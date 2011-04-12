@@ -759,7 +759,8 @@ class BuildMaster(service.MultiService):
         Request that C{callback(bsid=bsid, ssid=ssid, reason=reason,
         properties=properties, builderNames=builderNames,
         external_idstring=external_idstring)} be called whenever a buildset is
-        added.
+        added.  Properties is a dictionary as expected for
+        L{BuildsetsConnectorComponent.addBuildset}.
 
         Note: this method will go away in 0.9.x
         """

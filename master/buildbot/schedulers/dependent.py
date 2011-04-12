@@ -56,7 +56,7 @@ class Dependent(base.BaseScheduler):
     def _buildsetAdded(self, bsid=None, properties=None, **kwargs):
         # check if this was submitetted by our upstream by checking the
         # scheduler property
-        submitter = properties.getProperty('scheduler', None)
+        submitter = properties.get('scheduler', (None, None))[0]
         if submitter != self.upstream_name:
             return
 

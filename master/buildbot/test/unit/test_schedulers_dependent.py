@@ -16,7 +16,6 @@
 from twisted.trial import unittest
 from buildbot.schedulers import dependent, base
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
-from buildbot.process import properties
 from buildbot.test.util import scheduler
 from buildbot.test.fake import fakedb
 
@@ -79,7 +78,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
             fakedb.Buildset(id=44, sourcestampid=93),
             ])
         callbacks['buildsets'](bsid=44,
-                properties=properties.Properties(scheduler=scheduler_name))
+                properties=dict(scheduler=(scheduler_name, 'Scheduler')))
 
         # check whether scheduler is subscribed to that buildset
         if expect_subscription:

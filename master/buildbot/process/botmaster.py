@@ -28,9 +28,8 @@ from buildbot.util.loop import DelegateLoop
 class BotMaster(service.MultiService):
 
     """This is the master-side service which manages remote buildbot slaves.
-    It provides them with BuildSlaves, and distributes file change
-    notification messages to them.
-    """
+    It provides them with BuildSlaves, and distributes build requests to
+    them."""
 
     debug = 0
     reactor = reactor
@@ -324,6 +323,139 @@ class BotMaster(service.MultiService):
     def triggerNewBuildCheck(self):
         # TODO: old name -- should go
         self.loop.trigger()
+
+
+class BuildRequestDistributor(service.Service):
+    """
+    Special-purpose class to handle distributing build requests to builders by
+    calling their C{maybeStartBuild} method.
+
+    This takes account of the C{prioritizeBuilders} configuration, and is
+    highly re-entrant; that is, if a new build request arrives while builders
+    are still working on the previous build request, then this class will
+    correctly re-prioritize invocations of builders' C{maybeStartBuild}
+    methods.
+    """
+
+    def __init__(self, botmaster):
+        self.botmaster = botmaster
+        self.master = botmaster.master
+
+        # sorted list of names of builders that need their maybeStartBuild
+        # method invoked.
+        self._pending_builders = []
+        self.activity_lock = defer.DeferredLock()
+        self.active = False
+
+    def stopService(self):
+        # let the parent stopService succeed between activity; then the loop
+        # will stop calling itself, since self.running is false
+        d = self.activity_lock.acquire()
+        d.addCallback(lambda _ : service.Service.stopService(self))
+        d.addBoth(lambda _ : self.activity_lock.release())
+        return d
+
+    def maybeStartBuildsOn(self, new_builders):
+        """
+        Try ot start any builds that can be started right now.  This function
+        returns immediately, and promises to trigger those builders eventually.
+
+        @param new_builders: names of new builders that should be given the
+        opportunity to check for new requests.
+        """
+        new_builders = set(new_builders)
+        existing_pending = set(self._pending_builders)
+
+        # if we haven't added any builders, there's nothing to do
+        if new_builders < existing_pending:
+            return
+
+        # reset the list of pending builders
+        new_pending = existing_pending | new_builders
+        self._pending_builders = self._sortBuilders(list(new_pending))
+
+        # and start calling builders' maybeStartBuild methods, if we aren't
+        # already working on that.
+        if not self.active:
+            self._activityLoop()
+
+    def _sortBuilders(self, buildernames):
+        # note that this takes and returns a list of builder names
+
+        # convert builder names to builders
+        builders_dict = self.botmaster.builders
+        builders = [ builders_dict.get(n)
+                     for n in buildernames
+                     if n in builders_dict ]
+
+        # find a sorting function
+        sorter = self.botmaster.prioritizeBuilders
+        if not sorter:
+            def _sortfunc(b1, b2):
+                t1 = b1.getOldestRequestTime()
+                if t1 is None:
+                    return 1
+                t2 = b2.getOldestRequestTime()
+                if t2 is None:
+                    return -1
+                return cmp(t1, t2)
+            sorter = lambda master, builders : sorted(builders, _sortfunc)
+
+        # run it
+        try:
+            builders = sorter(self.master, builders)
+        except:
+            log.msg("Exception prioritizing builders")
+            log.err(Failure())
+
+        # and return the names
+        return [ b.name for b in builders ]
+
+    @defer.deferredGenerator
+    def _activityLoop(self):
+        self.active = True
+
+        while 1:
+            wfd = defer.waitForDeferred(
+                self.activity_lock.acquire())
+            yield wfd
+            wfd.getResult()
+
+            # bail out if we shouldn't keep looping
+            if not self.running or not self._pending_builders:
+                self.activity_lock.release()
+                break
+
+            bldr_name = self._pending_builders.pop(0)
+
+            try:
+                wfd = defer.waitForDeferred(
+                    self._callABuilder(bldr_name))
+                yield wfd
+                wfd.getResult()
+            except:
+                log.err(Failure(),
+                        "from maybeStartBuild for builder '%s'" % (bldr_name,))
+
+            self.activity_lock.release()
+
+        self.active = False
+        self._quiet()
+
+    def _callABuilder(self, bldr_name):
+        # get the actual builder object
+        bldr = self.botmaster.builders.get(bldr_name)
+        if not bldr:
+            return defer.succeed(None)
+
+        # TODO: does this need to be Serialized, then?  Or is this over-serializing the checks?
+        d = bldr.maybeStartBuild()
+        d.addErrback(log.err, 'in maybeStartBuild for %r' % (bldr,))
+        return d
+
+    def _quiet(self):
+        # shim for tests
+        pass # pragma: no cover
 
 
 class DuplicateSlaveArbitrator(object):

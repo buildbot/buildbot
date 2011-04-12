@@ -37,7 +37,8 @@ class BuilderConfig:
                 nextBuild=None,
                 locks=None,
                 env=None,
-                properties=None):
+                properties=None,
+                mergeRequests=None):
 
         # name is required, and can't start with '_'
         if not name or type(name) not in (str, unicode):
@@ -87,6 +88,7 @@ class BuilderConfig:
         self.locks = locks
         self.env = env
         self.properties = properties
+        self.mergeRequests = mergeRequests
 
     def getConfigDict(self):
         rv = {
@@ -108,4 +110,6 @@ class BuilderConfig:
             rv['env'] = self.env
         if self.properties:
             rv['properties'] = self.properties
+        if self.mergeRequests:
+            rv['mergeRequests'] = self.mergeRequests
         return rv

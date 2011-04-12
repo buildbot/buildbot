@@ -98,24 +98,20 @@ class TestBuildSlave(unittest.TestCase):
         # return the dynamically allocated port number
         return self.listeningport.getHost().port
 
-    def test_keepalive_called(self):
-        # set up to fire this deferred on receipt of a keepalive
-        d = defer.Deferred()
-        def on_keepalive():
-            # need to wait long enough for the remote_keepalive call to
-            # finish, but not for another one to queue up
-            reactor.callLater(0.01, d.callback, None)
-        persp = MasterPerspective(on_keepalive=on_keepalive)
+    def test_constructor_minimal(self):
+        # only required arguments
+        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False)
 
-        # start up the master and slave, with a very short keepalive
-        port = self.start_master(persp)
-        self.buildslave = bot.BuildSlave("127.0.0.1", port,
-                "testy", "westy", self.basedir,
-                keepalive=0.1, keepaliveTimeout=0.05, usePTY=False)
-        self.buildslave.startService()
+    def test_constructor_083_tac(self):
+        # invocation as made from default 083 tac files
+        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False,
+                umask=0123, maxdelay=10)
 
-        # and wait for it to keepalive
-        return d
+    def test_constructor_full(self):
+        # invocation with all args
+        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False,
+                umask=0123, maxdelay=10, keepaliveTimeout=10,
+                unicode_encoding='utf8', allow_shutdown=True)
 
     def test_buildslave_print(self):
         d = defer.Deferred()
@@ -126,7 +122,7 @@ class TestBuildSlave(unittest.TestCase):
             print_d = mind.callRemote("print", "Hi, slave.")
             print_d.addCallbacks(d.callback, d.errback)
 
-        # start up the master and slave, with a very short keepalive
+        # start up the master and slave
         persp = MasterPerspective()
         port = self.start_master(persp, on_attachment=call_print)
         self.buildslave = bot.BuildSlave("127.0.0.1", port,

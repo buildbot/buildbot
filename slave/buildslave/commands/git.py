@@ -31,13 +31,16 @@ class Git(SourceBaseCommand):
                                    to retrieve. Default: "master".
     ['submodules'] (optional):     whether to initialize and update
                                    submodules. Default: False.
-    ['ignore_ignores'] (optional): ignore ignores when purging changes.
+    ['ignore_ignores'] (optional): ignore ignores when purging changes
+                                   (default true)
     ['reference'] (optional):      use this reference repository
                                    to fetch objects.
     ['gerrit_branch'] (optional):  which virtual branch to retrieve.
     ['progress'] (optional):       have git output progress markers,
                                    avoiding timeouts for long fetches;
                                    requires Git 1.7.2 or later.
+    ['shallow'] (optional):        if true, use shallow clones that do not
+                                   also fetch history
     """
 
     header = "git operation"
@@ -57,11 +60,6 @@ class Git(SourceBaseCommand):
     def _fullSrcdir(self):
         return os.path.join(self.builder.basedir, self.srcdir)
 
-    def _commitSpec(self):
-        if self.revision:
-            return self.revision
-        return self.branch
-
     def sourcedirIsUpdateable(self):
         return os.path.isdir(os.path.join(self._fullSrcdir(), ".git"))
 
@@ -77,12 +75,12 @@ class Git(SourceBaseCommand):
             d.addCallback(cb)
         return d
 
-    # If the repourl matches the sourcedata file, then
-    # we can say that the sourcedata matches.  We can
-    # ignore branch changes, since Git can work with
-    # many branches fetched, and we deal with it properly
-    # in doVCUpdate.
     def sourcedataMatches(self):
+        # If the repourl matches the sourcedata file, then we can say that the
+        # sourcedata matches.  We can ignore branch changes, since Git can work
+        # with many branches fetched, and we deal with it properly in
+        # doVCUpdate.  So, basically, as long as the file exists, consider it
+        # to match
         try:
             self.readSourcedata()
         except IOError:
@@ -90,7 +88,7 @@ class Git(SourceBaseCommand):
         return True
 
     def _cleanSubmodules(self, res):
-        command = ['submodule', 'foreach', 'git', 'clean', '-d', '-f']
+        command = ['submodule', 'foreach', 'git', 'clean', '-f', '-d']
         if self.ignore_ignores:
             command.append('-x')
         return self._dovccmd(command)
@@ -180,9 +178,8 @@ class Git(SourceBaseCommand):
         # up after the 'git init'.
         if self.reference:
             git_alts_path = os.path.join(self._fullSrcdir(), '.git', 'objects', 'info', 'alternates')
-            git_alts_file = open(git_alts_path, 'w')
-            git_alts_file.write(os.path.join(self.reference, 'objects'))
-            git_alts_file.close()
+            git_alts_content = os.path.join(self.reference, 'objects')
+            self.setFileContents(git_alts_path, git_alts_content)
         return self.doVCUpdate()
 
     def doVCFull(self):

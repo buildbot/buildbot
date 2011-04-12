@@ -400,6 +400,10 @@ The full list of parameters is:
 
 @item fileIsImportant
 
+@item branch
+(required) The branch to build when the time comes.  Remember that a value of
+@code{None} here means the default branch, and will not match other branches!
+
 @item change_filter
 @pxref{Configuring Schedulers}.  Note that @code{fileIsImportant} and
 @code{change_filter} are only relevant if @code{onlyIfChanged} is true.
@@ -429,10 +433,6 @@ If this is true, then builds will not be scheduled at the designated time
 @emph{unless} the specified branch has seen an important change since the
 previous build.
 
-@item branch
-The branch to build when the time comes.  Remember that a value of @code{None}
-here means the default branch, and will not match other branches!
-
 @end table
 
 For example, the following master.cfg clause will cause a build to be
@@ -441,6 +441,7 @@ started every night at 3:00am:
 @example
 from buildbot.schedulers import timed
 s = timed.Nightly(name='nightly',
+        branch='master',
         builderNames=['builder1', 'builder2'],
         hour=3,
         minute=0)
@@ -451,6 +452,7 @@ again at 8:23am, but only if someone has committed code in the interim:
 
 @example
 s = timed.Nightly(name='BeforeWork',
+         branch='default',
          builderNames=['builder1'],
          dayOfWeek=0,
          hour=[6,8],
@@ -463,6 +465,7 @@ function:
 
 @example
 s = timed.Nightly(name='every2hours',
+        branch=None, # default branch
         builderNames=['builder1'],
         hour=range(0, 24, 2))
 @end example
@@ -471,6 +474,7 @@ Finally, this example will run only on December 24th:
 
 @example
 s = timed.Nightly(name='SleighPreflightCheck',
+        branch=None, # default branch
         builderNames=['flying_circuits', 'radar'],
         month=12,
         dayOfMonth=24,

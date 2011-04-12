@@ -115,7 +115,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
 
         return d
 
-    def prepare(self, builder_status):
+    def prepare(self, builder_status, build):
         if not self.slave.acquireLocks():
             return defer.succeed(False)
         return defer.succeed(True)
@@ -240,13 +240,13 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
         log.msg("Latent buildslave %s attached to %s" % (slave.slavename,
                                                          self.builder_name))
 
-    def prepare(self, builder_status):
+    def prepare(self, builder_status, build):
         # If we can't lock, then don't bother trying to substantiate
         if not self.slave.acquireLocks():
             return defer.succeed(False)
 
         log.msg("substantiating slave %s" % (self,))
-        d = self.substantiate()
+        d = self.substantiate(build)
         def substantiation_failed(f):
             builder_status.addPointEvent(['removing', 'latent',
                                           self.slave.slavename])
@@ -262,9 +262,9 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
         d.addErrback(substantiation_failed)
         return d
 
-    def substantiate(self):
+    def substantiate(self, build):
         self.state = SUBSTANTIATING
-        d = self.slave.substantiate(self)
+        d = self.slave.substantiate(self, build)
         if not self.slave.substantiated:
             event = self.builder.builder_status.addEvent(
                 ["substantiating"])

@@ -84,10 +84,10 @@ with @code{haltOnFailure=True} has failed.
 @item doStepIf
 A step can be configured to only run under certain conditions.  To do this, set
 the step's @code{doStepIf} to a boolean value, or to a function that returns a
-boolean value.  If the value or function result is false, then the step will
-return SKIPPED without doing anything.  Oherwise, the step will be executed
-normally.  If you set @code{doStepIf} to a function, that function should
-accept one parameter, which will be the @code{Step} object itself.
+boolean value or Deferred.  If the value or function result is false, then the
+step will return SKIPPED without doing anything.  Oherwise, the step will be
+executed normally.  If you set @code{doStepIf} to a function, that function
+should accept one parameter, which will be the @code{Step} object itself.
 
 @item locks
 a list of Locks (instances of @code{buildbot.locks.SlaveLock} or
@@ -478,6 +478,7 @@ arguments are described on the following pages.
 * Git::
 * BitKeeper::
 * Repo::
+* Monotone::
 @end menu
 
 @node CVS
@@ -1008,6 +1009,34 @@ All of these properties will be translated into a @code{repo download}.
 This feature allows integrators to build with several pending interdependent changes,
 which at the moment cannot be described properly in Gerrit, and can only be described
 by humans.
+
+
+@node Monotone
+@subsubsection Monotone
+
+@cindex Monotone Checkout
+@bsindex buildbot.steps.source.Monotone
+
+
+The @code{Monotone} build step performs a
+@uref{http://www.monotone.ca, Monotone} (aka ``mtn'') checkout
+or update.
+
+The Monotone step takes the following arguments:
+
+@table @code
+@item repourl
+the URL at which the Monotone source repository is available.
+
+@item branch
+this specifies the name of the branch to use when a Build does not
+provide one of its own.
+
+@item progress
+this is a boolean that has a pull from the repository use
+``--ticker=dot'' instead of the default ``--ticker=none''.
+
+@end table
 
 
 @node ShellCommand
@@ -1625,11 +1654,14 @@ through a subunit filter to extract test and failure counts.
 
 @example
 from buildbot.steps.subunit import SubunitShellCommand
-f.addStep(SubunitShellCommand(command="make test"))
+f.addStep(SubunitShellCommand(command="make test", failureOnNoTests=False))
 @end example
 
 This runs @code{make test} and filters it through subunit. The 'tests' and
 'test failed' progress metrics will now accumulate test data from the test run.
+
+If @code{failureOnNoTests} is True, this step will fail if no test is run. By
+default @code{failureOnNoTests} is False.
 
 @node Python BuildSteps
 @subsection Python BuildSteps
@@ -2038,18 +2070,23 @@ all of the builds from the triggered schedulers have finished. If this
 argument is False (the default) or not given, then the buildstep
 succeeds immediately after triggering the schedulers.
 
+The SourceStamp to use for the triggered build is controlled by the arguments
+@code{updateSourceStamp}, @code{alwaysUseLatest}, and @code{sourceStamp}.
 If @code{updateSourceStamp} is True (the default), then step updates
 the SourceStamp given to the Triggerables to include
 @code{got_revision} (the revision actually used in this build) as
 @code{revision} (the revision to use in the triggered builds). This is
 useful to ensure that all of the builds use exactly the same
 SourceStamp, even if other Changes have occurred while the build was
-running.
-
-If @code{alwaysUseLatest} is False (the default), then the step uses the source
-stamp as detail for @code{updateSourceStamp}. If this argument is True, then
-no SourceStamp is given. This is useful if the triggered builds use to a different
-source repository.
+running. If @code{updateSourceStamp} is False (and neither of the other
+arguments are specified), then the exact same SourceStamp is used. If
+@code{alwaysUseLatest} is True, then no SourceStamp is given, corresponding to
+using the latest revision of the repository specified in the Source step. This
+is useful if the triggered builds use to a different source repository.
+@code{sourceStamp} accepts a dictionary containing the keys @code{branch},
+@code{revision}, @code{branch}, @code{repository}, @code{project}, and
+optionally @code{patch_level}, @code{patch_level} and @code{patch_subdir} and
+creates the corresponding SourceStamp.
 
 Two parameters allow control of the properties that are passed to the triggered
 scheduler.  To simply copy properties verbatim, list them in the
@@ -2065,7 +2102,6 @@ A number of steps do not fall into any particular category.
 
 @menu
 * HLint::
-* Proce
 @end menu
 
 @node HLint

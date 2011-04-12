@@ -27,7 +27,7 @@ class Trigger(LoggingBuildStep):
 
     flunkOnFailure = True
 
-    def __init__(self, schedulerNames=[], updateSourceStamp=True, alwaysUseLatest=False,
+    def __init__(self, schedulerNames=[], sourceStamp=None, updateSourceStamp=None, alwaysUseLatest=False,
                  waitForFinish=False, set_properties={}, copy_properties=[], **kwargs):
         """
         Trigger the given schedulers when this step is executed.
@@ -35,6 +35,14 @@ class Trigger(LoggingBuildStep):
         @param schedulerNames: A list of scheduler names that should be
                                triggered. Schedulers can be specified using
                                WithProperties, if desired.
+
+        @param sourceStamp: A dict containing the source stamp to use for the
+                            build. Keys must include branch, revision, repository and
+                            project. In addition, patch_body, patch_level, and
+                            patch_subdir can be specified. Only one of
+                            sourceStamp, updateSourceStamp and alwaysUseLatest
+                            can be specified. Any of these can be specified using
+                            WithProperties, if desired.
 
         @param updateSourceStamp: If True (the default), I will try to give
                                   the schedulers an absolute SourceStamp for
@@ -67,8 +75,15 @@ class Trigger(LoggingBuildStep):
 
         """
         assert schedulerNames, "You must specify a scheduler to trigger"
+        if sourceStamp and updateSourceStamp:
+            raise ValueError("You can't specify both sourceStamp and updateSourceStamp")
+        if sourceStamp and alwaysUseLatest:
+            raise ValueError("You can't specify both sourceStamp and alwaysUseLatest")
+        if alwaysUseLatest and updateSourceStamp:
+            raise ValueError("You can't specify both alwaysUseLatest and updateSourceStamp")
         self.schedulerNames = schedulerNames
-        self.updateSourceStamp = updateSourceStamp
+        self.sourceStamp = sourceStamp
+        self.updateSourceStamp = updateSourceStamp or not (alwaysUseLatest or sourceStamp)
         self.alwaysUseLatest = alwaysUseLatest
         self.waitForFinish = waitForFinish
         self.set_properties = set_properties
@@ -77,6 +92,7 @@ class Trigger(LoggingBuildStep):
         self.ended = False
         LoggingBuildStep.__init__(self, **kwargs)
         self.addFactoryArguments(schedulerNames=schedulerNames,
+                                 sourceStamp=sourceStamp,
                                  updateSourceStamp=updateSourceStamp,
                                  alwaysUseLatest=alwaysUseLatest,
                                  waitForFinish=waitForFinish,
@@ -107,11 +123,6 @@ class Trigger(LoggingBuildStep):
                         "%s (in triggering build)" % properties.getPropertySource(p))
 
         self.running = True
-        ss = self.build.getSourceStamp()
-        if self.updateSourceStamp:
-            got = properties.getProperty('got_revision')
-            if got:
-                ss = ss.getAbsoluteSourceStamp(got)
 
         # (is there an easier way to find the BuildMaster?)
         all_schedulers = self.build.builder.botmaster.parent.allSchedulers()
@@ -136,9 +147,16 @@ class Trigger(LoggingBuildStep):
             return self.end(FAILURE)
 
         master = self.build.builder.botmaster.parent # seriously?!
-        if self.alwaysUseLatest:
+        if self.sourceStamp:
+            d = master.db.sourcestamps.createSourceStamp(**properties.render(self.sourceStamp))
+        elif self.alwaysUseLatest:
             d = defer.succeed(None)
         else:
+            ss = self.build.getSourceStamp()
+            if self.updateSourceStamp:
+                got = properties.getProperty('got_revision')
+                if got:
+                    ss = ss.getAbsoluteSourceStamp(got)
             d = ss.getSourceStampId(master)
         def start_builds(ssid):
             dl = []
@@ -154,6 +172,7 @@ class Trigger(LoggingBuildStep):
                 # do something to handle errors
                 d.addErrback(log.err,
                         '(ignored) while invoking Triggerable schedulers:')
+                self.end(SUCCESS)
                 return None
         d.addCallback(start_builds)
 

@@ -39,6 +39,8 @@ class SourceCommandTestMixin(command.CommandTestMixin):
 
         self.sourcedata = initial_sourcedata
         def readSourcedata():
+            if self.sourcedata is None:
+                raise IOError("File not found")
             return self.sourcedata
         cmd.readSourcedata = readSourcedata
 
@@ -46,6 +48,9 @@ class SourceCommandTestMixin(command.CommandTestMixin):
             self.sourcedata = cmd.sourcedata
             return res
         cmd.writeSourcedata = writeSourcedata
+
+        # patch out a bunch of actions with invocations of RunProcess that will
+        # end up being Expect-able by the tests.
 
         def doClobber(_, dirname):
             r = runprocess.RunProcess(self.builder,
@@ -60,6 +65,14 @@ class SourceCommandTestMixin(command.CommandTestMixin):
                 self.builder.basedir)
             return r.start()
         cmd.doCopy = doCopy
+
+        def setFileContents(filename, contents):
+            r = runprocess.RunProcess(self.builder,
+                [ 'setFileContents', filename, contents ],
+                self.builder.basedir)
+            return r.start()
+        cmd.setFileContents = setFileContents
+
 
     def check_sourcedata(self, _, expected_sourcedata):
         """

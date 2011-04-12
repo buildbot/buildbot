@@ -89,6 +89,8 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         self.missing_timer = None
         self.keepalive_interval = keepalive_interval
 
+        self._old_builder_list = None
+
     def update(self, new):
         """
         Given a new BuildSlave, configure this one identically.  Because
@@ -429,11 +431,19 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
     def sendBuilderList(self):
         our_builders = self.botmaster.getBuildersForSlave(self.slavename)
         blist = [(b.name, b.slavebuilddir) for b in our_builders]
+        if blist == self._old_builder_list:
+            log.msg("Builder list is unchanged; not calling setBuilderList")
+            return defer.succeed(None)
+
         d = self.slave.callRemote("setBuilderList", blist)
+        def sentBuilderList(ign):
+            self._old_builder_list = blist
+            return ign
+        d.addCallback(sentBuilderList)
         return d
 
     def perspective_keepalive(self):
-        pass
+        self.messageReceivedFromSlave()
 
     def perspective_shutdown(self):
         log.msg("slave %s wants to shut down" % self.slavename)
@@ -579,6 +589,9 @@ class BuildSlave(AbstractBuildSlave):
     def sendBuilderList(self):
         d = AbstractBuildSlave.sendBuilderList(self)
         def _sent(slist):
+            # Nothing has changed, so don't need to re-attach to everything
+            if not slist:
+                return
             dl = []
             for name, remote in slist.items():
                 # use get() since we might have changed our mind since then
@@ -633,7 +646,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         self.building = set()
         self.build_wait_timeout = build_wait_timeout
 
-    def start_instance(self):
+    def start_instance(self, build):
         # responsible for starting instance that will try to connect with this
         # master.  Should return deferred with either True (instance started)
         # or False (instance not started, so don't run a build here).  Problems
@@ -644,7 +657,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         # responsible for shutting down instance.
         raise NotImplementedError
 
-    def substantiate(self, sb):
+    def substantiate(self, sb, build):
         if self.substantiated:
             self._clearBuildWaitTimer()
             self._setBuildWaitTimer()
@@ -657,15 +670,15 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
                     self._substantiation_failed, defer.TimeoutError())
             self.substantiation_deferred = defer.Deferred()
             if self.slave is None:
-                d = self._substantiate() # start up instance
+                d = self._substantiate(build) # start up instance
                 d.addErrback(log.err, "while substantiating")
             # else: we're waiting for an old one to detach.  the _substantiate
             # will be done in ``detached`` below.
         return self.substantiation_deferred
 
-    def _substantiate(self):
+    def _substantiate(self, build):
         # register event trigger
-        d = self.start_instance()
+        d = self.start_instance(build)
         self._shutdown_callback_handle = reactor.addSystemEventTrigger(
             'before', 'shutdown', self._soft_disconnect, fast=True)
         def start_instance_result(result):
@@ -821,6 +834,8 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
     def sendBuilderList(self):
         d = AbstractBuildSlave.sendBuilderList(self)
         def _sent(slist):
+            if not slist:
+                return
             dl = []
             for name, remote in slist.items():
                 # use get() since we might have changed our mind since then.

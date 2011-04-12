@@ -675,7 +675,8 @@ With this set up, add a Post-Receive URL for the project in the Github
 administrative interface, pointing to @code{/change_hook/github} relative to
 the root of the web status.  For example, if the grid URL is
 @code{http://builds.mycompany.com/bbot/grid}, then point Github to
-@code{http://builds.mycompany.com/bbot/change_hook/github}.
+@code{http://builds.mycompany.com/bbot/change_hook/github}. To specify a project
+assoicated to the repository, append @code{?project=name} to the URL.
 
 Note that there is a standalone HTTP server available for receiving github
 notifications, as well: @code{contrib/github_buildbot.py}.  This script may be
@@ -864,7 +865,7 @@ def html_message_formatter(mode, name, build, results, master_status):
         text.append(u'<br>')
         text.append(u'<h4>Last %d lines of "%s"</h4>' % (limit_lines, name))
         unilist = list()
-        for line in content[len(content)-limit_lines:]:
+        for line in content[-limit_lines:]:
             unilist.append(cgi.escape(unicode(line,'utf-8')))
         text.append(u'<pre>'.join([uniline for uniline in unilist]))
         text.append(u'</pre>')

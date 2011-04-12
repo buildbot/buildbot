@@ -740,6 +740,7 @@ class BuildStep:
 
         d = self.acquireLocks()
         d.addCallback(self._startStep_2)
+        d.addErrback(self.failed)
         return self.deferred
 
     def acquireLocks(self, res=None):
@@ -771,28 +772,32 @@ class BuildStep:
         if self.progress:
             self.progress.start()
 
+        doStep = defer.succeed(True)
+        if isinstance(self.doStepIf, bool):
+            if not self.doStepIf:
+                doStep = defer.succeed(False)
+        else:
+            doStep = defer.maybeDeferred(self.doStepIf, self)
+        doStep.addCallback(self._startStep_3)
+        return doStep
+
+    def _startStep_3(self, doStep):
         try:
-            skip = None
-            if isinstance(self.doStepIf, bool):
-                if not self.doStepIf:
-                    skip = SKIPPED
-            elif not self.doStepIf(self):
-                skip = SKIPPED
-
-            if skip is None:
-                skip = self.start()
-
-            if skip == SKIPPED:
-                self.step_status.setText(self.describe(True) + ['skipped'])
-                self.step_status.setSkipped(True)
-                # this return value from self.start is a shortcut to finishing
-                # the step immediately; we skip calling finished() as
-                # subclasses may have overridden that an expect it to be called
-                # after start() (bug #837)
-                reactor.callLater(0, self._finishFinished, SKIPPED)
+            if doStep:
+                if self.start() == SKIPPED:
+                    doStep = False
         except:
             log.msg("BuildStep.startStep exception in .start")
             self.failed(Failure())
+
+        if not doStep:
+            self.step_status.setText(self.describe(True) + ['skipped'])
+            self.step_status.setSkipped(True)
+            # this return value from self.start is a shortcut to finishing
+            # the step immediately; we skip calling finished() as
+            # subclasses may have overridden that an expect it to be called
+            # after start() (bug #837)
+            reactor.callLater(0, self._finishFinished, SKIPPED)
 
     def start(self):
         """Begin the step. Override this method and add code to do local

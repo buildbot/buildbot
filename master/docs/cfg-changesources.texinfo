@@ -109,6 +109,12 @@ hook)
 @item @code{gerritchangesource.GerritChangeSource} connects to Gerrit via SSH to get a live stream of changes
 @end itemize
 
+@item Monotone
+@itemize @bullet
+@item pb.PBChangeSource (listening for connections from
+@code{monotone-buildbot.lua}, which is available with monotone)
+@end itemize
+
 @end table
 
 All VC systems can be driven by a PBChangeSource, and the

@@ -27,8 +27,9 @@ from buildbot.status import builder
 
 class SourceStampExtractor:
 
-    def __init__(self, treetop, branch):
-        self.treetop = treetop # also is repository
+    def __init__(self, treetop, branch, repository):
+        self.treetop = treetop
+        self.repository = repository
         self.branch = branch
         self.exe = which(self.vcexe)[0]
 
@@ -58,9 +59,11 @@ class SourceStampExtractor:
             diff = None
         self.patch = (patchlevel, diff)
     def done(self, res):
+        if not self.repository:
+            self.repository = self.treetop
         # TODO: figure out the branch and project too
         ss = SourceStamp(self.branch, self.baserev, self.patch, 
-                         repository=self.treetop)
+                         repository=self.repository)
         return ss
 
 class CVSExtractor(SourceStampExtractor):
@@ -223,6 +226,7 @@ class DarcsExtractor(SourceStampExtractor):
 class GitExtractor(SourceStampExtractor):
     patchlevel = 1
     vcexe = "git"
+    config = None
 
     def getBaseRevision(self):
         # If a branch is specified, parse out the rev it points to
@@ -241,20 +245,24 @@ class GitExtractor(SourceStampExtractor):
         return d
 
     def readConfig(self):
+        if self.config:
+            return defer.succeed(self.config)
         d = self.dovc(["config", "-l"])
         d.addCallback(self.parseConfig)
         return d
 
     def parseConfig(self, res):
-        git_config = {}
+        self.config = {}
         for l in res.split("\n"):
             if l.strip():
                 parts = l.strip().split("=", 2)
-                git_config[parts[0]] = parts[1]
+                self.config[parts[0]] = parts[1]
+        return self.config
 
+    def parseTrackingBranch(self, res):
         # If we're tracking a remote, consider that the base.
-        remote = git_config.get("branch." + self.branch + ".remote")
-        ref = git_config.get("branch." + self.branch + ".merge")
+        remote = self.config.get("branch." + self.branch + ".remote")
+        ref = self.config.get("branch." + self.branch + ".merge")
         if remote and ref:
             remote_branch = ref.split("/", 3)[-1]
             d = self.dovc(["rev-parse", remote + "/" + remote_branch])
@@ -273,7 +281,9 @@ class GitExtractor(SourceStampExtractor):
         if m:
             self.baserev = m.group(2)
             self.branch = m.group(1)
-            return self.readConfig()
+            d = self.readConfig()
+            d.addCallback(self.parseTrackingBranch)
+            return d
         raise IndexError("Could not find current GIT branch: %s" % res)
 
     def getPatch(self, res):
@@ -281,24 +291,44 @@ class GitExtractor(SourceStampExtractor):
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 
-def getSourceStamp(vctype, treetop, branch=None):
+class MonotoneExtractor(SourceStampExtractor):
+    patchlevel = 0
+    vcexe = "mtn"
+    def getBaseRevision(self):
+        d = self.dovc(["automate", "get_base_revision_id"])
+        d.addCallback(self.parseStatus)
+        return d
+    def parseStatus(self, output):
+        hash = output.strip()
+        if len(hash) != 40:
+            self.baserev = None
+        self.baserev = hash
+    def getPatch(self, res):
+        d = self.dovc(["diff"])
+        d.addCallback(self.readPatch, self.patchlevel)
+        return d
+
+
+def getSourceStamp(vctype, treetop, branch=None, repository=None):
     if vctype == "cvs":
-        e = CVSExtractor(treetop, branch)
+        cls = CVSExtractor
     elif vctype == "svn":
-        e = SVNExtractor(treetop, branch)
+        cls = SVNExtractor
     elif vctype == "bzr":
-        e = BzrExtractor(treetop, branch)
+        cls = BzrExtractor
     elif vctype == "hg":
-        e = MercurialExtractor(treetop, branch)
+        cls = MercurialExtractor
     elif vctype == "p4":
-        e = PerforceExtractor(treetop, branch)
+        cls = PerforceExtractor
     elif vctype == "darcs":
-        e = DarcsExtractor(treetop, branch)
+        cls = DarcsExtractor
     elif vctype == "git":
-        e = GitExtractor(treetop, branch)
+        cls = GitExtractor
+    elif vctype == "mtn":
+        cls = MonotoneExtractor
     else:
         raise KeyError("unknown vctype '%s'" % vctype)
-    return e.get()
+    return cls(treetop, branch, repository).get()
 
 
 def ns(s):
@@ -431,7 +461,7 @@ class Try(pb.Referenceable):
             if not diff:
                 diff = None
             patch = (self.config['patchlevel'], diff)
-            ss = SourceStamp(branch, baserev, patch)
+            ss = SourceStamp(branch, baserev, patch, repository = self.getopt("repository"))
             d = defer.succeed(ss)
         else:
             vc = self.getopt("vc")
@@ -445,7 +475,7 @@ class Try(pb.Referenceable):
                     treedir = getTopdir(topfile)
             else:
                 treedir = os.getcwd()
-            d = getSourceStamp(vc, treedir, branch)
+            d = getSourceStamp(vc, treedir, branch, self.getopt("repository"))
         d.addCallback(self._createJob_1)
         return d
 
@@ -524,7 +554,7 @@ class Try(pb.Referenceable):
     def getStatus(self):
         # returns a Deferred that fires when the builds have finished, and
         # may emit status messages while we wait
-        wait = bool(self.getopt("wait", "try_wait"))
+        wait = bool(self.getopt("wait"))
         if not wait:
             # TODO: emit the URL where they can follow the builds. This
             # requires contacting the Status server over PB and doing
@@ -695,9 +725,9 @@ class Try(pb.Referenceable):
         # get the names of the configured builders that can
         # be used for the --builder argument
         if self.connect == "pb":
-            user = self.getopt("username", "try_username")
-            passwd = self.getopt("passwd", "try_password")
-            master = self.getopt("master", "try_master")
+            user = self.getopt("username")
+            passwd = self.getopt("passwd")
+            master = self.getopt("master")
             tryhost, tryport = master.split(":")
             tryport = int(tryport)
             f = pb.PBClientFactory()

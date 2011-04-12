@@ -95,3 +95,6 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.sourcestamp import SourceStamp
         assert SourceStamp
 
+    def test_process_subunitlogobserver_SubunitShellCommand(self):
+        from buildbot.process.subunitlogobserver import SubunitShellCommand
+        assert SubunitShellCommand
