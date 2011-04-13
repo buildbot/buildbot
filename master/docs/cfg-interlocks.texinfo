@@ -112,13 +112,13 @@ f.addStep(shell.ShellCommand(command="make test",
 b1 = @{'name': 'full1', 'slavename': 'fast',  'builddir': 'f1', 'factory': f,
        'locks': [build_lock.access('counting')] @}
 
-b2 = @{'name': 'full2', 'slavename': 'new',   'builddir': 'f2', 'factory': f.
+b2 = @{'name': 'full2', 'slavename': 'new',   'builddir': 'f2', 'factory': f,
        'locks': [build_lock.access('counting')] @}
 
-b3 = @{'name': 'full3', 'slavename': 'old',   'builddir': 'f3', 'factory': f.
+b3 = @{'name': 'full3', 'slavename': 'old',   'builddir': 'f3', 'factory': f,
        'locks': [build_lock.access('counting')] @}
 
-b4 = @{'name': 'full4', 'slavename': 'other', 'builddir': 'f4', 'factory': f.
+b4 = @{'name': 'full4', 'slavename': 'other', 'builddir': 'f4', 'factory': f,
        'locks': [build_lock.access('counting')] @}
 
 c['builders'] = [b1, b2, b3, b4]
