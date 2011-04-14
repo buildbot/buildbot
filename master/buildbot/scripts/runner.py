@@ -938,67 +938,83 @@ class ForceOptions(OptionsWithOptionsFile):
 class TryOptions(OptionsWithOptionsFile):
     optParameters = [
         ["connect", "c", None,
-         "how to reach the buildmaster, either 'ssh' or 'pb'"],
-        # for ssh, use --tryhost, --username, and --trydir
-        ["tryhost", None, None,
-         "the hostname (used by ssh) for the buildmaster"],
-        ["trydir", None, None,
-         "the directory (on the tryhost) where tryjobs are deposited"],
-        ["username", "u", None, "Username performing the trial build"],
+         "How to reach the buildmaster, either 'ssh' or 'pb'"],
+        # for ssh, use --host, --username, and --jobdir
+        ["host", None, None,
+         "Hostname (used by ssh) for the buildmaster"],
+        ["jobdir", None, None,
+         "Directory (on the buildmaster host) where try jobs are deposited"],
+        ["username", "u", None,
+         "Username performing the try build"],
         # for PB, use --master, --username, and --passwd
         ["master", "m", None,
          "Location of the buildmaster's PBListener (host:port)"],
-        ["passwd", None, None, "password for PB authentication"],
+        ["passwd", None, None,
+         "Password for PB authentication"],
 
         ["diff", None, None,
-         "Filename of a patch to use instead of scanning a local tree. Use '-' for stdin."],
+         "Filename of a patch to use instead of scanning a local tree. "
+         "Use '-' for stdin."],
         ["patchlevel", "p", 0,
-         "Number of slashes to remove from patch pathnames, like the -p option to 'patch'"],
+         "Number of slashes to remove from patch pathnames, "
+         "like the -p option to 'patch'"],
 
         ["baserev", None, None,
          "Base revision to use instead of scanning a local tree."],
 
         ["vc", None, None,
-         "The VC system in use, one of: cvs,svn,bzr,darcs,p4"],
+         "The VC system in use, one of: bzr, cvs, darcs, git, hg, "
+         "mtn, p4, svn"],
         ["branch", None, None,
-         "The branch in use, for VC systems that can't figure it out"
-         " themselves"],
+         "The branch in use, for VC systems that can't figure it out "
+         "themselves"],
 
         ["builder", "b", None,
          "Run the trial build on this Builder. Can be used multiple times."],
         ["properties", None, None,
-         "A set of properties made available in the build environment, format:prop1=value1,prop2=value2..."],
+         "A set of properties made available in the build environment, "
+         "format:prop1=value1,prop2=value2..."],
 
-        ["try-topfile", None, None,
-         "Name of a file at the top of the tree, used to find the top. Only needed for SVN and CVS."],
-        ["try-topdir", None, None,
+        ["topfile", None, None,
+         "Name of a file at the top of the tree, used to find the top. "
+         "Only needed for SVN and CVS."],
+        ["topdir", None, None,
          "Path to the top of the working copy. Only needed for SVN and CVS."],
-
-        ]
+    ]
 
     optFlags = [
-        ["wait", None, "wait until the builds have finished"],
-        ["dryrun", 'n', "Gather info, but don't actually submit."],
-        ["get-builder-names", None, "Get the names of available builders. Doesn't submit anything. Only supported for 'pb' connections."],
-        ["quiet", "q", "Don't print status of current builds while waiting."],
-        ]
+        ["wait", None,
+         "wait until the builds have finished"],
+        ["dryrun", 'n',
+         "Gather info, but don't actually submit."],
+        ["get-builder-names", None,
+         "Get the names of available builders. Doesn't submit anything. "
+         "Only supported for 'pb' connections."],
+        ["quiet", "q",
+         "Don't print status of current builds while waiting."],
+    ]
 
-    # here it is, the definitive, quirky mapping of .buildbot/options names to
-    # command-line options.  Design by committee, anyone?
+    # Mapping of .buildbot/options names to command-line options
     buildbotOptions = [
         [ 'try_connect', 'connect' ],
         #[ 'try_builders', 'builders' ], <-- handled in postOptions
         [ 'try_vc', 'vc' ],
         [ 'try_branch', 'branch' ],
-        [ 'try_topdir', 'try-topdir' ],
-        [ 'try_topfile', 'try-topfile' ],
-        [ 'try_host', 'tryhost' ],
+        [ 'try_topdir', 'topdir' ],
+        [ 'try_topfile', 'topfile' ],
+        [ 'try_host', 'host' ],
         [ 'try_username', 'username' ],
-        [ 'try_dir', 'trydir' ],
+        [ 'try_jobdir', 'jobdir' ],
         [ 'try_password', 'passwd' ],
         [ 'try_master', 'master' ],
         #[ 'try_wait', 'wait' ], <-- handled in postOptions
-        [ 'masterstatus', 'master' ],
+        [ 'try_masterstatus', 'masterstatus' ],
+        # Deprecated command mappings from the quirky old days:
+        [ 'try_topdir', 'try-topdir' ],
+        [ 'try_topfile', 'try-topfile' ],
+        [ 'try_host', 'tryhost' ],
+        [ 'try_dir', 'trydir' ],        # replaced by try_jobdir/jobdir
+        [ 'masterstatus', 'master' ],   # replaced by try_masterstatus/masterstatus
     ]
 
     def __init__(self):
