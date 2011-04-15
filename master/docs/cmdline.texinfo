@@ -207,30 +207,51 @@ the approach by using @option{--connect=ssh} or @option{--connect=pb}
 @file{.buildbot/options}).
 
 For the PB approach, the command must be given a @option{--master}
-argument (in the form HOST:PORT) that points to TCP port that you
-picked in the @code{Try_Userpass} scheduler. It also takes a
+argument (in the form HOST:PORT) that points to TCP port that you picked
+in the @code{Try_Userpass} scheduler. It also takes a
 @option{--username} and @option{--passwd} pair of arguments that match
 one of the entries in the buildmaster's @code{userpass} list. These
 arguments can also be provided as @code{try_master},
 @code{try_username}, and @code{try_password} entries in the
 @file{.buildbot/options} file.
 
-For the SSH approach, the command must be given @option{--tryhost},
-@option{--username}, and optionally @option{--password} (TODO:
-really?) to get to the buildmaster host. It must also be given
-@option{--trydir}, which points to the inlet directory configured
-above. The trydir can be relative to the user's home directory, but
-most of the time you will use an explicit path like
-@file{~buildbot/project/trydir}. These arguments can be provided in
-@file{.buildbot/options} as @code{try_host}, @code{try_username},
-@code{try_password}, and @code{try_dir}.
+For the SSH approach, the command must be given @option{--host} and
+@option{--username} to get to the buildmaster host. It must also be
+given @option{--jobdir}, which points to the inlet directory configured
+above. The jobdir can be relative to the user's home directory, but most
+of the time you will use an explicit path like
+@file{~buildbot/project/jobdir}. These arguments can be provided in
+@file{.buildbot/options} as @code{try_host}, @code{try_username}, and
+@code{try_jobdir}.
 
 In addition, the SSH approach needs to connect to a PBListener status
 port, so it can retrieve and report the results of the build (the PB
 approach uses the existing connection to retrieve status information,
-so this step is not necessary). This requires a @option{--master}
-argument, or a @code{masterstatus} entry in @file{.buildbot/options},
+so this step is not necessary). This requires a @option{--masterstatus}
+argument, or a @code{try_masterstatus} entry in @file{.buildbot/options},
 in the form of a HOSTNAME:PORT string.
+
+The following command line arguments are deprecated, but retained for
+backward compatibility:
+
+@itemize @bullet
+@item
+@option{--tryhost} is replaced by @option{--host}
+@item
+@option{--trydir} is replaced by @option{--jobdir}
+@item
+@option{--master} is replaced by @option{--masterstatus}
+@end itemize
+
+Likewise, the following @file{.buildbot/options} file entries are
+deprecated, but retained for backward compatibility:
+
+@itemize @bullet
+@item
+@code{try_dir} is replaced by @code{try_jobdir}
+@item
+@code{masterstatus} is replaced by @code{try_masterstatus}
+@end itemize
 
 
 @heading choosing the Builders
@@ -273,10 +294,8 @@ using, with an argument like @option{--vc=cvs} or @option{--vc=git}.
 This can also be provided as @code{try_vc} in
 @file{.buildbot/options}.
 
-@c The order of this list comes from the end of scripts/tryclient.py
-
-The following names are recognized: @code{cvs} @code{svn}
-@code{bzr} @code{hg} @code{darcs} @code{git} @code{p4} @code{mtn}
+The following names are recognized: @code{bzr} @code{cvs}
+@code{darcs} @code{git} @code{hg} @code{mtn} @code{p4} @code{svn}
 
 
 @heading finding the top of the tree
@@ -292,11 +311,11 @@ until it finds a marker file. The default name for this marker file is
 @command{buildbot try}. Alternatively, you can use a filename like
 @file{ChangeLog} or @file{README}, since many projects put one of
 these files in their top-most directory (and nowhere else). To set
-this filename, use @option{--try-topfile=ChangeLog}, or set it in the
+this filename, use @option{--topfile=ChangeLog}, or set it in the
 options file with @code{try_topfile = 'ChangeLog'}.
 
 You can also manually set the top of the tree with
-@option{--try-topdir=~/trees/mytree}, or @code{try_topdir =
+@option{--topdir=~/trees/mytree}, or @code{try_topdir =
 '~/trees/mytree'}. If you use @code{try_topdir}, in a
 @file{.buildbot/options} file, you will need a separate options file
 for each tree you use, so it may be more convenient to use the
@@ -304,12 +323,21 @@ for each tree you use, so it may be more convenient to use the
 
 Other VC systems which work on full projects instead of individual
 directories (darcs, mercurial, git, monotone) do not require
-@command{try} to know the top directory, so the @option{--try-topfile}
-and @option{--try-topdir} arguments will be ignored.
-@c is this true? I think I currently require topdirs all the time.
+@command{try} to know the top directory, so the @option{--topfile}
+and @option{--topdir} arguments will be ignored.
 
 If the @command{try} command cannot find the top directory, it will
-abort with an error message.
+abort with an error message. 
+
+The following command line arguments are deprecated, but retained for
+backward compatibility:
+
+@itemize @bullet
+@item
+@option{--try-topdir} is replaced by @option{--topdir}
+@item
+@option{--try-topfile} is replaced by @option{--topfile}
+@end itemize
 
 @heading determining the branch name
 
@@ -443,9 +471,9 @@ can override this with the @option{-p} argument.
 
 When you use @option{--diff}, you do not need to use any of the other
 options that relate to a local tree, specifically @option{--vc},
-@option{--try-topfile}, or @option{--try-topdir}. These options will
+@option{--topfile}, or @option{--topdir}. These options will
 be ignored. Of course you must still specify how to get to the
-buildmaster (with @option{--connect}, @option{--tryhost}, etc).
+buildmaster (with @option{--connect}, @option{--host}, etc).
 
 
 @node Other Tools

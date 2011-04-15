@@ -467,11 +467,12 @@ class Try(pb.Referenceable):
             vc = self.getopt("vc")
             if vc in ("cvs", "svn"):
                 # we need to find the tree-top
-                topdir = self.getopt("try-topdir")
+                topdir = self.getopt("topdir") or self.getopt("try-topdir")
                 if topdir:
                     treedir = os.path.expanduser(topdir)
                 else:
-                    topfile = self.getopt("try-topfile")
+                    topfile = (self.getopt("topfile")
+                               or self.getopt("try-topfile"))
                     treedir = getTopdir(topfile)
             else:
                 treedir = os.getcwd()
@@ -508,9 +509,9 @@ class Try(pb.Referenceable):
         # returns a Deferred that fires when the job has been delivered
 
         if self.connect == "ssh":
-            tryhost = self.getopt("tryhost")
+            tryhost = self.getopt("host") or self.getopt("tryhost")
             tryuser = self.getopt("username")
-            trydir = self.getopt("trydir")
+            trydir = self.getopt("jobdir") or self.getopt("trydir")
 
             argv = ["ssh", "-l", tryuser, tryhost,
                     "buildbot", "tryserver", "--jobdir", trydir]
@@ -523,7 +524,7 @@ class Try(pb.Referenceable):
         if self.connect == "pb":
             user = self.getopt("username")
             passwd = self.getopt("passwd")
-            master = self.getopt("master")
+            master = self.getopt("masterstatus") or self.getopt("master")
             tryhost, tryport = master.split(":")
             tryport = int(tryport)
             f = pb.PBClientFactory()
@@ -569,7 +570,7 @@ class Try(pb.Referenceable):
             return self.running
         # contact the status port
         # we're probably using the ssh style
-        master = self.getopt("master")
+        master = self.getopt("masterstatus") or self.getopt("master")
         host, port = master.split(":")
         port = int(port)
         self.announce("contacting the status port at %s:%d" % (host, port))
