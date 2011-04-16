@@ -128,11 +128,16 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
         self.gotten_buildset_completions.append((bsid, result))
 
     def test_pollDatabaseChanges_empty(self):
+        self.db.insertTestData([
+            fakedb.Object(id=22, name='master',
+                          class_name='buildbot.master.BuildMaster'),
+        ])
         d = self.master.pollDatabaseChanges()
         def check(_):
             self.assertEqual(self.gotten_changes, [])
             self.assertEqual(self.gotten_buildset_additions, [])
             self.assertEqual(self.gotten_buildset_completions, [])
+            self.db.state.assertState(22, last_processed_change=0)
         d.addCallback(check)
         return d
 

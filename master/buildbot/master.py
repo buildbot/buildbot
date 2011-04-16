@@ -821,7 +821,13 @@ class BuildMaster(service.MultiService):
             wfd = defer.waitForDeferred(
                 self.db.changes.getLatestChangeid())
             yield wfd
-            self._last_processed_change = wfd.getResult()
+            lpc = wfd.getResult()
+            # if there *are* no changes, count the last as '0' so that we don't
+            # skip the first change
+            if lpc is None:
+                lpc = 0
+            self._last_processed_change = lpc
+
             need_setState = True
 
         if self._last_processed_change is None:
