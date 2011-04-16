@@ -365,6 +365,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
 
     def detached(self, mind):
         self.slave = None
+        self._old_builder_list = []
         self.slave_status.removeGracefulWatcher(self._gracefulChanged)
         self.slave_status.setConnected(False)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
