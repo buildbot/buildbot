@@ -19,6 +19,7 @@ Support for buildsets in the database
 
 import sqlalchemy as sa
 from twisted.internet import reactor
+from twisted.python import log
 from buildbot.db import base
 from buildbot.util import epoch2datetime
 
@@ -294,11 +295,18 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     (tbl.c.claimed_by_name == master_name) &
                     (tbl.c.claimed_by_incarnation != master_incarnation) &
                     (tbl.c.complete == 0)))
-            conn.execute(q,
+            res = conn.execute(q,
                 claimed_at=0,
                 claimed_by_name=None,
                 claimed_by_incarnation=None)
-        return self.db.pool.do(thd)
+            return res.rowcount
+        d = self.db.pool.do(thd)
+        def log_nonzero_count(count):
+            if count != 0:
+                log.msg("unclaimed %d buildrequests for an old instance of "
+                        "this master" % (count,))
+        d.addCallback(log_nonzero_count)
+        return d
 
     def unclaimExpiredRequests(self, old, _reactor=reactor):
         """
@@ -323,11 +331,18 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     (tbl.c.claimed_at != 0) &
                     (tbl.c.claimed_at < old_epoch) &
                     (tbl.c.complete == 0)))
-            conn.execute(q,
+            res = conn.execute(q,
                 claimed_at=0,
                 claimed_by_name=None,
                 claimed_by_incarnation=None)
-        return self.db.pool.do(thd)
+            return res.rowcount
+        d = self.db.pool.do(thd)
+        def log_nonzero_count(count):
+            if count != 0:
+                log.msg("unclaimed %d expired buildrequests (over %d seconds "
+                        "old)" % (count, old))
+        d.addCallback(log_nonzero_count)
+        return d
 
     def _brdictFromRow(self, row):
         claimed = mine = False
