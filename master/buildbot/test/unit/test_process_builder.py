@@ -283,6 +283,17 @@ class TestBuilderBuildCreation(unittest.TestCase):
         return self.do_test_doMaybeStartBuild(rows=rows,
                 exp_claims=[11], exp_builds=[('test-slave2', [11])])
 
+    def test_maybeStartBuild_builder_stopped(self):
+        self.makeBuilder()
+
+        # this will cause an exception if maybeStartBuild tries to start
+        self.bldr.slaves = None
+
+        # so we just hope this does not fail
+        d = self.bldr.stopService()
+        d.addCallback(lambda _ : self.bldr.maybeStartBuild())
+        return d
+
     # _chooseSlave
 
     def do_test_chooseSlave(self, nextSlave, exp_choice=None, exp_fail=None):
