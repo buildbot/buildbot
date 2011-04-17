@@ -135,8 +135,6 @@ class Builder(pb.Referenceable, service.MultiService):
         self.reclaim_svc.setServiceParent(self)
 
         # for testing, to help synchronize tests
-        self.watchers = {'attach': [], 'detach': [], 'detach_all': [],
-                         'idle': []}
         self.run_count = 0
 
         # add serialized-invocation behavior to maybeStartBuild
@@ -423,14 +421,6 @@ class Builder(pb.Referenceable, service.MultiService):
                 return b
         return None
 
-    def fireTestEvent(self, name, fire_with=None):
-        if fire_with is None:
-            fire_with = self
-        watchers = self.watchers[name]
-        self.watchers[name] = []
-        for w in watchers:
-            eventually(w.callback, fire_with)
-
     def addLatentSlave(self, slave):
         assert interfaces.ILatentBuildSlave.providedBy(slave)
         for s in self.slaves:
@@ -486,7 +476,6 @@ class Builder(pb.Referenceable, service.MultiService):
         self.attaching_slaves.remove(sb)
         self.slaves.append(sb)
 
-        self.fireTestEvent('attach')
         return self
 
     def _not_attached(self, why, slave):
@@ -497,7 +486,6 @@ class Builder(pb.Referenceable, service.MultiService):
         self.builder_status.addPointEvent(['failed', 'connect',
                                            slave.slavename])
         # TODO: add an HTMLLogFile of the exception
-        self.fireTestEvent('attach', why)
 
     def detached(self, slave):
         """This is called when the connection to the bot is lost."""
@@ -525,9 +513,6 @@ class Builder(pb.Referenceable, service.MultiService):
         self.builder_status.addPointEvent(['disconnect', slave.slavename])
         sb.detached() # inform the SlaveBuilder that their slave went away
         self.updateBigStatus()
-        self.fireTestEvent('detach')
-        if not self.slaves:
-            self.fireTestEvent('detach_all')
 
     def updateBigStatus(self):
         if not self.slaves:
@@ -536,7 +521,6 @@ class Builder(pb.Referenceable, service.MultiService):
             self.builder_status.setBigState("building")
         else:
             self.builder_status.setBigState("idle")
-            self.fireTestEvent('idle')
 
     def startBuild(self, build, sb):
         """Start a build on the given slave.
