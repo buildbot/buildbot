@@ -29,7 +29,7 @@ import buildbot
 import buildbot.pbmanager
 from buildbot.util import safeTranslate, subscription
 from buildbot.process.builder import Builder
-from buildbot.status.builder import Status
+from buildbot.status.master import Status
 from buildbot.changes.manager import ChangeManager
 from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
