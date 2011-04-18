@@ -18,7 +18,7 @@ from unittest import TestResult
 from StringIO import StringIO
 
 from buildbot.process import buildstep
-from buildbot.status.builder import TestResult as aTestResult
+from buildbot.status.testresult import TestResult as aTestResult
 from buildbot.status.builder import SUCCESS, FAILURE, SKIPPED
 
 class SubunitLogObserver(buildstep.LogLineObserver, TestResult):

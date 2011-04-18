@@ -42,29 +42,6 @@ def worst_status(a, b):
         if s in (a, b):
             return s
 
-class TestResult:
-    implements(interfaces.ITestResult)
-
-    def __init__(self, name, results, text, logs):
-        assert isinstance(name, tuple)
-        self.name = name
-        self.results = results
-        self.text = text
-        self.logs = logs
-
-    def getName(self):
-        return self.name
-
-    def getResults(self):
-        return self.results
-
-    def getText(self):
-        return self.text
-
-    def getLogs(self):
-        return self.logs
-
-
 class BuildSetStatus:
     implements(interfaces.IBuildSetStatus)
 
