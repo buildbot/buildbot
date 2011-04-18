@@ -95,7 +95,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         Get a dictionary representing the given buildset, or None
         if no such buildset exists.
 
-        The dictionary has keys C{external_idstring}, C{reason},
+        The dictionary has keys C{bsid}, C{external_idstring}, C{reason},
         C{sourcestampid}, C{submitted_at}, C{complete}, C{complete_at}, and
         C{results}.  The C{*_at} keys point to datetime objects.  Use
         L{getBuildsetProperties} to fetch the properties for a buildset.
@@ -111,14 +111,31 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             row = res.fetchone()
             if not row:
                 return None
-            def mkdt(epoch):
-                if epoch:
-                    return epoch2datetime(epoch)
-            return dict(external_idstring=row.external_idstring,
-                    reason=row.reason, sourcestampid=row.sourcestampid,
-                    submitted_at=mkdt(row.submitted_at),
-                    complete=bool(row.complete),
-                    complete_at=mkdt(row.complete_at), results=row.results)
+            return self._row2dict(row)
+        return self.db.pool.do(thd)
+
+    def getBuildsets(self, complete=None):
+        """
+        Get a list of buildset dictionaries (see L{getBuildset}) matching
+        the given criteria.
+
+        @param complete: if True, return only complete buildsets; if False,
+        return only incomplete buildsets; if None or omitted, return all
+        buildsets
+
+        @returns: list of dictionaries, via Deferred
+        """
+        def thd(conn):
+            bs_tbl = self.db.model.buildsets
+            q = bs_tbl.select()
+            if complete is not None:
+                if complete:
+                    q = q.where(bs_tbl.c.complete != 0)
+                else:
+                    q = q.where((bs_tbl.c.complete == 0) |
+                                (bs_tbl.c.complete == None))
+            res = conn.execute(q)
+            return [ self._row2dict(row) for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
     def getBuildsetProperties(self, buildsetid):
@@ -213,3 +230,15 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             return [ (row.id, row.sourcestampid, row.complete, row.results)
                      for row in conn.execute(q).fetchall() ]
         return self.db.pool.do(thd)
+
+    def _row2dict(self, row):
+        def mkdt(epoch):
+            if epoch:
+                return epoch2datetime(epoch)
+        return dict(external_idstring=row.external_idstring,
+                reason=row.reason, sourcestampid=row.sourcestampid,
+                submitted_at=mkdt(row.submitted_at),
+                complete=bool(row.complete),
+                complete_at=mkdt(row.complete_at), results=row.results,
+                bsid=row.id)
+
