@@ -19,7 +19,7 @@ from twisted.python import log
 from twisted.spread import pb
 from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand
 from buildbot.process.buildstep import RemoteCommand
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot.status.logfile import STDOUT, STDERR
 from buildbot.interfaces import BuildSlaveTooOldError
 

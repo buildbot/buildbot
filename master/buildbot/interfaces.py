@@ -976,7 +976,7 @@ class IStatusReceiver(Interface):
         in L{IBuildStatus.getResults}.
 
         @type  builderName: string
-        @type  build:       L{buildbot.status.builder.BuildStatus}
+        @type  build:       L{buildbot.status.build.BuildStatus}
         @type  results:     tuple
         """
 

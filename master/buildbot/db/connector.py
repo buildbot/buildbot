@@ -24,7 +24,7 @@ from buildbot.util import collections as bbcollections
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process.buildrequest import BuildRequest
 from buildbot.process.properties import Properties
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot.util.eventual import eventually
 from buildbot.util import json
 from buildbot.db import pool, model, changes, schedulers, sourcestamps

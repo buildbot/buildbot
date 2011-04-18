@@ -22,7 +22,7 @@ from twisted.python.failure import Failure
 from twisted.internet import reactor, defer, error
 
 from buildbot import interfaces, locks
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
   RETRY, SKIPPED, worst_status
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
@@ -47,7 +47,7 @@ class Build:
     L{buildbot.process.factory.BuildFactory}
 
     @ivar requests: the list of L{BuildRequest}s that triggered me
-    @ivar build_status: the L{buildbot.status.builder.BuildStatus} that
+    @ivar build_status: the L{buildbot.status.build.BuildStatus} that
                         collects our status
     """
 

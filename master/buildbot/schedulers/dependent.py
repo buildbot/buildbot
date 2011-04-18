@@ -16,7 +16,7 @@
 from twisted.internet import defer
 from twisted.python import log
 from buildbot import util
-from buildbot.status.builder import SUCCESS, WARNINGS
+from buildbot.status.results import SUCCESS, WARNINGS
 from buildbot.schedulers import base
 
 class Dependent(base.BaseScheduler):

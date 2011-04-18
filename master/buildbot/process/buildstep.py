@@ -26,7 +26,7 @@ from twisted.web.util import formatFailure
 
 from buildbot import interfaces, locks
 from buildbot.status import progress
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION, RETRY, worst_status
 
 """

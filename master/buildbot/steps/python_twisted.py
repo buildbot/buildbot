@@ -17,7 +17,7 @@
 from twisted.python import log
 
 from buildbot.status import testresult
-from buildbot.status.builder import SUCCESS, FAILURE, WARNINGS, SKIPPED
+from buildbot.status.results import SUCCESS, FAILURE, WARNINGS, SKIPPED
 from buildbot.process.buildstep import LogLineObserver, OutputProgressObserver
 from buildbot.process.buildstep import RemoteShellCommand
 from buildbot.steps.shell import ShellCommand

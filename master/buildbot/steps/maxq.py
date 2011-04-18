@@ -14,7 +14,8 @@
 # Copyright Buildbot Team Members
 
 from buildbot.steps.shell import ShellCommand
-from buildbot.status.builder import Event, SUCCESS, FAILURE
+from buildbot.status.event import Event
+from buildbot.status.results import SUCCESS, FAILURE
 
 class MaxQ(ShellCommand):
     flunkOnFailure = True

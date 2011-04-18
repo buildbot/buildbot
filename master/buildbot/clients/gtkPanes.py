@@ -30,7 +30,7 @@ from twisted.spread import pb
 from buildbot.clients.base import TextClient, StatusClient
 from buildbot.util import now
 
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 
 '''
 class Pane:

@@ -22,7 +22,7 @@ import time, locale
 import operator
 
 from buildbot import interfaces, util
-from buildbot.status import builder, buildstep
+from buildbot.status import builder, buildstep, build
 
 from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
      ITopBox, build_get_class, path_to_build, path_to_step, path_to_root, \
@@ -157,7 +157,7 @@ class BuildBox(components.Adapter):
             # of whether it succeeded or failed.
             class_ = build_get_class(b)
         return Box([text], class_="BuildStep " + class_)
-components.registerAdapter(BuildBox, builder.BuildStatus, IBox)
+components.registerAdapter(BuildBox, build.BuildStatus, IBox)
 
 class StepBox(components.Adapter):
     implements(IBox)

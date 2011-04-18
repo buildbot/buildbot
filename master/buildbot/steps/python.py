@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-from buildbot.status.builder import SUCCESS, FAILURE, WARNINGS
+from buildbot.status.results import SUCCESS, FAILURE, WARNINGS
 from buildbot.steps.shell import ShellCommand
 import re
 

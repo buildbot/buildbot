@@ -37,7 +37,7 @@ except ImportError:
 
 from buildbot import interfaces, util
 from buildbot.status import base
-from buildbot.status.builder import FAILURE, SUCCESS, Results
+from buildbot.status.results import FAILURE, SUCCESS, Results
 
 VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
 

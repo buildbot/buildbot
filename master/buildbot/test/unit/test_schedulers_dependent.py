@@ -15,7 +15,7 @@
 
 from twisted.trial import unittest
 from buildbot.schedulers import dependent, base
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot.test.util import scheduler
 from buildbot.test.fake import fakedb
 

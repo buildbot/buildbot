@@ -31,7 +31,7 @@ from buildbot import version
 from buildbot.interfaces import IStatusReceiver
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status import base
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 from buildbot.scripts.runner import ForceOptions
 
 # twisted.internet.ssl requires PyOpenSSL, so be resilient if it's missing

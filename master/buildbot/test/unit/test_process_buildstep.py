@@ -18,7 +18,7 @@ import re
 from twisted.trial import unittest
 
 from buildbot.process.buildstep import LoggingBuildStep, regex_log_evaluator
-from buildbot.status.builder import FAILURE, SUCCESS, WARNINGS, EXCEPTION
+from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION
 
 class FakeLogFile:
     def __init__(self, text):
