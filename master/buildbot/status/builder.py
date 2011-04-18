@@ -29,6 +29,7 @@ from buildbot.util import collections
 from buildbot.util.eventual import eventually
 from buildbot import interfaces, util, sourcestamp
 from buildbot.status.logfile import LogFile, HTMLLogFile
+from buildbot.status.event import Event
 
 SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY = range(6)
 Results = ["success", "warnings", "failure", "skipped", "exception", "retry"]
@@ -40,24 +41,6 @@ def worst_status(a, b):
     for s in (RETRY, EXCEPTION, FAILURE, WARNINGS, SKIPPED, SUCCESS):
         if s in (a, b):
             return s
-
-class Event:
-    implements(interfaces.IStatusEvent)
-
-    started = None
-    finished = None
-    text = []
-
-    # IStatusEvent methods
-    def getTimes(self):
-        return (self.started, self.finished)
-    def getText(self):
-        return self.text
-    def getLogs(self):
-        return []
-
-    def finish(self):
-        self.finished = util.now()
 
 class TestResult:
     implements(interfaces.ITestResult)
