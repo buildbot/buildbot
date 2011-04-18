@@ -24,7 +24,7 @@ from twisted.application import service
 from twisted.spread import pb
 from twisted.python.reflect import namedModule
 
-from buildbot.status.builder import SlaveStatus
+from buildbot.status.slave import SlaveStatus
 from buildbot.status.mail import MailNotifier
 from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
 from buildbot.process.properties import Properties
