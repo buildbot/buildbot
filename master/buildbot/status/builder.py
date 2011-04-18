@@ -618,3 +618,18 @@ class BuilderStatus(styles.Versioned):
         result['state'] = self.getState()[0]
         result['pendingBuilds'] = len(self.getPendingBuilds())
         return result
+
+# old locations for these classes; these are still used in pickle files
+from buildbot.status.buildstep import BuildStepStatus
+from buildbot.status.buildset import BuildSetStatus
+from buildbot.status.testresult import TestResult
+from buildbot.status.logfile import LogFile, HTMLLogFile
+from buildbot.status.slave import SlaveStatus
+from buildbot.status.master import Status
+_hush_pyflakes = [ BuildStepStatus, BuildSetStatus, TestResult, LogFile,
+                   HTMLLogFile, SlaveStatus, Status, Event, BuildStatus ]
+
+# styles.Versioned requires this, as it keys the version numbers on the fully
+# qualified class name; see master/buildbot/test/regressions/test_unpickling.py
+BuildStepStatus.__module__ = 'buildbot.status.builder'
+BuildStatus.__module__ = 'buildbot.status.builder'
