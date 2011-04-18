@@ -24,7 +24,7 @@ from buildbot.util.maildir import MaildirService
 from buildbot.util import netstrings
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
-from buildbot.status.builder import BuildSetStatus
+from buildbot.status.buildset import BuildSetStatus
 
 
 class TryBase(base.BaseScheduler):

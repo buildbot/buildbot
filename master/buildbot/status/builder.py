@@ -29,6 +29,8 @@ from buildbot.util.eventual import eventually
 from buildbot import interfaces, util, sourcestamp
 from buildbot.status.logfile import LogFile, HTMLLogFile
 from buildbot.status.event import Event
+from buildbot.status.buildset import BuildSetStatus
+from buildbot.status.buildrequest import BuildRequestStatus
 
 SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY = range(6)
 Results = ["success", "warnings", "failure", "skipped", "exception", "retry"]
@@ -41,109 +43,6 @@ def worst_status(a, b):
         if s in (a, b):
             return s
 
-class BuildSetStatus:
-    implements(interfaces.IBuildSetStatus)
-
-    def __init__(self, bsid, status, db):
-        self.id = bsid
-        self.status = status
-        self.db = db
-
-    def _get_info(self):
-        return self.db.get_buildset_info(self.id)
-
-    # methods for our clients
-
-    def getSourceStamp(self):
-        (external_idstring, reason, ssid, complete, results) = self._get_info()
-        return self.db.getSourceStampNumberedNow(ssid)
-
-    def getReason(self):
-        (external_idstring, reason, ssid, complete, results) = self._get_info()
-        return reason
-    def getResults(self):
-        (external_idstring, reason, ssid, complete, results) = self._get_info()
-        return results
-    def getID(self):
-        (external_idstring, reason, ssid, complete, results) = self._get_info()
-        return external_idstring
-
-    def getBuilderNamesAndBuildRequests(self):
-        brs = {}
-        brids = self.db.get_buildrequestids_for_buildset(self.id)
-        for (buildername, brid) in brids.items():
-            brs[buildername] = BuildRequestStatus(brid, self.status, self.db)
-        return brs
-
-    def getBuilderNames(self):
-        brs = self.db.get_buildrequestids_for_buildset(self.id)
-        return sorted(brs.keys())
-
-    def getBuildRequests(self):
-        brs = self.db.get_buildrequestids_for_buildset(self.id)
-        return [BuildRequestStatus(brid, self.status, self.db)
-                for brid in brs.values()]
-
-    def isFinished(self):
-        (external_idstring, reason, ssid, complete, results) = self._get_info()
-        return complete
-
-    def waitUntilSuccess(self):
-        return self.status._buildset_waitUntilSuccess(self.id)
-    def waitUntilFinished(self):
-        return self.status._buildset_waitUntilFinished(self.id)
-
-class BuildRequestStatus:
-    implements(interfaces.IBuildRequestStatus)
-
-    def __init__(self, brid, status, db):
-        self.brid = brid
-        self.status = status
-        self.db = db
-
-    def buildStarted(self, build):
-        self.status._buildrequest_buildStarted(build.status)
-        self.builds.append(build.status)
-
-    # methods called by our clients
-    def getSourceStamp(self):
-        br = self.db.getBuildRequestWithNumber(self.brid)
-        return br.source
-    def getBuilderName(self):
-        br = self.db.getBuildRequestWithNumber(self.brid)
-        return br.buildername
-    def getBuilds(self):
-        builder = self.status.getBuilder(self.getBuilderName())
-        builds = []
-        buildnums = sorted(self.db.get_buildnums_for_brid(self.brid))
-        for buildnum in buildnums:
-            bs = builder.getBuild(buildnum)
-            if bs:
-                builds.append(bs)
-        return builds
-
-    def subscribe(self, observer):
-        oldbuilds = self.getBuilds()
-        for bs in oldbuilds:
-            eventually(observer, bs)
-        self.status._buildrequest_subscribe(self.brid, observer)
-    def unsubscribe(self, observer):
-        self.status._buildrequest_unsubscribe(self.brid, observer)
-
-    def getSubmitTime(self):
-        br = self.db.getBuildRequestWithNumber(self.brid)
-        return br.submittedAt
-
-    def asDict(self):
-        result = {}
-        # Constant
-        result['source'] = self.getSourceStamp().asDict()
-        result['builderName'] = self.getBuilderName()
-        result['submittedAt'] = self.getSubmitTime()
-
-        # Transient
-        result['builds'] = [build.asDict() for build in self.getBuilds()]
-        return result
 
 
 class BuildStepStatus(styles.Versioned):

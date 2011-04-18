@@ -24,7 +24,7 @@ from twisted.internet import defer
 from buildbot import interfaces, util
 from buildbot.status.progress import Expectations
 from buildbot.status.builder import RETRY
-from buildbot.status.builder import BuildSetStatus
+from buildbot.status.buildset import BuildSetStatus
 from buildbot.process.properties import Properties
 from buildbot.process import buildrequest, slavebuilder
 from buildbot.process.slavebuilder import BUILDING
