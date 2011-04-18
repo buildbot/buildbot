@@ -41,24 +41,6 @@ def worst_status(a, b):
         if s in (a, b):
             return s
 
-# build processes call the following methods:
-#
-#  setDefaults
-#
-#  currentlyBuilding
-#  currentlyIdle
-#  currentlyInterlocked
-#  currentlyOffline
-#  currentlyWaiting
-#
-#  setCurrentActivity
-#  updateCurrentActivity
-#  addFileToCurrentActivity
-#  finishCurrentActivity
-#
-#  startBuild
-#  finishBuild
-
 class Event:
     implements(interfaces.IStatusEvent)
 
