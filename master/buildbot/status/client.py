@@ -22,7 +22,7 @@ from twisted.cred import portal, checkers
 
 from buildbot import interfaces
 from zope.interface import Interface, implements
-from buildbot.status import builder, base
+from buildbot.status import logfile, base
 from buildbot.changes import changes
 
 class IRemote(Interface):
@@ -338,7 +338,7 @@ class RemoteLog(pb.Referenceable):
         return self.l.getChunks()
     # TODO: subscription interface
 
-components.registerAdapter(RemoteLog, builder.LogFile, IRemote)
+components.registerAdapter(RemoteLog, logfile.LogFile, IRemote)
 # TODO: something similar for builder.HTMLLogfile ?
 
 class RemoteChange:

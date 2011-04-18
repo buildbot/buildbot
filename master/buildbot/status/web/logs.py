@@ -22,7 +22,7 @@ from twisted.web.resource import Resource
 from twisted.web.error import NoResource
 
 from buildbot import interfaces
-from buildbot.status import builder
+from buildbot.status import builder, logfile
 from buildbot.status.web.base import IHTMLLog, HtmlResource, path_to_root
 
 class ChunkConsumer:
@@ -154,7 +154,7 @@ class HTMLLog(Resource):
         request.setHeader("content-type", "text/html")
         return self.original.html
 
-components.registerAdapter(HTMLLog, builder.HTMLLogFile, IHTMLLog)
+components.registerAdapter(HTMLLog, logfile.HTMLLogFile, IHTMLLog)
 
 
 class LogsResource(HtmlResource):

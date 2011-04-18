@@ -22,7 +22,7 @@ import time, locale
 import operator
 
 from buildbot import interfaces, util
-from buildbot.status import builder
+from buildbot.status import builder, buildstep
 
 from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
      ITopBox, build_get_class, path_to_build, path_to_step, path_to_root, \
@@ -189,7 +189,7 @@ class StepBox(components.Adapter):
         
         class_ = "BuildStep " + build_get_class(self.original)
         return Box(text, class_=class_)
-components.registerAdapter(StepBox, builder.BuildStepStatus, IBox)
+components.registerAdapter(StepBox, buildstep.BuildStepStatus, IBox)
 
 
 class EventBox(components.Adapter):

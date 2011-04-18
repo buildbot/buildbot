@@ -17,7 +17,7 @@ from twisted.python import log, failure
 from twisted.internet import reactor
 
 from buildbot.process.buildstep import BuildStep
-from buildbot.status import builder
+from buildbot.status import builder, buildstep
 
 class BadStepError(Exception):
     """Raised by Blocker when it is passed an upstream step that cannot
@@ -267,7 +267,7 @@ class Blocker(BuildStep):
         self._timed_out = True
 
     def _upstreamStepFinished(self, stepStatus):
-        assert isinstance(stepStatus, builder.BuildStepStatus)
+        assert isinstance(stepStatus, buildstep.BuildStepStatus)
         self._log("upstream build step %s:%s finished; results=%r",
                   stepStatus.getBuild().builder.getName(),
                   stepStatus.getName(),

@@ -493,7 +493,7 @@ class BuildStepJsonResource(JsonResource):
     title = 'BuildStep'
 
     def __init__(self, status, build_step_status):
-        # buildbot.status.builder.BuildStepStatus
+        # buildbot.status.buildstep.BuildStepStatus
         JsonResource.__init__(self, status)
         self.build_step_status = build_step_status
         # TODO self.putChild('logs', LogsJsonResource())

@@ -563,7 +563,7 @@ class BuildStep:
     Deferred it returns.
 
     Each BuildStep generates status as it runs. This status data is fed to
-    the L{buildbot.status.builder.BuildStepStatus} listener that sits in
+    the L{buildbot.status.buildstep.BuildStepStatus} listener that sits in
     C{self.step_status}. It can also feed progress data (like how much text
     is output by a shell command) to the
     L{buildbot.status.progress.StepProgress} object that lives in
@@ -576,7 +576,7 @@ class BuildStep:
     @type progress: L{buildbot.status.progress.StepProgress}
     @ivar progress: tracks ETA for the step
 
-    @type step_status: L{buildbot.status.builder.BuildStepStatus}
+    @type step_status: L{buildbot.status.buildstep.BuildStepStatus}
     @ivar step_status: collects output status
     """
 
