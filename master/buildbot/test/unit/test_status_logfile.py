@@ -17,26 +17,26 @@ import mock
 import cStringIO
 from twisted.trial import unittest
 from twisted.internet import defer
-from buildbot.status import builder
+from buildbot.status import logfile
 
 class TestLogFileProducer(unittest.TestCase):
     def make_static_logfile(self, contents):
         "make a fake logfile with the given contents"
-        logfile = mock.Mock()
-        logfile.getFile = lambda : cStringIO.StringIO(contents)
-        logfile.waitUntilFinished = lambda : defer.succeed(None) # already finished
-        logfile.runEntries = []
-        return logfile
+        lf = mock.Mock()
+        lf.getFile = lambda : cStringIO.StringIO(contents)
+        lf.waitUntilFinished = lambda : defer.succeed(None) # already finished
+        lf.runEntries = []
+        return lf
 
     def test_getChunks_static_helloworld(self):
-        logfile = self.make_static_logfile("13:0hello world!,")
-        lfp = builder.LogFileProducer(logfile, mock.Mock())
+        lf = self.make_static_logfile("13:0hello world!,")
+        lfp = logfile.LogFileProducer(lf, mock.Mock())
         chunks = list(lfp.getChunks())
         self.assertEqual(chunks, [ (0, 'hello world!') ])
 
     def test_getChunks_static_multichannel(self):
-        logfile = self.make_static_logfile("2:0a,3:1xx,2:0c,")
-        lfp = builder.LogFileProducer(logfile, mock.Mock())
+        lf = self.make_static_logfile("2:0a,3:1xx,2:0c,")
+        lfp = logfile.LogFileProducer(lf, mock.Mock())
         chunks = list(lfp.getChunks())
         self.assertEqual(chunks, [ (0, 'a'), (1, 'xx'), (0, 'c') ])
 

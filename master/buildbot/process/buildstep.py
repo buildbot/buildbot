@@ -246,7 +246,7 @@ class LoggedRemoteCommand(RemoteCommand):
 
     I am a L{RemoteCommand} which gathers output from the remote command into
     one or more local log files. My C{self.logs} dictionary contains
-    references to these L{buildbot.status.builder.LogFile} instances. Any
+    references to these L{buildbot.status.logfile.LogFile} instances. Any
     stdout/stderr/header updates from the slave will be put into
     C{self.logs['stdio']}, if it exists. If the remote command uses other log
     files, they will go into other entries in C{self.logs}.
