@@ -33,10 +33,10 @@ class TestBuildStepStatus(unittest.TestCase):
         return b
 
     def setupStatus(self, b):
-        botmaster = Mock()
-        botmaster.parent = Mock()
-        botmaster.parent.buildbotURL = 'http://buildbot:8010/'
-        s = master.Status(botmaster=botmaster, basedir=b.basedir)
+        m = Mock()
+        m.buildbotURL = 'http://buildbot:8010/'
+        m.basedir = '/basedir'
+        s = master.Status(m)
         b.status = s
         return s
 

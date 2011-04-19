@@ -30,6 +30,8 @@ configuration fell back to the global c['mergeRequests'] parameter's value.  To
 avoid this, remove `mergeRequests=True` from any BuilderConfig constructor
 invocations.
 
+*** The `Status.getBuildSets` method now returns its result via Deferred.
+
 ** Scheduler Improvements
 
 *** Nightly scheduler now accepts a change_filter argument

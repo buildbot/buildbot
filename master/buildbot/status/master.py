@@ -22,9 +22,7 @@ from zope.interface import implements
 from buildbot import interfaces
 from buildbot.util import collections
 from buildbot.util.eventual import eventually
-from buildbot.status.buildset import BuildSetStatus
-from buildbot.status.builder import BuilderStatus
-from buildbot.status.buildrequest import BuildRequestStatus
+from buildbot.status import buildset, builder, buildrequest
 
 class Status:
     """
@@ -32,26 +30,12 @@ class Status:
     """
     implements(interfaces.IStatus)
 
-    def __init__(self, botmaster, basedir):
-        """
-        @type  botmaster: L{buildbot.process.botmaster.BotMaster}
-        @param botmaster: the Status object uses C{.botmaster} to get at
-                          both the L{buildbot.master.BuildMaster} (for
-                          various buildbot-wide parameters) and the
-                          actual Builders (to get at their L{BuilderStatus}
-                          objects). It is not allowed to change or influence
-                          anything through this reference.
-        @type  basedir: string
-        @param basedir: this provides a base directory in which saved status
-                        information (changes.pck, saved Build status
-                        pickles) can be stored
-        """
-        self.botmaster = botmaster
-        self.master = botmaster.parent # TODO: temporary; this should get set more formally
+    def __init__(self, master):
+        self.master = master
+        self.botmaster = master.botmaster
         self.db = None
-        self.basedir = basedir
+        self.basedir = master.basedir
         self.watchers = []
-        assert os.path.isdir(basedir)
         # compress logs bigger than 4k, a good default on linux
         self.logCompressionLimit = 4*1024
         self.logCompressionMethod = "bz2"
@@ -75,7 +59,7 @@ class Status:
         return self.botmaster.cancelCleanShutdown()
 
     def setDB(self, db):
-        self.db = db
+        # XXX not called anymore - what to do about this?
         self.db.subscribe_to("add-build", self._db_builds_changed)
         self.db.subscribe_to("add-buildset", self._db_buildset_added)
         self.db.subscribe_to("modify-buildset", self._db_buildsets_changed)
@@ -100,22 +84,22 @@ class Status:
         if interfaces.ISchedulerStatus.providedBy(thing):
             pass
         if interfaces.IBuilderStatus.providedBy(thing):
-            builder = thing
+            bldr = thing
             return prefix + "builders/%s" % (
-                urllib.quote(builder.getName(), safe=''),
+                urllib.quote(bldr.getName(), safe=''),
                 )
         if interfaces.IBuildStatus.providedBy(thing):
             build = thing
-            builder = build.getBuilder()
+            bldr = build.getBuilder()
             return prefix + "builders/%s/builds/%d" % (
-                urllib.quote(builder.getName(), safe=''),
+                urllib.quote(bldr.getName(), safe=''),
                 build.getNumber())
         if interfaces.IBuildStepStatus.providedBy(thing):
             step = thing
             build = step.getBuild()
-            builder = build.getBuilder()
+            bldr = build.getBuilder()
             return prefix + "builders/%s/builds/%d/steps/%s" % (
-                urllib.quote(builder.getName(), safe=''),
+                urllib.quote(bldr.getName(), safe=''),
                 build.getNumber(),
                 urllib.quote(step.getName(), safe=''))
         # IBuildSetStatus
@@ -134,7 +118,7 @@ class Status:
             loog = thing
             step = loog.getStep()
             build = step.getBuild()
-            builder = build.getBuilder()
+            bldr = build.getBuilder()
 
             logs = step.getLogs()
             for i in range(len(logs)):
@@ -143,7 +127,7 @@ class Status:
             else:
                 return None
             return prefix + "builders/%s/builds/%d/steps/%s/logs/%s" % (
-                urllib.quote(builder.getName(), safe=''),
+                urllib.quote(bldr.getName(), safe=''),
                 build.getNumber(),
                 urllib.quote(step.getName(), safe=''),
                 urllib.quote(loog.getName()))
@@ -165,8 +149,8 @@ class Status:
         l = []
         # respect addition order
         for name in self.botmaster.builderNames:
-            builder = self.botmaster.builders[name]
-            if builder.builder_status.category in categories:
+            bldr = self.botmaster.builders[name]
+            if bldr.builder_status.category in categories:
                 l.append(name)
         return l
 
@@ -183,8 +167,13 @@ class Status:
         return self.botmaster.slaves[slavename].slave_status
 
     def getBuildSets(self):
-        return [BuildSetStatus(bsid, self, self.db)
-                for bsid in self.db.get_active_buildset_ids()]
+        d = self.master.db.buildsets.getBuildSets(complete=False)
+        def make_status_objects(bsdicts):
+            return [ buildset.BuildSetStatus(bsdict['bsid'], self,
+                                             self.master.db)
+                    for bsdict in bsdicts ]
+        d.addCallback(make_status_objects)
+        return d
 
     def generateFinishedBuilds(self, builders=[], branches=[],
                                num_builds=None, finished_before=None,
@@ -289,7 +278,7 @@ class Status:
             log.msg("error follows:")
             log.err()
         if not builder_status:
-            builder_status = BuilderStatus(name, category)
+            builder_status = builder.BuilderStatus(name, category)
             builder_status.addPointEvent(["builder", "created"])
         log.msg("added builder %s in category %s" % (name, category))
         # an unpickled object might not have category set from before,
@@ -351,7 +340,7 @@ class Status:
             pass
 
     def get_buildreq_for_id(self, brid):
-        return BuildRequestStatus(brid, self, self.db)
+        return buildrequest.BuildRequestStatus(brid, self, self.db)
 
     def _db_builds_changed(self, category, bid):
         brid,buildername,buildnum = self.db.get_build_info(bid)
@@ -368,7 +357,7 @@ class Status:
         self._buildreq_observers.discard(brid, observer)
 
     def _db_buildset_added(self, category, bsid):
-        bss = BuildSetStatus(bsid, self, self.db)
+        bss = buildset.BuildSetStatus(bsid, self, self.db)
         for t in self.watchers:
             if hasattr(t, 'buildsetSubmitted'):
                 t.buildsetSubmitted(bss)
@@ -396,7 +385,7 @@ class Status:
             and bsid not in self._buildset_finished_waiters):
             return
         successful,finished = self.db.examine_buildset(bsid)
-        bss = BuildSetStatus(bsid, self, self.db)
+        bss = buildset.BuildSetStatus(bsid, self, self.db)
         if successful is not None:
             for d in self._buildset_success_waiters.pop(bsid):
                 eventually(d.callback, bss)
@@ -419,7 +408,7 @@ class Status:
         for brid in brids:
             buildername = self.db.get_buildername_for_brid(brid)
             if buildername in self._builder_observers:
-                brs = BuildRequestStatus(brid, self, self.db)
+                brs = buildrequest.BuildRequestStatus(brid, self, self.db)
                 for observer in self._builder_observers[buildername]:
                     if mode == "added":
                         if hasattr(observer, 'requestSubmitted'):

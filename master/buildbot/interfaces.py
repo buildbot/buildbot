@@ -151,7 +151,11 @@ class IStatus(Interface):
         """Return the ISlaveStatus object for a given named buildslave."""
 
     def getBuildSets():
-        """Return a list of active (non-finished) IBuildSetStatus objects."""
+        """
+        Return a list of un-completed build sets.
+
+        @returns: list of L{IBuildSetStatus} implementations, via Deferred.
+        """
 
     def generateFinishedBuilds(builders=[], branches=[],
                                num_builds=None, finished_before=None,

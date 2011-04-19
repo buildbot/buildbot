@@ -41,6 +41,7 @@ class BuildSetStatus:
         (external_idstring, reason, ssid, complete, results) = self._get_info()
         return results
     def getID(self):
+        # hah, fooled you - this returns the external_idstring!
         (external_idstring, reason, ssid, complete, results) = self._get_info()
         return external_idstring
 

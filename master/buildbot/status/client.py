@@ -427,7 +427,11 @@ class StatusClientPerspective(base.StatusReceiverPerspective):
     def perspective_getBuildSets(self):
         """This returns tuples of (buildset, bsid), because that is much more
         convenient for tryclient."""
-        return [(IRemote(s), s.getID()) for s in self.status.getBuildSets()]
+        d = self.status.getBuildSets()
+        def make_remotes(buildsets):
+            return [(IRemote(s), s.id) for s in buildsets]
+        d.addCallback(make_remotes)
+        return d
 
     def perspective_getBuilderNames(self):
         return self.status.getBuilderNames()

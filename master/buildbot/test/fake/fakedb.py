@@ -538,16 +538,33 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def getBuildset(self, bsid):
         if bsid not in self.buildsets:
             return defer.succeed(None)
-        rv = self.buildsets[bsid].copy()
-        if rv['complete_at']:
-            rv['complete_at'] = epoch2datetime(rv['complete_at'])
-        else:
-            rv['complete_at'] = None
-        rv['submitted_at'] = rv['submitted_at'] and \
-                             epoch2datetime(rv['submitted_at'])
-        rv['complete'] = bool(rv['complete'])
-        del rv['id']
+        row = self.buildsets[bsid]
+        return defer.succeed(self._row2dict(row))
+
+    def getBuildSets(self, complete=None):
+        rv = []
+        for bs in self.buildsets.itervalues():
+            if complete is not None:
+                if complete and bs['complete']:
+                    rv.append(self._row2dict(bs))
+                elif not complete and not bs['complete']:
+                    rv.append(self._row2dict(bs))
+            else:
+                rv.append(self._row2dict(bs))
         return defer.succeed(rv)
+
+    def _row2dict(self, row):
+        row = row.copy()
+        if row['complete_at']:
+            row['complete_at'] = epoch2datetime(row['complete_at'])
+        else:
+            row['complete_at'] = None
+        row['submitted_at'] = row['submitted_at'] and \
+                             epoch2datetime(row['submitted_at'])
+        row['complete'] = bool(row['complete'])
+        row['bsid'] = row['id']
+        del row['id']
+        return row
 
     def getBuildsetProperties(self, buildsetid):
         if buildsetid in self.buildsets:

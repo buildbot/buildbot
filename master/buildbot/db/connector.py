@@ -428,6 +428,7 @@ class DBConnector(service.MultiService):
             qargs = [now, master_name, master_incarnation] + list(batch)
             t.execute(q, qargs)
 
+    # used by Builder._startBuildFor_2
     def build_started(self, brid, buildnumber):
         return self.runInteractionNow(self._txn_build_started, brid, buildnumber)
     def _txn_build_started(self, t, brid, buildnumber):
@@ -439,6 +440,7 @@ class DBConnector(service.MultiService):
         self.notify("add-build", bid)
         return bid
 
+    # used by Builder.buildFinished
     def builds_finished(self, bids):
         return self.runInteractionNow(self._txn_build_finished, bids)
     def _txn_build_finished(self, t, bids):
@@ -450,6 +452,7 @@ class DBConnector(service.MultiService):
             qargs = [now] + list(batch)
             t.execute(q, qargs)
 
+    # used by Status
     def get_build_info(self, bid):
         return self.runInteractionNow(self._txn_get_build_info, bid)
     def _txn_get_build_info(self, t, bid):
@@ -463,6 +466,7 @@ class DBConnector(service.MultiService):
             return res[0]
         return (None,None,None)
 
+    # used by BuildRequestStatus.getBuilds
     def get_buildnums_for_brid(self, brid):
         return self.runInteractionNow(self._txn_get_buildnums_for_brid, brid)
     def _txn_get_buildnums_for_brid(self, t, brid):
@@ -470,6 +474,7 @@ class DBConnector(service.MultiService):
                   (brid,))
         return [number for (number,) in t.fetchall()]
 
+    # used by Builder.buildFinished
     def resubmit_buildrequests(self, brids):
         return self.runInteraction(self._txn_resubmit_buildreqs, brids)
     def _txn_resubmit_buildreqs(self, t, brids):
@@ -484,6 +489,7 @@ class DBConnector(service.MultiService):
             t.execute(q, batch)
         self.notify("add-buildrequest", *brids)
 
+    # used by Builder.buildFinished
     def retire_buildrequests(self, brids, results):
         return self.runInteractionNow(self._txn_retire_buildreqs, brids,results)
     def _txn_retire_buildreqs(self, t, brids, results):
@@ -510,6 +516,7 @@ class DBConnector(service.MultiService):
         self.notify("retire-buildrequest", *brids)
         self.notify("modify-buildset", *bsids)
 
+    # used by BuildRequestControl.cancel and Builder.cancelBuildRequest
     def cancel_buildrequests(self, brids):
         return self.runInteractionNow(self._txn_cancel_buildrequest, brids)
     def _txn_cancel_buildrequest(self, t, brids):
@@ -573,6 +580,7 @@ class DBConnector(service.MultiService):
             # notify the master
             self.master.buildsetComplete(bsid, bs_results)
 
+    # used by BuildSetStatus
     def get_buildrequestids_for_buildset(self, bsid):
         return self.runInteractionNow(self._txn_get_buildrequestids_for_buildset,
                                       bsid)
@@ -582,6 +590,7 @@ class DBConnector(service.MultiService):
                   (bsid,))
         return dict(t.fetchall())
 
+    # use by Status.getBuildSets
     def examine_buildset(self, bsid):
         return self.runInteractionNow(self._txn_examine_buildset, bsid)
     def _txn_examine_buildset(self, t, bsid):
@@ -607,11 +616,7 @@ class DBConnector(service.MultiService):
             successful = True
         return (successful, finished)
 
-    def get_active_buildset_ids(self):
-        return self.runInteractionNow(self._txn_get_active_buildset_ids)
-    def _txn_get_active_buildset_ids(self, t):
-        t.execute("SELECT id FROM buildsets WHERE complete=0")
-        return [bsid for (bsid,) in t.fetchall()]
+    # used by BuildSetStatus.getReason, etc.
     def get_buildset_info(self, bsid):
         return self.runInteractionNow(self._txn_get_buildset_info, bsid)
     def _txn_get_buildset_info(self, t, bsid):
@@ -628,6 +633,7 @@ class DBConnector(service.MultiService):
             return (external_idstring, reason, ssid, complete, results)
         return None # shouldn't happen
 
+    # used by BuilderStatus.getPendingBuilds
     def get_pending_brids_for_builder(self, buildername):
         return self.runInteractionNow(self._txn_get_pending_brids_for_builder,
                                       buildername)

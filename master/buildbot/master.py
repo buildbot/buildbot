@@ -78,6 +78,7 @@ class BuildMaster(service.MultiService):
         service.MultiService.__init__(self)
         self.setName("buildmaster")
         self.basedir = basedir
+        assert os.path.isdir(self.basedir)
         self.configFileName = configFileName
 
         self.pbmanager = buildbot.pbmanager.PBManager()
@@ -107,7 +108,7 @@ class BuildMaster(service.MultiService):
 
         self.debugClientRegistration = None
 
-        self.status = Status(self.botmaster, self.basedir)
+        self.status = Status(self)
         self.statusTargets = []
 
         self.db = None
