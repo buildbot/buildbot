@@ -302,7 +302,7 @@ class BuilderStatus(styles.Versioned):
     def getSlaves(self):
         return [self.status.getSlave(name) for name in self.slavenames]
 
-    def getPendingBuilds(self):
+    def getPendingBuildRequestStatuses(self):
         db = self.status.db
         return [BuildRequestStatus(brid, self.status, db)
                 for brid in db.get_pending_brids_for_builder(self.name)]
@@ -616,6 +616,6 @@ class BuilderStatus(styles.Versioned):
         result['cachedBuilds'] = cached_builds
         result['currentBuilds'] = current_builds
         result['state'] = self.getState()[0]
-        result['pendingBuilds'] = len(self.getPendingBuilds())
+        result['pendingBuilds'] = len(self.getPendingBuildRequestStatuses())
         return result
 

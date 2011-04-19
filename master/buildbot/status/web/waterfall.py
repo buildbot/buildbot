@@ -105,7 +105,7 @@ class CurrentBox(components.Adapter):
         # when the builder is otherwise idle.
 
         # are any builds pending? (waiting for a slave to be free)
-        pbs = self.original.getPendingBuilds()
+        pbs = self.original.getPendingBuildRequestStatuses()
         if pbs:
             text.append("%d pending" % len(pbs))
         for t in upcoming:

@@ -841,7 +841,7 @@ class BuilderControl:
         d.addCallback(add_buildset)
         return d
 
-    def getPendingBuilds(self):
+    def getPendingBuildRequestControls(self):
         # return IBuildRequestControl objects
         retval = []
         for r in self.original.getBuildable():

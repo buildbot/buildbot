@@ -32,6 +32,9 @@ invocations.
 
 *** The `Status.getBuildSets` method now returns its result via Deferred.
 
+*** The `BuilderControl.getPendingBuilds` method has been renamed to
+`getPendingBuildRequestControls`
+
 ** Scheduler Improvements
 
 *** Nightly scheduler now accepts a change_filter argument

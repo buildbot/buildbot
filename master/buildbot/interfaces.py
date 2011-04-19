@@ -333,7 +333,7 @@ class IBuilderStatus(Interface):
         """Return a list of ISlaveStatus objects for the buildslaves that are
         used by this builder."""
 
-    def getPendingBuilds():
+    def getPendingBuildRequestStatuses():
         """Return an IBuildRequestStatus object for all upcoming builds
         (those which are ready to go but which are waiting for a buildslave
         to be available."""
@@ -1016,7 +1016,7 @@ class IBuilderControl(Interface):
         build. This has no effect (but may eventually raise an exception) if
         this Build has not yet finished."""
 
-    def getPendingBuilds():
+    def getPendingBuildRequestControls():
         """Return a list of L{IBuildRequestControl} objects for this Builder.
         Each one corresponds to a pending build that has not yet started (due
         to a scarcity of build slaves). These upcoming builds can be canceled

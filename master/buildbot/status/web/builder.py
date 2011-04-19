@@ -76,7 +76,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         cxt['current'] = [self.builder(x, req) for x in b.getCurrentBuilds()]
 
         cxt['pending'] = []
-        for pb in b.getPendingBuilds():
+        for pb in b.getPendingBuildRequestStatuses():
             source = pb.getSourceStamp()
             changes = []
 
@@ -194,7 +194,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         if request_id:
             c = interfaces.IControl(self.getBuildmaster(req))
             bc = c.getBuilder(self.builder_status.getName())
-            for build_req in bc.getPendingBuilds():
+            for build_req in bc.getPendingBuildRequestControls():
                 if cancel_all or (build_req.brid == request_id):
                     log.msg("Cancelling %s" % build_req)
                     if authz.actionAllowed('cancelPendingBuild', req, build_req):
@@ -215,12 +215,11 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         authz = self.getAuthz(req)
         if request_change:
-            # FIXME: Please, for the love of god one day make there only be
-            # one getPendingBuilds() with combined status info/controls
             c = interfaces.IControl(self.getBuildmaster(req))
             builder_control = c.getBuilder(self.builder_status.getName())
-            build_controls = dict((x.brid, x) for x in builder_control.getPendingBuilds())
-            for build_req in self.builder_status.getPendingBuilds():
+            brcontrols = builder_control.getPendingBuildRequestControls()
+            build_controls = dict((x.brid, x) for x in brcontrols)
+            for build_req in self.builder_status.getPendingBuildRequestStatuses():
                 ss = build_req.getSourceStamp()
                 if not ss.changes:
                     continue

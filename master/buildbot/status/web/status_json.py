@@ -354,7 +354,7 @@ class BuilderPendingBuildsJsonResource(JsonResource):
 
     def asDict(self, request):
         # buildbot.status.builder.BuilderStatus
-        return [b.asDict() for b in self.builder_status.getPendingBuilds()]
+        return [b.asDict() for b in self.builder_status.getPendingBuildRequestStatuses()]
 
 
 class BuilderJsonResource(JsonResource):

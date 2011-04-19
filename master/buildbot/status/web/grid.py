@@ -86,7 +86,7 @@ class GridStatusMixin(object):
         cxt = { 'url': path_to_builder(request, builder),
                 'name': builder.getName(),
                 'state': state,
-                'n_pending': len(builder.getPendingBuilds()) }
+                'n_pending': len(builder.getPendingBuildRequestStatuses()) }
 
         return cxt
 
