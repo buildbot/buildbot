@@ -22,7 +22,7 @@ from twisted.web.resource import Resource
 from twisted.web.error import NoResource
 
 from buildbot import interfaces
-from buildbot.status import builder, logfile
+from buildbot.status import logfile
 from buildbot.status.web.base import IHTMLLog, HtmlResource, path_to_root
 
 class ChunkConsumer:
@@ -71,17 +71,17 @@ class TextLog(Resource):
         html_entries = []
         text_data = ''
         for type, entry in entries:
-            if type >= len(builder.ChunkTypes) or type < 0:
+            if type >= len(logfile.ChunkTypes) or type < 0:
                 # non-std channel, don't display
                 continue
             
-            is_header = type == builder.HEADER
+            is_header = type == logfile.HEADER
 
             if not self.asText:
                 # jinja only works with unicode, or pure ascii, so assume utf-8 in logs
                 if not isinstance(entry, unicode):
                     entry = unicode(entry, 'utf-8', 'replace')
-                html_entries.append(dict(type = builder.ChunkTypes[type], 
+                html_entries.append(dict(type = logfile.ChunkTypes[type], 
                                          text = entry,
                                          is_header = is_header))
             elif not is_header:

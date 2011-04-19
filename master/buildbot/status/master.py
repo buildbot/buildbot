@@ -59,6 +59,7 @@ class Status:
         return self.botmaster.cancelCleanShutdown()
 
     def setDB(self, db):
+        self.db = self.master.db
         # XXX not called anymore - what to do about this?
         self.db.subscribe_to("add-build", self._db_builds_changed)
         self.db.subscribe_to("add-buildset", self._db_buildset_added)
