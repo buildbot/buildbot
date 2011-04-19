@@ -93,7 +93,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         sourcestamp.patch = None
         if ssdict['patch_body']:
             # note that this class does not store the patch_subdir
-            sourcestamp.patch = (ssdict['patch_body'], ssdict['patch_level'])
+            sourcestamp.patch = (ssdict['patch_level'], ssdict['patch_body'])
 
         if ssdict['changeids']:
             getChangeInstance = master.db.changes.getChangeInstance
