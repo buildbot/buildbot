@@ -46,7 +46,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     @ivar revision: revision string or None
 
-    @ivar patch: tuple (patch body, patch level) or None
+    @ivar patch: tuple (patch level, patch body) or None
 
     @ivar changes: tuple of changes that went into this source stamp, sorted by
     number

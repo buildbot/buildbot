@@ -71,7 +71,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
             self.assertEqual(ss.ssid, 234)
             self.assertEqual(ss.branch, 'trunk')
             self.assertEqual(ss.revision, '9284')
-            self.assertEqual(ss.patch, ('-- ++', 3))
+            self.assertEqual(ss.patch, (3, '-- ++'))
             self.assertEqual(ss.changes, ())
             self.assertEqual(ss.project, 'world-domination')
             self.assertEqual(ss.repository, 'svn://...')
