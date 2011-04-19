@@ -196,7 +196,7 @@ class Builder(pb.Referenceable, service.MultiService):
         return self.db.runInteractionNow(self._getBuildable, limit)
     def _getBuildable(self, t, limit):
         now = util.now()
-        old = now - self.RECLAIM_INTERVAL
+        old = now - 10*60
         return self.db.get_unclaimed_buildrequests(self.name, old,
                                                    self.master_name,
                                                    self.master_incarnation,
