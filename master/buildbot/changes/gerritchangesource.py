@@ -90,7 +90,7 @@ class GerritChangeSource(base.ChangeSource):
 
     def lineReceived(self, line):
         try:
-            event = json.loads(line)
+            event = json.loads(line.decode('utf-8'))
         except ValueError:
             log.msg("bad json line: %s" % (line,))
             return defer.succeed(None)
