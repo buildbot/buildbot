@@ -122,8 +122,13 @@ class GerritChangeSource(base.ChangeSource):
                         properties=properties)
             elif event["type"] == "ref-updated":
                 ref = event["refUpdate"]
+                who = "gerrit"
+
+                if "submitter" in event:
+                    who="%s <%s>" % (event["submitter"]["name"], event["submitter"]["email"])
+
                 chdict = dict(
-                        who="%s <%s>" % (event["submitter"]["name"], event["submitter"]["email"]),
+                        who=who,
                         project=ref["project"],
                         branch=ref["refName"],
                         revision=ref["newRev"],
