@@ -171,7 +171,21 @@ class Box:
         return props    
     
     
-class ContextMixin(object):
+class AccessorMixin(object):
+    def getStatus(self, request):
+        return request.site.buildbot_service.getStatus()    
+        
+    def getTitle(self, request):
+        return self.title
+
+    def getAuthz(self, request):
+        return request.site.buildbot_service.authz
+
+    def getBuildmaster(self, request):
+        return request.site.buildbot_service.master
+
+
+class ContextMixin(AccessorMixin):
     def getContext(self, request):
         status = self.getStatus(request)
         rootpath = path_to_root(request)
@@ -194,18 +208,36 @@ class ContextMixin(object):
                     authz = self.getAuthz(request),
                     )
 
-    def getStatus(self, request):
-        return request.site.buildbot_service.getStatus()    
-        
-    def getTitle(self, request):
-        return self.title
 
-    def getAuthz(self, request):
-        return request.site.buildbot_service.authz
+class ActionResource(resource.Resource, AccessorMixin):
+    """A resource that performs some action, then redirects to a new URL."""
 
-    def getBuildmaster(self, request):
-        return request.site.buildbot_service.master
+    isLeaf = 1
 
+    def getChild(self, name, request):
+        return self
+
+    def performAction(self, request):
+        """
+        Perform the action, and return the URL to redirect to
+
+        @param request: the web request
+        @returns: URL via Deferred
+        """
+
+    def render(self, request):
+        d = defer.maybeDeferred(lambda : self.performAction(request))
+        def redirect(url):
+            request.redirect(url)
+            request.write("see <a href='%s'>%s</a>" % (url,url))
+            request.finish()
+        d.addCallback(redirect)
+
+        def fail(f):
+            request.processingFailed(f)
+            return None # processingFailed will log this for us
+        d.addErrback(fail)
+        return server.NOT_DONE_YET
 
 class HtmlResource(resource.Resource, ContextMixin):
     # this is a cheap sort of template thingy
