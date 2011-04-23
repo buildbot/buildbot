@@ -452,7 +452,7 @@ class CVS(Source):
         if self.checkoutDelay is not None:
             when = lastChange + self.checkoutDelay
         else:
-            lastSubmit = max([brd['submitted_at'] for brd in self.build.requests])
+            lastSubmit = max([br.submittedAt for br in self.build.requests])
             when = (lastChange + lastSubmit) / 2
         return formatdate(when)
 
