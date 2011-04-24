@@ -529,7 +529,11 @@ class Builder(pb.Referenceable, service.MultiService):
             self._resubmit_buildreqs(build).addErrback(log.err) # returns Deferred
         else:
             brids = [br.id for br in build.requests]
-            self.db.retire_buildrequests(brids, results)
+            db = self.master.db
+            d = db.buildrequests.completeBuildRequests(brids, results)
+            # nothing in particular to do with this deferred, so just log it if
+            # it fails..
+            d.addErrback(log.err, 'while marking build requests as completed')
 
         if sb.slave:
             sb.slave.releaseLocks()

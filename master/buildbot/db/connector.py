@@ -471,33 +471,6 @@ class DBConnector(service.MultiService):
             t.execute(q, batch)
         self.notify("add-buildrequest", *brids)
 
-    # used by Builder.buildFinished
-    def retire_buildrequests(self, brids, results):
-        return self.runInteractionNow(self._txn_retire_buildreqs, brids,results)
-    def _txn_retire_buildreqs(self, t, brids, results):
-        now = self._getCurrentTime()
-        #q = self.db.quoteq("DELETE FROM buildrequests WHERE id IN "
-        #                   + self.db.parmlist(len(brids)))
-        while brids:
-            batch, brids = brids[:100], brids[100:]
-
-            q = self.quoteq("UPDATE buildrequests"
-                            " SET complete=1, results=?, complete_at=?"
-                            " WHERE id IN " + self.parmlist(len(batch)))
-            t.execute(q, [results, now]+batch)
-            # now, does this cause any buildsets to complete?
-            q = self.quoteq("SELECT bs.id"
-                            " FROM buildsets AS bs, buildrequests AS br"
-                            " WHERE br.buildsetid=bs.id AND bs.complete=0"
-                            "  AND br.id in "
-                            + self.parmlist(len(batch)))
-            t.execute(q, batch)
-            bsids = [bsid for (bsid,) in t.fetchall()]
-            for bsid in bsids:
-                self._check_buildset(t, bsid, now)
-        self.notify("retire-buildrequest", *brids)
-        self.notify("modify-buildset", *bsids)
-
     # used by BuildRequestControl.cancel and Builder.cancelBuildRequest
     def cancel_buildrequests(self, brids):
         return self.runInteractionNow(self._txn_cancel_buildrequest, brids)
