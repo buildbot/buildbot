@@ -65,8 +65,6 @@ class BuildSetStatus:
         (external_idstring, reason, ssid, complete, results) = self._get_info()
         return complete
 
-    def waitUntilSuccess(self):
-        return self.status._buildset_waitUntilSuccess(self.id)
     def waitUntilFinished(self):
         return self.status._buildset_waitUntilFinished(self.id)
 

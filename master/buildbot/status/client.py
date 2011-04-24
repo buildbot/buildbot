@@ -61,11 +61,6 @@ class RemoteBuildSet(pb.Referenceable):
     def remote_isFinished(self):
         return self.b.isFinished()
 
-    def remote_waitUntilSuccess(self):
-        d = self.b.waitUntilSuccess()
-        d.addCallback(lambda res: self)
-        return d
-
     def remote_waitUntilFinished(self):
         d = self.b.waitUntilFinished()
         d.addCallback(lambda res: self)

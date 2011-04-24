@@ -38,6 +38,8 @@ invocations.
 *** The utility method `Builder.getOldesetRequestTime` now returns its result
 via a Deferred, and that result is now a DateTime object.
 
+*** The remote BuildSetStatus method `waitForSuccess` is no longer available.
+
 ** Scheduler Improvements
 
 *** Nightly scheduler now accepts a change_filter argument

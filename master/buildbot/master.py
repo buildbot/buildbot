@@ -108,7 +108,6 @@ class BuildMaster(service.MultiService):
 
         self.debugClientRegistration = None
 
-        self.status = Status(self)
         self.statusTargets = []
 
         self.db = None
@@ -132,6 +131,10 @@ class BuildMaster(service.MultiService):
                 subscription.SubscriptionPoint("buildset_additions")
         self._complete_buildset_subs = \
                 subscription.SubscriptionPoint("buildset_completion")
+
+        # set up the tip of the status hierarchy (must occur after subscription
+        # points are initialized)
+        self.status = Status(self)
 
     def startService(self):
         service.MultiService.startService(self)

@@ -43,9 +43,12 @@ class Status:
         self.logMaxSize = None
         self.logMaxTailSize = None
 
+        # subscribe to the things we need to know about
+        self.master.subscribeToBuildsetCompletions(
+                self._buildsetCompletionCallback)
+
         self._builder_observers = collections.KeyedSets()
         self._buildreq_observers = collections.KeyedSets()
-        self._buildset_success_waiters = collections.KeyedSets()
         self._buildset_finished_waiters = collections.KeyedSets()
 
     @property
@@ -63,7 +66,6 @@ class Status:
         # XXX not called anymore - what to do about this?
         self.db.subscribe_to("add-build", self._db_builds_changed)
         self.db.subscribe_to("add-buildset", self._db_buildset_added)
-        self.db.subscribe_to("modify-buildset", self._db_buildsets_changed)
         self.db.subscribe_to("add-buildrequest", self._db_buildrequest_added)
         self.db.subscribe_to("cancel-buildrequest", self._db_buildrequest_cancelled)
 
@@ -363,33 +365,22 @@ class Status:
             if hasattr(t, 'buildsetSubmitted'):
                 t.buildsetSubmitted(bss)
 
-    def _buildset_waitUntilSuccess(self, bsid):
-        d = defer.Deferred()
-        self._buildset_success_waiters.add(bsid, d)
-        # now check for a buildset which was already successful
-        self._db_buildsets_changed("modify-buildset", bsid)
-        return d
     def _buildset_waitUntilFinished(self, bsid):
         d = defer.Deferred()
         self._buildset_finished_waiters.add(bsid, d)
-        self._db_buildsets_changed("modify-buildset", bsid)
+        self._maybeBuildsetFinished(bsid)
         return d
 
-    def _db_buildsets_changed(self, category, *bsids):
-        for bsid in bsids:
-            self._db_buildset_changed(bsid)
+    def _buildsetCompletionCallback(self, bsid, result):
+        self._maybeBuildsetFinished(bsid)
 
-    def _db_buildset_changed(self, bsid):
+    def _maybeBuildsetFinished(self, bsid):
         # check bsid to see if it's successful or finished, and notify anyone
         # who cares
-        if (bsid not in self._buildset_success_waiters
-            and bsid not in self._buildset_finished_waiters):
+        if bsid not in self._buildset_finished_waiters:
             return
         successful,finished = self.db.examine_buildset(bsid)
         bss = buildset.BuildSetStatus(bsid, self, self.db)
-        if successful is not None:
-            for d in self._buildset_success_waiters.pop(bsid):
-                eventually(d.callback, bss)
         if finished:
             for d in self._buildset_finished_waiters.pop(bsid):
                 eventually(d.callback, bss)
