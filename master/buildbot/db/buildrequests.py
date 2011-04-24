@@ -242,14 +242,15 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def completeBuildRequest(self, brid, results, _reactor=reactor):
+    def completeBuildRequests(self, brids, results, _reactor=reactor):
         """
-        Complete a build request that is owned by this master instance.  This
-        will fail with L{NotClaimedError} if the build request is not claimed
-        by this instance, is already completed, or does not exist.
+        Complete a set of build requests, all of which are owned by this master
+        instance.  This will fail with L{NotClaimedError} if the build request
+        is not claimed by this instance, is already completed, or does not
+        exist.
 
-        @param brid: build request ID to claim
-        @type brid: integer
+        @param brids: build request IDs to complete
+        @type brids: integer
 
         @param results: integer result code
         @type results: integer
@@ -265,7 +266,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             master_incarnation = self.db.master.master_incarnation
             tbl = self.db.model.buildrequests
 
-            q = tbl.update(whereclause=(tbl.c.id == brid))
+            q = tbl.update(whereclause=(tbl.c.id.in_(brids)))
             q = q.where(
                 (tbl.c.claimed_at != None) &
                 (tbl.c.claimed_by_name == master_name) &
@@ -276,8 +277,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 results=results,
                 complete_at=_reactor.seconds())
 
-            # if no rows were updated, then we failed
-            if not res.rowcount:
+            # if no rows were updated, then we failed (and left things in an
+            # awkward state, at that!)
+            if res.rowcount != len(brids):
                 raise NotClaimedError
         return self.db.pool.do(thd)
 
