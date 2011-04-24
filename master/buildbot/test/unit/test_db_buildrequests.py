@@ -422,7 +422,7 @@ class TestBuildsetsConnectorComponent(
                 q = sa.select([ tbl.c.id, tbl.c.complete,
                                  tbl.c.results, tbl.c.complete_at ])
                 results = conn.execute(q).fetchall()
-                self.assertEqual(map(tuple, results), expected)
+                self.assertEqual(sorted(map(tuple, results)), sorted(expected))
             return self.db.pool.do(thd)
         d.addCallback(check)
         def fail(f):
