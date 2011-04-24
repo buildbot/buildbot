@@ -21,7 +21,7 @@ from twisted.spread import pb
 from twisted.application import service, internet
 from twisted.internet import defer
 
-from buildbot import interfaces, util
+from buildbot import interfaces
 from buildbot.status.progress import Expectations
 from buildbot.status.builder import RETRY
 from buildbot.status.buildset import BuildSetStatus
@@ -192,28 +192,28 @@ class Builder(pb.Referenceable, service.MultiService):
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
 
-    def getBuildable(self, limit=None):
-        return self.db.runInteractionNow(self._getBuildable, limit)
-    def _getBuildable(self, t, limit):
-        now = util.now()
-        old = now - 10*60
-        return self.db.get_unclaimed_buildrequests(self.name, old,
-                                                   self.master_name,
-                                                   self.master_incarnation,
-                                                   t,
-                                                   limit)
-
+    @defer.deferredGenerator
     def getOldestRequestTime(self):
-        """Returns the timestamp of the oldest build request for this builder.
 
-        If there are no build requests, None is returned."""
-        buildable = self.getBuildable(1)
-        if buildable:
-            # TODO: this is sorted by priority first, not strictly reqtime
-            return buildable[0].getSubmitTime()
-        return None
+        """Returns the submitted_at of the oldest unclaimed build request for
+        this builder, or None if there are no build requests.
 
-    def cancelBuildRequest(self, brid):
+        @returns: datetime instance or None, via Deferred
+        """
+        wfd = defer.waitForDeferred(
+            self.master.db.buildrequests.getBuildRequests(
+                        buildername=self.name, claimed=False))
+        yield wfd
+        unclaimed = wfd.getResult()
+
+        if unclaimed:
+            unclaimed = [ brd['submitted_at'] for brd in unclaimed ]
+            unclaimed.sort()
+            yield unclaimed[0]
+        else:
+            yield None
+
+    def cancelBuildRequest(self, brid): # TODO: kill
         return self.db.cancel_buildrequests([brid])
 
     def consumeTheSoulOfYourPredecessor(self, old):
@@ -841,13 +841,28 @@ class BuilderControl:
         d.addCallback(add_buildset)
         return d
 
+    @defer.deferredGenerator
     def getPendingBuildRequestControls(self):
-        # return IBuildRequestControl objects
-        retval = []
-        for r in self.original.getBuildable():
-            retval.append(buildrequest.BuildRequestControl(self.original, r))
+        master = self.original.master
+        wfd = defer.waitForDeferred(
+            master.db.buildrequests.getBuildRequests(
+                buildername=self.original.name,
+                claimed=False))
+        yield wfd
+        brdicts = wfd.getResult()
 
-        return retval
+        # convert those into BuildRequest objects
+        buildrequests = [ ]
+        for brdict in brdicts:
+            wfd = defer.waitForDeferred(
+                buildrequest.BuildRequest.fromBrdict(self.master.master,
+                                                     brdict))
+            yield wfd
+            buildrequests.append(wfd.getResult())
+
+        # and return the corresponding control objects
+        yield [ buildrequest.BuildRequestControl(self.original, r)
+                 for r in buildrequests ]
 
     def getBuild(self, number):
         return self.original.getBuild(number)

@@ -13,8 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import generators
-
+from twisted.internet import defer
 from buildbot.status.web.base import HtmlResource
 from buildbot.status.web.base import build_get_class, path_to_builder, path_to_build
 from buildbot.sourcestamp import SourceStamp
@@ -62,6 +61,7 @@ class GridStatusMixin(object):
         cxt['class'] = build_get_class(build)
         return cxt
 
+    @defer.deferredGenerator
     def builder_cxt(self, request, builder):
         state, builds = builder.getState()
 
@@ -78,17 +78,17 @@ class GridStatusMixin(object):
         if state == "idle" and upcoming:
             state = "waiting"
 
-        # TODO: for now, this pending/upcoming stuff is in the "current
-        # activity" box, but really it should go into a "next activity" row
-        # instead. The only times it should show up in "current activity" is
-        # when the builder is otherwise idle.
+        wfd = defer.waitForDeferred(
+                builder.getPendingBuildRequestStatuses())
+        yield wfd
+        n_pending = len(wfd.getResult())
 
         cxt = { 'url': path_to_builder(request, builder),
                 'name': builder.getName(),
                 'state': state,
-                'n_pending': len(builder.getPendingBuildRequestStatuses()) }
+                'n_pending': n_pending }
 
-        return cxt
+        yield cxt
 
     def getSourceStampKey(self, ss):
         """Given two source stamps, we want to assign them to the same row if
@@ -156,6 +156,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
     status = None
     changemaster = None
 
+    @defer.deferredGenerator
     def content(self, request, cxt):
         """This method builds the regular grid display.
         That is, build stamps across the top, build hosts down the left side
@@ -198,14 +199,18 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
                     if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
                         builds[i] = build
 
-            b = self.builder_cxt(request, builder)
+            wfd = defer.waitForDeferred(
+                    self.builder_cxt(request, builder))
+            yield wfd
+            b = wfd.getResult()
+
             b['builds'] = []
             for build in builds:
                 b['builds'].append(self.build_cxt(request, build))
             cxt['builders'].append(b)
 
         template = request.site.buildbot_service.templates.get_template("grid.html")
-        return template.render(**cxt)
+        yield template.render(**cxt)
 
 
 class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
@@ -214,6 +219,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
     changemaster = None
     default_rev_order = "asc"
 
+    @defer.deferredGenerator
     def content(self, request, cxt):
         """This method builds the transposed grid display.
         That is, build hosts across the top, build stamps down the left side
@@ -265,10 +271,13 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
                     if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
                         builds[i] = build
 
-            builders.append(self.builder_cxt(request, builder))
+            wfd = defer.waitForDeferred(
+                    self.builder_cxt(request, builder))
+            yield wfd
+            builders.append(wfd.getResult())
+
             builder_builds.append(map(lambda b: self.build_cxt(request, b), builds))
 
         template = request.site.buildbot_service.templates.get_template('grid_transposed.html')
-        data = template.render(**cxt)
-        return data
+        yield template.render(**cxt)
 

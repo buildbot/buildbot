@@ -334,9 +334,12 @@ class IBuilderStatus(Interface):
         used by this builder."""
 
     def getPendingBuildRequestStatuses():
-        """Return an IBuildRequestStatus object for all upcoming builds
-        (those which are ready to go but which are waiting for a buildslave
-        to be available."""
+        """
+        Get a L{IBuildRequestStatus} implementations for all unclaimed build
+        requests.
+
+        @returns: list of objects via Deferred
+        """
 
     def getCurrentBuilds():
         """Return a list containing an IBuildStatus object for each build
@@ -1017,10 +1020,12 @@ class IBuilderControl(Interface):
         this Build has not yet finished."""
 
     def getPendingBuildRequestControls():
-        """Return a list of L{IBuildRequestControl} objects for this Builder.
-        Each one corresponds to a pending build that has not yet started (due
-        to a scarcity of build slaves). These upcoming builds can be canceled
-        through the control object."""
+        """
+        Get a list of L{IBuildRequestControl} objects for this Builder.
+        Each one corresponds to an unclaimed build request.
+
+        @returns: list of objects via Deferred
+        """
 
     def getBuild(number):
         """Attempt to return an IBuildControl object for the given build.

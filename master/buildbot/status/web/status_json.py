@@ -20,7 +20,8 @@ import datetime
 import os
 import re
 
-from twisted.web import error, html, resource
+from twisted.internet import defer
+from twisted.web import error, html, resource, server
 
 from buildbot.status.web.base import HtmlResource
 from buildbot.util import json
@@ -184,25 +185,36 @@ class JsonResource(resource.Resource):
 
     def render_GET(self, request):
         """Renders a HTTP GET at the http request level."""
-        data = self.content(request)
-        if isinstance(data, unicode):
-            data = data.encode("utf-8")
-        request.setHeader("Access-Control-Allow-Origin", "*")
-        if RequestArgToBool(request, 'as_text', False):
-            request.setHeader("content-type", 'text/plain')
-        else:
-            request.setHeader("content-type", self.contentType)
-            request.setHeader("content-disposition",
-                              "attachment; filename=\"%s.json\"" % request.path)
-        # Make sure we get fresh pages.
-        if self.cache_seconds:
-            now = datetime.datetime.utcnow()
-            expires = now + datetime.timedelta(seconds=self.cache_seconds)
-            request.setHeader("Expires",
-                              expires.strftime("%a, %d %b %Y %H:%M:%S GMT"))
-            request.setHeader("Pragma", "no-cache")
-        return data
+        d = defer.maybeDeferred(lambda : self.content(request))
+        def handle(data):
+            if isinstance(data, unicode):
+                data = data.encode("utf-8")
+            request.setHeader("Access-Control-Allow-Origin", "*")
+            if RequestArgToBool(request, 'as_text', False):
+                request.setHeader("content-type", 'text/plain')
+            else:
+                request.setHeader("content-type", self.contentType)
+                request.setHeader("content-disposition",
+                                "attachment; filename=\"%s.json\"" % request.path)
+            # Make sure we get fresh pages.
+            if self.cache_seconds:
+                now = datetime.datetime.utcnow()
+                expires = now + datetime.timedelta(seconds=self.cache_seconds)
+                request.setHeader("Expires",
+                                expires.strftime("%a, %d %b %Y %H:%M:%S GMT"))
+                request.setHeader("Pragma", "no-cache")
+            return data
+        d.addCallback(handle)
+        def ok(data):
+            request.write(data)
+            request.finish()
+        def fail(f):
+            request.processingFailed(f)
+            return None # processingFailed will log this for us
+        d.addCallbacks(ok, fail)
+        return server.NOT_DONE_YET
 
+    @defer.deferredGenerator
     def content(self, request):
         """Renders the json dictionaries."""
         # Supported flags.
@@ -236,11 +248,24 @@ class JsonResource(resource.Resource):
                     node = node[pathElement]
                     request.prepath.append(pathElement)
                     child = child.getChildWithDefault(pathElement, request)
-                node.update(child.asDict(request))
+
+                # some asDict methods return a Deferred, so handle that
+                # properly
+                wfd = defer.waitForDeferred(
+                        defer.maybeDeferred(lambda :
+                            child.asDict(request)))
+                yield wfd
+                node.update(wfd.getResult())
+
                 request.prepath = prepath
                 request.postpath = postpath
         else:
-            data = self.asDict(request)
+            wfd = defer.waitForDeferred(
+                    defer.maybeDeferred(lambda :
+                        self.asDict(request)))
+            yield wfd
+            data = wfd.getResult()
+
         if filter_out:
             data = FilterOut(data)
         if compact:
@@ -252,8 +277,9 @@ class JsonResource(resource.Resource):
             callback = callback[0]
             if re.match(r'^[a-zA-Z$][a-zA-Z$0-9.]*$', callback):
                 data = '%s(%s);' % (callback, data)
-        return data
+        yield data
 
+    @defer.deferredGenerator
     def asDict(self, request):
         """Generates the json dictionary.
 
@@ -263,9 +289,13 @@ class JsonResource(resource.Resource):
             for name in self.children:
                 child = self.getChildWithDefault(name, request)
                 if isinstance(child, JsonResource):
-                    data[name] = child.asDict(request)
+                    wfd = defer.waitForDeferred(
+                            defer.maybeDeferred(lambda :
+                                child.asDict(request)))
+                    yield wfd
+                    data[name] = wfd.getResult()
                 # else silently pass over non-json resources.
-            return data
+            yield data
         else:
             raise NotImplementedError()
 
@@ -354,7 +384,11 @@ class BuilderPendingBuildsJsonResource(JsonResource):
 
     def asDict(self, request):
         # buildbot.status.builder.BuilderStatus
-        return [b.asDict() for b in self.builder_status.getPendingBuildRequestStatuses()]
+        d = self.builder_status.getPendingBuildRequestStatuses()
+        def to_dict(statuses):
+            return [ b.asDict() for b in statuses ]
+        d.addCallback(to_dict)
+        return d
 
 
 class BuilderJsonResource(JsonResource):
@@ -374,7 +408,7 @@ class BuilderJsonResource(JsonResource):
 
     def asDict(self, request):
         # buildbot.status.builder.BuilderStatus
-        return self.builder_status.asDict()
+        return self.builder_status.asDict_async()
 
 
 class BuildersJsonResource(JsonResource):

@@ -388,24 +388,6 @@ class DBConnector(service.MultiService):
             return None
         return r[0][0]
 
-    def get_unclaimed_buildrequests(self, buildername, old, master_name,
-                                    master_incarnation, t, limit=None):
-        q = ("SELECT br.id"
-             " FROM buildrequests AS br, buildsets AS bs"
-             " WHERE br.buildername=? AND br.complete=0"
-             " AND br.buildsetid=bs.id"
-             " AND (br.claimed_at<?"
-             "      OR (br.claimed_by_name=?"
-             "          AND br.claimed_by_incarnation!=?))"
-             " ORDER BY br.priority DESC,bs.submitted_at ASC")
-        if limit:
-            q += " LIMIT %s" % limit
-        t.execute(self.quoteq(q),
-                (buildername, old, master_name, master_incarnation))
-        requests = [self.getBuildRequestWithNumber(brid, t)
-                    for (brid,) in t.fetchall()]
-        return requests
-
     def claim_buildrequests(self, now, master_name, master_incarnation, brids,
                             t=None):
         if not brids:
@@ -632,20 +614,6 @@ class DBConnector(service.MultiService):
             complete = bool(complete)
             return (external_idstring, reason, ssid, complete, results)
         return None # shouldn't happen
-
-    # used by BuilderStatus.getPendingBuilds
-    def get_pending_brids_for_builder(self, buildername):
-        return self.runInteractionNow(self._txn_get_pending_brids_for_builder,
-                                      buildername)
-    def _txn_get_pending_brids_for_builder(self, t, buildername):
-        # "pending" means unclaimed and incomplete. When a build is returned
-        # to the pool (self.resubmit_buildrequests), the claimed_at= field is
-        # reset to zero.
-        t.execute(self.quoteq("SELECT id FROM buildrequests"
-                              " WHERE buildername=? AND"
-                              "  complete=0 AND claimed_at=0"),
-                  (buildername,))
-        return [brid for (brid,) in t.fetchall()]
 
     # used by getSourceStamp
     def getChangeNumberedNow(self, changeid, t=None):

@@ -16,14 +16,14 @@
 
 from twisted.web import html
 from twisted.web.util import Redirect
-
 import re, urllib, time
 from twisted.python import log
+from twisted.internet import defer
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_slave, path_to_builder, path_to_change, \
     path_to_root, getAndCheckProperties, ICurrentBox, build_get_class, \
-    map_branches, path_to_authfail
+    map_branches, path_to_authfail, ActionResource
 
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
@@ -65,6 +65,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         return b
 
+    @defer.deferredGenerator
     def content(self, req, cxt):
         b = self.builder_status
 
@@ -76,7 +77,11 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         cxt['current'] = [self.builder(x, req) for x in b.getCurrentBuilds()]
 
         cxt['pending'] = []
-        for pb in b.getPendingBuildRequestStatuses():
+        wfd = defer.waitForDeferred(
+            b.getPendingBuildRequestStatuses())
+        yield wfd
+        statuses = wfd.getResult()
+        for pb in statuses:
             source = pb.getSourceStamp()
             changes = []
 
@@ -117,7 +122,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         cxt['builder_url'] = path_to_builder(req, b)
 
         template = req.site.buildbot_service.templates.get_template("builder.html")
-        return template.render(**cxt)
+        yield template.render(**cxt)
 
     def force(self, req, auth_ok=False):
         name = req.args.get("username", ["<unknown>"])[0]
@@ -179,7 +184,28 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         # send the user back to the builder page
         return Redirect(path_to_builder(req, self.builder_status))
 
-    def cancelbuild(self, req):
+    def getChild(self, path, req):
+        if path == "force":
+            return self.force(req)
+        if path == "ping":
+            return self.ping(req)
+        if path == "cancelbuild":
+            return CancelChangeResource(self.builder_status)
+        if path == "stopchange":
+            return StopChangeResource(self.builder_status)
+        if path == "builds":
+            return BuildsResource(self.builder_status)
+
+        return HtmlResource.getChild(self, path, req)
+
+class CancelChangeResource(ActionResource):
+
+    def __init__(self, builder_status):
+        ActionResource.__init__(self)
+        self.builder_status = builder_status
+
+    @defer.deferredGenerator
+    def performAction(self, req):
         try:
             request_id = req.args.get("id", [None])[0]
             if request_id == "all":
@@ -193,20 +219,31 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         authz = self.getAuthz(req)
         if request_id:
             c = interfaces.IControl(self.getBuildmaster(req))
-            bc = c.getBuilder(self.builder_status.getName())
-            for build_req in bc.getPendingBuildRequestControls():
+            builder_control = c.getBuilder(self.builder_status.getName())
+
+            wfd = defer.waitForDeferred(
+                    builder_control.getPendingBuildRequestControls())
+            yield wfd
+            brcontrols = wfd.getResult()
+
+            for build_req in brcontrols:
                 if cancel_all or (build_req.brid == request_id):
                     log.msg("Cancelling %s" % build_req)
-                    if authz.actionAllowed('cancelPendingBuild', req, build_req):
+                    if authz.actionAllowed('cancelPendingBuild',
+                                           req, build_req):
                         build_req.cancel()
                     else:
-                        return Redirect(path_to_authfail(req))
+                        yield path_to_authfail(req)
+                        return
                     if not cancel_all:
                         break
-        return Redirect(path_to_builder(req, self.builder_status))
 
-    def stopchange(self, req, auth_ok=False):
-        """Cancel all pending builds that include a given numbered change."""
+        yield path_to_builder(req, self.builder_status)
+
+class StopChangeMixin(object):
+
+    @defer.deferredGenerator
+    def stopChangeForBuilder(self, req, builder_status, auth_ok=False):
         try:
             request_change = req.args.get("change", [None])[0]
             request_change = int(request_change)
@@ -216,10 +253,21 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         authz = self.getAuthz(req)
         if request_change:
             c = interfaces.IControl(self.getBuildmaster(req))
-            builder_control = c.getBuilder(self.builder_status.getName())
-            brcontrols = builder_control.getPendingBuildRequestControls()
+            builder_control = c.getBuilder(builder_status.getName())
+
+            wfd = defer.waitForDeferred(
+                    builder_control.getPendingBuildRequestControls())
+            yield wfd
+            brcontrols = wfd.getResult()
+
             build_controls = dict((x.brid, x) for x in brcontrols)
-            for build_req in self.builder_status.getPendingBuildRequestStatuses():
+
+            wfd = defer.waitForDeferred(
+                    builder_status.getPendingBuildRequestStatuses())
+            yield wfd
+            build_req_statuses = wfd.getResult()
+
+            for build_req in build_req_statuses:
                 ss = build_req.getSourceStamp()
                 if not ss.changes:
                     continue
@@ -227,25 +275,60 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                     if change.number == request_change:
                         control = build_controls[build_req.brid]
                         log.msg("Cancelling %s" % control)
-                        if auth_ok or authz.actionAllowed('stopChange', req, control):
+                        if (auth_ok or authz.actionAllowed('stopChange',
+                                                            req, control)):
                             control.cancel()
                         else:
-                            return Redirect(path_to_authfail(req))
-        return Redirect(path_to_builder(req, self.builder_status))
+                            yield False
+                            return
 
-    def getChild(self, path, req):
-        if path == "force":
-            return self.force(req)
-        if path == "ping":
-            return self.ping(req)
-        if path == "cancelbuild":
-            return self.cancelbuild(req)
-        if path == "stopchange":
-            return self.stopchange(req)
-        if path == "builds":
-            return BuildsResource(self.builder_status)
+        yield True
 
-        return HtmlResource.getChild(self, path, req)
+
+class StopChangeResource(StopChangeMixin, ActionResource):
+
+    def __init__(self, builder_status):
+        ActionResource.__init__(self)
+        self.builder_status = builder_status
+
+    @defer.deferredGenerator
+    def performAction(self, req):
+        """Cancel all pending builds that include a given numbered change."""
+        wfd = defer.waitForDeferred(
+            self.stopChangeForBuilder(req, self.builder_status))
+        yield wfd
+        success = wfd.getResult()
+
+        if not success:
+            yield path_to_authfail(req)
+        else:
+            yield path_to_builder(req, self.builder_status)
+
+
+class StopChangeAllResource(StopChangeMixin, ActionResource):
+
+    def __init__(self, status):
+        ActionResource.__init__(self)
+        self.status = status
+
+    @defer.deferredGenerator
+    def performAction(self, req):
+        """Cancel all pending builds that include a given numbered change."""
+        authz = self.getAuthz(req)
+        if not authz.actionAllowed('stopChange', req):
+            yield path_to_authfail(req)
+            return
+
+        for bname in self.status.getBuilderNames():
+            builder_status = self.status.getBuilder(bname)
+            wfd = defer.waitForDeferred(
+                self.stopChangeForBuilder(req, builder_status, auth_ok=True))
+            yield wfd
+            if not wfd.getResult():
+                yield path_to_authfail(req)
+                return
+
+        yield path_to_root(req)
 
 
 # /builders/_all
@@ -261,7 +344,7 @@ class StatusResourceAllBuilders(HtmlResource, BuildLineMixin):
         if path == "stopall":
             return self.stopall(req)
         if path == "stopchangeall":
-            return self.stopchangeall(req)
+            return StopChangeAllResource(self.status)
 
         return HtmlResource.getChild(self, path, req)
 
@@ -296,29 +379,33 @@ class StatusResourceAllBuilders(HtmlResource, BuildLineMixin):
         # go back to the welcome page
         return Redirect(path_to_root(req))
 
-    def stopchangeall(self, req):
-        authz = self.getAuthz(req)
-        if not authz.actionAllowed('stopChange', req):
-            return Redirect(path_to_authfail(req))
-
-        for bname in self.status.getBuilderNames():
-            builder_status = self.status.getBuilder(bname)
-            build = StatusResourceBuilder(builder_status)
-            build.stopchange(req, auth_ok=True)
-
-        return Redirect(path_to_root(req))
-
 
 # /builders
 class BuildersResource(HtmlResource):
     title = "Builders"
     addSlash = True
 
+    @defer.deferredGenerator
     def content(self, req, cxt):
         status = self.getStatus(req)
 
         builders = req.args.get("builder", status.getBuilderNames())
         branches = [b for b in req.args.get("branch", []) if b]
+
+        # get counts of pending builds for each builder
+        brstatus_ds = []
+        brcounts = {}
+        def keep_count(statuses, builderName):
+            brcounts[builderName] = len(statuses)
+        for builderName in builders:
+            builder_status = status.getBuilder(builderName)
+            d = builder_status.getPendingBuildRequestStatuses()
+            d.addCallback(keep_count, builderName)
+            brstatus_ds.append(d)
+        wfd = defer.waitForDeferred(
+            defer.gatherResults(brstatus_ds))
+        yield wfd
+        wfd.getResult()
 
         cxt['branches'] = branches
         bs = cxt['builders'] = []
@@ -348,7 +435,7 @@ class BuildersResource(HtmlResource):
                 bld['build_text'] = " ".join(b.getText())
                 bld['build_css_class'] = build_get_class(b)
 
-            current_box = ICurrentBox(builder).getBox(status)
+            current_box = ICurrentBox(builder).getBox(status, brcounts)
             bld['current_box'] = current_box.td()
 
             builder_status = builder.getState()[0]
@@ -363,7 +450,7 @@ class BuildersResource(HtmlResource):
         cxt['num_online'] = online
 
         template = req.site.buildbot_service.templates.get_template("builders.html")
-        return template.render(**cxt)
+        yield template.render(**cxt)
 
     def getChild(self, path, req):
         s = self.getStatus(req)

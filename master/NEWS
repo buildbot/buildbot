@@ -33,7 +33,10 @@ invocations.
 *** The `Status.getBuildSets` method now returns its result via Deferred.
 
 *** The `BuilderControl.getPendingBuilds` method has been renamed to
-`getPendingBuildRequestControls`
+`getPendingBuildRequestControls`.  Both now return their results via Deferred.
+
+*** The utility method `Builder.getOldesetRequestTime` now returns its result
+via a Deferred, and that result is now a DateTime object.
 
 ** Scheduler Improvements
 

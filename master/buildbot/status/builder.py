@@ -303,9 +303,14 @@ class BuilderStatus(styles.Versioned):
         return [self.status.getSlave(name) for name in self.slavenames]
 
     def getPendingBuildRequestStatuses(self):
-        db = self.status.db
-        return [BuildRequestStatus(brid, self.status, db)
-                for brid in db.get_pending_brids_for_builder(self.name)]
+        db = self.status.master.db
+        d = db.buildrequests.getBuildRequests(claimed=False,
+                                              buildername=self.name)
+        def make_statuses(brdicts):
+            return [BuildRequestStatus(brdict['brid'], self.status, db)
+                    for brdict in brdicts]
+        d.addCallback(make_statuses)
+        return d
 
     def getCurrentBuilds(self):
         return self.currentBuilds
@@ -616,6 +621,17 @@ class BuilderStatus(styles.Versioned):
         result['cachedBuilds'] = cached_builds
         result['currentBuilds'] = current_builds
         result['state'] = self.getState()[0]
-        result['pendingBuilds'] = len(self.getPendingBuildRequestStatuses())
+        # lies, but we don't have synchronous access to this info; use
+        # asDict_async instead
+        result['pendingBuilds'] = 0
         return result
 
+    def asDict_async(self):
+        """Just like L{asDict}, but with a nonzero pendingBuilds."""
+        result = self.asDict()
+        d = self.getPendingBuildRequestStatuses()
+        def combine(statuses):
+            result['pendingBuilds'] = len(statuses)
+            return result
+        d.addCallback(combine)
+        return d

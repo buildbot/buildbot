@@ -21,6 +21,7 @@ from twisted.internet import defer
 from buildbot.test.fake import fakedb
 from buildbot.process import builder, buildrequest
 from buildbot.db import buildrequests
+from buildbot.util import epoch2datetime
 
 class TestBuilderBuildCreation(unittest.TestCase):
 
@@ -379,7 +380,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
     # _brdictToBuildRequest
 
     @defer.deferredGenerator
-    def test_brdictToBuildRequeset(self):
+    def test_brdictToBuildRequest(self):
         self.makeBuilder()
         # set up all of the data required for a BuildRequest object
         wfd = defer.waitForDeferred(
@@ -546,6 +547,59 @@ class TestBuilderBuildCreation(unittest.TestCase):
         d = self.bldr.reclaimAllBuilds()
         def check(_):
             self.assertEqual(claims, [ (set([10,11,12,15]),) ])
+        d.addCallback(check)
+        return d
+
+class TestGetOldestRequestTime(unittest.TestCase):
+
+    def setUp(self):
+        # a collection of rows that would otherwise clutter up every test
+        self.base_rows = [
+            fakedb.SourceStamp(id=21),
+            fakedb.Buildset(id=11, reason='because', sourcestampid=21),
+            fakedb.BuildRequest(id=111, submitted_at=1000,
+                        buildername='bldr1', claimed_at=0, buildsetid=11),
+            fakedb.BuildRequest(id=222, submitted_at=2000,
+                        buildername='bldr1', claimed_at=2001, buildsetid=11),
+            fakedb.BuildRequest(id=333, submitted_at=3000,
+                        buildername='bldr1', claimed_at=0, buildsetid=11),
+            fakedb.BuildRequest(id=444, submitted_at=2500,
+                        buildername='bldr2', claimed_at=2501, buildsetid=11),
+        ]
+
+    def makeBuilder(self, name):
+        self.bstatus = mock.Mock()
+        self.factory = mock.Mock()
+        self.master = mock.Mock()
+        # only include the necessary required config
+        config = dict(name=name, slavename="slv", builddir="bdir",
+                     slavebuilddir="sbdir", factory=self.factory)
+        self.bldr = builder.Builder(config, self.bstatus)
+        self.master.db = self.db = db = fakedb.FakeDBConnector(self)
+        self.master.master_name = db.buildrequests.MASTER_NAME
+        self.master.master_incarnation = db.buildrequests.MASTER_INCARNATION
+        self.bldr.master = self.master
+
+        # we don't want the reclaim service running during tests..
+        self.bldr.reclaim_svc.disownServiceParent()
+
+        self.bldr.startService()
+
+    def test_gort_unclaimed(self):
+        self.makeBuilder(name='bldr1')
+        d = self.db.insertTestData(self.base_rows)
+        d.addCallback(lambda _ : self.bldr.getOldestRequestTime())
+        def check(rqtime):
+            self.assertEqual(rqtime, epoch2datetime(1000))
+        d.addCallback(check)
+        return d
+
+    def test_gort_all_claimed(self):
+        self.makeBuilder(name='bldr2')
+        d = self.db.insertTestData(self.base_rows)
+        d.addCallback(lambda _ : self.bldr.getOldestRequestTime())
+        def check(rqtime):
+            self.assertEqual(rqtime, None)
         d.addCallback(check)
         return d
 
