@@ -108,23 +108,39 @@ class Test(unittest.TestCase):
         self.quiet_deferred.addCallback(check)
         return self.quiet_deferred
 
-    def do_test_sortBuilders(self, prioritizeBuilders, oldestRequestTimes, expected):
+    def do_test_sortBuilders(self, prioritizeBuilders, oldestRequestTimes,
+            expected, returnDeferred=False):
         self.addBuilders(oldestRequestTimes.keys())
         self.botmaster.prioritizeBuilders = prioritizeBuilders
 
+        def mklambda(t): # work around variable-binding issues
+            if returnDeferred:
+                return lambda : defer.succeed(t)
+            else:
+                return lambda : t
+
         for n, t in oldestRequestTimes.iteritems():
-            self.builders[n].getOldestRequestTime = lambda : t
+            self.builders[n].getOldestRequestTime = mklambda(t)
 
-        self.assertEqual(self.brd._sortBuilders(oldestRequestTimes.keys()),
-                         expected)
+        d = self.brd._sortBuilders(oldestRequestTimes.keys())
+        def check(result):
+            self.assertEqual(result, expected)
+        d.addCallback(check)
+        return d
 
-    def test_sortBuilders_default(self):
-        self.do_test_sortBuilders(None, # use the default sort
+    def test_sortBuilders_default_sync(self):
+        return self.do_test_sortBuilders(None, # use the default sort
                 dict(bldr1=777, bldr2=999, bldr3=888),
                 ['bldr1', 'bldr3', 'bldr2'])
 
+    def test_sortBuilders_default_asyn(self):
+        return self.do_test_sortBuilders(None, # use the default sort
+                dict(bldr1=777, bldr2=999, bldr3=888),
+                ['bldr1', 'bldr3', 'bldr2'],
+                returnDeferred=True)
+
     def test_sortBuilders_default_None(self):
-        self.do_test_sortBuilders(None, # use the default sort
+        return self.do_test_sortBuilders(None, # use the default sort
                 dict(bldr1=777, bldr2=None, bldr3=888),
                 ['bldr1', 'bldr3', 'bldr2'])
 
@@ -133,7 +149,16 @@ class Test(unittest.TestCase):
             self.assertIdentical(master, self.master)
             return sorted(builders, key=lambda b : b.name)
 
-        self.do_test_sortBuilders(prioritizeBuilders,
+        return self.do_test_sortBuilders(prioritizeBuilders,
+                dict(bldr1=1, bldr2=1, bldr3=1),
+                ['bldr1', 'bldr2', 'bldr3'])
+
+    def test_sortBuilders_custom_async(self):
+        def prioritizeBuilders(master, builders):
+            self.assertIdentical(master, self.master)
+            return defer.succeed(sorted(builders, key=lambda b : b.name))
+
+        return self.do_test_sortBuilders(prioritizeBuilders,
                 dict(bldr1=1, bldr2=1, bldr3=1),
                 ['bldr1', 'bldr2', 'bldr3'])
 
@@ -146,10 +171,14 @@ class Test(unittest.TestCase):
 
         # expect to get the builders back in the same order in the event of an
         # exception
-        self.assertEqual(self.brd._sortBuilders(['y', 'x']), ['y', 'x'])
+        d = self.brd._sortBuilders(['y', 'x'])
+        def check(result):
+            self.assertEqual(result, ['y', 'x'])
 
-        # and expect the exception to be logged
-        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+            # and expect the exception to be logged
+            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+        d.addCallback(check)
+        return d
 
     def test_stopService(self):
         # check that stopService waits for a builder run to complete, but does not

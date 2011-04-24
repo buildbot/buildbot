@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 
+import sys
 from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.internet import defer, reactor
@@ -350,6 +351,9 @@ class BuildRequestDistributor(service.Service):
         self.botmaster = botmaster
         self.master = botmaster.master
 
+        # lock to ensure builders are only sorted once at any time
+        self.builder_sorting_lock = defer.DeferredLock()
+
         # sorted list of names of builders that need their maybeStartBuild
         # method invoked.
         self._pending_builders = []
@@ -379,15 +383,54 @@ class BuildRequestDistributor(service.Service):
         if new_builders < existing_pending:
             return
 
-        # reset the list of pending builders
-        new_pending = existing_pending | new_builders
-        self._pending_builders = self._sortBuilders(list(new_pending))
+        # reset the list of pending builders; this is async, so begin
+        # by grabbing a lock
+        d = self.builder_sorting_lock.acquire()
 
-        # and start calling builders' maybeStartBuild methods, if we aren't
-        # already working on that.
-        if not self.active:
-            self._activityLoop()
+        # then sort the new, expanded set of builders
+        d.addCallback(lambda _ : self._sortBuilders(list(
+                                    existing_pending | new_builders)))
+        def keep_new_builders(result):
+            self._pending_builders = result
+        d.addCallback(keep_new_builders)
 
+        # start the activity loop, if we aren't already working on that.
+        def start_loop(_):
+            if not self.active:
+                self._activityLoop()
+        d.addCallback(start_loop)
+
+        # and release the lock in any case
+        def unlock(x):
+            self.builder_sorting_lock.release()
+            return x
+        d.addBoth(unlock)
+
+        d.addErrback(log.err, 'while sorting builders')
+
+    @defer.deferredGenerator
+    def _defaultSorter(self, master, builders):
+        # perform an asynchronous schwarzian transform, transforming None
+        # into sys.maxint so that it sorts to the end
+        def xform(bldr):
+            d = defer.maybeDeferred(lambda :
+                    bldr.getOldestRequestTime())
+            d.addCallback(lambda time :
+                ((time is None) and sys.maxint or time,bldr))
+            return d
+        wfd = defer.waitForDeferred(
+            defer.gatherResults(
+                [ xform(bldr) for bldr in builders ]))
+        yield wfd
+        xformed = wfd.getResult()
+
+        # sort the transformed list synchronously
+        xformed.sort()
+
+        # and reverse the transform
+        yield [ xf[1] for xf in xformed ]
+
+    @defer.deferredGenerator
     def _sortBuilders(self, buildernames):
         # note that this takes and returns a list of builder names
 
@@ -400,25 +443,21 @@ class BuildRequestDistributor(service.Service):
         # find a sorting function
         sorter = self.botmaster.prioritizeBuilders
         if not sorter:
-            def _sortfunc(b1, b2):
-                t1 = b1.getOldestRequestTime()
-                if t1 is None:
-                    return 1
-                t2 = b2.getOldestRequestTime()
-                if t2 is None:
-                    return -1
-                return cmp(t1, t2)
-            sorter = lambda master, builders : sorted(builders, _sortfunc)
+            sorter = self._defaultSorter
 
         # run it
         try:
-            builders = sorter(self.master, builders)
+            wfd = defer.waitForDeferred(
+                defer.maybeDeferred(lambda :
+                    sorter(self.master, builders)))
+            yield wfd
+            builders = wfd.getResult()
         except:
-            log.msg("Exception prioritizing builders")
+            log.msg("Exception prioritizing builders; order unspecified")
             log.err(Failure())
 
         # and return the names
-        return [ b.name for b in builders ]
+        yield [ b.name for b in builders ]
 
     @defer.deferredGenerator
     def _activityLoop(self):

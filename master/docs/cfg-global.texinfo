@@ -283,12 +283,12 @@ for more details.
 
 By default, buildbot will attempt to start builds on builders in order from the
 builder with the oldest pending request to the newest. This behaviour can be
-customized with the @code{c['prioritizeBuilders']} configuration key.
-This key specifies a function which is called with two arguments: a
-@code{BuildMaster} and a list of @code{Builder} objects. It
-should return a list of @code{Builder} objects in the desired order.
-It may also remove items from the list if builds should not be started
-on those builders.
+customized with the @code{c['prioritizeBuilders']} configuration key.  This key
+specifies a function which is called with two arguments: a @code{BuildMaster}
+and a list of @code{Builder} objects. It should return a list of @code{Builder}
+objects in the desired order.  It may also remove items from the list if builds
+should not be started on those builders.  If necessary, this function can
+return its results via a Deferred (it is called with @code{maybeDeferred}).
 
 This parameter controls the order in which builders are activated.  It does not
 affect the order in which a builder processes the build requests in its queue.
