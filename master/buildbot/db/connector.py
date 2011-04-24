@@ -30,11 +30,6 @@ from buildbot.util import json
 from buildbot.db import pool, model, changes, schedulers, sourcestamps
 from buildbot.db import state, buildsets, buildrequests
 
-def _one_or_else(res, default=None, process_f=lambda x: x):
-    if not res:
-        return default
-    return process_f(res[0][0])
-
 def str_or_none(s):
     if s is None:
         return None
@@ -118,10 +113,6 @@ class DBConnector(service.MultiService):
         self.cleanup_timer.setServiceParent(self)
 
         self.changeHorizon = None # default value; set by master
-
-    def _getCurrentTime(self): # TODO: remove
-        # this is a seam for use in testing
-        return util.now()
 
     def start(self): # TODO: remove
         # this only *needs* to be called in reactorless environments (which
