@@ -74,7 +74,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         claimed status of requests; C{True} to return only claimed builds,
         C{False} to return only unclaimed builds, or C{"mine"} to return only
         builds claimed by this master instance.  A request is considered
-        unclaimed if its C{claimed_at} column is either NULL or 0.
+        unclaimed if its C{claimed_at} column is either NULL or 0, and it is
+        not complete.
 
         A build is considered completed if its C{complete} column is 1; the
         C{complete_at} column is not consulted.
@@ -102,7 +103,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                         ((tbl.c.claimed_at == None) |
                          (tbl.c.claimed_at == 0)) &
                         (tbl.c.claimed_by_name == None) &
-                        (tbl.c.claimed_by_incarnation == None))
+                        (tbl.c.claimed_by_incarnation == None) &
+                        (tbl.c.complete == 0))
                 elif claimed == "mine":
                     master_name = self.db.master.master_name
                     master_incarnation = self.db.master.master_incarnation

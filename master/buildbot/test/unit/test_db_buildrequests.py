@@ -115,6 +115,11 @@ class TestBuildsetsConnectorComponent(
             fakedb.BuildRequest(id=52, buildsetid=self.BSID,
                 claimed_at=0, claimed_by_name=None,
                 claimed_by_incarnation=None),
+            # 53: unclaimed but complete (should not appear for claimed=False)
+            fakedb.BuildRequest(id=53, buildsetid=self.BSID,
+                claimed_at=0, claimed_by_name=None,
+                claimed_by_incarnation=None,
+                complete=1),
         ])
         d.addCallback(lambda _ :
                 self.db.buildrequests.getBuildRequests(**kwargs))
@@ -126,7 +131,7 @@ class TestBuildsetsConnectorComponent(
 
     def test_getBuildRequests_no_claimed_arg(self):
         return self.do_test_getBuildRequests_claim_args(
-                expected=[50, 51, 52])
+                expected=[50, 51, 52, 53])
 
     def test_getBuildRequests_claimed_mine(self):
         return self.do_test_getBuildRequests_claim_args(
