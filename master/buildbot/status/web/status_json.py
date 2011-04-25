@@ -386,7 +386,8 @@ class BuilderPendingBuildsJsonResource(JsonResource):
         # buildbot.status.builder.BuilderStatus
         d = self.builder_status.getPendingBuildRequestStatuses()
         def to_dict(statuses):
-            return [ b.asDict() for b in statuses ]
+            return defer.gatherResults(
+                [ b.asDict_async() for b in statuses ])
         d.addCallback(to_dict)
         return d
 
@@ -691,7 +692,7 @@ class SlavesJsonResource(JsonResource):
 
 
 class SourceStampJsonResource(JsonResource):
-    help = """Describe the sources for a BuildRequest.
+    help = """Describe the sources for a SourceStamp.
 """
     title = 'SourceStamp'
 

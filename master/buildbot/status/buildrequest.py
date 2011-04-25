@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from zope.interface import implements
+from twisted.internet import defer
 from buildbot import interfaces
 from buildbot.util.eventual import eventually
 
@@ -68,3 +69,6 @@ class BuildRequestStatus:
         # Transient
         result['builds'] = [build.asDict() for build in self.getBuilds()]
         return result
+
+    def asDict_async(self):
+        return defer.succeed(self.asDict())
