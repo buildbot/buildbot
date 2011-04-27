@@ -122,18 +122,6 @@ class BuildRequest(object):
 
         yield buildrequest # return value
 
-    # TODO: This should die when db.connector.getBuildRequestWithNumber does
-    @classmethod
-    def oldConstructor(cls, reason, source, builderName, props):
-        buildrequest = cls()
-        buildrequest.reason = reason
-        buildrequest.source = source
-        buildrequest.buildername = builderName
-        buildrequest.properties = properties.Properties()
-        if props:
-            buildrequest.properties.updateFromProperties(props)
-        return buildrequest
-
     def canBeMergedWith(self, other):
         return self.source.canBeMergedWith(other.source)
 

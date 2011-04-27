@@ -22,7 +22,6 @@ from buildbot.db import enginestrategy
 from buildbot import util
 from buildbot.util import collections as bbcollections
 from buildbot.sourcestamp import SourceStamp
-from buildbot.process.buildrequest import BuildRequest
 from buildbot.process.properties import Properties
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot.util.eventual import eventually
@@ -335,36 +334,6 @@ class DBConnector(service.MultiService):
         return retval
 
     # BuildRequest-manipulation methods
-
-    def getBuildRequestWithNumber(self, brid, t=None):
-        assert isinstance(brid, (int, long))
-        if t:
-            br = self._txn_getBuildRequestWithNumber(t, brid)
-        else:
-            br = self.runInteractionNow(self._txn_getBuildRequestWithNumber,
-                                        brid)
-        return br
-    def _txn_getBuildRequestWithNumber(self, t, brid):
-        assert isinstance(brid, (int, long))
-        t.execute(self.quoteq("SELECT br.buildsetid, bs.reason,"
-                              " bs.sourcestampid, br.buildername,"
-                              " bs.submitted_at, br.priority"
-                              " FROM buildrequests AS br, buildsets AS bs"
-                              " WHERE br.id=? AND br.buildsetid=bs.id"),
-                  (brid,))
-        r = t.fetchall()
-        if not r:
-            return None
-        (bsid, reason, ssid, builder_name, submitted_at, priority) = r[0]
-        ss = self.getSourceStampNumberedNow(ssid, t)
-        properties = self.get_properties_from_db("buildset_properties",
-                                                 "buildsetid", bsid, t)
-        br = BuildRequest.oldConstructor(reason, ss, builder_name, properties)
-        br.submittedAt = submitted_at
-        br.priority = priority
-        br.id = brid
-        br.bsid = bsid
-        return br
 
     def get_buildername_for_brid(self, brid):
         assert isinstance(brid, (int, long))

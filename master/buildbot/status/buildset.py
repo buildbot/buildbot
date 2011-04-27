@@ -48,8 +48,9 @@ class BuildSetStatus:
     def getBuilderNamesAndBuildRequests(self):
         brs = {}
         brids = self.db.get_buildrequestids_for_buildset(self.id)
-        for (buildername, brid) in brids.items():
-            brs[buildername] = BuildRequestStatus(brid, self.status, self.db)
+        for (buildername, brid) in brids.iteritems():
+            brs[buildername] = BuildRequestStatus(buildername, brid,
+                                                  self.status)
         return brs
 
     def getBuilderNames(self):
@@ -58,8 +59,8 @@ class BuildSetStatus:
 
     def getBuildRequests(self):
         brs = self.db.get_buildrequestids_for_buildset(self.id)
-        return [BuildRequestStatus(brid, self.status, self.db)
-                for brid in brs.values()]
+        return [BuildRequestStatus(buildername, brid, self.status)
+                for buildername, brid in brs.iteritems()]
 
     def isFinished(self):
         (external_idstring, reason, ssid, complete, results) = self._get_info()

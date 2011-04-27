@@ -114,6 +114,7 @@ class RemoteBuildRequest(pb.Referenceable):
         self.observers = []
 
     def remote_getSourceStamp(self):
+        # note that this now returns a Deferred
         return self.b.getSourceStamp()
 
     def remote_getBuilderName(self):

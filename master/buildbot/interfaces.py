@@ -255,18 +255,19 @@ class IBuildRequestStatus(Interface):
     finally turned into a Build."""
 
     def getSourceStamp():
-        """Return a SourceStamp object which can be used to re-create
-        the source tree that this build used.  This method will
-        return an absolute SourceStamp if possible, and its results
-        may change as the build progresses.  Specifically, a "HEAD"
-        build may later be more accurately specified by an absolute
-        SourceStamp with the specific revision information.
+        """
+        Get a SourceStamp object which can be used to re-create the source tree
+        that this build used.  This method will return an absolute SourceStamp
+        if possible, and its results may change as the build progresses.
+        Specifically, a "HEAD" build may later be more accurately specified by
+        an absolute SourceStamp with the specific revision information.
 
         This method will return None if the source information is no longer
-        available."""
-        pass
-    def getBuilderName():
-        pass
+        available.
+
+        @returns: SourceStamp via Deferred
+        """
+
     def getBuilds():
         """Return a list of IBuildStatus objects for each Build that has been
         started in an attempt to satify this BuildRequest."""
@@ -282,9 +283,8 @@ class IBuildRequestStatus(Interface):
     def unsubscribe(observer):
         """Unregister the callable that was registered with subscribe()."""
     def getSubmitTime():
-        """Return the time when this request was submitted"""
-    def setSubmitTime(t):
-        """Sets the time when this request was submitted"""
+        """Return the time when this request was submitted.  Returns a
+        Deferred."""
 
 
 class ISlaveStatus(Interface):

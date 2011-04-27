@@ -307,7 +307,8 @@ class BuilderStatus(styles.Versioned):
         d = db.buildrequests.getBuildRequests(claimed=False,
                                               buildername=self.name)
         def make_statuses(brdicts):
-            return [BuildRequestStatus(brdict['brid'], self.status, db)
+            return [BuildRequestStatus(self.name, brdict['brid'],
+                                       self.status)
                     for brdict in brdicts]
         d.addCallback(make_statuses)
         return d

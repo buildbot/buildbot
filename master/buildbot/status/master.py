@@ -342,9 +342,6 @@ class Status:
             # r.bsid: check for completion, notify subscribers, unsubscribe
             pass
 
-    def get_buildreq_for_id(self, brid):
-        return buildrequest.BuildRequestStatus(brid, self, self.db)
-
     def _db_builds_changed(self, category, bid):
         brid,buildername,buildnum = self.db.get_build_info(bid)
         if brid in self._buildreq_observers:
@@ -400,7 +397,7 @@ class Status:
         for brid in brids:
             buildername = self.db.get_buildername_for_brid(brid)
             if buildername in self._builder_observers:
-                brs = buildrequest.BuildRequestStatus(brid, self, self.db)
+                brs = buildrequest.BuildRequestStatus(buildername, brid, self)
                 for observer in self._builder_observers[buildername]:
                     if mode == "added":
                         if hasattr(observer, 'requestSubmitted'):

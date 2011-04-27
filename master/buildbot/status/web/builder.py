@@ -82,8 +82,17 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         yield wfd
         statuses = wfd.getResult()
         for pb in statuses:
-            source = pb.getSourceStamp()
             changes = []
+
+            wfd = defer.waitForDeferred(
+                    pb.getSourceStamp())
+            yield wfd
+            source = wfd.getResult()
+
+            wfd = defer.waitForDeferred(
+                    pb.getSubmitTime())
+            yield wfd
+            submitTime = wfd.getResult()
 
             if source.changes:
                 for c in source.changes:
@@ -93,8 +102,9 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                                      'repo' : c.repository })
 
             cxt['pending'].append({
-                'when': time.strftime("%b %d %H:%M:%S", time.localtime(pb.getSubmitTime())),
-                'delay': util.formatInterval(util.now() - pb.getSubmitTime()),
+                'when': time.strftime("%b %d %H:%M:%S",
+                                      time.localtime(submitTime)),
+                'delay': util.formatInterval(util.now() - submitTime),
                 'id': pb.brid,
                 'changes' : changes,
                 'num_changes' : len(changes),
@@ -268,9 +278,14 @@ class StopChangeMixin(object):
             build_req_statuses = wfd.getResult()
 
             for build_req in build_req_statuses:
-                ss = build_req.getSourceStamp()
+                wfd = defer.waitForDeferred(
+                        build_req.getSourceStamp())
+                yield wfd
+                ss = wfd.getResult()
+
                 if not ss.changes:
                     continue
+
                 for change in ss.changes:
                     if change.number == request_change:
                         control = build_controls[build_req.brid]

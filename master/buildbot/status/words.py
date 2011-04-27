@@ -318,7 +318,7 @@ class Contact(base.StatusReceiver):
 
     def requestSubmitted(self, brstatus):
         log.msg('[Contact] BuildRequest %d for %s submitted' %
-            (brstatus.brid, brstatus.getSourceStamp()))
+            (brstatus.brid, brstatus.getBuilderName()))
 
     def builderRemoved(self, builderName):
         log.msg('[Contact] Builder %s removed' % (builderName))
