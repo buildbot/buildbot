@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import base64
+import time
 
 from twisted.python import threadable, log
 from twisted.application import internet, service
@@ -243,7 +244,7 @@ class DBConnector(service.MultiService):
 
     def runInteraction(self, *args, **kwargs): # TODO: remove
         assert self._started
-        start = self._getCurrentTime()
+        start = time.time()
         t = self._start_operation()
         d = self._oldpool.runInteraction(*args, **kwargs)
         d.addBoth(self._runInteraction_done, start, t)
@@ -374,7 +375,7 @@ class DBConnector(service.MultiService):
     def build_started(self, brid, buildnumber):
         return self.runInteractionNow(self._txn_build_started, brid, buildnumber)
     def _txn_build_started(self, t, brid, buildnumber):
-        now = self._getCurrentTime()
+        now = time.time()
         t.execute(self.quoteq("INSERT INTO builds (number, brid, start_time)"
                               " VALUES (?,?,?)", "id"),
                   (buildnumber, brid, now))
@@ -386,7 +387,7 @@ class DBConnector(service.MultiService):
     def builds_finished(self, bids):
         return self.runInteractionNow(self._txn_build_finished, bids)
     def _txn_build_finished(self, t, bids):
-        now = self._getCurrentTime()
+        now = time.time()
         while bids:
             batch, bids = bids[:100], bids[100:]
             q = self.quoteq("UPDATE builds SET finish_time = ?"
@@ -445,7 +446,7 @@ class DBConnector(service.MultiService):
             batch, brids = brids[:100], brids[100:]
 
             if True:
-                now = self._getCurrentTime()
+                now = time.time()
                 q = self.quoteq("UPDATE buildrequests"
                                 " SET complete=1, results=?, complete_at=?"
                                 " WHERE id IN " + self.parmlist(len(batch)))
