@@ -114,10 +114,10 @@ class IStatus(Interface):
     """I am an object, obtainable from the buildmaster, which can provide
     status information."""
 
-    def getProjectName():
+    def getTitle():
         """Return the name of the project that this Buildbot is working
         for."""
-    def getProjectURL():
+    def getTitleURL():
         """Return the URL of this Buildbot's project."""
     def getBuildbotURL():
         """Return the URL of the top-most Buildbot status page, or None if

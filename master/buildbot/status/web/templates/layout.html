@@ -46,12 +46,12 @@
     <div class="footer" style="clear:both">
       <hr/>
       <a href="http://buildbot.net/">BuildBot</a> ({{version}})
-      {% if project_name -%}
+      {% if title -%}
         working for the&nbsp;
-        {%- if project_url -%}
-          <a href="{{ project_url }}">{{ project_name }}</a>
+        {%- if title_url -%}
+          <a href="{{ title_url }}">{{ title }}</a>
         {%- else -%}
-          {{ project_name }}
+          {{ title }}
         {%- endif -%}
         &nbsp;project.
       {%- endif -%}

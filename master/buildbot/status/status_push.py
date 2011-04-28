@@ -221,7 +221,7 @@ class StatusPush(StatusReceiverMultiService):
         packet['id'] = self.state['next_id']
         self.state['next_id'] += 1
         packet['timestamp'] = str(datetime.datetime.utcnow())
-        packet['project'] = self.status.getProjectName()
+        packet['project'] = self.status.getTitle()
         packet['started'] = self.state['started']
         packet['event'] = event
         packet['payload'] = {}

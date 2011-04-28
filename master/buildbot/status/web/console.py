@@ -104,9 +104,9 @@ class ConsoleStatusResource(HtmlResource):
 
     def getTitle(self, request):
         status = self.getStatus(request)
-        projectName = status.getProjectName()
-        if projectName:
-            return "BuildBot: %s" % projectName
+        title = status.getTitle()
+        if title:
+            return "BuildBot: %s" % title
         else:
             return "BuildBot"
 

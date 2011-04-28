@@ -55,8 +55,8 @@ class BuildMaster(service.MultiService):
     debug = 0
     manhole = None
     debugPassword = None
-    projectName = "(unspecified)"
-    projectURL = None
+    title = "(unspecified)"
+    titleURL = None
     buildbotURL = None
     change_svc = None
     properties = Properties()
@@ -222,6 +222,7 @@ class BuildMaster(service.MultiService):
                           "schedulers", "builders", "mergeRequests",
                           "slavePortnum", "debugPassword", "logCompressionLimit",
                           "manhole", "status", "projectName", "projectURL",
+                          "title", "titleURL",
                           "buildbotURL", "properties", "prioritizeBuilders",
                           "eventHorizon", "buildCacheSize", "changeCacheSize",
                           "logHorizon", "buildHorizon", "changeHorizon",
@@ -248,8 +249,10 @@ class BuildMaster(service.MultiService):
                 debugPassword = config.get('debugPassword')
                 manhole = config.get('manhole')
                 status = config.get('status', [])
-                projectName = config.get('projectName')
-                projectURL = config.get('projectURL')
+                # projectName/projectURL still supported to avoid
+                # breaking legacy configurations
+                title = config.get('title', config.get('projectName'))
+                titleURL = config.get('titleURL', config.get('projectURL'))
                 buildbotURL = config.get('buildbotURL')
                 properties = config.get('properties', {})
                 buildCacheSize = config.get('buildCacheSize', None)
@@ -448,8 +451,8 @@ class BuildMaster(service.MultiService):
             if checkOnly:
                 return
 
-            self.projectName = projectName
-            self.projectURL = projectURL
+            self.title = title
+            self.titleURL = titleURL
             self.buildbotURL = buildbotURL
 
             self.properties = Properties()

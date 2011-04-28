@@ -1004,7 +1004,7 @@ status objects:
 @item Name of the builder that generated this event
 @code{name}
 @item Name of the project
-@code{master_status.getProjectName()}
+@code{master_status.getTitle()}
 @item MailNotifier mode
 @code{mode} (one of @code{all, failing, problem, change, passing})
 @item Builder result as a string

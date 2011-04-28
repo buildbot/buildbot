@@ -70,7 +70,7 @@ class FeedResource(XmlResource):
         self.status = status
         self.categories = categories
         self.title = title
-        self.projectName = self.status.getProjectName()
+        self.title = self.status.getTitle()
         self.link = self.status.getBuildbotURL()
         self.description = 'List of builds'
         self.pubdate = time.gmtime(int(time.time()))
@@ -249,12 +249,12 @@ class FeedResource(XmlResource):
 
         title = self.title
         if not title:
-            title = 'Build status of %s' % self.projectName
+            title = 'Build status of %s' % self.title
 
         cxt = {}
         cxt['title'] = title
-        cxt['project_url'] = self.link
-        cxt['project_name'] = self.projectName
+        cxt['title_url'] = self.link
+        cxt['title'] = self.title
         cxt['language'] = self.language
         cxt['description'] = self.description
         if self.pubdate is not None:

@@ -194,8 +194,8 @@ class ContextMixin(AccessorMixin):
             locale_tz = unicode(time.tzname[time.localtime()[-1]], locale_enc)
         else:
             locale_tz = unicode(time.tzname[time.localtime()[-1]])
-        return dict(project_url = status.getProjectURL(),
-                    project_name = status.getProjectName(),
+        return dict(title_url = status.getTitleURL(),
+                    title = status.getTitle(),
                     stylesheet = rootpath + 'default.css',
                     path_to_root = rootpath,
                     version = version,

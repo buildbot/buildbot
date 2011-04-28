@@ -338,7 +338,7 @@ class WaterfallStatusResource(HtmlResource):
 
     def getTitle(self, request):
         status = self.getStatus(request)
-        p = status.getProjectName()
+        p = status.getTitle()
         if p:
             return "BuildBot: %s" % p
         else:

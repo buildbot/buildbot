@@ -23,7 +23,7 @@ class ANYBRANCH: pass # a flag value, used below
 class GridStatusMixin(object):
     def getTitle(self, request):
         status = self.getStatus(request)
-        p = status.getProjectName()
+        p = status.getTitle()
         if p:
             return "BuildBot: %s" % p
         else:
