@@ -430,6 +430,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             subject = msgdict['subject'].encode(ENCODING)
         else:
             subject = self.subject % { 'result': Results[results],
+                                       'projectName': title,
                                        'title': title,
                                        'builder': builderName,
                                        }
