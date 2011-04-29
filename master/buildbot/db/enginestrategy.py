@@ -143,6 +143,16 @@ BuildbotEngineStrategy()
 # this module is really imported for the side-effects, but pyflakes will like
 # us to use something from the module -- so offer a copy of create_engine, which
 # explicitly adds the strategy argument
-def create_engine(*args, **kwargs):
+def create_engine(url, *args, **kwargs):
     kwargs['strategy'] = 'buildbot'
-    return sqlalchemy.create_engine(*args, **kwargs)
+
+    # Use NullPool instead of the sqlalchemy-0.6.8-default
+    # SingletonThreadpool for sqlite to suppress the error in
+    # http://groups.google.com/group/sqlalchemy/msg/f8482e4721a89589,
+    # which also explains that NullPool is the new default in
+    # sqlalchemy 0.7
+    if url.startswith('sqlite:'):
+        from sqlalchemy.pool import NullPool
+        kwargs.setdefault('poolclass', NullPool)
+
+    return sqlalchemy.create_engine(url, *args, **kwargs)
