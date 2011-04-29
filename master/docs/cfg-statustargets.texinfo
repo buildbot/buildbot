@@ -1103,6 +1103,11 @@ To use the service, you address messages at the buildbot, either
 normally (@code{botnickname: status}) or with private messages
 (@code{/msg botnickname status}). The buildbot will respond in kind.
 
+If you issue a command that is currently not available, the buildbot
+will respond with an error message. If the @code{noticeOnChannel=True}
+option was used, error messages will be sent as channel notices instead
+of messaging. The default value is @code{noticeOnChannel=False}.
+
 Some of the commands currently available:
 
 @table @code
