@@ -60,11 +60,14 @@ class BuildbotEngineStrategy_special_cases(unittest.TestCase):
             basedir = r'C:\MYBASE~1'
             expected_url = r'sqlite:///C:\MYBASE~1\X\STATE.SQLITE'
 
+        exp_kwargs = self.sqlite_kwargs.copy()
+        exp_kwargs['basedir'] = basedir
+
         u = url.make_url(url_src)
         kwargs = dict(basedir=basedir)
         u, kwargs, max_conns = self.strat.special_case_sqlite(u, kwargs)
         self.assertEqual([ str(u), max_conns, self.filter_kwargs(kwargs) ],
-            [ expected_url, None, self.sqlite_kwargs ])
+            [ expected_url, None, exp_kwargs ])
 
     def test_sqlite_abspath(self):
         u = url.make_url("sqlite:////x/state.sqlite")
