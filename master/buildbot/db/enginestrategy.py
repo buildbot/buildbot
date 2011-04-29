@@ -26,6 +26,7 @@ special cases that Buildbot needs.  Those include:
 import os
 import sqlalchemy
 from sqlalchemy.engine import strategies, url
+from sqlalchemy.pool import NullPool
 
 # from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html
 class ReconnectingListener(object):
@@ -63,6 +64,14 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
 
         # when given a database path, stick the basedir in there
         if u.database:
+
+            # Use NullPool instead of the sqlalchemy-0.6.8-default
+            # SingletonThreadpool for sqlite to suppress the error in
+            # http://groups.google.com/group/sqlalchemy/msg/f8482e4721a89589,
+            # which also explains that NullPool is the new default in
+            # sqlalchemy 0.7 for non-memory SQLite databases.
+            kwargs.setdefault('poolclass', NullPool)
+
             u.database = u.database % dict(basedir = kwargs['basedir'])
             if not os.path.isabs(u.database[0]):
                 u.database = os.path.join(kwargs['basedir'], u.database)
@@ -143,16 +152,7 @@ BuildbotEngineStrategy()
 # this module is really imported for the side-effects, but pyflakes will like
 # us to use something from the module -- so offer a copy of create_engine, which
 # explicitly adds the strategy argument
-def create_engine(url, *args, **kwargs):
+def create_engine(*args, **kwargs):
     kwargs['strategy'] = 'buildbot'
 
-    # Use NullPool instead of the sqlalchemy-0.6.8-default
-    # SingletonThreadpool for sqlite to suppress the error in
-    # http://groups.google.com/group/sqlalchemy/msg/f8482e4721a89589,
-    # which also explains that NullPool is the new default in
-    # sqlalchemy 0.7
-    if url.startswith('sqlite:'):
-        from sqlalchemy.pool import NullPool
-        kwargs.setdefault('poolclass', NullPool)
-
-    return sqlalchemy.create_engine(url, *args, **kwargs)
+    return sqlalchemy.create_engine(*args, **kwargs)
