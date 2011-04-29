@@ -732,6 +732,10 @@ class IrcStatusBot(irc.IRCClient):
         @type  status: L{buildbot.status.builder.Status}
         @param status: the build master's Status object, through which the
                        bot retrieves all status information
+        @type  noticeOnChannel: boolean
+        @param noticeOnChannel: Defaults to False. If True, error messages
+                                for bot commands will be sent to the channel
+                                as notices. Otherwise they are sent as a msg.
         """
         self.nickname = nickname
         self.channels = channels
