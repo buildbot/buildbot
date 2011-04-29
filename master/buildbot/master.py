@@ -757,7 +757,7 @@ class BuildMaster(service.MultiService):
         resulting builds.
         """
         d = self.db.buildsets.addBuildset(**kwargs)
-        def notify(bsid):
+        def notify((bsid,brids)):
             log.msg("added buildset %d to database" % bsid)
             # note that buildset additions are only reported on this master
             self._new_buildset_subs.deliver(bsid=bsid, **kwargs)
@@ -765,7 +765,7 @@ class BuildMaster(service.MultiService):
             if not self.db_poll_interval:
                 for bn in kwargs.get('builderNames', []):
                     self.buildRequestAdded(bsid=bsid, buildername=bn)
-            return bsid
+            return (bsid,brids)
         d.addCallback(notify)
         return d
 

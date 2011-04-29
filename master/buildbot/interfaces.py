@@ -1004,14 +1004,11 @@ class IControl(Interface):
         """Retrieve the IBuilderControl object for the given Builder."""
 
 class IBuilderControl(Interface):
-    def submitBuildRequest(ss, reason, props=None, now=False):
+    def submitBuildRequest(ss, reason, props=None):
         """Create a BuildRequest, which will eventually cause a build of the
         given SourceStamp to be run on this builder. This returns a
         BuildRequestStatus object via a Deferred, which can be used to keep
-        track of the builds that are performed.
-
-        If now=True, and I have no slave attached, NoSlaveError will be
-        raised instead of queueing the request for later action."""
+        track of the builds that are performed."""
 
     def rebuildBuild(buildStatus, reason="<rebuild, no reason given>"):
         """Rebuild something we've already built before. This submits a

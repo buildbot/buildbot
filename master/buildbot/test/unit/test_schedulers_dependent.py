@@ -96,8 +96,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
             bsids = self.db.buildsets.allBuildsetIds()
             bsids.remove(44)
             self.db.buildsets.assertBuildset(bsids[0],
-                    dict(builderNames=['b'],
-                         external_idstring=None,
+                    dict(external_idstring=None,
                          properties=[('scheduler', ('n', 'Scheduler'))],
                          reason='downstream'),
                     dict(revision='555', branch='master', project='proj',

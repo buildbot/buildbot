@@ -57,8 +57,11 @@ class TestBuildsetsConnectorComponent(
             self.db.buildsets.addBuildset(ssid=234, reason='because',
                 properties={}, builderNames=['bldr'], external_idstring='extid',
                 _reactor=clock))
-        def check(bsid):
+        def check((bsid, brids)):
             def thd(conn):
+                # we should only have one brid
+                self.assertEqual(len(brids), 1)
+
                 # should see one buildset row
                 r = conn.execute(self.db.model.buildsets.select())
                 rows = [ (row.id, row.external_idstring, row.reason,
@@ -69,13 +72,14 @@ class TestBuildsetsConnectorComponent(
 
                 # and one buildrequests row
                 r = conn.execute(self.db.model.buildrequests.select())
-                rows = [ (row.buildsetid, row.buildername, row.priority,
-                          row.claimed_at, row.claimed_by_name,
-                          row.claimed_by_incarnation, row.complete, row.results,
-                          row.submitted_at, row.complete_at)
+
+                rows = [ (row.buildsetid, row.id, row.buildername,
+                    row.priority, row.claimed_at, row.claimed_by_name,
+                    row.claimed_by_incarnation, row.complete, row.results,
+                    row.submitted_at, row.complete_at)
                           for row in r.fetchall() ]
                 self.assertEqual(rows,
-                    [ ( bsid, 'bldr', 0, 0, None, None, 0,
+                    [ ( bsid, brids[0], 'bldr', 0, 0, None, None, 0,
                         -1, now, None) ])
             return self.db.pool.do(thd)
         d.addCallback(check)
@@ -87,8 +91,10 @@ class TestBuildsetsConnectorComponent(
         d.addCallback(lambda _ :
             self.db.buildsets.addBuildset(ssid=234, reason='because',
                                 properties=props, builderNames=['a', 'b']))
-        def check(bsid):
+        def check((bsid, brids)):
             def thd(conn):
+                self.assertEqual(len(brids), 2)
+
                 # should see one buildset row
                 r = conn.execute(self.db.model.buildsets.select())
                 rows = [ (row.id, row.external_idstring, row.reason,
@@ -107,10 +113,14 @@ class TestBuildsetsConnectorComponent(
 
                 # and two buildrequests rows (and don't re-check the default columns)
                 r = conn.execute(self.db.model.buildrequests.select())
-                rows = [ (row.buildsetid, row.buildername)
+                rows = [ (row.buildsetid, row.id, row.buildername)
                           for row in r.fetchall() ]
-                self.assertEqual(sorted(rows),
-                    [ ( bsid, 'a'), (bsid, 'b') ])
+
+                # we don't know which of the brids is assigned to which
+                # buildername, but either one will do
+                self.assertIn(sorted(rows), [
+                    [ ( bsid, brids[0], 'a'), (bsid, brids[1], 'b') ],
+                    [ ( bsid, brids[0], 'b'), (bsid, brids[1], 'a') ]])
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d

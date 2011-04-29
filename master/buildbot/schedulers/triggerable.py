@@ -46,7 +46,7 @@ class Triggerable(base.BaseScheduler):
                     properties=props)
         else:
             d = self.addBuildsetForLatest(reason=self.reason, properties=props)
-        def setup_waiter(bsid):
+        def setup_waiter((bsid,brids)):
             self._waiters[bsid] = d = defer.Deferred()
             self._updateWaiters()
             return d

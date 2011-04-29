@@ -515,8 +515,14 @@ class FakeBuildsetsComponent(FakeDBComponent):
 
     def addBuildset(self, **kwargs):
         bsid = kwargs['id'] = self._newBsid()
+        br_rows = []
+        for buildername in kwargs.pop('builderNames'):
+            br_rows.append(
+                    BuildRequest(buildsetid=bsid, buildername=buildername))
+        self.db.buildrequests.insertTestData(br_rows)
+
         self.buildsets[bsid] = kwargs
-        return defer.succeed(bsid)
+        return defer.succeed((bsid, [ br.id for br in br_rows ]))
 
     def subscribeToBuildset(self, schedulerid, buildsetid):
         self.buildset_subs.append((schedulerid, buildsetid))
@@ -616,6 +622,12 @@ class FakeBuildsetsComponent(FakeDBComponent):
 
         if buildset['properties']:
             buildset['properties'] = sorted(buildset['properties'].items())
+
+        # only add brids if we're expecting them (sometimes they're unknown)
+        if 'brids' in expected_buildset:
+            brids = [ br.id for br in self.db.buildrequests.reqs.values()
+                            if br.buildsetid == bsid ]
+            buildset['brids'] = brids
 
         if 'id' in ss:
             del ss['id']

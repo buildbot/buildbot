@@ -24,7 +24,7 @@ from twisted.internet import defer
 from buildbot import interfaces
 from buildbot.status.progress import Expectations
 from buildbot.status.builder import RETRY
-from buildbot.status.buildset import BuildSetStatus
+from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.process.properties import Properties
 from buildbot.process import buildrequest, slavebuilder
 from buildbot.process.slavebuilder import BUILDING
@@ -816,10 +816,9 @@ class BuilderControl:
                     builderNames=[self.original.name],
                     ssid=ssid, reason=reason, properties=props)
         d.addCallback(add_buildset)
-        def get_brs(bsid):
-            bss = BuildSetStatus(bsid, self.master.master.status,
-                                 self.master.master.db)
-            brs = bss.getBuildRequests()[0]
+        def get_brs((bsid,brids)):
+            brs = BuildRequestStatus(self.original.name, brids[0],
+                                     self.master.master.status)
             return brs
         d.addCallback(get_brs)
         return d

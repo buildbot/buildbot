@@ -211,7 +211,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
                         reason=reason, properties=requested_props,
                         builderNames=builderNames))
         yield wfd
-        bsid = wfd.getResult()
+        (bsid,brids) = wfd.getResult()
 
         # return a remotely-usable BuildSetStatus object
         bss = BuildSetStatus(bsid, self.scheduler.master.status, db)

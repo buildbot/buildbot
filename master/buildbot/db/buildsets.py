@@ -36,6 +36,10 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         each named builder, returning the resulting bsid via a Deferred.
         Arguments should be specified by keyword.
 
+        The return value is a tuple C{(bsid, brids)} where C{bsid} is the
+        inserted buildset ID and C{brids} is a list of inserted build request
+        IDs.
+
         @param ssid: id of the SourceStamp for this buildset
         @type ssid: integer
 
@@ -55,7 +59,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
         @param _reactor: for testing
 
-        @returns: buildset ID via a Deferred
+        @returns: buildset ID and buildrequest IDs, via a Deferred
         """
         def thd(conn):
             submitted_at = _reactor.seconds()
@@ -76,18 +80,24 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                          property_value=json.dumps([v,s]))
                     for k,(v,s) in properties.iteritems() ])
 
-            # and finish with a build request for each builder
-            conn.execute(self.db.model.buildrequests.insert(), [
-                dict(buildsetid=bsid, buildername=buildername,
-                     priority=0, claimed_at=0, claimed_by_name=None,
-                     claimed_by_incarnation=None, complete=0,
-                     results=-1, submitted_at=submitted_at,
-                     complete_at=None)
-                for buildername in builderNames ])
+            # and finish with a build request for each builder.  Note that
+            # sqlalchemy and the Python DBAPI do not provide a way to recover
+            # inserted IDs from a multi-row insert, so this is done one row at
+            # a time.
+            brids = []
+            ins = self.db.model.buildrequests.insert()
+            for buildername in builderNames:
+                r = conn.execute(ins,
+                    dict(buildsetid=bsid, buildername=buildername, priority=0,
+                        claimed_at=0, claimed_by_name=None,
+                        claimed_by_incarnation=None, complete=0, results=-1,
+                        submitted_at=submitted_at, complete_at=None))
+
+                brids.append(r.inserted_primary_key[0])
 
             transaction.commit()
 
-            return bsid
+            return (bsid, brids)
         return self.db.pool.do(thd)
 
     def getBuildset(self, bsid):

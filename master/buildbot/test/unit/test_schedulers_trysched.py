@@ -238,7 +238,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         d = self.call_handleJobFile(lambda f : self.makeSampleParsedJob())
         def check(_):
             self.db.buildsets.assertBuildset('?',
-                    dict(reason="'try' job", builderNames=['buildera', 'builderb'],
+                    dict(reason="'try' job",
                         external_idstring='extid',
                         properties=[('scheduler', ('tsched', 'Scheduler'))]),
                     dict(branch='trunk', repository='repo',
@@ -274,7 +274,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                 lambda f : self.makeSampleParsedJob(builderNames=['buildera']))
         def check(_):
             self.db.buildsets.assertBuildset('?',
-                    dict(reason="'try' job", builderNames=['buildera'],
+                    dict(reason="'try' job",
                         external_idstring='extid',
                         properties=[('scheduler', ('tsched', 'Scheduler'))]),
                     dict(branch='trunk', repository='repo',
@@ -319,7 +319,6 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
         def check(_):
             self.db.buildsets.assertBuildset('?',
                     dict(reason="'try' job from user a",
-                        builderNames=['a'],
                         external_idstring=None,
                         properties=[
                             ('frm', ('schd', 'Scheduler')),
