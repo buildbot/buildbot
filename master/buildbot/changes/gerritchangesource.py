@@ -143,6 +143,8 @@ class GerritChangeSource(base.ChangeSource):
             # eat failures..
             d.addErrback(log.err, 'error adding change from GerritChangeSource')
             return d
+        else:
+            return defer.succeed(None)
 
     def streamProcessStopped(self):
         self.process = None
