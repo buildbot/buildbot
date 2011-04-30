@@ -763,7 +763,7 @@ class BuildMaster(service.MultiService):
             self._new_buildset_subs.deliver(bsid=bsid, **kwargs)
             # only deliver messages immediately if we're not polling
             if not self.db_poll_interval:
-                for bn in kwargs.get('builderNames', []):
+                for bn in brids.keys():
                     self.buildRequestAdded(bsid=bsid, buildername=bn)
             return (bsid,brids)
         d.addCallback(notify)

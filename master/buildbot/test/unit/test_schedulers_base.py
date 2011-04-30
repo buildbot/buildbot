@@ -119,7 +119,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         d = sched.addBuildsetForLatest(reason='because')
         def check((bsid,brids)):
             self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='because', brids=sorted(brids),
+                    dict(reason='because', brids=brids,
                         external_idstring=None,
                         properties=[ ('a', ('b', 'Scheduler')),
                                      ('scheduler', ('testy', 'Scheduler')), ]),
@@ -214,7 +214,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                     external_idstring='try_1234')
         def check((bsid,brids)):
             self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='cuz', brids=sorted(brids),
+                    dict(reason='cuz', brids=brids,
                         external_idstring='try_1234',
                         properties=[('scheduler', ('xyz', 'Scheduler'))]),
                     dict(branch='default', revision=None, repository='hgmo',
@@ -230,7 +230,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                     external_idstring='try_1234', properties=props)
         def check((bsid,brids)):
             self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='cuz', brids=sorted(brids),
+                    dict(reason='cuz', brids=brids,
                         external_idstring='try_1234',
                         properties=[
                             ('scheduler', ('xyz', 'Scheduler')),
@@ -247,7 +247,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                     builderNames=['a', 'b'])
         def check((bsid,brids)):
             self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='cuz', brids=sorted(brids),
+                    dict(reason='cuz', brids=brids,
                         external_idstring=None,
                         properties=[('scheduler', ('xyz', 'Scheduler'))]),
                     dict(branch='default', revision=None, repository='',
@@ -264,7 +264,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         d = sched.addBuildsetForChanges(reason='power', changeids=[13])
         def check((bsid,brids)):
             self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='power', brids=sorted(brids),
+                    dict(reason='power', brids=brids,
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))]),
                     dict(branch='trunk', repository='svn://...',
@@ -284,7 +284,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                             properties=props)
         def check((bsid,brids)):
             self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='downstream', brids=sorted(brids),
+                    dict(reason='downstream', brids=brids,
                         external_idstring=None,
                         properties=[
                             ('scheduler', ('n', 'Scheduler')),
@@ -305,7 +305,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                             builderNames=['p'])
         def check((bsid,brids)):
             self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='power', brids=sorted(brids),
+                    dict(reason='power', brids=brids,
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))]),
                     dict(branch='trunk', repository='svn://...',
@@ -330,7 +330,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         d = sched.addBuildsetForChanges(reason='power', changeids=[14, 15, 13])
         def check((bsid,brids)):
             self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='power', brids=sorted(brids),
+                    dict(reason='power', brids=brids,
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))]),
                     dict(branch='trunk', repository='svn://...',
@@ -349,7 +349,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                 sched.addBuildsetForSourceStamp(reason='whynot', ssid=91))
         def check((bsid,brids)):
             self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='whynot', brids=sorted(brids),
+                    dict(reason='whynot', brids=brids,
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))]),
                     dict(branch='fixins', revision='abc', repository='r',
@@ -369,7 +369,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                                             properties=props))
         def check((bsid,brids)):
             self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='whynot', brids=sorted(brids),
+                    dict(reason='whynot', brids=brids,
                         external_idstring=None,
                         properties=[
                             ('scheduler', ('n', 'Scheduler')),
@@ -391,7 +391,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         builderNames=['a', 'b']))
         def check((bsid,brids)):
             self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='whynot', brids=sorted(brids),
+                    dict(reason='whynot', brids=brids,
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))]),
                     dict(branch='fixins', revision='abc', repository='r',

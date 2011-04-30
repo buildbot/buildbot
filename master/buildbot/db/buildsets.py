@@ -37,8 +37,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         Arguments should be specified by keyword.
 
         The return value is a tuple C{(bsid, brids)} where C{bsid} is the
-        inserted buildset ID and C{brids} is a list of inserted build request
-        IDs.
+        inserted buildset ID and C{brids} is a dictionary mapping buildernames
+        to build request IDs.
 
         @param ssid: id of the SourceStamp for this buildset
         @type ssid: integer
@@ -84,7 +84,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             # sqlalchemy and the Python DBAPI do not provide a way to recover
             # inserted IDs from a multi-row insert, so this is done one row at
             # a time.
-            brids = []
+            brids = {}
             ins = self.db.model.buildrequests.insert()
             for buildername in builderNames:
                 r = conn.execute(ins,
@@ -93,7 +93,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                         claimed_by_incarnation=None, complete=0, results=-1,
                         submitted_at=submitted_at, complete_at=None))
 
-                brids.append(r.inserted_primary_key[0])
+                brids[buildername] = r.inserted_primary_key[0]
 
             transaction.commit()
 

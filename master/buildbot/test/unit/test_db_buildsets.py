@@ -79,7 +79,7 @@ class TestBuildsetsConnectorComponent(
                     row.submitted_at, row.complete_at)
                           for row in r.fetchall() ]
                 self.assertEqual(rows,
-                    [ ( bsid, brids[0], 'bldr', 0, 0, None, None, 0,
+                    [ ( bsid, brids['bldr'], 'bldr', 0, 0, None, None, 0,
                         -1, now, None) ])
             return self.db.pool.do(thd)
         d.addCallback(check)
@@ -118,9 +118,8 @@ class TestBuildsetsConnectorComponent(
 
                 # we don't know which of the brids is assigned to which
                 # buildername, but either one will do
-                self.assertIn(sorted(rows), [
-                    [ ( bsid, brids[0], 'a'), (bsid, brids[1], 'b') ],
-                    [ ( bsid, brids[0], 'b'), (bsid, brids[1], 'a') ]])
+                self.assertEqual(sorted(rows),
+                    [ ( bsid, brids['a'], 'a'), (bsid, brids['b'], 'b') ])
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d

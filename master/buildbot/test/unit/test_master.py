@@ -60,7 +60,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
     def test_buildset_subscription(self):
         self.master.db = mock.Mock()
         self.master.db.buildsets.addBuildset.return_value = \
-            defer.succeed((938593, [19,20]))
+            defer.succeed((938593, dict(a=19,b=20)))
 
         cb = mock.Mock()
         sub = self.master.subscribeToBuildsets(cb)
@@ -71,7 +71,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
             # master called the right thing in the db component
             self.master.db.buildsets.addBuildset.assert_called_with(ssid=999)
             # addBuildset returned the right value
-            self.assertEqual((bsid,brids), (938593, [19,20]))
+            self.assertEqual((bsid,brids), (938593, dict(a=19,b=20)))
             # and the notification sub was called correctly
             cb.assert_called_with(bsid=938593, ssid=999)
         d.addCallback(check)

@@ -817,7 +817,8 @@ class BuilderControl:
                     ssid=ssid, reason=reason, properties=props)
         d.addCallback(add_buildset)
         def get_brs((bsid,brids)):
-            brs = BuildRequestStatus(self.original.name, brids[0],
+            brs = BuildRequestStatus(self.original.name,
+                                     brids[self.original.name],
                                      self.master.master.status)
             return brs
         d.addCallback(get_brs)
