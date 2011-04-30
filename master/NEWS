@@ -5,6 +5,15 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Version
 
+** `Blocker` step
+
+A "beta" version of the Blocker step has been added; this step allows multiple
+concurrent builds to be synchronized.  It is "beta" in the sense that it may
+contain significant bugs, is only documented in the source code, and has an
+interface that is subject to non-compatible change in later versions of
+Buildbot.  See `contrib/blockertest` for a test and demonstration of the new
+step's functionality.
+
 ** Deprecations, Removals, and Non-Compatible Changes
 
 *** MasterShellCommand and all of the transfer steps now default to
