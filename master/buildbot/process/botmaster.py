@@ -280,8 +280,8 @@ class BotMaster(service.MultiService):
             return sl
 
     def startService(self):
-        def buildRequestAdded(bsid=None, brid=None, buildername=None):
-            self.maybeStartBuildsForBuilder(buildername)
+        def buildRequestAdded(notif):
+            self.maybeStartBuildsForBuilder(notif['buildername'])
         self.buildrequest_sub = \
             self.master.subscribeToBuildRequests(buildRequestAdded)
         service.MultiService.startService(self)

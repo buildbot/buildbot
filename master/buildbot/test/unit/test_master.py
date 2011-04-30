@@ -130,8 +130,8 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
     def deliverBuildsetCompletion(self, bsid, result):
         self.gotten_buildset_completions.append((bsid, result))
 
-    def deliverBuildRequestAddition(self, **kwargs):
-        self.gotten_buildrequest_additions.append(kwargs)
+    def deliverBuildRequestAddition(self, notif):
+        self.gotten_buildrequest_additions.append(notif)
 
     # tests
 
@@ -221,8 +221,8 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
         d = self.master.pollDatabaseBuildRequests()
         def check(_):
             self.assertEqual(sorted(self.gotten_buildrequest_additions),
-                    sorted([dict(bsid=99, buildername='9teen'),
-                            dict(bsid=99, buildername='twenty')]))
+                    sorted([dict(bsid=99, brid=19, buildername='9teen'),
+                            dict(bsid=99, brid=20, buildername='twenty')]))
         d.addCallback(check)
         return d
 
@@ -255,11 +255,11 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
         d.addCallback(lambda _ : self.master.pollDatabaseBuildRequests())
         def check(_):
             self.assertEqual(self.gotten_buildrequest_additions, [
-                dict(bsid=9, buildername='eleventy'),
+                dict(bsid=9, brid=11, buildername='eleventy'),
                 'MARK',
-                dict(bsid=9, buildername='twenty'),
+                dict(bsid=9, brid=20, buildername='twenty'),
                 'MARK',
-                dict(bsid=9, buildername='eleventy'),
+                dict(bsid=9, brid=11, buildername='eleventy'),
             ])
         d.addCallback(check)
         return d

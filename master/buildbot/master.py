@@ -763,8 +763,9 @@ class BuildMaster(service.MultiService):
             self._new_buildset_subs.deliver(bsid=bsid, **kwargs)
             # only deliver messages immediately if we're not polling
             if not self.db_poll_interval:
-                for bn in brids.keys():
-                    self.buildRequestAdded(bsid=bsid, buildername=bn)
+                for bn, brid in brids.iteritems():
+                    self.buildRequestAdded(bsid=bsid, brid=brid,
+                                           buildername=bn)
             return (bsid,brids)
         d.addCallback(notify)
         return d
@@ -800,25 +801,26 @@ class BuildMaster(service.MultiService):
         """
         return self._complete_buildset_subs.subscribe(callback)
 
-    def buildRequestAdded(self, bsid, buildername):
+    def buildRequestAdded(self, bsid, brid, buildername):
         """
         Notifies the master that a build request is available to be claimed;
         this may be a brand new build request, or a build request that was
         previously claimed and unclaimed through a timeout or other calamity.
 
         @param bsid: containing buildset id
+        @param brid: buildrequest ID
         @param buildername: builder named by the build request
         """
-        self._new_buildrequest_subs.deliver(bsid=bsid,
-                                            buildername=buildername)
+        self._new_buildrequest_subs.deliver(
+                dict(bsid=bsid, brid=brid, buildername=buildername))
 
     def subscribeToBuildRequests(self, callback):
         """
-        Request that C{callback} be invoked with keyword parameters C{bsid}
-        (buildset id) and C{buildername} whenever a new build request is added
-        to the database.  Note that, due to the delayed nature of
-        subscriptions, the build request may already be claimed by the time
-        C{callback} is invoked.
+        Request that C{callback} be invoked with a dictionary with keys C{brid}
+        (the build request id), C{bsid} (buildset id) and C{buildername}
+        whenever a new build request is added to the database.  Note that, due
+        to the delayed nature of subscriptions, the build request may already
+        be claimed by the time C{callback} is invoked.
 
         Note: this method will go away in 0.9.x
         """
@@ -960,7 +962,8 @@ class BuildMaster(service.MultiService):
             brdicts = dict((brd['brid'], brd) for brd in now_unclaimed_brdicts)
             for brid in new_unclaimed:
                 brd = brdicts[brid]
-                self.buildRequestAdded(brd['buildsetid'], brd['buildername'])
+                self.buildRequestAdded(brd['buildsetid'], brd['brid'],
+                                       brd['buildername'])
 
     ## state maintenance (private)
 
