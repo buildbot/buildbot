@@ -309,6 +309,7 @@ class DBConnector(service.MultiService):
 
     # Properties methods
 
+    # used by getChangeNumberedNow (below)
     def get_properties_from_db(self, tablename, idname, id, t=None):
         if t:
             return self._txn_get_properties_from_db(t, tablename, idname, id)
@@ -348,28 +349,6 @@ class DBConnector(service.MultiService):
         if not r:
             return None
         return r[0][0]
-
-    def claim_buildrequests(self, now, master_name, master_incarnation, brids,
-                            t=None):
-        if not brids:
-            return
-        if t:
-            self._txn_claim_buildrequests(t, now, master_name,
-                                          master_incarnation, brids)
-        else:
-            self.runInteractionNow(self._txn_claim_buildrequests,
-                                   now, master_name, master_incarnation, brids)
-    def _txn_claim_buildrequests(self, t, now, master_name, master_incarnation,
-                                 brids):
-        brids = list(brids) # in case it's a set
-        while brids:
-            batch, brids = brids[:100], brids[100:]
-            q = self.quoteq("UPDATE buildrequests"
-                            " SET claimed_at = ?,"
-                            "     claimed_by_name = ?, claimed_by_incarnation = ?"
-                            " WHERE id IN " + self.parmlist(len(batch)))
-            qargs = [now, master_name, master_incarnation] + list(batch)
-            t.execute(q, qargs)
 
     # used by Builder._startBuildFor_2
     def build_started(self, brid, buildnumber):
