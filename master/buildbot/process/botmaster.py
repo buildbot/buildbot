@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-import sys
 from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.internet import defer, reactor
@@ -416,7 +415,7 @@ class BuildRequestDistributor(service.Service):
             d = defer.maybeDeferred(lambda :
                     bldr.getOldestRequestTime())
             d.addCallback(lambda time :
-                ((time is None) and sys.maxint or time,bldr))
+                (((time is None) and None or time),bldr))
             return d
         wfd = defer.waitForDeferred(
             defer.gatherResults(
@@ -424,8 +423,13 @@ class BuildRequestDistributor(service.Service):
         yield wfd
         xformed = wfd.getResult()
 
-        # sort the transformed list synchronously
-        xformed.sort()
+        # sort the transformed list synchronously, comparing None to the end of
+        # the list
+        def nonecmp(a,b):
+            if a[0] is None: return 1
+            if b[0] is None: return -1
+            return cmp(a,b)
+        xformed.sort(cmp=nonecmp)
 
         # and reverse the transform
         yield [ xf[1] for xf in xformed ]

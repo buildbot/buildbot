@@ -18,6 +18,7 @@ from twisted.trial import unittest
 from twisted.internet import defer, reactor
 from buildbot.test.util import compat
 from buildbot.process import botmaster
+from buildbot.util import epoch2datetime
 
 class Test(unittest.TestCase):
 
@@ -120,6 +121,8 @@ class Test(unittest.TestCase):
                 return lambda : t
 
         for n, t in oldestRequestTimes.iteritems():
+            if t is not None:
+                t = epoch2datetime(t)
             self.builders[n].getOldestRequestTime = mklambda(t)
 
         d = self.brd._sortBuilders(oldestRequestTimes.keys())
