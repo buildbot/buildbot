@@ -482,14 +482,23 @@ class Builder(pb.Referenceable, service.MultiService):
         # create the BuildStatus object that goes with the Build
         bs = self.builder_status.newBuild()
 
+        # record in the db - one per buildrequest
+        bids = []
+        for req in build.requests:
+            wfd = defer.waitForDeferred(
+                self.master.db.builds.addBuild(req.id, bs.number))
+            yield wfd
+            bids.append(wfd.getResult())
+
+        # let status know
+        self.master.status.build_started(req.id, self.name, bs.number)
+
         # start the build. This will first set up the steps, then tell the
         # BuildStatus that it has started, which will announce it to the world
         # (through our BuilderStatus object, which is its parent).  Finally it
         # will start the actual build process.  This is done with a fresh
         # Deferred since _startBuildFor should not wait until the build is
         # finished.
-        bids = [ self.db.build_started(req.id, bs.number)
-                 for req in build.requests ]
         d = build.startBuild(bs, self.expectations, slavebuilder)
         d.addCallback(self.buildFinished, slavebuilder, bids)
         # this shouldn't happen. if it does, the slave will be wedged

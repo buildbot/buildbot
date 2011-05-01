@@ -343,8 +343,7 @@ class Status:
             # r.bsid: check for completion, notify subscribers, unsubscribe
             pass
 
-    def _db_builds_changed(self, category, bid):
-        brid,buildername,buildnum = self.db.get_build_info(bid)
+    def build_started(self, brid, buildername, buildnum):
         if brid in self._buildreq_observers:
             bs = self.getBuilder(buildername).getBuild(buildnum)
             if bs:

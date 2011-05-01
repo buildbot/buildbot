@@ -353,18 +353,6 @@ class DBConnector(service.MultiService):
             return None
         return r[0][0]
 
-    # used by Builder._startBuildFor_2
-    def build_started(self, brid, buildnumber):
-        return self.runInteractionNow(self._txn_build_started, brid, buildnumber)
-    def _txn_build_started(self, t, brid, buildnumber):
-        now = time.time()
-        t.execute(self.quoteq("INSERT INTO builds (number, brid, start_time)"
-                              " VALUES (?,?,?)", "id"),
-                  (buildnumber, brid, now))
-        bid = self.lastrowid(t)
-        self.notify("add-build", bid)
-        return bid
-
     # used by Builder.buildFinished
     def builds_finished(self, bids):
         return self.runInteractionNow(self._txn_build_finished, bids)
@@ -376,20 +364,6 @@ class DBConnector(service.MultiService):
                             " WHERE id IN " + self.parmlist(len(batch)))
             qargs = [now] + list(batch)
             t.execute(q, qargs)
-
-    # used by Status
-    def get_build_info(self, bid):
-        return self.runInteractionNow(self._txn_get_build_info, bid)
-    def _txn_get_build_info(self, t, bid):
-        # brid, buildername, buildnum
-        t.execute(self.quoteq("SELECT b.brid,br.buildername,b.number"
-                              " FROM builds AS b, buildrequests AS br"
-                              " WHERE b.id=? AND b.brid=br.id"),
-                  (bid,))
-        res = t.fetchall()
-        if res:
-            return res[0]
-        return (None,None,None)
 
     # used by BuildRequestStatus.getBuilds
     def get_buildnums_for_brid(self, brid):

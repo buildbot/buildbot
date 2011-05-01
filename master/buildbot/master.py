@@ -557,9 +557,6 @@ class BuildMaster(service.MultiService):
 
         # set up the stuff that depends on the db
         def set_up_db_dependents(r):
-            # TODO: this needs to go
-            self.status.setDB(self.db)
-
             # subscribe the various parts of the system to changes
             self._change_subs.subscribe(self.status.changeAdded)
 
