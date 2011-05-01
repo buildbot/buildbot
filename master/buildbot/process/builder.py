@@ -539,7 +539,10 @@ class Builder(pb.Referenceable, service.MultiService):
         # which will trigger a check for any now-possible build requests
         # (maybeStartBuilds)
 
-        self.db.builds_finished(bids)
+        # mark the builds as finished, although since nothing ever reads this
+        # table, it's not too important that it complete successfully
+        d = self.db.builds.finishBuilds(bids)
+        d.addErrback(log.err, 'while markign builds as finished (ignored)')
 
         results = build.build_status.getResults()
         self.building.remove(build)

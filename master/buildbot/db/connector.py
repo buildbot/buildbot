@@ -331,18 +331,6 @@ class DBConnector(service.MultiService):
             return None
         return r[0][0]
 
-    # used by Builder.buildFinished
-    def builds_finished(self, bids):
-        return self.runInteractionNow(self._txn_build_finished, bids)
-    def _txn_build_finished(self, t, bids):
-        now = time.time()
-        while bids:
-            batch, bids = bids[:100], bids[100:]
-            q = self.quoteq("UPDATE builds SET finish_time = ?"
-                            " WHERE id IN " + self.parmlist(len(batch)))
-            qargs = [now] + list(batch)
-            t.execute(q, qargs)
-
     # used by BuildRequestStatus.getBuilds
     def get_buildnums_for_brid(self, brid):
         return self.runInteractionNow(self._txn_get_buildnums_for_brid, brid)
