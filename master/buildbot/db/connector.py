@@ -318,19 +318,6 @@ class DBConnector(service.MultiService):
 
     # BuildRequest-manipulation methods
 
-    def get_buildername_for_brid(self, brid):
-        assert isinstance(brid, (int, long))
-        return self.runInteractionNow(self._txn_get_buildername_for_brid, brid)
-    def _txn_get_buildername_for_brid(self, t, brid):
-        assert isinstance(brid, (int, long))
-        t.execute(self.quoteq("SELECT buildername FROM buildrequests"
-                              " WHERE id=?"),
-                  (brid,))
-        r = t.fetchall()
-        if not r:
-            return None
-        return r[0][0]
-
     # used by BuildRequestStatus.getBuilds
     def get_buildnums_for_brid(self, brid):
         return self.runInteractionNow(self._txn_get_buildnums_for_brid, brid)
