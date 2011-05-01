@@ -398,32 +398,6 @@ class DBConnector(service.MultiService):
                   (bsid,))
         return dict(t.fetchall())
 
-    # use by Status.getBuildSets
-    def examine_buildset(self, bsid):
-        return self.runInteractionNow(self._txn_examine_buildset, bsid)
-    def _txn_examine_buildset(self, t, bsid):
-        # "finished" means complete=1 for all builds. Return False until
-        # all builds are complete, then True.
-        # "successful" means complete=1 and results!=FAILURE for all builds.
-        # Returns None until the last success or the first failure. Returns
-        # False if there is at least one failure. Returns True if all are
-        # successful.
-        q = self.quoteq("SELECT br.complete,br.results"
-                        " FROM buildsets AS bs, buildrequests AS br"
-                        " WHERE br.buildsetid=bs.id AND bs.id=?")
-        t.execute(q, (bsid,))
-        results = t.fetchall()
-        finished = True
-        successful = None
-        for (c,r) in results:
-            if not c:
-                finished = False
-            if c and r not in (SUCCESS, WARNINGS):
-                successful = False
-        if finished and successful is None:
-            successful = True
-        return (successful, finished)
-
     # used by getSourceStamp
     def getChangeNumberedNow(self, changeid, t=None):
         # this is a synchronous/blocking version of getChangeByNumber
