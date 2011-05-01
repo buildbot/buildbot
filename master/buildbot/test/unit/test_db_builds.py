@@ -76,14 +76,14 @@ class TestBuildsConnectorComponent(
         clock.advance(1302222222)
         d = self.insertTestData(self.background_data)
         d.addCallback(lambda _ :
-                self.db.builds.addBuild(brid=40, number=119, _reactor=clock))
+                self.db.builds.addBuild(brid=41, number=119, _reactor=clock))
         def check(_):
             def thd(conn):
                 r = conn.execute(self.db.model.builds.select())
                 rows = [ (row.brid, row.number, row.start_time,
                           row.finish_time) for row in r.fetchall() ]
                 self.assertEqual(rows,
-                    [ (40, 119, 1302222222, None) ])
+                    [ (41, 119, 1302222222, None) ])
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
