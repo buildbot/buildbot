@@ -242,6 +242,37 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    def unclaimBuildRequests(self, brids):
+        """
+        Release this master's claim on all of the given build requests.  This
+        will check that the requests are claimed by this master, but will not
+        fail if they are not so claimed.
+
+        @param brids: ids of buildrequests to unclaim
+        @type brids: list
+
+        @returns: Deferred
+        """
+        def thd(conn):
+            master_name = self.db.master.master_name
+            master_incarnation = self.db.master.master_incarnation
+            tbl = self.db.model.buildrequests
+
+            q = tbl.update(whereclause=(tbl.c.id.in_(brids)))
+            q = q.where(
+                # incomplete
+                (tbl.c.complete == 0) &
+                # .. and mine only
+                (tbl.c.claimed_at != None) &
+                (tbl.c.claimed_by_name == master_name) &
+                (tbl.c.claimed_by_incarnation == master_incarnation))
+            res = conn.execute(q,
+                claimed_at=0,
+                claimed_by_name=None,
+                claimed_by_incarnation=None)
+            res.close()
+        return self.db.pool.do(thd)
+
     def completeBuildRequests(self, brids, results, _reactor=reactor):
         """
         Complete a set of build requests, all of which are owned by this master

@@ -576,3 +576,18 @@ class TestBuildsetsConnectorComponent(
         return self.do_test_unclaimMethod(
             lambda : meth(100, _reactor=clock),
             [47, 49])
+
+    def test_unclaimBuildRequests(self):
+        to_unclaim = [
+            44, # completed -> not unclaimed
+            45, # incomplete -> unclaimed
+            46, # from another master -> not unclaimed
+            47, # unclaimed -> still unclaimed
+            48, # previous incarnation -> not unclaimed
+            49, # another master -> not unclaimed
+            50  # no such buildrequest -> no error
+        ]
+        return self.do_test_unclaimMethod(
+            lambda : self.db.buildrequests.unclaimBuildRequests(to_unclaim),
+            [45, 47])
+
