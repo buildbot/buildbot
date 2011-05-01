@@ -904,17 +904,17 @@ class FakeBuildsComponent(FakeDBComponent):
     def getBuild(self, bid):
         row = self.builds.get(bid)
         if not row:
-            return None
+            return defer.succeed(None)
 
         def mkdt(epoch):
             if epoch:
                 return epoch2datetime(epoch)
-        return dict(
+        return defer.succeed(dict(
             bid=row.id,
             brid=row.brid,
             number=row.number,
             start_time=mkdt(row.start_time),
-            finish_time=mkdt(row.finish_time))
+            finish_time=mkdt(row.finish_time)))
 
     def addBuild(self, brid, number, _reactor=reactor):
         bid = self._newId()
@@ -953,6 +953,8 @@ class FakeDBConnector(object):
         self.state = comp = FakeStateComponent(self, testcase)
         self._components.append(comp)
         self.buildrequests = comp = FakeBuildRequestsComponent(self, testcase)
+        self._components.append(comp)
+        self.builds = comp = FakeBuildsComponent(self, testcase)
         self._components.append(comp)
 
     def insertTestData(self, rows):
