@@ -25,7 +25,6 @@ from buildbot.util import collections as bbcollections
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process.properties import Properties
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
-from buildbot.util.eventual import eventually
 from buildbot.util import json
 from buildbot.db import pool, model, changes, schedulers, sourcestamps
 from buildbot.db import state, buildsets, buildrequests, builds
@@ -61,7 +60,7 @@ class DBConnector(service.MultiService):
     object, and listed below.
     """
 
-    synchronized = ["notify", "_end_operation"] # TODO: remove
+    synchronized = ["_end_operation"] # TODO: remove
     MAX_QUERY_TIMES = 1000
 
     # Period, in seconds, of the cleanup task.  This master will perform
@@ -82,7 +81,6 @@ class DBConnector(service.MultiService):
 
         self._sourcestamp_cache = util.LRUCache() # TODO: remove
         self._active_operations = set() # protected by synchronized= TODO: remove
-        self._pending_notifications = [] # TODO: remove
         self._subscribers = bbcollections.defaultdict(set)
 
         self._started = False
@@ -193,17 +191,11 @@ class DBConnector(service.MultiService):
         return t
     def _end_operation(self, t):
         # this is always invoked from the main thread, but is wrapped by
-        # synchronized= and threadable.synchronous(), since it touches
-        # self._pending_notifications, which is also touched by
-        # runInteraction threads
+        # synchronized= and threadable.synchronous() for no particular reason
+        # now that notifications are removed
         self._active_operations.discard(t)
         if self._active_operations:
             return
-        for (category, args) in self._pending_notifications:
-            # in the distributed system, this will be a
-            # transport.write(" ".join([category] + [str(a) for a in args]))
-            eventually(self.send_notification, category, args)
-        self._pending_notifications = []
 
     def runInteractionNow(self, interaction, *args, **kwargs): # TODO: remove
         # synchronous+blocking version of runInteraction()
@@ -221,20 +213,6 @@ class DBConnector(service.MultiService):
         c.close()
         conn.commit()
         return result
-
-    def notify(self, category, *args): # TODO: remove
-        # this is wrapped by synchronized= and threadable.synchronous(),
-        # since it will be invoked from runInteraction threads
-        self._pending_notifications.append( (category,args) )
-
-    def send_notification(self, category, args): # TODO: remove
-        # in the distributed system, this will be invoked by lineReceived()
-        #print "SEND", category, args
-        for observer in self._subscribers[category]:
-            eventually(observer, category, *args)
-
-    def subscribe_to(self, category, observer): # TODO: remove
-        self._subscribers[category].add(observer)
 
     def runQuery(self, *args, **kwargs): # TODO: remove
         assert self._started
