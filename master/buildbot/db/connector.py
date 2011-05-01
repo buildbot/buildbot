@@ -28,7 +28,7 @@ from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot.util.eventual import eventually
 from buildbot.util import json
 from buildbot.db import pool, model, changes, schedulers, sourcestamps
-from buildbot.db import state, buildsets, buildrequests
+from buildbot.db import state, buildsets, buildrequests, builds
 
 def str_or_none(s):
     if s is None:
@@ -108,6 +108,9 @@ class DBConnector(service.MultiService):
 
         self.state = state.StateConnectorComponent(self)
         "L{buildbot.db.state.StateConnectorComponent} instance"
+
+        self.builds = builds.BuildsConnectorComponent(self)
+        "L{buildbot.db.builds.BuildsConnectorComponent} instance"
 
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD, self.doCleanup)
         self.cleanup_timer.setServiceParent(self)
@@ -409,7 +412,6 @@ class DBConnector(service.MultiService):
                             "     claimed_by_name=NULL, claimed_by_incarnation=NULL"
                             " WHERE id IN " + self.parmlist(len(batch)))
             t.execute(q, batch)
-        self.notify("add-buildrequest", *brids)
 
     # used by BuildRequestControl.cancel and Builder.cancelBuildRequest
     def cancel_buildrequests(self, brids):
@@ -446,8 +448,6 @@ class DBConnector(service.MultiService):
             for bsid in bsids:
                 self._check_buildset(t, bsid, now)
 
-        self.notify("cancel-buildrequest", *brids)
-        self.notify("modify-buildset", *bsids)
 
     def _check_buildset(self, t, bsid, now):
         q = self.quoteq("SELECT br.complete,br.results"

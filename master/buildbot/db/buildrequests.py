@@ -44,7 +44,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     def getBuildRequest(self, brid):
         """
         Get a single BuildRequest, in the format described above.  Returns
-        C{None} if there is no such buildrquest.
+        C{None} if there is no such buildrequest.
 
         @param brid: build request id
         @type brid: integer
@@ -141,8 +141,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         succeed in claiming a build request that is already claimed by this
         master instance, and will update its claimed_at date.
 
-        @param brid: ids of buildrequests to claim
-        @type brid: list
+        @param brids: ids of buildrequests to claim
+        @type brids: list
 
         @param _reactor: reactor to use (for testing)
         @param _race_hook: hook for testing

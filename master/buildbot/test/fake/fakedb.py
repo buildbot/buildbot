@@ -272,6 +272,17 @@ class ObjectState(Row):
 
     required_columns = ( 'objectid', )
 
+class Build(Row):
+    table = "builds"
+
+    defaults = dict(
+        id = None,
+        number = 29,
+        brid = 39,
+        start_time = 1304262222,
+        finish_time = None)
+
+    id_column = 'id'
 
 # Fake DB Components
 
@@ -870,6 +881,53 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                   if br.claimed_by_name == self.MASTER_NAME and
                      br.claimed_by_incarnation == self.MASTER_INCARNATION ],
                 claimed_brids)
+
+
+class FakeBuildsComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.builds = {}
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, Build):
+                self.builds[row.id] = row
+
+    # component methods
+
+    def _newId(self):
+        id = 100
+        while id in self.builds:
+            id += 1
+        return id
+
+    def getBuild(self, bid):
+        row = self.builds.get(bid)
+        if not row:
+            return None
+
+        def mkdt(epoch):
+            if epoch:
+                return epoch2datetime(epoch)
+        return dict(
+            bid=row.id,
+            brid=row.brid,
+            number=row.number,
+            start_time=mkdt(row.start_time),
+            finish_time=mkdt(row.finish_time))
+
+    def addBuild(self, brid, number, _reactor=reactor):
+        bid = self._newId()
+        self.builds[bid] = Build(id=bid, number=number, brid=brid,
+                start_time=_reactor.seconds, finish_time=None)
+        return bid
+
+    def finishBuilds(self, bids, _reactor=reactor):
+        now = _reactor.seconds()
+        for bid in bids:
+            b = self.builds.get(bid)
+            if b:
+                b.finish_time = now
 
 
 class FakeDBConnector(object):
