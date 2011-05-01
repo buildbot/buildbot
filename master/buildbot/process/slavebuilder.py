@@ -231,7 +231,7 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
 
     def prepare(self, builder_status, build):
         # If we can't lock, then don't bother trying to substantiate
-        if not self.slave.acquireLocks():
+        if not self.slave or not self.slave.acquireLocks():
             return defer.succeed(False)
 
         log.msg("substantiating slave %s" % (self,))

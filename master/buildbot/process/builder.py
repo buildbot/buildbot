@@ -440,21 +440,28 @@ class Builder(pb.Referenceable, service.MultiService):
                     "request" % (build, slavebuilder))
 
             self.building.remove(build)
-            self._resubmit_buildreqs(build).addErrback(log.err)
-
             slavebuilder.slave.releaseLocks()
-            self.maybeStartBuildsForBuilder(self.name)
+
+            # release the buildrequest claims
+            wfd = defer.waitForDeferred(
+                self._resubmit_buildreqs(build))
+            yield wfd
+            wfd.getResult()
+
+            # and try starting builds again.  If we still have a working slave,
+            # then this may re-claim the same buildrequests
+            self.botmaster.maybeStartBuildsForBuilder(self.name)
 
             return
 
-            # ping the slave to make sure they're still there. If they've
-            # fallen off the map (due to a NAT timeout or something), this
-            # will fail in a couple of minutes, depending upon the TCP
-            # timeout.
-            #
-            # TODO: This can unnecessarily suspend the starting of a build, in
-            # situations where the slave is live but is pushing lots of data to
-            # us in a build.
+        # ping the slave to make sure they're still there. If they've
+        # fallen off the map (due to a NAT timeout or something), this
+        # will fail in a couple of minutes, depending upon the TCP
+        # timeout.
+        #
+        # TODO: This can unnecessarily suspend the starting of a build, in
+        # situations where the slave is live but is pushing lots of data to
+        # us in a build.
         log.msg("starting build %s.. pinging the slave %s"
                 % (build, slavebuilder))
         wfd = defer.waitForDeferred(
@@ -561,7 +568,7 @@ class Builder(pb.Referenceable, service.MultiService):
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]
-        return self.db.resubmit_buildrequests(brids)
+        return self.db.buildrequests.unclaimBuildRequests(brids)
 
     def setExpectations(self, progress):
         """Mark the build as successful and update expectations for the next

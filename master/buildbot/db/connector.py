@@ -339,20 +339,6 @@ class DBConnector(service.MultiService):
                   (brid,))
         return [number for (number,) in t.fetchall()]
 
-    # used by Builder.buildFinished
-    def resubmit_buildrequests(self, brids):
-        return self.runInteraction(self._txn_resubmit_buildreqs, brids)
-    def _txn_resubmit_buildreqs(self, t, brids):
-        # the interrupted build that gets resubmitted will still have the
-        # same submitted_at value, so it should be re-started first
-        while brids:
-            batch, brids = brids[:100], brids[100:]
-            q = self.quoteq("UPDATE buildrequests"
-                            " SET claimed_at=0,"
-                            "     claimed_by_name=NULL, claimed_by_incarnation=NULL"
-                            " WHERE id IN " + self.parmlist(len(batch)))
-            t.execute(q, batch)
-
     # used by BuildRequestControl.cancel and Builder.cancelBuildRequest
     def cancel_buildrequests(self, brids):
         return self.runInteractionNow(self._txn_cancel_buildrequest, brids)
