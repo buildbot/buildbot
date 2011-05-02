@@ -292,16 +292,6 @@ class DBConnector(service.MultiService):
             # notify the master
             self.master.buildsetComplete(bsid, bs_results)
 
-    # used by BuildSetStatus
-    def get_buildrequestids_for_buildset(self, bsid):
-        return self.runInteractionNow(self._txn_get_buildrequestids_for_buildset,
-                                      bsid)
-    def _txn_get_buildrequestids_for_buildset(self, t, bsid):
-        t.execute(self.quoteq("SELECT buildername,id FROM buildrequests"
-                              " WHERE buildsetid=?"),
-                  (bsid,))
-        return dict(t.fetchall())
-
     def doCleanup(self):
         """
         Perform any periodic database cleanup tasks.

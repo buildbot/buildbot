@@ -41,16 +41,23 @@ class BuildSetStatus:
         return self.bsdict['complete']
 
     def getBuilderNamesAndBuildRequests(self):
-        brs = {}
-        brids = self.master.db.get_buildrequestids_for_buildset(self.id)
-        for (buildername, brid) in brids.iteritems():
-            brs[buildername] = BuildRequestStatus(buildername, brid,
-                                                  self.status)
-        return brs
+        # returns a Deferred; undocumented method that may be removed
+        # without warning
+        d = self.master.db.buildrequests.getBuildRequests(bsid=self.id)
+        def get_objects(brdicts):
+            return dict([
+                (brd['buildername'], BuildRequestStatus(brd['buildername'],
+                                            brd['brid'], self.status))
+                for brd in brdicts ])
+        d.addCallback(get_objects)
+        return d
 
     def getBuilderNames(self):
-        brs = self.master.db.get_buildrequestids_for_buildset(self.id)
-        return sorted(brs.keys())
+        d = self.master.db.buildrequests.getBuildRequests(bsid=self.id)
+        def get_names(brdicts):
+            return sorted([ brd['buildername'] for brd in brdicts ])
+        d.addCallback(get_names)
+        return d
 
     def waitUntilFinished(self):
         return self.status._buildset_waitUntilFinished(self.id)

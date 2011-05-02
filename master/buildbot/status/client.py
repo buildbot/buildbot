@@ -50,13 +50,17 @@ class RemoteBuildSet(pb.Referenceable):
         return self.b.getID()
 
     def remote_getBuilderNames(self):
-        return self.b.getBuilderNames()
+        return self.b.getBuilderNames() # note: passes along the Deferred
 
     def remote_getBuildRequests(self):
         """Returns a list of (builderName, BuildRequest) tuples."""
-        return [(bname, IRemote(br))
-                for (bname, br)
-                in self.b.getBuilderNamesAndBuildRequests().items()]
+        d = self.b.getBuilderNamesAndBuildRequests()
+        def add_remote(buildrequests):
+            for k,v in buildrequests.iteritems():
+                buildrequests[k] = IRemote(v)
+            return buildrequests
+        d.addCallback(add_remote)
+        return d
 
     def remote_isFinished(self):
         return self.b.isFinished()
