@@ -221,6 +221,26 @@ class TestBuildsetsConnectorComponent(
                 complete=False,
                 expected=[ 70, 82 ])
 
+    def test_getBuildRequests_bsid_arg(self):
+        d = self.insertTestData([
+            # the buildset that we are *not* looking for
+            fakedb.Buildset(id=self.BSID+1, sourcestampid=234),
+
+            fakedb.BuildRequest(id=70, buildsetid=self.BSID,
+                complete=0, complete_at=None),
+            fakedb.BuildRequest(id=71, buildsetid=self.BSID+1,
+                complete=0, complete_at=None),
+            fakedb.BuildRequest(id=72, buildsetid=self.BSID,
+                complete=0, complete_at=None),
+        ])
+        d.addCallback(lambda _ :
+                self.db.buildrequests.getBuildRequests(bsid=self.BSID))
+        def check(brlist):
+            self.assertEqual(sorted([ br['brid'] for br in brlist ]),
+                             sorted([70, 72]))
+        d.addCallback(check)
+        return d
+
     def test_getBuildRequests_combo(self):
         d = self.insertTestData([
             # 44: everything we want
@@ -258,10 +278,18 @@ class TestBuildsetsConnectorComponent(
                 claimed_at=self.CLAIMED_AT_EPOCH,
                 claimed_by_name="other",
                 claimed_by_incarnation="other"),
+            # 49: different bsid
+            fakedb.Buildset(id=self.BSID+1, sourcestampid=234),
+            fakedb.BuildRequest(id=49, buildsetid=self.BSID+1,
+                buildername="bbb", complete=1, results=92,
+                complete_at=self.COMPLETE_AT_EPOCH,
+                claimed_at=self.CLAIMED_AT_EPOCH,
+                claimed_by_name=self.MASTER_NAME,
+                claimed_by_incarnation=self.MASTER_INCARN),
         ])
         d.addCallback(lambda _ :
                 self.db.buildrequests.getBuildRequests(buildername="bbb",
-                    claimed="mine", complete=True))
+                    claimed="mine", complete=True, bsid=self.BSID))
         def check(brlist):
             self.assertEqual([ br['brid'] for br in brlist ], [ 44 ])
         d.addCallback(check)

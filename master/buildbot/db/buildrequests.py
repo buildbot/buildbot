@@ -63,7 +63,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             return rv
         return self.db.pool.do(thd)
 
-    def getBuildRequests(self, buildername=None, complete=None, claimed=None):
+    def getBuildRequests(self, buildername=None, complete=None, claimed=None,
+            bsid=None):
         """
         Get a list of build requests matching the given characteristics.  Note
         that C{unclaimed}, C{my_claimed}, and C{other_claimed} all default to
@@ -75,7 +76,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         C{False} to return only unclaimed builds, or C{"mine"} to return only
         builds claimed by this master instance.  A request is considered
         unclaimed if its C{claimed_at} column is either NULL or 0, and it is
-        not complete.
+        not complete.  If C{bsid} is specified, then only build requests for
+        that buildset will be returned.
 
         A build is considered completed if its C{complete} column is 1; the
         C{complete_at} column is not consulted.
@@ -91,6 +93,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         completion.
 
         @param claimed: see above
+
+        @param bsid: see above
 
         @returns: List of build request dictionaries as above, via Deferred
         """
@@ -125,6 +129,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     q = q.where(tbl.c.complete != 0)
                 else:
                     q = q.where(tbl.c.complete == 0)
+            if bsid is not None:
+                q = q.where(tbl.c.buildsetid == bsid)
             res = conn.execute(q)
             return [ self._brdictFromRow(row) for row in res.fetchall() ]
         return self.db.pool.do(thd)
