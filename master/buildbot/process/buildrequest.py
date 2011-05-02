@@ -89,6 +89,7 @@ class BuildRequest(object):
         buildrequest.priority = brdict['priority']
         dt = brdict['submitted_at']
         buildrequest.submittedAt = dt and calendar.timegm(dt.utctimetuple())
+        buildrequest.master = master
 
         # fetch the buildset to get the reason
         wfd = defer.waitForDeferred(
@@ -142,7 +143,8 @@ class BuildRequest(object):
         return self.submittedAt
 
     def cancelBuildRequest(self):
-        d = self.db.buildrequests.completeBuildRequests([self.id], FAILURE)
+        d = self.master.db.buildrequests.completeBuildRequests([self.id],
+                                                                FAILURE)
         d.addCallback(lambda _ : self.master.maybeBuildsetComplete(self.bsid))
         return d
 
