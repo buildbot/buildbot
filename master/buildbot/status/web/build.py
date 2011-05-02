@@ -38,7 +38,7 @@ class StatusResourceBuild(HtmlResource):
         HtmlResource.__init__(self)
         self.build_status = build_status
 
-    def getTitle(self, request):
+    def getPageTitle(self, request):
         return ("Buildbot: %s Build #%d" %
                 (self.build_status.getBuilder().getName(),
                  self.build_status.getNumber()))

@@ -175,8 +175,8 @@ class AccessorMixin(object):
     def getStatus(self, request):
         return request.site.buildbot_service.getStatus()    
         
-    def getTitle(self, request):
-        return self.title
+    def getPageTitle(self, request):
+        return self.pageTitle
 
     def getAuthz(self, request):
         return request.site.buildbot_service.authz
@@ -194,8 +194,8 @@ class ContextMixin(AccessorMixin):
             locale_tz = unicode(time.tzname[time.localtime()[-1]], locale_enc)
         else:
             locale_tz = unicode(time.tzname[time.localtime()[-1]])
-        return dict(project_url = status.getProjectURL(),
-                    project_name = status.getProjectName(),
+        return dict(title_url = status.getTitleURL(),
+                    title = status.getTitle(),
                     stylesheet = rootpath + 'default.css',
                     path_to_root = rootpath,
                     version = version,
@@ -203,7 +203,7 @@ class ContextMixin(AccessorMixin):
                                         time.localtime(util.now())),
                     tz = locale_tz,
                     metatags = [],
-                    title = self.getTitle(request),
+                    pageTitle = self.getPageTitle(request),
                     welcomeurl = rootpath,
                     authz = self.getAuthz(request),
                     )
@@ -242,7 +242,7 @@ class ActionResource(resource.Resource, AccessorMixin):
 class HtmlResource(resource.Resource, ContextMixin):
     # this is a cheap sort of template thingy
     contentType = "text/html; charset=utf-8"
-    title = "Buildbot"
+    pageTitle = "Buildbot"
     addSlash = False # adapted from Nevow
 
     def getChild(self, path, request):
@@ -324,13 +324,13 @@ class HtmlResource(resource.Resource, ContextMixin):
         return server.NOT_DONE_YET
 
 class StaticHTML(HtmlResource):
-    def __init__(self, body, title):
+    def __init__(self, body, pageTitle):
         HtmlResource.__init__(self)
         self.bodyHTML = body
-        self.title = title
+        self.pageTitle = pageTitle
     def content(self, request, cxt):
         cxt['content'] = self.bodyHTML
-        cxt['title'] = self.title
+        cxt['pageTitle'] = self.pageTitle
         template = request.site.buildbot_service.templates.get_template("empty.html")
         return template.render(**cxt)
 
@@ -343,7 +343,7 @@ if hasattr(static, 'DirectoryLister'):
         """This variant of the static.DirectoryLister uses a template
         for rendering."""
 
-        title = 'BuildBot'
+        pageTitle = 'BuildBot'
 
         def render(self, request):
             cxt = self.getContext(request)

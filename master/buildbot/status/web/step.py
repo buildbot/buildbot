@@ -23,7 +23,7 @@ from time import ctime
 
 # /builders/$builder/builds/$buildnum/steps/$stepname
 class StatusResourceBuildStep(HtmlResource):
-    title = "Build Step"
+    pageTitle = "Build Step"
     addSlash = True
 
     def __init__(self, build_status, step_status):

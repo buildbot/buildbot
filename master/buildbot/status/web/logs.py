@@ -107,7 +107,7 @@ class TextLog(Resource):
             self.template = req.site.buildbot_service.templates.get_template("logs.html")                
             
             data = self.template.module.page_header(
-                    title = "Log File contents",
+                    pageTitle = "Log File contents",
                     texturl = req.childLink("text"),
                     path_to_root = path_to_root(req))
             data = data.encode('utf-8')                   

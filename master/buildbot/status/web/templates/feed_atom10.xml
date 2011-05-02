@@ -2,11 +2,11 @@
 
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <id>{{ project_url }}</id>
-  <title>{{ title|e }}</title>
+  <id>{{ title_url }}</id>
+  <title>{{ pageTitle|e }}</title>
   {% if project_url -%}
-  <link rel="self" href="{{ project_url }}/atom"/>
-  <link rel="alternate" href="{{ project_url }}"/>
+  <link rel="self" href="{{ title_url }}/atom"/>
+  <link rel="alternate" href="{{ title_url }}"/>
   {% endif %}
   {%- if description -%}
   <subtitle>{{ description }}</subtitle>
@@ -20,11 +20,11 @@
 
   {% for b in builds -%}
   <entry>
-    <title>{{ b.title }}</title>
+    <title>{{ b.pageTitle }}</title>
     <link href="{{ b.link }}"/>
     <content type="xhtml">
       <div xmlns="http://www.w3.org/1999/xhtml">
-        {{ item_desc(b, project_url, project_name)|indent(6) }}
+        {{ item_desc(b, title_url, title)|indent(6) }}
         <pre xml:space="preserve">{{ b.log_lines|join('\n')|e }}</pre>
       </div>
     </content>

@@ -151,20 +151,22 @@ one project.  While the configuration parameter names may be confusing, a
 suitable choice of name and URL should help users avoid any confusion.
 
 @example
-c['projectName'] = "Buildbot"
-c['projectURL'] = "http://buildbot.sourceforge.net/"
+c['title'] = "Buildbot"
+c['titleURL'] = "http://buildbot.sourceforge.net/"
 c['buildbotURL'] = "http://localhost:8010/"
 @end example
 
-@bcindex c['projectName']
-@code{projectName} is a short string that will be used to describe the
-project that this buildbot is working on. For example, it is used as
-the title of the waterfall HTML page.
+@bcindex c['title']
+@code{title} is a short string that will appear at the top of this
+buildbot installation's @code{html.WebStatus} home page (linked to the
+@code{titleURL}), and is embedded in the title of the waterfall HTML
+page.
 
-@bcindex c['projectURL']
-@code{projectURL} is a string that gives a URL for the project as a whole. This
-URL must end with a slash (@code{/}).  HTML status displays will show
-@code{projectName} as a link to @code{projectURL}, to provide a link from
+@bcindex c['titleURL']
+
+@code{titleURL} is a URL string that must end with a slash (@code{/}).
+HTML status displays will show @code{title} as a link to
+@code{titleURL}.  This URL is often used to provide a link from
 buildbot HTML pages to your project's home page.
 
 @bcindex c['buildbotURL']

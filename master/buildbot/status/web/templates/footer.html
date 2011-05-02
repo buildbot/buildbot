@@ -6,12 +6,12 @@
 
 <a href="http://buildbot.net/">Buildbot</a>-{{ version }}
 
-{% if project_name %}
+{% if title %}
   working for
-  {% if project_url %}
-    <a href="{{ project_url }}">{{ project_name }}</a>
+  {% if title_url %}
+    <a href="{{ title_url }}">{{ title }}</a>
   {% else %}
-    {{ project_name }}
+    {{ title }}
   {% endif %}
   project
 {% endif %}

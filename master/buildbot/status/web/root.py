@@ -19,7 +19,7 @@ from buildbot.status.web.base import HtmlResource, path_to_authfail
 from buildbot.util.eventual import eventually
 
 class RootPage(HtmlResource):
-    title = "Buildbot"
+    pageTitle = "Buildbot"
 
     def content(self, request, cxt):
         status = self.getStatus(request)

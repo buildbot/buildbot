@@ -12,7 +12,7 @@
     {% if refresh %}
       <meta http-equiv="refresh" content="{{ refresh|e }}"/>
     {% endif %}
-    <title>{{ title|e }}</title>
+    <title>{{ pageTitle|e }}</title>
     <link rel="stylesheet" href="{{ stylesheet }}" type="text/css" />
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     {% endblock %}
@@ -47,12 +47,12 @@
     <div class="footer" style="clear:both">
       <hr/>
       <a href="http://buildbot.net/">BuildBot</a> ({{version}})
-      {% if project_name -%}
+      {% if title -%}
         working for the&nbsp;
-        {%- if project_url -%}
-          <a href="{{ project_url }}">{{ project_name }}</a>
+        {%- if title_url -%}
+          <a href="{{ title_url }}">{{ title }}</a>
         {%- else -%}
-          {{ project_name }}
+          {{ title }}
         {%- endif -%}
         &nbsp;project.
       {%- endif -%}
