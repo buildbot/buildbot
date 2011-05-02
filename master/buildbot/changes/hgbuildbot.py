@@ -154,13 +154,15 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         # merges don't always contain files, but at least one file is required by buildbot
         if len(parents) > 1 and not files:
             files = ["merge"]
+        if branch:
+            branch = fromlocal(branch)
         change = {
             'master': master,
             'username': fromlocal(user),
             'revision': hex(node),
             'comments': fromlocal(desc),
             'files': files,
-            'branch': fromlocal(branch)
+            'branch': branch
         }
         d.addCallback(_send, change)
 
