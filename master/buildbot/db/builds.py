@@ -61,6 +61,22 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             return rv
         return self.db.pool.do(thd)
 
+    def getBuildsForRequest(self, brid):
+        """
+        Get a list of builds for the given build request.  The resulting
+        build dictionaries are in exactly the same format as for L{getBuild}.
+
+        @param brids: list of build request ids
+
+        @returns: List of build dictionaries as above, via Deferred
+        """
+        def thd(conn):
+            tbl = self.db.model.builds
+            q = tbl.select(whereclause=(tbl.c.brid == brid))
+            res = conn.execute(q)
+            return [ self._bdictFromRow(row) for row in res.fetchall() ]
+        return self.db.pool.do(thd)
+
     def addBuild(self, brid, number, _reactor=reactor):
         """
         Add a new build, recorded as having started now.

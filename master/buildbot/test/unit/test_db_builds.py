@@ -71,6 +71,26 @@ class TestBuildsConnectorComponent(
         d.addCallback(check)
         return d
 
+    def test_getBuildsForRequest(self):
+        d = self.insertTestData(self.background_data + [
+            fakedb.Build(id=50, brid=42, number=5, start_time=1304262222),
+            fakedb.Build(id=51, brid=41, number=6, start_time=1304262223),
+            fakedb.Build(id=52, brid=42, number=7, start_time=1304262224,
+                                                  finish_time=1304262235),
+        ])
+        d.addCallback(lambda _ :
+                self.db.builds.getBuildsForRequest(42))
+        def check(bdicts):
+            self.assertEqual(sorted(bdicts), sorted([
+                dict(bid=50, number=5, brid=42,
+                    start_time=epoch2datetime(1304262222), finish_time=None),
+                dict(bid=52, number=7, brid=42,
+                    start_time=epoch2datetime(1304262224),
+                    finish_time=epoch2datetime(1304262235)),
+            ]))
+        d.addCallback(check)
+        return d
+
     def test_addBuild(self):
         clock = task.Clock()
         clock.advance(1302222222)
