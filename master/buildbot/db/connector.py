@@ -318,14 +318,6 @@ class DBConnector(service.MultiService):
 
     # BuildRequest-manipulation methods
 
-    # used by BuildRequestStatus.getBuilds
-    def get_buildnums_for_brid(self, brid):
-        return self.runInteractionNow(self._txn_get_buildnums_for_brid, brid)
-    def _txn_get_buildnums_for_brid(self, t, brid):
-        t.execute(self.quoteq("SELECT number FROM builds WHERE brid=?"),
-                  (brid,))
-        return [number for (number,) in t.fetchall()]
-
     # used by BuildRequestControl.cancel and Builder.cancelBuildRequest
     def cancel_buildrequests(self, brids):
         return self.runInteractionNow(self._txn_cancel_buildrequest, brids)

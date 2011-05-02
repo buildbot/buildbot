@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from zope.interface import implements
+from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces
 from buildbot.process import buildrequest
@@ -84,21 +85,34 @@ class BuildRequestStatus:
     def getBuilderName(self):
         return self.buildername
 
+    @defer.deferredGenerator
     def getBuilds(self):
         builder = self.status.getBuilder(self.getBuilderName())
         builds = []
-        buildnums = sorted(self.master.db.get_buildnums_for_brid(self.brid))
+
+        wfd = defer.waitForDeferred(
+                self.master.db.builds.getBuildsForRequest(self.brid))
+        yield wfd
+        buildnums = wfd.getResult()
+
+        buildnums.sort()
+
         for buildnum in buildnums:
             bs = builder.getBuild(buildnum)
             if bs:
                 builds.append(bs)
-        return builds
+        yield builds
 
     def subscribe(self, observer):
-        oldbuilds = self.getBuilds()
-        for bs in oldbuilds:
-            eventually(observer, bs)
-        self.status._buildrequest_subscribe(self.brid, observer)
+        d = self.getBuilds()
+        def notify_old(oldbuilds):
+            for bs in oldbuilds:
+                eventually(observer, bs)
+        d.addCallback(notify_old)
+        d.addCallback(lambda _ :
+            self.status._buildrequest_subscribe(self.brid, observer))
+        d.addErrback(log.err, 'while notifying subscribers')
+
     def unsubscribe(self, observer):
         self.status._buildrequest_unsubscribe(self.brid, observer)
 
@@ -119,7 +133,7 @@ class BuildRequestStatus:
         result['submittedAt'] = None # not availably sync, sorry
 
         # Transient
-        result['builds'] = [build.asDict() for build in self.getBuilds()]
+        result['builds'] = [] # not available async, sorry
         return result
 
     @defer.deferredGenerator
@@ -140,6 +154,11 @@ class BuildRequestStatus:
         submittedAt = wfd.getResult()
         result['submittedAt'] = submittedAt
 
-        result['builds'] = [ build.asDict() for build in self.getBuilds() ]
+        wfd = defer.waitForDeferred(
+            self.getBuilds())
+        yield wfd
+        builds = wfd.getResult()
+
+        result['builds'] = [ build.asDict() for build in builds ]
 
         yield result
