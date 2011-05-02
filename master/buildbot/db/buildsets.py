@@ -100,6 +100,37 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             return (bsid, brids)
         return self.db.pool.do(thd)
 
+    def completeBuildset(self, bsid, results, _reactor=reactor):
+        """
+        Complete a buildset, marking it with the given C{results} and setting
+        its C{completed_at} to the current time.
+
+        @param bsid: buildset ID to complete
+        @type bsid: integer
+
+        @param results: integer result code
+        @type results: integer
+
+        @param _reactor: reactor to use (for testing)
+
+        @returns: Deferred
+        @raises KeyError: if the row does not exist or is already complete
+        """
+        def thd(conn):
+            tbl = self.db.model.buildsets
+
+            q = tbl.update(whereclause=(
+                (tbl.c.id == bsid) &
+                ((tbl.c.complete == None) | (tbl.c.complete != 1))))
+            res = conn.execute(q,
+                complete=1,
+                results=results,
+                complete_at=_reactor.seconds())
+
+            if res.rowcount != 1:
+                raise KeyError
+        return self.db.pool.do(thd)
+
     def getBuildset(self, bsid):
         """
         Get a dictionary representing the given buildset, or None
