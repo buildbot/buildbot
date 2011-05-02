@@ -541,6 +541,12 @@ class FakeBuildsetsComponent(FakeDBComponent):
         return defer.succeed((bsid,
             dict([ (br.buildername, br.id) for br in br_rows ])))
 
+    def completeBuildset(self, bsid, results, _reactor=reactor):
+        self.buildsets[bsid]['results'] = results
+        self.buildsets[bsid]['complete'] = 1
+        self.buildsets[bsid]['complete_at'] = _reactor.seconds
+        return defer.succeed(None)
+
     def subscribeToBuildset(self, schedulerid, buildsetid):
         self.buildset_subs.append((schedulerid, buildsetid))
         return defer.succeed(None)
@@ -766,7 +772,8 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         except:
             return defer.succeed(None)
 
-    def getBuildRequests(self, buildername=None, complete=None, claimed=None):
+    def getBuildRequests(self, buildername=None, complete=None, claimed=None,
+                         bsid=None):
         rv = []
         for br in self.reqs.itervalues():
             if buildername and br.buildername != buildername:
@@ -788,6 +795,9 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 else:
                     if br.claimed_at:
                         continue
+            if bsid is not None:
+                if br.buildsetid != bsid:
+                    continue
             rv.append(self._brdictFromRow(br))
         return defer.succeed(rv)
 
