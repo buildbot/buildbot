@@ -21,7 +21,7 @@ from buildbot.status.builder import Results
 
 # /builders/$builder/builds/$buildnum/steps/$stepname
 class StatusResourceBuildTest(HtmlResource):
-    title = "Test Result"
+    pageTitle = "Test Result"
     addSlash = True
 
     def __init__(self, build_status, test_result):

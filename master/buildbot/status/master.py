@@ -67,10 +67,10 @@ class Status:
 
     # methods called by our clients
 
-    def getProjectName(self):
-        return self.master.projectName
-    def getProjectURL(self):
-        return self.master.projectURL
+    def getTitle(self):
+        return self.master.title
+    def getTitleURL(self):
+        return self.master.titleURL
     def getBuildbotURL(self):
         return self.master.buildbotURL
 
@@ -324,8 +324,8 @@ class Status:
     def asDict(self):
         result = {}
         # Constant
-        result['projectName'] = self.getProjectName()
-        result['projectURL'] = self.getProjectURL()
+        result['title'] = self.getTitle()
+        result['titleURL'] = self.getTitleURL()
         result['buildbotURL'] = self.getBuildbotURL()
         # TODO: self.getSchedulers()
         # self.getChangeSources()

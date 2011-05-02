@@ -30,7 +30,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         HtmlResource.__init__(self)
         self.slavename = slavename
 
-    def getTitle(self, req):
+    def getPageTitle(self, req):
         return "Buildbot: %s" % self.slavename
 
     def getChild(self, path, req):
@@ -98,7 +98,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
 
 # /buildslaves
 class BuildSlavesResource(HtmlResource):
-    title = "BuildSlaves"
+    pageTitle = "BuildSlaves"
     addSlash = True
 
     def content(self, request, ctx):

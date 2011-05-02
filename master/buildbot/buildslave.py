@@ -218,7 +218,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
 
         buildmaster = self.botmaster.parent
         status = buildmaster.getStatus()
-        text = "The Buildbot working for '%s'\n" % status.getProjectName()
+        text = "The Buildbot working for '%s'\n" % status.getTitle()
         text += ("has noticed that the buildslave named %s went away\n" %
                  self.slavename)
         text += "\n"
@@ -230,7 +230,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         text += "\n"
         text += "Sincerely,\n"
         text += " The Buildbot\n"
-        text += " %s\n" % status.getProjectURL()
+        text += " %s\n" % status.getTitleURL()
         subject = "Buildbot: buildslave %s was lost" % self.slavename
         return self._mail_missing_message(subject, text)
 
@@ -735,7 +735,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
         buildmaster = self.botmaster.parent
         status = buildmaster.getStatus()
-        text = "The Buildbot working for '%s'\n" % status.getProjectName()
+        text = "The Buildbot working for '%s'\n" % status.getTitle()
         text += ("has noticed that the latent buildslave named %s \n" %
                  self.slavename)
         text += "never substantiated after a request\n"
@@ -745,7 +745,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         text += "\n"
         text += "Sincerely,\n"
         text += " The Buildbot\n"
-        text += " %s\n" % status.getProjectURL()
+        text += " %s\n" % status.getTitleURL()
         subject = "Buildbot: buildslave %s never substantiated" % self.slavename
         return self._mail_missing_message(subject, text)
 

@@ -36,7 +36,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         HtmlResource.__init__(self)
         self.builder_status = builder_status
 
-    def getTitle(self, request):
+    def getPageTitle(self, request):
         return "Buildbot: %s" % self.builder_status.getName()
 
     def builder(self, build, req):
@@ -397,7 +397,7 @@ class StatusResourceAllBuilders(HtmlResource, BuildLineMixin):
 
 # /builders
 class BuildersResource(HtmlResource):
-    title = "Builders"
+    pageTitle = "Builders"
     addSlash = True
 
     @defer.deferredGenerator

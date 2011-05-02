@@ -99,7 +99,7 @@ class HTPasswdAuth(AuthBase):
         return res
 
 class AuthFailResource(HtmlResource):
-    title = "Authentication Failed"
+    pageTitle = "Authentication Failed"
 
     def content(self, request, cxt):
         template = request.site.buildbot_service.templates.get_template("authfail.html")

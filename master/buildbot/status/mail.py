@@ -80,7 +80,7 @@ def defaultMessage(mode, name, build, results, master_status):
     if ss and ss.project:
         project = ss.project
     else:
-        project = master_status.getProjectName()
+        project = master_status.getTitle()
     text += " on builder %s while building %s.\n" % (name, project)
     if master_status.getURLForThing(build):
         text += "Full details are available at:\n %s\n" % master_status.getURLForThing(build)
@@ -157,7 +157,7 @@ class MailNotifier(base.StatusReceiverMultiService):
 
     def __init__(self, fromaddr, mode="all", categories=None, builders=None,
                  addLogs=False, relayhost="localhost",
-                 subject="buildbot %(result)s in %(projectName)s on %(builder)s",
+                 subject="buildbot %(result)s in %(title)s on %(builder)s",
                  lookup=None, extraRecipients=[],
                  sendToInterestedUsers=True, customMesg=None,
                  messageFormatter=defaultMessage, extraHeaders=None,
@@ -397,7 +397,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                          logStatus))
 
         attrs = {'builderName': name,
-                 'projectName': master_status.getProjectName(),
+                 'title': master_status.getTitle(),
                  'mode': mode,
                  'result': Results[results],
                  'buildURL': master_status.getURLForThing(build),
@@ -422,7 +422,7 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         return attrs
 
-    def createEmail(self, msgdict, builderName, projectName, results, build,
+    def createEmail(self, msgdict, builderName, title, results, build,
                     patch=None, logs=None):
         text = msgdict['body'].encode(ENCODING)
         type = msgdict['type']
@@ -430,7 +430,8 @@ class MailNotifier(base.StatusReceiverMultiService):
             subject = msgdict['subject'].encode(ENCODING)
         else:
             subject = self.subject % { 'result': Results[results],
-                                       'projectName': projectName,
+                                       'projectName': title,
+                                       'title': title,
                                        'builder': builderName,
                                        }
 
@@ -498,7 +499,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         if self.addLogs:
             logs = build.getLogs()
             twlog.err("LOG: %s" % str(logs))
-        m = self.createEmail(msgdict, name, self.master_status.getProjectName(),
+        m = self.createEmail(msgdict, name, self.master_status.getTitle(),
                              results, build, patch, logs)
 
         # now, who is this message going to?
