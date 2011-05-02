@@ -223,11 +223,6 @@ class IBuildSetStatus(Interface):
     def getBuilderNames():
         """Return a list of the names of all Builders on which this set will
         do builds."""
-    def getBuildRequests():
-        """Return a list of IBuildRequestStatus objects that represent my
-        component Builds. This list might correspond to the Builders named by
-        getBuilderNames(), but if builder categories are used, or 'Builder
-        Aliases' are implemented, then they may not."""
     def isFinished():
         pass
     def waitUntilSuccess():

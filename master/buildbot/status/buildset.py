@@ -52,11 +52,6 @@ class BuildSetStatus:
         brs = self.master.db.get_buildrequestids_for_buildset(self.id)
         return sorted(brs.keys())
 
-    def getBuildRequests(self):
-        brs = self.master.db.get_buildrequestids_for_buildset(self.id)
-        return [BuildRequestStatus(buildername, brid, self.status)
-                for buildername, brid in brs.iteritems()]
-
     def waitUntilFinished(self):
         return self.status._buildset_waitUntilFinished(self.id)
 
