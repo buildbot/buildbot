@@ -437,23 +437,6 @@ class DBConnector(service.MultiService):
             successful = True
         return (successful, finished)
 
-    # used by BuildSetStatus.getReason, etc.
-    def get_buildset_info(self, bsid):
-        return self.runInteractionNow(self._txn_get_buildset_info, bsid)
-    def _txn_get_buildset_info(self, t, bsid):
-        q = self.quoteq("SELECT external_idstring, reason, sourcestampid,"
-                        "       complete, results"
-                        " FROM buildsets WHERE id=?")
-        t.execute(q, (bsid,))
-        res = t.fetchall()
-        if res:
-            (external, reason, ssid, complete, results) = res[0]
-            external_idstring = str_or_none(external)
-            reason = str_or_none(reason)
-            complete = bool(complete)
-            return (external_idstring, reason, ssid, complete, results)
-        return None # shouldn't happen
-
     # used by getSourceStamp
     def getChangeNumberedNow(self, changeid, t=None):
         # this is a synchronous/blocking version of getChangeByNumber

@@ -524,15 +524,20 @@ class FakeBuildsetsComponent(FakeDBComponent):
             bsid += 1
         return bsid
 
-    def addBuildset(self, **kwargs):
-        bsid = kwargs['id'] = self._newBsid()
+    def addBuildset(self, ssid, reason, properties, builderNames,
+                   external_idstring=None, _reactor=reactor):
+        bsid = self._newBsid()
         br_rows = []
-        for buildername in kwargs.pop('builderNames'):
+        for buildername in builderNames:
             br_rows.append(
                     BuildRequest(buildsetid=bsid, buildername=buildername))
         self.db.buildrequests.insertTestData(br_rows)
 
-        self.buildsets[bsid] = kwargs
+        # make up a row and keep its dictionary, with the properties tacked on
+        bsrow = Buildset(sourcestampid=ssid, reason=reason, external_idstring=external_idstring)
+        self.buildsets[bsid] = bsrow.values.copy()
+        self.buildsets[bsid]['properties'] = properties
+
         return defer.succeed((bsid,
             dict([ (br.buildername, br.id) for br in br_rows ])))
 
@@ -626,11 +631,16 @@ class FakeBuildsetsComponent(FakeDBComponent):
             self.t.assertIn(bsid, self.buildsets)
 
         buildset = self.buildsets[bsid].copy()
-        ss = self.db.sourcestamps.sourcestamps[buildset['ssid']].copy()
-        del buildset['ssid']
+        ss = self.db.sourcestamps.sourcestamps[buildset['sourcestampid']].copy()
+        del buildset['sourcestampid']
 
         if 'id' in buildset:
             del buildset['id']
+
+        # clear out some columns if the caller doesn't care
+        for col in 'complete complete_at submitted_at results'.split():
+            if col not in expected_buildset:
+                del buildset[col]
 
         if buildset['properties']:
             buildset['properties'] = sorted(buildset['properties'].items())

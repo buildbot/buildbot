@@ -214,7 +214,12 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         (bsid,brids) = wfd.getResult()
 
         # return a remotely-usable BuildSetStatus object
-        bss = BuildSetStatus(bsid, self.scheduler.master.status, db)
+        wfd = defer.waitForDeferred(
+                db.buildsets.getBuildset(bsid))
+        yield wfd
+        bsdict = wfd.getResult()
+
+        bss = BuildSetStatus(bsdict, self.scheduler.master.status)
         from buildbot.status.client import makeRemote
         r = makeRemote(bss)
         yield r # return value

@@ -168,8 +168,7 @@ class Status:
     def getBuildSets(self):
         d = self.master.db.buildsets.getBuildsets(complete=False)
         def make_status_objects(bsdicts):
-            return [ buildset.BuildSetStatus(bsdict['bsid'], self,
-                                             self.master.db)
+            return [ buildset.BuildSetStatus(bsdict, self)
                     for bsdict in bsdicts ]
         d.addCallback(make_status_objects)
         return d
@@ -362,11 +361,14 @@ class Status:
         # who cares
         if bsid not in self._buildset_finished_waiters:
             return
-        successful,finished = self.db.examine_buildset(bsid)
-        bss = buildset.BuildSetStatus(bsid, self, self.db)
-        if finished:
-            for d in self._buildset_finished_waiters.pop(bsid):
-                eventually(d.callback, bss)
+        d = self.master.db.buildsets.getBuildset(bsid)
+        def do_notifies(bsdict):
+            bss = buildset.BuildSetStatus(bsdict, self)
+            if bss.isFinished():
+                for d in self._buildset_finished_waiters.pop(bsid):
+                    eventually(d.callback, bss)
+        d.addCallback(do_notifies)
+        d.addErrback(log.err, 'while notifying for buildset finishes')
 
     def _builder_subscribe(self, buildername, watcher):
         # should get requestSubmitted and requestCancelled
@@ -376,10 +378,15 @@ class Status:
         self._builder_observers.discard(buildername, watcher)
 
     def _buildsetCallback(self, **kwargs):
-        bss = buildset.BuildSetStatus(kwargs['bsid'], self, self.db)
-        for t in self.watchers:
-            if hasattr(t, 'buildsetSubmitted'):
-                t.buildsetSubmitted(bss)
+        bsid = kwargs['bsid']
+        d = self.master.db.buildsets.getBuildset(bsid)
+        def do_notifies(bsdict):
+            bss = buildset.BuildSetStatus(bsdict, self)
+            for t in self.watchers:
+                if hasattr(t, 'buildsetSubmitted'):
+                    t.buildsetSubmitted(bss)
+        d.addCallback(do_notifies)
+        d.addErrback(log.err, 'while notifying buildsetSubmitted')
 
     def _buildsetCompletionCallback(self, bsid, result):
         self._maybeBuildsetFinished(bsid)

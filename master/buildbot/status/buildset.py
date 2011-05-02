@@ -20,51 +20,45 @@ from buildbot.status.buildrequest import BuildRequestStatus
 class BuildSetStatus:
     implements(interfaces.IBuildSetStatus)
 
-    def __init__(self, bsid, status, db):
-        self.id = bsid
+    def __init__(self, bsdict, status):
+        self.id = bsdict['bsid']
+        self.bsdict = bsdict
         self.status = status
-        self.db = db
-
-    def _get_info(self):
-        return self.db.get_buildset_info(self.id)
+        self.master = status.master
 
     # methods for our clients
 
     def getSourceStamp(self):
-        (external_idstring, reason, ssid, complete, results) = self._get_info()
-        return self.db.getSourceStampNumberedNow(ssid)
+        return self.master.db.getSourceStampNumberedNow(self.bsdict['sourcestampid'])
 
     def getReason(self):
-        (external_idstring, reason, ssid, complete, results) = self._get_info()
-        return reason
+        return self.bsdict['reason']
+
     def getResults(self):
-        (external_idstring, reason, ssid, complete, results) = self._get_info()
-        return results
+        return self.bsdict['results']
+
     def getID(self):
-        # hah, fooled you - this returns the external_idstring!
-        (external_idstring, reason, ssid, complete, results) = self._get_info()
-        return external_idstring
+        return self.bsdict['external_idstring']
+
+    def isFinished(self):
+        return self.bsdict['complete']
 
     def getBuilderNamesAndBuildRequests(self):
         brs = {}
-        brids = self.db.get_buildrequestids_for_buildset(self.id)
+        brids = self.master.db.get_buildrequestids_for_buildset(self.id)
         for (buildername, brid) in brids.iteritems():
             brs[buildername] = BuildRequestStatus(buildername, brid,
                                                   self.status)
         return brs
 
     def getBuilderNames(self):
-        brs = self.db.get_buildrequestids_for_buildset(self.id)
+        brs = self.master.db.get_buildrequestids_for_buildset(self.id)
         return sorted(brs.keys())
 
     def getBuildRequests(self):
-        brs = self.db.get_buildrequestids_for_buildset(self.id)
+        brs = self.master.db.get_buildrequestids_for_buildset(self.id)
         return [BuildRequestStatus(buildername, brid, self.status)
                 for buildername, brid in brs.iteritems()]
-
-    def isFinished(self):
-        (external_idstring, reason, ssid, complete, results) = self._get_info()
-        return complete
 
     def waitUntilFinished(self):
         return self.status._buildset_waitUntilFinished(self.id)
