@@ -60,16 +60,16 @@ class XmlResource(resource.Resource):
         return data
 
 class FeedResource(XmlResource):
-    title = None
+    pageTitle = None
     link = 'http://dummylink'
     language = 'en-us'
     description = 'Dummy rss'
     status = None
 
-    def __init__(self, status, categories=None, title=None):
+    def __init__(self, status, categories=None, pageTitle=None):
         self.status = status
         self.categories = categories
-        self.title = title
+        self.pageTitle = pageTitle
         self.title = self.status.getTitle()
         self.link = self.status.getBuildbotURL()
         self.description = 'List of builds'
@@ -192,7 +192,7 @@ class FeedResource(XmlResource):
                     got_revision = "[revision string too long]"
                 source += "(Got Revision: %s)" % got_revision
             failflag = (build.getResults() != FAILURE)
-            title = ('%s %s on "%s"' %
+            pageTitle = ('%s %s on "%s"' %
                      (source, ["failed","succeeded"][failflag],
                       build.getBuilder().getName()))
 
@@ -228,7 +228,7 @@ class FeedResource(XmlResource):
             bc['number'] = build.getNumber()
             bc['responsible_users'] = build.getResponsibleUsers()
             bc['failed_steps'] = failed_steps
-            bc['title'] = title
+            bc['pageTitle'] = pageTitle
             bc['link'] = link
             bc['log_lines'] = log_lines
 
@@ -247,12 +247,12 @@ class FeedResource(XmlResource):
 
             build_cxts.append(bc)
 
-        title = self.title
-        if not title:
-            title = 'Build status of %s' % self.title
+        pageTitle = self.pageTitle
+        if not pageTitle:
+            pageTitle = 'Build status of %s' % self.pageTitle
 
         cxt = {}
-        cxt['title'] = title
+        cxt['pageTitle'] = pageTitle
         cxt['title_url'] = self.link
         cxt['title'] = self.title
         cxt['language'] = self.language
@@ -271,12 +271,12 @@ class Rss20StatusResource(FeedResource):
     # contentType = 'application/rss+xml' (browser dependent)
     template_file = 'feed_rss20.xml'
 
-    def __init__(self, status, categories=None, title=None):
-        FeedResource.__init__(self, status, categories, title)
+    def __init__(self, status, categories=None, pageTitle=None):
+        FeedResource.__init__(self, status, categories, pageTitle)
 
 class Atom10StatusResource(FeedResource):
     # contentType = 'application/atom+xml' (browser dependent)
     template_file = 'feed_atom10.xml'
 
-    def __init__(self, status, categories=None, title=None):
-        FeedResource.__init__(self, status, categories, title)
+    def __init__(self, status, categories=None, pageTitle=None):
+        FeedResource.__init__(self, status, categories, pageTitle)

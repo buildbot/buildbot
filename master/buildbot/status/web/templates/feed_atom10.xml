@@ -3,8 +3,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>{{ title_url }}</id>
-  <title>{{ title|e }}</title>
-  {% if title_url -%}
+  <title>{{ pageTitle|e }}</title>
+  {% if project_url -%}
   <link rel="self" href="{{ title_url }}/atom"/>
   <link rel="alternate" href="{{ title_url }}"/>
   {% endif %}
@@ -20,7 +20,7 @@
 
   {% for b in builds -%}
   <entry>
-    <title>{{ b.title }}</title>
+    <title>{{ b.pageTitle }}</title>
     <link href="{{ b.link }}"/>
     <content type="xhtml">
       <div xmlns="http://www.w3.org/1999/xhtml">

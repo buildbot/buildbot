@@ -148,7 +148,7 @@ class JsonResource(resource.Resource):
     contentType = "application/json"
     cache_seconds = 60
     help = None
-    title = None
+    pageTitle = None
     level = 0
 
     def __init__(self, status):
@@ -157,11 +157,11 @@ class JsonResource(resource.Resource):
         # buildbot.status.builder.Status
         self.status = status
         if self.help:
-            title = ''
-            if self.title:
-                title = self.title + ' help'
+            pageTitle = ''
+            if self.pageTitle:
+                pageTitle = self.pageTitle + ' help'
             self.putChild('help',
-                          HelpResource(self.help, title=title, parent_node=self))
+                          HelpResource(self.help, pageTitle=pageTitle, parent_node=self))
 
     def getChildWithDefault(self, path, request):
         """Adds transparent support for url ending with /"""
@@ -355,10 +355,10 @@ def ToHtml(text):
 
 
 class HelpResource(HtmlResource):
-    def __init__(self, text, title, parent_node):
+    def __init__(self, text, pageTitle, parent_node):
         HtmlResource.__init__(self)
         self.text = text
-        self.title = title
+        self.pageTitle = pageTitle
         self.parent_node = parent_node
 
     def content(self, request, cxt):
@@ -376,7 +376,7 @@ class HelpResource(HtmlResource):
 class BuilderPendingBuildsJsonResource(JsonResource):
     help = """Describe pending builds for a builder.
 """
-    title = 'Builder'
+    pageTitle = 'Builder'
 
     def __init__(self, status, builder_status):
         JsonResource.__init__(self, status)
@@ -395,7 +395,7 @@ class BuilderPendingBuildsJsonResource(JsonResource):
 class BuilderJsonResource(JsonResource):
     help = """Describe a single builder.
 """
-    title = 'Builder'
+    pageTitle = 'Builder'
 
     def __init__(self, status, builder_status):
         JsonResource.__init__(self, status)
@@ -415,7 +415,7 @@ class BuilderJsonResource(JsonResource):
 class BuildersJsonResource(JsonResource):
     help = """List of all the builders defined on a master.
 """
-    title = 'Builders'
+    pageTitle = 'Builders'
 
     def __init__(self, status):
         JsonResource.__init__(self, status)
@@ -428,7 +428,7 @@ class BuildersJsonResource(JsonResource):
 class BuilderSlavesJsonResources(JsonResource):
     help = """Describe the slaves attached to a single builder.
 """
-    title = 'BuilderSlaves'
+    pageTitle = 'BuilderSlaves'
 
     def __init__(self, status, builder_status):
         JsonResource.__init__(self, status)
@@ -442,7 +442,7 @@ class BuilderSlavesJsonResources(JsonResource):
 class BuildJsonResource(JsonResource):
     help = """Describe a single build.
 """
-    title = 'Build'
+    pageTitle = 'Build'
 
     def __init__(self, status, build_status):
         JsonResource.__init__(self, status)
@@ -459,7 +459,7 @@ class BuildJsonResource(JsonResource):
 class AllBuildsJsonResource(JsonResource):
     help = """All the builds that were run on a builder.
 """
-    title = 'AllBuilds'
+    pageTitle = 'AllBuilds'
 
     def __init__(self, status, builder_status):
         JsonResource.__init__(self, status)
@@ -499,7 +499,7 @@ class AllBuildsJsonResource(JsonResource):
 class BuildsJsonResource(AllBuildsJsonResource):
     help = """Builds that were run on a builder.
 """
-    title = 'Builds'
+    pageTitle = 'Builds'
 
     def __init__(self, status, builder_status):
         AllBuildsJsonResource.__init__(self, status, builder_status)
@@ -525,7 +525,7 @@ class BuildsJsonResource(AllBuildsJsonResource):
 class BuildStepJsonResource(JsonResource):
     help = """A single build step.
 """
-    title = 'BuildStep'
+    pageTitle = 'BuildStep'
 
     def __init__(self, status, build_step_status):
         # buildbot.status.buildstep.BuildStepStatus
@@ -540,7 +540,7 @@ class BuildStepJsonResource(JsonResource):
 class BuildStepsJsonResource(JsonResource):
     help = """A list of build steps that occurred during a build.
 """
-    title = 'BuildSteps'
+    pageTitle = 'BuildSteps'
 
     def __init__(self, status, build_status):
         JsonResource.__init__(self, status)
@@ -580,7 +580,7 @@ class BuildStepsJsonResource(JsonResource):
 class ChangeJsonResource(JsonResource):
     help = """Describe a single change that originates from a change source.
 """
-    title = 'Change'
+    pageTitle = 'Change'
 
     def __init__(self, status, change):
         # buildbot.changes.changes.Change
@@ -594,7 +594,7 @@ class ChangeJsonResource(JsonResource):
 class ChangesJsonResource(JsonResource):
     help = """List of changes.
 """
-    title = 'Changes'
+    pageTitle = 'Changes'
 
     def __init__(self, status, changes):
         JsonResource.__init__(self, status)
@@ -617,7 +617,7 @@ class ChangesJsonResource(JsonResource):
 class ChangeSourcesJsonResource(JsonResource):
     help = """Describe a change source.
 """
-    title = 'ChangeSources'
+    pageTitle = 'ChangeSources'
 
     def asDict(self, request):
         result = {}
@@ -634,7 +634,7 @@ class ChangeSourcesJsonResource(JsonResource):
 class ProjectJsonResource(JsonResource):
     help = """Project-wide settings.
 """
-    title = 'Project'
+    pageTitle = 'Project'
 
     def asDict(self, request):
         return self.status.asDict()
@@ -643,7 +643,7 @@ class ProjectJsonResource(JsonResource):
 class SlaveJsonResource(JsonResource):
     help = """Describe a slave.
 """
-    title = 'Slave'
+    pageTitle = 'Slave'
 
     def __init__(self, status, slave_status):
         JsonResource.__init__(self, status)
@@ -681,7 +681,7 @@ class SlaveJsonResource(JsonResource):
 class SlavesJsonResource(JsonResource):
     help = """List the registered slaves.
 """
-    title = 'Slaves'
+    pageTitle = 'Slaves'
 
     def __init__(self, status):
         JsonResource.__init__(self, status)
@@ -694,7 +694,7 @@ class SlavesJsonResource(JsonResource):
 class SourceStampJsonResource(JsonResource):
     help = """Describe the sources for a SourceStamp.
 """
-    title = 'SourceStamp'
+    pageTitle = 'SourceStamp'
 
     def __init__(self, status, source_stamp):
         # buildbot.sourcestamp.SourceStamp
@@ -719,7 +719,7 @@ status. You may want to use a child instead to reduce the load on the server.
 
 For help on any sub directory, use url /child/help
 """
-    title = 'Buildbot JSON'
+    pageTitle = 'Buildbot JSON'
 
     def __init__(self, status):
         JsonResource.__init__(self, status)

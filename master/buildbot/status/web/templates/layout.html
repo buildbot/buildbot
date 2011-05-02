@@ -12,7 +12,7 @@
     {% if refresh %}
       <meta http-equiv="refresh" content="{{ refresh|e }}"/>
     {% endif %}
-    <title>{{ title|e }}</title>
+    <title>{{ pageTitle|e }}</title>
     <link rel="stylesheet" href="{{ stylesheet }}" type="text/css" />
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     {% endblock %}

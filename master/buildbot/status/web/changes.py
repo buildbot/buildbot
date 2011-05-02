@@ -24,7 +24,7 @@ from buildbot.status.web.base import HtmlResource, IBox, Box
 class ChangeResource(HtmlResource):
     def __init__(self, changeid):
         self.changeid = changeid
-        self.title = "Change #%d" % changeid
+        self.pageTitle = "Change #%d" % changeid
 
     def content(self, req, cxt):
         d = self.getStatus(req).getChange(self.changeid)
@@ -63,7 +63,7 @@ class ChangeBox(components.Adapter):
         template = req.site.buildbot_service.templates.get_template("change_macros.html")
         text = template.module.box_contents(url=url,
                                             who=self.original.getShortAuthor(),
-                                            title=self.original.comments)
+                                            pageTitle=self.original.comments)
         return Box([text], class_="Change")
 components.registerAdapter(ChangeBox, Change, IBox)
 

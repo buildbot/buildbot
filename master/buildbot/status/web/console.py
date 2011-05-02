@@ -102,7 +102,7 @@ class ConsoleStatusResource(HtmlResource):
         else:
             self.comparator = IntegerRevisionComparator()
 
-    def getTitle(self, request):
+    def getPageTitle(self, request):
         status = self.getStatus(request)
         title = status.getTitle()
         if title:
@@ -392,7 +392,7 @@ class ConsoleStatusResource(HtmlResource):
             for builder in builderList[category]:
                 s = {}
                 s["color"] = "notstarted"
-                s["title"] = builder
+                s["pageTitle"] = builder
                 s["url"] = "./builders/%s" % urllib.quote(builder)
                 state, builds = status.getBuilder(builder).getState()
                 # Check if it's offline, if so, the box is purple.
@@ -461,15 +461,15 @@ class ConsoleStatusResource(HtmlResource):
                     isRunning = True
 
                 url = "./waterfall"
-                title = builder
+                pageTitle = builder
                 tag = ""
                 current_details = {}
                 if introducedIn:
                     current_details = introducedIn.details or ""
                     url = "./buildstatus?builder=%s&number=%s" % (urllib.quote(builder),
                                                                   introducedIn.number)
-                    title += " "
-                    title += urllib.quote(' '.join(introducedIn.text), ' \n\\/:')
+                    pageTitle += " "
+                    pageTitle += urllib.quote(' '.join(introducedIn.text), ' \n\\/:')
 
                     builderStrip = builder.replace(' ', '')
                     builderStrip = builderStrip.replace('(', '')
@@ -478,13 +478,13 @@ class ConsoleStatusResource(HtmlResource):
                     tag = "Tag%s%s" % (builderStrip, introducedIn.number)
 
                 if isRunning:
-                    title += ' ETA: %ds' % (introducedIn.eta or 0)
+                    pageTitle += ' ETA: %ds' % (introducedIn.eta or 0)
                     
                 resultsClass = getResultsClass(results, previousResults, isRunning)
 
                 b = {}                
                 b["url"] = url
-                b["title"] = title
+                b["pageTitle"] = pageTitle
                 b["color"] = resultsClass
                 b["tag"] = tag
 

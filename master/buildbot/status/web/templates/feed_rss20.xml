@@ -3,7 +3,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>{{ title|e }}</title>
+    <title>{{ pageTitle|e }}</title>
     <link>{{ title_url }}</link>
     <atom:link href="{{ title_url }}rss" rel="self" type="application/rss+xml"/>
     {% if language -%}
@@ -18,7 +18,7 @@
 
     {% for b in builds -%}
     <item>
-      <title>{{ b.title }}</title>
+      <title>{{ b.pageTitle }}</title>
       <link>{{ b.link }}</link>
       <description>
         <![CDATA[

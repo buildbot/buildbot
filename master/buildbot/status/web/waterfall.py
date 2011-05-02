@@ -265,7 +265,7 @@ def insertGaps(g, showEvents, lastEventTime, idleGap=2):
 
 
 class WaterfallHelp(HtmlResource):
-    title = "Waterfall Help"
+    pageTitle = "Waterfall Help"
 
     def __init__(self, categories=None):
         HtmlResource.__init__(self)
@@ -336,7 +336,7 @@ class WaterfallStatusResource(HtmlResource):
         self.num_events_max=num_events_max
         self.putChild("help", WaterfallHelp(categories))
 
-    def getTitle(self, request):
+    def getPageTitle(self, request):
         status = self.getStatus(request)
         p = status.getTitle()
         if p:

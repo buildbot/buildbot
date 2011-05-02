@@ -28,7 +28,7 @@ class OneLinePerBuild(HtmlResource, BuildLineMixin):
     reload=: reload the page after this many seconds
     """
 
-    title = "Recent Builds"
+    pageTitle = "Recent Builds"
 
     def __init__(self, numbuilds=20):
         HtmlResource.__init__(self)
@@ -97,7 +97,7 @@ class OneLinePerBuildOneBuilder(HtmlResource, BuildLineMixin):
         self.builder = builder
         self.builder_name = builder.getName()
         self.numbuilds = numbuilds
-        self.title = "Recent Builds of %s" % self.builder_name
+        self.pageTitle = "Recent Builds of %s" % self.builder_name
 
     def content(self, req, cxt):
         numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
