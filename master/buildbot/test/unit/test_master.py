@@ -84,7 +84,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         sub = self.master.subscribeToBuildsetCompletions(cb)
         self.assertIsInstance(sub, subscription.Subscription)
 
-        self.master.buildsetComplete(938593, 999)
+        self.master._buildsetComplete(938593, 999)
         # assert the notification sub was called correctly
         cb.assert_called_with(938593, 999)
 

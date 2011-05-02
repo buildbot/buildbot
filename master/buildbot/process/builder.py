@@ -213,9 +213,6 @@ class Builder(pb.Referenceable, service.MultiService):
         else:
             yield None
 
-    def cancelBuildRequest(self, brid): # TODO: kill
-        return self.db.cancel_buildrequests([brid])
-
     def consumeTheSoulOfYourPredecessor(self, old):
         """Suck the brain out of an old Builder.
 
@@ -559,12 +556,23 @@ class Builder(pb.Referenceable, service.MultiService):
             brids = [br.id for br in build.requests]
             db = self.master.db
             d = db.buildrequests.completeBuildRequests(brids, results)
+            d.addCallback(
+                lambda _ : self._maybeBuildsetsComplete(build.requests))
             # nothing in particular to do with this deferred, so just log it if
             # it fails..
             d.addErrback(log.err, 'while marking build requests as completed')
 
         if sb.slave:
             sb.slave.releaseLocks()
+
+    @defer.deferredGenerator
+    def _maybeBuildsetsComplete(self, requests):
+        # inform the master that we may have completed a number of buildsets
+        for br in requests:
+            wfd = defer.waitForDeferred(
+                self.master.maybeBuildsetComplete(br.bsid))
+            yield wfd
+            wfd.getResult()
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]

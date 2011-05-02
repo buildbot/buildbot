@@ -15,9 +15,11 @@
 
 import calendar
 from zope.interface import implements
+from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces, sourcestamp
 from buildbot.process import properties
+from buildbot.status.results import FAILURE
 
 class BuildRequest(object):
     """
@@ -139,6 +141,11 @@ class BuildRequest(object):
     def getSubmitTime(self):
         return self.submittedAt
 
+    def cancelBuildRequest(self):
+        d = self.db.buildrequests.completeBuildRequests([self.id], FAILURE)
+        d.addCallback(lambda _ : self.master.maybeBuildsetComplete(self.bsid))
+        return d
+
 class BuildRequestControl:
     implements(interfaces.IBuildRequestControl)
 
@@ -154,4 +161,5 @@ class BuildRequestControl:
         raise NotImplementedError
 
     def cancel(self):
-        self.original_builder.cancelBuildRequest(self.brid)
+        d = self.original_request.cancelBuildRequest()
+        d.addErrback(log.err, 'while cancelling build request')

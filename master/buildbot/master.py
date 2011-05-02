@@ -40,6 +40,7 @@ from buildbot.schedulers.manager import SchedulerManager
 from buildbot.schedulers.base import isScheduler
 from buildbot.process.botmaster import BotMaster
 from buildbot.process import debug
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 
 ########################################
 
@@ -781,13 +782,46 @@ class BuildMaster(service.MultiService):
         """
         return self._new_buildset_subs.subscribe(callback)
 
-    def buildsetComplete(self, bsid, result):
+    @defer.deferredGenerator
+    def maybeBuildsetComplete(self, bsid):
         """
-        Notifies the master that the given buildset with ID C{bsid} is
-        complete, with result C{result}.
+        Instructs the master to check whether the buildset is complete,
+        and notify appropriately if it is.
+
+        Note that buildset completions are only reported on the master
+        on which the last build request completes.
         """
-        # note that buildset completions are only reported on this master
-        self._complete_buildset_subs.deliver(bsid, result)
+        wfd = defer.waitForDeferred(
+            self.db.buildrequests.getBuildRequests(bsid=bsid, complete=False))
+        yield wfd
+        brdicts = wfd.getResult()
+
+        # if there are incomplete buildrequests, bail out
+        if brdicts:
+            return
+
+        wfd = defer.waitForDeferred(
+            self.db.buildrequests.getBuildRequests(bsid=bsid))
+        yield wfd
+        brdicts = wfd.getResult()
+
+        # figure out the overall results of the buildset
+        cumulative_results = SUCCESS
+        for brdict in brdicts:
+            if brdict['results'] not in (SUCCESS, WARNINGS):
+                cumulative_results = FAILURE
+
+        # mark it as completed in the database
+        wfd = defer.waitForDeferred(
+            self.db.buildsets.completeBuildset(bsid, cumulative_results))
+        yield wfd
+        wfd.getResult()
+
+        # and deliver to any listeners
+        self._buildsetComplete(bsid, cumulative_results)
+
+    def _buildsetComplete(self, bsid, results):
+        self._complete_buildset_subs.deliver(bsid, results)
 
     def subscribeToBuildsetCompletions(self, callback):
         """
