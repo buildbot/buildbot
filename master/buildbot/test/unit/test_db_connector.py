@@ -33,46 +33,11 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
         def make_dbc(_):
             self.dbc = connector.DBConnector(mock.Mock(), self.db_url,
                                         os.path.abspath('basedir'))
-            self.dbc.start()
         d.addCallback(make_dbc)
         return d
 
     def tearDown(self):
-        self.dbc.stop()
         return self.tearDownRealDatabase()
-
-    def test_runQueryNow_simple(self):
-        self.assertEqual(list(self.dbc.runQueryNow("SELECT 1")),
-                         [(1,)])
-
-    def test_runQueryNow_exception(self):
-        self.assertRaises(Exception, lambda :
-            self.dbc.runQueryNow("EAT * FROM cookies"))
-
-    def test_runInterationNow_simple(self):
-        def inter(cursor, *args, **kwargs):
-            cursor.execute("SELECT 1")
-            self.assertEqual(list(cursor.fetchall()), [(1,)])
-        self.dbc.runInteractionNow(inter)
-
-    def test_runInterationNow_args(self):
-        def inter(cursor, *args, **kwargs):
-            self.assertEqual((args, kwargs), ((1, 2), dict(three=4)))
-            cursor.execute("SELECT 1")
-        self.dbc.runInteractionNow(inter, 1, 2, three=4)
-
-    def test_runInterationNow_exception(self):
-        def inter(cursor):
-            cursor.execute("GET * WHERE golden")
-        self.assertRaises(Exception, lambda : 
-            self.dbc.runInteractionNow(inter))
-
-    def test_runQuery_simple(self):
-        d = self.dbc.runQuery("SELECT 1")
-        def cb(res):
-            self.assertEqual(list(res), [(1,)])
-        d.addCallback(cb)
-        return d
 
     def test_doCleanup(self):
         # patch out all of the cleanup tasks; note that we can't patch dbc.doCleanup

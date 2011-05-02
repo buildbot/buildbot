@@ -229,8 +229,6 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
         return d
 
     def tearDown(self):
-        if self.db:
-            self.db.stop()
         return self.tearDownChangeImport()
 
     def testUpgradeListsAsFilenames(self):
@@ -245,7 +243,6 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     revision=12345))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.start())
         d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
         def check(c):
             self.failIf(c is None)
@@ -269,7 +266,6 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     revision='12345'))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.start())
         d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
         def check(c):
             self.failIf(c is None)
@@ -292,7 +288,6 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     revision='12345'))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.start())
         d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
         def check(c):
             self.failIf(c is None)
@@ -310,7 +305,6 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     files=['foo.c']))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.start())
         d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
         def check(c):
             self.failUnless(c is None)

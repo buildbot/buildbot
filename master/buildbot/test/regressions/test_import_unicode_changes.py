@@ -29,8 +29,6 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
         return d
 
     def tearDown(self):
-        if self.db:
-            self.db.stop()
         return self.tearDownChangeImport()
 
     def testUnicodeChange(self):
@@ -43,7 +41,6 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     revision=12345))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.start())
         d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
         def check(c):
             self.failIf(c is None)
@@ -79,7 +76,6 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     revision=12345))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.start())
         d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
         def check(c):
             self.failIf(c is None)
@@ -102,7 +98,6 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
                 recode_fn=lambda cm : cm.recode_changes('utf16', quiet=True))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.start())
         d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
         def check(c):
             self.failIf(c is None)

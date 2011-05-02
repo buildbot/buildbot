@@ -536,9 +536,6 @@ class BuildMaster(service.MultiService):
 
         self.db = connector.DBConnector(self, db_url, self.basedir)
         self.db.setServiceParent(self)
-        if self.changeCacheSize:
-            pass # TODO: set this in self.db.changes, or in self.config?
-        self.db.start()
 
         # make sure it's up to date
         d = self.db.model.is_current()
