@@ -19,7 +19,6 @@ from twisted.internet import defer, reactor
 from twisted.trial import unittest
 from buildbot.db import connector
 from buildbot.test.util import db
-from buildbot.test.fake import fakedb
 
 class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
     """
@@ -73,28 +72,6 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
         def cb(res):
             self.assertEqual(list(res), [(1,)])
         d.addCallback(cb)
-        return d
-
-    def test_getPropertiesFromDb(self):
-        d = self.insertTestData([
-                fakedb.Change(changeid=13),
-                fakedb.ChangeProperty(changeid=13, property_name='foo',
-                                    property_value='"my prop"'),
-                fakedb.SourceStamp(id=23),
-                fakedb.Buildset(id=33, sourcestampid=23),
-                fakedb.BuildsetProperty(buildsetid=33,
-                                    property_name='bar',
-                                    property_value='["other prop", "BS"]'),
-            ])
-        def do_test(_):
-            cprops = self.dbc.get_properties_from_db("change_properties",
-                                                        "changeid", 13)
-            bprops = self.dbc.get_properties_from_db("buildset_properties",
-                                                        "buildsetid", 33)
-            self.assertEqual(cprops.asList() + bprops.asList(),
-                    [ ('foo', 'my prop', 'Change'),
-                      ('bar', 'other prop', 'BS')])
-        d.addCallback(do_test)
         return d
 
     def test_doCleanup(self):

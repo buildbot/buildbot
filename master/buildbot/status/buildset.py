@@ -28,9 +28,6 @@ class BuildSetStatus:
 
     # methods for our clients
 
-    def getSourceStamp(self):
-        return self.master.db.getSourceStampNumberedNow(self.bsdict['sourcestampid'])
-
     def getReason(self):
         return self.bsdict['reason']
 

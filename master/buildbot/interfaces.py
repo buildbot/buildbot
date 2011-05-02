@@ -210,13 +210,6 @@ class IBuildSetStatus(Interface):
     """I represent a set of Builds, each run on a separate Builder but all
     using the same source tree."""
 
-    def getSourceStamp():
-        """Return a SourceStamp object which can be used to re-create
-        the source tree that this build used.
-
-        This method will return None if the source information is no longer
-        available."""
-        pass
     def getReason():
         pass
     def getID():

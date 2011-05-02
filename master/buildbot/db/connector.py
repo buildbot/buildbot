@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import base64
 import time
 
 from twisted.python import threadable, log
@@ -22,10 +21,7 @@ from buildbot.db import enginestrategy
 
 from buildbot import util
 from buildbot.util import collections as bbcollections
-from buildbot.sourcestamp import SourceStamp
-from buildbot.process.properties import Properties
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
-from buildbot.util import json
 from buildbot.db import pool, model, changes, schedulers, sourcestamps
 from buildbot.db import state, buildsets, buildrequests, builds
 
@@ -234,90 +230,6 @@ class DBConnector(service.MultiService):
         self._end_operation(t)
         return res
 
-    # SourceStamp-manipulating methods
-
-    def getSourceStampNumberedNow(self, ssid, t=None):
-        assert isinstance(ssid, (int, long))
-        ss = self._sourcestamp_cache.get(ssid)
-        if ss:
-            return ss
-        if t:
-            ss = self._txn_getSourceStampNumbered(t, ssid)
-        else:
-            ss = self.runInteractionNow(self._txn_getSourceStampNumbered,
-                                           ssid)
-        self._sourcestamp_cache.add(ssid, ss)
-        return ss
-
-    def _txn_getSourceStampNumbered(self, t, ssid):
-        assert isinstance(ssid, (int, long))
-        t.execute(self.quoteq("SELECT branch,revision,patchid,project,repository"
-                              " FROM sourcestamps WHERE id=?"),
-                  (ssid,))
-        r = t.fetchall()
-        if not r:
-            return None
-        (branch_u, revision_u, patchid, project, repository) = r[0]
-        branch = str_or_none(branch_u)
-        revision = str_or_none(revision_u)
-
-        patch = None
-        if patchid is not None:
-            t.execute(self.quoteq("SELECT patchlevel,patch_base64,subdir"
-                                  " FROM patches WHERE id=?"),
-                      (patchid,))
-            r = t.fetchall()
-            assert len(r) == 1
-            (patch_level, patch_text_base64, subdir_u) = r[0]
-            patch_text = base64.b64decode(patch_text_base64)
-            if subdir_u:
-                patch = (patch_level, patch_text, str(subdir_u))
-            else:
-                patch = (patch_level, patch_text)
-
-        t.execute(self.quoteq("SELECT changeid FROM sourcestamp_changes"
-                              " WHERE sourcestampid=?"
-                              " ORDER BY changeid ASC"),
-                  (ssid,))
-        r = t.fetchall()
-        changes = None
-        if r:
-            changes = [self.getChangeNumberedNow(changeid, t)
-                       for (changeid,) in r]
-        ss = SourceStamp(branch, revision, patch, changes, project=project, repository=repository)
-        ss.ssid = ssid
-        return ss
-
-    # Properties methods
-
-    # used by getChangeNumberedNow (below)
-    def get_properties_from_db(self, tablename, idname, id, t=None):
-        if t:
-            return self._txn_get_properties_from_db(t, tablename, idname, id)
-        else:
-            return self.runInteractionNow(self._txn_get_properties_from_db,
-                                          tablename, idname, id)
-
-    def _txn_get_properties_from_db(self, t, tablename, idname, id):
-        # apparently you can't use argument placeholders for table names. Don't
-        # call this with a weird-looking tablename.
-        q = self.quoteq("SELECT property_name,property_value FROM %s WHERE %s=?"
-                        % (tablename, idname))
-        t.execute(self.quoteq(q), (id,))
-        retval = Properties()
-        for key, value_json in t.fetchall():
-            value = json.loads(value_json)
-            if tablename == "change_properties":
-                # change_properties does not store a source
-                value, source = value, "Change"
-            else:
-                # buildset_properties stores a tuple (value, source)
-                value, source = value
-            retval.setProperty(str(key), value, source)
-        return retval
-
-    # BuildRequest-manipulation methods
-
     # used by BuildRequestControl.cancel and Builder.cancelBuildRequest
     def cancel_buildrequests(self, brids):
         return self.runInteractionNow(self._txn_cancel_buildrequest, brids)
@@ -389,53 +301,6 @@ class DBConnector(service.MultiService):
                               " WHERE buildsetid=?"),
                   (bsid,))
         return dict(t.fetchall())
-
-    # used by getSourceStamp
-    def getChangeNumberedNow(self, changeid, t=None):
-        # this is a synchronous/blocking version of getChangeByNumber
-        assert changeid >= 0
-        if t:
-            c = self._txn_getChangeNumberedNow(t, changeid)
-        else:
-            c = self.runInteractionNow(self._txn_getChangeNumberedNow, changeid)
-        return c
-    def _txn_getChangeNumberedNow(self, t, changeid):
-        q = self.quoteq("SELECT author, comments,"
-                        " is_dir, branch, revision, revlink,"
-                        " when_timestamp, category,"
-                        " repository, project"
-                        " FROM changes WHERE changeid = ?")
-        t.execute(q, (changeid,))
-        rows = t.fetchall()
-        if not rows:
-            return None
-        (who, comments,
-         isdir, branch, revision, revlink,
-         when, category, repository, project) = rows[0]
-        branch = str_or_none(branch)
-        revision = str_or_none(revision)
-        q = self.quoteq("SELECT link FROM change_links WHERE changeid=?")
-        t.execute(q, (changeid,))
-        rows = t.fetchall()
-        links = [row[0] for row in rows]
-        links.sort()
-
-        q = self.quoteq("SELECT filename FROM change_files WHERE changeid=?")
-        t.execute(q, (changeid,))
-        rows = t.fetchall()
-        files = [row[0] for row in rows]
-        files.sort()
-
-        p = self.get_properties_from_db("change_properties", "changeid",
-                                        changeid, t)
-        from buildbot.changes.changes import Change
-        c = Change(who=who, files=files, comments=comments, isdir=isdir,
-                   links=links, revision=revision, when=when,
-                   branch=branch, category=category, revlink=revlink,
-                   repository=repository, project=project)
-        c.properties.updateFromProperties(p)
-        c.number = changeid
-        return c
 
     def doCleanup(self):
         """
