@@ -166,7 +166,7 @@ class Status:
         return self.botmaster.slaves[slavename].slave_status
 
     def getBuildSets(self):
-        d = self.master.db.buildsets.getBuildSets(complete=False)
+        d = self.master.db.buildsets.getBuildsets(complete=False)
         def make_status_objects(bsdicts):
             return [ buildset.BuildSetStatus(bsdict['bsid'], self,
                                              self.master.db)

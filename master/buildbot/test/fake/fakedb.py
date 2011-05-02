@@ -559,7 +559,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         row = self.buildsets[bsid]
         return defer.succeed(self._row2dict(row))
 
-    def getBuildSets(self, complete=None):
+    def getBuildsets(self, complete=None):
         rv = []
         for bs in self.buildsets.itervalues():
             if complete is not None:
