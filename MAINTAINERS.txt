@@ -134,6 +134,11 @@ Documentation
     U: http://buildbot.net/buildbot/docs
     U: http://trac.buildbot.net/wiki/docs
 
+Performance
+    D: Improving buildbot's performance (memory, cpu, time)
+    S: Supported
+    U: http://trac.buildbot.net/wiki/performance
+
 == Packaging & System Compatibility ==
 
 MacPorts
