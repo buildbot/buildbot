@@ -145,12 +145,13 @@ class BotMaster(service.MultiService):
         # old BuildSlave instance in place. If the name has changed, of
         # course, it looks exactly the same as deleting one slave and adding
         # an unrelated one.
+
         old_t = {}
         for s in old_slaves:
-            old_t[(s.slavename, s.password, s.__class__)] = s
+            old_t[s.identity()] = s
         new_t = {}
         for s in new_slaves:
-            new_t[(s.slavename, s.password, s.__class__)] = s
+            new_t[s.identity()] = s
         removed = [old_t[t]
                    for t in old_t
                    if t not in new_t]
@@ -175,6 +176,7 @@ class BotMaster(service.MultiService):
         def update_remaining(_):
             for t in remaining_t:
                 old_t[t].update(new_t[t])
+
         d.addCallback(update_remaining)
 
         return d
