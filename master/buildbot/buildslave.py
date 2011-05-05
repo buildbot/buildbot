@@ -91,6 +91,17 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
 
         self._old_builder_list = None
 
+    def identity(self):
+        """
+        Return a tuple describing this slave.  After reconfiguration a
+        new slave with the same identity will update this one, rather
+        than replacing it, thereby avoiding an interruption of current
+        activity.
+        """
+        return (self.slavename, self.password, 
+                '%s.%s' % (self.__class__.__module__,
+                           self.__class__.__name__))
+
     def update(self, new):
         """
         Given a new BuildSlave, configure this one identically.  Because
@@ -100,7 +111,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         # the reconfiguration logic should guarantee this:
         assert self.slavename == new.slavename
         assert self.password == new.password
-        assert self.__class__ == new.__class__
+        assert self.identity() == new.identity()
         self.max_builds = new.max_builds
         self.access = new.access
         self.notify_on_missing = new.notify_on_missing
