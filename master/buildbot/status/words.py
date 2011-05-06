@@ -727,7 +727,7 @@ class IrcStatusBot(irc.IRCClient):
         @param nickname: the nickname by which this bot should be known
         @type  password: string
         @param password: the password to use for identifying with Nickserv
-        @type  channels: list of strings
+        @type  channels: list of dictionaries
         @param channels: the bot will maintain a presence in these channels
         @type  status: L{buildbot.status.builder.Status}
         @param status: the build master's Status object, through which the
@@ -804,13 +804,17 @@ class IrcStatusBot(irc.IRCClient):
         if "buildbot" in data:
             contact.handleAction(data, user)
 
-
-
     def signedOn(self):
         if self.password:
             self.msg("Nickserv", "IDENTIFY " + self.password)
         for c in self.channels:
-            self.join(c)
+            if isinstance(c, dict):
+                channel = c.get('channel', None)
+                password = c.get('password', None)
+            else:
+                channel = c
+                password = None
+            self.join(channel=channel, key=password)
 
     def joined(self, channel):
         self.log("I have joined %s" % (channel,))
