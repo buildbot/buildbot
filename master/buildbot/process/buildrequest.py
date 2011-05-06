@@ -15,9 +15,11 @@
 
 import calendar
 from zope.interface import implements
+from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces, sourcestamp
 from buildbot.process import properties
+from buildbot.status.results import FAILURE
 
 class BuildRequest(object):
     """
@@ -87,6 +89,7 @@ class BuildRequest(object):
         buildrequest.priority = brdict['priority']
         dt = brdict['submitted_at']
         buildrequest.submittedAt = dt and calendar.timegm(dt.utctimetuple())
+        buildrequest.master = master
 
         # fetch the buildset to get the reason
         wfd = defer.waitForDeferred(
@@ -122,18 +125,6 @@ class BuildRequest(object):
 
         yield buildrequest # return value
 
-    # TODO: This should die when db.connector.getBuildRequestWithNumber does
-    @classmethod
-    def oldConstructor(cls, reason, source, builderName, props):
-        buildrequest = cls()
-        buildrequest.reason = reason
-        buildrequest.source = source
-        buildrequest.buildername = builderName
-        buildrequest.properties = properties.Properties()
-        if props:
-            buildrequest.properties.updateFromProperties(props)
-        return buildrequest
-
     def canBeMergedWith(self, other):
         return self.source.canBeMergedWith(other.source)
 
@@ -151,6 +142,12 @@ class BuildRequest(object):
     def getSubmitTime(self):
         return self.submittedAt
 
+    def cancelBuildRequest(self):
+        d = self.master.db.buildrequests.completeBuildRequests([self.id],
+                                                                FAILURE)
+        d.addCallback(lambda _ : self.master.maybeBuildsetComplete(self.bsid))
+        return d
+
 class BuildRequestControl:
     implements(interfaces.IBuildRequestControl)
 
@@ -166,4 +163,5 @@ class BuildRequestControl:
         raise NotImplementedError
 
     def cancel(self):
-        self.original_builder.cancelBuildRequest(self.brid)
+        d = self.original_request.cancelBuildRequest()
+        d.addErrback(log.err, 'while cancelling build request')

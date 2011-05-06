@@ -17,7 +17,7 @@
 
 from buildbot.steps.shell import ShellCommand
 from buildbot.process.buildstep import LogLineObserver
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 
 import re
 

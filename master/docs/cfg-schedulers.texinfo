@@ -328,11 +328,12 @@ Example:
 
 @example
 from buildbot.schedulers import dependent
-tests = basic.SingleBranchScheduler("just-tests", None, 5*60,
-                            ["full-linux", "full-netbsd", "full-OSX"])
+tests = basic.SingleBranchScheduler(name="just-tests", branch=None,
+                treeStableTimer=5*60,
+                builderNames=["full-linux", "full-netbsd", "full-OSX"])
 package = dependent.Dependent(name="build-package",
-                              upstream=tests, # <- no quotes!
-                              builderNames=["make-tarball", "make-deb", "make-rpm"])
+                upstream=tests, # <- no quotes!
+                builderNames=["make-tarball", "make-deb", "make-rpm"])
 c['schedulers'] = [tests, package]
 @end example
 

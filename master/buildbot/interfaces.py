@@ -114,10 +114,10 @@ class IStatus(Interface):
     """I am an object, obtainable from the buildmaster, which can provide
     status information."""
 
-    def getProjectName():
+    def getTitle():
         """Return the name of the project that this Buildbot is working
         for."""
-    def getProjectURL():
+    def getTitleURL():
         """Return the URL of this Buildbot's project."""
     def getBuildbotURL():
         """Return the URL of the top-most Buildbot status page, or None if
@@ -151,7 +151,11 @@ class IStatus(Interface):
         """Return the ISlaveStatus object for a given named buildslave."""
 
     def getBuildSets():
-        """Return a list of active (non-finished) IBuildSetStatus objects."""
+        """
+        Return a list of un-completed build sets.
+
+        @returns: list of L{IBuildSetStatus} implementations, via Deferred.
+        """
 
     def generateFinishedBuilds(builders=[], branches=[],
                                num_builds=None, finished_before=None,
@@ -206,13 +210,6 @@ class IBuildSetStatus(Interface):
     """I represent a set of Builds, each run on a separate Builder but all
     using the same source tree."""
 
-    def getSourceStamp():
-        """Return a SourceStamp object which can be used to re-create
-        the source tree that this build used.
-
-        This method will return None if the source information is no longer
-        available."""
-        pass
     def getReason():
         pass
     def getID():
@@ -225,12 +222,9 @@ class IBuildSetStatus(Interface):
         pass # not implemented
     def getBuilderNames():
         """Return a list of the names of all Builders on which this set will
-        do builds."""
-    def getBuildRequests():
-        """Return a list of IBuildRequestStatus objects that represent my
-        component Builds. This list might correspond to the Builders named by
-        getBuilderNames(), but if builder categories are used, or 'Builder
-        Aliases' are implemented, then they may not."""
+        do builds.
+        
+        @returns: list of names via Deferred"""
     def isFinished():
         pass
     def waitUntilSuccess():
@@ -251,18 +245,19 @@ class IBuildRequestStatus(Interface):
     finally turned into a Build."""
 
     def getSourceStamp():
-        """Return a SourceStamp object which can be used to re-create
-        the source tree that this build used.  This method will
-        return an absolute SourceStamp if possible, and its results
-        may change as the build progresses.  Specifically, a "HEAD"
-        build may later be more accurately specified by an absolute
-        SourceStamp with the specific revision information.
+        """
+        Get a SourceStamp object which can be used to re-create the source tree
+        that this build used.  This method will return an absolute SourceStamp
+        if possible, and its results may change as the build progresses.
+        Specifically, a "HEAD" build may later be more accurately specified by
+        an absolute SourceStamp with the specific revision information.
 
         This method will return None if the source information is no longer
-        available."""
-        pass
-    def getBuilderName():
-        pass
+        available.
+
+        @returns: SourceStamp via Deferred
+        """
+
     def getBuilds():
         """Return a list of IBuildStatus objects for each Build that has been
         started in an attempt to satify this BuildRequest."""
@@ -278,9 +273,8 @@ class IBuildRequestStatus(Interface):
     def unsubscribe(observer):
         """Unregister the callable that was registered with subscribe()."""
     def getSubmitTime():
-        """Return the time when this request was submitted"""
-    def setSubmitTime(t):
-        """Sets the time when this request was submitted"""
+        """Return the time when this request was submitted.  Returns a
+        Deferred."""
 
 
 class ISlaveStatus(Interface):
@@ -329,10 +323,13 @@ class IBuilderStatus(Interface):
         """Return a list of ISlaveStatus objects for the buildslaves that are
         used by this builder."""
 
-    def getPendingBuilds():
-        """Return an IBuildRequestStatus object for all upcoming builds
-        (those which are ready to go but which are waiting for a buildslave
-        to be available."""
+    def getPendingBuildRequestStatuses():
+        """
+        Get a L{IBuildRequestStatus} implementations for all unclaimed build
+        requests.
+
+        @returns: list of objects via Deferred
+        """
 
     def getCurrentBuilds():
         """Return a list containing an IBuildStatus object for each build
@@ -976,7 +973,7 @@ class IStatusReceiver(Interface):
         in L{IBuildStatus.getResults}.
 
         @type  builderName: string
-        @type  build:       L{buildbot.status.builder.BuildStatus}
+        @type  build:       L{buildbot.status.build.BuildStatus}
         @type  results:     tuple
         """
 
@@ -997,14 +994,11 @@ class IControl(Interface):
         """Retrieve the IBuilderControl object for the given Builder."""
 
 class IBuilderControl(Interface):
-    def submitBuildRequest(ss, reason, props=None, now=False):
+    def submitBuildRequest(ss, reason, props=None):
         """Create a BuildRequest, which will eventually cause a build of the
         given SourceStamp to be run on this builder. This returns a
         BuildRequestStatus object via a Deferred, which can be used to keep
-        track of the builds that are performed.
-
-        If now=True, and I have no slave attached, NoSlaveError will be
-        raised instead of queueing the request for later action."""
+        track of the builds that are performed."""
 
     def rebuildBuild(buildStatus, reason="<rebuild, no reason given>"):
         """Rebuild something we've already built before. This submits a
@@ -1012,11 +1006,13 @@ class IBuilderControl(Interface):
         build. This has no effect (but may eventually raise an exception) if
         this Build has not yet finished."""
 
-    def getPendingBuilds():
-        """Return a list of L{IBuildRequestControl} objects for this Builder.
-        Each one corresponds to a pending build that has not yet started (due
-        to a scarcity of build slaves). These upcoming builds can be canceled
-        through the control object."""
+    def getPendingBuildRequestControls():
+        """
+        Get a list of L{IBuildRequestControl} objects for this Builder.
+        Each one corresponds to an unclaimed build request.
+
+        @returns: list of objects via Deferred
+        """
 
     def getBuild(number):
         """Attempt to return an IBuildControl object for the given build.

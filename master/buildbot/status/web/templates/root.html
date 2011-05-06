@@ -4,12 +4,12 @@
 {% block content %}
 
 <h1>Welcome to the Buildbot
-{%- if project_name -%}
+{%- if title -%}
   &nbsp;for the&nbsp;
-  {%- if project_url -%}
-    <a href="{{ project_url }}">{{ project_name }}</a>
+  {%- if title_url -%}
+    <a href="{{ title_url }}">{{ title }}</a>
   {%- else -%}
-    {{ project_name }}
+    {{ title }}
   {%- endif -%}
 &nbsp;project
 {%- endif -%}

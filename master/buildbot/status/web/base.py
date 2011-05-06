@@ -21,8 +21,9 @@ from zope.interface import Interface
 from twisted.internet import defer
 from twisted.web import resource, static, server
 from twisted.python import log
-from buildbot.status import builder
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY
+from buildbot.status import builder, buildstep, build
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED
+from buildbot.status.results import EXCEPTION, RETRY
 from buildbot import version, util
 from buildbot.process.properties import Properties
 
@@ -89,10 +90,9 @@ def build_get_class(b):
     """
     # FIXME: this getResults duplicity might need to be fixed
     result = b.getResults()
-    #print "THOMAS: result for b %r: %r" % (b, result)
-    if isinstance(b, builder.BuildStatus):
+    if isinstance(b, build.BuildStatus):
         result = b.getResults()
-    elif isinstance(b, builder.BuildStepStatus):
+    elif isinstance(b, buildstep.BuildStepStatus):
         result = b.getResults()[0]
         # after forcing a build, b.getResults() returns ((None, []), []), ugh
         if isinstance(result, tuple):
@@ -171,34 +171,12 @@ class Box:
         return props    
     
     
-class ContextMixin(object):
-    def getContext(self, request):
-        status = self.getStatus(request)
-        rootpath = path_to_root(request)
-        locale_enc = locale.getdefaultlocale()[1]
-        if locale_enc is not None:
-            locale_tz = unicode(time.tzname[time.localtime()[-1]], locale_enc)
-        else:
-            locale_tz = unicode(time.tzname[time.localtime()[-1]])
-        return dict(project_url = status.getProjectURL(),
-                    project_name = status.getProjectName(),
-                    stylesheet = rootpath + 'default.css',
-                    path_to_root = rootpath,
-                    version = version,
-                    time = time.strftime("%a %d %b %Y %H:%M:%S",
-                                        time.localtime(util.now())),
-                    tz = locale_tz,
-                    metatags = [],
-                    title = self.getTitle(request),
-                    welcomeurl = rootpath,
-                    authz = self.getAuthz(request),
-                    )
-
+class AccessorMixin(object):
     def getStatus(self, request):
         return request.site.buildbot_service.getStatus()    
         
-    def getTitle(self, request):
-        return self.title
+    def getPageTitle(self, request):
+        return self.pageTitle
 
     def getAuthz(self, request):
         return request.site.buildbot_service.authz
@@ -207,10 +185,64 @@ class ContextMixin(object):
         return request.site.buildbot_service.master
 
 
+class ContextMixin(AccessorMixin):
+    def getContext(self, request):
+        status = self.getStatus(request)
+        rootpath = path_to_root(request)
+        locale_enc = locale.getdefaultlocale()[1]
+        if locale_enc is not None:
+            locale_tz = unicode(time.tzname[time.localtime()[-1]], locale_enc)
+        else:
+            locale_tz = unicode(time.tzname[time.localtime()[-1]])
+        return dict(title_url = status.getTitleURL(),
+                    title = status.getTitle(),
+                    stylesheet = rootpath + 'default.css',
+                    path_to_root = rootpath,
+                    version = version,
+                    time = time.strftime("%a %d %b %Y %H:%M:%S",
+                                        time.localtime(util.now())),
+                    tz = locale_tz,
+                    metatags = [],
+                    pageTitle = self.getPageTitle(request),
+                    welcomeurl = rootpath,
+                    authz = self.getAuthz(request),
+                    )
+
+
+class ActionResource(resource.Resource, AccessorMixin):
+    """A resource that performs some action, then redirects to a new URL."""
+
+    isLeaf = 1
+
+    def getChild(self, name, request):
+        return self
+
+    def performAction(self, request):
+        """
+        Perform the action, and return the URL to redirect to
+
+        @param request: the web request
+        @returns: URL via Deferred
+        """
+
+    def render(self, request):
+        d = defer.maybeDeferred(lambda : self.performAction(request))
+        def redirect(url):
+            request.redirect(url)
+            request.write("see <a href='%s'>%s</a>" % (url,url))
+            request.finish()
+        d.addCallback(redirect)
+
+        def fail(f):
+            request.processingFailed(f)
+            return None # processingFailed will log this for us
+        d.addErrback(fail)
+        return server.NOT_DONE_YET
+
 class HtmlResource(resource.Resource, ContextMixin):
     # this is a cheap sort of template thingy
     contentType = "text/html; charset=utf-8"
-    title = "Buildbot"
+    pageTitle = "Buildbot"
     addSlash = False # adapted from Nevow
 
     def getChild(self, path, request):
@@ -292,13 +324,13 @@ class HtmlResource(resource.Resource, ContextMixin):
         return server.NOT_DONE_YET
 
 class StaticHTML(HtmlResource):
-    def __init__(self, body, title):
+    def __init__(self, body, pageTitle):
         HtmlResource.__init__(self)
         self.bodyHTML = body
-        self.title = title
+        self.pageTitle = pageTitle
     def content(self, request, cxt):
         cxt['content'] = self.bodyHTML
-        cxt['title'] = self.title
+        cxt['pageTitle'] = self.pageTitle
         template = request.site.buildbot_service.templates.get_template("empty.html")
         return template.render(**cxt)
 
@@ -311,7 +343,7 @@ if hasattr(static, 'DirectoryLister'):
         """This variant of the static.DirectoryLister uses a template
         for rendering."""
 
-        title = 'BuildBot'
+        pageTitle = 'BuildBot'
 
         def render(self, request):
             cxt = self.getContext(request)

@@ -90,7 +90,7 @@ class GerritChangeSource(base.ChangeSource):
 
     def lineReceived(self, line):
         try:
-            event = json.loads(line)
+            event = json.loads(line.decode('utf-8'))
         except ValueError:
             log.msg("bad json line: %s" % (line,))
             return defer.succeed(None)
@@ -122,8 +122,13 @@ class GerritChangeSource(base.ChangeSource):
                         properties=properties)
             elif event["type"] == "ref-updated":
                 ref = event["refUpdate"]
+                who = "gerrit"
+
+                if "submitter" in event:
+                    who="%s <%s>" % (event["submitter"]["name"], event["submitter"]["email"])
+
                 chdict = dict(
-                        who="%s <%s>" % (event["submitter"]["name"], event["submitter"]["email"]),
+                        who=who,
                         project=ref["project"],
                         branch=ref["refName"],
                         revision=ref["newRev"],
@@ -138,6 +143,8 @@ class GerritChangeSource(base.ChangeSource):
             # eat failures..
             d.addErrback(log.err, 'error adding change from GerritChangeSource')
             return d
+        else:
+            return defer.succeed(None)
 
     def streamProcessStopped(self):
         self.process = None

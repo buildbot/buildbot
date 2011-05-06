@@ -19,6 +19,7 @@ Support for buildsets in the database
 
 import sqlalchemy as sa
 from twisted.internet import reactor
+from twisted.python import log
 from buildbot.db import base
 from buildbot.util import epoch2datetime
 
@@ -43,7 +44,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     def getBuildRequest(self, brid):
         """
         Get a single BuildRequest, in the format described above.  Returns
-        C{None} if there is no such buildrquest.
+        C{None} if there is no such buildrequest.
 
         @param brid: build request id
         @type brid: integer
@@ -62,7 +63,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             return rv
         return self.db.pool.do(thd)
 
-    def getBuildRequests(self, buildername=None, complete=None, claimed=None):
+    def getBuildRequests(self, buildername=None, complete=None, claimed=None,
+            bsid=None):
         """
         Get a list of build requests matching the given characteristics.  Note
         that C{unclaimed}, C{my_claimed}, and C{other_claimed} all default to
@@ -73,7 +75,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         claimed status of requests; C{True} to return only claimed builds,
         C{False} to return only unclaimed builds, or C{"mine"} to return only
         builds claimed by this master instance.  A request is considered
-        unclaimed if its C{claimed_at} column is either NULL or 0.
+        unclaimed if its C{claimed_at} column is either NULL or 0, and it is
+        not complete.  If C{bsid} is specified, then only build requests for
+        that buildset will be returned.
 
         A build is considered completed if its C{complete} column is 1; the
         C{complete_at} column is not consulted.
@@ -90,6 +94,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         @param claimed: see above
 
+        @param bsid: see above
+
         @returns: List of build request dictionaries as above, via Deferred
         """
         def thd(conn):
@@ -101,7 +107,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                         ((tbl.c.claimed_at == None) |
                          (tbl.c.claimed_at == 0)) &
                         (tbl.c.claimed_by_name == None) &
-                        (tbl.c.claimed_by_incarnation == None))
+                        (tbl.c.claimed_by_incarnation == None) &
+                        (tbl.c.complete == 0))
                 elif claimed == "mine":
                     master_name = self.db.master.master_name
                     master_incarnation = self.db.master.master_incarnation
@@ -122,6 +129,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     q = q.where(tbl.c.complete != 0)
                 else:
                     q = q.where(tbl.c.complete == 0)
+            if bsid is not None:
+                q = q.where(tbl.c.buildsetid == bsid)
             res = conn.execute(q)
             return [ self._brdictFromRow(row) for row in res.fetchall() ]
         return self.db.pool.do(thd)
@@ -138,8 +147,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         succeed in claiming a build request that is already claimed by this
         master instance, and will update its claimed_at date.
 
-        @param brid: ids of buildrequests to claim
-        @type brid: list
+        @param brids: ids of buildrequests to claim
+        @type brids: list
 
         @param _reactor: reactor to use (for testing)
         @param _race_hook: hook for testing
@@ -239,14 +248,46 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def completeBuildRequest(self, brid, results, _reactor=reactor):
+    def unclaimBuildRequests(self, brids):
         """
-        Complete a build request that is owned by this master instance.  This
-        will fail with L{NotClaimedError} if the build request is not claimed
-        by this instance, is already completed, or does not exist.
+        Release this master's claim on all of the given build requests.  This
+        will check that the requests are claimed by this master, but will not
+        fail if they are not so claimed.
 
-        @param brid: build request ID to claim
-        @type brid: integer
+        @param brids: ids of buildrequests to unclaim
+        @type brids: list
+
+        @returns: Deferred
+        """
+        def thd(conn):
+            master_name = self.db.master.master_name
+            master_incarnation = self.db.master.master_incarnation
+            tbl = self.db.model.buildrequests
+
+            q = tbl.update(whereclause=(tbl.c.id.in_(brids)))
+            q = q.where(
+                # incomplete
+                (tbl.c.complete == 0) &
+                # .. and mine only
+                (tbl.c.claimed_at != None) &
+                (tbl.c.claimed_by_name == master_name) &
+                (tbl.c.claimed_by_incarnation == master_incarnation))
+            res = conn.execute(q,
+                claimed_at=0,
+                claimed_by_name=None,
+                claimed_by_incarnation=None)
+            res.close()
+        return self.db.pool.do(thd)
+
+    def completeBuildRequests(self, brids, results, _reactor=reactor):
+        """
+        Complete a set of build requests, all of which are owned by this master
+        instance.  This will fail with L{NotClaimedError} if the build request
+        is not claimed by this instance, is already completed, or does not
+        exist.
+
+        @param brids: build request IDs to complete
+        @type brids: integer
 
         @param results: integer result code
         @type results: integer
@@ -262,7 +303,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             master_incarnation = self.db.master.master_incarnation
             tbl = self.db.model.buildrequests
 
-            q = tbl.update(whereclause=(tbl.c.id == brid))
+            q = tbl.update(whereclause=(tbl.c.id.in_(brids)))
             q = q.where(
                 (tbl.c.claimed_at != None) &
                 (tbl.c.claimed_by_name == master_name) &
@@ -273,8 +314,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 results=results,
                 complete_at=_reactor.seconds())
 
-            # if no rows were updated, then we failed
-            if not res.rowcount:
+            # if no rows were updated, then we failed (and left things in an
+            # awkward state, at that!)
+            if res.rowcount != len(brids):
                 raise NotClaimedError
         return self.db.pool.do(thd)
 
@@ -294,11 +336,18 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     (tbl.c.claimed_by_name == master_name) &
                     (tbl.c.claimed_by_incarnation != master_incarnation) &
                     (tbl.c.complete == 0)))
-            conn.execute(q,
+            res = conn.execute(q,
                 claimed_at=0,
                 claimed_by_name=None,
                 claimed_by_incarnation=None)
-        return self.db.pool.do(thd)
+            return res.rowcount
+        d = self.db.pool.do(thd)
+        def log_nonzero_count(count):
+            if count != 0:
+                log.msg("unclaimed %d buildrequests for an old instance of "
+                        "this master" % (count,))
+        d.addCallback(log_nonzero_count)
+        return d
 
     def unclaimExpiredRequests(self, old, _reactor=reactor):
         """
@@ -323,11 +372,18 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     (tbl.c.claimed_at != 0) &
                     (tbl.c.claimed_at < old_epoch) &
                     (tbl.c.complete == 0)))
-            conn.execute(q,
+            res = conn.execute(q,
                 claimed_at=0,
                 claimed_by_name=None,
                 claimed_by_incarnation=None)
-        return self.db.pool.do(thd)
+            return res.rowcount
+        d = self.db.pool.do(thd)
+        def log_nonzero_count(count):
+            if count != 0:
+                log.msg("unclaimed %d expired buildrequests (over %d seconds "
+                        "old)" % (count, old))
+        d.addCallback(log_nonzero_count)
+        return d
 
     def _brdictFromRow(self, row):
         claimed = mine = False

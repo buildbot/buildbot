@@ -68,8 +68,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         d.addCallback(fired)
 
         bsid = self.db.buildsets.assertBuildset('?',
-                dict(builderNames=['b'],
-                     external_idstring=None,
+                dict(external_idstring=None,
                      properties=[
                          ('pr', ('op', 'test')),
                          ('scheduler', ('n', 'Scheduler')),
@@ -117,8 +116,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         d = sched.trigger(91)
         d.addCallback(lambda res : self.assertEqual(res, 11))
         bsid1 = self.db.buildsets.assertBuildset('?',
-                dict(builderNames=['b'],
-                     external_idstring=None,
+                dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
                      reason='Triggerable(n)'),
                 dict(branch='br', project='p', repository='r',
@@ -128,8 +126,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         d = sched.trigger(92)
         d.addCallback(lambda res : self.assertEqual(res, 22))
         bsid2 = self.db.buildsets.assertBuildset(bsid1+1, # assumes bsid's are sequential
-                dict(builderNames=['b'],
-                     external_idstring=None,
+                dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
                      reason='Triggerable(n)'),
                 dict(branch='br', project='p', repository='r',

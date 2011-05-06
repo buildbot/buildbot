@@ -17,7 +17,7 @@
 from twisted.internet import reactor
 from buildbot.process.buildstep import BuildStep, LoggingBuildStep
 from buildbot.process.buildstep import LoggedRemoteCommand
-from buildbot.status.builder import SUCCESS, FAILURE
+from buildbot.status.results import SUCCESS, FAILURE
 
 # these classes are used internally by buildbot unit tests
 

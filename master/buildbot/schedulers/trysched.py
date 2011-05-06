@@ -24,7 +24,7 @@ from buildbot.util.maildir import MaildirService
 from buildbot.util import netstrings
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
-from buildbot.status.builder import BuildSetStatus
+from buildbot.status.buildset import BuildSetStatus
 
 
 class TryBase(base.BaseScheduler):
@@ -211,10 +211,15 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
                         reason=reason, properties=requested_props,
                         builderNames=builderNames))
         yield wfd
-        bsid = wfd.getResult()
+        (bsid,brids) = wfd.getResult()
 
         # return a remotely-usable BuildSetStatus object
-        bss = BuildSetStatus(bsid, self.scheduler.master.status, db)
+        wfd = defer.waitForDeferred(
+                db.buildsets.getBuildset(bsid))
+        yield wfd
+        bsdict = wfd.getResult()
+
+        bss = BuildSetStatus(bsdict, self.scheduler.master.status)
         from buildbot.status.client import makeRemote
         r = makeRemote(bss)
         yield r # return value

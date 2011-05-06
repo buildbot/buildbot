@@ -17,7 +17,6 @@ import sys
 import os
 from shutil import copy, rmtree
 from tempfile import mkdtemp
-from os.path import isfile
 from twisted.internet import defer
 from buildbot import master
 
@@ -33,17 +32,14 @@ class ConfigLoader(object):
 
         def loadcfg(_):
             # Use a temporary directory since loadConfig() creates a bunch of
-            # directories and compiles .py files
+            # builder directories
             self.tempdir = mkdtemp()
             copy(self.configFileName, self.tempdir)
-            for entry in os.listdir("."):
-                # Any code in a subdirectory will _not_ be copied! This is a bug
-                if isfile(entry) and not entry.startswith("twistd.log"):
-                    copy(entry, self.tempdir)
 
             os.chdir(self.tempdir)
-            # Add the temp directory to the library path so local modules work
-            sys.path.append(self.tempdir)
+            # Add the original directory to the library path so local module
+            # imports work
+            sys.path.append(self.basedir)
 
             bmaster = master.BuildMaster(self.basedir, self.configFileName)
             return bmaster.loadConfig(open(self.configFileName, "r"), checkOnly=True)

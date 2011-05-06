@@ -14,14 +14,15 @@
 # Copyright Buildbot Team Members
 
 import os
-
 from mock import Mock
-from buildbot.status import builder
-#from buildbot.util import json
-
 from twisted.trial import unittest
+from buildbot.status import builder, master
 
 class TestBuildStepStatus(unittest.TestCase):
+
+    # that buildstep.BuildStepStatus is never instantiated here should tell you
+    # that these classes are not well isolated!
+
     def setupBuilder(self, buildername, category=None):
         b = builder.BuilderStatus(buildername=buildername, category=category)
         # Ackwardly, Status sets this member variable.
@@ -32,10 +33,10 @@ class TestBuildStepStatus(unittest.TestCase):
         return b
 
     def setupStatus(self, b):
-        botmaster = Mock()
-        botmaster.parent = Mock()
-        botmaster.parent.buildbotURL = 'http://buildbot:8010/'
-        s = builder.Status(botmaster=botmaster, basedir=b.basedir)
+        m = Mock()
+        m.buildbotURL = 'http://buildbot:8010/'
+        m.basedir = '/basedir'
+        s = master.Status(m)
         b.status = s
         return s
 

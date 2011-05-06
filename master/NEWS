@@ -5,6 +5,15 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Version
 
+** `Blocker` step
+
+A "beta" version of the Blocker step has been added; this step allows multiple
+concurrent builds to be synchronized.  It is "beta" in the sense that it may
+contain significant bugs, is only documented in the source code, and has an
+interface that is subject to non-compatible change in later versions of
+Buildbot.  See `contrib/blockertest` for a test and demonstration of the new
+step's functionality.
+
 ** Deprecations, Removals, and Non-Compatible Changes
 
 *** MasterShellCommand and all of the transfer steps now default to
@@ -29,6 +38,22 @@ to True, then the default merge method will be used.  In earlier versions, this
 configuration fell back to the global c['mergeRequests'] parameter's value.  To
 avoid this, remove `mergeRequests=True` from any BuilderConfig constructor
 invocations.
+
+*** The `Status.getBuildSets` method now returns its result via Deferred.
+
+*** The `BuilderControl.getPendingBuilds` method has been renamed to
+`getPendingBuildRequestControls`; `BuilderStatus.getPendingBuilds` has been
+renamed to `getPendingBuildStatuses`.  Both now return their results via
+Deferred.
+
+*** The utility method `Builder.getOldesetRequestTime` now returns its result
+via a Deferred, and that result is now a DateTime object.
+
+*** The remote BuildSetStatus method `waitForSuccess` is no longer available.
+
+*** The BuildRequestStatus methods `getSubmitTime` and `getSourceStamp` now
+return their results via a Deferred.  The `asDict` method omits these values,
+as it retuns synchronously.
 
 ** Scheduler Improvements
 

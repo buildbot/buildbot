@@ -17,7 +17,7 @@ from mock import Mock
 from buildbot.interfaces import ParameterError
 from twisted.trial import unittest
 
-from buildbot.status.builder import SUCCESS, FAILURE
+from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.status.mail import MailNotifier
 
 class FakeLog(object):

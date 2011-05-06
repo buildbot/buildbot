@@ -98,3 +98,50 @@ class OldImportPaths(unittest.TestCase):
     def test_process_subunitlogobserver_SubunitShellCommand(self):
         from buildbot.process.subunitlogobserver import SubunitShellCommand
         assert SubunitShellCommand
+
+    def test_status_builder_results(self):
+        # these symbols are now in buildbot.status.results, but lots of user
+        # code references them here:
+        from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED
+        from buildbot.status.builder import EXCEPTION, RETRY, Results
+        from buildbot.status.builder import worst_status
+        # reference the symbols to avoid failure from pyflakes
+        (SUCCESS, WARNINGS, FAILURE, SKIPPED,EXCEPTION, RETRY, Results,
+                worst_status)
+
+    def test_status_builder_BuildStepStatus(self):
+        from buildbot.status.builder import BuildStepStatus
+        assert BuildStepStatus
+
+    def test_status_builder_BuildSetStatus(self):
+        from buildbot.status.builder import BuildSetStatus
+        assert BuildSetStatus
+
+    def test_status_builder_TestResult(self):
+        from buildbot.status.builder import TestResult
+        assert TestResult
+
+    def test_status_builder_LogFile(self):
+        from buildbot.status.builder import LogFile
+        assert LogFile
+
+    def test_status_builder_HTMLLogFile(self):
+        from buildbot.status.builder import HTMLLogFile
+        assert HTMLLogFile
+
+    def test_status_builder_SlaveStatus(self):
+        from buildbot.status.builder import SlaveStatus
+        assert SlaveStatus
+
+    def test_status_builder_Status(self):
+        from buildbot.status.builder import Status
+        assert Status
+
+    def test_status_builder_Event(self):
+        from buildbot.status.builder import Event
+        assert Event
+
+    def test_status_builder_BuildStatus(self):
+        from buildbot.status.builder import BuildStatus
+        assert BuildStatus
+

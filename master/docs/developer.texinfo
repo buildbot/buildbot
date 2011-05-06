@@ -306,7 +306,7 @@ Finally, make the corresponding changes to @file{buildbot/db/schema/tables.sql}.
 
 @node Log File Format
 @section Log File Format
-@dvindex buildbot.status.builder.LogFile
+@dvindex buildbot.status.logfile.LogFile
 
 The master currently stores each logfile in a single file, which may have a
 standard compression applied.
@@ -317,7 +317,7 @@ consists of a one-digit channel identifier followed by the data from that
 channel.
 
 The formatting is implemented in the LogFile class in
-@file{buildbot/status/builder.py}, and in particular by the @code{merge}
+@file{buildbot/status/logfile.py}, and in particular by the @code{merge}
 method.
 
 @node Web Status

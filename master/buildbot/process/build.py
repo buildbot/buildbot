@@ -22,7 +22,7 @@ from twisted.python.failure import Failure
 from twisted.internet import reactor, defer, error
 
 from buildbot import interfaces, locks
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
   RETRY, SKIPPED, worst_status
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
@@ -47,7 +47,7 @@ class Build:
     L{buildbot.process.factory.BuildFactory}
 
     @ivar requests: the list of L{BuildRequest}s that triggered me
-    @ivar build_status: the L{buildbot.status.builder.BuildStatus} that
+    @ivar build_status: the L{buildbot.status.build.BuildStatus} that
                         collects our status
     """
 
@@ -63,6 +63,7 @@ class Build:
     def __init__(self, requests):
         self.requests = requests
         self.locks = []
+
         # build a source stamp
         self.source = requests[0].mergeWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
@@ -220,6 +221,7 @@ class Build:
                        for l, la in self.locks]
         self.remote = slavebuilder.remote
         self.remote.notifyOnDisconnect(self.lostRemote)
+
         d = self.deferred = defer.Deferred()
         def _release_slave(res, slave, bs):
             self.slavebuilder.buildFinished()

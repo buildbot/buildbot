@@ -258,7 +258,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         @param properties: a properties object containing initial properties for
             the buildset
         @type properties: L{buildbot.process.properties.Properties}
-        @returns: buildset ID via Deferred
+        @returns: (buildset ID, buildrequest IDs) via Deferred
         """
         d = self.master.db.sourcestamps.createSourceStamp(
                 branch=branch, revision=None, repository=repository,
@@ -289,7 +289,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         @param properties: a properties object containing initial properties for
             the buildset
         @type properties: L{buildbot.process.properties.Properties}
-        @returns: buildset ID via Deferred
+        @returns: (buildset ID, buildrequest IDs) via Deferred
         """
         assert changeids is not []
 
@@ -316,8 +316,9 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         Add a buildset for the given, already-existing sourcestamp.
 
         This method will add any properties provided to the scheduler
-        constructor to the buildset, and will call the master's addBuildset
-        method with the appropriate parameters.
+        constructor to the buildset, and will call the master's
+        L{BuildMaster.addBuildset} method with the appropriate parameters, and
+        return the same result.
 
         @param reason: reason for this buildset
         @type reason: unicode string
@@ -327,7 +328,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         @type properties: L{buildbot.process.properties.Properties}
         @param builderNames: builders to name in the buildset (defaults to
             C{self.builderNames})
-        @returns: buildset ID via Deferred
+        @returns: (buildset ID, buildrequest IDs) via Deferred
         """
         # combine properties
         if properties:

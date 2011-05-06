@@ -112,7 +112,7 @@ class WebStatus(service.MultiService):
     generates the root page.
 
     All of the resources provided by this service use relative URLs to reach
-    each other. The only absolute links are the c['projectURL'] links at the
+    each other. The only absolute links are the c['titleURL'] links at the
     top and bottom of the page, and the buildbot home-page link at the
     bottom.
 

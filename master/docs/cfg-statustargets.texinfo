@@ -1004,7 +1004,7 @@ status objects:
 @item Name of the builder that generated this event
 @code{name}
 @item Name of the project
-@code{master_status.getProjectName()}
+@code{master_status.getTitle()}
 @item MailNotifier mode
 @code{mode} (one of @code{all, failing, problem, change, passing})
 @item Builder result as a string
@@ -1102,6 +1102,11 @@ private messages until they have logged in with a password.
 To use the service, you address messages at the buildbot, either
 normally (@code{botnickname: status}) or with private messages
 (@code{/msg botnickname status}). The buildbot will respond in kind.
+
+If you issue a command that is currently not available, the buildbot
+will respond with an error message. If the @code{noticeOnChannel=True}
+option was used, error messages will be sent as channel notices instead
+of messaging. The default value is @code{noticeOnChannel=False}.
 
 Some of the commands currently available:
 

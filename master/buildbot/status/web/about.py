@@ -21,7 +21,7 @@ import sys
 import jinja2
 
 class AboutBuildbot(HtmlResource):
-    title = "About this Buildbot"
+    pageTitle = "About this Buildbot"
 
     def content(self, request, cxt):
         cxt.update(dict(buildbot=buildbot.version, 

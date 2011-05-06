@@ -272,6 +272,17 @@ class ObjectState(Row):
 
     required_columns = ( 'objectid', )
 
+class Build(Row):
+    table = "builds"
+
+    defaults = dict(
+        id = None,
+        number = 29,
+        brid = 39,
+        start_time = 1304262222,
+        finish_time = None)
+
+    id_column = 'id'
 
 # Fake DB Components
 
@@ -513,10 +524,28 @@ class FakeBuildsetsComponent(FakeDBComponent):
             bsid += 1
         return bsid
 
-    def addBuildset(self, **kwargs):
-        bsid = kwargs['id'] = self._newBsid()
-        self.buildsets[bsid] = kwargs
-        return defer.succeed(bsid)
+    def addBuildset(self, ssid, reason, properties, builderNames,
+                   external_idstring=None, _reactor=reactor):
+        bsid = self._newBsid()
+        br_rows = []
+        for buildername in builderNames:
+            br_rows.append(
+                    BuildRequest(buildsetid=bsid, buildername=buildername))
+        self.db.buildrequests.insertTestData(br_rows)
+
+        # make up a row and keep its dictionary, with the properties tacked on
+        bsrow = Buildset(sourcestampid=ssid, reason=reason, external_idstring=external_idstring)
+        self.buildsets[bsid] = bsrow.values.copy()
+        self.buildsets[bsid]['properties'] = properties
+
+        return defer.succeed((bsid,
+            dict([ (br.buildername, br.id) for br in br_rows ])))
+
+    def completeBuildset(self, bsid, results, _reactor=reactor):
+        self.buildsets[bsid]['results'] = results
+        self.buildsets[bsid]['complete'] = 1
+        self.buildsets[bsid]['complete_at'] = _reactor.seconds
+        return defer.succeed(None)
 
     def subscribeToBuildset(self, schedulerid, buildsetid):
         self.buildset_subs.append((schedulerid, buildsetid))
@@ -538,16 +567,33 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def getBuildset(self, bsid):
         if bsid not in self.buildsets:
             return defer.succeed(None)
-        rv = self.buildsets[bsid].copy()
-        if rv['complete_at']:
-            rv['complete_at'] = epoch2datetime(rv['complete_at'])
-        else:
-            rv['complete_at'] = None
-        rv['submitted_at'] = rv['submitted_at'] and \
-                             epoch2datetime(rv['submitted_at'])
-        rv['complete'] = bool(rv['complete'])
-        del rv['id']
+        row = self.buildsets[bsid]
+        return defer.succeed(self._row2dict(row))
+
+    def getBuildsets(self, complete=None):
+        rv = []
+        for bs in self.buildsets.itervalues():
+            if complete is not None:
+                if complete and bs['complete']:
+                    rv.append(self._row2dict(bs))
+                elif not complete and not bs['complete']:
+                    rv.append(self._row2dict(bs))
+            else:
+                rv.append(self._row2dict(bs))
         return defer.succeed(rv)
+
+    def _row2dict(self, row):
+        row = row.copy()
+        if row['complete_at']:
+            row['complete_at'] = epoch2datetime(row['complete_at'])
+        else:
+            row['complete_at'] = None
+        row['submitted_at'] = row['submitted_at'] and \
+                             epoch2datetime(row['submitted_at'])
+        row['complete'] = bool(row['complete'])
+        row['bsid'] = row['id']
+        del row['id']
+        return row
 
     def getBuildsetProperties(self, buildsetid):
         if buildsetid in self.buildsets:
@@ -591,14 +637,26 @@ class FakeBuildsetsComponent(FakeDBComponent):
             self.t.assertIn(bsid, self.buildsets)
 
         buildset = self.buildsets[bsid].copy()
-        ss = self.db.sourcestamps.sourcestamps[buildset['ssid']].copy()
-        del buildset['ssid']
+        ss = self.db.sourcestamps.sourcestamps[buildset['sourcestampid']].copy()
+        del buildset['sourcestampid']
 
         if 'id' in buildset:
             del buildset['id']
 
+        # clear out some columns if the caller doesn't care
+        for col in 'complete complete_at submitted_at results'.split():
+            if col not in expected_buildset:
+                del buildset[col]
+
         if buildset['properties']:
             buildset['properties'] = sorted(buildset['properties'].items())
+
+        # only add brids if we're expecting them (sometimes they're unknown)
+        if 'brids' in expected_buildset:
+            brids = dict([ (br.buildername, br.id)
+                      for br in self.db.buildrequests.reqs.values()
+                      if br.buildsetid == bsid ])
+            buildset['brids'] = brids
 
         if 'id' in ss:
             del ss['id']
@@ -714,7 +772,8 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         except:
             return defer.succeed(None)
 
-    def getBuildRequests(self, buildername=None, complete=None, claimed=None):
+    def getBuildRequests(self, buildername=None, complete=None, claimed=None,
+                         bsid=None):
         rv = []
         for br in self.reqs.itervalues():
             if buildername and br.buildername != buildername:
@@ -736,6 +795,9 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 else:
                     if br.claimed_at:
                         continue
+            if bsid is not None:
+                if br.buildsetid != bsid:
+                    continue
             rv.append(self._brdictFromRow(br))
         return defer.succeed(rv)
 
@@ -813,6 +875,12 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         br.claimed_by_incarnation = \
                 master_incarnation or self.MASTER_INCARNATION
 
+    def fakeUnclaimBuildRequest(self, brid):
+        br = self.reqs[brid]
+        br.claimed_at = 0
+        br.claimed_by_name = None
+        br.claimed_by_incarnation = None
+
     # assertions
 
     def assertClaimed(self, brid, master_name=None, master_incarnation=None):
@@ -833,6 +901,53 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                   if br.claimed_by_name == self.MASTER_NAME and
                      br.claimed_by_incarnation == self.MASTER_INCARNATION ],
                 claimed_brids)
+
+
+class FakeBuildsComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.builds = {}
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, Build):
+                self.builds[row.id] = row
+
+    # component methods
+
+    def _newId(self):
+        id = 100
+        while id in self.builds:
+            id += 1
+        return id
+
+    def getBuild(self, bid):
+        row = self.builds.get(bid)
+        if not row:
+            return defer.succeed(None)
+
+        def mkdt(epoch):
+            if epoch:
+                return epoch2datetime(epoch)
+        return defer.succeed(dict(
+            bid=row.id,
+            brid=row.brid,
+            number=row.number,
+            start_time=mkdt(row.start_time),
+            finish_time=mkdt(row.finish_time)))
+
+    def addBuild(self, brid, number, _reactor=reactor):
+        bid = self._newId()
+        self.builds[bid] = Build(id=bid, number=number, brid=brid,
+                start_time=_reactor.seconds, finish_time=None)
+        return bid
+
+    def finishBuilds(self, bids, _reactor=reactor):
+        now = _reactor.seconds()
+        for bid in bids:
+            b = self.builds.get(bid)
+            if b:
+                b.finish_time = now
 
 
 class FakeDBConnector(object):
@@ -858,6 +973,8 @@ class FakeDBConnector(object):
         self.state = comp = FakeStateComponent(self, testcase)
         self._components.append(comp)
         self.buildrequests = comp = FakeBuildRequestsComponent(self, testcase)
+        self._components.append(comp)
+        self.builds = comp = FakeBuildsComponent(self, testcase)
         self._components.append(comp)
 
     def insertTestData(self, rows):

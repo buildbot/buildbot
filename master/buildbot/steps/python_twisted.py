@@ -16,8 +16,8 @@
 
 from twisted.python import log
 
-from buildbot.status import builder
-from buildbot.status.builder import SUCCESS, FAILURE, WARNINGS, SKIPPED
+from buildbot.status import testresult
+from buildbot.status.results import SUCCESS, FAILURE, WARNINGS, SKIPPED
 from buildbot.process.buildstep import LogLineObserver, OutputProgressObserver
 from buildbot.process.buildstep import RemoteShellCommand
 from buildbot.steps.shell import ShellCommand
@@ -528,7 +528,7 @@ class Trial(ShellCommand):
     def addTestResult(self, testname, results, text, tlog):
         if self.reactor is not None:
             testname = (self.reactor,) + testname
-        tr = builder.TestResult(testname, results, text, logs={'log': tlog})
+        tr = testresult.TestResult(testname, results, text, logs={'log': tlog})
         #self.step_status.build.addTestResult(tr)
         self.build.build_status.addTestResult(tr)
 

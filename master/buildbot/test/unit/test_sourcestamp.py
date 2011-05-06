@@ -71,7 +71,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
             self.assertEqual(ss.ssid, 234)
             self.assertEqual(ss.branch, 'trunk')
             self.assertEqual(ss.revision, '9284')
-            self.assertEqual(ss.patch, ('-- ++', 3))
+            self.assertEqual(ss.patch, (3, '-- ++'))
             self.assertEqual(ss.changes, ())
             self.assertEqual(ss.project, 'world-domination')
             self.assertEqual(ss.repository, 'svn://...')
@@ -100,3 +100,38 @@ class TestBuilderBuildCreation(unittest.TestCase):
             self.assertEqual(ss.repository, 'svn://...')
         d.addCallback(check)
         return d
+
+    def test_getAbsoluteSourceStamp_from_relative(self):
+        ss = sourcestamp.SourceStamp(branch='dev', revision=None,
+                project='p', repository='r')
+        abs_ss = ss.getAbsoluteSourceStamp('abcdef')
+        self.assertEqual(abs_ss.branch, 'dev')
+        self.assertEqual(abs_ss.revision, 'abcdef')
+        self.assertEqual(abs_ss.project, 'p')
+        self.assertEqual(abs_ss.repository, 'r')
+
+    def test_getAbsoluteSourceStamp_from_absolute(self):
+        ss = sourcestamp.SourceStamp(branch='dev', revision='xyz',
+                project='p', repository='r')
+        abs_ss = ss.getAbsoluteSourceStamp('abcdef')
+        self.assertEqual(abs_ss.branch, 'dev')
+        # revision gets overridden
+        self.assertEqual(abs_ss.revision, 'abcdef')
+        self.assertEqual(abs_ss.project, 'p')
+        self.assertEqual(abs_ss.repository, 'r')
+
+    def test_getAbsoluteSourceStamp_from_absolute_with_changes(self):
+        c1 = mock.Mock()
+        c1.branch = 'dev'
+        c1.revision = 'xyz'
+        c1.project = 'p'
+        c1.repository = 'r'
+        ss = sourcestamp.SourceStamp(branch='dev', revision='xyz',
+                project='p', repository='r', changes=[c1])
+        abs_ss = ss.getAbsoluteSourceStamp('abcdef')
+        self.assertEqual(abs_ss.branch, 'dev')
+        # revision changes, even though changes say different - this is
+        # useful for CVS, for example
+        self.assertEqual(abs_ss.revision, 'abcdef')
+        self.assertEqual(abs_ss.project, 'p')
+        self.assertEqual(abs_ss.repository, 'r')

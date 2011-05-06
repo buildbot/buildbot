@@ -20,10 +20,8 @@ from twisted.internet import defer, reactor
 from twisted.spread import pb
 from twisted.application import service
 
-from buildbot.util import eventual
 from buildbot.process.builder import Builder
 from buildbot import interfaces, locks
-from buildbot.util.loop import DelegateLoop
 
 class BotMaster(service.MultiService):
 
@@ -42,8 +40,6 @@ class BotMaster(service.MultiService):
         self.builderNames = []
         # builders maps Builder names to instances of bb.p.builder.Builder,
         # which is the master-side object that defines and controls a build.
-        # They are added by calling botmaster.addBuilder() from the startup
-        # code.
 
         # self.slaves contains a ready BuildSlave instance for each
         # potential buildslave, i.e. all the ones listed in the config file.
@@ -64,39 +60,41 @@ class BotMaster(service.MultiService):
         # traversal
         self.prioritizeBuilders = None
 
-        self.loop = DelegateLoop(self._get_processors)
-        self.loop.setServiceParent(self)
-
         self.shuttingDown = False
 
         self.lastSlavePortnum = None
 
-    def setMasterName(self, name, incarnation):
-        self.master_name = name
-        self.master_incarnation = incarnation
+        # subscription to new build requests
+        self.buildrequest_sub = None
 
-    def cleanShutdown(self):
+        # a distributor for incoming build requests; see below
+        self.brd = BuildRequestDistributor(self)
+        self.brd.setServiceParent(self)
+
+    def cleanShutdown(self, _reactor=reactor):
+        """Shut down the entire process, once all currently-running builds are
+        complete."""
         if self.shuttingDown:
             return
         log.msg("Initiating clean shutdown")
         self.shuttingDown = True
 
-        # Wait for all builds to finish
-        l = []
-        for builder in self.builders.values():
-            for build in builder.builder_status.getCurrentBuilds():
-                l.append(build.waitUntilFinished())
-        if len(l) == 0:
-            log.msg("No running jobs, starting shutdown immediately")
-            self.loop.trigger()
-            d = self.loop.when_quiet()
-        else:
-            log.msg("Waiting for %i build(s) to finish" % len(l))
-            d = defer.DeferredList(l)
-            d.addCallback(lambda ign: self.loop.when_quiet())
+        # first, stop the distributor; this will finish any ongoing scheduling
+        # operations before firing
+        d = self.brd.stopService()
 
-        # Flush the eventual queue
-        d.addCallback(eventual.flushEventualQueue)
+        # then wait for all builds to finish
+        def wait(_):
+            l = []
+            for builder in self.builders.values():
+                for build in builder.builder_status.getCurrentBuilds():
+                    l.append(build.waitUntilFinished())
+            if len(l) == 0:
+                log.msg("No running jobs, starting shutdown immediately")
+            else:
+                log.msg("Waiting for %i build(s) to finish" % len(l))
+                return defer.DeferredList(l)
+        d.addCallback(wait)
 
         # Finally, shut the whole process down
         def shutdown(ign):
@@ -113,42 +111,18 @@ class BotMaster(service.MultiService):
                         self.cleanShutdown()
                         return
                 log.msg("Stopping reactor")
-                self.reactor.stop()
+                _reactor.stop()
+            else:
+                self.brd.startService()
         d.addCallback(shutdown)
-        return d
+        d.addErrback(log.err, 'while processing cleanShutdown')
 
     def cancelCleanShutdown(self):
+        """Cancel a clean shutdown that is already in progress, if any"""
         if not self.shuttingDown:
             return
         log.msg("Cancelling clean shutdown")
         self.shuttingDown = False
-
-    def _sortfunc(self, b1, b2):
-        t1 = b1.getOldestRequestTime()
-        t2 = b2.getOldestRequestTime()
-        # If t1 or t2 is None, then there are no build requests,
-        # so sort it at the end
-        if t1 is None:
-            return 1
-        if t2 is None:
-            return -1
-        return cmp(t1, t2)
-
-    def _sort_builders(self, parent, builders):
-        return sorted(builders, self._sortfunc)
-
-    def _get_processors(self):
-        if self.shuttingDown:
-            return []
-        builders = self.builders.values()
-        sorter = self.prioritizeBuilders or self._sort_builders
-        try:
-            builders = sorter(self.parent, builders)
-        except:
-            log.msg("Exception prioritizing builders")
-            log.err(Failure())
-            # leave them in the original order
-        return [b.run for b in builders]
 
     def loadConfig_Slaves(self, new_slaves):
         new_portnum = (self.lastSlavePortnum is not None
@@ -171,12 +145,13 @@ class BotMaster(service.MultiService):
         # old BuildSlave instance in place. If the name has changed, of
         # course, it looks exactly the same as deleting one slave and adding
         # an unrelated one.
+
         old_t = {}
         for s in old_slaves:
-            old_t[(s.slavename, s.password, s.__class__)] = s
+            old_t[s.identity()] = s
         new_t = {}
         for s in new_slaves:
-            new_t[(s.slavename, s.password, s.__class__)] = s
+            new_t[s.identity()] = s
         removed = [old_t[t]
                    for t in old_t
                    if t not in new_t]
@@ -201,6 +176,7 @@ class BotMaster(service.MultiService):
         def update_remaining(_):
             for t in remaining_t:
                 old_t[t].update(new_t[t])
+
         d.addCallback(update_remaining)
 
         return d
@@ -212,6 +188,8 @@ class BotMaster(service.MultiService):
         s.pb_registration = self.master.pbmanager.register(
                 self.master.slavePortnum, s.slavename,
                 s.password, self.getPerspective)
+        # do not call maybeStartBuildsForSlave here, as the slave has not
+        # necessarily attached yet
 
     def removeSlave(self, s):
         d = s.disownServiceParent()
@@ -240,9 +218,8 @@ class BotMaster(service.MultiService):
         return allBuilders
 
     def setBuilders(self, builders):
-        # TODO: remove self.builders and just use the Service hierarchy to
-        # keep track of active builders. We could keep self.builderNames to
-        # retain ordering, if it seems important.
+        # TODO: diff against previous list of builders instead of replacing
+        # wholesale?
         self.builders = {}
         self.builderNames = []
         d = defer.DeferredList([b.disownServiceParent() for b in list(self)
@@ -260,6 +237,9 @@ class BotMaster(service.MultiService):
                 b.setServiceParent(self)
         d.addCallback(_add)
         d.addCallback(lambda ign: self._updateAllSlaves())
+        # N.B. this takes care of starting all builders at master startup
+        d.addCallback(lambda _ :
+            self.maybeStartBuildsForAllBuilders())
         return d
 
     def _updateAllSlaves(self):
@@ -300,7 +280,17 @@ class BotMaster(service.MultiService):
             log.msg("slave '%s' attaching from %s" % (slavename, mind.broker.transport.getPeer()))
             return sl
 
+    def startService(self):
+        def buildRequestAdded(notif):
+            self.maybeStartBuildsForBuilder(notif['buildername'])
+        self.buildrequest_sub = \
+            self.master.subscribeToBuildRequests(buildRequestAdded)
+        service.MultiService.startService(self)
+
     def stopService(self):
+        if self.buildrequest_sub:
+            self.buildrequest_sub.unsubscribe()
+            self.buildrequest_sub = None
         for b in self.builders.values():
             b.builder_status.addPointEvent(["master", "shutdown"])
             b.builder_status.saveYourself()
@@ -320,10 +310,31 @@ class BotMaster(service.MultiService):
         # be hashable and that they should compare properly.
         return self.locks[lockid]
 
-    def triggerNewBuildCheck(self):
-        # TODO: old name -- should go
-        self.loop.trigger()
+    def maybeStartBuildsForBuilder(self, buildername):
+        """
+        Call this when something suggests that a particular builder may now be
+        available to start a build.
 
+        @param buildername: the name of the builder
+        """
+        self.brd.maybeStartBuildsOn([buildername])
+
+    def maybeStartBuildsForSlave(self, slave_name):
+        """
+        Call this when something suggests that a particular slave may now be available
+        to start a build.
+
+        @param slave_name: the name of the slave
+        """
+        builders = self.getBuildersForSlave(slave_name)
+        self.brd.maybeStartBuildsOn([ b.name for b in builders ])
+
+    def maybeStartBuildsForAllBuilders(self):
+        """
+        Call this when something suggests that this would be a good time to start some
+        builds, but nothing more specific.
+        """
+        self.brd.maybeStartBuildsOn(self.builderNames)
 
 class BuildRequestDistributor(service.Service):
     """
@@ -340,6 +351,9 @@ class BuildRequestDistributor(service.Service):
     def __init__(self, botmaster):
         self.botmaster = botmaster
         self.master = botmaster.master
+
+        # lock to ensure builders are only sorted once at any time
+        self.builder_sorting_lock = defer.DeferredLock()
 
         # sorted list of names of builders that need their maybeStartBuild
         # method invoked.
@@ -370,15 +384,59 @@ class BuildRequestDistributor(service.Service):
         if new_builders < existing_pending:
             return
 
-        # reset the list of pending builders
-        new_pending = existing_pending | new_builders
-        self._pending_builders = self._sortBuilders(list(new_pending))
+        # reset the list of pending builders; this is async, so begin
+        # by grabbing a lock
+        d = self.builder_sorting_lock.acquire()
 
-        # and start calling builders' maybeStartBuild methods, if we aren't
-        # already working on that.
-        if not self.active:
-            self._activityLoop()
+        # then sort the new, expanded set of builders
+        d.addCallback(lambda _ : self._sortBuilders(list(
+                                    existing_pending | new_builders)))
+        def keep_new_builders(result):
+            self._pending_builders = result
+        d.addCallback(keep_new_builders)
 
+        # start the activity loop, if we aren't already working on that.
+        def start_loop(_):
+            if not self.active:
+                self._activityLoop()
+        d.addCallback(start_loop)
+
+        # and release the lock in any case
+        def unlock(x):
+            self.builder_sorting_lock.release()
+            return x
+        d.addBoth(unlock)
+
+        d.addErrback(log.err, 'while sorting builders')
+
+    @defer.deferredGenerator
+    def _defaultSorter(self, master, builders):
+        # perform an asynchronous schwarzian transform, transforming None
+        # into sys.maxint so that it sorts to the end
+        def xform(bldr):
+            d = defer.maybeDeferred(lambda :
+                    bldr.getOldestRequestTime())
+            d.addCallback(lambda time :
+                (((time is None) and None or time),bldr))
+            return d
+        wfd = defer.waitForDeferred(
+            defer.gatherResults(
+                [ xform(bldr) for bldr in builders ]))
+        yield wfd
+        xformed = wfd.getResult()
+
+        # sort the transformed list synchronously, comparing None to the end of
+        # the list
+        def nonecmp(a,b):
+            if a[0] is None: return 1
+            if b[0] is None: return -1
+            return cmp(a,b)
+        xformed.sort(cmp=nonecmp)
+
+        # and reverse the transform
+        yield [ xf[1] for xf in xformed ]
+
+    @defer.deferredGenerator
     def _sortBuilders(self, buildernames):
         # note that this takes and returns a list of builder names
 
@@ -391,25 +449,21 @@ class BuildRequestDistributor(service.Service):
         # find a sorting function
         sorter = self.botmaster.prioritizeBuilders
         if not sorter:
-            def _sortfunc(b1, b2):
-                t1 = b1.getOldestRequestTime()
-                if t1 is None:
-                    return 1
-                t2 = b2.getOldestRequestTime()
-                if t2 is None:
-                    return -1
-                return cmp(t1, t2)
-            sorter = lambda master, builders : sorted(builders, _sortfunc)
+            sorter = self._defaultSorter
 
         # run it
         try:
-            builders = sorter(self.master, builders)
+            wfd = defer.waitForDeferred(
+                defer.maybeDeferred(lambda :
+                    sorter(self.master, builders)))
+            yield wfd
+            builders = wfd.getResult()
         except:
-            log.msg("Exception prioritizing builders")
+            log.msg("Exception prioritizing builders; order unspecified")
             log.err(Failure())
 
         # and return the names
-        return [ b.name for b in builders ]
+        yield [ b.name for b in builders ]
 
     @defer.deferredGenerator
     def _activityLoop(self):
@@ -448,7 +502,6 @@ class BuildRequestDistributor(service.Service):
         if not bldr:
             return defer.succeed(None)
 
-        # TODO: does this need to be Serialized, then?  Or is this over-serializing the checks?
         d = bldr.maybeStartBuild()
         d.addErrback(log.err, 'in maybeStartBuild for %r' % (bldr,))
         return d

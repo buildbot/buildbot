@@ -31,7 +31,7 @@ from buildbot import version
 from buildbot.interfaces import IStatusReceiver
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status import base
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 from buildbot.scripts.runner import ForceOptions
 
 # twisted.internet.ssl requires PyOpenSSL, so be resilient if it's missing
@@ -318,7 +318,7 @@ class Contact(base.StatusReceiver):
 
     def requestSubmitted(self, brstatus):
         log.msg('[Contact] BuildRequest %d for %s submitted' %
-            (brstatus.brid, brstatus.getSourceStamp()))
+            (brstatus.brid, brstatus.getBuilderName()))
 
     def builderRemoved(self, builderName):
         log.msg('[Contact] Builder %s removed' % (builderName))
@@ -732,6 +732,10 @@ class IrcStatusBot(irc.IRCClient):
         @type  status: L{buildbot.status.builder.Status}
         @param status: the build master's Status object, through which the
                        bot retrieves all status information
+        @type  noticeOnChannel: boolean
+        @param noticeOnChannel: Defaults to False. If True, error messages
+                                for bot commands will be sent to the channel
+                                as notices. Otherwise they are sent as a msg.
         """
         self.nickname = nickname
         self.channels = channels
