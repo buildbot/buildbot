@@ -108,7 +108,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         return d
 
     def __init__(self, branch=None, revision=None, patch=None,
-                 changes=None, project='', repository='', fromSsdict=False):
+                 changes=None, project='', repository='', fromSsdict=False,
+                 _ignoreChanges=False):
         # skip all this madness if we're being built from the database
         if fromSsdict:
             return
@@ -120,7 +121,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.patch = patch
         self.project = project or ''
         self.repository = repository or ''
-        if changes:
+        if changes and not _ignoreChanges:
             self.changes = tuple(changes)
             # set branch and revision to most recent change
             self.branch = changes[-1].branch
@@ -187,7 +188,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     def getAbsoluteSourceStamp(self, got_revision):
         return SourceStamp(branch=self.branch, revision=got_revision,
                            patch=self.patch, repository=self.repository,
-                           project=self.project, changes=self.changes)
+                           project=self.project, changes=self.changes,
+                           _ignoreChanges=True)
 
     def getText(self):
         # note: this won't work for VC systems with huge 'revision' strings
