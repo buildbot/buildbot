@@ -19,7 +19,9 @@ c['status'].append(m)
 
 from buildbot.status import words
 c['status'].append(words.IRC(host="irc.example.com", nick="bb",
-                             channels=["#example"]))
+                             channels=[{"channel": "#example1"},
+                                       {"channel": "#example2",
+                                        "password": "somesecretpassword"}]))
 @end example
 
 Most status delivery objects take a @code{categories=} argument, which
@@ -1083,8 +1085,10 @@ told to shut up.
 @example
 from buildbot.status import words
 irc = words.IRC("irc.example.org", "botnickname",
-                channels=["channel1", "channel2"],
-                password="mysecretpassword",
+                channels=[{"channel": "#example1"},
+                          {"channel": "#example2",
+                           "password": "somesecretpassword"}],
+                password="mysecretnickservpassword",
                 notify_events=@{
                   'exception': 1,
                   'successToFailure': 1,
