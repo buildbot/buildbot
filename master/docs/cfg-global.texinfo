@@ -61,6 +61,11 @@ configured @code{wait_timeout} is on your MySQL server.
 Buildbot requires @code{use_unique=True} and @code{charset=utf8}, and will add
 them automatically, so they do not need to be specified in @code{db_url}.
 
+MySQL defaults to the MyISAM storage engine, but this can be overridden with
+the @code{storage_engine} URL argument.  Note that, because of InnoDB's
+extremely short key length limitations, it cannot be used to run Buildbot.  See
+@url{http://bugs.mysql.com/bug.php?id=4541} for more information.
+
 @heading Postgres
 
 @example
