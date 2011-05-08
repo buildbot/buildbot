@@ -33,6 +33,16 @@ class ChangePerspective(NewCredPerspective):
 
     def perspective_addChange(self, changedict):
         log.msg("perspective_addChange called")
+
+        if 'revlink' in changedict and not changedict['revlink']:
+            changedict['revlink'] = ''
+        if 'repository' in changedict and not changedict['repository']:
+            changedict['repository'] = ''
+        if 'project' in changedict and not changedict['project']:
+            changedict['project'] = ''
+        if 'files' not in changedict or not changedict['files']:
+            changedict['files'] = []
+
         files = []
         for path in changedict['files']:
             if self.prefix:
