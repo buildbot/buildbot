@@ -47,7 +47,7 @@ FLAGS = """\
       amount of useless data sent.
   - callback
     - Enable uses of JSONP as described in
-      http://en.wikipedia.org/wiki/JSON#JSONP. Note that
+      http://en.wikipedia.org/wiki/JSONP. Note that
       Access-Control-Allow-Origin:* is set in the HTTP response header so you
       can use this in compatible browsers.
 """
