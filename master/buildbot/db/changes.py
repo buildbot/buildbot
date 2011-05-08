@@ -231,27 +231,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         d = self.db.pool.do(thd)
         return d
 
-    def getRecentChangeInstances(self, count):
-        """
-        Get a list of the C{count} most recent
-        L{buildbot.changes.changes.Change} instances, or fewer if that many do
-        not exist.
-
-        Deprecated.
-
-        @param count: maximum number of instances to return
-
-        @returns: list of Change instances via Deferred, ordered by changeid
-        """
-        d = self.getRecentChanges(count)
-
-        def make_changes(chdict_list):
-            return defer.gatherResults([
-                    Change.fromChdict(None, chdict)
-                    for chdict in chdict_list ])
-        d.addCallback(make_changes)
-        return d
-
     def getLatestChangeid(self):
         """
         Get the most-recently-assigned changeid, or None if there are no
