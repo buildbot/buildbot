@@ -819,6 +819,7 @@ class Git(Source):
         """
         Source.__init__(self, **kwargs)
         self.repourl = repourl
+        self.branch = branch
         self.addFactoryArguments(repourl=repourl,
                                  branch=branch,
                                  submodules=submodules,
@@ -827,8 +828,7 @@ class Git(Source):
                                  shallow=shallow,
                                  progress=progress,
                                  )
-        self.args.update({'branch': branch,
-                          'submodules': submodules,
+        self.args.update({'submodules': submodules,
                           'ignore_ignores': ignore_ignores,
                           'reference': reference,
                           'shallow': shallow,
@@ -841,9 +841,7 @@ class Git(Source):
         return changes[-1].revision
 
     def startVC(self, branch, revision, patch):
-        if branch is not None:
-            self.args['branch'] = branch
-
+        self.args['branch'] = branch
         self.args['repourl'] = self.computeRepositoryURL(self.repourl)
         self.args['revision'] = revision
         self.args['patch'] = patch

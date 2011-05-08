@@ -44,7 +44,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
       for the "default branch", whatever that might mean
     - category: user-defined category of this change (unicode string or None)
     - revlink: link to a web view of this change (unicode string or None)
-    - properties: user-specified key-value pairs for this change (dictionary)
+    - properties: user-specified properties for this change, represented as a
+      dictionary mapping keys to (value, source)
     - repository: repository where this change occurred (unicode string)
     - project: user-defined project to which this change corresponds (unicode
       string)
@@ -102,6 +103,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         @returns: a L{buildbot.changes.changes.Change} instance via Deferred
         """
+        # TODO: make the properties parameter have values (v,s) like addBuildset
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
 
@@ -153,7 +155,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 conn.execute(ins, [
                     dict(changeid=change.number,
                         property_name=k,
-                        property_value=json.dumps(v))
+                        property_value=json.dumps([v,s]))
                     for k,v,s in change.properties.asList()
                 ])
 
@@ -318,11 +320,23 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         for r in rows:
             chdict['files'].append(r.filename)
 
+        # and properties must be given without a source, so strip that, but
+        # be flexible in case users have used a development version where the
+        # change properties were recorded incorrectly
+        def split_vs(vs):
+            try:
+                v,s = vs
+                if s != "Change":
+                    v,s = vs, "Change"
+            except:
+                v,s = vs, "Change"
+            return v, s
+
         query = change_properties_tbl.select(
                 whereclause=(change_properties_tbl.c.changeid == ch_row.changeid))
         rows = conn.execute(query)
         for r in rows:
-            chdict['properties'][r.property_name] = json.loads(r.property_value)
+            v, s = split_vs(json.loads(r.property_value))
+            chdict['properties'][r.property_name] = (v,s)
 
         return chdict
-

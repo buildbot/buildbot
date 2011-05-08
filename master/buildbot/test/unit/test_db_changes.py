@@ -57,7 +57,7 @@ class TestChangesConnectorComponent(
         fakedb.ChangeFile(changeid=13, filename='slave/README.txt'),
 
         fakedb.ChangeProperty(changeid=13, property_name='notest',
-            property_value='"no"'),
+            property_value='["no","Change"]'),
     ]
 
     change14_rows = [
@@ -280,7 +280,7 @@ class TestChangesConnectorComponent(
                 r = r.fetchall()
                 self.assertEqual(len(r), 1)
                 self.assertEqual(r[0].property_name, 'platform')
-                self.assertEqual(r[0].property_value, '"linux"') # JSON-encoded
+                self.assertEqual(r[0].property_value, '["linux", "Change"]')
             return self.db.pool.do(thd)
         d.addCallback(check_change_properties)
         return d
@@ -387,6 +387,6 @@ class TestChangesConnectorComponent(
                         sorted(['http://buildbot.net',
                                 'http://sf.net/projects/buildbot']))
             self.assertEqual(changes[0]['properties'],
-                        { 'notest' : 'no' })
+                        { 'notest' : ('no', 'Change') })
         d.addCallback(check)
         return d

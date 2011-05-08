@@ -70,7 +70,8 @@ class Change:
         change.files.sort()
 
         change.properties = Properties()
-        change.properties.update(chdict['properties'], 'Change')
+        for n, (v,s) in chdict['properties'].iteritems():
+            change.properties.setProperty(n, v, s)
 
         return defer.succeed(change)
 
