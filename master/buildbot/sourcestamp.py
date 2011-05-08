@@ -83,7 +83,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
         @returns: L{SourceStamp} via Deferred
         """
-        sourcestamp = cls(fromSsdict=True)
+        sourcestamp = cls(_fromSsdict=True)
         sourcestamp.ssid = ssdict['ssid']
         sourcestamp.branch = ssdict['branch']
         sourcestamp.revision = ssdict['revision']
@@ -108,10 +108,10 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         return d
 
     def __init__(self, branch=None, revision=None, patch=None,
-                 changes=None, project='', repository='', fromSsdict=False,
+                 changes=None, project='', repository='', _fromSsdict=False,
                  _ignoreChanges=False):
         # skip all this madness if we're being built from the database
-        if fromSsdict:
+        if _fromSsdict:
             return
 
         if patch is not None:
