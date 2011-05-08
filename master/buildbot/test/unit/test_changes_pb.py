@@ -102,3 +102,14 @@ class TestChangePerspective(unittest.TestCase):
                     [ dict(who="bar", files=['a']) ])
         d.addCallback(check)
         return d
+
+    def test_addChange_sanitize_None(self):
+        cp = pb.ChangePerspective(self.master, None)
+        d = cp.perspective_addChange(
+                dict(project=None, revlink=None, repository=None)
+                )
+        def check(_):
+            self.assertEqual(self.added_changes,
+                    [ dict(project="", revlink="", repository="", files=[]) ])
+        d.addCallback(check)
+        return d
