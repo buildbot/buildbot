@@ -21,6 +21,7 @@ from buildbot.changes.changes import Change
 from buildbot.db import changes
 from buildbot.test.util import connector_component
 from buildbot.test.fake import fakedb
+from buildbot.util import epoch2datetime
 
 class TestChangesConnectorComponent(
             connector_component.ConnectorComponentMixin,
@@ -69,20 +70,20 @@ class TestChangesConnectorComponent(
     ]
 
     change14_dict = {
+        'changeid': 14,
+        'author': u'warner',
         'branch': u'warnerdb',
         'category': u'devel',
         'comments': u'fix whitespace',
         'files': [u'master/buildbot/__init__.py'],
-        'isdir': 0,
+        'is_dir': 0,
         'links': [],
-        'number': 14,
         'project': u'Buildbot',
         'properties': {},
         'repository': u'git://warner',
         'revision': u'0e92a098b',
         'revlink': u'http://warner/0e92a098b',
-        'when': 266738404,
-        'who': u'warner',
+        'when_timestamp': epoch2datetime(266738404),
     }
 
     def change14(self):
@@ -356,7 +357,7 @@ class TestChangesConnectorComponent(
         d.addCallback(lambda _ :
                 self.db.changes.getRecentChanges(5))
         def check(changes):
-            changeids = [ c['number'] for c in changes ]
+            changeids = [ c['changeid'] for c in changes ]
             self.assertEqual(changeids, [10, 11, 12, 13, 14])
         d.addCallback(check)
         return d
@@ -366,7 +367,7 @@ class TestChangesConnectorComponent(
         d.addCallback(lambda _ :
                 self.db.changes.getRecentChanges(5))
         def check(changes):
-            changeids = [ c['number'] for c in changes ]
+            changeids = [ c['changeid'] for c in changes ]
             self.assertEqual(changeids, [])
         d.addCallback(check)
         return d
@@ -377,7 +378,7 @@ class TestChangesConnectorComponent(
                 self.db.changes.getRecentChanges(5))
         def check(changes):
             # requested 5, but only got 2
-            changeids = [ c['number'] for c in changes ]
+            changeids = [ c['changeid'] for c in changes ]
             self.assertEqual(changeids, [13, 14])
             # double-check that they have .files, etc.
             self.assertEqual(sorted(changes[0]['files']),

@@ -20,6 +20,7 @@ from zope.interface import implements
 from twisted.python import log, runtime
 from twisted.internet import defer
 from twisted.web import html
+from buildbot.util import datetime2epoch
 
 from buildbot import interfaces, util
 from buildbot.process.properties import Properties
@@ -48,18 +49,22 @@ class Change:
         @returns: L{Change} via Deferred
         """
         change = cls(None, None, None, _fromChdict=True)
-        change.who = chdict['who']
+        change.who = chdict['author']
         change.comments = chdict['comments']
-        change.isdir = chdict['isdir']
+        change.isdir = chdict['is_dir']
         change.links = chdict['links']
         change.revision = chdict['revision']
-        change.when = chdict['when']
         change.branch = chdict['branch']
         change.category = chdict['category']
         change.revlink = chdict['revlink']
         change.repository = chdict['repository']
         change.project = chdict['project']
-        change.number = chdict['number']
+        change.number = chdict['changeid']
+
+        when = chdict['when_timestamp']
+        if when:
+            when = datetime2epoch(when)
+        change.when = when
 
         change.files = chdict['files'][:]
         change.files.sort()

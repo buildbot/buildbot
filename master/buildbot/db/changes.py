@@ -22,11 +22,32 @@ import sqlalchemy as sa
 from twisted.internet import defer
 from buildbot.changes.changes import Change
 from buildbot.db import base
+from buildbot.util import epoch2datetime
 
 class ChangesConnectorComponent(base.DBConnectorComponent):
     """
     A DBConnectorComponent to handle getting changes into and out of the
     database.  An instance is available at C{master.db.changes}.
+
+    Changes are represented as dictionaries with the following keys:
+
+    - changeid: the ID of this change
+    - author: the author of the change (unicode string)
+    - files: list of source-code filenames changed (unicode strings)
+    - comments: user comments (unicode string)
+    - is_dir: deprecated
+    - links: list of links for this change, e.g., to web views, review
+      (unicode strings)
+    - revision: revision for this change (unicode string), or None if unknown
+    - when_timestamp: time of the commit (datetime instance)
+    - branch: branch on which the change took place (unicode string), or None
+      for the "default branch", whatever that might mean
+    - category: user-defined category of this change (unicode string or None)
+    - revlink: link to a web view of this change (unicode string or None)
+    - properties: user-specified key-value pairs for this change (dictionary)
+    - repository: repository where this change occurred (unicode string)
+    - project: user-defined project to which this change corresponds (unicode
+      string)
     """
 
     changeHorizon = 0
@@ -286,15 +307,19 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         change_files_tbl = self.db.model.change_files
         change_properties_tbl = self.db.model.change_properties
 
+        def mkdt(epoch):
+            if epoch:
+                return epoch2datetime(epoch)
+
         chdict = dict(
-                number=ch_row.changeid,
-                who=ch_row.author,
+                changeid=ch_row.changeid,
+                author=ch_row.author,
                 files=[], # see below
                 comments=ch_row.comments,
-                isdir=ch_row.is_dir,
+                is_dir=ch_row.is_dir,
                 links=[], # see below
                 revision=ch_row.revision,
-                when=ch_row.when_timestamp,
+                when_timestamp=mkdt(ch_row.when_timestamp),
                 branch=ch_row.branch,
                 category=ch_row.category,
                 revlink=ch_row.revlink,
