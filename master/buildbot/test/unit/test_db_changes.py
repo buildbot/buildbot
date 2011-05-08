@@ -59,24 +59,6 @@ class TestChangesConnectorComponent(
             property_value='"no"'),
     ]
 
-    def change13(self):
-        c = Change(**dict(
-         category=None,
-         isdir=0,
-         repository=u'',
-         links=[u'http://buildbot.net', u'http://sf.net/projects/buildbot'],
-         who=u'dustin',
-         when=266738400,
-         comments=u'fix spelling',
-         project=u'',
-         branch=u'master',
-         revlink=None,
-         properties={u'notest': u'no'},
-         files=[u'master/README.txt', u'slave/README.txt'],
-         revision=u'deadbeef'))
-        c.number = 13
-        return c
-
     change14_rows = [
         fakedb.Change(changeid=14, author="warner", comments="fix whitespace",
             is_dir=0, branch="warnerdb", revision="0e92a098b",
@@ -85,6 +67,23 @@ class TestChangesConnectorComponent(
 
         fakedb.ChangeFile(changeid=14, filename='master/buildbot/__init__.py'),
     ]
+
+    change14_dict = {
+        'branch': u'warnerdb',
+        'category': u'devel',
+        'comments': u'fix whitespace',
+        'files': [u'master/buildbot/__init__.py'],
+        'isdir': 0,
+        'links': [],
+        'number': 14,
+        'project': u'Buildbot',
+        'properties': {},
+        'repository': u'git://warner',
+        'revision': u'0e92a098b',
+        'revlink': u'http://warner/0e92a098b',
+        'when': 266738404,
+        'who': u'warner',
+    }
 
     def change14(self):
         c = Change(**dict(
@@ -136,6 +135,27 @@ class TestChangesConnectorComponent(
                         (printable(a), printable(b)))
 
     # tests
+
+    def test_getChange(self):
+        d = self.insertTestData(self.change14_rows)
+        def get14(_):
+            return self.db.changes.getChange(14)
+        d.addCallback(get14)
+        def check14(chdict):
+            self.assertEqual(chdict, self.change14_dict)
+            # TODO: check that Change.fromChdict handles this
+        d.addCallback(check14)
+        return d
+
+    def test_getChange_missing(self):
+        d = defer.succeed(None)
+        def get14(_):
+            return self.db.changes.getChange(14)
+        d.addCallback(get14)
+        def check14(chdict):
+            self.failUnless(chdict is None)
+        d.addCallback(check14)
+        return d
 
     def test_getChangeInstance(self):
         d = self.insertTestData(self.change14_rows)
@@ -322,6 +342,51 @@ class TestChangesConnectorComponent(
                 self.assertEqual([ row.changeid for row in r.fetchall() ],
                                  [ 13 ])
             return self.db.pool.do(thd)
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChanges_subset(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=8),
+            fakedb.Change(changeid=9),
+            fakedb.Change(changeid=10),
+            fakedb.Change(changeid=11),
+            fakedb.Change(changeid=12),
+        ] + self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5))
+        def check(changes):
+            changeids = [ c['number'] for c in changes ]
+            self.assertEqual(changeids, [10, 11, 12, 13, 14])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChanges_empty(self):
+        d = defer.succeed(None)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5))
+        def check(changes):
+            changeids = [ c['number'] for c in changes ]
+            self.assertEqual(changeids, [])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChanges_missing(self):
+        d = self.insertTestData(self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5))
+        def check(changes):
+            # requested 5, but only got 2
+            changeids = [ c['number'] for c in changes ]
+            self.assertEqual(changeids, [13, 14])
+            # double-check that they have .files, etc.
+            self.assertEqual(sorted(changes[0]['files']),
+                        sorted(['master/README.txt', 'slave/README.txt']))
+            self.assertEqual(sorted(changes[0]['links']),
+                        sorted(['http://buildbot.net',
+                                'http://sf.net/projects/buildbot']))
+            self.assertEqual(changes[0]['properties'],
+                        { 'notest' : 'no' })
         d.addCallback(check)
         return d
 

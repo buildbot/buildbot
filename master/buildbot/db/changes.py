@@ -31,7 +31,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
     changeHorizon = 0
     "maximum number of changes to keep on hand, or 0 to keep all changes forever"
-    # TODO: add a threadsafe change cache
 
     def addChange(self, who, files, comments, isdir=0, links=None,
                  revision=None, when=None, branch=None, category=None,
@@ -143,14 +142,14 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         d = self.db.pool.do(thd)
         return d
 
-    def getChangeInstance(self, changeid):
+    def getChange(self, changeid):
         """
-        Get a L{buildbot.changes.changes.Change} instance for the given changeid,
-        or None if no such change exists.
+        Get a change dictionary for the given changeid, or None if no such
+        change exists.
 
         @param changeid: the id of the change instance to fetch
 
-        @returns: Change instance via Deferred
+        @returns: Change dictionary via Deferred
         """
         assert changeid >= 0
         def thd(conn):
@@ -164,23 +163,36 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             # and fetch the ancillary data (links, files, properties)
             return self._chdict_from_change_row_thd(conn, row)
         d = self.db.pool.do(thd)
+        return d
+
+    def getChangeInstance(self, changeid):
+        """
+        Get a L{buildbot.changes.changes.Change} instance for the given changeid,
+        or None if no such change exists.
+
+        Deprecated.
+
+        @param changeid: the id of the change instance to fetch
+
+        @returns: Change instance via Deferred
+        """
+        d = self.getChange(changeid)
 
         def make_change(chdict):
             if not chdict:
                 return None
-            return self._change_from_chdict(chdict)
+            return Change.fromChdict(None, chdict)
         d.addCallback(make_change)
         return d
 
-    def getRecentChangeInstances(self, count):
+    def getRecentChanges(self, count):
         """
-        Get a list of the C{count} most recent
-        L{buildbot.changes.changes.Change} instances, or fewer if that many do
-        not exist.
+        Get a list of the C{count} most recent changes, represented as
+        dictionaies; returns fewer if that many do not exist.
 
         @param count: maximum number of instances to return
 
-        @returns: list of Change instances via Deferred
+        @returns: list of dictionaries via Deferred, ordered by changeid
         """
         def thd(conn):
             # get the row from the 'changes' table
@@ -194,12 +206,28 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 # note that this does *three* extra queries per row!
                 changes.append(self._chdict_from_change_row_thd(conn, row))
             rp.close()
-            return reversed(changes)
+            return list(reversed(changes))
         d = self.db.pool.do(thd)
+        return d
+
+    def getRecentChangeInstances(self, count):
+        """
+        Get a list of the C{count} most recent
+        L{buildbot.changes.changes.Change} instances, or fewer if that many do
+        not exist.
+
+        Deprecated.
+
+        @param count: maximum number of instances to return
+
+        @returns: list of Change instances via Deferred, ordered by changeid
+        """
+        d = self.getRecentChanges(count)
 
         def make_changes(chdict_list):
-            return [ self._change_from_chdict(chdict)
-                     for chdict in chdict_list ]
+            return defer.gatherResults([
+                    Change.fromChdict(None, chdict)
+                    for chdict in chdict_list ])
         d.addCallback(make_changes)
         return d
 
@@ -222,11 +250,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def setChangeHorizon(self, changeHorizon): # TODO: remove
         "this method should go away"
         self.changeHorizon = changeHorizon
-
-    # cache management
-
-    def _flush_cache(self):
-        pass # TODO
 
     # utility methods
 
@@ -258,8 +281,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
     def _chdict_from_change_row_thd(self, conn, ch_row):
         # This method must be run in a db.pool thread, and returns a chdict
-        # (which can be used to construct a Change object), given a row from
-        # the 'changes' table
+        # given a row from the 'changes' table
         change_links_tbl = self.db.model.change_links
         change_files_tbl = self.db.model.change_files
         change_properties_tbl = self.db.model.change_properties
@@ -300,9 +322,3 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         return chdict
 
-    def _change_from_chdict(self, chdict):
-        # create a Change object, given a chdict
-        changeid = chdict.pop('number')
-        c = Change(**chdict)
-        c.number = changeid
-        return c
