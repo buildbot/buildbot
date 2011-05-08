@@ -243,10 +243,11 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     revision=12345))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
+        d.addCallback(lambda _ : self.db.changes.getChange(1))
         def check(c):
             self.failIf(c is None)
-            self.assertEquals(sorted(c.files), sorted([u"foo", u"bar", u"bing", u"baz"]))
+            self.assertEquals(sorted(c['files']),
+                              sorted([u"foo", u"bar", u"bing", u"baz"]))
         d.addCallback(check)
         return d
 
@@ -266,14 +267,14 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     revision='12345'))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
+        d.addCallback(lambda _ : self.db.changes.getChange(1))
         def check(c):
             self.failIf(c is None)
-            self.assertEquals(c.properties.getPropertySource('list'), 'Change')
-            self.assertEquals(c.properties.getProperty('list'), ['a', 'b'])
-            self.assertEquals(c.properties.getProperty('num'), 13)
-            self.assertEquals(c.properties.getProperty('str'), u'SNOW\N{SNOWMAN}MAN')
-            self.assertEquals(c.properties.getProperty('d'), dict(a=1, b=2))
+            self.assertEquals(c['properties'].get('list')[1], 'Change')
+            self.assertEquals(c['properties'].get('list')[0], ['a', 'b'])
+            self.assertEquals(c['properties'].get('num')[0], 13)
+            self.assertEquals(c['properties'].get('str')[0], u'SNOW\N{SNOWMAN}MAN')
+            self.assertEquals(c['properties'].get('d')[0], dict(a=1, b=2))
         d.addCallback(check)
         return d
 
@@ -288,10 +289,10 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     revision='12345'))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
+        d.addCallback(lambda _ : self.db.changes.getChange(1))
         def check(c):
             self.failIf(c is None)
-            self.assertEquals(sorted(c.links),
+            self.assertEquals(sorted(c['links']),
                     sorted(['http://buildbot.net', 'http://twistedmatrix.com']))
         d.addCallback(check)
         return d
@@ -305,7 +306,7 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     files=['foo.c']))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
+        d.addCallback(lambda _ : self.db.changes.getChange(1))
         def check(c):
             self.failUnless(c is None)
         d.addCallback(check)

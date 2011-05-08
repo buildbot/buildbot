@@ -19,6 +19,7 @@ from twisted.internet import defer
 from buildbot import util
 from buildbot.process.properties import Properties
 from buildbot.util import ComparableMixin
+from buildbot.changes import changes
 
 def isScheduler(sch):
     "Check that an object is a scheduler; used for configuration checks."
@@ -295,7 +296,12 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
         # attributes for this sourcestamp will be based on the most recent
         # change, so fetch the change with the highest id
-        d = self.master.db.changes.getChangeInstance(max(changeids))
+        d = self.master.db.changes.getChange(max(changeids))
+        def chdict2change(chdict):
+            if not chdict:
+                return None
+            return changes.Change.fromChdict(self.master, chdict)
+        d.addCallback(chdict2change)
         def create_sourcestamp(change):
             return self.master.db.sourcestamps.createSourceStamp(
                     branch=change.branch,

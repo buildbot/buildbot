@@ -17,6 +17,7 @@
 from zope.interface import implements
 from twisted.persisted import styles
 from twisted.internet import defer
+from buildbot.changes.changes import Change
 from buildbot import util, interfaces
 
 # TODO: kill this class, or at least make it less significant
@@ -96,8 +97,12 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             sourcestamp.patch = (ssdict['patch_level'], ssdict['patch_body'])
 
         if ssdict['changeids']:
-            getChangeInstance = master.db.changes.getChangeInstance
-            d = defer.gatherResults([ getChangeInstance(id)
+            def gci(id):
+                d = master.db.changes.getChange(id)
+                d.addCallback(lambda chdict :
+                    Change.fromChdict(master, chdict))
+                return d
+            d = defer.gatherResults([ gci(id)
                                 for id in ssdict['changeids'] ])
         else:
             d = defer.succeed([])

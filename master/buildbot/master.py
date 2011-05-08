@@ -30,6 +30,7 @@ import buildbot.pbmanager
 from buildbot.util import safeTranslate, subscription
 from buildbot.process.builder import Builder
 from buildbot.status.master import Status
+from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
 from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
@@ -915,14 +916,19 @@ class BuildMaster(service.MultiService):
         while True:
             changeid = self._last_processed_change + 1
             wfd = defer.waitForDeferred(
-                self.db.changes.getChangeInstance(changeid))
+                self.db.changes.getChange(changeid))
             yield wfd
-            change = wfd.getResult()
+            chdict = wfd.getResult()
 
             # if there's no such change, we've reached the end and can
             # stop polling
-            if not change:
+            if not chdict:
                 break
+
+            wfd = defer.waitForDeferred(
+                changes.Change.fromChdict(self, chdict))
+            yield wfd
+            change = wfd.getResult()
 
             self._change_subs.deliver(change)
 

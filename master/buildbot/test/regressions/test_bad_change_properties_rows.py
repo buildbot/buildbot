@@ -43,10 +43,10 @@ class TestBadRows(connector_component.ConnectorComponentMixin,
             fakedb.Change(changeid=13),
         ])
         def get13(_):
-            return self.db.changes.getChangeInstance(13)
+            return self.db.changes.getChange(13)
         d.addCallback(get13)
         def check13(c):
-            self.assertEqual(c.properties.asDict(),
+            self.assertEqual(c['properties'],
                              dict(devel=('no source', 'Change')))
         d.addCallback(check13)
         return d
@@ -58,10 +58,11 @@ class TestBadRows(connector_component.ConnectorComponentMixin,
             fakedb.Change(changeid=13),
         ])
         def get13(_):
-            return self.db.changes.getChangeInstance(13)
+            return self.db.changes.getChange(13)
         d.addCallback(get13)
         def check13(c):
-            self.assertEqual(c.properties.asDict(),
+            self.assertEqual(c['properties'],
                              dict(devel=([1,2], 'Change')))
         d.addCallback(check13)
         return d
+

@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 import pprint
 import sqlalchemy as sa
 from twisted.trial import unittest
@@ -106,34 +107,27 @@ class TestChangesConnectorComponent(
 
     # assertions
 
-    def assertChangesEqual(self, a, b):
-        if len(a) != len(b):
-            ok = False
-        else:
-            ok = True
-            for i in xrange(len(a)):
-                ca = a[i]
-                cb = b[i]
-                ok = ok and ca.number == cb.number
-                ok = ok and ca.who == cb.who
-                ok = ok and sorted(ca.files) == sorted(cb.files)
-                ok = ok and ca.comments == cb.comments
-                ok = ok and bool(ca.isdir) == bool(cb.isdir)
-                ok = ok and sorted(ca.links) == sorted(cb.links)
-                ok = ok and ca.revision == cb.revision
-                ok = ok and ca.when == cb.when
-                ok = ok and ca.branch == cb.branch
-                ok = ok and ca.category == cb.category
-                ok = ok and ca.revlink == cb.revlink
-                ok = ok and ca.properties == cb.properties
-                ok = ok and ca.repository == cb.repository
-                ok = ok and ca.project == cb.project
-                if not ok: break
+    def assertChangesEqual(self, ca, cb):
+        ok = True
+        ok = ok and ca.number == cb.number
+        ok = ok and ca.who == cb.who
+        ok = ok and sorted(ca.files) == sorted(cb.files)
+        ok = ok and ca.comments == cb.comments
+        ok = ok and bool(ca.isdir) == bool(cb.isdir)
+        ok = ok and sorted(ca.links) == sorted(cb.links)
+        ok = ok and ca.revision == cb.revision
+        ok = ok and ca.when == cb.when
+        ok = ok and ca.branch == cb.branch
+        ok = ok and ca.category == cb.category
+        ok = ok and ca.revlink == cb.revlink
+        ok = ok and ca.properties == cb.properties
+        ok = ok and ca.repository == cb.repository
+        ok = ok and ca.project == cb.project
         if not ok:
-            def printable(clist):
-                return pprint.pformat([ c.__dict__ for c in clist ])
+            def printable(c):
+                return pprint.pformat(c.__dict__)
             self.fail("changes do not match; expected\n%s\ngot\n%s" %
-                        (printable(a), printable(b)))
+                        (printable(ca), printable(cb)))
 
     # tests
 
@@ -144,8 +138,15 @@ class TestChangesConnectorComponent(
         d.addCallback(get14)
         def check14(chdict):
             self.assertEqual(chdict, self.change14_dict)
-            # TODO: check that Change.fromChdict handles this
         d.addCallback(check14)
+        return d
+
+    def test_Change_fromChdict_with_chdict(self):
+        # test that the chdict getChange returns works with Change.fromChdict
+        d = Change.fromChdict(mock.Mock(), self.change14_dict)
+        def check(c):
+            self.assertChangesEqual(c, self.change14())
+        d.addCallback(check)
         return d
 
     def test_getChange_missing(self):
@@ -155,26 +156,6 @@ class TestChangesConnectorComponent(
         d.addCallback(get14)
         def check14(chdict):
             self.failUnless(chdict is None)
-        d.addCallback(check14)
-        return d
-
-    def test_getChangeInstance(self):
-        d = self.insertTestData(self.change14_rows)
-        def get14(_):
-            return self.db.changes.getChangeInstance(14)
-        d.addCallback(get14)
-        def check14(c):
-            self.assertChangesEqual([ c ], [ self.change14() ])
-        d.addCallback(check14)
-        return d
-
-    def test_getChangeInstance_missing(self):
-        d = defer.succeed(None)
-        def get14(_):
-            return self.db.changes.getChangeInstance(14)
-        d.addCallback(get14)
-        def check14(c):
-            self.failUnless(c is None)
         d.addCallback(check14)
         return d
 
