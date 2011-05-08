@@ -269,11 +269,11 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
         d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
         def check(c):
             self.failIf(c is None)
-            self.assertEquals(c.properties.getProperty('list')[1], 'Change')
-            self.assertEquals(c.properties.getProperty('list')[0], ['a', 'b'])
-            self.assertEquals(c.properties.getProperty('num')[0], 13)
-            self.assertEquals(c.properties.getProperty('str')[0], u'SNOW\N{SNOWMAN}MAN')
-            self.assertEquals(c.properties.getProperty('d')[0], dict(a=1, b=2))
+            self.assertEquals(c.properties.getPropertySource('list'), 'Change')
+            self.assertEquals(c.properties.getProperty('list'), ['a', 'b'])
+            self.assertEquals(c.properties.getProperty('num'), 13)
+            self.assertEquals(c.properties.getProperty('str'), u'SNOW\N{SNOWMAN}MAN')
+            self.assertEquals(c.properties.getProperty('d'), dict(a=1, b=2))
         d.addCallback(check)
         return d
 

@@ -165,7 +165,7 @@ class Model(base.DBConnectorComponent):
     change_properties = sa.Table('change_properties', metadata,
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
         sa.Column('property_name', sa.String(256), nullable=False),
-        # JSON-encoded property value
+        # JSON-encoded tuple of (value, source)
         sa.Column('property_value', sa.String(1024), nullable=False), # TODO: too short?
     )
     """Properties for changes"""

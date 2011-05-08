@@ -133,7 +133,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 conn.execute(ins, [
                     dict(changeid=change.number,
                         property_name=k,
-                        property_value=json.dumps(v))
+                        property_value=json.dumps([v,s]))
                     for k,v,s in change.properties.asList()
                 ])
 
@@ -302,7 +302,25 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
     def _change_from_chdict(self, chdict):
         # create a Change object, given a chdict
+        chdict = chdict.copy()
+
+        # Change does not accept a number
         changeid = chdict.pop('number')
+
+        # ..and properties must be given without a source, so strip that, but
+        # be flexible in case users have used a development version where the
+        # change properties were recorded incorrectly
+        def vs2v(vs):
+            try:
+                v,s = vs
+                if s != "Change":
+                    v = vs
+            except:
+                v = vs
+            return v
+        chdict['properties'] = dict([ (n,vs2v(vs))
+            for n,vs in chdict['properties'].iteritems() ])
+
         c = Change(**chdict)
         c.number = changeid
         return c
