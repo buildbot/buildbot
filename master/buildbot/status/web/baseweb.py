@@ -406,8 +406,8 @@ class WebStatus(service.MultiService):
             # this will be replaced once we've been attached to a parent (and
             # thus have a basedir and can reference BASEDIR)
             root = static.Data("placeholder", "text/plain")
-            #httplog = os.path.abspath(os.path.join(self.master.basedir, "http.log"))
-            self.site = server.Site(root) #RotateLogSite(root, logPath=httplog)
+            httplog = os.path.abspath(os.path.join(self.master.basedir, "http.log"))
+            self.site = RotateLogSite(root, logPath=httplog)
 
         # the following items are accessed by HtmlResource when it renders
         # each page.
