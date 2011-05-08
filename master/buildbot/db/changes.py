@@ -82,6 +82,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         @returns: a L{buildbot.changes.changes.Change} instance via Deferred
         """
+        assert project is not None, "project must be a string, not None"
+        assert repository is not None, "repository must be a string, not None"
+
         # first create the change, although with no 'number'
         change = Change(who=who, files=files, comments=comments, isdir=isdir,
                 links=links, revision=revision, when=when, branch=branch,
