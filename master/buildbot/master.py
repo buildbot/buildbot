@@ -721,13 +721,22 @@ class BuildMaster(service.MultiService):
 
     ## triggering methods and subscriptions
 
-    def addChange(self, **kwargs):
-        """Add a change to the buildmaster and act on it.  Interface is
-        identical to
-        L{buildbot.db.changes.ChangesConnectorComponent.addChange}, including
-        returning a deferred, but also triggers schedulers to examine the
-        change."""
-        d = self.db.changes.addChange(**kwargs)
+    def addChange(self, who, files, comments, isdir=0, links=None,
+                 revision=None, when=None, branch=None, category=None,
+                 revlink='', properties={}, repository='', project=''):
+        """Add a change to the buildmaster and act on it.  The parameters to
+        this method are identical to
+        L{buildbot.db.changes.ChangesConnectorComponent.addChange}, but it
+        returns a L{Change} instance rather than just the change ID,
+        and also triggers schedulers to examine the change."""
+        d = self.db.changes.addChange(who, files, comments, isdir=isdir,
+                links=links, revision=revision, when=when, branch=branch,
+                category=category, revlink=revlink, properties=properties,
+                repository=repository, project=project)
+        d.addCallback(lambda changeid :
+                self.db.changes.getChange(changeid))
+        d.addCallback(lambda chdict :
+                changes.Change.fromChdict(self, chdict))
         def notify(change):
             msg = u"added change %s to database" % change
             log.msg(msg.encode('utf-8', 'replace'))

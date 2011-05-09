@@ -179,6 +179,7 @@ class TestChangesConnectorComponent(
         d.addCallback(check)
         return d
 
+    # TODO: when is None
     def test_addChange(self):
         d = self.db.changes.addChange(
                  who=u'dustin',
@@ -195,23 +196,8 @@ class TestChangesConnectorComponent(
                  repository=u'',
                  project=u'')
         # check all of the columns of the four relevant tables
-        def check_change(change):
-            self.assertEqual(change.number, 1)
-            self.assertEqual(change.who, 'dustin')
-            self.assertEqual(sorted(change.files),
-                 sorted([u'master/LICENSING.txt', u'slave/LICENSING.txt']))
-            self.assertEqual(change.comments, 'fix spelling')
-            self.assertFalse(change.isdir)
-            self.assertEqual(sorted(change.links),
-                 sorted([u'http://slashdot.org', u'http://wired.com/g']))
-            self.assertEqual(change.revision, '2d6caa52ab39fbac83cee03dcf2ccb7e41eaad86')
-            self.assertEqual(change.when, 266738400)
-            self.assertEqual(change.category, None)
-            self.assertEqual(change.revlink, None)
-            self.assertEqual(change.properties.asList(),
-                 [('platform', 'linux', 'Change')])
-            self.assertEqual(change.repository, '')
-            self.assertEqual(change.project, '')
+        def check_change(changeid):
+            self.assertEqual(changeid, 1)
             def thd(conn):
                 r = conn.execute(self.db.model.changes.select())
                 r = r.fetchall()

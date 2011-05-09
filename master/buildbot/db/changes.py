@@ -20,7 +20,6 @@ Support for changes in the database
 from buildbot.util import json
 import sqlalchemy as sa
 from twisted.internet import defer
-from buildbot.changes.changes import Change
 from buildbot.db import base
 from buildbot.util import epoch2datetime
 
@@ -78,7 +77,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         @param revision: the revision identifier for this change
         @type revision: unicode string
 
-        @param when: when this change occurs
+        @param when: when this change occurs, or the current time if None
         @type when: integer (UNIX epoch time)
 
         @param branch: the branch on which this change took place
@@ -101,22 +100,16 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         @param project: the project this change is a part of
         @type project: unicode string
 
-        @returns: a L{buildbot.changes.changes.Change} instance via Deferred
+        @returns: new change's ID
         """
         # TODO: make the properties parameter have values (v,s) like addBuildset
+        # TODO: rename parameters to match db columns; accept old names for compat
+        # via master.addChange, with deprecation warning
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
 
-        # first create the change, although with no 'number'
-        change = Change(who=who, files=files, comments=comments, isdir=isdir,
-                links=links, revision=revision, when=when, branch=branch,
-                category=category, revlink=revlink, properties=properties,
-                repository=repository, project=project)
-
         # then add it to the database and update its '.number'
         def thd(conn):
-            assert change.number is None
-
             # note that in a read-uncommitted database like SQLite this
             # transaction does not buy atomicitiy - other database users may
             # still come across a change without its links, files, properties,
@@ -127,41 +120,41 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
             ins = self.db.model.changes.insert()
             r = conn.execute(ins, dict(
-                author=change.who,
-                comments=change.comments,
-                is_dir=change.isdir,
-                branch=change.branch,
-                revision=change.revision,
-                revlink=change.revlink,
-                when_timestamp=change.when,
-                category=change.category,
-                repository=change.repository,
-                project=change.project))
-            change.number = r.inserted_primary_key[0]
-            if change.links:
+                author=who,
+                comments=comments,
+                is_dir=isdir,
+                branch=branch,
+                revision=revision,
+                revlink=revlink,
+                when_timestamp=when,
+                category=category,
+                repository=repository,
+                project=project))
+            changeid = r.inserted_primary_key[0]
+            if links:
                 ins = self.db.model.change_links.insert()
                 conn.execute(ins, [
-                    dict(changeid=change.number, link=l)
-                        for l in change.links
+                    dict(changeid=changeid, link=l)
+                        for l in links
                     ])
-            if change.files:
+            if files:
                 ins = self.db.model.change_files.insert()
                 conn.execute(ins, [
-                    dict(changeid=change.number, filename=f)
-                        for f in change.files
+                    dict(changeid=changeid, filename=f)
+                        for f in files
                     ])
-            if change.properties:
+            if properties:
                 ins = self.db.model.change_properties.insert()
                 conn.execute(ins, [
-                    dict(changeid=change.number,
+                    dict(changeid=changeid,
                         property_name=k,
-                        property_value=json.dumps([v,s]))
-                    for k,v,s in change.properties.asList()
+                        property_value=json.dumps([v,'Change']))
+                    for k,v in properties.iteritems()
                 ])
 
             transaction.commit()
 
-            return change
+            return changeid
         d = self.db.pool.do(thd)
         return d
 

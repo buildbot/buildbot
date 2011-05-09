@@ -346,6 +346,7 @@ class FakeChangesComponent(FakeDBComponent):
             ch = None
         return defer.succeed(self._ch2chdict(ch))
 
+    # TODO: addChange
     # TODO: getRecentChanges
 
     # utilities
