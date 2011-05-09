@@ -19,9 +19,9 @@ Support for changes in the database
 
 from buildbot.util import json
 import sqlalchemy as sa
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 from buildbot.db import base
-from buildbot.util import epoch2datetime
+from buildbot.util import epoch2datetime, datetime2epoch
 
 class ChangesConnectorComponent(base.DBConnectorComponent):
     """
@@ -53,14 +53,15 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     changeHorizon = 0
     "maximum number of changes to keep on hand, or 0 to keep all changes forever"
 
-    def addChange(self, who, files, comments, isdir=0, links=None,
-                 revision=None, when=None, branch=None, category=None,
-                 revlink='', properties={}, repository='', project=''):
+    def addChange(self, author=None, files=None, comments=None, is_dir=0,
+            links=None, revision=None, when_timestamp=None, branch=None,
+            category=None, revlink='', properties={}, repository='',
+            project='', _reactor=reactor):
         """Add the a Change with the given attributes to the database; returns
-        a Change instance via a deferred.
+        a Change instance via a deferred.  All arguments are keyword arguments.
 
-        @param who: the author of this change
-        @type branch: unicode string
+        @param author: the author of this change
+        @type author: unicode string
 
         @param files: a list of filenames that were changed
         @type branch: list of unicode strings
@@ -68,7 +69,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         @param comments: user comments on the change
         @type branch: unicode string
 
-        @param isdir: deprecated
+        @param is_dir: deprecated
 
         @param links: a list of links related to this change, e.g., to web
         viewers or review pages
@@ -77,8 +78,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         @param revision: the revision identifier for this change
         @type revision: unicode string
 
-        @param when: when this change occurs, or the current time if None
-        @type when: integer (UNIX epoch time)
+        @param when_timestamp: when this change occurred, or the current time
+          if None
+        @type when_timestamp: datetime instance or None
 
         @param branch: the branch on which this change took place
         @type branch: unicode string
@@ -91,8 +93,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         @type revlink: unicode string
 
         @param properties: properties to set on this change
-        @type properties: dictionary with string keys and simple values
-        (JSON-able)
+        @type properties: dictionary, where values are tuples of (value,
+        source).  At the moment, the source must be C{'Change'}, although
+        this may be relaxed in later versions.
 
         @param repository: the repository in which this change took place
         @type repository: unicode string
@@ -100,15 +103,21 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         @param project: the project this change is a part of
         @type project: unicode string
 
-        @returns: new change's ID
+        @param _reactor: for testing
+
+        @returns: new change's ID via Deferred
         """
-        # TODO: make the properties parameter have values (v,s) like addBuildset
-        # TODO: rename parameters to match db columns; accept old names for compat
-        # via master.addChange, with deprecation warning
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
 
-        # then add it to the database and update its '.number'
+        if when_timestamp is None:
+            when_timestamp = epoch2datetime(_reactor.seconds())
+
+        # verify that source is 'Change' for each property
+        for pv in properties.values():
+            assert pv[1] == 'Change', ("properties must be qualified with"
+                                       "source 'Change'")
+
         def thd(conn):
             # note that in a read-uncommitted database like SQLite this
             # transaction does not buy atomicitiy - other database users may
@@ -120,13 +129,13 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
             ins = self.db.model.changes.insert()
             r = conn.execute(ins, dict(
-                author=who,
+                author=author,
                 comments=comments,
-                is_dir=isdir,
+                is_dir=is_dir,
                 branch=branch,
                 revision=revision,
                 revlink=revlink,
-                when_timestamp=when,
+                when_timestamp=datetime2epoch(when_timestamp),
                 category=category,
                 repository=repository,
                 project=project))
@@ -148,7 +157,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 conn.execute(ins, [
                     dict(changeid=changeid,
                         property_name=k,
-                        property_value=json.dumps([v,'Change']))
+                        property_value=json.dumps(v))
                     for k,v in properties.iteritems()
                 ])
 
