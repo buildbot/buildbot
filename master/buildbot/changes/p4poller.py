@@ -173,11 +173,11 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
 
             for branch in branch_files:
                 d = self.master.addChange(
-                       who=who,
+                       author=who,
                        files=branch_files[branch],
                        comments=comments,
                        revision=str(num),
-                       when=when,
+                       when_timestamp=util.epoch2datetime(when),
                        branch=branch)
                 wfd = defer.waitForDeferred(d)
                 yield wfd

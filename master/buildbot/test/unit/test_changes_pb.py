@@ -89,7 +89,7 @@ class TestChangePerspective(unittest.TestCase):
         d = cp.perspective_addChange(dict(who="bar", files=['a']))
         def check(_):
             self.assertEqual(self.added_changes,
-                    [ dict(who="bar", files=['a']) ])
+                    [ dict(author="bar", files=['a']) ])
         d.addCallback(check)
         return d
 
@@ -99,7 +99,7 @@ class TestChangePerspective(unittest.TestCase):
                 dict(who="bar", files=['xx/a', 'yy/b']))
         def check(_):
             self.assertEqual(self.added_changes,
-                    [ dict(who="bar", files=['a']) ])
+                    [ dict(author="bar", files=['a']) ])
         d.addCallback(check)
         return d
 
