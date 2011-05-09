@@ -27,9 +27,10 @@ from twisted.application.internet import TimerService
 
 import buildbot
 import buildbot.pbmanager
-from buildbot.util import safeTranslate, subscription
+from buildbot.util import safeTranslate, subscription, epoch2datetime
 from buildbot.process.builder import Builder
 from buildbot.status.master import Status
+from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
 from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
@@ -720,13 +721,110 @@ class BuildMaster(service.MultiService):
 
     ## triggering methods and subscriptions
 
-    def addChange(self, **kwargs):
-        """Add a change to the buildmaster and act on it.  Interface is
-        identical to
-        L{buildbot.db.changes.ChangesConnectorComponent.addChange}, including
-        returning a deferred, but also triggers schedulers to examine the
-        change."""
-        d = self.db.changes.addChange(**kwargs)
+    def addChange(self, who=None, files=None, comments=None, author=None,
+            isdir=None, is_dir=None, links=None, revision=None, when=None,
+            when_timestamp=None, branch=None, category=None, revlink='',
+            properties={}, repository='', project=''):
+        """
+        Add a change to the buildmaster and act on it.
+
+        This is a wrapper around L{ChangesConnectorComponent.addChange} which
+        also acts on the resulting change and returns a L{Change} instance.
+
+        Note that all parameters are keyword arguments, although C{who},
+        C{files}, and C{comments} can be specified positionally for
+        backward-compatibility.
+
+        @param author: the author of this change
+        @type author: unicode string
+
+        @param who: deprecated name for C{author}
+
+        @param files: a list of filenames that were changed
+        @type branch: list of unicode strings
+
+        @param comments: user comments on the change
+        @type branch: unicode string
+
+        @param is_dir: deprecated
+
+        @param isdir: deprecated name for C{is_dir}
+
+        @param links: a list of links related to this change, e.g., to web
+        viewers or review pages
+        @type links: list of unicode strings
+
+        @param revision: the revision identifier for this change
+        @type revision: unicode string
+
+        @param when_timestamp: when this change occurred, or the current time
+          if None
+        @type when_timestamp: datetime instance or None
+
+        @param when: deprecated name and type for C{when_timestamp}
+        @type when: integer (UNIX epoch time) or None
+
+        @param branch: the branch on which this change took place
+        @type branch: unicode string
+
+        @param category: category for this change (arbitrary use by Buildbot
+        users)
+        @type category: unicode string
+
+        @param revlink: link to a web view of this revision
+        @type revlink: unicode string
+
+        @param properties: properties to set on this change
+        @type properties: dictionary with string keys and simple values
+        (JSON-able).  Note that the property source is I{not} included
+        in this dictionary.
+
+        @param repository: the repository in which this change took place
+        @type repository: unicode string
+
+        @param project: the project this change is a part of
+        @type project: unicode string
+
+        @returns: L{Change} instance via Deferred
+        """
+
+        # handle translating deprecated names into new names for db.changes
+        def handle_deprec(oldname, old, newname, new, default=None,
+                          converter = lambda x:x):
+            if old is not None:
+                if new is None:
+                    log.msg("WARNING: change source is using deprecated "
+                            "addChange parameter '%s'" % oldname)
+                    return converter(old)
+                raise TypeError("Cannot provide '%s' and '%s' to addChange"
+                                % (oldname, newname))
+            if new is None:
+                new = default
+            return new
+
+        author = handle_deprec("who", who, "author", author)
+        is_dir = handle_deprec("isdir", isdir, "is_dir", is_dir,
+                                default=0)
+        when_timestamp = handle_deprec("when", when,
+                                "when_timestamp", when_timestamp,
+                                converter=epoch2datetime)
+
+        # add a source to each property
+        for n in properties:
+            properties[n] = (properties[n], 'Change')
+
+        d = self.db.changes.addChange(author=author, files=files,
+                comments=comments, is_dir=is_dir, links=links,
+                revision=revision, when_timestamp=when_timestamp,
+                branch=branch, category=category, revlink=revlink,
+                properties=properties, repository=repository, project=project)
+
+        # convert the changeid to a Change instance
+        d.addCallback(lambda changeid :
+                self.db.changes.getChange(changeid))
+        d.addCallback(lambda chdict :
+                changes.Change.fromChdict(self, chdict))
+
         def notify(change):
             msg = u"added change %s to database" % change
             log.msg(msg.encode('utf-8', 'replace'))
@@ -915,14 +1013,19 @@ class BuildMaster(service.MultiService):
         while True:
             changeid = self._last_processed_change + 1
             wfd = defer.waitForDeferred(
-                self.db.changes.getChangeInstance(changeid))
+                self.db.changes.getChange(changeid))
             yield wfd
-            change = wfd.getResult()
+            chdict = wfd.getResult()
 
             # if there's no such change, we've reached the end and can
             # stop polling
-            if not change:
+            if not chdict:
                 break
+
+            wfd = defer.waitForDeferred(
+                changes.Change.fromChdict(self, chdict))
+            yield wfd
+            change = wfd.getResult()
 
             self._change_subs.deliver(change)
 

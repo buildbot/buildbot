@@ -18,6 +18,7 @@ from twisted.internet import defer
 from exceptions import Exception
 from buildbot.changes import gitpoller
 from buildbot.test.util import changesource, gpo
+from buildbot.util import epoch2datetime
 
 class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
     """Test GitPoller methods for parsing git output"""
@@ -154,13 +155,15 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         # check the results
         def check(_):
             self.assertEqual(len(self.changes_added), 2)
-            self.assertEqual(self.changes_added[0]['who'], 'by:4423cdbc')
-            self.assertEqual(self.changes_added[0]['when'], 1273258009.0)
+            self.assertEqual(self.changes_added[0]['author'], 'by:4423cdbc')
+            self.assertEqual(self.changes_added[0]['when_timestamp'],
+                                        epoch2datetime(1273258009))
             self.assertEqual(self.changes_added[0]['comments'], 'hello!')
             self.assertEqual(self.changes_added[0]['branch'], 'master')
             self.assertEqual(self.changes_added[0]['files'], [ '/etc/442' ])
-            self.assertEqual(self.changes_added[1]['who'], 'by:64a5dc2a')
-            self.assertEqual(self.changes_added[1]['when'], 1273258009.0)
+            self.assertEqual(self.changes_added[1]['author'], 'by:64a5dc2a')
+            self.assertEqual(self.changes_added[1]['when_timestamp'],
+                                        epoch2datetime(1273258009))
             self.assertEqual(self.changes_added[1]['comments'], 'hello!')
             self.assertEqual(self.changes_added[1]['files'], [ '/etc/64a' ])
         d.addCallback(check)

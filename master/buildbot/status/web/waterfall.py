@@ -24,6 +24,7 @@ import operator
 
 from buildbot import interfaces, util
 from buildbot.status import builder, buildstep, build
+from buildbot.changes import changes
 
 from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
      ITopBox, build_get_class, path_to_build, path_to_step, path_to_root, \
@@ -396,7 +397,12 @@ class WaterfallStatusResource(HtmlResource):
         results = {}
 
         # recent changes
-        changes_d = master.db.changes.getRecentChangeInstances(40)
+        changes_d = master.db.changes.getRecentChanges(40)
+        def to_changes(chdicts):
+            return defer.gatherResults([
+                changes.Change.fromChdict(master, chdict)
+                for chdict in chdicts ])
+        changes_d.addCallback(to_changes)
         def keep_changes(changes):
             results['changes'] = changes
         changes_d.addCallback(keep_changes)

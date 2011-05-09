@@ -19,28 +19,49 @@ Support for changes in the database
 
 from buildbot.util import json
 import sqlalchemy as sa
-from twisted.internet import defer
-from buildbot.changes.changes import Change
+from twisted.internet import defer, reactor
 from buildbot.db import base
+from buildbot.util import epoch2datetime, datetime2epoch
 
 class ChangesConnectorComponent(base.DBConnectorComponent):
     """
     A DBConnectorComponent to handle getting changes into and out of the
     database.  An instance is available at C{master.db.changes}.
+
+    Changes are represented as dictionaries with the following keys:
+
+    - changeid: the ID of this change
+    - author: the author of the change (unicode string)
+    - files: list of source-code filenames changed (unicode strings)
+    - comments: user comments (unicode string)
+    - is_dir: deprecated
+    - links: list of links for this change, e.g., to web views, review
+      (unicode strings)
+    - revision: revision for this change (unicode string), or None if unknown
+    - when_timestamp: time of the commit (datetime instance)
+    - branch: branch on which the change took place (unicode string), or None
+      for the "default branch", whatever that might mean
+    - category: user-defined category of this change (unicode string or None)
+    - revlink: link to a web view of this change (unicode string or None)
+    - properties: user-specified properties for this change, represented as a
+      dictionary mapping keys to (value, source)
+    - repository: repository where this change occurred (unicode string)
+    - project: user-defined project to which this change corresponds (unicode
+      string)
     """
 
     changeHorizon = 0
     "maximum number of changes to keep on hand, or 0 to keep all changes forever"
-    # TODO: add a threadsafe change cache
 
-    def addChange(self, who, files, comments, isdir=0, links=None,
-                 revision=None, when=None, branch=None, category=None,
-                 revlink='', properties={}, repository='', project=''):
+    def addChange(self, author=None, files=None, comments=None, is_dir=0,
+            links=None, revision=None, when_timestamp=None, branch=None,
+            category=None, revlink='', properties={}, repository='',
+            project='', _reactor=reactor):
         """Add the a Change with the given attributes to the database; returns
-        a Change instance via a deferred.
+        a Change instance via a deferred.  All arguments are keyword arguments.
 
-        @param who: the author of this change
-        @type branch: unicode string
+        @param author: the author of this change
+        @type author: unicode string
 
         @param files: a list of filenames that were changed
         @type branch: list of unicode strings
@@ -48,7 +69,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         @param comments: user comments on the change
         @type branch: unicode string
 
-        @param isdir: deprecated
+        @param is_dir: deprecated
 
         @param links: a list of links related to this change, e.g., to web
         viewers or review pages
@@ -57,8 +78,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         @param revision: the revision identifier for this change
         @type revision: unicode string
 
-        @param when: when this change occurs
-        @type when: integer (UNIX epoch time)
+        @param when_timestamp: when this change occurred, or the current time
+          if None
+        @type when_timestamp: datetime instance or None
 
         @param branch: the branch on which this change took place
         @type branch: unicode string
@@ -71,8 +93,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         @type revlink: unicode string
 
         @param properties: properties to set on this change
-        @type properties: dictionary with string keys and simple values
-        (JSON-able)
+        @type properties: dictionary, where values are tuples of (value,
+        source).  At the moment, the source must be C{'Change'}, although
+        this may be relaxed in later versions.
 
         @param repository: the repository in which this change took place
         @type repository: unicode string
@@ -80,21 +103,22 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         @param project: the project this change is a part of
         @type project: unicode string
 
-        @returns: a L{buildbot.changes.changes.Change} instance via Deferred
+        @param _reactor: for testing
+
+        @returns: new change's ID via Deferred
         """
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
 
-        # first create the change, although with no 'number'
-        change = Change(who=who, files=files, comments=comments, isdir=isdir,
-                links=links, revision=revision, when=when, branch=branch,
-                category=category, revlink=revlink, properties=properties,
-                repository=repository, project=project)
+        if when_timestamp is None:
+            when_timestamp = epoch2datetime(_reactor.seconds())
 
-        # then add it to the database and update its '.number'
+        # verify that source is 'Change' for each property
+        for pv in properties.values():
+            assert pv[1] == 'Change', ("properties must be qualified with"
+                                       "source 'Change'")
+
         def thd(conn):
-            assert change.number is None
-
             # note that in a read-uncommitted database like SQLite this
             # transaction does not buy atomicitiy - other database users may
             # still come across a change without its links, files, properties,
@@ -105,52 +129,52 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
             ins = self.db.model.changes.insert()
             r = conn.execute(ins, dict(
-                author=change.who,
-                comments=change.comments,
-                is_dir=change.isdir,
-                branch=change.branch,
-                revision=change.revision,
-                revlink=change.revlink,
-                when_timestamp=change.when,
-                category=change.category,
-                repository=change.repository,
-                project=change.project))
-            change.number = r.inserted_primary_key[0]
-            if change.links:
+                author=author,
+                comments=comments,
+                is_dir=is_dir,
+                branch=branch,
+                revision=revision,
+                revlink=revlink,
+                when_timestamp=datetime2epoch(when_timestamp),
+                category=category,
+                repository=repository,
+                project=project))
+            changeid = r.inserted_primary_key[0]
+            if links:
                 ins = self.db.model.change_links.insert()
                 conn.execute(ins, [
-                    dict(changeid=change.number, link=l)
-                        for l in change.links
+                    dict(changeid=changeid, link=l)
+                        for l in links
                     ])
-            if change.files:
+            if files:
                 ins = self.db.model.change_files.insert()
                 conn.execute(ins, [
-                    dict(changeid=change.number, filename=f)
-                        for f in change.files
+                    dict(changeid=changeid, filename=f)
+                        for f in files
                     ])
-            if change.properties:
+            if properties:
                 ins = self.db.model.change_properties.insert()
                 conn.execute(ins, [
-                    dict(changeid=change.number,
+                    dict(changeid=changeid,
                         property_name=k,
-                        property_value=json.dumps([v,s]))
-                    for k,v,s in change.properties.asList()
+                        property_value=json.dumps(v))
+                    for k,v in properties.iteritems()
                 ])
 
             transaction.commit()
 
-            return change
+            return changeid
         d = self.db.pool.do(thd)
         return d
 
-    def getChangeInstance(self, changeid):
+    def getChange(self, changeid):
         """
-        Get a L{buildbot.changes.changes.Change} instance for the given changeid,
-        or None if no such change exists.
+        Get a change dictionary for the given changeid, or None if no such
+        change exists.
 
         @param changeid: the id of the change instance to fetch
 
-        @returns: Change instance via Deferred
+        @returns: Change dictionary via Deferred
         """
         assert changeid >= 0
         def thd(conn):
@@ -164,23 +188,16 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             # and fetch the ancillary data (links, files, properties)
             return self._chdict_from_change_row_thd(conn, row)
         d = self.db.pool.do(thd)
-
-        def make_change(chdict):
-            if not chdict:
-                return None
-            return self._change_from_chdict(chdict)
-        d.addCallback(make_change)
         return d
 
-    def getRecentChangeInstances(self, count):
+    def getRecentChanges(self, count):
         """
-        Get a list of the C{count} most recent
-        L{buildbot.changes.changes.Change} instances, or fewer if that many do
-        not exist.
+        Get a list of the C{count} most recent changes, represented as
+        dictionaies; returns fewer if that many do not exist.
 
         @param count: maximum number of instances to return
 
-        @returns: list of Change instances via Deferred
+        @returns: list of dictionaries via Deferred, ordered by changeid
         """
         def thd(conn):
             # get the row from the 'changes' table
@@ -194,13 +211,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 # note that this does *three* extra queries per row!
                 changes.append(self._chdict_from_change_row_thd(conn, row))
             rp.close()
-            return reversed(changes)
+            return list(reversed(changes))
         d = self.db.pool.do(thd)
-
-        def make_changes(chdict_list):
-            return [ self._change_from_chdict(chdict)
-                     for chdict in chdict_list ]
-        d.addCallback(make_changes)
         return d
 
     def getLatestChangeid(self):
@@ -222,11 +234,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def setChangeHorizon(self, changeHorizon): # TODO: remove
         "this method should go away"
         self.changeHorizon = changeHorizon
-
-    # cache management
-
-    def _flush_cache(self):
-        pass # TODO
 
     # utility methods
 
@@ -258,21 +265,24 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
     def _chdict_from_change_row_thd(self, conn, ch_row):
         # This method must be run in a db.pool thread, and returns a chdict
-        # (which can be used to construct a Change object), given a row from
-        # the 'changes' table
+        # given a row from the 'changes' table
         change_links_tbl = self.db.model.change_links
         change_files_tbl = self.db.model.change_files
         change_properties_tbl = self.db.model.change_properties
 
+        def mkdt(epoch):
+            if epoch:
+                return epoch2datetime(epoch)
+
         chdict = dict(
-                number=ch_row.changeid,
-                who=ch_row.author,
+                changeid=ch_row.changeid,
+                author=ch_row.author,
                 files=[], # see below
                 comments=ch_row.comments,
-                isdir=ch_row.is_dir,
+                is_dir=ch_row.is_dir,
                 links=[], # see below
                 revision=ch_row.revision,
-                when=ch_row.when_timestamp,
+                when_timestamp=mkdt(ch_row.when_timestamp),
                 branch=ch_row.branch,
                 category=ch_row.category,
                 revlink=ch_row.revlink,
@@ -292,35 +302,23 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         for r in rows:
             chdict['files'].append(r.filename)
 
+        # and properties must be given without a source, so strip that, but
+        # be flexible in case users have used a development version where the
+        # change properties were recorded incorrectly
+        def split_vs(vs):
+            try:
+                v,s = vs
+                if s != "Change":
+                    v,s = vs, "Change"
+            except:
+                v,s = vs, "Change"
+            return v, s
+
         query = change_properties_tbl.select(
                 whereclause=(change_properties_tbl.c.changeid == ch_row.changeid))
         rows = conn.execute(query)
         for r in rows:
-            chdict['properties'][r.property_name] = json.loads(r.property_value)
+            v, s = split_vs(json.loads(r.property_value))
+            chdict['properties'][r.property_name] = (v,s)
 
         return chdict
-
-    def _change_from_chdict(self, chdict):
-        # create a Change object, given a chdict
-        chdict = chdict.copy()
-
-        # Change does not accept a number
-        changeid = chdict.pop('number')
-
-        # ..and properties must be given without a source, so strip that, but
-        # be flexible in case users have used a development version where the
-        # change properties were recorded incorrectly
-        def vs2v(vs):
-            try:
-                v,s = vs
-                if s != "Change":
-                    v = vs
-            except:
-                v = vs
-            return v
-        chdict['properties'] = dict([ (n,vs2v(vs))
-            for n,vs in chdict['properties'].iteritems() ])
-
-        c = Change(**chdict)
-        c.number = changeid
-        return c

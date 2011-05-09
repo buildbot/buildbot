@@ -21,6 +21,7 @@ from twisted.internet import defer, utils
 
 from buildbot.util import deferredLocked
 from buildbot.changes import base
+from buildbot.util import epoch2datetime
 
 class GitPoller(base.PollingChangeSource):
     """This source will poll a remote git repo for changes and submit
@@ -274,11 +275,11 @@ class GitPoller(base.PollingChangeSource):
 
             timestamp, name, files, comments = [ r[1] for r in results ]
             d = self.master.addChange(
-                   who=name,
+                   author=name,
                    revision=rev,
                    files=files,
                    comments=comments,
-                   when=timestamp,
+                   when_timestamp=epoch2datetime(timestamp),
                    branch=self.branch,
                    category=self.category,
                    project=self.project,

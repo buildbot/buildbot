@@ -57,7 +57,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         def check(_):
             self.failUnlessEqual(len(self.changes_added), 1)
             c = self.changes_added[0]
-            self.assertEqual(c['who'], "Dustin <dustin@mozilla.com>")
+            self.assertEqual(c['author'], "Dustin <dustin@mozilla.com>")
             self.assertEqual(c['project'], "pr")
             self.assertEqual(c['branch'], "br")
             self.assertEqual(c['revision'], "abcdef")

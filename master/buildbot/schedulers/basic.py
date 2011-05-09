@@ -17,7 +17,7 @@ from twisted.internet import defer, reactor
 from twisted.python import log
 from buildbot import util
 from buildbot.util import collections, NotABranch
-from buildbot.changes import filter
+from buildbot.changes import filter, changes
 from buildbot.schedulers import base, dependent
 
 class BaseBasicScheduler(base.BaseScheduler):
@@ -142,12 +142,17 @@ class BaseBasicScheduler(base.BaseScheduler):
         # call gotChange for each change, after first fetching it from the db
         for changeid, important in classifications.iteritems():
             wfd = defer.waitForDeferred(
-                self.master.db.changes.getChangeInstance(changeid))
+                self.master.db.changes.getChange(changeid))
+            yield wfd
+            chdict = wfd.getResult()
+
+            if not chdict:
+                continue
+
+            wfd = defer.waitForDeferred(
+                changes.Change.fromChdict(self, chdict))
             yield wfd
             change = wfd.getResult()
-
-            if not change:
-                continue
 
             wfd = defer.waitForDeferred(
                 self.gotChange(change, important))

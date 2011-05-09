@@ -21,6 +21,7 @@ from twisted.internet import defer
 from buildbot import util
 from buildbot.status import builder
 from buildbot.status.web.base import HtmlResource
+from buildbot.changes import changes
 
 class DoesNotPassFilter(Exception): pass # Used for filtering revs
 
@@ -166,7 +167,15 @@ class ConsoleStatusResource(HtmlResource):
         master = request.site.buildbot_service.master
 
         wfd = defer.waitForDeferred(
-                master.db.changes.getRecentChangeInstances(25))
+                master.db.changes.getRecentChanges(25))
+        yield wfd
+        chdicts = wfd.getResult()
+
+        # convert those to Change instances
+        wfd = defer.waitForDeferred(
+            defer.gatherResults([
+                changes.Change.fromChdict(master, chdict)
+                for chdict in chdicts ]))
         yield wfd
         allChanges = wfd.getResult()
 

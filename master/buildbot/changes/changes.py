@@ -18,7 +18,9 @@ from cPickle import dump
 
 from zope.interface import implements
 from twisted.python import log, runtime
+from twisted.internet import defer
 from twisted.web import html
+from buildbot.util import datetime2epoch
 
 from buildbot import interfaces, util
 from buildbot.process.properties import Properties
@@ -31,14 +33,56 @@ class Change:
     implements(interfaces.IStatusEvent)
 
     number = None
-
     branch = None
     category = None
     revision = None # used to create a source-stamp
 
+    @classmethod
+    def fromChdict(cls, master, chdict):
+        """
+        Class method to create a L{Change} from a dictionary as returned
+        by L{ChangesConnectorComponent.getChange}.
+
+        @param master: build master instance
+        @param ssdict: change dictionary
+
+        @returns: L{Change} via Deferred
+        """
+        change = cls(None, None, None, _fromChdict=True)
+        change.who = chdict['author']
+        change.comments = chdict['comments']
+        change.isdir = chdict['is_dir']
+        change.links = chdict['links']
+        change.revision = chdict['revision']
+        change.branch = chdict['branch']
+        change.category = chdict['category']
+        change.revlink = chdict['revlink']
+        change.repository = chdict['repository']
+        change.project = chdict['project']
+        change.number = chdict['changeid']
+
+        when = chdict['when_timestamp']
+        if when:
+            when = datetime2epoch(when)
+        change.when = when
+
+        change.files = chdict['files'][:]
+        change.files.sort()
+
+        change.properties = Properties()
+        for n, (v,s) in chdict['properties'].iteritems():
+            change.properties.setProperty(n, v, s)
+
+        return defer.succeed(change)
+
     def __init__(self, who, files, comments, isdir=0, links=None,
                  revision=None, when=None, branch=None, category=None,
-                 revlink='', properties={}, repository='', project=''):
+                 revlink='', properties={}, repository='', project='',
+                 _fromChdict=False):
+        # skip all this madness if we're being built from the database
+        if _fromChdict:
+            return
+
         self.who = who
         self.comments = comments
         self.isdir = isdir
