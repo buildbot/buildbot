@@ -204,7 +204,9 @@ class BuildMaster(service.MultiService):
 
             # execute the config file
 
-            localDict = {'basedir': os.path.expanduser(self.basedir)}
+            localDict = {'basedir': os.path.expanduser(self.basedir),
+                         '__file__': os.path.abspath(self.configFileName)}
+            
             try:
                 exec f in localDict
             except:

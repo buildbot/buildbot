@@ -93,6 +93,11 @@ the base directory for the buildmaster. This string has not been
 expanded, so it may start with a tilde. It needs to be expanded before
 use. The config file is located in
 @code{os.path.expanduser(os.path.join(basedir, 'master.cfg'))}
+
+@item __file__
+the absolute path of the config file. The config file's directory is located in
+@code{os.path.dirname(__file__)}.
+
 @end table
 
 @node Loading the Config File
