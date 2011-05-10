@@ -211,35 +211,6 @@ class Maker:
         if not self.quiet: print "mkdir", self.basedir
         os.mkdir(self.basedir)
 
-    def mkinfo(self):
-        path = os.path.join(self.basedir, "info")
-        if not os.path.exists(path):
-            if not self.quiet: print "mkdir", path
-            os.mkdir(path)
-        created = False
-        admin = os.path.join(path, "admin")
-        if not os.path.exists(admin):
-            if not self.quiet:
-                print "Creating info/admin, you need to edit it appropriately"
-            f = open(admin, "wt")
-            f.write("Your Name Here <admin@youraddress.invalid>\n")
-            f.close()
-            created = True
-        host = os.path.join(path, "host")
-        if not os.path.exists(host):
-            if not self.quiet:
-                print "Creating info/host, you need to edit it appropriately"
-            f = open(host, "wt")
-            f.write("Please put a description of this build host here\n")
-            f.close()
-            created = True
-        access_uri = os.path.join(path, "access_uri")
-        if not os.path.exists(access_uri):
-            if not self.quiet:
-                print "Not creating info/access_uri - add it if you wish"
-        if created and not self.quiet:
-            print "Please edit the files in %s appropriately." % path
-
     def chdir(self):
         if not self.quiet: print "chdir", self.basedir
         os.chdir(self.basedir)
@@ -366,11 +337,11 @@ class Maker:
             self.populate_if_missing(os.path.join(webdir, target),
                                  source)
 
-    def check_master_cfg(self):
+    def check_master_cfg(self, expected_db_url=None):
         """Check the buildmaster configuration, returning a deferred that
         fires with an approprate exit status (so 0=success)."""
         from buildbot.master import BuildMaster
-        from twisted.python import log, failure
+        from twisted.python import log
 
         master_cfg = os.path.join(self.basedir, "master.cfg")
         if not os.path.exists(master_cfg):
@@ -394,31 +365,41 @@ class Maker:
             sys.path.insert(0, self.basedir)
 
         m = BuildMaster(self.basedir)
+
         # we need to route log.msg to stdout, so any problems can be seen
         # there. But if everything goes well, I'd rather not clutter stdout
         # with log messages. So instead we add a logObserver which gathers
         # messages and only displays them if something goes wrong.
         messages = []
         log.addObserver(messages.append)
-        try:
-            # this will raise an exception if there's something wrong with
-            # the config file. Note that this BuildMaster instance is never
-            # started, so it won't actually do anything with the
-            # configuration.
-            return m.loadConfig(open(master_cfg, "r"), checkOnly=True)
-        except:
-            f = failure.Failure()
+
+        # this will errback if there's something wrong with the config file.
+        # Note that this BuildMaster instance is never started, so it won't
+        # actually do anything with the configuration.
+        d = defer.maybeDeferred(lambda :
+            m.loadConfig(open(master_cfg, "r"), checkOnly=True))
+        def check_db_url(config):
+            if expected_db_url and config['db_url'] != expected_db_url:
+                raise ValueError("c['db_url'] in the config file ('%s') does"
+                            " not match '%s'; please edit the configuration"
+                            " file before upgrading." %
+                                (config['db_url'], expected_db_url))
+        d.addCallback(check_db_url)
+        def cb(_):
+            return 0
+        def eb(f):
             if not self.quiet:
                 print
                 for m in messages:
                     print "".join(m['message'])
-                print f
+                f.printTraceback()
                 print
                 print "An error was detected in the master.cfg file."
                 print "Please correct the problem and run 'buildbot upgrade-master' again."
                 print
             return 1
-        return 0
+        d.addCallbacks(cb, eb)
+        return d
 
 DB_HELP = """
     The --db string is evaluated to build the DB object, which specifies
@@ -469,46 +450,51 @@ class UpgradeMasterOptions(MakerBase):
     """
 
 @in_reactor
+@defer.deferredGenerator
 def upgradeMaster(config):
     m = Maker(config)
 
-    d = defer.succeed(None)
-    def upgradeBasedir(_):
-        if not config['quiet']: print "upgrading basedir"
-        basedir = os.path.expanduser(config['basedir'])
-        # TODO: check Makefile
-        # TODO: check TAC file
-        # check web files: index.html, default.css, robots.txt
-        m.upgrade_public_html({
-              'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
-              'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
-              'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
-              'favicon.ico' : util.sibpath(__file__, "../status/web/files/favicon.ico"),
-          })
-        m.populate_if_missing(os.path.join(basedir, "master.cfg.sample"),
-                              util.sibpath(__file__, "sample.cfg"),
-                              overwrite=True)
-        # if index.html exists, use it to override the root page tempalte
-        m.move_if_present(os.path.join(basedir, "public_html/index.html"),
-                          os.path.join(basedir, "templates/root.html"))
-    d.addCallback(upgradeBasedir)
+    if not config['quiet']: print "upgrading basedir"
+    basedir = os.path.expanduser(config['basedir'])
+    # TODO: check Makefile
+    # TODO: check TAC file
+    # check web files: index.html, default.css, robots.txt
+    m.upgrade_public_html({
+            'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
+            'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
+            'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
+            'favicon.ico' : util.sibpath(__file__, "../status/web/files/favicon.ico"),
+        })
+    m.populate_if_missing(os.path.join(basedir, "master.cfg.sample"),
+                            util.sibpath(__file__, "sample.cfg"),
+                            overwrite=True)
+    # if index.html exists, use it to override the root page tempalte
+    m.move_if_present(os.path.join(basedir, "public_html/index.html"),
+                        os.path.join(basedir, "templates/root.html"))
 
-    def upgradeDB(_):
+    if not config['quiet']: print "checking master.cfg"
+    wfd = defer.waitForDeferred(
+            m.check_master_cfg(expected_db_url=config['db']))
+    yield wfd
+    rc = wfd.getResult()
+
+    if rc == 0:
         from buildbot.db import connector
-        db = connector.DBConnector(None, config['db'], basedir=config['basedir'])
-        if not config['quiet']: print "upgrading database"
-        return db.model.upgrade()
-    d.addCallback(upgradeDB)
 
-    def checkMaster(_):
-        # check the configuration
-        rc = m.check_master_cfg()
-        if rc:
-            return rc
+        if not config['quiet']: print "upgrading database"
+        db = connector.DBConnector(None,
+                            config['db'],
+                            basedir=config['basedir'])
+
+        wfd = defer.waitForDeferred(
+                db.model.upgrade())
+        yield wfd
+        wfd.getResult()
+
         if not config['quiet']: print "upgrade complete"
-        return 0
-    d.addCallback(checkMaster)
-    return d
+        yield 0
+    else:
+        yield rc
 
 
 class MasterOptions(MakerBase):

@@ -451,7 +451,7 @@ class BuildMaster(service.MultiService):
 
             ### ---- everything from here on down is done only on an actual (re)start
             if checkOnly:
-                return
+                return config
 
             self.title = title
             self.titleURL = titleURL
