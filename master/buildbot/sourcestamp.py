@@ -250,7 +250,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         patch_level = None
         if self.patch:
             patch_level, patch_body = self.patch
-        d = master.db.sourcestamps.createSourceStamp(
+        d = master.db.sourcestamps.addSourceStamp(
                 branch=self.branch, revision=self.revision,
                 repository=self.repository, project=self.project,
                 patch_body=patch_body, patch_level=patch_level,

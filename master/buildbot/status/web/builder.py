@@ -170,7 +170,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             revision = None
 
         master = self.getBuildmaster(req)
-        d = master.db.sourcestamps.createSourceStamp(branch=branch,
+        d = master.db.sourcestamps.addSourceStamp(branch=branch,
                 revision=revision, project=project, repository=repository)
         def make_buildset(ssid):
             r = ("The web-page 'force build' button was pressed by '%s': %s\n"

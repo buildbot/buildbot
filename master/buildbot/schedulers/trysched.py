@@ -161,7 +161,7 @@ class Try_Jobdir(TryBase):
             log.msg("incoming Try job did not specify any allowed builder names")
             return defer.succeed(None)
 
-        d = self.master.db.sourcestamps.createSourceStamp(
+        d = self.master.db.sourcestamps.addSourceStamp(
                 branch=parsed_job['branch'],
                 revision=parsed_job['baserev'],
                 patch_body=parsed_job['patch_body'],
@@ -195,7 +195,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
             return
 
         wfd = defer.waitForDeferred(
-                db.sourcestamps.createSourceStamp(branch=branch, revision=revision,
+                db.sourcestamps.addSourceStamp(branch=branch, revision=revision,
                     repository=repository, project=project, patch_level=patch[0],
                     patch_body=patch[1], patch_subdir=''))
                     # note: no way to specify patch subdir - #1769

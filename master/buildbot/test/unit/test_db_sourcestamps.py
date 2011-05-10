@@ -40,10 +40,10 @@ class TestSourceStampsConnectorComponent(
 
     # tests
 
-    def test_createSourceStamp_simple(self):
+    def test_addSourceStamp_simple(self):
         d = defer.succeed(None)
         d.addCallback(lambda _ :
-            self.db.sourcestamps.createSourceStamp('production', 'abdef',
+            self.db.sourcestamps.addSourceStamp('production', 'abdef',
                 'test://repo', 'stamper'))
         def check(ssid):
             def thd(conn):
@@ -65,7 +65,7 @@ class TestSourceStampsConnectorComponent(
         d.addCallback(check)
         return d
 
-    def test_createSourceStamp_changes(self):
+    def test_addSourceStamp_changes(self):
         # add some sample changes for referential integrity
         d = self.insertTestData([
               fakedb.Change(changeid=3),
@@ -73,7 +73,7 @@ class TestSourceStampsConnectorComponent(
             ])
 
         d.addCallback(lambda _ :
-            self.db.sourcestamps.createSourceStamp('production', 'abdef',
+            self.db.sourcestamps.addSourceStamp('production', 'abdef',
                 'test://repo', 'stamper', changeids=[3,4]))
         def check(ssid):
             def thd(conn):
@@ -95,10 +95,10 @@ class TestSourceStampsConnectorComponent(
         d.addCallback(check)
         return d
 
-    def test_createSourceStamp_patch(self):
+    def test_addSourceStamp_patch(self):
         d = defer.succeed(None)
         d.addCallback(lambda _ :
-            self.db.sourcestamps.createSourceStamp('production', 'abdef',
+            self.db.sourcestamps.addSourceStamp('production', 'abdef',
                 'test://repo', 'stamper', patch_body='my patch', patch_level=3,
                 patch_subdir='master/'))
         def check(ssid):

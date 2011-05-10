@@ -261,7 +261,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         @type properties: L{buildbot.process.properties.Properties}
         @returns: (buildset ID, buildrequest IDs) via Deferred
         """
-        d = self.master.db.sourcestamps.createSourceStamp(
+        d = self.master.db.sourcestamps.addSourceStamp(
                 branch=branch, revision=None, repository=repository,
                 project=project)
         d.addCallback(self.addBuildsetForSourceStamp, reason=reason,
@@ -303,7 +303,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
             return changes.Change.fromChdict(self.master, chdict)
         d.addCallback(chdict2change)
         def create_sourcestamp(change):
-            return self.master.db.sourcestamps.createSourceStamp(
+            return self.master.db.sourcestamps.addSourceStamp(
                     branch=change.branch,
                     revision=change.revision,
                     repository=change.repository,

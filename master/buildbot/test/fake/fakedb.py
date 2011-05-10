@@ -478,7 +478,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
 
     # component methods
 
-    def createSourceStamp(self, branch, revision, repository, project,
+    def addSourceStamp(self, branch, revision, repository, project,
                           patch_body=None, patch_level=0, patch_subdir=None,
                           changeids=[]):
         id = len(self.sourcestamps) + 100

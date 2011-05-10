@@ -148,7 +148,7 @@ class Trigger(LoggingBuildStep):
 
         master = self.build.builder.botmaster.parent # seriously?!
         if self.sourceStamp:
-            d = master.db.sourcestamps.createSourceStamp(**properties.render(self.sourceStamp))
+            d = master.db.sourcestamps.addSourceStamp(**properties.render(self.sourceStamp))
         elif self.alwaysUseLatest:
             d = defer.succeed(None)
         else:

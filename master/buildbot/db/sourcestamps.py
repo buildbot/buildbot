@@ -26,7 +26,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
     A DBConnectorComponent to handle source stamps in the database
     """
 
-    def createSourceStamp(self, branch, revision, repository, project,
+    def addSourceStamp(self, branch, revision, repository, project,
                           patch_body=None, patch_level=0, patch_subdir=None,
                           changeids=[]):
         """
