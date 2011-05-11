@@ -82,8 +82,11 @@ class FakeMasterMethods(object):
     def remote_unpack(self):
         self.add_update('unpack')
 
-    def remote_close(self):
-        self.add_update('close')
+    def remote_close(self,accessed_modified=None):
+        if accessed_modified is None:
+            self.add_update('close')
+        else:
+            self.add_update('close - {}'.format(accessed_modified))
 
 class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
@@ -117,6 +120,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             writer=FakeRemote(self.fakemaster),
             maxsize=1000,
             blocksize=64,
+            keepstamp=False,
         ))
 
         d = self.run_command()
@@ -139,6 +143,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             writer=FakeRemote(self.fakemaster),
             maxsize=100,
             blocksize=64,
+            keepstamp=False,
         ))
 
         d = self.run_command()
@@ -160,6 +165,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             writer=FakeRemote(self.fakemaster),
             maxsize=100,
             blocksize=64,
+            keepstamp=False,
         ))
 
         d = self.run_command()
@@ -184,6 +190,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             writer=FakeRemote(self.fakemaster),
             maxsize=100,
             blocksize=2,
+            keepstamp=False,
         ))
 
         d = self.run_command()
@@ -205,6 +212,32 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
                 ])
         dl.addCallback(check)
         return dl
+
+    def test_timestamp(self):
+        self.fakemaster.count_writes = True    # get actual byte counts
+        timestamp = ( os.path.getatime(self.datafile),
+                      os.path.getmtime(self.datafile) )
+
+        self.make_command(transfer.SlaveFileUploadCommand, dict(
+            workdir='workdir',
+            slavesrc='data',
+            writer=FakeRemote(self.fakemaster),
+            maxsize=1000,
+            blocksize=64,
+            keepstamp=True,
+        ))
+
+        d = self.run_command()
+
+        def check(_):
+            self.assertEqual(self.get_updates(), [
+                    {'header': 'sending %s' % self.datafile},
+                    'write 64', 'write 64', 'write 52',
+                    'close - {}'.format(timestamp),
+                    {'rc': 0}
+                ])
+        d.addCallback(check)
+        return d
 
 class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
