@@ -71,7 +71,7 @@ StatusReceiverMultiService and include an 'implements(IStatusReceiver)' stanza.
 @section Utilities
 
 @menu
-* buildbot.util.collections::
+* buildbot.util.bbcollections::
 * buildbot.util.eventual::
 * buildbot.util.json::
 @end menu
@@ -172,13 +172,15 @@ dt = datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC)
 
 @end table
 
-@node buildbot.util.collections
-@subsection buildbot.util.collections
+@node buildbot.util.bbcollections
+@subsection buildbot.util.bbcollections
 
-This package provides a few useful collection objects.
+This package provides a few useful collection objects.  Note that it used to be
+named @code{collections}, but without absolute imports (PEP 328), this
+precluded using the standard library's @code{collections} module.
 
 For compatibility, it provides a clone of the Python
-@code{collections.defaultdict} for use in Python-2.4.  In later versions, this
+@code{bbcollections.defaultdict} for use in Python-2.4.  In later versions, this
 is simply a reference to the built-in @code{defaultdict}, so buildbot code can
 simply use @code{buildbot.util.collections.defaultdict} everywhere.
 

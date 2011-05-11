@@ -45,8 +45,8 @@ from buildbot.steps import trigger, vstudio
 modules.extend([trigger, vstudio])
 from buildbot.steps.package.rpm import rpmbuild, rpmlint, rpmspec
 modules.extend([rpmbuild, rpmlint, rpmspec])
-from buildbot.util import collections, eventual, loop, monkeypatches
-modules.extend([collections, eventual, loop, monkeypatches])
+from buildbot.util import eventual, loop, monkeypatches
+modules.extend([eventual, loop, monkeypatches])
 
 # require gobject
 #import buildbot.clients.gtkPanes

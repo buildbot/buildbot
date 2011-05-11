@@ -16,13 +16,13 @@
 from twisted.internet import defer
 from twisted.application import service
 from twisted.python import log
-from buildbot.util import collections, deferredLocked
+from buildbot.util import bbcollections, deferredLocked
 
 class SchedulerManager(service.MultiService):
     def __init__(self, master):
         service.MultiService.__init__(self)
         self.master = master
-        self.upstream_subscribers = collections.defaultdict(list)
+        self.upstream_subscribers = bbcollections.defaultdict(list)
         self._updateLock = defer.DeferredLock()
 
     @deferredLocked('_updateLock')

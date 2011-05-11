@@ -20,7 +20,7 @@ from twisted.persisted import styles
 from twisted.internet import defer
 from zope.interface import implements
 from buildbot import interfaces
-from buildbot.util import collections
+from buildbot.util import bbcollections
 from buildbot.util.eventual import eventually
 from buildbot.changes import changes
 from buildbot.status import buildset, builder, buildrequest
@@ -52,9 +52,9 @@ class Status:
         self.master.subscribeToBuildRequests(
                 self._buildRequestCallback)
 
-        self._builder_observers = collections.KeyedSets()
-        self._buildreq_observers = collections.KeyedSets()
-        self._buildset_finished_waiters = collections.KeyedSets()
+        self._builder_observers = bbcollections.KeyedSets()
+        self._buildreq_observers = bbcollections.KeyedSets()
+        self._buildset_finished_waiters = bbcollections.KeyedSets()
 
     @property
     def shuttingDown(self):

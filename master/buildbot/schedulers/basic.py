@@ -16,7 +16,7 @@
 from twisted.internet import defer, reactor
 from twisted.python import log
 from buildbot import util
-from buildbot.util import collections, NotABranch
+from buildbot.util import bbcollections, NotABranch
 from buildbot.changes import filter, changes
 from buildbot.schedulers import base, dependent
 
@@ -48,7 +48,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         # the IDelayedCall used to wake up when this scheduler's
         # treeStableTimer expires.
-        self._stable_timers = collections.defaultdict(lambda : None)
+        self._stable_timers = bbcollections.defaultdict(lambda : None)
         self._stable_timers_lock = defer.DeferredLock()
 
     def getChangeFilter(self, branch, branches, change_filter, categories):
