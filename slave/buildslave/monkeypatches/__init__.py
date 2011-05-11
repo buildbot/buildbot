@@ -15,6 +15,11 @@
 
 
 def patch_bug4881():
+    # this patch doesn't apply (or even import!) on Windows
+    import sys
+    if sys.platform == 'win32':
+        return
+
     try:
         import twisted
         from twisted.python import versions
