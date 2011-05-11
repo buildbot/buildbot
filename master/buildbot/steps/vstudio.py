@@ -91,6 +91,7 @@ class VisualStudio(ShellCommand):
     projectfile = None
     config = None
     useenv = False
+    project = None
     PATH = []
     INCLUDE = []
     LIB = []
@@ -101,6 +102,7 @@ class VisualStudio(ShellCommand):
                 projectfile = None,
                 config = None,
                 useenv = False,
+                project = None,
                 INCLUDE = [],
                 LIB = [],
                 PATH = [],
@@ -110,6 +112,7 @@ class VisualStudio(ShellCommand):
         self.projectfile = projectfile
         self.config = config
         self.useenv = useenv
+        self.project = project
         if len(INCLUDE) > 0:
             self.INCLUDE = INCLUDE
             self.useenv = True
@@ -126,6 +129,7 @@ class VisualStudio(ShellCommand):
             projectfile = projectfile,
             config = config,
             useenv = useenv,
+            project = project,
             INCLUDE = INCLUDE,
             LIB = LIB,
             PATH = PATH
@@ -200,13 +204,10 @@ class VC6(VisualStudio):
 
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio'
 
-    def __init__(self,
-                project = "ALL",
-                 **kwargs):
-        self.project = project
+    def __init__(self, **kwargs):  
+
         # always upcall !
         VisualStudio.__init__(self, **kwargs)
-        self.addFactoryArguments(project = project)
 
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
@@ -232,7 +233,10 @@ class VC6(VisualStudio):
         command = ["msdev"]
         command.append(self.projectfile)
         command.append("/MAKE")
-        command.append(self.project + " - " + self.config)
+        if self.project is not None:
+            command.append(self.project + " - " + self.config)
+        else:
+            command.append("ALL - " + self.config)
         if self.mode == "rebuild":
             command.append("/REBUILD")
         else:
@@ -282,6 +286,9 @@ class VC7(VisualStudio):
         command.append(self.config)
         if self.useenv:
             command.append("/UseEnv")
+        if self.project is not None:
+            command.append("/Project")
+            command.append(self.project)
         self.setCommand(command)
         return VisualStudio.start(self)
 
@@ -344,6 +351,9 @@ class VCExpress9(VC8):
         command.append(self.config)
         if self.useenv:
             command.append("/UseEnv")
+        if self.project is not None:
+            command.append("/Project")
+            command.append(self.project)
         self.setCommand(command)
         return VisualStudio.start(self)
 
