@@ -17,7 +17,7 @@ from zope.interface import implements
 from twisted.internet import defer
 from twisted.application import service
 
-from buildbot import interfaces, util
+from buildbot import interfaces
 
 class ChangeManager(service.MultiService):
     """
@@ -37,7 +37,6 @@ class ChangeManager(service.MultiService):
     def __init__(self):
         service.MultiService.__init__(self)
         self.master = None
-        self._cache = util.LRUCache()
         self.lastPruneChanges = 0
 
     def startService(self):
