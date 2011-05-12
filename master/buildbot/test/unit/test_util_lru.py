@@ -17,6 +17,7 @@ import string
 import random
 from twisted.trial import unittest
 from twisted.internet import defer, reactor
+from twisted.python import failure
 from buildbot.util import lru
 
 # construct weakref-able objects for particular keys
@@ -101,29 +102,25 @@ class LRUCache(unittest.TestCase):
             res = wfd.getResult()
         self.check_result(res, short('b'), 27, 3)
 
-        # at this point, we should have 'x', 'a', and 'b' in the cache,
-        # and a, lots of x's, and ab in the queue.  The next get operation
-        # should evict 'x', not 'a'.
+        # at this point, we should have 'x', 'a', and 'b' in the cache, and
+        # 'axx..xxab' in the queue.
+        self.assertEqual(len(self.lru.queue), 30)
 
+        # This 'get' operation for an existing key should cause compaction
         wfd = defer.waitForDeferred(
-                self.lru.get('c', self.short_miss_fn))
+                self.lru.get('b', self.short_miss_fn))
         yield wfd
         res = wfd.getResult()
-        self.check_result(res, short('c'), 27, 4)
+        self.check_result(res, short('b'), 28, 3)
+
+        self.assertEqual(len(self.lru.queue), 3)
 
         # expect a cached short('a')
         wfd = defer.waitForDeferred(
                 self.lru.get('a', self.long_miss_fn))
         yield wfd
         res = wfd.getResult()
-        self.check_result(res, short('a'), 28, 4)
-
-        # expect a newly minted long('x')
-        wfd = defer.waitForDeferred(
-                self.lru.get('x', self.long_miss_fn))
-        yield wfd
-        res = wfd.getResult()
-        self.check_result(res, long('x'), 28, 5)
+        self.check_result(res, short('a'), 29, 3)
 
     @defer.deferredGenerator
     def test_all_misses(self):
@@ -242,3 +239,30 @@ class LRUCache(unittest.TestCase):
             self.assertEqual((self.lru.hits, self.lru.misses), (7, 1))
         d.addCallback(check)
         return d
+
+    def test_slow_failure(self):
+        def slow_fail_miss_fn(k):
+            d = defer.Deferred()
+            reactor.callLater(0.05,
+                lambda : d.errback(failure.Failure(RuntimeError("oh noes"))))
+            return d
+
+        def do_get(test_d, k):
+            d = self.lru.get(k, slow_fail_miss_fn)
+            def cb(_):
+                self.fail("unexpected success")
+            def eb(f):
+                f.trap(RuntimeError)
+                pass # expected exception
+            d.addCallbacks(cb, eb)
+            d.addCallbacks(test_d.callback, test_d.errback)
+
+        ds = []
+        for i in range(8):
+            d = defer.Deferred()
+            reactor.callLater(0.02*i, do_get, d, 'x')
+            ds.append(d)
+
+        d = defer.gatherResults(ds)
+        return d
+

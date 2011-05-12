@@ -77,10 +77,23 @@ class AsyncLRUCache(object):
         concurrent = self.concurrent
         queue = self.queue
 
-        # record recent use of this key
+        # utility function to record recent use of this key
         def ref_key():
             queue.append(key)
             refcount[key] = refcount.get(key, 0) + 1
+
+            # periodically compact the queue by eliminating duplicate keys
+            # while preserving order of most recent access.  Note that this
+            # is only required when the cache does not exceed its maximum
+            # size
+            if len(queue) > self.max_queue:
+                refcount.clear()
+                queue_appendleft = queue.appendleft
+                queue_appendleft(self.sentinel)
+                for k in ifilterfalse(refcount.__contains__,
+                                        iter(queue.pop, self.sentinel)):
+                    queue_appendleft(k)
+                    refcount[k] = 1
 
         try:
             result = cache[key]
@@ -127,17 +140,6 @@ class AsyncLRUCache(object):
                     refc = refcount[k] = refcount[k] - 1
                 del cache[k]
                 del refcount[k]
-
-            # periodically compact the queue by eliminating duplicate keys
-            # while preserving order of most recent access
-            if len(queue) > self.max_queue:
-                refcount.clear()
-                queue_appendleft = queue.appendleft
-                queue_appendleft(self.sentinel)
-                for k in ifilterfalse(refcount.__contains__,
-                                        iter(queue.pop, self.sentinel)):
-                    queue_appendleft(k)
-                    refcount[k] = 1
 
             # reference the key once, possibly standing in for multiple
             # concurrent accesses

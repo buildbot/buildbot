@@ -113,13 +113,13 @@ This function will filter out some inappropriate characters for filenames; it
 is suitable for adapting strings from the configuration for use as filenames.
 It is not suitable for use with strings from untrusted sources.
 
-@item LRUCache
+@item AsyncLRUCache
 
-This is a simple least-recently-used cache.  Its constructor takes a maximum
-size.  When the cache grows beyond this size, the least-recently used items
-will be automatically removed from the cache.  The class has @code{get} and
-@code{add} methods, and can also be accessed via dictionary syntax
-(@code{lru['id']}).
+This is a least-recently-used cache.  Its constructor takes a maximum size.
+When the cache grows beyond this size, the least-recently used items will be
+automatically removed from the cache.  The class has a @code{get} method that
+takes a key and a function to call (with the key) when the key is not in the
+cache.  Both @code{get} and the miss function return Deferreds.
 
 @item deferredLocked
 
