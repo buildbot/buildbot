@@ -126,7 +126,7 @@ case "$1" in
         exit $?
         ;;
     reload)
-        do_op "master_op" "reload" "Reloading buildmaster"
+        do_op "master_op" "reconfig" "Reloading buildmaster"
         exit $?
         ;;
     restart|force-reload)
