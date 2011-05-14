@@ -16,6 +16,9 @@
 import re
 import weakref
 from buildbot import util
+from buildbot.interfaces import IRenderable
+from twisted.python.components import registerAdapter
+from zope.interface import implements
 
 class Properties(util.ComparableMixin):
     """
@@ -122,20 +125,7 @@ class Properties(util.ComparableMixin):
         Return a variant of value that has any WithProperties objects
         substituted.  This recurses into Python's compound data types.
         """
-        # we use isinstance to detect Python's standard data types, and call
-        # this function recursively for the values in those types
-        if isinstance(value, (str, unicode)):
-            return value
-        elif isinstance(value, WithProperties):
-            return value.render(self)
-        elif isinstance(value, list):
-            return [ self.render(e) for e in value ]
-        elif isinstance(value, tuple):
-            return tuple([ self.render(e) for e in value ])
-        elif isinstance(value, dict):
-            return dict([ (self.render(k), self.render(v)) for k,v in value.iteritems() ])
-        else:
-            return value
+        return IRenderable(value).render(self)
 
 class PropertyMap:
     """
@@ -219,6 +209,7 @@ class WithProperties(util.ComparableMixin):
     want to interpolate build properties.
     """
 
+    implements(IRenderable)
     compare_attrs = ('fmtstring', 'args')
 
     def __init__(self, fmtstring, *args, **lambda_subs):
@@ -245,3 +236,72 @@ class WithProperties(util.ComparableMixin):
             s = self.fmtstring % pmap
             pmap.clear_temporary_values()
         return s
+
+
+class _DefaultRenderer:
+    """
+    Default IRenderable adaptor. Calls .render if availble, otherwise
+    returns argument unchanged.
+    """
+
+    implements(IRenderable)
+
+    def __init__(self, value):
+        try:
+            self.renderer = value.render
+        except AttributeError:
+            self.renderer = lambda _: value
+
+    def render(self, properties):
+        return self.renderer(properties)
+
+registerAdapter(_DefaultRenderer, object, IRenderable)
+
+
+class _ListRenderer:
+    """
+    List IRenderable adaptor. Maps Properties.render over the list.
+    """
+
+    implements(IRenderable)
+
+    def __init__(self, value):
+        self.value = value
+
+    def render(self, properties):
+        return [ properties.render(e) for e in self.value ]
+
+registerAdapter(_ListRenderer, list, IRenderable)
+
+
+class _TupleRenderer:
+    """
+    Tuple IRenderable adaptor. Maps Properties.render over the tuple.
+    """
+
+    implements(IRenderable)
+
+    def __init__(self, value):
+        self.value = value
+
+    def render(self, properties):
+        return tuple([ properties.render(e) for e in self.value ])
+
+registerAdapter(_TupleRenderer, tuple, IRenderable)
+
+
+class _DictRenderer:
+    """
+    Dict IRenderable adaptor. Maps Properties.render over the keya and values in the dict.
+    """
+
+    implements(IRenderable)
+
+    def __init__(self, value):
+        self.value = value
+
+    def render(self, properties):
+        return dict([ (properties.render(k), properties.render(v)) for k,v in self.value.iteritems() ])
+
+
+registerAdapter(_DictRenderer, dict, IRenderable)
