@@ -134,9 +134,26 @@ class MakeTarball(ShellCommand):
 @end example
 
 @menu
+* Property::
 * WithProperties::
 * Common Build Properties::
 @end menu
+
+@node Property
+@subsubsection Property
+@cindex Property
+
+You can use build properties in many step paramaters.
+The simplest simplest form is to wrap the property name with
+@code{Property}, passing an optional default argument.
+
+@example
+from buildbot.steps.trigger import Trigger
+form buildbot.process.properties import Property
+
+f.addStep(Trigger(waitForFinish=False, schedulerNames=['build-dependents'], alwaysUseLatest=True,
+			set_properties=@{'coq_revision': Property("got_revision")@}))
+@end example
 
 @node WithProperties
 @subsubsection WithProperties

@@ -238,6 +238,27 @@ class WithProperties(util.ComparableMixin):
         return s
 
 
+class Property(util.ComparableMixin):
+    """
+    An instance of this class renders a property of a build.
+    """
+
+    implements(IRenderable)
+
+    compare_attrs = ('key','default')
+
+    def __init__(self, key, default=None):
+        """
+        @param key: Property to render.
+        @param default: Value to use if property isn't set.
+        """
+        self.key = key
+        self.default = default
+
+    def render(self, properties):
+        return properties.getProperty(self.key, default=self.default)
+
+
 class _DefaultRenderer:
     """
     Default IRenderable adaptor. Calls .render if availble, otherwise
