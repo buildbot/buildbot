@@ -143,10 +143,9 @@ class MakeTarball(ShellCommand):
 @subsubsection Property
 @cindex Property
 
-You can use build properties in most step paramaters.  Please
-file bugs for any parameters which do not.  The simplest simplest
-form is to wrap the property name with @code{Property}, passing
-an optional default argument.
+You can use build properties in most step paramaters.  Please file bugs for any
+parameters which do not accept properties.  The simplest form is to wrap the
+property name with @code{Property}, passing an optional default argument.
 
 @example
 from buildbot.steps.trigger import Trigger
