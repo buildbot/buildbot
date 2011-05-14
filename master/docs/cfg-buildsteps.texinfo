@@ -155,6 +155,12 @@ f.addStep(Trigger(waitForFinish=False, schedulerNames=['build-dependents'], alwa
 			set_properties=@{'coq_revision': Property("got_revision")@}))
 @end example
 
+You can specify a default value by passing a @code{default} argument to
+@code{Property}. This is normally used when the property doesn't exist,
+or when the value is something Python regards as "false". The @code{defaultWhenFalse}
+argument can be used to force buildbot to use the default argument only
+if the parameter is not set.
+
 @node WithProperties
 @subsubsection WithProperties
 @cindex WithProperties
