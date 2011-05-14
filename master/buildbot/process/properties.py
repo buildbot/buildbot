@@ -127,7 +127,7 @@ class Properties(util.ComparableMixin):
         if isinstance(value, (str, unicode)):
             return value
         elif isinstance(value, WithProperties):
-            return value.render(self.pmap)
+            return value.render(self)
         elif isinstance(value, list):
             return [ self.render(e) for e in value ]
         elif isinstance(value, tuple):
@@ -232,14 +232,14 @@ class WithProperties(util.ComparableMixin):
         elif lambda_subs:
             raise ValueError('WithProperties takes either positional or keyword substitutions, not both.')
 
-    def render(self, pmap):
+    def render(self, properties):
+        pmap = properties.pmap
         if self.args:
             strings = []
             for name in self.args:
                 strings.append(pmap[name])
             s = self.fmtstring % tuple(strings)
         else:
-            properties = pmap.properties()
             for k,v in self.lambda_subs.iteritems():
                 pmap.add_temporary_value(k, v(properties))
             s = self.fmtstring % pmap
