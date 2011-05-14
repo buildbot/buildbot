@@ -245,18 +245,25 @@ class Property(util.ComparableMixin):
 
     implements(IRenderable)
 
-    compare_attrs = ('key','default')
+    compare_attrs = ('key','default', 'defaultWhenFalse')
 
-    def __init__(self, key, default=None):
+    def __init__(self, key, default=None, defaultWhenFalse=True):
         """
         @param key: Property to render.
         @param default: Value to use if property isn't set.
+        @param defaultWhenFalse: When true (default), use default value
+            if property evaluates to False. Otherwise, use default value
+            only when property isn't set.
         """
         self.key = key
         self.default = default
+        self.defaultWhenFalse = defaultWhenFalse
 
     def render(self, properties):
-        return properties.getProperty(self.key, default=self.default)
+        if self.defaultWhenFalse:
+            return properties.getProperty(self.key) or self.default
+        else:
+            return properties.getProperty(self.key, default=self.default)
 
 
 class _DefaultRenderer:
