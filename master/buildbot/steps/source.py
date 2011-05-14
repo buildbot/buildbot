@@ -186,10 +186,6 @@ class Source(LoggingBuildStep):
         source step took and the Change 'repository' property
         '''
 
-        assert not repository or callable(repository) or isinstance(repository, dict) or \
-            isinstance(repository, str) or isinstance(repository, unicode) or \
-            isinstance(repository, WithProperties)
-
         s = self.build.getSourceStamp()
         props = self.build.getProperties()
 
