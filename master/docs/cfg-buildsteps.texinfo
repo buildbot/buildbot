@@ -143,9 +143,10 @@ class MakeTarball(ShellCommand):
 @subsubsection Property
 @cindex Property
 
-You can use build properties in many step paramaters.
-The simplest simplest form is to wrap the property name with
-@code{Property}, passing an optional default argument.
+You can use build properties in most step paramaters.  Please
+file bugs for any parameters which do not.  The simplest simplest
+form is to wrap the property name with @code{Property}, passing
+an optional default argument.
 
 @example
 from buildbot.steps.trigger import Trigger
@@ -163,32 +164,11 @@ You can use build properties in ShellCommands by using the
 @code{WithProperties} wrapper when setting the arguments of
 the ShellCommand. This interpolates the named build properties
 into the generated shell command.  Most step parameters accept
-@code{WithProperties}.  Please file bugs for any parameters which
-do not.
+@code{WithProperties}.
 
-@example
-from buildbot.steps.shell import ShellCommand
-from buildbot.process.properties import WithProperties
-
-f.addStep(ShellCommand(
-          command=["tar", "czf",
-                   WithProperties("build-%s.tar.gz", "revision"),
-                   "source"]))
-@end example
-
-If this BuildStep were used in a tree obtained from Subversion, it
-would create a tarball with a name like @file{build-1234.tar.gz}.
-
-The @code{WithProperties} function does @code{printf}-style string
-interpolation, using strings obtained by calling
-@code{build.getProperty(propname)}. Note that for every @code{%s} (or
-@code{%d}, etc), you must have exactly one additional argument to
-indicate which build property you want to insert.
-
-You can also use python dictionary-style string interpolation by using
+You can use python dictionary-style string interpolation by using
 the @code{%(propname)s} syntax. In this form, the property name goes
-in the parentheses, and WithProperties takes @emph{no} additional
-arguments:
+in the parentheses:
 
 @example
 f.addStep(ShellCommand(
@@ -196,6 +176,9 @@ f.addStep(ShellCommand(
                    WithProperties("build-%(revision)s.tar.gz"),
                    "source"]))
 @end example
+
+If this BuildStep were used in a tree obtained from Subversion, it
+would create a tarball with a name like @file{build-1234.tar.gz}.
 
 Don't forget the extra ``s'' after the closing parenthesis! This is
 the cause of many confusing errors.
@@ -244,6 +227,22 @@ def determine_foo(props):
     return 'qux'
 
 WithProperties('%(foo)s', foo=determine_foo)
+@end example
+
+The @code{WithProperties} function also does @code{printf}-style string
+interpolation, using strings obtained by calling
+@code{build.getProperty(propname)}. Note that for every @code{%s} (or
+@code{%d}, etc), you must have exactly one additional argument to
+indicate which build property you want to insert.
+
+@example
+from buildbot.steps.shell import ShellCommand
+from buildbot.process.properties import WithProperties
+
+f.addStep(ShellCommand(
+          command=["tar", "czf",
+                   WithProperties("build-%s.tar.gz", "revision"),
+                   "source"]))
 @end example
 
 Note: like python, you can either do positional-argument interpolation
