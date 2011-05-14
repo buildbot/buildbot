@@ -379,7 +379,8 @@ class Maker:
         d = defer.maybeDeferred(lambda :
             m.loadConfig(open(master_cfg, "r"), checkOnly=True))
         def check_db_url(config):
-            if expected_db_url and config['db_url'] != expected_db_url:
+            if (expected_db_url and 
+                config.get('db_url', 'sqlite:///state.sqlite') != expected_db_url):
                 raise ValueError("c['db_url'] in the config file ('%s') does"
                             " not match '%s'; please edit the configuration"
                             " file before upgrading." %
