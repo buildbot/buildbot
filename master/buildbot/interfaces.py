@@ -1114,3 +1114,13 @@ class ILatentBuildSlave(IBuildSlave):
         @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
         build finished.
         """
+
+class IRenderable(Interface):
+    """An object that can be interpolated with properties from a build.
+    """
+
+    def render(properties):
+        """Return the interpolation with the given properties
+
+        @param pmap: a L{Properties} instance containing the properties to interpolate.
+        """
