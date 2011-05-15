@@ -26,6 +26,7 @@ control each.
 * Using Build Properties::
 * Source Checkout::
 * ShellCommand::
+* Slave Filesystem::
 * Python BuildSteps::
 * Transferring Files::
 * Transferring Strings::
@@ -1254,10 +1255,12 @@ suppress the display of empty or missing log files. The default is @code{False}.
 
 @item timeout
 if the command fails to produce any output for this many seconds, it
-is assumed to be locked up and will be killed.
+is assumed to be locked up and will be killed. This defaults to 1200 seconds.
+Pass @code{None} to disable.
 
 @item maxTime
-if the command takes longer than this many seconds, it will be killed.
+if the command takes longer than this many seconds, it will be killed. This
+is disabled by default.
 
 @item description
 This will be used to describe the command (on the Waterfall display)
@@ -1683,6 +1686,25 @@ This runs @code{make test} and filters it through subunit. The 'tests' and
 
 If @code{failureOnNoTests} is True, this step will fail if no test is run. By
 default @code{failureOnNoTests} is False.
+
+@node Slave Filesystem Steps
+@subsection Slave Filesystem Steps
+
+Here are some buildsteps for manipulating the slaves filesystem.
+
+@menu
+* RemoveDirectory::
+@end menu
+
+@node RemoveDirectory
+@subsubsection RemoveDirectory
+
+This command recursively deletes a directory on the slave.
+
+@example
+from buildbot.steps.slave import RemoveDirectory
+f.addStep(RemoveDirectory(dir="build/build"))
+@end example
 
 @node Python BuildSteps
 @subsection Python BuildSteps
