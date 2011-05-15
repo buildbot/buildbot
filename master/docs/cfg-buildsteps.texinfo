@@ -26,6 +26,7 @@ control each.
 * Using Build Properties::
 * Source Checkout::
 * ShellCommand::
+* Slave Filesystem::
 * Python BuildSteps::
 * Transferring Files::
 * Transferring Strings::
@@ -1685,6 +1686,25 @@ This runs @code{make test} and filters it through subunit. The 'tests' and
 
 If @code{failureOnNoTests} is True, this step will fail if no test is run. By
 default @code{failureOnNoTests} is False.
+
+@node Slave Filesystem Steps
+@subsection Slave Filesystem Steps
+
+Here are some buildsteps for manipulating the slaves filesystem.
+
+@menu
+* RemoveDirectory::
+@end menu
+
+@node RemoveDirectory
+@subsubsection RemoveDirectory
+
+This command recursively deletes a directory on the slave.
+
+@example
+from buildbot.steps.slave import RemoveDirectory
+f.addStep(RemoveDirectory(dir="build/build"))
+@end example
 
 @node Python BuildSteps
 @subsection Python BuildSteps
