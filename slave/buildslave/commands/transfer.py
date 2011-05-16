@@ -77,12 +77,13 @@ class SlaveFileUploadCommand(TransferCommand):
         self.path = os.path.join(self.builder.basedir,
                                  self.workdir,
                                  os.path.expanduser(self.filename))
+        accessed_modified = None
         try:
-            self.accessed_modified = None
-            self.fp = open(self.path, 'rb')
             if self.keepstamp:
-                self.accessed_modified = (os.path.getatime(self.path),
-                                          os.path.getmtime(self.path))
+                accessed_modified = (os.path.getatime(self.path),
+                                     os.path.getmtime(self.path))
+
+            self.fp = open(self.path, 'rb')
             if self.debug:
                 log.msg("Opened '%s' for upload" % self.path)
         except:
@@ -98,17 +99,23 @@ class SlaveFileUploadCommand(TransferCommand):
         self._reactor.callLater(0, self._loop, d)
         def _close_ok(res):
             self.fp = None
-            return self.writer.callRemote("close",self.accessed_modified)
+            d1 = self.writer.callRemote("close")
+            def _utime_ok(res):
+                return self.writer.callRemote("utime", accessed_modified)
+            if self.keepstamp:
+                d1.addCallback(_utime_ok)
+            return d1
         def _close_err(f):
             self.fp = None
             # call remote's close(), but keep the existing failure
-            d1 = self.writer.callRemote("close",self.accessed_modified)
+            d1 = self.writer.callRemote("close")
             def eb(f2):
                 log.msg("ignoring error from remote close():")
                 log.err(f2)
             d1.addErrback(eb)
             d1.addBoth(lambda _ : f) # always return _loop failure
             return d1
+
         d.addCallbacks(_close_ok, _close_err)
         d.addBoth(self.finished)
         return d

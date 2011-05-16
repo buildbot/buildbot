@@ -63,7 +63,10 @@ class _FileWriter(pb.Referenceable):
         else:
             self.fp.write(data)
 
-    def remote_close(self,accessed_modified):
+    def remote_utime(self, accessed_modified):
+        os.utime(self.destfile,accessed_modified)
+
+    def remote_close(self):
         """
         Called by remote slave to state that no more data will be transfered
         """
@@ -76,7 +79,6 @@ class _FileWriter(pb.Referenceable):
         self.tmpname = None
         if self.mode is not None:
             os.chmod(self.destfile, self.mode)
-        os.utime(self.destfile,accessed_modified)
 
     def __del__(self):
         # unclean shutdown, the file is probably truncated, so delete it
@@ -286,6 +288,11 @@ class FileUpload(_TransferBuildStep):
 
         # we use maxsize to limit the amount of data on both sides
         fileWriter = _FileWriter(masterdest, self.maxsize, self.mode)
+
+        if self.keepstamp and self.slaveVersionIsOlderThan("uploadFile","2.13"):
+            m = ("This buildslave (%s) does not support preserving timestamps. "
+                 "Please upgrade the buildslave." % self.build.slavename )
+            raise BuildSlaveTooOldError(m)
 
         # default arguments
         args = {

@@ -82,11 +82,11 @@ class FakeMasterMethods(object):
     def remote_unpack(self):
         self.add_update('unpack')
 
-    def remote_close(self,accessed_modified=None):
-        if accessed_modified is None:
-            self.add_update('close')
-        else:
-            self.add_update('close - {}'.format(accessed_modified))
+    def remote_utime(self,accessed_modified):
+        self.add_update('utime - {}'.format(accessed_modified))
+        
+    def remote_close(self):
+        self.add_update('close')
 
 class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
@@ -233,7 +233,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             self.assertEqual(self.get_updates(), [
                     {'header': 'sending %s' % self.datafile},
                     'write 64', 'write 64', 'write 52',
-                    'close - {}'.format(timestamp),
+                    'close','utime - {}'.format(timestamp),
                     {'rc': 0}
                 ])
         d.addCallback(check)

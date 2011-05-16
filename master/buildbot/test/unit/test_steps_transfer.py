@@ -53,7 +53,7 @@ class TestFileUpload(unittest.TestCase):
                 writer = kwargs['writer']
                 writer.remote_write(open(__file__, "rb").read())
                 self.assert_(not os.path.exists(self.destfile))
-                writer.remote_close(None)
+                writer.remote_close()
                 break
         else:
             self.assert_(False, "No uploadFile command found")
@@ -65,12 +65,11 @@ class TestFileUpload(unittest.TestCase):
         s = FileUpload(slavesrc=__file__, masterdest=self.destfile, keepstamp=True)
         s.build = Mock()
         s.build.getProperties.return_value = Properties()
-        s.build.getSlaveCommandVersion.return_value = 1
+        s.build.getSlaveCommandVersion.return_value = "2.13"
 
         s.step_status = Mock()
         s.buildslave = Mock()
         s.remote = Mock()
-
         s.start()
         timestamp = ( os.path.getatime(__file__),
                       os.path.getmtime(__file__) )
@@ -84,14 +83,16 @@ class TestFileUpload(unittest.TestCase):
                 writer = kwargs['writer']
                 writer.remote_write(open(__file__, "rb").read())
                 self.assert_(not os.path.exists(self.destfile))
-                writer.remote_close(timestamp)
+                writer.remote_close()
+                writer.remote_utime(timestamp)
                 break
         else:
             self.assert_(False, "No uploadFile command found")
 
         desttimestamp = ( os.path.getatime(self.destfile),
                           os.path.getmtime(self.destfile) )
-        self.assertEquals(timestamp,desttimestamp)
+        self.assertAlmostEquals(timestamp[0],desttimestamp[0],places=5)
+        self.assertAlmostEquals(timestamp[1],desttimestamp[1],places=5)
 
 class TestStringDownload(unittest.TestCase):
     def testBasic(self):
