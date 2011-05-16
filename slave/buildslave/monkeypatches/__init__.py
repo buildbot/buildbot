@@ -14,18 +14,13 @@
 # Copyright Buildbot Team Members
 
 
+import twisted
+from twisted.python import versions
+
 def patch_bug4881():
     # this patch doesn't apply (or even import!) on Windows
     import sys
     if sys.platform == 'win32':
-        return
-
-    try:
-        import twisted
-        from twisted.python import versions
-    except ImportError:
-        # sometimes this is invoked when Twisted is not installed, e.g.,
-        # from setup.py; in this case, there's nothing to monkeypatch
         return
 
     # this bug was only present in Twisted-10.2.0

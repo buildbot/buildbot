@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-# pro-actively monkey-patch the things that need it
-from buildbot import monkeypatches
-monkeypatches.patch_all()
-
 # strategy:
 #
 # if there is a VERSION file, use its contents. otherwise, call git to

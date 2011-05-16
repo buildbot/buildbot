@@ -42,6 +42,7 @@ from buildbot.schedulers.base import isScheduler
 from buildbot.process.botmaster import BotMaster
 from buildbot.process import debug
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
+from buildbot import monkeypatches
 
 ########################################
 
@@ -139,6 +140,9 @@ class BuildMaster(service.MultiService):
         self.status = Status(self)
 
     def startService(self):
+        # first, apply all monkeypatches
+        monkeypatches.patch_all()
+
         service.MultiService.startService(self)
         if not self.readConfig:
             # TODO: consider catching exceptions during this call to
