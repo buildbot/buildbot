@@ -20,6 +20,7 @@ from twisted.internet import defer
 from buildbot import interfaces, sourcestamp
 from buildbot.process import properties
 from buildbot.status.results import FAILURE
+from buildbot.db import buildrequests
 
 class BuildRequest(object):
     """
@@ -142,11 +143,33 @@ class BuildRequest(object):
     def getSubmitTime(self):
         return self.submittedAt
 
+    @defer.deferredGenerator
     def cancelBuildRequest(self):
-        d = self.master.db.buildrequests.completeBuildRequests([self.id],
-                                                                FAILURE)
-        d.addCallback(lambda _ : self.master.maybeBuildsetComplete(self.bsid))
-        return d
+        # first, try to claim the request; if this fails, then it's too late to
+        # cancel the build anyway
+        try:
+            wfd = defer.waitForDeferred(
+                self.master.db.buildrequests.claimBuildRequests([self.id]))
+            yield wfd
+            wfd.getResult()
+        except buildrequests.AlreadyClaimedError:
+            log.msg("build request already claimed; cannot cancel")
+            return
+
+        # then complete it with 'FAILURE'; this is the closest we can get to
+        # cancelling a request without running into trouble with dangling
+        # references.
+        wfd = defer.waitForDeferred(
+            self.master.db.buildrequests.completeBuildRequests([self.id],
+                                                                FAILURE))
+        yield wfd
+        wfd.getResult()
+
+        # and let the master know that the enclosing buildset may be complete
+        wfd = defer.waitForDeferred(
+                self.master.maybeBuildsetComplete(self.bsid))
+        yield wfd
+        wfd.getResult()
 
 class BuildRequestControl:
     implements(interfaces.IBuildRequestControl)
