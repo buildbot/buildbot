@@ -71,8 +71,7 @@ class MasterShellCommand(BuildStep):
 
     def start(self):
         # render properties
-        properties = self.build.getProperties()
-        command = properties.render(self.command)
+        command = self.build.render(self.command)
         # set up argv
         if type(command) in types.StringTypes:
             if runtime.platformType  == 'win32':

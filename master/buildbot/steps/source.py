@@ -194,18 +194,18 @@ class Source(LoggingBuildStep):
             return str(s.repository)
         else:
             if callable(repository):
-                return str(props.render(repository(s.repository)))
+                return str(self.build.render(repository(s.repository)))
             elif isinstance(repository, dict):
-                return str(props.render(repository.get(s.repository)))
-            elif isinstance(repository, WithProperties):
-                return str(props.render(repository))
-            else: # string or unicode
+                return str(self.build.render(repository.get(s.repository)))
+            elif isinstance(repository, str) or isinstance(repository, unicode):
                 try:
                     repourl = str(repository % s.repository)
                 except TypeError:
                     # that's the backward compatibility case
-                    repourl = props.render(repository)
+                    repourl = self.build.render(repository)
                 return repourl
+            else:
+                return str(self.build.render(repository))
 
     def start(self):
         if self.notReally:
@@ -217,13 +217,12 @@ class Source(LoggingBuildStep):
             return SKIPPED
 
         # Allow workdir to be WithProperties
-        properties = self.build.getProperties()
-        self.args['workdir'] = properties.render(self.workdir)
+        self.args['workdir'] = self.build.render(self.workdir)
 
         # what source stamp would this build like to use?
         s = self.build.getSourceStamp()
         # if branch is None, then use the Step's "default" branch
-        branch = s.branch or properties.render(self.branch)
+        branch = s.branch or self.build.render(self.branch)
         # if revision is None, use the latest sources (-rHEAD)
         revision = s.revision
         if not revision and not self.alwaysUseLatest:

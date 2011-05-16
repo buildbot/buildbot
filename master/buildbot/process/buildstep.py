@@ -115,8 +115,7 @@ class RemoteCommand(pb.Referenceable):
         cmd_args = self.args
         if cmd_args.has_key("logfiles") and cmd_args["logfiles"]:
             cmd_args = cmd_args.copy()
-            properties = self.step.build.getProperties()
-            cmd_args["logfiles"] = properties.render(cmd_args["logfiles"])
+            cmd_args["logfiles"] = self.step.build.render(cmd_args["logfiles"])
 
         # This method only initiates the remote command.
         # We will receive remote_update messages as the command runs.

@@ -145,12 +145,10 @@ class ShellCommand(LoggingBuildStep):
         """
 
         try:
-            properties = self.build.getProperties()
-
             if done and self.descriptionDone is not None:
-                return properties.render(self.descriptionDone)
+                return self.build.render(self.descriptionDone)
             if self.description is not None:
-                return properties.render(self.description)
+                return self.build.render(self.description)
 
             # we may have no command if this is a step that sets its command
             # name late in the game (e.g., in start())
@@ -161,7 +159,7 @@ class ShellCommand(LoggingBuildStep):
             if isinstance(words, (str, unicode)):
                 words = words.split()
             # render() each word to handle WithProperties objects
-            words = properties.render(words)
+            words = self.build.render(words)
             if len(words) < 1:
                 return ["???"]
             if len(words) == 1:
@@ -181,14 +179,13 @@ class ShellCommand(LoggingBuildStep):
         # BuildProperties.
         # Environment variables passed in by a BuildStep override
         # those passed in at the Builder level.
-        properties = self.build.getProperties()
         slaveEnv = self.build.slaveEnvironment
         if slaveEnv:
             if cmd.args['env'] is None:
                 cmd.args['env'] = {}
             fullSlaveEnv = slaveEnv.copy()
             fullSlaveEnv.update(cmd.args['env'])
-            cmd.args['env'] = properties.render(fullSlaveEnv)
+            cmd.args['env'] = self.build.render(fullSlaveEnv)
             # note that each RemoteShellCommand gets its own copy of the
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
@@ -223,13 +220,12 @@ class ShellCommand(LoggingBuildStep):
         # this block is specific to ShellCommands. subclasses that don't need
         # to set up an argv array, an environment, or extra logfiles= (like
         # the Source subclasses) can just skip straight to startCommand()
-        properties = self.build.getProperties()
 
         warnings = []
 
         # create the actual RemoteShellCommand instance now
-        kwargs = properties.render(self.remote_kwargs)
-        command = properties.render(self.command)
+        kwargs = self.build.render(self.remote_kwargs)
+        command = self.build.render(self.command)
         kwargs['command'] = command
         kwargs['logfiles'] = self.logfiles
 
@@ -298,7 +294,7 @@ class SetProperty(ShellCommand):
         if self.property:
             result = cmd.logs['stdio'].getText()
             if self.strip: result = result.strip()
-            propname = self.build.getProperties().render(self.property)
+            propname = self.build.render(self.property)
             self.setProperty(propname, result, "SetProperty Step")
             self.property_changes[propname] = result
         else:
@@ -478,10 +474,8 @@ class WarningCountingShellCommand(ShellCommand):
 
         self.myFileWriter = StringFileWriter()
 
-        properties = self.build.getProperties()
-
         args = {
-            'slavesrc': properties.render(self.suppressionFile),
+            'slavesrc': self.build.render(self.suppressionFile),
             'workdir': self.workdir,
             'writer': self.myFileWriter,
             'maxsize': None,

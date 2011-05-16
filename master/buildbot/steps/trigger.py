@@ -115,7 +115,7 @@ class Trigger(LoggingBuildStep):
         # make a new properties object from a dict rendered by the old 
         # properties object
         props_to_set = Properties()
-        props_to_set.update(properties.render(self.set_properties), "Trigger")
+        props_to_set.update(self.build.render(self.set_properties), "Trigger")
         for p in self.copy_properties:
             if p not in properties:
                 raise RuntimeError("copy_property '%s' is not set in the triggering build" % p)
@@ -132,7 +132,7 @@ class Trigger(LoggingBuildStep):
 
         # TODO: don't fire any schedulers if we discover an unknown one
         for scheduler in self.schedulerNames:
-            scheduler = properties.render(scheduler)
+            scheduler = self.build.render(scheduler)
             if all_schedulers.has_key(scheduler):
                 sch = all_schedulers[scheduler]
                 if isinstance(sch, Triggerable):
@@ -148,7 +148,7 @@ class Trigger(LoggingBuildStep):
 
         master = self.build.builder.botmaster.parent # seriously?!
         if self.sourceStamp:
-            d = master.db.sourcestamps.addSourceStamp(**properties.render(self.sourceStamp))
+            d = master.db.sourcestamps.addSourceStamp(**self.build.render(self.sourceStamp))
         elif self.alwaysUseLatest:
             d = defer.succeed(None)
         else:

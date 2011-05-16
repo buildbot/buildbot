@@ -15,8 +15,9 @@
 
 from twisted.trial import unittest
 
-from buildbot.steps.source import Source
+from buildbot.interfaces import IRenderable
 from buildbot.process.properties import Properties, WithProperties
+from buildbot.steps.source import Source
 
 class SourceStamp(object):
     repository = "test"
@@ -28,6 +29,9 @@ class Build(object):
         return self.s
     def getProperties(self):
         return self.props
+    def render(self, value):
+        return IRenderable(value).getRenderingFor(self)
+
 
 class RepoURL(unittest.TestCase):
 

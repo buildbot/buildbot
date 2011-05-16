@@ -305,8 +305,7 @@ class MTR(Test):
                                  mtr_subdir=self.mtr_subdir)
 
     def start(self):
-        properties = self.build.getProperties()
-        subdir = properties.render(self.mtr_subdir)
+        subdir = self.build.render(self.mtr_subdir)
 
         # Add mysql server logfiles.
         for mtr in range(0, self.parallel+1):
