@@ -28,5 +28,11 @@ def patch_bug4881():
         from buildslave.monkeypatches import bug4881
         bug4881.patch()
 
+def patch_bug5079():
+    # this bug will hopefully be patched in Twisted-12.0.0
+    if twisted.version < versions.Version('twisted', 12, 0, 0):
+        from buildslave.monkeypatches import bug5079
+        bug5079.patch()
+
 def patch_all():
     patch_bug4881()
