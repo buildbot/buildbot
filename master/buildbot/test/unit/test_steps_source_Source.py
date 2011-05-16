@@ -16,17 +16,14 @@
 from twisted.trial import unittest
 
 from buildbot.steps.source import Source
+from buildbot.process.properties import Properties, WithProperties
 
 class SourceStamp(object):
     repository = "test"
 
-class Properties(object):
-    def render(self, value):
-        return value % dict(foo="bar")
-
 class Build(object):
     s = SourceStamp()
-    props = Properties()
+    props = Properties(foo = "bar")
     def getSourceStamp(self):
         return self.s
     def getProperties(self):
@@ -60,18 +57,18 @@ class RepoURL(unittest.TestCase):
     def test_backward_compatibility_render(self):
         s = Source()
         s.build = Build()
-        self.assertEquals(s.computeRepositoryURL("repourl%(foo)s"), "repourlbar")
+        self.assertEquals(s.computeRepositoryURL(WithProperties("repourl%(foo)s")), "repourlbar")
 
     def test_dict_render(self):
         s = Source()
         s.build = Build()
-        d = dict(test="repourl%(foo)s")
+        d = dict(test=WithProperties("repourl%(foo)s"))
         self.assertEquals(s.computeRepositoryURL(d), "repourlbar")
 
     def test_callable_render(self):
         s = Source()
         s.build = Build()
-        func = lambda x: x+"%(foo)s"
+        func = lambda x: WithProperties(x+"%(foo)s")
         self.assertEquals(s.computeRepositoryURL(func), "testbar")
 
 
