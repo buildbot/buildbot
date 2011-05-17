@@ -233,7 +233,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             self.assertEqual(self.get_updates(), [
                     {'header': 'sending %s' % self.datafile},
                     'write 64', 'write 64', 'write 52',
-                    'close','utime - {}' % timestamp[0],
+                    'close','utime - %s' % timestamp[0],
                     {'rc': 0}
                 ])
         d.addCallback(check)
