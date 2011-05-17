@@ -8,6 +8,8 @@ Major User visible changes in Buildbot.             -*- outline -*-
 ** Buildbot can now take advantage of authentication done by a front-end web server:
    https://github.com/buildbot/buildbot/pull/266
 
+** statusgerrit callback got the master status in its arguments (need to update you configs!)
+
 * Buildbot 0.8.5
 
 ** Updated, sphinx-based documentation
