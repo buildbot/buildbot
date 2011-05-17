@@ -1313,14 +1313,14 @@ GerritStatusPush
 
     from buildbot.status.status_gerrit import GerritStatusPush
 
-    def gerritReviewCB(builderName, build, result, arg):
+    def gerritReviewCB(builderName, build, result, status, arg):
         message =  "Buildbot finished compiling your patchset\n"
         message += "on configuration: %s\n" % builderName
         message += "The result is: %s\n" % Results[result].upper()
 
         if arg:
             message += "\nFor more details visit:\n"
-            message += "%sbuilders/%s/builds/%d\n" % (arg, builderName, build.getNumber())
+            message += status.getURLForThing(build) + "\n"
 
         # message, verified, reviewed
         return message, (result == 0 or -1), 0

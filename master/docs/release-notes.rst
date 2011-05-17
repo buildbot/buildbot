@@ -36,6 +36,10 @@ Deprecations, Removals, and Non-Compatible Changes
   parameter and call its :py:meth:`~buildbot.config.ConfigErrors.addError`
   method to indicate errors.
 
+* The gerrit status callback now gets an additional parameter (the master
+  status).  If you use this callback, you will need to adjust its
+  implementation.
+
 * This is the last release of Buildbot that will be compatible with Python 2.4.
   The next version will minimally require Python-2.5.
 
