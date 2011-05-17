@@ -23,7 +23,9 @@
 </table>
 
 {% if num_building > 0 %}
-  {% if authz.advertiseAction('stopBuild') %}
+  {% if authz.advertiseAction('stopAllBuilds') %}
+    <h2>Stop Selected Builds</h2>
+    {{ forms.stop_build(path_to_root+"builders/_selected/stopselected", authz, on_selected=True, builders=builders, label='Selected Builds') }}
     <h2>Stop All Builds</h2>
     {{ forms.stop_build(path_to_root+"builders/_all/stopall", authz, on_all=True, label='All Builds') }}
   {% endif %}
@@ -31,8 +33,10 @@
   
 {% if num_online > 0 %}
   {% if authz.advertiseAction('forceAllBuilds') %}
+    <h2>Force Selected Builds</h2>
+    {{ forms.force_build(path_to_root+"builders/_selected/forceselected", authz, on_selected=True, builders=builders) }}
     <h2>Force All Builds</h2>
-    {{ forms.force_build(path_to_root+"builders/_all/forceall", authz, True) }}
+    {{ forms.force_build(path_to_root+"builders/_all/forceall", authz, on_all=True) }}
   {% endif %}
 {% endif %}
 
