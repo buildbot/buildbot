@@ -83,7 +83,7 @@ class FakeMasterMethods(object):
         self.add_update('unpack')
 
     def remote_utime(self,accessed_modified):
-        self.add_update('utime - {}'.format(accessed_modified))
+        self.add_update('utime - %s' % accessed_modified[0])
         
     def remote_close(self):
         self.add_update('close')
@@ -233,7 +233,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             self.assertEqual(self.get_updates(), [
                     {'header': 'sending %s' % self.datafile},
                     'write 64', 'write 64', 'write 52',
-                    'close','utime - {}'.format(timestamp),
+                    'close','utime - {}' % timestamp[0],
                     {'rc': 0}
                 ])
         d.addCallback(check)
