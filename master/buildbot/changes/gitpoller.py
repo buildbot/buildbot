@@ -62,6 +62,7 @@ class GitPoller(base.PollingChangeSource):
             self.workdir = tempfile.gettempdir() + '/gitpoller_work'
             log.msg("WARNING: gitpoller using deprecated temporary workdir " +
                     "'%s'; consider setting workdir=" % self.workdir)
+            os.system("git init %s" % self.workdir)
 
     def startService(self):
         # make our workdir absolute, relative to the master's basedir
