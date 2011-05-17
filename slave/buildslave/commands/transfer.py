@@ -55,6 +55,7 @@ class SlaveFileUploadCommand(TransferCommand):
         - ['writer']:    RemoteReference to a transfer._FileWriter object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
+        - ['keepstamp']: whether to preserve file modified and accessed times
     """
     debug = False
 
@@ -64,6 +65,7 @@ class SlaveFileUploadCommand(TransferCommand):
         self.writer = args['writer']
         self.remaining = args['maxsize']
         self.blocksize = args['blocksize']
+        self.keepstamp = args['keepstamp']
         self.stderr = None
         self.rc = 0
 
@@ -75,7 +77,12 @@ class SlaveFileUploadCommand(TransferCommand):
         self.path = os.path.join(self.builder.basedir,
                                  self.workdir,
                                  os.path.expanduser(self.filename))
+        accessed_modified = None
         try:
+            if self.keepstamp:
+                accessed_modified = (os.path.getatime(self.path),
+                                     os.path.getmtime(self.path))
+
             self.fp = open(self.path, 'rb')
             if self.debug:
                 log.msg("Opened '%s' for upload" % self.path)
@@ -92,7 +99,12 @@ class SlaveFileUploadCommand(TransferCommand):
         self._reactor.callLater(0, self._loop, d)
         def _close_ok(res):
             self.fp = None
-            return self.writer.callRemote("close")
+            d1 = self.writer.callRemote("close")
+            def _utime_ok(res):
+                return self.writer.callRemote("utime", accessed_modified)
+            if self.keepstamp:
+                d1.addCallback(_utime_ok)
+            return d1
         def _close_err(f):
             self.fp = None
             # call remote's close(), but keep the existing failure
@@ -103,6 +115,7 @@ class SlaveFileUploadCommand(TransferCommand):
             d1.addErrback(eb)
             d1.addBoth(lambda _ : f) # always return _loop failure
             return d1
+
         d.addCallbacks(_close_ok, _close_err)
         d.addBoth(self.finished)
         return d
