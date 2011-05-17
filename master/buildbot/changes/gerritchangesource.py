@@ -113,7 +113,7 @@ class GerritChangeSource(base.ChangeSource):
                 chdict = dict(
                         author="%s <%s>" % (change["owner"]["name"], change["owner"]["email"]),
                         project=change["project"],
-                        branch=change["branch"],
+                        branch=change["branch"]+"/"+change["number"],
                         revision=event["patchSet"]["revision"],
                         revlink=change["url"],
                         comments=change["subject"],
