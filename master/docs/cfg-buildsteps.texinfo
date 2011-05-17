@@ -1965,6 +1965,12 @@ umask tends to be fairly restrictive, but at least on the buildslave
 you can make it less restrictive with a --umask command-line option at
 creation time (@pxref{Buildslave Options}).
 
+The @code{keepstamp=} argument is a boolean that, when True, forces
+the modified and accessed time of the destination file to match the
+times of the source file.  When False, the modified and accessed times
+of the destination file are set to the current time on the buildmaster.
+The default is false.
+
 @subheading Transfering Directories
 
 To transfer complete directories from the buildslave to the master, there
