@@ -16,6 +16,9 @@ step's functionality.
 
 ** Deprecations, Removals, and Non-Compatible Changes
 
+*** 'buildbot.status.words.IRC' now defaults to `AllowForce=False` to prevent
+IRC bots from being allowed to force builds by default.
+
 *** MasterShellCommand and all of the transfer steps now default to
 haltOnFailure=True and flunkOnFailure=True
 

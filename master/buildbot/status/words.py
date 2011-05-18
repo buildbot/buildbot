@@ -914,7 +914,7 @@ class IRC(base.StatusReceiverMultiService):
                      "channels", "allowForce", "useSSL",
                      "categories"]
 
-    def __init__(self, host, nick, channels, port=6667, allowForce=True,
+    def __init__(self, host, nick, channels, port=6667, allowForce=False,
                  categories=None, password=None, notify_events={},
                  noticeOnChannel = False, showBlameList = True,
                  useSSL=False):
