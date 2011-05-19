@@ -1167,10 +1167,12 @@ If the @code{allowForce=True} option was used, some addtional commands
 will be available:
 
 @table @code
-@item force build BUILDER REASON
+@item force build [--branch=BRANCH] [--revision=REVISION] BUILDER REASON
 Tell the given Builder to start a build of the latest code. The user
 requesting the build and REASON are recorded in the Build status. The
-buildbot will announce the build's status when it finishes.
+buildbot will announce the build's status when it finishes. The user 
+can specify a branch and/or revision with the optional parameters
+@code{--branch=BRANCH} and @code{--revision=REVISION}.
 
 @item stop build BUILDER REASON
 Terminate any running build in the given Builder. REASON will be added
