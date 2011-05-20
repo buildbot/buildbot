@@ -580,7 +580,7 @@ class WarningCountingShellCommand(ShellCommand):
 
     def evaluateCommand(self, cmd):
         if ( cmd.rc != 0 or
-           ( self.maxWarnings != None and self.warnCount > self.maxWarnings ) ):
+           ( self.maxWarnCount != None and self.warnCount > self.maxWarnCount ) ):
             return FAILURE
         if self.warnCount:
             return WARNINGS
