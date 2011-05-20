@@ -385,8 +385,7 @@ class WarningCountingShellCommand(ShellCommand):
             self.warningExtractor = warningExtractor
         else:
             self.warningExtractor = WarningCountingShellCommand.warnExtractWholeLine
-        if maxWarnCount:
-            self.maxWarnCount = maxWarnCount
+        self.maxWarnCount = maxWarnCount
 
         # And upcall to let the base class do its work
         ShellCommand.__init__(self, workdir=workdir, **kwargs)
@@ -580,7 +579,7 @@ class WarningCountingShellCommand(ShellCommand):
 
     def evaluateCommand(self, cmd):
         if ( cmd.rc != 0 or
-           ( self.maxWarnings != None and self.warnCount > self.maxWarnings ) ):
+           ( self.maxWarnCount != None and self.warnCount > self.maxWarnCount ) ):
             return FAILURE
         if self.warnCount:
             return WARNINGS
