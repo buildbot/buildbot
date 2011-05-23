@@ -84,8 +84,15 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
         @returns: L{SourceStamp} via Deferred
         """
+        # try to fetch from the cache, falling back to _make_ss if not
+        # found
+        cache = master.caches.get_cache("SourceStamps", cls._make_ss)
+        return cache.get(ssdict['ssid'], ssdict=ssdict, master=master)
+
+    @classmethod
+    def _make_ss(cls, ssid, ssdict, master):
         sourcestamp = cls(_fromSsdict=True)
-        sourcestamp.ssid = ssdict['ssid']
+        sourcestamp.ssid = ssid
         sourcestamp.branch = ssdict['branch']
         sourcestamp.revision = ssdict['revision']
         sourcestamp.project = ssdict['project']
