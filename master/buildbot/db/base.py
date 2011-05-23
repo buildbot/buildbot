@@ -31,3 +31,31 @@ class DBConnectorComponent(object):
     def __init__(self, connector):
         self.db = connector
         "backlink to the DBConnector object"
+
+    def _setup_cached(self, meth, cache_name):
+        meth_name = meth.__name__
+        cache = self.db.master.caches.get_cache(cache_name,
+                lambda key : meth(self, key))
+        def wrap(key):
+            return cache.get(key)
+        wrap.__name__ = meth_name
+        wrap.__module__ = meth.__module__
+        wrap.__doc__ = meth.__doc__
+        setattr(self, meth_name, wrap)
+        return wrap
+
+def cached(cache_name):
+    """
+    A decorator for "getter" functions that fetch an object from the database
+    based on a single key.  The wrapped method will only be called if the named
+    cache does not contain the key.
+
+    @param cache_name: name of the cache to use
+    """
+    def dec(meth):
+        # on first call, replace this method with a caching function
+        def stub(self, key):
+            return self._setup_cached(meth, cache_name)(key)
+        stub.original = meth
+        return stub
+    return dec
