@@ -20,32 +20,41 @@ from twisted.internet import defer
 
 class TestCachedDecorator(unittest.TestCase):
 
+    def setUp(self):
+        # set this to True to check that cache.get isn't called (for
+        # no_cache=1)
+        self.cache_get_raises_exception = False
+
+    class TestConnectorComponent(base.DBConnectorComponent):
+        invocations = None
+        @base.cached("mycache")
+        def getThing(self, key):
+            if self.invocations is None:
+                self.invocations = []
+            self.invocations.append(key)
+            return defer.succeed(key * 2)
+
+    def get_cache(self, cache_name, miss_fn):
+        self.assertEqual(cache_name, "mycache")
+        cache = mock.Mock(name="mycache")
+        if self.cache_get_raises_exception:
+            def ex(key):
+                raise RuntimeError("cache.get called unexpectedly")
+            cache.get = ex
+        else:
+            cache.get = miss_fn
+        return cache
+
+    # tests
+
     @defer.deferredGenerator
     def test_cached(self):
-        class TestConnectorComponent(base.DBConnectorComponent):
-            invocations = None
-            @base.cached("mycache")
-            def getThing(self, key):
-                if self.invocations is None:
-                    self.invocations = []
-                self.invocations.append(key)
-                return defer.succeed(key * 2)
-
-        # build a simple passthrough cache
-        def get_cache(cache_name, miss_fn):
-            self.assertEqual(cache_name, "mycache")
-            cache = mock.Mock(name="mycache")
-            def get(key):
-                return miss_fn(key)
-            cache.get = get
-            return cache
-
         # attach it to the connector
         connector = mock.Mock(name="connector")
-        connector.master.caches.get_cache = get_cache
+        connector.master.caches.get_cache = self.get_cache
 
         # build an instance
-        comp = TestConnectorComponent(connector)
+        comp = self.TestConnectorComponent(connector)
 
         # test it twice (to test an implementation detail)
         wfd = defer.waitForDeferred(
@@ -60,3 +69,18 @@ class TestCachedDecorator(unittest.TestCase):
 
         self.assertEqual((res1, res2, comp.invocations),
                     ('foofoo', 'barbar', ['foo', 'bar']))
+
+    @defer.deferredGenerator
+    def test_cached_no_cache(self):
+        # attach it to the connector
+        connector = mock.Mock(name="connector")
+        connector.master.caches.get_cache = self.get_cache
+        self.cache_get_raises_exception = True
+
+        # build an instance
+        comp = self.TestConnectorComponent(connector)
+
+        wfd = defer.waitForDeferred(
+            comp.getThing("foo", no_cache=1))
+        yield wfd
+        wfd.getResult()

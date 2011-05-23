@@ -29,6 +29,9 @@ class AlreadyClaimedError(Exception):
 class NotClaimedError(Exception):
     pass
 
+class BrDict(dict):
+    pass
+
 class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     """
     A DBConnectorComponent to handle buildrequests.  An instance is available
@@ -45,6 +48,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         """
         Get a single BuildRequest, in the format described above.  Returns
         C{None} if there is no such buildrequest.
+
+        Note that build requests are not cached, as the values in the database
+        are not fixed.
 
         @param brid: build request id
         @type brid: integer
@@ -82,8 +88,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         A build is considered completed if its C{complete} column is 1; the
         C{complete_at} column is not consulted.
 
-        The resulting dictionaries may be cached internally, and should not be
-        modified directly.
+        Since this method is often used to detect changed build requests, it
+        always bypasses the cache.
 
         @param buildername: limit results to buildrequests for this builder
         @type buildername: string
@@ -132,6 +138,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             if bsid is not None:
                 q = q.where(tbl.c.buildsetid == bsid)
             res = conn.execute(q)
+
             return [ self._brdictFromRow(row) for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
@@ -404,7 +411,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         claimed_at = mkdt(row.claimed_at)
         complete_at = mkdt(row.complete_at)
 
-        return dict(brid=row.id, buildsetid=row.buildsetid,
+        return BrDict(brid=row.id, buildsetid=row.buildsetid,
                 buildername=row.buildername, priority=row.priority,
                 claimed=claimed, claimed_at=claimed_at, mine=mine,
                 complete=bool(row.complete), results=row.results,
