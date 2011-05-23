@@ -25,6 +25,8 @@ class FakeMaster(object):
         self.changes_subscr_cb = None
         self.bset_subscr_cb = None
         self.bset_completion_subscr_cb = None
+        self.caches = mock.Mock(name="caches")
+        self.caches.get_cache = self.get_cache
 
     def addBuildset(self, **kwargs):
         return self.db.buildsets.addBuildset(**kwargs)
@@ -53,6 +55,13 @@ class FakeMaster(object):
         assert not self.bset_completion_subscr_cb
         self.bset_completion_subscr_cb = callback
         return self._makeSubscription('bset_completion_subscr_cb')
+
+    # caches
+
+    def get_cache(self, cache_name, miss_fn):
+        c = mock.Mock(name=cache_name)
+        c.get = miss_fn
+        return c
 
     # useful assertions
 
