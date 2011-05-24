@@ -43,6 +43,7 @@ from buildbot.process.botmaster import BotMaster
 from buildbot.process import debug
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import monkeypatches
+from buildbot.status.html import WebStatus
 
 ########################################
 
@@ -706,6 +707,12 @@ class BuildMaster(service.MultiService):
         # after those are finished going away, add new ones
         def addNewOnes(res):
             for s in status:
+                if isinstance(s, WebStatus):
+                    st_class = [st.__class__ for st in self.statusTargets]
+                    if s.__class__ in st_class:
+                        log.msg("Not adding IStatusReceiver", s)
+                        continue
+
                 if not s in self.statusTargets:
                     log.msg("adding IStatusReceiver", s)
                     s.setServiceParent(self)
