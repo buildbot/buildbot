@@ -26,7 +26,7 @@ MASTER_RUNNER=/usr/bin/buildbot
 #MASTER_NAME[1]="buildmaster #1"        # short name printed on start/stop
 #MASTER_USER[1]="buildbot"              # user to run master as
 #MASTER_BASEDIR[1]=""                   # basedir to master (absolute path)
-#MASTER_OPTIONS[1]=""                   # buildbot options  
+#MASTER_OPTIONS[1]=""                   # buildbot options
 #MASTER_PREFIXCMD[1]=""                 # prefix command, i.e. nice, linux32, dchroot
 
 if [[ ! -x ${MASTER_RUNNER} ]]; then
@@ -40,7 +40,7 @@ function check_config() {
                ${#MASTER_USER[@]}
                ${#MASTER_BASEDIR[@]}
                ${#MASTER_OPTIONS[@]}
-               ${#MASTER_PREFIXCMD[@]}" 
+               ${#MASTER_PREFIXCMD[@]}"
 
     if [[ $(echo "$itemcount" | tr -d ' ' | sort -u | wc -l) -ne 1 ]]; then
         log_failure_msg "MASTER_* arrays must have an equal number of elements!"

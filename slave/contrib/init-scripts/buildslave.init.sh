@@ -17,7 +17,7 @@ SLAVE_RUNNER=/usr/bin/buildslave
 
 . /lib/lsb/init-functions
 
-# Source buildslave configuration 
+# Source buildslave configuration
 [[ -r /etc/default/buildslave ]] && . /etc/default/buildslave
 #[[ -r /etc/sysconfig/buildslave ]] && . /etc/sysconfig/buildslave
 
@@ -26,7 +26,7 @@ SLAVE_RUNNER=/usr/bin/buildslave
 #SLAVE_NAME[1]="buildslave #1"         # short name printed on start/stop
 #SLAVE_USER[1]="buildbot"              # user to run slave as
 #SLAVE_BASEDIR[1]=""                   # basedir to slave (absolute path)
-#SLAVE_OPTIONS[1]=""                   # buildbot options  
+#SLAVE_OPTIONS[1]=""                   # buildbot options
 #SLAVE_PREFIXCMD[1]=""                 # prefix command, i.e. nice, linux32, dchroot
 
 if [[ ! -x ${SLAVE_RUNNER} ]]; then
@@ -40,7 +40,7 @@ function check_config() {
                ${#SLAVE_USER[@]}
                ${#SLAVE_BASEDIR[@]}
                ${#SLAVE_OPTIONS[@]}
-               ${#SLAVE_PREFIXCMD[@]}" 
+               ${#SLAVE_PREFIXCMD[@]}"
 
     if [[ $(echo "$itemcount" | tr -d ' ' | sort -u | wc -l) -ne 1 ]]; then
         log_failure_msg "SLAVE_* arrays must have an equal number of elements!"
