@@ -49,9 +49,9 @@ function check_config() {
 
     errors=0
     for i in $( seq ${#SLAVE_ENABLED[@]} ); do
-        if [[ ${SLAVE_ENABLED[$i]} -ne 0 ]]; then 
-            log_failure_msg "buildslave #${i}: unknown run status"
-            errors=$(($errors+1))
+        if [[ "${SLAVE_ENABLED[$i]}" != "0" ]]; then
+            log_warning_msg "buildslave #${i}: disabled"
+            continue
         fi
 
         if [[ -z ${SLAVE_NAME[$i]} ]]; then
@@ -93,7 +93,7 @@ function slave_op () {
 function do_op () {
     errors=0
     for i in $( seq ${#SLAVE_ENABLED[@]} ); do
-        [[ ${SLAVE_ENABLED[$i]} -ne 0 ]] && continue
+        [[ "${SLAVE_ENABLED[$i]}" != "0" ]] && continue
 
         # Some rhels don't come with all the lsb goodies
         if iscallable log_daemon_msg; then

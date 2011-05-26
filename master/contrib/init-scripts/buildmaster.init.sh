@@ -49,9 +49,9 @@ function check_config() {
 
     errors=0
     for i in $( seq ${#MASTER_ENABLED[@]} ); do
-        if [[ ${MASTER_ENABLED[$i]} -ne 0 ]]; then 
-            log_failure_msg "buildmaster #${i}: unknown run status"
-            errors=$(($errors+1))
+        if [[ "${MASTER_ENABLED[$i]}" != "0" ]]; then
+            log_warning_msg "buildmaster #${i}: disabled"
+            continue
         fi
 
         if [[ -z ${MASTER_NAME[$i]} ]]; then
@@ -93,7 +93,7 @@ function master_op () {
 function do_op () {
     errors=0
     for i in $( seq ${#MASTER_ENABLED[@]} ); do
-        [[ ${MASTER_ENABLED[$i]} -ne 0 ]] && continue
+        [[ "${MASTER_ENABLED[$i]}" != "0" ]] && continue
 
         # Some rhels don't come with all the lsb goodies
         if iscallable log_daemon_msg; then
