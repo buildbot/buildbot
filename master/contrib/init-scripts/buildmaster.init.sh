@@ -18,8 +18,8 @@ MASTER_RUNNER=/usr/bin/buildbot
 . /lib/lsb/init-functions
 
 # Source buildmaster configuration
-[[ -r /etc/default/buildbot ]] && . /etc/default/buildbot
-#[[ -r /etc/sysconfig/buildbot ]] && . /etc/sysconfig/buildbot
+[[ -r /etc/default/buildmaster ]] && . /etc/default/buildmaster
+#[[ -r /etc/sysconfig/buildmaster ]] && . /etc/sysconfig/buildmaster
 
 # Or define/override the configuration here
 #MASTER_ENABLED[1]=0                    # 0-enabled, other-disabled
