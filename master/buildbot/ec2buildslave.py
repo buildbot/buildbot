@@ -24,6 +24,7 @@ import re
 import time
 
 import boto
+import boto.ec2
 import boto.exception
 from twisted.internet import defer, threads
 from twisted.python import log
@@ -44,11 +45,12 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
     def __init__(self, name, password, instance_type, ami=None,
                  valid_ami_owners=None, valid_ami_location_regex=None,
                  elastic_ip=None, identifier=None, secret_identifier=None,
-                 aws_id_file_path=None, user_data=None,
+                 aws_id_file_path=None, user_data=None, region=None,
                  keypair_name='latent_buildbot_slave',
                  security_name='latent_buildbot_slave',
                  max_builds=None, notify_on_missing=[], missing_timeout=60*20,
                  build_wait_timeout=60*10, properties={}, locks=None):
+
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
             missing_timeout, build_wait_timeout, properties, locks)
@@ -105,8 +107,28 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                     'do not specify the aws_id_file_path'
             assert secret_identifier is not None, \
                     'supply both or neither of identifier, secret_identifier'
+
+        region_found = None
+
         # Make the EC2 connection.
-        self.conn = boto.connect_ec2(identifier, secret_identifier)
+        if region is not None:
+            for r in boto.ec2.regions(aws_access_key_id=identifier,
+                                      aws_secret_access_key=secret_identifier):
+
+                if r.name == region:
+                    region_found = r
+
+            
+            if region_found is not None:
+                self.conn = boto.ec2.connect_to_region(region,
+                                     aws_access_key_id=identifier,
+                                     aws_secret_access_key=secret_identifier)
+
+        if region_found is None and region is not None:
+            log.msg("Warning: The specified region ({0}) was not found. Using " \
+                    "default region.".format(region))
+        else:
+            self.conn = boto.connect_ec2(identifier, secret_identifier)
 
         # Make a keypair
         #
