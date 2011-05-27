@@ -226,7 +226,7 @@ class BotMaster(service.MultiService):
                                 if isinstance(b, Builder)],
                                fireOnOneErrback=True)
         def _add(ign):
-            log.msg("setBuilders._add: %s %s" % (list(self), builders))
+            log.msg("setBuilders._add: %s %s" % (list(self), [b.name for b in builders]))
             for b in builders:
                 for slavename in b.slavenames:
                     # this is actually validated earlier
