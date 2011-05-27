@@ -1182,6 +1182,10 @@ wait for the first build (which is destined to fail) to complete
 before starting the second (hopefully fixed) build.
 @end table
 
+If the @code{categories} is set to a category of builders (see categories
+option in @ref{Builder Configuration}) changes related to only that 
+category of builders will be sent to the channel.
+
 @node PBListener
 @subsection PBListener
 
