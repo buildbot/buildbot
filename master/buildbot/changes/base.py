@@ -65,6 +65,6 @@ class PollingChangeSource(ChangeSource):
         reactor.callWhenRunning(start_loop)
 
     def stopService(self):
-        if self._loop:
+        if self._loop and self._loop.running:
             self._loop.stop()
         return ChangeSource.stopService(self)
