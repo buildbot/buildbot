@@ -287,7 +287,9 @@ class Maker:
 
     def create_db(self):
         from buildbot.db import connector
-        db = connector.DBConnector(None, self.config['db'], basedir=self.basedir)
+        from buildbot.master import BuildMaster
+        db = connector.DBConnector(BuildMaster(self.basedir),
+                self.config['db'], basedir=self.basedir)
         if not self.config['quiet']: print "creating database"
         d = db.model.upgrade()
         return d

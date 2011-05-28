@@ -48,6 +48,11 @@ class Change:
 
         @returns: L{Change} via Deferred
         """
+        cache = master.caches.get_cache("Changes", cls._make_ch)
+        return cache.get(chdict['changeid'], chdict=chdict, master=master)
+
+    @classmethod
+    def _make_ch(cls, changeid, master, chdict):
         change = cls(None, None, None, _fromChdict=True)
         change.who = chdict['author']
         change.comments = chdict['comments']

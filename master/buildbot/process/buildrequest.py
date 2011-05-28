@@ -72,19 +72,28 @@ class BuildRequest(object):
     submittedAt = None
 
     @classmethod
-    @defer.deferredGenerator
     def fromBrdict(cls, master, brdict):
         """
         Construct a new L{BuildRequest} from a dictionary as returned by
         L{BuildRequestsConnectorComponent.getBuildRequest}.
+
+        This method uses a cache, which may result in return of stale objects;
+        for the most up-to-date information, use the database connector
+        methods.
 
         @param master: current build master
         @param brdict: build request dictionary
 
         @returns: L{BuildRequest}, via Deferred
         """
+        cache = master.caches.get_cache("BuildRequests", cls._make_br)
+        return cache.get(brdict['brid'], brdict=brdict, master=master)
+
+    @classmethod
+    @defer.deferredGenerator
+    def _make_br(cls, brid, brdict, master):
         buildrequest = cls()
-        buildrequest.id = brdict['brid']
+        buildrequest.id = brid
         buildrequest.bsid = brdict['buildsetid']
         buildrequest.buildername = brdict['buildername']
         buildrequest.priority = brdict['priority']

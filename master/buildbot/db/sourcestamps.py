@@ -21,6 +21,9 @@ import base64
 from twisted.python import log
 from buildbot.db import base
 
+class SsDict(dict):
+    pass
+
 class SourceStampsConnectorComponent(base.DBConnectorComponent):
     """
     A DBConnectorComponent to handle source stamps in the database
@@ -65,9 +68,9 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             return ssid
         return self.db.pool.do(thd)
 
+    @base.cached("ssdicts")
     def getSourceStamp(self, ssid):
         """
-
         Get a dictionary representing the given source stamp, or None if no
         such source stamp exists.
 
@@ -80,6 +83,9 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
 
         @param bsid: buildset ID
 
+        @param no_cache: bypass cache and always fetch from database
+        @type no_cache: boolean
+
         @returns: dictionary as above, or None, via Deferred
         """
         def thd(conn):
@@ -89,10 +95,10 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             row = res.fetchone()
             if not row:
                 return None
-            ssdict = dict(ssid=ssid, branch=row.branch, revision=row.revision,
-                    patch_body=None, patch_level=None, patch_subdir=None,
-                    repository=row.repository, project=row.project,
-                    changeids=set([]))
+            ssdict = SsDict(ssid=ssid, branch=row.branch,
+                    revision=row.revision, patch_body=None, patch_level=None,
+                    patch_subdir=None, repository=row.repository,
+                    project=row.project, changeids=set([]))
             patchid = row.patchid
             res.close()
 

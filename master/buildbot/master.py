@@ -27,6 +27,7 @@ from twisted.application.internet import TimerService
 
 import buildbot
 import buildbot.pbmanager
+from buildbot import cache
 from buildbot.util import safeTranslate, subscription, epoch2datetime
 from buildbot.process.builder import Builder
 from buildbot.status.master import Status
@@ -108,6 +109,8 @@ class BuildMaster(service.MultiService):
         self.scheduler_manager = SchedulerManager(self)
         self.scheduler_manager.setName('scheduler_manager')
         self.scheduler_manager.setServiceParent(self)
+
+        self.caches = cache.CacheManager()
 
         self.debugClientRegistration = None
 

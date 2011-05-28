@@ -15,13 +15,13 @@
 
 import mock
 from twisted.trial import unittest
-from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakedb, fakemaster
 from buildbot import sourcestamp
 
 class TestBuilderBuildCreation(unittest.TestCase):
 
     def test_fromSsdict_changes(self):
-        master = mock.Mock()
+        master = fakemaster.make_master()
         master.db = fakedb.FakeDBConnector(self)
         master.db.insertTestData([
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
@@ -57,7 +57,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         return d
 
     def test_fromSsdict_patch(self):
-        master = mock.Mock()
+        master = fakemaster.make_master()
         master.db = fakedb.FakeDBConnector(self)
         master.db.insertTestData([
             fakedb.Patch(id=99, subdir='/foo', patchlevel=3,
@@ -83,7 +83,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         return d
 
     def test_fromSsdict_simple(self):
-        master = mock.Mock()
+        master = fakemaster.make_master()
         master.db = fakedb.FakeDBConnector(self)
         master.db.insertTestData([
             fakedb.SourceStamp(id=234, branch='trunk', revision='9284',

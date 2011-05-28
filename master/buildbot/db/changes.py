@@ -23,6 +23,9 @@ from twisted.internet import defer, reactor
 from buildbot.db import base
 from buildbot.util import epoch2datetime, datetime2epoch
 
+class ChDict(dict):
+    pass
+
 class ChangesConnectorComponent(base.DBConnectorComponent):
     """
     A DBConnectorComponent to handle getting changes into and out of the
@@ -167,12 +170,16 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         d = self.db.pool.do(thd)
         return d
 
+    @base.cached("chdicts")
     def getChange(self, changeid):
         """
         Get a change dictionary for the given changeid, or None if no such
         change exists.
 
         @param changeid: the id of the change instance to fetch
+
+        @param no_cache: bypass cache and always fetch from database
+        @type no_cache: boolean
 
         @returns: Change dictionary via Deferred
         """
@@ -200,19 +207,22 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         @returns: list of dictionaries via Deferred, ordered by changeid
         """
         def thd(conn):
-            # get the row from the 'changes' table
+            # get the changeids from the 'changes' table
             changes_tbl = self.db.model.changes
-            q = changes_tbl.select(
+            q = sa.select([changes_tbl.c.changeid],
                     order_by=[sa.desc(changes_tbl.c.changeid)],
                     limit=count)
             rp = conn.execute(q)
-            changes = []
-            for row in rp:
-                # note that this does *three* extra queries per row!
-                changes.append(self._chdict_from_change_row_thd(conn, row))
+            changeids = [ row.changeid for row in rp ]
             rp.close()
-            return list(reversed(changes))
+            return list(reversed(changeids))
         d = self.db.pool.do(thd)
+
+        # then turn those into changes, using the cache
+        def get_changes(changeids):
+            return defer.gatherResults([ self.getChange(changeid)
+                                         for changeid in changeids ])
+        d.addCallback(get_changes)
         return d
 
     def getLatestChangeid(self):
@@ -274,7 +284,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             if epoch:
                 return epoch2datetime(epoch)
 
-        chdict = dict(
+        chdict = ChDict(
                 changeid=ch_row.changeid,
                 author=ch_row.author,
                 files=[], # see below

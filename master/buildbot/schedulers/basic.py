@@ -150,7 +150,7 @@ class BaseBasicScheduler(base.BaseScheduler):
                 continue
 
             wfd = defer.waitForDeferred(
-                changes.Change.fromChdict(self, chdict))
+                changes.Change.fromChdict(self.master, chdict))
             yield wfd
             change = wfd.getResult()
 
