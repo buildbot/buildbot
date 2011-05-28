@@ -30,11 +30,14 @@ class TestBuilderBuildCreation(unittest.TestCase):
                         repository='svn://...', project='world-domination'),
             fakedb.Change(changeid=15, branch='trunk', revision='9284',
                         repository='svn://...', project='world-domination'),
+            fakedb.Change(changeid=16, branch='trunk', revision='9284',
+                        repository='svn://...', project='world-domination'),
             fakedb.SourceStamp(id=234, branch='trunk', revision='9284',
                         repository='svn://...', project='world-domination'),
             fakedb.SourceStampChange(sourcestampid=234, changeid=14),
             fakedb.SourceStampChange(sourcestampid=234, changeid=13),
             fakedb.SourceStampChange(sourcestampid=234, changeid=15),
+            fakedb.SourceStampChange(sourcestampid=234, changeid=16),
         ])
         # use getSourceStamp to minimize the risk from changes to the format of
         # the ssdict
@@ -46,7 +49,8 @@ class TestBuilderBuildCreation(unittest.TestCase):
             self.assertEqual(ss.branch, 'trunk')
             self.assertEqual(ss.revision, '9284')
             self.assertEqual(ss.patch, None)
-            self.assertEqual([ ch.number for ch in ss.changes], [13, 14, 15])
+            self.assertEqual([ ch.number for ch in ss.changes],
+                             [13, 14, 15, 16])
             self.assertEqual(ss.project, 'world-domination')
             self.assertEqual(ss.repository, 'svn://...')
         d.addCallback(check)

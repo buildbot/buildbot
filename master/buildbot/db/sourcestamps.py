@@ -73,9 +73,10 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
 
         The dictionary has keys C{ssid}, C{branch}, C{revision}, C{patch_body},
         C{patch_level}, C{patch_subdir}, C{repository}, C{project}, and
-        C{changeids}.  Most are simple strings.  The C{patch_*} arguments will
-        be C{None} if no patch is attached.  The last is a set of changeids for
-        this source stamp.
+        C{changeids}.  Most are simple strings.  The C{changeids} key contains
+        a set of change IDs.  The C{patch_*} arguments will be C{None} if no
+        patch is attached.  The last is a set of changeids for this source
+        stamp.
 
         @param bsid: buildset ID
 
