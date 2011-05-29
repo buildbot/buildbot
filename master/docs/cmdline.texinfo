@@ -431,6 +431,14 @@ build process' @code{source.Monotone} will use.
 
 @end table
 
+@heading showing who built
+
+You can provide the @option{--who=dev} to designate who is running the
+try build. This will add the @code{dev} to the Reason field on the try
+build's status web page. You can also set @code{try_who = dev} in the
+@file{.buildbot/options} file. Note that @option{--who=dev} will not
+work on version 0.8.3 or earlier masters.
+
 @heading waiting for results
 
 If you provide the @option{--wait} option (or @code{try_wait = True}
