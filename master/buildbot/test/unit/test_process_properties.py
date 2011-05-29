@@ -264,35 +264,40 @@ class TestWithProperties(unittest.TestCase):
         # test basic substitution with WithProperties
         self.props.setProperty("revision", "47", "test")
         command = WithProperties("build-%s.tar.gz", "revision")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "build-47.tar.gz")
 
     def testDict(self):
         # test dict-style substitution with WithProperties
         self.props.setProperty("other", "foo", "test")
         command = WithProperties("build-%(other)s.tar.gz")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "build-foo.tar.gz")
 
     def testDictColonMinus(self):
         # test dict-style substitution with WithProperties
         self.props.setProperty("prop1", "foo", "test")
         command = WithProperties("build-%(prop1:-empty)s-%(prop2:-empty)s.tar.gz")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "build-foo-empty.tar.gz")
 
     def testDictColonPlus(self):
         # test dict-style substitution with WithProperties
         self.props.setProperty("prop1", "foo", "test")
         command = WithProperties("build-%(prop1:+exists)s-%(prop2:+exists)s.tar.gz")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "build-exists-.tar.gz")
 
     def testEmpty(self):
         # None should render as ''
         self.props.setProperty("empty", None, "test")
         command = WithProperties("build-%(empty)s.tar.gz")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "build-.tar.gz")
 
     def testRecursiveList(self):
@@ -300,7 +305,8 @@ class TestWithProperties(unittest.TestCase):
         self.props.setProperty("y", 20, "test")
         command = [ WithProperties("%(x)s %(y)s"), "and",
                     WithProperties("%(y)s %(x)s") ]
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              ["10 20", "and", "20 10"])
 
     def testRecursiveTuple(self):
@@ -308,7 +314,8 @@ class TestWithProperties(unittest.TestCase):
         self.props.setProperty("y", 20, "test")
         command = ( WithProperties("%(x)s %(y)s"), "and",
                     WithProperties("%(y)s %(x)s") )
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              ("10 20", "and", "20 10"))
 
     def testRecursiveDict(self):
@@ -316,22 +323,26 @@ class TestWithProperties(unittest.TestCase):
         self.props.setProperty("y", 20, "test")
         command = { WithProperties("%(x)s %(y)s") : 
                     WithProperties("%(y)s %(x)s") }
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              {"10 20" : "20 10"})
 
     def testLambdaSubst(self):
         command = WithProperties('%(foo)s', foo=lambda _: 'bar')
-        self.failUnlessEqual(self.build.render(command), 'bar')
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual, 'bar')
 
     def testLambdaHasattr(self):
         command = WithProperties('%(foo)s',
                 foo=lambda b : b.hasProperty('x') and 'x' or 'y')
-        self.failUnlessEqual(self.build.render(command), 'y')
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual, 'y')
 
     def testLambdaOverride(self):
         self.props.setProperty('x', 10, 'test')
         command = WithProperties('%(x)s', x=lambda _: 20)
-        self.failUnlessEqual(self.build.render(command), '20')
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual, '20')
 
     def testLambdaCallable(self):
         self.assertRaises(ValueError, lambda: WithProperties('%(foo)s', foo='bar'))
@@ -340,7 +351,8 @@ class TestWithProperties(unittest.TestCase):
         self.props.setProperty('x', 10, 'test')
         self.props.setProperty('y', 20, 'test')
         command = WithProperties('%(z)s', z=lambda props: props.getProperty('x') + props.getProperty('y'))
-        self.failUnlessEqual(self.build.render(command), '30')
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual, '30')
 
 class TestProperties(unittest.TestCase):
     def setUp(self):
@@ -477,7 +489,8 @@ class TestProperties(unittest.TestCase):
             def getRenderingFor(self, props):
                 return props.getProperty('x') + 'z'
         self.props.setProperty('x', 'y', 'test')
-        self.assertEqual(self.props.render(FakeRenderable()), 'yz')
+        d = self.props.render(FakeRenderable())
+        d.addCallback(self.assertEqual, 'yz')
 
 
 class MyPropertiesThing(PropertiesMixin):
@@ -539,26 +552,30 @@ class TestProperty(unittest.TestCase):
         self.props.setProperty("do-tests", 1, "scheduler")
         value = Property("do-tests")
 
-        self.failUnlessEqual(self.build.render(value),
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
                 1)
 
     def testStringProperty(self):
         self.props.setProperty("do-tests", "string", "scheduler")
         value = Property("do-tests")
 
-        self.failUnlessEqual(self.build.render(value),
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
                 "string")
 
     def testMissingProperty(self):
         value = Property("do-tests")
 
-        self.failUnlessEqual(self.build.render(value),
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
                 None)
 
     def testDefaultValue(self):
         value = Property("do-tests", default="Hello!")
 
-        self.failUnlessEqual(self.build.render(value),
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
                 "Hello!")
 
     def testDefaultValueNested(self):
@@ -566,14 +583,16 @@ class TestProperty(unittest.TestCase):
         value = Property("do-tests",
                 default=WithProperties("a-%(xxx)s-b"))
 
-        self.failUnlessEqual(self.build.render(value),
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
                 "a-yyy-b")
 
     def testIgnoreDefaultValue(self):
         self.props.setProperty("do-tests", "string", "scheduler")
         value = Property("do-tests", default="Hello!")
 
-        self.failUnlessEqual(self.build.render(value),
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
                 "string")
 
     def testIgnoreFalseValue(self):
@@ -587,7 +606,8 @@ class TestProperty(unittest.TestCase):
                   Property("do-tests-list", default="Hello!"),
                   Property("do-tests-None", default="Hello!") ]
 
-        self.failUnlessEqual(self.build.render(value),
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
                 ["Hello!"] * 4)
 
     def testDefaultWhenFalse(self):
@@ -601,5 +621,6 @@ class TestProperty(unittest.TestCase):
                   Property("do-tests-list", default="Hello!", defaultWhenFalse=False),
                   Property("do-tests-None", default="Hello!", defaultWhenFalse=False) ]
 
-        self.failUnlessEqual(self.build.render(value),
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
                 ["", 0, [], None])

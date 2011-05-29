@@ -17,6 +17,7 @@ import re
 import weakref
 from buildbot import util
 from buildbot.interfaces import IRenderable, IProperties
+from twisted.internet import defer
 from twisted.python.components import registerAdapter
 from zope.interface import implements
 
@@ -134,7 +135,7 @@ class Properties(util.ComparableMixin):
 
     def render(self, value):
         renderable = IRenderable(value)
-        return renderable.getRenderingFor(self)
+        return defer.maybeDeferred(renderable.getRenderingFor, self)
 
 
 class PropertiesMixin:
@@ -352,7 +353,7 @@ class _ListRenderer(object):
         self.value = value
 
     def getRenderingFor(self, build):
-        return [ build.render(e) for e in self.value ]
+        return defer.gatherResults([ build.render(e) for e in self.value ])
 
 registerAdapter(_ListRenderer, list, IRenderable)
 
@@ -368,7 +369,9 @@ class _TupleRenderer(object):
         self.value = value
 
     def getRenderingFor(self, build):
-        return tuple([ build.render(e) for e in self.value ])
+        d = defer.gatherResults([ build.render(e) for e in self.value ])
+        d.addCallback(tuple)
+        return d
 
 registerAdapter(_TupleRenderer, tuple, IRenderable)
 
@@ -381,10 +384,11 @@ class _DictRenderer(object):
     implements(IRenderable)
 
     def __init__(self, value):
-        self.value = value
+        self.value = _ListRenderer([ _TupleRenderer((k,v)) for k,v in value.iteritems() ])
 
     def getRenderingFor(self, build):
-        return dict([ (build.render(k), build.render(v)) for k,v in self.value.iteritems() ])
-
+        d = self.value.getRenderingFor(build)
+        d.addCallback(dict)
+        return d
 
 registerAdapter(_DictRenderer, dict, IRenderable)

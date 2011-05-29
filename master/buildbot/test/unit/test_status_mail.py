@@ -47,12 +47,15 @@ class TestMailNotifier(unittest.TestCase):
         builds = [ FakeBuildStatus(name="build") ]
         msgdict = create_msgdict()
         mn = MailNotifier('from@example.org')
-        m = mn.createEmail(msgdict, u'builder-n\u00E5me', u'project-n\u00E5me',
+        d = mn.createEmail(msgdict, u'builder-n\u00E5me', u'project-n\u00E5me',
                            SUCCESS, builds)
-        try:
-            m.as_string()
-        except UnicodeEncodeError:
-            self.fail('Failed to call as_string() on email message.')
+        @d.addCallback
+        def callback(m):
+            try:
+                m.as_string()
+            except UnicodeEncodeError:
+                self.fail('Failed to call as_string() on email message.')
+        return d
 
     def test_createEmail_extraHeaders_one_build(self):
         builds = [ FakeBuildStatus(name="build") ]
@@ -61,21 +64,27 @@ class TestMailNotifier(unittest.TestCase):
         msgdict = create_msgdict()
         mn = MailNotifier('from@example.org', extraHeaders=dict(hhh='vvv'))
         # add some Unicode to detect encoding problems
-        m = mn.createEmail(msgdict, u'builder-n\u00E5me', u'project-n\u00E5me',
+        d = mn.createEmail(msgdict, u'builder-n\u00E5me', u'project-n\u00E5me',
                            SUCCESS, builds)
-        txt = m.as_string()
-        self.assertIn('hhh: vvv', txt)
+        @d.addCallback
+        def callback(m):
+            txt = m.as_string()
+            self.assertIn('hhh: vvv', txt)
+        return d
 
     def test_createEmail_extraHeaders_two_builds(self):
         builds = [ FakeBuildStatus(name="build1"),
                    FakeBuildStatus(name="build2") ]
         msgdict = create_msgdict()
         mn = MailNotifier('from@example.org', extraHeaders=dict(hhh='vvv'))
-        m = mn.createEmail(msgdict, u'builder-n\u00E5me', u'project-n\u00E5me',
+        d = mn.createEmail(msgdict, u'builder-n\u00E5me', u'project-n\u00E5me',
                            SUCCESS, builds)
-        txt = m.as_string()
-        # note that the headers are *not* rendered
-        self.assertIn('hhh: vvv', txt)
+        @d.addCallback
+        def callback(m):
+            txt = m.as_string()
+            # note that the headers are *not* rendered
+            self.assertIn('hhh: vvv', txt)
+        return d
 
     def test_createEmail_message_with_patch_and_log_containing_unicode(self):
         builds = [ FakeBuildStatus(name="build") ]
@@ -85,13 +94,16 @@ class TestMailNotifier(unittest.TestCase):
         # add msg twice: as unicode and already encoded
         logs = [ FakeLog(msg), FakeLog(msg.encode('utf-8')) ]
         mn = MailNotifier('from@example.org', addLogs=True)
-        m = mn.createEmail(msgdict, u'builder-n\u00E5me',
+        d = mn.createEmail(msgdict, u'builder-n\u00E5me',
                            u'project-n\u00E5me', SUCCESS,
                            builds, patches, logs)
-        try:
-            m.as_string()
-        except UnicodeEncodeError:
-            self.fail('Failed to call as_string() on email message.')
+        @d.addCallback
+        def callback(m):
+            try:
+                m.as_string()
+            except UnicodeEncodeError:
+                self.fail('Failed to call as_string() on email message.')
+        return d
 
     def test_createEmail_message_with_nonascii_patch(self):
         builds = [ FakeBuildStatus(name="build") ]
@@ -99,10 +111,13 @@ class TestMailNotifier(unittest.TestCase):
         patches = [ ['', '\x99\xaa', ''] ]
         logs = [ FakeLog('simple log') ]
         mn = MailNotifier('from@example.org', addLogs=True)
-        m = mn.createEmail(msgdict, u'builder', u'pr', SUCCESS,
+        d = mn.createEmail(msgdict, u'builder', u'pr', SUCCESS,
                            builds, patches, logs)
-        txt = m.as_string()
-        self.assertIn('application/octet-stream', txt)
+        @d.addCallback
+        def callback(m):
+            txt = m.as_string()
+            self.assertIn('application/octet-stream', txt)
+        return d
 
     def test_init_enforces_categories_and_builders_are_mutually_exclusive(self):
         self.assertRaises(config.ConfigErrors,
@@ -338,7 +353,7 @@ class TestMailNotifier(unittest.TestCase):
                             patches=None, logs=None):
             # only concerned with m['To'] and m['CC'], which are added in
             # _got_recipients later
-            return m
+            return defer.succeed(m)
         mn.createEmail = fakeCreateEmail
 
         self.db = fakedb.FakeDBConnector(self)
@@ -450,7 +465,7 @@ class TestMailNotifier(unittest.TestCase):
                             patches=None, logs=None):
             # only concerned with m['To'] and m['CC'], which are added in
             # _got_recipients later
-            return m
+            return defer.succeed(m)
         mn.createEmail = fakeCreateEmail
 
         self.db = fakedb.FakeDBConnector(self)
