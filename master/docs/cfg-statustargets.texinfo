@@ -947,6 +947,9 @@ log names, to send a subset of the logs. Defaults to False.
 Patches are usually used on a Try server.
 Defaults to True.
 
+@item buildSetSummary
+(boolean). If True, send a single summary email consisting of the concatenation of all build completion messages rather than a completion message for each build.  Defaults to False.
+
 @item relayhost
 (string). The host to which the outbound SMTP connection should be
 made. Defaults to 'localhost'
