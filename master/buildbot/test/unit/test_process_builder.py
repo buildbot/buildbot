@@ -18,7 +18,7 @@ import random
 from twisted.trial import unittest
 from twisted.python import failure
 from twisted.internet import defer
-from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import builder, buildrequest
 from buildbot.db import buildrequests
 from buildbot.util import epoch2datetime
@@ -36,7 +36,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         """Set up C{self.bldr}"""
         self.bstatus = mock.Mock()
         self.factory = mock.Mock()
-        self.master = mock.Mock()
+        self.master = fakemaster.make_master()
         # only include the necessary required config, plus user-requested
         config = dict(name="bldr", slavename="slv", builddir="bdir",
                      slavebuilddir="sbdir", factory=self.factory)

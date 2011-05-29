@@ -287,7 +287,9 @@ class Maker:
 
     def create_db(self):
         from buildbot.db import connector
-        db = connector.DBConnector(None, self.config['db'], basedir=self.basedir)
+        from buildbot.master import BuildMaster
+        db = connector.DBConnector(BuildMaster(self.basedir),
+                self.config['db'], basedir=self.basedir)
         if not self.config['quiet']: print "creating database"
         d = db.model.upgrade()
         return d
@@ -938,6 +940,8 @@ class TryOptions(OptionsWithOptionsFile):
          "Location of the buildmaster's PBListener (host:port)"],
         ["passwd", None, None,
          "Password for PB authentication"],
+        ["who", "w", None,
+         "Who is responsible for the try build"],
 
         ["diff", None, None,
          "Filename of a patch to use instead of scanning a local tree. "
@@ -997,6 +1001,7 @@ class TryOptions(OptionsWithOptionsFile):
         [ 'try_jobdir', 'jobdir' ],
         [ 'try_password', 'passwd' ],
         [ 'try_master', 'master' ],
+        [ 'try_who', 'who' ],
         #[ 'try_wait', 'wait' ], <-- handled in postOptions
         [ 'try_masterstatus', 'masterstatus' ],
         # Deprecated command mappings from the quirky old days:

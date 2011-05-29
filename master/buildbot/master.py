@@ -27,6 +27,7 @@ from twisted.application.internet import TimerService
 
 import buildbot
 import buildbot.pbmanager
+from buildbot import cache
 from buildbot.util import safeTranslate, subscription, epoch2datetime
 from buildbot.process.builder import Builder
 from buildbot.status.master import Status
@@ -42,6 +43,7 @@ from buildbot.schedulers.base import isScheduler
 from buildbot.process.botmaster import BotMaster
 from buildbot.process import debug
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
+from buildbot import monkeypatches
 
 ########################################
 
@@ -108,6 +110,8 @@ class BuildMaster(service.MultiService):
         self.scheduler_manager.setName('scheduler_manager')
         self.scheduler_manager.setServiceParent(self)
 
+        self.caches = cache.CacheManager()
+
         self.debugClientRegistration = None
 
         self.statusTargets = []
@@ -139,6 +143,9 @@ class BuildMaster(service.MultiService):
         self.status = Status(self)
 
     def startService(self):
+        # first, apply all monkeypatches
+        monkeypatches.patch_all()
+
         service.MultiService.startService(self)
         if not self.readConfig:
             # TODO: consider catching exceptions during this call to

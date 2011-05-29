@@ -366,7 +366,7 @@ class WarningCountingShellCommand(ShellCommand):
     suppressionLineRe = re.compile(r"^\s*(.+?)\s*:\s*(.+?)\s*(?:[:]\s*([0-9]+)(?:-([0-9]+))?\s*)?$")
 
     def __init__(self, workdir=None,
-                 warningPattern=None, warningExtractor=None,
+                 warningPattern=None, warningExtractor=None, maxWarnCount=None,
                  directoryEnterPattern=None, directoryLeavePattern=None,
                  suppressionFile=None, **kwargs):
         self.workdir = workdir
@@ -385,6 +385,7 @@ class WarningCountingShellCommand(ShellCommand):
             self.warningExtractor = warningExtractor
         else:
             self.warningExtractor = WarningCountingShellCommand.warnExtractWholeLine
+        self.maxWarnCount = maxWarnCount
 
         # And upcall to let the base class do its work
         ShellCommand.__init__(self, workdir=workdir, **kwargs)
@@ -577,7 +578,8 @@ class WarningCountingShellCommand(ShellCommand):
 
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if ( cmd.rc != 0 or
+           ( self.maxWarnCount != None and self.warnCount > self.maxWarnCount ) ):
             return FAILURE
         if self.warnCount:
             return WARNINGS

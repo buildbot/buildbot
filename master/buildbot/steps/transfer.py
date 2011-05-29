@@ -63,6 +63,9 @@ class _FileWriter(pb.Referenceable):
         else:
             self.fp.write(data)
 
+    def remote_utime(self, accessed_modified):
+        os.utime(self.destfile,accessed_modified)
+
     def remote_close(self):
         """
         Called by remote slave to state that no more data will be transfered
@@ -235,13 +238,14 @@ class FileUpload(_TransferBuildStep):
     - ['mode']       file access mode for the resulting master-side file.
                      The default (=None) is to leave it up to the umask of
                      the buildmaster process.
+    - ['keepstamp']  whether to preserve file modified and accessed times
 
     """
 
     name = 'upload'
 
     def __init__(self, slavesrc, masterdest,
-                 workdir=None, maxsize=None, blocksize=16*1024, mode=None,
+                 workdir=None, maxsize=None, blocksize=16*1024, mode=None, keepstamp=False,
                  **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
         self.addFactoryArguments(slavesrc=slavesrc,
@@ -250,6 +254,7 @@ class FileUpload(_TransferBuildStep):
                                  maxsize=maxsize,
                                  blocksize=blocksize,
                                  mode=mode,
+                                 keepstamp=keepstamp,
                                  )
 
         self.slavesrc = slavesrc
@@ -259,6 +264,7 @@ class FileUpload(_TransferBuildStep):
         self.blocksize = blocksize
         assert isinstance(mode, (int, type(None)))
         self.mode = mode
+        self.keepstamp = keepstamp
 
     def start(self):
         version = self.slaveVersion("uploadFile")
@@ -283,6 +289,11 @@ class FileUpload(_TransferBuildStep):
         # we use maxsize to limit the amount of data on both sides
         fileWriter = _FileWriter(masterdest, self.maxsize, self.mode)
 
+        if self.keepstamp and self.slaveVersionIsOlderThan("uploadFile","2.13"):
+            m = ("This buildslave (%s) does not support preserving timestamps. "
+                 "Please upgrade the buildslave." % self.build.slavename )
+            raise BuildSlaveTooOldError(m)
+
         # default arguments
         args = {
             'slavesrc': source,
@@ -290,6 +301,7 @@ class FileUpload(_TransferBuildStep):
             'writer': fileWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
+            'keepstamp': self.keepstamp,
             }
 
         self.cmd = StatusRemoteCommand('uploadFile', args)

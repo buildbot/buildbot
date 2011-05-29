@@ -13,17 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 from twisted.trial import unittest
 from buildbot.db.connector import DBConnector
 from buildbot.test.util import change_import
+from buildbot.test.fake import fakemaster
 
 class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
     def setUp(self):
         d = self.setUpChangeImport()
-        self.db = DBConnector(mock.Mock(), self.db_url, self.basedir)
         def make_dbc(_):
-            self.db = DBConnector(mock.Mock(), self.db_url, self.basedir)
+            master = fakemaster.make_master()
+            self.db = DBConnector(master, self.db_url, self.basedir)
         d.addCallback(make_dbc)
         # note the connector isn't started, as we're testing upgrades
         return d
