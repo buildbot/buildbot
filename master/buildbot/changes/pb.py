@@ -59,6 +59,20 @@ class ChangePerspective(NewCredPerspective):
             changedict['when_timestamp'] = epoch2datetime(changedict['when'])
             del changedict['when']
 
+        # turn any bytestring keys into unicode, assuming utf8 but just
+        # replacing unknown characters.  Ideally client would send us unicode
+        # in the first place, but older clients do not, so this fallback is
+        # useful.
+        for key in changedict:
+            if type(changedict[key]) == str:
+                changedict[key] = changedict[key].decode('utf8', 'replace')
+        for i, file in enumerate(changedict.get('files', [])):
+            if type(file) == str:
+                changedict['files'][i] = file.decode('utf8', 'replace')
+        for i, link in enumerate(changedict.get('links', [])):
+            if type(link) == str:
+                changedict['links'][i] = link.decode('utf8', 'replace')
+
         files = []
         for path in changedict['files']:
             if self.prefix:

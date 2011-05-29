@@ -23,6 +23,7 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.changes import pb
 from buildbot.test.util import changesource, pbmanager
+from buildbot.util import epoch2datetime
 
 class TestPBChangeSource(
             changesource.ChangeSourceMixin,
@@ -71,6 +72,11 @@ class TestPBChangeSource(
         cs = pb.PBChangeSource()
         self.assertSubstring("PBChangeSource", cs.describe())
 
+    def test_describe_prefix(self):
+        cs = pb.PBChangeSource(prefix="xyz")
+        self.assertSubstring("PBChangeSource", cs.describe())
+        self.assertSubstring("xyz", cs.describe())
+
     def test_describe_int(self):
         cs = pb.PBChangeSource(port=9989)
         self.assertSubstring("PBChangeSource", cs.describe())
@@ -113,3 +119,56 @@ class TestChangePerspective(unittest.TestCase):
                     [ dict(project="", revlink="", repository="", files=[]) ])
         d.addCallback(check)
         return d
+
+    def test_addChange_unicode(self):
+        cp = pb.ChangePerspective(self.master, None)
+        d = cp.perspective_addChange(dict(author=u"\N{SNOWMAN}",
+                    comments=u"\N{SNOWMAN}",
+                    links=[u'\N{HEAVY BLACK HEART}'],
+                    files=[u'\N{VERY MUCH GREATER-THAN}']))
+        def check(_):
+            self.assertEqual(self.added_changes,
+                    [ dict(author=u"\N{SNOWMAN}",
+                      comments=u"\N{SNOWMAN}",
+                      links=[u'\N{HEAVY BLACK HEART}'],
+                      files=[u'\N{VERY MUCH GREATER-THAN}']) ])
+        d.addCallback(check)
+        return d
+
+    def test_addChange_unicode_as_bytestring(self):
+        cp = pb.ChangePerspective(self.master, None)
+        d = cp.perspective_addChange(dict(author=u"\N{SNOWMAN}".encode('utf8'),
+                    comments=u"\N{SNOWMAN}".encode('utf8'),
+                    links=[u'\N{HEAVY BLACK HEART}'.encode('utf8')],
+                    files=[u'\N{VERY MUCH GREATER-THAN}'.encode('utf8')]))
+        def check(_):
+            self.assertEqual(self.added_changes,
+                    [ dict(author=u"\N{SNOWMAN}",
+                      comments=u"\N{SNOWMAN}",
+                      links=[u'\N{HEAVY BLACK HEART}'],
+                      files=[u'\N{VERY MUCH GREATER-THAN}']) ])
+        d.addCallback(check)
+        return d
+
+    def test_addChange_non_utf8_bytestring(self):
+        cp = pb.ChangePerspective(self.master, None)
+        bogus_utf8 = '\xff\xff\xff\xff'
+        replacement = bogus_utf8.decode('utf8', 'replace')
+        d = cp.perspective_addChange(dict(author=bogus_utf8, files=['a']))
+        def check(_):
+            self.assertEqual(self.added_changes,
+                    [ dict(author=replacement, files=['a']) ])
+        d.addCallback(check)
+        return d
+
+    def test_addChange_old_param_names(self):
+        cp = pb.ChangePerspective(self.master, None)
+        d = cp.perspective_addChange(dict(isdir=1, who='me', when=1234,
+                                          files=[]))
+        def check(_):
+            self.assertEqual(self.added_changes,
+                    [ dict(is_dir=1, author='me', files=[],
+                        when_timestamp=epoch2datetime(1234)) ])
+        d.addCallback(check)
+        return d
+
