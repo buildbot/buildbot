@@ -940,6 +940,8 @@ class TryOptions(OptionsWithOptionsFile):
          "Location of the buildmaster's PBListener (host:port)"],
         ["passwd", None, None,
          "Password for PB authentication"],
+        ["who", "w", None,
+         "Who is responsible for the try build"],
 
         ["diff", None, None,
          "Filename of a patch to use instead of scanning a local tree. "
@@ -999,6 +1001,7 @@ class TryOptions(OptionsWithOptionsFile):
         [ 'try_jobdir', 'jobdir' ],
         [ 'try_password', 'passwd' ],
         [ 'try_master', 'master' ],
+        [ 'try_who', 'who' ],
         #[ 'try_wait', 'wait' ], <-- handled in postOptions
         [ 'try_masterstatus', 'masterstatus' ],
         # Deprecated command mappings from the quirky old days:

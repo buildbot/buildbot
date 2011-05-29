@@ -116,6 +116,7 @@ class Try_Jobdir(TryBase):
         if not p.strings:
             raise BadJobfile("could not find any complete netstrings")
         ver = p.strings.pop(0)
+
         if ver == "1":
             buildsetID, branch, baserev, patchlevel, diff = p.strings[:5]
             builderNames = p.strings[5:]
@@ -126,9 +127,19 @@ class Try_Jobdir(TryBase):
             patchlevel = int(patchlevel)
             repository=''
             project=''
+            who=''
         elif ver == "2": # introduced the repository and project property
             buildsetID, branch, baserev, patchlevel, diff, repository, project = p.strings[:7]
             builderNames = p.strings[7:]
+            if branch == "":
+                branch = None
+            if baserev == "":
+                baserev = None
+            patchlevel = int(patchlevel)
+            who=''
+        elif ver == "3": # introduced who property
+            buildsetID, branch, baserev, patchlevel, diff, repository, project, who = p.strings[:8]
+            builderNames = p.strings[8:]
             if branch == "":
                 branch = None
             if baserev == "":
@@ -144,6 +155,7 @@ class Try_Jobdir(TryBase):
                 patch_level=patchlevel,
                 repository=repository,
                 project=project,
+                who=who,
                 jobid=buildsetID)
 
     def handleJobFile(self, filename, f):
@@ -170,8 +182,11 @@ class Try_Jobdir(TryBase):
                 project=parsed_job['project'],
                 repository=parsed_job['repository'])
         def create_buildset(ssid):
+            reason = "'try' job"
+            if parsed_job['who']:
+                reason += " by user %s" % parsed_job['who']
             return self.addBuildsetForSourceStamp(ssid=ssid,
-                    reason="'try' job", external_idstring=parsed_job['jobid'],
+                    reason=reason, external_idstring=parsed_job['jobid'],
                     builderNames=builderNames)
         d.addCallback(create_buildset)
         return d
@@ -184,7 +199,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
     @defer.deferredGenerator
     def perspective_try(self, branch, revision, patch, repository, project,
-                        builderNames, properties={}, ):
+                        builderNames, who='', properties={} ):
         db = self.scheduler.master.db
         log.msg("user %s requesting build on builders %s" % (self.username,
                                                              builderNames))
@@ -202,7 +217,9 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         yield wfd
         ssid = wfd.getResult()
 
-        reason = "'try' job from user %s" % self.username
+        reason = "'try' job"
+        if who:
+            reason += " by user %s" % who
 
         requested_props = Properties()
         requested_props.update(properties, "try build")
