@@ -106,7 +106,7 @@ class Sender(unittest.TestCase):
 
     def test_send_unicode(self):
         s = sendchange.Sender('localhost:1234')
-        d = s.send(u'\N{PALM BRANCH}',
+        d = s.send(u'\N{DEGREE SIGN}',
                     u'\U0001f49e',
                     u'\N{POSTAL MARK FACE}',
                     [u'\U0001F4C1'],
@@ -125,7 +125,7 @@ class Sender(unittest.TestCase):
                      who=u'\N{THAI CHARACTER KHOMUT}',
                      files=[u'\U0001F4C1'], # FILE FOLDER
                      comments=u'\N{POSTAL MARK FACE}',
-                     branch=u'\N{PALM BRANCH}',
+                     branch=u'\N{DEGREE SIGN}',
                      revision=u'\U0001f49e', # REVOLVING HEARTS
                      category=u'\U0001F640', # WEARY CAT FACE
                      when=1234,
@@ -137,7 +137,7 @@ class Sender(unittest.TestCase):
     def test_send_unicode_utf8(self):
         s = sendchange.Sender('localhost:1234')
 
-        d = s.send(u'\N{PALM BRANCH}'.encode('utf8'),
+        d = s.send(u'\N{DEGREE SIGN}'.encode('utf8'),
                 u'\U0001f49e'.encode('utf8'),
                 u'\N{POSTAL MARK FACE}'.encode('utf8'),
                 [u'\U0001F4C1'.encode('utf8')],
@@ -158,7 +158,7 @@ class Sender(unittest.TestCase):
                      who=u'\N{THAI CHARACTER KHOMUT}',
                      files=[u'\U0001F4C1'], # FILE FOLDER
                      comments=u'\N{POSTAL MARK FACE}',
-                     branch=u'\N{PALM BRANCH}',
+                     branch=u'\N{DEGREE SIGN}',
                      revision=u'\U0001f49e', # REVOLVING HEARTS
                      category=u'\U0001F640', # WEARY CAT FACE
                      when=1234,
