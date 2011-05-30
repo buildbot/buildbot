@@ -106,7 +106,6 @@ class TestMailNotifier(unittest.TestCase):
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
         
     def test_buildsetFinished_sends_email(self):
-        import sys
         fakeBuildMessage = Mock()
         mn = MailNotifier('from@example.org', 
                           buildSetSummary=True, 
@@ -140,7 +139,9 @@ class TestMailNotifier(unittest.TestCase):
        
        
         self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.Buildset(id=99, sourcestampid=127, results=SUCCESS, reason="testReason"),
+        self.db.insertTestData([fakedb.Buildset(id=99, sourcestampid=127,
+                                                results=SUCCESS,
+                                                reason="testReason"),
                                 fakedb.BuildRequest(id=11, buildsetid=99,
                                                     buildername='Builder'),
                                 fakedb.Build(number=0, brid=11, results=SUCCESS)
@@ -151,10 +152,12 @@ class TestMailNotifier(unittest.TestCase):
         mn.master_status = Mock()
         mn.master_status.getBuilder = fakeGetBuilder
         mn.buildMessageDict = Mock()
-        mn.buildMessageDict.return_value = {"body":"body", "type":"text", "subject":"subject"}
+        mn.buildMessageDict.return_value = {"body":"body", "type":"text",
+                                            "subject":"subject"}
             
         mn.buildsetFinished(99, FAILURE)
-        fakeBuildMessage.assert_called_with("Buildset Complete: testReason", [build], SUCCESS)
+        fakeBuildMessage.assert_called_with("Buildset Complete: testReason",
+                                            [build], SUCCESS)
  
 
     def test_buildFinished_ignores_unspecified_categories(self):

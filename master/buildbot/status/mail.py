@@ -310,6 +310,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.smtpPassword = smtpPassword
         self.smtpPort = smtpPort
         self.buildSetSummary = buildSetSummary
+        self.buildSetSubscription = None
         self.watched = []
         self.master_status = None
 
@@ -332,9 +333,19 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.master_status = self.parent.getStatus()
         self.master_status.subscribe(self)
         
-        if self.buildSetSummary:
-            self.parent.subscribeToBuildsetCompletions(self.buildsetFinished)
             
+    def startService(self):
+        base.StatusReceiverMultiService.startService(self)
+        
+        if self.buildSetSummary:
+            self.buildSetSubscription = self.parent.subscribeToBuildsetCompletions(self.buildsetFinished)
+    
+    def stopService(self):
+        base.StatusReceiverMultiService.stopService(self)
+        
+        if self.buildSetSubscription is not None:
+            self.buildSetSubscription.unsubscribe()
+            self.buildSetSubscription = None
 
     def disownServiceParent(self):
         self.master_status.unsubscribe(self)
@@ -405,7 +416,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                     if self.isMailNeeded(build, build.results):
                         builds.append(build)
 
-        self.buildMessage("Buildset Complete: " + buildset['reason'], builds, buildset['results'])
+        self.buildMessage("Buildset Complete: " + buildset['reason'], builds,
+                          buildset['results'])
         
     def _gotBuildRequests(self, breqs, buildset):
         builddicts = []
@@ -442,7 +454,9 @@ class MailNotifier(base.StatusReceiverMultiService):
             logStatus, dummy = logStep.getResults()
             logName = logf.getName()
             logs.append(('%s.%s' % (stepName, logName),
-                         '%s/steps/%s/logs/%s' % (master_status.getURLForThing(build), stepName, logName),
+                         '%s/steps/%s/logs/%s' % (
+                             master_status.getURLForThing(build),
+                             stepName, logName),
                          logf.getText().splitlines(),
                          logStatus))
 
@@ -486,7 +500,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                                        }
 
 
-        assert type in ('plain', 'html'), "'%s' message type must be 'plain' or 'html'." % type
+        assert type in ('plain', 'html'), \
+            "'%s' message type must be 'plain' or 'html'." % type
 
         if patches or logs:
             m = MIMEMultipart()
@@ -511,7 +526,8 @@ class MailNotifier(base.StatusReceiverMultiService):
             for log in logs:
                 name = "%s.%s" % (log.getStep().getName(),
                                   log.getName())
-                if self._shouldAttachLog(log.getName()) or self._shouldAttachLog(name):
+                if ( self._shouldAttachLog(log.getName()) or
+                     self._shouldAttachLog(name) ):
                     a = MIMEText(log.getText().encode(ENCODING), 
                                  _charset=ENCODING)
                     a.add_header('Content-Disposition', "attachment",
@@ -529,7 +545,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                 if len(builds == 1):
                     k = properties.render(k)
                 if k in m:
-                    twlog.msg("Warning: Got header " + k + " in self.extraHeaders "
+                    twlog.msg("Warning: Got header " + k +
+                      " in self.extraHeaders "
                       "but it already exists in the Message - "
                       "not adding it.")
                 continue
@@ -543,11 +560,13 @@ class MailNotifier(base.StatusReceiverMultiService):
     def buildMessageDict(self, name, build, results):
         if self.customMesg:
             # the customMesg stuff can be *huge*, so we prefer not to load it
-            attrs = self.getCustomMesgData(self.mode, name, build, results, self.master_status)
+            attrs = self.getCustomMesgData(self.mode, name, build, results,
+                                           self.master_status)
             text, type = self.customMesg(attrs)
             msgdict = { 'body' : text, 'type' : type }
         else:
-            msgdict = self.messageFormatter(self.mode, name, build, results, self.master_status)
+            msgdict = self.messageFormatter(self.mode, name, build, results,
+                                            self.master_status)
         
         return msgdict
 
@@ -565,7 +584,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                 logs.append(build.getLogs())
             twlog.err("LOG: %s" % str(logs))
             
-            tmp = self.buildMessageDict(name=build.getBuilder().name, build=build, results=build.results)
+            tmp = self.buildMessageDict(name=build.getBuilder().name,
+                                        build=build, results=build.results)
             msgdict['body'] += tmp['body']
             msgdict['body'] += '\n\n'
             msgdict['type'] = tmp['type']
