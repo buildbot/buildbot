@@ -38,9 +38,6 @@ class Sender:
         for i, file in enumerate(change.get('files', [])):
             if type(file) == str:
                 change['files'][i] = file.decode(self.encoding, 'replace')
-        for i, link in enumerate(change.get('links', [])):
-            if type(link) == str:
-                change['links'][i] = link.decode(self.encoding, 'replace')
 
         f = pb.PBClientFactory()
         d = f.login(credentials.UsernamePassword(self.username, self.password))
