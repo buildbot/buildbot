@@ -19,11 +19,11 @@ from twisted.cred import credentials
 from twisted.internet import reactor
 
 class Sender:
-    def __init__(self, master, auth=('change','changepw')):
+    def __init__(self, master, auth=('change','changepw'), encoding='utf8'):
         self.username, self.password = auth
         self.host, self.port = master.split(":")
         self.port = int(self.port)
-        self.num_changes = 0
+        self.encoding = encoding
 
     def send(self, branch, revision, comments, files, who=None, category=None,
              when=None, properties={}, repository='', project='', revlink=''):
@@ -31,39 +31,25 @@ class Sender:
                   'files': files, 'comments': comments, 'branch': branch,
                   'revision': revision, 'category': category, 'when': when,
                   'properties': properties, 'revlink': revlink}
-        self.num_changes += 1
+
+        for key in change:
+            if type(change[key]) == str:
+                change[key] = change[key].decode(self.encoding, 'replace')
+        for i, file in enumerate(change.get('files', [])):
+            if type(file) == str:
+                change['files'][i] = file.decode(self.encoding, 'replace')
+        for i, link in enumerate(change.get('links', [])):
+            if type(link) == str:
+                change['links'][i] = link.decode(self.encoding, 'replace')
 
         f = pb.PBClientFactory()
         d = f.login(credentials.UsernamePassword(self.username, self.password))
         reactor.connectTCP(self.host, self.port, f)
-        d.addCallback(self.addChange, change)
+
+        def call_addChange(remote):
+            d = remote.callRemote('addChange', change)
+            d.addCallback(lambda res: remote.broker.transport.loseConnection())
+            return d
+        d.addCallback(call_addChange)
+
         return d
-
-    def addChange(self, remote, change):
-        d = remote.callRemote('addChange', change)
-        d.addCallback(lambda res: remote.broker.transport.loseConnection())
-        return d
-
-    def printSuccess(self, res):
-        print self.getSuccessString(res)
-
-    def getSuccessString(self, res):
-        if self.num_changes > 1:
-            return "%d changes sent successfully" % self.num_changes
-        elif self.num_changes == 1:
-            return "change sent successfully"
-        else:
-            return "no changes to send"
-
-    def printFailure(self, why):
-        print self.getFailureString(why)
-
-    def getFailureString(self, why):
-        return "change(s) NOT sent, something went wrong: " + str(why)
-
-    def stop(self, res):
-        reactor.stop()
-        return res
-
-    def run(self):
-        reactor.run()

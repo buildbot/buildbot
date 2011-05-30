@@ -820,6 +820,8 @@ class SendChangeOptions(OptionsWithOptionsFile):
          "Read the log messages from this file (- for stdin)"),
         ("when", "w", None, "timestamp to use as the change time"),
         ("revlink", "l", '', "Revision link (revlink)"),
+        ("encoding", "e", 'utf8',
+            "Encoding of other parameters (default utf8)"),
         ]
 
     buildbotOptions = [
@@ -844,6 +846,7 @@ def sendchange(config, runReactor=False):
     connection will be drpoped as soon as the Change has been sent."""
     from buildbot.clients.sendchange import Sender
 
+    encoding = config.get('encoding')
     who = config.get('who')
     if not who and config.get('username'):
         print "NOTE: --username/-u is deprecated: use --who/-W'"
@@ -888,7 +891,7 @@ def sendchange(config, runReactor=False):
     assert who, "you must provide a committer (--who)"
     assert master, "you must provide the master location"
 
-    s = Sender(master, auth)
+    s = Sender(master, auth, encoding=encoding)
     d = s.send(branch, revision, comments, files, who=who, category=category, when=when,
                properties=properties, repository=repository, project=project,
                revlink=revlink)
