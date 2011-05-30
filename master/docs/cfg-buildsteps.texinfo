@@ -1317,7 +1317,9 @@ WARNINGS if any were discovered. Through the @code{WarningCountingShellCommand}
 superclass, the number of warnings is stored in a Build Property named
 ``warnings-count'', which is accumulated over all Compile steps (so if two
 warnings are found in one step, and three are found in another step, the
-overall build will have a ``warnings-count'' property of 5).
+overall build will have a ``warnings-count'' property of 5).  Each step can be
+optionally given a maximum number of warnings via the maxWarnCount parameter.
+If this limit is exceeded, the step will be marked as a failure.
 
 The default regular expression used to detect a warning is
 @code{'.*warning[: ].*'} , which is fairly liberal and may cause
@@ -1964,6 +1966,12 @@ default to whatever the umask of the writing process is. The default
 umask tends to be fairly restrictive, but at least on the buildslave
 you can make it less restrictive with a --umask command-line option at
 creation time (@pxref{Buildslave Options}).
+
+The @code{keepstamp=} argument is a boolean that, when True, forces
+the modified and accessed time of the destination file to match the
+times of the source file.  When False, the modified and accessed times
+of the destination file are set to the current time on the buildmaster.
+The default is false.
 
 @subheading Transfering Directories
 

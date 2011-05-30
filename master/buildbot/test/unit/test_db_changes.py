@@ -217,7 +217,7 @@ class TestChangesConnectorComponent(
             def thd(conn):
                 query = self.db.model.change_links.select()
                 query.where(self.db.model.change_links.c.changeid == 1)
-                query.order_by([self.db.model.change_links.c.link])
+                query.order_by(self.db.model.change_links.c.link)
                 r = conn.execute(query)
                 r = r.fetchall()
                 self.assertEqual(len(r), 2)
@@ -229,7 +229,7 @@ class TestChangesConnectorComponent(
             def thd(conn):
                 query = self.db.model.change_files.select()
                 query.where(self.db.model.change_files.c.changeid == 1)
-                query.order_by([self.db.model.change_files.c.filename])
+                query.order_by(self.db.model.change_files.c.filename)
                 r = conn.execute(query)
                 r = r.fetchall()
                 self.assertEqual(len(r), 2)
@@ -241,7 +241,7 @@ class TestChangesConnectorComponent(
             def thd(conn):
                 query = self.db.model.change_properties.select()
                 query.where(self.db.model.change_properties.c.changeid == 1)
-                query.order_by([self.db.model.change_properties.c.property_name])
+                query.order_by(self.db.model.change_properties.c.property_name)
                 r = conn.execute(query)
                 r = r.fetchall()
                 self.assertEqual(len(r), 1)

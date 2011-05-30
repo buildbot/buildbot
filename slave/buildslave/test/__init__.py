@@ -17,6 +17,10 @@ import sys
 
 import twisted
 from twisted.trial import unittest
+from buildslave import monkeypatches
+
+# apply the same patches the slave does when it starts
+monkeypatches.patch_all()
 
 def add_debugging_monkeypatches():
     """

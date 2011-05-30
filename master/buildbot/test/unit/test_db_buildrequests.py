@@ -80,7 +80,7 @@ class TestBuildsetsConnectorComponent(
                 complete_at=self.COMPLETE_AT_EPOCH),
         ])
         d.addCallback(lambda _ :
-                self.db.buildrequests.getBuildRequest(brid=44))
+                self.db.buildrequests.getBuildRequest(44))
         def check(brdict):
             self.assertEqual(brdict,
                     dict(brid=44, buildsetid=self.BSID, buildername="bbb",
@@ -92,7 +92,7 @@ class TestBuildsetsConnectorComponent(
         return d
 
     def test_getBuildRequest_missing(self):
-        d = self.db.buildrequests.getBuildRequest(brid=44)
+        d = self.db.buildrequests.getBuildRequest(44)
         def check(brdict):
             self.assertEqual(brdict, None)
         d.addCallback(check)

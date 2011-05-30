@@ -335,18 +335,33 @@ def ns(s):
     return "%d:%s," % (len(s), s)
 
 def createJobfile(bsid, branch, baserev, patchlevel, diff, repository, 
-                  project, builderNames):
-    job = ""
-    job += ns("2")
-    job += ns(bsid)
-    job += ns(branch)
-    job += ns(str(baserev))
-    job += ns("%d" % patchlevel)
-    job += ns(diff)
-    job += ns(repository)
-    job += ns(project)
-    for bn in builderNames:
-        job += ns(bn)
+                  project, who, builderNames):
+    job = None
+    if who:
+        job = ""
+        job += ns("3")
+        job += ns(bsid)
+        job += ns(branch)
+        job += ns(str(baserev))
+        job += ns("%d" % patchlevel)
+        job += ns(diff)
+        job += ns(repository)
+        job += ns(project)
+        job += ns(who)
+        for bn in builderNames:
+            job += ns(bn)
+    else:
+        job = ""
+        job += ns("2")
+        job += ns(bsid)
+        job += ns(branch)
+        job += ns(str(baserev))
+        job += ns("%d" % patchlevel)
+        job += ns(diff)
+        job += ns(repository)
+        job += ns(project)
+        for bn in builderNames:
+            job += ns(bn)
     return job
 
 def getTopdir(topfile, start=None):
@@ -432,6 +447,7 @@ class Try(pb.Referenceable):
         assert self.connect, "you must specify a connect style: ssh or pb"
         self.builderNames = self.getopt('builders')
         self.project = self.getopt('project', '')
+        self.who = self.getopt('who')
 
     def getopt(self, config_name, default=None):
         value = self.config.get(config_name)
@@ -490,7 +506,8 @@ class Try(pb.Referenceable):
             self.jobfile = createJobfile(self.bsid,
                                          ss.branch or "", revspec,
                                          patchlevel, diff, ss.repository,
-                                         self.project, self.builderNames)
+                                         self.project, self.who, 
+                                         self.builderNames)
 
     def fakeDeliverJob(self):
         # Display the job to be delivered, but don't perform delivery.
@@ -538,14 +555,25 @@ class Try(pb.Referenceable):
     def _deliverJob_pb(self, remote):
         ss = self.sourcestamp
 
-        d = remote.callRemote("try",
-                              ss.branch,
-                              ss.revision,
-                              ss.patch,
-                              ss.repository,
-                              self.project,
-                              self.builderNames,
-                              self.config.get('properties', {}))
+        if self.who:
+            d = remote.callRemote("try",
+                                  ss.branch,
+                                  ss.revision,
+                                  ss.patch,
+                                  ss.repository,
+                                  self.project,
+                                  self.builderNames,
+                                  self.who,
+                                  self.config.get('properties', {}))
+        else:
+            d = remote.callRemote("try",
+                                  ss.branch,
+                                  ss.revision,
+                                  ss.patch,
+                                  ss.repository,
+                                  self.project,
+                                  self.builderNames,
+                                  self.config.get('properties', {}))
         d.addCallback(self._deliverJob_pb2)
         return d
     def _deliverJob_pb2(self, status):

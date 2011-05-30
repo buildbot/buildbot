@@ -63,17 +63,29 @@
   {% endif %}
 {% endmacro %}
 
-{% macro stop_build(stop_url, authz, on_all=False, short=False, label="Build") %}
+{% macro stop_build(stop_url, authz, on_all=False, on_selected=False, builders=[], short=False, label="Build") %}
   {% if not short or not authz.needAuthForm('stopBuild') %}
     <form method="post" name="stop_build" action="{{ stop_url }}" class='command stopbuild'
                {{ 'style="display:inline"' if short else '' }}>
       {% if not short %}
         {% if on_all %}
-          <p>To stop all builds, fill out the following fields and
-          push the <i>Stop {{label}}</i> button</p>
+          <p>To stop all builds, fill out the following field and
+          push the <i>Stop {{ label }}</i> button</p>
+        {% elif on_selected %}
+          <p>To stop selected builds, select the builders, fill out the
+          following field and push the <i>Stop {{ label }}</i> button</p>
+          <table>
+          {% for b in builders %}
+            <tr>
+              <td align="center"><input type="checkbox" name="selected" value="{{ b.name }}"></td>
+              <td class="box"><a href="{{ b.link }}">{{ b.name|e }}</a></td>
+            </tr>
+          {% endfor %}
+          </table>
+
         {% else %}
-          <p>To stop this build, fill out the following fields and
-          push the <i>Stop {{label}}</i> button</p>
+          <p>To stop this build, fill out the following field and
+          push the <i>Stop {{ label }}</i> button</p>
         {% endif %}
       {% endif %}
       
@@ -93,12 +105,26 @@
   {% endif %}
 {% endmacro %}
 
-{% macro force_build(force_url, authz, on_all=False) %}
- <form method="post" name="force_build" action="{{ force_url }}" class="command forcebuild">  
+{% macro force_build(force_url, authz, on_all=False, on_selected=False, builders=[]) %}
+ <form method="post" name="force_build" action="{{ force_url }}" class="command forcebuild">
 
   {% if on_all %}
      <p>To force a build on <strong>all Builders</strong>, fill out the following fields
           and push the 'Force Build' button</p>
+  {% elif on_selected %}
+     <p>To force a build on <strong>certain Builders</strong>, select the
+        builders, fill out the following fields and push the
+        'Force Build' button</p>
+
+     <table>
+     {% for b in builders %}
+       <tr>
+         <td align="center"><input type="checkbox" name="selected" value="{{ b.name }}"></td>
+         <td class="box"><a href="{{ b.link }}">{{ b.name|e }}</a></td>
+       </tr>
+     {% endfor %}
+     </table>
+
   {% else %}
      <p>To force a build, fill out the following fields and
         push the 'Force Build' button</p>
@@ -108,9 +134,7 @@
     {{ auth() }}
   {% else %}
   <div class="row">
-    <span class="label">
-      Your name:
-    </span>
+    <span class="label">Your name:</span>
     <input type="text" name="username"/>
   </div>
   {% endif %}
