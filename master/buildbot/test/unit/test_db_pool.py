@@ -118,9 +118,12 @@ class Native(unittest.TestCase, db.RealDatabaseMixin):
         # try to delete the 'native_tests' table
         meta = sa.MetaData()
         native_tests = sa.Table("native_tests", meta)
-        native_tests.drop(bind=self.db_engine, checkfirst=True)
-        self.pool.shutdown()
-        return self.tearDownRealDatabase()
+        def thd(conn):
+            native_tests.drop(bind=self.db_engine, checkfirst=True)
+        d = self.pool.do(thd)
+        d.addCallback(lambda _ : self.pool.shutdown())
+        d.addCallback(lambda _ : self.tearDownRealDatabase())
+        return d
 
     def test_ddl_and_queries(self):
         meta = sa.MetaData()
