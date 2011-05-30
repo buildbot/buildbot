@@ -335,18 +335,19 @@ class MailNotifier(base.StatusReceiverMultiService):
         
             
     def startService(self):
-        base.StatusReceiverMultiService.startService(self)
-        
         if self.buildSetSummary:
             self.buildSetSubscription = \
             self.parent.subscribeToBuildsetCompletions(self.buildsetFinished)
-    
-    def stopService(self):
-        base.StatusReceiverMultiService.stopService(self)
+ 
+        base.StatusReceiverMultiService.startService(self)
         
+   
+    def stopService(self):
         if self.buildSetSubscription is not None:
             self.buildSetSubscription.unsubscribe()
             self.buildSetSubscription = None
+            
+        return base.StatusReceiverMultiService.stopService(self)
 
     def disownServiceParent(self):
         self.master_status.unsubscribe(self)
