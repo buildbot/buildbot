@@ -206,53 +206,46 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             master_incarnation = self.db.master.master_incarnation
             tbl = self.db.model.buildrequests
 
-            try:
-                transaction = conn.begin()
+            transaction = conn.begin()
 
-                # first, create a temporary table containing all of the ID's
-                # we want to claim
-                tmp_meta = sa.MetaData(bind=conn)
-                tmp = sa.Table('bbtmp_claim_ids', tmp_meta,
-                        sa.Column('brid', sa.Integer),
-                        prefixes=['TEMPORARY'])
-                tmp.create()
+            # first, create a temporary table containing all of the ID's
+            # we want to claim
+            tmp_meta = sa.MetaData(bind=conn)
+            tmp = sa.Table('bbtmp_claim_ids', tmp_meta,
+                    sa.Column('brid', sa.Integer),
+                    prefixes=['TEMPORARY'])
+            tmp.create()
 
-                q = tmp.insert()
-                conn.execute(q, [ dict(brid=id) for id in brids ])
+            q = tmp.insert()
+            conn.execute(q, [ dict(brid=id) for id in brids ])
 
-                q = tbl.update(whereclause=(tbl.c.id.in_(tmp.select())))
-                q = q.where(
-                    # unclaimed
-                    (((tbl.c.claimed_at == None) | (tbl.c.claimed_at == 0)) &
-                    (tbl.c.claimed_by_name == None) &
-                    (tbl.c.claimed_by_incarnation == None)) |
-                    # .. or mine
-                    ((tbl.c.claimed_at != None) &
-                    (tbl.c.claimed_by_name == master_name) &
-                    (tbl.c.claimed_by_incarnation == master_incarnation)))
-                res = conn.execute(q,
-                    claimed_at=_reactor.seconds(),
-                    claimed_by_name=self.db.master.master_name,
-                    claimed_by_incarnation=self.db.master.master_incarnation)
-                updated_rows = res.rowcount
-                res.close()
+            q = tbl.update(whereclause=(tbl.c.id.in_(tmp.select())))
+            q = q.where(
+                # unclaimed
+                (((tbl.c.claimed_at == None) | (tbl.c.claimed_at == 0)) &
+                (tbl.c.claimed_by_name == None) &
+                (tbl.c.claimed_by_incarnation == None)) |
+                # .. or mine
+                ((tbl.c.claimed_at != None) &
+                (tbl.c.claimed_by_name == master_name) &
+                (tbl.c.claimed_by_incarnation == master_incarnation)))
+            res = conn.execute(q,
+                claimed_at=_reactor.seconds(),
+                claimed_by_name=self.db.master.master_name,
+                claimed_by_incarnation=self.db.master.master_incarnation)
+            updated_rows = res.rowcount
+            res.close()
 
-                # if no rows or too few rows were updated, then we failed; this
-                # will roll back the transaction
-                if updated_rows != len(brids):
-                    # MySQL doesn't do transactions, so roll this back manually
-                    if conn.engine.dialect.name == 'mysql':
-                        alreadyClaimed(conn, tmp)
-                    transaction.rollback()
-                    raise AlreadyClaimedError
-
-                transaction.commit()
-            except (sa.exc.ProgrammingError, sa.exc.IntegrityError):
+            # if no rows or too few rows were updated, then we failed; this
+            # will roll back the transaction
+            if updated_rows != len(brids):
                 # MySQL doesn't do transactions, so roll this back manually
                 if conn.engine.dialect.name == 'mysql':
                     alreadyClaimed(conn, tmp)
                 transaction.rollback()
                 raise AlreadyClaimedError
+
+            transaction.commit()
 
             # testing hook to simulate a race condition
             if _race_hook:
