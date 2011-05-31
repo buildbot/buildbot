@@ -178,7 +178,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         # effective in environments with lower transactional isolation levels,
         # which may incorrectly serialize the conflicting UPDATES.
 
-        def alreadyClaimed(conn):
+        def alreadyClaimed(conn, tmp):
             # helper function to un-claim already-claimed requests, if we can't
             # claim all of them.  This may be redundant for the finer database
             # engines, but won't hurt.
@@ -188,7 +188,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             # only select *my builds* in this set of brids
             q = tbl.update()
-            q = q.where((tbl.c.id.in_(brids)) &
+            q = q.where((tbl.c.id.in_(tmp.select())) &
                 ((tbl.c.claimed_at != None) &
                  (tbl.c.claimed_by_name == master_name) &
                  (tbl.c.claimed_by_incarnation == master_incarnation)))
@@ -209,7 +209,18 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             try:
                 transaction = conn.begin()
 
-                q = tbl.update(whereclause=(tbl.c.id.in_(brids)))
+                # first, create a temporary table containing all of the ID's
+                # we want to claim
+                tmp_meta = sa.MetaData(bind=conn)
+                tmp = sa.Table('bbtmp_claim_ids', tmp_meta,
+                        sa.Column('brid', sa.Integer),
+                        prefixes=['TEMPORARY'])
+                tmp.create()
+
+                q = tmp.insert()
+                conn.execute(q, [ dict(brid=id) for id in brids ])
+
+                q = tbl.update(whereclause=(tbl.c.id.in_(tmp.select())))
                 q = q.where(
                     # unclaimed
                     (((tbl.c.claimed_at == None) | (tbl.c.claimed_at == 0)) &
@@ -226,14 +237,15 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 updated_rows = res.rowcount
                 res.close()
 
+                # if no rows or too few rows were updated, then we failed; this
+                # will roll back the transaction
+                if updated_rows != len(brids):
+                    transaction.rollback()
+                    raise AlreadyClaimedError
+
                 transaction.commit()
             except (sa.exc.ProgrammingError, sa.exc.IntegrityError):
-                alreadyClaimed(conn)
-                raise AlreadyClaimedError
-
-            # if no or too few rows were updated, then we failed
-            if updated_rows != len(brids):
-                alreadyClaimed(conn)
+                transaction.rollback()
                 raise AlreadyClaimedError
 
             # testing hook to simulate a race condition
@@ -244,12 +256,15 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             # now belong to this master
             q = sa.select([tbl.c.claimed_by_name,
                            tbl.c.claimed_by_incarnation],
-                          whereclause=(tbl.c.id.in_(brids)))
+                          whereclause=(tbl.c.id.in_(tmp.select())))
             res = conn.execute(q)
             for row in res:
                 if row.claimed_by_name != master_name or \
                         row.claimed_by_incarnation != master_incarnation:
-                    alreadyClaimed(conn)
+                    # note that the transaction is already committed here; too
+                    # bad!  We'll just fake it by unclaiming those requests (so
+                    # hopefully this was not a reclaim)
+                    alreadyClaimed(conn, tmp)
                     raise AlreadyClaimedError
             res.close()
 

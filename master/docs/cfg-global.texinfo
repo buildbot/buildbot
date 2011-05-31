@@ -66,6 +66,16 @@ the @code{storage_engine} URL argument.  Note that, because of InnoDB's
 extremely short key length limitations, it cannot be used to run Buildbot.  See
 @url{http://bugs.mysql.com/bug.php?id=4541} for more information.
 
+Buildbot uses temporary tables internally to manage large transactions.  MySQL
+has trouble doing replication with temporary tables, so if you are using a
+replicated MySQL installation, you may need to handle this situation carefully.
+The MySQL documentation
+(@url{http://dev.mysql.com/doc/refman/5.5/en/replication-features-temptables.html})
+recommends using @code{--replicate-wild-ignore-table} to ignore temporary
+tables that should not be replicated.  All Buildbot temporary tables begin with
+@code{bbtmp_}, so an option such as
+@code{--replicate-wild-ignore-table=bbtmp_.*} may help.
+
 @heading Postgres
 
 @example

@@ -58,15 +58,19 @@ via a Deferred, and that result is now a DateTime object.
 return their results via a Deferred.  The `asDict` method omits these values,
 as it retuns synchronously.
 
+*** Buildbot now uses temporary tables, which can cause problems with
+replication in MySQL.  See "Database Specification" in the manual for more
+details.
+
 ** Scheduler Improvements
 
 *** Nightly scheduler now accepts a change_filter argument
 
 ** SQLAlchemy & SQLAlchemy-Migrate
 
-Buildbot now uses SQLAlchemy as a database abstraction layer.  This will give
-us greater inter-database compatibility and a more stable and reliable basis
-for this core component of the framework.  SQLAlchemy-Migrate is used to manage
+Buildbot now uses SQLAlchemy as a database abstraction layer.  This gives
+greater inter-database compatibility and a more stable and reliable basis for
+this core component of the framework.  SQLAlchemy-Migrate is used to manage
 changes to the database schema from version to version.
 
 *** Postgres support
