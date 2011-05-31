@@ -16,7 +16,6 @@
 import mock
 from twisted.trial import unittest
 from buildbot import buildslave
-from buildbot.process import botmaster
 
 class AbstractBuildSlave(unittest.TestCase):
 
@@ -96,7 +95,7 @@ class AbstractBuildSlave(unittest.TestCase):
 
     def test_setBotmaster(self):
         bs = self.ConcreteBuildSlave('bot', 'pass')
-        bm = mock.Mock(name='botmaster', spec=botmaster.BotMaster)
+        bm = mock.Mock(name='botmaster')
 
         # stub out the things that should be called
         bs.updateLocks = mock.Mock()
