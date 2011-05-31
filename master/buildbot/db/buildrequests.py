@@ -240,11 +240,17 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 # if no rows or too few rows were updated, then we failed; this
                 # will roll back the transaction
                 if updated_rows != len(brids):
+                    # MySQL doesn't do transactions, so roll this back manually
+                    if conn.engine.dialect.name == 'mysql':
+                        alreadyClaimed(conn, tmp)
                     transaction.rollback()
                     raise AlreadyClaimedError
 
                 transaction.commit()
             except (sa.exc.ProgrammingError, sa.exc.IntegrityError):
+                # MySQL doesn't do transactions, so roll this back manually
+                if conn.engine.dialect.name == 'mysql':
+                    alreadyClaimed(conn, tmp)
                 transaction.rollback()
                 raise AlreadyClaimedError
 
