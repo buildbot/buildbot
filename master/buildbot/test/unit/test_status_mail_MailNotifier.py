@@ -19,12 +19,6 @@ from twisted.trial import unittest
 
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.status.mail import MailNotifier
-from buildbot.process.build import Build
-from buildbot.process.builder import Builder
-from buildbot.db.buildsets import BuildsetsConnectorComponent
-from buildbot.db.builds import BuildsConnectorComponent
-from buildbot.db.buildrequests import BuildRequestsConnectorComponent
-from buildbot.status.master import Status
 from twisted.internet import defer
 from buildbot.test.fake import fakedb
 
