@@ -963,6 +963,22 @@ class FakeBuildsComponent(FakeDBComponent):
             number=row.number,
             start_time=mkdt(row.start_time),
             finish_time=mkdt(row.finish_time)))
+    
+    def getBuildsForRequest(self, brid):
+        ret = []
+        def mkdt(epoch):
+            if epoch:
+                return epoch2datetime(epoch)
+ 
+        for (id, row) in self.builds.items():
+            if row.brid == brid:
+                ret.append(dict(bid = row.id,
+                                brid=row.brid,
+                                number=row.number,
+                                start_time=mkdt(row.start_time),
+                                finish_time=mkdt(row.finish_time)))
+               
+        return defer.succeed(ret)            
 
     def addBuild(self, brid, number, _reactor=reactor):
         bid = self._newId()

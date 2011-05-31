@@ -19,6 +19,14 @@ from twisted.trial import unittest
 
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.status.mail import MailNotifier
+from buildbot.process.build import Build
+from buildbot.process.builder import Builder
+from buildbot.db.buildsets import BuildsetsConnectorComponent
+from buildbot.db.builds import BuildsConnectorComponent
+from buildbot.db.buildrequests import BuildRequestsConnectorComponent
+from buildbot.status.master import Status
+from twisted.internet import defer
+from buildbot.test.fake import fakedb
 
 class FakeLog(object):
     def __init__(self, text):
@@ -57,7 +65,7 @@ class TestMailNotifier(unittest.TestCase):
         mn = MailNotifier('from@example.org', addLogs=True)
         m = mn.createEmail(msgdict, u'builder-n\u00E5me',
                            u'project-n\u00E5me', SUCCESS,
-                           build, patch, logs)
+                           [build], [patch], logs)
         try:
             m.as_string()
         except UnicodeEncodeError:
@@ -93,10 +101,64 @@ class TestMailNotifier(unittest.TestCase):
     def test_buildFinished_ignores_unspecified_builders(self):
         mn = MailNotifier('from@example.org', builders=['a','b'])
 
-
         build = Mock()
 
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
+        
+    def test_buildsetFinished_sends_email(self):
+        fakeBuildMessage = Mock()
+        mn = MailNotifier('from@example.org', 
+                          buildSetSummary=True, 
+                          mode="all",
+                          builders=["Builder"])
+        
+        mn.buildMessage = fakeBuildMessage
+        
+        def fakeGetBuild(number):
+            return build
+        
+        def fakeGetBuilder(buildername):
+            if buildername == builder.name: 
+                return builder
+            return None
+        
+        def fakeGetBuildRequests(self, bsid):
+            return defer.succeed([{"buildername":"Builder", "brid":1}])
+ 
+        builder = Mock()
+        builder.getBuild = fakeGetBuild
+        builder.name = "Builder"
+        
+        build = Mock()
+        build.result = FAILURE
+        build.finished = True
+        build.reason = "testReason"
+        build.builder = builder
+        build.getBuilder = Mock()
+        build.getBuilder.return_value = builder
+       
+       
+        self.db = fakedb.FakeDBConnector(self)
+        self.db.insertTestData([fakedb.Buildset(id=99, sourcestampid=127,
+                                                results=SUCCESS,
+                                                reason="testReason"),
+                                fakedb.BuildRequest(id=11, buildsetid=99,
+                                                    buildername='Builder'),
+                                fakedb.Build(number=0, brid=11, results=SUCCESS)
+                                ])
+        mn.parent = self
+        
+        self.status = Mock()
+        mn.master_status = Mock()
+        mn.master_status.getBuilder = fakeGetBuilder
+        mn.buildMessageDict = Mock()
+        mn.buildMessageDict.return_value = {"body":"body", "type":"text",
+                                            "subject":"subject"}
+            
+        mn.buildsetFinished(99, FAILURE)
+        fakeBuildMessage.assert_called_with("Buildset Complete: testReason",
+                                            [build], SUCCESS)
+ 
 
     def test_buildFinished_ignores_unspecified_categories(self):
         mn = MailNotifier('from@example.org', categories=['fast'])
@@ -117,7 +179,7 @@ class TestMailNotifier(unittest.TestCase):
         build = Mock()
         mn.buildFinished('dummyBuilder', build, FAILURE)
 
-        mock_method.assert_called_with('dummyBuilder', build, FAILURE)
+        mock_method.assert_called_with('dummyBuilder', [build], FAILURE)
 
     def test_buildFinished_mode_failing_ignores_successful_build(self):
         mn = MailNotifier('from@example.org', mode="failing")
