@@ -66,3 +66,6 @@ class DBConnector(service.MultiService):
         d = self.changes.pruneChanges(self.changeHorizon)
         d.addErrback(log.err, 'while pruning changes')
         return d
+
+# alias for the class, can be overriden
+db_connector = DBConnector
