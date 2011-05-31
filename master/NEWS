@@ -16,6 +16,11 @@ step's functionality.
 
 ** Deprecations, Removals, and Non-Compatible Changes
 
+*** Init script now uses /etc/default/buildmaster for instance configuration.
+Also MASTER_ENABLED used in /etc/default/buildmaster now accepts 'true|yes|1'
+to enable instance and 'false|no|0' to disable(not case sensitive). Other
+values will be considered as syntax error.
+
 *** 'buildbot.status.words.IRC' now defaults to `AllowForce=False` to prevent
 IRC bots from being allowed to force builds by default.
 
