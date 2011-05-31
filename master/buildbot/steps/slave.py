@@ -66,6 +66,8 @@ class FileExists(BuildStep):
     description='Checking'
     descriptionDone='Checked'
 
+    renderables = [ 'file' ]
+
     haltOnFailure = True
     flunkOnFailure = True
 
@@ -80,7 +82,7 @@ class FileExists(BuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about stat")
-        cmd = LoggedRemoteCommand('stat', {'file': self.build.render(self.file) })
+        cmd = LoggedRemoteCommand('stat', {'file': self.file })
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
@@ -106,6 +108,8 @@ class RemoveDirectory(BuildStep):
     description='Deleting'
     desciprtionDone='Deleted'
 
+    renderables = [ 'dir' ]
+
     haltOnFailure = True
     flunkOnFailure = True
 
@@ -119,7 +123,7 @@ class RemoveDirectory(BuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about rmdir")
-        cmd = LoggedRemoteCommand('rmdir', {'dir': self.build.render(self.dir) })
+        cmd = LoggedRemoteCommand('rmdir', {'dir': self.dir })
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)

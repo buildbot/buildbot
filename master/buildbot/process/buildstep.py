@@ -777,6 +777,14 @@ class BuildStep:
                 doStep = defer.succeed(False)
         else:
             doStep = defer.maybeDeferred(self.doStepIf, self)
+
+        renderables = []
+        from twisted.python.reflect import accumulateClassList
+        accumulateClassList(self.__class__, 'renderables', renderables)
+
+        for renderable in renderables:
+            setattr(self, renderable, self.build.render(getattr(self, renderable)))
+
         doStep.addCallback(self._startStep_3)
         return doStep
 

@@ -185,6 +185,8 @@ class _TransferBuildStep(BuildStep):
     """
     DEFAULT_WORKDIR = "build"           # is this redundant?
 
+    renderables = [ 'workdir' ]
+
     haltOnFailure = True
     flunkOnFailure = True
 
@@ -197,7 +199,7 @@ class _TransferBuildStep(BuildStep):
             workdir = self.DEFAULT_WORKDIR
         else:
             workdir = self.workdir
-        return self.build.render(workdir)
+        return workdir
 
     def interrupt(self, reason):
         self.addCompleteLog('interrupt', str(reason))
@@ -239,6 +241,8 @@ class FileUpload(_TransferBuildStep):
 
     name = 'upload'
 
+    renderables = [ 'slavesrc', 'masterdest' ]
+
     def __init__(self, slavesrc, masterdest,
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
@@ -266,8 +270,8 @@ class FileUpload(_TransferBuildStep):
             m = "slave is too old, does not know about uploadFile"
             raise BuildSlaveTooOldError(m)
 
-        source = self.build.render(self.slavesrc)
-        masterdest = self.build.render(self.masterdest)
+        source = self.slavesrc
+        masterdest = self.masterdest
         # we rely upon the fact that the buildmaster runs chdir'ed into its
         # basedir to make sure that relative paths in masterdest are expanded
         # properly. TODO: maybe pass the master's basedir all the way down
@@ -314,6 +318,8 @@ class DirectoryUpload(BuildStep):
 
     name = 'upload'
 
+    renderables = [ 'slavesrc', 'masterdest' ]
+
     def __init__(self, slavesrc, masterdest,
                  workdir="build", maxsize=None, blocksize=16*1024,
                  compress=None, **buildstep_kwargs):
@@ -341,8 +347,8 @@ class DirectoryUpload(BuildStep):
             m = "slave is too old, does not know about uploadDirectory"
             raise BuildSlaveTooOldError(m)
 
-        source = self.build.render(self.slavesrc)
-        masterdest = self.build.render(self.masterdest)
+        source = self.slavesrc
+        masterdest = self.masterdest
         # we rely upon the fact that the buildmaster runs chdir'ed into its
         # basedir to make sure that relative paths in masterdest are expanded
         # properly. TODO: maybe pass the master's basedir all the way down
@@ -443,6 +449,8 @@ class FileDownload(_TransferBuildStep):
     """
     name = 'download'
 
+    renderables = [ 'mastersrc', 'slavedest' ]
+
     def __init__(self, mastersrc, slavedest,
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
@@ -471,8 +479,8 @@ class FileDownload(_TransferBuildStep):
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
-        source = os.path.expanduser(self.build.render(self.mastersrc))
-        slavedest = self.build.render(self.slavedest)
+        source = os.path.expanduser(self.mastersrc)
+        slavedest = self.slavedest
         log.msg("FileDownload started, from master %r to slave %r" %
                 (source, slavedest))
 
@@ -529,6 +537,8 @@ class StringDownload(_TransferBuildStep):
     """
     name = 'string_download'
 
+    renderables = [ 'slavedest', 's' ]
+
     def __init__(self, s, slavedest,
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
@@ -557,14 +567,14 @@ class StringDownload(_TransferBuildStep):
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
-        slavedest = self.build.render(self.slavedest)
+        slavedest = self.slavedest
         log.msg("StringDownload started, from master to slave %r" % slavedest)
 
         self.step_status.setText(['downloading', "to",
                                   os.path.basename(slavedest)])
 
         # setup structures for reading the file
-        fp = StringIO(self.build.render(self.s))
+        fp = StringIO(self.s)
         fileReader = _FileReader(fp)
 
         # default arguments

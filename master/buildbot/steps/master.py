@@ -29,6 +29,7 @@ class MasterShellCommand(BuildStep):
     name='MasterShellCommand'
     description='Running'
     descriptionDone='Ran'
+    renderables = [ 'command' ]
     haltOnFailure = True
     flunkOnFailure = True
 
@@ -71,7 +72,7 @@ class MasterShellCommand(BuildStep):
 
     def start(self):
         # render properties
-        command = self.build.render(self.command)
+        command = self.command
         # set up argv
         if type(command) in types.StringTypes:
             if runtime.platformType  == 'win32':
