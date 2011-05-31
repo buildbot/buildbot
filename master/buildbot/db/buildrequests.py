@@ -216,56 +216,60 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     prefixes=['TEMPORARY'])
             tmp.create()
 
-            q = tmp.insert()
-            conn.execute(q, [ dict(brid=id) for id in brids ])
+            try:
+                q = tmp.insert()
+                conn.execute(q, [ dict(brid=id) for id in brids ])
 
-            q = tbl.update(whereclause=(tbl.c.id.in_(tmp.select())))
-            q = q.where(
-                # unclaimed
-                (((tbl.c.claimed_at == None) | (tbl.c.claimed_at == 0)) &
-                (tbl.c.claimed_by_name == None) &
-                (tbl.c.claimed_by_incarnation == None)) |
-                # .. or mine
-                ((tbl.c.claimed_at != None) &
-                (tbl.c.claimed_by_name == master_name) &
-                (tbl.c.claimed_by_incarnation == master_incarnation)))
-            res = conn.execute(q,
-                claimed_at=_reactor.seconds(),
-                claimed_by_name=self.db.master.master_name,
-                claimed_by_incarnation=self.db.master.master_incarnation)
-            updated_rows = res.rowcount
-            res.close()
+                q = tbl.update(whereclause=(tbl.c.id.in_(tmp.select())))
+                q = q.where(
+                    # unclaimed
+                    (((tbl.c.claimed_at == None) | (tbl.c.claimed_at == 0)) &
+                    (tbl.c.claimed_by_name == None) &
+                    (tbl.c.claimed_by_incarnation == None)) |
+                    # .. or mine
+                    ((tbl.c.claimed_at != None) &
+                    (tbl.c.claimed_by_name == master_name) &
+                    (tbl.c.claimed_by_incarnation == master_incarnation)))
+                res = conn.execute(q,
+                    claimed_at=_reactor.seconds(),
+                    claimed_by_name=self.db.master.master_name,
+                    claimed_by_incarnation=self.db.master.master_incarnation)
+                updated_rows = res.rowcount
+                res.close()
 
-            # if no rows or too few rows were updated, then we failed; this
-            # will roll back the transaction
-            if updated_rows != len(brids):
-                # MySQL doesn't do transactions, so roll this back manually
-                if conn.engine.dialect.name == 'mysql':
-                    alreadyClaimed(conn, tmp)
-                transaction.rollback()
-                raise AlreadyClaimedError
-
-            transaction.commit()
-
-            # testing hook to simulate a race condition
-            if _race_hook:
-                _race_hook(conn)
-
-            # but double-check to be sure all of the desired build requests
-            # now belong to this master
-            q = sa.select([tbl.c.claimed_by_name,
-                           tbl.c.claimed_by_incarnation],
-                          whereclause=(tbl.c.id.in_(tmp.select())))
-            res = conn.execute(q)
-            for row in res:
-                if row.claimed_by_name != master_name or \
-                        row.claimed_by_incarnation != master_incarnation:
-                    # note that the transaction is already committed here; too
-                    # bad!  We'll just fake it by unclaiming those requests (so
-                    # hopefully this was not a reclaim)
-                    alreadyClaimed(conn, tmp)
+                # if no rows or too few rows were updated, then we failed; this
+                # will roll back the transaction
+                if updated_rows != len(brids):
+                    # MySQL doesn't do transactions, so roll this back manually
+                    if conn.engine.dialect.name == 'mysql':
+                        alreadyClaimed(conn, tmp)
+                    transaction.rollback()
                     raise AlreadyClaimedError
-            res.close()
+
+                transaction.commit()
+
+                # testing hook to simulate a race condition
+                if _race_hook:
+                    _race_hook(conn)
+
+                # but double-check to be sure all of the desired build requests
+                # now belong to this master
+                q = sa.select([tbl.c.claimed_by_name,
+                            tbl.c.claimed_by_incarnation],
+                            whereclause=(tbl.c.id.in_(tmp.select())))
+                res = conn.execute(q)
+                for row in res:
+                    if row.claimed_by_name != master_name or \
+                            row.claimed_by_incarnation != master_incarnation:
+                        # note that the transaction is already committed here; too
+                        # bad!  We'll just fake it by unclaiming those requests (so
+                        # hopefully this was not a reclaim)
+                        alreadyClaimed(conn, tmp)
+                        raise AlreadyClaimedError
+                res.close()
+            finally:
+                # clean up after ourselves, even though it's a temporary table
+                tmp.drop(checkfirst=True)
 
         return self.db.pool.do(thd)
 
