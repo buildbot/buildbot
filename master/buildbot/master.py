@@ -547,7 +547,7 @@ class BuildMaster(service.MultiService):
         if self.db:
             return
 
-        self.db = connector.DBConnector(self, db_url, self.basedir)
+        self.db = connector.db_connector(self, db_url, self.basedir)
         self.db.setServiceParent(self)
 
         # make sure it's up to date
