@@ -64,7 +64,6 @@ from twisted.python import log
 
 from buildbot.util.eventual import eventually
 from buildbot import util
-from buildbot import interfaces
 from buildbot.process.metrics import Timer, countMethod
 
 class LoopBase(service.MultiService):

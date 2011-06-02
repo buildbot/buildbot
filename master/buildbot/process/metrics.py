@@ -45,6 +45,7 @@ import gc, os, sys
 # Make use of the resource module if we can
 try:
     import resource
+    assert resource
 except ImportError:
     resource = None
 
