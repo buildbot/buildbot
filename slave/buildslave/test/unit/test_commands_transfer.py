@@ -126,7 +126,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     {'header': 'sending %s' % self.datafile},
                     'write 64', 'write 64', 'write 52', 'close',
                     {'rc': 0}
@@ -149,7 +149,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     {'header': 'sending %s' % self.datafile},
                     'write 64', 'write 36', 'close',
                     {'rc': 1,
@@ -172,7 +172,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             df = self.datafile + "-nosuch"
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     {'header': 'sending %s' % df},
                     'close',
                     {'rc': 1,
@@ -206,7 +206,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         dl = defer.DeferredList([d, interrupt_d])
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     {'header': 'sending %s' % self.datafile},
                     'write(s)', 'close', {'rc': 1}
                 ])
@@ -230,7 +230,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     {'header': 'sending %s' % self.datafile},
                     'write 64', 'write 64', 'write 52',
                     'close','utime - %s' % timestamp[0],
@@ -275,7 +275,7 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     {'header': 'sending %s' % self.datadir},
                     'write(s)', 'unpack', # note no 'close"
                     {'rc': 0}
@@ -343,7 +343,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     'read 32', 'read 32', 'read 32', 'close',
                     {'rc': 0}
                 ])
@@ -370,7 +370,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     'read(s)', 'close',
                     {'rc': 0}
                 ])
@@ -396,7 +396,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     'close',
                     {'rc': 1,
                      'stderr': "Cannot open file '%s' for download"
@@ -421,7 +421,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     'read(s)', 'close',
                     {'rc': 1,
                      'stderr': "Maximum filesize reached, truncating file '%s'"
@@ -459,7 +459,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         dl = defer.DeferredList([d, interrupt_d])
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     'read(s)', 'close', {'rc': 1}
                 ])
         dl.addCallback(check)
