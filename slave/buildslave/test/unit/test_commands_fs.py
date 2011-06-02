@@ -81,7 +81,7 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertTrue(os.path.exists(os.path.abspath(os.path.join(self.basedir,'test-dir'))))
-            self.assertEqual(self.get_updates(),
+            self.assertUpdates(
                     [{'rc': 0}],
                     self.builder.show())
         d.addCallback(check)
@@ -94,7 +94,7 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(),
+            self.assertUpdates(
                     [{'rc': 0}],
                     self.builder.show())
         d.addCallback(check)
@@ -108,7 +108,7 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [{'rc': 1}], self.builder.show())
+            self.assertUpdates([{'rc': 1}], self.builder.show())
         d.addErrback(check)
         return d
 
@@ -127,7 +127,7 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(),
+            self.assertUpdates(
                     [{'rc': 1}],
                     self.builder.show())
         d.addCallback(check)
