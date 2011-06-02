@@ -130,6 +130,7 @@ class _Uncollectable:
 
 class TestPeriodicChecks(TestMetricBase):
     def testPeriodicCheck(self):
+        old_garbage = len(gc.garbage)
         clock = task.Clock()
         metrics.periodicCheck(_reactor=clock)
         clock.pump([0.1, 0.1, 0.1])
@@ -137,10 +138,11 @@ class TestPeriodicChecks(TestMetricBase):
         # We should have 0 reactor delay since we're using a fake clock
         report = self.observer.asDict()
         self.assertEquals(report['timers']['reactorDelay'], 0)
-        self.assertEquals(report['counters']['gc.garbage'], 0)
+        self.assertEquals(report['counters']['gc.garbage'], old_garbage)
         self.assertEquals(report['alarms']['gc.garbage'][0], 'OK')
 
     def testUncollectable(self):
+        old_garbage = len(gc.garbage)
         u1 = _Uncollectable()
         u2 = _Uncollectable()
         u1.ref = u2
@@ -156,7 +158,7 @@ class TestPeriodicChecks(TestMetricBase):
         # We should have 0 reactor delay since we're using a fake clock
         report = self.observer.asDict()
         self.assertEquals(report['timers']['reactorDelay'], 0)
-        self.assertEquals(report['counters']['gc.garbage'], 2)
+        self.assertEquals(report['counters']['gc.garbage'], old_garbage + 2)
         self.assertEquals(report['alarms']['gc.garbage'][0], 'WARN')
 
     if sys.platform == 'linux2':
