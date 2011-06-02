@@ -58,7 +58,7 @@ class RemoteBuildSet(pb.Referenceable):
         def add_remote(buildrequests):
             for k,v in buildrequests.iteritems():
                 buildrequests[k] = IRemote(v)
-            return buildrequests
+            return buildrequests.items()
         d.addCallback(add_remote)
         return d
 

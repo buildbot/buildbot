@@ -562,6 +562,10 @@ to use @option{--logfile} instead.
 This instructs the tool to read the change comments from the given
 file. If you use @code{-} as the filename, the tool will read the
 change comments from stdin.
+
+@item --encoding
+Specifies the character encoding for all other parameters, defaulting to 'utf8'.
+
 @end table
 
 

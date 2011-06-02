@@ -16,7 +16,7 @@
 
 from collections import deque
 import os
-import pickle
+import cPickle as pickle
 
 from zope.interface import implements, Interface
 

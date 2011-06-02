@@ -59,6 +59,16 @@ class XmlResource(resource.Resource):
             return ''
         return data
 
+_abbr_day = [ 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+_abbr_mon = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
+            'Sep', 'Oct', 'Nov', 'Dec']
+
+def rfc822_time(tstamp):
+    res = time.strftime("%%s, %d %%s %Y %H:%M:%S GMT",
+                                       tstamp)
+    res = res % (tstamp.tm_wday, tstamp.tm_mon)
+    return res
+
 class FeedResource(XmlResource):
     pageTitle = None
     link = 'http://dummylink'
@@ -219,8 +229,7 @@ class FeedResource(XmlResource):
                         log_lines.extend(unilist)
 
             bc = {}
-            bc['date'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
-                                       finishedTime)
+            bc['date'] = rfc822_time(finishedTime)
             bc['summary_link'] = ('%sbuilders/%s' %
                                   (self.link,
                                    build.getBuilder().getName()))            
@@ -233,8 +242,7 @@ class FeedResource(XmlResource):
             bc['log_lines'] = log_lines
 
             if finishedTime is not None:
-                bc['rfc822_pubdate'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
-                                              finishedTime)
+                bc['rfc822_pubdate'] = rfc822_time(finishedTime)
                 bc['rfc3339_pubdate'] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
                                                finishedTime)
 
@@ -258,8 +266,7 @@ class FeedResource(XmlResource):
         cxt['language'] = self.language
         cxt['description'] = self.description
         if self.pubdate is not None:
-            cxt['rfc822_pubdate'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
-                                                  self.pubdate)
+            cxt['rfc822_pubdate'] = rfc822_time( self.pubdate)
             cxt['rfc3339_pubdate'] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
                                                    self.pubdate)
 

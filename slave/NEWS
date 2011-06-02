@@ -10,6 +10,11 @@ systems.  This means that in most cases child processes are cleaned up
 properly, and removes the most common use for usePTY.  As of this version,
 usePTY should be set to False for almost all users of Buildbot.
 
+** Init script now uses /etc/default/buildslave for instance configuration.
+Also SLAVE_ENABLED used in /etc/default/buildslave now accepts 'true|yes|1'
+to enable instance and 'false|no|0' to disable(not case sensitive). Other
+values will be considered as syntax error.
+
 
 * Buildbot-Slave 0.8.3 (December 19, 2010)
 
