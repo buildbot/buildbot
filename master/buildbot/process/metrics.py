@@ -31,7 +31,7 @@ Basic architecture:
           \/
     MetricWatcher
 """
-from collections import defaultdict, deque
+from collections import deque
 
 from twisted.python import log
 from twisted.internet.task import LoopingCall
@@ -39,6 +39,7 @@ from twisted.internet import reactor
 from twisted.application import service
 
 from buildbot import util
+from buildbot.util.bbcollections import defaultdict
 
 import gc, os, sys
 # Make use of the resource module if we can
