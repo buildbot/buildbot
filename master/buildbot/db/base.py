@@ -35,7 +35,7 @@ class DBConnectorComponent(object):
         # set up caches
         for method in dir(self.__class__):
             o = getattr(self, method)
-            if isinstance(o, CachedMethod):
+            if isinstance(o, CachedMethod) and self.db.master:
                 setattr(self, method, o.get_cached_method(self))
 
 class CachedMethod(object):
