@@ -49,6 +49,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     @ivar patch: tuple (patch level, patch body) or None
 
+    @ivar patch_author: patch author name or None
+
     @ivar changes: tuple of changes that went into this source stamp, sorted by
     number
 
@@ -60,10 +62,11 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     persistenceVersion = 2
     persistenceForgets = ( 'wasUpgraded', )
 
-    # all six of these are publically visible attributes
+    # all seven of these are publicly visible attributes
     branch = None
     revision = None
     patch = None
+    patch_author = None
     changes = ()
     project = ''
     repository = ''
@@ -102,7 +105,10 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         if ssdict['patch_body']:
             # note that this class does not store the patch_subdir
             sourcestamp.patch = (ssdict['patch_level'], ssdict['patch_body'])
-
+        
+        if ssdict['patch_author']:
+            sourcestamp.patch_author = ssdict['patch_author']
+            
         if ssdict['changeids']:
             # sort the changeids in order, oldest to newest
             sorted_changeids = sorted(ssdict['changeids'])
@@ -122,8 +128,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         return d
 
     def __init__(self, branch=None, revision=None, patch=None,
-                 changes=None, project='', repository='', _fromSsdict=False,
-                 _ignoreChanges=False):
+                 patch_author=None, changes=None, project='', repository='',
+                 _fromSsdict=False, _ignoreChanges=False):
         # skip all this madness if we're being built from the database
         if _fromSsdict:
             return
@@ -133,6 +139,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             assert int(patch[0]) != -1
         self.branch = branch
         self.patch = patch
+        self.patch_author = patch_author
         self.project = project or ''
         self.repository = repository or ''
         if changes and not _ignoreChanges:
@@ -263,7 +270,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
                 branch=self.branch, revision=self.revision,
                 repository=self.repository, project=self.project,
                 patch_body=patch_body, patch_level=patch_level,
-                patch_subdir=None, changeids=[c.number for c in self.changes])
+                patch_author=self.patch_author, patch_subdir=None,
+                changeids=[c.number for c in self.changes])
         def set_ssid(ssid):
             self.ssid = ssid
             return ssid

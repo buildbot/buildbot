@@ -290,7 +290,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                     dict(branch='trunk', repository='repo',
                         project='proj', revision='1234',
                         patch_body='this is my diff, -- ++, etc.',
-                        patch_level=1, patch_subdir=''))
+                        patch_level=1, patch_subdir='',
+                        patch_author='who'))
         d.addCallback(check)
         return d
 
@@ -326,7 +327,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                     dict(branch='trunk', repository='repo',
                         project='proj', revision='1234',
                         patch_body='this is my diff, -- ++, etc.',
-                        patch_level=1, patch_subdir=''))
+                        patch_level=1, patch_subdir='',
+                        patch_author='who'))
         d.addCallback(check)
         return d
 
@@ -373,7 +375,8 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                         ]),
                     dict(branch='default', repository='repo',
                         project='proj', revision='abcdef',
-                        patch_body='-- ++', patch_level=1, patch_subdir=''))
+                        patch_body='-- ++', patch_level=1, patch_subdir='',
+                        patch_author=None))
         d.addCallback(check)
         return d
 
@@ -391,7 +394,8 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                         ]),
                     dict(branch='default', repository='repo',
                         project='proj', revision='abcdef',
-                        patch_body='-- ++', patch_level=1, patch_subdir=''))
+                        patch_body='-- ++', patch_level=1, patch_subdir='',
+                        patch_author='who'))
         d.addCallback(check)
         return d
 

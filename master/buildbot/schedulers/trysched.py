@@ -172,12 +172,17 @@ class Try_Jobdir(TryBase):
         if not builderNames:
             log.msg("incoming Try job did not specify any allowed builder names")
             return defer.succeed(None)
+        
+        who = None
+        if parsed_job['who']:
+            who = parsed_job['who']
 
         d = self.master.db.sourcestamps.addSourceStamp(
                 branch=parsed_job['branch'],
                 revision=parsed_job['baserev'],
                 patch_body=parsed_job['patch_body'],
                 patch_level=parsed_job['patch_level'],
+                patch_author=who,
                 patch_subdir='', # TODO: can't set this remotely - #1769
                 project=parsed_job['project'],
                 repository=parsed_job['repository'])
@@ -199,7 +204,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
     @defer.deferredGenerator
     def perspective_try(self, branch, revision, patch, repository, project,
-                        builderNames, who='', properties={} ):
+                        builderNames, who=None, properties={} ):
         db = self.scheduler.master.db
         log.msg("user %s requesting build on builders %s" % (self.username,
                                                              builderNames))
@@ -212,7 +217,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         wfd = defer.waitForDeferred(
                 db.sourcestamps.addSourceStamp(branch=branch, revision=revision,
                     repository=repository, project=project, patch_level=patch[0],
-                    patch_body=patch[1], patch_subdir=''))
+                    patch_body=patch[1], patch_subdir='', patch_author=who))
                     # note: no way to specify patch subdir - #1769
         yield wfd
         ssid = wfd.getResult()
