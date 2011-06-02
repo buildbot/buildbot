@@ -35,7 +35,7 @@ from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
 from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
-from buildbot.config import BuilderConfig
+from buildbot.config import BuilderConfig, MasterConfig
 from buildbot.process.builder import BuilderControl
 from buildbot.db import connector, exceptions
 from buildbot.schedulers.manager import SchedulerManager
@@ -115,6 +115,8 @@ class BuildMaster(service.MultiService):
         self.debugClientRegistration = None
 
         self.statusTargets = []
+
+        self.config = MasterConfig()
 
         self.db = None
         self.db_url = None
@@ -319,10 +321,7 @@ class BuildMaster(service.MultiService):
                 log.msg("leaving old configuration in place")
                 raise KeyError("must have a 'slaves' key")
 
-            if changeHorizon is not None:
-                self.change_svc.changeHorizon = changeHorizon # TODO: remove
-                # TODO: get this from master.config.changeHorizon
-                self.db.changeHorizon = changeHorizon
+            self.config.changeHorizon = changeHorizon
 
             change_source = config.get('change_source', [])
             if isinstance(change_source, (list, tuple)):

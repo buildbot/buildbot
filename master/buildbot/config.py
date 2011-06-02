@@ -16,6 +16,16 @@
 from buildbot.util import safeTranslate
 
 
+class MasterConfig(object):
+    """
+    Namespace for master configuration values.  An instance of this class is
+    available at C{master.config}.
+
+    @ivar changeHorizon: the current change horizon
+    """
+
+    changeHorizon = None
+
 class BuilderConfig:
     """
 

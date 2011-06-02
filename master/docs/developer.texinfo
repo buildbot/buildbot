@@ -12,6 +12,7 @@ described here.
 
 @menu
 * Buildmaster Service Hierarchy::
+* Access to Configuration::
 * Utilities::
 * The Database::
 * Log File Format::
@@ -66,6 +67,18 @@ StatusReceiverMultiService and include an 'implements(IStatusReceiver)' stanza.
 @end itemize
 
 @end itemize
+
+@node Access to Configuration
+@section Access to Configuration
+
+The master object makes much of the configuration available from an object
+named @code{master.config}.  Configuration is stored as attributes of this
+object.  Where possible, components should access this configuration directly
+and not cache the configuration values anywhere else.  This avoids the need to
+ensure that update-from-configuration methods are called on a reconfig.
+
+The available attributes are listed in the docstring for the
+@code{buildbot.config.MasterConfig} class.
 
 @node Utilities
 @section Utilities
