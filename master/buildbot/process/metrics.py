@@ -127,12 +127,12 @@ def timeMethod(name, _reactor=None):
 
 class FiniteList(deque):
     def __init__(self, maxlen=10):
-        self.maxlen = maxlen
+        self._maxlen = maxlen
         deque.__init__(self)
 
     def append(self, o):
         deque.append(self, o)
-        if len(self) > self.maxlen:
+        if len(self) > self._maxlen:
             self.popleft()
 
 class AveragingFiniteList(FiniteList):
