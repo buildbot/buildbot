@@ -27,6 +27,7 @@ from buildslave.interfaces import ISlaveCommand
 from buildslave import runprocess
 from buildslave.exceptions import AbandonChain
 from buildslave.commands import utils
+from buildslave import util
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
@@ -130,6 +131,7 @@ class Command:
         self.builder = builder
         self.stepId = stepId # just for logging
         self.args = args
+        self.startTime = None
         self.setup(args)
 
     def setup(self, args):
@@ -138,8 +140,10 @@ class Command:
 
     def doStart(self):
         self.running = True
+        self.startTime = util.now(self._reactor)
         d = defer.maybeDeferred(self.start)
         def commandComplete(res):
+            self.sendStatus({"elapsed": util.now(self._reactor) - self.startTime})
             self.running = False
             return res
         d.addBoth(commandComplete)

@@ -11,6 +11,7 @@ The keys in this section affect the operations of the buildmaster globally.
 * Setting the PB Port for Slaves::
 * Defining Global Properties::
 * Debug Options::
+* Metrics Options::
 @end menu
 
 @node Database Specification
@@ -501,3 +502,15 @@ data attributes of <Builder ''builder'' at 48963528>
 >>> win32 = _
 >>> win32.category = 'w32'
 @end example
+
+@node Metrics Options
+@subsection Metrics Options
+@code{c['metrics'] = dict(log_interval=10, periodic_interval=10)}
+
+@code{c['metrics']} can be a dictionary that configures various aspects of the metrics subsystem. If @code{c['metrics']} is None, then metrics collection, logging and reporting will be disabled.
+
+@code{log_interval} determines how often metrics should be logged to twistd.log. It default to 60s. If set to 0 or None, then logging of metrics will be disabled. This value can be changed via a reconfig.
+
+@code{periodic_interval} determines how often various non-event based metrics are collected, such as memory usage, uncollectable garbage, reactor delay. This defaults to 10s. If set to 0 or None, then periodic collection of this data is disabled. This value can also be changed via a reconifg.
+
+Read more about metrics in the @ref{Metrics} section of the documentation.

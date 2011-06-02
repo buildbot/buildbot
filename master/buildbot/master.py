@@ -42,6 +42,7 @@ from buildbot.schedulers.manager import SchedulerManager
 from buildbot.schedulers.base import isScheduler
 from buildbot.process.botmaster import BotMaster
 from buildbot.process import debug
+from buildbot.process import metrics
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import monkeypatches
 
@@ -122,11 +123,13 @@ class BuildMaster(service.MultiService):
         self.db_url = None
         self.db_poll_interval = _Unset
 
+        self.metrics = None
+
         # note that "read" here is taken in the past participal (i.e., "I read
         # the config already") rather than the imperative ("you should read the
         # config later")
         self.readConfig = False
-        
+
         # create log_rotation object and set default parameters (used by WebStatus)
         self.log_rotation = LogRotation()
 
@@ -241,6 +244,7 @@ class BuildMaster(service.MultiService):
                           "logHorizon", "buildHorizon", "changeHorizon",
                           "logMaxSize", "logMaxTailSize", "logCompressionMethod",
                           "db_url", "multiMaster", "db_poll_interval",
+                          "metrics"
                           )
             for k in config.keys():
                 if k not in known_keys:
@@ -300,6 +304,8 @@ class BuildMaster(service.MultiService):
 
                 multiMaster = config.get("multiMaster", False)
 
+                metrics_config = config.get("metrics")
+
             except KeyError:
                 log.msg("config dictionary is missing a required parameter")
                 log.msg("leaving old configuration in place")
@@ -314,6 +320,9 @@ class BuildMaster(service.MultiService):
                 m = ("c['bots'] is deprecated as of 0.7.6 and is no longer "
                      "accepted in >= 0.8.0 . Please use c['slaves'] instead.")
                 raise KeyError(m)
+
+            # Set up metrics
+            self.loadConfig_Metrics(metrics_config)
 
             slaves = config.get('slaves', [])
             if "slaves" not in config:
@@ -520,7 +529,7 @@ class BuildMaster(service.MultiService):
             # botmaster will handle startup/shutdown issues.
             d.addCallback(lambda res: self.loadConfig_Builders(builders))
 
-            d.addCallback(lambda res: self.loadConfig_status(status))
+            d.addCallback(lambda res: self.loadConfig_Status(status))
 
             # Schedulers are added after Builders in case they start right away
             d.addCallback(lambda _: self.loadConfig_Schedulers(schedulers))
@@ -541,6 +550,20 @@ class BuildMaster(service.MultiService):
             d.addCallback(_done)
             d.addErrback(log.err)
         return d
+
+    def loadConfig_Metrics(self, metrics_config):
+        if metrics_config:
+            if self.metrics:
+                self.metrics.reloadConfig(metrics_config)
+            else:
+                self.metrics = metrics.MetricLogObserver(metrics_config)
+                self.metrics.setServiceParent(self)
+
+            metrics.MetricCountEvent.log("loaded_config", 1)
+        else:
+            if self.metrics:
+                self.metrics.disownServiceParent()
+            self.metrics = None
 
     def loadDatabase(self, db_url, db_poll_interval=None):
         if self.db:
@@ -592,6 +615,8 @@ class BuildMaster(service.MultiService):
         return self.botmaster.loadConfig_Slaves(new_slaves)
 
     def loadConfig_Sources(self, sources):
+        timer = metrics.Timer("BuildMaster.loadConfig_Sources()")
+        timer.start()
         if not sources:
             log.msg("warning: no ChangeSources specified in c['change_source']")
         # shut down any that were removed, start any that were added
@@ -604,6 +629,13 @@ class BuildMaster(service.MultiService):
             [self.change_svc.addSource(s) for s in added_sources]
         d = defer.DeferredList(dl, fireOnOneErrback=1, consumeErrors=0)
         d.addCallback(addNewOnes)
+
+        def logCount(_):
+            timer.stop()
+            metrics.MetricCountEvent.log("num_sources",
+                len(list(self.change_svc)), absolute=True)
+            return _
+        d.addBoth(logCount)
         return d
 
     def loadConfig_DebugClient(self, debugPassword):
@@ -626,6 +658,8 @@ class BuildMaster(service.MultiService):
         return list(self.scheduler_manager)
 
     def loadConfig_Builders(self, newBuilderData):
+        timer = metrics.Timer("BuildMaster.loadConfig_Builders()")
+        timer.start()
         somethingChanged = False
         newList = {}
         newBuilderNames = []
@@ -688,14 +722,24 @@ class BuildMaster(service.MultiService):
         for builder in allBuilders.values():
             builder.builder_status.reconfigFromBuildmaster(self)
 
+        metrics.MetricCountEvent.log("num_builders",
+            len(allBuilders), absolute=True)
+
         # and then tell the botmaster if anything's changed
         if somethingChanged:
             sortedAllBuilders = [allBuilders[name] for name in newBuilderNames]
             d = self.botmaster.setBuilders(sortedAllBuilders)
+            def stop_timer(_):
+                timer.stop()
+                return _
+            d.addBoth(stop_timer)
             return d
+
         return None
 
-    def loadConfig_status(self, status):
+    def loadConfig_Status(self, status):
+        timer = metrics.Timer("BuildMaster.loadConfig_Status()")
+        timer.start()
         dl = []
 
         # remove old ones
@@ -714,6 +758,14 @@ class BuildMaster(service.MultiService):
                     self.statusTargets.append(s)
         d = defer.DeferredList(dl, fireOnOneErrback=1)
         d.addCallback(addNewOnes)
+
+        def logCount(_):
+            timer.stop()
+            metrics.MetricCountEvent.log("num_status",
+                len(self.statusTargets), absolute=True)
+            return _
+        d.addBoth(logCount)
+
         return d
 
     def checkConfig_Schedulers(self, schedulers):
@@ -725,7 +777,16 @@ class BuildMaster(service.MultiService):
             assert isScheduler(s), errmsg
 
     def loadConfig_Schedulers(self, schedulers):
-        return self.scheduler_manager.updateSchedulers(schedulers)
+        timer = metrics.Timer("BuildMaster.loadConfig_Schedulers()")
+        timer.start()
+        d = self.scheduler_manager.updateSchedulers(schedulers)
+        def logCount(_):
+            timer.stop()
+            metrics.MetricCountEvent.log("num_schedulers",
+                len(list(self.scheduler_manager)), absolute=True)
+            return _
+        d.addBoth(logCount)
+        return d
 
     ## triggering methods and subscriptions
 
@@ -795,6 +856,7 @@ class BuildMaster(service.MultiService):
 
         @returns: L{Change} instance via Deferred
         """
+        metrics.MetricCountEvent.log("added_changes", 1)
 
         # handle translating deprecated names into new names for db.changes
         def handle_deprec(oldname, old, newname, new, default=None,
@@ -992,6 +1054,9 @@ class BuildMaster(service.MultiService):
         # This version polls the database on behalf of the schedulers, using a
         # similar state at the master level.
 
+        timer = metrics.Timer("BuildMaster.pollDatabaseChanges()")
+        timer.start()
+
         need_setState = False
 
         # get the last processed change id
@@ -1016,6 +1081,7 @@ class BuildMaster(service.MultiService):
             need_setState = True
 
         if self._last_processed_change is None:
+            timer.stop()
             return
 
         while True:
@@ -1047,6 +1113,7 @@ class BuildMaster(service.MultiService):
                                self._last_processed_change))
             yield wfd
             wfd.getResult()
+        timer.stop()
 
     _last_unclaimed_brids_set = None
     _last_claim_cleanup = None
@@ -1054,6 +1121,9 @@ class BuildMaster(service.MultiService):
     def pollDatabaseBuildRequests(self):
         # deal with cleaning up unclaimed requests, and (if necessary)
         # requests from a previous instance of this master
+        timer = metrics.Timer("BuildMaster.pollDatabaseBuildRequests()")
+        timer.start()
+
         if self._last_claim_cleanup is None:
             self._last_claim_cleanup = 0
 
@@ -1106,6 +1176,7 @@ class BuildMaster(service.MultiService):
                 brd = brdicts[brid]
                 self.buildRequestAdded(brd['buildsetid'], brd['brid'],
                                        brd['buildername'])
+        timer.stop()
 
     ## state maintenance (private)
 

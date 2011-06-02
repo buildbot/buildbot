@@ -690,6 +690,20 @@ class SourceStampJsonResource(JsonResource):
     def asDict(self, request):
         return self.source_stamp.asDict()
 
+class MetricsJsonResource(JsonResource):
+    help = """Master metrics.
+"""
+    title = "Metrics"
+
+    def asDict(self, request):
+        metrics = self.status.getMetrics()
+        if metrics:
+            return metrics.asDict()
+        else:
+            # Metrics are disabled
+            return None
+
+
 
 class JsonStatusResource(JsonResource):
     """Retrieves all json data."""
@@ -709,6 +723,7 @@ For help on any sub directory, use url /child/help
         self.putChild('change_sources', ChangeSourcesJsonResource(status))
         self.putChild('project', ProjectJsonResource(status))
         self.putChild('slaves', SlavesJsonResource(status))
+        self.putChild('metrics', MetricsJsonResource(status))
         # This needs to be called before the first HelpResource().body call.
         self.hackExamples()
 

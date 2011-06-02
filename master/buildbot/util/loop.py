@@ -64,6 +64,8 @@ from twisted.python import log
 
 from buildbot.util.eventual import eventually
 from buildbot import util
+from buildbot import interfaces
+from buildbot.process.metrics import Timer, countMethod
 
 class LoopBase(service.MultiService):
     OCD_MINIMUM_DELAY = 5.0
@@ -116,6 +118,9 @@ class LoopBase(service.MultiService):
     def get_processors(self):
         raise Exception('subclasses must implement get_processors()')
 
+    _loop_timer = Timer('Loop.run')
+    @_loop_timer.startTimer
+    @countMethod('Loop._loop_start()')
     def _loop_start(self):
         if self._everything_needs_to_run:
             self._everything_needs_to_run = False
@@ -136,6 +141,7 @@ class LoopBase(service.MultiService):
                 # consider sorting by 'when'
         self._loop_next()
 
+    @countMethod('Loop._loop_next()')
     def _loop_next(self):
         if not self._remaining:
             return self._loop_done()
@@ -151,6 +157,7 @@ class LoopBase(service.MultiService):
     def _one_done(self, ignored):
         eventually(self._loop_next)
 
+    @_loop_timer.stopTimer
     def _loop_done(self):
         if self._everything_needs_to_run:
             self._loop_start()
