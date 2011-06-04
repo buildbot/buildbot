@@ -24,10 +24,11 @@ from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.web.util import formatFailure
 
-from buildbot import interfaces, locks
+from buildbot import interfaces, locks, util
 from buildbot.status import progress
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION, RETRY, worst_status
+from buildbot.process import metrics
 
 """
 BuildStep and RemoteCommand classes for master-side representation of the
@@ -309,6 +310,8 @@ class LoggedRemoteCommand(RemoteCommand):
         assert logfileName not in self.delayedLogs
         self.logs[logfileName] = loog
         self._closeWhenFinished[logfileName] = closeWhenFinished
+        self._startTime = None
+        self._remoteElapsed = None
 
     def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
         assert logfileName not in self.logs
@@ -322,6 +325,7 @@ class LoggedRemoteCommand(RemoteCommand):
                     "it isn't being logged to anything. This seems unusual."
                     % self)
         self.updates = {}
+        self._startTime = util.now()
         return RemoteCommand.start(self)
 
     def addStdout(self, data):
@@ -348,6 +352,7 @@ class LoggedRemoteCommand(RemoteCommand):
         else:
             log.msg("%s.addToLog: no such log %s" % (self, logname))
 
+    @metrics.countMethod('LoggedRemoteCommand.remoteUpdate()')
     def remoteUpdate(self, update):
         if self.debug:
             for k,v in update.items():
@@ -369,6 +374,8 @@ class LoggedRemoteCommand(RemoteCommand):
             rc = self.rc = update['rc']
             log.msg("%s rc=%s" % (self, rc))
             self.addHeader("program finished with exit code %d\n" % rc)
+        if update.has_key('elapsed'):
+            self._remoteElapsed = update['elapsed']
 
         for k in update:
             if k not in ('stdout', 'stderr', 'header', 'rc'):
@@ -377,6 +384,10 @@ class LoggedRemoteCommand(RemoteCommand):
                 self.updates[k].append(update[k])
 
     def remoteComplete(self, maybeFailure):
+        if self._startTime and self._remoteElapsed:
+            delta = (util.now() - self._startTime) - self._remoteElapsed
+            metrics.MetricTimeEvent.log("LoggedRemoteCommand.overhead", delta)
+
         for name,loog in self.logs.items():
             if self._closeWhenFinished[name]:
                 if maybeFailure:

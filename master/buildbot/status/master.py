@@ -75,6 +75,9 @@ class Status:
     def getBuildbotURL(self):
         return self.master.buildbotURL
 
+    def getMetrics(self):
+        return self.master.metrics
+
     def getURLForThing(self, thing):
         prefix = self.getBuildbotURL()
         if not prefix:

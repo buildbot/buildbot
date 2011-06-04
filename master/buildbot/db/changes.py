@@ -53,9 +53,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
       string)
     """
 
-    changeHorizon = 0
-    "maximum number of changes to keep on hand, or 0 to keep all changes forever"
-
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
             links=None, revision=None, when_timestamp=None, branch=None,
             category=None, revlink='', properties={}, repository='',
@@ -240,10 +237,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             return conn.scalar(q)
         d = self.db.pool.do(thd)
         return d
-
-    def setChangeHorizon(self, changeHorizon): # TODO: remove
-        "this method should go away"
-        self.changeHorizon = changeHorizon
 
     # utility methods
 

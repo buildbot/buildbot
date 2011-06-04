@@ -22,6 +22,7 @@ from twisted.application import service
 
 from buildbot.process.builder import Builder
 from buildbot import interfaces, locks
+from buildbot.process import metrics
 
 class BotMaster(service.MultiService):
 
@@ -125,6 +126,8 @@ class BotMaster(service.MultiService):
         self.shuttingDown = False
 
     def loadConfig_Slaves(self, new_slaves):
+        timer = metrics.Timer("BotMaster.loadConfig_Slaves()")
+        timer.start()
         new_portnum = (self.lastSlavePortnum is not None
                    and self.lastSlavePortnum != self.master.slavePortnum)
         if new_portnum:
@@ -179,6 +182,13 @@ class BotMaster(service.MultiService):
 
         d.addCallback(update_remaining)
 
+        def stop(_):
+            metrics.MetricCountEvent.log("num_slaves",
+                len(self.slaves), absolute=True)
+            timer.stop()
+            return _
+        d.addBoth(stop)
+
         return d
 
     def addSlave(self, s):
@@ -191,6 +201,7 @@ class BotMaster(service.MultiService):
         # do not call maybeStartBuildsForSlave here, as the slave has not
         # necessarily attached yet
 
+    @metrics.countMethod('BotMaster.removeSlave()')
     def removeSlave(self, s):
         d = s.disownServiceParent()
         d.addCallback(lambda _ : s.pb_registration.unregister())
@@ -200,11 +211,14 @@ class BotMaster(service.MultiService):
         d.addCallback(delslave)
         return d
 
+    @metrics.countMethod('BotMaster.slaveLost()')
     def slaveLost(self, bot):
+        metrics.MetricCountEvent.log("BotMaster.attached_slaves", -1)
         for name, b in self.builders.items():
             if bot.slavename in b.slavenames:
                 b.detached(bot)
 
+    @metrics.countMethod('BotMaster.getBuildersForSlave()')
     def getBuildersForSlave(self, slavename):
         return [b
                 for b in self.builders.values()
@@ -244,13 +258,21 @@ class BotMaster(service.MultiService):
 
     def _updateAllSlaves(self):
         """Notify all buildslaves about changes in their Builders."""
+        timer = metrics.Timer("BotMaster._updateAllSlaves()")
+        timer.start()
         dl = []
         for s in self.slaves.values():
             d = s.updateSlave()
             d.addErrback(log.err)
             dl.append(d)
-        return defer.DeferredList(dl)
+        d = defer.DeferredList(dl)
+        def stop(_):
+            timer.stop()
+            return _
+        d.addBoth(stop)
+        return d
 
+    @metrics.countMethod('BotMaster.shouldMergeRequests()')
     def shouldMergeRequests(self, builder, req1, req2):
         """Determine whether two BuildRequests should be merged for
         the given builder.
@@ -268,6 +290,7 @@ class BotMaster(service.MultiService):
         sl = self.slaves[slavename]
         if not sl:
             return None
+        metrics.MetricCountEvent.log("BotMaster.attached_slaves", 1)
 
         # record when this connection attempt occurred
         sl.recordConnectTime()
@@ -312,8 +335,8 @@ class BotMaster(service.MultiService):
 
     def maybeStartBuildsForBuilder(self, buildername):
         """
-        Call this when something suggests that a particular builder may now be
-        available to start a build.
+        Call this when something suggests that a particular builder may now
+        be available to start a build.
 
         @param buildername: the name of the builder
         """
@@ -321,8 +344,8 @@ class BotMaster(service.MultiService):
 
     def maybeStartBuildsForSlave(self, slave_name):
         """
-        Call this when something suggests that a particular slave may now be available
-        to start a build.
+        Call this when something suggests that a particular slave may now be
+        available to start a build.
 
         @param slave_name: the name of the slave
         """
@@ -371,8 +394,9 @@ class BuildRequestDistributor(service.Service):
 
     def maybeStartBuildsOn(self, new_builders):
         """
-        Try ot start any builds that can be started right now.  This function
-        returns immediately, and promises to trigger those builders eventually.
+        Try to start any builds that can be started right now.  This function
+        returns immediately, and promises to trigger those builders
+        eventually.
 
         @param new_builders: names of new builders that should be given the
         opportunity to check for new requests.
@@ -411,6 +435,8 @@ class BuildRequestDistributor(service.Service):
 
     @defer.deferredGenerator
     def _defaultSorter(self, master, builders):
+        timer = metrics.Timer("BuildRequestDistributor._defaultSorter()")
+        timer.start()
         # perform an asynchronous schwarzian transform, transforming None
         # into sys.maxint so that it sorts to the end
         def xform(bldr):
@@ -435,9 +461,12 @@ class BuildRequestDistributor(service.Service):
 
         # and reverse the transform
         yield [ xf[1] for xf in xformed ]
+        timer.stop()
 
     @defer.deferredGenerator
     def _sortBuilders(self, buildernames):
+        timer = metrics.Timer("BuildRequestDistributor._sortBuilders()")
+        timer.start()
         # note that this takes and returns a list of builder names
 
         # convert builder names to builders
@@ -464,10 +493,14 @@ class BuildRequestDistributor(service.Service):
 
         # and return the names
         yield [ b.name for b in builders ]
+        timer.stop()
 
     @defer.deferredGenerator
     def _activityLoop(self):
         self.active = True
+
+        timer = metrics.Timer('BuildRequestDistributor._activityLoop()')
+        timer.start()
 
         while 1:
             wfd = defer.waitForDeferred(
@@ -492,6 +525,8 @@ class BuildRequestDistributor(service.Service):
                         "from maybeStartBuild for builder '%s'" % (bldr_name,))
 
             self.activity_lock.release()
+
+        timer.stop()
 
         self.active = False
         self._quiet()

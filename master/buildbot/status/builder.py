@@ -22,6 +22,7 @@ from cPickle import load, dump
 from zope.interface import implements
 from twisted.python import log, runtime
 from twisted.persisted import styles
+from buildbot.process import metrics
 from buildbot import interfaces, util
 from buildbot.status.event import Event
 from buildbot.status.build import BuildStatus
@@ -207,7 +208,9 @@ class BuilderStatus(styles.Versioned):
 
         # then in the buildCache
         if number in self.buildCache:
+            metrics.MetricCountEvent.log("buildCache.hits", 1)
             return self.touchBuildCache(self.buildCache[number])
+        metrics.MetricCountEvent.log("buildCache.misses", 1)
 
         # then fall back to loading it from disk
         filename = self.makeBuildFilename(number)
@@ -636,3 +639,8 @@ class BuilderStatus(styles.Versioned):
             return result
         d.addCallback(combine)
         return d
+
+    def getMetrics(self):
+        return self.botmaster.parent.metrics
+
+# vim: set ts=4 sts=4 sw=4 et:
