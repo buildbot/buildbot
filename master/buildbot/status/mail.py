@@ -605,6 +605,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                     d.addCallback(recipients.append)
                     dl.append(d)
         d = defer.DeferredList(dl)
+        import sys
+        print >>sys.stderr, "recipients: ", recipients
         d.addCallback(self._gotRecipients, recipients, m)
         return d
 

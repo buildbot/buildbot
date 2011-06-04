@@ -72,7 +72,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     repository = ''
     ssid = None
 
-    compare_attrs = ('branch', 'revision', 'patch', 'changes', 'project', 'repository')
+    compare_attrs = ('branch', 'revision', 'patch', 'patch_author', 'changes', 'project', 'repository')
 
     implements(interfaces.ISourceStamp)
 
@@ -201,6 +201,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         newsource = SourceStamp(branch=self.branch,
                                 revision=self.revision,
                                 patch=self.patch,
+                                patch_author=self.patch_author,
                                 project=self.project,
                                 repository=self.repository,
                                 changes=changes)

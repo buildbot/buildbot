@@ -214,6 +214,13 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         if not builderNames:
             return
 
+        reason = "'try' job"
+        
+        if who:
+            reason += " by user %s" % who
+        else:
+            who = None
+
         wfd = defer.waitForDeferred(
                 db.sourcestamps.addSourceStamp(branch=branch, revision=revision,
                     repository=repository, project=project, patch_level=patch[0],
@@ -221,10 +228,6 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
                     # note: no way to specify patch subdir - #1769
         yield wfd
         ssid = wfd.getResult()
-
-        reason = "'try' job"
-        if who:
-            reason += " by user %s" % who
 
         requested_props = Properties()
         requested_props.update(properties, "try build")
