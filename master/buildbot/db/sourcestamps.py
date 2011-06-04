@@ -89,8 +89,6 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
 
         @returns: dictionary as above, or None, via Deferred
         """
-        import sys
-        print >>sys.stdout, "About to grab sourcestamp"
         def thd(conn):
             tbl = self.db.model.sourcestamps
             q = tbl.select(whereclause=(tbl.c.id == ssid))
@@ -106,7 +104,6 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             patchid = row.patchid
             res.close()
 
-            print >>sys.stdout, "Got sourcestamp, checking patch; patchid=", patchid
             # fetch the patch, if necessary
             if patchid is not None:
                 tbl = self.db.model.patches
@@ -120,7 +117,6 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                     ssdict['patch_author'] = row.patch_author
                     body = base64.b64decode(row.patch_base64)
                     ssdict['patch_body'] = body
-                    print >> sys.stderr, "Grabbed patch from DB: author: ", ssdict['patch_author']
                 else:
                     log.msg('patchid %d, referenced from ssid %d, not found'
                             % (patchid, ssid))
