@@ -358,6 +358,8 @@ class Builder(pb.Referenceable, service.MultiService):
         self.attaching_slaves.remove(sb)
         self.slaves.append(sb)
 
+        self.updateBigStatus()
+
         return self
 
     def _not_attached(self, why, slave):
@@ -445,6 +447,8 @@ class Builder(pb.Referenceable, service.MultiService):
             yield wfd
             wfd.getResult()
 
+            self.updateBigStatus()
+
             # and try starting builds again.  If we still have a working slave,
             # then this may re-claim the same buildrequests
             self.botmaster.maybeStartBuildsForBuilder(self.name)
@@ -523,6 +527,8 @@ class Builder(pb.Referenceable, service.MultiService):
         # slave as disconnected (so we don't try to use it again).
         slavebuilder.buildFinished()
 
+        self.updateBigStatus()
+
         log.msg("re-queueing the BuildRequest")
         self.building.remove(build)
         self._resubmit_buildreqs(build).addErrback(log.err)
@@ -546,7 +552,7 @@ class Builder(pb.Referenceable, service.MultiService):
         # mark the builds as finished, although since nothing ever reads this
         # table, it's not too important that it complete successfully
         d = self.db.builds.finishBuilds(bids)
-        d.addErrback(log.err, 'while markign builds as finished (ignored)')
+        d.addErrback(log.err, 'while marking builds as finished (ignored)')
 
         results = build.build_status.getResults()
         self.building.remove(build)
@@ -564,6 +570,8 @@ class Builder(pb.Referenceable, service.MultiService):
 
         if sb.slave:
             sb.slave.releaseLocks()
+
+        self.updateBigStatus()
 
     @defer.deferredGenerator
     def _maybeBuildsetsComplete(self, requests):
