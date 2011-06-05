@@ -1239,7 +1239,7 @@ the directory where the poller should keep its local repository. will default
 to @code{<tempdir>/gitpoller_work}, which is probably not what you want.  If
 this is a relative path, it will be interpreted relative to the master's
 basedir.
-                
+
 @item pollInterval
 interval in seconds between polls, default is 10 minutes.
 
@@ -1278,7 +1278,8 @@ will translate non-ascii file names to unreadable escape sequences.
 @example
 from buildbot.changes.gitpoller import GitPoller
 c['change_source'] = GitPoller('git@@example.com:foobaz/myrepo.git',
-                               branch='great_new_feature')
+                               branch='great_new_feature',
+                               workdir='/home/buildbot/gitpoller_workdir')
 @end example
 
 @node GerritChangeSource
