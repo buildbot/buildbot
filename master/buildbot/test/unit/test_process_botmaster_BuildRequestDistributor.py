@@ -16,6 +16,7 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer, reactor
+from twisted.python import failure
 from buildbot.test.util import compat
 from buildbot.process import botmaster
 from buildbot.util import epoch2datetime
@@ -33,8 +34,17 @@ class Test(unittest.TestCase):
         self.brd = botmaster.BuildRequestDistributor(self.botmaster)
         self.brd.startService()
 
+        # TODO: this is a terrible way to detect the "end" of the test -
+        # it regularly completes too early after a simple modification of
+        # a test.  Is there a better way?
         self.quiet_deferred = defer.Deferred()
-        self.brd._quiet = lambda : self.quiet_deferred.callback(None)
+        def _quiet():
+            if self.quiet_deferred:
+                d, self.quiet_deferred = self.quiet_deferred, None
+                d.callback(None)
+            else:
+                self.fail("loop has already gone quiet once")
+        self.brd._quiet = _quiet
 
         self.maybeStartBuild_calls = []
         self.builders = {}
@@ -70,12 +80,42 @@ class Test(unittest.TestCase):
         self.quiet_deferred.addCallback(check)
         return self.quiet_deferred
 
+    def test_maybeStartBuildsOn_parallel(self):
+        # test 15 "parallel" invocations of maybeStartBuildsOn, with a
+        # _sortBuilders that takes a while.  This is a regression test for bug
+        # #1979.
+        builders = ['bldr%02d' % i for i in xrange(15) ]
+
+        def slow_sorter(master, bldrs):
+            bldrs.sort(lambda b1, b2 : cmp(b1.name, b2.name))
+            d = defer.Deferred()
+            reactor.callLater(0, d.callback, bldrs)
+            def done(_):
+                return _
+            d.addCallback(done)
+            return d
+        self.brd.botmaster.prioritizeBuilders = slow_sorter
+
+        self.addBuilders(builders)
+        for bldr in builders:
+            self.brd.maybeStartBuildsOn([bldr])
+        def check(_):
+            self.assertEqual(self.maybeStartBuild_calls, builders)
+        self.quiet_deferred.addCallback(check)
+        return self.quiet_deferred
+
     @compat.usesFlushLoggedErrors
     def test_maybeStartBuildsOn_exception(self):
         self.addBuilders(['bldr1'])
-        def fail(n):
-            raise RuntimeError("oh noes")
-        self.brd._callABuilder = fail
+
+        def _callABuilder(n):
+            # fail slowly, so that the activity loop doesn't go quiet too soon
+            d = defer.Deferred()
+            reactor.callLater(0,
+                    d.errback, failure.Failure(RuntimeError("oh noes")))
+            return d
+        self.brd._callABuilder = _callABuilder
+
         self.brd.maybeStartBuildsOn(['bldr1'])
         def check(_):
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
