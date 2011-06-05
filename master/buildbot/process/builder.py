@@ -624,6 +624,10 @@ class Builder(pb.Referenceable, service.MultiService):
         yield wfd
         unclaimed_requests = wfd.getResult()
 
+        if not unclaimed_requests:
+            self.updateBigStatus()
+            return
+
         # sort by submitted_at, so the first is the oldest
         unclaimed_requests.sort(key=lambda brd : brd['submitted_at'])
 
