@@ -404,18 +404,21 @@ one uses unencrypted telnet. Two of them use a username+password
 combination to grant access, one of them uses an SSH-style
 @file{authorized_keys} file which contains a list of ssh public keys.
 
+Note that using any Manhole requires that @code{pycrypto} and @code{pyasn1} be
+installed.  These are not part of the normal Buildbot dependencies.
+
 @table @code
-@item manhole.AuthorizedKeysManhole
+@item buildbot.manhole.AuthorizedKeysManhole
 You construct this with the name of a file that contains one SSH
 public key per line, just like @file{~/.ssh/authorized_keys}. If you
 provide a non-absolute filename, it will be interpreted relative to
 the buildmaster's base directory.
 
-@item manhole.PasswordManhole
+@item buildbot.manhole.PasswordManhole
 This one accepts SSH connections but asks for a username and password
 when authenticating. It accepts only one such pair.
 
-@item manhole.TelnetManhole
+@item buildbot.manhole.TelnetManhole
 This accepts regular unencrypted telnet connections, and asks for a
 username/password pair before providing access. Because this
 username/password is transmitted in the clear, and because Manhole
@@ -448,9 +451,6 @@ To have the @code{Manhole} listen on all interfaces, use
 @code{"tcp:9999"} or simply 9999. This port specification uses
 @code{twisted.application.strports}, so you can make it listen on SSL
 or even UNIX-domain sockets if you want.
-
-Note that using any Manhole requires that the TwistedConch package be
-installed, and that you be using Twisted version 2.0 or later.
 
 The buildmaster's SSH server will use a different host key than the
 normal sshd running on a typical unix host. This will cause the ssh
