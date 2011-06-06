@@ -224,6 +224,9 @@ class Model(base.DBConnectorComponent):
         
         # patch author, if known
         sa.Column('patch_author', sa.Text),
+        
+        # patch comment
+        sa.Column('patch_comment', sa.Text),
 
         # subdirectory in which the patch should be applied; NULL for top-level
         sa.Column('subdir', sa.Text),

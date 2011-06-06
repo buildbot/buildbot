@@ -154,6 +154,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             'patch_level': 1,
             'project': '',
             'who': '',
+            'comment': '',
             'repository': ''
         })
 
@@ -187,6 +188,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             'patch_level': 1,
             'project': 'proj',
             'who': '',
+            'comment': '',
             'repository': 'repo'
         })
 
@@ -231,6 +233,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             'patch_level': 1,
             'project': 'proj',
             'who': 'who',
+            'comment': '',
             'repository': 'repo'
         })
 
@@ -257,6 +260,51 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
         self.assertEqual(parsedjob['builderNames'], [])
 
+    def test_parseJob_v4(self):
+        sched = trysched.Try_Jobdir(name='tsched',
+                builderNames=['buildera','builderb'], jobdir='foo')
+        jobstr = self.makeNetstring(
+            '4', 'extid', 'trunk', '1234', '1', 'this is my diff, -- ++, etc.',
+            'repo', 'proj', 'who', 'comment', 
+            'buildera', 'builderc'
+        )
+        parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
+        self.assertEqual(parsedjob, {
+            'baserev': '1234',
+            'branch': 'trunk',
+            'builderNames': ['buildera', 'builderc'],
+            'jobid': 'extid',
+            'patch_body': 'this is my diff, -- ++, etc.',
+            'patch_level': 1,
+            'project': 'proj',
+            'who': 'who',
+            'comment': 'comment',
+            'repository': 'repo'
+        })
+
+    def test_parseJob_v4_empty_branch_rev(self):
+        sched = trysched.Try_Jobdir(name='tsched',
+                builderNames=['buildera','builderb'], jobdir='foo')
+        jobstr = self.makeNetstring(
+                # blank branch, rev are turned to None
+            '4', 'extid', '', '', '1', 'this is my diff, -- ++, etc.',
+            'repo', 'proj', 'who', 'comment',
+            'buildera', 'builderc'
+        )
+        parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
+        self.assertEqual(parsedjob['branch'], None)
+        self.assertEqual(parsedjob['baserev'], None)
+
+    def test_parseJob_v4_no_builders(self):
+        sched = trysched.Try_Jobdir(name='tsched',
+                builderNames=['buildera','builderb'], jobdir='foo')
+        jobstr = self.makeNetstring(
+            '4', 'extid', 'trunk', '1234', '1', 'this is my diff, -- ++, etc.',
+            'repo', 'proj', 'who', 'comment'
+        )
+        parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
+        self.assertEqual(parsedjob['builderNames'], [])
+
     # handleJobFile
 
     def call_handleJobFile(self, parseJob):
@@ -276,7 +324,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         pj = dict(baserev='1234', branch='trunk',
             builderNames=['buildera', 'builderb'],
             jobid='extid', patch_body='this is my diff, -- ++, etc.',
-            patch_level=1, project='proj', repository='repo', who='who')
+            patch_level=1, project='proj', repository='repo', who='who',
+            comment='comment')
         pj.update(overrides)
         return pj
 
@@ -291,7 +340,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                         project='proj', revision='1234',
                         patch_body='this is my diff, -- ++, etc.',
                         patch_level=1, patch_subdir='',
-                        patch_author='who'))
+                        patch_author='who',
+                        patch_comment='comment'))
         d.addCallback(check)
         return d
 
@@ -328,7 +378,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                         project='proj', revision='1234',
                         patch_body='this is my diff, -- ++, etc.',
                         patch_level=1, patch_subdir='',
-                        patch_author='who'))
+                        patch_author='who',
+                        patch_comment='comment'))
         d.addCallback(check)
         return d
 
@@ -376,7 +427,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                     dict(branch='default', repository='repo',
                         project='proj', revision='abcdef',
                         patch_body='-- ++', patch_level=1, patch_subdir='',
-                        patch_author=None))
+                        patch_author=None, patch_comment=None))
         d.addCallback(check)
         return d
 
@@ -395,7 +446,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                     dict(branch='default', repository='repo',
                         project='proj', revision='abcdef',
                         patch_body='-- ++', patch_level=1, patch_subdir='',
-                        patch_author='who'))
+                        patch_author='who', patch_comment=None))
         d.addCallback(check)
         return d
 

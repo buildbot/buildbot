@@ -100,7 +100,8 @@ class TestSourceStampsConnectorComponent(
         d.addCallback(lambda _ :
             self.db.sourcestamps.addSourceStamp('production', 'abdef',
                 'test://repo', 'stamper', patch_body='my patch', patch_level=3,
-                patch_subdir='master/', patch_author='me'))
+                patch_subdir='master/', patch_author='me',
+                patch_comment="comment"))
         def check(ssid):
             def thd(conn):
                 # should see one sourcestamp row
@@ -112,14 +113,17 @@ class TestSourceStampsConnectorComponent(
                 patchid = row.patchid
                 self.assertNotEqual(patchid, None)
                 self.assertEqual(rows,
-                    [ ( ssid, 'production', 'abdef', patchid, 'test://repo', 'stamper') ])
+                    [ ( ssid, 'production', 'abdef', patchid, 'test://repo',
+                        'stamper') ])
 
                 # .. and a single patch
                 patches_tbl = self.db.model.patches
                 r = conn.execute(patches_tbl.select())
-                rows = [ (row.id, row.patchlevel, row.patch_base64, row.subdir, row.patch_author)
+                rows = [ (row.id, row.patchlevel, row.patch_base64, row.subdir,
+                          row.patch_author, row.patch_comment)
                          for row in r.fetchall() ]
-                self.assertEqual(rows, [(patchid, 3, 'bXkgcGF0Y2g=', 'master/', 'me')])
+                self.assertEqual(rows, [(patchid, 3, 'bXkgcGF0Y2g=', 'master/',
+                                         'me', 'comment')])
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
@@ -135,7 +139,7 @@ class TestSourceStampsConnectorComponent(
             self.assertEqual(ssdict, dict(ssid=234, branch='br', revision='rv',
                 repository='rep', project='prj', patch_body=None,
                 patch_level=None, patch_subdir=None, 
-                patch_author=None, changeids=set([])))
+                patch_author=None, patch_comment=None, changeids=set([])))
         d.addCallback(check)
         return d
 
@@ -172,7 +176,8 @@ class TestSourceStampsConnectorComponent(
     def test_getSourceStamp_patch(self):
         d = self.insertTestData([
             fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
-                patch_author='bar', subdir='/foo', patchlevel=3),
+                patch_author='bar', patch_comment='foo', subdir='/foo',
+                patchlevel=3),
             fakedb.SourceStamp(id=234, patchid=99),
         ])
         d.addCallback(lambda _ :
@@ -183,6 +188,7 @@ class TestSourceStampsConnectorComponent(
                              dict(patch_body='hello, world',
                                   patch_level=3,
                                   patch_author='bar',
+                                  patch_comment='foo',
                                   patch_subdir='/foo'))
         d.addCallback(check)
         return d

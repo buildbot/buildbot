@@ -125,8 +125,8 @@ class Build:
         for c in self.allChanges():
             if c.who not in blamelist:
                 blamelist.append(c.who)
-        if self.source.patch_author:
-            blamelist.append(self.source.patch_author)
+        if self.source.patch_info: #Add patch author to blamelist
+            blamelist.append(self.source.patch_info[0])
         blamelist.sort()
         return blamelist
 
