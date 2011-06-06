@@ -17,10 +17,12 @@
 from warnings import warn
 from email.Utils import formatdate
 from twisted.python import log
+from twisted.internet import defer
 from zope.interface import implements
 from buildbot.process.buildstep import LoggingBuildStep, LoggedRemoteCommand
 from buildbot.interfaces import BuildSlaveTooOldError, IRenderable
 from buildbot.status.builder import SKIPPED
+from buildbot.status.results import FAILURE
 
 class _ComputeRepositoryURL(object):
     implements(IRenderable)
@@ -940,24 +942,29 @@ class Repo(Source):
         for cur_re in [re1, re2, re3]:
             res = cur_re.search(s)
             while res:
-                ret.append("%s %s" % (res.group(1), res.group(2)))
+                ret.append("-c %s %s" % (res.group(1), res.group(2)))
                 s = s[:res.start(0)] + s[res.end(0):]
                 res = cur_re.search(s)
         return ret
 
-    def startVC(self, branch, revision, patch):
-        self.args['manifest_url'] = self.manifest_url
-
-        # only master has access to properties, so we must implement this here.
-        downloads = []
+    def buildDownloadList(self):
+        """taken the changesource and forcebuild property,
+        build the repo download command to send to the slave
+        making this a defereable allow config to tweak this
+        in order to e.g. manage dependancies
+        """
+        try:
+            downloads = self.build.getProperty("repo_downloads")
+        except KeyError:
+            downloads = []
 
         # download patches based on GerritChangeSource events
         for change in self.build.allChanges():
             if (change.properties.has_key("event.type") and
                 change.properties["event.type"] == "patchset-created"):
                 downloads.append("%s %s/%s"% (change.properties["event.change.project"],
-                                              change.properties["event.change.number"],
-                                              change.properties["event.patchSet.number"]))
+                                                 change.properties["event.change.number"],
+                                                 change.properties["event.patchSet.number"]))
 
         # download patches based on web site forced build properties:
         # "repo_d", "repo_d0", .., "repo_d9"
@@ -973,13 +980,27 @@ class Repo(Source):
         if downloads:
             self.args["repo_downloads"] = downloads
             self.setProperty("repo_downloads", downloads)
+        return defer.succeed(None)
 
+    def startVC(self, branch, revision, patch):
+        self.args['manifest_url'] = self.manifest_url
+
+        # only master has access to properties, so we must implement this here.
+        d = self.buildDownloadList()
+        d.addCallback(self.continueStartVC, branch, revision, patch)
+        d.addErrback(self.failedStartVC)
+
+    def continueStartVC(self, ignored, branch, revision, patch):
         slavever = self.slaveVersion("repo")
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about repo")
         cmd = LoggedRemoteCommand("repo", self.args)
         self.startCommand(cmd)
+
+    def failedStartVC(self, failure):
+        self.interrupt("unable to build download list"+str(failure))
+        self.finished(FAILURE)
 
     def commandComplete(self, cmd):
         if cmd.updates.has_key("repo_downloaded"):
