@@ -483,7 +483,7 @@ def upgradeMaster(config):
 
     if rc == 0:
         from buildbot.db import connector
-        from buildbot.buildmaster import BuildMaster
+        from buildbot.master import BuildMaster
 
         if not config['quiet']: print "upgrading database"
         db = connector.DBConnector(BuildMaster(config['basedir']),
