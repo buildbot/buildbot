@@ -122,15 +122,12 @@ class TestMetricTimeEvent(TestMetricBase):
         report = self.observer.asDict()
         self.assertEquals(report['timers']['foo_time'], sum(data)/float(len(data)))
 
-class _Uncollectable:
-    def __del__(self):
-        # Do work
-        for i in range(10):
-            pass
-
 class TestPeriodicChecks(TestMetricBase):
     def testPeriodicCheck(self):
-        old_garbage = len(gc.garbage)
+        # fake out that there's no garbage (since we can't rely on Python
+        # not having any garbage while running tests)
+        self.patch(gc, 'garbage', [])
+
         clock = task.Clock()
         metrics.periodicCheck(_reactor=clock)
         clock.pump([0.1, 0.1, 0.1])
@@ -138,18 +135,12 @@ class TestPeriodicChecks(TestMetricBase):
         # We should have 0 reactor delay since we're using a fake clock
         report = self.observer.asDict()
         self.assertEquals(report['timers']['reactorDelay'], 0)
-        self.assertEquals(report['counters']['gc.garbage'], old_garbage)
+        self.assertEquals(report['counters']['gc.garbage'], 0)
         self.assertEquals(report['alarms']['gc.garbage'][0], 'OK')
 
     def testUncollectable(self):
-        old_garbage = len(gc.garbage)
-        u1 = _Uncollectable()
-        u2 = _Uncollectable()
-        u1.ref = u2
-        u2.ref = u1
-        del u1
-        del u2
-        gc.collect()
+        # make some fake garbage
+        self.patch(gc, 'garbage', [ 1, 2 ])
 
         clock = task.Clock()
         metrics.periodicCheck(_reactor=clock)
@@ -158,12 +149,13 @@ class TestPeriodicChecks(TestMetricBase):
         # We should have 0 reactor delay since we're using a fake clock
         report = self.observer.asDict()
         self.assertEquals(report['timers']['reactorDelay'], 0)
-        self.assertEquals(report['counters']['gc.garbage'], old_garbage + 2)
+        self.assertEquals(report['counters']['gc.garbage'], 2)
         self.assertEquals(report['alarms']['gc.garbage'][0], 'WARN')
 
-    if sys.platform == 'linux2':
-        def testGetRSS(self):
-            self.assert_(metrics._get_rss() > 0)
+    def testGetRSS(self):
+        self.assert_(metrics._get_rss() > 0)
+    if sys.platform != 'linux2':
+        testGetRSS.skip = "only available on linux2 platforms"
 
 class TestReconfig(TestMetricBase):
     def testReconfig(self):

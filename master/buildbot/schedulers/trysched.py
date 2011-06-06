@@ -16,7 +16,7 @@
 import os
 
 from twisted.internet import defer
-from twisted.python import log, runtime
+from twisted.python import log
 from twisted.protocols import basic
 
 from buildbot import pbutil
@@ -62,24 +62,8 @@ class JobdirService(MaildirService):
     # NOTE: tightly coupled with Try_Jobdir, below
 
     def messageReceived(self, filename):
-        md = self.parent.jobdir
-        if runtime.platformType == "posix":
-            # open the file before moving it, because I'm afraid that once
-            # it's in cur/, someone might delete it at any moment
-            path = os.path.join(md, "new", filename)
-            f = open(path, "r")
-            os.rename(os.path.join(md, "new", filename),
-                      os.path.join(md, "cur", filename))
-        if runtime.platformType == "win32":
-            # do this backwards under windows, because you can't move a file
-            # that somebody is holding open. This was causing a Permission
-            # Denied error on bear's win32-twisted1.3 buildslave.
-            os.rename(os.path.join(md, "new", filename),
-                      os.path.join(md, "cur", filename))
-            path = os.path.join(md, "cur", filename)
-            f = open(path, "r")
-
-        self.parent.handleJobFile(filename, f)
+        f = self.moveToCurDir(filename)
+        return self.parent.handleJobFile(filename, f)
 
 
 class Try_Jobdir(TryBase):

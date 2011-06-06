@@ -172,4 +172,5 @@ class Dispatcher(service.MultiService):
             d.addCallback(check)
             return d
         else:
+            log.msg("invalid login from unknown user '%s'" % creds.username)
             return defer.fail(error.UnauthorizedLogin())

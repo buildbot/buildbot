@@ -376,7 +376,7 @@ class BuildRequestDistributor(service.Service):
         self.master = botmaster.master
 
         # lock to ensure builders are only sorted once at any time
-        self.builder_sorting_lock = defer.DeferredLock()
+        self.pending_builders_lock = defer.DeferredLock()
 
         # sorted list of names of builders that need their maybeStartBuild
         # method invoked.
@@ -392,6 +392,7 @@ class BuildRequestDistributor(service.Service):
         d.addBoth(lambda _ : self.activity_lock.release())
         return d
 
+    @defer.deferredGenerator
     def maybeStartBuildsOn(self, new_builders):
         """
         Try to start any builds that can be started right now.  This function
@@ -404,34 +405,37 @@ class BuildRequestDistributor(service.Service):
         new_builders = set(new_builders)
         existing_pending = set(self._pending_builders)
 
-        # if we haven't added any builders, there's nothing to do
+        # if we won't add any builders, there's nothing to do
         if new_builders < existing_pending:
             return
 
         # reset the list of pending builders; this is async, so begin
         # by grabbing a lock
-        d = self.builder_sorting_lock.acquire()
+        wfd = defer.waitForDeferred(
+            self.pending_builders_lock.acquire())
+        yield wfd
+        wfd.getResult()
 
-        # then sort the new, expanded set of builders
-        d.addCallback(lambda _ : self._sortBuilders(list(
-                                    existing_pending | new_builders)))
-        def keep_new_builders(result):
-            self._pending_builders = result
-        d.addCallback(keep_new_builders)
+        try:
+            # re-fetch existing_pending, in case it has changed while acquiring
+            # the lock
+            existing_pending = set(self._pending_builders)
 
-        # start the activity loop, if we aren't already working on that.
-        def start_loop(_):
+            # then sort the new, expanded set of builders
+            wfd = defer.waitForDeferred(
+                self._sortBuilders(list(existing_pending | new_builders)))
+            yield wfd
+            self._pending_builders = wfd.getResult()
+
+            # start the activity loop, if we aren't already working on that.
             if not self.active:
                 self._activityLoop()
-        d.addCallback(start_loop)
+        except:
+            log.err(Failure(),
+                    "while attempting to start builds on %s" % self.name)
 
-        # and release the lock in any case
-        def unlock(x):
-            self.builder_sorting_lock.release()
-            return x
-        d.addBoth(unlock)
-
-        d.addErrback(log.err, 'while sorting builders')
+        # release the lock unconditionally
+        self.pending_builders_lock.release()
 
     @defer.deferredGenerator
     def _defaultSorter(self, master, builders):
@@ -508,12 +512,20 @@ class BuildRequestDistributor(service.Service):
             yield wfd
             wfd.getResult()
 
+            # lock pending_builders, pop an element from it, and release
+            wfd = defer.waitForDeferred(
+                self.pending_builders_lock.acquire())
+            yield wfd
+            wfd.getResult()
+
             # bail out if we shouldn't keep looping
             if not self.running or not self._pending_builders:
+                self.pending_builders_lock.release()
                 self.activity_lock.release()
                 break
 
             bldr_name = self._pending_builders.pop(0)
+            self.pending_builders_lock.release()
 
             try:
                 wfd = defer.waitForDeferred(
