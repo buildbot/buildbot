@@ -985,7 +985,6 @@ class Repo(Source):
         in order to e.g. manage dependancies
         """
         downloads = self.build.getProperty("repo_downloads", [])
-
         # download patches based on GerritChangeSource events
         for change in self.build.allChanges():
             if (change.properties.has_key("event.type") and
@@ -1025,8 +1024,7 @@ class Repo(Source):
         self.startCommand(cmd)
 
     def failedStartVC(self, failure):
-        self.interrupt("unable to build download list"+str(failure))
-        self.finished(FAILURE)
+        self.failed(failure)
 
     def commandComplete(self, cmd):
         if cmd.updates.has_key("repo_downloaded"):
