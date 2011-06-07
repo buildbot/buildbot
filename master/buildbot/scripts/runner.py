@@ -287,7 +287,9 @@ class Maker:
 
     def create_db(self):
         from buildbot.db import connector
-        db = connector.DBConnector(None, self.config['db'], basedir=self.basedir)
+        from buildbot.master import BuildMaster
+        db = connector.DBConnector(BuildMaster(self.basedir),
+                self.config['db'], basedir=self.basedir)
         if not self.config['quiet']: print "creating database"
         d = db.model.upgrade()
         return d
@@ -818,6 +820,8 @@ class SendChangeOptions(OptionsWithOptionsFile):
          "Read the log messages from this file (- for stdin)"),
         ("when", "w", None, "timestamp to use as the change time"),
         ("revlink", "l", '', "Revision link (revlink)"),
+        ("encoding", "e", 'utf8',
+            "Encoding of other parameters (default utf8)"),
         ]
 
     buildbotOptions = [
@@ -842,6 +846,7 @@ def sendchange(config, runReactor=False):
     connection will be drpoped as soon as the Change has been sent."""
     from buildbot.clients.sendchange import Sender
 
+    encoding = config.get('encoding')
     who = config.get('who')
     if not who and config.get('username'):
         print "NOTE: --username/-u is deprecated: use --who/-W'"
@@ -886,7 +891,7 @@ def sendchange(config, runReactor=False):
     assert who, "you must provide a committer (--who)"
     assert master, "you must provide the master location"
 
-    s = Sender(master, auth)
+    s = Sender(master, auth, encoding=encoding)
     d = s.send(branch, revision, comments, files, who=who, category=category, when=when,
                properties=properties, repository=repository, project=project,
                revlink=revlink)
@@ -938,6 +943,8 @@ class TryOptions(OptionsWithOptionsFile):
          "Location of the buildmaster's PBListener (host:port)"],
         ["passwd", None, None,
          "Password for PB authentication"],
+        ["who", "w", None,
+         "Who is responsible for the try build"],
 
         ["diff", None, None,
          "Filename of a patch to use instead of scanning a local tree. "
@@ -997,6 +1004,7 @@ class TryOptions(OptionsWithOptionsFile):
         [ 'try_jobdir', 'jobdir' ],
         [ 'try_password', 'passwd' ],
         [ 'try_master', 'master' ],
+        [ 'try_who', 'who' ],
         #[ 'try_wait', 'wait' ], <-- handled in postOptions
         [ 'try_masterstatus', 'masterstatus' ],
         # Deprecated command mappings from the quirky old days:

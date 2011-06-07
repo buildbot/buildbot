@@ -947,6 +947,9 @@ log names, to send a subset of the logs. Defaults to False.
 Patches are usually used on a Try server.
 Defaults to True.
 
+@item buildSetSummary
+(boolean). If True, send a single summary email consisting of the concatenation of all build completion messages rather than a completion message for each build.  Defaults to False.
+
 @item relayhost
 (string). The host to which the outbound SMTP connection should be
 made. Defaults to 'localhost'
@@ -994,7 +997,8 @@ text of the message. The @code{type} key is the message type ('plain' or
 
 @item extraHeaders
 (dictionary) A dictionary containing key/value pairs of extra headers to add
-to sent e-mails. Both the keys and the values may be a WithProperties instance.
+to sent e-mails. If buildSetStatus is False, both the keys and the values may be
+a WithProperties instance.
 
 @end table
 
@@ -1167,10 +1171,12 @@ If the @code{allowForce=True} option was used, some addtional commands
 will be available:
 
 @table @code
-@item force build BUILDER REASON
+@item force build [--branch=BRANCH] [--revision=REVISION] BUILDER REASON
 Tell the given Builder to start a build of the latest code. The user
 requesting the build and REASON are recorded in the Build status. The
-buildbot will announce the build's status when it finishes.
+buildbot will announce the build's status when it finishes. The user 
+can specify a branch and/or revision with the optional parameters
+@code{--branch=BRANCH} and @code{--revision=REVISION}.
 
 @item stop build BUILDER REASON
 Terminate any running build in the given Builder. REASON will be added
@@ -1179,6 +1185,10 @@ if you committed a bug, corrected it right away, and don't want to
 wait for the first build (which is destined to fail) to complete
 before starting the second (hopefully fixed) build.
 @end table
+
+If the @code{categories} is set to a category of builders (see categories
+option in @ref{Builder Configuration}) changes related to only that 
+category of builders will be sent to the channel.
 
 @node PBListener
 @subsection PBListener

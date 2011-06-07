@@ -13,5 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+# apply the same patches the buildmaster does when it starts
+from buildbot import monkeypatches
+monkeypatches.patch_all()
+
+# and some extras to aid debugging
 from buildbot.util import monkeypatches
 monkeypatches.add_debugging_monkeypatches()

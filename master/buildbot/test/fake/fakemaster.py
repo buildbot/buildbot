@@ -13,26 +13,23 @@
 #
 # Copyright Buildbot Team Members
 
-import twisted
-from twisted.python import versions
+import mock
 
-def patch_bug4881():
-    # this patch doesn't apply (or even import!) on Windows
-    import sys
-    if sys.platform == 'win32':
-        return
+def make_master():
+    """
+    Create a fake Master instance: a Mock with some convenience
+    implementations:
 
-    # this bug was only present in Twisted-10.2.0
-    if twisted.version == versions.Version('twisted', 10, 2, 0):
-        from buildbot.monkeypatches import bug4881
-        bug4881.patch()
+    - Non-caching implementation for C{self.caches}
+    """
 
-def patch_bug5079():
-    # this bug will hopefully be patched in Twisted-12.0.0
-    if twisted.version < versions.Version('twisted', 12, 0, 0):
-        from buildbot.monkeypatches import bug5079
-        bug5079.patch()
+    fakemaster = mock.Mock(name="fakemaster")
 
-def patch_all():
-    patch_bug4881()
-    patch_bug5079()
+    # set up caches
+    def fake_get_cache(name, miss_fn):
+        fake_cache = mock.Mock(name='fakemaster.caches[%r]' % name)
+        fake_cache.get = miss_fn
+        return fake_cache
+    fakemaster.caches.get_cache = fake_get_cache
+
+    return fakemaster

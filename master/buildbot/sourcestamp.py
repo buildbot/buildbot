@@ -84,8 +84,15 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
         @returns: L{SourceStamp} via Deferred
         """
+        # try to fetch from the cache, falling back to _make_ss if not
+        # found
+        cache = master.caches.get_cache("SourceStamps", cls._make_ss)
+        return cache.get(ssdict['ssid'], ssdict=ssdict, master=master)
+
+    @classmethod
+    def _make_ss(cls, ssid, ssdict, master):
         sourcestamp = cls(_fromSsdict=True)
-        sourcestamp.ssid = ssdict['ssid']
+        sourcestamp.ssid = ssid
         sourcestamp.branch = ssdict['branch']
         sourcestamp.revision = ssdict['revision']
         sourcestamp.project = ssdict['project']
@@ -97,13 +104,15 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             sourcestamp.patch = (ssdict['patch_level'], ssdict['patch_body'])
 
         if ssdict['changeids']:
+            # sort the changeids in order, oldest to newest
+            sorted_changeids = sorted(ssdict['changeids'])
             def gci(id):
                 d = master.db.changes.getChange(id)
                 d.addCallback(lambda chdict :
                     Change.fromChdict(master, chdict))
                 return d
             d = defer.gatherResults([ gci(id)
-                                for id in ssdict['changeids'] ])
+                                for id in sorted_changeids ])
         else:
             d = defer.succeed([])
         def got_changes(changes):

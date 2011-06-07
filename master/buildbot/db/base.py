@@ -31,3 +31,47 @@ class DBConnectorComponent(object):
     def __init__(self, connector):
         self.db = connector
         "backlink to the DBConnector object"
+
+        # set up caches
+        for method in dir(self.__class__):
+            o = getattr(self, method)
+            if isinstance(o, CachedMethod):
+                setattr(self, method, o.get_cached_method(self))
+
+class CachedMethod(object):
+    def __init__(self, cache_name, method):
+        self.cache_name = cache_name
+        self.method = method
+
+    def get_cached_method(self, component):
+        meth = self.method
+
+        meth_name = meth.__name__
+        cache = component.db.master.caches.get_cache(self.cache_name,
+                lambda key : meth(component, key))
+        def wrap(key, no_cache=0):
+            if no_cache:
+                return meth(component, key)
+            return cache.get(key)
+        wrap.__name__ = meth_name + " (wrapped)"
+        wrap.__module__ = meth.__module__
+        wrap.__doc__ = meth.__doc__
+        wrap.cache = cache
+        return wrap
+
+def cached(cache_name):
+    """
+    A decorator for "getter" functions that fetch an object from the database
+    based on a single key.  The wrapped method will only be called if the named
+    cache does not contain the key.
+
+    The wrapped function must take one argument (the key); the wrapper will
+    take a key plus an optional C{no_cache} argument which, if true, will cause
+    it to invoke the underlying method even if the key is in the cache.
+
+    The resulting method will have a C{cache} attribute which can be used to
+    access the underlying cache.
+
+    @param cache_name: name of the cache to use
+    """
+    return lambda method : CachedMethod(cache_name, method)

@@ -116,6 +116,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         self.access = new.access
         self.notify_on_missing = new.notify_on_missing
         self.missing_timeout = new.missing_timeout
+        self.keepalive_interval = new.keepalive_interval
 
         self.properties = Properties()
         self.properties.updateFromProperties(new.properties)

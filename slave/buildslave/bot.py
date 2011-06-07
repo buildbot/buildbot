@@ -27,6 +27,7 @@ from twisted.cred import credentials
 import buildslave
 from buildslave.pbutil import ReconnectingPBClientFactory
 from buildslave.commands import registry, base
+from buildslave import monkeypatches
 
 class UnknownCommand(pb.Error):
     pass
@@ -452,6 +453,9 @@ class BuildSlave(service.MultiService):
         c.setServiceParent(self)
 
     def startService(self):
+        # first, apply all monkeypatches
+        monkeypatches.patch_all()
+
         log.msg("Starting BuildSlave -- version: %s" % buildslave.version)
 
         self.recordHostname(self.basedir)

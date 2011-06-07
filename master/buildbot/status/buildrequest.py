@@ -17,7 +17,6 @@ from zope.interface import implements
 from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces
-from buildbot.process import buildrequest
 from buildbot.util.eventual import eventually
 
 class BuildRequestStatus:
@@ -40,6 +39,9 @@ class BuildRequestStatus:
 
         @returns: BuildRequest instance or None, via Deferred
         """
+        # late binding to avoid an import cycle
+        from buildbot.process import buildrequest
+
         # this is only set once, so no need to lock if we already have it
         if self._buildrequest:
             yield self._buildrequest

@@ -13,15 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 from twisted.trial import unittest
-from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import buildrequest
 
 class TestBuildRequest(unittest.TestCase):
 
     def test_fromBrdict(self):
-        master = mock.Mock()
+        master = fakemaster.make_master()
         master.db = fakedb.FakeDBConnector(self)
         master.db.insertTestData([
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
@@ -60,7 +59,7 @@ class TestBuildRequest(unittest.TestCase):
         return d
 
     def test_fromBrdict_submittedAt_NULL(self):
-        master = mock.Mock()
+        master = fakemaster.make_master()
         master.db = fakedb.FakeDBConnector(self)
         master.db.insertTestData([
             fakedb.SourceStamp(id=234, branch='trunk', revision='9284',

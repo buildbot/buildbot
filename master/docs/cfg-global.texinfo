@@ -3,7 +3,7 @@ The keys in this section affect the operations of the buildmaster globally.
 @menu
 * Database Specification::
 * Multi-master mode::
-* Project Definitions::
+* Site Definition::
 * Log Handling::
 * Data Lifetime::
 * Merging Build Requests (global option)::
@@ -65,6 +65,16 @@ MySQL defaults to the MyISAM storage engine, but this can be overridden with
 the @code{storage_engine} URL argument.  Note that, because of InnoDB's
 extremely short key length limitations, it cannot be used to run Buildbot.  See
 @url{http://bugs.mysql.com/bug.php?id=4541} for more information.
+
+Buildbot uses temporary tables internally to manage large transactions.  MySQL
+has trouble doing replication with temporary tables, so if you are using a
+replicated MySQL installation, you may need to handle this situation carefully.
+The MySQL documentation
+(@url{http://dev.mysql.com/doc/refman/5.5/en/replication-features-temptables.html})
+recommends using @code{--replicate-wild-ignore-table} to ignore temporary
+tables that should not be replicated.  All Buildbot temporary tables begin with
+@code{bbtmp_}, so an option such as
+@code{--replicate-wild-ignore-table=bbtmp_.*} may help.
 
 @heading Postgres
 
@@ -142,18 +152,10 @@ c['multiMaster'] = True
 c['db_poll_interval'] = 60
 @end example
 
-@node Project Definitions
-@subsection Project Definitions
+@node Site Definition
+@subsection Site Definition
 
-There are a couple of basic settings that you use to tell the buildbot what it
-is working on. This information is used by status reporters to let users find
-out more about the codebase being exercised by this particular Buildbot
-installation.
-
-Note that these parameters were added long before Buildbot became able to build
-multiple projects in a single buildmaster, and thus assume that there is only
-one project.  While the configuration parameter names may be confusing, a
-suitable choice of name and URL should help users avoid any confusion.
+Three basic settings describe the buildmaster in status reports.
 
 @example
 c['title'] = "Buildbot"

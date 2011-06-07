@@ -20,6 +20,7 @@ from twisted.internet import defer
 from buildbot import interfaces, sourcestamp
 from buildbot.process import properties
 from buildbot.status.results import FAILURE
+from buildbot.db import buildrequests
 
 class BuildRequest(object):
     """
@@ -71,19 +72,28 @@ class BuildRequest(object):
     submittedAt = None
 
     @classmethod
-    @defer.deferredGenerator
     def fromBrdict(cls, master, brdict):
         """
         Construct a new L{BuildRequest} from a dictionary as returned by
         L{BuildRequestsConnectorComponent.getBuildRequest}.
+
+        This method uses a cache, which may result in return of stale objects;
+        for the most up-to-date information, use the database connector
+        methods.
 
         @param master: current build master
         @param brdict: build request dictionary
 
         @returns: L{BuildRequest}, via Deferred
         """
+        cache = master.caches.get_cache("BuildRequests", cls._make_br)
+        return cache.get(brdict['brid'], brdict=brdict, master=master)
+
+    @classmethod
+    @defer.deferredGenerator
+    def _make_br(cls, brid, brdict, master):
         buildrequest = cls()
-        buildrequest.id = brdict['brid']
+        buildrequest.id = brid
         buildrequest.bsid = brdict['buildsetid']
         buildrequest.buildername = brdict['buildername']
         buildrequest.priority = brdict['priority']
@@ -142,11 +152,33 @@ class BuildRequest(object):
     def getSubmitTime(self):
         return self.submittedAt
 
+    @defer.deferredGenerator
     def cancelBuildRequest(self):
-        d = self.master.db.buildrequests.completeBuildRequests([self.id],
-                                                                FAILURE)
-        d.addCallback(lambda _ : self.master.maybeBuildsetComplete(self.bsid))
-        return d
+        # first, try to claim the request; if this fails, then it's too late to
+        # cancel the build anyway
+        try:
+            wfd = defer.waitForDeferred(
+                self.master.db.buildrequests.claimBuildRequests([self.id]))
+            yield wfd
+            wfd.getResult()
+        except buildrequests.AlreadyClaimedError:
+            log.msg("build request already claimed; cannot cancel")
+            return
+
+        # then complete it with 'FAILURE'; this is the closest we can get to
+        # cancelling a request without running into trouble with dangling
+        # references.
+        wfd = defer.waitForDeferred(
+            self.master.db.buildrequests.completeBuildRequests([self.id],
+                                                                FAILURE))
+        yield wfd
+        wfd.getResult()
+
+        # and let the master know that the enclosing buildset may be complete
+        wfd = defer.waitForDeferred(
+                self.master.maybeBuildsetComplete(self.bsid))
+        yield wfd
+        wfd.getResult()
 
 class BuildRequestControl:
     implements(interfaces.IBuildRequestControl)

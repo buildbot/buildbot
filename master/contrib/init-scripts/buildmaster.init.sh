@@ -18,15 +18,15 @@ MASTER_RUNNER=/usr/bin/buildbot
 . /lib/lsb/init-functions
 
 # Source buildmaster configuration
-[[ -r /etc/default/buildbot ]] && . /etc/default/buildbot
-#[[ -r /etc/sysconfig/buildbot ]] && . /etc/sysconfig/buildbot
+[[ -r /etc/default/buildmaster ]] && . /etc/default/buildmaster
+#[[ -r /etc/sysconfig/buildmaster ]] && . /etc/sysconfig/buildmaster
 
 # Or define/override the configuration here
-#MASTER_ENABLED[1]=0                    # 0-enabled, other-disabled
+#MASTER_ENABLED[1]=0                    # 1-enabled, 0-disabled
 #MASTER_NAME[1]="buildmaster #1"        # short name printed on start/stop
 #MASTER_USER[1]="buildbot"              # user to run master as
 #MASTER_BASEDIR[1]=""                   # basedir to master (absolute path)
-#MASTER_OPTIONS[1]=""                   # buildbot options  
+#MASTER_OPTIONS[1]=""                   # buildbot options
 #MASTER_PREFIXCMD[1]=""                 # prefix command, i.e. nice, linux32, dchroot
 
 if [[ ! -x ${MASTER_RUNNER} ]]; then
@@ -34,13 +34,58 @@ if [[ ! -x ${MASTER_RUNNER} ]]; then
     exit 1
 fi
 
+function is_enabled() {
+    ANSWER=`echo $1|tr "[:upper:]" "[:lower:]"`
+    [[ "$ANSWER" == "yes" ]] || [[ "$ANSWER" == "true" ]] || [[ "$ANSWER" ==  "1" ]]
+    return $?
+}
+
+function is_disabled() {
+    ANSWER=`echo $1|tr "[:upper:]" "[:lower:]"`
+    [[ "$ANSWER" == "no" ]] || [[ "$ANSWER" == "false" ]] || [[ "$ANSWER" ==  "0" ]]
+    return $?
+}
+
+
+function master_config_valid() {
+    # Function validates buildmaster instance startup variables based on array
+    # index
+    local errors=0
+    local index=$1
+
+    if ! is_enabled "${MASTER_ENABLED[$index]}" && ! is_disabled "${MASTER_ENABLED[$index]}" ; then
+        log_warning_msg "buildmaster #${i}: invalid enabled status"
+        errors=$(($errors+1))
+    fi
+
+    if [[ -z ${MASTER_NAME[$index]} ]]; then
+        log_failure_msg "buildmaster #${i}: no name"
+        errors=$(($errors+1))
+    fi
+
+    if [[ -z ${MASTER_USER[$index]} ]]; then
+        log_failure_msg "buildmaster #${i}: no run user specified"
+        errors=$( ($errors+1) )
+    elif ! getent passwd ${MASTER_USER[$index]} >/dev/null; then
+        log_failure_msg "buildmaster #${i}: unknown user ${MASTER_USER[$index]}"
+        errors=$(($errors+1))
+    fi
+
+    if [[ ! -d "${MASTER_BASEDIR[$index]}" ]]; then
+        log_failure_msg "buildmaster ${i}: basedir does not exist ${MASTER_BASEDIR[$index]}"
+        errors=$(($errors+1))
+    fi
+
+    return $errors
+}
+
 function check_config() {
     itemcount="${#MASTER_ENABLED[@]}
                ${#MASTER_NAME[@]}
                ${#MASTER_USER[@]}
                ${#MASTER_BASEDIR[@]}
                ${#MASTER_OPTIONS[@]}
-               ${#MASTER_PREFIXCMD[@]}" 
+               ${#MASTER_PREFIXCMD[@]}"
 
     if [[ $(echo "$itemcount" | tr -d ' ' | sort -u | wc -l) -ne 1 ]]; then
         log_failure_msg "MASTER_* arrays must have an equal number of elements!"
@@ -49,28 +94,12 @@ function check_config() {
 
     errors=0
     for i in $( seq ${#MASTER_ENABLED[@]} ); do
-        if [[ ${MASTER_ENABLED[$i]} -ne 0 ]]; then 
-            log_failure_msg "buildmaster #${i}: unknown run status"
-            errors=$(($errors+1))
+        if is_disabled "${MASTER_ENABLED[$i]}" ; then
+            log_warning_msg "buildmaster #${i}: disabled"
+            continue
         fi
-
-        if [[ -z ${MASTER_NAME[$i]} ]]; then
-            log_failure_msg "buildmaster #${i}: no name"
-            errors=$(($errors+1))
-        fi
-
-        if [[ -z ${MASTER_USER[$i]} ]]; then
-            log_failure_msg "buildmaster #${i}: no run user specified"
-            errors=$( ($errors+1) )
-        elif ! getent passwd ${MASTER_USER[$i]} >/dev/null; then
-            log_failure_msg "buildmaster #${i}: unknown user ${MASTER_USER[$i]}"
-            errors=$(($errors+1))
-        fi
-
-        if [[ ! -d "${MASTER_BASEDIR[$i]}" ]]; then
-            log_failure_msg "buildmaster ${i}: basedir does not exist ${MASTER_BASEDIR[$i]}"
-            errors=$(($errors+1))
-        fi
+        master_config_valid $i
+        errors=$(($errors+$?))
     done
 
     [[ $errors == 0 ]]; return $?
@@ -93,7 +122,9 @@ function master_op () {
 function do_op () {
     errors=0
     for i in $( seq ${#MASTER_ENABLED[@]} ); do
-        [[ ${MASTER_ENABLED[$i]} -ne 0 ]] && continue
+        if is_disabled "${MASTER_ENABLED[$i]}" ; then
+            continue
+        fi
 
         # Some rhels don't come with all the lsb goodies
         if iscallable log_daemon_msg; then

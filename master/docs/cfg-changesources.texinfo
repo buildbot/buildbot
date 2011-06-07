@@ -426,7 +426,7 @@ Where options are:
 
     --category=category
     -C
-        Catagory for change. This becomes the Change.cagatory attribute.
+        Category for change. This becomes the Change.category attribute.
         This may not make sense to specify it here, as category is meant
         to distinguish the diffrent types of bots inside a same project,
         such as "test", "docs", "full"
