@@ -123,7 +123,7 @@ class GerritStatusPush(StatusReceiverMultiService):
         command = ["ssh", self.gerrit_username + "@" + self.gerrit_server, "-p %d" % self.gerrit_port,
                    "gerrit", "review", "--project %s" % str(project)]
         if message:
-            command.append("--message '%s'" % message)
+            command.append("--message '%s'" % message.replace("'","\""))
         if verified:
             command.extend(["--verified %d" % int(verified)])
         if reviewed:
