@@ -120,13 +120,6 @@ class Properties(util.ComparableMixin):
             if k not in other.runtime:
                 self.properties[k] = v
 
-    def render(self, value):
-        """
-        Return a variant of value that has any WithProperties objects
-        substituted.  This recurses into Python's compound data types.
-        """
-        return IRenderable(value).render(self)
-
 class PropertyMap:
     """
     Privately-used mapping object to implement WithProperties' substitutions,
@@ -223,8 +216,8 @@ class WithProperties(util.ComparableMixin):
         elif lambda_subs:
             raise ValueError('WithProperties takes either positional or keyword substitutions, not both.')
 
-    def render(self, properties):
-        pmap = properties.pmap
+    def getRenderingFor(self, build):
+        pmap = build.getProperties().pmap
         if self.args:
             strings = []
             for name in self.args:
@@ -232,7 +225,7 @@ class WithProperties(util.ComparableMixin):
             s = self.fmtstring % tuple(strings)
         else:
             for k,v in self.lambda_subs.iteritems():
-                pmap.add_temporary_value(k, v(properties))
+                pmap.add_temporary_value(k, v(build))
             s = self.fmtstring % pmap
             pmap.clear_temporary_values()
         return s
@@ -259,16 +252,16 @@ class Property(util.ComparableMixin):
         self.default = default
         self.defaultWhenFalse = defaultWhenFalse
 
-    def render(self, properties):
+    def getRenderingFor(self, build):
         if self.defaultWhenFalse:
-            return properties.getProperty(self.key) or self.default
+            return build.getProperty(self.key) or self.default
         else:
-            return properties.getProperty(self.key, default=self.default)
+            return build.getProperty(self.key, default=self.default)
 
 
 class _DefaultRenderer:
     """
-    Default IRenderable adaptor. Calls .render if availble, otherwise
+    Default IRenderable adaptor. Calls .getRenderingFor if availble, otherwise
     returns argument unchanged.
     """
 
@@ -276,19 +269,19 @@ class _DefaultRenderer:
 
     def __init__(self, value):
         try:
-            self.renderer = value.render
+            self.renderer = value.getRenderingFor
         except AttributeError:
             self.renderer = lambda _: value
 
-    def render(self, properties):
-        return self.renderer(properties)
+    def getRenderingFor(self, build):
+        return self.renderer(build)
 
 registerAdapter(_DefaultRenderer, object, IRenderable)
 
 
 class _ListRenderer:
     """
-    List IRenderable adaptor. Maps Properties.render over the list.
+    List IRenderable adaptor. Maps Build.render over the list.
     """
 
     implements(IRenderable)
@@ -296,15 +289,15 @@ class _ListRenderer:
     def __init__(self, value):
         self.value = value
 
-    def render(self, properties):
-        return [ properties.render(e) for e in self.value ]
+    def getRenderingFor(self, build):
+        return [ build.render(e) for e in self.value ]
 
 registerAdapter(_ListRenderer, list, IRenderable)
 
 
 class _TupleRenderer:
     """
-    Tuple IRenderable adaptor. Maps Properties.render over the tuple.
+    Tuple IRenderable adaptor. Maps Build.render over the tuple.
     """
 
     implements(IRenderable)
@@ -312,15 +305,15 @@ class _TupleRenderer:
     def __init__(self, value):
         self.value = value
 
-    def render(self, properties):
-        return tuple([ properties.render(e) for e in self.value ])
+    def getRenderingFor(self, build):
+        return tuple([ build.render(e) for e in self.value ])
 
 registerAdapter(_TupleRenderer, tuple, IRenderable)
 
 
 class _DictRenderer:
     """
-    Dict IRenderable adaptor. Maps Properties.render over the keya and values in the dict.
+    Dict IRenderable adaptor. Maps Build.render over the keya and values in the dict.
     """
 
     implements(IRenderable)
@@ -328,8 +321,8 @@ class _DictRenderer:
     def __init__(self, value):
         self.value = value
 
-    def render(self, properties):
-        return dict([ (properties.render(k), properties.render(v)) for k,v in self.value.iteritems() ])
+    def getRenderingFor(self, build):
+        return dict([ (build.render(k), build.render(v)) for k,v in self.value.iteritems() ])
 
 
 registerAdapter(_DictRenderer, dict, IRenderable)

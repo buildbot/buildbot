@@ -17,11 +17,44 @@
 from warnings import warn
 from email.Utils import formatdate
 from twisted.python import log
+from zope.interface import implements
 from buildbot.process.buildstep import LoggingBuildStep, LoggedRemoteCommand
 from buildbot.process.properties import WithProperties
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import BuildSlaveTooOldError, IRenderable
 from buildbot.status.builder import SKIPPED
 
+class _ComputeRepositoryURL(object):
+    implements(IRenderable)
+
+    def __init__(self, repository):
+        self.repository = repository
+
+    def getRenderingFor(self, build):
+        '''
+        Helper function that the repository URL based on the parameter the
+        source step took and the Change 'repository' property
+        '''
+
+        s = build.getSourceStamp()
+        props = build.getProperties()
+
+        repository = self.repository
+
+        if not repository:
+            return str(s.repository)
+        else:
+            if callable(repository):
+                return str(build.render(repository(s.repository)))
+            elif isinstance(repository, dict):
+                return str(build.render(repository.get(s.repository)))
+            elif isinstance(repository, str) or isinstance(repository, unicode):
+                try:
+                    return str(repository % s.repository)
+                except TypeError:
+                    # that's the backward compatibility case
+                    return build.render(repository)
+            else:
+                return str(build.render(repository))
 
 class Source(LoggingBuildStep):
     """This is a base class to generate a source tree in the buildslave.
@@ -30,6 +63,8 @@ class Source(LoggingBuildStep):
     startVC(). The class as a whole builds up the self.args dictionary, then
     starts a LoggedRemoteCommand with those arguments.
     """
+
+    renderables = [ 'workdir' ]
 
     # if the checkout fails, there's no point in doing anything else
     haltOnFailure = True
@@ -180,33 +215,6 @@ class Source(LoggingBuildStep):
         self.checkoutDelay value."""
         return None
 
-    def computeRepositoryURL(self, repository):
-        '''
-        Helper function that the repository URL based on the parameter the
-        source step took and the Change 'repository' property
-        '''
-
-        s = self.build.getSourceStamp()
-        props = self.build.getProperties()
-
-        if not repository:
-            assert s.repository
-            return str(s.repository)
-        else:
-            if callable(repository):
-                return str(props.render(repository(s.repository)))
-            elif isinstance(repository, dict):
-                return str(props.render(repository.get(s.repository)))
-            elif isinstance(repository, WithProperties):
-                return str(props.render(repository))
-            else: # string or unicode
-                try:
-                    repourl = str(repository % s.repository)
-                except TypeError:
-                    # that's the backward compatibility case
-                    repourl = props.render(repository)
-                return repourl
-
     def start(self):
         if self.notReally:
             log.msg("faking %s checkout/update" % self.name)
@@ -217,13 +225,12 @@ class Source(LoggingBuildStep):
             return SKIPPED
 
         # Allow workdir to be WithProperties
-        properties = self.build.getProperties()
-        self.args['workdir'] = properties.render(self.workdir)
+        self.args['workdir'] = self.workdir
 
         # what source stamp would this build like to use?
         s = self.build.getSourceStamp()
         # if branch is None, then use the Step's "default" branch
-        branch = s.branch or properties.render(self.branch)
+        branch = s.branch or self.branch
         # if revision is None, use the latest sources (-rHEAD)
         revision = s.revision
         if not revision and not self.alwaysUseLatest:
@@ -257,6 +264,8 @@ class BK(Source):
     """I perform BitKeeper checkout/update operations."""
     
     name = 'bk'
+
+    renderables = [ 'bkurl', 'baseURL' ]
     
     def __init__(self, bkurl=None, baseURL=None,
                  directory=None, extra_args=None, **kwargs):
@@ -271,8 +280,8 @@ class BK(Source):
                         C{bkurl} and C{baseURL}.
         """
                         
-        self.bkurl = bkurl
-        self.baseURL = baseURL
+        self.bkurl = _ComputeRepositoryURL(bkurl)
+        self.baseURL = _ComputeRepositoryURL(baseURL)
         self.extra_args = extra_args
         
         Source.__init__(self, **kwargs)
@@ -300,9 +309,9 @@ class BK(Source):
 
         if self.bkurl:
             assert not branch # we need baseURL= to use branches
-            self.args['bkurl'] = self.computeRepositoryURL(self.bkurl)
+            self.args['bkurl'] = self.bkurl
         else:
-            self.args['bkurl'] = self.computeRepositoryURL(self.baseURL) + branch
+            self.args['bkurl'] = self.baseURL + branch
         self.args['revision'] = revision
         self.args['patch'] = patch
         self.args['branch'] = branch
@@ -333,6 +342,8 @@ class CVS(Source):
     """
 
     name = "cvs"
+
+    renderables = [ "cvsroot" ]
 
     #progressMetrics = ('output',)
     #
@@ -419,7 +430,7 @@ class CVS(Source):
 
         self.checkoutDelay = checkoutDelay
         self.branch = branch
-        self.cvsroot = cvsroot
+        self.cvsroot = _ComputeRepositoryURL(cvsroot)
 
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(cvsroot=cvsroot,
@@ -484,7 +495,7 @@ class CVS(Source):
 
         if branch is None:
             branch = "HEAD"
-        self.args['cvsroot'] = self.computeRepositoryURL(self.cvsroot)
+        self.args['cvsroot'] = self.cvsroot
         self.args['branch'] = branch
         self.args['revision'] = revision
         self.args['patch'] = patch
@@ -518,6 +529,8 @@ class SVN(Source):
 
     name = 'svn'
     branch_placeholder = '%%BRANCH%%'
+
+    renderables = [ 'svnurl', 'baseURL' ]
 
     def __init__(self, svnurl=None, baseURL=None, defaultBranch=None,
                  directory=None, username=None, password=None,
@@ -554,8 +567,8 @@ class SVN(Source):
             warn("Please use workdir=, not directory=", DeprecationWarning)
             kwargs['workdir'] = directory
 
-        self.svnurl = svnurl
-        self.baseURL = baseURL
+        self.svnurl = _ComputeRepositoryURL(svnurl)
+        self.baseURL = _ComputeRepositoryURL(baseURL)
         self.branch = defaultBranch
         self.username = username
         self.password = password
@@ -630,7 +643,7 @@ class SVN(Source):
     def getSvnUrl(self, branch, revision, patch):
         ''' Compute the svn url that will be passed to the svn remote command '''
         if self.svnurl:
-            return self.computeRepositoryURL(self.svnurl)
+            return self.svnurl
         else:
             if branch is None:
                 m = ("The SVN source step belonging to builder '%s' does not know "
@@ -639,7 +652,7 @@ class SVN(Source):
                      % self.build.builder.name)
                 raise RuntimeError(m)
 
-            computed = self.computeRepositoryURL(self.baseURL)
+            computed = self.baseURL
 
             if self.branch_placeholder in self.baseURL:
                 return computed.replace(self.branch_placeholder, branch)
@@ -695,6 +708,8 @@ class Darcs(Source):
 
     name = "darcs"
 
+    renderables = [ 'repourl', 'baseURL' ]
+
     def __init__(self, repourl=None, baseURL=None, defaultBranch=None,
                  **kwargs):
         """
@@ -716,8 +731,8 @@ class Darcs(Source):
                               C{baseURL} and the result handed to the
                               'darcs pull' command.
         """
-        self.repourl = repourl
-        self.baseURL = baseURL
+        self.repourl = _ComputeRepositoryURL(repourl)
+        self.baseURL = _ComputeRepositoryURL(baseURL)
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(repourl=repourl,
@@ -759,9 +774,9 @@ class Darcs(Source):
 
         if self.repourl:
             assert not branch # we need baseURL= to use branches
-            self.args['repourl'] = self.computeRepositoryURL(self.repourl)
+            self.args['repourl'] = self.repourl
         else:
-            self.args['repourl'] = self.computeRepositoryURL(self.baseURL) + branch
+            self.args['repourl'] = self.baseURL + branch
         self.args['revision'] = revision
         self.args['patch'] = patch
 
@@ -779,6 +794,8 @@ class Git(Source):
     """Check out a source tree from a git repository 'repourl'."""
 
     name = "git"
+
+    renderables = [ 'repourl' ]
 
     def __init__(self, repourl=None,
                  branch="master",
@@ -814,7 +831,7 @@ class Git(Source):
                          lack of output, but requires Git 1.7.2+.
         """
         Source.__init__(self, **kwargs)
-        self.repourl = repourl
+        self.repourl = _ComputeRepositoryURL(repourl)
         self.branch = branch
         self.addFactoryArguments(repourl=repourl,
                                  branch=branch,
@@ -838,7 +855,7 @@ class Git(Source):
 
     def startVC(self, branch, revision, patch):
         self.args['branch'] = branch
-        self.args['repourl'] = self.computeRepositoryURL(self.repourl)
+        self.args['repourl'] = self.repourl
         self.args['revision'] = revision
         self.args['patch'] = patch
 
@@ -871,6 +888,8 @@ class Repo(Source):
 
     name = "repo"
 
+    renderables = [ "manifest_url" ]
+
     def __init__(self,
                  manifest_url=None,
                  manifest_branch="master",
@@ -889,7 +908,7 @@ class Repo(Source):
 
         """
         Source.__init__(self, **kwargs)
-        self.manifest_url = manifest_url
+        self.manifest_url = _ComputeRepositoryURL(manifest_url)
         self.addFactoryArguments(manifest_url=manifest_url,
                                  manifest_branch=manifest_branch,
                                  manifest_file=manifest_file,
@@ -929,7 +948,7 @@ class Repo(Source):
         return ret
 
     def startVC(self, branch, revision, patch):
-        self.args['manifest_url'] = self.computeRepositoryURL(self.manifest_url)
+        self.args['manifest_url'] = self.manifest_url
 
         # only master has access to properties, so we must implement this here.
         downloads = []
@@ -978,6 +997,8 @@ class Bzr(Source):
 
     name = "bzr"
 
+    renderables = [ 'repourl', 'baseURL' ]
+
     def __init__(self, repourl=None, baseURL=None, defaultBranch=None,
                  forceSharedRepo=None,
                  **kwargs):
@@ -1009,8 +1030,8 @@ class Bzr(Source):
                                 if not using update/copy mode, or if using
                                 update/copy mode with multiple branches.
         """
-        self.repourl = repourl
-        self.baseURL = baseURL
+        self.repourl = _ComputeRepositoryURL(repourl)
+        self.baseURL = _ComputeRepositoryURL(baseURL)
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(repourl=repourl,
@@ -1037,9 +1058,9 @@ class Bzr(Source):
 
         if self.repourl:
             assert not branch # we need baseURL= to use branches
-            self.args['repourl'] = self.computeRepositoryURL(self.repourl)
+            self.args['repourl'] = self.repourl
         else:
-            self.args['repourl'] = self.computeRepositoryURL(self.baseURL) + branch
+            self.args['repourl'] = self.baseURL + branch
         self.args['revision'] = revision
         self.args['patch'] = patch
 
@@ -1059,6 +1080,8 @@ class Mercurial(Source):
     """Check out a source tree from a mercurial repository 'repourl'."""
 
     name = "hg"
+
+    renderables = [ 'repourl', 'baseURL' ]
 
     def __init__(self, repourl=None, baseURL=None, defaultBranch=None,
                  branchType='dirname', clobberOnBranchChange=True, **kwargs):
@@ -1095,8 +1118,8 @@ class Mercurial(Source):
                                       at each branch change. Otherwise, just
                                       update to the branch.
         """
-        self.repourl = repourl
-        self.baseURL = baseURL
+        self.repourl = _ComputeRepositoryURL(repourl)
+        self.baseURL = _ComputeRepositoryURL(baseURL)
         self.branch = defaultBranch
         self.branchType = branchType
         self.clobberOnBranchChange = clobberOnBranchChange
@@ -1120,11 +1143,11 @@ class Mercurial(Source):
         if self.repourl:
             # we need baseURL= to use dirname branches
             assert self.branchType == 'inrepo' or not branch
-            self.args['repourl'] = self.computeRepositoryURL(self.repourl)
+            self.args['repourl'] = self.repourl
             if branch:
                 self.args['branch'] = branch
         else:
-            self.args['repourl'] = self.computeRepositoryURL(self.baseURL) + (branch or '')
+            self.args['repourl'] = self.baseURL + (branch or '')
         self.args['revision'] = revision
         self.args['patch'] = patch
         self.args['clobberOnBranchChange'] = self.clobberOnBranchChange
@@ -1156,6 +1179,8 @@ class Mercurial(Source):
 class P4(Source):
     """ P4 is a class for accessing perforce revision control"""
     name = "p4"
+
+    renderables = [ 'p4base' ]
 
     def __init__(self, p4base=None, defaultBranch=None, p4port=None, p4user=None,
                  p4passwd=None, p4extra_views=[], p4line_end='local',
@@ -1193,7 +1218,7 @@ class P4(Source):
         @param p4client: The perforce client to use for this buildslave.
         """
 
-        self.p4base = p4base
+        self.p4base = _ComputeRepositoryURL(p4base)
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(p4base=p4base,
@@ -1214,7 +1239,6 @@ class P4(Source):
 
     def setBuild(self, build):
         Source.setBuild(self, build)
-        self.args['p4base'] = self.computeRepositoryURL(self.p4base)
         self.args['p4client'] = self.p4client % {
             'slave': build.slavename,
             'builder': build.builder.name,
@@ -1230,6 +1254,7 @@ class P4(Source):
         slavever = self.slaveVersion("p4")
         assert slavever, "slave is too old, does not know about p4"
         args = dict(self.args)
+        args['p4base'] = self.p4base
         args['branch'] = branch or self.branch
         args['revision'] = revision
         args['patch'] = patch
@@ -1288,6 +1313,8 @@ class Monotone(Source):
 
     name = "mtn"
 
+    renderables = [ 'repourl' ]
+
     def __init__(self, repourl=None, branch=None, progress=False, **kwargs):
         """
         @type  repourl: string
@@ -1304,7 +1331,7 @@ class Monotone(Source):
                          lack of output.
         """
         Source.__init__(self, **kwargs)
-        self.repourl = repourl
+        self.repourl = _ComputeRepositoryURL(repourl)
         if (not repourl):
             raise ValueError("you must provide a repository uri in 'repourl'")
         if (not branch):
@@ -1323,7 +1350,7 @@ class Monotone(Source):
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about mtn")
 
-        self.args['repourl'] = self.computeRepositoryURL(self.repourl)
+        self.args['repourl'] = self.repourl
         if branch:
             self.args['branch'] = branch
         self.args['revision'] = revision

@@ -160,7 +160,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
             text += "%s tree: %s\n" % (t, self.tree)
         elif isinstance(self.tree, WithProperties):
             # interpolate the WithProperties instance, use that
-            text += "%s tree: %s\n" % (t, build.getProperties().render(self.tree))
+            text += "%s tree: %s\n" % (t, build.render(self.tree))
         else:
             raise Exception("tree is an unhandled value")
 
@@ -203,7 +203,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
             text += "%s build: %s\n" % (t, self.columnName)
         elif isinstance(self.columnName, WithProperties):
             # interpolate the WithProperties instance, use that
-            text += "%s build: %s\n" % (t, build.getProperties().render(self.columnName))
+            text += "%s build: %s\n" % (t, build.render(self.columnName))
         else:
             raise Exception("columnName is an unhandled value")
         text += "%s errorparser: %s\n" % (t, self.errorparser)
