@@ -399,6 +399,7 @@ class WarningCountingShellCommand(ShellCommand):
                                  directoryEnterPattern=directoryEnterPattern,
                                  directoryLeavePattern=directoryLeavePattern,
                                  warningExtractor=warningExtractor,
+                                 maxWarnCount=maxWarnCount,
                                  suppressionFile=suppressionFile)
         self.suppressions = []
         self.directoryStack = []
