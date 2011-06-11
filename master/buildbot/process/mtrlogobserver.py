@@ -316,7 +316,7 @@ class MTR(Test):
                 else:
                     logname = "mysqld.%d.err.%d" % (mysqld, mtr)
                     filename = "var/%d/log/mysqld.%d.err" % (mtr, mysqld)
-                self.addLogFile(logname, subdir + "/" + filename)
+                self.addLogFile(logname, self.mtr_subdir + "/" + filename)
 
         self.myMtr = self.MyMtrLogObserver(textLimit=self.textLimit,
                                            testNameLimit=self.testNameLimit,

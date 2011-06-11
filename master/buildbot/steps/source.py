@@ -19,7 +19,6 @@ from email.Utils import formatdate
 from twisted.python import log
 from zope.interface import implements
 from buildbot.process.buildstep import LoggingBuildStep, LoggedRemoteCommand
-from buildbot.process.properties import WithProperties
 from buildbot.interfaces import BuildSlaveTooOldError, IRenderable
 from buildbot.status.builder import SKIPPED
 
@@ -36,7 +35,6 @@ class _ComputeRepositoryURL(object):
         '''
 
         s = build.getSourceStamp()
-        props = build.getProperties()
 
         repository = self.repository
 
