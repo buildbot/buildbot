@@ -106,6 +106,13 @@ class Build:
     def getProperty(self, propname):
         return self.build_status.getProperty(propname)
 
+    def render(self, value):
+        """
+        Return a variant of value that has any WithProperties objects
+        substituted.  This recurses into Python's compound data types.
+        """
+        return interfaces.IRenderable(value).getRenderingFor(self)
+
     def allChanges(self):
         return self.source.changes
 
