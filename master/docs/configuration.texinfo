@@ -187,6 +187,9 @@ reasons:
 
 @item
 Any modules imported by the configuration file are not automatically reloaded.
+Python modules such as @url{http://pypi.python.org/pypi/lazy-reload} may help
+here, but reloading modules is fraught with subtlties and difficult-to-decipher
+failure cases.
 
 @item
 During the reconfiguration, active internal objects are divorced from the service
