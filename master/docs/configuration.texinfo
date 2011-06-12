@@ -22,6 +22,7 @@ understand how to fill in each section properly.
 * Predefined Config File Symbols::
 * Loading the Config File::
 * Testing the Config File::
+* Reloading the Config File (reconfig)::
 * Global Configuration::
 * Change Sources::
 * Schedulers::
@@ -100,60 +101,6 @@ the absolute path of the config file. The config file's directory is located in
 
 @end table
 
-@node Loading the Config File
-@section Loading the Config File
-
-The config file is only read at specific points in time. It is first
-read when the buildmaster is launched. Once it is running, there are
-various ways to ask it to reload the config file.
-
-@heading Reconfiguration
-
-If you are on the system hosting the buildmaster, you can send a @code{SIGHUP}
-signal to it: the @command{buildbot} tool has a shortcut for this:
-
-@example
-buildbot reconfig @var{BASEDIR}
-@end example
-
-This command will show you all of the lines from @file{twistd.log}
-that relate to the reconfiguration. If there are any problems during
-the config-file reload, they will be displayed in these lines.
-
-Buildbot's reconfiguration system is fragile for a few difficult-to-fix
-reasons:
-
-@itemize @bullet
-@item
-Any modules imported by the configuration file are not automatically reloaded.
-
-@item
-During the reconfiguration, active internal objects are divorced from the service
-hierarchy, leading to tracebacks in the web interface and other components. These
-are ordinarily transient, but with HTTP connection caching (either by the browser or
-an intervening proxy) they can last for a long time.
-
-@end itemize
-
-@heading Debug Client
-
-The debug tool (@code{buildbot debugclient --master HOST:PORT}) has a
-``Reload .cfg'' button which will also trigger a reload. In the
-future, there will be other ways to accomplish this step (probably a
-password-protected button on the web page, as well as a privileged IRC
-command).
-
-When reloading the config file, the buildmaster will endeavor to
-change as little as possible about the running system. For example,
-although old status targets may be shut down and new ones started up,
-any status targets that were not changed since the last time the
-config file was read will be left running and untouched. Likewise any
-Builders which have not been changed will be left running. If a
-Builder is modified (say, the build process is changed) while a Build
-is currently running, that Build will keep running with the old
-process until it completes. Any previously queued Builds (or Builds
-which get queued after the reconfig) will use the new process.
-
 @node Testing the Config File
 @section Testing the Config File
 
@@ -199,6 +146,78 @@ Traceback (most recent call last):
 NameError: name 'bogus' is not defined
 @end example
 
+@node Loading the Config File
+@section Loading the Config File
+
+The configuration file is only read at specific points in time. It is first
+read when the buildmaster is launched.  If the configuration is invalid, the
+master will display the errors in the console output, but will not exit.
+
+@node Reloading the Config File (reconfig)
+@section Reloading the Config File (reconfig)
+
+If you are on the system hosting the buildmaster, you can send a @code{SIGHUP}
+signal to it: the @command{buildbot} tool has a shortcut for this:
+
+@example
+buildbot reconfig @var{BASEDIR}
+@end example
+
+This command will show you all of the lines from @file{twistd.log}
+that relate to the reconfiguration. If there are any problems during
+the config-file reload, they will be displayed in these lines.
+
+When reloading the config file, the buildmaster will endeavor to
+change as little as possible about the running system. For example,
+although old status targets may be shut down and new ones started up,
+any status targets that were not changed since the last time the
+config file was read will be left running and untouched. Likewise any
+Builders which have not been changed will be left running. If a
+Builder is modified (say, the build process is changed) while a Build
+is currently running, that Build will keep running with the old
+process until it completes. Any previously queued Builds (or Builds
+which get queued after the reconfig) will use the new process.
+
+@heading Warning
+
+Buildbot's reconfiguration system is fragile for a few difficult-to-fix
+reasons:
+
+@itemize @bullet
+
+@item
+Any modules imported by the configuration file are not automatically reloaded.
+
+@item
+During the reconfiguration, active internal objects are divorced from the service
+hierarchy, leading to tracebacks in the web interface and other components. These
+are ordinarily transient, but with HTTP connection caching (either by the browser or
+an intervening proxy) they can last for a long time.
+
+@item
+If the new configuration file is invalid, it is possible for Buildbot's
+internal state to be corrupted, leading to undefined results.  When this
+occurs, it is best to restart the mater.
+
+@item
+For more advanced configurations, it is impossible for Buildbot to tell if the
+configuration for a builder or scheduler has chanaged, and thus the builder or
+scheduler will always be reloaded.  This occurs most commonly when a callable
+is passed as a configuration parameter.
+
+@end itemize
+
+The bbproto project (at @url{https://github.com/dabrahams/bbproto}) may help to
+construct large (multi-file) configurations which can be effectively reloaded
+and reconfigured.
+
+@heading Reconfig by Debug Client
+
+The debug tool (@code{buildbot debugclient --master HOST:PORT}) has a
+``Reload .cfg'' button which will also trigger a reload. In the
+future, there will be other ways to accomplish this step (probably a
+password-protected button on the web page, as well as a privileged IRC
+command).
 
 @node Global Configuration
 @section Global Configuration
