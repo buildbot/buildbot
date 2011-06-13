@@ -42,7 +42,8 @@ class Row(object):
     auto-incremented id.  Auto-assigned id's begin at 1000, so any explicitly
     specified ID's should be less than 1000.
 
-    @cvar id_column: a tuple of columns that must be given in the constructor
+    @cvar required_columns: a tuple of columns that must be given in the
+    constructor
 
     @ivar values: the values to be inserted into this row
     """

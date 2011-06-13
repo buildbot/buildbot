@@ -70,7 +70,7 @@ triggered by an important change.  The default value of None means
 that all Changes are important.
 
 @item change_filter
-The change filter that will determine whch changes are recognized by this
+The change filter that will determine which changes are recognized by this
 scheduler; @pxref{Change Filters}.  Note that this is different from
 @code{fileIsImportant}: if the change filter filters out a Change, then it is
 completely ignored by the scheduler.  If a Change is allowed by the change
