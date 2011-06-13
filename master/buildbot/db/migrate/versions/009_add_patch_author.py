@@ -21,8 +21,8 @@ def upgrade(migrate_engine):
 
     # add an empty class_name to the schedulers table
     patches = sa.Table('patches', metadata, autoload=True)
-    patch_author= sa.Column('patch_author', sa.Text, server_default=sa.DefaultClause(''))
+    patch_author= sa.Column('patch_author', sa.Text, server_default=sa.DefaultClause(''), nullable=False)
     patch_author.create(patches, populate_default=True)
     
-    patch_author= sa.Column('patch_comment', sa.Text, server_default=sa.DefaultClause(''))
+    patch_author= sa.Column('patch_comment', sa.Text, server_default=sa.DefaultClause(''), nullable=False)
     patch_author.create(patches, populate_default=True)

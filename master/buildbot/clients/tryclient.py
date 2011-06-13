@@ -336,8 +336,18 @@ def ns(s):
 
 def createJobfile(bsid, branch, baserev, patchlevel, diff, repository, 
                   project, who, comment, builderNames):
+    
     job = ""
-    job += ns("4")
+    
+    #Determine job file version from provided arguments
+    if comment:
+        version = 4
+    elif who:
+        version = 3
+    else:
+        version = 2
+    
+    job += ns(str(version))
     job += ns(bsid)
     job += ns(branch)
     job += ns(str(baserev))
@@ -345,10 +355,15 @@ def createJobfile(bsid, branch, baserev, patchlevel, diff, repository,
     job += ns(diff)
     job += ns(repository)
     job += ns(project)
-    job += ns(who)
-    job += ns(comment)
+    
+    if (version >= 3):
+        job += ns(who)
+    if (version >= 4):
+        job += ns(comment)
+        
     for bn in builderNames:
         job += ns(bn)
+ 
     return job
 
 def getTopdir(topfile, start=None):

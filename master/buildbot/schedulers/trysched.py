@@ -170,11 +170,11 @@ class Try_Jobdir(TryBase):
             log.msg("incoming Try job did not specify any allowed builder names")
             return defer.succeed(None)
         
-        who = None
+        who = ""
         if parsed_job['who']:
             who = parsed_job['who']
         
-        comment = None
+        comment = ""
         if parsed_job['comment']:
             comment = parsed_job['comment']
 
@@ -206,7 +206,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
     @defer.deferredGenerator
     def perspective_try(self, branch, revision, patch, repository, project,
-                        builderNames, who=None, comment=None, properties={} ):
+                        builderNames, who="", comment="", properties={} ):
         db = self.scheduler.master.db
         log.msg("user %s requesting build on builders %s" % (self.username,
                                                              builderNames))
@@ -219,9 +219,10 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         reason = "'try' job"
         
         if who:
-            reason += " by user %s (%s)" % (who, comment)
-        else:
-            who = None
+            reason += " by user %s" % who
+            
+        if comment:
+            reason += " (%s)" % comment
 
         wfd = defer.waitForDeferred(
                 db.sourcestamps.addSourceStamp(branch=branch, revision=revision,

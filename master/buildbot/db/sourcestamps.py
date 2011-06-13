@@ -30,8 +30,8 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
     """
 
     def addSourceStamp(self, branch, revision, repository, project,
-                          patch_body=None, patch_level=0, patch_author=None,
-                          patch_comment=None, patch_subdir=None, changeids=[]):
+                          patch_body=None, patch_level=0, patch_author="",
+                          patch_comment="", patch_subdir=None, changeids=[]):
         """
         Create a new SourceStamp instance with the given attributes, and return
         its sourcestamp ID, via a Deferred.
