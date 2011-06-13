@@ -118,7 +118,7 @@ class Mercurial(SourceBaseCommand):
                 return self._clobber(dummy, dirname)
 
             # Purge was a success, then we need to update
-            return self._update2(res)
+            return res
 
         p = purgeCmd.start()
         p.addCallback(_clobber)
@@ -237,9 +237,6 @@ class Mercurial(SourceBaseCommand):
             if self.clobber:
                 msg = "Clobber flag set. Doing clobbering"
                 log.msg(msg)
-
-                def _vcfull(res):
-                    return self.doVCFull()
 
                 return self.clobber(None, self.srcdir)
 
