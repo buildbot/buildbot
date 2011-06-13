@@ -57,7 +57,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             links=None, revision=None, when_timestamp=None, branch=None,
             category=None, revlink='', properties={}, repository='',
             project='', _reactor=reactor):
-        """Add the a Change with the given attributes to the database; returns
+        """Add a Change with the given attributes to the database; returns
         a Change instance via a deferred.  All arguments are keyword arguments.
 
         @param author: the author of this change
