@@ -151,7 +151,9 @@ class Patch(Row):
     defaults = dict(
         id = None,
         patchlevel = 0,
-        patch_base64 = 'aGVsbG8sIHdvcmxk', # 'hello, world'
+        patch_base64 = 'aGVsbG8sIHdvcmxk', # 'hello, world',
+        patch_author = None,
+        patch_comment = None,
         subdir = None,
     )
 
@@ -465,6 +467,8 @@ class FakeSourceStampsComponent(FakeDBComponent):
                 self.patches[row.id] = dict(
                     patch_level=row.patchlevel,
                     patch_body=base64.b64decode(row.patch_base64),
+                    patch_author=row.patch_author,
+                    patch_comment=row.patch_comment,
                     patch_subdir=row.subdir)
 
         for row in rows:
@@ -480,8 +484,8 @@ class FakeSourceStampsComponent(FakeDBComponent):
     # component methods
 
     def addSourceStamp(self, branch, revision, repository, project,
-                          patch_body=None, patch_level=0, patch_subdir=None,
-                          changeids=[]):
+                          patch_body=None, patch_level=0, patch_author=None,
+                          patch_comment=None, patch_subdir=None, changeids=[]):
         id = len(self.sourcestamps) + 100
         while id in self.sourcestamps:
             id += 1
@@ -496,6 +500,8 @@ class FakeSourceStampsComponent(FakeDBComponent):
                 patch_level=patch_level,
                 patch_body=patch_body,
                 patch_subdir=patch_subdir,
+                patch_author=patch_author,
+                patch_comment=patch_comment
             )
         else:
             patchid = None
@@ -517,6 +523,8 @@ class FakeSourceStampsComponent(FakeDBComponent):
                 ssdict['patch_body'] = None
                 ssdict['patch_level'] = None
                 ssdict['patch_subdir'] = None
+                ssdict['patch_author'] = None
+                ssdict['patch_comment'] = None
             del ssdict['patchid']
             return defer.succeed(ssdict)
         else:

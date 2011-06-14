@@ -476,6 +476,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                  'branch': "",
                  'revision': "",
                  'patch': "",
+                 'patch_info': "",
                  'changes': [],
                  'logs': logs}
 
@@ -484,6 +485,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             attrs['branch'] = ss.branch
             attrs['revision'] = ss.revision
             attrs['patch'] = ss.patch
+            attrs['patch_info'] = ss.patch_info
             attrs['changes'] = ss.changes[:]
 
         return attrs
