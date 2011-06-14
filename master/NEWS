@@ -5,6 +5,8 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Version
 
+* Buildbot 0.8.4
+
 ** `Blocker` step
 
 A "beta" version of the Blocker step has been added; this step allows multiple

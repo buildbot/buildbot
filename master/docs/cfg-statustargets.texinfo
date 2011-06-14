@@ -1108,7 +1108,8 @@ Take a look at the docstring for @code{words.IRC} for more details on
 configuring this service. Note that the @code{useSSL} option requires
 @code{PyOpenSSL}.  The @code{password} argument, if provided, will be sent to
 Nickserv to claim the nickname: some IRC servers will not allow clients to send
-private messages until they have logged in with a password.
+private messages until they have logged in with a password. We can also specify
+a different @code{port} number. Defalut values is 6667.
 
 To use the service, you address messages at the buildbot, either
 normally (@code{botnickname: status}) or with private messages
