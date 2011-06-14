@@ -121,7 +121,11 @@ class Repo(SourceBaseCommand):
         command = ['forall', '-c', 'git', 'clean', '-f', '-d', '-x']
         return self._repoCmd(command, self._doClean2, abandonOnFailure=False)
 
-    def _doClean2(self,dummy):
+    def _doClean2(self, dummy):
+        command = ['forall', '-c', 'git', 'reset', '--hard', 'HEAD']
+        return self._repoCmd(command, self._doClean3, abandonOnFailure=False)
+
+    def _doClean3(self,dummy):
         command = ['clean', '-f', '-d', '-x']
         return self._gitCmd(".repo/manifests",command, self._doSync)
 
