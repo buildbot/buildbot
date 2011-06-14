@@ -17,8 +17,7 @@
 import re
 from twisted.python import log
 from twisted.spread import pb
-from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand
-from buildbot.process.buildstep import RemoteCommand
+from buildbot.process import buildstep
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot.status.logfile import STDOUT, STDERR
 from buildbot.interfaces import BuildSlaveTooOldError
@@ -29,7 +28,7 @@ from buildbot.process.properties import WithProperties
 _hush_pyflakes = [WithProperties]
 del _hush_pyflakes
 
-class ShellCommand(LoggingBuildStep):
+class ShellCommand(buildstep.LoggingBuildStep):
     """I run a single shell command on the buildslave. I return FAILURE if
     the exit code of that command is non-zero, SUCCESS otherwise. To change
     this behavior, override my .evaluateCommand method.
@@ -105,7 +104,7 @@ class ShellCommand(LoggingBuildStep):
             if k in self.__class__.parms:
                 buildstep_kwargs[k] = kwargs[k]
                 del kwargs[k]
-        LoggingBuildStep.__init__(self, **buildstep_kwargs)
+        buildstep.LoggingBuildStep.__init__(self, **buildstep_kwargs)
         self.addFactoryArguments(workdir=workdir,
                                  description=description,
                                  descriptionDone=descriptionDone,
@@ -119,12 +118,12 @@ class ShellCommand(LoggingBuildStep):
         self.addFactoryArguments(**kwargs)
 
     def setBuild(self, build):
-        LoggingBuildStep.setBuild(self, build)
+        buildstep.LoggingBuildStep.setBuild(self, build)
         # Set this here, so it gets rendered when we start the step
         self.slaveEnvironment = self.build.slaveEnvironment
 
     def setStepStatus(self, step_status):
-        LoggingBuildStep.setStepStatus(self, step_status)
+        buildstep.LoggingBuildStep.setStepStatus(self, step_status)
 
     def setDefaultWorkdir(self, workdir):
         rkw = self.remote_kwargs
@@ -164,8 +163,6 @@ class ShellCommand(LoggingBuildStep):
             words = self.command
             if isinstance(words, (str, unicode)):
                 words = words.split()
-            # render() each word to handle WithProperties objects
-            words = self.build.render(words)
             if len(words) < 1:
                 return ["???"]
             if len(words) == 1:
@@ -240,7 +237,7 @@ class ShellCommand(LoggingBuildStep):
             if self.slaveVersionIsOlderThan("svn", "2.7"):
                 warnings.append("NOTE: slave does not allow master to override usePTY\n")
 
-        cmd = RemoteShellCommand(**kwargs)
+        cmd = buildstep.RemoteShellCommand(**kwargs)
         self.setupEnvironment(cmd)
         self.checkForOldSlaveAndLogfiles()
 
@@ -348,7 +345,7 @@ class StringFileWriter(pb.Referenceable):
     def remote_close(self):
         pass
 
-class SilentRemoteCommand(RemoteCommand):
+class SilentRemoteCommand(buildstep.RemoteCommand):
     """
     Remote command subclass used to run an internal file upload command on the
     slave. We do not need any progress updates from such command, so override
