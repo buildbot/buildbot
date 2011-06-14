@@ -221,6 +221,12 @@ class Model(base.DBConnectorComponent):
 
         # base64-encoded version of the patch file
         sa.Column('patch_base64', sa.Text, nullable=False),
+        
+        # patch author, if known
+        sa.Column('patch_author', sa.Text, nullable=False),
+        
+        # patch comment
+        sa.Column('patch_comment', sa.Text, nullable=False),
 
         # subdirectory in which the patch should be applied; NULL for top-level
         sa.Column('subdir', sa.Text),

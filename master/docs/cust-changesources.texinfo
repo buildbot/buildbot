@@ -54,7 +54,7 @@ from the old, then the old will be stopped and the new started.
 
 @dvindex buildbot.changes.base.PollingChangeSource
 
-Polilng is a very common means of seeking changes, so Buildbot supplies a
+Polling is a very common means of seeking changes, so Buildbot supplies a
 utility parent class to make it easier.  A poller should subclass
 @code{buildbot.changes.base.PollingChangeSource}, which is a subclass of
 @code{ChangeSource}.  This subclass implements the @code{Service} methods, and

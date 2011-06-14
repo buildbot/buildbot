@@ -946,6 +946,8 @@ class TryOptions(OptionsWithOptionsFile):
          "Password for PB authentication"],
         ["who", "w", None,
          "Who is responsible for the try build"],
+        ["comment", "C", None,
+         "A comment which can be used in notifications for this build"],
 
         ["diff", None, None,
          "Filename of a patch to use instead of scanning a local tree. "
@@ -1006,6 +1008,7 @@ class TryOptions(OptionsWithOptionsFile):
         [ 'try_password', 'passwd' ],
         [ 'try_master', 'master' ],
         [ 'try_who', 'who' ],
+        [ 'try_comment', 'comment' ],
         #[ 'try_wait', 'wait' ], <-- handled in postOptions
         [ 'try_masterstatus', 'masterstatus' ],
         # Deprecated command mappings from the quirky old days:

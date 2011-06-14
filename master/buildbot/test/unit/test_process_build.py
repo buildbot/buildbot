@@ -34,6 +34,8 @@ class FakeSource:
     revision = "12345"
     repository = None
     project = None
+    patch_info = (None, None)
+    patch = None
 
 class FakeRequest:
     source = FakeSource()
