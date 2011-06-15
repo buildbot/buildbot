@@ -131,6 +131,17 @@ class TestChangePerspective(unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def test_addChange_files_tuple(self):
+        cp = pb.ChangePerspective(self.master, None)
+        d = cp.perspective_addChange(
+                dict(files=('a', 'b'))
+                )
+        def check(_):
+            self.assertEqual(self.added_changes,
+                    [ dict(files=['a', 'b']) ])
+        d.addCallback(check)
+        return d
+
     def test_addChange_unicode(self):
         cp = pb.ChangePerspective(self.master, None)
         d = cp.perspective_addChange(dict(author=u"\N{SNOWMAN}",
