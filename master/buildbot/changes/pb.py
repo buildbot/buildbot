@@ -56,7 +56,10 @@ class ChangePerspective(NewCredPerspective):
             changedict['author'] = changedict['who']
             del changedict['who']
         if 'when' in changedict:
-            changedict['when_timestamp'] = epoch2datetime(changedict['when'])
+            when = None
+            if changedict['when'] is not None:
+                when = epoch2datetime(changedict['when'])
+            changedict['when_timestamp'] = when
             del changedict['when']
 
         # turn any bytestring keys into unicode, assuming utf8 but just
