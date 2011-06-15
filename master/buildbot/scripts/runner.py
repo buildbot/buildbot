@@ -906,7 +906,7 @@ def sendchange(config, runReactor=False):
             status[0] = False
             s.printFailure(res)
         d.addCallbacks(printSuccess, failed)
-        d.addBoth(reactor.stop)
+        d.addBoth(lambda _ : reactor.stop())
         reactor.run()
         return status[0]
     return d
