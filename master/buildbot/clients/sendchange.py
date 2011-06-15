@@ -35,6 +35,7 @@ class Sender:
         for key in change:
             if type(change[key]) == str:
                 change[key] = change[key].decode(self.encoding, 'replace')
+        change['files'] = list(change['files'])
         for i, file in enumerate(change.get('files', [])):
             if type(file) == str:
                 change['files'][i] = file.decode(self.encoding, 'replace')

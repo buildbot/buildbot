@@ -22,7 +22,7 @@
 
 import os, sys, stat, re, time
 from twisted.python import usage, util, runtime
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 
 from buildbot.interfaces import BuildbotNotRunningError
 
@@ -896,14 +896,18 @@ def sendchange(config, runReactor=False):
     d = s.send(branch, revision, comments, files, who=who, category=category, when=when,
                properties=properties, repository=repository, project=project,
                revlink=revlink)
+
+    def printSuccess(_):
+        print "change sent successfully"
+
     if runReactor:
         status = [True]
         def failed(res):
             status[0] = False
             s.printFailure(res)
-        d.addCallbacks(s.printSuccess, failed)
-        d.addBoth(s.stop)
-        s.run()
+        d.addCallbacks(printSuccess, failed)
+        d.addBoth(lambda _ : reactor.stop())
+        reactor.run()
         return status[0]
     return d
 
