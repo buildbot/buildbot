@@ -104,6 +104,18 @@ class Sender(unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def test_send_files_tuple(self):
+        # 'buildbot sendchange' sends files as a tuple, rather than a list..
+        s = sendchange.Sender('localhost:1234')
+        d = s.send('branch', 'rev', 'comm', ('a', 'b'))
+        def check(_):
+            self.assertProcess('localhost', 1234, 'change', 'changepw', [
+                dict(project='', repository='', who=None, files=['a', 'b'],
+                    comments='comm', branch='branch', revision='rev',
+                    category=None, when=None, properties={}, revlink='')])
+        d.addCallback(check)
+        return d
+
     def test_send_unicode(self):
         s = sendchange.Sender('localhost:1234')
         d = s.send(u'\N{DEGREE SIGN}',
