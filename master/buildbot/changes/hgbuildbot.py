@@ -173,7 +173,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         ui.warn(s.getFailureString(why) + '\n')
 
     d.addCallbacks(_printSuccess, _printFailure)
-    d.addBoth(s.stop)
+    d.addBoth(lambda _ : reactor.stop)
     s.run()
 
     if fork:
