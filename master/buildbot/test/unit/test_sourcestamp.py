@@ -49,6 +49,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
             self.assertEqual(ss.branch, 'trunk')
             self.assertEqual(ss.revision, '9284')
             self.assertEqual(ss.patch, None)
+            self.assertEqual(ss.patch_info, None)
             self.assertEqual([ ch.number for ch in ss.changes],
                              [13, 14, 15, 16])
             self.assertEqual(ss.project, 'world-domination')
@@ -102,6 +103,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
             self.assertEqual(ss.branch, 'trunk')
             self.assertEqual(ss.revision, '9284')
             self.assertEqual(ss.patch, None)
+            self.assertEqual(ss.patch_info, None)
             self.assertEqual(ss.changes, ())
             self.assertEqual(ss.project, 'world-domination')
             self.assertEqual(ss.repository, 'svn://...')
