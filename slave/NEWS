@@ -3,7 +3,7 @@ Major User visible changes in Buildslave.             -*- outline -*-
    http://github.com/buildbot/buildbot/commits/master
 
 
-* Buildbot-Slave 0.8.4
+* Buildbot-Slave 0.8.4 (June 12, 2011)
 
 ** Buildslave now places all spawned commands into process groups on POSIX
 systems.  This means that in most cases child processes are cleaned up
