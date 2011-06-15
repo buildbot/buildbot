@@ -21,6 +21,8 @@ from buildbot import master
 from buildbot.util import subscription
 from buildbot.test.util import dirs
 from buildbot.test.fake import fakedb
+from buildbot.util import epoch2datetime
+from buildbot.changes import changes
 
 class Subscriptions(dirs.DirsMixin, unittest.TestCase):
 
@@ -37,25 +39,121 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         return self.tearDownDirs()
 
     def test_change_subscription(self):
-        self.newchange = mock.Mock()
+        changeid = 918
+        chdict = {
+            'changeid': 14,
+            'author': u'warner',
+            'branch': u'warnerdb',
+            'category': u'devel',
+            'comments': u'fix whitespace',
+            'files': [u'master/buildbot/__init__.py'],
+            'is_dir': 0,
+            'links': [],
+            'project': u'Buildbot',
+            'properties': {},
+            'repository': u'git://warner',
+            'revision': u'0e92a098b',
+            'revlink': u'http://warner/0e92a098b',
+            'when_timestamp': epoch2datetime(266738404),
+        }
+        newchange = mock.Mock(name='newchange')
+
+        # patch out everything we're about to call
         self.master.db = mock.Mock()
         self.master.db.changes.addChange.return_value = \
-            defer.succeed(self.newchange)
+            defer.succeed(changeid)
+        self.master.db.changes.getChange.return_value = \
+            defer.succeed(chdict)
+        self.patch(changes.Change, 'fromChdict',
+                classmethod(lambda cls, master, chdict :
+                                defer.succeed(newchange)))
 
         cb = mock.Mock()
         sub = self.master.subscribeToChanges(cb)
         self.assertIsInstance(sub, subscription.Subscription)
 
-        d = self.master.addChange(this='chdict')
+        d = self.master.addChange()
         def check(change):
-            # master called the right thing in the db component
-            self.master.db.changes.addChange.assert_called_with(this='chdict')
+            # master called the right thing in the db component, including with
+            # appropriate default values
+            self.master.db.changes.addChange.assert_called_with(author=None,
+                    files=None, comments=None, is_dir=0, links=None,
+                    revision=None, when_timestamp=None, branch=None,
+                    category=None, revlink='', properties={}, repository='',
+                    project='')
+
+            self.master.db.changes.getChange.assert_called_with(changeid)
             # addChange returned the right value
-            self.failUnless(change is self.newchange) # addChange return value
+            self.failUnless(change is newchange) # fromChdict's return value
             # and the notification sub was called correctly
-            cb.assert_called_with(self.newchange)
+            cb.assert_called_with(newchange)
         d.addCallback(check)
         return d
+
+    def do_test_addChange_args(self, args=(), kwargs={}, exp_db_kwargs={}):
+        # add default arguments
+        default_db_kwargs = dict(files=None, comments=None, author=None,
+                is_dir=0, links=None, revision=None, when_timestamp=None,
+                branch=None, category=None, revlink='', properties={},
+                repository='', project='')
+        k = default_db_kwargs
+        k.update(exp_db_kwargs)
+        exp_db_kwargs = k
+
+        self.master.db = mock.Mock()
+        got = []
+        def db_addChange(*args, **kwargs):
+            got[:] = args, kwargs
+            # use an exception as a quick way to bail out of the remainder
+            # of the addChange method
+            return defer.fail(RuntimeError)
+        self.master.db.changes.addChange = db_addChange
+
+        d = self.master.addChange(*args, **kwargs)
+        d.addCallback(lambda _ : self.fail("should not succeed"))
+        def check(f):
+            self.assertEqual(got, [(), exp_db_kwargs])
+        d.addErrback(check)
+        return d
+
+    def test_addChange_args_author(self):
+        # who should come through as author
+        return self.do_test_addChange_args(
+                kwargs=dict(who='me'),
+                exp_db_kwargs=dict(author='me'))
+
+    def test_addChange_args_isdir(self):
+        # isdir should come through as is_dir
+        return self.do_test_addChange_args(
+                kwargs=dict(isdir=1),
+                exp_db_kwargs=dict(is_dir=1))
+
+    def test_addChange_args_when(self):
+        # when should come through as when_timestamp, as a datetime
+        return self.do_test_addChange_args(
+                kwargs=dict(when=892293875),
+                exp_db_kwargs=dict(when_timestamp=epoch2datetime(892293875)))
+
+    def test_addChange_args_properties(self):
+        # properties should be qualified with a source
+        return self.do_test_addChange_args(
+                kwargs=dict(properties={ 'a' : 'b' }),
+                exp_db_kwargs=dict(properties={ 'a' : ('b', 'Change') }))
+
+    def test_addChange_args_properties_tuple(self):
+        # properties should be qualified with a source, even if they
+        # already look like they have a source
+        return self.do_test_addChange_args(
+                kwargs=dict(properties={ 'a' : ('b', 'Change') }),
+                exp_db_kwargs=dict(properties={
+                    'a' : (('b', 'Change'), 'Change') }))
+
+    def test_addChange_args_positional(self):
+        # master.addChange can take author, files, comments as positional
+        # arguments
+        return self.do_test_addChange_args(
+                args=('me', ['a'], 'com'),
+                exp_db_kwargs=dict(author='me', files=['a'], comments='com'))
 
     def test_buildset_subscription(self):
         self.master.db = mock.Mock()

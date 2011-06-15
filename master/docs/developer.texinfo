@@ -12,6 +12,7 @@ described here.
 
 @menu
 * Buildmaster Service Hierarchy::
+* Access to Configuration::
 * Utilities::
 * The Database::
 * Log File Format::
@@ -20,6 +21,8 @@ described here.
 * Master-Slave API::
 * Twisted Idioms::
 * Buildbot Tests::
+* String Encodings::
+* Metrics::
 * Developer Class Index::
 @end menu
 
@@ -66,11 +69,23 @@ StatusReceiverMultiService and include an 'implements(IStatusReceiver)' stanza.
 
 @end itemize
 
+@node Access to Configuration
+@section Access to Configuration
+
+The master object makes much of the configuration available from an object
+named @code{master.config}.  Configuration is stored as attributes of this
+object.  Where possible, components should access this configuration directly
+and not cache the configuration values anywhere else.  This avoids the need to
+ensure that update-from-configuration methods are called on a reconfig.
+
+The available attributes are listed in the docstring for the
+@code{buildbot.config.MasterConfig} class.
+
 @node Utilities
 @section Utilities
 
 @menu
-* buildbot.util.collections::
+* buildbot.util.bbcollections::
 * buildbot.util.eventual::
 * buildbot.util.json::
 @end menu
@@ -112,13 +127,13 @@ This function will filter out some inappropriate characters for filenames; it
 is suitable for adapting strings from the configuration for use as filenames.
 It is not suitable for use with strings from untrusted sources.
 
-@item LRUCache
+@item AsyncLRUCache
 
-This is a simple least-recently-used cache.  Its constructor takes a maximum
-size.  When the cache grows beyond this size, the least-recently used items
-will be automatically removed from the cache.  The class has @code{get} and
-@code{add} methods, and can also be accessed via dictionary syntax
-(@code{lru['id']}).
+This is a least-recently-used cache.  Its constructor takes a maximum size.
+When the cache grows beyond this size, the least-recently used items will be
+automatically removed from the cache.  The class has a @code{get} method that
+takes a key and a function to call (with the key) when the key is not in the
+cache.  Both @code{get} and the miss function return Deferreds.
 
 @item deferredLocked
 
@@ -171,13 +186,15 @@ dt = datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC)
 
 @end table
 
-@node buildbot.util.collections
-@subsection buildbot.util.collections
+@node buildbot.util.bbcollections
+@subsection buildbot.util.bbcollections
 
-This package provides a few useful collection objects.
+This package provides a few useful collection objects.  Note that it used to be
+named @code{collections}, but without absolute imports (PEP 328), this
+precluded using the standard library's @code{collections} module.
 
 For compatibility, it provides a clone of the Python
-@code{collections.defaultdict} for use in Python-2.4.  In later versions, this
+@code{bbcollections.defaultdict} for use in Python-2.4.  In later versions, this
 is simply a reference to the built-in @code{defaultdict}, so buildbot code can
 simply use @code{buildbot.util.collections.defaultdict} everywhere.
 
@@ -820,6 +837,154 @@ this in the header of every test file:
 from buildbot.test.util.monkeypatches import monkeypatch
 monkeypatch()
 @end example
+
+@node String Encodings
+@section String Encodings
+
+Buildbot expects all strings used internally to be valid Unicode strings - not
+bytestrings.
+
+Note that Buildbot rarely feeds strings back into external tools in such a way
+that those strings must match.  For example, Buildbot does not attempt to
+access the filenames specified in a Change.  So it is more important to store
+strings in a manner that will be most useful to a human reader (e.g., in
+logfiles, web status, etc.) than to store them in a lossless format.
+
+@heading Inputs
+
+On input, strings should be decoded, if their encoding is known.  Where
+necessary, the assumed input encoding should be configurable.  In some cases,
+such as filenames, this encoding is not known or not well-defined (e.g., a
+utf-8 encoded filename in a latin-1 directory).  In these cases, the input
+mechanisms should make a best effort at decoding, and use e.g., the
+@code{errors='replace'} option to fail gracefully on un-decodable characters.
+
+@heading Outputs
+
+At most points where Buildbot outputs a string, the target encoding is known.
+For example, the web status can encode to utf-8.  In cases where it is not
+known, it should be configurable, with a safe fallback (e.g., ascii with
+@code{errors='replace'}).
+
+@node Metrics
+@section Metrics
+
+@menu
+* Metric Events::
+* Metric Handlers::
+* Metric Watchers::
+* Metric Helpers::
+@end menu
+
+New in buildbot 0.8.4 is support for tracking various performance metrics inside the buildbot master process. Currently these are logged periodically according to the @code{log_interval} configuration setting of the @ref{Metrics Options} configuration.
+
+If @ref{Web Status} is enabled, the metrics data is also available via /json/metrics.
+
+The metrics subsystem is implemented in @code{buildbot.process.metrics}. It makes use of twisted's logging system to pass metrics data from all over buildbot's code to a central @code{MetricsLogObserver} object, which is available at @code{BuildMaster.metrics} or via @code{Status.getMetrics()}.
+
+@node Metric Events
+@subsection Metric Events
+@code{MetricEvent} objects represent individual items to monitor. There are three sub-classes implemented:
+
+@table @code
+@item MetricCountEvent
+Records incremental increase or decrease of some value, or an absolute measure of some value.
+@example
+from buildbot.process.metrics import MetricCountEvent
+
+# We got a new widget!
+MetricCountEvent.log('num_widgets', 1)
+
+# We have exactly 10 widgets
+MetricCountEvent.log('num_widgets', 10, absolute=True)
+@end example
+
+@item MetricTimeEvent
+Measures how long things take. By default the average of the last 10 times will be reported.
+@example
+from buildbot.process.metrics import MetricTimeEvent
+
+# function took 0.001s
+MetricTimeEvent.log('time_function', 0.001)
+@end example
+
+@item MetricAlarmEvent
+Indicates the health of various metrics.
+@example
+from buildbot.process.metrics import MetricAlarmEvent, ALARM_OK
+
+# num_slaves looks ok
+MetricAlarmEvent.log('num_slaves', level=ALARM_OK)
+@end example
+@end table
+
+@node Metric Handlers
+@subsection Metric Handlers
+@code{MetricsHandler} objects are responsble for collecting @code{MetricEvent}s of a specific type and keeping track of their values for future reporting. There are @code{MetricsHandler} classes corresponding to each of the @code{MetricEvent} types.
+
+@node Metric Watchers
+@subsection Metric Watchers
+Watcher objects can be added to @code{MetricsHandlers} to be called when metric events of a certain type are received. Watchers are generally used to record alarm events in response to count or time events.
+
+@node Metric Helpers
+@subsection Metric Helpers
+@table @code
+@item countMethod(name)
+A function decorator that counts how many times the function is called.
+@example
+from buildbot.process.metrics import countMethod
+
+@@countMethod('foo_called')
+def foo():
+    return "foo!"
+@end example
+
+@item Timer(name)
+@code{Timer} objects can be used to make timing events easier. When @code{Timer.stop()} is called, a @code{MetricTimeEvent} is logged with the elapsed time since @code{timer.start()} was called.
+@example
+from buildbot.process.metrics import Timer
+
+def foo():
+    t = Timer('time_foo')
+    t.start()
+    try:
+        for i in range(1000):
+            calc(i)
+        return "foo!"
+    finally:
+        t.stop()
+@end example
+
+@code{Timer} objects also provide a pair of decorators, @code{startTimer}/@code{stopTimer} to decorate other functions.
+@example
+from buildbot.process.metrics import Timer
+
+t = Timer('time_thing')
+
+@@t.startTimer
+def foo():
+    return "foo!"
+    
+@@t.stopTimer
+def bar():
+    return "bar!"
+
+foo()
+bar()
+@end example
+
+@item timeMethod(name)
+A function decorator that measures how long a function takes to execute. Note that many functions in buildbot return deferreds, so may return before all the work they set up has completed. Using an explicit @code{Timer} is better in this case.
+@example
+from buildbot.process.metrics import timeMethod
+
+@@timeMethod('time_foo')
+def foo():
+    for i in range(1000):
+        calc(i)
+    return "foo!"
+@end example
+@end table
 
 @node Developer Class Index
 @section Developer Class Index

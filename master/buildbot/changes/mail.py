@@ -16,7 +16,7 @@
 """
 Parse various kinds of 'CVS notify' email.
 """
-import os, re
+import re
 import time, calendar
 import datetime
 from email import message_from_file
@@ -49,10 +49,10 @@ class MaildirSource(MaildirService, util.ComparableMixin):
         return "%s watching maildir '%s'" % (self.__class__.__name__, self.basedir)
 
     def messageReceived(self, filename):
-        path = os.path.join(self.basedir, "new", filename)
         d = defer.succeed(None)
         def parse_file(_):
-            return self.parse_file(open(path, "r"), self.prefix)
+            f = self.moveToCurDir(filename)
+            return self.parse_file(f, self.prefix)
         d.addCallback(parse_file)
 
         def add_change(chdict):
@@ -61,10 +61,6 @@ class MaildirSource(MaildirService, util.ComparableMixin):
             else:
                 log.msg("no change found in maildir file '%s'" % filename)
         d.addCallback(add_change)
-
-        def move_file(_):
-            os.rename(path, os.path.join(self.basedir, "cur", filename))
-        d.addCallback(move_file)
 
         return d
 

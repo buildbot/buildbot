@@ -167,9 +167,21 @@ def sendChanges(master):
     for c in changes:
         d.addCallback(_send, c)
 
-    d.addCallbacks(s.printSuccess, s.printFailure)
-    d.addBoth(s.stop)
-    s.run()
+    def printSuccess(res):
+        num_changes = len(changes)
+        if num_changes > 1:
+            print "%d changes sent successfully" % num_changes
+        elif num_changes == 1:
+            print "change sent successfully"
+        else:
+            print "no changes to send"
+
+    def printFailure(why):
+        print "change(s) NOT sent, something went wrong: " + str(why)
+
+    d.addCallbacks(printSuccess, printFailure)
+    d.addBoth(lambda _ : reactor.stop)
+    reactor.run()
 
     if changes:
         lastchange = changes[-1]['revision']

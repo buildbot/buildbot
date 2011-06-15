@@ -13,14 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 import pprint
 import sqlalchemy as sa
 from twisted.trial import unittest
-from twisted.internet import defer
+from twisted.internet import defer, task
 from buildbot.changes.changes import Change
 from buildbot.db import changes
 from buildbot.test.util import connector_component
 from buildbot.test.fake import fakedb
+from buildbot.util import epoch2datetime
 
 class TestChangesConnectorComponent(
             connector_component.ConnectorComponentMixin,
@@ -56,26 +58,8 @@ class TestChangesConnectorComponent(
         fakedb.ChangeFile(changeid=13, filename='slave/README.txt'),
 
         fakedb.ChangeProperty(changeid=13, property_name='notest',
-            property_value='"no"'),
+            property_value='["no","Change"]'),
     ]
-
-    def change13(self):
-        c = Change(**dict(
-         category=None,
-         isdir=0,
-         repository=u'',
-         links=[u'http://buildbot.net', u'http://sf.net/projects/buildbot'],
-         who=u'dustin',
-         when=266738400,
-         comments=u'fix spelling',
-         project=u'',
-         branch=u'master',
-         revlink=None,
-         properties={u'notest': u'no'},
-         files=[u'master/README.txt', u'slave/README.txt'],
-         revision=u'deadbeef'))
-        c.number = 13
-        return c
 
     change14_rows = [
         fakedb.Change(changeid=14, author="warner", comments="fix whitespace",
@@ -85,6 +69,23 @@ class TestChangesConnectorComponent(
 
         fakedb.ChangeFile(changeid=14, filename='master/buildbot/__init__.py'),
     ]
+
+    change14_dict = {
+        'changeid': 14,
+        'author': u'warner',
+        'branch': u'warnerdb',
+        'category': u'devel',
+        'comments': u'fix whitespace',
+        'files': [u'master/buildbot/__init__.py'],
+        'is_dir': 0,
+        'links': [],
+        'project': u'Buildbot',
+        'properties': {},
+        'repository': u'git://warner',
+        'revision': u'0e92a098b',
+        'revlink': u'http://warner/0e92a098b',
+        'when_timestamp': epoch2datetime(266738404),
+    }
 
     def change14(self):
         c = Change(**dict(
@@ -106,54 +107,55 @@ class TestChangesConnectorComponent(
 
     # assertions
 
-    def assertChangesEqual(self, a, b):
-        if len(a) != len(b):
-            ok = False
-        else:
-            ok = True
-            for i in xrange(len(a)):
-                ca = a[i]
-                cb = b[i]
-                ok = ok and ca.number == cb.number
-                ok = ok and ca.who == cb.who
-                ok = ok and sorted(ca.files) == sorted(cb.files)
-                ok = ok and ca.comments == cb.comments
-                ok = ok and bool(ca.isdir) == bool(cb.isdir)
-                ok = ok and sorted(ca.links) == sorted(cb.links)
-                ok = ok and ca.revision == cb.revision
-                ok = ok and ca.when == cb.when
-                ok = ok and ca.branch == cb.branch
-                ok = ok and ca.category == cb.category
-                ok = ok and ca.revlink == cb.revlink
-                ok = ok and ca.properties == cb.properties
-                ok = ok and ca.repository == cb.repository
-                ok = ok and ca.project == cb.project
-                if not ok: break
+    def assertChangesEqual(self, ca, cb):
+        ok = True
+        ok = ok and ca.number == cb.number
+        ok = ok and ca.who == cb.who
+        ok = ok and sorted(ca.files) == sorted(cb.files)
+        ok = ok and ca.comments == cb.comments
+        ok = ok and bool(ca.isdir) == bool(cb.isdir)
+        ok = ok and sorted(ca.links) == sorted(cb.links)
+        ok = ok and ca.revision == cb.revision
+        ok = ok and ca.when == cb.when
+        ok = ok and ca.branch == cb.branch
+        ok = ok and ca.category == cb.category
+        ok = ok and ca.revlink == cb.revlink
+        ok = ok and ca.properties == cb.properties
+        ok = ok and ca.repository == cb.repository
+        ok = ok and ca.project == cb.project
         if not ok:
-            def printable(clist):
-                return pprint.pformat([ c.__dict__ for c in clist ])
+            def printable(c):
+                return pprint.pformat(c.__dict__)
             self.fail("changes do not match; expected\n%s\ngot\n%s" %
-                        (printable(a), printable(b)))
+                        (printable(ca), printable(cb)))
 
     # tests
 
-    def test_getChangeInstance(self):
+    def test_getChange(self):
         d = self.insertTestData(self.change14_rows)
         def get14(_):
-            return self.db.changes.getChangeInstance(14)
+            return self.db.changes.getChange(14)
         d.addCallback(get14)
-        def check14(c):
-            self.assertChangesEqual([ c ], [ self.change14() ])
+        def check14(chdict):
+            self.assertEqual(chdict, self.change14_dict)
         d.addCallback(check14)
         return d
 
-    def test_getChangeInstance_missing(self):
+    def test_Change_fromChdict_with_chdict(self):
+        # test that the chdict getChange returns works with Change.fromChdict
+        d = Change.fromChdict(mock.Mock(), self.change14_dict)
+        def check(c):
+            self.assertChangesEqual(c, self.change14())
+        d.addCallback(check)
+        return d
+
+    def test_getChange_missing(self):
         d = defer.succeed(None)
         def get14(_):
-            return self.db.changes.getChangeInstance(14)
+            return self.db.changes.getChange(14)
         d.addCallback(get14)
-        def check14(c):
-            self.failUnless(c is None)
+        def check14(chdict):
+            self.failUnless(chdict is None)
         d.addCallback(check14)
         return d
 
@@ -179,47 +181,32 @@ class TestChangesConnectorComponent(
 
     def test_addChange(self):
         d = self.db.changes.addChange(
-                 who=u'dustin',
+                 author=u'dustin',
                  files=[u'master/LICENSING.txt', u'slave/LICENSING.txt'],
                  comments=u'fix spelling',
-                 isdir=0,
+                 is_dir=0,
                  links=[u'http://slashdot.org', u'http://wired.com/g'],
-                 revision=u'2d6caa52ab39fbac83cee03dcf2ccb7e41eaad86',
-                 when=266738400,
+                 revision=u'2d6caa52',
+                 when_timestamp=epoch2datetime(266738400),
                  branch=u'master',
                  category=None,
                  revlink=None,
-                 properties={u'platform': u'linux'},
+                 properties={u'platform': (u'linux', 'Change')},
                  repository=u'',
                  project=u'')
         # check all of the columns of the four relevant tables
-        def check_change(change):
-            self.assertEqual(change.number, 1)
-            self.assertEqual(change.who, 'dustin')
-            self.assertEqual(sorted(change.files),
-                 sorted([u'master/LICENSING.txt', u'slave/LICENSING.txt']))
-            self.assertEqual(change.comments, 'fix spelling')
-            self.assertFalse(change.isdir)
-            self.assertEqual(sorted(change.links),
-                 sorted([u'http://slashdot.org', u'http://wired.com/g']))
-            self.assertEqual(change.revision, '2d6caa52ab39fbac83cee03dcf2ccb7e41eaad86')
-            self.assertEqual(change.when, 266738400)
-            self.assertEqual(change.category, None)
-            self.assertEqual(change.revlink, None)
-            self.assertEqual(change.properties.asList(),
-                 [('platform', 'linux', 'Change')])
-            self.assertEqual(change.repository, '')
-            self.assertEqual(change.project, '')
+        def check_change(changeid):
             def thd(conn):
+                self.assertEqual(changeid, 1)
                 r = conn.execute(self.db.model.changes.select())
                 r = r.fetchall()
                 self.assertEqual(len(r), 1)
-                self.assertEqual(r[0].changeid, 1)
+                self.assertEqual(r[0].changeid, changeid)
                 self.assertEqual(r[0].author, 'dustin')
                 self.assertEqual(r[0].comments, 'fix spelling')
                 self.assertFalse(r[0].is_dir)
                 self.assertEqual(r[0].branch, 'master')
-                self.assertEqual(r[0].revision, '2d6caa52ab39fbac83cee03dcf2ccb7e41eaad86')
+                self.assertEqual(r[0].revision, '2d6caa52')
                 self.assertEqual(r[0].when_timestamp, 266738400)
                 self.assertEqual(r[0].category, None)
                 self.assertEqual(r[0].repository, '')
@@ -230,7 +217,7 @@ class TestChangesConnectorComponent(
             def thd(conn):
                 query = self.db.model.change_links.select()
                 query.where(self.db.model.change_links.c.changeid == 1)
-                query.order_by([self.db.model.change_links.c.link])
+                query.order_by(self.db.model.change_links.c.link)
                 r = conn.execute(query)
                 r = r.fetchall()
                 self.assertEqual(len(r), 2)
@@ -242,7 +229,7 @@ class TestChangesConnectorComponent(
             def thd(conn):
                 query = self.db.model.change_files.select()
                 query.where(self.db.model.change_files.c.changeid == 1)
-                query.order_by([self.db.model.change_files.c.filename])
+                query.order_by(self.db.model.change_files.c.filename)
                 r = conn.execute(query)
                 r = r.fetchall()
                 self.assertEqual(len(r), 2)
@@ -254,12 +241,66 @@ class TestChangesConnectorComponent(
             def thd(conn):
                 query = self.db.model.change_properties.select()
                 query.where(self.db.model.change_properties.c.changeid == 1)
-                query.order_by([self.db.model.change_properties.c.property_name])
+                query.order_by(self.db.model.change_properties.c.property_name)
                 r = conn.execute(query)
                 r = r.fetchall()
                 self.assertEqual(len(r), 1)
                 self.assertEqual(r[0].property_name, 'platform')
-                self.assertEqual(r[0].property_value, '"linux"') # JSON-encoded
+                self.assertEqual(r[0].property_value, '["linux", "Change"]')
+            return self.db.pool.do(thd)
+        d.addCallback(check_change_properties)
+        return d
+
+    def test_addChange_when_timestamp_None(self):
+        clock = task.Clock()
+        clock.advance(1239898353)
+        d = self.db.changes.addChange(
+                 author=u'dustin',
+                 files=[],
+                 comments=u'fix spelling',
+                 is_dir=0,
+                 links=[],
+                 revision=u'2d6caa52',
+                 when_timestamp=None,
+                 branch=u'master',
+                 category=None,
+                 revlink=None,
+                 properties={},
+                 repository=u'',
+                 project=u'',
+                 _reactor=clock)
+        # check all of the columns of the four relevant tables
+        def check_change(changeid):
+            def thd(conn):
+                r = conn.execute(self.db.model.changes.select())
+                r = r.fetchall()
+                self.assertEqual(len(r), 1)
+                self.assertEqual(r[0].changeid, changeid)
+                self.assertEqual(r[0].when_timestamp, 1239898353)
+            return self.db.pool.do(thd)
+        d.addCallback(check_change)
+        def check_change_links(_):
+            def thd(conn):
+                query = self.db.model.change_links.select()
+                r = conn.execute(query)
+                r = r.fetchall()
+                self.assertEqual(len(r), 0)
+            return self.db.pool.do(thd)
+        d.addCallback(check_change_links)
+        def check_change_files(_):
+            def thd(conn):
+                query = self.db.model.change_files.select()
+                r = conn.execute(query)
+                r = r.fetchall()
+                self.assertEqual(len(r), 0)
+            return self.db.pool.do(thd)
+        d.addCallback(check_change_files)
+        def check_change_properties(_):
+            def thd(conn):
+                query = self.db.model.change_properties.select()
+                r = conn.execute(query)
+                r = r.fetchall()
+                self.assertEqual(len(r), 0)
             return self.db.pool.do(thd)
         d.addCallback(check_change_properties)
         return d
@@ -325,7 +366,7 @@ class TestChangesConnectorComponent(
         d.addCallback(check)
         return d
 
-    def test_getRecentChangeInstances_subset(self):
+    def test_getRecentChanges_subset(self):
         d = self.insertTestData([
             fakedb.Change(changeid=8),
             fakedb.Change(changeid=9),
@@ -334,38 +375,38 @@ class TestChangesConnectorComponent(
             fakedb.Change(changeid=12),
         ] + self.change13_rows + self.change14_rows)
         d.addCallback(lambda _ :
-                self.db.changes.getRecentChangeInstances(5))
+                self.db.changes.getRecentChanges(5))
         def check(changes):
-            changeids = [ c.number for c in changes ]
+            changeids = [ c['changeid'] for c in changes ]
             self.assertEqual(changeids, [10, 11, 12, 13, 14])
         d.addCallback(check)
         return d
 
-    def test_getRecentChangeInstances_empty(self):
+    def test_getRecentChanges_empty(self):
         d = defer.succeed(None)
         d.addCallback(lambda _ :
-                self.db.changes.getRecentChangeInstances(5))
+                self.db.changes.getRecentChanges(5))
         def check(changes):
-            changeids = [ c.number for c in changes ]
+            changeids = [ c['changeid'] for c in changes ]
             self.assertEqual(changeids, [])
         d.addCallback(check)
         return d
 
-    def test_getRecentChangeInstances_missing(self):
+    def test_getRecentChanges_missing(self):
         d = self.insertTestData(self.change13_rows + self.change14_rows)
         d.addCallback(lambda _ :
-                self.db.changes.getRecentChangeInstances(5))
+                self.db.changes.getRecentChanges(5))
         def check(changes):
             # requested 5, but only got 2
-            changeids = [ c.number for c in changes ]
+            changeids = [ c['changeid'] for c in changes ]
             self.assertEqual(changeids, [13, 14])
             # double-check that they have .files, etc.
-            self.assertEqual(sorted(changes[0].files),
+            self.assertEqual(sorted(changes[0]['files']),
                         sorted(['master/README.txt', 'slave/README.txt']))
-            self.assertEqual(sorted(changes[0].links),
+            self.assertEqual(sorted(changes[0]['links']),
                         sorted(['http://buildbot.net',
                                 'http://sf.net/projects/buildbot']))
-            self.assertEqual(changes[0].properties.asList(),
-                        [('notest', 'no', 'Change')])
+            self.assertEqual(changes[0]['properties'],
+                        { 'notest' : ('no', 'Change') })
         d.addCallback(check)
         return d

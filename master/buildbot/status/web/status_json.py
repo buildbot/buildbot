@@ -21,7 +21,7 @@ import os
 import re
 
 from twisted.internet import defer
-from twisted.web import error, html, resource, server
+from twisted.web import html, resource, server
 
 from buildbot.status.web.base import HtmlResource
 from buildbot.util import json
@@ -47,7 +47,7 @@ FLAGS = """\
       amount of useless data sent.
   - callback
     - Enable uses of JSONP as described in
-      http://en.wikipedia.org/wiki/JSON#JSONP. Note that
+      http://en.wikipedia.org/wiki/JSONP. Note that
       Access-Control-Allow-Origin:* is set in the HTTP response header so you
       can use this in compatible browsers.
 """
@@ -99,31 +99,6 @@ def RequestArgToBool(request, arg, default):
         return False
     # Ignore value.
     return default
-
-
-def TwistedWebErrorAsDict(self, request):
-    """Additional method for twisted.web.error.Error."""
-    result = {}
-    result['http_error'] = self.status
-    result['response'] = self.response
-    return result
-
-
-def TwistedWebErrorPageAsDict(self, request):
-    """Additional method for twisted.web.error.Error."""
-    result = {}
-    result['http_error'] = self.code
-    result['response'] = self.brief
-    result['detail'] = self.detail
-    return result
-
-
-# Add .asDict() method to twisted.web.error.Error to simplify the code below.
-error.Error.asDict = TwistedWebErrorAsDict
-error.PageRedirect.asDict = TwistedWebErrorAsDict
-error.ErrorPage.asDict = TwistedWebErrorPageAsDict
-error.NoResource.asDict = TwistedWebErrorPageAsDict
-error.ForbiddenResource.asDict = TwistedWebErrorPageAsDict
 
 
 def FilterOut(data):
@@ -251,11 +226,17 @@ class JsonResource(resource.Resource):
 
                 # some asDict methods return a Deferred, so handle that
                 # properly
-                wfd = defer.waitForDeferred(
-                        defer.maybeDeferred(lambda :
-                            child.asDict(request)))
-                yield wfd
-                node.update(wfd.getResult())
+                if hasattr(child, 'asDict'):
+                    wfd = defer.waitForDeferred(
+                            defer.maybeDeferred(lambda :
+                                child.asDict(request)))
+                    yield wfd
+                    child_dict = wfd.getResult()
+                else:
+                    child_dict = {
+                        'error' : 'Not available',
+                    }
+                node.update(child_dict)
 
                 request.prepath = prepath
                 request.postpath = postpath
@@ -572,7 +553,7 @@ class BuildStepsJsonResource(JsonResource):
         results = {}
         index = 0
         for step in self.build_status.getSteps():
-            results[index] = step
+            results[index] = step.asDict()
             index += 1
         return results
 
@@ -709,6 +690,20 @@ class SourceStampJsonResource(JsonResource):
     def asDict(self, request):
         return self.source_stamp.asDict()
 
+class MetricsJsonResource(JsonResource):
+    help = """Master metrics.
+"""
+    title = "Metrics"
+
+    def asDict(self, request):
+        metrics = self.status.getMetrics()
+        if metrics:
+            return metrics.asDict()
+        else:
+            # Metrics are disabled
+            return None
+
+
 
 class JsonStatusResource(JsonResource):
     """Retrieves all json data."""
@@ -728,6 +723,7 @@ For help on any sub directory, use url /child/help
         self.putChild('change_sources', ChangeSourcesJsonResource(status))
         self.putChild('project', ProjectJsonResource(status))
         self.putChild('slaves', SlavesJsonResource(status))
+        self.putChild('metrics', MetricsJsonResource(status))
         # This needs to be called before the first HelpResource().body call.
         self.hackExamples()
 

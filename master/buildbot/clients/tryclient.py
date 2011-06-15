@@ -335,9 +335,19 @@ def ns(s):
     return "%d:%s," % (len(s), s)
 
 def createJobfile(bsid, branch, baserev, patchlevel, diff, repository, 
-                  project, builderNames):
+                  project, who, comment, builderNames):
+    
     job = ""
-    job += ns("2")
+    
+    #Determine job file version from provided arguments
+    if comment:
+        version = 4
+    elif who:
+        version = 3
+    else:
+        version = 2
+    
+    job += ns(str(version))
     job += ns(bsid)
     job += ns(branch)
     job += ns(str(baserev))
@@ -345,8 +355,15 @@ def createJobfile(bsid, branch, baserev, patchlevel, diff, repository,
     job += ns(diff)
     job += ns(repository)
     job += ns(project)
+    
+    if (version >= 3):
+        job += ns(who)
+    if (version >= 4):
+        job += ns(comment)
+        
     for bn in builderNames:
         job += ns(bn)
+ 
     return job
 
 def getTopdir(topfile, start=None):
@@ -432,6 +449,8 @@ class Try(pb.Referenceable):
         assert self.connect, "you must specify a connect style: ssh or pb"
         self.builderNames = self.getopt('builders')
         self.project = self.getopt('project', '')
+        self.who = self.getopt('who')
+        self.comment = self.getopt('comment')
 
     def getopt(self, config_name, default=None):
         value = self.config.get(config_name)
@@ -490,7 +509,8 @@ class Try(pb.Referenceable):
             self.jobfile = createJobfile(self.bsid,
                                          ss.branch or "", revspec,
                                          patchlevel, diff, ss.repository,
-                                         self.project, self.builderNames)
+                                         self.project, self.who, self.comment,
+                                         self.builderNames)
 
     def fakeDeliverJob(self):
         # Display the job to be delivered, but don't perform delivery.
@@ -537,6 +557,7 @@ class Try(pb.Referenceable):
 
     def _deliverJob_pb(self, remote):
         ss = self.sourcestamp
+        print "Delivering job; comment=", self.comment
 
         d = remote.callRemote("try",
                               ss.branch,
@@ -545,6 +566,8 @@ class Try(pb.Referenceable):
                               ss.repository,
                               self.project,
                               self.builderNames,
+                              self.who,
+                              self.comment,
                               self.config.get('properties', {}))
         d.addCallback(self._deliverJob_pb2)
         return d

@@ -17,7 +17,6 @@
 import time, re, string
 import datetime
 import calendar
-from twisted.python import threadable
 from buildbot.util.misc import deferredLocked, SerializedInvocation
 
 def naturalSort(l):
@@ -112,46 +111,6 @@ def safeTranslate(str):
     if isinstance(str, unicode):
         str = str.encode('utf8')
     return str.translate(badchars_map)
-
-class LRUCache:
-    """
-    A simple least-recently-used cache, with a fixed maximum size.  Note that
-    an item's memory will not necessarily be free if other code maintains a reference
-    to it, but this class will "lose track" of it all the same.  Without caution, this
-    can lead to duplicate items in memory simultaneously.
-    """
-
-    synchronized = ["get", "add"]
-
-    def __init__(self, max_size=50):
-        self._max_size = max_size
-        self._cache = {} # basic LRU cache
-        self._cached_ids = [] # = [LRU .. MRU]
-
-    def get(self, id):
-        thing = self._cache.get(id, None)
-        if thing is not None:
-            self._cached_ids.remove(id)
-            self._cached_ids.append(id)
-        return thing
-    __getitem__ = get
-
-    def add(self, id, thing):
-        if id in self._cache:
-            self._cached_ids.remove(id)
-            self._cached_ids.append(id)
-            return
-        while len(self._cached_ids) >= self._max_size:
-            del self._cache[self._cached_ids.pop(0)]
-        self._cache[id] = thing
-        self._cached_ids.append(id)
-    __setitem__ = add
-
-    def setMaxSize(self, max_size):
-        self._max_size = max_size
-
-threadable.synchronize(LRUCache)
-
 
 def none_or_str(x):
     """Cast X to a str if it is not None"""

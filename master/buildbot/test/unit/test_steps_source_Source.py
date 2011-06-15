@@ -15,63 +15,58 @@
 
 from twisted.trial import unittest
 
-from buildbot.steps.source import Source
+from buildbot.interfaces import IRenderable
+from buildbot.process.properties import Properties, WithProperties
+from buildbot.steps.source import _ComputeRepositoryURL
 
 class SourceStamp(object):
     repository = "test"
 
-class Properties(object):
-    def render(self, value):
-        return value % dict(foo="bar")
-
 class Build(object):
     s = SourceStamp()
-    props = Properties()
+    props = Properties(foo = "bar")
     def getSourceStamp(self):
         return self.s
     def getProperties(self):
         return self.props
+    def render(self, value):
+        return IRenderable(value).getRenderingFor(self)
 
 class RepoURL(unittest.TestCase):
+    def setUp(self):
+        self.build = Build()
 
     def test_backward_compatibility(self):
-        s = Source()
-        s.build = Build()
-        self.assertEqual(s.computeRepositoryURL("repourl"), "repourl")
+        url = _ComputeRepositoryURL("repourl")
+        self.assertEqual(self.build.render(url), "repourl")
 
     def test_format_string(self):
-        s = Source()
-        s.build = Build()
-        self.assertEquals(s.computeRepositoryURL("http://server/%s"), "http://server/test")
+        url = _ComputeRepositoryURL("http://server/%s")
+        self.assertEquals(self.build.render(url), "http://server/test")
 
     def test_dict(self):
-        s = Source()
-        s.build = Build()
         dict = {}
         dict['test'] = "ssh://server/testrepository"
-        self.assertEquals(s.computeRepositoryURL(dict), "ssh://server/testrepository")
+        url = _ComputeRepositoryURL(dict)
+        self.assertEquals(self.build.render(url), "ssh://server/testrepository")
 
     def test_callable(self):
-        s = Source()
-        s.build = Build()
         func = lambda x: x[::-1]
-        self.assertEquals(s.computeRepositoryURL(func), "tset")
+        url = _ComputeRepositoryURL(func)
+        self.assertEquals(self.build.render(url), "tset")
 
     def test_backward_compatibility_render(self):
-        s = Source()
-        s.build = Build()
-        self.assertEquals(s.computeRepositoryURL("repourl%(foo)s"), "repourlbar")
+        url = _ComputeRepositoryURL(WithProperties("repourl%(foo)s"))
+        self.assertEquals(self.build.render(url), "repourlbar")
 
     def test_dict_render(self):
-        s = Source()
-        s.build = Build()
-        d = dict(test="repourl%(foo)s")
-        self.assertEquals(s.computeRepositoryURL(d), "repourlbar")
+        d = dict(test=WithProperties("repourl%(foo)s"))
+        url = _ComputeRepositoryURL(d)
+        self.assertEquals(self.build.render(url), "repourlbar")
 
     def test_callable_render(self):
-        s = Source()
-        s.build = Build()
-        func = lambda x: x+"%(foo)s"
-        self.assertEquals(s.computeRepositoryURL(func), "testbar")
+        func = lambda x: WithProperties(x+"%(foo)s")
+        url = _ComputeRepositoryURL(func)
+        self.assertEquals(self.build.render(url), "testbar")
 
 

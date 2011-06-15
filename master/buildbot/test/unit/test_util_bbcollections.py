@@ -15,14 +15,14 @@
 
 from twisted.trial import unittest
 
-from buildbot.util import collections
+from buildbot.util import bbcollections
 
 class defaultdict(unittest.TestCase):
 
     # minimal tests here, since this is usually available from Python
 
     def setUp(self):
-        self.dd = collections.defaultdict(list)
+        self.dd = bbcollections.defaultdict(list)
     
     def test_getitem_default(self):
         self.assertEqual(self.dd['x'], [])
@@ -34,7 +34,7 @@ class defaultdict(unittest.TestCase):
 class KeyedSets(unittest.TestCase):
 
     def setUp(self):
-        self.ks = collections.KeyedSets()
+        self.ks = bbcollections.KeyedSets()
 
     def test_getitem_default(self):
         self.assertEqual(self.ks['x'], set())

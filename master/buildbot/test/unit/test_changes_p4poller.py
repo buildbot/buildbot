@@ -17,6 +17,7 @@ import time
 from twisted.trial import unittest
 from buildbot.changes.p4poller import P4Source, get_simple_split, P4PollerError
 from buildbot.test.util import changesource, gpo
+from buildbot.util import epoch2datetime
 
 first_p4changes = \
 """Change 1 on 2006/04/13 by slamb@testclient 'first rev'
@@ -110,7 +111,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
     def makeTime(self, timestring):
         datefmt = '%Y/%m/%d %H:%M:%S'
         when = time.mktime(time.strptime(timestring, datefmt))
-        return when
+        return epoch2datetime(when)
 
     # tests
 
@@ -146,11 +147,11 @@ class TestP4Poller(changesource.ChangeSourceMixin,
 
             # They're supposed to go oldest to newest, so this one must be first.
             self.assertEquals(self.changes_added[0],
-                dict(who='slamb',
+                dict(author='slamb',
                      files=['whatbranch'],
                      comments=change_2_log,
                      revision='2',
-                     when=self.makeTime("2006/04/13 21:46:23"),
+                     when_timestamp=self.makeTime("2006/04/13 21:46:23"),
                      branch='trunk'))
 
             # These two can happen in either order, since they're from the same
@@ -159,19 +160,19 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 self.changes_added[1:] = reversed(self.changes_added[1:])
 
             self.assertEquals(self.changes_added[1],
-                dict(who='bob',
+                dict(author='bob',
                      files=['branch_b_file',
                             'whatbranch'],
                      comments=change_3_log,
                      revision='3',
-                     when=self.makeTime("2006/04/13 21:51:39"),
+                     when_timestamp=self.makeTime("2006/04/13 21:51:39"),
                      branch='branch_b'))
             self.assertEquals(self.changes_added[2],
-                dict(who='bob',
+                dict(author='bob',
                      files=['whatbranch'],
                      comments=change_3_log,
                      revision='3',
-                     when=self.makeTime("2006/04/13 21:51:39"),
+                     when_timestamp=self.makeTime("2006/04/13 21:51:39"),
                      branch='branch_c'))
         d.addCallback(check_second_check)
         return d

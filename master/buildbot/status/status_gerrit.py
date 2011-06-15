@@ -68,9 +68,9 @@ class GerritStatusPush(StatusReceiverMultiService):
             else:
                 print "gerrit status: OK"
 
-    def setServiceParent(self, parent):
+    def startService(self):
         print """Starting up."""
-        StatusReceiverMultiService.setServiceParent(self, parent)
+        StatusReceiverMultiService.startService(self)
         self.status = self.parent.getStatus()
         self.status.subscribe(self)
 

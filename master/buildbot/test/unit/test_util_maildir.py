@@ -30,7 +30,7 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
         self.svc = None
 
     def tearDown(self):
-        if self.svc:
+        if self.svc and self.svc.running:
             self.svc.stopService()
         self.tearDownDirs()
 
@@ -63,3 +63,14 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
             self.assertEqual(messagesReceived, [ 'newmsg' ])
         d.addCallback(check_nonempty)
         return d
+
+    def test_moveToCurDir(self):
+        self.svc = maildir.MaildirService(self.maildir)
+        tmpfile = os.path.join(self.tmpdir, "newmsg")
+        newfile = os.path.join(self.newdir, "newmsg")
+        open(tmpfile, "w")
+        os.rename(tmpfile, newfile)
+        self.svc.moveToCurDir("newmsg")
+        self.assertEqual([ os.path.exists(os.path.join(d, "newmsg"))
+                           for d in (self.newdir, self.curdir, self.tmpdir) ],
+                         [ False, True, False ])

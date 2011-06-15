@@ -26,6 +26,7 @@ from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
   RETRY, SKIPPED, worst_status
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
+from buildbot.process import metrics
 
 
 class Build:
@@ -105,6 +106,13 @@ class Build:
     def getProperty(self, propname):
         return self.build_status.getProperty(propname)
 
+    def render(self, value):
+        """
+        Return a variant of value that has any WithProperties objects
+        substituted.  This recurses into Python's compound data types.
+        """
+        return interfaces.IRenderable(value).getRenderingFor(self)
+
     def allChanges(self):
         return self.source.changes
 
@@ -124,6 +132,8 @@ class Build:
         for c in self.allChanges():
             if c.who not in blamelist:
                 blamelist.append(c.who)
+        if self.source.patch_info: #Add patch author to blamelist
+            blamelist.append(self.source.patch_info[0])
         blamelist.sort()
         return blamelist
 
@@ -222,7 +232,14 @@ class Build:
         self.remote = slavebuilder.remote
         self.remote.notifyOnDisconnect(self.lostRemote)
 
+        metrics.MetricCountEvent.log('active_builds', 1)
+
         d = self.deferred = defer.Deferred()
+        def _uncount_build(res):
+            metrics.MetricCountEvent.log('active_builds', -1)
+            return res
+        d.addBoth(_uncount_build)
+
         def _release_slave(res, slave, bs):
             self.slavebuilder.buildFinished()
             slave.updateSlaveStatus(buildFinished=bs)

@@ -20,7 +20,7 @@
 # relative to the top of the maildir (so it will look like "new/blahblah").
 
 import os
-from twisted.python import log
+from twisted.python import log, runtime
 from twisted.application import service, internet
 from twisted.internet import reactor, defer
 dnotify = None
@@ -51,9 +51,8 @@ class MaildirService(service.MultiService):
         one which contains new/ and tmp/)
         """
         service.MultiService.__init__(self)
-        self.basedir = basedir
-        "base of the maildir"
-        self.newdir = None
+        if basedir:
+            self.setBasedir(basedir)
         self.files = []
         self.dnotify = None
 
@@ -63,11 +62,12 @@ class MaildirService(service.MultiService):
         # relative to the buildmaster's basedir. So let them set it late. We
         # don't actually need it until our own startService.
         self.basedir = basedir
+        self.newdir = os.path.join(self.basedir, "new")
+        self.curdir = os.path.join(self.basedir, "cur")
 
     def startService(self):
         service.MultiService.startService(self)
-        self.newdir = os.path.join(self.basedir, "new")
-        if not os.path.isdir(self.basedir) or not os.path.isdir(self.newdir):
+        if not os.path.isdir(self.newdir) or not os.path.isdir(self.curdir):
             raise NoSuchMaildir("invalid maildir '%s'" % self.basedir)
         try:
             if dnotify:
@@ -127,6 +127,33 @@ class MaildirService(service.MultiService):
             except:
                 log.msg("while reading '%s' from maildir '%s':" % (n, self.basedir))
                 log.err()
+
+    def moveToCurDir(self, filename):
+        """
+        Call this from messageReceived to start processing the message; this
+        moves the message file to the 'cur' directory and returns an open file
+        handle for it.
+
+        @param filename: unqualified filename of the message
+        @returns: open file
+        """
+        if runtime.platformType == "posix":
+            # open the file before moving it, because I'm afraid that once
+            # it's in cur/, someone might delete it at any moment
+            path = os.path.join(self.newdir, filename)
+            f = open(path, "r")
+            os.rename(os.path.join(self.newdir, filename),
+                      os.path.join(self.curdir, filename))
+        elif runtime.platformType == "win32":
+            # do this backwards under windows, because you can't move a file
+            # that somebody is holding open. This was causing a Permission
+            # Denied error on bear's win32-twisted1.3 buildslave.
+            os.rename(os.path.join(self.newdir, filename),
+                      os.path.join(self.curdir, filename))
+            path = os.path.join(self.curdir, filename)
+            f = open(path, "r")
+
+        return f
 
     def messageReceived(self, filename):
         """Process a received message.  The filename is relative to self.newdir.

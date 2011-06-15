@@ -27,11 +27,12 @@ from buildslave.interfaces import ISlaveCommand
 from buildslave import runprocess
 from buildslave.exceptions import AbandonChain
 from buildslave.commands import utils
+from buildslave import util
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
 # time this file is changed. The last cvs_ver that was here was 1.51 .
-command_version = "2.12"
+command_version = "2.13"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -60,6 +61,7 @@ command_version = "2.12"
 #  >= 2.10: CVS can handle 'extra_options' and 'export_options'
 #  >= 2.11: Arch, Bazaar, and Monotone removed
 #  >= 2.12: SlaveShellCommand no longer accepts 'keep_stdin_open'
+#  >= 2.13: SlaveFileUploadCommand supports option 'keepstamp'
 
 class Command:
     implements(ISlaveCommand)
@@ -129,6 +131,7 @@ class Command:
         self.builder = builder
         self.stepId = stepId # just for logging
         self.args = args
+        self.startTime = None
         self.setup(args)
 
     def setup(self, args):
@@ -137,8 +140,10 @@ class Command:
 
     def doStart(self):
         self.running = True
+        self.startTime = util.now(self._reactor)
         d = defer.maybeDeferred(self.start)
         def commandComplete(res):
+            self.sendStatus({"elapsed": util.now(self._reactor) - self.startTime})
             self.running = False
             return res
         d.addBoth(commandComplete)

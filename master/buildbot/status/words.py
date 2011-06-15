@@ -432,12 +432,13 @@ class Contact(base.StatusReceiver):
                 self.send("Build details are at %s" % buildurl)
 
     def command_FORCE(self, args, who):
+        errReply = "try 'force build [--branch=BRANCH] [--revision=REVISION] <WHICH> <REASON>'"
         args = shlex.split(args)
         if not args:
-            raise UsageError("try 'force build WHICH <REASON>'")
+            raise UsageError(errReply)
         what = args.pop(0)
         if what != "build":
-            raise UsageError("try 'force build WHICH <REASON>'")
+            raise UsageError(errReply)
         opts = ForceOptions()
         opts.parseOptions(args)
 
@@ -447,8 +448,7 @@ class Contact(base.StatusReceiver):
         reason = opts['reason']
 
         if which is None:
-            raise UsageError("you must provide a Builder, "
-                             "try 'force build WHICH <REASON>'")
+            raise UsageError("you must provide a Builder, " + errReply)
 
         # keep weird stuff out of the branch and revision strings. 
         # TODO:  centralize this somewhere.
@@ -473,7 +473,7 @@ class Contact(base.StatusReceiver):
         d.addErrback(log.err, "while forcing a build")
 
 
-    command_FORCE.usage = "force build <which> <reason> - Force a build"
+    command_FORCE.usage = "force build [--branch=branch] [--revision=revision] <which> <reason> - Force a build"
 
     def command_STOP(self, args, who):
         args = shlex.split(args)
@@ -727,7 +727,7 @@ class IrcStatusBot(irc.IRCClient):
         @param nickname: the nickname by which this bot should be known
         @type  password: string
         @param password: the password to use for identifying with Nickserv
-        @type  channels: list of strings
+        @type  channels: list of dictionaries
         @param channels: the bot will maintain a presence in these channels
         @type  status: L{buildbot.status.builder.Status}
         @param status: the build master's Status object, through which the
@@ -804,13 +804,17 @@ class IrcStatusBot(irc.IRCClient):
         if "buildbot" in data:
             contact.handleAction(data, user)
 
-
-
     def signedOn(self):
         if self.password:
             self.msg("Nickserv", "IDENTIFY " + self.password)
         for c in self.channels:
-            self.join(c)
+            if isinstance(c, dict):
+                channel = c.get('channel', None)
+                password = c.get('password', None)
+            else:
+                channel = c
+                password = None
+            self.join(channel=channel, key=password)
 
     def joined(self, channel):
         self.log("I have joined %s" % (channel,))
@@ -910,7 +914,7 @@ class IRC(base.StatusReceiverMultiService):
                      "channels", "allowForce", "useSSL",
                      "categories"]
 
-    def __init__(self, host, nick, channels, port=6667, allowForce=True,
+    def __init__(self, host, nick, channels, port=6667, allowForce=False,
                  categories=None, password=None, notify_events={},
                  noticeOnChannel = False, showBlameList = True,
                  useSSL=False):

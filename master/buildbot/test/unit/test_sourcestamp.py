@@ -15,13 +15,13 @@
 
 import mock
 from twisted.trial import unittest
-from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakedb, fakemaster
 from buildbot import sourcestamp
 
 class TestBuilderBuildCreation(unittest.TestCase):
 
     def test_fromSsdict_changes(self):
-        master = mock.Mock()
+        master = fakemaster.make_master()
         master.db = fakedb.FakeDBConnector(self)
         master.db.insertTestData([
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
@@ -30,11 +30,14 @@ class TestBuilderBuildCreation(unittest.TestCase):
                         repository='svn://...', project='world-domination'),
             fakedb.Change(changeid=15, branch='trunk', revision='9284',
                         repository='svn://...', project='world-domination'),
+            fakedb.Change(changeid=16, branch='trunk', revision='9284',
+                        repository='svn://...', project='world-domination'),
             fakedb.SourceStamp(id=234, branch='trunk', revision='9284',
                         repository='svn://...', project='world-domination'),
             fakedb.SourceStampChange(sourcestampid=234, changeid=14),
             fakedb.SourceStampChange(sourcestampid=234, changeid=13),
             fakedb.SourceStampChange(sourcestampid=234, changeid=15),
+            fakedb.SourceStampChange(sourcestampid=234, changeid=16),
         ])
         # use getSourceStamp to minimize the risk from changes to the format of
         # the ssdict
@@ -46,18 +49,22 @@ class TestBuilderBuildCreation(unittest.TestCase):
             self.assertEqual(ss.branch, 'trunk')
             self.assertEqual(ss.revision, '9284')
             self.assertEqual(ss.patch, None)
-            self.assertEqual([ ch.number for ch in ss.changes], [13, 14, 15])
+            self.assertEqual(ss.patch_info, None)
+            self.assertEqual([ ch.number for ch in ss.changes],
+                             [13, 14, 15, 16])
             self.assertEqual(ss.project, 'world-domination')
             self.assertEqual(ss.repository, 'svn://...')
         d.addCallback(check)
         return d
 
     def test_fromSsdict_patch(self):
-        master = mock.Mock()
+        master = fakemaster.make_master()
         master.db = fakedb.FakeDBConnector(self)
         master.db.insertTestData([
             fakedb.Patch(id=99, subdir='/foo', patchlevel=3,
-                        patch_base64='LS0gKys='),
+                        patch_base64='LS0gKys=',
+                        patch_author='Professor Chaos',
+                        patch_comment='comment'),
             fakedb.SourceStamp(id=234, branch='trunk', revision='9284',
                         repository='svn://...', project='world-domination',
                         patchid=99),
@@ -72,6 +79,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
             self.assertEqual(ss.branch, 'trunk')
             self.assertEqual(ss.revision, '9284')
             self.assertEqual(ss.patch, (3, '-- ++'))
+            self.assertEqual(ss.patch_info, ('Professor Chaos', 'comment'))
             self.assertEqual(ss.changes, ())
             self.assertEqual(ss.project, 'world-domination')
             self.assertEqual(ss.repository, 'svn://...')
@@ -79,7 +87,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         return d
 
     def test_fromSsdict_simple(self):
-        master = mock.Mock()
+        master = fakemaster.make_master()
         master.db = fakedb.FakeDBConnector(self)
         master.db.insertTestData([
             fakedb.SourceStamp(id=234, branch='trunk', revision='9284',
@@ -95,6 +103,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
             self.assertEqual(ss.branch, 'trunk')
             self.assertEqual(ss.revision, '9284')
             self.assertEqual(ss.patch, None)
+            self.assertEqual(ss.patch_info, None)
             self.assertEqual(ss.changes, ())
             self.assertEqual(ss.project, 'world-domination')
             self.assertEqual(ss.repository, 'svn://...')

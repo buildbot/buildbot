@@ -22,6 +22,7 @@ from twisted.application import service
 
 from buildbot.process.builder import Builder
 from buildbot import interfaces, locks
+from buildbot.process import metrics
 
 class BotMaster(service.MultiService):
 
@@ -125,6 +126,8 @@ class BotMaster(service.MultiService):
         self.shuttingDown = False
 
     def loadConfig_Slaves(self, new_slaves):
+        timer = metrics.Timer("BotMaster.loadConfig_Slaves()")
+        timer.start()
         new_portnum = (self.lastSlavePortnum is not None
                    and self.lastSlavePortnum != self.master.slavePortnum)
         if new_portnum:
@@ -179,6 +182,13 @@ class BotMaster(service.MultiService):
 
         d.addCallback(update_remaining)
 
+        def stop(_):
+            metrics.MetricCountEvent.log("num_slaves",
+                len(self.slaves), absolute=True)
+            timer.stop()
+            return _
+        d.addBoth(stop)
+
         return d
 
     def addSlave(self, s):
@@ -191,6 +201,7 @@ class BotMaster(service.MultiService):
         # do not call maybeStartBuildsForSlave here, as the slave has not
         # necessarily attached yet
 
+    @metrics.countMethod('BotMaster.removeSlave()')
     def removeSlave(self, s):
         d = s.disownServiceParent()
         d.addCallback(lambda _ : s.pb_registration.unregister())
@@ -200,11 +211,14 @@ class BotMaster(service.MultiService):
         d.addCallback(delslave)
         return d
 
+    @metrics.countMethod('BotMaster.slaveLost()')
     def slaveLost(self, bot):
+        metrics.MetricCountEvent.log("BotMaster.attached_slaves", -1)
         for name, b in self.builders.items():
             if bot.slavename in b.slavenames:
                 b.detached(bot)
 
+    @metrics.countMethod('BotMaster.getBuildersForSlave()')
     def getBuildersForSlave(self, slavename):
         return [b
                 for b in self.builders.values()
@@ -226,7 +240,7 @@ class BotMaster(service.MultiService):
                                 if isinstance(b, Builder)],
                                fireOnOneErrback=True)
         def _add(ign):
-            log.msg("setBuilders._add: %s %s" % (list(self), builders))
+            log.msg("setBuilders._add: %s %s" % (list(self), [b.name for b in builders]))
             for b in builders:
                 for slavename in b.slavenames:
                     # this is actually validated earlier
@@ -244,13 +258,21 @@ class BotMaster(service.MultiService):
 
     def _updateAllSlaves(self):
         """Notify all buildslaves about changes in their Builders."""
+        timer = metrics.Timer("BotMaster._updateAllSlaves()")
+        timer.start()
         dl = []
         for s in self.slaves.values():
             d = s.updateSlave()
             d.addErrback(log.err)
             dl.append(d)
-        return defer.DeferredList(dl)
+        d = defer.DeferredList(dl)
+        def stop(_):
+            timer.stop()
+            return _
+        d.addBoth(stop)
+        return d
 
+    @metrics.countMethod('BotMaster.shouldMergeRequests()')
     def shouldMergeRequests(self, builder, req1, req2):
         """Determine whether two BuildRequests should be merged for
         the given builder.
@@ -268,6 +290,7 @@ class BotMaster(service.MultiService):
         sl = self.slaves[slavename]
         if not sl:
             return None
+        metrics.MetricCountEvent.log("BotMaster.attached_slaves", 1)
 
         # record when this connection attempt occurred
         sl.recordConnectTime()
@@ -312,8 +335,8 @@ class BotMaster(service.MultiService):
 
     def maybeStartBuildsForBuilder(self, buildername):
         """
-        Call this when something suggests that a particular builder may now be
-        available to start a build.
+        Call this when something suggests that a particular builder may now
+        be available to start a build.
 
         @param buildername: the name of the builder
         """
@@ -321,8 +344,8 @@ class BotMaster(service.MultiService):
 
     def maybeStartBuildsForSlave(self, slave_name):
         """
-        Call this when something suggests that a particular slave may now be available
-        to start a build.
+        Call this when something suggests that a particular slave may now be
+        available to start a build.
 
         @param slave_name: the name of the slave
         """
@@ -353,7 +376,7 @@ class BuildRequestDistributor(service.Service):
         self.master = botmaster.master
 
         # lock to ensure builders are only sorted once at any time
-        self.builder_sorting_lock = defer.DeferredLock()
+        self.pending_builders_lock = defer.DeferredLock()
 
         # sorted list of names of builders that need their maybeStartBuild
         # method invoked.
@@ -369,10 +392,12 @@ class BuildRequestDistributor(service.Service):
         d.addBoth(lambda _ : self.activity_lock.release())
         return d
 
+    @defer.deferredGenerator
     def maybeStartBuildsOn(self, new_builders):
         """
-        Try ot start any builds that can be started right now.  This function
-        returns immediately, and promises to trigger those builders eventually.
+        Try to start any builds that can be started right now.  This function
+        returns immediately, and promises to trigger those builders
+        eventually.
 
         @param new_builders: names of new builders that should be given the
         opportunity to check for new requests.
@@ -380,37 +405,42 @@ class BuildRequestDistributor(service.Service):
         new_builders = set(new_builders)
         existing_pending = set(self._pending_builders)
 
-        # if we haven't added any builders, there's nothing to do
+        # if we won't add any builders, there's nothing to do
         if new_builders < existing_pending:
             return
 
         # reset the list of pending builders; this is async, so begin
         # by grabbing a lock
-        d = self.builder_sorting_lock.acquire()
+        wfd = defer.waitForDeferred(
+            self.pending_builders_lock.acquire())
+        yield wfd
+        wfd.getResult()
 
-        # then sort the new, expanded set of builders
-        d.addCallback(lambda _ : self._sortBuilders(list(
-                                    existing_pending | new_builders)))
-        def keep_new_builders(result):
-            self._pending_builders = result
-        d.addCallback(keep_new_builders)
+        try:
+            # re-fetch existing_pending, in case it has changed while acquiring
+            # the lock
+            existing_pending = set(self._pending_builders)
 
-        # start the activity loop, if we aren't already working on that.
-        def start_loop(_):
+            # then sort the new, expanded set of builders
+            wfd = defer.waitForDeferred(
+                self._sortBuilders(list(existing_pending | new_builders)))
+            yield wfd
+            self._pending_builders = wfd.getResult()
+
+            # start the activity loop, if we aren't already working on that.
             if not self.active:
                 self._activityLoop()
-        d.addCallback(start_loop)
+        except:
+            log.err(Failure(),
+                    "while attempting to start builds on %s" % self.name)
 
-        # and release the lock in any case
-        def unlock(x):
-            self.builder_sorting_lock.release()
-            return x
-        d.addBoth(unlock)
-
-        d.addErrback(log.err, 'while sorting builders')
+        # release the lock unconditionally
+        self.pending_builders_lock.release()
 
     @defer.deferredGenerator
     def _defaultSorter(self, master, builders):
+        timer = metrics.Timer("BuildRequestDistributor._defaultSorter()")
+        timer.start()
         # perform an asynchronous schwarzian transform, transforming None
         # into sys.maxint so that it sorts to the end
         def xform(bldr):
@@ -435,9 +465,12 @@ class BuildRequestDistributor(service.Service):
 
         # and reverse the transform
         yield [ xf[1] for xf in xformed ]
+        timer.stop()
 
     @defer.deferredGenerator
     def _sortBuilders(self, buildernames):
+        timer = metrics.Timer("BuildRequestDistributor._sortBuilders()")
+        timer.start()
         # note that this takes and returns a list of builder names
 
         # convert builder names to builders
@@ -464,10 +497,14 @@ class BuildRequestDistributor(service.Service):
 
         # and return the names
         yield [ b.name for b in builders ]
+        timer.stop()
 
     @defer.deferredGenerator
     def _activityLoop(self):
         self.active = True
+
+        timer = metrics.Timer('BuildRequestDistributor._activityLoop()')
+        timer.start()
 
         while 1:
             wfd = defer.waitForDeferred(
@@ -475,12 +512,20 @@ class BuildRequestDistributor(service.Service):
             yield wfd
             wfd.getResult()
 
+            # lock pending_builders, pop an element from it, and release
+            wfd = defer.waitForDeferred(
+                self.pending_builders_lock.acquire())
+            yield wfd
+            wfd.getResult()
+
             # bail out if we shouldn't keep looping
             if not self.running or not self._pending_builders:
+                self.pending_builders_lock.release()
                 self.activity_lock.release()
                 break
 
             bldr_name = self._pending_builders.pop(0)
+            self.pending_builders_lock.release()
 
             try:
                 wfd = defer.waitForDeferred(
@@ -492,6 +537,8 @@ class BuildRequestDistributor(service.Service):
                         "from maybeStartBuild for builder '%s'" % (bldr_name,))
 
             self.activity_lock.release()
+
+        timer.stop()
 
         self.active = False
         self._quiet()

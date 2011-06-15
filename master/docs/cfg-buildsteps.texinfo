@@ -26,6 +26,7 @@ control each.
 * Using Build Properties::
 * Source Checkout::
 * ShellCommand::
+* Slave Filesystem Steps::
 * Python BuildSteps::
 * Transferring Files::
 * Transferring Strings::
@@ -134,9 +135,32 @@ class MakeTarball(ShellCommand):
 @end example
 
 @menu
+* Property::
 * WithProperties::
 * Common Build Properties::
 @end menu
+
+@node Property
+@subsubsection Property
+@cindex Property
+
+You can use build properties in most step paramaters.  Please file bugs for any
+parameters which do not accept properties.  The simplest form is to wrap the
+property name with @code{Property}, passing an optional default argument.
+
+@example
+from buildbot.steps.trigger import Trigger
+form buildbot.process.properties import Property
+
+f.addStep(Trigger(waitForFinish=False, schedulerNames=['build-dependents'], alwaysUseLatest=True,
+			set_properties=@{'coq_revision': Property("got_revision")@}))
+@end example
+
+You can specify a default value by passing a @code{default} argument to
+@code{Property}. This is normally used when the property doesn't exist,
+or when the value is something Python regards as "false". The @code{defaultWhenFalse}
+argument can be used to force buildbot to use the default argument only
+if the parameter is not set.
 
 @node WithProperties
 @subsubsection WithProperties
@@ -146,32 +170,11 @@ You can use build properties in ShellCommands by using the
 @code{WithProperties} wrapper when setting the arguments of
 the ShellCommand. This interpolates the named build properties
 into the generated shell command.  Most step parameters accept
-@code{WithProperties}.  Please file bugs for any parameters which
-do not.
+@code{WithProperties}.
 
-@example
-from buildbot.steps.shell import ShellCommand
-from buildbot.process.properties import WithProperties
-
-f.addStep(ShellCommand(
-          command=["tar", "czf",
-                   WithProperties("build-%s.tar.gz", "revision"),
-                   "source"]))
-@end example
-
-If this BuildStep were used in a tree obtained from Subversion, it
-would create a tarball with a name like @file{build-1234.tar.gz}.
-
-The @code{WithProperties} function does @code{printf}-style string
-interpolation, using strings obtained by calling
-@code{build.getProperty(propname)}. Note that for every @code{%s} (or
-@code{%d}, etc), you must have exactly one additional argument to
-indicate which build property you want to insert.
-
-You can also use python dictionary-style string interpolation by using
+You can use python dictionary-style string interpolation by using
 the @code{%(propname)s} syntax. In this form, the property name goes
-in the parentheses, and WithProperties takes @emph{no} additional
-arguments:
+in the parentheses:
 
 @example
 f.addStep(ShellCommand(
@@ -179,6 +182,9 @@ f.addStep(ShellCommand(
                    WithProperties("build-%(revision)s.tar.gz"),
                    "source"]))
 @end example
+
+If this BuildStep were used in a tree obtained from Subversion, it
+would create a tarball with a name like @file{build-1234.tar.gz}.
 
 Don't forget the extra ``s'' after the closing parenthesis! This is
 the cause of many confusing errors.
@@ -227,6 +233,22 @@ def determine_foo(props):
     return 'qux'
 
 WithProperties('%(foo)s', foo=determine_foo)
+@end example
+
+The @code{WithProperties} function also does @code{printf}-style string
+interpolation, using strings obtained by calling
+@code{build.getProperty(propname)}. Note that for every @code{%s} (or
+@code{%d}, etc), you must have exactly one additional argument to
+indicate which build property you want to insert.
+
+@example
+from buildbot.steps.shell import ShellCommand
+from buildbot.process.properties import WithProperties
+
+f.addStep(ShellCommand(
+          command=["tar", "czf",
+                   WithProperties("build-%s.tar.gz", "revision"),
+                   "source"]))
 @end example
 
 Note: like python, you can either do positional-argument interpolation
@@ -1233,10 +1255,12 @@ suppress the display of empty or missing log files. The default is @code{False}.
 
 @item timeout
 if the command fails to produce any output for this many seconds, it
-is assumed to be locked up and will be killed.
+is assumed to be locked up and will be killed. This defaults to 1200 seconds.
+Pass @code{None} to disable.
 
 @item maxTime
-if the command takes longer than this many seconds, it will be killed.
+if the command takes longer than this many seconds, it will be killed. This
+is disabled by default.
 
 @item description
 This will be used to describe the command (on the Waterfall display)
@@ -1293,7 +1317,9 @@ WARNINGS if any were discovered. Through the @code{WarningCountingShellCommand}
 superclass, the number of warnings is stored in a Build Property named
 ``warnings-count'', which is accumulated over all Compile steps (so if two
 warnings are found in one step, and three are found in another step, the
-overall build will have a ``warnings-count'' property of 5).
+overall build will have a ``warnings-count'' property of 5).  Each step can be
+optionally given a maximum number of warnings via the maxWarnCount parameter.
+If this limit is exceeded, the step will be marked as a failure.
 
 The default regular expression used to detect a warning is
 @code{'.*warning[: ].*'} , which is fairly liberal and may cause
@@ -1463,8 +1489,8 @@ That one is only available with the class VS2005 (VC8). It gives the
 target architecture of the built artifact. It defaults to @code{"x86''}.
 
 @item project
-This one is only available with the class VC6. It gives the project to build
-from within a workspace. It defaults to buulding all projects. This is useful
+This gives the specific project to build
+from within a workspace. It defaults to building all projects. This is useful
 for building cmake generate projects.
 @end table
 
@@ -1662,6 +1688,25 @@ This runs @code{make test} and filters it through subunit. The 'tests' and
 
 If @code{failureOnNoTests} is True, this step will fail if no test is run. By
 default @code{failureOnNoTests} is False.
+
+@node Slave Filesystem Steps
+@subsection Slave Filesystem Steps
+
+Here are some buildsteps for manipulating the slaves filesystem.
+
+@menu
+* RemoveDirectory::
+@end menu
+
+@node RemoveDirectory
+@subsubsection RemoveDirectory
+
+This command recursively deletes a directory on the slave.
+
+@example
+from buildbot.steps.slave import RemoveDirectory
+f.addStep(RemoveDirectory(dir="build/build"))
+@end example
 
 @node Python BuildSteps
 @subsection Python BuildSteps
@@ -1921,6 +1966,12 @@ default to whatever the umask of the writing process is. The default
 umask tends to be fairly restrictive, but at least on the buildslave
 you can make it less restrictive with a --umask command-line option at
 creation time (@pxref{Buildslave Options}).
+
+The @code{keepstamp=} argument is a boolean that, when True, forces
+the modified and accessed time of the destination file to match the
+times of the source file.  When False, the modified and accessed times
+of the destination file are set to the current time on the buildmaster.
+The default is false.
 
 @subheading Transfering Directories
 

@@ -79,9 +79,7 @@ class RealDatabaseMixin(object):
         self.__want_pool = want_pool
 
         memory = 'sqlite://'
-        self.db_url = os.environ.get('BUILDBOT_TEST_DB_URL',
-                ### XXX TEMPORARY until sqlalchemification is complete
-                'sqlite:///%s' % (os.path.abspath('test.db')))
+        self.db_url = os.environ.get('BUILDBOT_TEST_DB_URL', memory)
         self.__using_memory_db = (self.db_url == memory)
 
         self.db_engine = enginestrategy.create_engine(self.db_url,

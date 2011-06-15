@@ -66,6 +66,8 @@ class FileExists(BuildStep):
     description='Checking'
     descriptionDone='Checked'
 
+    renderables = [ 'file' ]
+
     haltOnFailure = True
     flunkOnFailure = True
 
@@ -80,8 +82,7 @@ class FileExists(BuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about stat")
-        properties = self.build.getProperties()
-        cmd = LoggedRemoteCommand('stat', {'file': properties.render(self.file) })
+        cmd = LoggedRemoteCommand('stat', {'file': self.file })
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
@@ -98,3 +99,38 @@ class FileExists(BuildStep):
         else:
             self.step_status.setText(["Not a file."])
             self.finished(FAILURE)
+
+class RemoveDirectory(BuildStep):
+    """
+    Remove a directory tree on the slave.
+    """
+    name='RemoveDirectory'
+    description='Deleting'
+    desciprtionDone='Deleted'
+
+    renderables = [ 'dir' ]
+
+    haltOnFailure = True
+    flunkOnFailure = True
+
+    def __init__(self, dir, **kwargs):
+        BuildStep.__init__(self, **kwargs)
+        self.addFactoryArguments(dir = dir)
+        self.dir = dir
+
+    def start(self):
+        slavever = self.slaveVersion('rmdir')
+        if not slavever:
+            raise BuildSlaveTooOldError("slave is too old, does not know "
+                                        "about rmdir")
+        cmd = LoggedRemoteCommand('rmdir', {'dir': self.dir })
+        d = self.runCommand(cmd)
+        d.addCallback(lambda res: self.commandComplete(cmd))
+        d.addErrback(self.failed)
+
+    def commandComplete(self, cmd):
+        if cmd.rc != 0:
+            self.step_status.setText(["Delete failed."])
+            self.finished(FAILURE)
+            return
+        self.finished(SUCCESS)

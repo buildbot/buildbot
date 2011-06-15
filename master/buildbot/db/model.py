@@ -165,7 +165,7 @@ class Model(base.DBConnectorComponent):
     change_properties = sa.Table('change_properties', metadata,
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
         sa.Column('property_name', sa.String(256), nullable=False),
-        # JSON-encoded property value
+        # JSON-encoded tuple of (value, source)
         sa.Column('property_value', sa.String(1024), nullable=False), # TODO: too short?
     )
     """Properties for changes"""
@@ -221,6 +221,12 @@ class Model(base.DBConnectorComponent):
 
         # base64-encoded version of the patch file
         sa.Column('patch_base64', sa.Text, nullable=False),
+        
+        # patch author, if known
+        sa.Column('patch_author', sa.Text, nullable=False),
+        
+        # patch comment
+        sa.Column('patch_comment', sa.Text, nullable=False),
 
         # subdirectory in which the patch should be applied; NULL for top-level
         sa.Column('subdir', sa.Text),

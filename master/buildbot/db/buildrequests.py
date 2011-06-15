@@ -29,6 +29,9 @@ class AlreadyClaimedError(Exception):
 class NotClaimedError(Exception):
     pass
 
+class BrDict(dict):
+    pass
+
 class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     """
     A DBConnectorComponent to handle buildrequests.  An instance is available
@@ -45,6 +48,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         """
         Get a single BuildRequest, in the format described above.  Returns
         C{None} if there is no such buildrequest.
+
+        Note that build requests are not cached, as the values in the database
+        are not fixed.
 
         @param brid: build request id
         @type brid: integer
@@ -82,8 +88,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         A build is considered completed if its C{complete} column is 1; the
         C{complete_at} column is not consulted.
 
-        The resulting dictionaries may be cached internally, and should not be
-        modified directly.
+        Since this method is often used to detect changed build requests, it
+        always bypasses the cache.
 
         @param buildername: limit results to buildrequests for this builder
         @type buildername: string
@@ -132,6 +138,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             if bsid is not None:
                 q = q.where(tbl.c.buildsetid == bsid)
             res = conn.execute(q)
+
             return [ self._brdictFromRow(row) for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
@@ -171,7 +178,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         # effective in environments with lower transactional isolation levels,
         # which may incorrectly serialize the conflicting UPDATES.
 
-        def alreadyClaimed(conn):
+        def alreadyClaimed(conn, tmp):
             # helper function to un-claim already-claimed requests, if we can't
             # claim all of them.  This may be redundant for the finer database
             # engines, but won't hurt.
@@ -181,7 +188,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             # only select *my builds* in this set of brids
             q = tbl.update()
-            q = q.where((tbl.c.id.in_(brids)) &
+            q = q.where((tbl.c.id.in_(tmp.select())) &
                 ((tbl.c.claimed_at != None) &
                  (tbl.c.claimed_by_name == master_name) &
                  (tbl.c.claimed_by_incarnation == master_incarnation)))
@@ -199,10 +206,21 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             master_incarnation = self.db.master.master_incarnation
             tbl = self.db.model.buildrequests
 
-            try:
-                transaction = conn.begin()
+            transaction = conn.begin()
 
-                q = tbl.update(whereclause=(tbl.c.id.in_(brids)))
+            # first, create a temporary table containing all of the ID's
+            # we want to claim
+            tmp_meta = sa.MetaData(bind=conn)
+            tmp = sa.Table('bbtmp_claim_ids', tmp_meta,
+                    sa.Column('brid', sa.Integer),
+                    prefixes=['TEMPORARY'])
+            tmp.create()
+
+            try:
+                q = tmp.insert()
+                conn.execute(q, [ dict(brid=id) for id in brids ])
+
+                q = tbl.update(whereclause=(tbl.c.id.in_(tmp.select())))
                 q = q.where(
                     # unclaimed
                     (((tbl.c.claimed_at == None) | (tbl.c.claimed_at == 0)) &
@@ -219,32 +237,39 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 updated_rows = res.rowcount
                 res.close()
 
-                transaction.commit()
-            except (sa.exc.ProgrammingError, sa.exc.IntegrityError):
-                alreadyClaimed(conn)
-                raise AlreadyClaimedError
-
-            # if no or too few rows were updated, then we failed
-            if updated_rows != len(brids):
-                alreadyClaimed(conn)
-                raise AlreadyClaimedError
-
-            # testing hook to simulate a race condition
-            if _race_hook:
-                _race_hook(conn)
-
-            # but double-check to be sure all of the desired build requests
-            # now belong to this master
-            q = sa.select([tbl.c.claimed_by_name,
-                           tbl.c.claimed_by_incarnation],
-                          whereclause=(tbl.c.id.in_(brids)))
-            res = conn.execute(q)
-            for row in res:
-                if row.claimed_by_name != master_name or \
-                        row.claimed_by_incarnation != master_incarnation:
-                    alreadyClaimed(conn)
+                # if no rows or too few rows were updated, then we failed; this
+                # will roll back the transaction
+                if updated_rows != len(brids):
+                    # MySQL doesn't do transactions, so roll this back manually
+                    if conn.engine.dialect.name == 'mysql':
+                        alreadyClaimed(conn, tmp)
+                    transaction.rollback()
                     raise AlreadyClaimedError
-            res.close()
+
+                transaction.commit()
+
+                # testing hook to simulate a race condition
+                if _race_hook:
+                    _race_hook(conn)
+
+                # but double-check to be sure all of the desired build requests
+                # now belong to this master
+                q = sa.select([tbl.c.claimed_by_name,
+                            tbl.c.claimed_by_incarnation],
+                            whereclause=(tbl.c.id.in_(tmp.select())))
+                res = conn.execute(q)
+                for row in res:
+                    if row.claimed_by_name != master_name or \
+                            row.claimed_by_incarnation != master_incarnation:
+                        # note that the transaction is already committed here; too
+                        # bad!  We'll just fake it by unclaiming those requests (so
+                        # hopefully this was not a reclaim)
+                        alreadyClaimed(conn, tmp)
+                        raise AlreadyClaimedError
+                res.close()
+            finally:
+                # clean up after ourselves, even though it's a temporary table
+                tmp.drop(checkfirst=True)
 
         return self.db.pool.do(thd)
 
@@ -404,7 +429,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         claimed_at = mkdt(row.claimed_at)
         complete_at = mkdt(row.complete_at)
 
-        return dict(brid=row.id, buildsetid=row.buildsetid,
+        return BrDict(brid=row.id, buildsetid=row.buildsetid,
                 buildername=row.buildername, priority=row.priority,
                 claimed=claimed, claimed_at=claimed_at, mine=mine,
                 complete=bool(row.complete), results=row.results,

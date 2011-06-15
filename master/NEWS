@@ -5,6 +5,8 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Version
 
+* Buildbot 0.8.4
+
 ** `Blocker` step
 
 A "beta" version of the Blocker step has been added; this step allows multiple
@@ -15,6 +17,14 @@ Buildbot.  See `contrib/blockertest` for a test and demonstration of the new
 step's functionality.
 
 ** Deprecations, Removals, and Non-Compatible Changes
+
+*** Init script now uses /etc/default/buildmaster for instance configuration.
+Also MASTER_ENABLED used in /etc/default/buildmaster now accepts 'true|yes|1'
+to enable instance and 'false|no|0' to disable(not case sensitive). Other
+values will be considered as syntax error.
+
+*** 'buildbot.status.words.IRC' now defaults to `AllowForce=False` to prevent
+IRC bots from being allowed to force builds by default.
 
 *** MasterShellCommand and all of the transfer steps now default to
 haltOnFailure=True and flunkOnFailure=True
@@ -55,15 +65,19 @@ via a Deferred, and that result is now a DateTime object.
 return their results via a Deferred.  The `asDict` method omits these values,
 as it retuns synchronously.
 
+*** Buildbot now uses temporary tables, which can cause problems with
+replication in MySQL.  See "Database Specification" in the manual for more
+details.
+
 ** Scheduler Improvements
 
 *** Nightly scheduler now accepts a change_filter argument
 
 ** SQLAlchemy & SQLAlchemy-Migrate
 
-Buildbot now uses SQLAlchemy as a database abstraction layer.  This will give
-us greater inter-database compatibility and a more stable and reliable basis
-for this core component of the framework.  SQLAlchemy-Migrate is used to manage
+Buildbot now uses SQLAlchemy as a database abstraction layer.  This gives
+greater inter-database compatibility and a more stable and reliable basis for
+this core component of the framework.  SQLAlchemy-Migrate is used to manage
 changes to the database schema from version to version.
 
 *** Postgres support

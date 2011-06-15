@@ -633,7 +633,9 @@ nothing about email addresses or IRC nicknames, just user names.
 Each change has a single user who is responsible for it. Most builds have a set
 of changes: the build generally represents the first time these changes have
 been built and tested by the Buildbot. The build has a ``blamelist'' that is
-the union of the users responsible for all the build's changes.
+the union of the users responsible for all the build's changes.  If the build
+was created by a Try Scheduler this list will include the submitter of the try
+job, if known (@pxref{Try Schedulers}).
 
 The build provides a list of users who are interested in the build -- the
 ``interested users''. Usually this is equal to the blamelist, but may also be

@@ -17,6 +17,7 @@
 from zope.interface import implements
 from twisted.persisted import styles
 from twisted.internet import defer
+from buildbot.changes.changes import Change
 from buildbot import util, interfaces
 
 # TODO: kill this class, or at least make it less significant
@@ -48,6 +49,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     @ivar patch: tuple (patch level, patch body) or None
 
+    @ivar patch_info: tuple (patch author, patch comment) or None
+
     @ivar changes: tuple of changes that went into this source stamp, sorted by
     number
 
@@ -59,16 +62,17 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     persistenceVersion = 2
     persistenceForgets = ( 'wasUpgraded', )
 
-    # all six of these are publically visible attributes
+    # all seven of these are publicly visible attributes
     branch = None
     revision = None
     patch = None
+    patch_info = None
     changes = ()
     project = ''
     repository = ''
     ssid = None
 
-    compare_attrs = ('branch', 'revision', 'patch', 'changes', 'project', 'repository')
+    compare_attrs = ('branch', 'revision', 'patch', 'patch_info', 'changes', 'project', 'repository')
 
     implements(interfaces.ISourceStamp)
 
@@ -83,8 +87,15 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
         @returns: L{SourceStamp} via Deferred
         """
-        sourcestamp = cls(fromSsdict=True)
-        sourcestamp.ssid = ssdict['ssid']
+        # try to fetch from the cache, falling back to _make_ss if not
+        # found
+        cache = master.caches.get_cache("SourceStamps", cls._make_ss)
+        return cache.get(ssdict['ssid'], ssdict=ssdict, master=master)
+
+    @classmethod
+    def _make_ss(cls, ssid, ssdict, master):
+        sourcestamp = cls(_fromSsdict=True)
+        sourcestamp.ssid = ssid
         sourcestamp.branch = ssdict['branch']
         sourcestamp.revision = ssdict['revision']
         sourcestamp.project = ssdict['project']
@@ -93,12 +104,21 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         sourcestamp.patch = None
         if ssdict['patch_body']:
             # note that this class does not store the patch_subdir
-            sourcestamp.patch = (ssdict['patch_level'], ssdict['patch_body'])
-
+            sourcestamp.patch = (ssdict['patch_level'],
+                                 ssdict['patch_body'])
+            sourcestamp.patch_info = (ssdict['patch_author'],
+                                      ssdict['patch_comment'])
+        
         if ssdict['changeids']:
-            getChangeInstance = master.db.changes.getChangeInstance
-            d = defer.gatherResults([ getChangeInstance(id)
-                                for id in ssdict['changeids'] ])
+            # sort the changeids in order, oldest to newest
+            sorted_changeids = sorted(ssdict['changeids'])
+            def gci(id):
+                d = master.db.changes.getChange(id)
+                d.addCallback(lambda chdict :
+                    Change.fromChdict(master, chdict))
+                return d
+            d = defer.gatherResults([ gci(id)
+                                for id in sorted_changeids ])
         else:
             d = defer.succeed([])
         def got_changes(changes):
@@ -108,10 +128,10 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         return d
 
     def __init__(self, branch=None, revision=None, patch=None,
-                 changes=None, project='', repository='', fromSsdict=False,
-                 _ignoreChanges=False):
+                 patch_info=None, changes=None, project='', repository='',
+                 _fromSsdict=False, _ignoreChanges=False):
         # skip all this madness if we're being built from the database
-        if fromSsdict:
+        if _fromSsdict:
             return
 
         if patch is not None:
@@ -119,6 +139,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             assert int(patch[0]) != -1
         self.branch = branch
         self.patch = patch
+        self.patch_info = patch_info
         self.project = project or ''
         self.repository = repository or ''
         if changes and not _ignoreChanges:
@@ -180,6 +201,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         newsource = SourceStamp(branch=self.branch,
                                 revision=self.revision,
                                 patch=self.patch,
+                                patch_info=self.patch_info,
                                 project=self.project,
                                 repository=self.repository,
                                 changes=changes)
@@ -245,10 +267,17 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         patch_level = None
         if self.patch:
             patch_level, patch_body = self.patch
-        d = master.db.sourcestamps.createSourceStamp(
+            
+        patch_author = None
+        patch_comment = None
+        if self.patch_info:
+            patch_author, patch_comment = self.patch_info
+            
+        d = master.db.sourcestamps.addSourceStamp(
                 branch=self.branch, revision=self.revision,
                 repository=self.repository, project=self.project,
                 patch_body=patch_body, patch_level=patch_level,
+                patch_author=patch_author, patch_comment=patch_comment,
                 patch_subdir=None, changeids=[c.number for c in self.changes])
         def set_ssid(ssid):
             self.ssid = ssid

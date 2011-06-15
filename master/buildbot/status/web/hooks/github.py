@@ -93,6 +93,8 @@ def getChanges(request, options = None):
             project = request.args.get('project', None)
             if project:
                 project = project[0]
+            elif project is None:
+                project = ''
             # This field is unused:
             #private = payload['repository']['private']
             changes = process_change(payload, user, repo, repo_url, project)

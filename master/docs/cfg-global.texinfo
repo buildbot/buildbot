@@ -3,7 +3,7 @@ The keys in this section affect the operations of the buildmaster globally.
 @menu
 * Database Specification::
 * Multi-master mode::
-* Project Definitions::
+* Site Definition::
 * Log Handling::
 * Data Lifetime::
 * Merging Build Requests (global option)::
@@ -11,6 +11,7 @@ The keys in this section affect the operations of the buildmaster globally.
 * Setting the PB Port for Slaves::
 * Defining Global Properties::
 * Debug Options::
+* Metrics Options::
 @end menu
 
 @node Database Specification
@@ -60,6 +61,21 @@ configured @code{wait_timeout} is on your MySQL server.
 
 Buildbot requires @code{use_unique=True} and @code{charset=utf8}, and will add
 them automatically, so they do not need to be specified in @code{db_url}.
+
+MySQL defaults to the MyISAM storage engine, but this can be overridden with
+the @code{storage_engine} URL argument.  Note that, because of InnoDB's
+extremely short key length limitations, it cannot be used to run Buildbot.  See
+@url{http://bugs.mysql.com/bug.php?id=4541} for more information.
+
+Buildbot uses temporary tables internally to manage large transactions.  MySQL
+has trouble doing replication with temporary tables, so if you are using a
+replicated MySQL installation, you may need to handle this situation carefully.
+The MySQL documentation
+(@url{http://dev.mysql.com/doc/refman/5.5/en/replication-features-temptables.html})
+recommends using @code{--replicate-wild-ignore-table} to ignore temporary
+tables that should not be replicated.  All Buildbot temporary tables begin with
+@code{bbtmp_}, so an option such as
+@code{--replicate-wild-ignore-table=bbtmp_.*} may help.
 
 @heading Postgres
 
@@ -137,18 +153,10 @@ c['multiMaster'] = True
 c['db_poll_interval'] = 60
 @end example
 
-@node Project Definitions
-@subsection Project Definitions
+@node Site Definition
+@subsection Site Definition
 
-There are a couple of basic settings that you use to tell the buildbot what it
-is working on. This information is used by status reporters to let users find
-out more about the codebase being exercised by this particular Buildbot
-installation.
-
-Note that these parameters were added long before Buildbot became able to build
-multiple projects in a single buildmaster, and thus assume that there is only
-one project.  While the configuration parameter names may be confusing, a
-suitable choice of name and URL should help users avoid any confusion.
+Three basic settings describe the buildmaster in status reports.
 
 @example
 c['title'] = "Buildbot"
@@ -396,18 +404,21 @@ one uses unencrypted telnet. Two of them use a username+password
 combination to grant access, one of them uses an SSH-style
 @file{authorized_keys} file which contains a list of ssh public keys.
 
+Note that using any Manhole requires that @code{pycrypto} and @code{pyasn1} be
+installed.  These are not part of the normal Buildbot dependencies.
+
 @table @code
-@item manhole.AuthorizedKeysManhole
+@item buildbot.manhole.AuthorizedKeysManhole
 You construct this with the name of a file that contains one SSH
 public key per line, just like @file{~/.ssh/authorized_keys}. If you
 provide a non-absolute filename, it will be interpreted relative to
 the buildmaster's base directory.
 
-@item manhole.PasswordManhole
+@item buildbot.manhole.PasswordManhole
 This one accepts SSH connections but asks for a username and password
 when authenticating. It accepts only one such pair.
 
-@item manhole.TelnetManhole
+@item buildbot.manhole.TelnetManhole
 This accepts regular unencrypted telnet connections, and asks for a
 username/password pair before providing access. Because this
 username/password is transmitted in the clear, and because Manhole
@@ -440,9 +451,6 @@ To have the @code{Manhole} listen on all interfaces, use
 @code{"tcp:9999"} or simply 9999. This port specification uses
 @code{twisted.application.strports}, so you can make it listen on SSL
 or even UNIX-domain sockets if you want.
-
-Note that using any Manhole requires that the TwistedConch package be
-installed, and that you be using Twisted version 2.0 or later.
 
 The buildmaster's SSH server will use a different host key than the
 normal sshd running on a typical unix host. This will cause the ssh
@@ -494,3 +502,15 @@ data attributes of <Builder ''builder'' at 48963528>
 >>> win32 = _
 >>> win32.category = 'w32'
 @end example
+
+@node Metrics Options
+@subsection Metrics Options
+@code{c['metrics'] = dict(log_interval=10, periodic_interval=10)}
+
+@code{c['metrics']} can be a dictionary that configures various aspects of the metrics subsystem. If @code{c['metrics']} is None, then metrics collection, logging and reporting will be disabled.
+
+@code{log_interval} determines how often metrics should be logged to twistd.log. It default to 60s. If set to 0 or None, then logging of metrics will be disabled. This value can be changed via a reconfig.
+
+@code{periodic_interval} determines how often various non-event based metrics are collected, such as memory usage, uncollectable garbage, reactor delay. This defaults to 10s. If set to 0 or None, then periodic collection of this data is disabled. This value can also be changed via a reconifg.
+
+Read more about metrics in the @ref{Metrics} section of the documentation.

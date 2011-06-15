@@ -26,6 +26,7 @@ from twisted.python.reflect import namedModule
 
 from buildbot.status.slave import SlaveStatus
 from buildbot.status.mail import MailNotifier
+from buildbot.process import metrics
 from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
 from buildbot.process.properties import Properties
 from buildbot.locks import LockAccess
@@ -116,6 +117,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         self.access = new.access
         self.notify_on_missing = new.notify_on_missing
         self.missing_timeout = new.missing_timeout
+        self.keepalive_interval = new.keepalive_interval
 
         self.properties = Properties()
         self.properties.updateFromProperties(new.properties)
@@ -262,6 +264,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         if buildFinished:
             self.slave_status.buildFinished(buildFinished)
 
+    @metrics.countMethod('AbstractBuildSlave.attached()')
     def attached(self, bot):
         """This is called when the slave connects.
 
@@ -270,6 +273,8 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
 
         # the botmaster should ensure this.
         assert not self.isConnected()
+
+        metrics.MetricCountEvent.log("AbstractBuildSlave.attached_slaves", 1)
 
         # now we go through a sequence of calls, gathering information, then
         # tell the Botmaster that it can finally give this slave to all the
@@ -376,6 +381,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         self.slave_status.setLastMessageReceived(now)
 
     def detached(self, mind):
+        metrics.MetricCountEvent.log("AbstractBuildSlave.attached_slaves", -1)
         self.slave = None
         self._old_builder_list = []
         self.slave_status.removeGracefulWatcher(self._gracefulChanged)

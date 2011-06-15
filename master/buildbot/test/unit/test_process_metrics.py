@@ -1,0 +1,214 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+import gc, sys
+from mock import Mock
+
+from twisted.trial import unittest
+from twisted.internet import task
+
+from buildbot.process import metrics
+
+class TestMetricBase(unittest.TestCase):
+    def setUp(self):
+        self.clock = task.Clock()
+        self.observer = metrics.MetricLogObserver(dict(log_interval=0, periodic_interval=0))
+        self.observer.parent = Mock()
+        self.observer.parent.db_poll_interval = 60
+        self.observer._reactor = self.clock
+        self.observer.startService()
+
+    def tearDown(self):
+        if self.observer.running:
+            self.observer.stopService()
+
+class TestMetricCountEvent(TestMetricBase):
+    def testIncrement(self):
+        metrics.MetricCountEvent.log('num_widgets', 1)
+        report = self.observer.asDict()
+        self.assertEquals(report['counters']['num_widgets'], 1)
+
+        metrics.MetricCountEvent.log('num_widgets', 1)
+        report = self.observer.asDict()
+        self.assertEquals(report['counters']['num_widgets'], 2)
+
+    def testDecrement(self):
+        metrics.MetricCountEvent.log('num_widgets', 1)
+        report = self.observer.asDict()
+        self.assertEquals(report['counters']['num_widgets'], 1)
+
+        metrics.MetricCountEvent.log('num_widgets', -1)
+        report = self.observer.asDict()
+        self.assertEquals(report['counters']['num_widgets'], 0)
+
+    def testAbsolute(self):
+        metrics.MetricCountEvent.log('num_widgets', 10, absolute=True)
+        report = self.observer.asDict()
+        self.assertEquals(report['counters']['num_widgets'], 10)
+
+    def testCountMethod(self):
+        @metrics.countMethod('foo_called')
+        def foo():
+            return "foo!"
+
+        for i in range(10):
+            foo()
+        report = self.observer.asDict()
+        self.assertEquals(report['counters']['foo_called'], 10)
+
+class TestMetricTimeEvent(TestMetricBase):
+    def testManualEvent(self):
+        metrics.MetricTimeEvent.log('foo_time', 0.001)
+        report = self.observer.asDict()
+        self.assertEquals(report['timers']['foo_time'], 0.001)
+
+    def testTimer(self):
+        clock = task.Clock()
+        t = metrics.Timer('foo_time')
+        t._reactor = clock
+        t.start()
+
+        clock.advance(5)
+        t.stop()
+
+        report = self.observer.asDict()
+        self.assertEquals(report['timers']['foo_time'], 5)
+
+    def testStartStopDecorators(self):
+        clock = task.Clock()
+        t = metrics.Timer('foo_time')
+        t._reactor = clock
+
+        @t.startTimer
+        def foo():
+            clock.advance(5)
+            return "foo!"
+
+        @t.stopTimer
+        def bar():
+            clock.advance(5)
+            return "bar!"
+
+        foo()
+        bar()
+        report = self.observer.asDict()
+        self.assertEquals(report['timers']['foo_time'], 10)
+
+    def testTimeMethod(self):
+        clock = task.Clock()
+        @metrics.timeMethod('foo_time', _reactor=clock)
+        def foo():
+            clock.advance(5)
+            return "foo!"
+        foo()
+        report = self.observer.asDict()
+        self.assertEquals(report['timers']['foo_time'], 5)
+
+    def testAverages(self):
+        data = range(10)
+        for i in data:
+            metrics.MetricTimeEvent.log('foo_time', i)
+        report = self.observer.asDict()
+        self.assertEquals(report['timers']['foo_time'], sum(data)/float(len(data)))
+
+class TestPeriodicChecks(TestMetricBase):
+    def testPeriodicCheck(self):
+        # fake out that there's no garbage (since we can't rely on Python
+        # not having any garbage while running tests)
+        self.patch(gc, 'garbage', [])
+
+        clock = task.Clock()
+        metrics.periodicCheck(_reactor=clock)
+        clock.pump([0.1, 0.1, 0.1])
+
+        # We should have 0 reactor delay since we're using a fake clock
+        report = self.observer.asDict()
+        self.assertEquals(report['timers']['reactorDelay'], 0)
+        self.assertEquals(report['counters']['gc.garbage'], 0)
+        self.assertEquals(report['alarms']['gc.garbage'][0], 'OK')
+
+    def testUncollectable(self):
+        # make some fake garbage
+        self.patch(gc, 'garbage', [ 1, 2 ])
+
+        clock = task.Clock()
+        metrics.periodicCheck(_reactor=clock)
+        clock.pump([0.1, 0.1, 0.1])
+
+        # We should have 0 reactor delay since we're using a fake clock
+        report = self.observer.asDict()
+        self.assertEquals(report['timers']['reactorDelay'], 0)
+        self.assertEquals(report['counters']['gc.garbage'], 2)
+        self.assertEquals(report['alarms']['gc.garbage'][0], 'WARN')
+
+    def testGetRSS(self):
+        self.assert_(metrics._get_rss() > 0)
+    if sys.platform != 'linux2':
+        testGetRSS.skip = "only available on linux2 platforms"
+
+class TestReconfig(TestMetricBase):
+    def testReconfig(self):
+        observer = self.observer
+        self.assertEquals(observer.log_task, None)
+        self.assertEquals(observer.periodic_task, None)
+
+        observer.reloadConfig(dict(log_interval=10, periodic_interval=0))
+        self.assert_(observer.log_task)
+        self.assertEquals(observer.periodic_task, None)
+
+        observer.reloadConfig(dict(log_interval=0, periodic_interval=10))
+        self.assert_(observer.periodic_task)
+        self.assertEquals(observer.log_task, None)
+        # Make the periodic check run
+        self.clock.pump([0.1])
+
+        observer.reloadConfig(dict(log_interval=0, periodic_interval=0))
+        self.assertEquals(observer.log_task, None)
+        self.assertEquals(observer.periodic_task, None)
+
+        observer.reloadConfig(dict(log_interval=10, periodic_interval=10))
+        self.assert_(observer.log_task)
+        self.assert_(observer.periodic_task)
+        observer.stopService()
+        self.assertEquals(observer.log_task, None)
+        self.assertEquals(observer.periodic_task, None)
+
+class _LogObserver:
+    def __init__(self):
+        self.events = []
+
+    def gotEvent(self, event):
+        self.events.append(event)
+
+class TestReports(unittest.TestCase):
+    def testMetricCountReport(self):
+        handler = metrics.MetricCountHandler(None)
+        handler.handle({}, metrics.MetricCountEvent('num_foo', 1))
+
+        self.assertEquals("Counter num_foo: 1", handler.report())
+        self.assertEquals({"counters": {"num_foo": 1}}, handler.asDict())
+
+    def testMetricTimeReport(self):
+        handler = metrics.MetricTimeHandler(None)
+        handler.handle({}, metrics.MetricTimeEvent('time_foo', 1))
+
+        self.assertEquals("Timer time_foo: 1", handler.report())
+        self.assertEquals({"timers": {"time_foo": 1}}, handler.asDict())
+
+    def testMetricAlarmReport(self):
+        handler = metrics.MetricAlarmHandler(None)
+        handler.handle({}, metrics.MetricAlarmEvent('alarm_foo', msg='Uh oh', level=metrics.ALARM_WARN))
+
+        self.assertEquals("WARN alarm_foo: Uh oh", handler.report())
+        self.assertEquals({"alarms": {"alarm_foo": ("WARN", "Uh oh")}}, handler.asDict())

@@ -170,7 +170,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             revision = None
 
         master = self.getBuildmaster(req)
-        d = master.db.sourcestamps.createSourceStamp(branch=branch,
+        d = master.db.sourcestamps.addSourceStamp(branch=branch,
                 revision=revision, project=project, repository=repository)
         def make_buildset(ssid):
             r = ("The web-page 'force build' button was pressed by '%s': %s\n"
@@ -395,6 +395,53 @@ class StatusResourceAllBuilders(HtmlResource, BuildLineMixin):
         return Redirect(path_to_root(req))
 
 
+# /builders/_selected
+class StatusResourceSelectedBuilders(HtmlResource, BuildLineMixin):
+
+    def __init__(self, status):
+        HtmlResource.__init__(self)
+        self.status = status
+
+    def getChild(self, path, req):
+        if path == "forceselected":
+            return self.forceselected(req)
+        if path == "stopselected":
+            return self.stopselected(req)
+
+        return HtmlResource.getChild(self, path, req)
+
+    def forceselected(self, req):
+        authz = self.getAuthz(req)
+        if not authz.actionAllowed('forceAllBuilds', req):
+            return Redirect(path_to_authfail(req))
+
+        for bname in [b for b in req.args.get("selected", []) if b]:
+            builder_status = self.status.getBuilder(bname)
+            build = StatusResourceBuilder(builder_status)
+            build.force(req, auth_ok=True) # auth_ok because we already checked
+        # back to the welcome page
+        return Redirect(path_to_root(req))
+
+    def stopselected(self, req):
+        authz = self.getAuthz(req)
+        if not authz.actionAllowed('stopAllBuilds', req):
+            return Redirect(path_to_authfail(req))
+
+        for bname in [b for b in req.args.get("selected", []) if b]:
+            builder_status = self.status.getBuilder(bname)
+            (state, current_builds) = builder_status.getState()
+            if state != "building":
+                continue
+            for b in current_builds:
+                build_status = builder_status.getBuild(b.number)
+                if not build_status:
+                    continue
+                build = StatusResourceBuild(build_status)
+                build.stop(req, auth_ok=True)
+        # go back to the welcome page
+        return Redirect(path_to_root(req))
+
+
 # /builders
 class BuildersResource(HtmlResource):
     pageTitle = "Builders"
@@ -474,6 +521,8 @@ class BuildersResource(HtmlResource):
             return StatusResourceBuilder(builder_status)
         if path == "_all":
             return StatusResourceAllBuilders(self.getStatus(req))
+        if path == "_selected":
+            return StatusResourceSelectedBuilders(self.getStatus(req))
 
         return HtmlResource.getChild(self, path, req)
 

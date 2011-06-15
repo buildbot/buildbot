@@ -267,6 +267,8 @@ class MTR(Test):
         dbpool is specified. The test_type string, if specified, will also
         appear on the waterfall page."""
 
+    renderables = [ 'mtr_subdir' ]
+
     def __init__(self, dbpool=None, test_type=None, test_info="",
                  description=None, descriptionDone=None,
                  autoCreateTables=False, textLimit=5, testNameLimit=16,
@@ -305,9 +307,6 @@ class MTR(Test):
                                  mtr_subdir=self.mtr_subdir)
 
     def start(self):
-        properties = self.build.getProperties()
-        subdir = properties.render(self.mtr_subdir)
-
         # Add mysql server logfiles.
         for mtr in range(0, self.parallel+1):
             for mysqld in range(1, 4+1):
@@ -317,7 +316,7 @@ class MTR(Test):
                 else:
                     logname = "mysqld.%d.err.%d" % (mysqld, mtr)
                     filename = "var/%d/log/mysqld.%d.err" % (mtr, mysqld)
-                self.addLogFile(logname, subdir + "/" + filename)
+                self.addLogFile(logname, self.mtr_subdir + "/" + filename)
 
         self.myMtr = self.MyMtrLogObserver(textLimit=self.textLimit,
                                            testNameLimit=self.testNameLimit,

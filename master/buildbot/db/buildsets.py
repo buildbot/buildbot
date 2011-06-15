@@ -23,6 +23,9 @@ from buildbot.util import json
 from buildbot.db import base
 from buildbot.util import epoch2datetime
 
+class BsDict(dict):
+    pass
+
 class BuildsetsConnectorComponent(base.DBConnectorComponent):
     """
     A DBConnectorComponent to handle getting buildsets into and out of the
@@ -141,6 +144,9 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         C{results}.  The C{*_at} keys point to datetime objects.  Use
         L{getBuildsetProperties} to fetch the properties for a buildset.
 
+        Note that buildsets are not cached, as the values in the database are
+        not fixed.
+
         @param bsid: buildset ID
 
         @returns: dictionary as above, or None, via Deferred
@@ -159,6 +165,9 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         """
         Get a list of buildset dictionaries (see L{getBuildset}) matching
         the given criteria.
+
+        Since this method is often used to detect changed build requests, it
+        always bypasses the cache.
 
         @param complete: if True, return only complete buildsets; if False,
         return only incomplete buildsets; if None or omitted, return all
@@ -276,7 +285,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         def mkdt(epoch):
             if epoch:
                 return epoch2datetime(epoch)
-        return dict(external_idstring=row.external_idstring,
+        return BsDict(external_idstring=row.external_idstring,
                 reason=row.reason, sourcestampid=row.sourcestampid,
                 submitted_at=mkdt(row.submitted_at),
                 complete=bool(row.complete),

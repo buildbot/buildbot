@@ -82,6 +82,9 @@ class FakeMasterMethods(object):
     def remote_unpack(self):
         self.add_update('unpack')
 
+    def remote_utime(self,accessed_modified):
+        self.add_update('utime - %s' % accessed_modified[0])
+        
     def remote_close(self):
         self.add_update('close')
 
@@ -117,12 +120,13 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             writer=FakeRemote(self.fakemaster),
             maxsize=1000,
             blocksize=64,
+            keepstamp=False,
         ))
 
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     {'header': 'sending %s' % self.datafile},
                     'write 64', 'write 64', 'write 52', 'close',
                     {'rc': 0}
@@ -139,12 +143,13 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             writer=FakeRemote(self.fakemaster),
             maxsize=100,
             blocksize=64,
+            keepstamp=False,
         ))
 
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     {'header': 'sending %s' % self.datafile},
                     'write 64', 'write 36', 'close',
                     {'rc': 1,
@@ -160,13 +165,14 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             writer=FakeRemote(self.fakemaster),
             maxsize=100,
             blocksize=64,
+            keepstamp=False,
         ))
 
         d = self.run_command()
 
         def check(_):
             df = self.datafile + "-nosuch"
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     {'header': 'sending %s' % df},
                     'close',
                     {'rc': 1,
@@ -184,6 +190,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             writer=FakeRemote(self.fakemaster),
             maxsize=100,
             blocksize=2,
+            keepstamp=False,
         ))
 
         d = self.run_command()
@@ -199,12 +206,38 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         dl = defer.DeferredList([d, interrupt_d])
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     {'header': 'sending %s' % self.datafile},
                     'write(s)', 'close', {'rc': 1}
                 ])
         dl.addCallback(check)
         return dl
+
+    def test_timestamp(self):
+        self.fakemaster.count_writes = True    # get actual byte counts
+        timestamp = ( os.path.getatime(self.datafile),
+                      os.path.getmtime(self.datafile) )
+
+        self.make_command(transfer.SlaveFileUploadCommand, dict(
+            workdir='workdir',
+            slavesrc='data',
+            writer=FakeRemote(self.fakemaster),
+            maxsize=1000,
+            blocksize=64,
+            keepstamp=True,
+        ))
+
+        d = self.run_command()
+
+        def check(_):
+            self.assertUpdates([
+                    {'header': 'sending %s' % self.datafile},
+                    'write 64', 'write 64', 'write 52',
+                    'close','utime - %s' % timestamp[0],
+                    {'rc': 0}
+                ])
+        d.addCallback(check)
+        return d
 
 class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
@@ -242,7 +275,7 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     {'header': 'sending %s' % self.datadir},
                     'write(s)', 'unpack', # note no 'close"
                     {'rc': 0}
@@ -310,7 +343,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     'read 32', 'read 32', 'read 32', 'close',
                     {'rc': 0}
                 ])
@@ -337,7 +370,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     'read(s)', 'close',
                     {'rc': 0}
                 ])
@@ -363,7 +396,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     'close',
                     {'rc': 1,
                      'stderr': "Cannot open file '%s' for download"
@@ -388,7 +421,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     'read(s)', 'close',
                     {'rc': 1,
                      'stderr': "Maximum filesize reached, truncating file '%s'"
@@ -426,7 +459,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         dl = defer.DeferredList([d, interrupt_d])
         def check(_):
-            self.assertEqual(self.get_updates(), [
+            self.assertUpdates([
                     'read(s)', 'close', {'rc': 1}
                 ])
         dl.addCallback(check)

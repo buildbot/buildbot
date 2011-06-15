@@ -17,8 +17,7 @@
 import re
 from twisted.python import log
 from twisted.spread import pb
-from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand
-from buildbot.process.buildstep import RemoteCommand
+from buildbot.process import buildstep
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot.status.logfile import STDOUT, STDERR
 from buildbot.interfaces import BuildSlaveTooOldError
@@ -29,7 +28,7 @@ from buildbot.process.properties import WithProperties
 _hush_pyflakes = [WithProperties]
 del _hush_pyflakes
 
-class ShellCommand(LoggingBuildStep):
+class ShellCommand(buildstep.LoggingBuildStep):
     """I run a single shell command on the buildslave. I return FAILURE if
     the exit code of that command is non-zero, SUCCESS otherwise. To change
     this behavior, override my .evaluateCommand method.
@@ -66,6 +65,7 @@ class ShellCommand(LoggingBuildStep):
     """
 
     name = "shell"
+    renderables = [ 'description', 'descriptionDone', 'slaveEnvironment', 'remote_kwargs', 'command' ]
     description = None # set this to a list of short strings to override
     descriptionDone = None # alternate description when the step is complete
     command = None # set this to a command, or set in kwargs
@@ -104,7 +104,7 @@ class ShellCommand(LoggingBuildStep):
             if k in self.__class__.parms:
                 buildstep_kwargs[k] = kwargs[k]
                 del kwargs[k]
-        LoggingBuildStep.__init__(self, **buildstep_kwargs)
+        buildstep.LoggingBuildStep.__init__(self, **buildstep_kwargs)
         self.addFactoryArguments(workdir=workdir,
                                  description=description,
                                  descriptionDone=descriptionDone,
@@ -117,8 +117,13 @@ class ShellCommand(LoggingBuildStep):
         # we need to stash the RemoteShellCommand's args too
         self.addFactoryArguments(**kwargs)
 
+    def setBuild(self, build):
+        buildstep.LoggingBuildStep.setBuild(self, build)
+        # Set this here, so it gets rendered when we start the step
+        self.slaveEnvironment = self.build.slaveEnvironment
+
     def setStepStatus(self, step_status):
-        LoggingBuildStep.setStepStatus(self, step_status)
+        buildstep.LoggingBuildStep.setStepStatus(self, step_status)
 
     def setDefaultWorkdir(self, workdir):
         rkw = self.remote_kwargs
@@ -145,12 +150,10 @@ class ShellCommand(LoggingBuildStep):
         """
 
         try:
-            properties = self.build.getProperties()
-
             if done and self.descriptionDone is not None:
-                return properties.render(self.descriptionDone)
+                return self.descriptionDone
             if self.description is not None:
-                return properties.render(self.description)
+                return self.description
 
             # we may have no command if this is a step that sets its command
             # name late in the game (e.g., in start())
@@ -160,8 +163,6 @@ class ShellCommand(LoggingBuildStep):
             words = self.command
             if isinstance(words, (str, unicode)):
                 words = words.split()
-            # render() each word to handle WithProperties objects
-            words = properties.render(words)
             if len(words) < 1:
                 return ["???"]
             if len(words) == 1:
@@ -181,14 +182,13 @@ class ShellCommand(LoggingBuildStep):
         # BuildProperties.
         # Environment variables passed in by a BuildStep override
         # those passed in at the Builder level.
-        properties = self.build.getProperties()
-        slaveEnv = self.build.slaveEnvironment
+        slaveEnv = self.slaveEnvironment
         if slaveEnv:
             if cmd.args['env'] is None:
                 cmd.args['env'] = {}
             fullSlaveEnv = slaveEnv.copy()
             fullSlaveEnv.update(cmd.args['env'])
-            cmd.args['env'] = properties.render(fullSlaveEnv)
+            cmd.args['env'] = fullSlaveEnv
             # note that each RemoteShellCommand gets its own copy of the
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
@@ -223,13 +223,12 @@ class ShellCommand(LoggingBuildStep):
         # this block is specific to ShellCommands. subclasses that don't need
         # to set up an argv array, an environment, or extra logfiles= (like
         # the Source subclasses) can just skip straight to startCommand()
-        properties = self.build.getProperties()
 
         warnings = []
 
         # create the actual RemoteShellCommand instance now
-        kwargs = properties.render(self.remote_kwargs)
-        command = properties.render(self.command)
+        kwargs = self.remote_kwargs
+        command = self.command
         kwargs['command'] = command
         kwargs['logfiles'] = self.logfiles
 
@@ -238,7 +237,7 @@ class ShellCommand(LoggingBuildStep):
             if self.slaveVersionIsOlderThan("svn", "2.7"):
                 warnings.append("NOTE: slave does not allow master to override usePTY\n")
 
-        cmd = RemoteShellCommand(**kwargs)
+        cmd = buildstep.RemoteShellCommand(**kwargs)
         self.setupEnvironment(cmd)
         self.checkForOldSlaveAndLogfiles()
 
@@ -277,6 +276,7 @@ class TreeSize(ShellCommand):
 
 class SetProperty(ShellCommand):
     name = "setproperty"
+    renderables = [ 'property' ]
 
     def __init__(self, property=None, extract_fn=None, strip=True, **kwargs):
         self.property = property
@@ -298,7 +298,7 @@ class SetProperty(ShellCommand):
         if self.property:
             result = cmd.logs['stdio'].getText()
             if self.strip: result = result.strip()
-            propname = self.build.getProperties().render(self.property)
+            propname = self.property
             self.setProperty(propname, result, "SetProperty Step")
             self.property_changes[propname] = result
         else:
@@ -345,7 +345,7 @@ class StringFileWriter(pb.Referenceable):
     def remote_close(self):
         pass
 
-class SilentRemoteCommand(RemoteCommand):
+class SilentRemoteCommand(buildstep.RemoteCommand):
     """
     Remote command subclass used to run an internal file upload command on the
     slave. We do not need any progress updates from such command, so override
@@ -355,6 +355,8 @@ class SilentRemoteCommand(RemoteCommand):
         pass
 
 class WarningCountingShellCommand(ShellCommand):
+    renderables = [ 'suppressionFile' ]
+
     warnCount = 0
     warningPattern = '.*warning[: ].*'
     # The defaults work for GNU Make.
@@ -366,7 +368,7 @@ class WarningCountingShellCommand(ShellCommand):
     suppressionLineRe = re.compile(r"^\s*(.+?)\s*:\s*(.+?)\s*(?:[:]\s*([0-9]+)(?:-([0-9]+))?\s*)?$")
 
     def __init__(self, workdir=None,
-                 warningPattern=None, warningExtractor=None,
+                 warningPattern=None, warningExtractor=None, maxWarnCount=None,
                  directoryEnterPattern=None, directoryLeavePattern=None,
                  suppressionFile=None, **kwargs):
         self.workdir = workdir
@@ -385,6 +387,7 @@ class WarningCountingShellCommand(ShellCommand):
             self.warningExtractor = warningExtractor
         else:
             self.warningExtractor = WarningCountingShellCommand.warnExtractWholeLine
+        self.maxWarnCount = maxWarnCount
 
         # And upcall to let the base class do its work
         ShellCommand.__init__(self, workdir=workdir, **kwargs)
@@ -393,6 +396,7 @@ class WarningCountingShellCommand(ShellCommand):
                                  directoryEnterPattern=directoryEnterPattern,
                                  directoryLeavePattern=directoryLeavePattern,
                                  warningExtractor=warningExtractor,
+                                 maxWarnCount=maxWarnCount,
                                  suppressionFile=suppressionFile)
         self.suppressions = []
         self.directoryStack = []
@@ -478,10 +482,8 @@ class WarningCountingShellCommand(ShellCommand):
 
         self.myFileWriter = StringFileWriter()
 
-        properties = self.build.getProperties()
-
         args = {
-            'slavesrc': properties.render(self.suppressionFile),
+            'slavesrc': self.suppressionFile,
             'workdir': self.workdir,
             'writer': self.myFileWriter,
             'maxsize': None,
@@ -577,7 +579,8 @@ class WarningCountingShellCommand(ShellCommand):
 
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if ( cmd.rc != 0 or
+           ( self.maxWarnCount != None and self.warnCount > self.maxWarnCount ) ):
             return FAILURE
         if self.warnCount:
             return WARNINGS

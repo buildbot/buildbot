@@ -24,6 +24,7 @@ from buildbot.util import json, epoch2datetime
 from twisted.python import failure
 from twisted.internet import defer, reactor
 from buildbot.db import buildrequests
+from buildbot.process import properties
 
 # Fake DB Rows
 
@@ -41,7 +42,8 @@ class Row(object):
     auto-incremented id.  Auto-assigned id's begin at 1000, so any explicitly
     specified ID's should be less than 1000.
 
-    @cvar id_column: a tuple of columns that must be given in the constructor
+    @cvar required_columns: a tuple of columns that must be given in the
+    constructor
 
     @ivar values: the values to be inserted into this row
     """
@@ -149,7 +151,9 @@ class Patch(Row):
     defaults = dict(
         id = None,
         patchlevel = 0,
-        patch_base64 = 'aGVsbG8sIHdvcmxk', # 'hello, world'
+        patch_base64 = 'aGVsbG8sIHdvcmxk', # 'hello, world',
+        patch_author = None,
+        patch_comment = None,
         subdir = None,
     )
 
@@ -313,7 +317,7 @@ class FakeChangesComponent(FakeDBComponent):
                     comments=row.comments, isdir=row.is_dir, links=[],
                     revision=row.revision, when=row.when_timestamp,
                     branch=row.branch, category=row.category,
-                    revlink=row.revlink, properties={},
+                    revlink=row.revlink, properties=properties.Properties(),
                     repository=row.repository, project=row.project))
                 self.changes[row.changeid] = ch
 
@@ -327,8 +331,9 @@ class FakeChangesComponent(FakeDBComponent):
 
             elif isinstance(row, ChangeProperty):
                 ch = self.changes[row.changeid]
-                n, v = row.property_name, row.property_value
-                ch.properties[n] = json.loads(v)
+                n, vs = row.property_name, row.property_value
+                v, s = json.loads(vs)
+                ch.properties.setProperty(n, v, s)
 
     # component methods
 
@@ -337,12 +342,38 @@ class FakeChangesComponent(FakeDBComponent):
             return defer.succeed(max(self.changes.iterkeys()))
         return defer.succeed(None)
 
-    def getChangeInstance(self, changeid):
+    def getChange(self, changeid):
         try:
-            return defer.succeed(self.changes[changeid])
+            ch = self.changes[changeid]
         except KeyError:
-            return defer.succeed(None)
+            ch = None
+        return defer.succeed(self._ch2chdict(ch))
 
+    # TODO: addChange
+    # TODO: getRecentChanges
+
+    # utilities
+
+    def _ch2chdict(self, ch):
+        if not ch:
+            return None
+        return dict(
+            changeid=ch.number,
+            author=ch.who,
+            comments=ch.comments,
+            is_dir=ch.isdir,
+            links=ch.links,
+            revision=ch.revision,
+            branch=ch.branch,
+            category=ch.category,
+            revlink=ch.revlink,
+            repository=ch.repository,
+            project=ch.project,
+            files=ch.files,
+            when_timestamp=epoch2datetime(ch.when),
+            properties=dict([ (k,(v,s))
+                for k,v,s in ch.properties.asDict() ]),
+        )
     # fake methods
 
     def fakeAddChange(self, change):
@@ -436,6 +467,8 @@ class FakeSourceStampsComponent(FakeDBComponent):
                 self.patches[row.id] = dict(
                     patch_level=row.patchlevel,
                     patch_body=base64.b64decode(row.patch_base64),
+                    patch_author=row.patch_author,
+                    patch_comment=row.patch_comment,
                     patch_subdir=row.subdir)
 
         for row in rows:
@@ -450,9 +483,9 @@ class FakeSourceStampsComponent(FakeDBComponent):
 
     # component methods
 
-    def createSourceStamp(self, branch, revision, repository, project,
-                          patch_body=None, patch_level=0, patch_subdir=None,
-                          changeids=[]):
+    def addSourceStamp(self, branch, revision, repository, project,
+                          patch_body=None, patch_level=0, patch_author=None,
+                          patch_comment=None, patch_subdir=None, changeids=[]):
         id = len(self.sourcestamps) + 100
         while id in self.sourcestamps:
             id += 1
@@ -467,6 +500,8 @@ class FakeSourceStampsComponent(FakeDBComponent):
                 patch_level=patch_level,
                 patch_body=patch_body,
                 patch_subdir=patch_subdir,
+                patch_author=patch_author,
+                patch_comment=patch_comment
             )
         else:
             patchid = None
@@ -488,6 +523,8 @@ class FakeSourceStampsComponent(FakeDBComponent):
                 ssdict['patch_body'] = None
                 ssdict['patch_level'] = None
                 ssdict['patch_subdir'] = None
+                ssdict['patch_author'] = None
+                ssdict['patch_comment'] = None
             del ssdict['patchid']
             return defer.succeed(ssdict)
         else:
@@ -935,6 +972,22 @@ class FakeBuildsComponent(FakeDBComponent):
             number=row.number,
             start_time=mkdt(row.start_time),
             finish_time=mkdt(row.finish_time)))
+    
+    def getBuildsForRequest(self, brid):
+        ret = []
+        def mkdt(epoch):
+            if epoch:
+                return epoch2datetime(epoch)
+ 
+        for (id, row) in self.builds.items():
+            if row.brid == brid:
+                ret.append(dict(bid = row.id,
+                                brid=row.brid,
+                                number=row.number,
+                                start_time=mkdt(row.start_time),
+                                finish_time=mkdt(row.finish_time)))
+               
+        return defer.succeed(ret)            
 
     def addBuild(self, brid, number, _reactor=reactor):
         bid = self._newId()

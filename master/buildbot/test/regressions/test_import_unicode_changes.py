@@ -13,17 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 from twisted.trial import unittest
 from buildbot.db.connector import DBConnector
 from buildbot.test.util import change_import
+from buildbot.test.fake import fakemaster
 
 class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
     def setUp(self):
         d = self.setUpChangeImport()
-        self.db = DBConnector(mock.Mock(), self.db_url, self.basedir)
         def make_dbc(_):
-            self.db = DBConnector(mock.Mock(), self.db_url, self.basedir)
+            master = fakemaster.make_master()
+            self.db = DBConnector(master, self.db_url, self.basedir)
         d.addCallback(make_dbc)
         # note the connector isn't started, as we're testing upgrades
         return d
@@ -41,11 +41,11 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     revision=12345))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
+        d.addCallback(lambda _ : self.db.changes.getChange(1))
         def check(c):
             self.failIf(c is None)
-            self.assertEquals(c.who, u"Frosty the \N{SNOWMAN}")
-            self.assertEquals(c.comments, u"Frosty the \N{SNOWMAN}")
+            self.assertEquals(c['author'], u"Frosty the \N{SNOWMAN}")
+            self.assertEquals(c['comments'], u"Frosty the \N{SNOWMAN}")
         d.addCallback(check)
         return d
 
@@ -76,11 +76,11 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     revision=12345))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
+        d.addCallback(lambda _ : self.db.changes.getChange(1))
         def check(c):
             self.failIf(c is None)
-            self.assertEquals(c.who, "Frosty the Snowman")
-            self.assertEquals(c.comments, "Frosty the Snowman")
+            self.assertEquals(c['author'], "Frosty the Snowman")
+            self.assertEquals(c['comments'], "Frosty the Snowman")
         d.addCallback(check)
         return d
 
@@ -98,10 +98,10 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
                 recode_fn=lambda cm : cm.recode_changes('utf16', quiet=True))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
+        d.addCallback(lambda _ : self.db.changes.getChange(1))
         def check(c):
             self.failIf(c is None)
-            self.assertEquals(c.who, u"Frosty the \N{SNOWMAN}")
-            self.assertEquals(c.comments, u"Frosty the \N{SNOWMAN}")
+            self.assertEquals(c['author'], u"Frosty the \N{SNOWMAN}")
+            self.assertEquals(c['comments'], u"Frosty the \N{SNOWMAN}")
         d.addCallback(check)
         return d

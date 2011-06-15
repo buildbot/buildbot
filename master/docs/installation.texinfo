@@ -272,7 +272,9 @@ installed. This can be used as the basis for customized daemon startup,
 
 If you want to use MySQL as the database backend for your Buildbot, add the
 @code{--db} option to the @code{create-master} invocation to specify the
-connection string for the MySQL database (@pxref{Database Specification}).
+connection string for the MySQL database (@pxref{Database Specification}), and
+make sure that the same URL appears in the @code{C['db_url']} parameter in your
+configuration file.
 
 @heading Buildmaster Options
 
@@ -308,8 +310,8 @@ specify a number or @code{None} to keep all @file{twistd.log} files
 around.  The default is 10.
 
 @item --db
-The database that the Buildmaster should use.  This information is needed
-earlier than the configuration file can be loaded.
+The database that the Buildmaster should use.  Note that the same value must be
+added to the configuration file.
 
 @end table
 
@@ -374,23 +376,32 @@ database with the changes the buildmaster has seen.  Note that, as of this
 release, build history is @i{not} contained in the database, and is thus not
 migrated.
 
-You will need to add an entry into your @file{master.cfg} to reflect the 
-database version you are using. The upgrade process does @i{not} edit your
-@file{master.cfg} for you. So something like:
-
-@example
-# for the default sqlite you need:
-c['db_url'] = "sqlite:///state.sqlite"
-# or for using mysql:
-c['db_url'] = 'mysql://bbuser:<password>@@localhost/buildbot'
-@end example
-
-See @pxref{Database Specification} for more options.
-
 The upgrade process renames the Changes pickle (@code{$basedir/changes.pck}) to
 @code{changes.pck.old} once the upgrade is complete.  To reverse the upgrade,
 simply downgrade Buildbot and move this file back to its original name.  You
 may also wish to delete the state database (@code{state.sqlite}).
+
+@heading Upgrading into a non-SQLite database
+
+If you are not using sqlite, you will need to add an entry into your
+@file{master.cfg} to reflect the database version you are using. The upgrade
+process does @i{not} edit your @file{master.cfg} for you. So something like:
+
+@example
+# for using mysql:
+c['db_url'] = 'mysql://bbuser:<password>@@localhost/buildbot'
+@end example
+
+Once the parameter has been added, invoke @code{upgrade-master} with the
+@code{--db} parameter, e.g.,
+
+@example
+buildbot upgrade-master --db=mysql://bbuser:<password>@@localhost/buildbot
+@end example
+
+The @code{--db} option must match the @code{c['db_url']} exactly.
+
+See @pxref{Database Specification} for more options to specify a database.
 
 @heading Change Encoding Issues
 

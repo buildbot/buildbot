@@ -24,6 +24,7 @@ import sqlalchemy as sa
 import migrate.versioning.api
 from buildbot.db import connector
 from buildbot.test.util import change_import, db, dirs
+from buildbot.test.fake import fakemaster
 
 class UpgradeTestMixin(object):
     """Supporting code to test upgrading from older versions by untarring a
@@ -223,7 +224,8 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
     def setUp(self):
         d = self.setUpChangeImport()
         def make_dbc(_):
-            self.db = connector.DBConnector(mock.Mock(), self.db_url, self.basedir)
+            master = fakemaster.make_master()
+            self.db = connector.DBConnector(master, self.db_url, self.basedir)
         d.addCallback(make_dbc)
         # note the connector isn't started, as we're testing upgrades
         return d
@@ -243,10 +245,11 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     revision=12345))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
+        d.addCallback(lambda _ : self.db.changes.getChange(1))
         def check(c):
             self.failIf(c is None)
-            self.assertEquals(sorted(c.files), sorted([u"foo", u"bar", u"bing", u"baz"]))
+            self.assertEquals(sorted(c['files']),
+                              sorted([u"foo", u"bar", u"bing", u"baz"]))
         d.addCallback(check)
         return d
 
@@ -266,14 +269,14 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     revision='12345'))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
+        d.addCallback(lambda _ : self.db.changes.getChange(1))
         def check(c):
             self.failIf(c is None)
-            self.assertEquals(c.properties.getProperty('list')[1], 'Change')
-            self.assertEquals(c.properties.getProperty('list')[0], ['a', 'b'])
-            self.assertEquals(c.properties.getProperty('num')[0], 13)
-            self.assertEquals(c.properties.getProperty('str')[0], u'SNOW\N{SNOWMAN}MAN')
-            self.assertEquals(c.properties.getProperty('d')[0], dict(a=1, b=2))
+            self.assertEquals(c['properties'].get('list')[1], 'Change')
+            self.assertEquals(c['properties'].get('list')[0], ['a', 'b'])
+            self.assertEquals(c['properties'].get('num')[0], 13)
+            self.assertEquals(c['properties'].get('str')[0], u'SNOW\N{SNOWMAN}MAN')
+            self.assertEquals(c['properties'].get('d')[0], dict(a=1, b=2))
         d.addCallback(check)
         return d
 
@@ -288,10 +291,10 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     revision='12345'))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
+        d.addCallback(lambda _ : self.db.changes.getChange(1))
         def check(c):
             self.failIf(c is None)
-            self.assertEquals(sorted(c.links),
+            self.assertEquals(sorted(c['links']),
                     sorted(['http://buildbot.net', 'http://twistedmatrix.com']))
         d.addCallback(check)
         return d
@@ -305,7 +308,7 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     files=['foo.c']))
 
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
+        d.addCallback(lambda _ : self.db.changes.getChange(1))
         def check(c):
             self.failUnless(c is None)
         d.addCallback(check)

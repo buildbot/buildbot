@@ -24,6 +24,7 @@ class BuildbotEngineStrategy_special_cases(unittest.TestCase):
 
     # used several times below
     mysql_kwargs = dict(basedir='my-base-dir',
+            connect_args=dict(init_command='SET storage_engine=MyISAM'),
             listeners=['ReconnectingListener'], pool_recycle=3600)
     sqlite_kwargs = dict(basedir='/my-base-dir', poolclass=NullPool)
 
@@ -122,11 +123,11 @@ class BuildbotEngineStrategy_special_cases(unittest.TestCase):
         u = url.make_url("mysql:///dbname?max_idle=1234")
         kwargs = dict(basedir='my-base-dir')
         u, kwargs, max_conns = self.strat.special_case_mysql(u, kwargs)
+        exp = self.mysql_kwargs.copy()
+        exp['pool_recycle'] = 1234
         self.assertEqual([ str(u), max_conns, self.filter_kwargs(kwargs) ],
                 [ "mysql:///dbname?charset=utf8&use_unicode=True", None,
-                dict(basedir='my-base-dir',
-                     listeners=['ReconnectingListener'],
-                     pool_recycle=1234) ])
+                  exp ])
 
     def test_mysql_good_charset(self):
         u = url.make_url("mysql:///dbname?charset=utf8")
@@ -155,6 +156,17 @@ class BuildbotEngineStrategy_special_cases(unittest.TestCase):
         kwargs = dict(basedir='my-base-dir')
         self.assertRaises(TypeError,
                 lambda : self.strat.special_case_mysql(u, kwargs))
+
+    def test_mysql_storage_engine(self):
+        u = url.make_url("mysql:///dbname?storage_engine=foo")
+        kwargs = dict(basedir='my-base-dir')
+        u, kwargs, max_conns = self.strat.special_case_mysql(u, kwargs)
+        exp = self.mysql_kwargs.copy()
+        exp['connect_args'] = dict(init_command='SET storage_engine=foo')
+        self.assertEqual([ str(u), max_conns, self.filter_kwargs(kwargs) ],
+                [ "mysql:///dbname?charset=utf8&use_unicode=True", None,
+                  exp ])
+
 
 class BuildbotEngineStrategy(unittest.TestCase):
     "Test create_engine by creating a sqlite in-memory db"

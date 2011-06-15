@@ -20,8 +20,9 @@ from twisted.persisted import styles
 from twisted.internet import defer
 from zope.interface import implements
 from buildbot import interfaces
-from buildbot.util import collections
+from buildbot.util import bbcollections
 from buildbot.util.eventual import eventually
+from buildbot.changes import changes
 from buildbot.status import buildset, builder, buildrequest
 
 class Status:
@@ -51,9 +52,9 @@ class Status:
         self.master.subscribeToBuildRequests(
                 self._buildRequestCallback)
 
-        self._builder_observers = collections.KeyedSets()
-        self._buildreq_observers = collections.KeyedSets()
-        self._buildset_finished_waiters = collections.KeyedSets()
+        self._builder_observers = bbcollections.KeyedSets()
+        self._buildreq_observers = bbcollections.KeyedSets()
+        self._buildset_finished_waiters = bbcollections.KeyedSets()
 
     @property
     def shuttingDown(self):
@@ -73,6 +74,9 @@ class Status:
         return self.master.titleURL
     def getBuildbotURL(self):
         return self.master.buildbotURL
+
+    def getMetrics(self):
+        return self.master.metrics
 
     def getURLForThing(self, thing):
         prefix = self.getBuildbotURL()
@@ -107,7 +111,6 @@ class Status:
 
         # IStatusEvent
         if interfaces.IStatusEvent.providedBy(thing):
-            from buildbot.changes import changes
             # TODO: this is goofy, create IChange or something
             if isinstance(thing, changes.Change):
                 change = thing
@@ -136,7 +139,13 @@ class Status:
 
     def getChange(self, number):
         """Get a Change object; returns a deferred"""
-        return self.master.db.changes.getChangeInstance(number)
+        d = self.master.db.changes.getChange(number)
+        def chdict2change(chdict):
+            if not chdict:
+                return None
+            return changes.Change.fromChdict(self.master, chdict)
+        d.addCallback(chdict2change)
+        return d
 
     def getSchedulers(self):
         return self.master.allSchedulers()
