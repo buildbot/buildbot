@@ -100,12 +100,14 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         sourcestamp.revision = ssdict['revision']
         sourcestamp.project = ssdict['project']
         sourcestamp.repository = ssdict['repository']
-        sourcestamp.patch_info = (ssdict['patch_author'], ssdict['patch_comment'])
 
         sourcestamp.patch = None
         if ssdict['patch_body']:
             # note that this class does not store the patch_subdir
-            sourcestamp.patch = (ssdict['patch_level'], ssdict['patch_body'])
+            sourcestamp.patch = (ssdict['patch_level'],
+                                 ssdict['patch_body'])
+            sourcestamp.patch_info = (ssdict['patch_author'],
+                                      ssdict['patch_comment'])
         
         if ssdict['changeids']:
             # sort the changeids in order, oldest to newest
