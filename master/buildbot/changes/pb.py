@@ -69,6 +69,7 @@ class ChangePerspective(NewCredPerspective):
         for key in changedict:
             if type(changedict[key]) == str:
                 changedict[key] = changedict[key].decode('utf8', 'replace')
+        changedict['files'] = list(changedict['files'])
         for i, file in enumerate(changedict.get('files', [])):
             if type(file) == str:
                 changedict['files'][i] = file.decode('utf8', 'replace')
