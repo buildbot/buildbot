@@ -15,6 +15,7 @@
 
 import mock
 from buildbot.process import buildstep
+from buildbot import interfaces
 from buildbot.test.fake import remotecommand
 
 
@@ -30,6 +31,7 @@ class BuildStepMixin(object):
     The following instance variables are available after C{setupStep}:
 
     @ivar step: the step under test
+    @ivar build: the fake build containing the step
     @ivar progress: mock progress object
     @ivar buildslave: mock buildslave object
     @ivar step_status: mock StepStatus object
@@ -61,6 +63,9 @@ class BuildStepMixin(object):
         environment for the slave to run in, repleate with a fake build and a
         fake slave.
 
+        As a convenience, it calls the step's setDefaultWorkdir method with
+        C{'wkdir'}.
+
         @param slave_version: slave version to present; defaults to "99.99"
 
         @param slave_env: environment from the slave at slave startup
@@ -72,8 +77,8 @@ class BuildStepMixin(object):
 
         # step.build
 
-        b = mock.Mock(name="build")
-        b.render = lambda x : x # render is identity
+        b = self.build = mock.Mock(name="build")
+        b.render = lambda x : interfaces.IRenderable(x).getRenderingFor(b)
         b.getSlaveCommandVersion = lambda command, oldversion : slave_version
         b.slaveEnvironment = slave_env.copy()
         step.setBuild(b)
@@ -97,7 +102,7 @@ class BuildStepMixin(object):
             ss.status_text = strings
         ss.setText = ss_setText
 
-        ss.getLogs = lambda : ss.logs
+        ss.getLogs = lambda : ss.logs.values()
 
         self.step.setStepStatus(ss)
 
@@ -108,6 +113,8 @@ class BuildStepMixin(object):
             ss.logs[name] = l
             return l
         step.addLog = addLog
+
+        step.setDefaultWorkdir('wkdir')
 
         return step
 
