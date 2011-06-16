@@ -20,6 +20,7 @@
 # Also don't forget to mirror your changes on command-line options in manual
 # pages and texinfo documentation.
 
+import copy
 import os, sys, stat, re, time
 from twisted.python import usage, util, runtime
 from twisted.internet import defer, reactor
@@ -71,15 +72,23 @@ class OptionsWithOptionsFile(usage.Options):
         # file, change the default in optParameters *before* calling through
         # to the parent constructor
 
+        # Options uses reflect.accumulateClassList, so this *must* be
+        # a class attribute; however, we do not want to permanently change
+        # the class.  So we patch it temporarily and restore it after.
+        cls = self.__class__
+        old_optParameters = cls.optParameters
+        cls.optParameters = op = copy.deepcopy(cls.optParameters)
         if self.buildbotOptions:
             optfile = loadOptionsFile()
             for optfile_name, option_name in self.buildbotOptions:
-                for i in range(len(self.optParameters)):
-                    if self.optParameters[i][0] == option_name and optfile_name in optfile:
-                        self.optParameters[i][2] = optfile[optfile_name]
+                for i in range(len(op)):
+                    if (op[i][0] == option_name and optfile_name in optfile):
+                        op[i] = list(op[i])
+                        op[i][2] = optfile[optfile_name]
         usage.Options.__init__(self, *args)
+        cls.optParameters = old_optParameters
 
-def loadOptionsFile(filename="options", here=None, home=None):
+def loadOptionsFile():
     """Find the .buildbot/FILENAME file. Crawl from the current directory up
     towards the root, and also look in ~/.buildbot . The first directory
     that's owned by the user and has the file we're looking for wins. Windows
@@ -90,18 +99,15 @@ def loadOptionsFile(filename="options", here=None, home=None):
              file was found, return an empty dict.
     """
 
-    if here is None:
-        here = os.getcwd()
-    here = os.path.abspath(here)
+    here = os.path.abspath(os.getcwd())
 
-    if home is None:
-        if runtime.platformType == 'win32':
-            # never trust env-vars, use the proper API
-            from win32com.shell import shellcon, shell            
-            appdata = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
-            home = os.path.join(appdata, "buildbot")             
-        else:
-            home = os.path.expanduser("~/.buildbot")
+    if runtime.platformType == 'win32':
+        # never trust env-vars, use the proper API
+        from win32com.shell import shellcon, shell
+        appdata = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
+        home = os.path.join(appdata, "buildbot")
+    else:
+        home = os.path.expanduser("~/.buildbot")
 
     searchpath = []
     toomany = 20
@@ -125,7 +131,7 @@ def loadOptionsFile(filename="options", here=None, home=None):
                 if os.stat(d)[stat.ST_UID] != os.getuid():
                     print "skipping %s because you don't own it" % d
                     continue # security, skip other people's directories
-            optfile = os.path.join(d, filename)
+            optfile = os.path.join(d, "options")
             if os.path.exists(optfile):
                 try:
                     f = open(optfile, "r")
@@ -828,6 +834,7 @@ class SendChangeOptions(OptionsWithOptionsFile):
     buildbotOptions = [
         [ 'master', 'master' ],
         [ 'who', 'who' ],
+        # deprecated in 0.8.3; remove in 0.8.5 (bug #1711)
         [ 'username', 'username' ],
         [ 'branch', 'branch' ],
         [ 'category', 'category' ],
@@ -845,9 +852,9 @@ class SendChangeOptions(OptionsWithOptionsFile):
 def sendchange(config, runReactor=False):
     """Send a single change to the buildmaster's PBChangeSource. The
     connection will be drpoped as soon as the Change has been sent."""
-    from buildbot.clients.sendchange import Sender
+    from buildbot.clients import sendchange
 
-    encoding = config.get('encoding')
+    encoding = config.get('encoding', 'utf8')
     who = config.get('who')
     if not who and config.get('username'):
         print "NOTE: --username/-u is deprecated: use --who/-W'"
@@ -878,7 +885,7 @@ def sendchange(config, runReactor=False):
     if comments is None:
         comments = ""
 
-    files = config.get('files', [])
+    files = config.get('files', ())
 
     # fix up the auth with a password if none was given
     if not auth:
@@ -892,19 +899,18 @@ def sendchange(config, runReactor=False):
     assert who, "you must provide a committer (--who)"
     assert master, "you must provide the master location"
 
-    s = Sender(master, auth, encoding=encoding)
+    s = sendchange.Sender(master, auth, encoding=encoding)
     d = s.send(branch, revision, comments, files, who=who, category=category, when=when,
                properties=properties, repository=repository, project=project,
                revlink=revlink)
 
-    def printSuccess(_):
-        print "change sent successfully"
-
     if runReactor:
         status = [True]
-        def failed(res):
+        def printSuccess(_):
+            print "change sent successfully"
+        def failed(f):
             status[0] = False
-            s.printFailure(res)
+            print "change NOT sent - something went wrong: " + str(f)
         d.addCallbacks(printSuccess, failed)
         d.addBoth(lambda _ : reactor.stop())
         reactor.run()
