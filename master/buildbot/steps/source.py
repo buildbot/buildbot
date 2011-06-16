@@ -565,7 +565,7 @@ class SVN(Source):
             warn("Please use workdir=, not directory=", DeprecationWarning)
             kwargs['workdir'] = directory
 
-        self.svnurl = _ComputeRepositoryURL(svnurl)
+        self.svnurl = svnurl and _ComputeRepositoryURL(svnurl)
         self.baseURL = _ComputeRepositoryURL(baseURL)
         self.branch = defaultBranch
         self.username = username
