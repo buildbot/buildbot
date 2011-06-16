@@ -174,7 +174,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
 
     d.addCallbacks(_printSuccess, _printFailure)
     d.addBoth(lambda _ : reactor.stop)
-    s.run()
+    reactor.run()
 
     if fork:
         os._exit(os.EX_OK)
