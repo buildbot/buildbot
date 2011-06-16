@@ -76,17 +76,19 @@ class OptionsWithOptionsFile(usage.Options):
         # a class attribute; however, we do not want to permanently change
         # the class.  So we patch it temporarily and restore it after.
         cls = self.__class__
-        old_optParameters = cls.optParameters
-        cls.optParameters = op = copy.deepcopy(cls.optParameters)
-        if self.buildbotOptions:
-            optfile = loadOptionsFile()
-            for optfile_name, option_name in self.buildbotOptions:
-                for i in range(len(op)):
-                    if (op[i][0] == option_name and optfile_name in optfile):
-                        op[i] = list(op[i])
-                        op[i][2] = optfile[optfile_name]
+        if hasattr(cls, 'optParameters'):
+            old_optParameters = cls.optParameters
+            cls.optParameters = op = copy.deepcopy(cls.optParameters)
+            if self.buildbotOptions:
+                optfile = loadOptionsFile()
+                for optfile_name, option_name in self.buildbotOptions:
+                    for i in range(len(op)):
+                        if (op[i][0] == option_name and optfile_name in optfile):
+                            op[i] = list(op[i])
+                            op[i][2] = optfile[optfile_name]
         usage.Options.__init__(self, *args)
-        cls.optParameters = old_optParameters
+        if hasattr(cls, 'optParameters'):
+            cls.optParameters = old_optParameters
 
 def loadOptionsFile():
     """Find the .buildbot/FILENAME file. Crawl from the current directory up
