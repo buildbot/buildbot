@@ -5,6 +5,10 @@ Major User visible changes in Buildslave.             -*- outline -*-
 
 * Buildbot-Slave 0.8.4 (June 12, 2011)
 
+** Monotone support
+
+Monotone support has returned to Buildbot, thanks to Richard Levitte.
+
 ** Buildslave now places all spawned commands into process groups on POSIX
 systems.  This means that in most cases child processes are cleaned up
 properly, and removes the most common use for usePTY.  As of this version,
