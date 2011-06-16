@@ -7,6 +7,10 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Buildbot 0.8.4 (June 12, 2011)
 
+** Monotone support
+
+Monotone support has returned to Buildbot, thanks to Richard Levitte.
+
 ** `Blocker` step
 
 A "beta" version of the Blocker step has been added; this step allows multiple
