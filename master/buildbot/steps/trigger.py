@@ -25,7 +25,7 @@ class Trigger(LoggingBuildStep):
     """
     name = "trigger"
 
-    renderables = [ 'set_properties', 'scheduler', 'sourceStamp' ]
+    renderables = [ 'set_properties', 'schedulerNames', 'sourceStamp' ]
 
     flunkOnFailure = True
 
