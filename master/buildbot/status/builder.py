@@ -15,7 +15,6 @@
 
 
 import weakref
-import gc
 import os, re, itertools
 from cPickle import load, dump
 
@@ -247,8 +246,6 @@ class BuilderStatus(styles.Versioned):
 
         if events_only:
             return
-
-        gc.collect()
 
         # get the horizons straight
         if self.buildHorizon is not None:
