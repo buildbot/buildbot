@@ -121,11 +121,21 @@ class Repo(SourceBaseCommand):
         command = ['forall', '-c', 'git', 'clean', '-f', '-d', '-x']
         return self._repoCmd(command, self._doClean2, abandonOnFailure=False)
 
-    def _doClean2(self,dummy):
+    def _doClean2(self):
+        command = ['forall', '-c', 'git', 'reset', '--hard', 'HEAD']
+        return self._repoCmd(command, self._doClean3, abandonOnFailure=False)
+
+    def _doClean3(self,dummy):
         command = ['clean', '-f', '-d', '-x']
         return self._gitCmd(".repo/manifests",command, self._doSync)
 
     def _doSync(self, dummy):
+        command = ['sync']
+        self.sendStatus({"header": "synching manifest %s from branch %s from %s\n"
+                                   % (self.manifest_file, self.manifest_branch, self.manifest_url)})
+        return self._repoCmd(command, self._doSync2,  abandonOnFailure=False)
+
+    def _doSync2(self, dummy):
         command = ['sync']
         self.sendStatus({"header": "synching manifest %s from branch %s from %s\n"
                                    % (self.manifest_file, self.manifest_branch, self.manifest_url)})
@@ -139,6 +149,11 @@ class Repo(SourceBaseCommand):
 
     def _doDownload(self, dummy):
         if hasattr(self.command, 'stderr') and self.command.stderr:
+            if "Automatic cherry-pick failed" in self.command.stderr:
+                command = ['forall','-c' ,'git' ,'diff', 'HEAD']
+                self.cherry_pick_failed = True
+                return self._repoCmd(command, self._DownloadAbandon, abandonOnFailure = False, keepStderr=True) # call again
+
             lines = self.command.stderr.split('\n')
             if len(lines) > 2:
                 match1 = self.re_change.match(lines[1])
@@ -152,7 +167,7 @@ class Repo(SourceBaseCommand):
             command = ['download'] + download.split(' ')
             self.sendStatus({"header": "downloading changeset %s\n"
                                        % (download)})
-            return self._repoCmd(command, self._doDownload, keepStderr=True) # call again
+            return self._repoCmd(command, self._doDownload, abandonOnFailure = False, keepStderr=True) # call again
 
         if self.repo_downloaded:
             self.sendStatus({"repo_downloaded": self.repo_downloaded[:-1]})
@@ -164,4 +179,9 @@ class Repo(SourceBaseCommand):
         if hasattr(self.command, 'stderr'):
             if "Couldn't find remote ref" in self.command.stderr:
                 raise AbandonChain(-1)
+            if hasattr(self, 'cherry_pick_failed') or "Automatic cherry-pick failed" in self.command.stderr:
+                raise AbandonChain(-1)
+    def _DownloadAbandon(self,dummy):
+        self.sendStatus({"header": "abandonned due to merge failure\n"})
+        raise AbandonChain(-1)
 

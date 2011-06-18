@@ -23,7 +23,7 @@ from buildbot.status.builder import Results
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 
-def defaultReviewCB(builderName, build, result, arg):
+def defaultReviewCB(builderName, build, result, status, arg):
     message =  "Buildbot finished compiling your patchset\n"
     message += "on configuration: %s\n" % builderName
     message += "The result is: %s\n" % Results[result].upper()
@@ -91,7 +91,9 @@ class GerritStatusPush(StatusReceiverMultiService):
 
         if repo:
             if downloads and 2 * len(downloads) == len(downloaded):
-                message, verified, reviewed = self.reviewCB(builderName, build, result, self.reviewArg)
+                message, verified, reviewed = self.reviewCB(builderName, build, result, self.status, self.reviewArg)
+                if message == None:
+                    return
                 for i in range(0, len(downloads)):
                     try:
                         project, change1 = downloads[i].split(" ")
@@ -115,7 +117,9 @@ class GerritStatusPush(StatusReceiverMultiService):
             pass
 
         if git:
-            message, verified, reviewed = self.reviewCB(builderName, build, result, self.reviewArg)
+            message, verified, reviewed = self.reviewCB(builderName, build, result, self.status, self.reviewArg)
+            if message == None:
+                return
             self.sendCodeReview(project, revision, message, verified, reviewed)
             return
 
@@ -123,7 +127,7 @@ class GerritStatusPush(StatusReceiverMultiService):
         command = ["ssh", self.gerrit_username + "@" + self.gerrit_server, "-p %d" % self.gerrit_port,
                    "gerrit", "review", "--project %s" % str(project)]
         if message:
-            command.append("--message '%s'" % message)
+            command.append("--message '%s'" % message.replace("'","\""))
         if verified:
             command.extend(["--verified %d" % int(verified)])
         if reviewed:

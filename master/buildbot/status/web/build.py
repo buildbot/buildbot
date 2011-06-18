@@ -28,6 +28,12 @@ from buildbot.status.web.step import StepsResource
 from buildbot.status.web.tests import TestsResource
 from buildbot import util, interfaces
 
+def default_properties_text(properties):
+    return defer.suceed("")
+_cfg_properties_text = default_properties_text
+def set_properties_text(callback):
+    global _cfg_properties_text
+    _cfg_properties_text = callback
 
 
 # /builders/$builder/builds/$buildnum
@@ -43,6 +49,7 @@ class StatusResourceBuild(HtmlResource):
                 (self.build_status.getBuilder().getName(),
                  self.build_status.getNumber()))
 
+    @defer.deferredGenerator
     def content(self, req, cxt):
         b = self.build_status
         status = self.getStatus(req)
@@ -131,7 +138,11 @@ class StatusResourceBuild(HtmlResource):
                 p['short_value'] = value[:500]
 
             ps.append(p)
-
+        wfd = defer.waitForDeferred(
+            _cfg_properties_text(b.getProperties())
+            )
+        yield wfd
+        cxt['properties_text'] = wfd.getResult()
         
         cxt['responsible_users'] = list(b.getResponsibleUsers())
 
@@ -150,7 +161,7 @@ class StatusResourceBuild(HtmlResource):
         cxt['authz'] = self.getAuthz(req)
 
         template = req.site.buildbot_service.templates.get_template("build.html")
-        return template.render(**cxt)
+        yield template.render(**cxt)
 
     def stop(self, req, auth_ok=False):
         # check if this is allowed

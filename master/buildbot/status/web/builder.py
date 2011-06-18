@@ -28,6 +28,12 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
 
+def default_parse_force_change(args, properties):
+    pass
+_cfg_parse_force_change = default_parse_force_change
+def set_parse_force_change_callback(callback):
+    global _cfg_parse_force_change
+    _cfg_parse_force_change = callback
 # /builders/$builder
 class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     addSlash = True
@@ -69,6 +75,9 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     def content(self, req, cxt):
         b = self.builder_status
 
+        cxt['build_candidates'] = req.args.get("build_candidates", [""])[0]
+        cxt['user'] = req.args.get("user", [""])[0]
+        cxt['comments'] = req.args.get("comments", [""])[0]
         cxt['name'] = b.getName()
         req.setHeader('Cache-Control', 'no-cache')
         slaves = b.getSlaves()
@@ -93,7 +102,14 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                     pb.getSubmitTime())
             yield wfd
             submitTime = wfd.getResult()
-
+            wfd = defer.waitForDeferred(
+                pb.master.db.buildrequests.getBuildRequests(bsid=pb._buildrequest.bsid))
+            yield wfd
+            builds = wfd.getResult()
+            wfd = defer.waitForDeferred(
+                pb.master.db.buildsets.getBuildsetProperties(pb._buildrequest.bsid))
+            yield wfd
+            properties = wfd.getResult()
             if source.changes:
                 for c in source.changes:
                     changes.append({ 'url' : path_to_change(req, c),
@@ -108,6 +124,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 'id': pb.brid,
                 'changes' : changes,
                 'num_changes' : len(changes),
+                'properties' : properties,
                 })
 
         numbuilds = int(req.args.get('numbuilds', ['5'])[0])
@@ -137,15 +154,6 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     def force(self, req, auth_ok=False):
         name = req.args.get("username", ["<unknown>"])[0]
         reason = req.args.get("comments", ["<no reason specified>"])[0]
-        branch = req.args.get("branch", [""])[0]
-        revision = req.args.get("revision", [""])[0]
-        repository = req.args.get("repository", [""])[0]
-        project = req.args.get("project", [""])[0]
-
-        log.msg("web forcebuild of builder '%s', branch='%s', revision='%s',"
-                " repository='%s', project='%s' by user '%s'" % (
-                self.builder_status.getName(), branch, revision, repository,
-                project, name))
 
         # check if this is allowed
         if not auth_ok:
@@ -153,22 +161,17 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 log.msg("..but not authorized")
                 return Redirect(path_to_authfail(req))
 
-        # keep weird stuff out of the branch revision, and property strings.
-        # TODO: centralize this somewhere.
-        if not re.match(r'^[\w.+/~-]*$', branch):
-            log.msg("bad branch '%s'" % branch)
-            return Redirect(path_to_builder(req, self.builder_status))
-        if not re.match(r'^[ \w\.\-\/]*$', revision):
-            log.msg("bad revision '%s'" % revision)
-            return Redirect(path_to_builder(req, self.builder_status))
         properties = getAndCheckProperties(req)
-        if properties is None:
-            return Redirect(path_to_builder(req, self.builder_status))
-        if not branch:
-            branch = None
-        if not revision:
-            revision = None
 
+        _cfg_parse_force_change(req.args, properties)
+
+        properties.setProperty("owner", name, "Force Build Form")
+        properties.setProperty("reason", reason, "Force Build Form")
+
+        branch = None
+        revision = None
+        project = ""
+        repository = ""
         master = self.getBuildmaster(req)
         d = master.db.sourcestamps.addSourceStamp(branch=branch,
                 revision=revision, project=project, repository=repository)
