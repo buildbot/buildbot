@@ -3,6 +3,16 @@ Major User visible changes in Buildbot.             -*- outline -*-
    http://github.com/buildbot/buildbot/commits/master
 
 
+* Buildbot 0.8.4p1 (June 18, 2011)
+
+** Fix a hang on startup (bug #1992)
+
+** Fix errors in handling changes via sendchange (hgbuildbot, sendchange)
+
+** Fix incorrect property renderings (Trigger, SVN)
+
+** Allow configuration of change cache once again
+
 * Buildbot 0.8.4 (June 12, 2011)
 
 ** Monotone support
