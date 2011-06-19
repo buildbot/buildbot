@@ -16,8 +16,28 @@
 import os
 import sqlalchemy as sa
 import twisted
-from twisted.internet import reactor, threads, defer
+from twisted.internet import reactor, threads, defer, task
 from twisted.python import threadpool, failure, versions, log
+
+# Hack for bug #1992.  In as-yet-unknown circumstances, select() fails to
+# notice that a selfpipe has been written to, thus causing callFromThread, as
+# used in deferToThreadPool, to hang indefinitely.  The workaround is to wake
+# up the select loop every second by ensuring that there is an event occuring
+# every second, with this busy loop:
+def bug1992hack(f):
+    def w(*args, **kwargs):
+        busyloop = task.LoopingCall(lambda : None)
+        busyloop.start(1)
+        d = f(*args, **kwargs)
+        def stop_loop(r):
+            busyloop.stop()
+            return r
+        d.addBoth(stop_loop)
+        return d
+    w.__name__ = f.__name__
+    w.__doc__ = f.__doc__
+    return w
+
 
 class DBThreadPool(threadpool.ThreadPool):
     """
@@ -76,6 +96,7 @@ class DBThreadPool(threadpool.ThreadPool):
         reactor.removeSystemEventTrigger(self._stop_evt)
         self._stop()
 
+    @bug1992hack
     def do(self, callable, *args, **kwargs):
         """
         Call C{callable} in a thread, with a Connection as first argument.
@@ -96,6 +117,7 @@ class DBThreadPool(threadpool.ThreadPool):
             return rv
         return threads.deferToThreadPool(reactor, self, thd)
 
+    @bug1992hack
     def do_with_engine(self, callable, *args, **kwargs):
         """
         Like L{do}, but with an SQLAlchemy Engine as the first argument.  This
@@ -116,6 +138,7 @@ class DBThreadPool(threadpool.ThreadPool):
     # of the synchronization wrong - the thread may still be "in use" when the
     # deferred fires in the parent, which can lead to database accesses hopping
     # between threads.  In practice, this should not cause any difficulty.
+    @bug1992hack
     def do_081(self, callable, *args, **kwargs): # pragma: no cover
         d = defer.Deferred()
         def thd():
@@ -134,6 +157,8 @@ class DBThreadPool(threadpool.ThreadPool):
                 reactor.callFromThread(d.errback, failure.Failure())
         self.callInThread(thd)
         return d
+
+    @bug1992hack
     def do_with_engine_081(self, callable, *args, **kwargs): # pragma: no cover
         d = defer.Deferred()
         def thd():
