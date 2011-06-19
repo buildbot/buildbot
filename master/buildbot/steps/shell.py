@@ -15,7 +15,7 @@
 
 
 import re
-from twisted.python import log
+from twisted.python import log, failure
 from twisted.spread import pb
 from buildbot.process import buildstep
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
@@ -171,8 +171,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
                 return ["'%s" % words[0], "%s'" % words[1]]
             return ["'%s" % words[0], "%s" % words[1], "...'"]
         except:
-            log.msg("Error describing step")
-            log.err()
+            log.err(failure.Failure(), "Error describing step")
             return ["???"]
 
     def setupEnvironment(self, cmd):
@@ -236,6 +235,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
         if kwargs.has_key('usePTY') and kwargs['usePTY'] != 'slave-config':
             if self.slaveVersionIsOlderThan("svn", "2.7"):
                 warnings.append("NOTE: slave does not allow master to override usePTY\n")
+                del kwargs['usePTY']
 
         cmd = buildstep.RemoteShellCommand(**kwargs)
         self.setupEnvironment(cmd)
