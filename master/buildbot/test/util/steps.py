@@ -81,6 +81,10 @@ class BuildStepMixin(object):
         b.render = lambda x : interfaces.IRenderable(x).getRenderingFor(b)
         b.getSlaveCommandVersion = lambda command, oldversion : slave_version
         b.slaveEnvironment = slave_env.copy()
+        self.set_properties = {}
+        def setProperty(propname, value, source=None, runtime=None):
+            self.set_properties[propname] = value
+        b.setProperty = setProperty
         step.setBuild(b)
 
         # step.progress
@@ -130,6 +134,9 @@ class BuildStepMixin(object):
 
         step.setDefaultWorkdir('wkdir')
 
+        self.exp_outcome = None
+        self.exp_properties = {}
+
         return step
 
     def expectCommands(self, *exp):
@@ -146,6 +153,12 @@ class BuildStepMixin(object):
         """
         self.exp_outcome = dict(result=result, status_text=status_text)
 
+    def expectProperty(self, property, value):
+        """
+        Expect the given property to be set when the step is complete.
+        """
+        self.exp_properties[property] = value
+
     def runStep(self):
         """
         Run the step set up with L{setupStep}, and check the results.
@@ -160,6 +173,8 @@ class BuildStepMixin(object):
             got_outcome = dict(result=result,
                         status_text=self.step_status.status_text)
             self.assertEqual(got_outcome, self.exp_outcome)
+            for pn, pv in self.exp_properties.iteritems():
+                self.assertEqual(self.set_properties[pn], pv)
         d.addCallback(check)
         return d
 

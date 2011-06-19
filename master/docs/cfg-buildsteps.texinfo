@@ -1524,6 +1524,9 @@ of the code tree. It puts the size (as a count of 1024-byte blocks,
 aka 'KiB' or 'kibibytes') on the step's status text, and sets a build
 property named 'tree-size-KiB' with the same value.
 
+Its constructor takes no arguments beyond those supplied to ShellCommand.  It
+will only work on systems that support the command @code{du -s -k .}.
+
 @node PerlModuleTest
 @subsubsection PerlModuleTest
 

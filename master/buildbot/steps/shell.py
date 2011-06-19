@@ -227,9 +227,6 @@ class TreeSize(ShellCommand):
     descriptionDone = "tree size measured"
     kib = None
 
-    def __init__(self, *args, **kwargs):
-        ShellCommand.__init__(self, *args, **kwargs)
-
     def commandComplete(self, cmd):
         out = cmd.logs['stdio'].getText()
         m = re.search(r'^(\d+)', out)
@@ -248,6 +245,7 @@ class TreeSize(ShellCommand):
         if self.kib is not None:
             return ["treesize", "%d KiB" % self.kib]
         return ["treesize", "unknown"]
+
 
 class SetProperty(ShellCommand):
     name = "setproperty"

@@ -15,7 +15,7 @@
 
 from twisted.trial import unittest
 from buildbot.steps import shell
-from buildbot.status.results import SKIPPED, SUCCESS
+from buildbot.status.results import SKIPPED, SUCCESS, WARNINGS, FAILURE
 from buildbot.test.util import steps, compat
 from buildbot.test.fake.remotecommand import ExpectShell
 
@@ -172,5 +172,50 @@ class TestShellCommandExeceution(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS, status_text=["'echo", "hello'"])
+        return self.runStep()
+
+class TreeSize(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_run_success(self):
+        self.setupStep(shell.TreeSize())
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['du', '-s', '-k', '.'])
+            + ExpectShell.log('stdio', stdout='9292    .\n')
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["treesize", "9292 KiB"])
+        self.expectProperty('tree-size-KiB', 9292)
+        return self.runStep()
+
+    def test_run_misparsed(self):
+        self.setupStep(shell.TreeSize())
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['du', '-s', '-k', '.'])
+            + ExpectShell.log('stdio', stdio='abcdef\n')
+            + 0
+        )
+        self.expectOutcome(result=WARNINGS,
+                status_text=["treesize", "unknown"])
+        return self.runStep()
+
+    def test_run_failed(self):
+        self.setupStep(shell.TreeSize())
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['du', '-s', '-k', '.'])
+            + ExpectShell.log('stdio', stderr='abcdef\n')
+            + 1
+        )
+        self.expectOutcome(result=FAILURE,
+                status_text=["treesize", "unknown"])
         return self.runStep()
 
