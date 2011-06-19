@@ -342,3 +342,10 @@ class SetProperty(steps.BuildStepMixin, unittest.TestCase):
         d.addCallback(lambda _ :
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
         return d
+
+class Configure(unittest.TestCase):
+
+    def test_class_attrs(self):
+        # nothing too exciting here, but at least make sure the class is present
+        step = shell.Configure()
+        self.assertEqual(step.command, ['./configure'])
