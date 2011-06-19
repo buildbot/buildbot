@@ -114,6 +114,20 @@ class BuildStepMixin(object):
             return l
         step.addLog = addLog
 
+        def addHTMLLog(name, html):
+            l = remotecommand.FakeLogFile(name)
+            l.addStdout(html)
+            ss.logs[name] = l
+            return l
+        step.addHTMLLog = addHTMLLog
+
+        def addCompleteLog(name, text):
+            l = remotecommand.FakeLogFile(name)
+            l.addStdout(text)
+            ss.logs[name] = l
+            return l
+        step.addCompleteLog = addCompleteLog
+
         step.setDefaultWorkdir('wkdir')
 
         return step
