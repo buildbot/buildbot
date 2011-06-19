@@ -15,6 +15,7 @@
 
 from twisted.internet import defer
 from twisted.python import failure
+from buildbot.status.logfile import STDOUT, STDERR, HEADER
 
 
 DEFAULT_TIMEOUT="DEFAULT_TIMEOUT"
@@ -66,24 +67,38 @@ class FakeLogFile(object):
         self.header = ''
         self.stdout = ''
         self.stderr = ''
+        self.chunks = []
 
     def getName(self):
         return self.name
 
     def addHeader(self, data):
         self.header += data
+        self.chunks.append((HEADER, data))
 
     def addStdout(self, data):
         self.stdout += data
+        self.chunks.append((STDOUT, data))
 
     def addStderr(self, data):
         self.stderr += data
+        self.chunks.append((STDERR, data))
 
     def readlines(self): # TODO: remove channel arg from logfile.py
         return self.stdout.split('\n')
 
     def getText(self):
         return self.stdout
+
+    def getChunks(self, channels=[], onlyText=False):
+        if onlyText:
+            return [ data
+                        for (ch, data) in self.chunks
+                        if ch in channels ]
+        else:
+            return [ (ch, data)
+                        for (ch, data) in self.chunks
+                        if ch in channels ]
 
 
 class Expect(object):

@@ -136,6 +136,8 @@ class BuildStepMixin(object):
 
         self.exp_outcome = None
         self.exp_properties = {}
+        self.exp_missing_properties = []
+        self.exp_logfiles = {}
 
         return step
 
@@ -159,6 +161,18 @@ class BuildStepMixin(object):
         """
         self.exp_properties[property] = value
 
+    def expectNoProperty(self, property):
+        """
+        Expect the given property is *not* set when the step is complete
+        """
+        self.exp_missing_properties.append(property)
+
+    def expectLogfile(self, logfile, contents):
+        """
+        Expect a logfile with the given contents
+        """
+        self.exp_logfiles[logfile] = contents
+
     def runStep(self):
         """
         Run the step set up with L{setupStep}, and check the results.
@@ -175,6 +189,10 @@ class BuildStepMixin(object):
             self.assertEqual(got_outcome, self.exp_outcome)
             for pn, pv in self.exp_properties.iteritems():
                 self.assertEqual(self.set_properties[pn], pv)
+            for pn in self.exp_missing_properties:
+                self.assertNotIn(pn, self.set_properties)
+            for log, contents in self.exp_logfiles.iteritems():
+                self.assertEqual(self.step_status.logs[log].stdout, contents)
         d.addCallback(check)
         return d
 

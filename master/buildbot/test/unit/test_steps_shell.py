@@ -16,6 +16,7 @@
 from twisted.trial import unittest
 from buildbot.steps import shell
 from buildbot.status.results import SKIPPED, SUCCESS, WARNINGS, FAILURE
+from buildbot.status.results import EXCEPTION
 from buildbot.test.util import steps, compat
 from buildbot.test.fake.remotecommand import ExpectShell
 
@@ -219,3 +220,125 @@ class TreeSize(steps.BuildStepMixin, unittest.TestCase):
                 status_text=["treesize", "unknown"])
         return self.runStep()
 
+class SetProperty(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_constructor_conflict(self):
+        self.assertRaises(AssertionError, lambda :
+                shell.SetProperty(property='foo', extract_fn=lambda : None))
+
+    def test_run_property(self):
+        self.setupStep(shell.SetProperty(property="res", command="cmd"))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command="cmd")
+            + ExpectShell.log('stdio', stdout='\n\nabcdef\n')
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["set props:", "res"])
+        self.expectProperty("res", "abcdef") # note: stripped
+        self.expectLogfile('property changes', r"res: 'abcdef'")
+        return self.runStep()
+
+    def test_run_property_no_strip(self):
+        self.setupStep(shell.SetProperty(property="res", command="cmd",
+                                         strip=False))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command="cmd")
+            + ExpectShell.log('stdio', stdout='\n\nabcdef\n')
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["set props:", "res"])
+        self.expectProperty("res", "\n\nabcdef\n")
+        self.expectLogfile('property changes', r"res: '\n\nabcdef\n'")
+        return self.runStep()
+
+    def test_run_failure(self):
+        self.setupStep(shell.SetProperty(property="res", command="blarg"))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command="blarg")
+            + ExpectShell.log('stdio', stderr='cannot blarg: File not found')
+            + 1
+        )
+        self.expectOutcome(result=FAILURE,
+                status_text=["'blarg'", "failed"])
+        self.expectNoProperty("res")
+        return self.runStep()
+
+    def test_run_extract_fn(self):
+        def extract_fn(rc, stdout, stderr):
+            self.assertEqual((rc, stdout, stderr), (0, 'startend', 'STARTEND'))
+            return dict(a=1, b=2)
+        self.setupStep(shell.SetProperty(extract_fn=extract_fn, command="cmd"))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command="cmd")
+            + ExpectShell.log('stdio', stdout='start', stderr='START')
+            + ExpectShell.log('stdio', stdout='end')
+            + ExpectShell.log('stdio', stderr='END')
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["set props:", "a", "b"])
+        self.expectLogfile('property changes', 'a: 1\nb: 2')
+        self.expectProperty("a", 1)
+        self.expectProperty("b", 2)
+        return self.runStep()
+
+    def test_run_extract_fn_cmdfail(self):
+        def extract_fn(rc, stdout, stderr):
+            self.assertEqual((rc, stdout, stderr), (3, '', ''))
+            return dict(a=1, b=2)
+        self.setupStep(shell.SetProperty(extract_fn=extract_fn, command="cmd"))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command="cmd")
+            + 3
+        )
+        # note that extract_fn *is* called anyway
+        self.expectOutcome(result=FAILURE,
+                status_text=["set props:", "a", "b"])
+        self.expectLogfile('property changes', 'a: 1\nb: 2')
+        return self.runStep()
+
+    def test_run_extract_fn_cmdfail_empty(self):
+        def extract_fn(rc, stdout, stderr):
+            self.assertEqual((rc, stdout, stderr), (3, '', ''))
+            return dict()
+        self.setupStep(shell.SetProperty(extract_fn=extract_fn, command="cmd"))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command="cmd")
+            + 3
+        )
+        # note that extract_fn *is* called anyway, but returns no properties
+        self.expectOutcome(result=FAILURE,
+                status_text=["'cmd'", "failed"])
+        return self.runStep()
+
+    @compat.usesFlushLoggedErrors
+    def test_run_extract_fn_exception(self):
+        def extract_fn(rc, stdout, stderr):
+            raise RuntimeError("oh noes")
+        self.setupStep(shell.SetProperty(extract_fn=extract_fn, command="cmd"))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command="cmd")
+            + 0
+        )
+        # note that extract_fn *is* called anyway, but returns no properties
+        self.expectOutcome(result=EXCEPTION,
+                status_text=["setproperty", "exception"])
+        d = self.runStep()
+        d.addCallback(lambda _ :
+            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
+        return d

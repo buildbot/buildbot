@@ -269,6 +269,8 @@ class SetProperty(ShellCommand):
 
     def commandComplete(self, cmd):
         if self.property:
+            if cmd.rc != 0:
+                return
             result = cmd.logs['stdio'].getText()
             if self.strip: result = result.strip()
             propname = self.property
@@ -284,14 +286,17 @@ class SetProperty(ShellCommand):
             self.property_changes = new_props
 
     def createSummary(self, log):
-        props_set = [ "%s: %r" % (k,v) for k,v in self.property_changes.items() ]
-        self.addCompleteLog('property changes', "\n".join(props_set))
+        if self.property_changes:
+            props_set = [ "%s: %r" % (k,v)
+                          for k,v in self.property_changes.items() ]
+            self.addCompleteLog('property changes', "\n".join(props_set))
 
     def getText(self, cmd, results):
         if self.property_changes:
             return [ "set props:" ] + self.property_changes.keys()
         else:
-            return [ "no change" ]
+            # let ShellCommand describe
+            return ShellCommand.getText(self, cmd, results)
 
 class Configure(ShellCommand):
 
