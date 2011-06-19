@@ -27,7 +27,6 @@ from twisted.application.internet import TimerService
 
 import buildbot
 import buildbot.pbmanager
-from buildbot import cache
 from buildbot.util import safeTranslate, subscription, epoch2datetime
 from buildbot.process.builder import Builder
 from buildbot.status.master import Status
@@ -43,6 +42,7 @@ from buildbot.schedulers.base import isScheduler
 from buildbot.process.botmaster import BotMaster
 from buildbot.process import debug
 from buildbot.process import metrics
+from buildbot.process import cache
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import monkeypatches
 

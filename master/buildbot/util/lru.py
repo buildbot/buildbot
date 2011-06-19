@@ -47,6 +47,7 @@ class AsyncLRUCache(object):
     @ivar hits: cache hits so far
     @ivar refhits: cache misses found in the weak ref dictionary, so far
     @ivar misses: cache misses leading to re-fetches, so far
+    @ivar max_size: maximum allowed size of the cache
     """
 
     __slots__ = ('max_size max_queue miss_fn '
