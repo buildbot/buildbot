@@ -27,7 +27,6 @@ from twisted.application.internet import TimerService
 
 import buildbot
 import buildbot.pbmanager
-from buildbot import cache
 from buildbot.util import safeTranslate, subscription, epoch2datetime
 from buildbot.process.builder import Builder
 from buildbot.status.master import Status
@@ -43,6 +42,7 @@ from buildbot.schedulers.base import isScheduler
 from buildbot.process.botmaster import BotMaster
 from buildbot.process import debug
 from buildbot.process import metrics
+from buildbot.process import cache
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import monkeypatches
 
@@ -244,7 +244,7 @@ class BuildMaster(service.MultiService):
                           "logHorizon", "buildHorizon", "changeHorizon",
                           "logMaxSize", "logMaxTailSize", "logCompressionMethod",
                           "db_url", "multiMaster", "db_poll_interval",
-                          "metrics"
+                          "metrics", "caches"
                           )
             for k in config.keys():
                 if k not in known_keys:
@@ -305,6 +305,7 @@ class BuildMaster(service.MultiService):
                 multiMaster = config.get("multiMaster", False)
 
                 metrics_config = config.get("metrics")
+                caches_config = config.get("caches", {})
 
             except KeyError:
                 log.msg("config dictionary is missing a required parameter")
@@ -321,8 +322,10 @@ class BuildMaster(service.MultiService):
                      "accepted in >= 0.8.0 . Please use c['slaves'] instead.")
                 raise KeyError(m)
 
-            # Set up metrics
+            # Set up metrics and caches
             self.loadConfig_Metrics(metrics_config)
+            self.loadConfig_Caches(caches_config, buildCacheSize,
+                                   changeCacheSize)
 
             slaves = config.get('slaves', [])
             if "slaves" not in config:
@@ -564,6 +567,14 @@ class BuildMaster(service.MultiService):
             if self.metrics:
                 self.metrics.disownServiceParent()
             self.metrics = None
+
+    def loadConfig_Caches(self, caches_config, buildCacheSize,
+            changeCacheSize):
+        if buildCacheSize is not None:
+            caches_config['builds'] = buildCacheSize
+        if changeCacheSize is not None:
+            caches_config['changes'] = changeCacheSize
+        self.caches.load_config(caches_config)
 
     def loadDatabase(self, db_url, db_poll_interval=None):
         if self.db:
