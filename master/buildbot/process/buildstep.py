@@ -1095,6 +1095,11 @@ class LoggingBuildStep(BuildStep):
         """
         self.logfiles[logname] = filename
 
+    def buildCommandKwargs(self):
+        kwargs = dict()
+        kwargs['logfiles'] = self.logfiles
+        return kwargs
+
     def startCommand(self, cmd, errorMessages=[]):
         """
         @param cmd: a suitable RemoteCommand which will be launched, with

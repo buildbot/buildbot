@@ -191,32 +191,18 @@ class ShellCommand(buildstep.LoggingBuildStep):
             # note that each RemoteShellCommand gets its own copy of the
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
-    def checkForOldSlaveAndLogfiles(self):
-        if not self.logfiles:
-            return # doesn't matter
-        if not self.slaveVersionIsOlderThan("shell", "2.1"):
-            return # slave is new enough
-        # this buildslave is too old and will ignore the 'logfiles'
-        # argument. You'll either have to pull the logfiles manually
-        # (say, by using 'cat' in a separate RemoteShellCommand) or
-        # upgrade the buildslave.
-        msg1 = ("Warning: buildslave %s is too old "
-                "to understand logfiles=, ignoring it."
-               % self.getSlaveName())
-        msg2 = "You will have to pull this logfile (%s) manually."
-        log.msg(msg1)
-        for logname,remotefilevalue in self.logfiles.items():
-            remotefilename = remotefilevalue
-            # check for a dictionary of options
-            if type(remotefilevalue) == dict:
-                remotefilename = remotefilevalue['filename']
+    def buildCommandKwargs(self, warnings):
+        kwargs = buildstep.LoggingBuildStep.buildCommandKwargs(self)
+        kwargs.update(self.remote_kwargs)
+        kwargs['command'] = self.command
 
-            newlog = self.addLog(logname)
-            newlog.addHeader(msg1 + "\n")
-            newlog.addHeader(msg2 % remotefilename + "\n")
-            newlog.finish()
-        # now prevent setupLogfiles() from adding them
-        self.logfiles = {}
+        # check for the usePTY flag
+        if kwargs.has_key('usePTY') and kwargs['usePTY'] != 'slave-config':
+            if self.slaveVersionIsOlderThan("svn", "2.7"):
+                warnings.append("NOTE: slave does not allow master to override usePTY\n")
+                del kwargs['usePTY']
+
+        return kwargs
 
     def start(self):
         # this block is specific to ShellCommands. subclasses that don't need
@@ -226,20 +212,9 @@ class ShellCommand(buildstep.LoggingBuildStep):
         warnings = []
 
         # create the actual RemoteShellCommand instance now
-        kwargs = self.remote_kwargs
-        command = self.command
-        kwargs['command'] = command
-        kwargs['logfiles'] = self.logfiles
-
-        # check for the usePTY flag
-        if kwargs.has_key('usePTY') and kwargs['usePTY'] != 'slave-config':
-            if self.slaveVersionIsOlderThan("svn", "2.7"):
-                warnings.append("NOTE: slave does not allow master to override usePTY\n")
-                del kwargs['usePTY']
-
+        kwargs = self.buildCommandKwargs(warnings)
         cmd = buildstep.RemoteShellCommand(**kwargs)
         self.setupEnvironment(cmd)
-        self.checkForOldSlaveAndLogfiles()
 
         self.startCommand(cmd, warnings)
 
