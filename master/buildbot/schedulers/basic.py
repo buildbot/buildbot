@@ -229,7 +229,7 @@ class Scheduler(SingleBranchScheduler):
         SingleBranchScheduler.__init__(self, *args, **kwargs)
 
 
-class AnyBranchScheduler(Scheduler):
+class AnyBranchScheduler(SingleBranchScheduler):
     def getChangeFilter(self, branch, branches, change_filter, categories):
         assert branch is NotABranch
         return filter.ChangeFilter.fromSchedulerConstructorArgs(
