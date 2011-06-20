@@ -61,7 +61,10 @@ class RemoteCommand(pb.Referenceable):
     @type  active:         boolean
     @ivar  active:         whether the command is currently running
     """
-    commandCounter = [0] # we use a list as a poor man's singleton
+
+    # class-level unique identifier generator for command ids
+    commandCounter = 0
+
     active = False
 
     def __init__(self, remote_command, args):
@@ -83,10 +86,12 @@ class RemoteCommand(pb.Referenceable):
         self.active = True
         self.step = step
         self.remote = remote
-        c = self.commandCounter[0]
-        self.commandCounter[0] += 1
-        #self.commandID = "%d %d" % (c, random.randint(0, 1000000))
-        self.commandID = "%d" % c
+
+        # generate a new command id
+        cmd_id = RemoteCommand.commandCounter
+        RemoteCommand.commandCounter += 1
+        self.commandID = "%d" % cmd_id
+
         log.msg("%s: RemoteCommand.run [%s]" % (self, self.commandID))
         self.deferred = defer.Deferred()
 
