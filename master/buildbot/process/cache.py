@@ -61,5 +61,6 @@ class CacheManager(object):
 
     def get_metrics(self):
         return dict([
-            (n, dict(hits=c.hits, refhits=c.refhits, misses=c.misses))
+            (n, dict(hits=c.hits, refhits=c.refhits,
+                     misses=c.misses, max_size=c.max_size))
             for n, c in self._caches.iteritems()])

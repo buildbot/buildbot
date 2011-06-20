@@ -65,7 +65,7 @@ class SlaveFileUploadCommand(TransferCommand):
         self.writer = args['writer']
         self.remaining = args['maxsize']
         self.blocksize = args['blocksize']
-        self.keepstamp = args['keepstamp']
+        self.keepstamp = args.get('keepstamp', False)
         self.stderr = None
         self.rc = 0
 

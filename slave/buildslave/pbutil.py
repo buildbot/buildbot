@@ -22,6 +22,7 @@ from twisted.spread import pb
 from twisted.spread.pb import PBClientFactory
 from twisted.internet import protocol, reactor
 from twisted.python import log
+from twisted.cred import error
 
 class ReconnectingPBClientFactory(PBClientFactory,
                                   protocol.ReconnectingClientFactory):
@@ -71,7 +72,7 @@ class ReconnectingPBClientFactory(PBClientFactory,
     def clientConnectionMade(self, broker):
         self.resetDelay()
         PBClientFactory.clientConnectionMade(self, broker)
-        self.doLogin(self._root)
+        self.doLogin(self._root, broker)
         self.gotRootObject(self._root)
 
     # newcred methods
@@ -83,11 +84,12 @@ class ReconnectingPBClientFactory(PBClientFactory,
         self._credentials = credentials
         self._client = client
 
-    def doLogin(self, root):
+    def doLogin(self, root, broker):
         # newcred login()
         d = self._cbSendUsername(root, self._credentials.username,
                                  self._credentials.password, self._client)
-        d.addCallbacks(self.gotPerspective, self.failedToGetPerspective)
+        d.addCallbacks(self.gotPerspective, self.failedToGetPerspective,
+                errbackArgs=(broker,))
 
     # timer for hung connections
 
@@ -118,18 +120,25 @@ class ReconnectingPBClientFactory(PBClientFactory,
         is established and the object reference is retrieved."""
         self.stopHungConnectionTimer()
 
-    def failedToGetPerspective(self, why):
+    def failedToGetPerspective(self, why, broker):
         """The login process failed, most likely because of an authorization
         failure (bad password), but it is also possible that we lost the new
         connection before we managed to send our credentials.
         """
         log.msg("ReconnectingPBClientFactory.failedToGetPerspective")
         self.stopHungConnectionTimer()
+        # put something useful in the logs
         if why.check(pb.PBConnectionLost):
             log.msg("we lost the brand-new connection")
-            # retrying might help here, let clientConnectionLost decide
+            # fall through
+        elif why.check(error.UnauthorizedLogin):
+            log.msg("unauthorized login; check slave name and password")
+            # fall through
+        else:
+            log.err(why, 'While trying to connect:')
+            self.stopTrying()
+            reactor.stop()
             return
-        # probably authorization
-        self.stopTrying() # logging in harder won't help
-        log.err(why)
-        reactor.stop()
+
+        # lose the current connection, which will trigger a retry
+        broker.transport.loseConnection()
