@@ -128,6 +128,14 @@ class ShellCommand(buildstep.LoggingBuildStep):
         rkw = self.remote_kwargs
         rkw['workdir'] = rkw['workdir'] or workdir
 
+    def getWorkdir(self):
+        """
+        Get the current notion of the workdir.  Note that this may change
+        between instantiation of the step and C{start}, as it is based on the
+        build's default workdir, and may even be C{None} before that point.
+        """
+        return self.remote_kwargs['workdir']
+
     def setCommand(self, command):
         self.command = command
 
@@ -345,11 +353,10 @@ class WarningCountingShellCommand(ShellCommand):
     commentEmptyLineRe = re.compile(r"^\s*(\#.*)?$")
     suppressionLineRe = re.compile(r"^\s*(.+?)\s*:\s*(.+?)\s*(?:[:]\s*([0-9]+)(?:-([0-9]+))?\s*)?$")
 
-    def __init__(self, workdir=None,
+    def __init__(self,
                  warningPattern=None, warningExtractor=None, maxWarnCount=None,
                  directoryEnterPattern=None, directoryLeavePattern=None,
                  suppressionFile=None, **kwargs):
-        self.workdir = workdir
         # See if we've been given a regular expression to use to match
         # warnings. If not, use a default that assumes any line with "warning"
         # present is a warning. This may lead to false positives in some cases.
@@ -368,7 +375,7 @@ class WarningCountingShellCommand(ShellCommand):
         self.maxWarnCount = maxWarnCount
 
         # And upcall to let the base class do its work
-        ShellCommand.__init__(self, workdir=workdir, **kwargs)
+        ShellCommand.__init__(self, **kwargs)
 
         self.addFactoryArguments(warningPattern=warningPattern,
                                  directoryEnterPattern=directoryEnterPattern,
@@ -378,11 +385,6 @@ class WarningCountingShellCommand(ShellCommand):
                                  suppressionFile=suppressionFile)
         self.suppressions = []
         self.directoryStack = []
-
-    def setDefaultWorkdir(self, workdir):
-        if self.workdir is None:
-            self.workdir = workdir
-        ShellCommand.setDefaultWorkdir(self, workdir)
 
     def addSuppression(self, suppressionList):
         """
@@ -461,7 +463,7 @@ class WarningCountingShellCommand(ShellCommand):
 
         args = {
             'slavesrc': self.suppressionFile,
-            'workdir': self.workdir,
+            'workdir': self.getWorkdir(),
             'writer': self.myFileWriter,
             'maxsize': None,
             'blocksize': 32*1024,
