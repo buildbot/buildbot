@@ -101,9 +101,31 @@ class FakeLogFile(object):
                         if ch in channels ]
 
 
+class ExpectRemoteRef(object):
+    """
+    Define an expected RemoteReference in the args to an L{Expect} class
+    """
+
+    def __init__(self, rrclass):
+        self.rrclass = rrclass
+
+    def __eq__(self, other):
+        return isinstance(other, self.rrclass)
+
 class Expect(object):
     """
     Define an expected L{RemoteCommand}, with the same arguments
+
+    Extra behaviors of the remote command can be added to the instance, using
+    class methods.  For L{Expect}, use L{Expect.behavior}, passing a callable
+    that will be invoked with the real command and can do what it likes:
+
+        def custom_behavior(command):
+            ...
+        ExpectLogged('somecommand', { args='foo' })
+            + Expect.behavior(custom_behavior),
+        ...
+
     """
 
     def __init__(self, remote_command, args):
@@ -113,20 +135,51 @@ class Expect(object):
         self.remote_command = remote_command
         self.args = args
         self.result = None
+        self.behaviors = []
 
+    @classmethod
+    def behavior(cls, callable):
+        """
+        Add an arbitrary behavior that is expected of this command.
+        C{callable} will be invoked with the real command as an argument, and
+        can do what it wishes.  It will be invoked with maybeDeferred, in case
+        the operation is asynchronous.
+        """
+        return ('callable', callable)
+
+    def __add__(self, other):
+        self.behaviors.append(other)
+        return self
+
+    def runBehavior(self, behavior, args, command):
+        """
+        Implement the given behavior.  Returns a Deferred.
+        """
+        if behavior == 'callable':
+            return defer.maybeDeferred(lambda : args[0](command))
+        else:
+            return defer.fail(failure.Failure(
+                        AssertionError('invalid behavior %s' % behavior)))
+
+    @defer.deferredGenerator
     def runBehaviors(self, command):
         """
-        Implement any behaviors expected of this command (e.g., logs)
+        Run all expected behaviors for this command
         """
-        return defer.succeed(self)
+        for behavior in self.behaviors:
+            wfd = defer.waitForDeferred(
+                    self.runBehavior(behavior[0], behavior[1:], command))
+            yield wfd
+            wfd.getResult()
 
 
 class ExpectLogged(Expect):
     """
     Define an expected L{LoggedRemoteCommand}, with the same arguments
 
-    Extra attributes of the logged remote command can be added to
-    the instance, using class methods to specify the attributes::
+    As with L{Expect}, extra behaviors can be added to the object; use
+    L{ExpectLogged.log} to add a logfile, or add an integer to specify the
+    return code (rc), or add a Failure instance to raise an exception::
 
         ExpectLogged('somecommand', { args='foo' })
             + ExpectLogged.log('stdio', stdout='foo!')
@@ -137,37 +190,38 @@ class ExpectLogged(Expect):
     """
     def __init__(self, remote_command, args):
         Expect.__init__(self, remote_command, args)
-        self.updates = []
 
     @classmethod
     def log(self, name, **streams):
         return ('log', name, streams)
 
     def __add__(self, other):
+        # special-case adding an integer (return code) or failure (error)
         if isinstance(other, int):
-            self.updates.append(('rc', other))
+            self.behaviors.append(('rc', other))
         elif isinstance(other, failure.Failure):
-            self.updates.append(('err', other))
+            self.behaviors.append(('err', other))
         else:
-            self.updates.append(other)
+            return Expect.__add__(self, other)
+            self.behaviors.append(other)
         return self
 
-    def runBehaviors(self, command):
-        # apply updates
-        for upd in self.updates:
-            if upd[0] == 'rc':
-                command.rc = upd[1]
-            elif upd[0] == 'err':
-                return defer.fail(upd[1])
-            elif upd[0] == 'log':
-                name, streams = upd[1:]
-                if 'header' in streams:
-                    command.logs[name].addHeader(streams['header'])
-                if 'stdout' in streams:
-                    command.logs[name].addStdout(streams['stdout'])
-                if 'stderr' in streams:
-                    command.logs[name].addStderr(streams['stderr'])
-        return Expect.runBehaviors(self, command)
+    def runBehavior(self, behavior, args, command):
+        if behavior == 'rc':
+            command.rc = args[0]
+        elif behavior == 'err':
+            return defer.fail(args[0])
+        elif behavior == 'log':
+            name, streams = args
+            if 'header' in streams:
+                command.logs[name].addHeader(streams['header'])
+            if 'stdout' in streams:
+                command.logs[name].addStdout(streams['stdout'])
+            if 'stderr' in streams:
+                command.logs[name].addStderr(streams['stderr'])
+        else:
+            return Expect.runBehavior(self, behavior, args, command)
+        return defer.succeed(None)
 
 
 class ExpectShell(ExpectLogged):

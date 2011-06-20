@@ -1402,10 +1402,6 @@ directoryEnterPattern = "make.*: Entering directory [\"`'](.*)['`\"]"
 directoryLeavePattern = "make.*: Leaving directory"
 @end example
 
-(TODO: this step needs to be extended to look for GCC error messages
-as well, and collect them into a separate logfile, along with the
-source code filenames involved).
-
 @node Visual C++
 @subsubsection Visual C++
 

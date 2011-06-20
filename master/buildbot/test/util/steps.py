@@ -85,6 +85,7 @@ class BuildStepMixin(object):
         def setProperty(propname, value, source=None, runtime=None):
             self.set_properties[propname] = value
         b.setProperty = setProperty
+        b.getProperty = self.set_properties.__getitem__
         step.setBuild(b)
 
         # step.progress
@@ -107,6 +108,11 @@ class BuildStepMixin(object):
         ss.setText = ss_setText
 
         ss.getLogs = lambda : ss.logs.values()
+
+        self.step_statistics = {}
+        ss.setStatistic = self.step_statistics.__setitem__
+        ss.getStatistic = self.step_statistics.get
+        ss.hasStatistic = self.step_statistics.__contains__
 
         self.step.setStepStatus(ss)
 
@@ -132,7 +138,11 @@ class BuildStepMixin(object):
             return l
         step.addCompleteLog = addCompleteLog
 
+        # set defaults
+
         step.setDefaultWorkdir('wkdir')
+
+        # expectations
 
         self.exp_outcome = None
         self.exp_properties = {}
@@ -206,8 +216,10 @@ class BuildStepMixin(object):
         if not self.expected_remote_commands:
             self.fail("got command %r when no further commands were expected"
                     % (got,))
+
+        # first check any ExpectedRemoteReference instances
         exp = self.expected_remote_commands.pop(0)
-        self.assertEqual(got, (exp.remote_command, exp.args))
+        self.assertEqual((exp.remote_command, exp.args), got)
 
         # let the Expect object show any behaviors that are required
         return exp.runBehaviors(command)

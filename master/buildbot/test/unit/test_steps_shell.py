@@ -13,12 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
+import re
+import textwrap
 from twisted.trial import unittest
 from buildbot.steps import shell
 from buildbot.status.results import SKIPPED, SUCCESS, WARNINGS, FAILURE
 from buildbot.status.results import EXCEPTION
 from buildbot.test.util import steps, compat
-from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.fake.remotecommand import ExpectShell, Expect
+from buildbot.test.fake.remotecommand import FakeRemoteCommand, ExpectRemoteRef
 
 
 class TestShellCommandExeceution(steps.BuildStepMixin, unittest.TestCase):
@@ -349,3 +352,264 @@ class Configure(unittest.TestCase):
         # nothing too exciting here, but at least make sure the class is present
         step = shell.Configure()
         self.assertEqual(step.command, ['./configure'])
+
+class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_no_warnings(self):
+        self.setupStep(shell.WarningCountingShellCommand(workdir='w',
+                                    command=['make']))
+        self.expectCommands(
+            ExpectShell(workdir='w', usePTY='slave-config',
+                        command=["make"])
+            + ExpectShell.log('stdio', stdout='blarg success!')
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["'make'"])
+        self.expectProperty("warnings-count", 0)
+        return self.runStep()
+
+    def test_default_pattern(self):
+        self.setupStep(shell.WarningCountingShellCommand(command=['make']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=["make"])
+            + ExpectShell.log('stdio',
+                    stdout='normal: foo\nwarning: blarg!\nalso normal')
+            + 0
+        )
+        self.expectOutcome(result=WARNINGS, status_text=["'make'", "warnings"])
+        self.expectProperty("warnings-count", 1)
+        self.expectLogfile("warnings (1)", "warning: blarg!\n")
+        return self.runStep()
+
+    def test_custom_pattern(self):
+        self.setupStep(shell.WarningCountingShellCommand(command=['make'],
+                            warningPattern=r"scary:.*"))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=["make"])
+            + ExpectShell.log('stdio',
+                stdout='scary: foo\nwarning: bar\nscary: bar')
+            + 0
+        )
+        self.expectOutcome(result=WARNINGS, status_text=["'make'", "warnings"])
+        self.expectProperty("warnings-count", 2)
+        self.expectLogfile("warnings (2)", "scary: foo\nscary: bar\n")
+        return self.runStep()
+
+    def test_maxWarnCount(self):
+        self.setupStep(shell.WarningCountingShellCommand(command=['make'],
+            maxWarnCount=9))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=["make"])
+            + ExpectShell.log('stdio', stdout='warning: noo!\n' * 10)
+            + 0
+        )
+        self.expectOutcome(result=FAILURE, status_text=["'make'", "failed"])
+        self.expectProperty("warnings-count", 10)
+        return self.runStep()
+
+    def test_fail_with_warnings(self):
+        self.setupStep(shell.WarningCountingShellCommand(command=['make']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=["make"])
+            + ExpectShell.log('stdio', stdout='warning: I might fail')
+            + 3
+        )
+        self.expectOutcome(result=FAILURE, status_text=["'make'", "failed"])
+        self.expectProperty("warnings-count", 1)
+        self.expectLogfile("warnings (1)", "warning: I might fail\n")
+        return self.runStep()
+
+    def do_test_suppressions(self, step, supps_file='', stdout='',
+                                exp_warning_count=0, exp_warning_log='',
+                                exp_exception=False):
+        self.patch(shell, 'SilentRemoteCommand', FakeRemoteCommand)
+        self.setupStep(step)
+
+        # Invoke the expected callbacks for the suppression file upload.  Note
+        # that this assumes all of the remote_* are synchronous, but can be
+        # easily adapted to suit if that changes (using deferredGenerator)
+        def upload_behavior(command):
+            writer = command.args['writer']
+            writer.remote_write(supps_file)
+            writer.remote_close()
+
+        self.expectCommands(
+            # step will first get the remote suppressions file
+            Expect('uploadFile', dict(blocksize=32768, maxsize=None,
+                            slavesrc='supps', workdir='wkdir',
+                            writer=ExpectRemoteRef(shell.StringFileWriter)))
+            + Expect.behavior(upload_behavior),
+
+            # and then run the command
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=["make"])
+            + ExpectShell.log('stdio', stdout=stdout)
+            + 0
+        )
+        if exp_exception:
+            self.expectOutcome(result=EXCEPTION,
+                                status_text=["shell", "exception"])
+        else:
+            if exp_warning_count != 0:
+                self.expectOutcome(result=WARNINGS,
+                                status_text=["'make'", "warnings"])
+                self.expectLogfile("warnings (%d)" % exp_warning_count,
+                                exp_warning_log)
+            else:
+                self.expectOutcome(result=SUCCESS,
+                                status_text=["'make'"])
+            self.expectProperty("warnings-count", exp_warning_count)
+        return self.runStep()
+
+    def test_suppressions(self):
+        step = shell.WarningCountingShellCommand(command=['make'],
+                                suppressionFile='supps')
+        supps_file = textwrap.dedent("""\
+            # example suppressions file
+
+            amar.c : .*unused variable.*
+            holding.c : .*invalid access to non-static.*
+            """).strip()
+        stdout = textwrap.dedent("""\
+            /bin/sh ../libtool --tag=CC  --silent --mode=link gcc blah
+            /bin/sh ../libtool --tag=CC  --silent --mode=link gcc blah
+            amar.c: In function 'write_record':
+            amar.c:164: warning: unused variable 'x'
+            amar.c:164: warning: this should show up
+            /bin/sh ../libtool --tag=CC  --silent --mode=link gcc blah
+            /bin/sh ../libtool --tag=CC  --silent --mode=link gcc blah
+            holding.c: In function 'holding_thing':
+            holding.c:984: warning: invalid access to non-static 'y'
+            """)
+        exp_warning_log = textwrap.dedent("""\
+            amar.c:164: warning: this should show up
+        """)
+        return self.do_test_suppressions(step, supps_file, stdout, 1,
+                                         exp_warning_log)
+
+    def test_suppressions_directories(self):
+        def warningExtractor(step, line, match):
+            return line.split(':', 2)
+        step = shell.WarningCountingShellCommand(command=['make'],
+                                suppressionFile='supps',
+                                warningExtractor=warningExtractor)
+        supps_file = textwrap.dedent("""\
+            # these should be suppressed:
+            amar-src/amar.c : XXX
+            .*/server-src/.* : AAA
+            # these should not, as the dirs do not match:
+            amar.c : YYY
+            server-src.* : BBB
+            """).strip()
+        # note that this uses the unicode smart-quotes that gcc loves so much
+        stdout = textwrap.dedent(u"""\
+            make: Entering directory \u2019amar-src\u2019
+            amar.c:164: warning: XXX
+            amar.c:165: warning: YYY
+            make: Leaving directory 'amar-src'
+            make: Entering directory "subdir"
+            make: Entering directory 'server-src'
+            make: Entering directory `one-more-dir`
+            holding.c:999: warning: BBB
+            holding.c:1000: warning: AAA
+            """)
+        exp_warning_log = textwrap.dedent("""\
+            amar.c:165: warning: YYY
+            holding.c:999: warning: BBB
+        """)
+        return self.do_test_suppressions(step, supps_file, stdout, 2,
+                                         exp_warning_log)
+
+    def test_suppressions_directories_custom(self):
+        def warningExtractor(step, line, match):
+            return line.split(':', 2)
+        step = shell.WarningCountingShellCommand(command=['make'],
+                                suppressionFile='supps',
+                                warningExtractor=warningExtractor,
+                                directoryEnterPattern="^IN: (.*)",
+                                directoryLeavePattern="^OUT:")
+        supps_file = "dir1/dir2/abc.c : .*"
+        stdout = textwrap.dedent(u"""\
+            IN: dir1
+            IN: decoy
+            OUT: decoy
+            IN: dir2
+            abc.c:123: warning: hello
+            """)
+        return self.do_test_suppressions(step, supps_file, stdout, 0, '')
+
+    def test_suppressions_linenos(self):
+        def warningExtractor(step, line, match):
+            return line.split(':', 2)
+        step = shell.WarningCountingShellCommand(command=['make'],
+                                suppressionFile='supps',
+                                warningExtractor=warningExtractor)
+        supps_file = "abc.c:.*:100-199\ndef.c:.*:22"
+        stdout = textwrap.dedent(u"""\
+            abc.c:99: warning: seen 1
+            abc.c:150: warning: unseen
+            def.c:22: warning: unseen
+            abc.c:200: warning: seen 2
+            """)
+        exp_warning_log = textwrap.dedent(u"""\
+            abc.c:99: warning: seen 1
+            abc.c:200: warning: seen 2
+            """)
+        return self.do_test_suppressions(step, supps_file, stdout, 2,
+                                         exp_warning_log)
+
+    @compat.usesFlushLoggedErrors
+    def test_suppressions_warningExtractor_exc(self):
+        def warningExtractor(step, line, match):
+            raise RuntimeError("oh noes")
+        step = shell.WarningCountingShellCommand(command=['make'],
+                                suppressionFile='supps',
+                                warningExtractor=warningExtractor)
+        supps_file = 'x:y' # need at least one supp to trigger warningExtractor
+        stdout = "abc.c:99: warning: seen 1"
+        d = self.do_test_suppressions(step, supps_file, stdout,
+                                         exp_exception=True)
+        d.addCallback(lambda _ :
+            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
+        return d
+
+    def test_suppressions_addSuppression(self):
+        # call addSuppression "manually" from a subclass
+        class MyWCSC(shell.WarningCountingShellCommand):
+            def start(self):
+                self.addSuppression([('.*', '.*unseen.*', None, None)])
+                return shell.WarningCountingShellCommand.start(self)
+
+        def warningExtractor(step, line, match):
+            return line.split(':', 2)
+        step = MyWCSC(command=['make'], suppressionFile='supps',
+                        warningExtractor=warningExtractor)
+        stdout = textwrap.dedent(u"""\
+            abc.c:99: warning: seen 1
+            abc.c:150: warning: unseen
+            abc.c:200: warning: seen 2
+            """)
+        exp_warning_log = textwrap.dedent(u"""\
+            abc.c:99: warning: seen 1
+            abc.c:200: warning: seen 2
+            """)
+        return self.do_test_suppressions(step, '', stdout, 2,
+                                         exp_warning_log)
+
+    def test_warnExtractFromRegexpGroups(self):
+        step = shell.WarningCountingShellCommand(command=['make'])
+        we = shell.WarningCountingShellCommand.warnExtractFromRegexpGroups
+        line, pat, exp_file, exp_lineNo, exp_text = \
+            ('foo:123:text', '(.*):(.*):(.*)', 'foo', 123, 'text')
+        self.assertEqual(we(step, line, re.match(pat, line)),
+                (exp_file, exp_lineNo, exp_text))
