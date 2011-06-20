@@ -24,7 +24,7 @@ DEFAULT_USEPTY="DEFAULT_USEPTY"
 
 class FakeRemoteCommand(object):
 
-    def __init__(self, remote_command, args):
+    def __init__(self, remote_command, args, ignore_updates=False):
         # copy the args and set a few defaults
         self.remote_command = remote_command
         self.args = args.copy()

@@ -330,15 +330,6 @@ class StringFileWriter(pb.Referenceable):
     def remote_close(self):
         pass
 
-class SilentRemoteCommand(buildstep.RemoteCommand):
-    """
-    Remote command subclass used to run an internal file upload command on the
-    slave. We do not need any progress updates from such command, so override
-    remoteUpdate() with an empty method.
-    """
-    def remoteUpdate(self, update):
-        pass
-
 class WarningCountingShellCommand(ShellCommand):
     renderables = [ 'suppressionFile' ]
 
@@ -468,7 +459,7 @@ class WarningCountingShellCommand(ShellCommand):
             'maxsize': None,
             'blocksize': 32*1024,
             }
-        cmd = SilentRemoteCommand('uploadFile', args)
+        cmd = buildstep.RemoteCommand('uploadFile', args, ignore_updates=True)
         d = self.runCommand(cmd)
         d.addCallback(self.uploadDone)
         d.addErrback(self.failed)

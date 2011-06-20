@@ -21,7 +21,7 @@ from buildbot.status.results import SKIPPED, SUCCESS, WARNINGS, FAILURE
 from buildbot.status.results import EXCEPTION
 from buildbot.test.util import steps, compat
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
-from buildbot.test.fake.remotecommand import FakeRemoteCommand, ExpectRemoteRef
+from buildbot.test.fake.remotecommand import ExpectRemoteRef
 
 
 class TestShellCommandExeceution(steps.BuildStepMixin, unittest.TestCase):
@@ -432,7 +432,6 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
     def do_test_suppressions(self, step, supps_file='', stdout='',
                                 exp_warning_count=0, exp_warning_log='',
                                 exp_exception=False):
-        self.patch(shell, 'SilentRemoteCommand', FakeRemoteCommand)
         self.setupStep(step)
 
         # Invoke the expected callbacks for the suppression file upload.  Note
