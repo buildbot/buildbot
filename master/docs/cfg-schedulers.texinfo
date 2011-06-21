@@ -24,14 +24,14 @@ based on other events in the buildmaster.
 @code{c['schedulers']} is a list of Scheduler instances, each
 of which causes builds to be started on a particular set of
 Builders. The two basic Scheduler classes you are likely to start
-with are @code{Scheduler} and @code{Periodic}, but you can write a
+with are @code{SingleBranchScheduler} and @code{Periodic}, but you can write a
 customized subclass to implement more complicated build scheduling.
 
 Scheduler arguments should always be specified by name (as keyword arguments),
 to allow for future expansion:
 
 @example
-sched = Scheduler(name="quick", builderNames=['lin', 'win'])
+sched = SingleBranchScheduler(name="quick", builderNames=['lin', 'win'])
 @end example
 
 There are several common arguments for schedulers, although not all are
@@ -58,7 +58,7 @@ particular interest, as its contents (as a list) will be added to the list of
 For example:
 
 @example
-sched = Scheduler(...,
+sched = SingleBranchScheduler(...,
     properties = @{ 'owner' : [ 'zorro@@company.com', 'silver@@company.com' ] @})
 @end example
 
