@@ -232,7 +232,7 @@ triggers a different set of Builders, referenced by name.
 @slindex buildbot.scheduler.Scheduler
 The old names for this scheduler, @code{buildbot.scheduler.Scheduler} and
 @code{buildbot.schedulers.basic.Scheduler}, are deprecated in favor of the more
-accurate name @code{SingleBranchScheduler}.
+accurate name @code{buildbot.schedulers.basic.SingleBranchScheduler}.
 
 @node AnyBranchScheduler
 @subsection AnyBranchScheduler
