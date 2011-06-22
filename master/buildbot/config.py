@@ -99,6 +99,7 @@ class BuilderConfig:
         self.env = env
         self.properties = properties
         self.mergeRequests = mergeRequests
+        print "DEEGAN: in BuilderConfig __init__ mergeRequests=%s"%self.mergeRequests
 
     def getConfigDict(self):
         rv = {
@@ -120,6 +121,6 @@ class BuilderConfig:
             rv['env'] = self.env
         if self.properties:
             rv['properties'] = self.properties
-        if self.mergeRequests:
+        if self.mergeRequests is not None:
             rv['mergeRequests'] = self.mergeRequests
         return rv
