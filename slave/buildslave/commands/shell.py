@@ -46,6 +46,8 @@ class SlaveShellCommand(base.Command):
                         watched just like 'tail -f', and all changes will be
                         written to 'log' status updates.
         - ['logEnviron']: False to not log the environment variables on the slave
+        - ['KILL']: what signal should be sent to the sub process when 
+                    interrupting this step. Defaults to "KILL"
 
     ShellCommand creates the following status messages:
         - {'stdout': data} : when stdout data is available
@@ -76,6 +78,8 @@ class SlaveShellCommand(base.Command):
                          usePTY=args.get('usePTY', "slave-config"),
                          logEnviron=args.get('logEnviron', True),
                          )
+	if args.get('KILL'):
+            c.KILL = args['KILL']
         c._reactor = self._reactor
         self.command = c
         d = self.command.start()
