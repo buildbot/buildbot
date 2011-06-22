@@ -207,7 +207,7 @@ on other branches. Setting @code{branch} equal to the special value of
 Example:
 
 @example
-from buildbot.schedulers.basic  import SingleBranchScheduler
+from buildbot.schedulers.basic import SingleBranchScheduler
 quick = SingleBranchScheduler(name="quick",
                     branch=None,
                     treeStableTimer=60,
