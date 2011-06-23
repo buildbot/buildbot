@@ -776,7 +776,6 @@ class Builder(pb.Referenceable, service.MultiService):
         # first, seek through builder, global, and the default
         mergeRequests_fn = self.mergeRequests
             
-        # Possible fix for bug 2008
         if mergeRequests_fn is None:
             mergeRequests_fn = self.botmaster.mergeRequests
             

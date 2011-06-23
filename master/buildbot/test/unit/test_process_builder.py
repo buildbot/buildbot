@@ -18,7 +18,7 @@ import random
 from twisted.trial import unittest
 from twisted.python import failure
 from twisted.internet import defer
-from buildbot.test.fake import fakedb, fakemaster
+from buildbot.test.fake import fakedb, fakemaster, fakebotmaster
 from buildbot.process import builder, buildrequest
 from buildbot.db import buildrequests
 from buildbot.util import epoch2datetime
@@ -36,16 +36,25 @@ class TestBuilderBuildCreation(unittest.TestCase):
         """Set up C{self.bldr}"""
         self.bstatus = mock.Mock()
         self.factory = mock.Mock()
-        self.master = fakemaster.make_master()
+        
+        # Create fake botmaster
+        self.botmaster = fakebotmaster.make_botmaster()
+        self.botmaster.mergeRequests = None
+
+        self.botmaster.master = fakemaster.make_master()
+
         # only include the necessary required config, plus user-requested
         config = dict(name="bldr", slavename="slv", builddir="bdir",
                      slavebuilddir="sbdir", factory=self.factory)
         config.update(config_kwargs)
         self.bldr = builder.Builder(config, self.bstatus)
-        self.master.db = self.db = db = fakedb.FakeDBConnector(self)
-        self.master.master_name = db.buildrequests.MASTER_NAME
-        self.master.master_incarnation = db.buildrequests.MASTER_INCARNATION
-        self.bldr.master = self.master
+        self.botmaster.master.db = self.db = db = fakedb.FakeDBConnector(self)
+        self.botmaster.master.master_name = db.buildrequests.MASTER_NAME
+        self.botmaster.master.master_incarnation = db.buildrequests.MASTER_INCARNATION
+        
+        # Use setBotmaster to assign master and botmaster to builder
+        self.bldr.setBotmaster(self.botmaster)
+
 
         # patch into the _startBuildsFor method
         self.builds_started = []
@@ -419,7 +428,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
     def do_test_getMergeRequestsFn(self, builder_param, global_param,
                                   expected):
         self.makeBuilder(mergeRequests=builder_param)
-        self.master.mergeRequests=global_param
+        self.botmaster.mergeRequests=global_param
         self.assertEqual(self.bldr._getMergeRequestsFn(), expected)
 
     def test_getMergeRequestsFn_defaults(self):
@@ -443,6 +452,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
     def test_getMergeRequestsFn_builder_False(self):
         self.do_test_getMergeRequestsFn(False, True, None)
+
 
     def test_getMergeRequestsFn_builder_function(self):
         function = lambda : None
