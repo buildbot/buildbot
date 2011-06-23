@@ -105,19 +105,11 @@ class Builder(pb.Referenceable, service.MultiService):
         self.buildHorizon = setup.get('buildHorizon')
         self.logHorizon = setup.get('logHorizon')
         self.eventHorizon = setup.get('eventHorizon')
-        
-        
-        #import traceback
-        #print "DEEGAN: stack trace"
-        #for t in traceback.extract_stack():
-        #    print "DEEGAN:%s %s %s %s"%t
             
-        print "DEEGAN: builder __init__: mergeRequests:%s"%setup.get('mergeRequests','zebras')
         # Bug 2008. Shouldn't default to True here. The _getMergeRequestsFn
         # won't know if it's defaulted or was set by user.
         self.mergeRequests = setup.get('mergeRequests', None)
-        
-        
+                
         self.properties = setup.get('properties', {})
         self.category = setup.get('category', None)
 
@@ -618,8 +610,6 @@ class Builder(pb.Referenceable, service.MultiService):
 
     @defer.deferredGenerator
     def maybeStartBuild(self):
-        print "DEEGAN: in maybeStartBuild()"
-
         # This method is called by the botmaster whenever this builder should
         # check for and potentially start new builds.  Do not call this method
         # directly - use master.botmaster.maybeStartBuildsForBuilder, or one
@@ -784,51 +774,28 @@ class Builder(pb.Referenceable, service.MultiService):
         """Helper function to determine which mergeRequests function to use
         from L{_mergeRequests}, or None for no merging"""
         # first, seek through builder, global, and the default
-        print "DEEGAN: _getMergeRequestsFn : self.mergeRequests:%s"%self.mergeRequests
-        #try:
-        #    print "DEEGAN: _getMergeRequestsFn : self.master.mergeRequests:%s"%self.master.mergeRequests
-        #except AttributeError,e:
-        #    print "DEEGAN: _getMergeRequestsFn : no self.master.mergeRequests defined"
-            
-        print "DEEGAN: _getMergeRequestsFn: self.botmaster.mergeRequests:%s"%self.botmaster.mergeRequests
-
         mergeRequests_fn = self.mergeRequests
-        
-        # There is no longer a self.master.mergeRequests, it's in self.botmaster
-        #if mergeRequests_fn is None:
-        #    mergeRequests_fn = self.master.mergeRequests
-        #    print "DEEGAN: _getMergeRequestsFn: setting to self.master.mergeRequests:%s"%self.master.mergeRequests
             
         # Possible fix for bug 2008
         if mergeRequests_fn is None:
             mergeRequests_fn = self.botmaster.mergeRequests
-            print "DEEGAN: _getMergeRequestsFn: setting to self.botmaster.mergeRequests:%s"%self.botmaster.mergeRequests
-
             
         if mergeRequests_fn is None:
-            print "DEEGAN: _getMergeRequestsFn: still none setting to True"
             mergeRequests_fn = True
             
-
-
         # then translate False and True properly
         if mergeRequests_fn is False:
-            print "DEEGAN: _getMergeRequestsFn: false setting to None"
             mergeRequests_fn = None
         elif mergeRequests_fn is True and not callable(mergeRequests_fn):
-            print "DEEGAN: _getMergeRequestsFn is true:%s callable:%s"%(mergeRequests_fn is True,callable(mergeRequests_fn))
             mergeRequests_fn = buildrequest.BuildRequest.canBeMergedWith
 
-        print "DEEGAN: _getMergeRequestsFn: returning:%s"%mergeRequests_fn
         return mergeRequests_fn
 
     @defer.deferredGenerator
     def _mergeRequests(self, breq, unclaimed_requests, mergeRequests_fn):
         """Use C{mergeRequests_fn} to merge C{breq} against
         C{unclaimed_requests}, where both are build request dictionaries"""
-        
-        print "DEEGAN: in _mergeRequests"
-        
+                
         # short circuit if there is no merging to do
         if not mergeRequests_fn or len(unclaimed_requests) == 1:
             yield [ breq ]

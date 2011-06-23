@@ -700,7 +700,6 @@ class BuildMaster(service.MultiService):
                 log.msg("adding new builder %s for category %s" %
                         (name, category))
                 statusbag = self.status.builderAdded(name, basedir, category)
-                print "DEEGAN:Buildmaster:loadConfig_Builders: data:%s"%data
                 builder = Builder(data, statusbag)
                 allBuilders[name] = builder
                 somethingChanged = True
