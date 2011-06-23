@@ -248,6 +248,10 @@ class BotMaster(service.MultiService):
                 self.builders[b.name] = b
                 self.builderNames.append(b.name)
                 b.setBotmaster(self)
+                # Looks like the right way to get this is from b.botmaster.mergeRequests
+                # and not from b.master.mergeRequests
+                # TODO: FIgure out how/why to fix this
+                print "DEEGAN: b.master.mergeRequests:%s"%b.botmaster.mergeRequests
                 b.setServiceParent(self)
         d.addCallback(_add)
         d.addCallback(lambda ign: self._updateAllSlaves())
