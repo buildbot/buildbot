@@ -60,6 +60,7 @@ class Options(usage.Options):
     optParameters = [
         ['repository', 'r', None,
          "The repository that was changed."],
+        ['slave-repo', 'c', None, "In case the repository differs for the slaves."],
         ['revision', 'v', None,
          "The revision that we want to examine (default: latest)"],
         ['bbserver', 's', 'localhost',
@@ -82,6 +83,7 @@ patterns.  Excludes override includes, that is, patterns that match both an
 include and an exclude will be excluded.'''],
         ['encoding', 'e', "utf8",
          "The encoding of the strings from subversion (default: utf8)" ],
+        ['project', 'P', None, "The project for the source."]
         ]
     optFlags = [
         ['dryrun', 'n', "Do not actually send changes"],
@@ -151,6 +153,7 @@ class ChangeSender:
 
         # first we extract information about the files that were changed
         repo = opts['repository']
+        slave_repo = opts['slave-repo'] or repo
         print "Repo:", repo
         rev_arg = ''
         if opts['revision']:
@@ -201,9 +204,10 @@ class ChangeSender:
         encoding = opts['encoding']
         for branch in files_per_branch.keys():
             d = {'who': unicode(who, encoding=encoding),
-                 'repository': unicode(repo, encoding=encoding),
+                 'repository': unicode(slave_repo, encoding=encoding),
                  'comments': unicode(message, encoding=encoding),
-                 'revision': revision
+                 'revision': revision,
+                 'project' : unicode(opts['project'] or "", encoding=encoding)
                  }
             if branch:
                 d['branch'] = unicode(branch, encoding=encoding)
