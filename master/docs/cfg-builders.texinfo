@@ -146,7 +146,11 @@ parameter, and on a per-builder basis, using the @code{mergeRequests} argument
 to the builder configuration.  If @code{mergeRequests} is given, it completely
 overrides the global configuration.
 
-For either configuration parameter, a value of @code{True} (the default) causes
+Valid values for mergeRequests are: @code{False}, a @code{callable}, or @code{None}
+(which will cause the default
+  @code{buildbot.process.buildrequest.BuildRequest.canBeMergedWith()} to be called)
+
+For either configuration parameter, a value of @code{None} (the default) causes
 buildbot to merge BuildRequests that have "compatible" source stamps.  Source
 stamps are compatible if:
 
@@ -163,12 +167,11 @@ A configuration value of @code{False} indicates that requests should never be
 merged.
 
 If the configuration value is a callable, that callable will be invoked with
-three positional arguments: a @code{Builder} object and two @code{BuildRequest}
-objects. It should return true if the requests can be merged, and False
-otherwise. For example:
+two positional arguments: two @code{BuildRequest} objects. It should return true
+if the requests can be merged, and False otherwise. For example:
 
 @example
-def mergeRequests(builder, req1, req2):
+def mergeRequests(req1, req2):
     "any requests with the same branch can be merged"
     return req1.branch == req2.branch
 c['mergeRequests'] = mergeRequests
@@ -181,7 +184,7 @@ the use of the @code{canBeMergedWith} method to access the source stamp
 compatibility algorithm.
 
 @example
-def mergeRequests(builder, req1, req2):
+def mergeRequests(req1, req2):
     if req1.source.canBeMergedWith(req2.source) and  req1.reason == req2.reason:
        return True
     return False

@@ -120,6 +120,6 @@ class BuilderConfig:
             rv['env'] = self.env
         if self.properties:
             rv['properties'] = self.properties
-        if self.mergeRequests:
+        if self.mergeRequests is not None:
             rv['mergeRequests'] = self.mergeRequests
         return rv

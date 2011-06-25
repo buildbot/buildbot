@@ -105,7 +105,11 @@ class Builder(pb.Referenceable, service.MultiService):
         self.buildHorizon = setup.get('buildHorizon')
         self.logHorizon = setup.get('logHorizon')
         self.eventHorizon = setup.get('eventHorizon')
-        self.mergeRequests = setup.get('mergeRequests', True)
+            
+        # Bug 2008. Shouldn't default to True here. The _getMergeRequestsFn
+        # won't know if it's defaulted or was set by user.
+        self.mergeRequests = setup.get('mergeRequests', None)
+                
         self.properties = setup.get('properties', {})
         self.category = setup.get('category', None)
 
@@ -771,15 +775,17 @@ class Builder(pb.Referenceable, service.MultiService):
         from L{_mergeRequests}, or None for no merging"""
         # first, seek through builder, global, and the default
         mergeRequests_fn = self.mergeRequests
+            
         if mergeRequests_fn is None:
-            mergeRequests_fn = self.master.mergeRequests
+            mergeRequests_fn = self.botmaster.mergeRequests
+            
         if mergeRequests_fn is None:
             mergeRequests_fn = True
-
+            
         # then translate False and True properly
         if mergeRequests_fn is False:
             mergeRequests_fn = None
-        elif mergeRequests_fn is True:
+        elif mergeRequests_fn is True and not callable(mergeRequests_fn):
             mergeRequests_fn = buildrequest.BuildRequest.canBeMergedWith
 
         return mergeRequests_fn
@@ -788,6 +794,7 @@ class Builder(pb.Referenceable, service.MultiService):
     def _mergeRequests(self, breq, unclaimed_requests, mergeRequests_fn):
         """Use C{mergeRequests_fn} to merge C{breq} against
         C{unclaimed_requests}, where both are build request dictionaries"""
+                
         # short circuit if there is no merging to do
         if not mergeRequests_fn or len(unclaimed_requests) == 1:
             yield [ breq ]
