@@ -257,7 +257,7 @@ class FeedResource(XmlResource):
 
         pageTitle = self.pageTitle
         if not pageTitle:
-            pageTitle = 'Build status of %s' % self.pageTitle
+            pageTitle = 'Build status of %s' % self.title
 
         cxt = {}
         cxt['pageTitle'] = pageTitle
