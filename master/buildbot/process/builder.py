@@ -105,7 +105,7 @@ class Builder(pb.Referenceable, service.MultiService):
         self.buildHorizon = setup.get('buildHorizon')
         self.logHorizon = setup.get('logHorizon')
         self.eventHorizon = setup.get('eventHorizon')
-        self.mergeRequests = setup.get('mergeRequests', True)
+        self.mergeRequests = setup.get('mergeRequests', None)
         self.properties = setup.get('properties', {})
         self.category = setup.get('category', None)
 
@@ -772,7 +772,7 @@ class Builder(pb.Referenceable, service.MultiService):
         # first, seek through builder, global, and the default
         mergeRequests_fn = self.mergeRequests
         if mergeRequests_fn is None:
-            mergeRequests_fn = self.master.mergeRequests
+            mergeRequests_fn = self.botmaster.mergeRequests
         if mergeRequests_fn is None:
             mergeRequests_fn = True
 
