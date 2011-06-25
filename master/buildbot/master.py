@@ -293,7 +293,8 @@ class BuildMaster(service.MultiService):
                         isinstance(logMaxTailSize, int):
                     raise ValueError("logMaxTailSize needs to be None or int")
                 mergeRequests = config.get('mergeRequests')
-                if mergeRequests not in (None, False) and not callable(mergeRequests):
+                if (mergeRequests not in (None, True, False)
+                            and not callable(mergeRequests)):
                     raise ValueError("mergeRequests must be a callable or False")
                 prioritizeBuilders = config.get('prioritizeBuilders')
                 if prioritizeBuilders is not None and not callable(prioritizeBuilders):
