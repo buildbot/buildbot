@@ -272,20 +272,6 @@ class BotMaster(service.MultiService):
         d.addBoth(stop)
         return d
 
-    @metrics.countMethod('BotMaster.shouldMergeRequests()')
-    def shouldMergeRequests(self, builder, req1, req2):
-        """Determine whether two BuildRequests should be merged for
-        the given builder.
-
-        """
-        if self.mergeRequests is not None:
-            if callable(self.mergeRequests):
-                return self.mergeRequests(builder, req1, req2)
-            elif self.mergeRequests == False:
-                # To save typing, this allows c['mergeRequests'] = False
-                return False
-        return req1.canBeMergedWith(req2)
-
     def getPerspective(self, mind, slavename):
         sl = self.slaves[slavename]
         if not sl:
