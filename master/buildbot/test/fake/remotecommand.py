@@ -98,30 +98,6 @@ class Expect(object):
         self.remote_command = remote_command
         self.args = args
         self.result = None
-
-    def runBehaviors(self, command):
-        """
-        Implement any behaviors expected of this command (e.g., logs)
-        """
-        return defer.succeed(self)
-
-
-class ExpectLogged(Expect):
-    """
-    Define an expected L{LoggedRemoteCommand}, with the same arguments
-
-    Extra attributes of the logged remote command can be added to
-    the instance, using class methods to specify the attributes::
-
-        ExpectLogged('somecommand', { args='foo' })
-            + ExpectLogged.log('stdio', stdout='foo!')
-            + ExpectLogged.log('config.log', stdout='some info')
-            + 0,      # (specifies the rc)
-        ...
-
-    """
-    def __init__(self, remote_command, args):
-        Expect.__init__(self, remote_command, args)
         self.updates = []
 
     @classmethod
@@ -152,8 +128,24 @@ class ExpectLogged(Expect):
                     command.logs[name].addStdout(streams['stdout'])
                 if 'stderr' in streams:
                     command.logs[name].addStderr(streams['stderr'])
-        return Expect.runBehaviors(self, command)
+        return defer.succeed(self)
 
+class ExpectLogged(Expect):
+    """
+    Define an expected L{LoggedRemoteCommand}, with the same arguments
+
+    Extra attributes of the logged remote command can be added to
+    the instance, using class methods to specify the attributes::
+
+        ExpectLogged('somecommand', { args='foo' })
+            + ExpectLogged.log('stdio', stdout='foo!')
+            + ExpectLogged.log('config.log', stdout='some info')
+            + 0,      # (specifies the rc)
+        ...
+
+    """
+    def __init__(self, remote_command, args):
+        Expect.__init__(self, remote_command, args)
 
 class ExpectShell(ExpectLogged):
     """
