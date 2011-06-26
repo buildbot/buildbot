@@ -157,7 +157,8 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
     ## change handling
 
-    def startConsumingChanges(self, fileIsImportant=None, change_filter=None):
+    def startConsumingChanges(self, fileIsImportant=None, change_filter=None,
+                              onlyImportant=False):
         """
         Subclasses should call this method from startService to register to
         receive changes.  The BaseScheduler class will take care of filtering
@@ -171,6 +172,11 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         @param change_filter: a filter to determine which changes are even
         considered by this scheduler, or C{None} to consider all changes
         @type change_filter: L{buildbot.changes.filter.ChangeFilter} instance
+
+        @param onlyImportant: If True, only important changes, as specified by
+        fileIsImportant, will be added to the buildset.
+        @type onlyImportant: boolean
+
         """
         assert fileIsImportant is None or callable(fileIsImportant)
 
@@ -186,6 +192,8 @@ class BaseScheduler(service.MultiService, ComparableMixin):
             if fileIsImportant:
                 try:
                     important = fileIsImportant(change)
+                    if not important and onlyImportant:
+                        return
                 except:
                     log.err(failure.Failure(),
                             'in fileIsImportant check for %s' % change)

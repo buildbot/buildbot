@@ -99,7 +99,8 @@ class BaseBasicScheduler(CommonStuffMixin,
         # check that the scheduler has started to consume changes, and the
         # classifications *have* been flushed, since they will not be used
         def check(_):
-            self.assertConsumingChanges(fileIsImportant=fII, change_filter=cf)
+            self.assertConsumingChanges(fileIsImportant=fII, change_filter=cf,
+                                        onlyImportant=False)
             self.db.schedulers.assertClassifications(self.SCHEDULERID, {})
         d.addCallback(check)
         d.addCallback(lambda _ : sched.stopService())
@@ -123,7 +124,8 @@ class BaseBasicScheduler(CommonStuffMixin,
         # classification should have been acted on, so the timer should be
         # running
         def check(_):
-            self.assertConsumingChanges(fileIsImportant=None, change_filter=cf)
+            self.assertConsumingChanges(fileIsImportant=None, change_filter=cf,
+                                        onlyImportant=False)
             self.db.schedulers.assertClassifications(self.SCHEDULERID, { 20 : True })
             self.assertTrue(sched.timer_started)
         d.addCallback(check)

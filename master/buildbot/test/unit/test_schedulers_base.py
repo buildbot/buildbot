@@ -207,6 +207,18 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                 self.makeFakeChange(),
                 None)
 
+    def test_change_consumption_fileIsImportant_False_onlyImportant(self):
+        return self.do_test_change_consumption(
+                dict(fileIsImportant=lambda c : False, onlyImportant=True),
+                self.makeFakeChange(),
+                None)
+
+    def test_change_consumption_fileIsImportant_True_onlyImportant(self):
+        return self.do_test_change_consumption(
+                dict(fileIsImportant=lambda c : True, onlyImportant=True),
+                self.makeFakeChange(),
+                True)
+
     def test_addBuilsetForLatest_args(self):
         sched = self.makeScheduler(name='xyz', builderNames=['y', 'z'])
         d = sched.addBuildsetForLatest(reason='cuz', branch='default',

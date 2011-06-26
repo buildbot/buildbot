@@ -207,7 +207,7 @@ class Periodic(Timed):
     compare_attrs = Timed.compare_attrs + ('periodicBuildTimer', 'branch',)
 
     def __init__(self, name, builderNames, periodicBuildTimer,
-            branch=None, properties={}):
+            branch=None, properties={}, onlyImportant=False):
         Timed.__init__(self, name=name, builderNames=builderNames,
                     properties=properties)
         assert periodicBuildTimer > 0, "periodicBuildTimer must be positive"
@@ -228,14 +228,17 @@ class Nightly(Timed):
     compare_attrs = (Timed.compare_attrs
             + ('minute', 'hour', 'dayOfMonth', 'month',
                'dayOfWeek', 'onlyIfChanged', 'fileIsImportant',
-               'change_filter',))
+               'change_filter', 'onlyImportant',))
 
     class NoBranch: pass
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  branch=NoBranch, fileIsImportant=None, onlyIfChanged=False,
-                 properties={}, change_filter=None):
+                 properties={}, change_filter=None, onlyImportant=False):
         Timed.__init__(self, name=name, builderNames=builderNames, properties=properties)
+
+        # If True, only important changes will be added to the buildset.
+        self.onlyImportant = onlyImportant
 
         if fileIsImportant:
             assert callable(fileIsImportant), \
@@ -257,8 +260,9 @@ class Nightly(Timed):
 
     def startTimedSchedulerService(self):
         if self.onlyIfChanged:
-            return self.startConsumingChanges(
-                    fileIsImportant=self.fileIsImportant, change_filter=self.change_filter)
+            return self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
+                                              change_filter=self.change_filter,
+                                              onlyImportant=self.onlyImportant)
         else:
             return self.master.db.schedulers.flushChangeClassifications(self.schedulerid)
 

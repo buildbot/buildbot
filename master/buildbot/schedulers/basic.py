@@ -21,9 +21,16 @@ from buildbot.changes import filter, changes
 from buildbot.schedulers import base, dependent
 
 class BaseBasicScheduler(base.BaseScheduler):
+    """
+    @param onlyImportant: If True, only important changes will be added to the
+                          buildset.
+    @type onlyImportant: boolean
+
+    """
 
     compare_attrs = (base.BaseScheduler.compare_attrs +
-                     ('treeStableTimer', 'change_filter', 'fileIsImportant') )
+                     ('treeStableTimer', 'change_filter', 'fileIsImportant',
+                      'onlyImportant') )
 
     _reactor = reactor # for tests
 
@@ -31,7 +38,7 @@ class BaseBasicScheduler(base.BaseScheduler):
     def __init__(self, name, shouldntBeSet=NotSet, treeStableTimer=None,
                 builderNames=None, branch=NotABranch, branches=NotABranch,
                 fileIsImportant=None, properties={}, categories=None,
-                change_filter=None):
+                change_filter=None, onlyImportant=False):
         assert shouldntBeSet is self.NotSet, \
                 "pass arguments to schedulers using keyword arguments"
         if fileIsImportant:
@@ -42,6 +49,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         self.treeStableTimer = treeStableTimer
         self.fileIsImportant = fileIsImportant
+        self.onlyImportant = onlyImportant
         self.change_filter = self.getChangeFilter(branch=branch,
                 branches=branches, change_filter=change_filter,
                 categories=categories)
@@ -58,7 +66,8 @@ class BaseBasicScheduler(base.BaseScheduler):
         base.BaseScheduler.startService(self)
 
         d = self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
-                                       change_filter=self.change_filter)
+                                       change_filter=self.change_filter,
+                                       onlyImportant=self.onlyImportant)
 
         # if treeStableTimer is False, then we don't care about classified
         # changes, so get rid of any hanging around from previous

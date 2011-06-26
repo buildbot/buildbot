@@ -77,6 +77,12 @@ completely ignored by the scheduler.  If a Change is allowed by the change
 filter, but is deemed unimportant, then it will not cause builds to start, but
 will be remembered and shown in status displays.
 
+@item onlyImportant
+A boolean that, when @code{True}, only adds important changes to the buildset as
+sepcified in the @code{fileIsImportant} callable. This means that unimportant
+changes are ignored the same way a @code{change_filter} filters changes. This
+defaults to @code{False} and only applies when @code{fileIsImportant} is given.
+
 @end table
 
 The remaining subsections represent a catalog of the available Scheduler types.
@@ -182,6 +188,8 @@ The arguments to this scheduler are:
 @item change_filter
 @pxref{Configuring Schedulers}
 
+@item onlyImportant
+
 @item treeStableTimer
 The scheduler will wait for this many seconds before starting the
 build. If new changes are made during this interval, the timer will be
@@ -254,6 +262,8 @@ The arguments to this scheduler are:
 
 @item change_filter
 @pxref{Configuring Schedulers}
+
+@item onlyImportant
 
 @item treeStableTimer
 The scheduler will wait for this many seconds before starting the
@@ -352,6 +362,8 @@ The arguments to this scheduler are:
 
 @item properties
 
+@item onlyImportant
+
 @item periodicBuildTimer
 The time, in seconds, after which to start a build.
 @end table
@@ -400,6 +412,8 @@ The full list of parameters is:
 @item properties
 
 @item fileIsImportant
+
+@item onlyImportant
 
 @item branch
 (required) The branch to build when the time comes.  Remember that a value of
