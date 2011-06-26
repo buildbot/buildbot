@@ -299,8 +299,10 @@ class SetProperty(ShellCommand):
             self.addCompleteLog('property changes', "\n".join(props_set))
 
     def getText(self, cmd, results):
-        if self.property_changes:
-            return [ "set props:" ] + self.property_changes.keys()
+        if len(self.property_changes) > 1:
+            return [ "%d properties set" % len(self.property_changes) ]
+        elif len(self.property_changes) == 1:
+            return [ "property '%s' set" % self.property_changes.keys()[0] ]
         else:
             # let ShellCommand describe
             return ShellCommand.getText(self, cmd, results)

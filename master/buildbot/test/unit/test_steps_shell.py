@@ -244,7 +244,7 @@ class SetProperty(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["set props:", "res"])
+                status_text=["property 'res' set"])
         self.expectProperty("res", "abcdef") # note: stripped
         self.expectLogfile('property changes', r"res: 'abcdef'")
         return self.runStep()
@@ -259,7 +259,7 @@ class SetProperty(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["set props:", "res"])
+                status_text=["property 'res' set"])
         self.expectProperty("res", "\n\nabcdef\n")
         self.expectLogfile('property changes', r"res: '\n\nabcdef\n'")
         return self.runStep()
@@ -291,7 +291,7 @@ class SetProperty(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["set props:", "a", "b"])
+                status_text=["2 properties set"])
         self.expectLogfile('property changes', 'a: 1\nb: 2')
         self.expectProperty("a", 1)
         self.expectProperty("b", 2)
@@ -309,7 +309,7 @@ class SetProperty(steps.BuildStepMixin, unittest.TestCase):
         )
         # note that extract_fn *is* called anyway
         self.expectOutcome(result=FAILURE,
-                status_text=["set props:", "a", "b"])
+                status_text=["2 properties set"])
         self.expectLogfile('property changes', 'a: 1\nb: 2')
         return self.runStep()
 
