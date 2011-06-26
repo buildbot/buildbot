@@ -504,6 +504,36 @@ class TestBuildsetsConnectorComponent(
             ], 1300305712, [ 44 ],
             expfailure=buildrequests.AlreadyClaimedError)
 
+    def test_claimBuildRequests_sequential(self):
+        now = 120350934
+        clock = task.Clock()
+        clock.advance(now)
+
+        d = self.insertTestData([
+                fakedb.BuildRequest(id=44, buildsetid=self.BSID,
+                    claimed_at=None, claimed_by_name=None,
+                    claimed_by_incarnation=None),
+                fakedb.BuildRequest(id=45, buildsetid=self.BSID,
+                    claimed_at=None, claimed_by_name=None,
+                    claimed_by_incarnation=None),
+        ])
+        d.addCallback(lambda _ :
+            self.db.buildrequests.claimBuildRequests(brids=[44],
+                        _reactor=clock))
+        d.addCallback(lambda _ :
+            self.db.buildrequests.claimBuildRequests(brids=[45],
+                        _reactor=clock))
+        def check(brlist):
+            def thd(conn):
+                tbl = self.db.model.buildrequests
+                q = sa.select([ tbl.c.id ],
+                        whereclause=(tbl.c.claimed_at == None))
+                results = conn.execute(q).fetchall()
+                self.assertEqual(results, [])
+            return self.db.pool.do(thd)
+        d.addCallback(check)
+        return d
+
     def do_test_completeBuildRequests(self, rows, now, expected=None,
                                      expfailure=None, brids=[44]):
         clock = task.Clock()
