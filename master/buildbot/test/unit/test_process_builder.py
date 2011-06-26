@@ -489,7 +489,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         yield wfd
         brdicts = wfd.getResult()
 
-        def mergeRequests_fn(breq, other):
+        def mergeRequests_fn(builder, breq, other):
             # merge evens with evens, odds with odds
             return breq.id % 2 == other.id % 2
 

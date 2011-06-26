@@ -808,7 +808,7 @@ class Builder(pb.Referenceable, service.MultiService):
         for other_breq_object in unclaimed_request_objects:
             wfd = defer.waitForDeferred(
                 defer.maybeDeferred(lambda :
-                    mergeRequests_fn(breq_object, other_breq_object)))
+                    mergeRequests_fn(self, breq_object, other_breq_object)))
             yield wfd
             if wfd.getResult():
                 merged_request_objects.append(other_breq_object)
