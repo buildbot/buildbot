@@ -1458,8 +1458,9 @@ This argument defaults to @code{"release"} an gives to the compiler the
 configuration to use.
 
 @item installdir
-This is the place where the compiler is installed. The default value is
-compiler specific and is the default place where the compiler is installed.
+Base Visual Studio installation directory. For example, @code{C:\Program
+Files\Microsoft Visual Studio 8} for Visual Studio 2005.  This is the place
+where the compiler is installed. The default value is compiler specific.
 
 @item useenv
 This boolean parameter, defaulting to @code{False} instruct the compiler
