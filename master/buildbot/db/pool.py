@@ -13,11 +13,42 @@
 #
 # Copyright Buildbot Team Members
 
+import time
+import traceback
 import os
 import sqlalchemy as sa
 import twisted
 from twisted.internet import reactor, threads, defer
 from twisted.python import threadpool, failure, versions, log
+
+# set this to True for *very* verbose query debugging output; this can
+# be monkey-patched from master.cfg, too:
+#     from buildbot.db import pool
+#     pool.debug = True
+debug = False
+
+def timed_do_fn(f):
+    """Decorate a do function to log before, after, and elapsed time,
+    with the name of the calling function.  This is not speedy!"""
+    def wrap(*args, **kwargs):
+        # get a description of the function that called us
+        st = traceback.extract_stack(limit=2)
+        file, line, name, _ = st[0]
+        descr = "%s ('%s' line %d)" % (name, file, line)
+
+        start_time = time.time()
+        log.msg("%s - before" % (descr,))
+        d = f(*args, **kwargs)
+        def after(x):
+            end_time = time.time()
+            elapsed = (end_time - start_time) * 1000
+            log.msg("%s - after (%0.2f ms elapsed)" % (descr, elapsed))
+            return x
+        d.addBoth(after)
+        return d
+    wrap.__name__ = f.__name__
+    wrap.__doc__ = f.__doc__
+    return wrap
 
 class DBThreadPool(threadpool.ThreadPool):
     """
@@ -52,6 +83,11 @@ class DBThreadPool(threadpool.ThreadPool):
             log.msg("applying SQLite workaround from Buildbot bug #1810")
             self.__broken_sqlite = self.detect_bug1810()
         self._start_evt = reactor.callWhenRunning(self._start)
+
+        # patch the do methods to do verbose logging if necessary
+        if debug:
+            self.do = timed_do_fn(self.do)
+            self.do_with_engine = timed_do_fn(self.do_with_engine)
 
     def _start(self):
         self._start_evt = None
@@ -149,6 +185,8 @@ class DBThreadPool(threadpool.ThreadPool):
                 reactor.callFromThread(d.errback, failure.Failure())
         self.callInThread(thd)
         return d
+
+    # use the 0.8.1 versions on old Twisteds
     if twisted.version < versions.Version('twisted', 8, 2, 0):
         do = do_081
         do_with_engine = do_with_engine_081

@@ -103,6 +103,20 @@ class Basic(unittest.TestCase):
         d.addCallback( lambda r : self.pool.do_with_engine(insert_into_table))
         return d
 
+
+class BasicWithDebug(Basic):
+
+    # same thing, but with debug=True
+
+    def setUp(self):
+        pool.debug = True
+        return Basic.setUp(self)
+
+    def tearDown(self):
+        pool.debug = False
+        return Basic.tearDown(self)
+
+
 class Native(unittest.TestCase, db.RealDatabaseMixin):
 
     # similar tests, but using the BUILDBOT_TEST_DB_URL
