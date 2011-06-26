@@ -1402,10 +1402,6 @@ directoryEnterPattern = "make.*: Entering directory [\"`'](.*)['`\"]"
 directoryLeavePattern = "make.*: Leaving directory"
 @end example
 
-(TODO: this step needs to be extended to look for GCC error messages
-as well, and collect them into a separate logfile, along with the
-source code filenames involved).
-
 @node Visual C++
 @subsubsection Visual C++
 
@@ -1523,6 +1519,9 @@ This is a simple command that uses the 'du' tool to measure the size
 of the code tree. It puts the size (as a count of 1024-byte blocks,
 aka 'KiB' or 'kibibytes') on the step's status text, and sets a build
 property named 'tree-size-KiB' with the same value.
+
+Its constructor takes no arguments beyond those supplied to ShellCommand.  It
+will only work on systems that support the command @code{du -s -k .}.
 
 @node PerlModuleTest
 @subsubsection PerlModuleTest

@@ -81,6 +81,11 @@ class BuildStepMixin(object):
         b.render = lambda x : interfaces.IRenderable(x).getRenderingFor(b)
         b.getSlaveCommandVersion = lambda command, oldversion : slave_version
         b.slaveEnvironment = slave_env.copy()
+        self.set_properties = {}
+        def setProperty(propname, value, source=None, runtime=None):
+            self.set_properties[propname] = value
+        b.setProperty = setProperty
+        b.getProperty = self.set_properties.__getitem__
         step.setBuild(b)
 
         # step.progress
@@ -104,6 +109,11 @@ class BuildStepMixin(object):
 
         ss.getLogs = lambda : ss.logs.values()
 
+        self.step_statistics = {}
+        ss.setStatistic = self.step_statistics.__setitem__
+        ss.getStatistic = self.step_statistics.get
+        ss.hasStatistic = self.step_statistics.__contains__
+
         self.step.setStepStatus(ss)
 
         # step overrides
@@ -114,7 +124,30 @@ class BuildStepMixin(object):
             return l
         step.addLog = addLog
 
+        def addHTMLLog(name, html):
+            l = remotecommand.FakeLogFile(name)
+            l.addStdout(html)
+            ss.logs[name] = l
+            return l
+        step.addHTMLLog = addHTMLLog
+
+        def addCompleteLog(name, text):
+            l = remotecommand.FakeLogFile(name)
+            l.addStdout(text)
+            ss.logs[name] = l
+            return l
+        step.addCompleteLog = addCompleteLog
+
+        # set defaults
+
         step.setDefaultWorkdir('wkdir')
+
+        # expectations
+
+        self.exp_outcome = None
+        self.exp_properties = {}
+        self.exp_missing_properties = []
+        self.exp_logfiles = {}
 
         return step
 
@@ -132,6 +165,24 @@ class BuildStepMixin(object):
         """
         self.exp_outcome = dict(result=result, status_text=status_text)
 
+    def expectProperty(self, property, value):
+        """
+        Expect the given property to be set when the step is complete.
+        """
+        self.exp_properties[property] = value
+
+    def expectNoProperty(self, property):
+        """
+        Expect the given property is *not* set when the step is complete
+        """
+        self.exp_missing_properties.append(property)
+
+    def expectLogfile(self, logfile, contents):
+        """
+        Expect a logfile with the given contents
+        """
+        self.exp_logfiles[logfile] = contents
+
     def runStep(self):
         """
         Run the step set up with L{setupStep}, and check the results.
@@ -146,6 +197,12 @@ class BuildStepMixin(object):
             got_outcome = dict(result=result,
                         status_text=self.step_status.status_text)
             self.assertEqual(got_outcome, self.exp_outcome)
+            for pn, pv in self.exp_properties.iteritems():
+                self.assertEqual(self.set_properties[pn], pv)
+            for pn in self.exp_missing_properties:
+                self.assertNotIn(pn, self.set_properties)
+            for log, contents in self.exp_logfiles.iteritems():
+                self.assertEqual(self.step_status.logs[log].stdout, contents)
         d.addCallback(check)
         return d
 
@@ -159,8 +216,10 @@ class BuildStepMixin(object):
         if not self.expected_remote_commands:
             self.fail("got command %r when no further commands were expected"
                     % (got,))
+
+        # first check any ExpectedRemoteReference instances
         exp = self.expected_remote_commands.pop(0)
-        self.assertEqual(got, (exp.remote_command, exp.args))
+        self.assertEqual((exp.remote_command, exp.args), got)
 
         # let the Expect object show any behaviors that are required
         return exp.runBehaviors(command)
