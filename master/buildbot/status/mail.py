@@ -587,7 +587,9 @@ class MailNotifier(base.StatusReceiverMultiService):
             msgdict['body'] += tmp['body']
             msgdict['body'] += '\n\n'
             msgdict['type'] = tmp['type']
-            
+            if "subject" in tmp:
+                msgdict['subject'] = tmp['subject']
+
         m = self.createEmail(msgdict, name, self.master_status.getTitle(),
                              results, builds, patches, logs)
 
