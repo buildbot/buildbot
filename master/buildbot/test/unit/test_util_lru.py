@@ -92,6 +92,57 @@ class LRUCache(unittest.TestCase):
         d.addCallback(self.check_result, short('c'), 1, 5)
         return d
 
+    def test_simple_lru_expulsion_maxsize_1(self):
+        self.lru = lru.AsyncLRUCache(self.short_miss_fn, 1)
+        d = defer.succeed(None)
+
+        d.addCallback(lambda _ :
+            self.lru.get('a'))
+        d.addCallback(self.check_result, short('a'), 0, 1)
+        d.addCallback(lambda _ :
+            self.lru.get('a'))
+        d.addCallback(self.check_result, short('a'), 1, 1)
+        d.addCallback(lambda _ :
+            self.lru.get('b'))
+        d.addCallback(self.check_result, short('b'), 1, 2)
+
+        # now try 'a' again - it should be a miss
+        self.lru.miss_fn = self.long_miss_fn
+        d.addCallback(lambda _ :
+            self.lru.get('a'))
+        d.addCallback(self.check_result, long('a'), 1, 3)
+
+        # ..and that expelled B
+        d.addCallback(lambda _ :
+            self.lru.get('b'))
+        d.addCallback(self.check_result, long('b'), 1, 4)
+        return d
+
+    def test_simple_lru_expulsion_maxsize_1_null_result(self):
+        # a regression test for #2011
+        def miss_fn(k):
+            if k == 'b':
+                return defer.succeed(None)
+            else:
+                return defer.succeed(short(k))
+        self.lru = lru.AsyncLRUCache(miss_fn, 1)
+        d = defer.succeed(None)
+
+        d.addCallback(lambda _ :
+            self.lru.get('a'))
+        d.addCallback(self.check_result, short('a'), 0, 1)
+        d.addCallback(lambda _ :
+            self.lru.get('b'))
+        d.addCallback(self.check_result, None, 0, 2)
+
+        # 'a' was not expelled since 'b' was None
+        self.lru.miss_fn = self.long_miss_fn
+        d.addCallback(lambda _ :
+            self.lru.get('a'))
+        d.addCallback(self.check_result, short('a'), 1, 2)
+
+        return d
+
     @defer.deferredGenerator
     def test_queue_collapsing(self):
         # just to check that we're practicing with the right queue size (so
