@@ -73,7 +73,7 @@ class AsyncLRUCache(object):
         self.weakrefs = WeakValueDictionary()
         self.concurrent = {}
         self.hits = self.misses = self.refhits = 0
-        self.refcount = defaultdict(default_factory = lambda : 0)
+        self.refcount = defaultdict(lambda : 0)
 
     def get(self, key, **miss_fn_kwargs):
         """
@@ -100,7 +100,7 @@ class AsyncLRUCache(object):
         # utility function to record recent use of this key
         def ref_key():
             queue.append(key)
-            refcount[key] = refcount.get(key, 0) + 1
+            refcount[key] = refcount[key] + 1
 
             # periodically compact the queue by eliminating duplicate keys
             # while preserving order of most recent access.  Note that this
