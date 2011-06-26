@@ -299,7 +299,8 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         sched.startService()
 
         # check that the scheduler has started to consume changes
-        self.assertConsumingChanges(fileIsImportant=fII, change_filter=None)
+        self.assertConsumingChanges(fileIsImportant=fII, change_filter=None,
+                                    onlyImportant=False)
 
         # manually run the clock forward through a half-hour, allowing any
         # excitement to take place
