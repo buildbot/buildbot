@@ -136,6 +136,23 @@ class LRUCache(unittest.TestCase):
             self.check_result(res, short(c), 0, i+1)
 
     @defer.deferredGenerator
+    def test_get_exception(self):
+        def fail_miss_fn(k):
+            return defer.fail(RuntimeError("oh noes"))
+        self.lru.miss_fn = fail_miss_fn
+
+        got_exc = False
+        try:
+            wfd = defer.waitForDeferred(
+                    self.lru.get('abc'))
+            yield wfd
+            wfd.getResult()
+        except RuntimeError:
+            got_exc = True
+
+        self.assertEqual(got_exc, True)
+
+    @defer.deferredGenerator
     def test_all_hits(self):
         wfd = defer.waitForDeferred(
                 self.lru.get('a'))
