@@ -152,11 +152,11 @@ class AsyncLRUCache(object):
                 cache[key] = result
                 weakrefs[key] = result
 
-            self._purge()
+                # reference the key once, possibly standing in for multiple
+                # concurrent accesses
+                ref_key()
 
-            # reference the key once, possibly standing in for multiple
-            # concurrent accesses
-            ref_key()
+            self._purge()
 
             # and fire all of the waiting Deferreds
             dlist = concurrent.pop(key)
@@ -183,8 +183,8 @@ class AsyncLRUCache(object):
         queue = self.queue
         max_size = self.max_size
 
-        # purge least recently used entries, using refcount
-        # to count repeatedly-used entries
+        # purge least recently used entries, using refcount to count entries
+        # that appear multiple times in the queue
         while len(cache) > max_size:
             refc = 1
             while refc:
