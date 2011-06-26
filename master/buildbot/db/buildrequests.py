@@ -206,8 +206,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             master_incarnation = self.db.master.master_incarnation
             tbl = self.db.model.buildrequests
 
-            transaction = conn.begin()
-
             # first, create a temporary table containing all of the ID's
             # we want to claim
             tmp_meta = sa.MetaData(bind=conn)
@@ -215,6 +213,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     sa.Column('brid', sa.Integer),
                     prefixes=['TEMPORARY'])
             tmp.create()
+
+            transaction = conn.begin()
 
             try:
                 q = tmp.insert()
@@ -268,8 +268,10 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                         raise AlreadyClaimedError
                 res.close()
             finally:
-                # clean up after ourselves, even though it's a temporary table
-                tmp.drop(checkfirst=True)
+                # clean up after ourselves, even though it's a temporary table;
+                # note that checkfirst=True does not work here for Postgres
+                # (#2010).
+                tmp.drop()
 
         return self.db.pool.do(thd)
 
