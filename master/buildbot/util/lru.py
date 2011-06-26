@@ -193,6 +193,28 @@ class AsyncLRUCache(object):
             del cache[k]
             del refcount[k]
 
+    def inv(self):
+        """Check invariants and log if they are not met; used for debugging"""
+
+        # the keys of the queue and cache should be identical
+        cache_keys = set(self.cache.keys())
+        queue_keys = set(self.queue)
+        if queue_keys - cache_keys:
+            log.msg("INV: uncached keys in queue:", queue_keys - cache_keys)
+        if cache_keys - queue_keys:
+            log.msg("INV: unqueued keys in cache:", cache_keys - queue_keys)
+
+        # refcount should always represent the number of times each key appears
+        # in the queue
+        exp_refcount = dict()
+        for k in self.queue:
+            exp_refcount[k] = exp_refcount.get(k, 0) + 1
+        if exp_refcount != self.refcount:
+            log.msg("INV: refcounts differ:")
+            log.msg(" expected:", sorted(exp_refcount.items()))
+            log.msg("      got:", sorted(self.refcount.items()))
+
+
     def put(self, key, value):
         """
         Update the cache with the given key and value, if the key is already in
