@@ -67,7 +67,7 @@ class RemoteCommand(pb.Referenceable):
 
     active = False
 
-    def __init__(self, remote_command, args):
+    def __init__(self, remote_command, args, ignore_updates=False):
         """
         @type  remote_command: string
         @param remote_command: remote command to start.  This will be
@@ -77,10 +77,13 @@ class RemoteCommand(pb.Referenceable):
                                slave-side in L{buildbot.slave.registry}
         @type  args:           dict
         @param args:           arguments to send to the remote command
+
+        @param ignore_updates: if true, ignore any updates from the slave side
         """
 
         self.remote_command = remote_command
         self.args = args
+        self.ignore_updates = ignore_updates
 
     def run(self, step, remote):
         self.active = True
@@ -178,7 +181,7 @@ class RemoteCommand(pb.Referenceable):
         for (update, num) in updates:
             #log.msg("update[%d]:" % num)
             try:
-                if self.active: # ignore late updates
+                if self.active and not self.ignore_updates:
                     self.remoteUpdate(update)
             except:
                 # log failure, terminate build, let slave retire the update
@@ -1099,6 +1102,11 @@ class LoggingBuildStep(BuildStep):
         startCommand().
         """
         self.logfiles[logname] = filename
+
+    def buildCommandKwargs(self):
+        kwargs = dict()
+        kwargs['logfiles'] = self.logfiles
+        return kwargs
 
     def startCommand(self, cmd, errorMessages=[]):
         """

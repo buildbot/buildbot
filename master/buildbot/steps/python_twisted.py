@@ -19,7 +19,6 @@ from twisted.python import log
 from buildbot.status import testresult
 from buildbot.status.results import SUCCESS, FAILURE, WARNINGS, SKIPPED
 from buildbot.process.buildstep import LogLineObserver, OutputProgressObserver
-from buildbot.process.buildstep import RemoteShellCommand
 from buildbot.steps.shell import ShellCommand
 
 try:
@@ -411,41 +410,10 @@ class Trial(ShellCommand):
             self.command.extend(self.tests)
         log.msg("Trial.start: command is", self.command)
 
-        # if our slave is too old to understand logfiles=, fetch them
-        # manually. This is a fallback for the Twisted buildbot and some old
-        # buildslaves.
-        self._needToPullTestDotLog = False
-        if self.slaveVersionIsOlderThan("shell", "2.1"):
-            log.msg("Trial: buildslave %s is too old to accept logfiles=" %
-                    self.getSlaveName())
-            log.msg(" falling back to 'cat _trial_temp/test.log' instead")
-            self.logfiles = {}
-            self._needToPullTestDotLog = True
-
         ShellCommand.start(self)
 
 
     def commandComplete(self, cmd):
-        if not self._needToPullTestDotLog:
-            return self._gotTestDotLog(cmd)
-
-        # if the buildslave was too old, pull test.log now
-        catcmd = ["cat", "_trial_temp/test.log"]
-        c2 = RemoteShellCommand(command=catcmd, workdir=self.workdir)
-        loog = self.addLog("test.log")
-        c2.useLog(loog, True, logfileName="stdio")
-        self.cmd = c2 # to allow interrupts
-        d = c2.run(self, self.remote)
-        d.addCallback(lambda res: self._gotTestDotLog(cmd))
-        return d
-
-    def rtext(self, fmt='%s'):
-        if self.reactor:
-            rtext = fmt % self.reactor
-            return rtext.replace("reactor", "")
-        return ""
-
-    def _gotTestDotLog(self, cmd):
         # figure out all status, then let the various hook functions return
         # different pieces of it
 
@@ -524,6 +492,13 @@ class Trial(ShellCommand):
         self.results = results
         self.text = text
         self.text2 = [text2]
+
+
+    def rtext(self, fmt='%s'):
+        if self.reactor:
+            rtext = fmt % self.reactor
+            return rtext.replace("reactor", "")
+        return ""
 
     def addTestResult(self, testname, results, text, tlog):
         if self.reactor is not None:
