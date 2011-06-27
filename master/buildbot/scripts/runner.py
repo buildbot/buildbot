@@ -44,6 +44,9 @@ def in_reactor(f):
         reactor.callWhenRunning(async)
         reactor.run()
         return result[0]
+    wrap.__doc__ = f.__doc__
+    wrap.__name__ = f.__name__
+    wrap._orig = f # for tests
     return wrap
 
 def isBuildmasterDir(dir):
