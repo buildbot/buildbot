@@ -138,8 +138,9 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         if changes and not _ignoreChanges:
             self.changes = tuple(changes)
             # set branch and revision to most recent change
-            self.branch = changes[-1].branch
-            revision = changes[-1].revision
+	    if changes[-1] is not None:
+		self.branch = changes[-1].branch
+	        revision = changes[-1].revision
             if not self.project and hasattr(changes[-1], 'project'):
                 self.project = changes[-1].project
             if not self.repository and hasattr(changes[-1], 'repository'):
