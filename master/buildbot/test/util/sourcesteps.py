@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 import mock
+from buildbot.process import buildstep
+from buildbot.test.fake import remotecommand
 from buildbot.test.util import steps
 
 
@@ -38,7 +40,7 @@ class SourceStepMixin(steps.BuildStepMixin):
 
     # utilities
 
-    def setupStep(self, step, **kwargs):
+    def setupStep(self, step, args={}, **kwargs):
         """
         Set up C{step} for testing.  This calls L{BuildStepMixin}'s C{setupStep}
         and then does setup specific to a Source step.
@@ -47,8 +49,8 @@ class SourceStepMixin(steps.BuildStepMixin):
 
         ss = self.sourcestamp = mock.Mock(name="sourcestamp")
         ss.ssid = 9123
-        ss.branch = None
-        ss.revision = None
+        ss.branch = args.get('branch', None)
+        ss.revision = args.get('revision', None)
         ss.project = ''
         ss.repository = ''
         ss.patch = None
