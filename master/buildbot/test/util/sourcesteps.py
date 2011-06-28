@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 import mock
-from buildbot.process import buildstep
-from buildbot.test.fake import remotecommand
 from buildbot.test.util import steps
 
 
