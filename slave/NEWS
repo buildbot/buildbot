@@ -5,6 +5,12 @@ Major User visible changes in Buildslave.             -*- outline -*-
 
 * Next Version
 
+** Retry on UnauthorizedLogin
+
+In previous versions, if a slave received UnauthorizedLogin from the master, it
+would stop retrying and exit.  This has proven to be less helpful than simply
+retrying, so as of this version the slave will continue to retry.
+
 * Buildbot-Slave 0.8.4 (June 12, 2011)
 
 ** Monotone support

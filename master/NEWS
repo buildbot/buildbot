@@ -11,6 +11,16 @@ Source steps have been rewritten to have a simpler, more consistent
 configuration, and to run on the master instead of the slave, allowing much
 more control over their behavior.  So far, Mercurial is complete.
 
+** Interested users for Try
+
+Try jobs can now include the name of an interested user, which will be kept
+with the patch and displayed in the web status.
+
+** 'buildbot checkconfig' improved
+
+This command no longer copies the configuration to a temporary directory.  This
+change allows more complex configurations to be tested with checkconfig.
+
 * Buildbot 0.8.4 (June 12, 2011)
 
 ** Monotone support
