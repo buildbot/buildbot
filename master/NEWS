@@ -5,6 +5,12 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Version
 
+** New and improved Source steps
+
+Source steps have been rewritten to have a simpler, more consistent
+configuration, and to run on the master instead of the slave, allowing much
+more control over their behavior.  So far, Mercurial is complete.
+
 * Buildbot 0.8.4 (June 12, 2011)
 
 ** Monotone support
