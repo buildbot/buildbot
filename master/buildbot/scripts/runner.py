@@ -23,7 +23,7 @@
 import copy
 import os, sys, stat, re, time
 from twisted.python import usage, util, runtime
-from twisted.internet import defer, reactor
+from twisted.internet import defer
 
 from buildbot.interfaces import BuildbotNotRunningError
 
@@ -907,6 +907,7 @@ def sendchange(config, runReactor=False):
                revlink=revlink)
 
     if runReactor:
+        from twisted.internet import reactor
         status = [True]
         def printSuccess(_):
             print "change sent successfully"
