@@ -41,25 +41,36 @@ class FakeLog(object):
 
 class TestMailNotifier(unittest.TestCase):
     def test_createEmail_message_without_patch_and_log_contains_unicode(self):
-        build = Mock()
+        builds = [ Mock(name="build") ]
         msgdict = create_msgdict()
         mn = MailNotifier('from@example.org')
         m = mn.createEmail(msgdict, u'builder-n\u00E5me', u'project-n\u00E5me',
-                           SUCCESS, build)
+                           SUCCESS, builds)
+        try:
+            m.as_string()
+        except UnicodeEncodeError:
+            self.fail('Failed to call as_string() on email message.')
+
+    def test_createEmail_extraHeaders(self):
+        builds = [ Mock(name="build") ]
+        msgdict = create_msgdict()
+        mn = MailNotifier('from@example.org', extraHeaders=dict(hhh='vvv'))
+        m = mn.createEmail(msgdict, u'builder-n\u00E5me', u'project-n\u00E5me',
+                           SUCCESS, builds)
         try:
             m.as_string()
         except UnicodeEncodeError:
             self.fail('Failed to call as_string() on email message.')
 
     def test_createEmail_message_with_patch_and_log_contains_unicode(self):
-        build = Mock()
+        builds = [ Mock(name="build") ]
         msgdict = create_msgdict()
-        patch = ['', u'\u00E5\u00E4\u00F6', '']
-        logs = [FakeLog(u'Unicode log with non-ascii (\u00E5\u00E4\u00F6).')]
+        patches = [ ['', u'\u00E5\u00E4\u00F6', ''] ]
+        logs = [ FakeLog(u'Unicode log with non-ascii (\u00E5\u00E4\u00F6).') ]
         mn = MailNotifier('from@example.org', addLogs=True)
         m = mn.createEmail(msgdict, u'builder-n\u00E5me',
                            u'project-n\u00E5me', SUCCESS,
-                           [build], [patch], logs)
+                           builds, patches, logs)
         try:
             m.as_string()
         except UnicodeEncodeError:
@@ -231,7 +242,38 @@ class TestMailNotifier(unittest.TestCase):
 
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, FAILURE))
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build2, SUCCESS))
-    pass
+
+    def test_buildMessage_addLogs(self):
+        mn = MailNotifier('from@example.org', mode="change", addLogs=True)
+
+        mn.buildMessageDict = Mock()
+        mn.buildMessageDict.return_value = {"body":"body", "type":"text",
+                                            "subject":"subject"}
+
+        mn.createEmail = Mock("createEmail")
+
+        mn._gotRecipients = Mock("_gotReceipients")
+        mn._gotRecipients.return_value = None
+
+        mn.master_status = Mock()
+        mn.master_status.getTitle.return_value = 'TITLE'
+
+        bldr = Mock(name="builder")
+        builds = [ Mock(name='build1'), Mock(name='build2') ]
+        logs = [ FakeLog('log1'), FakeLog('log2') ]
+        for b, l in zip(builds, logs):
+            b.getBuilder.return_value = bldr
+            b.results = 0
+            b.getSourceStamp.return_value = ss = Mock(name='ss')
+            ss.patch = None
+            b.getLogs.return_value = [ l ]
+        d = mn.buildMessage("mybldr", builds, 0)
+        def check(_):
+            mn.createEmail.assert_called_with(
+                dict(body='body\n\nbody\n\n', type='text', subject='subject'),
+                'mybldr', 'TITLE', 0, builds, [], logs)
+        d.addCallback(check)
+        return d
 
 def create_msgdict():
     unibody = u'Unicode body with non-ascii (\u00E5\u00E4\u00F6).'

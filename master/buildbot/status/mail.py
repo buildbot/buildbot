@@ -543,7 +543,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         # interpolation if only one build was given
         if self.extraHeaders:
             for k,v in self.extraHeaders.items():
-                if len(builds == 1):
+                if len(builds) == 1:
                     k = builds[0].render(k)
                 if k in m:
                     twlog.msg("Warning: Got header " + k +
@@ -582,8 +582,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             if ss and ss.patch and self.addPatch:
                 patches.append(ss.patch)
             if self.addLogs:
-                logs.append(build.getLogs())
-            twlog.err("LOG: %s" % str(logs))
+                logs.extend(build.getLogs())
             
             tmp = self.buildMessageDict(name=build.getBuilder().name,
                                         build=build, results=build.results)
