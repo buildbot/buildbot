@@ -125,7 +125,7 @@ class StatusResourceBuild(HtmlResource):
 
         ps = cxt['properties'] = []
         for name, value, source in b.getProperties().asList():
-            value = str(value)
+            value = unicode(value)
             p = { 'name': name, 'value': value, 'source': source}            
             if len(value) > 500:
                 p['short_value'] = value[:500]
