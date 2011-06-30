@@ -120,7 +120,7 @@ class Trigger(LoggingBuildStep):
         props_to_set.update(self.set_properties, "Trigger")
         for p in self.copy_properties:
             if p not in properties:
-                raise RuntimeError("copy_property '%s' is not set in the triggering build" % p)
+                continue
             props_to_set.setProperty(p, properties[p],
                         "%s (in triggering build)" % properties.getPropertySource(p))
 
