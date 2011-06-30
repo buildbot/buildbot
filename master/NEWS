@@ -4,6 +4,10 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 
 * Next Version
+** Logging for SVNPoller cleaned up
+
+All logging for SVNPoller now starts with "SVNPoller: ". Previously it was
+mixed case and not uniform.
 
 ** New and improved Source steps
 

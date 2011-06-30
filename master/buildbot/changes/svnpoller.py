@@ -92,7 +92,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             try:
                 f = open(self.cachepath, "r")
                 self.last_change = int(f.read().strip())
-                log.msg("SVNPoller(%s) setting last_change to %s" % (self.svnurl, self.last_change))
+                log.msg("SVNPoller: SVNPoller(%s) setting last_change to %s" % (self.svnurl, self.last_change))
                 f.close()
                 # try writing it, too
                 f = open(self.cachepath, "w")
@@ -100,12 +100,12 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 f.close()
             except:
                 self.cachepath = None
-                log.msg(("SVNPoller(%s) cache file corrupt or unwriteable; " +
+                log.msg(("SVNPoller: SVNPoller(%s) cache file corrupt or unwriteable; " +
                         "skipping and not using") % self.svnurl)
                 log.err()
 
     def describe(self):
-        return "SVNPoller watching %s" % self.svnurl
+        return "SVNPoller: watching %s" % self.svnurl
 
     def poll(self):
         # Our return value is only used for unit testing.
@@ -140,9 +140,9 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         # whew.
 
         if self.project:
-            log.msg("SVNPoller polling " + self.project)
+            log.msg("SVNPoller: polling " + self.project)
         else:
-            log.msg("SVNPoller polling")
+            log.msg("SVNPoller: polling")
 
         d = defer.succeed(None)
         if not self._prefix:
@@ -157,7 +157,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         d.addCallback(self.create_changes)
         d.addCallback(self.submit_changes)
         d.addCallback(self.finished_ok)
-        d.addErrback(log.err, 'error in SVNPoller while polling') # eat errors
+        d.addErrback(log.err, 'SVNPoller: Error in  while polling') # eat errors
         return d
 
     def getProcessOutput(self, args):
@@ -176,7 +176,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             try:
                 doc = xml.dom.minidom.parseString(output)
             except xml.parsers.expat.ExpatError:
-                log.msg("SVNPoller._determine_prefix_2: ExpatError in '%s'"
+                log.msg("SVNPoller: SVNPoller._determine_prefix_2: ExpatError in '%s'"
                         % output)
                 raise
             rootnodes = doc.getElementsByTagName("root")
@@ -216,7 +216,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         try:
             doc = xml.dom.minidom.parseString(output)
         except xml.parsers.expat.ExpatError:
-            log.msg("SVNPoller.parse_logs: ExpatError in '%s'" % output)
+            log.msg("SVNPoller: SVNPoller.parse_logs: ExpatError in '%s'" % output)
             raise
         logentries = doc.getElementsByTagName("logentry")
         return logentries
@@ -238,10 +238,10 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 # if this is the first time we've been run, ignore any changes
                 # that occurred before now. This prevents a build at every
                 # startup.
-                log.msg('svnPoller: starting at change %s' % new_last_change)
+                log.msg('SVNPoller: starting at change %s' % new_last_change)
             elif last_change == new_last_change:
                 # an unmodified repository will hit this case
-                log.msg('svnPoller: no changes')
+                log.msg('SVNPoller: no changes')
             else:
                 for el in logentries:
                     if last_change == int(el.getAttribute("revision")):
@@ -250,7 +250,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 new_logentries.reverse() # return oldest first
 
         self.last_change = new_last_change
-        log.msg('svnPoller: _process_changes %s .. %s' %
+        log.msg('SVNPoller: _process_changes %s .. %s' %
                 (old_last_change, new_last_change))
         return new_logentries
 
@@ -359,5 +359,5 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             f.write(str(self.last_change))
             f.close()
 
-        log.msg("SVNPoller finished polling %s" % res)
+        log.msg("SVNPoller: finished polling %s" % res)
         return res
