@@ -112,7 +112,7 @@ function iscallable () { type $1 2>/dev/null | grep -q 'shell function'; }
 function slave_op () {
     op=$1 ; mi=$2
 
-    ${SLAVE_PREFIXCMD[$1]} \
+    ${SLAVE_PREFIXCMD[$mi]} \
     su -s /bin/sh \
     -c "$SLAVE_RUNNER $op --quiet ${SLAVE_OPTIONS[$mi]} ${SLAVE_BASEDIR[$mi]}" \
     - ${SLAVE_USER[$mi]}
