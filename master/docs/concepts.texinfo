@@ -718,7 +718,8 @@ BuildSteps to modify their actions.  These properties, in the form of
 key-value pairs, provide a general framework for dynamically altering
 the behavior of a build based on its circumstances.
 
-Properties come from a number of places:
+Properties come from a number of places, as follows.
+
 @itemize
 @item global configuration --
 These properties apply to all builds.
@@ -738,6 +739,10 @@ A builder can set properties on all the builds it runs.
 The steps of a build can set properties that are available to subsequent
 steps.  In particular, source steps set a number of properties.
 @end itemize
+
+If the same property is supplied in multiple places, the final appearance takes
+precedence.  For example, a property set in a builder configuration will
+override one supplied by a scheduler.
 
 Properties are very flexible, and can be used to implement all manner
 of functionality.  Here are some examples:
