@@ -988,7 +988,8 @@ class TryOptions(OptionsWithOptionsFile):
          "Run the trial build on this Builder. Can be used multiple times."],
         ["properties", None, None,
          "A set of properties made available in the build environment, "
-         "format:prop1=value1,prop2=value2..."],
+         "format is --properties=prop1=value1,prop2=value2,.. "
+         "option can be specified multiple times."],
 
         ["topfile", None, None,
          "Name of a file at the top of the tree, used to find the top. "
@@ -1021,18 +1022,17 @@ class TryOptions(OptionsWithOptionsFile):
         [ 'try_host', 'host' ],
         [ 'try_username', 'username' ],
         [ 'try_jobdir', 'jobdir' ],
-        [ 'try_password', 'passwd' ],
+        [ 'try_passwd', 'passwd' ],
         [ 'try_master', 'master' ],
         [ 'try_who', 'who' ],
         [ 'try_comment', 'comment' ],
         #[ 'try_wait', 'wait' ], <-- handled in postOptions
-        [ 'try_masterstatus', 'masterstatus' ],
+        #[ 'try_quiet', 'quiet' ], <-- handled in postOptions
+
         # Deprecated command mappings from the quirky old days:
-        [ 'try_topdir', 'try-topdir' ],
-        [ 'try_topfile', 'try-topfile' ],
-        [ 'try_host', 'tryhost' ],
-        [ 'try_dir', 'trydir' ],        # replaced by try_jobdir/jobdir
-        [ 'masterstatus', 'master' ],   # replaced by try_masterstatus/masterstatus
+        [ 'try_masterstatus', 'master' ],
+        [ 'try_dir', 'jobdir' ],
+        [ 'try_password', 'passwd' ],
     ]
 
     def __init__(self):
@@ -1045,13 +1045,10 @@ class TryOptions(OptionsWithOptionsFile):
 
     def opt_properties(self, option):
         # We need to split the value of this option into a dictionary of properties
-        properties = {}
         propertylist = option.split(",")
         for i in range(0,len(propertylist)):
-            print propertylist[i]
-            splitproperty = propertylist[i].split("=")
-            properties[splitproperty[0]] = splitproperty[1]
-        self['properties'] = properties
+            splitproperty = propertylist[i].split("=", 1)
+            self['properties'][splitproperty[0]] = splitproperty[1]
 
     def opt_patchlevel(self, option):
         self['patchlevel'] = int(option)
@@ -1067,6 +1064,10 @@ class TryOptions(OptionsWithOptionsFile):
             self['wait'] = True
         if opts.get('try_quiet', False):
             self['quiet'] = True
+        # get the global 'masterstatus' option if it's set and no master
+        # was specified otherwise
+        if not self['master']:
+            self['master'] = opts.get('masterstatus', None)
 
 def doTry(config):
     from buildbot.clients import tryclient

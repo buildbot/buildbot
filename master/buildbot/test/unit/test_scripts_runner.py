@@ -23,7 +23,19 @@ from twisted.internet import defer, reactor
 from buildbot.scripts import runner, checkconfig
 from buildbot.clients import sendchange
 
-class TestSendChangeOptions(unittest.TestCase):
+class OptionsMixin(object):
+
+    def assertOptions(self, opts, exp):
+        got = dict([(k, opts[k]) for k in exp])
+        if got != exp:
+            msg = []
+            for k in exp:
+                if opts[k] != exp[k]:
+                    msg.append(" %s: expected %r, got %r" %
+                               (k, exp[k], opts[k]))
+            self.fail("did not get expected options\n" + ("\n".join(msg)))
+
+class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.options_file = {}
@@ -45,7 +57,7 @@ class TestSendChangeOptions(unittest.TestCase):
                 revision=None, revision_file=None, property=None,
                 comments=None, logfile=None, when=None, revlink='',
                 encoding='utf8', files=())
-        self.assertEqual(dict([(k, opts[k]) for k in exp]), exp)
+        self.assertOptions(opts, exp)
 
     def test_files(self):
         opts = self.parse('a', 'b', 'c')
@@ -63,7 +75,7 @@ class TestSendChangeOptions(unittest.TestCase):
         opts = self.parse()
         exp = dict(master='MMM', who='WWW',
                 branch='BBB', category='CCC')
-        self.assertEqual(dict([(k, opts[k]) for k in exp]), exp)
+        self.assertOptions(opts, exp)
 
     def test_short_args(self):
         opts = self.parse(*('-m m -a a -W w -R r -P p -b b ' +
@@ -72,7 +84,7 @@ class TestSendChangeOptions(unittest.TestCase):
                 branch='b', category='c', revision='r',
                 properties=dict(pn='pv'), comments='c', logfile='f', when='w',
                 revlink='l', encoding='e')
-        self.assertEqual(dict([(k, opts[k]) for k in exp]), exp)
+        self.assertOptions(opts, exp)
 
     def test_long_args(self):
         opts = self.parse(*('--master m --auth a --who w --repository r ' +
@@ -83,7 +95,7 @@ class TestSendChangeOptions(unittest.TestCase):
                 branch='b', category='c', revision='r', revision_file='rr',
                 properties=dict(pn='pv'), comments='c', logfile='f', when='w',
                 revlink='l', encoding='e')
-        self.assertEqual(dict([(k, opts[k]) for k in exp]), exp)
+        self.assertOptions(opts, exp)
 
 class TestSendChange(unittest.TestCase):
 
@@ -253,7 +265,7 @@ class TestSendChange(unittest.TestCase):
         d.addCallbacks(cb, eb)
         return d
 
-class TestCheckConfigOptions(unittest.TestCase):
+class TestCheckConfigOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.options_file = {}
@@ -271,17 +283,17 @@ class TestCheckConfigOptions(unittest.TestCase):
     def test_defaults(self):
         opts = self.parse()
         exp = dict(quiet=False, configFile='master.cfg')
-        self.assertEqual(dict([(k, opts[k]) for k in exp]), exp)
+        self.assertOptions(opts, exp)
 
     def test_configfile(self):
         opts = self.parse('foo.cfg')
         exp = dict(quiet=False, configFile='foo.cfg')
-        self.assertEqual(dict([(k, opts[k]) for k in exp]), exp)
+        self.assertOptions(opts, exp)
 
     def test_quiet(self):
         opts = self.parse('-q')
         exp = dict(quiet=True, configFile='master.cfg')
-        self.assertEqual(dict([(k, opts[k]) for k in exp]), exp)
+        self.assertOptions(opts, exp)
 
 class TestCheckConfig(unittest.TestCase):
 
@@ -358,3 +370,130 @@ class TestCheckConfig(unittest.TestCase):
         d.addCallback(check)
         return d
 
+class TestTryOptions(OptionsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.options_file = {}
+        self.patch(runner, 'loadOptionsFile', lambda : self.options_file)
+
+    def parse(self, *args):
+        self.opts = runner.TryOptions()
+        self.opts.parseOptions(args)
+        return self.opts
+
+    def defaults_and(self, **kwargs):
+        defaults = dict(connect=None, host=None, jobdir=None, username=None,
+                master=None, passwd=None, who=None, comment=None, diff=None,
+                patchlevel=0, baserev=None, vc=None, branch=None,
+                repository=None, topfile=None, topdir=None, wait=False,
+                dryrun=False, quiet=False, builders=[], properties={})
+        # dashes make python syntax hard..
+        defaults['get-builder-names'] = False
+        if 'get_builder_names' in kwargs:
+            kwargs['get-builder-names'] = kwargs['get_builder_names']
+            del kwargs['get_builder_names']
+        assert set(kwargs.keys()) <= set(defaults.keys()), "invalid keys"
+        opts = defaults.copy()
+        opts.update(kwargs)
+        return opts
+
+    def test_synopsis(self):
+        opts = runner.TryOptions()
+        self.assertIn('buildbot try', opts.getSynopsis())
+
+    def test_defaults(self):
+        opts = self.parse()
+        exp = self.defaults_and()
+        self.assertOptions(opts, exp)
+
+    def test_properties(self):
+        opts = self.parse('--properties=a=b')
+        exp = self.defaults_and(properties=dict(a='b'))
+        self.assertOptions(opts, exp)
+
+    def test_properties_multiple_opts(self):
+        opts = self.parse('--properties=X=1', '--properties=Y=2')
+        exp = self.defaults_and(properties=dict(X='1', Y='2'))
+        self.assertOptions(opts, exp)
+
+    def test_properties_equals(self):
+        opts = self.parse('--properties=X=2+2=4')
+        exp = self.defaults_and(properties=dict(X='2+2=4'))
+        self.assertOptions(opts, exp)
+
+    def test_properties_commas(self):
+        opts = self.parse('--properties=a=b,c=d')
+        exp = self.defaults_and(properties=dict(a='b', c='d'))
+        self.assertOptions(opts, exp)
+
+    def test_properties_builders_multiple(self):
+        opts = self.parse('--builder=aa', '--builder=bb')
+        exp = self.defaults_and(builders=['aa', 'bb'])
+        self.assertOptions(opts, exp)
+
+    def test_options_short(self):
+        opts = self.parse(
+                *'-n -q -c pb -u me -m mstr -w you -C comm -p 2 -b bb'.split())
+        exp = self.defaults_and(dryrun=True, quiet=True, connect='pb',
+                username='me', master='mstr', who='you', comment='comm',
+                patchlevel=2, builders=['bb'])
+        self.assertOptions(opts, exp)
+
+    def test_options_long(self):
+        opts = self.parse(
+                *"""--wait --dryrun --get-builder-names --quiet --connect=pb
+                --host=h --jobdir=j --username=u --master=m --passwd=p
+                --who=w --comment=comm --diff=d --patchlevel=7 --baserev=br
+                --vc=cvs --branch=br --repository=rep --builder=bl
+                --properties=a=b --topfile=Makefile --topdir=.""".split())
+        exp = self.defaults_and(wait=True, dryrun=True, get_builder_names=True,
+                quiet=True, connect='pb', host='h', jobdir='j', username='u',
+                master='m', passwd='p', who='w', comment='comm', diff='d',
+                patchlevel=7, baserev='br', vc='cvs', branch='br',
+                repository='rep', builders=['bl'], properties=dict(a='b'),
+                topfile='Makefile', topdir='.')
+        self.assertOptions(opts, exp)
+
+    def test_patchlevel_inval(self):
+        self.assertRaises(ValueError, lambda:
+                self.parse('-p', 'a'))
+
+    def test_config_builders(self):
+        self.options_file['try_builders'] = ['a', 'b']
+        opts = self.parse()
+        self.assertOptions(opts, dict(builders=['a', 'b']))
+
+    def test_config_builders_override(self):
+        self.options_file['try_builders'] = ['a', 'b']
+        opts = self.parse('-b', 'd') # overrides a, b
+        self.assertOptions(opts, dict(builders=['d']))
+
+    def test_config_old_names(self):
+        self.options_file['try_masterstatus'] = 'ms'
+        self.options_file['try_dir'] = 'td'
+        self.options_file['try_password'] = 'pw'
+        opts = self.parse()
+        self.assertOptions(opts, dict(master='ms', jobdir='td', passwd='pw'))
+
+    def test_config_masterstatus(self):
+        self.options_file['masterstatus'] = 'ms'
+        opts = self.parse()
+        self.assertOptions(opts, dict(master='ms'))
+
+    def test_config_masterstatus_override(self):
+        self.options_file['masterstatus'] = 'ms'
+        opts = self.parse('-m', 'mm')
+        self.assertOptions(opts, dict(master='mm'))
+
+    def test_config_options(self):
+        self.options_file.update(dict(try_connect='pb', try_vc='cvs',
+            try_branch='br', try_repository='rep', try_topdir='.',
+            try_topfile='Makefile', try_host='h', try_username='u',
+            try_jobdir='j', try_password='p', try_master='m', try_who='w',
+            try_comment='comm', try_quiet='y', try_wait='y'))
+        opts = self.parse()
+        exp = self.defaults_and(wait=True, quiet=True, connect='pb', host='h',
+                jobdir='j', username='u', master='m', passwd='p', who='w',
+                comment='comm', vc='cvs', branch='br', repository='rep',
+                topfile='Makefile', topdir='.')
+        self.assertOptions(opts, exp)
