@@ -106,6 +106,10 @@ class Build:
     def getProperty(self, propname):
         return self.build_status.getProperty(propname)
 
+    def hasProperty(self, propname):
+        return self.build_status.properties.has_key(propname)
+    has_key = hasProperty
+
     def render(self, value):
         """
         Return a variant of value that has any WithProperties objects
