@@ -507,7 +507,6 @@ class BuilderStatus(styles.Versioned):
         Steps, its ETA, etc), so it is safe to notify our watchers."""
 
         assert s.builder is self # paranoia
-        assert s.number == self.nextBuildNumber - 1
         assert s not in self.currentBuilds
         self.currentBuilds.append(s)
         self.touchBuildCache(s)
