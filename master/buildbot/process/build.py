@@ -17,7 +17,7 @@
 import types
 
 from zope.interface import implements
-from twisted.python import log
+from twisted.python import log, components
 from twisted.python.failure import Failure
 from twisted.internet import reactor, defer, error
 
@@ -26,10 +26,10 @@ from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
   RETRY, SKIPPED, worst_status
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
-from buildbot.process import metrics
+from buildbot.process import metrics, properties
 
 
-class Build:
+class Build(properties.PropertiesMixin):
     """I represent a single build by a single slave. Specialized Builders can
     use subclasses of Build to hold status information unique to those build
     processes.
@@ -60,6 +60,7 @@ class Build:
     finished = False
     results = None
     stopped = False
+    set_runtime_properties = True
 
     def __init__(self, requests):
         self.requests = requests
@@ -93,25 +94,6 @@ class Build:
 
     def getSourceStamp(self):
         return self.source
-
-    def setProperty(self, propname, value, source, runtime=True):
-        """Set a property on this build. This may only be called after the
-        build has started, so that it has a BuildStatus object where the
-        properties can live."""
-        self.build_status.setProperty(propname, value, source, runtime=True)
-
-    def getProperties(self):
-        return self.build_status.getProperties()
-
-    def getProperty(self, propname):
-        return self.build_status.getProperty(propname)
-
-    def render(self, value):
-        """
-        Return a variant of value that has any WithProperties objects
-        substituted.  This recurses into Python's compound data types.
-        """
-        return interfaces.IRenderable(value).getRenderingFor(self)
 
     def allChanges(self):
         return self.source.changes
@@ -152,8 +134,6 @@ class Build:
         later, their __init__ method will have access to things like
         build.allFiles() ."""
         self.stepFactories = list(step_factories)
-
-
 
     useProgress = True
 
@@ -546,4 +526,6 @@ class Build:
 
     # stopBuild is defined earlier
 
-
+components.registerAdapter(
+        lambda build : interfaces.IProperties(build.build_status),
+        Build, interfaces.IProperties)

@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 
 from mock import Mock
-from buildbot.interfaces import ParameterError
+from twisted.python import components
+from buildbot.interfaces import ParameterError, IProperties
 from twisted.trial import unittest
-
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.status.mail import MailNotifier
 from twisted.internet import defer
@@ -39,9 +39,30 @@ class FakeLog(object):
         return self.text
 
 
+class FakeBuildStatus(Mock):
+
+    def __init__(self, *args, **kwargs):
+        Mock.__init__(self, *args, **kwargs)
+        self.builder = None
+        self.properites = {}
+
+    def getBuilder(self):
+        return self.builder
+
+class FakeBuildStatusProperties(components.Adapter):
+
+    def getProperty(self, name, default):
+        return self.original.properties.get(name, default)
+
+    def render(self, value):
+        return "rndr(%s)" % (value,)
+
+components.registerAdapter(FakeBuildStatusProperties, FakeBuildStatus,
+                IProperties)
+
 class TestMailNotifier(unittest.TestCase):
     def test_createEmail_message_without_patch_and_log_contains_unicode(self):
-        builds = [ Mock(name="build") ]
+        builds = [ FakeBuildStatus(name="build") ]
         msgdict = create_msgdict()
         mn = MailNotifier('from@example.org')
         m = mn.createEmail(msgdict, u'builder-n\u00E5me', u'project-n\u00E5me',
@@ -51,19 +72,29 @@ class TestMailNotifier(unittest.TestCase):
         except UnicodeEncodeError:
             self.fail('Failed to call as_string() on email message.')
 
-    def test_createEmail_extraHeaders(self):
-        builds = [ Mock(name="build") ]
+    def test_createEmail_extraHeaders_one_build(self):
+        builds = [ FakeBuildStatus(name="build") ]
+        msgdict = create_msgdict()
+        mn = MailNotifier('from@example.org', extraHeaders=dict(hhh='vvv'))
+        # add some Unicode to detect encoding problems
+        m = mn.createEmail(msgdict, u'builder-n\u00E5me', u'project-n\u00E5me',
+                           SUCCESS, builds)
+        txt = m.as_string()
+        self.assertIn('rndr(hhh): rndr(vvv)', txt)
+
+    def test_createEmail_extraHeaders_two_builds(self):
+        builds = [ FakeBuildStatus(name="build1"),
+                   FakeBuildStatus(name="build2") ]
         msgdict = create_msgdict()
         mn = MailNotifier('from@example.org', extraHeaders=dict(hhh='vvv'))
         m = mn.createEmail(msgdict, u'builder-n\u00E5me', u'project-n\u00E5me',
                            SUCCESS, builds)
-        try:
-            m.as_string()
-        except UnicodeEncodeError:
-            self.fail('Failed to call as_string() on email message.')
+        txt = m.as_string()
+        # note that the headers are *not* rendered
+        self.assertIn('hhh: vvv', txt)
 
     def test_createEmail_message_with_patch_and_log_contains_unicode(self):
-        builds = [ Mock(name="build") ]
+        builds = [ FakeBuildStatus(name="build") ]
         msgdict = create_msgdict()
         patches = [ ['', u'\u00E5\u00E4\u00F6', ''] ]
         logs = [ FakeLog(u'Unicode log with non-ascii (\u00E5\u00E4\u00F6).') ]
@@ -106,7 +137,8 @@ class TestMailNotifier(unittest.TestCase):
     def test_buildFinished_ignores_unspecified_builders(self):
         mn = MailNotifier('from@example.org', builders=['a','b'])
 
-        build = Mock()
+        build = FakeBuildStatus()
+        build.builder = Mock()
 
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
         
@@ -134,13 +166,11 @@ class TestMailNotifier(unittest.TestCase):
         builder.getBuild = fakeGetBuild
         builder.name = "Builder"
         
-        build = Mock()
+        build = FakeBuildStatus()
         build.result = FAILURE
         build.finished = True
         build.reason = "testReason"
         build.builder = builder
-        build.getBuilder = Mock()
-        build.getBuilder.return_value = builder
        
        
         self.db = fakedb.FakeDBConnector(self)
@@ -169,10 +199,9 @@ class TestMailNotifier(unittest.TestCase):
         mn = MailNotifier('from@example.org', categories=['fast'])
 
 
-        build = Mock()
-        builder = Mock()
-        build.getBuilder.return_value = builder
-        builder.category = 'slow'
+        build = FakeBuildStatus(name="build")
+        build.builder = Mock()
+        build.builder.category = 'slow'
 
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
 
@@ -181,7 +210,7 @@ class TestMailNotifier(unittest.TestCase):
         self.patch(MailNotifier, "buildMessage", mock_method)
         mn = MailNotifier('from@example.org', mode="all")
 
-        build = Mock()
+        build = FakeBuildStatus(name="build")
         mn.buildFinished('dummyBuilder', build, FAILURE)
 
         mock_method.assert_called_with('dummyBuilder', [build], FAILURE)
@@ -189,29 +218,29 @@ class TestMailNotifier(unittest.TestCase):
     def test_buildFinished_mode_failing_ignores_successful_build(self):
         mn = MailNotifier('from@example.org', mode="failing")
 
-        build = Mock()
+        build = FakeBuildStatus(name="build")
 
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
 
     def test_buildFinished_mode_passing_ignores_failed_build(self):
         mn = MailNotifier('from@example.org', mode="passing")
 
-        build = Mock()
+        build = FakeBuildStatus(name="build")
 
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, FAILURE))
 
     def test_buildFinished_mode_problem_ignores_successful_build(self):
         mn = MailNotifier('from@example.org', mode="problem")
 
-        build = Mock()
+        build = FakeBuildStatus(name="build")
 
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
 
     def test_buildFinished_mode_problem_ignores_two_failed_builds_in_sequence(self):
         mn = MailNotifier('from@example.org', mode="problem")
 
-        build = Mock()
-        old_build = Mock()
+        build = FakeBuildStatus(name="build")
+        old_build = FakeBuildStatus(name="old_build")
         build.getPreviousBuild.return_value = old_build
         old_build.getResults.return_value = FAILURE
 
@@ -220,7 +249,7 @@ class TestMailNotifier(unittest.TestCase):
     def test_buildFinished_mode_change_ignores_first_build(self):
         mn = MailNotifier('from@example.org', mode="change")
 
-        build = Mock()
+        build = FakeBuildStatus(name="build")
         build.getPreviousBuild.return_value = None
 
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, FAILURE))
@@ -230,13 +259,13 @@ class TestMailNotifier(unittest.TestCase):
     def test_buildFinished_mode_change_ignores_same_result_in_sequence(self):
         mn = MailNotifier('from@example.org', mode="change")
 
-        build = Mock()
-        old_build = Mock()
+        build = FakeBuildStatus(name="build")
+        old_build = FakeBuildStatus(name="old_build")
         build.getPreviousBuild.return_value = old_build
         old_build.getResults.return_value = FAILURE
 
-        build2 = Mock()
-        old_build2 = Mock()
+        build2 = FakeBuildStatus(name="build2")
+        old_build2 = FakeBuildStatus(name="old_build2")
         build2.getPreviousBuild.return_value = old_build2
         old_build2.getResults.return_value = SUCCESS
 
@@ -259,10 +288,11 @@ class TestMailNotifier(unittest.TestCase):
         mn.master_status.getTitle.return_value = 'TITLE'
 
         bldr = Mock(name="builder")
-        builds = [ Mock(name='build1'), Mock(name='build2') ]
+        builds = [ FakeBuildStatus(name='build1'),
+                   FakeBuildStatus(name='build2') ]
         logs = [ FakeLog('log1'), FakeLog('log2') ]
         for b, l in zip(builds, logs):
-            b.getBuilder.return_value = bldr
+            b.builder = bldr
             b.results = 0
             b.getSourceStamp.return_value = ss = Mock(name='ss')
             ss.patch = None

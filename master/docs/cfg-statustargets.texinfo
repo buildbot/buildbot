@@ -707,7 +707,7 @@ build logs in each message.
 
 By default, the message will be sent to the Interested Users list (@pxref{Doing
 Things With Users}), which includes all developers who made changes in the
-build. You can add additional recipients with the extraRecipients argument.
+build. You can add additional recipients with the @code{extraRecipients} argument.
 You can also add interested users by setting the @code{owners} build property
 to a list of users in the scheduler constructor (@pxref{Configuring
 Schedulers}).

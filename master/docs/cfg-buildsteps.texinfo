@@ -216,6 +216,8 @@ Although these are similar to shell substitutions, no other
 substitutions are currently supported, and @code{replacement} in the
 above cannot contain more substitutions.
 
+@heading Callables
+
 If you need to do more complex substitution, you can pass keyword
 arguments to @code{WithProperties}. The value of each keyword argument
 should be a function that takes one argument (the existing properties)
@@ -227,18 +229,47 @@ WithProperties('%(now)s', now=lambda _: time.clock())
 
 @example
 def determine_foo(props):
-    if props.has_key('bar'):
+    if props.hasProperty('bar'):
         return props['bar']
-    elif props.has_key('baz'):
+    elif props.hasProperty('baz'):
         return props['baz']
     return 'qux'
 
 WithProperties('%(foo)s', foo=determine_foo)
 @end example
 
+@heading Properties Objects
+
+The available methods on a properties object are those described by the
+@code{IProperties} interface.  Specifically:
+
+@table @code
+
+@item getProperty(propname, default=None)
+
+Get a named property, returning the default value if the property is not found.
+
+@item hasProperty(propname):
+
+Determine whether the named property exists.
+
+@item setProperty(propname, value, source)
+
+Set a property's value, also specifying the source for this value.
+
+@item getProperties()
+
+Get a Properties (@code{buildbot.process.properties.Properties}) instance.  The
+interface of this class is not finalized; where possible, use the other
+@code{IProperties} methods.
+
+@end table
+
+@heading Positional Arguments
+
 The @code{WithProperties} function also does @code{printf}-style string
-interpolation, using strings obtained by calling
-@code{build.getProperty(propname)}. Note that for every @code{%s} (or
+interpolation with positional arguments, using strings obtained by calling
+@code{props.getProperty(propname)}. Note that for every @code{%s} (or
 @code{%d}, etc), you must have exactly one additional argument to
 indicate which build property you want to insert.
 
@@ -462,7 +493,7 @@ value from its default of 1200 (20 minutes).
 
 @end table
 
-Use of WithProperties with string, dict and callable is supported.
+Use of @ref{WithProperties} with string, dict and callable is supported.
 
 @menu
 * Mercurial::
@@ -670,7 +701,7 @@ value from its default of 1200 (20 minutes).
 
 @end table
 
-Use of WithProperties with string, dict and callable is supported.
+Use of @ref{WithProperties} with string, dict and callable is supported.
 
 Note that this is quite similar to the mechanism used by the WebStatus
 for the @code{changecommentlink}, @code{projects} or @code{repositories} parameter.
@@ -1823,7 +1854,7 @@ description of this particular test run.
 
 @item mtr_subdir
 The subdirectory in which to look for server error log files. Defaults to
-``mysql-test'', which is usually correct. WithProperties is supported.
+``mysql-test'', which is usually correct. @ref{WithProperties} is supported.
 
 @end table
 
@@ -1845,7 +1876,7 @@ This runs @code{uname -a} and captures its output (including stderr), stripped
 of leading and trailing whitespace, in the property "uname".  To avoid
 stripping, add @code{strip=False}. 
 
-The @code{property} argument can be specified as a @code{WithProperties}
+The @code{property} argument can be specified as a @ref{WithProperties}
 object, allowing the property name to be built from other property values.
 
 The more advanced usage allows you to specify a function to extract properties
@@ -2224,7 +2255,7 @@ use @code{FileDownload}, you can use one of the string download steps.
 
 @code{StringDownload} works just like @code{FileDownload} except it takes a
 single argument, @code{s}, representing the string to download instead of a
-@code{mastersrc} argument.  @code{WithProperties} will be properly rendered, if
+@code{mastersrc} argument.  @ref{WithProperties} will be properly rendered, if
 used in this argument.
 
 @code{JSONStringDownload} is similar, except it takes an @code{o}
@@ -2350,7 +2381,7 @@ Two parameters allow control of the properties that are passed to the triggered
 scheduler.  To simply copy properties verbatim, list them in the
 @code{copy_properties} parameter.  To set properties explicitly, use the more
 sophisticated @code{set_properties}, which takes a dictionary mapping property
-names to values.  You may use @code{WithProperties} here to dynamically
+names to values.  You may use @ref{WithProperties} here to dynamically
 construct new property values.
 
 @node Miscellaneous BuildSteps

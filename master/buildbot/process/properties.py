@@ -16,7 +16,7 @@
 import re
 import weakref
 from buildbot import util
-from buildbot.interfaces import IRenderable
+from buildbot.interfaces import IRenderable, IProperties
 from twisted.python.components import registerAdapter
 from zope.interface import implements
 
@@ -37,6 +37,7 @@ class Properties(util.ComparableMixin):
     """
 
     compare_attrs = ('properties',)
+    implements(IProperties)
 
     def __init__(self, **kwargs):
         """
@@ -71,13 +72,6 @@ class Properties(util.ComparableMixin):
     def __nonzero__(self):
         return not not self.properties
 
-    def has_key(self, name):
-        return self.properties.has_key(name)
-
-    def getProperty(self, name, default=None):
-        """Get the value for the given property."""
-        return self.properties.get(name, (default,))[0]
-
     def getPropertySource(self, name):
         return self.properties[name][1]
 
@@ -95,11 +89,6 @@ class Properties(util.ComparableMixin):
         return ('Properties(**' +
                 repr(dict((k,v[0]) for k,v in self.properties.iteritems())) +
                 ')')
-
-    def setProperty(self, name, value, source, runtime=False):
-        self.properties[name] = (value, source)
-        if runtime:
-            self.runtime.add(name)
 
     def update(self, dict, source, runtime=False):
         """Update this object from a dictionary, with an explicit source specified."""
@@ -119,6 +108,68 @@ class Properties(util.ComparableMixin):
         for k,v in other.properties.iteritems():
             if k not in other.runtime:
                 self.properties[k] = v
+
+    # IProperties methods
+
+    def getProperty(self, name, default=None):
+        return self.properties.get(name, (default,))[0]
+
+    def hasProperty(self, name):
+        return self.properties.has_key(name)
+
+    has_key = hasProperty
+
+    def setProperty(self, name, value, source, runtime=False):
+        self.properties[name] = (value, source)
+        if runtime:
+            self.runtime.add(name)
+
+    def getProperties(self):
+        return self
+
+    def render(self, value):
+        renderable = IRenderable(value)
+        return renderable.getRenderingFor(self)
+
+
+class PropertiesMixin:
+    """
+    A mixin to add L{IProperties} methods to a class which does not implement
+    the interface, but which can be coerced to the interface via an adapter.
+
+    This is useful because L{IProperties} methods are often called on L{Build}
+    and L{BuildStatus} objects without first coercing them.
+
+    @ivar set_runtime_properties: the default value for the C{runtime}
+    parameter of L{setProperty}.
+    """
+
+    set_runtime_properties = False
+
+    def getProperty(self, propname, default=None):
+        props = IProperties(self)
+        return props.getProperty(propname, default)
+
+    def hasProperty(self, propname):
+        props = IProperties(self)
+        return props.hasProperty(propname)
+
+    has_key = hasProperty
+
+    def setProperty(self, propname, value, source, runtime=None):
+        props = IProperties(self)
+        if runtime is None:
+            runtime = self.set_runtime_properties
+        props.setProperty(propname, value, source, runtime=runtime)
+
+    def getProperties(self):
+        return IProperties(self)
+
+    def render(self, value):
+        props = IProperties(self)
+        return props.render(value)
+
+
 
 class PropertyMap:
     """

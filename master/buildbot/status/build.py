@@ -16,14 +16,14 @@
 import os, shutil, re
 from cPickle import dump
 from zope.interface import implements
-from twisted.python import log, runtime
+from twisted.python import log, runtime, components
 from twisted.persisted import styles
 from twisted.internet import reactor, defer
 from buildbot import interfaces, util, sourcestamp
-from buildbot.process.properties import Properties
+from buildbot.process import properties
 from buildbot.status.buildstep import BuildStepStatus
 
-class BuildStatus(styles.Versioned):
+class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     implements(interfaces.IBuildStatus, interfaces.IStatusEvent)
 
     persistenceVersion = 3
@@ -40,6 +40,8 @@ class BuildStatus(styles.Versioned):
     text = []
     results = None
     slavename = "???"
+
+    set_runtime_properties = True
 
     # these lists/dicts are defined here so that unserialized instances have
     # (empty) values. They are set in __init__ to new objects to make sure
@@ -62,7 +64,7 @@ class BuildStatus(styles.Versioned):
         self.finishedWatchers = []
         self.steps = []
         self.testResults = {}
-        self.properties = Properties()
+        self.properties = properties.Properties()
 
     def __repr__(self):
         return "<%s #%s>" % (self.__class__.__name__, self.number)
@@ -74,12 +76,6 @@ class BuildStatus(styles.Versioned):
         @rtype: L{BuilderStatus}
         """
         return self.builder
-
-    def getProperty(self, propname):
-        return self.properties[propname]
-
-    def getProperties(self):
-        return self.properties
 
     def getNumber(self):
         return self.number
@@ -238,9 +234,6 @@ class BuildStatus(styles.Versioned):
         self.steps.append(s)
         return s
 
-    def setProperty(self, propname, value, source, runtime=True):
-        self.properties.setProperty(propname, value, source, runtime)
-
     def addTestResult(self, result):
         self.testResults[result.getName()] = result
 
@@ -387,7 +380,7 @@ class BuildStatus(styles.Versioned):
     def upgradeToVersion3(self):
         # in version 3, self.properties became a Properties object
         propdict = self.properties
-        self.properties = Properties()
+        self.properties = properties.Properties()
         self.properties.update(propdict, "Upgrade from previous version")
         self.wasUpgraded = True
 
@@ -460,5 +453,5 @@ class BuildStatus(styles.Versioned):
             result['currentStep'] = None
         return result
 
-
-
+components.registerAdapter(lambda build_status : build_status.properties,
+        BuildStatus, interfaces.IProperties)

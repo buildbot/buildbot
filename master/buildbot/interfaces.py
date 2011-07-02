@@ -1119,8 +1119,71 @@ class IRenderable(Interface):
     """An object that can be interpolated with properties from a build.
     """
 
-    def getRenderingFor(build):
+    def getRenderingFor(iprops):
         """Return the interpolation with the given properties
 
-        @param build: the L{Build} instance for which interpolation is being done.
+        @param iprops: the L{IProperties} provider supplying the properties.
+        """
+class IProperties(Interface):
+    """
+    An object providing access to build properties
+    """
+
+    def getProperty(name, default=None):
+        """Get the named property, returning the default if the property does
+        not exist.
+
+        @param name: property name
+        @type name: string
+
+        @param default: default value (default: @code{None})
+
+        @returns: property value
+        """
+
+    def hasProperty(name):
+        """Return true if the named property exists.
+
+        @param name: property name
+        @type name: string
+        @returns: boolean
+        """
+
+    def has_key(name):
+        """Deprecated name for L{hasProperty}."""
+
+    def setProperty(name, value, source, runtime=False):
+        """Set the given property, overwriting any existing value.  The source
+        describes the source of the value for human interpretation.
+
+        @param name: property name
+        @type name: string
+
+        @param value: property value
+        @type value: JSON-able value
+
+        @param source: property source
+        @type source: string
+
+        @param runtime: (optional) whether this property was set during the
+        build's runtime: usually left at its default value
+        @type runtime: boolean
+        """
+
+    def getProperties():
+        """Get the L{buildbot.process.properties.Properties} instance storing
+        these properties.  Note that the interfaec for this class is not
+        stable, so where possible the other methods of this interface should be
+        used.
+
+        @returns: L{buildbot.process.properties.Properties} instance
+        """
+
+    def render(value):
+        """Render @code{value} as an L{IRenderable}.  This essentially coerces
+        @code{value} to an L{IRenderable} and calls its @L{getRenderingFor}
+        method.
+
+        @name value: value to render
+        @returns: rendered value
         """

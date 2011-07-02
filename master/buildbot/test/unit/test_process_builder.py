@@ -19,7 +19,7 @@ from twisted.trial import unittest
 from twisted.python import failure
 from twisted.internet import defer
 from buildbot.test.fake import fakedb, fakemaster
-from buildbot.process import builder, buildrequest
+from buildbot.process import builder
 from buildbot.db import buildrequests
 from buildbot.util import epoch2datetime
 
