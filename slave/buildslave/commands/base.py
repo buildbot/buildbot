@@ -251,7 +251,7 @@ class SourceBaseCommand(Command):
         self.timeout = args.get('timeout', 120)
         self.maxTime = args.get('maxTime', None)
         self.retry = args.get('retry')
-        self.logEnviron = args.get('logEnviron')
+        self.logEnviron = args.get('logEnviron',True)
         self._commandPaths = {}
         # VC-specific subclasses should override this to extract more args.
         # Make sure to upcall!
