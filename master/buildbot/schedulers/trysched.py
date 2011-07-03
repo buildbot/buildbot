@@ -227,8 +227,8 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         wfd = defer.waitForDeferred(
                 db.sourcestamps.addSourceStamp(branch=branch, revision=revision,
                     repository=repository, project=project, patch_level=patch[0],
-                    patch_body=patch[1], patch_subdir='', patch_author=who,
-                    patch_comment = comment))
+                    patch_body=patch[1], patch_subdir='', patch_author=who or '',
+                    patch_comment=comment or ''))
                     # note: no way to specify patch subdir - #1769
         yield wfd
         ssid = wfd.getResult()
