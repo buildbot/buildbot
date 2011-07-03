@@ -230,7 +230,12 @@ class ActionResource(resource.Resource, AccessorMixin):
         def redirect(url):
             request.redirect(url)
             request.write("see <a href='%s'>%s</a>" % (url,url))
-            request.finish()
+            try:
+                request.finish()
+            except RuntimeError:
+                # this occurs when the client has already disconnected; ignore
+                # it (see #2027)
+                log.msg("http client disconnected before results were sent")
         d.addCallback(redirect)
 
         def fail(f):
@@ -316,7 +321,12 @@ class HtmlResource(resource.Resource, ContextMixin):
         d.addCallback(handle)
         def ok(data):
             request.write(data)
-            request.finish()
+            try:
+                request.finish()
+            except RuntimeError:
+                # this occurs when the client has already disconnected; ignore
+                # it (see #2027)
+                log.msg("http client disconnected before results were sent")
         def fail(f):
             request.processingFailed(f)
             return None # processingFailed will log this for us
