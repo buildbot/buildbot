@@ -251,6 +251,7 @@ class SourceBaseCommand(Command):
         self.timeout = args.get('timeout', 120)
         self.maxTime = args.get('maxTime', None)
         self.retry = args.get('retry')
+        self.logEnviron = args.get('logEnviron')
         self._commandPaths = {}
         # VC-specific subclasses should override this to extract more args.
         # Make sure to upcall!
@@ -500,7 +501,7 @@ class SourceBaseCommand(Command):
         command = ["rm", "-rf", d]
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
-                         usePTY=False)
+                         logEnviron=self.logEnviron, usePTY=False)
 
         self.command = c
         # sendRC=0 means the rm command will send stdout/stderr to the
@@ -531,7 +532,7 @@ class SourceBaseCommand(Command):
                                 '-exec', 'chmod', 'u+rwx', '{}', ';' ]
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
-                         usePTY=False)
+                         logEnviron=self.logEnviron, usePTY=False)
 
         self.command = c
         d = c.start()
@@ -560,7 +561,7 @@ class SourceBaseCommand(Command):
         command = ['cp', '-R', '-P', '-p', fromdir, todir]
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout, maxTime=self.maxTime,
-                         usePTY=False)
+                         logEnviron=self.logEnviron, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -598,7 +599,8 @@ class SourceBaseCommand(Command):
         # now apply the patch
         c = runprocess.RunProcess(self.builder, command, dir,
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
+                         maxTime=self.maxTime, logEnviron=self.logEnviron,
+                         usePTY=False)
         self.command = c
         d = c.start()
         

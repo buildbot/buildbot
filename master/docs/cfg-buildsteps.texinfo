@@ -491,6 +491,12 @@ Specifies the timeout for slave-side operations, in seconds.  If your
 repositories are particularly large, then you may need to increase this 
 value from its default of 1200 (20 minutes).
 
+@item logEnviront
+If this option is true (the default), then the step's logfile will
+describe the environment variables on the slave. In situations where the
+environment is not relevant and is long, it may be easier to set
+logEnviron=False.
+
 @end table
 
 Use of @ref{WithProperties} with string, dict and callable is supported.

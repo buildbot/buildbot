@@ -76,7 +76,7 @@ class Source(LoggingBuildStep):
     branch = None # the default branch, should be set in __init__
 
     def __init__(self, workdir=None, mode='update', alwaysUseLatest=False,
-                 timeout=20*60, retry=None, **kwargs):
+                 timeout=20*60, retry=None, logEnviron=True, **kwargs):
         """
         @type  workdir: string
         @param workdir: local directory (relative to the Builder's root)
@@ -157,6 +157,13 @@ class Source(LoggingBuildStep):
                       their build failures are due to transient network
                       failures that could be handled by simply retrying a
                       couple times.
+                      
+        @type logEnviron: boolean
+        @param logEnviron: If this option is true (the default), then the
+                           step's logfile will describe the environment
+                           variables on the slave. In situations where the
+                           environment is not relevant and is long, it may
+                           be easier to set logEnviron=False.
 
         """
 
@@ -183,6 +190,8 @@ class Source(LoggingBuildStep):
 
         self.alwaysUseLatest = alwaysUseLatest
 
+        self.logEnviron = logEnviron
+        
         # Compute defaults for descriptions:
         description = ["updating"]
         descriptionDone = ["update"]
@@ -252,6 +261,8 @@ class Source(LoggingBuildStep):
 
         if self.alwaysUseLatest:
             revision = None
+            
+        self.args['logEnviron'] = self.logEnviron
         self.startVC(branch, revision, patch)
 
     def commandComplete(self, cmd):
