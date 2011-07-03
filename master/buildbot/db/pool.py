@@ -82,8 +82,15 @@ class DBThreadPool(threadpool.ThreadPool):
                         name='DBThreadPool')
         self.engine = engine
         if engine.dialect.name == 'sqlite':
-            log.msg("applying SQLite workaround from Buildbot bug #1810")
-            self.__broken_sqlite = self.detect_bug1810()
+            vers = self.get_sqlite_version()
+            log.msg("Using SQLite Version %s" % (vers,))
+            if vers < (3,3,17):
+                log.msg("NOTE: this old version of SQLite does not support "
+                        "multiple simultaneous accesses to the database; "
+                        "add the 'pool_size=1' argument to your db url")
+            brkn = self.__broken_sqlite = self.detect_bug1810()
+            if brkn:
+                log.msg("Applying SQLite workaround from Buildbot bug #1810")
         self._start_evt = reactor.callWhenRunning(self._start)
 
         # patch the do methods to do verbose logging if necessary
@@ -237,3 +244,22 @@ class DBThreadPool(threadpool.ThreadPool):
         test(select_from_sqlite_master=True)
         shutil.rmtree(tmpdir)
         return False # not broken - no workaround required
+
+    def get_sqlite_version(self):
+        engine = sa.create_engine('sqlite://')
+        conn = engine.contextual_connect()
+
+        try:
+            r = conn.execute("SELECT sqlite_version()")
+            vers_row = r.fetchone()
+            r.close()
+        except:
+            return (0,)
+
+        if vers_row:
+            try:
+                return tuple(map(int, vers_row[0].split('.')))
+            except (TypeError, ValueError):
+                return (0,)
+        else:
+            return (0,)
