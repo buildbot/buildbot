@@ -145,3 +145,55 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.status.builder import BuildStatus
         assert BuildStatus
 
+    def test_steps_source__ComputeRepositoryURL(self):
+        from buildbot.steps.source import _ComputeRepositoryURL
+        assert _ComputeRepositoryURL
+
+    def test_steps_source_Source(self):
+        from buildbot.steps.source import Source
+        assert Source
+
+    def test_steps_source_CVS(self):
+        from buildbot.steps.source import CVS
+        assert CVS
+
+    def test_steps_source_SVN(self):
+        from buildbot.steps.source import SVN
+        assert SVN
+
+    def test_steps_source_Git(self):
+        from buildbot.steps.source import Git
+        assert Git
+
+    def test_steps_source_Darcs(self):
+        from buildbot.steps.source import Darcs
+        assert Darcs
+
+    def test_steps_source_Repo(self):
+        from buildbot.steps.source import Repo
+        assert Repo
+
+    def test_steps_source_Bzr(self):
+        from buildbot.steps.source import Bzr
+        assert Bzr
+
+    def test_steps_source_Mercurial(self):
+        from buildbot.steps.source import Mercurial
+        assert Mercurial
+
+    def test_steps_source_P4(self):
+        from buildbot.steps.source import P4
+        assert P4
+
+    def test_steps_source_P4Sync(self):
+        from buildbot.steps.source import P4Sync
+        assert P4Sync
+
+    def test_steps_source_Monotone(self):
+        from buildbot.steps.source import Monotone
+        assert Monotone
+
+    def test_steps_source_BK(self):
+        from buildbot.steps.source import BK
+        assert BK
+
