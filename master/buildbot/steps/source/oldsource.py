@@ -28,12 +28,14 @@ class _ComputeRepositoryURL(object):
     def __init__(self, repository):
         self.repository = repository
 
-    def getRenderingFor(self, build):
+    def getRenderingFor(self, props):
         '''
         Helper function that the repository URL based on the parameter the
         source step took and the Change 'repository' property
         '''
 
+        build = props.getBuild()
+        assert build is not None, "Build should be available *during* a build?"
         s = build.getSourceStamp()
 
         repository = self.repository
@@ -42,17 +44,17 @@ class _ComputeRepositoryURL(object):
             return str(s.repository)
         else:
             if callable(repository):
-                return str(build.render(repository(s.repository)))
+                return str(props.render(repository(s.repository)))
             elif isinstance(repository, dict):
-                return str(build.render(repository.get(s.repository)))
+                return str(props.render(repository.get(s.repository)))
             elif isinstance(repository, str) or isinstance(repository, unicode):
                 try:
                     return str(repository % s.repository)
                 except TypeError:
                     # that's the backward compatibility case
-                    return build.render(repository)
+                    return props.render(repository)
             else:
-                return str(build.render(repository))
+                return str(props.render(repository))
 
 class Source(LoggingBuildStep):
     """This is a base class to generate a source tree in the buildslave.

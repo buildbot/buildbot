@@ -48,11 +48,13 @@ class Properties(util.ComparableMixin):
         # persisted if a build is rebuilt
         self.runtime = set()
         self.pmap = PropertyMap(self)
+        self.build = None # will be set by the Build when starting
         if kwargs: self.update(kwargs, "TEST")
 
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['pmap']
+        d['build'] = None
         return d
 
     def __setstate__(self, d):
@@ -126,6 +128,9 @@ class Properties(util.ComparableMixin):
 
     def getProperties(self):
         return self
+
+    def getBuild(self):
+        return self.build
 
     def render(self, value):
         renderable = IRenderable(value)

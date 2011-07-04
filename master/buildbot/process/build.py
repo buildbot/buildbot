@@ -143,7 +143,10 @@ class Build(properties.PropertiesMixin):
         return self.slavebuilder.slave.slavename
 
     def setupProperties(self):
-        props = self.getProperties()
+        props = interfaces.IProperties(self)
+
+        # give the properties a reference back to this build
+        props.build = self
 
         # start with global properties from the configuration
         buildmaster = self.builder.botmaster.parent

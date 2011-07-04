@@ -30,7 +30,8 @@ class Build(object):
     def getProperties(self):
         return self.props
     def render(self, value):
-        return IRenderable(value).getRenderingFor(self)
+        self.props.build = self
+        return IRenderable(value).getRenderingFor(self.props)
 
 class RepoURL(unittest.TestCase):
     def setUp(self):

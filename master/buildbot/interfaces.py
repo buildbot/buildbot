@@ -1172,11 +1172,22 @@ class IProperties(Interface):
 
     def getProperties():
         """Get the L{buildbot.process.properties.Properties} instance storing
-        these properties.  Note that the interfaec for this class is not
+        these properties.  Note that the interface for this class is not
         stable, so where possible the other methods of this interface should be
         used.
 
         @returns: L{buildbot.process.properties.Properties} instance
+        """
+
+    def getBuild():
+        """Get the L{buildbot.process.build.Build} instance for the current
+        build.  Note that this object is not available after the build is
+        complete, at which point this method will return None.
+
+        Try to avoid using this method, as the API of L{Build} instances is not
+        well-defined.
+
+        @returns L{buildbot.process.build.Build} instance
         """
 
     def render(value):

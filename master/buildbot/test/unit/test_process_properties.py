@@ -468,6 +468,9 @@ class TestProperties(unittest.TestCase):
     def test_getProperties(self):
         self.assertIdentical(self.props.getProperties(), self.props)
 
+    def test_getBuild(self):
+        self.assertIdentical(self.props.getBuild(), self.props.build)
+
     def test_render(self):
         class FakeRenderable(object):
             implements(IRenderable)
