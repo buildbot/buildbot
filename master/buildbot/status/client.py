@@ -132,7 +132,8 @@ class RemoteBuildRequest(pb.Referenceable):
         def send(bs):
             d = observer.callRemote("newbuild",
                                     IRemote(bs), self.b.getBuilderName())
-            d.addErrback(lambda err: None)
+            d.addErrback(twlog.err,
+                    "while calling client-side remote_newbuild")
         reactor.callLater(0, self.b.subscribe, send)
 
     def remote_unsubscribe(self, observer):
