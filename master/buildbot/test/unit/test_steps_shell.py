@@ -612,3 +612,72 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
             ('foo:123:text', '(.*):(.*):(.*)', 'foo', 123, 'text')
         self.assertEqual(we(step, line, re.match(pat, line)),
                 (exp_file, exp_lineNo, exp_text))
+
+class Compile(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_class_args(self):
+        # since this step is just a pre-configured WarningCountingShellCommand,
+        # there' not much to test!
+        step = self.setupStep(shell.Compile())
+        self.assertEqual(step.name, "compile")
+        self.assertTrue(step.haltOnFailure)
+        self.assertTrue(step.flunkOnFailure)
+        self.assertEqual(step.description, ["compiling"])
+        self.assertEqual(step.descriptionDone, ["compile"])
+        self.assertEqual(step.command, ["make", "all"])
+
+class Test(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpBuildStep()
+
+    def tearDown(self):
+        self.tearDownBuildStep()
+
+    def test_setTestResults(self):
+        step = self.setupStep(shell.Test())
+        step.setTestResults(total=10, failed=3, passed=5, warnings=3)
+        self.assertEqual(self.step_statistics, {
+            'tests-total' : 10,
+            'tests-failed' : 3,
+            'tests-passed' : 5,
+            'tests-warnings' : 3,
+        })
+        # ensure that they're additive
+        step.setTestResults(total=1, failed=2, passed=3, warnings=4)
+        self.assertEqual(self.step_statistics, {
+            'tests-total' : 11,
+            'tests-failed' : 5,
+            'tests-passed' : 8,
+            'tests-warnings' : 7,
+        })
+
+    def test_describe_not_done(self):
+        step = self.setupStep(shell.Test())
+        self.assertEqual(step.describe(), ['testing'])
+
+    def test_describe_done(self):
+        step = self.setupStep(shell.Test())
+        self.step_statistics['tests-total'] = 93
+        self.step_statistics['tests-failed'] = 10
+        self.step_statistics['tests-passed'] = 20
+        self.step_statistics['tests-warnings'] = 30
+        self.assertEqual(step.describe(done=True), [ 'test', '93 tests',
+                '20 passed', '30 warnings', '10 failed'])
+
+    def test_describe_done_no_total(self):
+        step = self.setupStep(shell.Test())
+        self.step_statistics['tests-total'] = 0
+        self.step_statistics['tests-failed'] = 10
+        self.step_statistics['tests-passed'] = 20
+        self.step_statistics['tests-warnings'] = 30
+        # describe calculates 60 = 10+20+30
+        self.assertEqual(step.describe(done=True), [ 'test', '60 tests',
+                '20 passed', '30 warnings', '10 failed'])
+

@@ -569,15 +569,6 @@ class Compile(WarningCountingShellCommand):
     descriptionDone = ["compile"]
     command = ["make", "all"]
 
-    OFFprogressMetrics = ('output',)
-    # things to track: number of files compiled, number of directories
-    # traversed (assuming 'make' is being used)
-
-    def createSummary(self, log):
-        # TODO: grep for the characteristic GCC error lines and
-        # assemble them into a pair of buffers
-        WarningCountingShellCommand.createSummary(self, log)
-
 class Test(WarningCountingShellCommand):
 
     name = "test"
@@ -603,6 +594,7 @@ class Test(WarningCountingShellCommand):
     def describe(self, done=False):
         description = WarningCountingShellCommand.describe(self, done)
         if done:
+            description = description[:] # make a private copy
             if self.step_status.hasStatistic('tests-total'):
                 total = self.step_status.getStatistic("tests-total", 0)
                 failed = self.step_status.getStatistic("tests-failed", 0)
