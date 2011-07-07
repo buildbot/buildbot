@@ -678,7 +678,7 @@ administrative interface, pointing to @code{/change_hook/github} relative to
 the root of the web status.  For example, if the grid URL is
 @code{http://builds.mycompany.com/bbot/grid}, then point GitHub to
 @code{http://builds.mycompany.com/bbot/change_hook/github}. To specify a project
-assoicated to the repository, append @code{?project=name} to the URL.
+associated to the repository, append @code{?project=name} to the URL.
 
 Note that there is a standalone HTTP server available for receiving GitHub
 notifications, as well: @code{contrib/github_buildbot.py}.  This script may be
