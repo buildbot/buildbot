@@ -2466,7 +2466,7 @@ the parent class's constructor.
 The whole thing looks like this:
 
 @example
-class Frobinfy(LoggingBuildStep):
+class Frobnify(LoggingBuildStep):
     def __init__(self,
             frob_what="frobee",
             frob_how_many=None,
@@ -2475,7 +2475,7 @@ class Frobinfy(LoggingBuildStep):
 
         # check
         if frob_how_many is None:
-            raise TypeError("Frobinfy argument how_many is required")
+            raise TypeError("Frobnify argument how_many is required")
 
         # call parent
         LoggingBuildStep.__init__(self, **kwargs)
