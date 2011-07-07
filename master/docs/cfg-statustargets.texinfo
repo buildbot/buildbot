@@ -396,7 +396,7 @@ by other programs, rather than humans.
 @item /change_hook
 
 This provides an endpoint for web-based source change notification.
-It is used by github and contrib/post_build_request.py.
+It is used by GitHub and contrib/post_build_request.py.
 See @ref{Change Hooks} for more details.
 
 @end table
@@ -579,7 +579,7 @@ to a web-view of your source control system. The parameter's value must be a
 format string, a dict mapping a string (repository name) to format strings, or a callable.
 
 The format string should use '%s' to insert the revision id in the url.  For
-example, for Buildbot on github:
+example, for Buildbot on GitHub:
 @code{revlink='http://github.com/buildbot/buildbot/tree/%s'} (The revision ID
 will be URL encoded before inserted in the replacement string)
 
@@ -640,7 +640,7 @@ events displayed, even if the web browser requests more.
 
 The /change_hook url is a magic URL which will accept HTTP requests and translate
 them into changes for buildbot. Implementations (such as a trivial json-based endpoint
-and a github implementation) can be found in @code{master/buildbot/status/web/hooks}.
+and a GitHub implementation) can be found in @code{master/buildbot/status/web/hooks}.
 The format of the url is /change_hook/DIALECT where DIALECT is a package within the 
 hooks directory. Change_hook is disabled by default and each DIALECT has to be enabled
 separately, for security reasons
@@ -666,21 +666,21 @@ work.
 
 @heading github hook
 
-The github hook is simple and takes no options.  
+The GitHub hook is simple and takes no options.  
 
 @example
 c['status'].append(html.WebStatus(..
                     change_hook_dialects=@{ 'github' : True @}))
 @end example
 
-With this set up, add a Post-Receive URL for the project in the Github
+With this set up, add a Post-Receive URL for the project in the GitHub
 administrative interface, pointing to @code{/change_hook/github} relative to
 the root of the web status.  For example, if the grid URL is
-@code{http://builds.mycompany.com/bbot/grid}, then point Github to
+@code{http://builds.mycompany.com/bbot/grid}, then point GitHub to
 @code{http://builds.mycompany.com/bbot/change_hook/github}. To specify a project
 assoicated to the repository, append @code{?project=name} to the URL.
 
-Note that there is a standalone HTTP server available for receiving github
+Note that there is a standalone HTTP server available for receiving GitHub
 notifications, as well: @code{contrib/github_buildbot.py}.  This script may be
 useful in cases where you cannot expose the WebStatus for public consumption.
 
