@@ -96,7 +96,7 @@ Now, create the slave::
   buildslave create-slave slave localhost:9989 example-slave pass
 
 The user:host pair, username, and password should be the same as the ones in
-master.cfg; please verify this is the case byt looking at the section for c['slaves']::
+master.cfg; please verify this is the case by looking at the section for c['slaves']::
 
   cat $VIRTUAL_ENV/master/master.cfg
 
