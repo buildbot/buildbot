@@ -2898,7 +2898,7 @@ to be root to write to one of those standard include directories.
 
 Option 4: Submit the code for inclusion in the Buildbot distribution
 
-Make a fork of buildbot on http://github.com/djmitche/buildbot or post a patch
+Make a fork of buildbot on http://github.com/buildbot/buildbot or post a patch
 in a bug at http://buildbot.net.  In either case, post a note about your patch
 to the mailing list, so others can provide feedback and, eventually, commit it.
 
