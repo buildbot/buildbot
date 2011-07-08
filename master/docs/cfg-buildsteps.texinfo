@@ -497,6 +497,7 @@ Use of @ref{WithProperties} with string, dict and callable is supported.
 
 @menu
 * Mercurial::
+* Git::
 @end menu
 
 @node Mercurial
@@ -570,6 +571,86 @@ purge --all} then pull/update
 All the files which are tracked by Mercurial and listed ignore files are not
 deleted. Remaining all other files will be deleted before pull/update. This is
 equivalent to @code{hg purge} then pull/update.
+@end table
+
+@end table
+
+@node Git
+@subsubsection Git
+
+@cindex Git Checkout
+@bsindex buildbot.steps.source.git.Git
+
+The @code{Git} build step clones or updates a @uref{http://git.or.cz/,
+Git} repository and checks out the specified branch or revision. Note
+that the buildbot supports Git version 1.2.0 and later: earlier
+versions (such as the one shipped in Ubuntu 'Dapper') do not support
+the @command{git init} command that the buildbot uses.
+
+The Git step takes the following arguments:
+
+@table @code
+@item repourl
+(required): the URL of the upstream Git repository.
+
+@item branch
+(optional): this specifies the name of the branch to use when a Build
+does not provide one of its own. If this this parameter is not
+specified, and the Build does not provide a branch, the ``master''
+branch will be used.
+
+@item submodules
+(optional): when initializing/updating a Git repository, this decides whether
+or not buildbot should consider git submodules.  Default: False.
+
+@item shallow
+(optional): instructs git to attempt shallow clones (@code{--depth 1}).  If the
+user/scheduler asks for a specific revision, this parameter is ignored.
+
+@item progress
+(optional): passes the (@code{--progress}) flag to (@code{git fetch}). This
+solves issues of long fetches being killed due to lack of output, but requires
+Git 1.7.2 or later.
+
+@item retryFetch
+(optional): this value defaults to @code{False}. In any case if fetch fails
+buildbot retries to fetch again instead of failing the entire source checkout.
+
+@item clobberOnFailure
+(optional): defaults to @code{False}. If a fetch or full clone fails we can
+checkout source removing everything. This way new repository will be cloned.
+If retry fails it fails the source checkout step.
+
+@item mode
+@item method
+
+Git's incremental mode does not require a method.  The full mode has
+four methods defined:
+
+@table @code
+@item clobber
+It removes the build directory entirely then makes full clone from repo. This
+can be slow as it need to clone whole repository
+
+@item fresh
+This remove all other files except those tracked by Git. First it does @code{git
+ clean -d -f -x} then fetch/checkout to a specified revision(if any). This
+option is equal to update mode with @code{ignore_ignores=True} in old steps.
+
+@item clean
+All the files which are tracked by Git and listed ignore files are not
+deleted. Remaining all other files will be deleted before fetch/checkout. This
+is equivalent to @code{git clean -d -f} then fetch. This is equivalent to
+@code{ignore_ignores=False} in old steps.
+
+@item copy
+This first checkout source into source directory then copy the @code{source}
+directory to @code{build} directory then performs the build operation in the
+copied directory. This way we make fresh builds with very less bandwidth to
+download source. The behavior of source checkout follows exactly same as
+incremental. It performs all the incremental checkout behavior in @code{source}
+directory.
+
 @end table
 
 @end table
