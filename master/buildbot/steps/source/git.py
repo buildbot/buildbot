@@ -112,12 +112,12 @@ class Git(Source):
         if self.method == 'clobber':
             wfd = defer.waitForDeferred(self.clobber())
             yield wfd
-            res = wfd.getResult()
+            wfd.getResult()
             return
         elif self.method == 'copy':
             wfd = defer.waitForDeferred(self.copy())
             yield wfd
-            res = wfd.getResult()
+            wfd.getResult()
             return
 
         wfd = defer.waitForDeferred(self._sourcedirIsUpdatable())
@@ -134,7 +134,7 @@ class Git(Source):
             raise ValueError("Unknown method, check your configuration")
         wfd = defer.waitForDeferred(d)
         yield wfd
-        res = wfd.getResult()
+        wfd.getResult()
 
     def incremental(self):
         d = self._sourcedirIsUpdatable()
