@@ -450,9 +450,9 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
     def sendBuilderList(self):
         our_builders = self.botmaster.getBuildersForSlave(self.slavename)
         blist = [(b.name, b.slavebuilddir) for b in our_builders]
-#        if blist == self._old_builder_list:
-#            log.msg("Builder list is unchanged; not calling setBuilderList")
-#            return defer.succeed(None)
+        if blist == self._old_builder_list:
+            log.msg("Builder list is unchanged; not calling setBuilderList")
+            return defer.succeed(None)
 
         d = self.slave.callRemote("setBuilderList", blist)
         def sentBuilderList(ign):
