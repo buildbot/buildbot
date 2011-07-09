@@ -412,47 +412,57 @@ class Builder(pb.Referenceable, service.MultiService):
         @param build: the L{base.Build} to start
         @param sb: the L{SlaveBuilder} which will host this build
 
-        @return: a Deferred which fires with a
-        L{buildbot.interfaces.IBuildControl} that can be used to stop the
-        Build, or to access a L{buildbot.interfaces.IBuildStatus} which will
-        watch the Build as it runs. """
+        @return: (via Deferred) boolean indicating that the build was
+        succesfully started.
+        """
+
+        # as of the Python versions supported now, try/finally can't be used
+        # with a generator expression.  So instead, we push cleanup functions
+        # into a list so that, at any point, we can abort this operation.
+        cleanups = []
+        def run_cleanups():
+            while cleanups:
+                fn = cleanups.pop()
+                fn()
+
+        # the last cleanup we want to perform is to update the big
+        # status based on any other cleanup
+        cleanups.append(lambda : self.updateBigStatus())
 
         build = self.buildFactory.newBuild(buildrequests)
         build.setBuilder(self)
+        log.msg("starting build %s using slave %s" % (build, slavebuilder))
+
+        # set up locks
         build.setLocks(self.locks)
+        cleanups.append(lambda : slavebuilder.slave.releaseLocks())
+
         if len(self.env) > 0:
             build.setSlaveEnvironment(self.env)
 
+        # append the build to self.building
         self.building.append(build)
-        self.updateBigStatus()
-        log.msg("starting build %s using slave %s" % (build, slavebuilder))
+        cleanups.append(lambda : self.building.remove(build))
 
-        wfd = defer.waitForDeferred(
-                slavebuilder.prepare(self.builder_status, build))
-        yield wfd
-        ready = wfd.getResult()
+        # update the big status accordingly
+        self.updateBigStatus()
+
+        try:
+            wfd = defer.waitForDeferred(
+                    slavebuilder.prepare(self.builder_status, build))
+            yield wfd
+            ready = wfd.getResult()
+        except:
+            log.err(failure.Failure(), 'while preparing slavebuilder:')
+            ready = False
 
         # If prepare returns True then it is ready and we start a build
         # If it returns false then we don't start a new build.
         if not ready:
             log.msg("slave %s can't build %s after all; re-queueing the "
                     "request" % (build, slavebuilder))
-
-            self.building.remove(build)
-            slavebuilder.slave.releaseLocks()
-
-            # release the buildrequest claims
-            wfd = defer.waitForDeferred(
-                self._resubmit_buildreqs(build))
-            yield wfd
-            wfd.getResult()
-
-            self.updateBigStatus()
-
-            # and try starting builds again.  If we still have a working slave,
-            # then this may re-claim the same buildrequests
-            self.botmaster.maybeStartBuildsForBuilder(self.name)
-
+            run_cleanups()
+            yield False
             return
 
         # ping the slave to make sure they're still there. If they've
@@ -465,38 +475,55 @@ class Builder(pb.Referenceable, service.MultiService):
         # us in a build.
         log.msg("starting build %s.. pinging the slave %s"
                 % (build, slavebuilder))
-        wfd = defer.waitForDeferred(
-                slavebuilder.ping())
-        yield wfd
-        ping_success = wfd.getResult()
+        try:
+            wfd = defer.waitForDeferred(
+                    slavebuilder.ping())
+            yield wfd
+            ping_success = wfd.getResult()
+        except:
+            log.err(failure.Failure(), 'while pinging slave before build:')
+            ping_success = False
 
         if not ping_success:
-            self._startBuildFailed("slave ping failed", build, slavebuilder)
+            log.msg("slave ping failed; re-queueing the request")
+            run_cleanups()
+            yield False
             return
 
         # The buildslave is ready to go. slavebuilder.buildStarted() sets its
         # state to BUILDING (so we won't try to use it for any other builds).
         # This gets set back to IDLE by the Build itself when it finishes.
         slavebuilder.buildStarted()
+        cleanups.append(lambda : slavebuilder.buildFinished())
+
+        # tell the remote that it's starting a build, too
         try:
             wfd = defer.waitForDeferred(
                     slavebuilder.remote.callRemote("startBuild"))
             yield wfd
             wfd.getResult()
         except:
-            self._startBuildFailed(failure.Failure(), build, slavebuilder)
+            log.err(failure.Failure(), 'while calling remote startBuild:')
+            run_cleanups()
+            yield False
             return
 
         # create the BuildStatus object that goes with the Build
         bs = self.builder_status.newBuild()
 
-        # record in the db - one per buildrequest
-        bids = []
-        for req in build.requests:
-            wfd = defer.waitForDeferred(
-                self.master.db.builds.addBuild(req.id, bs.number))
-            yield wfd
-            bids.append(wfd.getResult())
+        # record the build in the db - one row per buildrequest
+        try:
+            bids = []
+            for req in build.requests:
+                wfd = defer.waitForDeferred(
+                    self.master.db.builds.addBuild(req.id, bs.number))
+                yield wfd
+                bids.append(wfd.getResult())
+        except:
+            log.err(failure.Failure(), 'while adding rows to build table:')
+            run_cleanups()
+            yield False
+            return
 
         # let status know
         self.master.status.build_started(req.id, self.name, bs)
@@ -515,23 +542,7 @@ class Builder(pb.Referenceable, service.MultiService):
         # make sure the builder's status is represented correctly
         self.updateBigStatus()
 
-        # yield the IBuildControl, in case anyone needs it
-        yield build
-
-    def _startBuildFailed(self, why, build, slavebuilder):
-        # put the build back on the buildable list
-        log.msg("I tried to tell the slave that the build %s started, but "
-                "remote_startBuild failed: %s" % (build, why))
-        # release the slave. This will queue a call to maybeStartBuild, which
-        # will fire after other notifyOnDisconnect handlers have marked the
-        # slave as disconnected (so we don't try to use it again).
-        slavebuilder.buildFinished()
-
-        self.updateBigStatus()
-
-        log.msg("re-queueing the BuildRequest")
-        self.building.remove(build)
-        self._resubmit_buildreqs(build).addErrback(log.err)
+        yield True
 
     def setupProperties(self, props):
         props.setProperty("buildername", self.name, "Builder")
@@ -681,10 +692,10 @@ class Builder(pb.Referenceable, service.MultiService):
             brdicts = wfd.getResult()
 
             # try to claim the build requests
+            brids = [ brdict['brid'] for brdict in brdicts ]
             try:
                 wfd = defer.waitForDeferred(
-                        self.master.db.buildrequests.claimBuildRequests(
-                            [ brdict['brid'] for brdict in brdicts ]))
+                        self.master.db.buildrequests.claimBuildRequests(brids))
                 yield wfd
                 wfd.getResult()
             except buildrequests.AlreadyClaimedError:
@@ -712,9 +723,24 @@ class Builder(pb.Referenceable, service.MultiService):
                                           for brdict in brdicts ]))
             yield wfd
             breqs = wfd.getResult()
-            self._startBuildFor(slavebuilder, breqs)
 
-            # and finally remove the buildrequests and slavebuilder from the
+            wfd = defer.waitForDeferred(
+                    self._startBuildFor(slavebuilder, breqs))
+            yield wfd
+            build_started = wfd.getResult()
+
+            if not build_started:
+                # build was not started, so unclaim the build requests
+                wfd = defer.waitForDeferred(
+                    self.master.db.buildrequests.unclaimBuildRequests(brids))
+                yield wfd
+                wfd.getResult()
+
+                # and try starting builds again.  If we still have a working slave,
+                # then this may re-claim the same buildrequests
+                self.botmaster.maybeStartBuildsForBuilder(self.name)
+
+            # finally, remove the buildrequests and slavebuilder from the
             # respective queues
             self._breakBrdictRefloops(brdicts)
             for brdict in brdicts:

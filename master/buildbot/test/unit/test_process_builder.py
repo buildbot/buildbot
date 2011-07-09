@@ -52,7 +52,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         self.builds_started = []
         def _startBuildFor(slavebuilder, buildrequests):
             self.builds_started.append((slavebuilder, buildrequests))
-            return defer.succeed(None)
+            return defer.succeed(True)
         self.bldr._startBuildFor = _startBuildFor
 
         if patch_random:
