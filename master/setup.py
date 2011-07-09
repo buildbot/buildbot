@@ -281,7 +281,7 @@ else:
         'Jinja2 >= 2.1',
         'sqlalchemy >= 0.6',
         # buildbot depends on sqlalchemy internals. See buildbot.db.model.
-        'sqlalchemy-migrate == 0.6',
+        'sqlalchemy-migrate ==0.6, ==0.7',
     ]
     # Python-2.6 and up includes json
     if not py_26:
