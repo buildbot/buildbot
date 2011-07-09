@@ -81,6 +81,11 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
             kwargs['pool_size'] = 1
             max_conns = 1
 
+        # allow serializing access to the db
+        if 'serialize_access' in u.query:
+            u.query.pop('serialize_access')
+            max_conns = 1
+
         return u, kwargs, max_conns
 
     def special_case_mysql(self, u, kwargs):

@@ -43,6 +43,15 @@ c['db_url'] = "sqlite:///state.sqlite"
 
 No special configuration is required to use SQLite.
 
+If you have trouble with "database is locked" exceptions, try adding
+@code{serialize_access=1} to the DB URL as a workaround:
+
+@example
+c['db_url'] = "sqlite:///state.sqlite?serialize_access=1"
+@end example
+
+and please file a bug at @url{http://trac.buildbot.net}.
+
 @heading MySQL
 
 @example
