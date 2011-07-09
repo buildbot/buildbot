@@ -29,6 +29,7 @@ class GitPoller(base.PollingChangeSource):
     
     compare_attrs = ["repourl", "branch", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
+                     "remoteName",
                      "category", "project"]
                      
     def __init__(self, repourl, branch='master', 
@@ -36,6 +37,7 @@ class GitPoller(base.PollingChangeSource):
                  gitbin='git', usetimestamps=True,
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
+                 localBranch=None, remoteName='origin',
                  encoding='utf-8'):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -56,6 +58,8 @@ class GitPoller(base.PollingChangeSource):
         self.project = project
         self.changeCount = 0
         self.commitInfo  = {}
+        self.remoteName = remoteName
+        self.localBranch = localBranch or branch
         self.initLock = defer.DeferredLock()
         
         if self.workdir == None:
@@ -102,32 +106,33 @@ class GitPoller(base.PollingChangeSource):
         
         def git_remote_add(_):
             d = utils.getProcessOutputAndValue(self.gitbin,
-                    ['remote', 'add', 'origin', self.repourl],
+                    ['remote', 'add', self.remoteName, self.repourl],
                     path=self.workdir, env=dict(PATH=os.environ['PATH']))
             d.addCallback(self._convert_nonzero_to_failure)
             d.addErrback(self._stop_on_failure)
             return d
         d.addCallback(git_remote_add)
         
-        def git_fetch_origin(_):
-            args = ['fetch', 'origin']
+        def git_fetch_remote(_):
+            args = ['fetch', self.remoteName]
             self._extend_with_fetch_refspec(args)
             d = utils.getProcessOutputAndValue(self.gitbin, args,
                     path=self.workdir, env=dict(PATH=os.environ['PATH']))
             d.addCallback(self._convert_nonzero_to_failure)
             d.addErrback(self._stop_on_failure)
             return d
-        d.addCallback(git_fetch_origin)
+        d.addCallback(git_fetch_remote)
         
         def set_master(_):
             log.msg('gitpoller: checking out %s' % self.branch)
-            if self.branch == 'master': # repo is already on branch 'master', so reset
+            # FIXME
+            if self.localBranch == 'master': # repo is already on branch 'master', so reset
                 d = utils.getProcessOutputAndValue(self.gitbin,
-                        ['reset', '--hard', 'origin/%s' % self.branch],
+                        ['reset', '--hard', '%s/%s' % (self.remoteName, self.branch)],
                         path=self.workdir, env=dict(PATH=os.environ['PATH']))
             else:
                 d = utils.getProcessOutputAndValue(self.gitbin,
-                        ['checkout', '-b', self.branch, 'origin/%s' % self.branch],
+                        ['checkout', '-b', self.localBranch, '%s/%s' % (self.remoteName, self.branch)],
                         path=self.workdir, env=dict(PATH=os.environ['PATH']))
             d.addCallback(self._convert_nonzero_to_failure)
             d.addErrback(self._stop_on_failure)
@@ -135,7 +140,7 @@ class GitPoller(base.PollingChangeSource):
         d.addCallback(set_master)
         def get_rev(_):
             d = utils.getProcessOutputAndValue(self.gitbin,
-                    ['rev-parse', self.branch],
+                    ['rev-parse', self.localBranch],
                     path=self.workdir, env={})
             d.addCallback(self._convert_nonzero_to_failure)
             d.addErrback(self._stop_on_failure)
@@ -220,7 +225,7 @@ class GitPoller(base.PollingChangeSource):
         self.lastPoll = time.time()
         
         # get a deferred object that performs the fetch
-        args = ['fetch', 'origin']
+        args = ['fetch', self.remoteName]
         self._extend_with_fetch_refspec(args)
 
         # This command always produces data on stderr, but we actually do not care
@@ -236,7 +241,7 @@ class GitPoller(base.PollingChangeSource):
     @defer.deferredGenerator
     def _process_changes(self, unused_output):
         # get the change list
-        revListArgs = ['log', '%s..origin/%s' % (self.branch, self.branch), r'--format=%H']
+        revListArgs = ['log', '%s..%s/%s' % (self.localBranch, self.remoteName, self.branch), r'--format=%H']
         self.changeCount = 0
         d = utils.getProcessOutput(self.gitbin, revListArgs, path=self.workdir,
                                    env=dict(PATH=os.environ['PATH']), errortoo=False )
@@ -299,7 +304,7 @@ class GitPoller(base.PollingChangeSource):
             log.msg('gitpoller: no changes, no catch_up')
             return
         log.msg('gitpoller: catching up tracking branch')
-        args = ['reset', '--hard', 'origin/%s' % (self.branch,)]
+        args = ['reset', '--hard', '%s/%s' % (self.remoteName, self.branch,)]
         d = utils.getProcessOutputAndValue(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']))
         d.addCallback(self._convert_nonzero_to_failure)
         return d
