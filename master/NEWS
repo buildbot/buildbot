@@ -15,6 +15,12 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Buildbot 0.8.4 (June 12, 2011)
 
+** Buildmaster Metrics
+
+The buildmaster now actively measures a number of quantities that can be useful
+in debugging and tuning its performance.  See the documentation for more
+information.
+
 ** Monotone support
 
 Monotone support has returned to Buildbot, thanks to Richard Levitte.
