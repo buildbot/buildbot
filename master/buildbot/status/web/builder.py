@@ -16,7 +16,7 @@
 
 from twisted.web import html
 from twisted.web.util import Redirect
-import re, urllib, time
+import urllib, time
 from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces
@@ -153,12 +153,15 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 log.msg("..but not authorized")
                 return Redirect(path_to_authfail(req))
 
+        master = self.getBuildmaster(req)
+
         # keep weird stuff out of the branch revision, and property strings.
-        # TODO: centralize this somewhere.
-        if not re.match(r'^[\w.+/~-]*$', branch):
+        branch_validate = master.config.validation['branch']
+        revision_validate = master.config.validation['revision']
+        if not branch_validate.match(branch):
             log.msg("bad branch '%s'" % branch)
             return Redirect(path_to_builder(req, self.builder_status))
-        if not re.match(r'^[ \w\.\-\/]*$', revision):
+        if not revision_validate.match(r'^[ \w\.\-\/]*$', revision):
             log.msg("bad revision '%s'" % revision)
             return Redirect(path_to_builder(req, self.builder_status))
         properties = getAndCheckProperties(req)
@@ -169,7 +172,6 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         if not revision:
             revision = None
 
-        master = self.getBuildmaster(req)
         d = master.db.sourcestamps.addSourceStamp(branch=branch,
                 revision=revision, project=project, repository=repository)
         def make_buildset(ssid):

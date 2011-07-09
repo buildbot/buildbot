@@ -22,6 +22,7 @@ class MasterConfig(object):
     available at C{master.config}.
 
     @ivar changeHorizon: the current change horizon
+    @ivar validation: regexes for preventing invalid inputs
     """
 
     changeHorizon = None

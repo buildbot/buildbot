@@ -12,6 +12,7 @@ The keys in this section affect the operations of the buildmaster globally.
 * Defining Global Properties::
 * Debug Options::
 * Metrics Options::
+* Input Validation::
 @end menu
 
 @node Database Specification
@@ -572,3 +573,26 @@ data attributes of <Builder ''builder'' at 48963528>
 @code{periodic_interval} determines how often various non-event based metrics are collected, such as memory usage, uncollectable garbage, reactor delay. This defaults to 10s. If set to 0 or None, then periodic collection of this data is disabled. This value can also be changed via a reconifg.
 
 Read more about metrics in the @ref{Metrics} section of the documentation.
+
+@node Input Validation
+@subsection Input Validation
+@bcindex c['validation']
+
+@example
+import re
+c['validation'] = @{
+    'branch' : re.compile(r'^[\w.+/~-]*$'),
+    'revision' : re.compile(r'^[ \w\.\-\/]*$'),
+    'property_name' : re.compile(r'^[\w\.\-\/\~:]*$'),
+    'property_value' : re.compile(r'^[\w\.\-\/\~:]*$'),
+@}
+@end example
+
+This option configures the validation applied to user inputs of various types.
+This validation is important since these values are often included in
+command-line arguments executed on slaves.  Allowing arbitrary input from
+untrusted users may raise security concerns.
+
+The keys describe the type of input validated; the values are compiled regular
+expressions against which the input will be matched.  The defaults for each
+type of input are those given in the example, above.

@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 
+import re
 import os
 import signal
 import time
@@ -308,6 +309,22 @@ class BuildMaster(service.MultiService):
                 metrics_config = config.get("metrics")
                 caches_config = config.get("caches", {})
 
+                # load validation, with defaults, and verify no unrecognized
+                # keys are included.
+                validation_defaults = {
+                    'branch' : re.compile(r'^[\w.+/~-]*$'),
+                    'revision' : re.compile(r'^[ \w\.\-\/]*$'),
+                    'property_name' : re.compile(r'^[\w\.\-\/\~:]*$'),
+                    'property_value' : re.compile(r'^[\w\.\-\/\~:]*$'),
+                }
+                validation_config = validation_defaults.copy()
+                validation_config.update(config.get("validation", {}))
+                v_config_keys = set(validation_config.keys())
+                v_default_keys = set(validation_defaults.keys())
+                if v_config_keys > v_default_keys:
+                    raise ValueError("unrecognized validation key(s): %s" %
+                            (", ".join(v_config_keys - v_default_keys,)))
+
             except KeyError:
                 log.msg("config dictionary is missing a required parameter")
                 log.msg("leaving old configuration in place")
@@ -335,6 +352,7 @@ class BuildMaster(service.MultiService):
                 raise KeyError("must have a 'slaves' key")
 
             self.config.changeHorizon = changeHorizon
+            self.config.validation = validation_config
 
             change_source = config.get('change_source', [])
             if isinstance(change_source, (list, tuple)):

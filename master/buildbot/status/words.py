@@ -89,6 +89,7 @@ class Contact(base.StatusReceiver):
     def __init__(self, channel):
         #StatusReceiver.__init__(self) doesn't exist
         self.channel = channel
+        self.master = channel.master
         self.notify_events = {}
         self.subscribed = 0
         self.muted = False
@@ -451,12 +452,13 @@ class Contact(base.StatusReceiver):
             raise UsageError("you must provide a Builder, " + errReply)
 
         # keep weird stuff out of the branch and revision strings. 
-        # TODO:  centralize this somewhere.
-        if branch and not re.match(r'^[\w\.\-\/]*$', branch):
+        branch_validate = self.master.config.validation['branch']
+        revision_validate = self.master.config.validation['revision']
+        if branch and not branch_validate.match(branch):
             log.msg("bad branch '%s'" % branch)
             self.send("sorry, bad branch '%s'" % branch)
             return
-        if revision and not re.match(r'^[\w\.\-\/]*$', revision):
+        if revision and not revision_validate.match(revision):
             log.msg("bad revision '%s'" % revision)
             self.send("sorry, bad revision '%s'" % revision)
             return

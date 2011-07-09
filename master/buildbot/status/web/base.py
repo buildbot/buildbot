@@ -62,11 +62,14 @@ css_classes = {SUCCESS: "success",
 
 def getAndCheckProperties(req):
     """
-Fetch custom build properties from the HTTP request of a "Force build" or
-"Resubmit build" HTML form.
-Check the names for valid strings, and return None if a problem is found.
-Return a new Properties object containing each property found in req.
-"""
+    Fetch custom build properties from the HTTP request of a "Force build" or
+    "Resubmit build" HTML form.
+    Check the names for valid strings, and return None if a problem is found.
+    Return a new Properties object containing each property found in req.
+    """
+    master = req.site.buildbot_service.master
+    pname_validate = master.config.validation['property_name']
+    pval_validate = master.config.validation['property_value']
     properties = Properties()
     i = 1
     while True:
@@ -74,8 +77,8 @@ Return a new Properties object containing each property found in req.
         pvalue = req.args.get("property%dvalue" % i, [""])[0]
         if not pname:
             break
-        if not re.match(r'^[\w\.\-\/\~:]*$', pname) \
-                or not re.match(r'^[\w\.\-\/\~:]*$', pvalue):
+        if not pname_validate.match(pname) \
+                or not pval_validate.match(pvalue):
             log.msg("bad property name='%s', value='%s'" % (pname, pvalue))
             return None
         properties.setProperty(pname, pvalue, "Force Build Form")
