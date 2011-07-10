@@ -200,7 +200,7 @@ an intervening proxy) they can last for a long time.
 @item
 If the new configuration file is invalid, it is possible for Buildbot's
 internal state to be corrupted, leading to undefined results.  When this
-occurs, it is best to restart the mater.
+occurs, it is best to restart the master.
 
 @item
 For more advanced configurations, it is impossible for Buildbot to tell if the
