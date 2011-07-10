@@ -5,6 +5,14 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Version
 
+** Deprecations, Removals, and Non-Compatible Changes
+
+*** The db.buildrequests.claimBuildRequests method can no longer re-claim
+already-claimed requests; use reclaimBuildRequests instead.  The database no
+longer tracks master instances, so the unclaimOldIncarnationRequests method has
+been removed.  Note that several of the methods in this module now perform
+fewer consistency checks, for efficiency.
+
 ** Customizable validation regexps
 
 The global c['validation'] parameter can be used to adjust the regular

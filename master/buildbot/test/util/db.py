@@ -16,8 +16,20 @@
 import os
 from sqlalchemy.schema import MetaData
 from twisted.python import log
+from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.db import model, pool, enginestrategy
+
+def skip_for_dialect(dialect):
+    """Decorator to skip a test for a particular SQLAlchemy dialect."""
+    def dec(fn):
+        def wrap(self, *args, **kwargs):
+            if self.db_engine.dialect.name == dialect:
+                raise unittest.SkipTest(
+                        "Not supported on dialect '%s'" % dialect)
+            return fn(self, *args, **kwargs)
+        return wrap
+    return dec
 
 class RealDatabaseMixin(object):
     """

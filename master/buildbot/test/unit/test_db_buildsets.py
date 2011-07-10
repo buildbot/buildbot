@@ -74,12 +74,11 @@ class TestBuildsetsConnectorComponent(
                 r = conn.execute(self.db.model.buildrequests.select())
 
                 rows = [ (row.buildsetid, row.id, row.buildername,
-                    row.priority, row.claimed_at, row.claimed_by_name,
-                    row.claimed_by_incarnation, row.complete, row.results,
+                    row.priority, row.complete, row.results,
                     row.submitted_at, row.complete_at)
                           for row in r.fetchall() ]
                 self.assertEqual(rows,
-                    [ ( bsid, brids['bldr'], 'bldr', 0, 0, None, None, 0,
+                    [ ( bsid, brids['bldr'], 'bldr', 0, 0,
                         -1, self.now, None) ])
             return self.db.pool.do(thd)
         d.addCallback(check)

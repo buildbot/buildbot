@@ -13,28 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from buildbot.test.fake import fakedb
-import mock
+# from http://www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct
 
-def make_master(master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
+from sqlalchemy.ext import compiler
+from sqlalchemy.sql.expression import Executable, ClauseElement
+
+class InsertFromSelect(Executable, ClauseElement):
     """
-    Create a fake Master instance: a Mock with some convenience
-    implementations:
-
-    - Non-caching implementation for C{self.caches}
+    An L{Executable} that can insert into C{table} the values from C{select}
     """
+    def __init__(self, table, select):
+        self.table = table
+        self.select = select
 
-    fakemaster = mock.Mock(name="fakemaster")
-
-    # set up caches
-    def fake_get_cache(name, miss_fn):
-        fake_cache = mock.Mock(name='fakemaster.caches[%r]' % name)
-        fake_cache.get = miss_fn
-        return fake_cache
-    fakemaster.caches.get_cache = fake_get_cache
-
-    # and a getObjectId method
-    fakemaster.getObjectId = (lambda : defer.succeed(master_id))
-
-    return fakemaster
+@compiler.compiles(InsertFromSelect)
+def _visit_insert_from_select(element, compiler, **kw):
+    return "INSERT INTO %s %s" % (
+        compiler.process(element.table, asfrom=True),
+        compiler.process(element.select)
+    )

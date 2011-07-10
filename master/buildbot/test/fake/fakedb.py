@@ -59,6 +59,8 @@ class Row(object):
                 self.values[self.id_column] = self.nextId()
         for col in self.required_columns:
             assert col in kwargs, "%s not specified" % col
+        for col in kwargs.keys():
+            assert col in self.defaults, "%s is not a valid column" % col
         # make the values appear as attributes
         self.__dict__.update(self.values)
 
@@ -78,9 +80,6 @@ class BuildRequest(Row):
         buildsetid = None,
         buildername = "bldr",
         priority = 0,
-        claimed_at = 0,
-        claimed_by_name = None,
-        claimed_by_incarnation = None,
         complete = 0,
         results = -1,
         submitted_at = 0,
@@ -89,6 +88,18 @@ class BuildRequest(Row):
 
     id_column = 'id'
     required_columns = ('buildsetid',)
+
+
+class BuildRequestClaim(Row):
+    table = "buildrequest_claims"
+
+    defaults = dict(
+        brid = None,
+        objectid = None,
+        claimed_at = None
+    )
+
+    required_columns = ('brid', 'objectid', 'claimed_at')
 
 
 class Change(Row):
@@ -787,19 +798,22 @@ class FakeStateComponent(FakeDBComponent):
 class FakeBuildRequestsComponent(FakeDBComponent):
 
     # for use in determining "my" requests
-    MASTER_NAME = "this-master"
-    MASTER_INCARNATION = "this-lifetime"
+    MASTER_ID = 824
 
     # override this to set reactor.seconds
     _reactor = reactor
 
     def setUp(self):
         self.reqs = {}
+        self.claims = {}
 
     def insertTestData(self, rows):
         for row in rows:
             if isinstance(row, BuildRequest):
                 self.reqs[row.id] = row
+
+            if isinstance(row, BuildRequestClaim):
+                self.claims[row.brid] = row
 
     # component methods
 
@@ -821,16 +835,15 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 if not complete and br.complete:
                     continue
             if claimed is not None:
+                claim_row = self.claims.get(br.id)
                 if claimed == "mine":
-                    if br.claimed_by_name != self.MASTER_NAME:
-                        continue
-                    if br.claimed_by_incarnation != self.MASTER_INCARNATION:
+                    if not claim_row or claim_row.objectid != self.MASTER_ID:
                         continue
                 elif claimed:
-                    if not br.claimed_at:
+                    if not claim_row:
                         continue
                 else:
-                    if br.claimed_at:
+                    if claim_row:
                         continue
             if bsid is not None:
                 if br.buildsetid != bsid:
@@ -840,60 +853,41 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
     def claimBuildRequests(self, brids):
         for brid in brids:
-            if brid not in self.reqs:
-                return defer.fail(
-                        failure.Failure(buildrequests.AlreadyClaimedError))
-            br = self.reqs[brid]
-            if br.claimed_at and (
-                    br.claimed_by_name != self.MASTER_NAME or
-                    br.claimed_by_incarnation != self.MASTER_INCARNATION):
+            if brid not in self.reqs or brid in self.claims:
                 return defer.fail(
                         failure.Failure(buildrequests.AlreadyClaimedError))
         # now that we've thrown any necessary exceptions, get started
         for brid in brids:
-            br = self.reqs[brid]
-            br.claimed_at = self._reactor.seconds()
-            br.claimed_by_name = self.MASTER_NAME
-            br.claimed_by_incarnation = self.MASTER_INCARNATION
+            self.claims[brid] = BuildRequestClaim(brid=brid,
+                objectid=self.MASTER_ID, claimed_at=self._reactor.seconds())
         return defer.succeed(None)
 
-    def unclaimOldIncarnationRequests(self):
-        for br in self.reqs.itervalues():
-            if (not br.complete and br.claimed_at and
-                    br.claimed_by_name == self.MASTER_NAME and
-                    br.claimed_by_incarnation != self.MASTER_INCARNATION):
-                br.claimed_at = 0
-                br.claimed_by_name = None
-                br.claimed_by_incarnation = None
-        return defer.succeed(None)
-
-    def unclaimExpiredRequests(self, old):
-        old_time = self._reactor.seconds() - old
-        for br in self.reqs.itervalues():
-            if not br.complete and br.claimed_at and br.claimed_at < old_time:
-                br.claimed_at = 0
-                br.claimed_by_name = None
-                br.claimed_by_incarnation = None
+    def reclaimBuildRequests(self, brids):
+        for brid in brids:
+            if brid not in self.claims:
+                print "trying to reclaim brid %d, but it's not claimed" % brid
+                return defer.fail(
+                        failure.Failure(buildrequests.AlreadyClaimedError))
+        # now that we've thrown any necessary exceptions, get started
+        for brid in brids:
+            self.claims[brid] = BuildRequestClaim(brid=brid,
+                objectid=self.MASTER_ID, claimed_at=self._reactor.seconds())
         return defer.succeed(None)
 
     # Code copied from buildrequests.BuildRequestConnectorComponent
     def _brdictFromRow(self, row):
         claimed = mine = False
-        if (row.claimed_at
-                and row.claimed_by_name is not None
-                and row.claimed_by_incarnation is not None):
+        claimed_at = None
+        claim_row = self.claims.get(row.id, None)
+        if claim_row:
             claimed = True
-            master_name = self.db.master.master_name
-            master_incarnation = self.db.master.master_incarnation
-            if (row.claimed_by_name == master_name and
-                row.claimed_by_incarnation == master_incarnation):
-               mine = True
+            claimed_at = claim_row.claimed_at
+            mine = claim_row.objectid == self.MASTER_ID
 
         def mkdt(epoch):
             if epoch:
                 return epoch2datetime(epoch)
         submitted_at = mkdt(row.submitted_at)
-        claimed_at = mkdt(row.claimed_at)
         complete_at = mkdt(row.complete_at)
 
         return dict(brid=row.id, buildsetid=row.buildsetid,
@@ -904,39 +898,21 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
     # fake methods
 
-    def fakeClaimBuildRequest(self, brid, claimed_at=None, master_name=None,
-                                          master_incarnation=None):
-        br = self.reqs[brid]
-        br.claimed_at = claimed_at or self._reactor.seconds()
-        br.claimed_by_name = master_name or self.MASTER_NAME
-        br.claimed_by_incarnation = \
-                master_incarnation or self.MASTER_INCARNATION
+    def fakeClaimBuildRequest(self, brid, claimed_at=None, objectid=None):
+        if objectid is None:
+            objectid = self.MASTER_ID
+        self.claims[brid] = BuildRequestClaim(brid=brid,
+            objectid=objectid, claimed_at=self._reactor.seconds())
 
     def fakeUnclaimBuildRequest(self, brid):
-        br = self.reqs[brid]
-        br.claimed_at = 0
-        br.claimed_by_name = None
-        br.claimed_by_incarnation = None
+        del self.claims[brid]
 
     # assertions
 
-    def assertClaimed(self, brid, master_name=None, master_incarnation=None):
-        self.t.assertTrue(self.reqs[brid].claimed_at)
-        if master_name and master_incarnation:
-            br = self.reqs[brid]
-            self.t.assertEqual(
-                [ br.claimed_by_name, br.claimed_by_incarnation ]
-                [ master_name, master_incarnation ])
-
-    def assertClaimedMine(self, brid):
-        return self.t.assertClaimed(brid, master_name=self.MASTER_NAME,
-                master_incarnation=self.MASTER_INCARNATION)
-
     def assertMyClaims(self, claimed_brids):
         self.t.assertEqual(
-                [ id for (id, br) in self.reqs.iteritems()
-                  if br.claimed_by_name == self.MASTER_NAME and
-                     br.claimed_by_incarnation == self.MASTER_INCARNATION ],
+                [ id for (id, brc) in self.claims.iteritems()
+                  if brc.objectid == self.MASTER_ID ],
                 claimed_brids)
 
 

@@ -63,27 +63,15 @@ class Model(base.DBConnectorComponent):
 
     buildrequests = sa.Table('buildrequests', metadata,
         sa.Column('id', sa.Integer,  primary_key=True),
-        sa.Column('buildsetid', sa.Integer, sa.ForeignKey("buildsets.id"), nullable=False),
+        sa.Column('buildsetid', sa.Integer, sa.ForeignKey("buildsets.id"),
+            nullable=False),
         sa.Column('buildername', sa.String(length=256), nullable=False),
-        sa.Column('priority', sa.Integer, nullable=False, server_default=sa.DefaultClause("0")), # TODO: used?
-
-        # claimed_at is the time at which a master most recently asserted that
-        # it is responsible for running the build: this will be updated
-        # periodically to maintain the claim.  Note that 0 and NULL mean the
-        # same thing here (and not 1969!)
-        sa.Column('claimed_at', sa.Integer, server_default=sa.DefaultClause("0")),
-
-        # claimed_by indicates which buildmaster has claimed this request. The
-        # 'name' contains hostname/basedir, and will be the same for subsequent
-        # runs of any given buildmaster. The 'incarnation' contains bootime/pid,
-        # and will be different for subsequent runs. This allows each buildmaster
-        # to distinguish their current claims, their old claims, and the claims
-        # of other buildmasters, to treat them each appropriately.
-        sa.Column('claimed_by_name', sa.String(length=256)),
-        sa.Column('claimed_by_incarnation', sa.String(length=256)),
+        sa.Column('priority', sa.Integer, nullable=False,
+            server_default=sa.DefaultClause("0")), # TODO: used?
 
         # if this is zero, then the build is still pending
-        sa.Column('complete', sa.Integer, server_default=sa.DefaultClause("0")), # TODO: boolean
+        sa.Column('complete', sa.Integer,
+            server_default=sa.DefaultClause("0")), # TODO: boolean
 
         # results is only valid when complete == 1; 0 = SUCCESS, 1 = WARNINGS,
         # etc - see master/buildbot/status/builder.py
@@ -98,6 +86,16 @@ class Model(base.DBConnectorComponent):
     """A BuildRequest is a request for a particular build to be performed.
     Each BuildRequest is a part of a BuildSet.  BuildRequests are claimed by
     masters, to avoid multiple masters running the same build."""
+
+    buildrequest_claims = sa.Table('buildrequest_claims', metadata,
+        sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
+            index=True, unique=True),
+        sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id'),
+            index=True, nullable=True),
+        sa.Column('claimed_at', sa.Integer, nullable=False),
+    )
+    """Each row in this table represents a claimed build request, where the
+    claim is made by the object referenced by objectid."""
 
     # builds
 
@@ -339,8 +337,6 @@ class Model(base.DBConnectorComponent):
     sa.Index('buildrequests_buildsetid', buildrequests.c.buildsetid)
     sa.Index('buildrequests_buildername', buildrequests.c.buildername)
     sa.Index('buildrequests_complete', buildrequests.c.complete)
-    sa.Index('buildrequests_claimed_at', buildrequests.c.claimed_at)
-    sa.Index('buildrequests_claimed_by_name', buildrequests.c.claimed_by_name)
     sa.Index('builds_number', builds.c.number)
     sa.Index('builds_brid', builds.c.brid)
     sa.Index('buildsets_complete', buildsets.c.complete)

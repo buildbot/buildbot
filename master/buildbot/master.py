@@ -17,8 +17,8 @@
 import re
 import os
 import signal
-import time
 import textwrap
+import socket
 
 from zope.interface import implements
 from twisted.python import log, components
@@ -97,13 +97,6 @@ class BuildMaster(service.MultiService):
         self.change_svc = ChangeManager()
         self.change_svc.setServiceParent(self)
 
-        try:
-            hostname = os.uname()[1] # only on unix
-        except AttributeError:
-            hostname = "?"
-        self.master_name = "%s:%s" % (hostname, os.path.abspath(self.basedir))
-        self.master_incarnation = "pid%d-boot%d" % (os.getpid(), time.time())
-
         self.botmaster = BotMaster(self)
         self.botmaster.setName("botmaster")
         self.botmaster.setServiceParent(self)
@@ -147,6 +140,9 @@ class BuildMaster(service.MultiService):
         # set up the tip of the status hierarchy (must occur after subscription
         # points are initialized)
         self.status = Status(self)
+
+        # local cache for this master's object ID
+        self._object_id = None
 
     def startService(self):
         # first, apply all monkeypatches
@@ -818,6 +814,33 @@ class BuildMaster(service.MultiService):
         d.addBoth(logCount)
         return d
 
+    ## informational methods
+
+    def getObjectId(self):
+        """
+        Return the obejct id for this master, for associating state with the master.
+
+        @returns: ID, via Deferred
+        """
+        # try to get the cached value
+        if self._object_id is not None:
+            return defer.succeed(self._object_id)
+
+        # failing that, get it from the DB; multiple calls to this function
+        # at the same time will not hurt
+        try:
+            hostname = os.uname()[1] # only on unix
+        except AttributeError:
+            hostname = socket.getfqdn()
+        master_name = "%s:%s" % (hostname, os.path.abspath(self.basedir))
+
+        d = self.db.state.getObjectId(master_name, "BuildMaster")
+        def keep(id):
+            self._object_id = id
+        d.addCallback(keep)
+        return d
+
+
     ## triggering methods and subscriptions
 
     def addChange(self, who=None, files=None, comments=None, author=None,
@@ -1146,23 +1169,13 @@ class BuildMaster(service.MultiService):
         timer.stop()
 
     _last_unclaimed_brids_set = None
-    _last_claim_cleanup = None
+    _last_claim_cleanup = 0
     @defer.deferredGenerator
     def pollDatabaseBuildRequests(self):
         # deal with cleaning up unclaimed requests, and (if necessary)
         # requests from a previous instance of this master
         timer = metrics.Timer("BuildMaster.pollDatabaseBuildRequests()")
         timer.start()
-
-        if self._last_claim_cleanup is None:
-            self._last_claim_cleanup = 0
-
-            # first time through - clean up any builds belonging to a previous
-            # instance
-            wfd = defer.waitForDeferred(
-                    self.db.buildrequests.unclaimOldIncarnationRequests())
-            yield wfd
-            wfd.getResult()
 
         # cleanup unclaimed builds
         since_last_cleanup = reactor.seconds() - self._last_claim_cleanup 

@@ -269,17 +269,36 @@ class UpgradeTestV082(UpgradeTestMixin, unittest.TestCase):
 
         tbl = model.buildrequests
         r = conn.execute(tbl.select(order_by=tbl.c.id))
-        buildreqs = [ (br.id, br.buildsetid, int(br.claimed_at),
+        buildreqs = [ (br.id, br.buildsetid,
                        br.complete, br.results)
                       for br in r.fetchall() ]
         self.assertEqual(buildreqs, [
-            (1, 1, 1310337746, 1, 0),
-            (2, 2, 1310337757, 1, 4),
-            (3, 3, 1310337757, 1, 4),
-            (4, 4, 1310337757, 1, 4),
-            (5, 5, 1310337779, 1, 0),
-            (6, 6, 1310337779, 1, 0),
-            (7, 7, 1310337779, 1, 0),
+            (1, 1, 1, 0),
+            (2, 2, 1, 4),
+            (3, 3, 1, 4),
+            (4, 4, 1, 4),
+            (5, 5, 1, 0),
+            (6, 6, 1, 0),
+            (7, 7, 1, 0),
+        ])
+
+        br_claims = model.buildrequest_claims
+        objects = model.objects
+        r = conn.execute(sa.select([ br_claims.outerjoin(objects,
+                    br_claims.c.objectid == objects.c.id)]))
+        # the int() is required here because sqlalchemy stores floats in an
+        # INTEGER column(!)
+        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.name, brc.class_name)
+                      for brc in r.fetchall() ]
+        objname = 'euclid:/home/dustin/code/buildbot/t/buildbot/sand27/master'
+        self.assertEqual(buildreqs, [
+            (1, 1310337746, objname, 'BuildMaster'),
+            (2, 1310337757, objname, 'BuildMaster'),
+            (3, 1310337757, objname, 'BuildMaster'),
+            (4, 1310337757, objname, 'BuildMaster'),
+            (5, 1310337779, objname, 'BuildMaster'),
+            (6, 1310337779, objname, 'BuildMaster'),
+            (7, 1310337779, objname, 'BuildMaster'),
         ])
 
     def test_upgrade(self):
@@ -296,24 +315,50 @@ class UpgradeTestV083(UpgradeTestMixin, unittest.TestCase):
 
         tbl = model.buildrequests
         r = conn.execute(tbl.select(order_by=tbl.c.id))
-        buildreqs = [ (br.id, br.buildsetid, int(br.claimed_at),
+        buildreqs = [ (br.id, br.buildsetid,
                        br.complete, br.results)
                       for br in r.fetchall() ]
         self.assertEqual(buildreqs, [
-            (1, 1, 1310326850, 1, 0),
-            (2, 2, 1310326862, 1, 0),
-            (3, 3, 1310326872, 1, 0),
-            (4, 4, 1310326872, 1, 0),
-            (5, 5, 1310326872, 1, 0),
-            (6, 6, 1310326872, 1, 0),
-            (7, 7, 1310326872, 1, 0),
-            (8, 8, 1310326872, 1, 0),
-            (9, 9, 1310326872, 1, 0),
-            (10, 10, 1310326872, 1, 0),
-            (11, 11, 1310326895, 1, 4),
-            (12, 12, 1310326900, 1, 0),
-            (13, 13, 1310326900, 1, 0),
-            (14, 14, 1310326900, 1, 0),
+            (1, 1, 1, 0),
+            (2, 2, 1, 0),
+            (3, 3, 1, 0),
+            (4, 4, 1, 0),
+            (5, 5, 1, 0),
+            (6, 6, 1, 0),
+            (7, 7, 1, 0),
+            (8, 8, 1, 0),
+            (9, 9, 1, 0),
+            (10, 10, 1, 0),
+            (11, 11, 1, 4),
+            (12, 12, 1, 0),
+            (13, 13, 1, 0),
+            (14, 14, 1, 0),
+        ])
+
+        br_claims = model.buildrequest_claims
+        objects = model.objects
+        r = conn.execute(sa.select([ br_claims.outerjoin(objects,
+                    br_claims.c.objectid == objects.c.id)]))
+        # the int() is required here because sqlalchemy stores floats in an
+        # INTEGER column(!)
+        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.name, brc.class_name)
+                      for brc in r.fetchall() ]
+        objname = 'euclid:/home/dustin/code/buildbot/t/buildbot/sand27/master'
+        self.assertEqual(buildreqs, [
+            (1, 1310326850, objname, 'BuildMaster'),
+            (2, 1310326862, objname, 'BuildMaster'),
+            (3, 1310326872, objname, 'BuildMaster'),
+            (4, 1310326872, objname, 'BuildMaster'),
+            (5, 1310326872, objname, 'BuildMaster'),
+            (6, 1310326872, objname, 'BuildMaster'),
+            (7, 1310326872, objname, 'BuildMaster'),
+            (8, 1310326872, objname, 'BuildMaster'),
+            (9, 1310326872, objname, 'BuildMaster'),
+            (10, 1310326872, objname, 'BuildMaster'),
+            (11, 1310326895, objname, 'BuildMaster'),
+            (12, 1310326900, objname, 'BuildMaster'),
+            (13, 1310326900, objname, 'BuildMaster'),
+            (14, 1310326900, objname, 'BuildMaster'),
         ])
 
     def test_upgrade(self):
@@ -330,17 +375,35 @@ class UpgradeTestV084(UpgradeTestMixin, unittest.TestCase):
 
         tbl = model.buildrequests
         r = conn.execute(tbl.select(order_by=tbl.c.id))
-        buildreqs = [ (br.id, br.buildsetid, int(br.claimed_at),
+        buildreqs = [ (br.id, br.buildsetid,
                        br.complete, br.results)
                       for br in r.fetchall() ]
         self.assertEqual(buildreqs, [
-            (1, 1, 1310406744, 0, -1),
-            (2, 2, 1310406863, 0, -1),
-            (3, 3, 1310406863, 0, -1),
-            (4, 4, 1310406863, 0, -1),
-            (5, 5, 1310406863, 0, -1),
-            (6, 6, 0, 0, -1),
-            (7, 7, 0, 0, -1),
+            (1, 1, 0, -1),
+            (2, 2, 0, -1),
+            (3, 3, 0, -1),
+            (4, 4, 0, -1),
+            (5, 5, 0, -1),
+            (6, 6, 0, -1),
+            (7, 7, 0, -1),
+        ])
+
+        br_claims = model.buildrequest_claims
+        objects = model.objects
+        r = conn.execute(sa.select([ br_claims.outerjoin(objects,
+                    br_claims.c.objectid == objects.c.id)]))
+        # the int() is required here because sqlalchemy stores floats in an
+        # INTEGER column(!)
+        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.name, brc.class_name)
+                      for brc in r.fetchall() ]
+        objname = 'euclid:/home/dustin/code/buildbot/t/buildbot/sand27/master'
+        self.assertEqual(buildreqs, [
+            (1, 1310406744, objname, 'BuildMaster'),
+            (2, 1310406863, objname, 'BuildMaster'),
+            (3, 1310406863, objname, 'BuildMaster'),
+            (4, 1310406863, objname, 'BuildMaster'),
+            (5, 1310406863, objname, 'BuildMaster'),
+            # 6, 7 aren't claimed yet
         ])
 
     def test_upgrade(self):

@@ -150,8 +150,6 @@ class Builder(pb.Referenceable, service.MultiService):
         self.botmaster = botmaster
         self.master = botmaster.master
         self.db = self.master.db
-        self.master_name = self.master.master_name
-        self.master_incarnation = self.master.master_incarnation
 
     def compareToSetup(self, setup):
         diffs = []
@@ -290,7 +288,7 @@ class Builder(pb.Referenceable, service.MultiService):
         if not brids:
             return defer.succeed(None)
 
-        d = self.master.db.buildrequests.claimBuildRequests(brids)
+        d = self.master.db.buildrequests.reclaimBuildRequests(brids)
         d.addErrback(log.err, 'while re-claiming running BuildRequests')
         return d
 

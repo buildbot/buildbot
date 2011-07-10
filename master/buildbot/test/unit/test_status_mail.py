@@ -179,7 +179,7 @@ class TestMailNotifier(unittest.TestCase):
                                                 reason="testReason"),
                                 fakedb.BuildRequest(id=11, buildsetid=99,
                                                     buildername='Builder'),
-                                fakedb.Build(number=0, brid=11, results=SUCCESS)
+                                fakedb.Build(number=0, brid=11),
                                 ])
         mn.parent = self
         

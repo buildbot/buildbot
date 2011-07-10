@@ -188,13 +188,13 @@ class BaseBasicScheduler(CommonStuffMixin,
         sched = self.makeScheduler(self.Subclass, treeStableTimer=9, branch='master')
         self.master.db.insertTestData([
             fakedb.Change(changeid=1, branch='master', when_timestamp=1110),
-            fakedb.ChangeFile(changeid=1, file='readme.txt'),
+            fakedb.ChangeFile(changeid=1, filename='readme.txt'),
             fakedb.Change(changeid=2, branch='master', when_timestamp=2220),
-            fakedb.ChangeFile(changeid=2, file='readme.txt'),
+            fakedb.ChangeFile(changeid=2, filename='readme.txt'),
             fakedb.Change(changeid=3, branch='master', when_timestamp=3330),
-            fakedb.ChangeFile(changeid=3, file='readme.txt'),
+            fakedb.ChangeFile(changeid=3, filename='readme.txt'),
             fakedb.Change(changeid=4, branch='master', when_timestamp=4440),
-            fakedb.ChangeFile(changeid=4, file='readme.txt'),
+            fakedb.ChangeFile(changeid=4, filename='readme.txt'),
         ])
         sched.startService()
 
