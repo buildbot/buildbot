@@ -89,14 +89,14 @@ class Git(Source):
         self.repourl = self.repourl and _ComputeRepositoryURL(self.repourl)
 
     def startVC(self, branch, revision, patch):
-        slavever = self.slaveVersion('git')
-        if not slavever:
-            raise BuildSlaveTooOldError("slave is too old, does not know "
-                                        "about git")
         self.branch = branch or 'master'
         self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = self.addLog("stdio")
+
+        gitInstalled = self.checkGit()
+        if not gitInstalled:
+            raise BuildSlaveTooOldError("git is not installed on slave")
 
         if self.mode == 'incremental':
             d = self.incremental()
@@ -327,6 +327,11 @@ class Git(Source):
         d.addCallback(clobber)
         return d
 
+    def computeSourceRevision(self, changes):
+        if not changes:
+            return None
+        return changes[-1].revision
+
     def _sourcedirIsUpdatable(self):
         cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.workdir + '/.git'})
         log.msg(self.workdir)
@@ -361,3 +366,13 @@ class Git(Source):
             return None
         elif self.method is None and self.mode == 'full':
             return 'fresh'
+
+    def checkGit(self):
+        d = self._dovccmd(['--version'])
+        def check(res):
+            if res == 0:
+                return True
+            return False
+        d.addCallback(check)
+        return d
+
