@@ -65,7 +65,8 @@ class Repo(SourceBaseCommand):
         repo = self.getCommand("repo")
         c = runprocess.RunProcess(self.builder, [repo] + command, self._fullSrcdir(),
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False, **kwargs)
+                         maxTime=self.maxTime, usePTY=False,
+                         logEnviron=self.logEnviron, **kwargs)
         self.command = c
         d = c.start()
         if cb:
@@ -78,7 +79,8 @@ class Repo(SourceBaseCommand):
         cmd = ["tar"] + cmds
         c = runprocess.RunProcess(self.builder, cmd, self._fullSrcdir(),
                                   sendRC=False, timeout=self.timeout,
-                                  maxTime=self.maxTime, usePTY=False)
+                                  maxTime=self.maxTime, usePTY=False,
+                                  logEnviron=self.logEnviron)
         self.command = c
         cmdexec = c.start()
         cmdexec.addCallback(callback)
@@ -88,7 +90,8 @@ class Repo(SourceBaseCommand):
         cmd = ["git"] + cmds
         c = runprocess.RunProcess(self.builder, cmd, os.path.join(self._fullSrcdir(), subdir),
                                   sendRC=False, timeout=self.timeout,
-                                  maxTime=self.maxTime, usePTY=False)
+                                  maxTime=self.maxTime, usePTY=False,
+                                  logEnviron=self.logEnviron)
         self.command = c
         cmdexec = c.start()
         cmdexec.addCallback(callback)

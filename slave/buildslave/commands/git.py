@@ -67,7 +67,8 @@ class Git(SourceBaseCommand):
         git = self.getCommand("git")
         c = runprocess.RunProcess(self.builder, [git] + command, self._fullSrcdir(),
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False, **kwargs)
+                         maxTime=self.maxTime, logEnviron=self.logEnviron,
+                         usePTY=False, **kwargs)
         self.command = c
         d = c.start()
         if cb:
@@ -195,7 +196,8 @@ class Git(SourceBaseCommand):
             cmd.extend([self.repourl, self._fullSrcdir()])
             c = runprocess.RunProcess(self.builder, cmd, self.builder.basedir,
                              sendRC=False, timeout=self.timeout,
-                             maxTime=self.maxTime, usePTY=False)
+                             maxTime=self.maxTime, logEnviron=self.logEnviron,
+                             usePTY=False)
             self.command = c
             cmdexec = c.start()
             cmdexec.addCallback(self._didInit)
