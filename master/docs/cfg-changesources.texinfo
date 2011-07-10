@@ -40,7 +40,7 @@ events from the VC repository to the buildmaster.
 As a quick guide, here is a list of VC systems and the ChangeSources that might
 be useful with them. All of these ChangeSources are in the
 @code{buildbot.changes} module.  The @code{contrib/} scripts mentioned below
-are available on github - @pxref{Contrib Scripts}.
+are available on GitHub - @pxref{Contrib Scripts}.
 
 @table @code
 @item CVS
@@ -98,9 +98,9 @@ hook)
 @item Git
 @itemize @bullet
 @item pb.PBChangeSource (listening for connections from @code{contrib/git_buildbot.py} run in the post-receive hook)
-@item pb.PBChangeSource (listening for connections from @code{contrib/github_buildbot.py}, which listens for notifications from github)
+@item pb.PBChangeSource (listening for connections from @code{contrib/github_buildbot.py}, which listens for notifications from GitHub)
 @item change_hook in WebStatus (@pxref{Change Hooks})
-@item github change hook (specifically designed for github notifications, but requiring a publicly-accessible WebStatus)
+@item github change hook (specifically designed for GitHub notifications, but requiring a publicly-accessible WebStatus)
 @item @code{gitpoller.GitPoller} (polling a remote git repository)
 @end itemize
 
@@ -121,7 +121,7 @@ All VC systems can be driven by a PBChangeSource, and the
 @code{buildbot sendchange} tool run from some form of commit script.
 If you write an email parsing function, they can also all be driven by
 a suitable @code{MaildirSource}. Additionally, handlers for web-based
-notification (i.e. from github) can be used with WebStatus' change_hook
+notification (i.e. from GitHub) can be used with WebStatus' change_hook
 module. The interface is simple, so adding your own handlers (and sharing!)
 should be a breeze.
 
@@ -1376,7 +1376,7 @@ see
 @subsection Change Hooks (HTTP Notifications)
 
 Buildbot already provides a web frontend, and that frontend can easily be used
-to receive HTTP push notifications of commits from services like github.  See
+to receive HTTP push notifications of commits from services like GitHub.  See
 @pxref{Change Hooks} for more information.
 
 @node GoogleCodeAtomPoller
