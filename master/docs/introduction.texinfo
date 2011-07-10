@@ -1,6 +1,6 @@
 @cindex introduction
 
-The BuildBot is a system to automate the compile/test cycle required by most
+Buildbot is a system to automate the compile/test cycle required by most
 software projects to validate code changes. By automatically rebuilding and
 testing the tree each time something has changed, build problems are
 pinpointed quickly, before other developers are inconvenienced by the
@@ -53,7 +53,7 @@ released under the GPL
 
 @cindex Philosophy of operation
 
-The Buildbot was inspired by a similar project built for a development
+Buildbot was inspired by a similar project built for a development
 team writing a cross-platform embedded system. The various components
 of the project were supposed to compile and run on several flavors of
 unix (linux, solaris, BSD), but individual developers had their own
@@ -101,7 +101,7 @@ works, and keeps working.
 @comment  node-name,  next,  previous,  up
 @section System Architecture
 
-The Buildbot consists of a single @code{buildmaster} and one or more
+Buildbot consists of a single @code{buildmaster} and one or more
 @code{buildslaves}, connected in a star topology. The buildmaster
 makes all decisions about what, when, and how to build. It sends
 commands to be run on the build slaves, which simply execute the
@@ -154,7 +154,7 @@ performing builds, but does not provide the source code itself.
 @node Buildmaster Architecture
 @subsection Buildmaster Architecture
 
-The Buildmaster consists of several pieces:
+The buildmaster consists of several pieces:
 
 @image{images/master,,,BuildMaster Architecture,}
 

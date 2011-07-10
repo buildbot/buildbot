@@ -799,7 +799,7 @@ below:
 from buildbot.status.builder import Results
 
 def html_message_formatter(mode, name, build, results, master_status):
-    """Provide a customized message to BuildBot's MailNotifier.
+    """Provide a customized message to Buildbot's MailNotifier.
     
     The last 80 lines of the log are provided as well as the changes
     relevant to the build.  Message content is formatted as html.
@@ -875,7 +875,7 @@ def html_message_formatter(mode, name, build, results, master_status):
         text.append(u'<pre>'.join([uniline for uniline in unilist]))
         text.append(u'</pre>')
         text.append(u'<br><br>')
-        text.append(u'<b>-The BuildBot</b>')
+        text.append(u'<b>-The Buildbot</b>')
         return @{
             'body': u"\n".join(text),
             'type': 'html'

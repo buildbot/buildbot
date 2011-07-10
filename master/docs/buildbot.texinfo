@@ -2,7 +2,7 @@
 @c %**start of header
 @setfilename buildbot.info
 @include version.texinfo
-@settitle BuildBot Manual - @value{VERSION}
+@settitle Buildbot Manual - @value{VERSION}
 @defcodeindex cs
 @defcodeindex sl
 @defcodeindex bf
@@ -23,7 +23,7 @@
 @c @bcindex : keys that make up BuildmasterConfig
 
 @copying
-This is the BuildBot manual for Buildbot version @value{VERSION}.
+This is the Buildbot manual for Buildbot version @value{VERSION}.
 
 Copyright (C) 2005, 2006, 2009, 2010 Brian Warner
 
@@ -41,7 +41,7 @@ provided the copyright notice and this notice are preserved.
 @end ifinfo
 
 @titlepage
-@title BuildBot
+@title Buildbot
 @subtitle @value{VERSION}
 @page
 @vskip 0pt plus 1filll
@@ -53,13 +53,13 @@ provided the copyright notice and this notice are preserved.
 
 @ifnottex
 @node Top, Introduction, (dir), (dir)
-@top BuildBot
+@top Buildbot
 
 @insertcopying
 @end ifnottex
 
 @menu
-* Introduction::                What the BuildBot does.
+* Introduction::                What Buildbot does.
 * Installation::                Installing and setting up a Builbot system
 * Concepts::                    What goes on in the buildbot's little mind.
 * Configuration::               Controlling the buildbot.

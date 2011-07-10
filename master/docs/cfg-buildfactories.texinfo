@@ -106,7 +106,7 @@ workdir). If this attributed is set to a Python callable, that
 callable will be called with SourceStamp as single parameter and
 is supposed to return a string which will be used as above.
 The latter is useful in scenarios with multiple repositories
-submitting changes to BuildBot. In this case you likely will want
+submitting changes to Buildbot. In this case you likely will want
 to have a dedicated workdir per repository, since otherwise a
 sourcing step with mode = "update" will fail as a workdir with
 a working copy of repository A can't be "updated" for changes
