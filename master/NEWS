@@ -22,6 +22,11 @@ Source steps have been rewritten to have a simpler, more consistent
 configuration, and to run on the master instead of the slave, allowing much
 more control over their behavior.  So far, Mercurial is complete.
 
+** Source steps have logEnviron parameter
+
+Similar to shell commands, a logEnviron parameter is now supported for Source
+steps.
+
 ** Interested users for Try
 
 Try jobs can now include the name of an interested user, which will be kept
