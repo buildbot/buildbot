@@ -653,7 +653,7 @@ class SVN(Source):
                  "buildbot-0.7.10 or newer." % (self.build.slavename,))
             raise BuildSlaveTooOldError(m)
 
-    def getSvnUrl(self, branch, revision, patch):
+    def getSvnUrl(self, branch):
         ''' Compute the svn url that will be passed to the svn remote command '''
         if self.svnurl:
             return self.svnurl
@@ -677,7 +677,7 @@ class SVN(Source):
 
         self.checkCompatibility()
 
-        self.args['svnurl'] = self.getSvnUrl(branch, revision, patch)
+        self.args['svnurl'] = self.getSvnUrl(branch)
         self.args['revision'] = revision
         self.args['patch'] = patch
         self.args['always_purge'] = self.always_purge
