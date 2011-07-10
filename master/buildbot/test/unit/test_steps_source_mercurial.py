@@ -41,6 +41,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                     mode='full', method='clean', branchType='inrepo'))
         self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--version'])
+            + 0,
             ExpectLogged('stat', dict(file='wkdir/.hg'))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -76,6 +79,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                     mode='full', method='clean', branchType='inrepo'))
         self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--version'])
+            + 0,
             ExpectLogged('stat', dict(file='wkdir/.hg'))
             + 1,
             ExpectShell(workdir='wkdir',
@@ -98,6 +104,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                     mode='full', method='clobber', branchType='inrepo'))
         self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--version'])
+            + 0,
             ExpectLogged('rmdir', dict(dir='wkdir'))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -123,6 +132,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                     mode='full', method='fresh', branchType='inrepo'))
         self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--version'])
+            + 0,
             ExpectLogged('stat', dict(file='wkdir/.hg'))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -158,6 +170,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                     mode='full', method='fresh', branchType='inrepo'))
         self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--version'])
+            + 0,
             ExpectLogged('stat', dict(file='wkdir/.hg'))
             + 1,
             ExpectShell(workdir='wkdir',
@@ -181,6 +196,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                     mode='incremental', branchType='dirname'),
             )
         self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--version'])
+            + 0,
             ExpectLogged('stat', dict(file='wkdir/.hg'))
             + 1, # does not exist
             ExpectShell(workdir='wkdir',
@@ -209,6 +227,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             dict(branch='stable')
             )
         self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--version'])
+            + 0,
             ExpectLogged('stat', dict(file='wkdir/.hg'))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -241,6 +262,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                     mode='incremental', branchType='inrepo'))
         self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--version'])
+            + 0,
             ExpectLogged('stat', dict(file='wkdir/.hg'))
             + 1, # does not exist
             ExpectShell(workdir='wkdir',
@@ -270,6 +294,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                     mode='incremental', branchType='inrepo'))
         self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--version'])
+            + 0,
             ExpectLogged('stat', dict(file='wkdir/.hg'))
             + 0, # directory exists
             ExpectShell(workdir='wkdir',
@@ -302,6 +329,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                 ))
 
         self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--version'])
+            + 0,
             ExpectLogged('stat', dict(file='wkdir/.hg'))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -334,6 +364,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                 branch='stable',
                 ))
         self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--version'])
+            + 0,
             ExpectLogged('stat', dict(file='wkdir/.hg'))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -373,6 +406,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                 branch='stable',
                 ))
         self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--version'])
+            + 0,
             ExpectLogged('stat', dict(file='wkdir/.hg'))
             + 0,
             ExpectShell(workdir='wkdir',

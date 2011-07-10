@@ -98,13 +98,12 @@ class Mercurial(Source):
         self.baseURL = self.baseURL and _ComputeRepositoryURL(self.baseURL)
         
     def startVC(self, branch, revision, patch):
-        
-        slavever = self.slaveVersion('hg')
-        if not slavever:
-            raise BuildSlaveTooOldError("slave is too old, does not know "
-                                        "about hg")
         self.revision = revision
         self.method = self._getMethod()
+        self.stdio_log = self.addLog("stdio")
+        hgInstalled = self.checkHg()
+        if not hgInstalled:
+            raise BuildSlaveTooOldError("Mercurial is not installed on slave")
 
         if self.branchType == 'dirname':
             assert self.repourl is None
@@ -116,8 +115,6 @@ class Mercurial(Source):
             self.update_branch = (branch or 'default')
         else:
             raise ValueError("Invalid branch type")
-        
-        self.stdio_log = self.addLog("stdio")
 
         if self.mode == 'full':
             d = self.full()
@@ -256,6 +253,19 @@ class Mercurial(Source):
         d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
+    def computeSourceRevision(self, changes):
+        if not changes:
+            return None
+        # without knowing the revision ancestry graph, we can't sort the
+        # changes at all. So for now, assume they were given to us in sorted
+        # order, and just pay attention to the last one. See ticket #103 for
+        # more details.
+        if len(changes) > 1:
+            log.msg("Mercurial.computeSourceRevision: warning: "
+                    "there are %d changes here, assuming the last one is "
+                    "the most recent" % len(changes))
+        return changes[-1].revision
+
     def _getCurrentBranch(self):
         if self.branchType == 'dirname':
             return defer.succeed(self.branch)
@@ -292,3 +302,13 @@ class Mercurial(Source):
             command += ['--rev', self.revision]
         d = self._dovccmd(command)
         return d
+
+    def checkHg(self):
+        d = self._dovccmd(['--version'])
+        def check(res):
+            if res == 0:
+                return True
+            return False
+        d.addCallback(check)
+        return d
+
