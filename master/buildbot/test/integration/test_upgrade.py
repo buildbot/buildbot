@@ -244,13 +244,70 @@ class UpgradeTestCitools(UpgradeTestMixin, unittest.TestCase):
             whereclause=model.change_files.c.changeid == 77))
         self.assertEqual(r.scalar(), 'CHANGELOG')
 
+    def test_upgrade(self):
+        return self.do_test_upgrade()
 
-    def test_test(self):
-        d = defer.succeed(None)
-        d.addCallback(lambda _ : self.db.model.upgrade())
-        d.addCallback(lambda _ : self.assertModelMatches())
-        d.addCallback(lambda _ : self.db.pool.do(self.verify_thd))
-        return d
+
+class UpgradeTestV082(UpgradeTestMixin, unittest.TestCase):
+
+    source_tarball = "v082.tgz"
+
+    def verify_thd(self, conn):
+        "partially verify the contents of the db - run in a thread"
+        model = self.db.model
+
+        tbl = model.buildrequests
+        r = conn.execute(tbl.select(order_by=tbl.c.id))
+        buildreqs = [ (br.id, br.buildsetid, int(br.claimed_at),
+                       br.complete, br.results)
+                      for br in r.fetchall() ]
+        self.assertEqual(buildreqs, [
+            (1, 1, 1310337746, 1, 0),
+            (2, 2, 1310337757, 1, 4),
+            (3, 3, 1310337757, 1, 4),
+            (4, 4, 1310337757, 1, 4),
+            (5, 5, 1310337779, 1, 0),
+            (6, 6, 1310337779, 1, 0),
+            (7, 7, 1310337779, 1, 0),
+        ])
+
+    def test_upgrade(self):
+        return self.do_test_upgrade()
+
+
+class UpgradeTestV083(UpgradeTestMixin, unittest.TestCase):
+
+    source_tarball = "v083.tgz"
+
+    def verify_thd(self, conn):
+        "partially verify the contents of the db - run in a thread"
+        model = self.db.model
+
+        tbl = model.buildrequests
+        r = conn.execute(tbl.select(order_by=tbl.c.id))
+        buildreqs = [ (br.id, br.buildsetid, int(br.claimed_at),
+                       br.complete, br.results)
+                      for br in r.fetchall() ]
+        self.assertEqual(buildreqs, [
+            (1, 1, 1310326850, 1, 0),
+            (2, 2, 1310326862, 1, 0),
+            (3, 3, 1310326872, 1, 0),
+            (4, 4, 1310326872, 1, 0),
+            (5, 5, 1310326872, 1, 0),
+            (6, 6, 1310326872, 1, 0),
+            (7, 7, 1310326872, 1, 0),
+            (8, 8, 1310326872, 1, 0),
+            (9, 9, 1310326872, 1, 0),
+            (10, 10, 1310326872, 1, 0),
+            (11, 11, 1310326895, 1, 4),
+            (12, 12, 1310326900, 1, 0),
+            (13, 13, 1310326900, 1, 0),
+            (14, 14, 1310326900, 1, 0),
+        ])
+
+    def test_upgrade(self):
+        return self.do_test_upgrade()
+
 
 class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
     def setUp(self):
