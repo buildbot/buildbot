@@ -92,7 +92,8 @@ class Monotone(SourceBaseCommand):
                                       environ=self.env, sendRC=False,
                                       timeout=self.timeout,
                                       maxTime=self.maxTime,
-                                      keepStdout=True, usePTY=False)
+                                      keepStdout=True, usePTY=False,
+                                      logEnviron=self.logEnviron)
             self.sendStatus({"header": "pulling %s from %s\n"
                              % (self.branch, self.sourcedata)})
             self.command = c
@@ -116,7 +117,8 @@ class Monotone(SourceBaseCommand):
         c = runprocess.RunProcess(self.builder, command, self._fullSrcdir(),
                                   environ=self.env, sendRC=False,
                                   timeout=self.timeout, maxTime=self.maxTime,
-                                  keepStdout=True, usePTY=False)
+                                  keepStdout=True, usePTY=False,
+                                  logEnviron=self.logEnviron)
         d = c.start()
         return d
 
@@ -129,7 +131,8 @@ class Monotone(SourceBaseCommand):
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                                   environ=self.env, sendRC=False,
                                   timeout=self.timeout, maxTime=self.maxTime,
-                                  keepStdout=True, usePTY=False)
+                                  keepStdout=True, usePTY=False,
+                                  logEnviron=self.logEnviron)
         d = c.start()
         return d
 
@@ -142,7 +145,7 @@ class Monotone(SourceBaseCommand):
                                   self.builder.basedir,
                                   environ=self.env, sendRC=False,
                                   keepStdout=True, sendStderr=False,
-                                  usePTY=False)
+                                  usePTY=False, logEnviron=self.logEnviron)
         d = c.start()
         def afterCheckRepo(res, cdi):
             if type(res) is int and res != 0:
@@ -155,7 +158,8 @@ class Monotone(SourceBaseCommand):
                                                          '--db', self.database],
                                           self.builder.basedir,
                                           environ=self.env, 
-                                          sendRC=False, usePTY=False)
+                                          sendRC=False, usePTY=False,
+                                          logEnviron=self.logEnviron)
                 self.command = c
                 return c.start()
             elif cdi.stdout.find("(migration needed)") > 0:
@@ -166,7 +170,8 @@ class Monotone(SourceBaseCommand):
                                                          '--db', self.database],
                                           self.builder.basedir,
                                           environ=self.env, 
-                                          sendRC=False, usePTY=False)
+                                          sendRC=False, usePTY=False,
+                                          logEnviron=self.logEnviron)
                 self.command = c
                 return c.start()
             elif cdi.stdout.find("(too new, cannot use)") > 0:
@@ -190,7 +195,8 @@ class Monotone(SourceBaseCommand):
                                   self._fullSrcdir(),
                                   sendRC=False,
                                   timeout=self.timeout, maxTime=self.maxTime,
-                                  keepStdout=True, usePTY=False)
+                                  keepStdout=True, usePTY=False,
+                                  logEnviron=self.logEnviron)
         d = c.start()
         d.addCallback(self._abandonOnFailure)
         return d

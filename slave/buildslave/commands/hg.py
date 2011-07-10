@@ -52,7 +52,8 @@ class Mercurial(SourceBaseCommand):
         command = [hg, 'pull', '--verbose', self.repourl]
         c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, keepStdout=True, usePTY=False)
+                         maxTime=self.maxTime, keepStdout=True,
+                         logEnviron=self.logEnviron, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._handleEmptyUpdate)
@@ -81,7 +82,8 @@ class Mercurial(SourceBaseCommand):
 
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
+                         maxTime=self.maxTime, logEnviron=self.logEnviron,
+                         usePTY=False)
         self.command = c
         cmd1 = c.start()
         cmd1.addCallback(self._update)
@@ -106,7 +108,8 @@ class Mercurial(SourceBaseCommand):
         d = os.path.join(self.builder.basedir, self.srcdir)
         purge = [hg, 'purge', '--all']
         purgeCmd = runprocess.RunProcess(self.builder, purge, d,
-                                keepStdout=True, keepStderr=True, usePTY=False)
+                                keepStdout=True, keepStderr=True,
+                                logEnviron=self.logEnviron, usePTY=False)
 
         def _clobber(res):
             if res != 0:
@@ -136,7 +139,8 @@ class Mercurial(SourceBaseCommand):
         parentscmd = [hg, 'identify', '--num', '--branch']
         cmd = runprocess.RunProcess(self.builder, parentscmd, d,
                            sendRC=False, timeout=self.timeout, keepStdout=True,
-                           keepStderr=True, usePTY=False)
+                           keepStderr=True, logEnviron=self.logEnviron,
+                           usePTY=False)
 
         self.clobber = None
 
@@ -191,7 +195,8 @@ class Mercurial(SourceBaseCommand):
             parentscmd = [hg, 'paths', 'default']
             cmd2 = runprocess.RunProcess(self.builder, parentscmd, d,
                                keepStdout=True, keepStderr=True, usePTY=False,
-                               timeout=self.timeout, sendRC=False)
+                               timeout=self.timeout, sendRC=False,
+                               logEnviron=self.logEnviron)
 
             def _parseRepoURL(res):
                 if res == 1:
@@ -258,7 +263,8 @@ class Mercurial(SourceBaseCommand):
             updatecmd.extend(['--rev', self.args.get('branch',  'default')])
         self.command = runprocess.RunProcess(self.builder, updatecmd,
             self.builder.basedir, sendRC=False,
-            timeout=self.timeout, maxTime=self.maxTime, usePTY=False)
+            timeout=self.timeout, maxTime=self.maxTime,
+            logEnviron=self.logEnviron, usePTY=False)
         return self.command.start()
 
     def parseGotRevision(self):
@@ -269,7 +275,8 @@ class Mercurial(SourceBaseCommand):
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env, timeout=self.timeout,
                          sendRC=False,
-                         keepStdout=True, usePTY=False)
+                         keepStdout=True, usePTY=False,
+                         logEnviron=self.logEnviron)
         d = c.start()
         def _parse(res):
             m = re.search(r'^(\w+)', c.stdout)

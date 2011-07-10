@@ -70,7 +70,8 @@ class SVN(SourceBaseCommand):
         fullCmd.extend(args)
         c = runprocess.RunProcess(self.builder, fullCmd, rootdir,
                          environ=self.env, sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False, **kwargs)
+                         maxTime=self.maxTime, usePTY=False,
+                         logEnviron=self.logEnviron, **kwargs)
         self.command = c
         d = c.start()
         if cb:
@@ -188,7 +189,8 @@ class SVN(SourceBaseCommand):
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env, timeout=self.timeout,
                          sendStdout=False, sendStderr=False, sendRC=False,
-                         keepStdout=True, usePTY=False)
+                         keepStdout=True, usePTY=False,
+                         logEnviron=self.logEnviron)
         d = c.start()
         def _parse(res):
             r_raw = c.stdout.strip()

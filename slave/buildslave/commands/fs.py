@@ -67,6 +67,10 @@ class RemoveDirectory(base.Command):
     """
 
     header = "rmdir"
+    
+    def setup(self,args):
+        self.logEnviron = args.get('logEnviron',True)
+
 
     def start(self):
         args = self.args
@@ -95,7 +99,7 @@ class RemoveDirectory(base.Command):
         command = ["rm", "-rf", self.dir]
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
-                         usePTY=False)
+                         logEnviron=self.logEnviron, usePTY=False)
 
         self.command = c
         # sendRC=0 means the rm command will send stdout/stderr to the
@@ -126,7 +130,7 @@ class RemoveDirectory(base.Command):
                                 '-exec', 'chmod', 'u+rwx', '{}', ';' ]
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
-                         usePTY=False)
+                         logEnviron=self.logEnviron, usePTY=False)
 
         self.command = c
         d = c.start()
@@ -155,6 +159,9 @@ class CopyDirectory(base.Command):
 
     header = "rmdir"
 
+    def setup(self,args):
+        self.logEnviron = args.get('logEnviron',True)
+        
     def start(self):
         args = self.args
         # args['todir'] is relative to Builder directory, and is required.
@@ -185,7 +192,7 @@ class CopyDirectory(base.Command):
             command = ['cp', '-R', '-P', '-p', fromdir, todir]
             c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                              sendRC=False, timeout=self.timeout, maxTime=self.maxTime,
-                             usePTY=False)
+                             logEnviron=self.logEnviron, usePTY=False)
             self.command = c
             d = c.start()
             d.addCallback(self._abandonOnFailure)

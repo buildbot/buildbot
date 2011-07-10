@@ -55,7 +55,7 @@ class P4Base(SourceBaseCommand):
                          environ=self.env, timeout=self.timeout,
                          maxTime=self.maxTime, sendStdout=True,
                          sendRC=False, keepStdout=True,
-                         usePTY=False)
+                         usePTY=False, logEnviron=self.logEnviron)
         self.command = c
         d = c.start()
 
@@ -143,7 +143,8 @@ class P4(P4Base):
         env = {}
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          environ=env, sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
+                         maxTime=self.maxTime, usePTY=False,
+                         logEnviron=self.logEnviron)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -197,7 +198,7 @@ class P4(P4Base):
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          environ=env, sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, initialStdin=client_spec,
-                         usePTY=False)
+                         usePTY=False, logEnviron=self.logEnviron)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -249,7 +250,8 @@ class P4Sync(P4Base):
         env = {}
         c = runprocess.RunProcess(self.builder, command, d, environ=env,
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
+                         maxTime=self.maxTime, usePTY=False,
+                         logEnviron=self.logEnviron)
         self.command = c
         return c.start()
 
