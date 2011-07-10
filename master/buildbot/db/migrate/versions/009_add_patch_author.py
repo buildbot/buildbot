@@ -19,7 +19,8 @@ def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    # add an empty class_name to the schedulers table
+    # add patch_author and patch_comment to the patches table
+
     patches = sa.Table('patches', metadata, autoload=True)
     patch_author= sa.Column('patch_author', sa.Text, server_default=sa.DefaultClause(''), nullable=False)
     patch_author.create(patches, populate_default=True)
