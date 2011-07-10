@@ -42,6 +42,21 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def test_multiple_dirs(self):
+        self.make_command(fs.RemoveDirectory, dict(
+            dir=['workdir', 'sourcedir'],
+        ), True)
+        d = self.run_command()
+
+        def check(_):
+            for dirname in ['workdir', 'sourcedir']:
+                self.assertFalse(os.path.exists(os.path.abspath(os.path.join(self.basedir, dirname))))
+                self.assertIn({'rc': 0},
+                              self.get_updates(),
+                              self.builder.show())
+        d.addCallback(check)
+        return d
+
 class TestCopyDirectory(CommandTestMixin, unittest.TestCase):
 
     def setUp(self):
