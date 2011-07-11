@@ -17,14 +17,39 @@ import os
 import cPickle
 import tarfile
 import mock
+import shutil
 from twisted.python import util
 from twisted.internet import defer
 from twisted.trial import unittest
 import sqlalchemy as sa
 import migrate.versioning.api
+from migrate.versioning import schemadiff
 from buildbot.db import connector
 from buildbot.test.util import change_import, db, dirs
 from buildbot.test.fake import fakemaster
+
+# monkey-patch for "compare_model_to_db gets confused by sqlite_sequence",
+# http://code.google.com/p/sqlalchemy-migrate/issues/detail?id=124
+def getDiffMonkeyPatch(metadata, engine, excludeTables=None):
+    """
+    Return differences of model against database.
+
+    :return: object which will evaluate to :keyword:`True` if there \
+      are differences else :keyword:`False`.
+    """
+    db_metadata = sa.MetaData(engine, reflect=True)
+
+    # sqlite will include a dynamically generated 'sqlite_sequence' table if
+    # there are autoincrement sequences in the database; this should not be
+    # compared.
+    if engine.dialect.name == 'sqlite':
+        if 'sqlite_sequence' in db_metadata.tables:
+            db_metadata.remove(db_metadata.tables['sqlite_sequence'])
+
+    return schemadiff.SchemaDiff(metadata, db_metadata,
+                      labelA='model',
+                      labelB='database',
+                      excludeTables=excludeTables)
 
 class UpgradeTestMixin(object):
     """Supporting code to test upgrading from older versions by untarring a
@@ -58,7 +83,7 @@ class UpgradeTestMixin(object):
 
     def tearDownUpgradeTest(self):
         if self.basedir:
-            pass #shutil.rmtree(self.basedir)
+            shutil.rmtree(self.basedir)
 
     # save subclasses the trouble of calling our setUp and tearDown methods
 
@@ -68,11 +93,11 @@ class UpgradeTestMixin(object):
     def tearDown(self):
         self.tearDownUpgradeTest()
 
-class DBUtilsMixin(object):
-    """Utilities -- assertions and whatnot -- for classes below"""
-
     def assertModelMatches(self):
+        self.patch(schemadiff, 'getDiffOfModelAgainstDatabase',
+                                getDiffMonkeyPatch)
         def comp(engine):
+            # get a fresh model/metadata
             return migrate.versioning.api.compare_model_to_db(
                 engine,
                 self.db.model.repo_path,
@@ -92,18 +117,19 @@ class DBUtilsMixin(object):
         d.addCallback(check)
         return d
 
-    def fix_pickle_encoding(self, old_encoding):
-        """Do the equivalent of master/contrib/fix_pickle_encoding.py"""
-        changes_file = os.path.join(self.basedir, "changes.pck")
-        fp = open(changes_file)
-        changemgr = cPickle.load(fp)
-        fp.close()
-        changemgr.recode_changes(old_encoding, quiet=True)
-        cPickle.dump(changemgr, open(changes_file, "w"))
+    def do_test_upgrade(self, pre_callbacks=[]):
+        d = defer.succeed(None)
+        for cb in pre_callbacks:
+            d.addCallback(cb)
+        d.addCallback(lambda _ : self.db.model.upgrade())
+        d.addCallback(lambda _ : self.assertModelMatches())
+        d.addCallback(lambda _ : self.db.pool.do(self.verify_thd))
+        return d
+
 
 class UpgradeTestEmpty(dirs.DirsMixin,
+                       UpgradeTestMixin,
                        db.RealDatabaseMixin,
-                       DBUtilsMixin,
                        unittest.TestCase):
 
     def setUp(self):
@@ -124,12 +150,10 @@ class UpgradeTestEmpty(dirs.DirsMixin,
         d.addCallback(lambda r : self.assertModelMatches())
         return d
 
+
 class UpgradeTest075(UpgradeTestMixin,
-                     DBUtilsMixin,
                      unittest.TestCase):
 
-    # this tarball contains some unicode changes, encoded as utf8, so it
-    # needs fix_pickle_encoding invoked before we can get started
     source_tarball = "master-0-7-5.tgz"
 
     def verify_thd(self, conn):
@@ -163,16 +187,24 @@ class UpgradeTest075(UpgradeTestMixin,
         ])
         self.failUnlessEqual(filenames, expected)
 
+    def fix_pickle_encoding(self, old_encoding):
+        """Do the equivalent of master/contrib/fix_pickle_encoding.py"""
+        changes_file = os.path.join(self.basedir, "changes.pck")
+        fp = open(changes_file)
+        changemgr = cPickle.load(fp)
+        fp.close()
+        changemgr.recode_changes(old_encoding, quiet=True)
+        cPickle.dump(changemgr, open(changes_file, "w"))
 
-    def test_test(self):
-        d = defer.succeed(None)
-        d.addCallback(lambda _ : self.fix_pickle_encoding('utf8'))
-        d.addCallback(lambda _ : self.db.model.upgrade())
-        d.addCallback(lambda _ : self.assertModelMatches())
-        d.addCallback(lambda _ : self.db.pool.do(self.verify_thd))
-        return d
+    def test_upgrade(self):
+        # this tarball contains some unicode changes, encoded as utf8, so it
+        # needs fix_pickle_encoding invoked before we can get started
+        return self.do_test_upgrade(pre_callbacks=[
+            lambda _ : self.fix_pickle_encoding('utf8'),
+        ])
 
-class UpgradeTestCitools(UpgradeTestMixin, DBUtilsMixin, unittest.TestCase):
+
+class UpgradeTestCitools(UpgradeTestMixin, unittest.TestCase):
 
     source_tarball = "citools.tgz"
 

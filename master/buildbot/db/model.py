@@ -449,6 +449,9 @@ class Model(base.DBConnectorComponent):
                                  sa.Column('x', sa.Integer))
                 table.drop(bind=engine)
 
+                # clear the dummy metadata entry
+                self.metadata.remove(table)
+
                 # and, finally, upgrade using migrate
                 upgrade(engine)
 
