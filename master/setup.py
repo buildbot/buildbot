@@ -280,8 +280,9 @@ else:
         'twisted >= 8.0.0',
         'Jinja2 >= 2.1',
         'sqlalchemy >= 0.6',
-        # buildbot depends on sqlalchemy internals. See buildbot.db.model.
-        'sqlalchemy-migrate ==0.6, ==0.7',
+        # buildbot depends on sqlalchemy internals, and these are the tested
+        # versions.
+        'sqlalchemy-migrate ==0.6.0, ==0.6.1, ==0.7.0, ==0.7.1',
     ]
     # Python-2.6 and up includes json
     if not py_26:
