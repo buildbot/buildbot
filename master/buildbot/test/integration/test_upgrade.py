@@ -22,6 +22,7 @@ from twisted.python import util
 from twisted.internet import defer
 from twisted.trial import unittest
 import sqlalchemy as sa
+import migrate
 import migrate.versioning.api
 from migrate.versioning import schemadiff
 from buildbot.db import connector
@@ -94,6 +95,14 @@ class UpgradeTestMixin(object):
         self.tearDownUpgradeTest()
 
     def assertModelMatches(self):
+        # this patch only applies to sqlalchemy-migrate-0.7.x.  We prefer to
+        # skip the remainder of the test, even though some significant testing
+        # has already occcurred (verify_thd), to indicate that the test was not
+        # complete.
+        if (not hasattr(migrate, '__version__')
+            or not migrate.__version__.startswith('0.7.')):
+            raise unittest.SkipTest("model comparison skipped: unsupported "
+                                    "version of sqlalchemy-migrate")
         self.patch(schemadiff, 'getDiffOfModelAgainstDatabase',
                                 getDiffMonkeyPatch)
         def comp(engine):
@@ -109,7 +118,8 @@ class UpgradeTestMixin(object):
         # this test on such platforms.
         def catch_TypeError(f):
             f.trap(TypeError)
-            raise unittest.SkipTest, "bugs in schema reflection on this platform"
+            raise unittest.SkipTest("model comparison skipped: bugs in schema "
+                                    "reflection on this sqlite version")
         d.addErrback(catch_TypeError)
         def check(diff):
             if diff:
@@ -122,8 +132,8 @@ class UpgradeTestMixin(object):
         for cb in pre_callbacks:
             d.addCallback(cb)
         d.addCallback(lambda _ : self.db.model.upgrade())
-        d.addCallback(lambda _ : self.assertModelMatches())
         d.addCallback(lambda _ : self.db.pool.do(self.verify_thd))
+        d.addCallback(lambda _ : self.assertModelMatches())
         return d
 
 
