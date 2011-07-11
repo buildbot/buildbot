@@ -161,7 +161,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         if not branch_validate.match(branch):
             log.msg("bad branch '%s'" % branch)
             return Redirect(path_to_builder(req, self.builder_status))
-        if not revision_validate.match(r'^[ \w\.\-\/]*$', revision):
+        if not revision_validate.match(revision):
             log.msg("bad revision '%s'" % revision)
             return Redirect(path_to_builder(req, self.builder_status))
         properties = getAndCheckProperties(req)
