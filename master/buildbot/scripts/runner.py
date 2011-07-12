@@ -23,7 +23,7 @@
 import copy
 import os, sys, stat, re, time
 from twisted.python import usage, util, runtime
-from twisted.internet import defer, reactor
+from twisted.internet import defer
 
 from buildbot.interfaces import BuildbotNotRunningError
 
@@ -44,6 +44,9 @@ def in_reactor(f):
         reactor.callWhenRunning(async)
         reactor.run()
         return result[0]
+    wrap.__doc__ = f.__doc__
+    wrap.__name__ = f.__name__
+    wrap._orig = f # for tests
     return wrap
 
 def isBuildmasterDir(dir):
@@ -907,6 +910,7 @@ def sendchange(config, runReactor=False):
                revlink=revlink)
 
     if runReactor:
+        from twisted.internet import reactor
         status = [True]
         def printSuccess(_):
             print "change sent successfully"

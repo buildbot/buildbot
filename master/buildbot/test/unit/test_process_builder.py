@@ -19,7 +19,7 @@ from twisted.trial import unittest
 from twisted.python import failure
 from twisted.internet import defer
 from buildbot.test.fake import fakedb, fakemaster
-from buildbot.process import builder, buildrequest
+from buildbot.process import builder
 from buildbot.db import buildrequests
 from buildbot.util import epoch2datetime
 
@@ -433,17 +433,17 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
         fn = self.bldr._getMergeRequestsFn()
 
-        if fn == buildrequest.BuildRequest.canBeMergedWith:
-            fn = "cbmw"
+        if fn == builder.Builder._defaultMergeRequestFn:
+            fn = "default"
         elif fn is cble:
             fn = 'callable'
         self.assertEqual(fn, expected)
 
     def test_getMergeRequestsFn_defaults(self):
-        self.do_test_getMergeRequestsFn(None, None, "cbmw")
+        self.do_test_getMergeRequestsFn(None, None, "default")
 
     def test_getMergeRequestsFn_global_True(self):
-        self.do_test_getMergeRequestsFn(None, True, "cbmw")
+        self.do_test_getMergeRequestsFn(None, True, "default")
 
     def test_getMergeRequestsFn_global_False(self):
         self.do_test_getMergeRequestsFn(None, False, None)
@@ -452,7 +452,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         self.do_test_getMergeRequestsFn(None, 'callable', 'callable')
 
     def test_getMergeRequestsFn_builder_True(self):
-        self.do_test_getMergeRequestsFn(True, False, "cbmw")
+        self.do_test_getMergeRequestsFn(True, False, "default")
 
     def test_getMergeRequestsFn_builder_False(self):
         self.do_test_getMergeRequestsFn(False, True, None)

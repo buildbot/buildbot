@@ -499,7 +499,7 @@ class Builder(pb.Referenceable, service.MultiService):
             bids.append(wfd.getResult())
 
         # let status know
-        self.master.status.build_started(req.id, self.name, bs.number)
+        self.master.status.build_started(req.id, self.name, bs)
 
         # start the build. This will first set up the steps, then tell the
         # BuildStatus that it has started, which will announce it to the world
@@ -780,9 +780,12 @@ class Builder(pb.Referenceable, service.MultiService):
         if mergeRequests_fn is False:
             mergeRequests_fn = None
         elif mergeRequests_fn is True:
-            mergeRequests_fn = buildrequest.BuildRequest.canBeMergedWith
+            mergeRequests_fn = Builder._defaultMergeRequestFn
 
         return mergeRequests_fn
+
+    def _defaultMergeRequestFn(self, req1, req2):
+        return req1.canBeMergedWith(req2)
 
     @defer.deferredGenerator
     def _mergeRequests(self, breq, unclaimed_requests, mergeRequests_fn):

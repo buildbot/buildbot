@@ -997,8 +997,7 @@ text of the message. The @code{type} key is the message type ('plain' or
 
 @item extraHeaders
 (dictionary) A dictionary containing key/value pairs of extra headers to add
-to sent e-mails. If buildSetStatus is False, both the keys and the values may be
-a WithProperties instance.
+to sent e-mails.  Property interpolation is not supported in this version.
 
 @end table
 

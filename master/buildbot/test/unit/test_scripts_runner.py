@@ -20,7 +20,7 @@ import getpass
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer, reactor
-from buildbot.scripts import runner
+from buildbot.scripts import runner, checkconfig
 from buildbot.clients import sendchange
 
 class TestSendChangeOptions(unittest.TestCase):
@@ -251,5 +251,110 @@ class TestSendChange(unittest.TestCase):
             f.trap(AssertionError)
             pass # A-OK
         d.addCallbacks(cb, eb)
+        return d
+
+class TestCheckConfigOptions(unittest.TestCase):
+
+    def setUp(self):
+        self.options_file = {}
+        self.patch(runner, 'loadOptionsFile', lambda : self.options_file)
+
+    def parse(self, *args):
+        self.opts = runner.CheckConfigOptions()
+        self.opts.parseOptions(args)
+        return self.opts
+
+    def test_synopsis(self):
+        opts = runner.CheckConfigOptions()
+        self.assertIn('buildbot checkconfig', opts.getSynopsis())
+
+    def test_defaults(self):
+        opts = self.parse()
+        exp = dict(quiet=False, configFile='master.cfg')
+        self.assertEqual(dict([(k, opts[k]) for k in exp]), exp)
+
+    def test_configfile(self):
+        opts = self.parse('foo.cfg')
+        exp = dict(quiet=False, configFile='foo.cfg')
+        self.assertEqual(dict([(k, opts[k]) for k in exp]), exp)
+
+    def test_quiet(self):
+        opts = self.parse('-q')
+        exp = dict(quiet=True, configFile='master.cfg')
+        self.assertEqual(dict([(k, opts[k]) for k in exp]), exp)
+
+class TestCheckConfig(unittest.TestCase):
+
+    class FakeConfigLoader(object):
+        testcase = None
+        def __init__(self, **kwargs):
+            self.testcase.ConfigLoader_kwargs = kwargs
+
+        def load(self):
+            self.testcase.config_loaded = True
+            if self.testcase.load_exception:
+                return defer.fail(ValueError('I feel undervalued'))
+            else:
+                return defer.succeed(None)
+
+    def setUp(self):
+        # temporarily remove the @in_reactor decoration
+        self.patch(runner, 'doCheckConfig', runner.doCheckConfig._orig)
+
+        self.patch(checkconfig, 'ConfigLoader',
+                        self.FakeConfigLoader)
+        self.FakeConfigLoader.testcase = self
+        self.load_exception = False
+        self.config_loaded = False
+        self.ConfigLoader_kwargs = None
+
+        self.stdout = cStringIO.StringIO()
+        self.patch(sys, 'stdout', self.stdout)
+
+    def test_doCheckConfig(self):
+        d = runner.doCheckConfig(dict(configFile='master.cfg', quiet=False))
+        def check(res):
+            self.assertTrue(self.config_loaded)
+            self.assertTrue(res)
+            self.assertEqual(self.ConfigLoader_kwargs,
+                    dict(configFileName='master.cfg'))
+            self.assertEqual(self.stdout.getvalue().strip(),
+                             "Config file is good!")
+        d.addCallback(check)
+        return d
+
+    def test_doCheckConfig_quiet(self):
+        d = runner.doCheckConfig(dict(configFile='master.cfg', quiet=True))
+        def check(res):
+            self.assertTrue(self.config_loaded)
+            self.assertTrue(res)
+            self.assertEqual(self.ConfigLoader_kwargs,
+                    dict(configFileName='master.cfg'))
+            self.assertEqual(self.stdout.getvalue().strip(), "")
+        d.addCallback(check)
+        return d
+
+    def test_doCheckConfig_dir(self):
+        os.mkdir('checkconfig_dir')
+        d = runner.doCheckConfig(dict(configFile='checkconfig_dir',
+                                      quiet=False))
+        def check(res):
+            self.assertTrue(self.config_loaded)
+            self.assertTrue(res)
+            self.assertEqual(self.ConfigLoader_kwargs,
+                    dict(basedir='checkconfig_dir'))
+            self.assertEqual(self.stdout.getvalue().strip(),
+                             "Config file is good!")
+        d.addCallback(check)
+        return d
+
+    def test_doCheckConfig_exception(self):
+        self.load_exception = True
+        d = runner.doCheckConfig(dict(configFile='master.cfg', quiet=False))
+        def check(res):
+            self.assertTrue(self.config_loaded)
+            self.assertFalse(res)
+            # (exception gets logged..)
+        d.addCallback(check)
         return d
 

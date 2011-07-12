@@ -554,7 +554,11 @@ data attributes of <Builder ''builder'' at 48963528>
 
 @node Metrics Options
 @subsection Metrics Options
-@code{c['metrics'] = dict(log_interval=10, periodic_interval=10)}
+@bcindex c['metrics']
+
+@example
+c['metrics'] = dict(log_interval=10, periodic_interval=10)
+@end example
 
 @code{c['metrics']} can be a dictionary that configures various aspects of the metrics subsystem. If @code{c['metrics']} is None, then metrics collection, logging and reporting will be disabled.
 

@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+import shutil
 import os
 import sqlalchemy as sa
 import twisted
+import tempfile
 from twisted.internet import reactor, threads, defer, task
 from twisted.python import threadpool, failure, versions, log
 
@@ -187,8 +189,11 @@ class DBThreadPool(threadpool.ThreadPool):
         except ImportError:
             import sqlite3 as sqlite
 
-        dbfile = "detect_bug1810.db"
+        tmpdir = tempfile.mkdtemp()
+        dbfile = os.path.join(tmpdir, "detect_bug1810.db")
         def test(select_from_sqlite_master=False):
+            conn1 = None
+            conn2 = None
             try:
                 conn1 = sqlite.connect(dbfile)
                 curs1 = conn1.cursor()
@@ -202,16 +207,20 @@ class DBThreadPool(threadpool.ThreadPool):
                     curs1.execute("SELECT * from sqlite_master")
                 curs1.execute("SELECT * from foo")
             finally:
-                conn1.close()
-                conn2.close()
+                if conn1:
+                    conn1.close()
+                if conn2:
+                    conn2.close()
                 os.unlink(dbfile)
 
         try:
             test()
         except sqlite.OperationalError:
             # this is the expected error indicating it's broken
+            shutil.rmtree(tmpdir)
             return True
 
         # but this version should not fail..
         test(select_from_sqlite_master=True)
+        shutil.rmtree(tmpdir)
         return False # not broken - no workaround required

@@ -3,6 +3,26 @@ Major User visible changes in Buildbot.             -*- outline -*-
    http://github.com/buildbot/buildbot/commits/master
 
 
+* Buildbot 0.8.4p2
+
+** Fix mergeRequests configuration handling (#2008, #2025)
+
+** Fix Postgres problems with temporary tables (#2010)
+
+** Fix running scripts under non-default reactors (#2020)
+
+** Fix MailNotifier bugs (#2017, #2014, #2021)
+
+** Fix more property rendering bugs (#2024)
+
+** Remove an incorrect assertion about build numbers (#2028)
+
+** Create the test DB in a temporary directory (#2016)
+
+** Fix try --wait (#2007)
+
+** Run checkconfig in the master directory, rather than copying
+
 * Buildbot 0.8.4p1 (June 18, 2011)
 
 ** Fix a hang on startup (bug #1992)
@@ -14,6 +34,12 @@ Major User visible changes in Buildbot.             -*- outline -*-
 ** Allow configuration of change cache once again
 
 * Buildbot 0.8.4 (June 12, 2011)
+
+** Buildmaster Metrics
+
+The buildmaster now actively measures a number of quantities that can be useful
+in debugging and tuning its performance.  See the documentation for more
+information.
 
 ** Monotone support
 
