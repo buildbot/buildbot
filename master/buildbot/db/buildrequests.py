@@ -70,7 +70,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
-            bsid=None):
+            bsid=None, ssid=None):
         """
         Get a list of build requests matching the given characteristics.  Note
         that C{unclaimed}, C{my_claimed}, and C{other_claimed} all default to
@@ -84,6 +84,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         unclaimed if its C{claimed_at} column is either NULL or 0, and it is
         not complete.  If C{bsid} is specified, then only build requests for
         that buildset will be returned.
+        If C{ssid} is specified, then only build requests from this sourcestamp
+        will be returned.
 
         A build is considered completed if its C{complete} column is 1; the
         C{complete_at} column is not consulted.
@@ -137,6 +139,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     q = q.where(tbl.c.complete == 0)
             if bsid is not None:
                 q = q.where(tbl.c.buildsetid == bsid)
+            if ssid is not None:
+                bs_tbl = self.db.model.buildsets
+                q = q.where(
+                        (tbl.c.buildsetid == bs_tbl.c.id) &
+                        (bs_tbl.c.sourcestampid == ssid))
             res = conn.execute(q)
 
             return [ self._brdictFromRow(row) for row in res.fetchall() ]

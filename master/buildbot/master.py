@@ -143,6 +143,8 @@ class BuildMaster(service.MultiService):
                 subscription.SubscriptionPoint("buildset_additions")
         self._complete_buildset_subs = \
                 subscription.SubscriptionPoint("buildset_completion")
+        self._complete_sourcestamp_subs = \
+                subscription.SubscriptionPoint("sourcestamp_completion")
 
         # set up the tip of the status hierarchy (must occur after subscription
         # points are initialized)
@@ -1018,8 +1020,54 @@ class BuildMaster(service.MultiService):
         # and deliver to any listeners
         self._buildsetComplete(bsid, cumulative_results)
 
+        # check sourcestamp completion
+        wfd = defer.waitForDeferred(self.maybeSourceStampComplete(bsid))
+        yield wfd
+        wfd.getResult()
+
     def _buildsetComplete(self, bsid, results):
         self._complete_buildset_subs.deliver(bsid, results)
+
+    @defer.deferredGenerator
+    def maybeSourceStampComplete(self, bsid):
+        """
+        Instructs the master to check whether all buildsets associated with
+        this sourcestamp are complete, and notify appropriately if they are.
+
+        Note that sourcestamp completions are only reported on the master
+        on which the last build request completes.
+        """
+        wfd = defer.waitForDeferred(
+            self.db.buildsets.getBuildset(bsid))
+        yield wfd
+        bsdict = wfd.getResult()
+	ssid = bsdict['sourcestampid']
+
+        wfd = defer.waitForDeferred(
+            self.db.buildrequests.getBuildRequests(ssid=ssid, complete=False))
+        yield wfd
+        brdicts = wfd.getResult()
+
+        # if there are incomplete buildrequests, bail out
+        if brdicts:
+            return
+
+        wfd = defer.waitForDeferred(
+            self.db.buildrequests.getBuildRequests(ssid=ssid))
+        yield wfd
+        brdicts = wfd.getResult()
+
+        # figure out the overall results of the sourcestamp
+        cumulative_results = SUCCESS
+        for brdict in brdicts:
+            if brdict['results'] not in (SUCCESS, WARNINGS):
+                cumulative_results = FAILURE
+
+        # deliver to any listeners
+        self._sourcestampComplete(ssid, cumulative_results)
+
+    def _sourcestampComplete(self, ssid, results):
+        self._complete_sourcestamp_subs.deliver(ssid, results)
 
     def subscribeToBuildsetCompletions(self, callback):
         """
@@ -1029,6 +1077,15 @@ class BuildMaster(service.MultiService):
         Note: this method will go away in 0.9.x
         """
         return self._complete_buildset_subs.subscribe(callback)
+
+    def subscribeToSourceStampCompletions(self, callback):
+        """
+        Request that C{callback(ssid, result)} be called whenever all
+        buildsets associated with a sourcestamp are complete.
+
+        Note: this method will go away in 0.9.x
+        """
+        return self._complete_sourcestamp_subs.subscribe(callback)
 
     def buildRequestAdded(self, bsid, brid, buildername):
         """

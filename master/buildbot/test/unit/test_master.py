@@ -186,6 +186,17 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         # assert the notification sub was called correctly
         cb.assert_called_with(938593, 999)
 
+    def test_sourcestamp_completion_subscription(self):
+        self.master.db = mock.Mock()
+
+        cb = mock.Mock()
+        sub = self.master.subscribeToSourceStampCompletions(cb)
+        self.assertIsInstance(sub, subscription.Subscription)
+
+        self.master._sourcestampComplete(938593, 999)
+        # assert the notification sub was called correctly
+        cb.assert_called_with(938593, 999)
+
 class Polling(dirs.DirsMixin, unittest.TestCase):
 
     def setUp(self):
