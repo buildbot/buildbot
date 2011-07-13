@@ -101,9 +101,11 @@ class Mercurial(Source):
         self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = self.addLog("stdio")
-        hgInstalled = self.checkHg()
-        if not hgInstalled:
-            raise BuildSlaveTooOldError("Mercurial is not installed on slave")
+        d = self.checkHg()
+        def checkInstall(hgInstalled):
+            if not hgInstalled:
+                raise BuildSlaveTooOldError("Mercurial is not installed on slave")
+            return 0
 
         if self.branchType == 'dirname':
             assert self.repourl is None
@@ -117,9 +119,9 @@ class Mercurial(Source):
             raise ValueError("Invalid branch type")
 
         if self.mode == 'full':
-            d = self.full()
+            d.addCallback(lambda _: self.full())
         elif self.mode == 'incremental':
-            d = self.incremental()
+            d.addCallback(lambda _: self.incremental())
         d.addCallback(self.parseGotRevision)
         d.addCallback(self.finish)
         d.addErrback(self.failed)

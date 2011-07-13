@@ -94,14 +94,18 @@ class Git(Source):
         self.method = self._getMethod()
         self.stdio_log = self.addLog("stdio")
 
-        gitInstalled = self.checkGit()
-        if not gitInstalled:
-            raise BuildSlaveTooOldError("git is not installed on slave")
+        d = self.checkGit()
+        def checkInstall(gitInstalled):
+            if not gitInstalled:
+                raise BuildSlaveTooOldError("git is not installed on slave")
+            return 0
+        d.addCallback(checkInstall)
+
 
         if self.mode == 'incremental':
-            d = self.incremental()
+            d.addCallback(lambda _: self.incremental())
         elif self.mode == 'full':
-            d = self.full()
+            d.addCallback(lambda _: self.full())
         d.addCallback(self.parseGotRevision)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
@@ -375,4 +379,3 @@ class Git(Source):
             return False
         d.addCallback(check)
         return d
-
