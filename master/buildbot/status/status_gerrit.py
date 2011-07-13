@@ -20,12 +20,13 @@
 
 from buildbot.status.base import StatusReceiverMultiService
 from buildbot.status.builder import Results
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 from twisted.internet.protocol import ProcessProtocol
+from twisted.python import log
 
-def defaultReviewCB(builderName, build, result, arg):
+def defaultReviewCB(builderNames, build, result, arg):
     message =  "Buildbot finished compiling your patchset\n"
-    message += "on configuration: %s\n" % builderName
+    message += "on configuration(s): %s\n\n" % ", ".join(builderNames)
     message += "The result is: %s\n" % Results[result].upper()
 
     # message, verified, reviewed
@@ -51,6 +52,7 @@ class GerritStatusPush(StatusReceiverMultiService):
         self.gerrit_port = port
         self.reviewCB = reviewCB
         self.reviewArg = reviewArg
+        self.sourceStampSubscription = None
 
     class LocalPP(ProcessProtocol):
         def __init__(self, status):
@@ -69,57 +71,100 @@ class GerritStatusPush(StatusReceiverMultiService):
                 print "gerrit status: OK"
 
     def startService(self):
-        print """Starting up."""
         StatusReceiverMultiService.startService(self)
-        self.status = self.parent.getStatus()
-        self.status.subscribe(self)
+        self.sourceStampSubscription = \
+            self.parent.subscribeToSourceStampCompletions(
+                    self.sourceStampFinished)
 
-    def builderAdded(self, name, builder):
-        return self # subscribe to this builder
+    def stopService(self):
+        if self.sourceStampSubscription is not None:
+            self.sourceStampSubscription.unsubscribe()
+            self.sourceStampSubscription = None
+        return StatusReceiverMultiService.stopService(self)
 
-    def buildFinished(self, builderName, build, result):
-        """Do the SSH gerrit verify command to the server."""
-        repo, git = False, False
+    def sourceStampFinished(self, ssid, result):
+        log.msg("GerritStatusPush: sourcestamp %s finished (status: %s)"
+                % (ssid, Results[result]))
+        d = self.parent.db.buildrequests.getBuildRequests(ssid=ssid)
+        d.addCallback(self._gotBuildRequests, result)
+        return d
 
-        # Gerrit + Repo
-        try:
-            downloads = build.getProperty("repo_downloads")
-            downloaded = build.getProperty("repo_downloaded").split(" ")
-            repo = True
-        except KeyError:
-            pass
+    def _gotBuildRequests(self, breqs, result):
+        dl = []
+        for breq in breqs:
+            builder = self.parent.getStatus().getBuilder(breq['buildername'])
+            d = self.parent.db.builds.getBuildsForRequest(breq['brid'])
+            d.addCallback(lambda *a: a, builder) # tuple(build, builder)
+            dl.append(d)
+        d = defer.DeferredList(dl)
+        d.addCallback(self._gotBuilds, result)
 
-        if repo:
-            if downloads and 2 * len(downloads) == len(downloaded):
-                message, verified, reviewed = self.reviewCB(builderName, build, result, self.reviewArg)
-                for i in range(0, len(downloads)):
-                    try:
-                        project, change1 = downloads[i].split(" ")
-                    except ValueError:
-                        return # something is wrong, abort
-                    change2 = downloaded[2 * i]
-                    revision = downloaded[2 * i + 1]
-                    if change1 == change2:
-                        self.sendCodeReview(project, revision, message, verified, reviewed)
-                    else:
-                        return # something is wrong, abort
+    def _gotBuilds(self, dl_result, result):
+        builderNames = set()
+        builds = []
+        for (success, build_tuple) in dl_result:
+            builddictlist, builder = build_tuple
+            builderNames.add(builder.name)
+            for builddict in builddictlist:
+                build = builder.getBuild(builddict['number'])
+                if not build:
+                    log.msg("GerritStatusPush: did not find build num %s on "
+                            "builder %s" % (builddict['number'], builder.name))
+                    continue
+                builds.append(build)
+
+        if not builds:
+            log.msg("GerritStatusPush: no builds")
             return
 
-        # Gerrit + Git
-        try:
-            build.getProperty("gerrit_branch") # used only to verify Gerrit source
-            project = build.getProperty("project")
-            revision = build.getProperty("got_revision")
-            git = True
-        except KeyError:
-            pass
+        builderNames = list(builderNames)
+        builderNames.sort()
 
-        if git:
-            message, verified, reviewed = self.reviewCB(builderName, build, result, self.reviewArg)
-            self.sendCodeReview(project, revision, message, verified, reviewed)
+        if "repo_downloads" in builds[0].properties:
+            return self._repoBuildsFinished(builds, builderNames, result)
+        elif "gerrit_branch" in builds[0].properties:
+            return self._gerritBuildsFinished(builds, builderNames, result)
+        else:
+            log.msg("The build %s does not seem to come from Gerrit"
+                    % builds[0])
+
+    def _repoBuildsFinished(self, builds, builderNames, result):
+        try:
+            downloads = builds[0].getProperty("repo_downloads")
+            downloaded = builds[0].getProperty("repo_downloaded").split(" ")
+        except KeyError, e:
+            log.err(e)
             return
+        if not downloads or 2 * len(downloads) != len(downloaded):
+            return
+        message, verified, reviewed = self.reviewCB(builderNames, builds,
+                                                    result, self.reviewArg)
+        for i in range(0, len(downloads)):
+            try:
+                project, change1 = downloads[i].split(" ")
+            except ValueError:
+                return # something is wrong, abort
+            change2 = downloaded[2 * i]
+            revision = downloaded[2 * i + 1]
+            if change1 == change2:
+                self.sendCodeReview(project, revision, message, verified,
+                                    reviewed)
+            else:
+                return # something is wrong, abort
+
+    def _gerritBuildsFinished(self, builds, builderNames, result):
+        try:
+            project = builds[0].getProperty("project")
+            revision = builds[0].getProperty("got_revision")
+        except KeyError, e:
+            log.err(e)
+            return
+        message, verified, reviewed = self.reviewCB(
+                builderNames, builds, result, self.reviewArg)
+        self.sendCodeReview(project, revision, message, verified, reviewed)
 
     def sendCodeReview(self, project, revision, message=None, verified=0, reviewed=0):
+        """Do the SSH gerrit verify command to the server."""
         command = ["ssh", self.gerrit_username + "@" + self.gerrit_server, "-p %d" % self.gerrit_port,
                    "gerrit", "review", "--project %s" % str(project)]
         if message:
