@@ -85,7 +85,9 @@ class BuildStepMixin(object):
         def setProperty(propname, value, source=None, runtime=None):
             self.set_properties[propname] = value
         b.setProperty = setProperty
-        b.getProperty = self.set_properties.__getitem__
+        def getProperty(propname, default=None):
+            self.set_properties.get(propname,default)
+        b.getProperty = getProperty
         step.setBuild(b)
 
         # step.progress

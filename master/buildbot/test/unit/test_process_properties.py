@@ -35,7 +35,7 @@ class FakeBuild(object):
     def getProperties(self):
         return self.properties
     def getProperty(self, key, default=None):
-        return self.properties.getProperty(key)
+        return self.properties.getProperty(key, default)
     def hasProperty(self, key):
         return self.properties.has_key(key)
     def render(self, value):

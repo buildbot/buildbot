@@ -423,10 +423,8 @@ CREATE TABLE IF NOT EXISTS test_warnings(
 ) ENGINE=innodb
 """)
 
-        revision = None
-        try:
-            revision = self.getProperty("got_revision")
-        except exceptions.KeyError:
+        revision = self.getProperty("got_revision")
+        if revision is None:
             revision = self.getProperty("revision")
         typ = "mtr"
         if self.test_type:

@@ -488,10 +488,7 @@ class BuildersResource(HtmlResource):
             if builds:
                 b = builds[0]
                 bld['build_url'] = (bld['link'] + "/builds/%d" % b.getNumber())
-                try:
-                    label = b.getProperty("got_revision")
-                except KeyError:
-                    label = None
+                label = b.getProperty("got_revision")
                 if not label or len(str(label)) > 20:
                     label = "#%d" % b.getNumber()
 

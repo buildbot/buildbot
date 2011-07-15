@@ -431,13 +431,7 @@ class BuildLineMixin:
         builder_name = build.getBuilder().getName()
         results = build.getResults()
         text = build.getText()
-        try:
-            rev = build.getProperty("got_revision")
-            if rev is None:
-                rev = "??"
-        except KeyError:
-            rev = "??"
-        rev = str(rev)
+        rev = str(build.getProperty("got_revision", "??"))
         css_class = css_classes.get(results, "")
         repo = build.getSourceStamp().repository
 
