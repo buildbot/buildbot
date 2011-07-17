@@ -13,9 +13,27 @@
 #
 # Copyright Buildbot Team Members
 
+import weakref
 from twisted.internet import defer
 from buildbot.test.fake import fakedb
 import mock
+
+class FakeCache(object):
+    """Emulate an L{AsyncLRUCache}, but without any real caching.  This
+    I{does} do the weakref part, to catch un-weakref-able objects."""
+    def __init__(self, name, miss_fn):
+        self.name = name
+        self.miss_fn = miss_fn
+
+    def get(self, key, **kwargs):
+        d = self.miss_fn(key, **kwargs)
+        def mkref(x):
+            if x is not None:
+                weakref.ref(x)
+            return x
+        d.addCallback(mkref)
+        return d
+
 
 def make_master(master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
     """
@@ -28,11 +46,7 @@ def make_master(master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
     fakemaster = mock.Mock(name="fakemaster")
 
     # set up caches
-    def fake_get_cache(name, miss_fn):
-        fake_cache = mock.Mock(name='fakemaster.caches[%r]' % name)
-        fake_cache.get = miss_fn
-        return fake_cache
-    fakemaster.caches.get_cache = fake_get_cache
+    fakemaster.caches.get_cache = FakeCache
 
     # and a getObjectId method
     fakemaster.getObjectId = (lambda : defer.succeed(master_id))

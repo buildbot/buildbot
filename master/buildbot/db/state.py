@@ -21,6 +21,9 @@ from buildbot.db import base
 class _IdNotFoundError(Exception):
     pass # used internally
 
+class ObjDict(dict):
+    pass
+
 class StateConnectorComponent(base.DBConnectorComponent):
     """
     A DBConnectorComponent to handle maintaining arbitrary key/value state for
@@ -45,7 +48,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
         """
         # defer to a cached metho that only takes one parameter (a tuple)
         return self._getObjectId((name, class_name)
-                ).addCallback(lambda list : list[0])
+                ).addCallback(lambda objdict : objdict['id'])
 
     @base.cached('objectids')
     def _getObjectId(self, name_class_name_tuple):
@@ -78,18 +81,19 @@ class StateConnectorComponent(base.DBConnectorComponent):
             # then try selecting again.  We include an invocation of a hook
             # method to allow tests to exercise this particular behavior
             try:
-                return [ select() ]
+                return ObjDict(id=select())
             except _IdNotFoundError:
                 pass
 
             self._test_timing_hook(conn)
 
             try:
-                return [ insert() ]
-            except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.ProgrammingError):
+                return ObjDict(id=insert())
+            except (sqlalchemy.exc.IntegrityError,
+                    sqlalchemy.exc.ProgrammingError):
                 pass
 
-            return [ select() ]
+            return ObjDict(id=select())
 
         return self.db.pool.do(thd)
 
