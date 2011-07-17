@@ -544,9 +544,8 @@ class WarningCountingShellCommand(ShellCommand):
         warnings_stat = self.step_status.getStatistic('warnings', 0)
         self.step_status.setStatistic('warnings', warnings_stat + self.warnCount)
 
-        try:
-            old_count = self.getProperty("warnings-count")
-        except KeyError:
+        old_count = self.getProperty("warnings-count")
+        if old_count is None:
             old_count = 0
         self.setProperty("warnings-count", old_count + self.warnCount, "WarningCountingShellCommand")
 

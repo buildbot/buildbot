@@ -702,7 +702,10 @@ class BuildStep:
             self.progress.setProgress(metric, value)
 
     def getProperty(self, propname):
-        return self.build.getProperty(propname)
+        try:
+            return self.build.getProperty(propname)
+        except KeyError:
+            raise KeyError, 'build is %r' % self.build
 
     def setProperty(self, propname, value, source="Step", runtime=True):
         self.build.setProperty(propname, value, source, runtime=runtime)

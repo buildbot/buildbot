@@ -77,11 +77,7 @@ class StatusResourceBuild(HtmlResource):
             cxt['most_recent_rev_build'] = True
 
 
-        got_revision = None
-        try:
-            got_revision = b.getProperty("got_revision")
-        except KeyError:
-            pass
+        got_revision = b.getProperty("got_revision")
         if got_revision:
             cxt['got_revision'] = str(got_revision)
 
