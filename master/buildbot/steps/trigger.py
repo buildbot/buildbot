@@ -77,15 +77,18 @@ class Trigger(LoggingBuildStep):
 
         """
         assert schedulerNames, "You must specify a scheduler to trigger"
-        if sourceStamp and updateSourceStamp:
+        if sourceStamp and (updateSourceStamp is not None):
             raise ValueError("You can't specify both sourceStamp and updateSourceStamp")
         if sourceStamp and alwaysUseLatest:
             raise ValueError("You can't specify both sourceStamp and alwaysUseLatest")
-        if alwaysUseLatest and updateSourceStamp:
+        if alwaysUseLatest and (updateSourceStamp is not None):
             raise ValueError("You can't specify both alwaysUseLatest and updateSourceStamp")
         self.schedulerNames = schedulerNames
         self.sourceStamp = sourceStamp
-        self.updateSourceStamp = updateSourceStamp or not (alwaysUseLatest or sourceStamp)
+        if updateSourceStamp is not None:
+            self.updateSourceStamp = updateSourceStamp
+        else:
+            self.updateSourceStamp = not (alwaysUseLatest or sourceStamp)
         self.alwaysUseLatest = alwaysUseLatest
         self.waitForFinish = waitForFinish
         self.set_properties = set_properties
