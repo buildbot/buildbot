@@ -43,6 +43,17 @@ class StateConnectorComponent(base.DBConnectorComponent):
         @param class_name: object class name
         @returns: the objectid, via a Deferred.
         """
+        # defer to a cached metho that only takes one parameter (a tuple)
+        return self._getObjectId((name, class_name)
+                ).addCallback(lambda list : list[0])
+
+    @base.cached('objectids')
+    def _getObjectId(self, name_class_name_tuple):
+        """
+        Cache-compatible implementation of L{_getObjectId}, taking a single
+        parameter and returning a weakref-able value (a list).
+        """
+        name, class_name = name_class_name_tuple
         def thd(conn):
             objects_tbl = self.db.model.objects
 
@@ -67,18 +78,18 @@ class StateConnectorComponent(base.DBConnectorComponent):
             # then try selecting again.  We include an invocation of a hook
             # method to allow tests to exercise this particular behavior
             try:
-                return select()
+                return [ select() ]
             except _IdNotFoundError:
                 pass
 
             self._test_timing_hook(conn)
 
             try:
-                return insert()
+                return [ insert() ]
             except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.ProgrammingError):
                 pass
 
-            return select()
+            return [ select() ]
 
         return self.db.pool.do(thd)
 

@@ -326,6 +326,13 @@ be similar to the number BuildRequesets.
 The number of rows from the @code{sourcestamps} table to cache in memory.  This
 value should be similar to the value for @code{SourceStamps}.
 
+@item objectids
+
+The number of object IDs - a means to correlate an object in the Buildbot
+configuration with an identity in the database - to cache.  In this version,
+object IDs are not looked up often during runtime, so a relatively low value
+such as 10 is fine.
+
 @end enumerate
 
 The @emph{global} @code{buildCacheSize} parameter gives the number of builds
