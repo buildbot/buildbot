@@ -981,11 +981,9 @@ class Repo(Source):
         # "repo_download", "repo_download0", .., "repo_download9"
         for propName in ["repo_d"] + ["repo_d%d" % i for i in xrange(0,10)] + \
           ["repo_download"] + ["repo_download%d" % i for i in xrange(0,10)]:
-            try:
-                s = self.build.getProperty(propName)
+            s = self.build.getProperty(propName)
+            if s is not None:
                 downloads.extend(self.parseDownloadProperty(s))
-            except KeyError:
-                pass
 
         if downloads:
             self.args["repo_downloads"] = downloads

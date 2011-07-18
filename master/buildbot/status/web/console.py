@@ -244,9 +244,7 @@ class ConsoleStatusResource(HtmlResource):
             # Get the last revision in this build.
             # We first try "got_revision", but if it does not work, then
             # we try "revision".
-            got_rev = build.getProperty("got_revision", -1)
-            if got_rev == -1:
-                got_rev = build.getProperty("revision", -1)
+            got_rev = build.getProperty("got_revision", build.getProperty("revision", -1))
             if got_rev != -1 and not self.comparator.isValidRevision(got_rev):
                 got_rev = -1
 
@@ -254,7 +252,7 @@ class ConsoleStatusResource(HtmlResource):
             # TODO(nsylvain): If the build is over, maybe it was a problem
             # with the update source step. We need to find a way to tell the
             # user that his change might have broken the source update.
-            if got_rev and got_rev != -1:
+            if got_rev != -1:
                 details = self.getBuildDetails(request, builderName, build)
                 devBuild = DevBuild(got_rev, build, details)
                 builds.append(devBuild)
