@@ -161,7 +161,9 @@ class PropertiesMixin:
 
     has_key = hasProperty
 
-    def setProperty(self, propname, value, source, runtime=None):
+    def setProperty(self, propname, value, source='Unknown', runtime=None):
+        # source is not optional in IProperties, but is optional here to avoid
+        # breaking user-supplied code that fails to specify a source
         props = IProperties(self)
         if runtime is None:
             runtime = self.set_runtime_properties
@@ -308,11 +310,11 @@ class Property(util.ComparableMixin):
         self.default = default
         self.defaultWhenFalse = defaultWhenFalse
 
-    def getRenderingFor(self, build):
+    def getRenderingFor(self, props):
         if self.defaultWhenFalse:
-            return build.getProperty(self.key) or self.default
+            return props.getProperty(self.key) or self.default
         else:
-            return build.getProperty(self.key, default=self.default)
+            return props.getProperty(self.key, default=self.default)
 
 
 class _DefaultRenderer:

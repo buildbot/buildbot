@@ -29,17 +29,13 @@ class FakeProperties(object):
     def has_key(self, k):
         return self.dict.has_key(k)
 
-class FakeBuild(object):
+class FakeBuild(PropertiesMixin):
     def __init__(self, properties):
         self.properties = properties
-    def getProperties(self):
-        return self.properties
-    def getProperty(self, key, default=None):
-        return self.properties.getProperty(key)
-    def hasProperty(self, key):
-        return self.properties.has_key(key)
-    def render(self, value):
-        return IRenderable(value).getRenderingFor(self)
+
+components.registerAdapter(
+        lambda build : IProperties(build.properties),
+        FakeBuild, IProperties)
 
 class TestPropertyMap(unittest.TestCase):
     def setUp(self):
@@ -343,7 +339,7 @@ class TestWithProperties(unittest.TestCase):
     def testLambdaUseExisting(self):
         self.props.setProperty('x', 10, 'test')
         self.props.setProperty('y', 20, 'test')
-        command = WithProperties('%(z)s', z=lambda build: build.getProperty('x') + build.getProperty('y'))
+        command = WithProperties('%(z)s', z=lambda props: props.getProperty('x') + props.getProperty('y'))
         self.failUnlessEqual(self.build.render(command), '30')
 
 class TestProperties(unittest.TestCase):
@@ -465,6 +461,10 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(self.props.properties['x'], ('y', 'test'))
         self.assertIn('x', self.props.runtime)
 
+    def test_setProperty_no_source(self):
+        self.assertRaises(TypeError, lambda :
+                self.props.setProperty('x', 'y'))
+
     def test_getProperties(self):
         self.assertIdentical(self.props.getProperties(), self.props)
 
@@ -517,6 +517,12 @@ class TestPropertiesMixin(unittest.TestCase):
         self.mp.setProperty('abc', 'def', 'src')
         self.mp.properties.setProperty.assert_called_with('abc', 'def', 'src',
                                                           runtime=True)
+
+    def test_setProperty_no_source(self):
+        # this compatibility is maintained for old code
+        self.mp.setProperty('abc', 'def')
+        self.mp.properties.setProperty.assert_called_with('abc', 'def',
+                                                    'Unknown', runtime=True)
 
     def test_render(self):
         self.mp.render([1,2])

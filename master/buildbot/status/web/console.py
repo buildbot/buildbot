@@ -244,21 +244,11 @@ class ConsoleStatusResource(HtmlResource):
             # Get the last revision in this build.
             # We first try "got_revision", but if it does not work, then
             # we try "revision".
-            got_rev = -1
-            try:
-                got_rev = build.getProperty("got_revision")
-                if not self.comparator.isValidRevision(got_rev):
-                    got_rev = -1
-            except KeyError:
-                pass
-
-            try:
-                if got_rev == -1:
-                    got_rev = build.getProperty("revision")
-                if not self.comparator.isValidRevision(got_rev):
-                    got_rev = -1
-            except:
-                pass
+            got_rev = build.getProperty("got_revision", -1)
+            if got_rev == -1:
+                got_rev = build.getProperty("revision", -1)
+            if got_rev != -1 and not self.comparator.isValidRevision(got_rev):
+                got_rev = -1
 
             # We ignore all builds that don't have last revisions.
             # TODO(nsylvain): If the build is over, maybe it was a problem

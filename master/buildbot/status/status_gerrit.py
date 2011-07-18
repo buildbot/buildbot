@@ -82,14 +82,10 @@ class GerritStatusPush(StatusReceiverMultiService):
         repo, git = False, False
 
         # Gerrit + Repo
-        try:
+        if (build.hasProperty('repo_downloads')
+                or build.hasProperty('repo_downloaded')):
             downloads = build.getProperty("repo_downloads")
             downloaded = build.getProperty("repo_downloaded").split(" ")
-            repo = True
-        except KeyError:
-            pass
-
-        if repo:
             if downloads and 2 * len(downloads) == len(downloaded):
                 message, verified, reviewed = self.reviewCB(builderName, build, result, self.reviewArg)
                 for i in range(0, len(downloads)):

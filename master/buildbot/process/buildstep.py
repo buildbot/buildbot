@@ -20,7 +20,7 @@ from zope.interface import implements
 from twisted.internet import reactor, defer, error
 from twisted.protocols import basic
 from twisted.spread import pb
-from twisted.python import log
+from twisted.python import log, components
 from twisted.python.failure import Failure
 from twisted.web.util import formatFailure
 from twisted.python.reflect import accumulateClassList
@@ -29,7 +29,7 @@ from buildbot import interfaces, locks, util
 from buildbot.status import progress
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION, RETRY, worst_status
-from buildbot.process import metrics
+from buildbot.process import metrics, properties
 
 """
 BuildStep and RemoteCommand classes for master-side representation of the
@@ -564,7 +564,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
     def __repr__(self):
         return "<RemoteShellCommand '%s'>" % repr(self.command)
 
-class BuildStep:
+class BuildStep(properties.PropertiesMixin):
     """
     I represent a single step of the build process. This step may involve
     zero or more commands to be run in the build slave, as well as arbitrary
@@ -612,6 +612,9 @@ class BuildStep:
     warnOnWarnings = False
     warnOnFailure = False
     alwaysRun = False
+
+    # properties set on a build step are, by nature, always runtime properties
+    set_runtime_properties = True
 
     # 'parms' holds a list of all the parameters we care about, to allow
     # users to instantiate a subclass of BuildStep with a mixture of
@@ -700,12 +703,6 @@ class BuildStep:
         some metric."""
         if self.progress:
             self.progress.setProgress(metric, value)
-
-    def getProperty(self, propname):
-        return self.build.getProperty(propname)
-
-    def setProperty(self, propname, value, source="Step", runtime=True):
-        self.build.setProperty(propname, value, source, runtime=runtime)
 
     def startStep(self, remote):
         """Begin the step. This returns a Deferred that will fire when the
@@ -1055,6 +1052,11 @@ class BuildStep:
         return d
 
 
+components.registerAdapter(
+        lambda step : interfaces.IProperties(step.build),
+        BuildStep, interfaces.IProperties)
+
+
 class OutputProgressObserver(LogObserver):
     length = 0
 
@@ -1299,7 +1301,6 @@ def regex_log_evaluator(cmd, step_status, regexes):
                 if err.search(l.getText()):
                     worst = possible_status
     return worst
-
 
 # (WithProperties used to be available in this module)
 from buildbot.process.properties import WithProperties

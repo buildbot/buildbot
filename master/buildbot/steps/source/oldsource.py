@@ -873,14 +873,14 @@ class Git(Source):
         self.args['patch'] = patch
 
         # check if there is any patchset we should fetch from Gerrit
-        try:
+        if self.build.hasProperty("event.patchSet.ref"):
             # GerritChangeSource
             self.args['gerrit_branch'] = self.build.getProperty("event.patchSet.ref")
             self.setProperty("gerrit_branch", self.args['gerrit_branch'])
-        except KeyError:
+        else:
             try:
                 # forced build
-                change = self.build.getProperty("gerrit_change").split('/')
+                change = self.build.getProperty("gerrit_change", '').split('/')
                 if len(change) == 2:
                     self.args['gerrit_branch'] = "refs/changes/%2.2d/%d/%d" \
                                                  % (int(change[0]) % 100, int(change[0]), int(change[1]))
@@ -966,10 +966,7 @@ class Repo(Source):
         making this a defereable allow config to tweak this
         in order to e.g. manage dependancies
         """
-        try:
-            downloads = self.build.getProperty("repo_downloads")
-        except KeyError:
-            downloads = []
+        downloads = self.build.getProperty("repo_downloads", [])
 
         # download patches based on GerritChangeSource events
         for change in self.build.allChanges():

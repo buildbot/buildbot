@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 
 import mock
-from buildbot.process import buildstep
 from buildbot import interfaces
-from buildbot.test.fake import remotecommand
+from buildbot.process import buildstep
+from buildbot.test.fake import remotecommand, fakebuild
 
 
 class BuildStepMixin(object):
@@ -35,6 +35,7 @@ class BuildStepMixin(object):
     @ivar progress: mock progress object
     @ivar buildslave: mock buildslave object
     @ivar step_status: mock StepStatus object
+    @ivar properties: build properties (L{Properties} instance)
     """
 
     def setUpBuildStep(self):
@@ -77,16 +78,13 @@ class BuildStepMixin(object):
 
         # step.build
 
-        b = self.build = mock.Mock(name="build")
-        b.render = lambda x : interfaces.IRenderable(x).getRenderingFor(b)
+        b = self.build = fakebuild.FakeBuild()
         b.getSlaveCommandVersion = lambda command, oldversion : slave_version
         b.slaveEnvironment = slave_env.copy()
-        self.set_properties = {}
-        def setProperty(propname, value, source=None, runtime=None):
-            self.set_properties[propname] = value
-        b.setProperty = setProperty
-        b.getProperty = self.set_properties.__getitem__
         step.setBuild(b)
+
+        # watch for properties being set
+        self.properties = interfaces.IProperties(b)
 
         # step.progress
 
@@ -198,9 +196,10 @@ class BuildStepMixin(object):
                         status_text=self.step_status.status_text)
             self.assertEqual(got_outcome, self.exp_outcome)
             for pn, pv in self.exp_properties.iteritems():
-                self.assertEqual(self.set_properties[pn], pv)
+                self.failUnless(self.properties.hasProperty(pn))
+                self.assertEqual(self.properties.getProperty(pn), pv)
             for pn in self.exp_missing_properties:
-                self.assertNotIn(pn, self.set_properties)
+                self.failIf(self.properties.hasProperty(pn))
             for log, contents in self.exp_logfiles.iteritems():
                 self.assertEqual(self.step_status.logs[log].stdout, contents)
         d.addCallback(check)

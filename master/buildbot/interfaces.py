@@ -457,10 +457,6 @@ class IBuildStatus(Interface):
         build has already finished, this deferred will fire right away. The
         callback is given this IBuildStatus instance as an argument."""
 
-    def getProperty(propname):
-        """Return the value of the build property with the given name. Raises
-        KeyError if there is no such property on this build."""
-
     def getReason():
         """Return a string that indicates why the build was run. 'changes',
         'forced', and 'periodic' are the most likely values. 'try' will be

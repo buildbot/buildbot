@@ -14,11 +14,12 @@
 # Copyright Buildbot Team Members
 
 import re
-
+import mock
 from twisted.trial import unittest
-
-from buildbot.process.buildstep import LoggingBuildStep, regex_log_evaluator
+from buildbot.process import buildstep
+from buildbot.process.buildstep import regex_log_evaluator
 from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION
+from buildbot.test.fake import fakebuild
 
 class FakeLogFile:
     def __init__(self, text):
@@ -67,16 +68,37 @@ class TestRegexLogEvaluator(unittest.TestCase):
         self.assertEqual(new_status, WARNINGS, "regex_log_evaluator returned %d, should've returned %d" % (new_status, WARNINGS))
 
 
+class TestBuildStep(unittest.TestCase):
+
+    def test_getProperty(self):
+        bs = buildstep.BuildStep()
+        bs.build = fakebuild.FakeBuild()
+        props = bs.build.build_status.properties = mock.Mock()
+        bs.getProperty("xyz", 'b')
+        props.getProperty.assert_called_with("xyz", 'b')
+        bs.getProperty("xyz")
+        props.getProperty.assert_called_with("xyz", None)
+
+    def test_setProperty(self):
+        bs = buildstep.BuildStep()
+        bs.build = fakebuild.FakeBuild()
+        props = bs.build.build_status.properties = mock.Mock()
+        bs.setProperty("x", "y", "t")
+        props.setProperty.assert_called_with("x", "y", "t", runtime=True)
+        bs.setProperty("x", "abc", "test", runtime=True)
+        props.setProperty.assert_called_with("x", "abc", "test", runtime=True)
+
+
 class TestLoggingBuildStep(unittest.TestCase):
     def test_evaluateCommand_success(self):
         cmd = FakeCmd("Log text", "Log text")
-        lbs = LoggingBuildStep()
+        lbs = buildstep.LoggingBuildStep()
         status = lbs.evaluateCommand(cmd)
         self.assertEqual(status, SUCCESS, "evaluateCommand returned %d, should've returned %d" % (status, SUCCESS))
 
     def test_evaluateCommand_failed(self):
         cmd = FakeCmd("Log text", "", 23)
-        lbs = LoggingBuildStep()
+        lbs = buildstep.LoggingBuildStep()
         status = lbs.evaluateCommand(cmd)
         self.assertEqual(status, FAILURE, "evaluateCommand returned %d, should've returned %d" % (status, FAILURE))
 
@@ -84,6 +106,6 @@ class TestLoggingBuildStep(unittest.TestCase):
         cmd = FakeCmd("Log text", "")
         def eval(cmd, step_status):
             return WARNINGS
-        lbs = LoggingBuildStep(log_eval_func=eval)
+        lbs = buildstep.LoggingBuildStep(log_eval_func=eval)
         status = lbs.evaluateCommand(cmd)
         self.assertEqual(status, WARNINGS, "evaluateCommand didn't call log_eval_func or overrode its results")
