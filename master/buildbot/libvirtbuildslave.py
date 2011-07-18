@@ -198,13 +198,13 @@ class LibVirtSlave(AbstractLatentBuildSlave):
                 return self.connection.create(self.xml)
             d = self.connection.lookupByName(self.name)
             def _really_start(res):
-                return res.create()
+                self.domain = res
+                return self.domain.create()
             d.addCallback(_really_start)
             return d
         d.addCallback(_start)
 
         def _started(res):
-            self.domain = res
             return True
         d.addCallback(_started)
 
