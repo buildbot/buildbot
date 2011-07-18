@@ -873,11 +873,12 @@ class Git(Source):
         self.args['patch'] = patch
 
         # check if there is any patchset we should fetch from Gerrit
-        try:
+        gerrit_branch = self.build.getProperty("event.patchSet.ref")
+        if gerrit_branch is not None:
             # GerritChangeSource
-            self.args['gerrit_branch'] = self.build.getProperty("event.patchSet.ref")
-            self.setProperty("gerrit_branch", self.args['gerrit_branch'])
-        except KeyError:
+            self.args['gerrit_branch'] = gerrit_branch
+            self.setProperty("gerrit_branch", gerrit_branch)
+        else:
             try:
                 # forced build
                 change = self.build.getProperty("gerrit_change").split('/')
@@ -966,10 +967,7 @@ class Repo(Source):
         making this a defereable allow config to tweak this
         in order to e.g. manage dependancies
         """
-        try:
-            downloads = self.build.getProperty("repo_downloads")
-        except KeyError:
-            downloads = []
+        downloads = self.build.getProperty("repo_downloads", [])
 
         # download patches based on GerritChangeSource events
         for change in self.build.allChanges():
@@ -984,11 +982,9 @@ class Repo(Source):
         # "repo_download", "repo_download0", .., "repo_download9"
         for propName in ["repo_d"] + ["repo_d%d" % i for i in xrange(0,10)] + \
           ["repo_download"] + ["repo_download%d" % i for i in xrange(0,10)]:
-            try:
-                s = self.build.getProperty(propName)
+            s = self.build.getProperty(propName)
+            if s is not None:
                 downloads.extend(self.parseDownloadProperty(s))
-            except KeyError:
-                pass
 
         if downloads:
             self.args["repo_downloads"] = downloads

@@ -191,11 +191,7 @@ class FeedResource(XmlResource):
             if (ss.branch is None and ss.revision is None and ss.patch is None
                 and not ss.changes):
                 source += "Latest revision "
-            got_revision = None
-            try:
-                got_revision = build.getProperty("got_revision")
-            except KeyError:
-                pass
+            got_revision = build.getProperty("got_revision")
             if got_revision:
                 got_revision = str(got_revision)
                 if len(got_revision) > 40:
