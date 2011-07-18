@@ -431,8 +431,7 @@ class BuildLineMixin:
         builder_name = build.getBuilder().getName()
         results = build.getResults()
         text = build.getText()
-        rev = build.getProperty("got_revision", "??")
-        rev = str(rev)
+        rev = str(build.getProperty("got_revision", "??"))
         css_class = css_classes.get(results, "")
         repo = build.getSourceStamp().repository
 
