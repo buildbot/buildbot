@@ -19,7 +19,7 @@
 ."""
 
 from buildbot.status.base import StatusReceiverMultiService
-from buildbot.status.builder import Results
+from buildbot.status.results import Results, FAILURE
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import log
@@ -30,7 +30,7 @@ def defaultReviewCB(builderNames, build, result, arg):
     message += "The result is: %s\n" % Results[result].upper()
 
     # message, verified, reviewed
-    return message, (result == 0 or -1), 0
+    return message, (result < FAILURE or -1), 0
 
 class GerritStatusPush(StatusReceiverMultiService):
     """Event streamer to a gerrit ssh server."""

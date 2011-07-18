@@ -23,6 +23,7 @@ from buildbot.test.util import dirs
 from buildbot.test.fake import fakedb
 from buildbot.util import epoch2datetime
 from buildbot.changes import changes
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 
 class Subscriptions(dirs.DirsMixin, unittest.TestCase):
 
@@ -187,6 +188,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         cb.assert_called_with(938593, 999)
 
     def test_sourcestamp_completion_subscription(self):
+        # Tests the subscription mechanism
         self.master.db = mock.Mock()
 
         cb = mock.Mock()
@@ -196,6 +198,44 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         self.master._sourcestampComplete(938593, 999)
         # assert the notification sub was called correctly
         cb.assert_called_with(938593, 999)
+
+    def do_sourcestamp_completion(self, buildrequests):
+        self.master.db = mock.Mock()
+        self.master._sourcestampComplete = mock.Mock()
+        self.master.db.buildsets.getBuildset.return_value = \
+                defer.succeed({"sourcestampid": 42})
+        def fakeGetBR(ssid, complete=None):
+            if complete == False:
+                return defer.succeed([])
+            else:
+                return defer.succeed(buildrequests)
+        self.master.db.buildrequests.getBuildRequests.side_effect = fakeGetBR
+        d = self.master.maybeSourceStampComplete(1337)
+        return d
+
+    def test_sourcestamp_completion_success(self):
+        d = self.do_sourcestamp_completion(
+                [{"results": SUCCESS}, {"results": SUCCESS}])
+        def check(_ignore):
+            self.master._sourcestampComplete.assert_called_with(42, SUCCESS)
+        d.addCallback(check)
+        return d
+
+    def test_sourcestamp_completion_warnings(self):
+        d = self.do_sourcestamp_completion(
+                [{"results": SUCCESS}, {"results": WARNINGS}])
+        def check(_ignore):
+            self.master._sourcestampComplete.assert_called_with(42, WARNINGS)
+        d.addCallback(check)
+        return d
+
+    def test_sourcestamp_completion_failure(self):
+        d = self.do_sourcestamp_completion(
+                [{"results": SUCCESS}, {"results": FAILURE}])
+        def check(_ignore):
+            self.master._sourcestampComplete.assert_called_with(42, FAILURE)
+        d.addCallback(check)
+        return d
 
 class Polling(dirs.DirsMixin, unittest.TestCase):
 

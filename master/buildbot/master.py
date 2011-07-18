@@ -1035,13 +1035,13 @@ class BuildMaster(service.MultiService):
         this sourcestamp are complete, and notify appropriately if they are.
 
         Note that sourcestamp completions are only reported on the master
-        on which the last build request completes.
+        on which the last sourcestamp completes.
         """
         wfd = defer.waitForDeferred(
             self.db.buildsets.getBuildset(bsid))
         yield wfd
         bsdict = wfd.getResult()
-	ssid = bsdict['sourcestampid']
+        ssid = bsdict['sourcestampid']
 
         wfd = defer.waitForDeferred(
             self.db.buildrequests.getBuildRequests(ssid=ssid, complete=False))
@@ -1058,10 +1058,15 @@ class BuildMaster(service.MultiService):
         brdicts = wfd.getResult()
 
         # figure out the overall results of the sourcestamp
-        cumulative_results = SUCCESS
-        for brdict in brdicts:
-            if brdict['results'] not in (SUCCESS, WARNINGS):
-                cumulative_results = FAILURE
+        results = [ br["results"] for br in brdicts ]
+        results.sort()
+        cumulative_results = results[-1] # the worst
+        if cumulative_results > FAILURE:
+            cumulative_results = FAILURE
+        #cumulative_results = SUCCESS
+        #for brdict in brdicts:
+        #    if brdict['results'] not in (SUCCESS, WARNINGS):
+        #        cumulative_results = FAILURE
 
         # deliver to any listeners
         self._sourcestampComplete(ssid, cumulative_results)
