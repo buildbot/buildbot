@@ -422,7 +422,6 @@ CREATE TABLE IF NOT EXISTS test_warnings(
 ) ENGINE=innodb
 """)
 
-        revision = None
         revision = self.getProperty("got_revision")
         if revision is None:
             revision = self.getProperty("revision")
