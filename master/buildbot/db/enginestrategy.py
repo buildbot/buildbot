@@ -25,6 +25,7 @@ special cases that Buildbot needs.  Those include:
 
 import os
 import sqlalchemy
+from twisted.python import log
 from sqlalchemy.engine import strategies, url
 from sqlalchemy.pool import NullPool
 
@@ -87,6 +88,16 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
             max_conns = 1
 
         return u, kwargs, max_conns
+
+    def set_up_sqlite_engine(self, u, engine):
+        """Special setup for sqlite engines"""
+        # try to enable WAL logging
+        if u.database:
+            log.msg("setting database journal mode to 'wal'")
+            try:
+                engine.execute("pragma journal_mode = wal")
+            except:
+                log.msg("failed to set journal mode - database may fail")
 
     def special_case_mysql(self, u, kwargs):
         """For mysql, take max_idle out of the query arguments, and
@@ -153,8 +164,11 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         # by DBConnector to configure the surrounding thread pool
         engine.optimal_thread_pool_size = max_conns
 
-        # and keep the basedir
+        # keep the basedir
         engine.buildbot_basedir = basedir
+
+        if u.drivername.startswith('sqlite'):
+            self.set_up_sqlite_engine(u, engine)
 
         return engine
 
