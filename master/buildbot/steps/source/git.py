@@ -17,7 +17,7 @@ from twisted.python import log, failure
 from twisted.internet import defer
 
 from buildbot.process import buildstep
-from buildbot.steps.source import Source, _ComputeRepositoryURL
+from buildbot.steps.source import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 
 class Git(Source):
@@ -86,7 +86,7 @@ class Git(Source):
         assert self.repourl is not None
         if self.mode == 'full':
             assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
-        self.repourl = self.repourl and _ComputeRepositoryURL(self.repourl)
+        self.repourl = self.repourl
 
     def startVC(self, branch, revision, patch):
         self.branch = branch or 'master'

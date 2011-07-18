@@ -19,7 +19,7 @@ from twisted.python import log, failure
 from twisted.internet import defer
 
 from buildbot.process import buildstep
-from buildbot.steps.source import Source, _ComputeRepositoryURL
+from buildbot.steps.source import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 
 class Mercurial(Source):
@@ -94,8 +94,8 @@ class Mercurial(Source):
             raise ValueError("you must privide at least one of repourl and"
                              " baseURL")
 
-        self.repourl = self.repourl and _ComputeRepositoryURL(self.repourl)
-        self.baseURL = self.baseURL and _ComputeRepositoryURL(self.baseURL)
+        self.repourl = self.repourl
+        self.baseURL = self.baseURL
         
     def startVC(self, branch, revision, patch):
         self.revision = revision
