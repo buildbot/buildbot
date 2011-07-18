@@ -5,6 +5,11 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Version
 
+** SQLite databases use write-ahead logging
+
+WAL mode offers much greater concurrency (preventing the dreaded 'database is
+locked' errors) and is also more efficient and durable.
+
 ** Deprecations, Removals, and Non-Compatible Changes
 
 *** The db.buildrequests.claimBuildRequests method can no longer re-claim
