@@ -132,6 +132,7 @@ class Mercurial(Source):
             d = self.clobber(None)
             wfd = defer.waitForDeferred(d)
             yield wfd
+            wfd.getResult()
             return
 
         wfd = defer.waitForDeferred(self._sourcedirIsUpdatable())
@@ -147,6 +148,7 @@ class Mercurial(Source):
             raise ValueError("Unknow method, check your configuration")
         wfd = defer.waitForDeferred(d)
         yield wfd
+        wfd.getResult()
 
     def incremental(self):
         if self.method is not None:
@@ -231,6 +233,7 @@ class Mercurial(Source):
 
         wfd = defer.waitForDeferred(d)
         yield wfd
+        wfd.getResult()
 
     def _pullUpdate(self, res):
         command = ['pull' , self.repourl]
