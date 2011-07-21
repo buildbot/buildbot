@@ -145,6 +145,17 @@ class UsersMixin(object):
             r_uid = res['uid']
         return defer.succeed(r_uid)
 
+    def getUserContact(self, contact_type=None, uid=None):
+        contact = None
+        res = None
+        for row in self.stored_users:
+            if row['uid'] == uid:
+                res = row
+
+        if res and contact_type in res:
+            contact = res[contact_type]
+        return defer.succeed(contact)
+
     def perspective_commandline(self, op, ids, info):
         results = []
         if ids:

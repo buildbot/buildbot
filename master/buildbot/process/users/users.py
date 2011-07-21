@@ -132,3 +132,30 @@ def parseAuthz(user_authz):
                 usdicts.append(usdict)
 
     return defer.succeed(usdicts)
+
+def getUserContact(master, contact_type=None, uid=None):
+    """
+    This is a simple getter function that returns a user attribute
+    that matches the contact_type argument, or returns None if no
+    uid/match is found.
+
+    @param master: BuildMaster used to query the database
+    @type master: BuildMaster instance
+
+    @param contact_type: type of contact attribute to look for in
+                         in a given user, such as 'email' or 'nick'
+    @type contact_type: string
+
+    @param uid: user that is searched for the contact_type match
+    @type uid: integer
+
+    @returns: string of contact information or None via deferred
+    """
+    d = master.db.users.getUser(uid)
+    def getContact(usdict):
+        contact = None
+        if usdict and contact_type in usdict:
+            contact = usdict[contact_type]
+        return contact
+    d.addCallback(getContact)
+    return d

@@ -227,3 +227,32 @@ class UsersTests(connector_component.ConnectorComponentMixin,
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
+
+    def test_getUserContact_found(self):
+        self.insertTestData([fakedb.User(id=1, uid=1,
+                                         auth_type='full_name',
+                                         auth_data='tyler durden'),
+                             fakedb.User(id=2, uid=1)])
+        d = users.getUserContact(self.master, contact_type='email', uid=1)
+        def check(contact):
+            self.assertEqual(contact, 'tyler@mayhem.net')
+        d.addCallback(check)
+        return d
+
+    def test_getUserContact_key_not_found(self):
+        self.insertTestData([fakedb.User(id=1, uid=1,
+                                         auth_type='full_name',
+                                         auth_data='tyler durden'),
+                             fakedb.User(id=2, uid=1)])
+        d = users.getUserContact(self.master, contact_type='nick', uid=1)
+        def check(contact):
+            self.assertEqual(contact, None)
+        d.addCallback(check)
+        return d
+
+    def test_getUserContact_uid_not_found(self):
+        d = users.getUserContact(self.master, contact_type='email', uid=1)
+        def check(contact):
+            self.assertEqual(contact, None)
+        d.addCallback(check)
+        return d
