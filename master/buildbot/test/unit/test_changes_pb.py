@@ -22,7 +22,7 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.changes import pb
-from buildbot.test.util import changesource, pbmanager
+from buildbot.test.util import changesource, pbmanager, users
 from buildbot.util import epoch2datetime
 
 class TestPBChangeSource(
@@ -33,7 +33,6 @@ class TestPBChangeSource(
     def setUp(self):
         self.setUpPBChangeSource()
         d = self.setUpChangeSource()
-
         def setup(_):
             # fill in some extra details of the master
             self.master.slavePortnum = '9999'
@@ -81,13 +80,31 @@ class TestPBChangeSource(
         cs = pb.PBChangeSource(port=9989)
         self.assertSubstring("PBChangeSource", cs.describe())
 
-class TestChangePerspective(unittest.TestCase):
+class TestChangePerspective(users.UsersMixin, unittest.TestCase):
     def setUp(self):
         self.added_changes = []
         self.master = mock.Mock()
+
+        self.setUpUsers()
+        self.master.db.users.checkFromGit = self.checkFromGit
         def addChange(**chdict):
-            self.added_changes.append(chdict)
-            return defer.succeed(None)
+            self.src = None
+            d = defer.succeed(None)
+            def getUid(_):
+                uid = None
+                if 'src' in chdict:
+                    self.src = chdict.pop('src')
+                    if self.src:
+                        uid = self.createUserObject(chdict['author'], self.src)
+                return uid
+            d.addCallback(getUid)
+            def setChange(uid):
+                if self.src:
+                    chdict.update({'uid': uid})
+                self.added_changes.append(chdict)
+                return mock.Mock()
+            d.addCallback(setChange)
+            return d
         self.master.addChange = addChange
 
     def test_addChange_noprefix(self):
@@ -194,3 +211,90 @@ class TestChangePerspective(unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def test_createUserObject_git_no_match(self):
+        cp = pb.ChangePerspective(self.master, None)
+        d = cp.perspective_addChange(dict(who="guess"), src='git')
+        def check_change(_):
+            self.assertEqual(self.added_changes, [ dict(author="guess",
+                                                        files=[],
+                                                        uid=1) ])
+        d.addCallback(check_change)
+        def check_users(_):
+            self.assertEqual(self.stored_users,
+                             [ dict(id=1, uid=1, identifier="guess",
+                                    auth_type="full_name",
+                                    auth_data="guess") ])
+        d.addCallback(check_users)
+        return d
+
+    def test_createUserObject_git_match(self):
+        cp = pb.ChangePerspective(self.master, None)
+        d = cp.perspective_addChange(dict(who="guess"), src='git')
+        def check_change(_):
+            self.assertEqual(self.added_changes, [ dict(author="guess",
+                                                        files=[],
+                                                        uid=1) ])
+        d.addCallback(check_change)
+        def check_users(_):
+            self.assertEqual(self.stored_users,
+                             [ dict(id=1, uid=1, identifier="guess",
+                                    auth_type="full_name",
+                                    auth_data="guess") ])
+        d.addCallback(check_users)
+
+        d.addCallback(lambda _ : cp.perspective_addChange(
+                                     dict(who="guess", files=["yep"]), src='git'))
+        def check_change2(_):
+            self.assertEqual(self.added_changes[1], dict(author="guess",
+                                                         files=["yep"],
+                                                         uid=1))
+        d.addCallback(check_change2)
+        def check_users2(_):
+            # should be the same as previously checked
+            self.assertEqual(len(self.stored_users), 1)
+            self.assertEqual(self.stored_users,
+                             [ dict(id=1, uid=1, identifier="guess",
+                                    auth_type="full_name",
+                                    auth_data="guess") ])
+        d.addCallback(check_users2)
+        return d
+
+    def test_createUserObject_git_match_email(self):
+        cp = pb.ChangePerspective(self.master, None)
+        d = cp.perspective_addChange(dict(who="guess <h@c>"), src='git')
+        def check_change(_):
+            self.assertEqual(self.added_changes, [ dict(author="guess <h@c>",
+                                                        files=[],
+                                                        uid=1) ])
+        d.addCallback(check_change)
+        def check_users(_):
+            self.assertEqual(len(self.stored_users), 2)
+            self.assertEqual(self.stored_users,
+                             [ dict(id=1, uid=1, identifier="guess",
+                                    auth_type="email",
+                                    auth_data="h@c"),
+                               dict(id=2, uid=1, identifier="guess",
+                                    auth_type="full_name",
+                                    auth_data="guess") ])
+        d.addCallback(check_users)
+
+        # test if the email is still picked up with the same full_name
+        d.addCallback(lambda _ : cp.perspective_addChange(
+                                     dict(who="guess", files=["yep"]), src='git'))
+        def check_change2(_):
+            self.assertEqual(self.added_changes[1], dict(author="guess",
+                                                         files=["yep"],
+                                                         uid=1))
+        d.addCallback(check_change2)
+        def check_users2(_):
+            # should be the same as previously checked
+            self.assertEqual(len(self.stored_users), 2)
+            self.assertEqual(self.stored_users,
+                             [ dict(id=1, uid=1, identifier="guess",
+                                    auth_type="email",
+                                    auth_data="h@c"),
+                               dict(id=2, uid=1, identifier="guess",
+                                    auth_type="full_name",
+                                    auth_data="guess") ])
+        d.addCallback(check_users2)
+        return d

@@ -299,3 +299,108 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             return usdict
         d = self.db.pool.do(thd)
         return d
+
+    def checkFromGit(self, user):
+        """
+        Take a parsed author from a git change and add the author to the
+        database if they don't already exist, returning the new user id.
+
+        Note that full_name may not be an existing user's identifier if
+        that user was previously added through authz. Here, full_name is
+        only set as the identifier when adding a new user, so we don't
+        have to worry about overwriting the identifier set in checkFromAuthz.
+
+        A few merging techniques are applied to find an existing user before
+        adding a new one. If the user contains an email address, the table is
+        searched for usernames that match the local part of the email address.
+        If a match is found, the auth_dict items are added to the existing
+        user.
+
+        @param user: parsed author from a git change
+        @type user: dictionary
+
+        @returns: user id or None via deferred
+        """
+
+        def thd(conn):
+            tbl = self.db.model.users
+            auth_dict = {}
+            has_email = False
+
+            # on git commits, the default identifier is set to full_name
+            identifier = user['full_name']
+
+            if user['email']:
+                has_email = True
+                auth_dict['email'] = user['email']
+                auth_dict['full_name'] = user['full_name']
+                q = tbl.select(whereclause=(
+                        or_(and_(tbl.c.auth_type == 'email',
+                                 tbl.c.auth_data == user['email']),
+                            and_(tbl.c.auth_type == 'full_name',
+                                 tbl.c.auth_data == user['full_name']))))
+            else:
+                auth_dict['full_name'] = user['full_name']
+                q = tbl.select(whereclause=(
+                        and_(tbl.c.auth_type == 'full_name',
+                            tbl.c.auth_data == user['full_name'])))
+            res = conn.execute(q)
+            row = res.fetchone()
+
+            # if no match found, add one
+            if not row:
+                transaction = conn.begin()
+                uid = None
+                merged = False
+
+                # if the username portion of an email is already stored as
+                # a username, merge the new auth_dict with the existing user
+                if has_email:
+                    username = auth_dict['email'].split('@')[0]
+                    res = conn.execute(tbl.select(
+                            whereclause=(and_(tbl.c.auth_type == 'username',
+                                              tbl.c.auth_data == username))))
+                    rows = res.fetchall()
+
+                    if rows:
+                        log.msg("adding to existing User Object with "
+                                "username %r" % username)
+                        uid = rows[0].uid
+                        identifier = rows[0].identifier
+                        merged = True
+
+                # if there's a user with the same identifier already in the
+                # database, we use the existing uid
+                if not merged:
+                    res = conn.execute(tbl.select(whereclause=(
+                                tbl.c.identifier == identifier)))
+                    rows = res.fetchall()
+                    if rows:
+                        log.msg("adding to existing User Object with "
+                                "identifier %r" % identifier)
+                        uid = rows[0].uid
+
+                for auth_type in auth_dict:
+                    auth_data = auth_dict[auth_type]
+
+                    r = conn.execute(tbl.insert(), dict(
+                            identifier=identifier,
+                            auth_type=auth_type,
+                            auth_data=auth_data))
+                    row_id = r.inserted_primary_key[0]
+
+                    # set user id to first primary key from inserting auth_dict
+                    if uid is None:
+                        uid = row_id
+                        log.msg("created new User Object with uid '%r' and "
+                                "identifier %r" % (uid, identifier))
+                    r = conn.execute(tbl.update(tbl.c.id == row_id), uid=uid)
+
+                transaction.commit()
+                return uid
+            log.msg("found existing User Object with uid '%r' and "
+                    "identifier %r" % (row.uid, row.identifier))
+            return row.uid
+
+        d = self.db.pool.do(thd)
+        return d

@@ -36,6 +36,7 @@ class ChangeHookResource(resource.Resource):
         configuration options to the dialect.
         """
         self.dialects = dialects
+        self.request_dialect = None
     
     def getChild(self, name, request):
         return self
@@ -105,7 +106,7 @@ class ChangeHookResource(resource.Resource):
             tempModule = namedModule('buildbot.status.web.hooks.' + dialect)
             changes = tempModule.getChanges(request,self.dialects[dialect])
             log.msg("Got the following changes %s" % changes)
-
+            self.request_dialect = dialect
         else:
             m = "The dialect specified, '%s', wasn't whitelisted in change_hook" % dialect
             log.msg(m)
@@ -118,7 +119,10 @@ class ChangeHookResource(resource.Resource):
     def submitChanges(self, changes, request):
         master = request.site.buildbot_service.master
         for chdict in changes:
-            wfd = defer.waitForDeferred(master.addChange(**chdict))
+            src = None
+            if self.request_dialect == 'github':
+                src = 'git'
+            wfd = defer.waitForDeferred(master.addChange(src=src, **chdict))
             yield wfd
             change = wfd.getResult()
             log.msg("injected change %s" % change)

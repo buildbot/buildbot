@@ -15,14 +15,15 @@
 
 import mock
 from twisted.internet import defer
+from buildbot.test.util import users
 
-class ChangeSourceMixin(object):
+class ChangeSourceMixin(users.UsersMixin):
     """
     This class is used for testing change sources, and handles a few things:
 
      - starting and stopping a ChangeSource service
      - a fake C{self.master.addChange}, which adds its args
-       to the list C{self.chagnes_added}
+       to the list C{self.changes_added}
     """
 
     changesource = None
@@ -31,10 +32,28 @@ class ChangeSourceMixin(object):
     def setUpChangeSource(self):
         "Set up the mixin - returns a deferred."
         self.changes_added = []
+        self.setUpUsers()
         def addChange(**kwargs):
-            self.changes_added.append(kwargs)
-            change = mock.Mock()
-            return defer.succeed(change)
+            self.src = None
+            d = defer.succeed(None)
+            def getUid(_):
+                uid = None
+                if 'src' in kwargs:
+                    self.src = kwargs.pop('src')
+                    if self.src:
+                        if 'author' in kwargs:
+                            uid = self.createUserObject(kwargs['author'], self.src)
+                        elif 'who' in kwargs:
+                            uid = self.createUserObject(kwargs['who'], self.src)
+                return uid
+            d.addCallback(getUid)
+            def setChange(uid):
+                if self.src:
+                    kwargs.update({'uid': uid})
+                self.changes_added.append(kwargs)
+                return mock.Mock()
+            d.addCallback(setChange)
+            return d
         self.master = mock.Mock()
         self.master.addChange = addChange
         return defer.succeed(None)

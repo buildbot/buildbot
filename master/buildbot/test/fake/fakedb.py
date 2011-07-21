@@ -1111,6 +1111,25 @@ class FakeUsersComponent(FakeDBComponent):
 
         return defer.succeed(usdict)
 
+    def checkFromGit(self, user):
+        usdict = {}
+        res = None
+        if user['email']:
+            auth_dict['email'] = user['email']
+            auth_dict['full_name'] = user['full_name']
+            for row in self.users:
+                if user['email'] == row['email']:
+                    res = self._row2dict(row)
+        else:
+            auth_dict['full_name'] = user['full_name']
+            for row in self.users:
+                if user['full_name'] == row['full_name']:
+                    res = self._row2dict(row)
+
+        if not res:
+            return self.addUser(identifier=user['full_name'], auth_dict=auth_dict)
+        return res['uid']
+
 class FakeDBConnector(object):
     """
     A stand-in for C{master.db} that operates without an actual database

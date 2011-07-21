@@ -313,3 +313,113 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
             self.assertEqual(removed, None)
         d.addCallback(check1)
         return d
+
+    def test_checkFromGit_both_in_table(self):
+        d = self.insertTestData(self.user1_rows)
+        def test_check(_):
+            user = dict(full_name='tyler durden', email='tyler@mayhem.net')
+            return self.db.users.checkFromGit(user)
+        d.addCallback(test_check)
+        def check_check(uid):
+            def thd(conn):
+                self.assertEqual(uid, 1)
+                r = conn.execute(self.db.model.users.select())
+                rows = r.fetchall()
+                self.assertEqual(len(rows), 2)
+                self.assertEqual(rows[0].id, 1)
+                self.assertEqual(rows[0].uid, 1)
+                self.assertEqual(rows[0].identifier, 'soap')
+                self.assertEqual(rows[0].auth_type, 'full_name')
+                self.assertEqual(rows[0].auth_data, 'tyler durden')
+                self.assertEqual(rows[1].id, 2)
+                self.assertEqual(rows[1].uid, 1)
+                self.assertEqual(rows[1].identifier, 'soap')
+                self.assertEqual(rows[1].auth_type, 'email')
+                self.assertEqual(rows[1].auth_data, 'tyler@mayhem.net')
+            return self.db.pool.do(thd)
+        d.addCallback(check_check)
+        return d
+
+    def test_checkFromGit_merge_on_username(self):
+        d = self.db.users.addUser(identifier='soap',
+                                  auth_dict={'username': 'tdurden',
+                                             'password': 'lye'})
+        def test_check(_):
+            user = dict(full_name='tyler durden', email='tdurden@mayhem.net')
+            return self.db.users.checkFromGit(user)
+        d.addCallback(test_check)
+        def check_check(uid):
+            def thd(conn):
+                self.assertEqual(uid, 1)
+                r = conn.execute(self.db.model.users.select())
+                rows = r.fetchall()
+                self.assertEqual(len(rows), 4)
+                self.assertEqual(rows[0].id, 1)
+                self.assertEqual(rows[0].uid, 1)
+                self.assertEqual(rows[0].identifier, 'soap')
+                self.assertEqual(rows[0].auth_type, 'username')
+                self.assertEqual(rows[0].auth_data, 'tdurden')
+                self.assertEqual(rows[1].id, 2)
+                self.assertEqual(rows[1].uid, 1)
+                self.assertEqual(rows[1].identifier, 'soap')
+                self.assertEqual(rows[1].auth_type, 'password')
+                self.assertEqual(rows[1].auth_data, 'lye')
+                self.assertEqual(rows[2].id, 3)
+                self.assertEqual(rows[2].uid, 1)
+                self.assertEqual(rows[2].identifier, 'soap')
+                self.assertEqual(rows[2].auth_type, 'email')
+                self.assertEqual(rows[2].auth_data, 'tdurden@mayhem.net')
+                self.assertEqual(rows[3].id, 4)
+                self.assertEqual(rows[3].uid, 1)
+                self.assertEqual(rows[3].identifier, 'soap')
+                self.assertEqual(rows[3].auth_type, 'full_name')
+                self.assertEqual(rows[3].auth_data, 'tyler durden')
+            return self.db.pool.do(thd)
+        d.addCallback(check_check)
+        return d
+
+    def test_checkFromGit_full_name_in_table(self):
+        d = self.insertTestData(self.user1_without_email)
+        def test_check(_):
+            user = dict(full_name='tyler durden', email=None)
+            return self.db.users.checkFromGit(user)
+        d.addCallback(test_check)
+        def check_check(uid):
+            def thd(conn):
+                self.assertEqual(uid, 1)
+                r = conn.execute(self.db.model.users.select())
+                rows = r.fetchall()
+                self.assertEqual(len(rows), 1)
+                self.assertEqual(rows[0].id, 1)
+                self.assertEqual(rows[0].uid, 1)
+                self.assertEqual(rows[0].identifier, 'soap')
+                self.assertEqual(rows[0].auth_type, 'full_name')
+                self.assertEqual(rows[0].auth_data, 'tyler durden')
+            return self.db.pool.do(thd)
+        d.addCallback(check_check)
+        return d
+
+    def test_checkFromGit_not_in_table(self):
+        def test_check():
+            user = dict(full_name='tyler durden', email='tyler@mayhem.net')
+            return self.db.users.checkFromGit(user)
+        d = test_check()
+        def check_check(uid):
+            def thd(conn):
+                self.assertEqual(uid, 1)
+                r = conn.execute(self.db.model.users.select())
+                rows = r.fetchall()
+                self.assertEqual(len(rows), 2)
+                self.assertEqual(rows[0].id, 1)
+                self.assertEqual(rows[0].uid, 1)
+                self.assertEqual(rows[0].identifier, 'tyler durden')
+                self.assertEqual(rows[0].auth_type, 'email')
+                self.assertEqual(rows[0].auth_data, 'tyler@mayhem.net')
+                self.assertEqual(rows[1].id, 2)
+                self.assertEqual(rows[1].uid, 1)
+                self.assertEqual(rows[1].identifier, 'tyler durden')
+                self.assertEqual(rows[1].auth_type, 'full_name')
+                self.assertEqual(rows[1].auth_data, 'tyler durden')
+            return self.db.pool.do(thd)
+        d.addCallback(check_check)
+        return d

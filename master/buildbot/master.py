@@ -44,6 +44,7 @@ from buildbot.process.botmaster import BotMaster
 from buildbot.process import debug
 from buildbot.process import metrics
 from buildbot.process import cache
+from buildbot.process.users import users
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import monkeypatches
 
@@ -156,6 +157,7 @@ class BuildMaster(service.MultiService):
             # the config file, and it would be nice for the user to discover
             # this quickly.
             self.loadTheConfigFile()
+
         if hasattr(signal, "SIGHUP"):
             signal.signal(signal.SIGHUP, self._handleSIGHUP)
         for b in self.botmaster.builders.values():
@@ -846,7 +848,7 @@ class BuildMaster(service.MultiService):
     def addChange(self, who=None, files=None, comments=None, author=None,
             isdir=None, is_dir=None, links=None, revision=None, when=None,
             when_timestamp=None, branch=None, category=None, revlink='',
-            properties={}, repository='', project=''):
+            properties={}, repository='', project='', src=None):
         """
         Add a change to the buildmaster and act on it.
 
@@ -907,6 +909,9 @@ class BuildMaster(service.MultiService):
         @param project: the project this change is a part of
         @type project: unicode string
 
+        @param src: source of the change (vcs or other)
+        @type src: string
+
         @returns: L{Change} instance via Deferred
         """
         metrics.MetricCountEvent.log("added_changes", 1)
@@ -936,11 +941,21 @@ class BuildMaster(service.MultiService):
         for n in properties:
             properties[n] = (properties[n], 'Change')
 
-        d = self.db.changes.addChange(author=author, files=files,
-                comments=comments, is_dir=is_dir, links=links,
-                revision=revision, when_timestamp=when_timestamp,
-                branch=branch, category=category, revlink=revlink,
-                properties=properties, repository=repository, project=project)
+        d = defer.succeed(None)
+        if src:
+            # create user object, returning a corresponding uid
+            d.addCallback(lambda _ : users.createUserObject(self, author, src))
+
+        # add the Change to the database
+        d.addCallback(lambda uid :
+                          self.db.changes.addChange(author=author, files=files,
+                                          comments=comments, is_dir=is_dir,
+                                          links=links, revision=revision,
+                                          when_timestamp=when_timestamp,
+                                          branch=branch, category=category,
+                                          revlink=revlink, properties=properties,
+                                          repository=repository, project=project,
+                                          uid=uid))
 
         # convert the changeid to a Change instance
         d.addCallback(lambda changeid :
