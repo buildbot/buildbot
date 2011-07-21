@@ -423,3 +423,90 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
             return self.db.pool.do(thd)
         d.addCallback(check_check)
         return d
+
+    def test_checkFromAuthz_in_table(self):
+        d = self.insertTestData(self.user2_rows)
+        def test_check(_):
+            user = dict(username='tdurden', password='lye')
+            return self.db.users.checkFromAuthz(user)
+        d.addCallback(test_check)
+        def check_check(uid):
+            def thd(conn):
+                self.assertEqual(uid, 1)
+                r = conn.execute(self.db.model.users.select())
+                rows = r.fetchall()
+                self.assertEqual(len(rows), 2)
+                self.assertEqual(rows[0].id, 1)
+                self.assertEqual(rows[0].uid, 1)
+                self.assertEqual(rows[0].identifier, 'tdurden')
+                self.assertEqual(rows[0].auth_type, 'username')
+                self.assertEqual(rows[0].auth_data, 'tdurden')
+                self.assertEqual(rows[1].id, 2)
+                self.assertEqual(rows[1].uid, 1)
+                self.assertEqual(rows[1].identifier, 'tdurden')
+                self.assertEqual(rows[1].auth_type, 'password')
+                self.assertEqual(rows[1].auth_data, 'lye')
+            return self.db.pool.do(thd)
+        d.addCallback(check_check)
+        return d
+
+    def test_checkFromAuthz_merge_on_email(self):
+        d = self.insertTestData(self.user1_rows)
+        def test_check(_):
+            user = dict(username='tyler', password='lye')
+            return self.db.users.checkFromAuthz(user)
+        d.addCallback(test_check)
+        def check_check(uid):
+            def thd(conn):
+                self.assertEqual(uid, 1)
+                r = conn.execute(self.db.model.users.select())
+                rows = r.fetchall()
+                self.assertEqual(len(rows), 4)
+                self.assertEqual(rows[0].id, 1)
+                self.assertEqual(rows[0].uid, 1)
+                self.assertEqual(rows[0].identifier, 'soap')
+                self.assertEqual(rows[0].auth_type, 'full_name')
+                self.assertEqual(rows[0].auth_data, 'tyler durden')
+                self.assertEqual(rows[1].id, 2)
+                self.assertEqual(rows[1].uid, 1)
+                self.assertEqual(rows[1].identifier, 'soap')
+                self.assertEqual(rows[1].auth_type, 'email')
+                self.assertEqual(rows[1].auth_data, 'tyler@mayhem.net')
+                self.assertEqual(rows[2].id, 3)
+                self.assertEqual(rows[2].uid, 1)
+                self.assertEqual(rows[2].identifier, 'soap')
+                self.assertEqual(rows[2].auth_type, 'username')
+                self.assertEqual(rows[2].auth_data, 'tyler')
+                self.assertEqual(rows[3].id, 4)
+                self.assertEqual(rows[3].uid, 1)
+                self.assertEqual(rows[3].identifier, 'soap')
+                self.assertEqual(rows[3].auth_type, 'password')
+                self.assertEqual(rows[3].auth_data, 'lye')
+            return self.db.pool.do(thd)
+        d.addCallback(check_check)
+        return d
+
+    def test_checkFromAuthz_not_in_table(self):
+        def test_check():
+            user = dict(username='tdurden', password='lye')
+            return self.db.users.checkFromAuthz(user)
+        d = test_check()
+        def check_check(uid):
+            def thd(conn):
+                self.assertEqual(uid, 1)
+                r = conn.execute(self.db.model.users.select())
+                rows = r.fetchall()
+                self.assertEqual(len(rows), 2)
+                self.assertEqual(rows[0].id, 1)
+                self.assertEqual(rows[0].uid, 1)
+                self.assertEqual(rows[0].identifier, 'tdurden')
+                self.assertEqual(rows[0].auth_type, 'username')
+                self.assertEqual(rows[0].auth_data, 'tdurden')
+                self.assertEqual(rows[1].id, 2)
+                self.assertEqual(rows[1].uid, 1)
+                self.assertEqual(rows[1].identifier, 'tdurden')
+                self.assertEqual(rows[1].auth_type, 'password')
+                self.assertEqual(rows[1].auth_data, 'lye')
+            return self.db.pool.do(thd)
+        d.addCallback(check_check)
+        return d

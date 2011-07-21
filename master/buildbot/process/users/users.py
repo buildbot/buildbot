@@ -54,7 +54,23 @@ def createUserObject(master, authors, src=None):
         wfd = defer.waitForDeferred(d)
         yield wfd
         uid = wfd.getResult()
+    elif src == 'authz':
+        log.msg("checking for User Objects from Authz in master.cfg")
 
+        d = parseAuthz(authors)
+        wfd = defer.waitForDeferred(d)
+        yield wfd
+        usdicts = wfd.getResult()
+
+        if usdicts:
+            for usdict in usdicts:
+                d = master.db.users.checkFromAuthz(usdict)
+                wfd = defer.waitForDeferred(d)
+                yield wfd
+                uid = wfd.getResult()
+        else:
+            log.msg("Unable to check for User Objects from Authz, "
+                    "maybe check your master.cfg?")
     yield uid
 
 def parseGitAuthor(author):
@@ -82,3 +98,37 @@ def parseGitAuthor(author):
     else:
         full_name = author
     return defer.succeed(dict(full_name=full_name, email=email))
+
+def parseAuthz(user_authz):
+    """
+    This takes username/password credentials from an auth.BasicAuth or
+    auth.HTPasswdAuth instance and translates them into auth_type/auth_data
+    dictionaries that are passed to db.users methods.
+
+    @param user_authz: authz instance as given in the master.cfg
+    @type user_authz: auth.BasicAuth or auth.HTPasswdAuth instance
+
+    @returns: list of dicts
+    """
+    usdicts = []
+
+    try:
+        # from auth.BasicAuth
+        for username, password in user_authz.auth.userpass:
+            usdict = dict(username=username, password=password)
+            usdicts.append(usdict)
+    except (AttributeError, TypeError): # TypeError for tests with mock
+        # from auth.HTPassAuth
+        authz_file = user_authz.auth.file
+        if not os.path.exists(authz_file):
+            log.msg("No such file: " + authz_file)
+        else:
+            authz_file = open(authz_file, "r")
+            authz_lines = authz_file.readlines()
+            authz_file.close()
+            lines = [l.rstrip().split(':', 1) for l in authz_lines]
+            for user in lines:
+                usdict = dict(username=user[0], password=user[1])
+                usdicts.append(usdict)
+
+    return defer.succeed(usdicts)

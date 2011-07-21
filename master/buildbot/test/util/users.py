@@ -36,6 +36,13 @@ class UsersMixin(object):
             d = users.parseGitAuthor(names)
             d.addCallback(lambda usdict : self.checkFromGit(usdict))
             return d
+        elif src == "authz":
+            d = users.parseAuthz(names)
+            def check_authz(usdict):
+                if usdict:
+                    return self.checkFromAuthz(usdict)
+            d.addCallback(check_authz)
+            return d
 
     def checkFromGit(self, usdict):
         res = None
@@ -57,6 +64,38 @@ class UsersMixin(object):
                 if row['auth_type'] == 'full_name' and \
                    row['auth_data'] == usdict['full_name']:
                     res = row
+
+        r_uid = None
+        if not res:
+            uid = None
+            for auth_type in auth_dict:
+                auth_data = auth_dict[auth_type]
+                self.stored_users.append(dict(id=self.next_id,
+                                             identifier=identifier,
+                                             auth_type=auth_type,
+                                             auth_data=auth_data))
+                if uid is None:
+                    r_uid = uid = self.next_id
+
+                self.stored_users[-1].update(dict(uid=uid))
+                self.next_id += self.next_id
+        else:
+            r_uid = res['uid']
+        return defer.succeed(r_uid)
+
+    def checkFromAuthz(self, usdict):
+        res = None
+        auth_dict = {}
+        identifier = usdict['username']
+
+        auth_dict['username'] = usdict['username']
+        auth_dict['password'] = usdict['password']
+        for row in self.stored_users:
+            if (row['auth_type'] == 'username' and
+                row['auth_data'] == usdict['username']) or \
+                (row['auth_type'] == 'password' and
+                 row['auth_data'] == usdict['password']):
+                res = row
 
         r_uid = None
         if not res:

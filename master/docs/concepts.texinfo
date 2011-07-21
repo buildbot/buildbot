@@ -665,6 +665,17 @@ created from these changes have @code{full_name} and @code{email} attributes. If
 no @code{email} is found in @code{who}, @code{email} is stored as @code{None}.
 @end table
 
+@heading Authz
+
+When using @ref{WebStatus} with @code{buildbot.status.web.auth.BasicAuth} or
+@code{buildbot.status.web.auth.HTPasswdAuth}, username and password pairs are
+used to authenticate against certain Buildbot actions accessible through the
+web interface (@pxref{WebStatus Configuration Parameters}). When using using
+either of these authorization techniques, the pairs will be translated into
+User Objects with @code{username} and @code{password} attributes. In the
+future, these User Objects will be used to authenticate against and validate
+actions performed on the web interface.
+
 @node Doing Things With Users
 @subsection Doing Things With Users
 
@@ -740,6 +751,9 @@ Once the mapping is established, the rest of the buildbot can ask the
 the likelihood that the user saw the given message (based upon how long the
 user has been inactive on the channel), which might prompt the Problem
 Hassler logic to send them an email message instead.
+
+These operations and authentication of commands issued by particular
+nicknames will be implemented in @ref{User Objects}.
 
 @node Live Status Clients
 @subsection Live Status Clients

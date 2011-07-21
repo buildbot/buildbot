@@ -1130,6 +1130,20 @@ class FakeUsersComponent(FakeDBComponent):
             return self.addUser(identifier=user['full_name'], auth_dict=auth_dict)
         return res['uid']
 
+    def checkFromAuthz(self, user):
+        usdict = {}
+        res = None
+
+        auth_dict['username'] = user['username']
+        auth_dict['password'] = user['password']
+        for row in self.users:
+            if user['username'] == row['username']:
+                res = self._row2dict(row)
+
+        if not res:
+            return self.addUser(identifier=user['username'], auth_dict=auth_dict)
+        return res['uid']
+
 class FakeDBConnector(object):
     """
     A stand-in for C{master.db} that operates without an actual database

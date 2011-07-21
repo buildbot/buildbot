@@ -24,6 +24,7 @@ from twisted.spread import pb
 from twisted.web.util import Redirect
 
 from buildbot.interfaces import IStatusReceiver
+from buildbot.process.users import users
 
 from buildbot.status.web.base import StaticFile, createJinjaEnv
 from buildbot.status.web.feeds import Rss20StatusResource, \
@@ -384,6 +385,9 @@ class WebStatus(service.MultiService):
         
         rotateLength = either(self.logRotateLength, self.master.log_rotation.rotateLength)
         maxRotatedFiles = either(self.maxRotatedFiles, self.master.log_rotation.maxRotatedFiles)
+
+        if self.authz.auth:
+            users.createUserObject(self.master, self.authz, src='authz')
 
         if not self.site:
             
