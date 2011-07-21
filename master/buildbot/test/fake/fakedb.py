@@ -155,6 +155,15 @@ class ChangeProperty(Row):
 
     required_columns = ('changeid',)
 
+class ChangeUser(Row):
+    table = "change_users"
+
+    defaults = dict(
+        changeid = None,
+        uid = None,
+    )
+
+    required_columns = ('changeid',)
 
 class Patch(Row):
     table = "patches"
@@ -287,6 +296,29 @@ class ObjectState(Row):
 
     required_columns = ( 'objectid', )
 
+class User(Row):
+    table = "users"
+
+    defaults = dict(
+        uid = None,
+        identifier = 'soap',
+        full_name = None,
+        email = None,
+    )
+
+    id_column = 'uid'
+
+class UserInfo(Row):
+    table = "users_info"
+
+    defaults = dict(
+        uid = None,
+        attr_type = 'git',
+        attr_data = 'Tyler Durden <tyler@mayhem.net>'
+    )
+
+    required_columns = ( 'uid', )
+
 class Build(Row):
     table = "builds"
 
@@ -329,7 +361,8 @@ class FakeChangesComponent(FakeDBComponent):
                     revision=row.revision, when=row.when_timestamp,
                     branch=row.branch, category=row.category,
                     revlink=row.revlink, properties=properties.Properties(),
-                    repository=row.repository, project=row.project))
+                    repository=row.repository, project=row.project,
+                    uid=None))
                 self.changes[row.changeid] = ch
 
             elif isinstance(row, ChangeFile):
@@ -346,6 +379,10 @@ class FakeChangesComponent(FakeDBComponent):
                 v, s = json.loads(vs)
                 ch.properties.setProperty(n, v, s)
 
+            elif isinstance(row, ChangeUser):
+                ch = self.changes[row.changeid]
+                ch.uid = row.uid
+
     # component methods
 
     def getLatestChangeid(self):
@@ -359,6 +396,13 @@ class FakeChangesComponent(FakeDBComponent):
         except KeyError:
             ch = None
         return defer.succeed(self._ch2chdict(ch))
+
+    def getChangeUids(self, changeid):
+        try:
+            ch_uids = [self.changes[changeid].uid]
+        except KeyError:
+            ch_uids = []
+        return defer.succeed(ch_uid)
 
     # TODO: addChange
     # TODO: getRecentChanges
@@ -978,6 +1022,159 @@ class FakeBuildsComponent(FakeDBComponent):
             if b:
                 b.finish_time = now
 
+class FakeUsersComponent(FakeDBComponent):
+
+    known_types = ['full_name', 'email']
+    known_info_types = ['authz_user', 'authz_pass', 'git']
+
+    def setUp(self):
+        self.users = {}
+        self.users_info = {}
+        self.id_num = 0
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, User):
+                self.users[row.uid] = dict(identifier=row.identifier)
+                if 'full_name' in row:
+                    self.users[row.uid].update(full_name=row.full_name)
+                if 'email' in row:
+                    self.users[row.uid].update(email=row.email)
+
+            if isinstance(row, UserInfo):
+                assert row.uid in self.users
+                self.users_info[row.uid] = dict(attr_type=row.attr_type,
+                                                attr_data=row.attr_data)
+
+    def _user2dict(self, uid):
+        usdict = None
+        users, users_info = None, None
+
+        if uid in self.stored_users:
+            users = self.stored_users[uid]
+            users_info = self.stored_users_info[uid]
+            usdict = users.update(users_info)
+        return usdict
+
+    def nextId(self):
+        self.id_num += 1
+        return self.id_num
+
+    # component methods
+
+    def addUser(self, identifier=None, user_dict=None):
+        if not user_dict:
+            return defer.succeed(None)
+
+        uid, ident = None, None
+        for user in self.users.values():
+            if identifier in user:
+                uid = user.uid
+                ident = identifier
+
+        if not ident:
+            if 'email' in user_dict:
+                ident = user_dict['email']
+            elif 'full_name' in user_dict:
+                ident = user_dict['full_name']
+            else:
+                ident = user_dict.values()[0]
+
+        for attr_type in user_dict:
+            attr_data = user_dict[attr_type]
+            usdict = self.getUser((attr_type, attr_data))
+            if usdict:
+                return defer.succeed(usdict['uid'])
+
+        if not uid:
+            uid = self.nextId()
+            self.db.users.insertTestData([User(uid=uid, identifier=ident)])
+
+        for attr in user_dict:
+            if attr in self.known_types:
+                if not self.users[uid][full_name] and attr == 'full_name':
+                    self.users[uid][full_name] = user_dict[attr]
+                if not self.users[uid][email] and attr == 'email':
+                    self.users[uid][email] = user_dict[attr]
+
+        infos = []
+        for attr_type in user_dict:
+            attr_data = user_dict[attr_type]
+            infos.append(UserInfo(uid=uid, attr_type=attr_type,
+                                  attr_data=attr_data))
+
+        self.db.users.insertTestData(infos)
+        return defer.succeed(uid)
+
+    def getUser(self, key):
+        attr_type, attr_data = None, None
+
+        if isinstance(key, tuple):
+            attr_type, attr_data = key
+
+        for user in self.users.values():
+            if attr_type and attr_data:
+                if attr_type in user.values() and attr_data in user.values():
+                    return self._user2dict(user.id)
+            elif key in user.values():
+                return defer.succeed(self._user2dict(user.uid))
+
+        return defer.succeed(None)
+
+    def updateUser(self, uid=None, identifier=None, user_dict=None):
+        if not user_dict:
+            return defer.succeed(None)
+
+        for attr_type in user_dict:
+            attr_data = user_dict[attr_type]
+
+            if attr_type in self.known_types:
+                if user in self.users.values():
+                    if self.users[uid][full_name] and attr_type == 'full_name':
+                        self.users[uid][full_name] = user_dict[attr_type]
+                    if self.users[uid][email] and attr_type == 'email':
+                        self.users[uid][email] = user_dict[attr_type]
+
+            elif attr_type in self.known_info_types:
+                for user in self.users_info.values():
+                    if uid in user.values():
+                        user.update(dict(attr_type=attr_type,
+                                         attr_data=attr_data))
+                    elif identifier in user.values():
+                        user.update(dict(attr_type=attr_type,
+                                         attr_data=attr_data))
+
+        return defer.succeed(None)
+
+    def removeUser(self, uid=None, identifier=None):
+        for user in self.users.values():
+            if uid and uid not in user.values():
+                return defer.succeed(None)
+            elif identifier and identifier not in user.values():
+                return defer.succeed(None)
+
+        key = uid or identifier
+        usdict = {}
+        for user in self.users.values():
+            if key in user.values():
+                usdict = self._user2dict(user.uid)
+                break
+
+        users_pop = []
+        for user in self.users.values():
+            if usdict['uid'] in user.values():
+                users_pop.append(user)
+        users_info_pop = []
+        for info in self.users_info.values():
+            if usdict['uid'] in info.values():
+                users_info_pop.append(info)
+
+        for popper in users_pop:
+            self.users_info.pop(popper)
+        for popper in users_pop:
+            self.users.pop(popper)
+
+        return defer.succeed(usdict)
 
 class FakeDBConnector(object):
     """
@@ -1004,6 +1201,8 @@ class FakeDBConnector(object):
         self.buildrequests = comp = FakeBuildRequestsComponent(self, testcase)
         self._components.append(comp)
         self.builds = comp = FakeBuildsComponent(self, testcase)
+        self._components.append(comp)
+        self.users = comp = FakeUsersComponent(self, testcase)
         self._components.append(comp)
 
     def insertTestData(self, rows):

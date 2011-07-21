@@ -333,6 +333,11 @@ configuration with an identity in the database - to cache.  In this version,
 object IDs are not looked up often during runtime, so a relatively low value
 such as 10 is fine.
 
+@item usdicts
+
+The number of rows from the @code{users} table to cache in memory. Note that for
+a given user there will be a row for each attribute that user has.
+
 @end enumerate
 
 The @emph{global} @code{buildCacheSize} parameter gives the number of builds

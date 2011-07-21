@@ -56,7 +56,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
             links=None, revision=None, when_timestamp=None, branch=None,
             category=None, revlink='', properties={}, repository='',
-            project='', _reactor=reactor):
+            project='', uid=None, _reactor=reactor):
         """Add a Change with the given attributes to the database; returns
         a Change instance via a deferred.  All arguments are keyword arguments.
 
@@ -102,6 +102,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         @param project: the project this change is a part of
         @type project: unicode string
+
+        @param uid: uid generated for the change author
+        @type uid: integer
 
         @param _reactor: for testing
 
@@ -160,6 +163,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                         property_value=json.dumps(v))
                     for k,v in properties.iteritems()
                 ])
+            if uid:
+                ins = self.db.model.change_users.insert()
+                conn.execute(ins, dict(changeid=changeid, uid=uid))
 
             transaction.commit()
 
@@ -191,6 +197,31 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 return None
             # and fetch the ancillary data (links, files, properties)
             return self._chdict_from_change_row_thd(conn, row)
+        d = self.db.pool.do(thd)
+        return d
+
+    def getChangeUids(self, changeid):
+        """
+        Get the uid associated with the given changeid or None if no
+        matching changeid exists.
+
+        @param changeid: the id of the change instance to fetch
+
+        @returns: uid integer via Deferred
+        """
+        assert changeid >= 0
+        def thd(conn):
+            cu_tbl = self.db.model.change_users
+            q = cu_tbl.select(whereclause=(cu_tbl.c.changeid == changeid))
+            res = conn.execute(q)
+            rows = res.fetchall()
+            if not rows:
+                return None
+
+            row_uids = []
+            for row in rows:
+                row_uids.append(row.uid)
+            return row_uids
         d = self.db.pool.do(thd)
         return d
 
@@ -260,7 +291,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             # and delete from all relevant tables, in dependency order
             for table_name in ('scheduler_changes', 'sourcestamp_changes',
                                'change_files', 'change_links',
-                               'change_properties', 'changes'):
+                               'change_properties', 'changes', 'change_users'):
                 table = self.db.model.metadata.tables[table_name]
                 conn.execute(
                     table.delete(table.c.changeid.in_(ids_to_delete)))
