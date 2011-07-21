@@ -18,7 +18,7 @@ from twisted.application import internet, service
 from buildbot.db import enginestrategy
 
 from buildbot.db import pool, model, changes, schedulers, sourcestamps
-from buildbot.db import state, buildsets, buildrequests, builds
+from buildbot.db import state, buildsets, buildrequests, builds, users
 
 class DBConnector(service.MultiService):
     """
@@ -51,6 +51,7 @@ class DBConnector(service.MultiService):
         self.buildrequests = buildrequests.BuildRequestsConnectorComponent(self)
         self.state = state.StateConnectorComponent(self)
         self.builds = builds.BuildsConnectorComponent(self)
+        self.users = users.UsersConnectorComponent(self)
 
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD, self.doCleanup)
         self.cleanup_timer.setServiceParent(self)

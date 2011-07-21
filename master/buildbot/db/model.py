@@ -168,6 +168,14 @@ class Model(base.DBConnectorComponent):
     )
     """Properties for changes"""
 
+    change_users = sa.Table("change_users", metadata,
+        sa.Column("changeid", sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
+        # uid for the author of the change with the given changeid
+        sa.Column("uid", sa.Integer, nullable=False)
+    )
+    """Uid values for the User Objects created from the author of the Change that
+    has the corresponding changeid"""
+
     changes = sa.Table('changes', metadata,
         # changeid also serves as 'change number'
         sa.Column('changeid', sa.Integer,  primary_key=True), # TODO: rename to 'id'
@@ -331,6 +339,29 @@ class Model(base.DBConnectorComponent):
     """This table stores key/value pairs for objects, where the key is a string
     and the value is a JSON string."""
 
+    users = sa.Table("users", metadata,
+        # row id number
+        sa.Column("id", sa.Integer, primary_key=True),
+
+        # user id number - this must be nullable as unique user ids are
+        # rendered from the primary key (id) after inserting into the db
+        sa.Column("uid", sa.Integer),
+
+        # in cases where indexing is needed and the uid is not known, this
+        # generic identifier will be used to look up users
+        sa.Column("identifier", sa.Text()),
+
+        # type of auth for a given user, 'email', 'irc', and so on
+        sa.Column("auth_type", sa.Text(), nullable=False),
+
+        # value of auth for a given user corresponding to auth_type
+        sa.Column("auth_data", sa.Text(), nullable=False),
+    )
+    """This table stores information relating to a specfic user through the
+    auth_type and auth_data columns. auth_type entries would contain keys such
+    as 'email', 'irc', 'username', etc. and auth_data entries would contain
+    the corresponding values."""
+
     # indexes
 
     sa.Index('name_and_class', schedulers.c.name, schedulers.c.class_name)
@@ -358,6 +389,8 @@ class Model(base.DBConnectorComponent):
     sa.Index('scheduler_upstream_buildsets_schedulerid', scheduler_upstream_buildsets.c.schedulerid)
     sa.Index('scheduler_upstream_buildsets_active', scheduler_upstream_buildsets.c.active)
     sa.Index('sourcestamp_changes_sourcestampid', sourcestamp_changes.c.sourcestampid)
+    sa.Index('user_userid', users.c.uid)
+    sa.Index('user_identifier', users.c.identifier)
 
     #
     # migration support
