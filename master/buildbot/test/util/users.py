@@ -19,6 +19,36 @@ from twisted.internet import defer
 from buildbot.test.fake import fakedb
 from buildbot.process.users import users
 
+class ManualUsersMixin(object):
+    """
+    This class fakes out the master/db components to test the manual
+    user managers located in process.users.manual.
+    """
+
+    class FakeMaster(object):
+
+        def __init__(self):
+            self.db = fakedb.FakeDBConnector(self)
+            self.slavePortnum = 9989
+            self.caches = mock.Mock(name="caches")
+            self.caches.get_cache = self.get_cache
+
+        def get_cache(self, cache_name, miss_fn):
+            c = mock.Mock(name=cache_name)
+            c.get = miss_fn
+            return c
+
+    def setUpManualUsers(self):
+        pass
+
+    def tearDownManualUsers(self):
+        pass
+
+    def attachManualUsers(self, manual_component):
+        self.master = self.FakeMaster()
+        manual_component.master = self.master
+        return manual_component
+
 class UsersMixin(object):
     """
     This class is used for testing user components, faking out parts of
@@ -114,3 +144,32 @@ class UsersMixin(object):
         else:
             r_uid = res['uid']
         return defer.succeed(r_uid)
+
+    def perspective_commandline(self, op, ids, info):
+        results = []
+        if ids:
+            for user in ids:
+                r = None
+                if op == 'remove':
+                    for elem in self.stored_users:
+                        if user == elem['identifier']:
+                            r = self.stored_users.pop(self.stored_users.index(elem))
+                elif op == 'show':
+                    for elem in self.stored_users:
+                        if user == elem['identifier']:
+                            r = self.stored_users[self.stored_users.index(elem)]
+                results.append(r)
+        else:
+            for user in info:
+                r = None
+                if op == 'add':
+                    r = user['uid'] = self.next_id
+                    self.stored_users.append(user)
+                    self.next_id += self.next_id
+                elif op == 'update':
+                    for elem in self.stored_users:
+                        if user['identifier'] == elem['identifier']:
+                            for key in user:
+                                elem[key] = user[key]
+                results.append(r)
+        return results

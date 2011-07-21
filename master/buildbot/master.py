@@ -45,6 +45,7 @@ from buildbot.process import debug
 from buildbot.process import metrics
 from buildbot.process import cache
 from buildbot.process.users import users
+from buildbot.process.users.manager import UserManager
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import monkeypatches
 
@@ -106,6 +107,9 @@ class BuildMaster(service.MultiService):
         self.scheduler_manager.setName('scheduler_manager')
         self.scheduler_manager.setServiceParent(self)
 
+        self.user_manager = UserManager()
+        self.user_manager.setServiceParent(self)
+
         self.caches = cache.CacheManager()
 
         self.debugClientRegistration = None
@@ -157,6 +161,9 @@ class BuildMaster(service.MultiService):
             # the config file, and it would be nice for the user to discover
             # this quickly.
             self.loadTheConfigFile()
+
+        # done after config loaded
+        self.user_manager.initManualUsers()
 
         if hasattr(signal, "SIGHUP"):
             signal.signal(signal.SIGHUP, self._handleSIGHUP)

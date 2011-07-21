@@ -676,6 +676,12 @@ User Objects with @code{username} and @code{password} attributes. In the
 future, these User Objects will be used to authenticate against and validate
 actions performed on the web interface.
 
+@heading Tools
+
+For managing users manually, use the @command{buildbot user} command, which
+allows you to add, remove, update, and show various attributes of users in the
+Buildbot database (see @pxref{Command-line Tools}).
+
 @node Doing Things With Users
 @subsection Doing Things With Users
 

@@ -1152,6 +1152,129 @@ def doCheckConfig(config):
 
     return d
 
+class UserOptions(OptionsWithOptionsFile):
+    optParameters = [
+        ["master", "m", None,
+         "Location of the buildmaster's PBListener (host:port)"],
+        ["op", None, None,
+         "User management operation: add, remove, update, show"],
+        ["ids", None, None,
+         "User's identifiers, used to find users in 'remove' and 'show' "
+         "Can be specified multiple times (--ids=id1,id2,id3)"],
+        ["info", None, None,
+         "User information in the form: --info=type=value,type=value,.. "
+         "Used in 'add' and 'update', can be specified multiple times.  "
+         "Note that 'update' requires --info=id:type=value..."]
+    ]
+
+    def __init__(self):
+        OptionsWithOptionsFile.__init__(self)
+        self['ids'] = []
+        self['info'] = []
+
+    def opt_ids(self, option):
+        id_list = option.split(",")
+        self['ids'].extend(id_list)
+
+    def opt_info(self, option):
+        # split info into type/value dictionary, appends to info
+        info_list = option.split(",")
+        info_elem = {}
+        for i in range(0,len(info_list)):
+            split_info = info_list[i].split("=", 1)
+
+            # pull identifier from update --info
+            if ":" in split_info[0]:
+                split_id = split_info[0].split(":")
+                info_elem["identifier"] = split_id[0]
+                split_info[0] = split_id[1]
+
+            info_elem[split_info[0]] = split_info[1]
+        self['info'].append(info_elem)
+
+    def getSynopsis(self):
+        return "Usage:    buildbot user [options]"
+
+    longdesc = """
+    Currently implemented types for --info= are:\n
+    username, password, full_name, email
+    """
+
+def usersclient(config, runReactor=False):
+    from buildbot.clients import usersclient
+
+    master = config.get('master')
+    assert master, "you must provide the master location"
+    op = config.get('op')
+    assert op, "you must specify an operation: add, remove, update, show"
+    if op not in ['add', 'remove', 'update', 'show']:
+        raise AssertionError("bad op %r, use 'add', 'remove', 'update', "
+                             "or 'show'" % op)
+
+    # check op and proper args
+    info = config.get('info')
+    ids = config.get('ids')
+
+    # check for erroneous args
+    if not info and not ids:
+        raise AssertionError("must specify either --ids or --info")
+    if info and ids:
+        raise AssertionError("cannot use both --ids and --info, use "
+                         "--ids for 'remove' and 'show', --info "
+                         "for 'add' and 'update'")
+
+    if op == 'add' or op == 'update':
+        if ids:
+            raise AssertionError("cannot use --ids with 'add' or 'update'")
+        if op == 'update':
+            for user in info:
+                if 'identifier' not in user:
+                    raise ValueError("no ids found in update info, use: "
+                                     "--info=id:type=value,type=value,..")
+        if op == 'add':
+            for user in info:
+                if 'identifier' in user:
+                    raise ValueError("id found in add info, use: "
+                                     "--info=type=value,type=value,..")
+    if op == 'remove' or op == 'show':
+        if info:
+            raise AssertionError("cannot use --info with 'remove' or 'show'")
+
+    # find identifier if op == add
+    if info:
+        if op == 'add':
+            for user in info:
+                identifier = None
+                for auth_type in user:
+                    # try to render good identifier
+                    if auth_type == 'username':
+                        identifier = user[auth_type]
+                        break
+                    if auth_type == 'full_name':
+                        identifier = user[auth_type]
+                        break
+                else:
+                    # default to first value
+                    identifier = user.values()[0]
+                user['identifier'] = identifier
+
+    uc = usersclient.UsersClient(master)
+    d = uc.send(op, ids, info)
+
+    if runReactor:
+        from twisted.internet import reactor
+        status = [True]
+        def printSuccess(res):
+            print res
+        def failed(f):
+            status[0] = False
+            print "user op NOT sent - something went wrong: " + str(f)
+        d.addCallbacks(printSuccess, failed)
+        d.addBoth(lambda _ : reactor.stop())
+        reactor.run()
+        return status[0]
+    return d
+
 class Options(usage.Options):
     synopsis = "Usage:    buildbot <command> [command options]"
 
@@ -1190,6 +1313,9 @@ class Options(usage.Options):
 
         ['checkconfig', None, CheckConfigOptions,
          "test the validity of a master.cfg config file"],
+
+        ['user', None, UserOptions,
+         "Manage users in buildbot's database"]
 
         # TODO: 'watch'
         ]
@@ -1262,6 +1388,9 @@ def run():
         doTryServer(so)
     elif command == "checkconfig":
         if not doCheckConfig(so):
+            sys.exit(1)
+    elif command == "user":
+        if not usersclient(so, True):
             sys.exit(1)
     sys.exit(0)
 

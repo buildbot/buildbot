@@ -492,6 +492,7 @@ These tools are generally used by buildmaster administrators.
 @menu
 * sendchange::
 * debugclient::
+* user::
 @end menu
 
 @node sendchange
@@ -632,6 +633,97 @@ way and these buttons are no longer meaningful.
 
 @end table
 
+@node user
+@subsubsection user
+
+This command allows you to manage users in buildbot's database.
+No extra requirements are needed to use this command, aside from
+the Buildmaster running. For details on how Buildbot manages users,
+@pxref{Users}.
+
+@table @code
+@item --master
+The @command{buildbot user} command can be run virtually anywhere
+provided a location of the running buildmaster. The @code{master}
+argument is of the form @var{MASTERHOST}:@var{PORT}. The @var{PORT}
+number will default to @code{c['slavePortnum']} as specified in
+your master.cfg (@pxref{Setting the PB Port for Slaves}).
+
+@item --op
+
+There are four supported values for the @code{op} argument:
+@code{add}, @code{update}, @code{remove}, and @code{show}. Each
+are described in full in the following sections.
+
+@item --ids
+
+When working with users, you need to be able to refer to them by
+unique identifiers to find particular users in the database. The
+@code{ids} option lets you specify a comma separated list of these
+identifiers for use with the @command{buildbot user} command.
+
+The @code{ids} option is used only when using @code{--op=remove}
+or @code{--op=show}.
+
+@item --info
+
+Users are known in buildbot as a collection of attributes tied
+together by some unique identifier (@pxref{User Objects}). These
+attributes are specified in the form @var{TYPE}=@var{VALUE} when
+using the @code{info} option. These @var{TYPE}=@var{VALUE} pairs
+are specified in a comma separated list, so for example:
+
+@example
+--info=@var{full_name}=@var{'Joe Schmo'},@var{email}=@var{joe@@schmo.com}
+@end example
+
+The @code{info} option can be specified multiple times in the
+@command{buildbot user} command, as each specified option will be
+interpreted as a new user. Note that @code{info} is only used with
+@code{--op=add} or with @code{--op=update}, and whenever you use
+@code{--op=update} you need to specify the identifier of the user
+you want to update. This is done by prepending the @code{info}
+arguments with @code{ID:}. If we were to update @var{'Joe Schmo'}
+from the previous example, it would look like this:
+
+@example
+--info=@var{joe}:@var{email}=@var{joe@@schmo.net}
+@end example
+
+Below are examples of how each command should look. Whenever a
+@command{buildbot user} command is successful, results will be shown
+to whoever issued the command and logged in the buildmaster'
+twistd.log.
+
+For @code{--op=add}:
+
+@example
+buildbot user --master=@var{MASTERHOST}:@var{PORT} --op=@var{OP} \
+	          --info=@var{TYPE}=@var{VALUE},...
+@end example
+
+For @code{--op=update}:
+
+@example
+buildbot user --master=@var{MASTERHOST}:@var{PORT} --op=@var{OP} \
+	          --info=@var{ID}:@var{TYPE}=@var{VALUE},...
+@end example
+
+For @code{--op=remove}:
+
+@example
+buildbot user --master=@var{MASTERHOST}:@var{PORT} --op=@var{OP} \
+	          --ids=@var{ID1},@var{ID2},...
+@end example
+
+For @code{--op=show}:
+
+@example
+buildbot user --master=@var{MASTERHOST}:@var{PORT} --op=@var{OP} \
+	          --ids=@var{ID1},@var{ID2},...
+@end example
+
+@end table
 
 @node .buildbot config directory
 @subsection .buildbot config directory

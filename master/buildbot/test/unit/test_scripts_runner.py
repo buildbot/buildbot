@@ -21,7 +21,7 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer, reactor
 from buildbot.scripts import runner, checkconfig
-from buildbot.clients import sendchange
+from buildbot.clients import sendchange, usersclient
 
 class OptionsMixin(object):
 
@@ -497,3 +497,220 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
                 comment='comm', vc='cvs', branch='br', repository='rep',
                 topfile='Makefile', topdir='.')
         self.assertOptions(opts, exp)
+
+class TestUserOptions(OptionsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.options_file = {}
+        self.patch(runner, 'loadOptionsFile', lambda : self.options_file)
+
+    def parse(self, *args):
+        self.opts = runner.UserOptions()
+        self.opts.parseOptions(args)
+        return self.opts
+
+    def test_defaults(self, **kwargs):
+        opts = self.parse()
+        exp = dict(master=None, op=None, ids=[], info=[])
+        self.assertOptions(opts, exp)
+
+    def test_synopsis(self):
+        opts = runner.UserOptions()
+        self.assertIn('buildbot user', opts.getSynopsis())
+
+    def test_ids(self):
+        opts = self.parse("--ids", "id1,id2,id3")
+        self.assertEqual(opts['ids'], ['id1', 'id2', 'id3'])
+
+    def test_info(self):
+        opts = self.parse("--info", "full_name=Tyler Durden,username=tdurden")
+        self.assertEqual(opts['info'], [dict(username='tdurden',
+                                             full_name='Tyler Durden')])
+
+    def test_info_with_id(self):
+        opts = self.parse("--info", "tdurden:username=tdurden,full_name=Tyler Durden")
+        self.assertEqual(opts['info'], [dict(identifier='tdurden',
+                                             username='tdurden',
+                                             full_name='Tyler Durden')])
+
+    def test_info_multiple(self):
+        opts = self.parse("--info", "username=tdurden,full_name=Tyler Durden",
+                          "--info", "username=narrator,email=narrator@mayhem.net")
+        self.assertEqual(opts['info'], [dict(username='tdurden',
+                                             full_name='Tyler Durden'),
+                                        dict(username='narrator',
+                                             email='narrator@mayhem.net')])
+
+class TestUsersClient(OptionsMixin, unittest.TestCase):
+
+    class FakeUsersClient(object):
+        def __init__(self, master, auth=("user", "userpw")):
+            self.master = master
+            self.auth = auth
+            self.fail = False
+
+        def send(self, op, ids, info):
+            self.op = op
+            self.ids = ids
+            self.info = info
+            d = defer.Deferred()
+            if self.fail:
+                reactor.callLater(0, d.errback, RuntimeError("oh noes"))
+            else:
+                reactor.callLater(0, d.callback, None)
+            return d
+
+    def setUp(self):
+        def fake_UsersClient(*args):
+            self.usersclient = self.FakeUsersClient(*args)
+            return self.usersclient
+        self.patch(usersclient, 'UsersClient', fake_UsersClient)
+
+    def test_usersclient_no_master(self):
+        d = defer.maybeDeferred(lambda :
+                                    runner.usersclient(dict(op='add')))
+        def cb(_):
+            self.fail("shouldn't succeed")
+        def eb(f):
+            f.trap(AssertionError)
+            pass # A-OK
+        d.addCallbacks(cb, eb)
+        return d
+
+    def test_usersclient_no_op(self):
+        d = defer.maybeDeferred(lambda :
+                                    runner.usersclient(dict(master='a:x')))
+        def cb(_):
+            self.fail("shouldn't succeed")
+        def eb(f):
+            f.trap(AssertionError)
+            pass # A-OK
+        d.addCallbacks(cb, eb)
+        return d
+
+    def test_usersclient_bad_op(self):
+        d = defer.maybeDeferred(lambda :
+                     runner.usersclient(dict(master='a:x', op='edit')))
+        def cb(_):
+            self.fail("shouldn't succeed")
+        def eb(f):
+            f.trap(AssertionError)
+            pass # A-OK
+        d.addCallbacks(cb, eb)
+        return d
+
+    def test_usersclient_no_ids_no_info(self):
+        d = defer.maybeDeferred(lambda :
+                     runner.usersclient(dict(master='a:x', op='add')))
+        def cb(_):
+            self.fail("shouldn't succeed")
+        def eb(f):
+            f.trap(AssertionError)
+            pass # A-OK
+        d.addCallbacks(cb, eb)
+        return d
+
+    def test_usersclient_ids_and_info(self):
+        d = defer.maybeDeferred(lambda :
+                     runner.usersclient(dict(master='a:x', op='add',
+                                             ids=['me'], info=[{'a':'b'}])))
+        def cb(_):
+            self.fail("shouldn't succeed")
+        def eb(f):
+            f.trap(AssertionError)
+            pass # A-OK
+        d.addCallbacks(cb, eb)
+        return d
+
+    def test_usersclient_add_and_ids(self):
+        d = defer.maybeDeferred(lambda :
+                     runner.usersclient(dict(master='a:x', op='add',
+                                             ids=['me'], info=None)))
+        def cb(_):
+            self.fail("shouldn't succeed")
+        def eb(f):
+            f.trap(AssertionError)
+            pass # A-OK
+        d.addCallbacks(cb, eb)
+        return d
+
+    def test_usersclient_add_update_and_ids(self):
+        d = defer.maybeDeferred(lambda :
+                     runner.usersclient(dict(master='a:x', op='add',
+                                             ids=['me'], info=None)))
+        def cb(_):
+            self.fail("shouldn't succeed")
+        def eb(f):
+            f.trap(AssertionError)
+            pass # A-OK
+        d.addCallbacks(cb, eb)
+        return d
+
+    def test_usersclient_remove_show_and_info(self):
+        d = defer.maybeDeferred(lambda :
+                     runner.usersclient(dict(master='a:x', op='remove',
+                                             ids=None, info=[{'a':'x'}])))
+        def cb(_):
+            self.fail("shouldn't succeed")
+        def eb(f):
+            f.trap(AssertionError)
+            pass # A-OK
+        d.addCallbacks(cb, eb)
+        return d
+
+    def test_usersclient_update_no_identifier(self):
+        d = defer.maybeDeferred(lambda :
+                     runner.usersclient(dict(master='a:x', op='update', ids=None,
+                                             info=[{'not_identifier':'x'}])))
+        def cb(_):
+            self.fail("shouldn't succeed")
+        def eb(f):
+            f.trap(ValueError)
+            pass # A-OK
+        d.addCallbacks(cb, eb)
+        return d
+
+    def test_usersclient_add_existing_identifier(self):
+        d = defer.maybeDeferred(lambda :
+                     runner.usersclient(dict(master='a:x', op='add', ids=None,
+                                             info=[{'identifier':'x'}])))
+        def cb(_):
+            self.fail("shouldn't succeed")
+        def eb(f):
+            f.trap(ValueError)
+            pass # A-OK
+        d.addCallbacks(cb, eb)
+        return d
+
+    def test_usersclient_send_ids(self):
+        d = runner.usersclient(dict(master='a:1', op='show',
+                                    ids=['me', 'you'], info=None))
+        def check(_):
+            self.assertEqual((self.usersclient.master, self.usersclient.op,
+                              self.usersclient.ids, self.usersclient.info),
+                             ('a:1', 'show', ['me', 'you'], None))
+        d.addCallback(check)
+        return d
+
+    def test_usersclient_send_update_info(self):
+        d = runner.usersclient(dict(master='a:1', op='update',
+                                    ids=None, info=[{'identifier':'c',
+                                                    'a':'x', 'b':'y'}]))
+        def check(_):
+            self.assertEqual((self.usersclient.master, self.usersclient.op,
+                              self.usersclient.ids, self.usersclient.info),
+                             ('a:1', 'update', None, [{'identifier':'c',
+                                                       'a':'x', 'b':'y'}]))
+        d.addCallback(check)
+        return d
+
+    def test_usersclient_send_add_info(self):
+        d = runner.usersclient(dict(master='a:1', op='add',
+                                    ids=None, info=[{'a':'x', 'b':'y'}]))
+        def check(_):
+            self.assertEqual((self.usersclient.master, self.usersclient.op,
+                              self.usersclient.ids, self.usersclient.info),
+                             ('a:1', 'add', None, [{'identifier':'x',
+                                                       'a':'x', 'b':'y'}]))
+        d.addCallback(check)
+        return d
