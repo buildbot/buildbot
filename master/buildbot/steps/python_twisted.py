@@ -387,7 +387,7 @@ class Trial(ShellCommand):
                 ppath = e.get('PYTHONPATH', self.testpath)
                 if isinstance(ppath, str):
                     ppath = [ppath]
-                pathset = set([self.testpath]) ^ set(ppath)
+                pathset = set([self.testpath]) | set(ppath)
                 e['PYTHONPATH'] = list(pathset)
 
     def start(self):
