@@ -384,21 +384,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.properties.update(propdict, "Upgrade from previous version")
         self.wasUpgraded = True
 
-    def upgradeLogfiles(self):
-        # upgrade any LogFiles that need it. This must occur after we've been
-        # attached to our Builder, and after we know about all LogFiles of
-        # all Steps (to get the filenames right).
-        assert self.builder
-        for s in self.steps:
-            for l in s.getLogs():
-                if l.filename:
-                    pass # new-style, log contents are on disk
-                else:
-                    logfilename = self.generateLogfileName(s.name, l.name)
-                    # let the logfile update its .filename pointer,
-                    # transferring its contents onto disk if necessary
-                    l.upgrade(logfilename)
-
     def checkLogfiles(self):
         # check that all logfiles exist, and remove references to any that
         # have been deleted (e.g., by purge())

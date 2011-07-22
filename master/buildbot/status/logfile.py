@@ -175,17 +175,16 @@ class LogFileProducer:
             self.consumer = None
 
 class LogFile:
-    """A LogFile keeps all of its contents on disk, in a non-pickle format to
-    which new entries can easily be appended. The file on disk has a name
-    like 12-log-compile-output, under the Builder's directory. The actual
-    filename is generated (before the LogFile is created) by
+    """
+    A LogFile keeps all of its contents on disk, in a non-pickle format to
+    which new entries can easily be appended. The file on disk has a name like
+    12-log-compile-output, under the Builder's directory. The actual filename
+    is generated (before the LogFile is created) by
     L{BuildStatus.generateLogfileName}.
 
-    Old LogFile pickles (which kept their contents in .entries) must be
-    upgraded. The L{BuilderStatus} is responsible for doing this, when it
-    loads the L{BuildStatus} into memory. The Build pickle is not modified,
-    so users who go from 0.6.5 back to 0.6.4 don't have to lose their
-    logs."""
+    @ivar length: length of the data in the logfile (sum of chunk sizes; not
+    the length of the on-disk encoding)
+    """
 
     implements(interfaces.IStatusLog, interfaces.ILogFile)
 
@@ -236,22 +235,57 @@ class LogFile:
         self.tailBuffer = []
 
     def getFilename(self):
+        """
+        Get the base (uncompressed) filename for this log file.
+
+        @returns: filename
+        """
         return os.path.join(self.step.build.builder.basedir, self.filename)
 
     def hasContents(self):
+        """
+        Return true if this logfile's contents are available.  For a newly
+        created logfile, this is always true, but for a L{LogFile} instance
+        that has been persisted, the logfiles themselves may have been deleted,
+        in which case this method will return False.
+
+        @returns: boolean
+        """
         return os.path.exists(self.getFilename() + '.bz2') or \
             os.path.exists(self.getFilename() + '.gz') or \
             os.path.exists(self.getFilename())
 
     def getName(self):
+        """
+        Get this logfile's name
+
+        @returns: string
+        """
         return self.name
 
     def getStep(self):
+        """
+        Get the L{BuildStepStatus} instance containing this logfile
+
+        @returns: L{BuildStepStatus} instance
+        """
         return self.step
 
     def isFinished(self):
+        """
+        Return true if this logfile is finished (that is, if it will not
+        receive any additional data
+
+        @returns: boolean
+        """
+
         return self.finished
+
     def waitUntilFinished(self):
+        """
+        Return a Deferred that will fire when this logfile is finished, or will
+        fire immediately if the logfile is already finished.
+        """
         if self.finished:
             d = defer.succeed(self)
         else:
@@ -260,6 +294,14 @@ class LogFile:
         return d
 
     def getFile(self):
+        """
+        Get an open file object for this log.  The file may also be in use for
+        writing, so it should not be closed by the caller, and the caller
+        should not rely on its file position remaining constant between
+        asynchronous code segments.
+
+        @returns: file object
+        """
         if self.openfile:
             # this is the filehandle we're using to write to the log, so
             # don't close it!
@@ -381,14 +423,14 @@ class LogFile:
 
     # interface used by the build steps to add things to the log
 
-    def merge(self):
+    def _merge(self):
         # merge all .runEntries (which are all of the same type) into a
         # single chunk for .entries
         if not self.runEntries:
             return
         channel = self.runEntries[0][0]
         text = "".join([c[1] for c in self.runEntries])
-        assert channel < 10
+        assert channel < 10, "channel number must be a single decimal digit"
         f = self.openfile
         f.seek(0, 2)
         offset = 0
@@ -401,75 +443,122 @@ class LogFile:
         self.runEntries = []
         self.runLength = 0
 
-    def addEntry(self, channel, text):
-        assert not self.finished
+    def addEntry(self, channel, text, _no_watchers=False):
+        """
+        Add an entry to the logfile.  The C{channel} is one of L{STDOUT},
+        L{STDERR}, or L{HEADER}.  The C{text} is the text to add to the
+        logfile, which can be a unicode string or a bytestring which is
+        presumed to be encoded with utf-8.
+
+        This method cannot be called after the logfile is finished.
+
+        @param channel: channel to add a chunk for
+        @param text: chunk of text
+        @param _no_atchers: private
+        """
+
+        assert not self.finished, "logfile is already finished"
 
         if isinstance(text, unicode):
             text = text.encode('utf-8')
+
+        # notify watchers first, before the chunk gets munged, so that they get
+        # a complete picture of the actual log output
+        # TODO: is this right, or should the watchers get a picture of the chunks?
+        if not _no_watchers:
+            for w in self.watchers:
+                w.logChunk(self.step.build, self.step, self, channel, text)
+
         if channel != HEADER:
             # Truncate the log if it's more than logMaxSize bytes
-            if self.logMaxSize and self.nonHeaderLength > self.logMaxSize:
-                # Add a message about what's going on
-                if not self.maxLengthExceeded:
-                    msg = "\nOutput exceeded %i bytes, remaining output has been truncated\n" % self.logMaxSize
-                    self.addEntry(HEADER, msg)
-                    self.merge()
-                    self.maxLengthExceeded = True
+            if self.logMaxSize:
+                self.nonHeaderLength += len(text)
+                if self.nonHeaderLength > self.logMaxSize:
+                    # Add a message about what's going on and truncate this
+                    # chunk if necessary
+                    if not self.maxLengthExceeded:
+                        if self.runEntries and channel != self.runEntries[0][0]:
+                            self._merge()
+                        i = -(self.nonHeaderLength - self.logMaxSize)
+                        trunc, text = text[:i], text[i:]
+                        self.runEntries.append((channel, trunc))
+                        self._merge()
+                        msg = ("\nOutput exceeded %i bytes, remaining output "
+                            "has been truncated\n" % self.logMaxSize)
+                        self.runEntries.append((HEADER, msg))
+                        self.maxLengthExceeded = True
 
-                if self.logMaxTailSize:
-                    # Update the tail buffer
-                    self.tailBuffer.append((channel, text))
-                    self.tailLength += len(text)
-                    while self.tailLength > self.logMaxTailSize:
-                        # Drop some stuff off the beginning of the buffer
-                        c,t = self.tailBuffer.pop(0)
-                        n = len(t)
-                        self.tailLength -= n
-                        assert self.tailLength >= 0
-                return
+                    # and track the tail of the text
+                    if self.logMaxTailSize and text:
+                        # Update the tail buffer
+                        self.tailBuffer.append((channel, text))
+                        self.tailLength += len(text)
+                        while self.tailLength > self.logMaxTailSize:
+                            # Drop some stuff off the beginning of the buffer
+                            c,t = self.tailBuffer.pop(0)
+                            n = len(t)
+                            self.tailLength -= n
+                            assert self.tailLength >= 0
+                    return
 
-            self.nonHeaderLength += len(text)
-
-        # we only add to .runEntries here. merge() is responsible for adding
+        # we only add to .runEntries here. _merge() is responsible for adding
         # merged chunks to .entries
         if self.runEntries and channel != self.runEntries[0][0]:
-            self.merge()
+            self._merge()
         self.runEntries.append((channel, text))
         self.runLength += len(text)
         if self.runLength >= self.chunkSize:
-            self.merge()
+            self._merge()
 
-        for w in self.watchers:
-            w.logChunk(self.step.build, self.step, self, channel, text)
         self.length += len(text)
 
     def addStdout(self, text):
+        """
+        Shortcut to add stdout text to the logfile
+
+        @param text: text to add to the logfile
+        """
         self.addEntry(STDOUT, text)
+
     def addStderr(self, text):
+        """
+        Shortcut to add stderr text to the logfile
+
+        @param text: text to add to the logfile
+        """
         self.addEntry(STDERR, text)
+
     def addHeader(self, text):
+        """
+        Shortcut to add header text to the logfile
+
+        @param text: text to add to the logfile
+        """
         self.addEntry(HEADER, text)
 
     def finish(self):
+        """
+        Finish the logfile, flushing any buffers and preventing any further
+        writes to the log.
+        """
+        self._merge()
         if self.tailBuffer:
             msg = "\nFinal %i bytes follow below:\n" % self.tailLength
             tmp = self.runEntries
             self.runEntries = [(HEADER, msg)]
-            self.merge()
+            self._merge()
             self.runEntries = self.tailBuffer
-            self.merge()
+            self._merge()
             self.runEntries = tmp
-            self.merge()
+            self._merge()
             self.tailBuffer = []
-        else:
-            self.merge()
 
         if self.openfile:
             # we don't do an explicit close, because there might be readers
             # shareing the filehandle. As soon as they stop reading, the
             # filehandle will be released and automatically closed.
             self.openfile.flush()
-            del self.openfile
+            self.openfile = None
         self.finished = True
         watchers = self.finishedWatchers
         self.finishedWatchers = []
@@ -484,43 +573,48 @@ class LogFile:
             compressed = self.getFilename() + ".bz2.tmp"
         elif self.compressMethod == "gz":
             compressed = self.getFilename() + ".gz.tmp"
-        d = threads.deferToThread(self._compressLog, compressed)
-        d.addCallback(self._renameCompressedLog, compressed)
-        d.addErrback(self._cleanupFailedCompress, compressed)
+        else:
+            return defer.succeed(None)
+
+        def _compressLog():
+            infile = self.getFile()
+            if self.compressMethod == "bz2":
+                cf = BZ2File(compressed, 'w')
+            elif self.compressMethod == "gz":
+                cf = GzipFile(compressed, 'w')
+            bufsize = 1024*1024
+            while True:
+                buf = infile.read(bufsize)
+                cf.write(buf)
+                if len(buf) < bufsize:
+                    break
+            cf.close()
+        d = threads.deferToThread(_compressLog)
+
+        def _renameCompressedLog(rv):
+            if self.compressMethod == "bz2":
+                filename = self.getFilename() + '.bz2'
+            else:
+                filename = self.getFilename() + '.gz'
+            if runtime.platformType  == 'win32':
+                # windows cannot rename a file on top of an existing one, so
+                # fall back to delete-first. There are ways this can fail and
+                # lose the builder's history, so we avoid using it in the
+                # general (non-windows) case
+                if os.path.exists(filename):
+                    os.unlink(filename)
+            os.rename(compressed, filename)
+            _tryremove(self.getFilename(), 1, 5)
+        d.addCallback(_renameCompressedLog)
+
+        def _cleanupFailedCompress(failure):
+            log.msg("failed to compress %s" % self.getFilename())
+            if os.path.exists(compressed):
+                _tryremove(compressed, 1, 5)
+            failure.trap() # reraise the failure
+        d.addErrback(_cleanupFailedCompress)
         return d
 
-    def _compressLog(self, compressed):
-        infile = self.getFile()
-        if self.compressMethod == "bz2":
-            cf = BZ2File(compressed, 'w')
-        elif self.compressMethod == "gz":
-            cf = GzipFile(compressed, 'w')
-        bufsize = 1024*1024
-        while True:
-            buf = infile.read(bufsize)
-            cf.write(buf)
-            if len(buf) < bufsize:
-                break
-        cf.close()
-    def _renameCompressedLog(self, rv, compressed):
-        if self.compressMethod == "bz2":
-            filename = self.getFilename() + '.bz2'
-        else:
-            filename = self.getFilename() + '.gz'
-        if runtime.platformType  == 'win32':
-            # windows cannot rename a file on top of an existing one, so
-            # fall back to delete-first. There are ways this can fail and
-            # lose the builder's history, so we avoid using it in the
-            # general (non-windows) case
-            if os.path.exists(filename):
-                os.unlink(filename)
-        os.rename(compressed, filename)
-        _tryremove(self.getFilename(), 1, 5)
-    def _cleanupFailedCompress(self, failure, compressed):
-        log.msg("failed to compress %s" % self.getFilename())
-        if os.path.exists(compressed):
-            _tryremove(compressed, 1, 5)
-        failure.trap() # reraise the failure
 
     # persistence stuff
     def __getstate__(self):
@@ -541,19 +635,6 @@ class LogFile:
         self.finishedWatchers = [] # same
         # self.step must be filled in by our parent
         self.finished = True
-
-    def upgrade(self, logfilename):
-        """Save our .entries to a new-style offline log file (if necessary),
-        and modify our in-memory representation to use it. The original
-        pickled LogFile (inside the pickled Build) won't be modified."""
-        self.filename = logfilename
-        if not os.path.exists(self.getFilename()):
-            self.openfile = open(self.getFilename(), "w")
-            self.finished = False
-            for channel,text in self.entries:
-                self.addEntry(channel, text)
-            self.finish() # releases self.openfile, which will be closed
-        del self.entries
 
 class HTMLLogFile:
     implements(interfaces.IStatusLog)
@@ -597,9 +678,6 @@ class HTMLLogFile:
         d = self.__dict__.copy()
         del d['step']
         return d
-
-    def upgrade(self, logfilename):
-        pass
 
 
 def _tryremove(filename, timeout, retries):

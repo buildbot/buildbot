@@ -230,8 +230,6 @@ class BuilderStatus(styles.Versioned):
                 log.msg("re-writing upgraded build pickle")
                 build.saveYourself()
 
-            # handle LogFiles from after 0.5.0 and before 0.6.5
-            build.upgradeLogfiles()
             # check that logfiles exist
             build.checkLogfiles()
             return self.touchBuildCache(build)

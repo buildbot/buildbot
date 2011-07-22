@@ -23,6 +23,9 @@ longer tracks master instances, so the unclaimOldIncarnationRequests method has
 been removed.  Note that several of the methods in this module now perform
 fewer consistency checks, for efficiency.
 
+*** Upgrades directly from versions older than 0.6.5 will no longer
+automatically migrate logfiles.
+
 ** Customizable validation regexps
 
 The global c['validation'] parameter can be used to adjust the regular
