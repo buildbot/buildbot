@@ -72,8 +72,8 @@ class Mercurial(Source):
         self.branchType = branchType
         self.method = method
         self.clobberOnBranchChange = clobberOnBranchChange
-        Source.__init__(self, **kwargs)
         self.mode = mode
+        Source.__init__(self, **kwargs)
         self.addFactoryArguments(repourl=repourl,
                                  baseURL=baseURL,
                                  mode=mode,
@@ -94,9 +94,6 @@ class Mercurial(Source):
             raise ValueError("you must privide at least one of repourl and"
                              " baseURL")
 
-        self.repourl = self.repourl
-        self.baseURL = self.baseURL
-        
     def startVC(self, branch, revision, patch):
         self.revision = revision
         self.method = self._getMethod()
