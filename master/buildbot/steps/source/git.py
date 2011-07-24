@@ -68,6 +68,7 @@ class Git(Source):
         self.shallow   = shallow
         self.fetchcount = 0
         self.clobberOnFailure = clobberOnFailure
+        self.mode = mode
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(branch=branch,
                                  mode=mode,
@@ -81,12 +82,10 @@ class Git(Source):
                                  clobberOnFailure,
                                  )
 
-        self.mode = mode
         assert self.mode in ['incremental', 'full']
         assert self.repourl is not None
         if self.mode == 'full':
             assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
-        self.repourl = self.repourl
 
     def startVC(self, branch, revision, patch):
         self.branch = branch or 'master'
