@@ -295,7 +295,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             self.conn.disassociate_address(self.elastic_ip.public_ip)
         instance.update()
         if instance.state not in (SHUTTINGDOWN, TERMINATED):
-            instance.stop()
+            instance.terminate()
             log.msg('%s %s terminating instance %s' %
                     (self.__class__.__name__, self.slavename, instance.id))
         duration = 0

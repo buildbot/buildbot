@@ -5,6 +5,11 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Version
 
+** EC2 instances are now terminated instead of stopped.
+
+This is really only relevant for EBS-backed instances, as Buildbot will now
+free the instance and associated EBS storage when shutting down the slave.
+
 ** SQLite databases use write-ahead logging
 
 WAL mode offers much greater concurrency (preventing the dreaded 'database is
@@ -17,6 +22,9 @@ already-claimed requests; use reclaimBuildRequests instead.  The database no
 longer tracks master instances, so the unclaimOldIncarnationRequests method has
 been removed.  Note that several of the methods in this module now perform
 fewer consistency checks, for efficiency.
+
+*** Upgrades directly from versions older than 0.6.5 will no longer
+automatically migrate logfiles.
 
 ** Customizable validation regexps
 
