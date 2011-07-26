@@ -382,22 +382,13 @@ class Trial(ShellCommand):
             if e is None:
                 cmd.args['env'] = {'PYTHONPATH': self.testpath}
             else:
-                # TODO: somehow, each build causes another copy of
-                # self.testpath to get prepended
-                if e.get('PYTHONPATH', "") == "":
-                    e['PYTHONPATH'] = self.testpath
-                else:
-                    e['PYTHONPATH'] = self.testpath + ":" + e['PYTHONPATH']
-        try:
-            p = cmd.args['env']['PYTHONPATH']
-            if type(p) is not str:
-                log.msg("hey, not a string:", p)
-                assert False
-        except (KeyError, TypeError):
-            # KeyError if args doesn't have ['env']
-            # KeyError if args['env'] doesn't have ['PYTHONPATH']
-            # TypeError if args is None
-            pass
+                #this bit produces a list, which can be used
+                #by buildslave.runprocess.RunProcess
+                ppath = e.get('PYTHONPATH', self.testpath)
+                if isinstance(ppath, str):
+                    ppath = [ppath]
+                pathset = set([self.testpath]) | set(ppath)
+                e['PYTHONPATH'] = list(pathset)
 
     def start(self):
         # now that self.build.allFiles() is nailed down, finish building the
