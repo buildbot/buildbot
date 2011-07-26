@@ -387,8 +387,9 @@ class Trial(ShellCommand):
                 ppath = e.get('PYTHONPATH', self.testpath)
                 if isinstance(ppath, str):
                     ppath = [ppath]
-                pathset = set([self.testpath]) | set(ppath)
-                e['PYTHONPATH'] = list(pathset)
+                if self.testpath not in ppath:
+                    ppath.insert(0, self.testpath)
+                e['PYTHONPATH'] = ppath
 
     def start(self):
         # now that self.build.allFiles() is nailed down, finish building the

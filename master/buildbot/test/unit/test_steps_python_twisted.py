@@ -20,7 +20,7 @@ from buildbot.test.util import steps
 from buildbot.test.fake.remotecommand import ExpectShell
 
 
-class TestTrialExeceution(steps.BuildStepMixin, unittest.TestCase):
+class Trial(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
         return self.setUpBuildStep()
@@ -29,23 +29,18 @@ class TestTrialExeceution(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_run_env(self):
-        step = self.setupStep(
+        self.setupStep(
                 python_twisted.Trial(workdir='build',
                                      tests = 'testname',
                                      testpath = None,
                                      env = {'PYTHONPATH': 'somepath'}))
-        def firstInWins(name):
-            if name not in self.step_status.logs:
-                self.step.backupAddLog(name)
-            return self.step_status.logs[name]
-        self.step.backupAddLog = self.step.addLog
-        self.step.addLog = firstInWins
-        self.step.addLog("stdio").addStdout("Ran 0 tests\n")
         self.expectCommands(
-            ExpectShell(workdir='build', command=['trial', '--reporter=bwverbose', 'testname'],
+            ExpectShell(workdir='build',
+                        command=['trial', '--reporter=bwverbose', 'testname'],
                         usePTY="slave-config",
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env=dict(PYTHONPATH='somepath'))
+            + ExpectShell.log('stdio', stdout="Ran 0 tests\n")
             + 0
         )
         self.expectOutcome(result=SUCCESS, status_text=['no tests', 'run'])
@@ -57,19 +52,65 @@ class TestTrialExeceution(steps.BuildStepMixin, unittest.TestCase):
                                      tests = 'testname',
                                      testpath = 'path1',
                                      env = {'PYTHONPATH': ['path2','path3']}))
-        def firstInWins(name):
-            if name not in self.step_status.logs:
-                self.step.backupAddLog(name)
-            return self.step_status.logs[name]
-        self.step.backupAddLog = self.step.addLog
-        self.step.addLog = firstInWins
-        self.step.addLog("stdio").addStdout("Ran 0 tests\n")
         self.expectCommands(
-            ExpectShell(workdir='build', command=['trial', '--reporter=bwverbose', 'testname'],
+            ExpectShell(workdir='build',
+                        command=['trial', '--reporter=bwverbose', 'testname'],
                         usePTY="slave-config",
                         logfiles={'test.log': '_trial_temp/test.log'},
-                        env=dict(PYTHONPATH=['path2','path3','path1']))
+                        env=dict(PYTHONPATH=['path1', 'path2', 'path3']))
+            + ExpectShell.log('stdio', stdout="Ran 0 tests\n")
             + 0
         )
         self.expectOutcome(result=SUCCESS, status_text=['no tests', 'run'])
         return self.runStep()
+
+    def test_run_env_nodupe(self):
+        self.setupStep(
+                python_twisted.Trial(workdir='build',
+                                     tests = 'testname',
+                                     testpath = 'path2',
+                                     env = {'PYTHONPATH': ['path1','path2']}))
+        self.expectCommands(
+            ExpectShell(workdir='build',
+                        command=['trial', '--reporter=bwverbose', 'testname'],
+                        usePTY="slave-config",
+                        logfiles={'test.log': '_trial_temp/test.log'},
+                        env=dict(PYTHONPATH=['path1','path2']))
+            + ExpectShell.log('stdio', stdout="Ran 0 tests\n")
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=['no tests', 'run'])
+        return self.runStep()
+
+    def test_run_singular(self):
+        self.setupStep(
+                python_twisted.Trial(workdir='build',
+                                     tests = 'testname',
+                                     testpath=None))
+        self.expectCommands(
+            ExpectShell(workdir='build',
+                        command=['trial', '--reporter=bwverbose', 'testname'],
+                        usePTY="slave-config",
+                        logfiles={'test.log': '_trial_temp/test.log'})
+            + ExpectShell.log('stdio', stdout="Ran 1 tests\n")
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=['1 test', 'passed'])
+        return self.runStep()
+
+    def test_run_plural(self):
+        self.setupStep(
+                python_twisted.Trial(workdir='build',
+                                     tests = 'testname',
+                                     testpath=None))
+        self.expectCommands(
+            ExpectShell(workdir='build',
+                        command=['trial', '--reporter=bwverbose', 'testname'],
+                        usePTY="slave-config",
+                        logfiles={'test.log': '_trial_temp/test.log'})
+            + ExpectShell.log('stdio', stdout="Ran 2 tests\n")
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=['2 tests', 'passed'])
+        return self.runStep()
+
