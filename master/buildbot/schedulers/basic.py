@@ -129,8 +129,11 @@ class BaseBasicScheduler(base.BaseScheduler):
                 return
             if self._stable_timers[timer_name]:
                 self._stable_timers[timer_name].cancel()
+            def fire_timer():
+                d = self.stableTimerFired(timer_name)
+                d.addErrback(log.err, "while firing stable timer")
             self._stable_timers[timer_name] = self._reactor.callLater(
-                    self.treeStableTimer, self.stableTimerFired, timer_name)
+                    self.treeStableTimer, fire_timer)
         d.addCallback(fix_timer)
         return d
 
