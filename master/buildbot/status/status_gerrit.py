@@ -34,7 +34,7 @@ def defaultReviewCB(builderName, build, result, arg):
 class GerritStatusPush(StatusReceiverMultiService):
     """Event streamer to a gerrit ssh server."""
 
-    def __init__(self, server, username, reviewCB=defaultReviewCB, port=29418, reviewArg=None,
+    def __init__(self, server, username, reviewCB=defaultReviewCB, port=29418, reviewArg=None, identityFile=None,
                  **kwargs):
         """
         @param server:    Gerrit SSH server's address to use for push event notifications.
@@ -43,6 +43,7 @@ class GerritStatusPush(StatusReceiverMultiService):
                           to define the message and review approvals depending on the build result.
         @param port:      Gerrit SSH server's port.
         @param reviewArg: Optional argument that is passed to the callback.
+        @param identityFile: Optional argument that is used for ssh authentication.
         """
         StatusReceiverMultiService.__init__(self)
         # Parameters.
@@ -51,6 +52,7 @@ class GerritStatusPush(StatusReceiverMultiService):
         self.gerrit_port = port
         self.reviewCB = reviewCB
         self.reviewArg = reviewArg
+        self.identityFile = identityFile
 
     class LocalPP(ProcessProtocol):
         def __init__(self, status):
@@ -110,8 +112,10 @@ class GerritStatusPush(StatusReceiverMultiService):
                 return
 
     def sendCodeReview(self, project, revision, message=None, verified=0, reviewed=0):
-        command = ["ssh", self.gerrit_username + "@" + self.gerrit_server, "-p %d" % self.gerrit_port,
-                   "gerrit", "review", "--project %s" % str(project)]
+        command = ["ssh", self.gerrit_username + "@" + self.gerrit_server, "-p %d" % self.gerrit_port]
+        if self.identityFile is not None:
+            command.extend(["-i", self.identityFile])
+        command.extend(["gerrit", "review", "--project %s" % str(project)])
         if message:
             command.append("--message '%s'" % message.replace("'","\""))
         if verified:
