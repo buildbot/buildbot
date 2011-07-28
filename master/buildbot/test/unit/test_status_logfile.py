@@ -54,6 +54,11 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         self.logfile = logfile.LogFile(step, 'testlf', '123-stdio')
 
     def tearDown(self):
+        if self.logfile.openfile:
+            try:
+                self.logfile.openfile.close()
+            except:
+                pass # oh well, we tried
         self.tearDownDirs()
 
     def pickle_and_restore(self):
