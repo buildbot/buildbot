@@ -47,7 +47,7 @@ class TestBuildsetsConnectorComponent(
         d = self.setUpConnectorComponent(
             table_names=[ 'patches', 'changes', 'sourcestamp_changes',
                 'buildsets', 'buildset_properties', 'buildrequests',
-                'buildrequest_claims', 'sourcestamps' ])
+                'objects', 'buildrequest_claims', 'sourcestamps' ])
 
         def finish_setup(_):
             self.db.buildrequests = \
