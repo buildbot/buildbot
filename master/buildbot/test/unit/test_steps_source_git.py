@@ -19,7 +19,6 @@ from buildbot.status.results import SUCCESS
 from buildbot.test.util import sourcesteps
 from buildbot.test.fake.remotecommand import ExpectShell, ExpectLogged
 
-
 class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def setUp(self):
@@ -36,7 +35,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.git'))
+            ExpectLogged('stat', dict(file='wkdir/.git',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d'])
@@ -67,7 +67,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['git', '--version'])
             + 0,
 
-            ExpectLogged('stat', dict(file='wkdir/.git'))
+            ExpectLogged('stat', dict(file='wkdir/.git',
+                                      logEnviron=True))
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -91,7 +92,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('rmdir', dict(dir='wkdir'))
+            ExpectLogged('rmdir', dict(dir='wkdir',
+                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -115,7 +117,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.git'))
+            ExpectLogged('stat', dict(file='wkdir/.git',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -143,7 +146,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.git'))
+            ExpectLogged('stat', dict(file='wkdir/.git',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d', '-x'])
@@ -175,7 +179,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.git'))
+            ExpectLogged('stat', dict(file='wkdir/.git',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'cat-file', '-e', 'abcdef01'])
@@ -200,7 +205,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.git'))
+            ExpectLogged('stat', dict(file='wkdir/.git',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d', '-x'])
@@ -238,7 +244,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('rmdir', dict(dir='wkdir'))
+            ExpectLogged('rmdir', dict(dir='wkdir',
+                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone', '--depth', '1',
@@ -263,7 +270,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.git'))
+            ExpectLogged('stat', dict(file='wkdir/.git',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -299,7 +307,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.git'))
+            ExpectLogged('stat', dict(file='wkdir/.git',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -309,7 +318,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD'])
             + 1,
-            ExpectLogged('rmdir', dict(dir='wkdir'))
+            ExpectLogged('rmdir', dict(dir='wkdir',
+                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -334,8 +344,10 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('rmdir', dict(dir='wkdir')),
-            ExpectLogged('stat', dict(file='source/.git'))
+            ExpectLogged('rmdir', dict(dir='wkdir',
+                                       logEnviron=True)),
+            ExpectLogged('stat', dict(file='source/.git',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='source',
                         command=['git', 'fetch', '-t',
@@ -345,7 +357,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='source',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD'])
             + 0,
-            ExpectLogged('cpdir', {'fromdir': 'source', 'todir': 'build'})
+            ExpectLogged('cpdir', {'fromdir': 'source', 'todir': 'build',
+                                   'logEnviron': True})
             + 0,
             ExpectShell(workdir='build',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -365,7 +378,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.git'))
+            ExpectLogged('stat', dict(file='wkdir/.git',
+                                      logEnviron=True))
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -391,7 +405,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('rmdir', dict(dir='wkdir'))
+            ExpectLogged('rmdir', dict(dir='wkdir',
+                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -419,7 +434,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('rmdir', dict(dir='wkdir'))
+            ExpectLogged('rmdir', dict(dir='wkdir',
+                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -452,7 +468,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.git'))
+            ExpectLogged('stat', dict(file='wkdir/.git',
+                                      logEnviron=True))
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -480,13 +497,15 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.git'))
+            ExpectLogged('stat', dict(file='wkdir/.git',
+                                      logEnviron=True))
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
                                  'http://github.com/buildbot/buildbot.git', '.'])
             + 1,
-            ExpectLogged('rmdir', dict(dir='wkdir'))
+            ExpectLogged('rmdir', dict(dir='wkdir',
+                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone', 
@@ -510,7 +529,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.git'))
+            ExpectLogged('stat', dict(file='wkdir/.git',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d', '-x'])
@@ -525,6 +545,78 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_mode_full_with_env(self):
+        self.setupStep(
+                git.Git(repourl='http://github.com/buildbot/buildbot.git',
+                        mode='full', env={'abc': '123'}))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'],
+                        env={'abc': '123'})
+            + 0,
+            ExpectLogged('stat', dict(file='wkdir/.git',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-d', '-x'],
+                        env={'abc': '123'})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'master'],
+                        env={'abc': '123'})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD'],
+                        env={'abc': '123'})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'],
+                        env={'abc': '123'})
+            + ExpectShell.log('stdio',
+                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_mode_full_logEnviron(self):
+        self.setupStep(
+                git.Git(repourl='http://github.com/buildbot/buildbot.git',
+                        mode='full', logEnviron=False))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'],
+                        logEnviron=False)
+            + 0,
+            ExpectLogged('stat', dict(file='wkdir/.git',
+                                      logEnviron=False))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-d', '-x'],
+                        logEnviron=False)
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'master'],
+                        logEnviron=False)
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD'],
+                        logEnviron=False)
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'],
+                        logEnviron=False)
             + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,

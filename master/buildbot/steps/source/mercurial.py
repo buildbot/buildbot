@@ -28,8 +28,8 @@ class Mercurial(Source):
 
     renderables = [ "repourl", "baseURL" ]
 
-    def __init__(self, repourl=None, baseURL=None, mode='incremental', 
-                 method=None, defaultBranch=None, branchType='dirname', 
+    def __init__(self, repourl=None, baseURL=None, mode='incremental',
+                 method=None, defaultBranch=None, branchType='dirname',
                  clobberOnBranchChange=True, **kwargs):
 
         """
@@ -171,7 +171,8 @@ class Mercurial(Source):
         return d
 
     def clobber(self, _):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir})
+        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
+                                                      'logEnviron':self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         d.addCallback(lambda _: self._dovccmd(['clone', '--noupdate'
@@ -243,7 +244,9 @@ class Mercurial(Source):
     def _dovccmd(self, command):
         if not command:
             raise ValueError("No command specified")
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command)
+        cmd = buildstep.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command,
+                                           env=self.env,
+                                           logEnviron=self.logEnviron)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting mercurial command : hg %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
@@ -288,7 +291,8 @@ class Mercurial(Source):
             return 'fresh'
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.workdir + '/.hg'})
+        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.workdir + '/.hg',
+                                                     'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _fail(tmp):

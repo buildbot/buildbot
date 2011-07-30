@@ -497,6 +497,11 @@ describe the environment variables on the slave. In situations where the
 environment is not relevant and is long, it may be easier to set
 logEnviron=False.
 
+@item env
+a dictionary of environment strings which will be added to the child
+command's environment.
+
+
 @end table
 
 Use of @ref{WithProperties} with string, dict and callable is supported.
@@ -554,10 +559,8 @@ or the branch is a mercurial named branch and can be
 found within the @code{repourl}.
 
 @item clobberOnBranchChange
-boolean, defaults to True. If set and
-using inrepos branches, clobber the tree
-at each branch change. Otherwise, just
-update to the branch.
+boolean, defaults to True. If set and using inrepos branches, clobber the tree
+at each branch change. Otherwise, just update to the branch.
 
 @item mode
 @item method

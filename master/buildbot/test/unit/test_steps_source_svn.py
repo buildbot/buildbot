@@ -65,12 +65,14 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_incremental(self):
         self.setupStep(
                 svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
-                                    mode='incremental',username='user',password='pass', extra_args=['--random']))
+                        mode='incremental',username='user',
+                        password='pass', extra_args=['--random']))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.svn'))
+            ExpectLogged('stat', dict(file='wkdir/.svn',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
@@ -94,7 +96,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.svn'))
+            ExpectLogged('stat', dict(file='wkdir/.svn',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
@@ -117,7 +120,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.svn'))
+            ExpectLogged('stat', dict(file='wkdir/.svn',
+                                      logEnviron=True))
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
@@ -142,7 +146,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.svn'))
+            ExpectLogged('stat', dict(file='wkdir/.svn',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--revision', '100',
@@ -165,7 +170,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             + 0,
-            ExpectLogged('rmdir', {'dir': 'wkdir'})
+            ExpectLogged('rmdir', {'dir': 'wkdir',
+                                   'logEnviron': True})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout',
@@ -190,7 +196,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             + 0,
-            ExpectLogged('stat', {'file': 'wkdir/.svn'})
+            ExpectLogged('stat', {'file': 'wkdir/.svn',
+                                  'logEnviron': True})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn',
@@ -223,7 +230,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             + 0,
-            ExpectLogged('stat', {'file': 'wkdir/.svn'})
+            ExpectLogged('stat', {'file': 'wkdir/.svn',
+                                  'logEnviron': True})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn',
@@ -233,7 +241,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                 stdout=self.svn_st_xml)
             + 0,
             ExpectLogged('rmdir', {'dir':
-                                   'wkdir/svn_external_path/unversioned_file2'})
+                                   'wkdir/svn_external_path/unversioned_file2',
+                                   'logEnviron': True})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
@@ -256,7 +265,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             + 0,
-            ExpectLogged('stat', {'file': 'wkdir/.svn'})
+            ExpectLogged('stat', {'file': 'wkdir/.svn',
+                                  'logEnviron': True})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn',
@@ -286,7 +296,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             + 0,
-            ExpectLogged('stat', {'file': 'wkdir/.svn'})
+            ExpectLogged('stat', {'file': 'wkdir/.svn',
+                                  'logEnviron': True})
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk@HEAD',
@@ -310,7 +321,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             + 0,
-            ExpectLogged('stat', {'file': 'wkdir/.svn'})
+            ExpectLogged('stat', {'file': 'wkdir/.svn',
+                                  'logEnviron': True})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn',
@@ -320,10 +332,12 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                 stdout=self.svn_st_xml)
             + 0,
             ExpectLogged('rmdir', {'dir':
-                                   'wkdir/svn_external_path/unversioned_file1'})
+                                   'wkdir/svn_external_path/unversioned_file1',
+                                   'logEnviron': True})
             + 0,
             ExpectLogged('rmdir', {'dir':
-                                   'wkdir/svn_external_path/unversioned_file2'})
+                                   'wkdir/svn_external_path/unversioned_file2',
+                                   'logEnviron': True})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
@@ -348,7 +362,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             + 0,
-            ExpectLogged('stat', {'file': 'wkdir/.svn'})
+            ExpectLogged('stat', {'file': 'wkdir/.svn',
+                                  'logEnviron': True})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn',
@@ -359,7 +374,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectLogged('rmdir', {'dir':
                                    ['wkdir/svn_external_path/unversioned_file1',
-                                   'wkdir/svn_external_path/unversioned_file2']})
+                                   'wkdir/svn_external_path/unversioned_file2'],
+                                   'logEnviron': True})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
@@ -382,19 +398,82 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             + 0,
-            ExpectLogged('rmdir', dict(dir='wkdir'))
+            ExpectLogged('rmdir', dict(dir='wkdir',
+                                       logEnviron=True))
             + 0,
-            ExpectLogged('stat', dict(file='source/.svn'))
+            ExpectLogged('stat', dict(file='source/.svn',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
             + 0,
             ExpectLogged('cpdir', {'fromdir': 'source',
-                                   'todir': 'build'})
+                                   'todir': 'build',
+                                   'logEnviron': True})
             + 0,
             ExpectShell(workdir='build',
                         command=['svnversion'])
+            + ExpectShell.log('stdio',
+                stdout='100')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_mode_incremental_with_env(self):
+        self.setupStep(
+                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                        mode='incremental',username='user',
+                        password='pass', extra_args=['--random'],
+                        env={'abc': '123'}))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'],
+                        env={'abc': '123'})
+            + 0,
+            ExpectLogged('stat', dict(file='wkdir/.svn',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache', '--username', 'user',
+                                 '--password', 'pass', '--random'],
+                        env={'abc': '123'})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svnversion'],
+                        env={'abc': '123'})
+            + ExpectShell.log('stdio',
+                stdout='100')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+    
+    def test_mode_incremental_logEnviron(self):
+        self.setupStep(
+                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                        mode='incremental',username='user',
+                        password='pass', extra_args=['--random'],
+                        logEnviron=False))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'],
+                        logEnviron=False)
+            + 0,
+            ExpectLogged('stat', dict(file='wkdir/.svn',
+                                      logEnviron=False))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache', '--username', 'user',
+                                 '--password', 'pass', '--random'],
+                        logEnviron=False)
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svnversion'],
+                        logEnviron=False)
             + ExpectShell.log('stdio',
                 stdout='100')
             + 0,
