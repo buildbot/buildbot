@@ -192,7 +192,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 conn.execute(q, [ dict(brid=id, objectid=_master_objectid,
                                     claimed_at=claimed_at)
                                   for id in brids ])
-            except sa.exc.IntegrityError:
+            except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 transaction.rollback()
                 raise AlreadyClaimedError
 

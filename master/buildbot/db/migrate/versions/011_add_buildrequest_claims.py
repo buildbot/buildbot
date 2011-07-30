@@ -22,7 +22,7 @@ def migrate_claims(migrate_engine, metadata, buildrequests, objects,
 
     # First, ensure there is an object row for each master
     new_objects = sa.select([
-            sa.null().label('id'),
+            sa.cast(sa.null().label('id'), sa.INTEGER),
             buildrequests.c.claimed_by_name.label("name"),
             sa.literal_column("'BuildMaster'").label("class_name"),
         ],
