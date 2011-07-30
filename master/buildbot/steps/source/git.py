@@ -100,7 +100,6 @@ class Git(Source):
             return 0
         d.addCallback(checkInstall)
 
-
         if self.mode == 'incremental':
             d.addCallback(lambda _: self.incremental())
         elif self.mode == 'full':
@@ -173,7 +172,8 @@ class Git(Source):
         return d
 
     def clobber(self):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir})
+        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
+                                                      'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def checkRemoval(res):
@@ -193,7 +193,8 @@ class Git(Source):
         return d
 
     def copy(self):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir})
+        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
+                                                      'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -202,7 +203,8 @@ class Git(Source):
         def copy(_):
             cmd = buildstep.LoggedRemoteCommand('cpdir',
                                                 {'fromdir': 'source',
-                                                 'todir':'build'})
+                                                 'todir':'build',
+                                                 'logEnviron': self.logEnviron,})
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
@@ -238,7 +240,9 @@ class Git(Source):
         return d
 
     def _dovccmd(self, command, abandonOnFailure=True):
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['git'] + command)
+        cmd = buildstep.RemoteShellCommand(self.workdir, ['git'] + command,
+                                           env=self.env,
+                                           logEnviron=self.logEnviron)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting git command : git %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
@@ -336,8 +340,8 @@ class Git(Source):
         return changes[-1].revision
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.workdir + '/.git'})
-        log.msg(self.workdir)
+        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.workdir + '/.git',
+                                                     'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _fail(tmp):
