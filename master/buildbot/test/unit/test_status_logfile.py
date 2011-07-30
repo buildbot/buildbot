@@ -68,6 +68,14 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         self.logfile.step = step
         step.build.builder.basedir = self.basedir
 
+    def delete_logfile(self):
+        if self.logfile.openfile:
+            try:
+                self.logfile.openfile.close()
+            except:
+                pass # oh well, we tried
+        os.unlink(os.path.join('basedir', '123-stdio'))
+
     # tests
 
     def test_getFilename(self):
@@ -78,22 +86,22 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         self.assertTrue(self.logfile.hasContents())
 
     def test_hasContents_no(self):
-        os.unlink(os.path.join('basedir', '123-stdio')) # created by constructor
+        self.delete_logfile()
         self.assertFalse(self.logfile.hasContents())
 
     def test_hasContents_gz(self):
-        os.unlink(os.path.join('basedir', '123-stdio')) # created by constructor
+        self.delete_logfile()
         open(os.path.join(self.basedir, '123-stdio.gz'), "w").write("hi")
         self.assertTrue(self.logfile.hasContents())
 
     def test_hasContents_gz_pickled(self):
-        os.unlink(os.path.join('basedir', '123-stdio')) # created by constructor
+        self.delete_logfile()
         open(os.path.join(self.basedir, '123-stdio.gz'), "w").write("hi")
         self.pickle_and_restore()
         self.assertTrue(self.logfile.hasContents())
 
     def test_hasContents_bz2(self):
-        os.unlink(os.path.join('basedir', '123-stdio')) # created by constructor
+        self.delete_logfile()
         open(os.path.join(self.basedir, '123-stdio.bz2'), "w").write("hi")
         self.assertTrue(self.logfile.hasContents())
 
