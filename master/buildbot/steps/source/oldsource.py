@@ -76,7 +76,7 @@ class Source(LoggingBuildStep):
     branch = None # the default branch, should be set in __init__
 
     def __init__(self, workdir=None, mode='update', alwaysUseLatest=False,
-                 timeout=20*60, retry=None, logEnviron=True, **kwargs):
+                 timeout=20*60, retry=None, env=None, logEnviron=True, **kwargs):
         """
         @type  workdir: string
         @param workdir: local directory (relative to the Builder's root)
@@ -173,6 +173,8 @@ class Source(LoggingBuildStep):
                                  alwaysUseLatest=alwaysUseLatest,
                                  timeout=timeout,
                                  retry=retry,
+                                 logEnviron=logEnviron,
+                                 env=env,
                                  )
 
         assert mode in ("update", "copy", "clobber", "export")
@@ -191,6 +193,7 @@ class Source(LoggingBuildStep):
         self.alwaysUseLatest = alwaysUseLatest
 
         self.logEnviron = logEnviron
+        self.env = env
         
         # Compute defaults for descriptions:
         description = ["updating"]
@@ -263,6 +266,7 @@ class Source(LoggingBuildStep):
             revision = None
             
         self.args['logEnviron'] = self.logEnviron
+        self.args['env'] = self.env
         self.startVC(branch, revision, patch)
 
     def commandComplete(self, cmd):

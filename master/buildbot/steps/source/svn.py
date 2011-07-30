@@ -134,7 +134,8 @@ class SVN(Source):
         return d
 
     def clobber(self):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir})
+        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
+                                                      'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         d.addCallback(lambda _: self._dovccmd(['checkout', self.svnurl, '.']))
@@ -151,7 +152,8 @@ class SVN(Source):
         return d
 
     def copy(self):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir})
+        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
+                                                      'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         self.workdir = 'source'
@@ -159,7 +161,8 @@ class SVN(Source):
         def copy(_):
             cmd = buildstep.LoggedRemoteCommand('cpdir', 
                                                 {'fromdir': 'source',
-                                                 'todir':'build'})
+                                                 'todir':'build',
+                                                 'logEnviron': self.logEnviron,})
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
@@ -192,7 +195,9 @@ class SVN(Source):
         if self.extra_args:
             command.extend(self.extra_args)
 
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['svn'] + command)
+        cmd = buildstep.RemoteShellCommand(self.workdir, ['svn'] + command,
+                                           env=self.env,
+                                           logEnviron=self.logEnviron)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting SVN command : svn %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
@@ -232,7 +237,8 @@ class SVN(Source):
             return 'fresh'
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.workdir + '/.svn'})
+        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.workdir + '/.svn',
+                                                     'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _fail(tmp):
@@ -243,7 +249,9 @@ class SVN(Source):
         return d
 
     def parseGotRevision(self, _):
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['svnversion'])
+        cmd = buildstep.RemoteShellCommand(self.workdir, ['svnversion'],
+                                           env=self.env,
+                                           logEnviron=self.logEnviron,)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _setrev(res):
@@ -283,7 +291,9 @@ class SVN(Source):
                 if not self.slaveVersionIsOlderThan('rmdir', '2.14'):
                     d = self.removeFiles(files)
                 else:
-                    cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': files})
+                    cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': files,
+                                                                  'logEnviron':
+                                                                  self.logEnviron,})
                     cmd.useLog(self.stdio_log, False)
                     d = self.runCommand(cmd)
                     d.addCallback(lambda _: cmd.rc)
@@ -319,7 +329,8 @@ class SVN(Source):
     @defer.deferredGenerator
     def removeFiles(self, files):
         for filename in files:
-            cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': filename})
+            cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': filename,
+                                                          'logEnviron': self.logEnviron,})
             cmd.useLog(self.stdio_log, False)
             wfd = defer.waitForDeferred(self.runCommand(cmd))
             yield wfd
@@ -330,7 +341,9 @@ class SVN(Source):
         yield 0
 
     def checkSvn(self):
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['svn', '--version'])
+        cmd = buildstep.RemoteShellCommand(self.workdir, ['svn', '--version'],
+                                           env=self.env,
+                                           logEnviron=self.logEnviron)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def evaluate(cmd):
