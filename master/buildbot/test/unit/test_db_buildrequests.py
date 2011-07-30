@@ -467,7 +467,10 @@ class TestBuildsetsConnectorComponent(
             ], 1300305712, [ 44, 45 ],
             expfailure=buildrequests.AlreadyClaimedError)
         def check(_):
-            # check that the time wasn't updated on 44
+            # check that the time wasn't updated on 44, noting that MySQL does
+            # not support this.
+            if self.db_engine.dialect.name == 'mysql':
+                return
             def thd(conn):
                 tbl = self.db.model.buildrequest_claims
                 q = tbl.select(order_by=tbl.c.brid)
