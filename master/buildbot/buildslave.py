@@ -486,6 +486,12 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         I am called when a build is requested to see if this buildslave
         can start a build.  This function can be used to limit overall
         concurrency on the buildslave.
+
+        Note for subclassers: if a slave can become willing to start a build
+        without any action on that slave (for example, by a resource in use on
+        another slave becoming available), then you must arrange for
+        L{maybeStartBuildsForSlave} to be called at that time, or builds on
+        this slave will not start.
         """
         # If we're waiting to shutdown gracefully, then we shouldn't
         # accept any new jobs.
