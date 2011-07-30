@@ -21,8 +21,12 @@ def migrate_claims(migrate_engine, metadata, buildrequests, objects,
                    buildrequest_claims):
 
     # First, ensure there is an object row for each master
+    null_id = sa.null().label('id')
+    if migrate_engine.dialect.name == 'postgresql':
+        # postgres needs NULL cast to an integer:
+        null_id = sa.cast(null_id, sa.INTEGER)
     new_objects = sa.select([
-            sa.cast(sa.null().label('id'), sa.INTEGER),
+            null_id,
             buildrequests.c.claimed_by_name.label("name"),
             sa.literal_column("'BuildMaster'").label("class_name"),
         ],
