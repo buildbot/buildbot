@@ -31,7 +31,6 @@ class BotMaster(service.MultiService):
     them."""
 
     debug = 0
-    reactor = reactor
 
     def __init__(self, master):
         service.MultiService.__init__(self)
@@ -546,7 +545,15 @@ class BuildRequestDistributor(service.Service):
 
 class DuplicateSlaveArbitrator(object):
     """Utility class to arbitrate the situation when a new slave connects with
-    the name of an existing, connected slave"""
+    the name of an existing, connected slave
+
+    @ivar buildslave: L{buildbot.process.slavebuilder.AbstractBuildSlave}
+    instance
+    @ivar old_remote: L{RemoteReference} to the old slave
+    @ivar new_remote: L{RemoteReference} to the new slave
+    """
+    _reactor = reactor # for testing
+
     # There are several likely duplicate slave scenarios in practice:
     #
     # 1. two slaves are configured with the same username/password
@@ -565,63 +572,75 @@ class DuplicateSlaveArbitrator(object):
     """Timeout for pinging the old slave.  Set this to something quite long, as
     a very busy slave (e.g., one sending a big log chunk) may take a while to
     return a ping.
-
-    @ivar old_slave: L{buildbot.process.slavebuilder.AbstractSlaveBuilder}
-    instance
     """
 
-    def __init__(self, slave):
-        self.old_slave = slave
+    DISCONNECT_TRIES = 20
+    """Number of times to try to disconnect an old slave"""
+
+    DISCONNECT_TRY_TIME = 0.1
+    """Time to wait beteween each attempt to disconnect an old slave"""
+
+    def __init__(self, buildslave):
+        self.buildslave = buildslave
+        self.old_remote = self.buildslave.slave
 
     def getPerspective(self, mind, slavename):
-        self.new_slave_mind = mind
+        self.new_remote = mind
+        self.ping_old_slave_done = False
+        self.old_slave_connected = True
+        self.ping_new_slave_done = False
 
-        old_tport = self.old_slave.slave.broker.transport
-        new_tport = mind.broker.transport
-        log.msg("duplicate slave %s; delaying new slave (%s) and pinging old (%s)" % 
-                (self.old_slave.slavename, new_tport.getPeer(), old_tport.getPeer()))
+        old_tport = self.old_remote.broker.transport
+        new_tport = self.new_remote.broker.transport
+        log.msg("duplicate slave %s; delaying new slave (%s) and pinging old "
+                "(%s)" % (self.buildslave.slavename, new_tport.getPeer(),
+                          old_tport.getPeer()))
 
         # delay the new slave until we decide what to do with it
-        self.new_slave_d = defer.Deferred()
+        d = self.new_slave_d = defer.Deferred()
 
         # Ping the old slave.  If this kills it, then we can allow the new
         # slave to connect.  If this does not kill it, then we disconnect
         # the new slave.
-        self.ping_old_slave_done = False
-        self.old_slave_connected = True
         self.ping_old_slave(new_tport.getPeer())
 
         # Print a message on the new slave, if possible.
-        self.ping_new_slave_done = False
         self.ping_new_slave()
 
-        return self.new_slave_d
+        return d
 
     def ping_new_slave(self):
-        d = self.new_slave_mind.callRemote("print",
-            "master already has a connection named '%s' - checking its liveness"
-                        % self.old_slave.slavename)
+        d = defer.maybeDeferred(lambda :
+            self.new_remote.callRemote("print", "master already has a "
+                        "connection named '%s' - checking its liveness"
+                        % self.buildslave.slavename))
         def done(_):
-            # failure or success, doesn't matter
+            # failure or success, doesn't matter - the ping is done.
             self.ping_new_slave_done = True
             self.maybe_done()
         d.addBoth(done)
 
     def ping_old_slave(self, new_peer):
-        # set a timer on this ping, in case the network is bad.  TODO: a timeout
-        # on the ping itself is not quite what we want.  If there is other data
-        # flowing over the PB connection, then we should keep waiting.  Bug #1703
+        # set a timer on this ping, in case the network is bad.  TODO: a
+        # timeout on the ping itself is not quite what we want.  If there is
+        # other data flowing over the PB connection, then we should keep
+        # waiting.  Bug #1703
         def timeout():
             self.ping_old_slave_timeout = None
             self.ping_old_slave_timed_out = True
             self.old_slave_connected = False
             self.ping_old_slave_done = True
             self.maybe_done()
-        self.ping_old_slave_timeout = reactor.callLater(self.PING_TIMEOUT, timeout)
+        self.ping_old_slave_timeout = self._reactor.callLater(
+                                    self.PING_TIMEOUT, timeout)
         self.ping_old_slave_timed_out = False
 
-        d = self.old_slave.slave.callRemote("print",
-            "master got a duplicate connection from %s; keeping this one" % new_peer)
+        # call this in maybeDeferred because callRemote tends to raise
+        # exceptions instead of returning Failures
+        d = defer.maybeDeferred(lambda :
+            self.old_remote.callRemote("print",
+                "master got a duplicate connection from %s; keeping this one"
+                                        % new_peer))
 
         def clear_timeout(r):
             if self.ping_old_slave_timeout:
@@ -633,17 +652,14 @@ class DuplicateSlaveArbitrator(object):
         def old_gone(f):
             if self.ping_old_slave_timed_out:
                 return # ignore after timeout
-            f.trap(pb.PBConnectionLost)
+            f.trap(pb.PBConnectionLost, pb.DeadReferenceError)
             log.msg(("connection lost while pinging old slave '%s' - " +
-                     "keeping new slave") % self.old_slave.slavename)
+                     "keeping new slave") % self.buildslave.slavename)
             self.old_slave_connected = False
         d.addErrback(old_gone)
 
         def other_err(f):
-            if self.ping_old_slave_timed_out:
-                return # ignore after timeout
-            log.msg("unexpected error while pinging old slave; disconnecting it")
-            log.err(f)
+            log.err(f, "unexpected error pinging old slave; disconnecting it")
             self.old_slave_connected = False
         d.addErrback(other_err)
 
@@ -664,29 +680,39 @@ class DuplicateSlaveArbitrator(object):
         else:
             self.start_new_slave()
 
-    def start_new_slave(self, count=20):
+    def start_new_slave(self, count=DISCONNECT_TRIES-1):
+        # just in case
         if not self.new_slave_d:
-            return
+            return # pragma: ignore
 
         # we need to wait until the old slave has actually disconnected, which
-        # can take a little while -- but don't wait forever!
-        if self.old_slave.isConnected():
-            if self.old_slave.slave:
-                self.old_slave.slave.broker.transport.loseConnection()
+        # can take a little while -- but don't wait forever!  This polls
+        # until buildslave.slave becomes None.
+
+        # TODO: test this in Twisted to see if it's necessary - it's mostly
+        # important for AbstractBuildSlave's accounting, right? can we just
+        # call detach directly?
+        if self.buildslave.isConnected():
+            if self.buildslave.slave:
+                self.buildslave.slave.broker.transport.loseConnection()
             if count < 0:
-                log.msg("WEIRD: want to start new slave, but the old slave will not disconnect")
+                log.msg("WEIRD: want to start new slave, but the old slave "
+                        "will not disconnect")
                 self.disconnect_new_slave()
             else:
-                reactor.callLater(0.1, self.start_new_slave, count-1)
+                self._reactor.callLater(self.DISCONNECT_TRY_TIME,
+                                    self.start_new_slave, count-1)
             return
 
         d = self.new_slave_d
         self.new_slave_d = None
-        d.callback(self.old_slave)
+        d.callback(self.buildslave)
 
     def disconnect_new_slave(self):
+        # just in case
         if not self.new_slave_d:
-            return
+            return # pragma: ignore
+
         d = self.new_slave_d
         self.new_slave_d = None
         log.msg("rejecting duplicate slave with exception")
