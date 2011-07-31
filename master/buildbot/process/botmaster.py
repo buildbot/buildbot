@@ -574,12 +574,6 @@ class DuplicateSlaveArbitrator(object):
     return a ping.
     """
 
-    DISCONNECT_TRIES = 20
-    """Number of times to try to disconnect an old slave"""
-
-    DISCONNECT_TRY_TIME = 0.1
-    """Time to wait beteween each attempt to disconnect an old slave"""
-
     def __init__(self, buildslave):
         self.buildslave = buildslave
         self.old_remote = self.buildslave.slave
@@ -680,38 +674,31 @@ class DuplicateSlaveArbitrator(object):
         else:
             self.start_new_slave()
 
-    def start_new_slave(self, count=DISCONNECT_TRIES-1):
+    def start_new_slave(self):
         # just in case
-        if not self.new_slave_d:
-            return # pragma: ignore
-
-        # we need to wait until the old slave has actually disconnected, which
-        # can take a little while -- but don't wait forever!  This polls
-        # until buildslave.slave becomes None.
-
-        # TODO: test this in Twisted to see if it's necessary - it's mostly
-        # important for AbstractBuildSlave's accounting, right? can we just
-        # call detach directly?
-        if self.buildslave.isConnected():
-            if self.buildslave.slave:
-                self.buildslave.slave.broker.transport.loseConnection()
-            if count < 0:
-                log.msg("WEIRD: want to start new slave, but the old slave "
-                        "will not disconnect")
-                self.disconnect_new_slave()
-            else:
-                self._reactor.callLater(self.DISCONNECT_TRY_TIME,
-                                    self.start_new_slave, count-1)
+        if not self.new_slave_d: # pragma: ignore
             return
 
         d = self.new_slave_d
         self.new_slave_d = None
-        d.callback(self.buildslave)
+
+        if self.buildslave.isConnected():
+            # we need to wait until the old slave has fully detached, which can
+            # take a little while as buffers drain, etc.
+            def detached():
+                d.callback(self.buildslave)
+            self.buildslave.subscribeToDetach(detached)
+            self.old_remote.broker.transport.loseConnection()
+        else: # pragma: ignore
+            # by some unusual timing, it's quite possible that the old slave
+            # has disconnected while the arbitration was going on.  In that
+            # case, we're already done!
+            d.callback(self.buildslave)
 
     def disconnect_new_slave(self):
         # just in case
-        if not self.new_slave_d:
-            return # pragma: ignore
+        if not self.new_slave_d: # pragma: ignore
+            return
 
         d = self.new_slave_d
         self.new_slave_d = None

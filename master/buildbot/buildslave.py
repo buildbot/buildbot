@@ -30,6 +30,7 @@ from buildbot.process import metrics
 from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
 from buildbot.process.properties import Properties
 from buildbot.locks import LockAccess
+from buildbot.util import subscription
 
 class AbstractBuildSlave(pb.Avatar, service.MultiService):
     """This is the master-side representative for a remote buildbot slave.
@@ -89,6 +90,8 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         self.missing_timeout = missing_timeout
         self.missing_timer = None
         self.keepalive_interval = keepalive_interval
+
+        self.detached_subs = None
 
         self._old_builder_list = None
 
@@ -229,7 +232,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         if not self.parent:
             return
 
-        buildmaster = self.botmaster.parent
+        buildmaster = self.botmaster.master
         status = buildmaster.getStatus()
         text = "The Buildbot working for '%s'\n" % status.getTitle()
         text += ("has noticed that the buildslave named %s went away\n" %
@@ -275,6 +278,9 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         assert not self.isConnected()
 
         metrics.MetricCountEvent.log("AbstractBuildSlave.attached_slaves", 1)
+
+        # set up the subscription point for eventual detachment
+        self.detached_subs = subscription.SubscriptionPoint("detached")
 
         # now we go through a sequence of calls, gathering information, then
         # tell the Botmaster that it can finally give this slave to all the
@@ -363,7 +369,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
             log.msg("bot attached")
             self.messageReceivedFromSlave()
             self.stopMissingTimer()
-            self.botmaster.parent.status.slaveConnected(self.slavename)
+            self.botmaster.master.status.slaveConnected(self.slavename)
 
             return self.updateSlave()
         d.addCallback(_accept_slave)
@@ -387,8 +393,26 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         self.slave_status.removeGracefulWatcher(self._gracefulChanged)
         self.slave_status.setConnected(False)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
-        self.botmaster.parent.status.slaveDisconnected(self.slavename)
+        self.botmaster.master.status.slaveDisconnected(self.slavename)
         self.stopKeepaliveTimer()
+
+        # notify watchers, but do so in the next reactor iteration so that
+        # any further detached() action by subclasses happens first
+        def notif():
+            subs = self.detached_subs
+            self.detached_subs = None
+            subs.deliver()
+        reactor.callLater(0, notif)
+
+    def subscribeToDetach(self, callback):
+        """
+        Request that C{callable} be invoked with no arguments when the
+        L{detached} method is invoked.
+
+        @returns: L{Subscription}
+        """
+        assert self.detached_subs, "detached_subs is only set if attached"
+        return self.detached_subs.subscribe(callback)
 
     def disconnect(self):
         """Forcibly disconnect the slave.
@@ -512,7 +536,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
     def _mail_missing_message(self, subject, text):
         # first, see if we have a MailNotifier we can use. This gives us a
         # fromaddr and a relayhost.
-        buildmaster = self.botmaster.parent
+        buildmaster = self.botmaster.master
         for st in buildmaster.statusTargets:
             if isinstance(st, MailNotifier):
                 break
@@ -756,7 +780,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         if not self.parent or not self.notify_on_missing:
             return
 
-        buildmaster = self.botmaster.parent
+        buildmaster = self.botmaster.master
         status = buildmaster.getStatus()
         text = "The Buildbot working for '%s'\n" % status.getTitle()
         text += ("has noticed that the latent buildslave named %s \n" %

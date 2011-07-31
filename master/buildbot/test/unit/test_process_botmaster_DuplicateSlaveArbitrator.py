@@ -26,19 +26,24 @@ from buildbot.process import botmaster
 
 class FakeAbstractBuildSlave(object):
 
-    def __init__(self, slave, name, isConnected=True,
-            loseConnection_broken=False, reactor=reactor):
+    def __init__(self, slave, name, isConnected=True, reactor=reactor):
         self.slavename = name
         self.slave = slave
         self.isConnectedResult = isConnected
         self.reactor = reactor
+        self.call_on_detach = lambda : None
 
-        # set up for loseConnection to lose the connection, but not immediately
-        if not loseConnection_broken:
-            def loseConnection():
-                self.isConnectedResult = False
-            self.slave.broker.transport.loseConnection = (lambda :
-                    self.reactor.callLater(0, loseConnection))
+        # set up for loseConnection to cause the slave to detach, but not
+        # immediately
+        def tport_loseConnection():
+            self.isConnectedResult = False
+            self.call_on_detach()
+            self.call_on_detach = None
+        self.slave.broker.transport.loseConnection = (lambda :
+                self.reactor.callLater(0, tport_loseConnection))
+
+    def subscribeToDetach(self, callback):
+        self.call_on_detach = callback
 
     def isConnected(self):
         return self.isConnectedResult
@@ -189,30 +194,6 @@ class DuplicateSlaveArbitrator(unittest.TestCase):
     def test_old_slave_absent_timeout_exc(self):
         return self.do_test_old_slave_absent_timeout(
                 callRemoteException=self.makeRuntimeError)
-
-    def test_old_slave_will_not_disconnect(self):
-        clock = task.Clock()
-        DISCONNECT_TRIES = botmaster.DuplicateSlaveArbitrator.DISCONNECT_TRIES
-        DISCONNECT_TRY_TIME = botmaster.DuplicateSlaveArbitrator.DISCONNECT_TRY_TIME
-
-        old_remote = FakeRemoteBuildSlave("old", reactor=clock,
-                callRemoteFailure=self.makePBConnectionLostFailure)
-        new_remote = FakeRemoteBuildSlave("new", reactor=clock)
-        buildslave = FakeAbstractBuildSlave(old_remote, name="testslave",
-                loseConnection_broken=True, reactor=clock)
-        arb = botmaster.DuplicateSlaveArbitrator(buildslave)
-        arb._reactor = clock
-        d = arb.getPerspective(new_remote, "testslave")
-        def got_persp(bs):
-            self.fail("shouldn't get here")
-        def failed(f):
-            f.trap(RuntimeError) # expected error
-        d.addCallbacks(got_persp, failed)
-
-        # pass enough time to try disconnecting repeatedly
-        clock.pump([DISCONNECT_TRY_TIME] * DISCONNECT_TRIES)
-
-        return d
 
     @compat.usesFlushLoggedErrors
     def test_new_slave_ping_error(self):
