@@ -156,6 +156,7 @@ class AsyncLRUCache(object):
                 # concurrent accesses
                 ref_key()
 
+            self.inv()
             self._purge()
 
             # and fire all of the waiting Deferreds
@@ -193,28 +194,6 @@ class AsyncLRUCache(object):
             del cache[k]
             del refcount[k]
 
-    def inv(self):
-        """Check invariants and log if they are not met; used for debugging"""
-
-        # the keys of the queue and cache should be identical
-        cache_keys = set(self.cache.keys())
-        queue_keys = set(self.queue)
-        if queue_keys - cache_keys:
-            log.msg("INV: uncached keys in queue:", queue_keys - cache_keys)
-        if cache_keys - queue_keys:
-            log.msg("INV: unqueued keys in cache:", cache_keys - queue_keys)
-
-        # refcount should always represent the number of times each key appears
-        # in the queue
-        exp_refcount = dict()
-        for k in self.queue:
-            exp_refcount[k] = exp_refcount.get(k, 0) + 1
-        if exp_refcount != self.refcount:
-            log.msg("INV: refcounts differ:")
-            log.msg(" expected:", sorted(exp_refcount.items()))
-            log.msg("      got:", sorted(self.refcount.items()))
-
-
     def put(self, key, value):
         """
         Update the cache with the given key and value, if the key is already in
@@ -239,3 +218,31 @@ class AsyncLRUCache(object):
         self.max_size = max_size
         self.max_queue = max_size * self.QUEUE_SIZE_FACTOR
         self._purge()
+
+    def inv(self):
+        """Check invariants and log if they are not met; used for debugging"""
+        global inv_failed
+
+        # the keys of the queue and cache should be identical
+        cache_keys = set(self.cache.keys())
+        queue_keys = set(self.queue)
+        if queue_keys - cache_keys:
+            log.msg("INV: uncached keys in queue:", queue_keys - cache_keys)
+            inv_failed = True
+        if cache_keys - queue_keys:
+            log.msg("INV: unqueued keys in cache:", cache_keys - queue_keys)
+            inv_failed = True
+
+        # refcount should always represent the number of times each key appears
+        # in the queue
+        exp_refcount = dict()
+        for k in self.queue:
+            exp_refcount[k] = exp_refcount.get(k, 0) + 1
+        if exp_refcount != self.refcount:
+            log.msg("INV: refcounts differ:")
+            log.msg(" expected:", sorted(exp_refcount.items()))
+            log.msg("      got:", sorted(self.refcount.items()))
+            inv_failed = True
+
+# for tests
+inv_failed = False

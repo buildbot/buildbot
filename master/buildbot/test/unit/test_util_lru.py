@@ -29,7 +29,11 @@ def long(k):
 class LRUCache(unittest.TestCase):
 
     def setUp(self):
+        lru.inv_failed = False
         self.lru = lru.AsyncLRUCache(self.short_miss_fn, 3)
+
+    def tearDown(self):
+        self.assertFalse(lru.inv_failed, "invariant failed; see logs")
 
     def short_miss_fn(self, key):
         return defer.succeed(short(key))
