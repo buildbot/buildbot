@@ -197,13 +197,6 @@ class BuildMaster(service.MultiService):
             return # sorry unit tests
         f.close()
         return d # for unit tests
-    
-    def validate_status(self):
-        """
-        Check if there are
-        Bug: 1684
-        """
-        pass
 
     def loadConfig(self, f, checkOnly=False):
         """Internal function to load a specific configuration file. Any

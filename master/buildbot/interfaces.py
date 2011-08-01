@@ -986,7 +986,8 @@ class IStatusReceiver(Interface):
         """Verify that there are no other status receivers which conflict with
         the current one.
         
-        @type  otherStatusReceivers: L{IStatusReceiver}
+        @type  otherStatusReceivers: A list of L{IStatusReceiver} objects which
+        will contain self.
         """
 
 

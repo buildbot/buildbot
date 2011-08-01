@@ -5,11 +5,6 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Version
 
-** Any status providers should provide a checkConfig(all_statuses): method
-
-This is to verify at startup that there are no conflicting status
-configurations.
-
 ** EC2 instances are now terminated instead of stopped.
 
 This is really only relevant for EBS-backed instances, as Buildbot will now
@@ -21,6 +16,10 @@ WAL mode offers much greater concurrency (preventing the dreaded 'database is
 locked' errors) and is also more efficient and durable.
 
 ** Deprecations, Removals, and Non-Compatible Changes
+
+*** Any custom IStatusListener providers which do not inherit from
+StatusListener should provide a checkConfig(all_statuses): method.
+This is to verify at startup that there are no conflicting status configurations.
 
 *** The db.buildrequests.claimBuildRequests method can no longer re-claim
 already-claimed requests; use reclaimBuildRequests instead.  The database no
