@@ -491,6 +491,22 @@ class WebStatus(service.MultiService):
     # find the requisite object manually, starting at the buildmaster.
     # This is in preparation for removal of the IControl hierarchy
     # entirely.
+    
+    def checkConfig(self, otherStatusReceivers):
+        duplicate_webstatus=0
+        for osr in otherStatusReceivers:
+            if isinstance(osr,WebStatus):
+                if osr is self:
+                    continue
+                # compare against myself and complain if the settings conflict
+                if self.http_port == osr.http_port:
+                    if duplicate_webstatus == 0:
+                        duplicate_webstatus = 2
+                    else:
+                        duplicate_webstatus += 1
+        
+        if duplicate_webstatus:
+            raise RuntimeError("%d Webstatus objects have same port: %s"%(duplicate_webstatus,self.http_port))
 
 # resources can get access to the IStatus by calling
 # request.site.buildbot_service.getStatus()

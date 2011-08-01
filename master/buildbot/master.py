@@ -376,8 +376,10 @@ class BuildMaster(service.MultiService):
                 assert interfaces.IChangeSource(s, None)
             self.checkConfig_Schedulers(schedulers)
             assert isinstance(status, (list, tuple))
+            
             for s in status:
-                assert interfaces.IStatusReceiver(s, None)
+                assert interfaces.IStatusReceiver.providedBy(s)
+                s.checkConfig(status)
 
             slavenames = [s.slavename for s in slaves]
             buildernames = []

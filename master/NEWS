@@ -17,6 +17,10 @@ locked' errors) and is also more efficient and durable.
 
 ** Deprecations, Removals, and Non-Compatible Changes
 
+*** Any custom IStatusListener providers which do not inherit from
+StatusListener should provide a checkConfig(all_statuses): method.
+This is to verify at startup that there are no conflicting status configurations.
+
 *** The db.buildrequests.claimBuildRequests method can no longer re-claim
 already-claimed requests; use reclaimBuildRequests instead.  The database no
 longer tracks master instances, so the unclaimOldIncarnationRequests method has

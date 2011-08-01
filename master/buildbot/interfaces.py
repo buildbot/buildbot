@@ -981,6 +981,15 @@ class IStatusReceiver(Interface):
 
     def slaveDisconnected(slaveName):
         """The slave has disconnected."""
+        
+    def checkConfig(otherStatusReceivers):
+        """Verify that there are no other status receivers which conflict with
+        the current one.
+        
+        @type  otherStatusReceivers: A list of L{IStatusReceiver} objects which
+        will contain self.
+        """
+
 
 class IControl(Interface):
     def addChange(change):
