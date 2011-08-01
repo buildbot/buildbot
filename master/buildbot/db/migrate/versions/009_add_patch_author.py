@@ -21,9 +21,16 @@ def upgrade(migrate_engine):
 
     # add patch_author and patch_comment to the patches table
 
+    # mysql doesn't like default values on these columns
+    defaults = {}
+    if migrate_engine.dialect.name != "mysql":
+        defaults['server_default'] = sa.DefaultClause('')
+
     patches = sa.Table('patches', metadata, autoload=True)
-    patch_author= sa.Column('patch_author', sa.Text, server_default=sa.DefaultClause(''), nullable=False)
+    patch_author= sa.Column('patch_author', sa.Text, nullable=False,
+                            **defaults)
     patch_author.create(patches, populate_default=True)
     
-    patch_author= sa.Column('patch_comment', sa.Text, server_default=sa.DefaultClause(''), nullable=False)
+    patch_author= sa.Column('patch_comment', sa.Text, nullable=False,
+                            **defaults)
     patch_author.create(patches, populate_default=True)
