@@ -149,7 +149,7 @@ master will display the errors in the console output, but will not exit.
 .. _Reloading-the-config-file-reconfig:
 
 Reloading the Config File (reconfig)
-++++++++++++++++++++++++++++++++++++
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you are on the system hosting the buildmaster, you can send a ``SIGHUP``
 signal to it: the :command:`buildbot` tool has a shortcut for this:
@@ -201,7 +201,7 @@ which get queued after the reconfig) will use the new process.
    and reconfigured.
 
 Reconfig by Debug Client
-++++++++++++++++++++++++
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 The debug tool (:samp:`buildbot debugclient --master {HOST}:{PORT}`) has a
 :guilabel:`Reload .cfg` button which will also trigger a reload. In the
