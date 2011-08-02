@@ -271,6 +271,29 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
 
     # tests
 
+    def test_constructor_project_or_projects(self):
+        base = "http://svn.amanda.sourceforge.net/svnroot/amanda"
+        self.assertRaises(AssertionError,
+            lambda : svnpoller.SVNPoller(base, project="foo", projects=['bar']))
+
+    def test_constructor_projects(self):
+        base = "http://svn.amanda.sourceforge.net/svnroot/amanda"
+        self.assertRaises(AssertionError,
+            lambda : svnpoller.SVNPoller(base, projects='bar'))
+
+    def test_constructor_split_file_projects(self):
+        base = "http://svn.amanda.sourceforge.net/svnroot/amanda"
+        self.assertRaises(AssertionError,
+            lambda : svnpoller.SVNPoller(base, projects=['foo','bar'],
+                split_file=svnpoller.split_file_alwaystrunk))
+
+    def test_constructor_split_fns(self):
+        base = "http://svn.amanda.sourceforge.net/svnroot/amanda"
+        self.assertRaises(AssertionError,
+            lambda : svnpoller.SVNPoller(base,
+                split_file=svnpoller.split_file_alwaystrunk,
+                split_svn_path=svnpoller.split_svn_project_branches))
+
     def test_describe(self):
         s = self.attachSVNPoller('file://')
         self.assertSubstring("SVNPoller", s.describe())
