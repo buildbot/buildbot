@@ -76,6 +76,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         self.access = []
         if locks:
             self.access = locks
+        self.lock_subscriptions = []
 
         self.properties = Properties()
         self.properties.update(properties, "BuildSlave")
@@ -118,6 +119,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         assert self.identity() == new.identity()
         self.max_builds = new.max_builds
         self.access = new.access
+        assert new.lock_subscriptions == []
         self.notify_on_missing = new.notify_on_missing
         self.missing_timeout = new.missing_timeout
         self.keepalive_interval = new.keepalive_interval
@@ -139,6 +141,12 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
                 (self.__class__.__name__, self.slavename)
 
     def updateLocks(self):
+        """Convert the L{LockAccess} objects in C{self.locks} into real lock
+        objects, while also maintaining the subscriptions to lock releases."""
+        # unsubscribe from any old locks
+        for s in self.lock_subscriptions:
+            s.unsubscribe()
+
         # convert locks into their real form
         locks = []
         for access in self.access:
@@ -147,6 +155,8 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
             lock = self.botmaster.getLockByID(access.lockid)
             locks.append((lock, access))
         self.locks = [(l.getLock(self), la) for l, la in locks]
+        self.lock_subscriptions = [ l.subscribeToReleases(self._lockReleased)
+                                    for l in self.locks ]
 
     def locksAvailable(self):
         """
@@ -183,6 +193,13 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         log.msg("releaseLocks(%s): %s" % (self, self.locks))
         for lock, access in self.locks:
             lock.release(self, access)
+
+    def _lockReleased(self):
+        """One of the locks for this slave was released; try scheduling
+        builds."""
+        if not self.botmaster:
+            return # oh well..
+        self.botmaster.maybeStartBuildsForSlave(self.slavename)
 
     def setBotmaster(self, botmaster):
         assert not self.botmaster, "BuildSlave already has a botmaster"
