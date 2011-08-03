@@ -510,6 +510,7 @@ Use of @ref{WithProperties} with string, dict and callable is supported.
 * Mercurial::
 * Git::
 * SVN::
+* CVS::
 @end menu
 
 @node Mercurial
@@ -875,6 +876,61 @@ name) to get the correct svn command. If the ``newthing'' branch has a change
 to ``src/foo.c'', then the SVN step will concatenate
 ``svn://svn.example.org/MyProject/'' with ``features/newthing'' to get the
 svnurl for checkout.
+
+@node CVS
+@subsubsection CVS
+@cindex CVS Checkout
+@bsindex buildbot.steps.source.cvs.CVS
+
+The @code{CVS} build step performs a @uref{http://www.nongnu.org/cvs/,
+CVS} checkout or update. It takes the following arguments:
+
+@table @code
+@item cvsroot
+(required): specify the CVSROOT value, which points to a CVS
+repository, probably on a remote machine. For example, the cvsroot
+value you would use to get a copy of the Buildbot source code is
+@code{:pserver:anonymous@@cvs.sourceforge.net:/cvsroot/buildbot}
+
+@item cvsmodule
+(required): specify the cvs @code{module}, which is generally a
+subdirectory of the CVSROOT. The cvsmodule for the Buildbot source
+code is @code{buildbot}.
+
+@item branch
+a string which will be used in a @code{-r} argument. This is most
+useful for specifying a branch to work on. Defaults to @code{HEAD}.
+
+@item global_options
+a list of flags to be put before the argument @code{checkout} in
+the CVS command.
+
+@item extra_options
+a list of flags to be put after the @code{checkout} in the CVS command.
+
+@item mode
+@item method
+method can take four values for mode='full'. If no value for method is given it defaults to 'fresh' for full mode.
+
+@table @code
+@item clobber
+This specifies to remove the @code{workdir} and make full checkout.
+
+@item fresh
+This is uses @code{cvsdiscard} which is a part of cvsutil. @code{cvsdiscard}
+is necessary for this method to work. This first runs @code{cvsdisard} in build
+directory then updates
+
+@item clean
+Same as method='fresh' but it does @code{cvsdiscard --ignore} instead of @code{cvsdiscard}
+
+@item copy
+This maintains a @code{source} directory for source and copy this source to
+@code{build} before each build to make full builds from scratch. Before each
+build this performs update in @code{source} then copy the contents to
+@code{build}.
+
+@end table
 
 @node Source Checkout (Old)
 @subsection Source Checkout (Old)
