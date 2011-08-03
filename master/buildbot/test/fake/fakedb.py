@@ -155,6 +155,15 @@ class ChangeProperty(Row):
 
     required_columns = ('changeid',)
 
+class ChangeUser(Row):
+    table = "change_users"
+
+    defaults = dict(
+        changeid = None,
+        uid = None,
+    )
+
+    required_columns = ('changeid',)
 
 class Patch(Row):
     table = "patches"
@@ -287,6 +296,19 @@ class ObjectState(Row):
 
     required_columns = ( 'objectid', )
 
+class User(Row):
+    table = "users"
+
+    defaults = dict(
+        id = None,
+        uid = None,
+        identifier = 'soap',
+        auth_type = 'email',
+        auth_data = 'tyler@mayhem.net',
+    )
+
+    id_column = 'id'
+
 class Build(Row):
     table = "builds"
 
@@ -329,7 +351,8 @@ class FakeChangesComponent(FakeDBComponent):
                     revision=row.revision, when=row.when_timestamp,
                     branch=row.branch, category=row.category,
                     revlink=row.revlink, properties=properties.Properties(),
-                    repository=row.repository, project=row.project))
+                    repository=row.repository, project=row.project,
+                    uid=None))
                 self.changes[row.changeid] = ch
 
             elif isinstance(row, ChangeFile):
@@ -346,6 +369,10 @@ class FakeChangesComponent(FakeDBComponent):
                 v, s = json.loads(vs)
                 ch.properties.setProperty(n, v, s)
 
+            elif isinstance(row, ChangeUser):
+                ch = self.changes[row.changeid]
+                ch.uid = row.uid
+
     # component methods
 
     def getLatestChangeid(self):
@@ -359,6 +386,13 @@ class FakeChangesComponent(FakeDBComponent):
         except KeyError:
             ch = None
         return defer.succeed(self._ch2chdict(ch))
+
+    def getChangeUid(self, changeid):
+        try:
+            ch_uid = self.changes[changeid].uid
+        except KeyError:
+            ch_uid = None
+        return defer.succeed(ch_uid)
 
     # TODO: addChange
     # TODO: getRecentChanges
@@ -978,6 +1012,137 @@ class FakeBuildsComponent(FakeDBComponent):
             if b:
                 b.finish_time = now
 
+class FakeUsersComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.users = {}
+        self.id_num = 0
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, User):
+                self.users[row.id] = dict(uid=row.uid,
+                                          identifier=row.identifier,
+                                          auth_type=row.auth_type,
+                                          auth_data=row.auth_data)
+
+    def _row2dict(self, row):
+        return {'uid':row['uid'], 'identifier':row['identifier'],
+                    row['auth_type']:row['auth_data']}
+
+    def nextId(self):
+        self.id_num += 1
+        return self.id_num
+
+    # component methods
+
+    def addUser(self, identifier=None, auth_dict=None):
+        if not auth_dict:
+            return defer.succeed(None)
+
+        uid = None
+        for user in self.users.values():
+            if identifier in user:
+                uid = user.uid
+        for auth_type in auth_dict:
+            auth_data = auth_dict[auth_type]
+
+            rid = self.nextId()
+            if uid is None:
+                uid = rid
+
+            usrow = User(id=rid, uid=uid, identifier=identifier,
+                         auth_type=auth_type, auth_data=auth_data)
+
+            self.db.users.insertTestData([usrow])
+        return defer.succeed(uid)
+
+    def getUser(self, key):
+        usdict = {}
+        for user in self.users.values():
+            if key in user.values():
+                usrow = self._row2dict(user)
+                usdict.update(usrow)
+
+        if not usdict:
+            return defer.succeed(None)
+        return defer.succeed(usdict)
+
+    def updateUser(self, uid=None, identifier=None, auth_dict=None):
+        if not auth_dict:
+            return defer.succeed(None)
+        found = False
+
+        uid = None
+        for auth_type in auth_dict:
+            auth_data = auth_dict[auth_type]
+
+            for user in self.users.values():
+                if uid in user.values():
+                    found = True
+                    user.update(dict(auth_type=auth_type, auth_data=auth_data))
+                elif identifier in user.values():
+                    found = True
+                    user.update(dict(auth_type=auth_type, auth_data=auth_data))
+
+        return defer.succeed(None)
+
+    def removeUser(self, uid=None, identifier=None):
+        for user in self.users.values():
+            if uid and uid not in user.values():
+                return defer.succeed(None)
+            elif identifier and identifier not in user.values():
+                return defer.succeed(None)
+
+        key = uid or identifier
+        usdict = {}
+        for user in self.users.values():
+            if key in user.values():
+                usrow = self._row2dict(user)
+                usdict.update(usrow)
+
+        to_pop = []
+        for user in self.users:
+            if key in self.users[user].values():
+                to_pop.append(user)
+
+        for popper in to_pop:
+            self.users.pop(popper)
+
+        return defer.succeed(usdict)
+
+    def checkFromGit(self, user):
+        usdict = {}
+        res = None
+        if user['email']:
+            auth_dict['email'] = user['email']
+            auth_dict['full_name'] = user['full_name']
+            for row in self.users:
+                if user['email'] == row['email']:
+                    res = self._row2dict(row)
+        else:
+            auth_dict['full_name'] = user['full_name']
+            for row in self.users:
+                if user['full_name'] == row['full_name']:
+                    res = self._row2dict(row)
+
+        if not res:
+            return self.addUser(identifier=user['full_name'], auth_dict=auth_dict)
+        return res['uid']
+
+    def checkFromAuthz(self, user):
+        usdict = {}
+        res = None
+
+        auth_dict['username'] = user['username']
+        auth_dict['password'] = user['password']
+        for row in self.users:
+            if user['username'] == row['username']:
+                res = self._row2dict(row)
+
+        if not res:
+            return self.addUser(identifier=user['username'], auth_dict=auth_dict)
+        return res['uid']
 
 class FakeDBConnector(object):
     """
@@ -1004,6 +1169,8 @@ class FakeDBConnector(object):
         self.buildrequests = comp = FakeBuildRequestsComponent(self, testcase)
         self._components.append(comp)
         self.builds = comp = FakeBuildsComponent(self, testcase)
+        self._components.append(comp)
+        self.users = comp = FakeUsersComponent(self, testcase)
         self._components.append(comp)
 
     def insertTestData(self, rows):

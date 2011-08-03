@@ -101,4 +101,21 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             self.assertEquals(change["revlink"], "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0")
 
         d.addCallback(check_changes)
+        def check_users(_):
+            # not 4, since the second change['who'] is already in the db
+            usdict = self.request.stored_users
+            self.assertEquals(len(usdict), 2)
+            self.assertEquals(usdict[0]['id'], 1)
+            self.assertEquals(usdict[0]['uid'], 1)
+            self.assertEquals(usdict[0]['identifier'], "Fred Flinstone")
+            self.assertEquals(usdict[0]['auth_type'], "email")
+            self.assertEquals(usdict[0]['auth_data'], "fred@flinstone.org")
+
+            self.assertEquals(usdict[1]['id'], 2)
+            self.assertEquals(usdict[1]['uid'], 1)
+            self.assertEquals(usdict[1]['identifier'], "Fred Flinstone")
+            self.assertEquals(usdict[1]['auth_type'], "full_name")
+            self.assertEquals(usdict[1]['auth_data'], "Fred Flinstone")
+
+        d.addCallback(check_users)
         return d

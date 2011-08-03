@@ -80,7 +80,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
                     files=None, comments=None, is_dir=0, links=None,
                     revision=None, when_timestamp=None, branch=None,
                     category=None, revlink='', properties={}, repository='',
-                    project='')
+                    project='', uid=None)
 
             self.master.db.changes.getChange.assert_called_with(changeid)
             # addChange returned the right value
@@ -95,7 +95,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         default_db_kwargs = dict(files=None, comments=None, author=None,
                 is_dir=0, links=None, revision=None, when_timestamp=None,
                 branch=None, category=None, revlink='', properties={},
-                repository='', project='')
+                repository='', project='', uid=None)
         k = default_db_kwargs
         k.update(exp_db_kwargs)
         exp_db_kwargs = k

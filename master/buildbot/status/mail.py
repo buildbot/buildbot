@@ -36,6 +36,7 @@ except ImportError:
     have_ssl = False
 
 from buildbot import interfaces, util
+from buildbot.process.users import users
 from buildbot.status import base
 from buildbot.status.results import FAILURE, SUCCESS, Results
 
@@ -595,17 +596,47 @@ class MailNotifier(base.StatusReceiverMultiService):
                              results, builds, patches, logs)
 
         # now, who is this message going to?
-        dl = []
-        recipients = []
-        if self.sendToInterestedUsers and self.lookup:
+        self.dl = []
+        self.recipients = []
+        if self.sendToInterestedUsers:
             for build in builds:
-                for u in build.getInterestedUsers():
-                    d = defer.maybeDeferred(self.lookup.getAddress, u)
-                    d.addCallback(recipients.append)
-                    dl.append(d)
-        d = defer.DeferredList(dl)
-        d.addCallback(self._gotRecipients, recipients, m)
+                d = defer.succeed(build)
+                if self.lookup:
+                    d.addCallback(self.useLookup)
+                else:
+                    d.addCallback(self.useUsers)
+        d = defer.DeferredList(self.dl)
+        d.addCallback(self._gotRecipients, self.recipients, m)
         return d
+
+    def useLookup(self, build):
+        for u in build.getInterestedUsers():
+            d = defer.maybeDeferred(self.lookup.getAddress, u)
+            d.addCallback(self.recipients.append)
+            self.dl.append(d)
+
+    def useUsers(self, build):
+        ss = build.getSourceStamp()
+        for change in ss.changes:
+            d = self.parent.db.changes.getChangeUid(change.number)
+            d.addCallback(lambda uid:
+                              users.getUserContact(self.parent,
+                                                   contact_type='email',
+                                                   uid=uid))
+            def logNoMatch(contact):
+                if not contact:
+                    twlog.msg("Unable to find email for User: %r" %
+                              change.who)
+                return contact
+            d.addCallback(logNoMatch)
+            d.addCallback(self.recipients.append)
+            def addOwners(_):
+                owners = []
+                [owners.extend(e) for e in build.getInterestedUsers()
+                              if e not in build.getResponsibleUsers()]
+                self.recipients.extend(owners)
+            d.addCallback(addOwners)
+            self.dl.append(d)
 
     def _shouldAttachLog(self, logname):
         if type(self.addLogs) is bool:

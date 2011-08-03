@@ -16,8 +16,9 @@
 from mock import Mock
 
 from twisted.internet import defer
+from buildbot.test.util import users
 
-class MockRequest(Mock):
+class MockRequest(Mock, users.UsersMixin):
     """
     A fake Twisted Web Request object, including some pointers to the
     buildmaster and an addChange method on that master which will append its
@@ -29,10 +30,29 @@ class MockRequest(Mock):
         self.site.buildbot_service = Mock()
         master = self.site.buildbot_service.master = Mock()
 
+        self.setUpUsers()
         self.addedChanges = []
         def addChange(**kwargs):
-            self.addedChanges.append(kwargs)
-            return defer.succeed(Mock())
+            self.src = None
+            d = defer.succeed(None)
+            def getUid(_):
+                uid = None
+                if 'src' in kwargs:
+                    self.src = kwargs.pop('src')
+                    if self.src:
+                        if 'author' in kwargs:
+                            uid = self.createUserObject(kwargs['author'], self.src)
+                        elif 'who' in kwargs:
+                            uid = self.createUserObject(kwargs['who'], self.src)
+                return uid
+            d.addCallback(getUid)
+            def setChange(uid):
+                if self.src:
+                    kwargs.update({'uid': uid})
+                self.addedChanges.append(kwargs)
+                return Mock()
+            d.addCallback(setChange)
+            return d
         master.addChange = addChange
 
         Mock.__init__(self)
