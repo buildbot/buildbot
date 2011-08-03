@@ -887,10 +887,10 @@ CVS} checkout or update. It takes the following arguments:
 
 @table @code
 @item cvsroot
-(required): specify the CVSROOT value, which points to a CVS
-repository, probably on a remote machine. For example, the cvsroot
-value you would use to get a copy of the Buildbot source code is
-@code{:pserver:anonymous@@cvs.sourceforge.net:/cvsroot/buildbot}
+(required): specify the CVSROOT value, which points to a CVS repository,
+probably on a remote machine. For example, if Buildbot was hosted in CVS then
+the cvsroot value you would use to get a copy of the Buildbot source code might
+be @code{:pserver:anonymous@@cvs.sourceforge.net:/cvsroot/buildbot}
 
 @item cvsmodule
 (required): specify the cvs @code{module}, which is generally a
@@ -910,25 +910,27 @@ a list of flags to be put after the @code{checkout} in the CVS command.
 
 @item mode
 @item method
-method can take four values for mode='full'. If no value for method is given it defaults to 'fresh' for full mode.
+No method is needed for incremental mode.  For full mode, @code{method} can
+take the values shown below. If no value is given, it defaults to @code{fresh}.
 
 @table @code
 @item clobber
-This specifies to remove the @code{workdir} and make full checkout.
+This specifies to remove the @code{workdir} and make a full checkout.
 
 @item fresh
-This is uses @code{cvsdiscard} which is a part of cvsutil. @code{cvsdiscard}
-is necessary for this method to work. This first runs @code{cvsdisard} in build
-directory then updates
+This method first runs @code{cvsdisard} in the build directory, then updates it.
+This requires @code{cvsdiscard} which is a part of the cvsutil package.
 
 @item clean
-Same as method='fresh' but it does @code{cvsdiscard --ignore} instead of @code{cvsdiscard}
+This method is the same as @code{method='fresh'}, but it runs @code{cvsdiscard
+--ignore} instead of @code{cvsdiscard}.
 
 @item copy
-This maintains a @code{source} directory for source and copy this source to
-@code{build} before each build to make full builds from scratch. Before each
-build this performs update in @code{source} then copy the contents to
-@code{build}.
+This maintains a @code{source} directory for source, which it updates copies to
+the build directory.  This allows Buildbot to start with a fresh directory,
+without downloading the entire repository on every build.
+
+@end table
 
 @end table
 
