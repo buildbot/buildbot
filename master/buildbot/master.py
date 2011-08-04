@@ -247,84 +247,90 @@ class BuildMaster(service.MultiService):
                 if k not in known_keys:
                     log.msg("unknown key '%s' defined in config dictionary" % k)
 
+            required_keys = ('schedulers','builders','slavePortnum')
+            missing_required_keys=[]
+            for k in required_keys:
+                if k not in config.keys():
+                    log.err("Missing required key '%s'"%k)
+                    missing_required_keys.append(k)
+
+            if missing_required_keys:
+                m='required keys %s are missing from configuration'%" ".join(["'%s'"%rk for rk in missing_required_keys])
+                raise KeyError(m)
+
+
             # load known keys into local vars, applying defaults
 
-            try:
-                # required
-                schedulers = config['schedulers']
-                builders = config['builders']
-                slavePortnum = config['slavePortnum']
-                #slaves = config['slaves']
-                #change_source = config['change_source']
+            # required
+            schedulers = config['schedulers']
+            builders = config['builders']
+            slavePortnum = config['slavePortnum']
+            #slaves = config['slaves']
+            #change_source = config['change_source']
 
-                # optional
-                db_url = config.get("db_url", "sqlite:///state.sqlite")
-                db_poll_interval = config.get("db_poll_interval", None)
-                debugPassword = config.get('debugPassword')
-                manhole = config.get('manhole')
-                status = config.get('status', [])
-                # projectName/projectURL still supported to avoid
-                # breaking legacy configurations
-                title = config.get('title', config.get('projectName'))
-                titleURL = config.get('titleURL', config.get('projectURL'))
-                buildbotURL = config.get('buildbotURL')
-                properties = config.get('properties', {})
-                buildCacheSize = config.get('buildCacheSize', None)
-                changeCacheSize = config.get('changeCacheSize', None)
-                eventHorizon = config.get('eventHorizon', 50)
-                logHorizon = config.get('logHorizon', None)
-                buildHorizon = config.get('buildHorizon', None)
-                logCompressionLimit = config.get('logCompressionLimit', 4*1024)
-                if logCompressionLimit is not None and not \
-                        isinstance(logCompressionLimit, int):
-                    raise ValueError("logCompressionLimit needs to be bool or int")
-                logCompressionMethod = config.get('logCompressionMethod', "bz2")
-                if logCompressionMethod not in ('bz2', 'gz'):
-                    raise ValueError("logCompressionMethod needs to be 'bz2', or 'gz'")
-                logMaxSize = config.get('logMaxSize')
-                if logMaxSize is not None and not \
-                        isinstance(logMaxSize, int):
-                    raise ValueError("logMaxSize needs to be None or int")
-                logMaxTailSize = config.get('logMaxTailSize')
-                if logMaxTailSize is not None and not \
-                        isinstance(logMaxTailSize, int):
-                    raise ValueError("logMaxTailSize needs to be None or int")
-                mergeRequests = config.get('mergeRequests')
-                if (mergeRequests not in (None, True, False)
-                            and not callable(mergeRequests)):
-                    raise ValueError("mergeRequests must be a callable or False")
-                prioritizeBuilders = config.get('prioritizeBuilders')
-                if prioritizeBuilders is not None and not callable(prioritizeBuilders):
-                    raise ValueError("prioritizeBuilders must be callable")
-                changeHorizon = config.get("changeHorizon")
-                if changeHorizon is not None and not isinstance(changeHorizon, int):
-                    raise ValueError("changeHorizon needs to be an int")
+            # optional
+            db_url = config.get("db_url", "sqlite:///state.sqlite")
+            db_poll_interval = config.get("db_poll_interval", None)
+            debugPassword = config.get('debugPassword')
+            manhole = config.get('manhole')
+            status = config.get('status', [])
+            # projectName/projectURL still supported to avoid
+            # breaking legacy configurations
+            title = config.get('title', config.get('projectName'))
+            titleURL = config.get('titleURL', config.get('projectURL'))
+            buildbotURL = config.get('buildbotURL')
+            properties = config.get('properties', {})
+            buildCacheSize = config.get('buildCacheSize', None)
+            changeCacheSize = config.get('changeCacheSize', None)
+            eventHorizon = config.get('eventHorizon', 50)
+            logHorizon = config.get('logHorizon', None)
+            buildHorizon = config.get('buildHorizon', None)
+            logCompressionLimit = config.get('logCompressionLimit', 4*1024)
+            if logCompressionLimit is not None and not \
+                   isinstance(logCompressionLimit, int):
+                raise ValueError("logCompressionLimit needs to be bool or int")
+            logCompressionMethod = config.get('logCompressionMethod', "bz2")
+            if logCompressionMethod not in ('bz2', 'gz'):
+                raise ValueError("logCompressionMethod needs to be 'bz2', or 'gz'")
+            logMaxSize = config.get('logMaxSize')
+            if logMaxSize is not None and not \
+                   isinstance(logMaxSize, int):
+                raise ValueError("logMaxSize needs to be None or int")
+            logMaxTailSize = config.get('logMaxTailSize')
+            if logMaxTailSize is not None and not \
+                   isinstance(logMaxTailSize, int):
+                raise ValueError("logMaxTailSize needs to be None or int")
+            mergeRequests = config.get('mergeRequests')
+            if (mergeRequests not in (None, True, False)
+                and not callable(mergeRequests)):
+                raise ValueError("mergeRequests must be a callable or False")
+            prioritizeBuilders = config.get('prioritizeBuilders')
+            if prioritizeBuilders is not None and not callable(prioritizeBuilders):
+                raise ValueError("prioritizeBuilders must be callable")
+            changeHorizon = config.get("changeHorizon")
+            if changeHorizon is not None and not isinstance(changeHorizon, int):
+                raise ValueError("changeHorizon needs to be an int")
 
-                multiMaster = config.get("multiMaster", False)
+            multiMaster = config.get("multiMaster", False)
 
-                metrics_config = config.get("metrics")
-                caches_config = config.get("caches", {})
+            metrics_config = config.get("metrics")
+            caches_config = config.get("caches", {})
 
-                # load validation, with defaults, and verify no unrecognized
-                # keys are included.
-                validation_defaults = {
-                    'branch' : re.compile(r'^[\w.+/~-]*$'),
-                    'revision' : re.compile(r'^[ \w\.\-\/]*$'),
-                    'property_name' : re.compile(r'^[\w\.\-\/\~:]*$'),
-                    'property_value' : re.compile(r'^[\w\.\-\/\~:]*$'),
+            # load validation, with defaults, and verify no unrecognized
+            # keys are included.
+            validation_defaults = {
+                'branch' : re.compile(r'^[\w.+/~-]*$'),
+                'revision' : re.compile(r'^[ \w\.\-\/]*$'),
+                'property_name' : re.compile(r'^[\w\.\-\/\~:]*$'),
+                'property_value' : re.compile(r'^[\w\.\-\/\~:]*$'),
                 }
-                validation_config = validation_defaults.copy()
-                validation_config.update(config.get("validation", {}))
-                v_config_keys = set(validation_config.keys())
-                v_default_keys = set(validation_defaults.keys())
-                if v_config_keys > v_default_keys:
-                    raise ValueError("unrecognized validation key(s): %s" %
-                            (", ".join(v_config_keys - v_default_keys,)))
-
-            except KeyError:
-                log.msg("config dictionary is missing a required parameter")
-                log.msg("leaving old configuration in place")
-                raise
+            validation_config = validation_defaults.copy()
+            validation_config.update(config.get("validation", {}))
+            v_config_keys = set(validation_config.keys())
+            v_default_keys = set(validation_defaults.keys())
+            if v_config_keys > v_default_keys:
+                raise ValueError("unrecognized validation key(s): %s" %
+                                 (", ".join(v_config_keys - v_default_keys,)))
 
             if "sources" in config:
                 m = ("c['sources'] is deprecated as of 0.7.6 and is no longer "
