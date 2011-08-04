@@ -333,7 +333,7 @@ class DirectoryUpload(BuildStep):
     renderables = [ 'slavesrc', 'masterdest' ]
 
     def __init__(self, slavesrc, masterdest,
-                 workdir="build", maxsize=None, blocksize=16*1024,
+                 workdir=None, maxsize=None, blocksize=16*1024,
                  compress=None, **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
         self.addFactoryArguments(slavesrc=slavesrc,
@@ -377,7 +377,7 @@ class DirectoryUpload(BuildStep):
         # default arguments
         args = {
             'slavesrc': source,
-            'workdir': self.workdir,
+            'workdir': self._getWorkdir(),
             'writer': dirWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
