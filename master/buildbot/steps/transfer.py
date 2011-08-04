@@ -311,7 +311,7 @@ class FileUpload(_TransferBuildStep):
         d.addCallback(self.finished).addErrback(self.failed)
 
 
-class DirectoryUpload(BuildStep):
+class DirectoryUpload(_TransferBuildStep):
     """
     Build step to transfer a directory from the slave to the master.
 
