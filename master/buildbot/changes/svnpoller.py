@@ -25,7 +25,7 @@ from buildbot import util
 from buildbot.changes import base
 
 import xml.dom.minidom
-import os, urllib
+import os, urllib, collections
 
 # these split_file_* functions are available for use as values to the
 # split_file= argument.
@@ -43,6 +43,25 @@ def split_file_branches(path):
     else:
         return None
 
+# This function may be used for the split_svn_path= argument
+def split_svn_project_branches(path, projects):
+    # turn project/trunk/subdir/file.c into
+    #  ("project", "trunk", "subdir/file.c")
+    # and project/branches/1.5.x/subdir/file.c into
+    #  ("project", "branches/1.5.x", "subdir/file.c")
+
+    pieces = path.split('/')
+    project = pieces.pop(0)
+    if project not in projects:
+        return None
+    if pieces[0] == 'trunk':
+       return (project, pieces[0], '/'.join(pieces[1:]))
+    elif pieces[0] == 'branches' or pieces[0] == 'tags':
+       return (project, '/'.join(pieces[0:2]), '/'.join(pieces[2:]))
+    else:
+       return None
+
+
 
 class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     """
@@ -50,20 +69,22 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     master.
     """
 
-    compare_attrs = ["svnurl", "split_file",
+    compare_attrs = ["svnurl", "split_svn_path",
                      "svnuser", "svnpasswd",
                      "pollInterval", "histmax",
-                     "svnbin", "category", "cachepath"]
+                     "svnbin", "category", "cachepath",
+                     "projects"]
 
     parent = None # filled in when we're added
     last_change = None
     loop = None
 
     def __init__(self, svnurl, split_file=None,
-                 svnuser=None, svnpasswd=None,
-                 pollInterval=10*60, histmax=100,
+                 split_svn_path=None, svnuser=None,
+                 svnpasswd=None, pollInterval=10*60, histmax=100,
                  svnbin='svn', revlinktmpl='', category=None, 
-                 project='', cachepath=None, pollinterval=-2):
+                 project='', projects=None, cachepath=None,
+                 pollinterval=-2):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
@@ -71,7 +92,24 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         if svnurl.endswith("/"):
             svnurl = svnurl[:-1] # strip the trailing slash
         self.svnurl = svnurl
-        self.split_file = split_file or split_file_alwaystrunk
+        if projects:
+            assert project is '', "Set either 'project' or 'projects', not both!"
+            assert isinstance(projects, list)
+            self.projects = projects
+        else:
+            self.projects = [project]
+        if len(self.projects) > 1:
+            assert split_file is None, "When watching more than one project," + \
+                "you must use split_svn_path, not split_file."
+
+        if split_file:
+            assert split_svn_path is None, "Use either split_file or" + \
+                "split_svn_path, not both!"
+            self.split_svn_path = lambda path, projects: split_file(path)
+        else:
+            self.split_svn_path = split_svn_path or split_svn_project_branches
+        assert isinstance(self.split_svn_path, collections.Callable)
+
         self.svnuser = svnuser
         self.svnpasswd = svnpasswd
 
@@ -85,7 +123,6 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         self.histmax = histmax
         self._prefix = None
         self.category = category
-        self.project = project
 
         self.cachepath = cachepath
         if self.cachepath and os.path.exists(self.cachepath):
@@ -139,10 +176,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
 
         # whew.
 
-        if self.project:
-            log.msg("SVNPoller: polling " + self.project)
-        else:
-            log.msg("SVNPoller: polling")
+        log.msg("SVNPoller: polling ", self.projects)
 
         d = defer.succeed(None)
         if not self._prefix:
@@ -270,8 +304,9 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         relative_path = path[len(self._prefix):]
         if relative_path.startswith("/"):
             relative_path = relative_path[1:]
-        where = self.split_file(relative_path)
-        # 'where' is either None or (branch, final_path)
+        where = self.split_svn_path(relative_path, self.projects)
+        # 'where' is either None, (branch, final_path) or
+        # (project, branch, final_path)
         return where
 
     def create_changes(self, new_logentries):
@@ -316,7 +351,13 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 # if 'where' is None, the file was outside any project that
                 # we care about and we should ignore it
                 if where:
-                    branch, filename = where
+                    # TODO: remove this when split_file parameter is removed.
+                    if len(where) == 2:
+                        # The project is static
+                        project = self.projects[0]
+                        branch, filename = where
+                    elif len(where) == 3:
+                        project, branch, filename = where
                     if not branch in branches:
                         branches[branch] = { 'files': []}
                     branches[branch]['files'].append(filename)
@@ -341,7 +382,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                             revlink=revlink,
                             category=self.category,
                             repository=self.svnurl,
-                            project = self.project)
+                            project = project)
                     changes.append(chdict)
 
         return changes
