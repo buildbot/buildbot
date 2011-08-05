@@ -89,6 +89,9 @@ function checkMouseLeave(element, event) {
 {% if repository %}
         <br><b>Repository:</b> {{ repository|e }}
 {% endif %}
+{% if project %}
+        <br><b>Project:</b> {{ project|e }}
+{% endif %}
 {% if branch != ANYBRANCH %}
         <br><b>Branch:</b> {{ branch|e }}
 {% endif %}
