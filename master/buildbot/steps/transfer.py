@@ -245,10 +245,11 @@ class FileUpload(_TransferBuildStep):
 
     name = 'upload'
 
-    renderables = [ 'slavesrc', 'masterdest' ]
+    renderables = [ 'slavesrc', 'masterdest', 'url' ]
 
     def __init__(self, slavesrc, masterdest,
-                 workdir=None, maxsize=None, blocksize=16*1024, mode=None, keepstamp=False,
+                 workdir=None, maxsize=None, blocksize=16*1024, mode=None,
+                 keepstamp=False, url=None,
                  **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
         self.addFactoryArguments(slavesrc=slavesrc,
@@ -258,6 +259,7 @@ class FileUpload(_TransferBuildStep):
                                  blocksize=blocksize,
                                  mode=mode,
                                  keepstamp=keepstamp,
+                                 url=url,
                                  )
 
         self.slavesrc = slavesrc
@@ -268,6 +270,7 @@ class FileUpload(_TransferBuildStep):
         assert isinstance(mode, (int, type(None)))
         self.mode = mode
         self.keepstamp = keepstamp
+        self.url = url
 
     def start(self):
         version = self.slaveVersion("uploadFile")
@@ -287,6 +290,8 @@ class FileUpload(_TransferBuildStep):
                 % (source, masterdest))
 
         self.step_status.setText(['uploading', os.path.basename(source)])
+        if self.url is not None:
+            self.addURL(os.path.basename(masterdest), self.url)
 
         # we use maxsize to limit the amount of data on both sides
         fileWriter = _FileWriter(masterdest, self.maxsize, self.mode)
@@ -334,7 +339,7 @@ class DirectoryUpload(_TransferBuildStep):
 
     def __init__(self, slavesrc, masterdest,
                  workdir=None, maxsize=None, blocksize=16*1024,
-                 compress=None, **buildstep_kwargs):
+                 compress=None, url=None, **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
         self.addFactoryArguments(slavesrc=slavesrc,
                                  masterdest=masterdest,
@@ -342,6 +347,7 @@ class DirectoryUpload(_TransferBuildStep):
                                  maxsize=maxsize,
                                  blocksize=blocksize,
                                  compress=compress,
+                                 url=url,
                                  )
 
         self.slavesrc = slavesrc
@@ -351,6 +357,7 @@ class DirectoryUpload(_TransferBuildStep):
         self.blocksize = blocksize
         assert compress in (None, 'gz', 'bz2')
         self.compress = compress
+        self.url = url
 
     def start(self):
         version = self.slaveVersion("uploadDirectory")
@@ -370,6 +377,8 @@ class DirectoryUpload(_TransferBuildStep):
                 % (source, masterdest))
 
         self.step_status.setText(['uploading', os.path.basename(source)])
+        if self.url is not None:
+            self.addURL(os.path.basename(masterdest), self.url)
         
         # we use maxsize to limit the amount of data on both sides
         dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.compress, 0600)
