@@ -526,12 +526,13 @@ class ConsoleStatusResource(HtmlResource):
                     pass
 
     def displayPage(self, request, status, builderList, allBuilds, revisions,
-                    categories, repository, branch, debugInfo):
+                    categories, repository, project, branch, debugInfo):
         """Display the console page."""
         # Build the main template directory with all the informations we have.
         subs = dict()
         subs["branch"] = branch or 'trunk'
         subs["repository"] = repository
+        subs["project"] = project
         if categories:
             subs["categories"] = ' '.join(categories)
         subs["time"] = time.strftime("%a %d %b %Y %H:%M:%S",
@@ -615,6 +616,8 @@ class ConsoleStatusResource(HtmlResource):
         builders = request.args.get("builder", [])
         # Repo used to filter the changes shown.
         repository = request.args.get("repository", [None])[0]
+        # Project used to filter the changes shown.
+        project = request.args.get("project", [None])[0]
         # Branch used to filter the changes shown.
         branch = request.args.get("branch", [ANYBRANCH])[0]
         # List of all the committers name to display on the page.
@@ -645,6 +648,8 @@ class ConsoleStatusResource(HtmlResource):
                 revFilter['who'] = devName
             if repository:
                 revFilter['repository'] = repository
+            if project:
+                revFilter['project'] = project
             revisions = list(self.filterRevisions(allChanges, max_revs=numRevs,
                                                             filter=revFilter))
             debugInfo["revision_final"] = len(revisions)
@@ -669,7 +674,7 @@ class ConsoleStatusResource(HtmlResource):
 
             cxt.update(self.displayPage(request, status, builderList,
                                         allBuilds, revisions, categories,
-                                        repository, branch, debugInfo))
+                                        repository, project, branch, debugInfo))
 
             templates = request.site.buildbot_service.templates
             template = templates.get_template("console.html")
