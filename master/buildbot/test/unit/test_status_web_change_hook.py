@@ -110,6 +110,7 @@ class TestChangeHookConfigured(unittest.TestCase):
             self.assertEquals(change["repository"], "myrepo")
             self.assertEquals(change["when"], 1234)
             self.assertEquals(change["who"], "Santa Claus")
+            self.assertEquals(change["src"], None)
             self.assertEquals(change["revision"], 99)
             self.assertEquals(change["comments"], "a comment")
             self.assertEquals(change["project"], "a project")

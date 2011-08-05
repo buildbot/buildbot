@@ -17,7 +17,7 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from exceptions import Exception
 from buildbot.changes import gitpoller
-from buildbot.test.util import changesource, gpo
+from buildbot.test.util import changesource, gpo, users
 from buildbot.util import epoch2datetime
 
 class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
@@ -101,14 +101,18 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
 
 class TestGitPoller(gpo.GetProcessOutputMixin,
                     changesource.ChangeSourceMixin,
+                    users.UsersMixin,
                     unittest.TestCase):
 
     def setUp(self):
         self.setUpGetProcessOutput()
         d = self.setUpChangeSource()
+        d.addCallback(lambda _ : self.setUpUsers())
         def create_poller(_):
             self.poller = gitpoller.GitPoller('git@example.com:foo/baz.git')
             self.poller.master = self.master
+            self.poller.createUserObject = self.createUserObject
+            self.poller.master.db.users.addUser = self.addUser
         d.addCallback(create_poller)
         return d
         
@@ -153,7 +157,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         d = self.poller.poll()
 
         # check the results
-        def check(_):
+        def check_changes(_):
             self.assertEqual(len(self.changes_added), 2)
             self.assertEqual(self.changes_added[0]['author'], 'by:4423cdbc')
             self.assertEqual(self.changes_added[0]['when_timestamp'],
@@ -161,11 +165,13 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(self.changes_added[0]['comments'], 'hello!')
             self.assertEqual(self.changes_added[0]['branch'], 'master')
             self.assertEqual(self.changes_added[0]['files'], [ '/etc/442' ])
+            self.assertEqual(self.changes_added[0]['src'], 'git')
             self.assertEqual(self.changes_added[1]['author'], 'by:64a5dc2a')
             self.assertEqual(self.changes_added[1]['when_timestamp'],
                                         epoch2datetime(1273258009))
             self.assertEqual(self.changes_added[1]['comments'], 'hello!')
             self.assertEqual(self.changes_added[1]['files'], [ '/etc/64a' ])
-        d.addCallback(check)
+            self.assertEqual(self.changes_added[1]['src'], 'git')
+        d.addCallback(check_changes)
 
         return d

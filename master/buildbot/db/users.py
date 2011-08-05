@@ -38,9 +38,6 @@ class UsersConnectorComponent(base.DBConnectorComponent):
     with conflicting names will be ignored.
     """
 
-    known_types = ['full_name', 'email']
-    known_info_types = ['authz_user', 'authz_pass', 'git']
-
     def addUser(self, identifier, attr_type, attr_data, _race_hook=None):
         """
         Get an existing user, or add a new one, based on the given attribute.

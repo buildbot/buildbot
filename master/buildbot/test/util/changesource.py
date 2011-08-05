@@ -22,7 +22,7 @@ class ChangeSourceMixin(object):
 
      - starting and stopping a ChangeSource service
      - a fake C{self.master.addChange}, which adds its args
-       to the list C{self.chagnes_added}
+       to the list C{self.changes_added}
     """
 
     changesource = None
@@ -33,8 +33,7 @@ class ChangeSourceMixin(object):
         self.changes_added = []
         def addChange(**kwargs):
             self.changes_added.append(kwargs)
-            change = mock.Mock()
-            return defer.succeed(change)
+            return defer.succeed(mock.Mock())
         self.master = mock.Mock()
         self.master.addChange = addChange
         return defer.succeed(None)

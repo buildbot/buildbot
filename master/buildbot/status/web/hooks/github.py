@@ -99,7 +99,7 @@ def getChanges(request, options = None):
             #private = payload['repository']['private']
             changes = process_change(payload, user, repo, repo_url, project)
             log.msg("Received %s changes from github" % len(changes))
-            return changes
+            return (changes, 'git')
         except Exception:
             logging.error("Encountered an exception:")
             for msg in traceback.format_exception(*sys.exc_info()):
