@@ -250,6 +250,14 @@ class TestChangesConnectorComponent(
                 self.assertEqual(r[0].property_value, '["linux", "Change"]')
             return self.db.pool.do(thd)
         d.addCallback(check_change_properties)
+        def check_change_users(_):
+            def thd(conn):
+                query = self.db.model.change_users.select()
+                r = conn.execute(query)
+                r = r.fetchall()
+                self.assertEqual(len(r), 0)
+            return self.db.pool.do(thd)
+        d.addCallback(check_change_users)
         return d
 
     def test_addChange_when_timestamp_None(self):
@@ -304,6 +312,14 @@ class TestChangesConnectorComponent(
                 self.assertEqual(len(r), 0)
             return self.db.pool.do(thd)
         d.addCallback(check_change_properties)
+        def check_change_users(_):
+            def thd(conn):
+                query = self.db.model.change_users.select()
+                r = conn.execute(query)
+                r = r.fetchall()
+                self.assertEqual(len(r), 0)
+            return self.db.pool.do(thd)
+        d.addCallback(check_change_users)
         return d
 
     def test_addChange_with_uid(self):
