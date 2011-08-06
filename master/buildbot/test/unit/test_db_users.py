@@ -13,9 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import sqlalchemy as sa
 from twisted.trial import unittest
-from twisted.internet import defer, task
 from buildbot.db import users
 from buildbot.test.util import connector_component
 from buildbot.test.fake import fakedb

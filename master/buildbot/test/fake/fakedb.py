@@ -402,7 +402,7 @@ class FakeChangesComponent(FakeDBComponent):
             ch_uids = [self.changes[changeid].uid]
         except KeyError:
             ch_uids = []
-        return defer.succeed(ch_uid)
+        return defer.succeed(ch_uids)
 
     # TODO: addChange
     # TODO: getRecentChanges
@@ -1092,10 +1092,10 @@ class FakeUsersComponent(FakeDBComponent):
 
         for attr in user_dict:
             if attr in self.known_types:
-                if not self.users[uid][full_name] and attr == 'full_name':
-                    self.users[uid][full_name] = user_dict[attr]
-                if not self.users[uid][email] and attr == 'email':
-                    self.users[uid][email] = user_dict[attr]
+                if not self.users[uid]['full_name'] and attr == 'full_name':
+                    self.users[uid]['full_name'] = user_dict[attr]
+                if not self.users[uid]['email'] and attr == 'email':
+                    self.users[uid]['email'] = user_dict[attr]
 
         infos = []
         for attr_type in user_dict:
@@ -1129,11 +1129,11 @@ class FakeUsersComponent(FakeDBComponent):
             attr_data = user_dict[attr_type]
 
             if attr_type in self.known_types:
-                if user in self.users.values():
-                    if self.users[uid][full_name] and attr_type == 'full_name':
-                        self.users[uid][full_name] = user_dict[attr_type]
-                    if self.users[uid][email] and attr_type == 'email':
-                        self.users[uid][email] = user_dict[attr_type]
+                if 'user' in self.users.values():
+                    if self.users[uid]['full_name'] and attr_type == 'full_name':
+                        self.users[uid]['full_name'] = user_dict[attr_type]
+                    if self.users[uid]['email'] and attr_type == 'email':
+                        self.users[uid]['email'] = user_dict[attr_type]
 
             elif attr_type in self.known_info_types:
                 for user in self.users_info.values():

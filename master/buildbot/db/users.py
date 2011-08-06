@@ -17,11 +17,9 @@
 Support for users in the database
 """
 
-import sqlalchemy as sa
-from sqlalchemy.sql.expression import and_, or_
+from sqlalchemy.sql.expression import and_
 
 from twisted.python import log
-from twisted.internet import defer, reactor
 from buildbot.db import base
 
 class UsDict(dict):
@@ -241,7 +239,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                         if info_row.attr_type == attr_type:
                             qu = tbl_info.update(whereclause=(
                                     and_(tbl_info.c.attr_type == attr_type,
-                                         tbl_info.c.uid == info_row_uid)))
+                                         tbl_info.c.uid == info_row.uid)))
                             conn.execute(qu, attr_data=attr_data)
                             break
                     else:
