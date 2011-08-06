@@ -207,7 +207,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         @param changeid: the id of the change instance to fetch
 
-        @returns: uid integer via Deferred
+        @returns: list of uids via Deferred
         """
         assert changeid >= 0
         def thd(conn):
