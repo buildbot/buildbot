@@ -215,12 +215,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             q = cu_tbl.select(whereclause=(cu_tbl.c.changeid == changeid))
             res = conn.execute(q)
             rows = res.fetchall()
-            if not rows:
-                return None
-
-            row_uids = []
-            for row in rows:
-                row_uids.append(row.uid)
+            row_uids = [ row.uid for row in rows ]
             return row_uids
         d = self.db.pool.do(thd)
         return d

@@ -391,7 +391,7 @@ class TestChangesConnectorComponent(
     def test_getChangeUids_missing(self):
         d = self.db.changes.getChangeUids(1)
         def check(res):
-            self.assertEqual(res, None)
+            self.assertEqual(res, [])
         d.addCallback(check)
         return d
 
