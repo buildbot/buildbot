@@ -395,7 +395,7 @@ class TestChangesConnectorComponent(
         d.addCallback(check)
         return d
 
-    def test_getChangeUid_found(self):
+    def test_getChangeUids_found(self):
         d = self.insertTestData(self.change14_rows + [
                 fakedb.User(uid=1),
                 fakedb.ChangeUser(changeid=14, uid=1),
@@ -403,6 +403,21 @@ class TestChangesConnectorComponent(
         d.addCallback(lambda _ : self.db.changes.getChangeUids(14))
         def check(res):
             self.assertEqual(res, [1])
+        d.addCallback(check)
+        return d
+
+    def test_getChangeUids_multi(self):
+        d = self.insertTestData(self.change14_rows + self.change13_rows + [
+                fakedb.User(uid=1, identifier="one"),
+                fakedb.User(uid=2, identifier="two"),
+                fakedb.User(uid=99, identifier="nooo"),
+                fakedb.ChangeUser(changeid=14, uid=1),
+                fakedb.ChangeUser(changeid=14, uid=2),
+                fakedb.ChangeUser(changeid=13, uid=99), # not selected
+            ])
+        d.addCallback(lambda _ : self.db.changes.getChangeUids(14))
+        def check(res):
+            self.assertEqual(sorted(res), [1, 2])
         d.addCallback(check)
         return d
 
