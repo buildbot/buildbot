@@ -33,7 +33,7 @@ class TestChangesConnectorComponent(
             table_names=['changes', 'change_links', 'change_files',
                 'change_properties', 'scheduler_changes', 'schedulers',
                 'sourcestamps', 'sourcestamp_changes', 'patches',
-                'change_users'])
+                'change_users', 'users'])
 
         def finish_setup(_):
             self.db.changes = changes.ChangesConnectorComponent(self.db)
@@ -323,7 +323,11 @@ class TestChangesConnectorComponent(
         return d
 
     def test_addChange_with_uid(self):
-        d = self.db.changes.addChange(
+        d = self.insertTestData([
+                fakedb.User(uid=1, identifier="one"),
+            ])
+        d.addCallback(lambda _ :
+            self.db.changes.addChange(
                  author=u'dustin',
                  files=[],
                  comments=u'fix spelling',
@@ -337,7 +341,7 @@ class TestChangesConnectorComponent(
                  properties={},
                  repository=u'',
                  project=u'',
-                 uid=1)
+                 uid=1))
         # check all of the columns of the five relevant tables
         def check_change(changeid):
             def thd(conn):
@@ -392,8 +396,10 @@ class TestChangesConnectorComponent(
         return d
 
     def test_getChangeUid_found(self):
-        d = self.insertTestData(self.change14_rows +
-                                [fakedb.ChangeUser(changeid=14, uid=1)])
+        d = self.insertTestData(self.change14_rows + [
+                fakedb.User(uid=1),
+                fakedb.ChangeUser(changeid=14, uid=1),
+            ])
         d.addCallback(lambda _ : self.db.changes.getChangeUids(14))
         def check(res):
             self.assertEqual(res, [1])
