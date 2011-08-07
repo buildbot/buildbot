@@ -17,7 +17,9 @@ from twisted.trial import unittest
 
 from buildbot.interfaces import IRenderable
 from buildbot.process.properties import Properties, WithProperties
-from buildbot.steps.source import _ComputeRepositoryURL
+from buildbot.steps.source import _ComputeRepositoryURL, Source
+from buildbot.test.util import steps
+
 
 class SourceStamp(object):
     repository = "test"
@@ -71,3 +73,24 @@ class RepoURL(unittest.TestCase):
         self.assertEquals(self.build.render(url), "testbar")
 
 
+class TestSourceDescription(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_constructor_args_strings(self):
+        step = Source(workdir='build',
+                      description='svn update (running)',
+                      descriptionDone='svn update')
+        self.assertEqual(step.description, ['svn update (running)'])
+        self.assertEqual(step.descriptionDone, ['svn update'])
+
+    def test_constructor_args_lists(self):
+        step = Source(workdir='build',
+                      description=['svn', 'update', '(running)'],
+                      descriptionDone=['svn', 'update'])
+        self.assertEqual(step.description, ['svn', 'update', '(running)'])
+        self.assertEqual(step.descriptionDone, ['svn', 'update'])
