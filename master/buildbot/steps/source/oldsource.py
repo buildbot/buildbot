@@ -66,7 +66,9 @@ class Source(LoggingBuildStep):
     starts a LoggedRemoteCommand with those arguments.
     """
 
-    renderables = [ 'workdir' ]
+    renderables = [ 'workdir', 'description', 'descriptionDone' ]
+    description = None # set this to a list of short strings to override
+    descriptionDone = None # alternate description when the step is complete
 
     # if the checkout fails, there's no point in doing anything else
     haltOnFailure = True
@@ -76,7 +78,8 @@ class Source(LoggingBuildStep):
     branch = None # the default branch, should be set in __init__
 
     def __init__(self, workdir=None, mode='update', alwaysUseLatest=False,
-                 timeout=20*60, retry=None, env=None, logEnviron=True, **kwargs):
+                 timeout=20*60, retry=None, env=None, logEnviron=True,
+                 description=None, descriptionDone=None, **kwargs):
         """
         @type  workdir: string
         @param workdir: local directory (relative to the Builder's root)
@@ -157,7 +160,7 @@ class Source(LoggingBuildStep):
                       their build failures are due to transient network
                       failures that could be handled by simply retrying a
                       couple times.
-                      
+
         @type logEnviron: boolean
         @param logEnviron: If this option is true (the default), then the
                            step's logfile will describe the environment
@@ -175,6 +178,8 @@ class Source(LoggingBuildStep):
                                  retry=retry,
                                  logEnviron=logEnviron,
                                  env=env,
+                                 description=description,
+                                 descriptionDone=descriptionDone
                                  )
 
         assert mode in ("update", "copy", "clobber", "export")
@@ -194,19 +199,28 @@ class Source(LoggingBuildStep):
 
         self.logEnviron = logEnviron
         self.env = env
-        
-        # Compute defaults for descriptions:
-        description = ["updating"]
-        descriptionDone = ["update"]
-        if mode == "clobber":
-            description = ["checkout"]
-            # because checkingouting takes too much space
-            descriptionDone = ["checkout"]
-        elif mode == "export":
-            description = ["exporting"]
-            descriptionDone = ["export"]
-        self.description = description
-        self.descriptionDone = descriptionDone
+
+        descriptions_for_mode = {
+            "clobber": "checkout",
+            "export": "exporting"}
+        descriptionDones_for_mode = {
+            "clobber": "checkout",
+            "export": "export"}
+        if description:
+            self.description = description
+        else:
+            self.description = [
+                descriptions_for_mode.get(mode, "updating")]
+        if isinstance(self.description, str):
+            self.description = [self.description]
+
+        if descriptionDone:
+            self.descriptionDone = descriptionDone
+        else:
+            self.descriptionDone = [
+                descriptionDones_for_mode.get(mode, "update")]
+        if isinstance(self.descriptionDone, str):
+            self.descriptionDone = [self.descriptionDone]
 
     def setStepStatus(self, step_status):
         LoggingBuildStep.setStepStatus(self, step_status)
@@ -264,7 +278,7 @@ class Source(LoggingBuildStep):
 
         if self.alwaysUseLatest:
             revision = None
-            
+
         self.args['logEnviron'] = self.logEnviron
         self.args['env'] = self.env
         self.startVC(branch, revision, patch)
@@ -279,28 +293,28 @@ class Source(LoggingBuildStep):
 
 class BK(Source):
     """I perform BitKeeper checkout/update operations."""
-    
+
     name = 'bk'
 
     renderables = [ 'bkurl', 'baseURL' ]
-    
+
     def __init__(self, bkurl=None, baseURL=None,
                  directory=None, extra_args=None, **kwargs):
         """
         @type  bkurl: string
         @param bkurl: the URL which points to the BitKeeper server.
-                 
+
         @type  baseURL: string
         @param baseURL: if branches are enabled, this is the base URL to
                         which a branch name will be appended. It should
                         probably end in a slash. Use exactly one of
                         C{bkurl} and C{baseURL}.
         """
-                        
+
         self.bkurl = _ComputeRepositoryURL(bkurl)
         self.baseURL = _ComputeRepositoryURL(baseURL)
         self.extra_args = extra_args
-        
+
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(bkurl=bkurl,
                                  baseURL=baseURL,
@@ -311,11 +325,11 @@ class BK(Source):
         if bkurl and baseURL:
             raise ValueError("you must use exactly one of bkurl and baseURL")
 
-        
+
     def computeSourceRevision(self, changes):
         return changes.revision
-                       
-                       
+
+
     def startVC(self, branch, revision, patch):
 
         warnings = []
