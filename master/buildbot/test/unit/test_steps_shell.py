@@ -24,7 +24,7 @@ from buildbot.test.fake.remotecommand import ExpectShell, Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 
 
-class TestShellCommandExeceution(steps.BuildStepMixin, unittest.TestCase):
+class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
         return self.setUpBuildStep()
