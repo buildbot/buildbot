@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import sqlalchemy as sa
 from twisted.trial import unittest
 from buildbot.db import users
 from buildbot.test.util import connector_component
@@ -22,7 +23,8 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
                                  unittest.TestCase):
 
     def setUp(self):
-        d = self.setUpConnectorComponent(table_names=['users', 'users_info'])
+        d = self.setUpConnectorComponent(
+                table_names=['users', 'users_info', 'changes', 'change_users'])
         def finish_setup(_):
             self.db.users = users.UsersConnectorComponent(self.db)
         d.addCallback(finish_setup)
@@ -34,121 +36,125 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
     # sample user data
 
     user1_rows = [
-        fakedb.User(uid=1, identifier='soap', full_name='Tyler Durden',
-                    email='tyler@mayhem.net'),
-        fakedb.UserInfo(uid=1)
+        fakedb.User(uid=1, identifier='soap'),
+        fakedb.UserInfo(uid=1, attr_type='IPv9', attr_data='0578cc6.8db024'),
     ]
 
     user2_rows = [
         fakedb.User(uid=2),
-        fakedb.UserInfo(uid=2, attr_type='authz_user', attr_data='tdurden'),
-        fakedb.UserInfo(uid=2, attr_type='authz_pass', attr_data='lye')
+        fakedb.UserInfo(uid=2, attr_type='git',
+                        attr_data='Tyler Durden <tyler@mayhem.net>'),
+        fakedb.UserInfo(uid=2, attr_type='irc', attr_data='durden')
     ]
 
     user1_dict = {
         'uid': 1,
         'identifier': u'soap',
-        'full_name': u'Tyler Durden',
-        'email': u'tyler@mayhem.net',
-        'git': u'Tyler Durden <tyler@mayhem.net>'
-    }
-
-    # updated email
-    user1_updated_dict = {
-        'uid': 1,
-        'identifier': u'soap',
-        'full_name': u'Tyler Durden',
-        'email': u'narrator@mayhem.net',
-        'git': u'Tyler Durden <tyler@mayhem.net>'
+        'IPv9': u'0578cc6.8db024',
     }
 
     user2_dict = {
         'uid': 2,
-        'identifier': u'tdurden',
-        'authz_user': u'tdurden',
-        'authz_pass': u'lye'
+        'identifier': u'soap',
+        'irc': u'durden',
+        'git': u'Tyler Durden <tyler@mayhem.net>'
     }
 
     # tests
 
-    def test_addUser(self):
-        d = self.db.users.addUser(user_dict={'full_name': 'tyler durden',
-                                             'email': 'tyler@mayhem.net',
-                                             'authz_user': 'tdurden',
-                                             'authz_pass': 'lye'})
+    def test_addUser_new(self):
+        d = self.db.users.addUser(identifier='soap',
+                                  attr_type='subspace_net_handle',
+                                  attr_data='Durden0924')
+        def check_user(uid):
+            def thd(conn):
+                users_tbl = self.db.model.users
+                users_info_tbl = self.db.model.users_info
+                users = conn.execute(users_tbl.select()).fetchall()
+                infos = conn.execute(users_info_tbl.select()).fetchall()
+                self.assertEqual(len(users), 1)
+                self.assertEqual(users[0].uid, uid)
+                self.assertEqual(users[0].identifier, 'soap')
+                self.assertEqual(len(infos), 1)
+                self.assertEqual(infos[0].uid, uid)
+                self.assertEqual(infos[0].attr_type, 'subspace_net_handle')
+                self.assertEqual(infos[0].attr_data, 'Durden0924')
+            return self.db.pool.do(thd)
+        d.addCallback(check_user)
+        return d
+
+    def test_addUser_existing(self):
+        d = self.insertTestData(self.user1_rows)
+        d.addCallback(lambda _ : self.db.users.addUser(
+                                  identifier='soapy',
+                                  attr_type='IPv9',
+                                  attr_data='0578cc6.8db024'))
         def check_user(uid):
             self.assertEqual(uid, 1)
             def thd(conn):
-                rows = conn.execute(self.db.model.users.select()).fetchall()
-                infos = conn.execute(self.db.model.users_info.select()).fetchall()
-                self.assertEqual(len(rows), 1)
-                self.assertEqual(rows[0].uid, 1)
-                self.assertEqual(rows[0].identifier, 'tyler@mayhem.net')
-                self.assertEqual(rows[0].full_name, 'tyler durden')
-                self.assertEqual(rows[0].email, 'tyler@mayhem.net')
-                self.assertEqual(len(infos), 2)
-                self.assertEqual(infos[0].uid, 1)
-                self.assertEqual(infos[0].attr_type, 'authz_user')
-                self.assertEqual(infos[0].attr_data, 'tdurden')
-                self.assertEqual(infos[1].uid, 1)
-                self.assertEqual(infos[1].attr_type, 'authz_pass')
-                self.assertEqual(infos[1].attr_data, 'lye')
+                users_tbl = self.db.model.users
+                users_info_tbl = self.db.model.users_info
+                users = conn.execute(users_tbl.select()).fetchall()
+                infos = conn.execute(users_info_tbl.select()).fetchall()
+                self.assertEqual(len(users), 1)
+                self.assertEqual(users[0].uid, uid)
+                self.assertEqual(users[0].identifier, 'soap') # not changed!
+                self.assertEqual(len(infos), 1)
+                self.assertEqual(infos[0].uid, uid)
+                self.assertEqual(infos[0].attr_type, 'IPv9')
+                self.assertEqual(infos[0].attr_data, '0578cc6.8db024')
+            return self.db.pool.do(thd)
+        d.addCallback(check_user)
+        return d
+
+    def test_addUser_race(self):
+        def race_thd(conn):
+            # note that this assumes that both inserts can happen "at once".
+            # This is the case for DB engines that support transactions, but
+            # not for MySQL.  so this test does not detect the potential MySQL
+            # failure, which will generally result in a spurious failure.
+            conn.execute(self.db.model.users.insert(),
+                    uid=99, identifier='soap')
+            conn.execute(self.db.model.users_info.insert(),
+                    uid=99, attr_type='subspace_net_handle',
+                    attr_data='Durden0924')
+        d = self.db.users.addUser(identifier='soap',
+                                  attr_type='subspace_net_handle',
+                                  attr_data='Durden0924',
+                                  _race_hook=race_thd)
+        def check_user(uid):
+            self.assertEqual(uid, 99)
+            def thd(conn):
+                users_tbl = self.db.model.users
+                users_info_tbl = self.db.model.users_info
+                users = conn.execute(users_tbl.select()).fetchall()
+                infos = conn.execute(users_info_tbl.select()).fetchall()
+                self.assertEqual(len(users), 1)
+                self.assertEqual(users[0].uid, uid)
+                self.assertEqual(users[0].identifier, 'soap')
+                self.assertEqual(len(infos), 1)
+                self.assertEqual(infos[0].uid, uid)
+                self.assertEqual(infos[0].attr_type, 'subspace_net_handle')
+                self.assertEqual(infos[0].attr_data, 'Durden0924')
             return self.db.pool.do(thd)
         d.addCallback(check_user)
         return d
 
     def test_addUser_existing_identifier(self):
-        d = self.db.users.addUser(identifier='soap',
-                                  user_dict={'authz_user': 'tdurden'})
+        d = self.insertTestData(self.user1_rows)
         d.addCallback(lambda _ : self.db.users.addUser(
-                                            identifier='soap',
-                                            user_dict={'authz_pass': 'lye'}))
-        def check_user(uid):
-            self.assertEqual(uid, 1)
-            def thd(conn):
-                rows = conn.execute(self.db.model.users.select()).fetchall()
-                infos = conn.execute(self.db.model.users_info.select()).fetchall()
-                self.assertEqual(len(rows), 1)
-                self.assertEqual(rows[0].uid, 1)
-                self.assertEqual(rows[0].identifier, 'soap')
-                self.assertEqual(rows[0].full_name, None)
-                self.assertEqual(rows[0].email, None)
-                self.assertEqual(len(infos), 2)
-                self.assertEqual(infos[0].uid, 1)
-                self.assertEqual(infos[0].attr_type, 'authz_user')
-                self.assertEqual(infos[0].attr_data, 'tdurden')
-                self.assertEqual(infos[1].uid, 1)
-                self.assertEqual(infos[1].attr_type, 'authz_pass')
-                self.assertEqual(infos[1].attr_data, 'lye')
-            return self.db.pool.do(thd)
-        d.addCallback(check_user)
+                                  identifier='soap',
+                                  attr_type='telepathIO(tm)',
+                                  attr_data='hmm,lye'))
+        def cb(_):
+            self.fail("shouldn't get here")
+        def eb(f):
+            f.trap(sa.exc.IntegrityError, sa.exc.ProgrammingError)
+            pass # expected
+        d.addCallbacks(cb, eb)
         return d
 
-    def test_addUser_existing_attr(self):
-        d = self.db.users.addUser(identifier='soap',
-                                  user_dict={'authz_user': 'tdurden'})
-        d.addCallback(lambda _ : self.db.users.addUser(
-                                            identifier='soap',
-                                            user_dict={'authz_user': 'tdurden'}))
-        def check_user(uid):
-            self.assertEqual(uid, 1)
-            def thd(conn):
-                rows = conn.execute(self.db.model.users.select()).fetchall()
-                infos = conn.execute(self.db.model.users_info.select()).fetchall()
-                self.assertEqual(len(rows), 1)
-                self.assertEqual(rows[0].uid, 1)
-                self.assertEqual(rows[0].identifier, 'soap')
-                self.assertEqual(rows[0].full_name, None)
-                self.assertEqual(rows[0].email, None)
-                self.assertEqual(len(infos), 1)
-                self.assertEqual(infos[0].uid, 1)
-                self.assertEqual(infos[0].attr_type, 'authz_user')
-                self.assertEqual(infos[0].attr_data, 'tdurden')
-            return self.db.pool.do(thd)
-        d.addCallback(check_user)
-        return d
-
-    def test_getUser_uid(self):
+    def test_getUser(self):
         d = self.insertTestData(self.user1_rows)
         def get1(_):
             return self.db.users.getUser(1)
@@ -158,17 +164,17 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         d.addCallback(check1)
         return d
 
-    def test_getUser_identifier(self):
-        d = self.insertTestData(self.user1_rows)
+    def test_getUser_multi_attr(self):
+        d = self.insertTestData(self.user2_rows)
         def get1(_):
-            return self.db.users.getUser('soap')
+            return self.db.users.getUser(2)
         d.addCallback(get1)
         def check1(usdict):
-            self.assertEqual(usdict, self.user1_dict)
+            self.assertEqual(usdict, self.user2_dict)
         d.addCallback(check1)
         return d
 
-    def test_getNoMatch(self):
+    def test_getUser_no_match(self):
         d = self.insertTestData(self.user1_rows)
         def get3(_):
             return self.db.users.getUser(3)
@@ -182,80 +188,120 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         d = self.insertTestData(self.user1_rows)
         def update1(_):
             return self.db.users.updateUser(
-                uid=1, user_dict={'email': 'narrator@mayhem.net'})
+                uid=1, attr_type='IPv9', attr_data='abcd.1234')
         d.addCallback(update1)
         def get1(_):
             return self.db.users.getUser(1)
         d.addCallback(get1)
         def check1(usdict):
-            self.assertEqual(usdict, self.user1_updated_dict)
+            self.assertEqual(usdict['IPv9'], 'abcd.1234')
+            self.assertEqual(usdict['identifier'], 'soap') # no change
         d.addCallback(check1)
         return d
 
-    def test_updateUser_new_type_uid(self):
+    def test_updateUser_new_type(self):
         d = self.insertTestData(self.user1_rows)
         def update1(_):
-            return self.db.users.updateUser(uid=1, user_dict={'authz_user': 'jack'})
+            return self.db.users.updateUser(
+                uid=1, attr_type='IPv4', attr_data='123.134.156.167')
         d.addCallback(update1)
         def get1(_):
             return self.db.users.getUser(1)
         d.addCallback(get1)
         def check1(usdict):
-            newdict = self.user1_dict
-            newdict['authz_user'] = 'jack'
-            self.assertEqual(usdict, newdict)
+            self.assertEqual(usdict['IPv4'], '123.134.156.167')
+            self.assertEqual(usdict['IPv9'], '0578cc6.8db024') # no change
+            self.assertEqual(usdict['identifier'], 'soap') # no change
         d.addCallback(check1)
         return d
 
-    def test_updateUser_new_type_identifier(self):
+    def test_updateUser_identifier(self):
         d = self.insertTestData(self.user1_rows)
         def update1(_):
-            return self.db.users.updateUser(identifier='soap',
-                                            user_dict={'authz_user': 'jack'})
+            return self.db.users.updateUser(
+                uid=1, identifier='lye')
         d.addCallback(update1)
         def get1(_):
             return self.db.users.getUser(1)
         d.addCallback(get1)
         def check1(usdict):
-            newdict = self.user1_dict
-            newdict['authz_user'] = 'jack'
-            self.assertEqual(usdict, newdict)
+            self.assertEqual(usdict['identifier'], 'lye')
+            self.assertEqual(usdict['IPv9'], '0578cc6.8db024') # no change
         d.addCallback(check1)
         return d
 
-    def test_updateNoMatch(self):
+    def test_updateUser_both(self):
+        d = self.insertTestData(self.user1_rows)
+        def update1(_):
+            return self.db.users.updateUser(
+                uid=1, identifier='lye',
+                attr_type='IPv4', attr_data='123.134.156.167')
+        d.addCallback(update1)
+        def get1(_):
+            return self.db.users.getUser(1)
+        d.addCallback(get1)
+        def check1(usdict):
+            self.assertEqual(usdict['identifier'], 'lye')
+            self.assertEqual(usdict['IPv4'], '123.134.156.167')
+            self.assertEqual(usdict['IPv9'], '0578cc6.8db024') # no change
+        d.addCallback(check1)
+        return d
+
+    def test_updateUser_race(self):
+        def race_thd(conn):
+            conn.execute(self.db.model.users_info.insert(),
+                    uid=1, attr_type='IPv4',
+                    attr_data='8.8.8.8')
+        d = self.insertTestData(self.user1_rows)
+        def update1(_):
+            return self.db.users.updateUser(
+                uid=1, attr_type='IPv4', attr_data='123.134.156.167',
+                _race_hook=race_thd)
+        d.addCallback(update1)
+        def get1(_):
+            return self.db.users.getUser(1)
+        d.addCallback(get1)
+        def check1(usdict):
+            self.assertEqual(usdict['identifier'], 'soap')
+            self.assertEqual(usdict['IPv4'], '8.8.8.8')
+            self.assertEqual(usdict['IPv9'], '0578cc6.8db024') # no change
+        d.addCallback(check1)
+        return d
+
+    def test_update_NoMatch_identifier(self):
         d = self.insertTestData(self.user1_rows)
         def update3(_):
             return self.db.users.updateUser(
-                uid=3, user_dict={'email': 'narrator@mayhem.net'})
+                uid=3, identifier='abcd')
         d.addCallback(update3)
-        def check3(none):
-            self.assertEqual(none, None)
-        d.addCallback(check3)
+        def get1(_):
+            return self.db.users.getUser(1)
+        d.addCallback(get1)
+        def check1(usdict):
+            self.assertEqual(usdict['identifier'], 'soap') # no change
+        d.addCallback(check1)
+        return d
+
+    def test_update_NoMatch_attribute(self):
+        d = self.insertTestData(self.user1_rows)
+        def update3(_):
+            return self.db.users.updateUser(
+                uid=3, attr_type='abcd', attr_data='efgh')
+        d.addCallback(update3)
+        def get1(_):
+            return self.db.users.getUser(1)
+        d.addCallback(get1)
+        def check1(usdict):
+            self.assertEqual(usdict['IPv9'], '0578cc6.8db024') # no change
+        d.addCallback(check1)
         return d
 
     def test_removeUser_uid(self):
         d = self.insertTestData(self.user1_rows)
         def remove1(_):
-            return self.db.users.removeUser(uid=1)
+            return self.db.users.removeUser(1)
         d.addCallback(remove1)
-        def check1(removed):
-            self.assertEqual(removed, self.user1_dict)
-            def thd(conn):
-                r = conn.execute(self.db.model.users.select())
-                r = r.fetchall()
-                self.assertEqual(len(r), 0)
-            return self.db.pool.do(thd)
-        d.addCallback(check1)
-        return d
-
-    def test_removeUser_identifier(self):
-        d = self.insertTestData(self.user1_rows)
-        def remove1(_):
-            return self.db.users.removeUser(identifier='soap')
-        d.addCallback(remove1)
-        def check1(removed):
-            self.assertEqual(removed, self.user1_dict)
+        def check1(_):
             def thd(conn):
                 r = conn.execute(self.db.model.users.select())
                 r = r.fetchall()
@@ -266,10 +312,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
 
     def test_removeNoMatch(self):
         d = self.insertTestData(self.user1_rows)
-        def remove1(_):
+        def check(_):
             return self.db.users.removeUser(uid=3)
-        d.addCallback(remove1)
-        def check1(removed):
-            self.assertEqual(removed, None)
-        d.addCallback(check1)
+        d.addCallback(check)
         return d

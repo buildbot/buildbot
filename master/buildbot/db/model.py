@@ -343,31 +343,26 @@ class Model(base.DBConnectorComponent):
         # unique user id number
         sa.Column("uid", sa.Integer, primary_key=True),
 
-        # in cases where indexing is needed and the uid is not known, this
-        # generic identifier will be used to look up users
-        sa.Column("identifier", sa.String(256)),
-
-        # full name of user, parsed from git changes
-        sa.Column("full_name", sa.Text()),
-
-        # value of auth for a given user corresponding to auth_type
-        sa.Column("email", sa.Text()),
+        # identifier (nickname) for this user; used for display
+        sa.Column("identifier", sa.String(256), nullable=False),
     )
-    """This table stores attributes that describe a user, like the identifier,
-    email, and so on."""
+    """This table identifies individual users, and contains buildbot-specific
+    information about those users."""
 
     users_info = sa.Table("users_info", metadata,
         # unique user id number
-        sa.Column("uid", sa.Integer, sa.ForeignKey('users.uid'), nullable=False),
+        sa.Column("uid", sa.Integer, sa.ForeignKey('users.uid'),
+                  nullable=False),
 
         # type of user attribute, such as 'git'
-        sa.Column("attr_type", sa.Text(), nullable=False),
+        sa.Column("attr_type", sa.String(128), nullable=False),
 
         # data for given user attribute, such as a commit string or password
-        sa.Column("attr_data", sa.Text(), nullable=False),
+        sa.Column("attr_data", sa.String(128), nullable=False),
     )
-    """This table stores the user information about how buildbot references users,
-    such as their vcs commit strings or passwords."""
+
+    """This table stores information identifying a user that's related to a
+    particular interface - a version-control system, status plugin, etc."""
 
     # indexes
 
@@ -396,9 +391,12 @@ class Model(base.DBConnectorComponent):
     sa.Index('scheduler_upstream_buildsets_schedulerid', scheduler_upstream_buildsets.c.schedulerid)
     sa.Index('scheduler_upstream_buildsets_active', scheduler_upstream_buildsets.c.active)
     sa.Index('sourcestamp_changes_sourcestampid', sourcestamp_changes.c.sourcestampid)
-    sa.Index('users_uid', users.c.uid)
-    sa.Index('users_identifier', users.c.identifier)
+    sa.Index('users_identifier', users.c.identifier, unique=True)
     sa.Index('users_info_uid', users_info.c.uid)
+    sa.Index('users_info_uid_attr_type', users_info.c.uid,
+            users_info.c.attr_type, unique=True)
+    sa.Index('users_info_attrs', users_info.c.attr_type,
+            users_info.c.attr_data, unique=True)
     sa.Index('change_users_changeid', change_users.c.changeid)
 
     #

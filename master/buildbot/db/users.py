@@ -17,12 +17,15 @@
 Support for users in the database
 """
 
+import sqlalchemy as sa
 from sqlalchemy.sql.expression import and_
 
-from twisted.python import log
 from buildbot.db import base
 
 class UsDict(dict):
+    pass
+
+class MultipleMatchingUsersError(Exception):
     pass
 
 class UsersConnectorComponent(base.DBConnectorComponent):
@@ -30,111 +33,86 @@ class UsersConnectorComponent(base.DBConnectorComponent):
     A DBConnectorComponent to handle getting users into and out of the
     database.  An instance is available at C{master.db.users}.
 
+    Users are represented as user dictionaries, with keys C{uid},
+    C{identifier}, and all attribute types for the given user.  Attribute types
+    with conflicting names will be ignored.
     """
 
     known_types = ['full_name', 'email']
     known_info_types = ['authz_user', 'authz_pass', 'git']
 
-    def addUser(self, identifier=None, user_dict=None):
-        """Adds a User to the database with the passed in attributes; returns
-        the new user's uid via deferred. All arguments are keyword arguments.
-        This performs some checks to make sure there aren't duplicate users
-        created, such as checking for exact matches on attr_data.
-
-        @param identifier: string used as index if uid is not known
-        @type identifier: string
-
-        @param user_dict: dictionary whose key/value pairs are attr_type
-                          and attr_data pairs
-        @type user_dict: dictionary
-
-        @returns: new user's uid via Deferred or None
+    def addUser(self, identifier, attr_type, attr_data, _race_hook=None):
         """
+        Get an existing user, or add a new one, based on the given attribute.
 
-        def thd(conn):
-            if not user_dict:
-                return None
+        This method is intended for use by other components of Buildbot, for
+        identifying users that may relate to Buildbot in several ways, e.g.,
+        IRC and Mercurial.  The IRC plugin would use an C{irc} attribute, while
+        Mercurial would use an C{hg} attribute, but both would find the same
+        user id.
 
-            transaction = conn.begin()
+        Note that C{identifier} is I{not} used in the search for an existing
+        user.  The identifier should be based on the attributes, and care
+        should be taken to avoid calling this method with the same attribute
+        arguments but different identifiers, as this can lead to creation of
+        multiple users.
+
+        For future compatibility, always use keyword parameters to call this
+        method.
+
+        @param identifier: identifier to use for a new user
+        @param attr_type: attribute type to search for and/or add
+        @param attr_data: attribute data to add
+        @param _race_hook: for testing
+        @returns: user id via Deferred
+        """
+        def thd(conn, no_recurse=False):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
-            uid, ident = None, None
 
-            # if there's a user with the same identifier already in the
-            # database, we use the existing uid
-            if identifier:
-                res = conn.execute(tbl.select(whereclause=(
-                                      tbl.c.identifier == identifier)))
-                rows = res.fetchall()
-                if rows:
-                    uid = rows[0].uid
-                ident = identifier
+            # try to find the user
+            q = sa.select([ tbl.c.uid ],
+                        whereclause=and_(tbl_info.c.attr_type == attr_type,
+                                tbl_info.c.attr_data == attr_data))
+            rows = conn.execute(q).fetchall()
+            if rows:
+                return rows[0].uid
 
-            # if no identifier is given, we try to render a decent one
-            elif not ident:
-                if 'email' in user_dict:
-                    ident = user_dict['email']
-                elif 'full_name' in user_dict:
-                    ident = user_dict['full_name']
-                else:
-                    ident = user_dict.values()[0]
+            _race_hook and _race_hook(conn)
 
-            # check for an existing user
-            for attr_type in user_dict:
-                attr_data = user_dict[attr_type]
-
-                q = tbl_info.select(whereclause=(
-                                    and_(tbl_info.c.attr_type == attr_type,
-                                         tbl_info.c.attr_data == attr_data)))
-                rows = conn.execute(q).fetchall()
-
-                if rows:
-                    log.msg("found existing User Object with attribute "
-                            "%r: %r and uid %r" % (attr_type, attr_data,
-                                                   rows[0].uid))
-                    return rows[0].uid
-
-            # insert new uid if needed
-            if not uid:
-                r = conn.execute(tbl.insert(), dict(identifier=ident))
+            # try to do both of these inserts in a transaction, so that both
+            # the new user and the corresponding attributes appear at the same
+            # time from the perspective of other masters.
+            transaction = conn.begin()
+            try:
+                r = conn.execute(tbl.insert(), dict(identifier=identifier))
                 uid = r.inserted_primary_key[0]
 
-            # update users table if type is null
-            for attr in user_dict:
-                if attr in self.known_types:
-                    qs = tbl.select(whereclause=(tbl.c.uid == uid))
-                    row = conn.execute(qs).fetchone()
+                conn.execute(tbl_info.insert(),
+                        dict(uid=uid, attr_type=attr_type,
+                             attr_data=attr_data))
 
-                    qu = tbl.update(whereclause=(tbl.c.uid == uid))
-                    if not row.full_name and attr == 'full_name':
-                        conn.execute(qu, full_name=user_dict[attr])
-                    if not row.email and attr == 'email':
-                        conn.execute(qu, email=user_dict[attr])
+                transaction.commit()
+            except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                transaction.rollback()
 
-            # add new attr_foo to users_info table
-            for attr_type in user_dict:
-                attr_data = user_dict[attr_type]
-                if attr_type in self.known_info_types:
-                    r = conn.execute(tbl_info.insert(),
-                                     dict(uid=uid, attr_type=attr_type,
-                                          attr_data=attr_data))
+                # try it all over again, in case there was an overlapping,
+                # identical call to addUser, but only retry once.
+                if no_recurse:
+                    raise
+                return thd(conn, no_recurse=True)
 
-            log.msg("added User Object to table: %r" % user_dict)
-            transaction.commit()
             return uid
         d = self.db.pool.do(thd)
         return d
 
     @base.cached("usdicts")
-    def getUser(self, key):
+    def getUser(self, uid):
         """
         Get a dictionary representing a given user, or None if no matching
         user is found.
 
-        @param key: to work with the caching decorator, there can only be
-                    one argument given to the method, which is either the
-                    user id (uid) or the string used as index if uid is not
-                    known (identifier)
+        @param uid: user id to look up
         @type key: int or string
 
         @param no_cache: bypass cache and always fetch from database
@@ -145,162 +123,111 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
-            q = None
 
-            if isinstance(key, int):
-                q = tbl.select(whereclause=(tbl.c.uid == key))
-            elif key:
-                q = tbl.select(whereclause=(tbl.c.identifier == key))
-            else:
-                return None
+            q = tbl.select(whereclause=(tbl.c.uid == uid))
+            users_row = conn.execute(q).fetchone()
 
-            row = conn.execute(q).fetchone()
-
-            if not row:
+            if not users_row:
                 return None
 
             # make UsDict to return
             usdict = UsDict()
-            usdict['uid'] = row.uid
-            usdict['identifier'] = row.identifier
-            usdict['full_name'] = row.full_name
-            usdict['email'] = row.email
 
             # gather all attr_type and attr_data entries from users_info table
-            q = tbl_info.select(whereclause=(tbl_info.c.uid == usdict['uid']))
+            q = tbl_info.select(whereclause=(tbl_info.c.uid == uid))
             rows = conn.execute(q).fetchall()
-
             for row in rows:
                 usdict[row.attr_type] = row.attr_data
 
-            log.msg("got User Object from table: %r" % usdict)
+            # add the users_row data *after* the attributes in case attr_type
+            # matches one of these keys.
+            usdict['uid'] = users_row.uid
+            usdict['identifier'] = users_row.identifier
+
             return usdict
         d = self.db.pool.do(thd)
         return d
 
-    def updateUser(self, uid=None, identifier=None, user_dict=None):
-        """Updates a user's attributes in the database with the given user_dict
-        items. Returns a deferred or None if there is no matching user found.
-        If an item is in user_dict that a matching user does not have yet, that
-        item will be added to the tables.
+    def updateUser(self, uid=None, identifier=None, attr_type=None,
+                   attr_data=None, _race_hook=None):
+        """
+        Updates the current attribute and identifier for the given user.
+        items.  If no user with that uid exists, the method will return
+        silently.
 
-        @param uid: user id number
+        @param uid: user id of the user to change
         @type uid: int
 
-        @param identifier: string used as index if uid is not known
+        @param identifier: (optional) new identifier for this user
         @type identifier: string
 
-        @param user_dict: dictionary whose key/value pairs are attr_type
-                          and attr_data pairs
-        @type user_dict: dictionary
+        @param attr_type: (optional) attribute type to update
+        @type attr_type: string
 
-        @returns: Deferred or None
+        @param attr_data: (optional) value for C{attr_type}
+        @type attr_data: string
+
+        @param _race_hook: for testing
+
+        @returns: Deferred
         """
-
         def thd(conn):
-            if not user_dict:
-                return None
-            transaction = conn.begin()
-
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
-            if uid:
-                q = tbl.select(whereclause=(tbl.c.uid == uid))
-            elif identifier:
-                q = tbl.select(whereclause=(tbl.c.identifier == identifier))
-            else:
-                return None
+            # first, update the identifier
+            if identifier is not None:
+                conn.execute(
+                    tbl.update(whereclause=tbl.c.uid == uid),
+                    identifier=identifier)
 
-            # if no matching user is found, return
-            row = conn.execute(q).fetchone()
-            if not row:
-                return None
+            # then, update the attributes, carefully handling the potential
+            # update-or-insert race condition.
+            if attr_type is not None:
+                assert attr_data is not None
 
-            row_uid = row.uid
-            qs = tbl_info.select(whereclause=(tbl_info.c.uid == row_uid))
-            rows = conn.execute(qs).fetchall()
-            if not rows:
-                rows = []
+                # first update, then insert
+                q = tbl_info.update(
+                        whereclause=(tbl_info.c.uid == uid)
+                                    & (tbl_info.c.attr_type == attr_type))
+                res = conn.execute(q, attr_data=attr_data)
+                if res.rowcount > 0:
+                    return
 
-            for attr_type in user_dict:
-                attr_data = user_dict[attr_type]
+                _race_hook and _race_hook(conn)
 
-                # update value if attr_type exists, otherwise add a new row
-                if attr_type in self.known_types:
-                    qu = tbl.update(whereclause=(tbl.c.uid == row_uid))
-                    if row.full_name and attr_type == 'full_name':
-                        conn.execute(qu, full_name=user_dict[attr_type])
-                    if row.email and attr_type == 'email':
-                        conn.execute(qu, email=user_dict[attr_type])
-
-                elif attr_type in self.known_info_types:
-                    for info_row in rows:
-                        if info_row.attr_type == attr_type:
-                            qu = tbl_info.update(whereclause=(
-                                    and_(tbl_info.c.attr_type == attr_type,
-                                         tbl_info.c.uid == info_row.uid)))
-                            conn.execute(qu, attr_data=attr_data)
-                            break
-                    else:
-                        if attr_type in self.known_info_types:
-                            conn.execute(tbl_info.insert(),
-                                         dict(uid=row_uid,
-                                              attr_type=attr_type,
-                                              attr_data=attr_data))
-            transaction.commit()
-            log.msg("updated following attributes of matching User Object in "
-                    "table: %r" % user_dict)
+                # the update hit 0 rows, so try inserting a new one
+                try:
+                    q = tbl_info.insert()
+                    res = conn.execute(q,
+                            uid=uid,
+                            attr_type=attr_type,
+                            attr_data=attr_data)
+                except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                    # someone else beat us to the punch inserting this row; let
+                    # them win.
+                    pass
         d = self.db.pool.do(thd)
         return d
 
-    def removeUser(self, uid=None, identifier=None):
+    def removeUser(self, uid):
         """
-        Remove a user with the given uid from the database, returns a UsDict
-        with the removed user via Deferred if the user was found.
+        Remove the user with the given uid from the database.  This will remove
+        the user from any associated tables as well.
 
         @param uid: unique user id number
         @type uid: int
 
-        @param identifier: string used as index if uid is not known
-        @type identifier: string
-
-        @returns: UsDict via Deferred
+        @returns: Deferred
         """
 
         def thd(conn):
-            tbl = self.db.model.users
-            tbl_info = self.db.model.users_info
-
-            if uid:
-                q = tbl.select(whereclause=(tbl.c.uid == uid))
-            elif identifier:
-                q = tbl.select(whereclause=(tbl.c.identifier == identifier))
-            else:
-                return None
-
-            res = conn.execute(q)
-            row = res.fetchone()
-
-            if not row:
-                return None
-
-            qs = tbl_info.select(whereclause=(tbl_info.c.uid == row.uid))
-            info_rows = conn.execute(qs).fetchall()
-
-            conn.execute(tbl_info.delete(whereclause=(tbl_info.c.uid == row.uid)))
-            conn.execute(tbl.delete(whereclause=(tbl.c.uid == row.uid)))
-
-            # gather all attr_type and attr_data entries
-            usdict = {}
-            usdict['uid'] = row.uid
-            usdict['identifier'] = row.identifier
-            usdict['full_name'] = row.full_name
-            usdict['email'] = row.email
-
-            for row in info_rows:
-                usdict[row.attr_type] = row.attr_data
-            log.msg("removed User Object from table: %r" % usdict)
-            return usdict
+            # delete from dependent tables first, followed by 'users'
+            for tbl in [
+                    self.db.model.change_users,
+                    self.db.model.users_info,
+                    self.db.model.users,
+                    ]:
+                conn.execute(tbl.delete(whereclause=(tbl.c.uid==uid)))
         d = self.db.pool.do(thd)
         return d
