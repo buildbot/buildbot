@@ -1043,17 +1043,20 @@ class FakeUsersComponent(FakeDBComponent):
 
             if isinstance(row, UserInfo):
                 assert row.uid in self.users
-                self.users_info[row.uid] = dict(attr_type=row.attr_type,
-                                                attr_data=row.attr_data)
+                if not self.users_info[row.uid]:
+                    self.users_info[row.uid] = dict(attr_type=row.attr_type,
+                                                    attr_data=row.attr_data)
+                else:
+                    self.users_info[row.uid].update(
+                                               dict(attr_type=row.attr_type,
+                                                    attr_data=row.attr_data))
 
     def _user2dict(self, uid):
         usdict = None
-        users, users_info = None, None
-
-        if uid in self.stored_users:
-            users = self.stored_users[uid]
-            users_info = self.stored_users_info[uid]
-            usdict = users.update(users_info)
+        if uid in self.users:
+            usdict.update(self.users[uid])
+            usdict.update(self.users_info[uid])
+            usdict['uid'] = uid
         return usdict
 
     def nextId(self):
@@ -1062,119 +1065,44 @@ class FakeUsersComponent(FakeDBComponent):
 
     # component methods
 
-    def addUser(self, identifier=None, user_dict=None):
-        if not user_dict:
-            return defer.succeed(None)
+    def addUser(self, identifier, attr_type, attr_data):
+        for uid in self.users_info:
+            attrs = self.users_info[uid]
+            if (attr_type == attrs['attr_type'] and
+                attr_data == attrs['attr_data']):
+                return defer.succeed(uid)
 
-        uid, ident = None, None
-        for user in self.users.values():
-            if identifier in user:
-                uid = user.uid
-                ident = identifier
-
-        if not ident:
-            if 'email' in user_dict:
-                ident = user_dict['email']
-            elif 'full_name' in user_dict:
-                ident = user_dict['full_name']
-            else:
-                ident = user_dict.values()[0]
-
-        for attr_type in user_dict:
-            attr_data = user_dict[attr_type]
-            usdict = self.getUser((attr_type, attr_data))
-            if usdict:
-                return defer.succeed(usdict['uid'])
-
-        if not uid:
-            uid = self.nextId()
-            self.db.users.insertTestData([User(uid=uid, identifier=ident)])
-
-        for attr in user_dict:
-            if attr in self.known_types:
-                if not self.users[uid]['full_name'] and attr == 'full_name':
-                    self.users[uid]['full_name'] = user_dict[attr]
-                if not self.users[uid]['email'] and attr == 'email':
-                    self.users[uid]['email'] = user_dict[attr]
-
-        infos = []
-        for attr_type in user_dict:
-            attr_data = user_dict[attr_type]
-            infos.append(UserInfo(uid=uid, attr_type=attr_type,
-                                  attr_data=attr_data))
-
-        self.db.users.insertTestData(infos)
+        uid = self.nextId()
+        self.db.users.insertTestData([User(uid=uid, identifier=identifier)])
+        self.db.users_info.insertTestData([UserInfo(uid=uid,
+                                                    attr_type=attr_type,
+                                                    attr_data=attr_data)])
         return defer.succeed(uid)
 
-    def getUser(self, key):
-        attr_type, attr_data = None, None
-
-        if isinstance(key, tuple):
-            attr_type, attr_data = key
-
-        for user in self.users.values():
-            if attr_type and attr_data:
-                if attr_type in user.values() and attr_data in user.values():
-                    return self._user2dict(user.id)
-            elif key in user.values():
-                return defer.succeed(self._user2dict(user.uid))
-
-        return defer.succeed(None)
-
-    def updateUser(self, uid=None, identifier=None, user_dict=None):
-        if not user_dict:
-            return defer.succeed(None)
-
-        for attr_type in user_dict:
-            attr_data = user_dict[attr_type]
-
-            if attr_type in self.known_types:
-                if 'user' in self.users.values():
-                    if self.users[uid]['full_name'] and attr_type == 'full_name':
-                        self.users[uid]['full_name'] = user_dict[attr_type]
-                    if self.users[uid]['email'] and attr_type == 'email':
-                        self.users[uid]['email'] = user_dict[attr_type]
-
-            elif attr_type in self.known_info_types:
-                for user in self.users_info.values():
-                    if uid in user.values():
-                        user.update(dict(attr_type=attr_type,
-                                         attr_data=attr_data))
-                    elif identifier in user.values():
-                        user.update(dict(attr_type=attr_type,
-                                         attr_data=attr_data))
-
-        return defer.succeed(None)
-
-    def removeUser(self, uid=None, identifier=None):
-        for user in self.users.values():
-            if uid and uid not in user.values():
-                return defer.succeed(None)
-            elif identifier and identifier not in user.values():
-                return defer.succeed(None)
-
-        key = uid or identifier
+    def getUser(self, uid):
         usdict = {}
-        for user in self.users.values():
-            if key in user.values():
-                usdict = self._user2dict(user.uid)
-                break
-
-        users_pop = []
-        for user in self.users.values():
-            if usdict['uid'] in user.values():
-                users_pop.append(user)
-        users_info_pop = []
-        for info in self.users_info.values():
-            if usdict['uid'] in info.values():
-                users_info_pop.append(info)
-
-        for popper in users_pop:
-            self.users_info.pop(popper)
-        for popper in users_pop:
-            self.users.pop(popper)
-
+        if uid in self.users:
+            usdict = self._user2dict(uid)
         return defer.succeed(usdict)
+
+    def updateUser(self, uid=None, identifier=None, attr_type=None,
+                   attr_data=None):
+        assert uid is not None
+
+        if identifier is not None:
+            self.users[uid]['identifier'] = identifier
+
+        if attr_type is not None:
+            assert attr_data is not None
+            self.users_info[uid].update(dict(attr_type=attr_type,
+                                             attr_data=attr_data))
+        return defer.succeed(None)
+
+    def removeUser(self, uid):
+        if uid in self.users:
+            self.users.pop(uid)
+            self.users_info.pop(uid)
+        return defer.succeed(None)
 
 class FakeDBConnector(object):
     """
