@@ -76,7 +76,7 @@ def getChanges(request, options=None):
                 branch=branch, category=category, revlink=revlink,
                 properties=properties, repository=repository,
                 project=project)
-        return [ chdict ]
+        return ([ chdict ], None)
 
 
 

@@ -283,7 +283,8 @@ class GitPoller(base.PollingChangeSource):
                    branch=self.branch,
                    category=self.category,
                    project=self.project,
-                   repository=self.repourl)
+                   repository=self.repourl,
+                   src='git')
             wfd = defer.waitForDeferred(d)
             yield wfd
             results = wfd.getResult()
