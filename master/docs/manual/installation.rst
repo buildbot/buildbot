@@ -165,6 +165,14 @@ Windows users will find these files in other places. You will need to
 make sure that python can find the libraries, and will probably find
 it convenient to have :command:`buildbot` on your :envvar:`PATH`.
 
+Installation in a Virtualenv
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you cannot or do not wish to install the buildbot into a site-wide
+location like :file:`/usr` or :file:`/usr/local`, you can also install
+it into the account's home directory or any other location using a tool like
+`virtualenv <http://pypi.python.org/pypi/virtualenv>`_.
+
 
 .. _Running-Buildbots-Tests-optional:
 
@@ -197,11 +205,6 @@ process, as it will probably be easier to track down the bug early. In most
 cases, the problem is incorrectly installed Python modules or a badly
 configured ``PYTHONPATH``. This may be a good time to contact the Buildbot
 developers for help.
-
-If you cannot or do not wish to install the buildbot into a site-wide
-location like :file:`/usr` or :file:`/usr/local`, you can also install
-it into the account's home directory or any other location using a tool like
-`virtualenv <http://pypi.python.org/pypi/virtualenv>`_.
 
 .. _Creating-a-buildmaster:
 
