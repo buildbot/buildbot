@@ -326,6 +326,10 @@ The available caches are:
     cache.  In this version, object IDs are not looked up often during
     runtime, so a relatively low value such as 10 is fine.
 
+``usdicts``
+    The number of rows from the ``users`` table to cache in memory.  Note that for
+    a given user there will be a row for each attribute that user has.
+
 The *global* ``buildCacheSize`` parameter gives the number of builds
 for each builder which are cached in memory.  This number should be larger than
 the number of builds required for commonly-used status displays (the waterfall

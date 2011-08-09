@@ -624,9 +624,8 @@ changes to the source code, causing builds which may succeed or fail.
 Each developer is primarily known through the source control system. Each
 :class:`Change` object that arrives is tagged with a :attr:`who` field that
 typically gives the account name (on the repository machine) of the user
-responsible for that change. This string is the primary key by which the
-User is known, and is displayed on the HTML status pages and in each :class:`Build`\'s
-*blamelist*.
+responsible for that change. This string is displayed on the HTML status
+pages and in each :class:`Build`\'s *blamelist*.
 
 To do more with the User than just refer to them, this username needs to
 be mapped into an address of some sort. The responsibility for this mapping
