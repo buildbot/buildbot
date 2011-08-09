@@ -95,6 +95,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             self.assertEquals(change["repository"], "http://github.com/defunkt/github")
             self.assertEquals(change["when"], 1203114994)
             self.assertEquals(change["who"], "Fred Flinstone <fred@flinstone.org>")
+            self.assertEquals(change["src"], "git")
             self.assertEquals(change["revision"], 'de8251ff97ee194a289832576287d6f8ad74e3d0')
             self.assertEquals(change["comments"], "update pricing a tad")
             self.assertEquals(change["branch"], "master")

@@ -265,6 +265,11 @@ host which runs the repository, but not all VC systems require this.  Each
 StatusNotifier will map the @code{who} attribute into something appropriate for
 their particular means of communication: an email address, an IRC handle, etc.
 
+This @code{who} attribute is also parsed and stored into Buildbot's database
+(@pxref{User Objects}). Currently, only @code{who} attributes in Changes from
+@code{git} repositories are translated into @ref{User Objects}, but in the
+future all incoming Changes will have their @code{who} parsed and stored.
+
 @heading Files
 
 It also has a list of @code{files}, which are just the tree-relative
@@ -608,6 +613,10 @@ the world consists of a set of developers, each of whom can be
 described by a couple of simple attributes. These developers make
 changes to the source code, causing builds which may succeed or fail.
 
+Users also may have different levels of authorization when issuing Buildbot
+commands, such as forcing a build from the web interface or from an IRC
+channel (@pxref{WebStatus Configuration Parameters}, @pxref{IRC Bot}).
+
 Each developer is primarily known through the source control system. Each
 Change object that arrives is tagged with a @code{who} field that
 typically gives the account name (on the repository machine) of the user
@@ -616,15 +625,47 @@ pages and in each Build's ``blamelist''.
 
 To do more with the User than just refer to them, this username needs to
 be mapped into an address of some sort. The responsibility for this mapping
-is left up to the status module which needs the address. The core code knows
-nothing about email addresses or IRC nicknames, just user names.
+is left up to the status module which needs the address. In the future,
+the responsbility for managing users will be transferred to User Objects.
+
+@code{who} fields in @code{git} Changes are used to create User Objects,
+which allows for more control and flexibility in how Buildbot manages users.
 
 @menu
+* User Objects::
 * Doing Things With Users::
 * Email Addresses::
 * IRC Nicknames::
 * Live Status Clients::
 @end menu
+
+@node User Objects
+@subsection User Objects
+
+User Objects allow Buildbot to better manage users throughout its various
+interactions with users (@pxref{Change Sources}, @pxref{Status Targets}).
+The User Objects are stored in the Buildbot database and correlate the various
+attributes that a user might have: irc, git, etc.
+
+@heading Changes
+
+Incoming Changes all have a @code{who} attribute attached to them that specifies
+which developer is responsible for that Change. When a Change is first rendered,
+the @code{who} attribute is parsed and added to the database if it doesn't exist
+or checked against an existing user. The @code{who} attribute is formatted in
+different ways depending on the version control system that the Change came from.
+Note that @code{git} is the only vcs currently supported for User Object creation.
+
+@table @code
+@item git
+@code{who} attributes take the form @code{Full Name <Email>}.
+@end table
+
+@heading Uses
+
+Correlating the various bits and pieces that Buildbot views as users also means
+that one attribute of a user can be translated into another. This provides a
+more complete view of users throughout Buildbot.
 
 @node Doing Things With Users
 @subsection Doing Things With Users
@@ -701,6 +742,9 @@ Once the mapping is established, the rest of the buildbot can ask the
 the likelihood that the user saw the given message (based upon how long the
 user has been inactive on the channel), which might prompt the Problem
 Hassler logic to send them an email message instead.
+
+These operations and authentication of commands issued by particular
+nicknames will be implemented in @ref{User Objects}.
 
 @node Live Status Clients
 @subsection Live Status Clients

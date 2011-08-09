@@ -72,21 +72,21 @@ def connectFailed(error):
     return error
 
 
-def addChanges(remote, changei):
+def addChanges(remote, changei, src='git'):
     logging.debug("addChanges %s, %s" % (repr(remote), repr(changei)))
     def addChange(c):
         logging.info("New revision: %s" % c['revision'][:8])
         for key, value in c.iteritems():
             logging.debug("  %s: %s" % (key, value))
 
-        d = remote.callRemote('addChange', c)
+        d = remote.callRemote('addChange', c, src=src)
         return d
 
     finished_d = defer.Deferred()
     def iter():
         try:
             c = changei.next()
-            d = addChange(c)
+            d = addChange(c, src)
             # handle successful completion by re-iterating, but not immediately
             # as that will blow out the Python stack
             def cb(_):
