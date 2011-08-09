@@ -1,33 +1,14 @@
 all: docs.tgz
 
+.PHONY: images images-png images-eps tutorial manual
+
 VERSION=$(shell if [ -n "$$VERSION" ]; then echo $$VERSION; else PYTHONPATH=..:$${PYTHONPATH} python -c 'from buildbot import version; print version'; fi)
 
-buildbot.info: buildbot.texinfo
-	echo "@set VERSION $(VERSION)" > version.texinfo
-	makeinfo --fill-column=70 $<
+docs.tgz: manual images-png
+	cd manual; $(MAKE) singlehtml
+	cp manual/_build/singlehtml/index.html manual/_build/html/full.html
+	tar -C manual/_build --transform 's/^html/$(VERSION)/' -zcf $@ html
 
-buildbot.html: buildbot.texinfo images-png
-	echo "@set VERSION $(VERSION)" > version.texinfo
-	makeinfo --no-split --html $<
-
-docs.tgz: buildbot.html images-png
-	echo "@set VERSION $(VERSION)" > version.texinfo
-	rm -rf $(VERSION)
-	makeinfo --html --output $(VERSION) buildbot.texinfo
-	cp buildbot.html $(VERSION)/full.html
-	mkdir $(VERSION)/images
-	cp images/*.png $(VERSION)/images
-	tar -zcf $@ $(VERSION)
-
-buildbot.ps: buildbot.texinfo images-eps
-	echo "@set VERSION $(VERSION)" > version.texinfo
-	rm -rf buildbot
-	texi2dvi $<
-	dvips buildbot.dvi
-	rm buildbot.aux buildbot.cp buildbot.cps buildbot.fn buildbot.ky buildbot.log buildbot.pg buildbot.toc buildbot.tp buildbot.vr
-	rm buildbot.dvi
-
-.PHONY: images images-png images-eps tutorial
 images:
 	$(MAKE) -C images all
 images-png:
@@ -35,6 +16,9 @@ images-png:
 	#$(MAKE) -C images images-png
 images-eps:
 	$(MAKE) -C images images-eps
+
+manual:
+	cd manual; $(MAKE) clean; $(MAKE) html
 
 tutorial:
 	cd tutorial; $(MAKE) clean; $(MAKE) html

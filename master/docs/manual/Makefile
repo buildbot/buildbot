@@ -35,7 +35,6 @@ help:
 
 clean:
 	-rm -rf $(BUILDDIR)/*
-	-rm -f conf.py
 
 html: conf.py
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
@@ -129,9 +128,3 @@ doctest: conf.py
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
-
-# customized version handling
-VERSION=$(shell if [ -n "$$VERSION" ]; then echo $$VERSION; else PYTHONPATH=..:$${PYTHONPATH} python -c 'from buildbot import version; print version'; fi)
-
-conf.py: conf.py.in
-	sed -e 's/%VERSION%/$(VERSION)/g' $< > $@
