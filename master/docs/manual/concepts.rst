@@ -253,6 +253,11 @@ host which runs the repository, but not all VC systems require this.  Each
 :class:`StatusNotifier` will map the :attr:`who` attribute into something appropriate for
 their particular means of communication: an email address, an IRC handle, etc.
 
+This ``who`` attribute is also parsed and stored into Buildbot's database (see
+:ref:`User-Objects`). Currently, only ``who`` attributes in Changes from
+``git`` repositories are translated into user objects, but in the future all
+incoming Changes will have their ``who`` parsed and stored.
+
 .. _Attr-Files:
 
 Files
@@ -621,16 +626,54 @@ the world consists of a set of developers, each of whom can be
 described by a couple of simple attributes. These developers make
 changes to the source code, causing builds which may succeed or fail.
 
+Users also may have different levels of authorization when issuing Buildbot
+commands, such as forcing a build from the web interface or from an IRC channel
+(see :ref:`WebStatus-Configuration-Parameters` and :ref:`IRC-Bot`).
+
 Each developer is primarily known through the source control system. Each
 :class:`Change` object that arrives is tagged with a :attr:`who` field that
 typically gives the account name (on the repository machine) of the user
 responsible for that change. This string is displayed on the HTML status
 pages and in each :class:`Build`\'s *blamelist*.
 
-To do more with the User than just refer to them, this username needs to
-be mapped into an address of some sort. The responsibility for this mapping
-is left up to the status module which needs the address. The core code knows
-nothing about email addresses or IRC nicknames, just user names.
+To do more with the User than just refer to them, this username needs to be
+mapped into an address of some sort. The responsibility for this mapping is
+left up to the status module which needs the address.  In the future, the
+responsbility for managing users will be transferred to User Objects.
+
+The ``who`` fields in ``git`` Changes are used to create :ref:`User-Objects`,
+which allows for more control and flexibility in how Buildbot manages users.
+
+.. _User-Objects:
+
+User Objects
+~~~~~~~~~~~~
+
+User Objects allow Buildbot to better manage users throughout its various
+interactions with users (see :ref:`Change-Sources` and :ref:`Status-Targets`).
+The User Objects are stored in the Buildbot database and correlate the various
+attributes that a user might have: irc, git, etc.
+
+Changes
++++++++
+
+Incoming Changes all have a ``who`` attribute attached to them that specifies
+which developer is responsible for that Change. When a Change is first
+rendered, the ``who`` attribute is parsed and added to the database if it
+doesn't exist or checked against an existing user. The ``who`` attribute is
+formatted in different ways depending on the version control system that the
+Change came from.  Note that ``git`` is the only version control system
+currently supported for User Object creation.
+
+``git``
+    ``who`` attributes take the form ``Full Name <Email>``.
+
+Uses
+++++
+
+Correlating the various bits and pieces that Buildbot views as users also means
+that one attribute of a user can be translated into another. This provides a
+more complete view of users throughout Buildbot.
 
 .. _Doing-Things-With-Users:
 
@@ -713,6 +756,9 @@ Once the mapping is established, the rest of the buildbot can ask the
 the likelihood that the user saw the given message (based upon how long the
 user has been inactive on the channel), which might prompt the Problem
 Hassler logic to send them an email message instead.
+
+These operations and authentication of commands issued by particular
+nicknames will be implemented in :ref:`User-Objects`.
 
 .. _Live-Status-Clients:
 
