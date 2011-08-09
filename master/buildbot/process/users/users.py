@@ -16,6 +16,8 @@
 from twisted.python import log
 from twisted.internet import defer
 
+accepted_sources = ['git', 'svn']
+
 @defer.deferredGenerator
 def createUserObject(master, author, src=None):
     """
@@ -37,9 +39,10 @@ def createUserObject(master, author, src=None):
         log.msg("No vcs information found, unable to create User Object")
         return
 
-    if src == 'git':
-        log.msg("checking for User Object from git Change for: %s" % author)
-        usdict = dict(identifier=author, attr_type='git', attr_data=author)
+    if src in accepted_sources:
+        log.msg("checking for User Object from %s Change for: %s" % (src,
+                                                                     author))
+        usdict = dict(identifier=author, attr_type=src, attr_data=author)
     else:
         log.msg("Unrecognized source argument: %s" % src)
         return

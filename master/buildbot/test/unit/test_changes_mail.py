@@ -63,7 +63,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
         # monkey-patch in a parse method
         def parse(message, prefix):
             assert 'this is a test' in message.get_payload()
-            return dict(fake_chdict=1)
+            return ('svn', dict(fake_chdict=1))
         mds.parse = parse
 
         d = mds.messageReceived('newmsg')
@@ -71,5 +71,6 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
             self.assertMailProcessed()
             self.assertEqual(len(self.changes_added), 1)
             self.assertEqual(self.changes_added[0]['fake_chdict'], 1)
+            self.assertEqual(self.changes_added[0]['src'], 'svn')
         d.addCallback(check)
         return d

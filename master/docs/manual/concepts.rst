@@ -662,11 +662,13 @@ which developer is responsible for that Change. When a Change is first
 rendered, the ``who`` attribute is parsed and added to the database if it
 doesn't exist or checked against an existing user. The ``who`` attribute is
 formatted in different ways depending on the version control system that the
-Change came from.  Note that ``git`` is the only version control system
-currently supported for User Object creation.
+Change came from.
 
 ``git``
     ``who`` attributes take the form ``Full Name <Email>``.
+
+``svn``
+	``who`` attributes are of the form ``Username``.
 
 Uses
 ++++

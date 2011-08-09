@@ -81,3 +81,24 @@ class UsersTests(connector_component.ConnectorComponentMixin,
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
+
+    def test_createUserObject_svn(self):
+        d = users.createUserObject(self.master, "tdurden", 'svn')
+        def check(_):
+            def thd(conn):
+                r = conn.execute(self.db.model.users.select())
+                rows = r.fetchall()
+                r = conn.execute(self.db.model.users_info.select())
+                info_rows = r.fetchall()
+
+                self.assertEqual(len(rows), 1)
+                self.assertEqual(len(info_rows), 1)
+
+                self.assertEqual(rows[0].uid, 1)
+                self.assertEqual(rows[0].identifier, 'tdurden')
+                self.assertEqual(info_rows[0].uid, 1)
+                self.assertEqual(info_rows[0].attr_type, 'svn')
+                self.assertEqual(info_rows[0].attr_data, 'tdurden')
+            return self.db.pool.do(thd)
+        d.addCallback(check)
+        return d
