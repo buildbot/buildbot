@@ -26,7 +26,8 @@ class Sender:
         self.encoding = encoding
 
     def send(self, branch, revision, comments, files, who=None, category=None,
-             when=None, properties={}, repository='', project='', revlink=''):
+             when=None, properties={}, repository='', vc=None, project='',
+             revlink=''):
         change = {'project': project, 'repository': repository, 'who': who,
                   'files': files, 'comments': comments, 'branch': branch,
                   'revision': revision, 'category': category, 'when': when,
@@ -45,7 +46,7 @@ class Sender:
         reactor.connectTCP(self.host, self.port, f)
 
         def call_addChange(remote):
-            d = remote.callRemote('addChange', change)
+            d = remote.callRemote('addChange', change, src=vc)
             d.addCallback(lambda res: remote.broker.transport.loseConnection())
             return d
         d.addCallback(call_addChange)
