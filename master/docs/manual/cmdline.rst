@@ -495,12 +495,12 @@ arguments which can influence the ``Change`` that gets submitted:
 
 --branch
     (or option ``branch``) This provides the (string) branch specifier. If
-    omitted, it defaults to :keyword:`None`, indicating the ``default branch``. All files
+    omitted, it defaults to ``None``, indicating the ``default branch``. All files
     included in this Change must be on the same branch.
 
 --category
     (or option ``category``) This provides the (string) category specifier. If
-    omitted, it defaults to :keyword:`None`, indicating ``no category``. The category property
+    omitted, it defaults to ``None``, indicating ``no category``. The category property
     can be used by :class:`Scheduler`\s to filter what changes they listen to.
 
 --project

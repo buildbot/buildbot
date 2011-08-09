@@ -323,7 +323,7 @@ Each Change can have a :attr:`revision` attribute, which describes how
 to get a tree with a specific state: a tree which includes this Change
 (and all that came before it) but none that come after it. If this
 information is unavailable, the :attr:`revision` attribute will be
-:keyword:`None`. These revisions are provided by the :class:`ChangeSource`, and
+``None``. These revisions are provided by the :class:`ChangeSource`, and
 consumed by the :meth:`computeSourceRevision` method in the appropriate
 :class:`source.Source` class.
 
@@ -475,7 +475,7 @@ the :class:`BuildSet` has completely finished, regardless of whether the
 overall set passed or failed).
 
 A :class:`BuildSet` is created with a *source stamp* tuple of
-``(branch, revision, changes, patch)``, some of which may be :keyword:`None`, and a
+``(branch, revision, changes, patch)``, some of which may be ``None``, and a
 list of :class:`Builder`\s on which it is to be run. They are then given to the
 BuildMaster, which is responsible for creating a separate
 :class:`BuildRequest` for each :class:`Builder`.
@@ -506,7 +506,7 @@ There are a couple of different likely values for the
     patch (using ``patch -pLEVEL <DIFF``) from inside the relative
     directory *SUBDIR_ROOT*. Item *SUBDIR_ROOT* is optional and defaults to the
     builder working directory. The :ref:`try` feature uses this kind of
-    :class:`SourceStamp`. If ``patch`` is :keyword:`None`, the patching step is
+    :class:`SourceStamp`. If ``patch`` is ``None``, the patching step is
     bypassed.
 
 The buildmaster is responsible for turning the :class:`BuildSet` into a

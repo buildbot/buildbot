@@ -75,11 +75,11 @@ Attributes
 ++++++++++
 
 :attr:`useProgress`
-    (defaults to :keyword:`True`): if :keyword:`True`, the buildmaster keeps track of how long
+    (defaults to ``True``): if ``True``, the buildmaster keeps track of how long
     each step takes, so it can provide estimates of how long future builds
     will take. If builds are not expected to take a consistent amount of
     time (such as incremental builds in which a random set of files are
-    recompiled or tested each time), this should be set to :keyword:`False` to
+    recompiled or tested each time), this should be set to ``False`` to
     inhibit progress-tracking.
 
 :attr:`workdir`
@@ -153,16 +153,16 @@ time. This serves to give each Build an independent copy of each step.
 
 Each step can affect the build process in the following ways:
 
-  * If the step's :attr:`haltOnFailure` attribute is :keyword:`True`, then a failure
+  * If the step's :attr:`haltOnFailure` attribute is ``True``, then a failure
     in the step (i.e. if it completes with a result of ``FAILURE``) will cause
     the whole build to be terminated immediately: no further steps will be
     executed, with the exception of steps with :attr:`alwaysRun` set to
-    :keyword:`True`. :attr:`haltOnFailure` is useful for setup steps upon which the
+    ``True``. :attr:`haltOnFailure` is useful for setup steps upon which the
     rest of the build depends: if the CVS checkout or :command:`./configure`
     process fails, there is no point in trying to compile or test the
     resulting tree.
 
-  * If the step's :attr:`alwaysRun` attribute is :keyword:`True`, then it will always
+  * If the step's :attr:`alwaysRun` attribute is ``True``, then it will always
     be run, regardless of if previous steps have failed. This is useful
     for cleanup steps that should always be run to return the build
     directory or build slave into a good state.
@@ -189,7 +189,7 @@ build as a whole.
 The pre-defined :class:`BuildStep`\s like :class:`CVS` and :class:`Compile` have
 reasonably appropriate flags set on them already. For example, without
 a source tree there is no point in continuing the build, so the
-:class:`CVS` class has the :attr:`haltOnFailure` flag set to :keyword:`True`. Look
+:class:`CVS` class has the :attr:`haltOnFailure` flag set to ``True``. Look
 in :file:`buildbot/steps/*.py` to see how the other :class:`Step`\s are
 marked.
 
@@ -269,7 +269,7 @@ Optional Arguments:
 ``compile``
     this is a shell command or list of argv values which is used to
     actually compile the tree. It defaults to ``make all``. If set to
-    :keyword:`None`, the compile step is skipped.
+    ``None``, the compile step is skipped.
 
 ``test``
     this is a shell command or list of argv values which is used to run
@@ -324,7 +324,7 @@ where the previous build was performed. That simply means that the
 source-checkout step should be given a ``mode='update'`` flag, to
 do the source update in-place.
 
-In addition to that, this class sets the :attr:`useProgress` flag to :keyword:`False`.
+In addition to that, this class sets the :attr:`useProgress` flag to ``False``.
 Incremental builds will (or at least the ought to) compile as few files as
 necessary, so they will take an unpredictable amount of time to run. Therefore
 it would be misleading to claim to predict how long the build will take.
@@ -408,7 +408,7 @@ Arguments:
 
 ``test``
     Provides a shell command which runs unit tests. This accepts either a
-    string or a list. The default value is :keyword:`None`, which disables the test
+    string or a list. The default value is ``None``, which disables the test
     step (since there is no common default command to run unit tests in
     distutils modules).
 
@@ -480,7 +480,7 @@ Arguments:
     the `argv` array that will launch trial. If you use this,
     you should set ``trial`` to an explicit path (like
     :file:`/usr/bin/trial` or :file:`./bin/trial`). The parameter defaults
-    to :keyword:`None`, which
+    to ``None``, which
     leaves it out entirely (running ``trial args`` instead of
     ``python ./bin/trial args``). Likely values are ``['python']``,
     ``['python2.2']``, or ``['python', '-Wall']``.
@@ -503,17 +503,17 @@ Arguments:
 ``tests``
     Provides a module name or names which contain the unit tests for this
     project. Accepts a string, typically :samp:`{PROJECTNAME}.test`, or a
-    list of strings. Defaults to :keyword:`None`, indicating that no tests should be
+    list of strings. Defaults to ``None``, indicating that no tests should be
     run. You must either set this or ``testChanges``.
 
 ``testChanges``
-    if :keyword:`True`, ignore the ``tests`` parameter and instead ask the Build for all
+    if ``True``, ignore the ``tests`` parameter and instead ask the Build for all
     the files that make up the Changes going into this build. Pass these filenames
     to trial and ask it to look for test-case-name tags, running just the tests
     necessary to cover the changes.
 
 ``recurse``
-    If :keyword:`True`, tells Trial (with the ``--recurse`` argument) to look in all
+    If ``True``, tells Trial (with the ``--recurse`` argument) to look in all
     subdirectories for additional test cases.
 
 ``reactor``
@@ -521,9 +521,9 @@ Arguments:
     usual platform-dependent default is used.
 
 ``randomly``
-    If :keyword:`True`, tells Trial (with the ``--random=0`` argument) to
+    If ``True``, tells Trial (with the ``--random=0`` argument) to
     run the test cases in random order, which sometimes catches subtle
-    inter-test dependency bugs. Defaults to :keyword:`False`.
+    inter-test dependency bugs. Defaults to ``False``.
 
 The step can also take any of the :class:`ShellCommand` arguments, e.g.,
 :attr:`haltOnFailure`.

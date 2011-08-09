@@ -111,7 +111,7 @@ There are four attributes of changes on which you can filter:
 
 ``branch``
     the branch on which this change occurred.  Note that 'trunk' or 'master' is often
-    denoted by :keyword:`None`.
+    denoted by ``None``.
 
 ``category``
     the category, again as defined by the ChangeSource.
@@ -182,12 +182,12 @@ The arguments to this scheduler are:
     restarted, so really the build will be started after a change and then
     after this many seconds of inactivity.
     
-    If ``treeStableTimer`` is :keyword:`None`, then a separate build is started
+    If ``treeStableTimer`` is ``None``, then a separate build is started
     immediately for each Change.
 
 ``fileIsImportant``
     A callable which takes one argument, a Change instance, and returns
-    :keyword:`True` if the change is worth building, and :keyword:`False` if
+    ``True`` if the change is worth building, and ``False`` if
     it is not.  Unimportant Changes are accumulated until the build is
     triggered by an important change.  The default value of None means
     that all Changes are important.

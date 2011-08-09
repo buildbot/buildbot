@@ -53,7 +53,7 @@ Arguments common to all :class:`BuildStep` subclasses:
     used to give a name to any :class:`LogFile`\s created by this step.
 
 ``haltOnFailure``
-    if :keyword:`True`, a ``FAILURE`` of this build step will cause the build to halt
+    if ``True``, a ``FAILURE`` of this build step will cause the build to halt
     immediately. Steps with ``alwaysRun=True`` are still run. Generally
     speaking, ``haltOnFailure`` implies ``flunkOnFailure`` (the default for most
     :class:`BuildStep`\s). In some cases, particularly series of tests, it makes sense
@@ -61,24 +61,24 @@ Arguments common to all :class:`BuildStep` subclasses:
     This can be achieved with ``haltOnFailure=True``, ``flunkOnFailure=False``.
 
 ``flunkOnWarnings``
-    when :keyword:`True`, a ``WARNINGS`` or ``FAILURE`` of this build step will mark the
+    when ``True``, a ``WARNINGS`` or ``FAILURE`` of this build step will mark the
     overall build as ``FAILURE``. The remaining steps will still be executed.
 
 ``flunkOnFailure``
-    when :keyword:`True`, a ``FAILURE`` of this build step will mark the overall build as
+    when ``True``, a ``FAILURE`` of this build step will mark the overall build as
     a ``FAILURE``. The remaining steps will still be executed.
 
 ``warnOnWarnings``
-    when :keyword:`True`, a ``WARNINGS`` or ``FAILURE`` of this build step will mark the
+    when ``True``, a ``WARNINGS`` or ``FAILURE`` of this build step will mark the
     overall build as having ``WARNINGS``. The remaining steps will still be
     executed.
 
 ``warnOnFailure``
-    when :keyword:`True`, a ``FAILURE`` of this build step will mark the overall build as
+    when ``True``, a ``FAILURE`` of this build step will mark the overall build as
     having ``WARNINGS``. The remaining steps will still be executed.
 
 ``alwaysRun``
-    if :keyword:`True`, this build step will always be run, even if a previous buildstep
+    if ``True``, this build step will always be run, even if a previous buildstep
     with ``haltOnFailure=True`` has failed.
 
 ``doStepIf``
@@ -149,7 +149,7 @@ argument. ::
 
 You can specify a default value by passing a ``default`` argument to
 :class:`Property`. This is normally used when the property doesn't exist,
-or when the value is something Python regards as :keyword:`False`. The ``defaultWhenFalse``
+or when the value is something Python regards as ``False``. The ``defaultWhenFalse``
 argument can be used to force buildbot to use the default argument only
 if the parameter is not set.
 
@@ -195,8 +195,8 @@ syntaxes, too.
 
 ``propname:~replacement``
     Like ``propname:-replacement``, but only substitutes the value
-    of property ``propname`` if it is something Python regards as :keyword:`True`.
-    Python considers :keyword:`None`, 0, empty lists, and the empty string to be 
+    of property ``propname`` if it is something Python regards as ``True``.
+    Python considers ``None``, 0, empty lists, and the empty string to be 
     false, so such values will be replaced by ``replacement``.
 
 ``propname:+replacement``
@@ -287,7 +287,7 @@ are available to all steps.
 
 ``branch``
     This comes from the build's :class:`SourceStamp`, and describes which branch is
-    being checked out. This will be :keyword:`None` (which interpolates into
+    being checked out. This will be ``None`` (which interpolates into
     ``WithProperties`` as an empty string) if the build is on the
     default branch, which is generally the trunk. Otherwise it will be a
     string like ``branches/beta1.4``. The exact syntax depends upon the VC
@@ -302,7 +302,7 @@ are available to all steps.
     integer, for Mercurial it is a short string, for Darcs it is a rather large
     string, etc.
     
-    If the :guilabel:`force build` button was pressed, the revision will be :keyword:`None`,
+    If the :guilabel:`force build` button was pressed, the revision will be ``None``,
     which means to use the most recent revision available.  This is a `trunk
     build`. This will be interpolated as an empty string.
 
@@ -413,7 +413,7 @@ parameters are mostly to specify where exactly the sources are coming from.
     If set, this specifies a tuple of ``(delay, repeats)`` which means
     that when a full VC checkout fails, it should be retried up to
     ``repeats`` times, waiting ``delay`` seconds between attempts. If
-    you don't provide this, it defaults to :keyword:`None`, which means VC
+    you don't provide this, it defaults to ``None``, which means VC
     operations should not be retried. This is provided to make life easier
     for buildslaves which are stuck behind poor network connections.
 
@@ -519,7 +519,7 @@ The Mercurial step takes the following arguments:
    is a mercurial named branch and can be found within the ``repourl``.
 
 ``clobberOnBranchChange``
-   boolean, defaults to :keyword:`True`. If set and using inrepos branches,
+   boolean, defaults to ``True``. If set and using inrepos branches,
    clobber the tree at each branch change. Otherwise, just update to
    the branch.
 
@@ -574,7 +574,7 @@ The Git step takes the following arguments:
 ``submodules``
    (optional): when initializing/updating a Git repository, this
    decides whether or not buildbot should consider git submodules.
-   Default: :keyword:`False`.
+   Default: ``False``.
 
 ``shallow``
    (optional): instructs git to attempt shallow clones (``--depth
@@ -587,12 +587,12 @@ The Git step takes the following arguments:
    lack of output, but requires Git 1.7.2 or later.
 
 ``retryFetch``
-   (optional): this value defaults to :keyword:`False`. In any case if
+   (optional): this value defaults to ``False``. In any case if
    fetch fails buildbot retries to fetch again instead of failing the
    entire source checkout.
 
 ``clobberOnFailure``
-   (optional): defaults to :keyword:`False`. If a fetch or full clone
+   (optional): defaults to ``False``. If a fetch or full clone
    fails we can checkout source removing everything. This way new
    repository will be cloned. If retry fails it fails the source
    checkout step.
@@ -980,14 +980,14 @@ sources are coming from.
     outside of the workdir (like creating the workdir itself).
 
 ``alwaysUseLatest``
-    if :keyword:`True`, bypass the usual `update to the last Change` behavior, and
+    if ``True``, bypass the usual `update to the last Change` behavior, and
     always update to the latest changes instead.
 
 ``retry``
     If set, this specifies a tuple of ``(delay, repeats)`` which means
     that when a full VC checkout fails, it should be retried up to
     `repeats` times, waiting `delay` seconds between attempts. If
-    you don't provide this, it defaults to :keyword:`None`, which means VC
+    you don't provide this, it defaults to ``None``, which means VC
     operations should not be retried. This is provided to make life easier
     for buildslaves which are stuck behind poor network connections.
 
@@ -1170,7 +1170,7 @@ should preferentially create the :class:`SVN` step with the
     ``svn:ignore`` properties and global-ignores in subversion/config.
 
 ``always_purge``
-    (optional): if set to :keyword:`True`, always purge local changes before updating. This
+    (optional): if set to ``True``, always purge local changes before updating. This
     deletes unversioned files and reverts everything that would appear in a
     ``svn status``.
 
@@ -1373,7 +1373,7 @@ The Mercurial step takes the following arguments:
     found within the ``repourl``.
 
 ``clobberOnBranchChange``
-    boolean, defaults to :keyword:`True`. If set and
+    boolean, defaults to ``True``. If set and
     using inrepos branches, clobber the tree
     at each branch change. Otherwise, just
     update to the branch.
@@ -1410,7 +1410,7 @@ arguments:
     will be passed to the ``bzr checkout`` command.
 
 ``forceSharedRepo``
-    (boolean, optional, defaults to :keyword:`False`): If set to :keyword:`True`, the working directory
+    (boolean, optional, defaults to ``False``): If set to ``True``, the working directory
     will be made into a bzr shared repository if it is not already. Shared
     repository greatly reduces the amount of history data that needs to be
     downloaded if not using update/copy mode, or if using update/copy mode with
@@ -1507,7 +1507,7 @@ The :class:`Git` step takes the following arguments:
 
 ``submodules``
     (optional): when initializing/updating a Git repository, this decides whether
-    or not buildbot should consider git submodules.  Default: :keyword:`False`.
+    or not buildbot should consider git submodules.  Default: ``False``.
 
 ``reference``
     (optional): use the specified string as a path to a reference
@@ -1584,7 +1584,7 @@ The Repo step takes the following arguments:
     init` command.
 
 ``tarball``
-    (optional, defaults to :keyword:`None`): the repo tarball used for
+    (optional, defaults to ``None``): the repo tarball used for
     fast bootstrap. If not present the tarball will be created
     automatically after first sync. It is a copy of the ``.repo``
     directory which contains all the git objects. This feature helps
@@ -1729,7 +1729,7 @@ correctly unless you add 'call' before your batch file's name:
                       env={'PATH': "/home/buildbot/bin:${PATH}"}))
 
 ``want_stdout``
-    if :keyword:`False`, stdout from the child process is discarded rather than being
+    if ``False``, stdout from the child process is discarded rather than being
     sent to the buildmaster for inclusion in the step's :class:`LogFile`.
 
 ``want_stderr``
@@ -1740,7 +1740,7 @@ correctly unless you add 'call' before your batch file's name:
 ``usePTY``
     Should this command be run in a ``pty``?  The default is to observe the
     configuration of the client (:ref:`Buildslave-Options`), but specifying
-    :keyword:`True` or :keyword:`False` here will override the
+    ``True`` or ``False`` here will override the
     default. This option is not available on Windows.
 
     In general, you do not want to use a pseudo-terminal.  This is is
@@ -1783,7 +1783,7 @@ correctly unless you add 'call' before your batch file's name:
     is a boolean controlling whether a logfile is followed or concatenated in its
     entirety.  Following is appropriate for logfiles to which the build step will
     append, where the pre-existing contents are not interesting.  The default value
-    for ``follow`` is :keyword:`False`, which gives the same behavior as just
+    for ``follow`` is ``False``, which gives the same behavior as just
     providing a string filename. ::
     
         f.addStep(ShellCommand(
@@ -1800,15 +1800,15 @@ correctly unless you add 'call' before your batch file's name:
 
 
 ``lazylogfiles``
-    If set to :keyword:`True`, logfiles will be tracked lazily, meaning that they will
+    If set to ``True``, logfiles will be tracked lazily, meaning that they will
     only be added when and if something is written to them. This can be used to
-    suppress the display of empty or missing log files. The default is :keyword:`False`.
+    suppress the display of empty or missing log files. The default is ``False``.
 
 
 ``timeout``
     if the command fails to produce any output for this many seconds, it
     is assumed to be locked up and will be killed. This defaults to
-    1200 seconds. Pass :keyword:`None` to disable.
+    1200 seconds. Pass ``None`` to disable.
 
 
 ``maxTime``
@@ -1839,7 +1839,7 @@ correctly unless you add 'call' before your batch file's name:
                                descriptionDone=["tests"]))
 
 ``logEnviron``
-    If this option is :keyword:`True` (the default), then the step's logfile will describe the
+    If this option is ``True`` (the default), then the step's logfile will describe the
     environment variables on the slave.  In situations where the environment is not
     relevant and is long, it may be easier to set ``logEnviron=False``.
 
@@ -2014,11 +2014,11 @@ The available constructor arguments are
     compiler specific and is the default place where the compiler is installed.
 
 ``useenv``
-    This boolean parameter, defaulting to :keyword:`False` instruct the compiler
+    This boolean parameter, defaulting to ``False`` instruct the compiler
     to use its own settings or the one defined through the environment
     variables :envvar:`PATH`, :envvar:`INCLUDE`, and :envvar:`LIB`. If any of
     the ``INCLUDE`` or  ``LIB`` parameter is defined, this parameter
-    automatically switches to :keyword:`True`.
+    automatically switches to ``True``.
 
 ``PATH``
     This is a list of path to be added to the :envvar:`PATH` environment
@@ -2116,7 +2116,7 @@ Optionally, data about the test run and any test failures can be inserted into
 a database for further analysis and report generation. To use this facility,
 create an instance of :class:`twisted.enterprise.adbapi.ConnectionPool` with
 connections to the database. The necessary tables can be created automatically
-by setting ``autoCreateTables`` to :keyword:`True`, or manually using the SQL
+by setting ``autoCreateTables`` to ``True``, or manually using the SQL
 found in the :file:`mtrlogobserver.py` source file.
 
 One problem with specifying a database is that each reload of the
@@ -2153,12 +2153,12 @@ Example use::
     it needs to be specified, or some server error logs will be missing.
 
 ``dbpool``
-    An instance of :class:`twisted.enterprise.adbapi.ConnectionPool`, or :keyword:`None`.  Defaults to
-    :keyword:`None`. If specified, results are inserted into the database using the
+    An instance of :class:`twisted.enterprise.adbapi.ConnectionPool`, or ``None``.  Defaults to
+    ``None``. If specified, results are inserted into the database using the
     :class:`ConnectionPool`.
 
 ``autoCreateTables``
-    Boolean, defaults to :keyword:`False`. If :keyword:`True` (and ``dbpool`` is specified), the
+    Boolean, defaults to ``False``. If ``True`` (and ``dbpool`` is specified), the
     necessary database tables will be created automatically if they do not exist
     already. Alternatively, the tables can be created manually from the SQL
     statements found in the :file:`mtrlogobserver.py` source file.
@@ -2247,7 +2247,7 @@ through a subunit filter to extract test and failure counts. ::
 This runs ``make test`` and filters it through subunit. The 'tests' and
 'test failed' progress metrics will now accumulate test data from the test run.
 
-If ``failureOnNoTests`` is :keyword:`True`, this step will fail if no test is run. By
+If ``failureOnNoTests`` is ``True``, this step will fail if no test is run. By
 default ``failureOnNoTests`` is False.
 
 .. _Slave-Filesystem-Steps:
@@ -2532,9 +2532,9 @@ umask tends to be fairly restrictive, but at least on the buildslave
 you can make it less restrictive with a --umask command-line option at
 creation time (:ref:`Buildslave-Options`).
 
-The ``keepstamp=`` argument is a boolean that, when :keyword:`True`, forces
+The ``keepstamp=`` argument is a boolean that, when ``True``, forces
 the modified and accessed time of the destination file to match the
-times of the source file.  When :keyword:`False` (the default), the modified and accessed times
+times of the source file.  When ``False`` (the default), the modified and accessed times
 of the destination file are set to the current time on the buildmaster.
 
 Transfering Directories
@@ -2691,14 +2691,14 @@ it is possible, but not advisable, to create a cycle where a build
 continually triggers itself, because the schedulers are specified
 by name.
 
-If ``waitForFinish`` is :keyword:`True`, then the step will not finish until
+If ``waitForFinish`` is ``True``, then the step will not finish until
 all of the builds from the triggered schedulers have finished. If this
-argument is :keyword:`False` (the default) or not given, then the buildstep
+argument is ``False`` (the default) or not given, then the buildstep
 succeeds immediately after triggering the schedulers.
 
 The SourceStamp to use for the triggered build is controlled by the arguments
 ``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp``.
-If ``updateSourceStamp`` is :keyword:`True` (the default), then step updates
+If ``updateSourceStamp`` is ``True`` (the default), then step updates
 the :class:`SourceStamp` given to the :class:`Triggerable`\s to include
 ``got_revision`` (the revision actually used in this build) as
 ``revision`` (the revision to use in the triggered builds). This is

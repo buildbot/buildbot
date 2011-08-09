@@ -771,7 +771,7 @@ Keeping State in Tests
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Python does not allow assignment to anything but the innermost local scope or
-the global scope with the :keyword:`global` keyword.  This presents a problem when
+the global scope with the ``global`` keyword.  This presents a problem when
 creating nested functions::
 
     def test_localVariable(self):

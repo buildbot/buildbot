@@ -71,7 +71,7 @@ Other optional keys may be set on each :class:`Builder`:
     future jobs. The function is passed two arguments, the :class:`Builder`
     object which is assigning a new job, and a list of :class:`BuildSlave`
     objects. The function should return one of the :class:`BuildSlave`
-    objects, or :keyword:`None` if none of the available slaves should be
+    objects, or ``None`` if none of the available slaves should be
     used.
 
 ``nextBuild``
@@ -79,7 +79,7 @@ Other optional keys may be set on each :class:`Builder`:
     handled next. The function is passed two arguments, the :class:`Builder`
     object which is assigning a new job, and a list of :class:`BuildRequest`
     objects of pending builds. The function should return one of the
-    :class:`BuildRequest` objects, or :keyword:`None` if none of the pending
+    :class:`BuildRequest` objects, or ``None`` if none of the pending
     builds should be started. This function can optionally return a
     Deferred which should fire with the same results.
 

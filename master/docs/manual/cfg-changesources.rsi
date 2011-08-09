@@ -992,7 +992,7 @@ is responsible for splitting something like
 that names a file relative to the subdirectory pointed to by the
 :class:`SVNPoller`\'s ``svnurl=`` argument. It is expected to return a
 :samp:`({BRANCHNAME}, {FILEPATH})` tuple (in which :samp:`{FILEPATH}` is relative to the
-branch indicated), or :keyword:`None` to indicate that the file is outside any
+branch indicated), or ``None`` to indicate that the file is outside any
 project of interest.
 
 (note that we want to see ``branches/1.5.x`` rather than just
@@ -1024,7 +1024,7 @@ multiple branches, we would use this::
                                    split_file=split_file_branches)
 
 Changes for all sorts of branches (with names like ``branches/1.5.x``,
-and :keyword:`None` to indicate the trunk) will be delivered to the Schedulers.
+and ``None`` to indicate the trunk) will be delivered to the Schedulers.
 Each Scheduler is then free to use or ignore each branch as it sees
 fit.
 
@@ -1080,7 +1080,7 @@ repository-relative pathnames like:
 :file:`trunk/Nevow/formless/webform.py`
     This is a Nevow file, on the trunk. We want the Change that includes this
     to see a filename of :file:`formless/webform.py`, and a branch of
-    :keyword:`None`
+    ``None``
 
 :file:`branches/1.5.x/Nevow/formless/webform.py`
     This is a Nevow file, on a branch. We want to get
@@ -1088,7 +1088,7 @@ repository-relative pathnames like:
 
 :file:`trunk/Quotient/setup.py`
     This is a Quotient file, so we want to ignore it by having
-    :meth:`my_file_splitter` return :keyword:`None`.
+    :meth:`my_file_splitter` return ``None``.
 
 :file:`branches/1.5.x/Quotient/setup.py`
     This is also a Quotient file, which should be ignored.
@@ -1138,7 +1138,7 @@ privileges. You may also want to specify these optional values.
     for the change. When run in a pqm (Patch Queue Manager, see
     https://launchpad.net/pqm) environment, the user that commits is the Patch
     Queue Manager, and the user that committed the merged, *parent* revision is
-    responsible for the change. set this value to :keyword:`True` if this is pointed against
+    responsible for the change. set this value to ``True`` if this is pointed against
     a PQM-managed branch.
 
 .. _GitPoller:

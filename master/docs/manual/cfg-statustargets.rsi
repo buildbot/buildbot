@@ -450,7 +450,7 @@ This is all configured with the :class:`Authz` class::
     c['status'].append(http_port=WebStatus(http_port=8080, authz=authz))
 
 Each of the actions listed above is an option to :class:`Authz`.  You can specify
-:keyword:`False` (the default) to prohibit that action or :keyword:`True` to enable it.
+``False`` (the default) to prohibit that action or ``True`` to enable it.
 
 .. _Authentication:
 
@@ -848,8 +848,8 @@ MailNotifier arguments
     The email address to be used in the 'From' header.
 
 ``sendToInterestedUsers``
-    (boolean). If :keyword:`True` (the default), send mail to all of the Interested
-    Users. If :keyword:`False`, only send mail to the ``extraRecipients`` list.
+    (boolean). If ``True`` (the default), send mail to all of the Interested
+    Users. If ``False``, only send mail to the ``extraRecipients`` list.
 
 ``extraRecipients``
     (list of strings). A list of email addresses to which messages should
@@ -888,16 +888,16 @@ MailNotifier arguments
 
 ``builders``
     (list of strings). A list of builder names for which mail should be
-    sent. Defaults to :keyword:`None` (send mail for all builds). Use either builders
+    sent. Defaults to ``None`` (send mail for all builds). Use either builders
     or categories, but not both.
 
 ``categories``
     (list of strings). A list of category names to serve status
-    information for. Defaults to :keyword:`None` (all categories). Use either
+    information for. Defaults to ``None`` (all categories). Use either
     builders or categories, but not both.
 
 ``addLogs``
-    (boolean). If :keyword:`True`, include all build logs as attachments to the
+    (boolean). If ``True``, include all build logs as attachments to the
     messages. These can be quite large. This can also be set to a list of
     log names, to send a subset of the logs. Defaults to ``False``.
 
@@ -920,7 +920,7 @@ MailNotifier arguments
     connections. Defaults to 25.
 
 ``useTls``
-    (boolean). When this argument is :keyword:`True` (default is :keyword:`False`)
+    (boolean). When this argument is ``True`` (default is ``False``)
     ``MailNotifier`` sends emails using TLS and authenticates with the
     ``relayhost``. When using TLS the arguments ``smtpUser`` and
     ``smtpPassword`` must also be specified.
@@ -999,7 +999,7 @@ Build reason (from a forced build)
 List of responsible users
     ``build.getResponsibleUsers()``
 
-Source information (only valid if ss is not :keyword:`None`)
+Source information (only valid if ss is not ``None``)
 
     ::
         
