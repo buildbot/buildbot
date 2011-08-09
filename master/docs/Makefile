@@ -5,14 +5,7 @@ all: docs.tgz
 VERSION=$(shell if [ -n "$$VERSION" ]; then echo $$VERSION; else PYTHONPATH=..:$${PYTHONPATH} python -c 'from buildbot import version; print version'; fi)
 
 docs.tgz: manual images-png
-	fail # this rule is still TODO..
-	echo "@set VERSION $(VERSION)" > version.texinfo
-	rm -rf $(VERSION)
-	makeinfo --html --output $(VERSION) buildbot.texinfo
-	cp buildbot.html $(VERSION)/full.html
-	mkdir $(VERSION)/images
-	cp images/*.png $(VERSION)/images
-	tar -zcf $@ $(VERSION)
+	tar -C manual/_build --transform 's/^html/$(VERSION)/' -zcf $@ html
 
 images:
 	$(MAKE) -C images all
