@@ -212,7 +212,7 @@ Creating a buildmaster
 ----------------------
 
 As you learned earlier (:ref:`System-Architecture`), the buildmaster
-runs on a central host (usually one that is publically visible, so
+runs on a central host (usually one that is publicly visible, so
 everybody can check on the status of the project), and controls all
 aspects of the buildbot system
 
