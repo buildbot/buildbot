@@ -340,23 +340,23 @@ refresh. ::
 
     c['buildCacheSize'] = 15
 
-.. _Merging-BuildRequests:
+.. _Merging-Build-Requests-Global:
 
 .. index:: BuildMaster Config; mergeRequests
 
-Merging BuildRequests
-~~~~~~~~~~~~~~~~~~~~~
+Merging Build Requests (global)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This is a global default value for builders' ``mergeRequests`` parameter,
 and controls the merging of build requests.  See :ref:`Merging-Build-Requests`
 for more details.
 
-.. _Prioritizing-Builders:
-    
 .. index::
    prioritizeBuilders
    BuildMaster Config; prioritizeBuilders
 
+.. _Prioritizing-Builders:
+    
 Prioritizing Builders
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -373,7 +373,7 @@ results via a Deferred (it is called with ``maybeDeferred``).
 
 This parameter controls the order in which builders are activated.  It does not
 affect the order in which a builder processes the build requests in its queue.
-For that purpose, see :ref:`Prioritizing Builds`. ::
+For that purpose, see :ref:`Prioritizing-Builds`. ::
 
     def prioritizeBuilders(buildmaster, builders):
         """Prioritize builders.  'finalRelease' builds have the highest
@@ -389,11 +389,11 @@ For that purpose, see :ref:`Prioritizing Builds`. ::
     
     c['prioritizeBuilders'] = prioritizeBuilders
 
-.. _Setting-the-PB-Port-for-Slaves:
-
 .. index::
    slavePortnum
    BuildMaster Config; slavePortnum
+
+.. _Setting-the-PB-Port-for-Slaves:
 
 Setting the PB Port for Slaves
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -445,12 +445,12 @@ buildmaster::
         'release-stage' : 'alpha'
     }
 
-.. _Debug-Options:
-    
 .. index::
    debugPassword
    BuildMaster Config; debugPassword
 
+.. _Debug-Options:
+    
 Debug Options
 ~~~~~~~~~~~~~
 

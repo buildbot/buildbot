@@ -646,9 +646,9 @@ Note that there is a standalone HTTP server available for receiving GitHub
 notifications, as well: :file:`contrib/github_buildbot.py`.  This script may be
 useful in cases where you cannot expose the WebStatus for public consumption.
 
-.. _MailNotifier:
-
 .. index:: email, mail
+
+.. _MailNotifier:
 
 MailNotifier
 ~~~~~~~~~~~~
@@ -1046,9 +1046,9 @@ Log information ::
                                            log.getName())
         logs.append((log_name, log_url, log_body, log_status))
 
-.. _IRC-Bot:
-
 .. index:: IRC
+
+.. _IRC-Bot:
 
 IRC Bot
 ~~~~~~~

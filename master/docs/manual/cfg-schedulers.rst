@@ -604,9 +604,9 @@ Like most places in the buildbot, the ``port`` argument takes a
 `strports` specification. See :mod:`twisted.application.strports` for
 details.
 
-.. _Triggerable-Scheduler:
-
 .. index:: Triggers
+
+.. _Triggerable-Scheduler:
 
 Triggerable Scheduler
 ~~~~~~~~~~~~~~~~~~~~~

@@ -88,7 +88,7 @@ Other optional keys may be set on each :class:`Builder`:
 
 ``env``
     A Builder may be given a dictionary of environment variables in this parameter.
-    The variables are used in :ref:`ShellCommand` steps in builds created by this
+    The variables are used in :ref:`Step-ShellCommand` steps in builds created by this
     builder. The environment variables will override anything in the buildslave's
     environment. Variables passed directly to a :class:`ShellCommand` will override
     variables of the same name passed to the Builder.
@@ -110,7 +110,7 @@ Other optional keys may be set on each :class:`Builder`:
 
 ``mergeRequests``
     Specifies how build requests for this builder should be merged, overriding the
-    :ref:`global option<Merging-Build-Requests-global-option>`. See
+    :ref:`global option<Merging-Build-Requests-global>`. See
     :ref:`Merging-Build-Requests` for details.
 
 ``properties``

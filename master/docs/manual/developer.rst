@@ -858,7 +858,7 @@ metrics inside the buildbot master process. Currently these are logged
 periodically according to the ``log_interval`` configuration
 setting of the @ref{Metrics Options} configuration.
 
-If :ref:`Web-Status` is enabled, the metrics data is also available
+If :ref:`WebStatus` is enabled, the metrics data is also available
 via ``/json/metrics``. 
 
 The metrics subsystem is implemented in

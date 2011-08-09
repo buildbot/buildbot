@@ -1,8 +1,8 @@
 .. -*- rst -*-
-.. _BuildSteps:
+.. _Build-Steps:
 
-BuildSteps
-----------
+Build Steps
+-----------
 
 .. todo::
     go over this file to organize into classes
@@ -129,9 +129,9 @@ arbitrary [#]_ object. For example::
             ShellCommand.start(self)
 
 
-.. _Property:
-
 .. index:: Property
+
+.. _Property:
 
 Property
 ++++++++
@@ -153,9 +153,9 @@ or when the value is something Python regards as ``False``. The ``defaultWhenFal
 argument can be used to force buildbot to use the default argument only
 if the parameter is not set.
 
-.. _WithProperties:
-
 .. index:: WithProperties
+
+.. _WithProperties:
 
 WithProperties
 ++++++++++++++
@@ -357,7 +357,7 @@ Source Checkout
 At the moment, Buildbot contains two implementations of source steps.  The new
 implementation handles most of the logic on the master side, and has a simpler,
 more unified approach.  The older implementation
-(:ref:`Source-Checkout-Old)`) handles the logic on the slave side, and
+(:ref:`Source-Checkout-Old`) handles the logic on the slave side, and
 some of the classes have a bewildering array of options.
 
 New users should, where possible, use the new implementations.  The old
@@ -909,7 +909,7 @@ heckout or update. It takes the following arguments:
     the build directory.  This allows Buildbot to start with a fresh directory,
     without downloading the entire repository on every build.
 
-.. Source-Checkout-Old:
+.. _Source-Checkout-Old:
 
 Source Checkout (Old)
 ~~~~~~~~~~~~~~~~~~~~~
@@ -1288,11 +1288,11 @@ the default specified in ``defaultBranch``. ::
                 baseURL='svn://svn.example.org/svn/%%BRANCH%%/myproject',
                 defaultBranch='trunk' )
 
-.. _Step-Darcs-Old:
-
 .. index::
    Darcs (Old)
    Build Steps; Darcs (Old)
+
+.. _Step-Darcs-Old:
 
 Darcs (Old)
 +++++++++++
@@ -1300,7 +1300,7 @@ Darcs (Old)
 The :class:`Darcs` build step performs a
 `Darcs <http://darcs.net/>`_ checkout or update.
 
-Like :ref:`SVN`, this step can either be configured to always check
+Like :ref:`Step-SVN-Old`, this step can either be configured to always check
 out a specific tree, or set up to pull from a particular branch that
 gets specified separately for each build. Also like SVN, the
 repository URL given to Darcs is created by concatenating a
@@ -1345,7 +1345,7 @@ The :class:`Mercurial` build step performs a
 `Mercurial <http://selenic.com/mercurial>`_ (aka `hg`) checkout
 or update.
 
-Branches are available in two modes: `dirname` like :ref:`Darcs`\, or
+Branches are available in two modes: `dirname` like :ref:`Step-Darcs-Old`\, or
 `inrepo`, which uses the repository internal branches. Make sure this
 setting matches your changehook, if you have that installed.
 
@@ -1632,11 +1632,11 @@ The Monotone step takes the following arguments:
     this is a boolean that has a pull from the repository use
     ``--ticker=dot`` instead of the default ``--ticker=none``.
 
-.. _Step-ShellCommand:
-
 .. index::
    ShellCommand
    Build Steps; ShellCommand
+
+.. _Step-ShellCommand:
 
 ShellCommand
 ~~~~~~~~~~~~
@@ -2051,11 +2051,11 @@ Here is an example on how to use this step::
             INCLUDE=[r'D:\WINDDK\Include\wnet'],
             LIB=[r'D:\WINDDK\lib\wnet\amd64']))
 
-.. _Step-Test:
-
 .. index::
    Test
    Build Steps; Test
+
+.. _Step-Test:
 
 Test
 ++++
@@ -2100,7 +2100,7 @@ Testing with mysql-test-run
 +++++++++++++++++++++++++++
 
 The :class:`process.mtrlogobserver.MTR` class is a subclass of :class:`Test`
-(:ref:`Test`). It is used to run test suites using the mysql-test-run program,
+(:ref:`Step-Test`). It is used to run test suites using the mysql-test-run program,
 as used in MySQL, Drizzle, MariaDB, and MySQL storage engine plugins.
 
 The shell command to run the test suite is specified in the same way as for
@@ -2177,11 +2177,11 @@ Example use::
     The subdirectory in which to look for server error log files. Defaults to
     :file:`mysql-test`, which is usually correct. ``WithProperties`` is supported.
 
-.. _Step-SetProperty:
-
 .. index::
    SetProperty
    Build Steps; SetProperty
+
+.. _Step-SetProperty:
 
 SetProperty
 +++++++++++
@@ -2663,14 +2663,14 @@ environment will appear to be empty).
 
 .. seealso::
   
-   :ref:`SetProperty`, which runs a command on the slave and sets a
+   :ref:`Step-SetProperty`, which runs a command on the slave and sets a
    property based on the result.
 
-.. _Triggering-Schedulers:
-        
 .. index::
    Trigger
    Build Steps; Trigger
+
+.. _Triggering-Schedulers:
 
 Triggering Schedulers
 ~~~~~~~~~~~~~~~~~~~~~
@@ -2913,7 +2913,7 @@ closed. It may be useful to create and populate a :class:`LogFile` like this
 from a :class:`LogObserver` method :ref:`Adding-LogObservers`.
 
 The ``logfiles=`` argument to :class:`ShellCommand` (see
-:ref:`ShellCommand`) creates new :class:`LogFile`\s and fills them in realtime
+:ref:`Step-ShellCommand`) creates new :class:`LogFile`\s and fills them in realtime
 by asking the buildslave to watch a actual file on disk. The
 buildslave will look for additions in the target file and report them
 back to the :class:`BuildStep`. These additions will be added to the :class:`LogFile` by
@@ -2982,7 +2982,7 @@ change it by calling :meth:`setMaxLineLength()` on your
 infinity.)
 
 For example, let's take a look at the :class:`TrialTestCaseCounter`,
-which is used by the :ref:`Trial` step to count test cases as they are run.
+which is used by the :ref:`Step-Trial` step to count test cases as they are run.
 As Trial executes, it emits lines like the following:
 
 .. code-block:: none

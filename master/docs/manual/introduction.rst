@@ -203,7 +203,7 @@ should be used for the build. The :class:`Build` is then randomly assigned to a
 free :class:`SlaveBuilder` and the build begins.
 
 The behaviour when :class:`BuildRequest`\s are merged can be customized,
-:ref:`Merging-BuildRequests`.
+:ref:`Merging-Build-Requests`.
 
 .. _Status-Delivery-Architecture:
 
