@@ -670,6 +670,10 @@ Change came from.
 ``svn``
     ``who`` attributes are of the form ``Username``.
 
+``hg``
+    ``who`` attributes are free-form strings, but usually adhere to similar
+    conventions as ``git`` attributes (``Full Name <Email>``).
+
 Uses
 ++++
 
