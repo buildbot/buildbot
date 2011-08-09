@@ -52,7 +52,7 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
 
     def test_defaults(self):
         opts = self.parse()
-        exp = dict(master=None, auth=None, who=None,
+        exp = dict(master=None, auth=None, who=None, vc=None,
                 repository='', project='', branch=None, category=None,
                 revision=None, revision_file=None, property=None,
                 comments=None, logfile=None, when=None, revlink='',
@@ -78,21 +78,21 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         self.assertOptions(opts, exp)
 
     def test_short_args(self):
-        opts = self.parse(*('-m m -a a -W w -R r -P p -b b ' +
+        opts = self.parse(*('-m m -a a -W w -R r -P p -b b -s s ' +
             '-C c -r r -p pn:pv -c c -F f -w w -l l -e e').split())
         exp = dict(master='m', auth='a', who='w', repository='r', project='p',
-                branch='b', category='c', revision='r',
+                branch='b', category='c', revision='r', vc='s',
                 properties=dict(pn='pv'), comments='c', logfile='f', when='w',
                 revlink='l', encoding='e')
         self.assertOptions(opts, exp)
 
     def test_long_args(self):
         opts = self.parse(*('--master m --auth a --who w --repository r ' +
-            '--project p --branch b --category c --revision r ' +
+            '--project p --branch b --category c --revision r --vc s ' +
             '--revision_file rr --property pn:pv --comments c --logfile f ' +
             '--when w --revlink l --encoding e').split())
         exp = dict(master='m', auth='a', who='w', repository='r', project='p',
-                branch='b', category='c', revision='r', revision_file='rr',
+                branch='b', category='c', revision='r', vc='s', revision_file='rr',
                 properties=dict(pn='pv'), comments='c', logfile='f', when='w',
                 revlink='l', encoding='e')
         self.assertOptions(opts, exp)
@@ -145,7 +145,8 @@ class TestSendChange(unittest.TestCase):
                         'revision': None,
                         'revlink': '',
                         'when': None,
-                        'who': 'me'}))
+                        'who': 'me',
+                        'vc': None}))
             # nothing to stdout
             self.assertEqual(self.stdout.getvalue(), '')
         d.addCallback(check)
@@ -154,7 +155,7 @@ class TestSendChange(unittest.TestCase):
     def test_sendchange_args(self):
         d = runner.sendchange(dict(encoding='utf16', who='me', auth='a:b',
                 master='a:1', branch='br', category='cat', revision='rr',
-                properties={'a':'b'}, repository='rep', project='prj',
+                properties={'a':'b'}, repository='rep', project='prj', vc='git',
                 revlink='rl', when='1234', comments='comm', files=('a', 'b')))
         def check(_):
             self.assertEqual((self.sender.master, self.sender.auth,
@@ -170,7 +171,8 @@ class TestSendChange(unittest.TestCase):
                         'revision': 'rr',
                         'revlink': 'rl',
                         'when': 1234.0,
-                        'who': 'me'}))
+                        'who': 'me',
+                        'vc': 'git'}))
             self.assertEqual(self.stdout.getvalue(), '')
         d.addCallback(check)
         return d
@@ -230,6 +232,17 @@ class TestSendChange(unittest.TestCase):
             except:
                 pass
         d.addCallback(check)
+        return d
+
+    def test_sendchange_bad_vc(self):
+        d = defer.maybeDeferred(lambda :
+                runner.sendchange(dict(master='a:1', who="abc", vc="blargh")))
+        def cb(_):
+            self.fail("shouldn't succeed")
+        def eb(f):
+            f.trap(AssertionError)
+            pass # A-OK
+        d.addCallbacks(cb, eb)
         return d
 
     def test_sendchange_auth_prompt(self):

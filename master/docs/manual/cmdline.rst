@@ -541,6 +541,10 @@ arguments which can influence the ``Change`` that gets submitted:
     Specifies the character encoding for all other parameters,
     defaulting to ``'utf8'``. 
 
+--vc
+	Specifies which VC system the Change is coming from, one of: ``cvs``,
+	``svn``, ``darcs``, ``hg``, ``bzr``, ``git``, ``mtn``, or ``p4``.
+	Defaults to ``None``.
 
 .. _debugclient:
     
