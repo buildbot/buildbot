@@ -239,11 +239,12 @@ be used to access them.
     By adding one or more ``builder=`` query arguments, the Console view is
     restricted to only showing information about the given Builders.Adding a
     ``repository=`` argument will limit display to a given repository. By
-    adding one or more ``branch=`` query arguments, the display is
-    restricted to showing information about the given branches. In
-    addition, adding one or more ``category=`` query arguments to the URL
-    will limit the display to Builders that were defined with one of the
-    given categories.
+    adding one or more ``branch=`` query arguments, the display is restricted
+    to showing information about the given branches. In addition, adding one or
+    more ``category=`` query arguments to the URL will limit the display to
+    Builders that were defined with one of the given categories.  With the
+    ``project=`` query argument, it's possible to restrict the view to changes
+    from the given project.
     
     By adding one or more ``name=`` query arguments to the URL, the console view is
     restricted to only showing changes made by the given users.
