@@ -859,7 +859,7 @@ CVS
 
 .. py:class:: buildbot.steps.source.cvs.CVS
 
-The :class:`CVS` build step performs a `Subversion <http://www.nongnu.org/cvs/>`_
+The :class:`CVS` build step performs a `CVS <http://www.nongnu.org/cvs/>`_
 heckout or update. It takes the following arguments:
 
 ``cvsroot``
@@ -1107,7 +1107,7 @@ SVN (Old)
 +++++++++
 
 The :class:`SVN` build step performs a
-`Subversion`_ checkout or update.
+`Subversion <http://subversion.tigris.org>`_ checkout or update.
 There are two basic ways of setting up the checkout step, depending
 upon whether you are using multiple branches or not.
 

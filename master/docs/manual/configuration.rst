@@ -227,6 +227,3 @@ The keys in this section affect the operations of the buildmaster globally.
 .. include:: cfg-buildsteps.rsi
 .. include:: cfg-interlocks.rsi
 .. include:: cfg-statustargets.rsi
-
-.. _Subversion: http://subversion.tigris.org
-
