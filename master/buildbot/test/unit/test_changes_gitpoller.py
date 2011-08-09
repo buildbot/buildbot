@@ -17,7 +17,7 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from exceptions import Exception
 from buildbot.changes import gitpoller
-from buildbot.test.util import changesource, gpo, users
+from buildbot.test.util import changesource, gpo
 from buildbot.util import epoch2datetime
 
 class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
@@ -101,18 +101,14 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
 
 class TestGitPoller(gpo.GetProcessOutputMixin,
                     changesource.ChangeSourceMixin,
-                    users.UsersMixin,
                     unittest.TestCase):
 
     def setUp(self):
         self.setUpGetProcessOutput()
         d = self.setUpChangeSource()
-        d.addCallback(lambda _ : self.setUpUsers())
         def create_poller(_):
             self.poller = gitpoller.GitPoller('git@example.com:foo/baz.git')
             self.poller.master = self.master
-            self.poller.createUserObject = self.createUserObject
-            self.poller.master.db.users.addUser = self.addUser
         d.addCallback(create_poller)
         return d
         
