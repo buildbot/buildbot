@@ -1024,9 +1024,6 @@ class FakeBuildsComponent(FakeDBComponent):
 
 class FakeUsersComponent(FakeDBComponent):
 
-    known_types = ['full_name', 'email']
-    known_info_types = ['authz_user', 'authz_pass', 'git']
-
     def setUp(self):
         self.users = {}
         self.users_info = {}

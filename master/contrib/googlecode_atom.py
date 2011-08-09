@@ -68,6 +68,14 @@ class GoogleCodeAtomPoller(base.ChangeSource):
         self.pollinterval = pollinterval
         self.lastChange = None
         self.loop = LoopingCall(self.poll)
+        self.src = None
+        for word in self.feedurl.split('/'):
+            if word == 'svnchanges':
+                self.src = 'svn'
+                break
+            elif word == 'hgchanges':
+                self.src = 'hg'
+                break
 
     def startService(self):
         log.msg("GoogleCodeAtomPoller starting")
@@ -166,6 +174,6 @@ class GoogleCodeAtomPoller(base.ChangeSource):
                                    comments = change["comments"],
                                    when = change["when"],
                                    branch = self.branch)
-                self.parent.addChange(c)
+                self.parent.addChange(c, src=self.src)
         if change_list:
             self.lastChange = change_list[-1]["revision"]
