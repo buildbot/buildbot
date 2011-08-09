@@ -41,7 +41,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'BuildBot'
-copyright = u'2010, Brian Warner'
+copyright = u'Buildbot Team Members'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

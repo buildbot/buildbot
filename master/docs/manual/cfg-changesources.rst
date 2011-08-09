@@ -839,7 +839,7 @@ SVNPoller
 .. py:class:: buildbot.changes.svnpoller.SVNPoller
 
 The :class:`buildbot.changes.svnpoller.SVNPoller` is a ChangeSource
-which periodically polls a `Subversion`_
+which periodically polls a `Subversion <http://subversion.tigris.org/>`_
 repository for new revisions, by running the ``svn log``
 command in a subshell. It can watch a single branch or multiple
 branches.

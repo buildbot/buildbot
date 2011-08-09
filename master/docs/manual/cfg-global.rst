@@ -4,6 +4,8 @@
 Global Configuration
 --------------------
 
+The keys in this section affect the operations of the buildmaster globally.
+
 .. _Database-Specification:
 
 Database Specification
