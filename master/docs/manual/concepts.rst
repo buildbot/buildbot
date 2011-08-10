@@ -674,6 +674,9 @@ Change came from.
     ``who`` attributes are free-form strings, but usually adhere to similar
     conventions as ``git`` attributes (``Full Name <Email>``).
 
+``cvs``
+    ``who`` attributes are of the form ``Username``.
+
 Uses
 ++++
 
