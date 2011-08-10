@@ -668,7 +668,7 @@ Change came from.
     ``who`` attributes take the form ``Full Name <Email>``.
 
 ``svn``
-	``who`` attributes are of the form ``Username``.
+    ``who`` attributes are of the form ``Username``.
 
 Uses
 ++++
