@@ -677,6 +677,10 @@ Change came from.
 ``cvs``
     ``who`` attributes are of the form ``Username``.
 
+``darcs``
+    ``who`` attributes contain an ``Email`` and may also include a ``Full Name``
+    like ``git`` attributes.
+
 Uses
 ++++
 
