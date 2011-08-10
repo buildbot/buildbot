@@ -681,6 +681,10 @@ Change came from.
     ``who`` attributes contain an ``Email`` and may also include a ``Full Name``
     like ``git`` attributes.
 
+``bzr``
+    ``who`` attributes are free-form strings like ``hg``, and can include a
+    ``Username``, ``Email``, and/or ``Full Name``.
+
 Uses
 ++++
 

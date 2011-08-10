@@ -98,3 +98,14 @@ class UsersTests(unittest.TestCase):
                                attr_data="tyler@mayhem.net") })
         d.addCallback(check)
         return d
+
+    def test_createUserObject_bzr(self):
+        d = users.createUserObject(self.master, "Tyler Durden", 'bzr')
+        def check(_):
+            self.assertEqual(self.db.users.users,
+                     { 1: dict(identifier='Tyler Durden') })
+            self.assertEqual(self.db.users.users_info,
+                     { 1: dict(attr_type="bzr",
+                               attr_data="Tyler Durden") })
+        d.addCallback(check)
+        return d
