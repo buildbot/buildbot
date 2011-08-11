@@ -670,6 +670,21 @@ Change came from.
 ``svn``
     ``who`` attributes are of the form ``Username``.
 
+``hg``
+    ``who`` attributes are free-form strings, but usually adhere to similar
+    conventions as ``git`` attributes (``Full Name <Email>``).
+
+``cvs``
+    ``who`` attributes are of the form ``Username``.
+
+``darcs``
+    ``who`` attributes contain an ``Email`` and may also include a ``Full Name``
+    like ``git`` attributes.
+
+``bzr``
+    ``who`` attributes are free-form strings like ``hg``, and can include a
+    ``Username``, ``Email``, and/or ``Full Name``.
+
 Uses
 ++++
 

@@ -1033,14 +1033,10 @@ class FakeUsersComponent(FakeDBComponent):
         for row in rows:
             if isinstance(row, User):
                 self.users[row.uid] = dict(identifier=row.identifier)
-                if 'full_name' in row:
-                    self.users[row.uid].update(full_name=row.full_name)
-                if 'email' in row:
-                    self.users[row.uid].update(email=row.email)
 
             if isinstance(row, UserInfo):
                 assert row.uid in self.users
-                if not self.users_info[row.uid]:
+                if row.uid not in self.users_info:
                     self.users_info[row.uid] = dict(attr_type=row.attr_type,
                                                     attr_data=row.attr_data)
                 else:
@@ -1070,10 +1066,10 @@ class FakeUsersComponent(FakeDBComponent):
                 return defer.succeed(uid)
 
         uid = self.nextId()
-        self.db.users.insertTestData([User(uid=uid, identifier=identifier)])
-        self.db.users_info.insertTestData([UserInfo(uid=uid,
-                                                    attr_type=attr_type,
-                                                    attr_data=attr_data)])
+        self.db.insertTestData([User(uid=uid, identifier=identifier)])
+        self.db.insertTestData([UserInfo(uid=uid,
+                                         attr_type=attr_type,
+                                         attr_data=attr_data)])
         return defer.succeed(uid)
 
     def getUser(self, uid):

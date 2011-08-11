@@ -17,44 +17,28 @@ import mock
 from twisted.trial import unittest
 
 from buildbot.process.users import users
-from buildbot.db import users as db_users
-from buildbot.test.util import connector_component
+from buildbot.test.fake import fakedb
 
 
-class UsersTests(connector_component.ConnectorComponentMixin,
-                 unittest.TestCase):
+class UsersTests(unittest.TestCase):
 
     def setUp(self):
-        d = self.setUpConnectorComponent(table_names=['users', 'users_info'])
-        def finish_setup(_):
-            self.master = mock.Mock()
-            self.db.users = db_users.UsersConnectorComponent(self.db)
-            self.master.db.users = self.db.users
-        d.addCallback(finish_setup)
-        return d
-
-    def tearDown(self):
-        return self.tearDownConnectorComponent()
+        self.master = mock.Mock()
+        self.master.db = self.db = fakedb.FakeDBConnector(self)
 
     def test_createUserObject_no_src(self):
         d = users.createUserObject(self.master, "Tyler Durden", None)
         def check(_):
-            def thd(conn):
-                r = conn.execute(self.db.model.users.select())
-                rows = r.fetchall()
-                self.assertEqual(len(rows), 0)
-            return self.db.pool.do(thd)
+            self.assertEqual(self.db.users.users, {})
+            self.assertEqual(self.db.users.users_info, {})
         d.addCallback(check)
         return d
 
     def test_createUserObject_unrecognized_src(self):
         d = users.createUserObject(self.master, "Tyler Durden", 'blah')
         def check(_):
-            def thd(conn):
-                r = conn.execute(self.db.model.users.select())
-                rows = r.fetchall()
-                self.assertEqual(len(rows), 0)
-            return self.db.pool.do(thd)
+            self.assertEqual(self.db.users.users, {})
+            self.assertEqual(self.db.users.users_info, {})
         d.addCallback(check)
         return d
 
@@ -62,43 +46,66 @@ class UsersTests(connector_component.ConnectorComponentMixin,
         d = users.createUserObject(self.master,
                                    "Tyler Durden <tyler@mayhem.net>", 'git')
         def check(_):
-            def thd(conn):
-                r = conn.execute(self.db.model.users.select())
-                rows = r.fetchall()
-                r = conn.execute(self.db.model.users_info.select())
-                info_rows = r.fetchall()
-
-                self.assertEqual(len(rows), 1)
-                self.assertEqual(len(info_rows), 1)
-
-                self.assertEqual(rows[0].uid, 1)
-                self.assertEqual(rows[0].identifier,
-                                 'Tyler Durden <tyler@mayhem.net>')
-                self.assertEqual(info_rows[0].uid, 1)
-                self.assertEqual(info_rows[0].attr_type, 'git')
-                self.assertEqual(info_rows[0].attr_data,
-                                 'Tyler Durden <tyler@mayhem.net>')
-            return self.db.pool.do(thd)
+            self.assertEqual(self.db.users.users,
+                     { 1: dict(identifier='Tyler Durden <tyler@mayhem.net>') })
+            self.assertEqual(self.db.users.users_info,
+                     { 1: dict(attr_type="git",
+                               attr_data="Tyler Durden <tyler@mayhem.net>") })
         d.addCallback(check)
         return d
 
     def test_createUserObject_svn(self):
         d = users.createUserObject(self.master, "tdurden", 'svn')
         def check(_):
-            def thd(conn):
-                r = conn.execute(self.db.model.users.select())
-                rows = r.fetchall()
-                r = conn.execute(self.db.model.users_info.select())
-                info_rows = r.fetchall()
+            self.assertEqual(self.db.users.users,
+                             { 1: dict(identifier='tdurden') })
+            self.assertEqual(self.db.users.users_info,
+                             { 1: dict(attr_type="svn",
+                                       attr_data="tdurden") })
+        d.addCallback(check)
+        return d
 
-                self.assertEqual(len(rows), 1)
-                self.assertEqual(len(info_rows), 1)
+    def test_createUserObject_hg(self):
+        d = users.createUserObject(self.master,
+                                   "Tyler Durden <tyler@mayhem.net>", 'hg')
+        def check(_):
+            self.assertEqual(self.db.users.users,
+                     { 1: dict(identifier='Tyler Durden <tyler@mayhem.net>') })
+            self.assertEqual(self.db.users.users_info,
+                     { 1: dict(attr_type="hg",
+                               attr_data="Tyler Durden <tyler@mayhem.net>") })
+        d.addCallback(check)
+        return d
 
-                self.assertEqual(rows[0].uid, 1)
-                self.assertEqual(rows[0].identifier, 'tdurden')
-                self.assertEqual(info_rows[0].uid, 1)
-                self.assertEqual(info_rows[0].attr_type, 'svn')
-                self.assertEqual(info_rows[0].attr_data, 'tdurden')
-            return self.db.pool.do(thd)
+    def test_createUserObject_cvs(self):
+        d = users.createUserObject(self.master, "tdurden", 'cvs')
+        def check(_):
+            self.assertEqual(self.db.users.users,
+                             { 1: dict(identifier='tdurden') })
+            self.assertEqual(self.db.users.users_info,
+                             { 1: dict(attr_type="cvs",
+                                       attr_data="tdurden") })
+        d.addCallback(check)
+        return d
+
+    def test_createUserObject_darcs(self):
+        d = users.createUserObject(self.master, "tyler@mayhem.net", 'darcs')
+        def check(_):
+            self.assertEqual(self.db.users.users,
+                     { 1: dict(identifier='tyler@mayhem.net') })
+            self.assertEqual(self.db.users.users_info,
+                     { 1: dict(attr_type="darcs",
+                               attr_data="tyler@mayhem.net") })
+        d.addCallback(check)
+        return d
+
+    def test_createUserObject_bzr(self):
+        d = users.createUserObject(self.master, "Tyler Durden", 'bzr')
+        def check(_):
+            self.assertEqual(self.db.users.users,
+                     { 1: dict(identifier='Tyler Durden') })
+            self.assertEqual(self.db.users.users_info,
+                     { 1: dict(attr_type="bzr",
+                               attr_data="Tyler Durden") })
         d.addCallback(check)
         return d
