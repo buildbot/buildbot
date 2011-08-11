@@ -85,9 +85,10 @@ class TestChangePerspective(unittest.TestCase):
     def setUp(self):
         self.added_changes = []
         self.master = mock.Mock()
+
         def addChange(**chdict):
             self.added_changes.append(chdict)
-            return defer.succeed(None)
+            return defer.succeed(mock.Mock())
         self.master.addChange = addChange
 
     def test_addChange_noprefix(self):
@@ -95,7 +96,7 @@ class TestChangePerspective(unittest.TestCase):
         d = cp.perspective_addChange(dict(who="bar", files=['a']))
         def check(_):
             self.assertEqual(self.added_changes,
-                    [ dict(author="bar", files=['a']) ])
+                    [ dict(author="bar", files=['a'], src=None) ])
         d.addCallback(check)
         return d
 
@@ -105,7 +106,7 @@ class TestChangePerspective(unittest.TestCase):
                 dict(who="bar", files=['xx/a', 'yy/b']))
         def check(_):
             self.assertEqual(self.added_changes,
-                    [ dict(author="bar", files=['a']) ])
+                    [ dict(author="bar", files=['a'], src=None) ])
         d.addCallback(check)
         return d
 
@@ -116,7 +117,8 @@ class TestChangePerspective(unittest.TestCase):
                 )
         def check(_):
             self.assertEqual(self.added_changes,
-                    [ dict(project="", revlink="", repository="", files=[]) ])
+                    [ dict(project="", revlink="", repository="",
+                           files=[], src=None) ])
         d.addCallback(check)
         return d
 
@@ -127,7 +129,7 @@ class TestChangePerspective(unittest.TestCase):
                 )
         def check(_):
             self.assertEqual(self.added_changes,
-                    [ dict(when_timestamp=None, files=[]) ])
+                    [ dict(when_timestamp=None, files=[], src=None) ])
         d.addCallback(check)
         return d
 
@@ -138,7 +140,7 @@ class TestChangePerspective(unittest.TestCase):
                 )
         def check(_):
             self.assertEqual(self.added_changes,
-                    [ dict(files=['a', 'b']) ])
+                    [ dict(files=['a', 'b'], src=None) ])
         d.addCallback(check)
         return d
 
@@ -153,7 +155,8 @@ class TestChangePerspective(unittest.TestCase):
                     [ dict(author=u"\N{SNOWMAN}",
                       comments=u"\N{SNOWMAN}",
                       links=[u'\N{HEAVY BLACK HEART}'],
-                      files=[u'\N{VERY MUCH GREATER-THAN}']) ])
+                      files=[u'\N{VERY MUCH GREATER-THAN}'],
+                      src=None) ])
         d.addCallback(check)
         return d
 
@@ -168,7 +171,8 @@ class TestChangePerspective(unittest.TestCase):
                     [ dict(author=u"\N{SNOWMAN}",
                       comments=u"\N{SNOWMAN}",
                       links=[u'\N{HEAVY BLACK HEART}'],
-                      files=[u'\N{VERY MUCH GREATER-THAN}']) ])
+                      files=[u'\N{VERY MUCH GREATER-THAN}'],
+                      src=None) ])
         d.addCallback(check)
         return d
 
@@ -179,7 +183,7 @@ class TestChangePerspective(unittest.TestCase):
         d = cp.perspective_addChange(dict(author=bogus_utf8, files=['a']))
         def check(_):
             self.assertEqual(self.added_changes,
-                    [ dict(author=replacement, files=['a']) ])
+                    [ dict(author=replacement, files=['a'], src=None) ])
         d.addCallback(check)
         return d
 
@@ -190,7 +194,16 @@ class TestChangePerspective(unittest.TestCase):
         def check(_):
             self.assertEqual(self.added_changes,
                     [ dict(is_dir=1, author='me', files=[],
-                        when_timestamp=epoch2datetime(1234)) ])
+                        when_timestamp=epoch2datetime(1234), src=None) ])
         d.addCallback(check)
         return d
 
+    def test_createUserObject_git_src(self):
+        cp = pb.ChangePerspective(self.master, None)
+        d = cp.perspective_addChange(dict(who="c <h@c>"), src='git')
+        def check_change(_):
+            self.assertEqual(self.added_changes, [ dict(author="c <h@c>",
+                                                        files=[],
+                                                        src='git') ])
+        d.addCallback(check_change)
+        return d

@@ -168,6 +168,14 @@ class Model(base.DBConnectorComponent):
     )
     """Properties for changes"""
 
+    change_users = sa.Table("change_users", metadata,
+        sa.Column("changeid", sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
+        # uid for the author of the change with the given changeid
+        sa.Column("uid", sa.Integer, sa.ForeignKey('users.uid'), nullable=False)
+    )
+    """Uid values for the User Objects created from the author of the Change that
+    has the corresponding changeid"""
+
     changes = sa.Table('changes', metadata,
         # changeid also serves as 'change number'
         sa.Column('changeid', sa.Integer,  primary_key=True), # TODO: rename to 'id'
@@ -331,6 +339,31 @@ class Model(base.DBConnectorComponent):
     """This table stores key/value pairs for objects, where the key is a string
     and the value is a JSON string."""
 
+    users = sa.Table("users", metadata,
+        # unique user id number
+        sa.Column("uid", sa.Integer, primary_key=True),
+
+        # identifier (nickname) for this user; used for display
+        sa.Column("identifier", sa.String(256), nullable=False),
+    )
+    """This table identifies individual users, and contains buildbot-specific
+    information about those users."""
+
+    users_info = sa.Table("users_info", metadata,
+        # unique user id number
+        sa.Column("uid", sa.Integer, sa.ForeignKey('users.uid'),
+                  nullable=False),
+
+        # type of user attribute, such as 'git'
+        sa.Column("attr_type", sa.String(128), nullable=False),
+
+        # data for given user attribute, such as a commit string or password
+        sa.Column("attr_data", sa.String(128), nullable=False),
+    )
+
+    """This table stores information identifying a user that's related to a
+    particular interface - a version-control system, status plugin, etc."""
+
     # indexes
 
     sa.Index('name_and_class', schedulers.c.name, schedulers.c.class_name)
@@ -358,6 +391,13 @@ class Model(base.DBConnectorComponent):
     sa.Index('scheduler_upstream_buildsets_schedulerid', scheduler_upstream_buildsets.c.schedulerid)
     sa.Index('scheduler_upstream_buildsets_active', scheduler_upstream_buildsets.c.active)
     sa.Index('sourcestamp_changes_sourcestampid', sourcestamp_changes.c.sourcestampid)
+    sa.Index('users_identifier', users.c.identifier, unique=True)
+    sa.Index('users_info_uid', users_info.c.uid)
+    sa.Index('users_info_uid_attr_type', users_info.c.uid,
+            users_info.c.attr_type, unique=True)
+    sa.Index('users_info_attrs', users_info.c.attr_type,
+            users_info.c.attr_data, unique=True)
+    sa.Index('change_users_changeid', change_users.c.changeid)
 
     #
     # migration support

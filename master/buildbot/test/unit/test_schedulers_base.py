@@ -57,6 +57,9 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertRaises(AssertionError,
                 lambda : self.makeScheduler(builderNames='xxx'))
 
+    def test_constructor_builderNames_unicode(self):
+        self.makeScheduler(builderNames=[u'a'])
+
     def test_getState(self):
         sched = self.makeScheduler()
         self.db.schedulers.fakeState(self.SCHEDULERID,

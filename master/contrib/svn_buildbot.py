@@ -231,7 +231,7 @@ class ChangeSender:
         return d
 
     def sendAllChanges(self, remote, changes):
-        dl = [remote.callRemote('addChange', change)
+        dl = [remote.callRemote('addChange', change, src='svn')
               for change in changes]
         return defer.DeferredList(dl)
 

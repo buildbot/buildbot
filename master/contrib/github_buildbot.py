@@ -126,7 +126,7 @@ class GitHubBuildBot(resource.Resource):
                 % error.getErrorMessage())
         return error
 
-    def addChange(self, dummy, remote, changei):
+    def addChange(self, dummy, remote, changei, src='git'):
         """
         Sends changes from the commit to the buildmaster.
         """
@@ -141,8 +141,8 @@ class GitHubBuildBot(resource.Resource):
         for key, value in change.iteritems():
             logging.debug("  %s: %s" % (key, value))
     
-        deferred = remote.callRemote('addChange', change)
-        deferred.addCallback(self.addChange, remote, changei)
+        deferred = remote.callRemote('addChange', change, src=src)
+        deferred.addCallback(self.addChange, remote, changei, src)
         return deferred
 
     def connected(self, remote, changes):

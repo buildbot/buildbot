@@ -223,6 +223,13 @@ You can also use the bot to force a build::
 
   bbtest: force build runtests test build
 
+But to allow this, you'll need to have ``allowForce`` in the IRC
+configuration::
+
+  c['status'].append(words.IRC(host="irc.freenode.org", nick="bbtest",
+                               allowForce=True,
+                               channels=["#buildbot-test"]))
+
 This time, the bot is giving you more output, as it's specifically responding
 to your direct request to force a build, and explicitly tells you when the
 build finishes::

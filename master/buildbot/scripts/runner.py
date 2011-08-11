@@ -820,6 +820,8 @@ class SendChangeOptions(OptionsWithOptionsFile):
         ("auth", "a", None, "Authentication token - username:password, or prompt for password"),
         ("who", "W", None, "Author of the commit"),
         ("repository", "R", '', "Repository specifier"),
+        ("vc", "s", None, "The VC system in use, one of: cvs, svn, darcs, hg, "
+                           "bzr, git, mtn, p4"),
         ("project", "P", '', "Project specifier"),
         ("branch", "b", None, "Branch specifier"),
         ("category", "C", None, "Category of repository"),
@@ -843,6 +845,7 @@ class SendChangeOptions(OptionsWithOptionsFile):
         [ 'username', 'username' ],
         [ 'branch', 'branch' ],
         [ 'category', 'category' ],
+        [ 'vc', 'vc' ],
     ]
 
     def getSynopsis(self):
@@ -871,6 +874,7 @@ def sendchange(config, runReactor=False):
     revision = config.get('revision')
     properties = config.get('properties', {})
     repository = config.get('repository', '')
+    vc = config.get('vc', None)
     project = config.get('project', '')
     revlink = config.get('revlink', '')
     if config.get('when'):
@@ -892,6 +896,10 @@ def sendchange(config, runReactor=False):
 
     files = config.get('files', ())
 
+    vcs = ['cvs', 'svn', 'darcs', 'hg', 'bzr', 'git', 'mtn', 'p4', None]
+    assert vc in vcs, "vc must be 'cvs', 'svn', 'darcs', 'hg', 'bzr', " \
+        "'git', 'mtn', or 'p4'"
+
     # fix up the auth with a password if none was given
     if not auth:
         auth = 'change:changepw'
@@ -906,7 +914,7 @@ def sendchange(config, runReactor=False):
 
     s = sendchange.Sender(master, auth, encoding=encoding)
     d = s.send(branch, revision, comments, files, who=who, category=category, when=when,
-               properties=properties, repository=repository, project=project,
+               properties=properties, repository=repository, vc=vc, project=project,
                revlink=revlink)
 
     if runReactor:

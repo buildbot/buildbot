@@ -32,7 +32,7 @@ class ChangePerspective(NewCredPerspective):
     def detached(self, mind):
         pass
 
-    def perspective_addChange(self, changedict):
+    def perspective_addChange(self, changedict, src=None):
         log.msg("perspective_addChange called")
 
         if 'revlink' in changedict and not changedict['revlink']:
@@ -89,7 +89,7 @@ class ChangePerspective(NewCredPerspective):
 
         if not files:
             log.msg("No files listed in change... bit strange, but not fatal.")
-        return self.master.addChange(**changedict)
+        return self.master.addChange(src=src, **changedict)
 
 class PBChangeSource(base.ChangeSource):
     compare_attrs = ["user", "passwd", "port", "prefix", "port"]

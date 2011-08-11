@@ -78,7 +78,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         m = message_from_string(cvs1_11_msg)
         src = CVSMaildirSource('/dev/null', urlmaker=fileToUrl)
         try:
-            chdict = src.parse( m )
+            src, chdict = src.parse( m )
         except:
             self.fail('Failed to get change from email message.')
         self.assert_(chdict != None)
@@ -95,12 +95,13 @@ class TestCVSMaildirSource(unittest.TestCase):
         self.assert_(chdict['repository'] == ':ext:cvshost.example.com:/cvsroot')
         self.assert_(chdict['project'] == 'MyModuleName')
         self.assert_(len(chdict['properties']) == 0)
+        self.assert_(src == 'cvs')
 
     def test_CVSMaildirSource_create_change_from_cvs1_12msg(self):
         m = message_from_string(cvs1_12_msg)
         src = CVSMaildirSource('/dev/null', urlmaker=fileToUrl)
         try:
-            chdict = src.parse( m )
+            src, chdict = src.parse( m )
         except:
             self.fail('Failed to get change from email message.')
         self.assert_(chdict != None)
@@ -118,13 +119,14 @@ class TestCVSMaildirSource(unittest.TestCase):
         self.assert_(chdict['repository'] == ':ext:cvshost.example.com:/cvsroot')
         self.assert_(chdict['project'] == 'MyModuleName')
         self.assert_(len(chdict['properties']) == 0)
+        self.assert_(src == 'cvs')
 
     def test_CVSMaildirSource_create_change_from_cvs1_12_with_no_path(self):
         msg = cvs1_12_msg.replace('Path: base/module/src', '')
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            assert src.parse( m )
+            assert src.parse( m )[1]
         except ValueError:
             pass
         else:
@@ -136,7 +138,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            assert src.parse( m )
+            assert src.parse( m )[1]
         except ValueError:
             pass
         else:
@@ -149,7 +151,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            chdict = src.parse( m )
+            chdict = src.parse( m )[1]
         except:
             self.fail('Failed to get change from email message.')
         self.assert_(chdict['branch'] == 'Test_Branch')
@@ -159,7 +161,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            chdict = src.parse( m )
+            chdict = src.parse( m )[1]
         except:
             self.fail('Failed to get change from email message.')
         self.assert_(chdict['category'] == 'Test category')
@@ -170,7 +172,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            chdict = src.parse( m )
+            chdict = src.parse( m )[1]
         except:
             self.fail('Failed to get change from email message.')
         self.assert_(chdict['comments'] == None )
@@ -191,7 +193,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            chdict = src.parse( m )
+            chdict = src.parse( m )[1]
         except:
             self.fail('Failed to get change from email message.')
         self.assert_(chdict['project'] == None )
@@ -201,7 +203,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            chdict = src.parse( m )
+            chdict = src.parse( m )[1]
         except:
             self.fail('Failed to get change from email message.')
         self.assert_(chdict['repository'] == None )
@@ -211,7 +213,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         propDict = { 'foo' : 'bar' }
         src = CVSMaildirSource('/dev/null', urlmaker=fileToUrl, properties=propDict)
         try:
-            chdict = src.parse( m )
+            chdict = src.parse( m )[1]
         except:
             self.fail('Failed to get change from email message.')
         self.assert_(chdict['properties']['foo'] == 'bar')

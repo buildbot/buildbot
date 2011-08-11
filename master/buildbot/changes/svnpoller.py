@@ -349,7 +349,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     @defer.deferredGenerator
     def submit_changes(self, changes):
         for chdict in changes:
-            wfd = defer.waitForDeferred(self.master.addChange(**chdict))
+            wfd = defer.waitForDeferred(self.master.addChange(src='svn',
+                                                              **chdict))
             yield wfd
             wfd.getResult()
 
