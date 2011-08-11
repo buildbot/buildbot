@@ -156,7 +156,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
             locks.append((lock, access))
         self.locks = [(l.getLock(self), la) for l, la in locks]
         self.lock_subscriptions = [ l.subscribeToReleases(self._lockReleased)
-                                    for l in self.locks ]
+                                    for l, la in self.locks ]
 
     def locksAvailable(self):
         """
