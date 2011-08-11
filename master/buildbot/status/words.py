@@ -573,7 +573,7 @@ class Contact(base.StatusReceiver):
             self.send("I'm baaaaaaaaaaack!")
         else:
             self.send("You hadn't told me to be quiet, but it's the thought that counts, right?")
-    command_MUTE.usage = "unmute - disable a previous 'mute'"
+    command_UNMUTE.usage = "unmute - disable a previous 'mute'"
 
     def build_commands(self):
         commands = []
