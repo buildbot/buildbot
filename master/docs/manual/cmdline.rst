@@ -606,6 +606,110 @@ buildmaster. The other sections of the tool are as follows:
     :class:`Builder`, but the status-assignment code was changed in an incompatible
     way and these buttons are no longer meaningful.
 
+.. _user:
+
+user
+++++
+
+Note that in order to use this command, you need to configure a
+`Commandline_Users` instance in your `master.cfg` file, which is
+explained in :ref:`Users Options`.
+
+This command allows you to manage users in buildbot's database.
+No extra requirements are needed to use this command, aside from
+the Buildmaster running. For details on how Buildbot manages users,
+see :ref:`Users`.
+
+--master
+    The :command:`user` command can be run virtually anywhere
+    provided a location of the running buildmaster. The :option:`master`
+    argument is of the form ``{MASTERHOST}``, with the port specified
+    in the :option:`port` option.
+
+--port
+    The :option:`port` specifies what PB port to connect to when issuing
+    a :command:`user` command, which should be the same as the port set
+    in the `Commandline_Users` instance. This should be different than
+    `c['slavePortnum']`.
+
+--username
+    PB connection authentication that should match the arguments to
+    `Commandline_Users`.
+
+--passwd
+    PB connection authentication that should match the arguments to
+    `Commandline_Users`.
+
+--op
+    There are four supported values for the :option:`op` argument:
+    :option:`add`, :option:`update`, :option:`remove`, and
+    :option:`show`. Each are described in full in the following sections.
+
+--ids
+    When working with users, you need to be able to refer to them by
+    unique identifiers to find particular users in the database. The
+    :option:`ids` option lets you specify a comma separated list of these
+    identifiers for use with the :command:`user` command.
+
+    The :option:`ids` option is used only when using :option:`remove`
+    or :option:`show`.
+
+--info
+    Users are known in buildbot as a collection of attributes tied
+    together by some unique identifier (see :ref:`User Objects`). These
+    attributes are specified in the form ``{TYPE}={VALUE}`` when
+    using the :option:`info` option. These ``{TYPE}={VALUE}`` pairs
+    are specified in a comma separated list, so for example:
+
+    .. code-block:: none
+
+    --info=svn=jschmo,git='Joe Schmo <joe@schmo.com>'
+
+    The :option:`info` option can be specified multiple times in the
+    :command:`user` command, as each specified option will be interpreted
+    as a new user. Note that :option:`info` is only used with :option:`add`
+    or with :option:`update`, and whenever you use :option:`update` you need
+    to specify the identifier of the user you want to update. This is done
+    by prepending the :option:`info` arguments with ``{ID:}``. If we were
+    to update ``'jschmo'`` from the previous example, it would look like this:
+
+    .. code-block:: none
+
+    --info=jschmo:git='Joseph Schmo <joe@schmo.com>'
+
+Note that :option:`master`, :option:`port`, :option:`username`,
+:option:`passwd`, and :option:`op` are always required to issue
+the :command:`user` command.
+
+Below are examples of how each command should look. Whenever a
+:command:`user` command is successful, results will be shown
+to whoever issued the command.
+
+For :option:`add`:
+
+.. code-block:: none
+
+    buildbot user --master={MASTERHOST} --port={PORT} --username={USER}
+             --passwd={USERPW} --op={OP} --info={TYPE}={VALUE},...
+
+For :option:`update`:
+
+.. code-block:: none
+    buildbot user --master={MASTERHOST} --port={PORT} --username={USER}
+             --passwd={USERPW} --info={ID}:{TYPE}={VALUE},...
+
+For :option:`remove`:
+
+.. code-block:: none
+    buildbot user --master={MASTERHOST} --port={PORT} --username={USER}
+             --passwd={USERPW} --ids={ID1},{ID2},...
+
+For :option:`show`:
+
+.. code-block:: none
+    buildbot user --master={MASTERHOST} --port={PORT} --username={USER}
+             --passwd={USERPW} --ids={ID1},{ID2},...
+
 .. _buildbot-config-directory:
 
 .buildbot config directory

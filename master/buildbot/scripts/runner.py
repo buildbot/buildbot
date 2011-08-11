@@ -1160,6 +1160,138 @@ def doCheckConfig(config):
 
     return d
 
+class UserOptions(OptionsWithOptionsFile):
+    optParameters = [
+        ["master", "m", None,
+         "Location of the buildmaster's PBListener (host)"],
+        ["port", "p", None,
+         "Port as specified in c['user_managers'] in master.cfg"],
+        ["username", "u", None,
+         "Username for PB authentication"],
+        ["passwd", "p", None,
+         "Password for PB authentication"],
+        ["op", None, None,
+         "User management operation: add, remove, update, get"],
+        ["ids", None, None,
+         "User's identifiers, used to find users in 'remove' and 'get' "
+         "Can be specified multiple times (--ids=id1,id2,id3)"],
+        ["info", None, None,
+         "User information in the form: --info=type=value,type=value,.. "
+         "Used in 'add' and 'update', can be specified multiple times.  "
+         "Note that 'update' requires --info=id:type=value..."]
+    ]
+
+    def __init__(self):
+        OptionsWithOptionsFile.__init__(self)
+        self['ids'] = []
+        self['info'] = []
+
+    def opt_ids(self, option):
+        id_list = option.split(",")
+        self['ids'].extend(id_list)
+
+    def opt_info(self, option):
+        # splits info into type/value dictionary, appends to info
+        info_list = option.split(",")
+        info_elem = {}
+        for i in range(0, len(info_list)):
+            split_info = info_list[i].split("=", 1)
+
+            # pull identifier from update --info
+            if ":" in split_info[0]:
+                split_id = split_info[0].split(":")
+                info_elem["identifier"] = split_id[0]
+                split_info[0] = split_id[1]
+
+            info_elem[split_info[0]] = split_info[1]
+        self['info'].append(info_elem)
+
+    def getSynopsis(self):
+        return "Usage:    buildbot user [options]"
+
+    longdesc = """
+    Currently implemented types for --info= are:\n
+    git, svn, hg, cvs, darcs, bzr
+    """
+
+def users_client(config, runReactor=False):
+    from buildbot.clients import usersclient
+    from buildbot.process.users import users    # for srcs
+
+    # accepted attr_types by runner.users_client, in addition to users.srcs
+    attr_types = ['identifier']
+
+    master = config.get('master')
+    assert master, "you must provide the master location"
+    port = config.get('port')
+    assert port, "A port must be specified for a PB connection"
+    op = config.get('op')
+    assert op, "you must specify an operation: add, remove, update, get"
+    if op not in ['add', 'remove', 'update', 'get']:
+        raise AssertionError("bad op %r, use 'add', 'remove', 'update', "
+                             "or 'get'" % op)
+
+    username = config.get('username')
+    passwd = config.get('passwd')
+    assert username and passwd, "A username and password pair must be given"
+
+    # check op and proper args
+    info = config.get('info')
+    ids = config.get('ids')
+
+    # check for erroneous args
+    if not info and not ids:
+        raise AssertionError("must specify either --ids or --info")
+    if info and ids:
+        raise AssertionError("cannot use both --ids and --info, use "
+                         "--ids for 'remove' and 'get', --info "
+                         "for 'add' and 'update'")
+
+    if op == 'add' or op == 'update':
+        if ids:
+            raise AssertionError("cannot use --ids with 'add' or 'update'")
+        if op == 'update':
+            for user in info:
+                if 'identifier' not in user:
+                    raise ValueError("no ids found in update info, use: "
+                                     "--info=id:type=value,type=value,..")
+        if op == 'add':
+            for user in info:
+                if 'identifier' in user:
+                    raise ValueError("id found in add info, use: "
+                                     "--info=type=value,type=value,..")
+    if op == 'remove' or op == 'get':
+        if info:
+            raise AssertionError("cannot use --info with 'remove' or 'get'")
+
+    # find identifier if op == add
+    if info:
+        # check for valid types
+        for user in info:
+            for attr_type in user:
+                if attr_type not in users.srcs + attr_types:
+                    raise ValueError("Type not a valid attr_type, must be in: "
+                                     "%r" % (users.srcs + attr_types))
+            if op == 'add':
+                user['identifier'] = user.values()[0]
+
+    uc = usersclient.UsersClient(master, username, passwd, port)
+    d = uc.send(op, ids, info)
+
+    if runReactor:
+        from twisted.internet import reactor
+        status = [True]
+        def printSuccess(res):
+            print res
+        def failed(f):
+            status[0] = False
+            print "user op NOT sent - something went wrong: " + str(f)
+        d.addCallbacks(printSuccess, failed)
+        d.addBoth(lambda _ : reactor.stop())
+        reactor.run()
+        return status[0]
+    return d
+
 class Options(usage.Options):
     synopsis = "Usage:    buildbot <command> [command options]"
 
@@ -1198,6 +1330,9 @@ class Options(usage.Options):
 
         ['checkconfig', None, CheckConfigOptions,
          "test the validity of a master.cfg config file"],
+
+        ['user', None, UserOptions,
+         "Manage users in buildbot's database"]
 
         # TODO: 'watch'
         ]
@@ -1270,6 +1405,9 @@ def run():
         doTryServer(so)
     elif command == "checkconfig":
         if not doCheckConfig(so):
+            sys.exit(1)
+    elif command == "user":
+        if not users_client(so, True):
             sys.exit(1)
     sys.exit(0)
 
