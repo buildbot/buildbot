@@ -242,7 +242,10 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 whereclause=(change_properties_tbl.c.changeid == ch_row.changeid))
         rows = conn.execute(query)
         for r in rows:
-            v, s = split_vs(json.loads(r.property_value))
-            chdict['properties'][r.property_name] = (v,s)
+            try:
+                v, s = split_vs(json.loads(r.property_value))
+                chdict['properties'][r.property_name] = (v,s)
+            except ValueError:
+                pass
 
         return chdict
