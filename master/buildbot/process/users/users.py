@@ -16,7 +16,7 @@
 from twisted.python import log
 from twisted.internet import defer
 
-accepted_sources = ['git', 'svn']
+accepted_sources = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr']
 
 @defer.deferredGenerator
 def createUserObject(master, author, src=None):

@@ -319,7 +319,7 @@ if DEFINE_POLLER:
             d = twisted.internet.defer.Deferred()
             def _add_change():
                 d.callback(
-                    self.parent.addChange(change))
+                    self.parent.addChange(change, src='bzr'))
             twisted.internet.reactor.callLater(0, _add_change)
             return d
 
@@ -439,7 +439,7 @@ def send_change(branch, old_revno, old_revid, new_revno, new_revid, hook):
     def sendChanges(remote):
         """Send changes to buildbot."""
         bzrlib.trace.mutter("bzrbuildout sending changes: %s", change)
-        return remote.callRemote('addChange', change)
+        return remote.callRemote('addChange', change, src='bzr')
 
     deferred.addCallback(sendChanges)
 
