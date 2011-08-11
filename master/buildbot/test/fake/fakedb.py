@@ -302,8 +302,6 @@ class User(Row):
     defaults = dict(
         uid = None,
         identifier = 'soap',
-        full_name = None,
-        email = None,
     )
 
     id_column = 'uid'
