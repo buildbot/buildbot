@@ -378,7 +378,7 @@ port. To do this, just pass in the TCP port number when you create the
 :class:`WebStatus` instance; this is called the ``http_port`` argument::
 
     from buildbot.status.html import WebStatus
-    c['status'].append(http_port=WebStatus(http_port=8080))
+    c['status'].append(WebStatus(http_port=8080))
 
 The ``http_port`` argument is actually a `strports specification` for the
 port that the web server should listen on. This can be a simple port number, or
@@ -447,7 +447,7 @@ This is all configured with the :class:`Authz` class::
     authz = Authz(
         forceBuild=True,
         stopBuild=True)
-    c['status'].append(http_port=WebStatus(http_port=8080, authz=authz))
+    c['status'].append(WebStatus(http_port=8080, authz=authz))
 
 Each of the actions listed above is an option to :class:`Authz`.  You can specify
 ``False`` (the default) to prohibit that action or ``True`` to enable it.
