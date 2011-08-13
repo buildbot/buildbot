@@ -22,6 +22,7 @@ from twisted.python import log
 from twisted.internet import defer
 from twisted.internet.protocol import ProcessProtocol
 
+
 class GerritChangeSource(base.ChangeSource):
     """This source will maintain a connection to gerrit ssh server
     that will provide us gerrit events in json format."""
@@ -74,7 +75,7 @@ class GerritChangeSource(base.ChangeSource):
             """Do line buffering."""
             self.data += data
             lines = self.data.split("\n")
-            self.data = lines.pop(-1) # last line is either empty or incomplete
+            self.data = lines.pop(-1)  # last line is either empty or incomplete
             for line in lines:
                 log.msg("gerrit: %s" % (line,))
                 d = self.change_source.lineReceived(line)
@@ -98,7 +99,7 @@ class GerritChangeSource(base.ChangeSource):
         if not(type(event) == type({}) and "type" in event):
             log.msg("no type in event %s" % (line,))
             return defer.succeed(None)
-        func = getattr(self, "eventReceived_"+event["type"].replace("-","_"), None)
+        func = getattr(self, "eventReceived_" + event["type"].replace("-", "_"), None)
         if func == None:
             log.msg("unsupported event %s" % (event["type"],))
             return defer.succeed(None)
@@ -108,35 +109,38 @@ class GerritChangeSource(base.ChangeSource):
             for k, v in d.items():
                 if type(v) == dict:
                     flatten(event, base + "." + k, v)
-                else: # already there
+                else:  # already there
                     event[base + "." + k] = v
 
         properties = {}
         flatten(properties, "event", event)
-        return func(properties,event)
+        return func(properties, event)
+
     def addChange(self, chdict):
         d = self.master.addChange(**chdict)
         # eat failures..
         d.addErrback(log.err, 'error adding change from GerritChangeSource')
         return d
+
     def eventReceived_patchset_created(self, properties, event):
         change = event["change"]
         return self.addChange(dict(
                 author="%s <%s>" % (change["owner"]["name"], change["owner"]["email"]),
                 project=change["project"],
-                branch=change["branch"]+"/"+change["number"],
+                branch=change["branch"] + "/" + change["number"],
                 revision=event["patchSet"]["revision"],
                 revlink=change["url"],
                 comments=change["subject"],
                 files=["unknown"],
                 category=event["type"],
                 properties=properties))
+
     def eventReceived_ref_updated(self, properties, event):
         ref = event["refUpdate"]
         author = "gerrit"
 
         if "submitter" in event:
-            author="%s <%s>" % (event["submitter"]["name"], event["submitter"]["email"])
+            author = "%s <%s>" % (event["submitter"]["name"], event["submitter"]["email"])
 
         return self.addChange(dict(
                 author=author,
@@ -174,11 +178,11 @@ class GerritChangeSource(base.ChangeSource):
     def startStreamProcess(self):
         log.msg("starting 'gerrit stream-events'")
         self.lastStreamProcessStart = util.now()
-        args = [ self.username+"@"+self.gerritserver,"-p", str(self.gerritport)]
+        args = [self.username + "@" + self.gerritserver, "-p", str(self.gerritport)]
         if self.identity_file is not None:
-          args = args + [ '-i', self.identity_file ]
+            args = args + ['-i', self.identity_file]
         self.process = reactor.spawnProcess(self.LocalPP(self), "ssh",
-          [ "ssh" ] + args + [ "gerrit", "stream-events" ])
+            ["ssh"] + args + ["gerrit", "stream-events"])
 
     def startService(self):
         self.startStreamProcess()
@@ -197,4 +201,3 @@ class GerritChangeSource(base.ChangeSource):
         str = ('GerritChangeSource watching the remote Gerrit repository %s@%s %s' %
                             (self.username, self.gerritserver, status))
         return str
-
