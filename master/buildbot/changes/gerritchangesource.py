@@ -17,6 +17,7 @@ from twisted.internet import reactor
 
 from buildbot.changes import base
 from buildbot.util import json
+from buildbot.util.gerrit import GerritConnectionFactory
 from buildbot import util
 from twisted.python import log
 from twisted.internet import defer
@@ -27,7 +28,7 @@ class GerritChangeSource(base.ChangeSource):
     """This source will maintain a connection to gerrit ssh server
     that will provide us gerrit events in json format."""
 
-    compare_attrs = ["gerritserver", "gerritport"]
+    compare_attrs = ["connectionFactory"]
 
     STREAM_GOOD_CONNECTION_TIME = 120
     "(seconds) connections longer than this are considered good, and reset the backoff timer"
@@ -41,29 +42,17 @@ class GerritChangeSource(base.ChangeSource):
     STREAM_BACKOFF_MAX = 60
     "(seconds) maximum time to wait before retrying a failed connection"
 
-    def __init__(self, gerritserver, username, gerritport=29418, identity_file=None):
-        """
-        @type  gerritserver: string
-        @param gerritserver: the dns or ip that host the gerrit ssh server,
-
-        @type  gerritport: int
-        @param gerritport: the port of the gerrit ssh server,
-
-        @type  username: string
-        @param username: the username to use to connect to gerrit,
-
-        @type  identity_file: string
-        @param identity_file: identity file to for authentication (optional).
-
-        """
-        # TODO: delete API comment when documented
-
-        self.gerritserver = gerritserver
-        self.gerritport = gerritport
-        self.username = username
-        self.identity_file = identity_file
+    def __init__(self, gerritserver, username, gerritport=29418, identity_file=None,
+                ConnectionFactoryClass=GerritConnectionFactory):
         self.process = None
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
+
+        gerrit_args = {'gerrit_server': gerritserver,
+                       'gerrit_username': username,
+                       'gerrit_port': gerritport,
+                       'identity_file': identity_file,
+                       'process_protocol': self.LocalPP(self)}
+        self.connectionFactory = ConnectionFactoryClass(**gerrit_args)
 
     class LocalPP(ProcessProtocol):
         def __init__(self, change_source):
@@ -178,18 +167,15 @@ class GerritChangeSource(base.ChangeSource):
     def startStreamProcess(self):
         log.msg("starting 'gerrit stream-events'")
         self.lastStreamProcessStart = util.now()
-        args = [self.username + "@" + self.gerritserver, "-p", str(self.gerritport)]
-        if self.identity_file is not None:
-            args = args + ['-i', self.identity_file]
-        self.process = reactor.spawnProcess(self.LocalPP(self), "ssh",
-            ["ssh"] + args + ["gerrit", "stream-events"])
+        self.process = self.connectionFactory.connect(['gerrit', 'stream-events']);
 
     def startService(self):
         self.startStreamProcess()
 
     def stopService(self):
         if self.process:
-            self.process.signalProcess("KILL")
+            self.process.sendSignal("KILL")
+
         # TODO: if this occurs while the process is restarting, some exceptions may
         # be logged, although things will settle down normally
         return base.ChangeSource.stopService(self)
@@ -199,5 +185,6 @@ class GerritChangeSource(base.ChangeSource):
         if not self.process:
             status = "[NOT CONNECTED - check log]"
         str = ('GerritChangeSource watching the remote Gerrit repository %s@%s %s' %
-                            (self.username, self.gerritserver, status))
+                            (self.connectionFactory.gerrit_username,
+                             self.connectionFactory.gerrit_server, status))
         return str

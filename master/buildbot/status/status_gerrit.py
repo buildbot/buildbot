@@ -23,6 +23,7 @@ from twisted.internet.protocol import ProcessProtocol
 
 from buildbot.status.base import StatusReceiverMultiService
 from buildbot.status.builder import Results
+from buildbot.util.gerrit import GerritConnectionFactory
 
 
 def defaultReviewCB(builderName, build, result, arg):
@@ -38,7 +39,8 @@ class GerritStatusPush(StatusReceiverMultiService):
     """Event streamer to a gerrit ssh server."""
 
     def __init__(self, server, username, reviewCB=defaultReviewCB, port=29418,
-                 reviewArg=None, identityFile=None):
+                 reviewArg=None, identityFile=None,
+                 ConnectionFactoryClass=GerritConnectionFactory):
         """
         @param server:    Gerrit SSH server's address to use for push event notifications.
         @param username:  Gerrit SSH server's username.
@@ -50,12 +52,15 @@ class GerritStatusPush(StatusReceiverMultiService):
         """
         StatusReceiverMultiService.__init__(self)
         # Parameters.
-        self.gerrit_server = server
-        self.gerrit_username = username
-        self.gerrit_port = port
         self.reviewCB = reviewCB
         self.reviewArg = reviewArg
-        self.identityFile = identityFile
+
+        gerrit_args = {'gerrit_server': server,
+                       'gerrit_username': username,
+                       'gerrit_port': port,
+                       'identity_file': identityFile,
+                       'process_protocol': self.LocalPP(self)}
+        self.connectionFactory = ConnectionFactoryClass(**gerrit_args)
 
     class LocalPP(ProcessProtocol):
         def __init__(self, status):
@@ -115,10 +120,7 @@ class GerritStatusPush(StatusReceiverMultiService):
                 return
 
     def sendCodeReview(self, project, revision, message=None, verified=0, reviewed=0):
-        command = ["ssh", self.gerrit_username + "@" + self.gerrit_server, "-p %d" % self.gerrit_port]
-        if self.identityFile is not None:
-            command.extend(["-i", self.identityFile])
-        command.extend(["gerrit", "review", "--project %s" % str(project)])
+        command = ["gerrit", "review", "--project %s" % str(project)]
         if message:
             command.append("--message '%s'" % message.replace("'", "\""))
         if verified:
@@ -127,6 +129,7 @@ class GerritStatusPush(StatusReceiverMultiService):
             command.extend(["--code-review %d" % int(reviewed)])
         command.append(str(revision))
         print command
-        reactor.spawnProcess(self.LocalPP(self), "ssh", command)
+        self.connectionFactory.connect(command)
+
 
 # vim: set ts=4 sts=4 sw=4 et:
