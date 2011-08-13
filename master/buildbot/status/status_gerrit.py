@@ -18,24 +18,27 @@
 
 ."""
 
-from buildbot.status.base import StatusReceiverMultiService
-from buildbot.status.builder import Results
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 
+from buildbot.status.base import StatusReceiverMultiService
+from buildbot.status.builder import Results
+
+
 def defaultReviewCB(builderName, build, result, arg):
-    message =  "Buildbot finished compiling your patchset\n"
+    message = "Buildbot finished compiling your patchset\n"
     message += "on configuration: %s\n" % builderName
     message += "The result is: %s\n" % Results[result].upper()
 
     # message, verified, reviewed
     return message, (result == 0 or -1), 0
 
+
 class GerritStatusPush(StatusReceiverMultiService):
     """Event streamer to a gerrit ssh server."""
 
-    def __init__(self, server, username, reviewCB=defaultReviewCB, port=29418, reviewArg=None, identityFile=None,
-                 **kwargs):
+    def __init__(self, server, username, reviewCB=defaultReviewCB, port=29418,
+                 reviewArg=None, identityFile=None):
         """
         @param server:    Gerrit SSH server's address to use for push event notifications.
         @param username:  Gerrit SSH server's username.
@@ -77,7 +80,7 @@ class GerritStatusPush(StatusReceiverMultiService):
         self.status.subscribe(self)
 
     def builderAdded(self, name, builder):
-        return self # subscribe to this builder
+        return self  # subscribe to this builder
 
     def buildFinished(self, builderName, build, result):
         """Do the SSH gerrit verify command to the server."""
@@ -85,7 +88,7 @@ class GerritStatusPush(StatusReceiverMultiService):
         # Gerrit + Repo
         downloads = build.getProperty("repo_downloads")
         downloaded = build.getProperty("repo_downloaded")
-        if downloads is not None and downloaded is not None: 
+        if downloads is not None and downloaded is not None:
             downloaded = downloaded.split(" ")
             if downloads and 2 * len(downloads) == len(downloaded):
                 message, verified, reviewed = self.reviewCB(builderName, build, result, self.reviewArg)
@@ -93,17 +96,17 @@ class GerritStatusPush(StatusReceiverMultiService):
                     try:
                         project, change1 = downloads[i].split(" ")
                     except ValueError:
-                        return # something is wrong, abort
+                        return  # something is wrong, abort
                     change2 = downloaded[2 * i]
                     revision = downloaded[2 * i + 1]
                     if change1 == change2:
                         self.sendCodeReview(project, revision, message, verified, reviewed)
                     else:
-                        return # something is wrong, abort
+                        return  # something is wrong, abort
             return
 
         # Gerrit + Git
-        if build.getProperty("gerrit_branch") is not None: # used only to verify Gerrit source
+        if build.getProperty("gerrit_branch") is not None:  # used only to verify Gerrit source
             project = build.getProperty("project")
             revision = build.getProperty("got_revision")
             if project is not None and revision is not None:
@@ -117,7 +120,7 @@ class GerritStatusPush(StatusReceiverMultiService):
             command.extend(["-i", self.identityFile])
         command.extend(["gerrit", "review", "--project %s" % str(project)])
         if message:
-            command.append("--message '%s'" % message.replace("'","\""))
+            command.append("--message '%s'" % message.replace("'", "\""))
         if verified:
             command.extend(["--verified %d" % int(verified)])
         if reviewed:
