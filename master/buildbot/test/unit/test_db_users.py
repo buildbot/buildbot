@@ -316,3 +316,20 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
             return self.db.users.removeUser(uid=3)
         d.addCallback(check)
         return d
+
+    def test_identifierToUid_NoMatch(self):
+        d = self.db.users.identifierToUid(identifier="soap")
+        def check(res):
+            self.assertEqual(res, None)
+        d.addCallback(check)
+        return d
+
+    def test_identifierToUid_match(self):
+        d = self.insertTestData(self.user1_rows)
+        def ident2uid(_):
+            return self.db.users.identifierToUid(identifier="soap")
+        d.addCallback(ident2uid)
+        def check(res):
+            self.assertEqual(res, 1)
+        d.addCallback(check)
+        return d
