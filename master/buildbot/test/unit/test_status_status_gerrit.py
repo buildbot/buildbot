@@ -74,7 +74,7 @@ class TestStatusGerrit(unittest.TestCase):
         self.props.setProperty("got_revision", "rev", "test")
         self.gsp.buildFinished("builder", self.build, SUCCESS)
         expectedConnects = []  # should not connect for builds w/o gerrit info
-        self.assertEqual([], self.connectList)
+        self.assertEqual(expectedConnects, self.connectList)
 
     def testGerritBuildFinishedSuccess(self):
         self.props.setProperty("gerrit_branch", "branch", "test")

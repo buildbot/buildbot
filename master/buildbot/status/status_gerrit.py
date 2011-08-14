@@ -18,7 +18,6 @@
 
 ."""
 
-from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 
 from buildbot.status.base import StatusReceiverMultiService
