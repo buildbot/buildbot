@@ -623,14 +623,7 @@ see :ref:`Concepts-Users`.
 --master
     The :command:`user` command can be run virtually anywhere
     provided a location of the running buildmaster. The :option:`master`
-    argument is of the form ``{MASTERHOST}``, with the port specified
-    in the :option:`port` option.
-
---port
-    The :option:`port` specifies what PB port to connect to when issuing
-    a :command:`user` command, which should be the same as the port set
-    in the `CommandlineUserManager` instance. This should be different than
-    `c['slavePortnum']`.
+    argument is of the form ``{MASTERHOST}:{PORT}``.
 
 --username
     PB connection authentication that should match the arguments to
@@ -677,9 +670,14 @@ see :ref:`Concepts-Users`.
 
         --info=jschmo:git='Joseph Schmo <joe@schmo.com>'
 
-Note that :option:`master`, :option:`port`, :option:`username`,
-:option:`passwd`, and :option:`op` are always required to issue
-the :command:`user` command.
+Note that :option:`--master`, :option:`--username`, :option:`--passwd`, and
+:option:`--op` are always required to issue the :command:`user` command.
+
+The :option:`--master`, :option:`--username`, and :option:`--passwd` options
+can be specified in the option file with keywords :option:`user_master`,
+:option:`user_username`, and :option:`user_passwd`, respectively.  If
+:option:`user_master` is not specified, then :option:`master` from the options
+file will be used instead.
 
 Below are examples of how each command should look. Whenever a
 :command:`user` command is successful, results will be shown
@@ -689,29 +687,33 @@ For :option:`add`:
 
 .. code-block:: none
 
-    buildbot user --master={MASTERHOST} --port={PORT} --username={USER}
-             --passwd={USERPW} --op={OP} --info={TYPE}={VALUE},...
+    buildbot user --master={MASTERHOST} --op=add \
+            --username={USER} --passwd={USERPW} \
+            --info={TYPE}={VALUE},...
 
 For :option:`update`:
 
 .. code-block:: none
 
-    buildbot user --master={MASTERHOST} --port={PORT} --username={USER}
-             --passwd={USERPW} --info={ID}:{TYPE}={VALUE},...
+    buildbot user --master={MASTERHOST} --op=update \
+            --username={USER} --passwd={USERPW} \
+            --info={ID}:{TYPE}={VALUE},...
 
 For :option:`remove`:
 
 .. code-block:: none
 
-    buildbot user --master={MASTERHOST} --port={PORT} --username={USER}
-             --passwd={USERPW} --ids={ID1},{ID2},...
+    buildbot user --master={MASTERHOST} --op=remove \
+            --username={USER} --passwd={USERPW} \
+            --ids={ID1},{ID2},...
 
 For :option:`show`:
 
 .. code-block:: none
 
-    buildbot user --master={MASTERHOST} --port={PORT} --username={USER}
-             --passwd={USERPW} --ids={ID1},{ID2},...
+    buildbot user --master={MASTERHOST} --op=show \
+            --username={USER} --passwd={USERPW} \
+            --ids={ID1},{ID2},...
 
 .. _buildbot-config-directory:
 

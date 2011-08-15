@@ -1163,9 +1163,7 @@ def doCheckConfig(config):
 class UserOptions(OptionsWithOptionsFile):
     optParameters = [
         ["master", "m", None,
-         "Location of the buildmaster's PBListener (host)"],
-        ["port", "p", None,
-         "Port as specified in c['user_managers'] in master.cfg"],
+         "Location of the buildmaster's PBListener (host:port)"],
         ["username", "u", None,
          "Username for PB authentication"],
         ["passwd", "p", None,
@@ -1180,6 +1178,12 @@ class UserOptions(OptionsWithOptionsFile):
          "Used in 'add' and 'update', can be specified multiple times.  "
          "Note that 'update' requires --info=id:type=value..."]
     ]
+    buildbotOptions = [
+        [ 'master', 'master' ],
+        [ 'user_master', 'master' ],
+        [ 'user_username', 'username' ],
+        [ 'user_passwd', 'passwd' ],
+        ]
 
     def __init__(self):
         OptionsWithOptionsFile.__init__(self)
@@ -1223,8 +1227,12 @@ def users_client(config, runReactor=False):
 
     master = config.get('master')
     assert master, "you must provide the master location"
-    port = config.get('port')
-    assert port, "A port must be specified for a PB connection"
+    try:
+        master, port = master.split(":")
+        port = int(port)
+    except:
+        raise AssertionError("master must have the form 'hostname:port'")
+
     op = config.get('op')
     assert op, "you must specify an operation: add, remove, update, get"
     if op not in ['add', 'remove', 'update', 'get']:

@@ -524,13 +524,17 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
 
     def test_defaults(self):
         opts = self.parse()
-        exp = dict(master=None, port=None, username=None, passwd=None, op=None,
+        exp = dict(master=None, username=None, passwd=None, op=None,
                    ids=[], info=[])
         self.assertOptions(opts, exp)
 
     def test_synopsis(self):
         opts = runner.UserOptions()
         self.assertIn('buildbot user', opts.getSynopsis())
+
+    def test_master(self):
+        opts = self.parse("--master", "abcd")
+        self.assertOptions(opts, dict(master="abcd"))
 
     def test_ids(self):
         opts = self.parse("--ids", "id1,id2,id3")
@@ -552,14 +556,33 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
                          [dict(git='Tyler Durden <tyler@mayhem.net>'),
                           dict(git='Narrator <narrator@mayhem.net>')])
 
+    def test_config_user_params(self):
+        self.options_file['user_master'] = 'mm:99'
+        self.options_file['user_username'] = 'un'
+        self.options_file['user_passwd'] = 'pw'
+        opts = self.parse()
+        self.assertOptions(opts, dict(master='mm:99', username='un', passwd='pw'))
+
+    def test_config_master(self):
+        self.options_file['master'] = 'mm:99'
+        opts = self.parse()
+        self.assertOptions(opts, dict(master='mm:99'))
+
+    def test_config_master_override(self):
+        self.options_file['master'] = 'not seen'
+        self.options_file['user_master'] = 'mm:99'
+        opts = self.parse()
+        self.assertOptions(opts, dict(master='mm:99'))
+
+
 class TestUsersClient(OptionsMixin, unittest.TestCase):
 
     class FakeUsersClient(object):
-        def __init__(self, master, username="user", passwd="userpw", port="9990"):
+        def __init__(self, master, username="user", passwd="userpw", port=0):
             self.master = master
+            self.port = port
             self.username = username
             self.passwd = passwd
-            self.port = port
             self.fail = False
 
         def send(self, op, ids, info):
@@ -604,8 +627,7 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
 
     def test_usersclient_no_op(self):
         d = defer.maybeDeferred(lambda :
-                                    runner.users_client(dict(master='a',
-                                                             port=9990)))
+                                    runner.users_client(dict(master='a:9990')))
         def cb(_):
             self.fail("shouldn't succeed")
         def eb(f):
@@ -616,8 +638,7 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
 
     def test_usersclient_no_username_password(self):
         d = defer.maybeDeferred(lambda :
-                                    runner.users_client(dict(master='a',
-                                                             port=9990,
+                                    runner.users_client(dict(master='a:9990',
                                                              op='add')))
         def cb(_):
             self.fail("shouldn't succeed")
@@ -629,7 +650,7 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
 
     def test_usersclient_bad_op(self):
         d = defer.maybeDeferred(lambda :
-                    runner.users_client(dict(master='a', port=9990, username="x",
+                    runner.users_client(dict(master='a:9990', username="x",
                                              passwd="y", op='edit')))
         def cb(_):
             self.fail("shouldn't succeed")
@@ -641,7 +662,7 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
 
     def test_usersclient_no_ids_no_info(self):
         d = defer.maybeDeferred(lambda :
-                     runner.users_client(dict(master='a', port=9990, username="x",
+                     runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='add')))
         def cb(_):
             self.fail("shouldn't succeed")
@@ -653,7 +674,7 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
 
     def test_usersclient_ids_and_info(self):
         d = defer.maybeDeferred(lambda :
-                     runner.users_client(dict(master='a', port=9990, username="x",
+                    runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='add', ids=['me'],
                                               info=[{'full_name':'b'}])))
         def cb(_):
@@ -666,7 +687,7 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
 
     def test_usersclient_add_and_ids(self):
         d = defer.maybeDeferred(lambda :
-                     runner.users_client(dict(master='a', port=9990, username="x",
+                    runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='add', ids=['me'],
                                               info=None)))
         def cb(_):
@@ -679,7 +700,7 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
 
     def test_usersclient_update_and_ids(self):
         d = defer.maybeDeferred(lambda :
-                     runner.users_client(dict(master='a', port=9990, username="x",
+                    runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='update', ids=['me'],
                                               info=None)))
         def cb(_):
@@ -692,7 +713,7 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
 
     def test_usersclient_remove_get_and_info(self):
         d = defer.maybeDeferred(lambda :
-                     runner.users_client(dict(master='a', port=9990, username="x",
+                    runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='remove', ids=None,
                                               info=[{'email':'x'}])))
         def cb(_):
@@ -705,7 +726,7 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
 
     def test_usersclient_update_no_identifier(self):
         d = defer.maybeDeferred(lambda :
-                     runner.users_client(dict(master='a', port=9990, username="x",
+                    runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='update', ids=None,
                                               info=[{'email':'x'}])))
         def cb(_):
@@ -718,7 +739,7 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
 
     def test_usersclient_add_existing_identifier(self):
         d = defer.maybeDeferred(lambda :
-                     runner.users_client(dict(master='a', port=9990, username="x",
+                    runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='add', ids=None,
                                               info=[{'identifier':'x'}])))
         def cb(_):
@@ -731,7 +752,7 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
 
     def test_usersclient_bad_attr_type(self):
         d = defer.maybeDeferred(lambda :
-                     runner.users_client(dict(master='a', port=9990, username="x",
+                    runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='add', ids=None,
                                               info=[{'b':'y'}])))
         def cb(_):
@@ -743,7 +764,7 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
         return d
 
     def test_usersclient_send_ids(self):
-        d = runner.users_client(dict(master='a', port=9990, username="x",
+        d = runner.users_client(dict(master='a:9990', username="x",
                                      passwd="y", op='get', ids=['me', 'you'],
                                      info=None))
         def check(_):
@@ -755,7 +776,7 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
         return d
 
     def test_usersclient_send_update_info(self):
-        d = runner.users_client(dict(master='a', port=9990, username="x",
+        d = runner.users_client(dict(master='a:9990', username="x",
                                      passwd="y", op='update', ids=None,
                                      info=[{'identifier':'x', 'svn':'x'}]))
         def check(_):
@@ -768,7 +789,7 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
         return d
 
     def test_usersclient_send_add_info(self):
-        d = runner.users_client(dict(master='a', port=9990, username="x",
+        d = runner.users_client(dict(master='a:9990', username="x",
                                      passwd="y", op='add', ids=None,
                                      info=[{'git':'x <h@c>'}]))
         def check(_):
