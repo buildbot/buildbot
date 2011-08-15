@@ -1222,8 +1222,8 @@ def users_client(config, runReactor=False):
     from buildbot.clients import usersclient
     from buildbot.process.users import users    # for srcs
 
-    # accepted attr_types by runner.users_client, in addition to users.srcs
-    attr_types = ['identifier']
+    # accepted attr_types by `buildbot user`, in addition to users.srcs
+    attr_types = ['identifier', 'email']
 
     master = config.get('master')
     assert master, "you must provide the master location"

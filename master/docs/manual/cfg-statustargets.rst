@@ -937,8 +937,14 @@ MailNotifier arguments
     (implementor of :class:`IEmailLookup`). Object which provides
     :class:`IEmailLookup`, which is responsible for mapping User names (which come
     from the VC system) into valid email addresses. If not provided, the
-    notifier will only be able to send mail to the addresses in the
-    extraRecipients list. Most of the time you can use a simple Domain
+    ``MailNotifier`` will attempt to build the ``sendToInterestedUsers``
+    from the authors of the Changes that led to the Build via :ref:`User-Objects`.
+    If the author of one of the Build's Changes has an email address stored,
+    it will added to the recipients list. With this method, ``owners`` are still
+    added to the recipients.
+
+    In either case, ``MailNotifier`` will also send mail to addresses in
+    the extraRecipients list. Most of the time you can use a simple Domain
     instance. As a shortcut, you can pass as string: this will be treated
     as if you had provided ``Domain(str)``. For example,
     ``lookup='twistedmatrix.com'`` will allow mail to be sent to all
