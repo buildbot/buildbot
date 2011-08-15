@@ -16,11 +16,9 @@
 # this class is known to contain cruft and will be looked at later, so
 # no current implementation utilizes it aside from scripts.runner.
 
-import sys
-from twisted.python import log
 from twisted.spread import pb
 from twisted.cred import credentials
-from twisted.internet import defer, reactor
+from twisted.internet import reactor
 
 class UsersClient(object):
     """

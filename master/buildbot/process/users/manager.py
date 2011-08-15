@@ -13,10 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import log
 from twisted.internet import defer
 from twisted.application import service
-from buildbot.process.users import manual
 
 class UserManager(service.MultiService):
     """

@@ -15,7 +15,6 @@
 
 import mock
 from twisted.trial import unittest
-from twisted.internet import defer
 from buildbot.process.users import manager, manual
 
 class TestUserManager(unittest.TestCase):
