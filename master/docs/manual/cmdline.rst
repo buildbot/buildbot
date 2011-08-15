@@ -613,12 +613,12 @@ user
 
 Note that in order to use this command, you need to configure a
 `Commandline_Users` instance in your `master.cfg` file, which is
-explained in :ref:`Users Options`.
+explained in :ref:`Users-Options`.
 
 This command allows you to manage users in buildbot's database.
 No extra requirements are needed to use this command, aside from
 the Buildmaster running. For details on how Buildbot manages users,
-see :ref:`Users`.
+see :ref:`Concepts-Users`.
 
 --master
     The :command:`user` command can be run virtually anywhere
@@ -656,14 +656,14 @@ see :ref:`Users`.
 
 --info
     Users are known in buildbot as a collection of attributes tied
-    together by some unique identifier (see :ref:`User Objects`). These
+    together by some unique identifier (see :ref:`Concepts-Users`). These
     attributes are specified in the form ``{TYPE}={VALUE}`` when
     using the :option:`info` option. These ``{TYPE}={VALUE}`` pairs
     are specified in a comma separated list, so for example:
 
     .. code-block:: none
 
-    --info=svn=jschmo,git='Joe Schmo <joe@schmo.com>'
+        --info=svn=jschmo,git='Joe Schmo <joe@schmo.com>'
 
     The :option:`info` option can be specified multiple times in the
     :command:`user` command, as each specified option will be interpreted
@@ -675,7 +675,7 @@ see :ref:`Users`.
 
     .. code-block:: none
 
-    --info=jschmo:git='Joseph Schmo <joe@schmo.com>'
+        --info=jschmo:git='Joseph Schmo <joe@schmo.com>'
 
 Note that :option:`master`, :option:`port`, :option:`username`,
 :option:`passwd`, and :option:`op` are always required to issue
@@ -695,18 +695,21 @@ For :option:`add`:
 For :option:`update`:
 
 .. code-block:: none
+
     buildbot user --master={MASTERHOST} --port={PORT} --username={USER}
              --passwd={USERPW} --info={ID}:{TYPE}={VALUE},...
 
 For :option:`remove`:
 
 .. code-block:: none
+
     buildbot user --master={MASTERHOST} --port={PORT} --username={USER}
              --passwd={USERPW} --ids={ID1},{ID2},...
 
 For :option:`show`:
 
 .. code-block:: none
+
     buildbot user --master={MASTERHOST} --port={PORT} --username={USER}
              --passwd={USERPW} --ids={ID1},{ID2},...
 

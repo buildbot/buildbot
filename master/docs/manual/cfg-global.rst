@@ -611,9 +611,9 @@ changed via a reconfig.
 
 Read more about metrics in the :ref:`Metrics` section of the documentation.
 
-.. _Users-Options:
-
 .. index:: c['user_managers']
+
+.. _Users-Options:
 
 Users Options
 ~~~~~~~~~~~~~
@@ -626,8 +626,8 @@ Users Options
                                                        passwd="userpw",
                                                        port=9990))
 
-``c[user_manager]`` contains a list of way to manually manage User Objects
-within Buildbot (see :ref:`User Objects`). Currently implemented is a
+``c[user_manager]`` contains a list of ways to manually manage User Objects
+within Buildbot (see :ref:`User-Objects`). Currently implemented is a
 commandline tool `buildbot user`, described at length in :ref:`user`.
 In the future, a web client will also be able to manage User Objects and
 their attributes.
