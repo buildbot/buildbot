@@ -30,12 +30,12 @@ fewer consistency checks, for efficiency.
 *** Upgrades directly from versions older than 0.6.5 will no longer
 automatically migrate logfiles.
 
-***Any custom change_hook_dialects should now return a (changes, src)
+*** Any custom change_hook_dialects should now return a (changes, src)
 tuple from its getChange method, instead of just the changes. The src
 is used for noting what VCS the changes came from, and is just a string
 such as 'git'.
 
-***Scripts in the contrib directory that use addChange() to send Changes
+*** Scripts in the contrib directory that use addChange() to send Changes
 to the buildmaster now require an additional `src` argument when calling
 addChange(). This lets the buildmaster know which VCS the Change is coming
 from, such as 'git' or 'svn'. This means that you need to use the version
