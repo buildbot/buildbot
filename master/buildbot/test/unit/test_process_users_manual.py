@@ -236,19 +236,6 @@ class TestCommandlineUserManager(unittest.TestCase, ManualUsersMixin):
         d.addCallbacks(cb, eb)
         return d
 
-    def test_port_slavePortnum_same(self):
-        comp = manual.CommandlineUserManager(username="x", passwd="y", port="9989")
-        comp.master = self.master
-        d = defer.maybeDeferred(lambda : comp.startService())
-
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
-
     def test_service(self):
         # patch out the pbmanager's 'register' command both to be sure
         # the registration is correct and to get a copy of the factory

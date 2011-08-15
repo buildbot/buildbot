@@ -210,10 +210,6 @@ class CommandlineUserManager(UsersBase):
 
     def startService(self):
         UsersBase.startService(self)
-        # check that port is different than c['slavePortnum']
-        slavePort = int(self.master.slavePortnum.split(':')[1])
-        assert self.port != slavePort, ("The port must not be the same as "
-                                        "c['slavePortNum']")
         # set up factory and register with buildbot.pbmanager
         def factory(mind, username):
             return CommandlineUserManagerPerspective(self.master)
