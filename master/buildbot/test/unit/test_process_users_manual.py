@@ -52,13 +52,13 @@ class TestUsersBase(unittest.TestCase):
     """
     pass
 
-class TestCommandline_Users_Perspective(unittest.TestCase, ManualUsersMixin):
+class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin):
 
     def setUp(self):
         self.setUpManualUsers()
 
     def call_perspective_commandline(self, *args):
-        persp = manual.Commandline_Users_Perspective(self.master)
+        persp = manual.CommandlineUserManagerPerspective(self.master)
         return persp.perspective_commandline(*args)
 
     def test_perspective_commandline_add(self):
@@ -206,17 +206,17 @@ class TestCommandline_Users_Perspective(unittest.TestCase, ManualUsersMixin):
         d.addCallback(check)
         return d
 
-class TestCommandline_Users(unittest.TestCase, ManualUsersMixin):
+class TestCommandlineUserManager(unittest.TestCase, ManualUsersMixin):
 
     def setUp(self):
         self.setUpManualUsers()
-        self.manual_component = manual.Commandline_Users(username="user",
+        self.manual_component = manual.CommandlineUserManager(username="user",
                                                          passwd="userpw",
                                                          port="9990")
         self.manual_component.master = self.master
 
     def test_no_userpass(self):
-        d = defer.maybeDeferred(lambda : manual.Commandline_Users())
+        d = defer.maybeDeferred(lambda : manual.CommandlineUserManager())
         def cb(_):
             self.fail("shouldn't succeed")
         def eb(f):
@@ -226,7 +226,7 @@ class TestCommandline_Users(unittest.TestCase, ManualUsersMixin):
         return d
 
     def test_no_port(self):
-        d = defer.maybeDeferred(lambda : manual.Commandline_Users(username="x",
+        d = defer.maybeDeferred(lambda : manual.CommandlineUserManager(username="x",
                                                                   passwd="y"))
         def cb(_):
             self.fail("shouldn't succeed")
@@ -237,7 +237,7 @@ class TestCommandline_Users(unittest.TestCase, ManualUsersMixin):
         return d
 
     def test_port_slavePortnum_same(self):
-        comp = manual.Commandline_Users(username="x", passwd="y", port="9989")
+        comp = manual.CommandlineUserManager(username="x", passwd="y", port="9989")
         comp.master = self.master
         d = defer.maybeDeferred(lambda : comp.startService())
 
@@ -265,6 +265,6 @@ class TestCommandline_Users(unittest.TestCase, ManualUsersMixin):
         self.manual_component.startService()
 
         persp = self.got_factory(mock.Mock(), 'user')
-        self.failUnless(isinstance(persp, manual.Commandline_Users_Perspective))
+        self.failUnless(isinstance(persp, manual.CommandlineUserManagerPerspective))
 
         return self.manual_component.stopService()

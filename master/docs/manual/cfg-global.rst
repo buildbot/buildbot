@@ -622,7 +622,7 @@ Users Options
 
     from buildbot.process.users import manual
     c['user_managers'] = []
-    c['user_managers'].append(manual.Commandline_Users(username="user",
+    c['user_managers'].append(manual.CommandlineUserManager(username="user",
                                                        passwd="userpw",
                                                        port=9990))
 
@@ -632,9 +632,9 @@ commandline tool `buildbot user`, described at length in :ref:`user`.
 In the future, a web client will also be able to manage User Objects and
 their attributes.
 
-As shown above, to enable the `buildbot user` tool, you must initialize
-a `Commandline_Users` instance in your `master.cfg`. `Commandline_Users`
-instances require the following arguments:
+As shown above, to enable the `buildbot user` tool, you must initialize a
+`CommandlineUserManager` instance in your `master.cfg`.
+`CommandlineUserManager` instances require the following arguments:
 
 ``username``
     This is the `username` that will be registered on the PB connection

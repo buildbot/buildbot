@@ -612,7 +612,7 @@ user
 ++++
 
 Note that in order to use this command, you need to configure a
-`Commandline_Users` instance in your `master.cfg` file, which is
+`CommandlineUserManager` instance in your `master.cfg` file, which is
 explained in :ref:`Users-Options`.
 
 This command allows you to manage users in buildbot's database.
@@ -629,16 +629,16 @@ see :ref:`Concepts-Users`.
 --port
     The :option:`port` specifies what PB port to connect to when issuing
     a :command:`user` command, which should be the same as the port set
-    in the `Commandline_Users` instance. This should be different than
+    in the `CommandlineUserManager` instance. This should be different than
     `c['slavePortnum']`.
 
 --username
     PB connection authentication that should match the arguments to
-    `Commandline_Users`.
+    `CommandlineUserManager`.
 
 --passwd
     PB connection authentication that should match the arguments to
-    `Commandline_Users`.
+    `CommandlineUserManager`.
 
 --op
     There are four supported values for the :option:`op` argument:

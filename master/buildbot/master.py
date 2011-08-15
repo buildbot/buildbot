@@ -570,7 +570,7 @@ class BuildMaster(service.MultiService):
             # and Sources go after Schedulers for the same reason
             d.addCallback(lambda res: self.loadConfig_Sources(change_sources))
 
-            # users managers (right now just Commandline_Users)
+            # users managers (right now just CommandlineUserManager)
             d.addCallback(lambda res: self.loadConfig_UsersManagers(user_managers))
 
             # debug client

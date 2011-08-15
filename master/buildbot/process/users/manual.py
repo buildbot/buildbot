@@ -38,7 +38,7 @@ class UsersBase(service.MultiService):
     def stopService(self):
         return service.MultiService.stopService(self)
 
-class Commandline_Users_Perspective(pbutil.NewCredPerspective):
+class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
     """
     Perspective registered in buildbot.pbmanager and contains the real
     workings of `buildbot user` by working with the database when
@@ -191,9 +191,9 @@ class Commandline_Users_Perspective(pbutil.NewCredPerspective):
         results = self.formatResults(op, info, results)
         yield results
 
-class Commandline_Users(UsersBase):
+class CommandlineUserManager(UsersBase):
     """
-    Service that runs to set up and register Commandline_Users_Perspective
+    Service that runs to set up and register CommandlineUserManagerPerspective
     so `buildbot user` calls get to perspective_commandline.
     """
 
@@ -216,7 +216,7 @@ class Commandline_Users(UsersBase):
                                         "c['slavePortNum']")
         # set up factory and register with buildbot.pbmanager
         def factory(mind, username):
-            return Commandline_Users_Perspective(self.master)
+            return CommandlineUserManagerPerspective(self.master)
         self.registration = self.master.pbmanager.register(self.port,
                                                            self.username,
                                                            self.passwd,
