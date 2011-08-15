@@ -49,8 +49,8 @@ class UsersTests(unittest.TestCase):
             self.assertEqual(self.db.users.users,
                      { 1: dict(identifier='Tyler Durden <tyler@mayhem.net>') })
             self.assertEqual(self.db.users.users_info,
-                     { 1: dict(attr_type="git",
-                               attr_data="Tyler Durden <tyler@mayhem.net>") })
+                     { 1: [dict(attr_type="git",
+                                attr_data="Tyler Durden <tyler@mayhem.net>")]})
         d.addCallback(check)
         return d
 
@@ -60,8 +60,8 @@ class UsersTests(unittest.TestCase):
             self.assertEqual(self.db.users.users,
                              { 1: dict(identifier='tdurden') })
             self.assertEqual(self.db.users.users_info,
-                             { 1: dict(attr_type="svn",
-                                       attr_data="tdurden") })
+                             { 1: [dict(attr_type="svn",
+                                        attr_data="tdurden")]})
         d.addCallback(check)
         return d
 
@@ -72,8 +72,8 @@ class UsersTests(unittest.TestCase):
             self.assertEqual(self.db.users.users,
                      { 1: dict(identifier='Tyler Durden <tyler@mayhem.net>') })
             self.assertEqual(self.db.users.users_info,
-                     { 1: dict(attr_type="hg",
-                               attr_data="Tyler Durden <tyler@mayhem.net>") })
+                     { 1: [dict(attr_type="hg",
+                                attr_data="Tyler Durden <tyler@mayhem.net>")]})
         d.addCallback(check)
         return d
 
@@ -83,8 +83,8 @@ class UsersTests(unittest.TestCase):
             self.assertEqual(self.db.users.users,
                              { 1: dict(identifier='tdurden') })
             self.assertEqual(self.db.users.users_info,
-                             { 1: dict(attr_type="cvs",
-                                       attr_data="tdurden") })
+                             { 1: [dict(attr_type="cvs",
+                                        attr_data="tdurden")]})
         d.addCallback(check)
         return d
 
@@ -94,8 +94,8 @@ class UsersTests(unittest.TestCase):
             self.assertEqual(self.db.users.users,
                      { 1: dict(identifier='tyler@mayhem.net') })
             self.assertEqual(self.db.users.users_info,
-                     { 1: dict(attr_type="darcs",
-                               attr_data="tyler@mayhem.net") })
+                     { 1: [dict(attr_type="darcs",
+                                attr_data="tyler@mayhem.net")]})
         d.addCallback(check)
         return d
 
@@ -105,7 +105,7 @@ class UsersTests(unittest.TestCase):
             self.assertEqual(self.db.users.users,
                      { 1: dict(identifier='Tyler Durden') })
             self.assertEqual(self.db.users.users_info,
-                     { 1: dict(attr_type="bzr",
-                               attr_data="Tyler Durden") })
+                     { 1: [dict(attr_type="bzr",
+                                attr_data="Tyler Durden")]})
         d.addCallback(check)
         return d

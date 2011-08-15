@@ -611,6 +611,43 @@ changed via a reconfig.
 
 Read more about metrics in the :ref:`Metrics` section of the documentation.
 
+.. index:: c['user_managers']
+
+.. _Users-Options:
+
+Users Options
+~~~~~~~~~~~~~
+
+::
+
+    from buildbot.process.users import manual
+    c['user_managers'] = []
+    c['user_managers'].append(manual.Commandline_Users(username="user",
+                                                       passwd="userpw",
+                                                       port=9990))
+
+``c[user_manager]`` contains a list of ways to manually manage User Objects
+within Buildbot (see :ref:`User-Objects`). Currently implemented is a
+commandline tool `buildbot user`, described at length in :ref:`user`.
+In the future, a web client will also be able to manage User Objects and
+their attributes.
+
+As shown above, to enable the `buildbot user` tool, you must initialize
+a `Commandline_Users` instance in your `master.cfg`. `Commandline_Users`
+instances require the following arguments:
+
+``username``
+    This is the `username` that will be registered on the PB connection
+    and need to be used when calling `buildbot user`.
+
+``passwd``
+    This is the `passwd` that will be registered on the PB connection
+    and need to be used when calling `buildbot user`.
+
+``port``
+    The PB connection `port` must be different than `c['slavePortnum']`
+    and be specified when calling `buildbot user`
+
 .. _Input-Validation:
 
 .. index:: c['validation']

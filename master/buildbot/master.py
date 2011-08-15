@@ -45,6 +45,7 @@ from buildbot.process import debug
 from buildbot.process import metrics
 from buildbot.process import cache
 from buildbot.process.users import users
+from buildbot.process.users.manager import UserManager
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import monkeypatches
 
@@ -106,6 +107,9 @@ class BuildMaster(service.MultiService):
         self.scheduler_manager.setName('scheduler_manager')
         self.scheduler_manager.setServiceParent(self)
 
+        self.user_manager = UserManager()
+        self.user_manager.setServiceParent(self)
+
         self.caches = cache.CacheManager()
 
         self.debugClientRegistration = None
@@ -157,6 +161,7 @@ class BuildMaster(service.MultiService):
             # the config file, and it would be nice for the user to discover
             # this quickly.
             self.loadTheConfigFile()
+
         if hasattr(signal, "SIGHUP"):
             signal.signal(signal.SIGHUP, self._handleSIGHUP)
         for b in self.botmaster.builders.values():
@@ -236,7 +241,7 @@ class BuildMaster(service.MultiService):
                           "schedulers", "builders", "mergeRequests",
                           "slavePortnum", "debugPassword", "logCompressionLimit",
                           "manhole", "status", "projectName", "projectURL",
-                          "title", "titleURL",
+                          "title", "titleURL", "user_managers",
                           "buildbotURL", "properties", "prioritizeBuilders",
                           "eventHorizon", "buildCacheSize", "changeCacheSize",
                           "logHorizon", "buildHorizon", "changeHorizon",
@@ -275,6 +280,7 @@ class BuildMaster(service.MultiService):
             debugPassword = config.get('debugPassword')
             manhole = config.get('manhole')
             status = config.get('status', [])
+            user_managers = config.get('user_managers', [])
             # projectName/projectURL still supported to avoid
             # breaking legacy configurations
             title = config.get('title', config.get('projectName'))
@@ -564,6 +570,9 @@ class BuildMaster(service.MultiService):
             # and Sources go after Schedulers for the same reason
             d.addCallback(lambda res: self.loadConfig_Sources(change_sources))
 
+            # users managers (right now just Commandline_Users)
+            d.addCallback(lambda res: self.loadConfig_UsersManagers(user_managers))
+
             # debug client
             d.addCallback(lambda res: self.loadConfig_DebugClient(debugPassword))
 
@@ -669,6 +678,33 @@ class BuildMaster(service.MultiService):
             timer.stop()
             metrics.MetricCountEvent.log("num_sources",
                 len(list(self.change_svc)), absolute=True)
+            return _
+        d.addBoth(logCount)
+        return d
+
+    def loadConfig_UsersManagers(self, managers):
+        if not managers:
+            # wasn't given in master.cfg
+            return
+
+        timer = metrics.Timer("BuildMaster.loadConfig_UsersManagers()")
+        timer.start()
+
+        # shut down any that were removed, start any that were added
+        deleted_um = [um for um in self.user_manager if um not in managers]
+        added_um = [um for um in managers if um not in self.user_manager]
+        log.msg("adding %d new user_managers, removing %d" %
+                (len(added_um), len(deleted_um)))
+        dl = [self.user_manager.removeManualComponent(um) for um in deleted_um]
+        def addNewOnes(res):
+            [self.user_manager.addManualComponent(um) for um in added_um]
+        d = defer.DeferredList(dl, fireOnOneErrback=1, consumeErrors=0)
+        d.addCallback(addNewOnes)
+
+        def logCount(_):
+            timer.stop()
+            metrics.MetricCountEvent.log("num_user_managers",
+                len(list(self.user_manager)), absolute=True)
             return _
         d.addBoth(logCount)
         return d

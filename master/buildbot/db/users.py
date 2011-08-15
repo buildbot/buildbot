@@ -228,3 +228,26 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                 conn.execute(tbl.delete(whereclause=(tbl.c.uid==uid)))
         d = self.db.pool.do(thd)
         return d
+
+    def identifierToUid(self, identifier):
+        """
+        Fetches a uid for a given identifier if one exists for use with the
+        other C{db.users} methods. This is called from the C{buildbot user}
+        command prior to calling one of the other C{db.users} methods.
+
+        @param identifier: identifier to search for and translate into uid
+        @type identifier: string
+
+        @returns: Uid or None via Deferred
+        """
+        def thd(conn):
+            tbl = self.db.model.users
+
+            q = tbl.select(whereclause=(tbl.c.identifier == identifier))
+            row = conn.execute(q).fetchone()
+            if not row:
+                return None
+
+            return row.uid
+        d = self.db.pool.do(thd)
+        return d

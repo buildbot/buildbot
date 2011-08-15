@@ -685,6 +685,13 @@ Change came from.
     ``who`` attributes are free-form strings like ``hg``, and can include a
     ``Username``, ``Email``, and/or ``Full Name``.
 
+Tools
++++++
+
+For managing users manually, use the ``buildbot user`` command, which allows
+you to add, remove, update, and show various attributes of users in the Buildbot
+database (see :ref:`Command-line-Tool`).
+
 Uses
 ++++
 
