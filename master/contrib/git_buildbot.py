@@ -86,7 +86,7 @@ def addChanges(remote, changei, src='git'):
     def iter():
         try:
             c = changei.next()
-            d = addChange(c, src)
+            d = addChange(c)
             # handle successful completion by re-iterating, but not immediately
             # as that will blow out the Python stack
             def cb(_):

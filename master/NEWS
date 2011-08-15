@@ -35,6 +35,12 @@ tuple from its getChange method, instead of just the changes. The src
 is used for noting what VCS the changes came from, and is just a string
 such as 'git'.
 
+***Scripts in the contrib directory that use addChange() to send Changes
+to the buildmaster now require an additional `src` argument when calling
+addChange(). This lets the buildmaster know which VCS the Change is coming
+from, such as 'git' or 'svn'. This means that you need to use the version
+of your contrib script that corresponds to your buildmaster.
+
 ** Customizable validation regexps
 
 The global c['validation'] parameter can be used to adjust the regular
