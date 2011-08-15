@@ -60,7 +60,7 @@ class SVN(Source):
                                  )
 
         assert self.mode in ['incremental', 'full']
-        assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
+        assert self.method in ['clean', 'fresh', 'clobber', 'copy', 'export', None]
 
         if svnurl and baseURL:
             raise ValueError("you must provide exactly one of svnurl and"
@@ -98,7 +98,8 @@ class SVN(Source):
             yield wfd
             wfd.getResult()
             return
-        elif self.method == 'copy':
+        elif self.method in ['copy', 'export']:
+            self.workdir = 'source'
             wfd = defer.waitForDeferred(self.copy())
             yield wfd
             wfd.getResult()
@@ -152,12 +153,12 @@ class SVN(Source):
         return d
 
     def copy(self):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
+        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': 'build',
                                                       'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
-        self.workdir = 'source'
         d.addCallback(self.incremental)
+
         def copy(_):
             cmd = buildstep.LoggedRemoteCommand('cpdir', 
                                                 {'fromdir': 'source',
@@ -166,11 +167,25 @@ class SVN(Source):
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
-        d.addCallback(copy)
-        def resetWorkdir(_):
-            self.workdir = 'build'
-            return 0
-        d.addCallback(resetWorkdir)
+
+        def export(_):
+            cmd = buildstep.RemoteShellCommand('', ['svn', 'export', 'source',
+                                                    'build'],
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,)
+            cmd.useLog(self.stdio_log, False)
+            d = self.runCommand(cmd)
+            def evaluate(_):
+                if cmd.rc != 0:
+                    raise failure.Failure
+                return cmd.rc
+            d.addCallback(evaluate)
+            return d
+
+        if self.method == 'copy':
+            d.addCallback(copy)
+        elif self.method == 'export':
+            d.addCallback(export)
         return d
 
     def finish(self, res):
