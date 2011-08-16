@@ -902,7 +902,7 @@ top directory. You can use something like the following:
     @weekly cd BASEDIR && find twistd.log* -mtime +14 -exec rm {} \;
 
 Alternatively, you can configure a maximum number of old logs to be kept
-using the ``--log-count`` command line option when running ``buildbot
+using the ``--log-count`` command line option when running ``buildslave
 create-slave`` or ``buildbot create-master``.
 
 .. _Troubleshooting:

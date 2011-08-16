@@ -1689,7 +1689,7 @@ correctly unless you add 'call' before your batch file's name:
     All ShellCommands are run by default in the ``workdir``, which
     defaults to the :file:`build` subdirectory of the slave builder's
     base directory. The absolute path of the workdir will thus be the
-    slave's basedir (set as an option to ``buildbot create-slave``,
+    slave's basedir (set as an option to ``buildslave create-slave``,
     :ref:`Creating-a-buildslave`) plus the builder's basedir (set in the
     builder's ``c['builddir']`` key in :file:`master.cfg`) plus the workdir
     itself (a class-level attribute of the BuildFactory, defaults to
