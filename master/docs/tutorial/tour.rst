@@ -331,5 +331,5 @@ To make a description of the change show up, use the
 --properties=comment="this is a comment" option on 'buildbot try'.
 
 To use ssl instead of a private username/password database,
-see `Try Schedulers <http://buildbot.net/buildbot/docs/current/Try-Schedulers.html>`_.
+see `Try Schedulers <http://buildbot.net/buildbot/docs/current/Schedulers.html>`_.
 
