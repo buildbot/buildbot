@@ -352,7 +352,7 @@ are available to all steps.
 Source Checkout
 ~~~~~~~~~~~~~~~
 
-    **WARNING:** New source checkout steps are recently developed
+.. caution:: New source checkout steps are recently developed
     and not stable yet. If you find any bugs please report them
     `here <http://trac.buildbot.net/newticket>`_. Old source steps
     are :ref:`Source-Checkout-Old`.
