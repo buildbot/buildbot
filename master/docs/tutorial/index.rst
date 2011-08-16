@@ -1,5 +1,5 @@
-Welcome to the Buildbot Tutorial
-================================
+Buildbot Tutorial
+=================
 
 Contents:
 
@@ -9,9 +9,3 @@ Contents:
    firstrun
    tour
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

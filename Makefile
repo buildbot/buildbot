@@ -8,9 +8,6 @@ docs:
 apidocs:
 	$(MAKE) -C apidocs
 
-tutorial:
-	$(MAKE) -C master/docs tutorial
-
 pylint:
 	cd master; $(MAKE) pylint
 	cd slave; $(MAKE) pylint
