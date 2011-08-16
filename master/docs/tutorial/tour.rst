@@ -20,6 +20,7 @@ This section will teach you how to:
  - force builds
  - enable and control the IRC bot
  - enable ssh debugging
+ - add a 'try' scheduler
 
 Setting Project Name and URL
 ----------------------------
@@ -281,3 +282,54 @@ If you wanted to check which slaves are connected and what builders those slaves
 
 Objects can be explored in more depth using `dir(x)` or the helper function
 `show(x)`.
+
+Adding a 'try' scheduler
+------------------------
+Buildbot includes a way for developers to submit patches for testing
+without committing them to the source code control system.  
+(This is really handy for projects that support several operating systems
+or architectures.)
+
+To set this up, add the following lines to master.cfg::
+
+  from buildbot.scheduler import Try_Userpass
+  c['schedulers'].append(Try_Userpass(
+                                      name='try',
+                                      builderNames=['runtests'],
+                                      port=5555,
+                                      userpass=[('sampleuser','samplepass')]))
+
+Then you can submit changes using the 
+`buildbot try <http://buildbot.net/buildbot/docs/current/try.html>`_ command.
+
+Let's try this out by making a one-line change to pyflakes, say,
+to make it trace the tree by default::
+
+  git clone git://github.com/buildbot/pyflakes.git pyflakes-git
+  cd pyflakes-git/pyflakes
+  $EDITOR checker.py
+  # change "traceTree = False" on line 185 to "traceTree = True"
+
+Then run buildbot's try command as follows::
+
+  source ~/tmp/buildbot/sandbox/bin/activate
+  buildbot try --connect=pb --master=127.0.0.1:5555 --username=sampleuser --passwd=samplepass --vc=git
+
+This will do "git diff" for you and send the resulting patch to
+the server for build and test against the latest sources from git.
+
+Now go back to the `waterfall <http://localhost:8010/waterfall>`_
+page, click on the runtests link, and scroll down.  You should see that
+another build has been started with your change (and stdout for the tests
+should be chock-full of parse trees as a result).  The "Reason" for the
+job will be listed as "'try' job", and the blamelist will be empty.
+
+To make yourself show up as the author of the change, use the --who=emailaddr
+option on 'buildbot try' to pass your email address.
+
+To make a description of the change show up, use the
+--properties=comment="this is a comment" option on 'buildbot try'.
+
+To use ssl instead of a private username/password database,
+see `Try Schedulers <http://buildbot.net/buildbot/docs/current/Try-Schedulers.html>`_.
+
