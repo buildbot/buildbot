@@ -129,13 +129,7 @@ Luckily, the buildbot master will ignore the wrong configuration and keep
 running with the previous configuration.
 
 The message is clear enough, so open the configuration again, fix the error,
-and reconfig the master. 
-
-*Note that if you are not using 0.8.4 you might experience an error during reconfig with clean configs, 
-this is due to* `<http://trac.buildbot.net/ticket/1757>`_ *which if fixed and will be in the 0.8.4 package. 
-If you come across this, just do start & stop for now to get your buildbot instance updated*::
-
-  buildbot stop master && buildbot start master
+and reconfig the master.
 
 Your First Build
 ----------------
