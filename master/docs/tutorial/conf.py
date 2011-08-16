@@ -48,7 +48,7 @@ copyright = u'2011, Thomas Vander Stichele, Lukas Blakk'
 # built documents.
 #
 # The short X.Y version.
-version = '%VERSION%'
+version = 'latest'
 # The full version, including alpha/beta/rc tags.
 release = version
 
