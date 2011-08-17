@@ -200,3 +200,87 @@ class PyLint(ShellCommand):
             return WARNINGS
         return SUCCESS
 
+class Sphinx(ShellCommand):
+    ''' A Step to build sphinx documentation '''
+
+    name = "sphinx"
+    description = ["running", "sphinx"]
+    descriptionDone = ["sphinx"]
+
+    
+
+    def __init__(self, sourcedir='.', builddir=None, builder=None,
+                 sphinx = 'sphinx-build', tags = [], defines = {}, 
+                 **kwargs):
+
+        if builddir is None:
+            # Who the heck is not interested in the built doc ?
+            raise TypeError("Sphinx argument builddir is required")
+
+        self.warnings = 0
+        self.success = False
+        ShellCommand.__init__(self, **kwargs)
+
+        # build the command
+        command = [sphinx]
+        if builder is not None:
+            command.extend(['-b', builder])
+
+        for tag in tags:
+            command.extend(['-t', tag])
+
+        for key in defines:
+            if defines[key] is None:
+                command.extend(['-D', key])
+            elif isinstance(defines[key], bool):
+                command.extend(['-D', '%s=%d' % (key, defines[key] and 1 or 0)])
+            else:              
+                command.extend(['-D', '%s=%s' % (key, defines[key])])
+
+        command.extend([sourcedir, builddir])
+        self.setCommand(command)
+
+        self.addFactoryArguments(
+            sphinx = sphinx,
+            sourcedir = sourcedir,
+            builddir = builddir,
+            builder = builder,
+            tags = tags,
+            defines = defines,
+        )
+
+    def evaluateCommand(self, cmd):
+        if self.success:
+            if self.warnings == 0:
+                return SUCCESS
+            else:
+                return WARNINGS
+        else:
+            return FAILURE
+
+    def createSummary(self, log):
+
+        msgs = ['WARNING', 'ERROR', 'SEVERE']
+
+        warnings = []
+        for line in log.readlines():
+            if line.startswith('build succeeded') or line.startswith('no targets are out of date.'):
+                self.success = True
+            else:
+                for msg in msgs:
+                    if msg in line:
+                        warnings.append(line)
+                        self.warnings += 1
+        if self.warnings > 0:
+            self.addCompleteLog('warnings', "".join(warnings))
+
+        self.step_status.setStatistic('warnings', self.warnings)
+
+    def describe(self, done=False):
+        if not done:
+            return ["building"]
+
+        description = [self.name]
+        description.append('%d warnings' % self.warnings)
+        return description
+
