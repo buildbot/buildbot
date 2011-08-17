@@ -41,6 +41,7 @@ from buildbot.status.web.about import AboutBuildbot
 from buildbot.status.web.authz import Authz
 from buildbot.status.web.auth import AuthFailResource
 from buildbot.status.web.root import RootPage
+from buildbot.status.web.users import UsersResource
 from buildbot.status.web.change_hook import ChangeHookResource
 
 # this class contains the WebStatus class.  Basic utilities are in base.py,
@@ -355,7 +356,7 @@ class WebStatus(service.MultiService):
                       OneLinePerBuild(numbuilds=numbuilds))
         self.putChild("about", AboutBuildbot())
         self.putChild("authfail", AuthFailResource())
-
+        self.putChild("users", UsersResource())
 
     def __repr__(self):
         if self.http_port is None:

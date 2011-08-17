@@ -41,7 +41,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
     ]
 
     user2_rows = [
-        fakedb.User(uid=2),
+        fakedb.User(uid=2, identifier='lye'),
         fakedb.UserInfo(uid=2, attr_type='git',
                         attr_data='Tyler Durden <tyler@mayhem.net>'),
         fakedb.UserInfo(uid=2, attr_type='irc', attr_data='durden')
@@ -55,7 +55,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
 
     user2_dict = {
         'uid': 2,
-        'identifier': u'soap',
+        'identifier': u'lye',
         'irc': u'durden',
         'git': u'Tyler Durden <tyler@mayhem.net>'
     }
@@ -182,6 +182,34 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         def check3(none):
             self.assertEqual(none, None)
         d.addCallback(check3)
+        return d
+
+    def test_getUsers_none(self):
+        d = self.db.users.getUsers()
+        def check(res):
+            self.assertEqual(res, [])
+        d.addCallback(check)
+        return d
+
+    def test_getUsers(self):
+        d = self.insertTestData(self.user1_rows)
+        def get(_):
+            return self.db.users.getUsers()
+        d.addCallback(get)
+        def check(res):
+            self.assertEqual(res, [dict(uid=1, identifier='soap')])
+        d.addCallback(check)
+        return d
+
+    def test_getUsers_multiple(self):
+        d = self.insertTestData(self.user1_rows + self.user2_rows)
+        def get(_):
+            return self.db.users.getUsers()
+        d.addCallback(get)
+        def check(res):
+            self.assertEqual(res, [dict(uid=1, identifier='soap'),
+                                   dict(uid=2, identifier='lye')])
+        d.addCallback(check)
         return d
 
     def test_updateUser_existing_type(self):
