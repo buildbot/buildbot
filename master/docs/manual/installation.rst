@@ -628,7 +628,7 @@ Other Buildslave Configuration
     :file:`buildbot.tac` file by adding a ``unicode_encoding``
     argument  to the BuildSlave constructor.
 
-``allow_constructor``
+``allow_shutdown``
     allow_shutdown can be passed to the BuildSlave constructor in buildbot.tac.  If
     set, it allows the buildslave to initiate a graceful shutdown, meaning that it
     will ask the master to shut down the slave when the current build, if any, is
