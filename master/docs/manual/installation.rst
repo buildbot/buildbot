@@ -416,9 +416,6 @@ typical invocation (with Mac-Roman encoding) might look like:
 If your Changes pickle uses multiple encodings, you're on your own, but the
 script in contrib may provide a good starting point for the fix.
 
-.. _Creating-a-buildslave:
-
-
 .. _Upgrading-a-Buildmaster-to-Later-Version:
 
 Upgrading a Buildmaster to Later Versions
@@ -426,6 +423,8 @@ Upgrading a Buildmaster to Later Versions
 
 Up to Buildbot version |version|, no further steps beyond those described
 above are required.
+
+.. _Creating-a-buildslave:
 
 Creating a buildslave
 ---------------------
