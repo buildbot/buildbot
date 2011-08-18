@@ -1085,7 +1085,7 @@ configuring this service. Note that the ``useSSL`` option requires
 `PyOpenSSL`_.  The ``password`` argument, if provided, will be sent to
 Nickserv to claim the nickname: some IRC servers will not allow clients to send
 private messages until they have logged in with a password. We can also specify
-a different ``port`` number. Defalut values is 6667.
+a different ``port`` number. Default value is 6667.
 
 To use the service, you address messages at the buildbot, either
 normally (``botnickname: status``) or with private messages
