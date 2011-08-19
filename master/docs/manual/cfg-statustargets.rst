@@ -875,7 +875,7 @@ MailNotifier arguments
     ``failing``
         Only send mail about builds which fail
 
-    ``warning``
+    ``warnings``
         Only send mail about builds which fail or generate warnings
 
     ``passing``
