@@ -135,6 +135,17 @@ class PyLint(ShellCommand):
     description = ["running", "pylint"]
     descriptionDone = ["pylint"]
 
+    # pylint's return codes (see pylint(1) for details)
+    # 1 - 16 will be bit-ORed
+
+    RC_OK = 0
+    RC_FATAL = 1
+    RC_ERROR = 2
+    RC_WARNING = 4
+    RC_REFACTOR = 8
+    RC_CONVENTION = 16
+    RC_USAGE = 32
+
     # Using the default text output, the message format is :
     # MESSAGE_TYPE: LINE_NUM:[OBJECT:] MESSAGE
     # with --output-format=parseable it is: (the outer brackets are literal)
@@ -191,7 +202,7 @@ class PyLint(ShellCommand):
         self.setProperty("pylint-total", sum(counts.values()))
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.rc & (self.RC_FATAL|self.RC_ERROR|self.RC_USAGE):
             return FAILURE
         for msg in self.flunkingIssues:
             if self.getProperty("pylint-%s" % self.MESSAGES[msg]):
