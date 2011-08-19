@@ -640,6 +640,7 @@ Here is a fully-worked example::
                 treeStableTimer=5*60,
                 builderNames=["checkin"])
     nightly = timed.Nightly(name='nightly',
+                branch=None,
                 builderNames=['nightly'],
                 hour=3,
                 minute=0)
