@@ -15,7 +15,7 @@
 
 from twisted.trial import unittest
 
-from buildbot.status.results import FAILURE, SUCCESS
+from buildbot.status.results import FAILURE, SUCCESS, WARNINGS
 from buildbot.steps import python
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
@@ -91,5 +91,115 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                                         'failed'])
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-error', 1)
+        return self.runStep()
+
+    def test_regex_text(self):
+        self.setupStep(python.PyLint(command=['pylint']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['pylint'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                stdout=('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
+                        'C:  1:foo123: Missing docstring\n'))
+            + (python.PyLint.RC_WARNING|python.PyLint.RC_CONVENTION))
+        self.expectOutcome(result=WARNINGS,
+                           status_text=['pylint', 'convention=1', 'warning=1',
+                                        'warnings'])
+        self.expectProperty('pylint-warning', 1)
+        self.expectProperty('pylint-convention', 1)
+        self.expectProperty('pylint-total', 2)
+        return self.runStep()
+
+    def test_regex_text_0_24(self):
+        # pylint >= 0.24.0 prints out column offsets when using text format
+        self.setupStep(python.PyLint(command=['pylint']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['pylint'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                stdout=('W: 11,0: Bad indentation. Found 6 spaces, expected 4\n'
+                        'C:  3,10:foo123: Missing docstring\n'))
+            + (python.PyLint.RC_WARNING|python.PyLint.RC_CONVENTION))
+        self.expectOutcome(result=WARNINGS,
+                           status_text=['pylint', 'convention=1', 'warning=1',
+                                        'warnings'])
+        self.expectProperty('pylint-warning', 1)
+        self.expectProperty('pylint-convention', 1)
+        self.expectProperty('pylint-total', 2)
+        return self.runStep()
+
+    def test_regex_text_ids(self):
+        self.setupStep(python.PyLint(command=['pylint']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['pylint'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                stdout=('W0311: 11: Bad indentation.\n'
+                        'C0111:  1:funcName: Missing docstring\n'))
+            + (python.PyLint.RC_WARNING|python.PyLint.RC_CONVENTION))
+        self.expectOutcome(result=WARNINGS,
+                           status_text=['pylint', 'convention=1', 'warning=1',
+                                        'warnings'])
+        self.expectProperty('pylint-warning', 1)
+        self.expectProperty('pylint-convention', 1)
+        self.expectProperty('pylint-total', 2)
+        return self.runStep()
+
+    def test_regex_text_ids_0_24(self):
+        # pylint >= 0.24.0 prints out column offsets when using text format
+        self.setupStep(python.PyLint(command=['pylint']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['pylint'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                stdout=('W0311: 11,0: Bad indentation.\n'
+                        'C0111:  3,10:foo123: Missing docstring\n'))
+            + (python.PyLint.RC_WARNING|python.PyLint.RC_CONVENTION))
+        self.expectOutcome(result=WARNINGS,
+                           status_text=['pylint', 'convention=1', 'warning=1',
+                                        'warnings'])
+        self.expectProperty('pylint-warning', 1)
+        self.expectProperty('pylint-convention', 1)
+        self.expectProperty('pylint-total', 2)
+        return self.runStep()
+
+    def test_regex_parseable_ids(self):
+        self.setupStep(python.PyLint(command=['pylint']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['pylint'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                stdout=('test.py:9: [W0311] Bad indentation.\n'
+                        'test.py:3: [C0111, foo123] Missing docstring\n'))
+            + (python.PyLint.RC_WARNING|python.PyLint.RC_CONVENTION))
+        self.expectOutcome(result=WARNINGS,
+                           status_text=['pylint', 'convention=1', 'warning=1',
+                                        'warnings'])
+        self.expectProperty('pylint-warning', 1)
+        self.expectProperty('pylint-convention', 1)
+        self.expectProperty('pylint-total', 2)
+        return self.runStep()
+
+    def test_regex_parseable(self):
+        self.setupStep(python.PyLint(command=['pylint']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['pylint'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                stdout=('test.py:9: [W] Bad indentation.\n'
+                        'test.py:3: [C, foo123] Missing docstring\n'))
+            + (python.PyLint.RC_WARNING|python.PyLint.RC_CONVENTION))
+        self.expectOutcome(result=WARNINGS,
+                           status_text=['pylint', 'convention=1', 'warning=1',
+                                        'warnings'])
+        self.expectProperty('pylint-warning', 1)
+        self.expectProperty('pylint-convention', 1)
+        self.expectProperty('pylint-total', 2)
         return self.runStep()
 
