@@ -36,6 +36,7 @@ except ImportError:
     have_ssl = False
 
 from buildbot import interfaces, util
+from buildbot.process.users import users
 from buildbot.status import base
 from buildbot.status.results import FAILURE, SUCCESS, Results
 
@@ -595,17 +596,58 @@ class MailNotifier(base.StatusReceiverMultiService):
                              results, builds, patches, logs)
 
         # now, who is this message going to?
-        dl = []
-        recipients = []
-        if self.sendToInterestedUsers and self.lookup:
+        self.dl = []
+        self.recipients = []
+        if self.sendToInterestedUsers:
             for build in builds:
-                for u in build.getInterestedUsers():
-                    d = defer.maybeDeferred(self.lookup.getAddress, u)
-                    d.addCallback(recipients.append)
-                    dl.append(d)
-        d = defer.DeferredList(dl)
-        d.addCallback(self._gotRecipients, recipients, m)
+                d = defer.succeed(build)
+                if self.lookup:
+                    d.addCallback(self.useLookup)
+                else:
+                    d.addCallback(self.useUsers)
+        d.addCallback(self._gotRecipients, self.recipients, m)
         return d
+
+    def useLookup(self, build):
+        for u in build.getInterestedUsers():
+            d = defer.maybeDeferred(self.lookup.getAddress, u)
+            d.addCallback(self.recipients.append)
+            self.dl.append(d)
+        return defer.DeferredList(self.dl)
+
+    def useUsers(self, build):
+        self.contacts = []
+        ss = build.getSourceStamp()
+        for change in ss.changes:
+            d = self.parent.db.changes.getChangeUids(change.number)
+            def getContacts(uids):
+                def uidContactPair(contact, uid):
+                    return (contact, uid)
+                d = defer.succeed(None)
+                for uid in uids:
+                    d.addCallback(lambda _ :
+                                     users.getUserContact(self.parent,
+                                                          contact_type='email',
+                                                          uid=uid))
+                    d.addCallback(lambda contact: uidContactPair(contact, uid))
+                    d.addCallback(self.contacts.append)
+                return d
+            d.addCallback(getContacts)
+            def logNoMatch(_):
+                for pair in self.contacts:
+                    contact, uid = pair
+                    if contact is None:
+                        twlog.msg("Unable to find email for uid: %r" % uid)
+                return [pair[0] for pair in self.contacts]
+            d.addCallback(logNoMatch)
+            d.addCallback(self.recipients.extend)
+            def addOwners(_):
+                owners = [e for e in build.getInterestedUsers()
+                          if e not in build.getResponsibleUsers()]
+                self.recipients.extend(owners)
+            d.addCallback(addOwners)
+            self.dl.append(d)
+        return defer.DeferredList(self.dl)
 
     def _shouldAttachLog(self, logname):
         if type(self.addLogs) is bool:
