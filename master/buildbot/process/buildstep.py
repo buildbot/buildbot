@@ -483,7 +483,8 @@ class RemoteShellCommand(LoggedRemoteCommand):
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=20*60, maxTime=None, logfiles={},
-                 usePTY="slave-config", logEnviron=True):
+                 usePTY="slave-config", logEnviron=True,
+                 KILL=None):
         """
         @type  workdir: string
         @param workdir: directory where the command ought to run,
@@ -529,6 +530,10 @@ class RemoteShellCommand(LoggedRemoteCommand):
         @param maxTime: tell the remote that if the command fails to complete
                         in this number of seconds, the command should be
                         killed.  Use None to disable maxTime.
+
+        @type  KILL: string
+        @param KILL: what signal to send to the command if the step should 
+                     be interrupted, Defaults to "KILL"
         """
 
         self.command = command # stash .command, set it later
@@ -547,6 +552,8 @@ class RemoteShellCommand(LoggedRemoteCommand):
                 'usePTY': usePTY,
                 'logEnviron': logEnviron,
                 }
+        if KILL is not None:
+            args['KILL'] = KILL
         LoggedRemoteCommand.__init__(self, "shell", args)
 
     def start(self):
