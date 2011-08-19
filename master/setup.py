@@ -293,8 +293,13 @@ else:
     if not py_26:
         setup_args['install_requires'].append('pysqlite')
 
+    setup_args['test_requires'] = [
+        'mock==0.7.1',
+    ]
+
     if os.getenv('NO_INSTALL_REQS'):
         setup_args['install_requires'] = None
+        setup_args['tests_require'] = None
 
 setup(**setup_args)
 
