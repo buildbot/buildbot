@@ -398,7 +398,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             + 0,
-            ExpectLogged('rmdir', dict(dir='wkdir',
+            ExpectLogged('rmdir', dict(dir='build',
                                        logEnviron=True))
             + 0,
             ExpectLogged('stat', dict(file='source/.svn',
@@ -412,7 +412,37 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                    'todir': 'build',
                                    'logEnviron': True})
             + 0,
-            ExpectShell(workdir='build',
+            ExpectShell(workdir='source',
+                        command=['svnversion'])
+            + ExpectShell.log('stdio',
+                stdout='100')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_mode_export(self):
+        self.setupStep(
+                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                                    mode='full', method='export'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            ExpectLogged('rmdir', dict(dir='build',
+                                       logEnviron=True))
+            + 0,
+            ExpectLogged('stat', dict(file='source/.svn',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='source',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache'])
+            + 0,
+            ExpectShell(workdir='',
+                        command=['svn', 'export', 'source', 'build'])
+            + 0,
+            ExpectShell(workdir='source',
                         command=['svnversion'])
             + ExpectShell.log('stdio',
                 stdout='100')

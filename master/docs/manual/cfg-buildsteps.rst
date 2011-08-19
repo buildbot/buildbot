@@ -760,6 +760,10 @@ should preferentially create the :class:`SVN` step with the
       behavior of source checkout follows exactly same as
       incremental. It performs all the incremental checkout behavior
       in ``source`` directory.
+   ``export``
+      Functionality is same as ``methd='copy'``. The only difference
+      is it uses ``snv export`` to create build directory so that
+      there's no ``.svn`` directory.
 
 If you are using branches, you must also make sure your
 ``ChangeSource`` will report the correct branch names.
