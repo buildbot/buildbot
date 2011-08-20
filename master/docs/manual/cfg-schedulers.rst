@@ -142,6 +142,20 @@ you want::
 The special argument ``filter_fn`` can be used to specify a function that is
 given the entire Change object, and returns a boolean.
 
+The entire set of allowed arguments, then, is
+
++------------+---------------+---------------+
+| project    | project_re    | project_fn    |
++------------+---------------+---------------+
+| repository | repository_re | repository_fn |
++------------+---------------+---------------+
+| branch     | branch_re     | branch_fn     |
++------------+---------------+---------------+
+| category   | category_re   | category_fn   |
++------------+---------------+---------------+
+| filter_fn                                  |
++--------------------------------------------+
+
 A Change passes the filter only if *all* arguments are satisfied.  If no
 filter object is given to a scheduler, then all changes will be built (subject
 to any other restrictions the scheduler enforces).
@@ -209,12 +223,13 @@ The arguments to this scheduler are:
 Example::
 
     from buildbot.schedulers.basic  import SingleBranchScheduler
+    from buildbot.changes import filter
     quick = SingleBranchScheduler(name="quick",
-                        branch=None,
+                        change_filter=filter.ChangeFilter(branch='master'),
                         treeStableTimer=60,
                         builderNames=["quick-linux", "quick-netbsd"])
     full = SingleBranchScheduler(name="full",
-                        branch=None,
+                        change_filter=filter.ChangeFilter(branch='master'),
                         treeStableTimer=5*60,
                         builderNames=["full-linux", "full-netbsd", "full-OSX"])
     c['schedulers'] = [quick, full]

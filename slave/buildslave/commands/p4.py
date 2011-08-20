@@ -93,7 +93,15 @@ class P4(P4Base):
         self.p4mode = args['mode']
         self.p4branch = args['branch']
 
+        # sourcedata is encoded to utf-8, since otherwise unicode strings
+        # appear with a leading "u", causing comparisons to fail.  In
+        # retrospect, comparing str() output is not the best technique!
+        def enc(x):
+            if isinstance(x, unicode):
+                return x.encode('utf8')
+            return x
         self.sourcedata = str([
+            enc(x) for x in [
             # Perforce server.
             self.p4port,
 
@@ -110,7 +118,7 @@ class P4(P4Base):
             self.builder.basedir,
             self.mode,
             self.workdir
-        ])
+        ]])
 
 
     def sourcedirIsUpdateable(self):
