@@ -209,12 +209,13 @@ The arguments to this scheduler are:
 Example::
 
     from buildbot.schedulers.basic  import SingleBranchScheduler
+    from buildbot.changes import filter
     quick = SingleBranchScheduler(name="quick",
-                        branch=None,
+                        change_filter=filter.ChangeFilter(branch='master'),
                         treeStableTimer=60,
                         builderNames=["quick-linux", "quick-netbsd"])
     full = SingleBranchScheduler(name="full",
-                        branch=None,
+                        change_filter=filter.ChangeFilter(branch='master'),
                         treeStableTimer=5*60,
                         builderNames=["full-linux", "full-netbsd", "full-OSX"])
     c['schedulers'] = [quick, full]
