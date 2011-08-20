@@ -142,6 +142,20 @@ you want::
 The special argument ``filter_fn`` can be used to specify a function that is
 given the entire Change object, and returns a boolean.
 
+The entire set of allowed arguments, then, is
+
++------------+---------------+---------------+
+| project    | project_re    | project_fn    |
++------------+---------------+---------------+
+| repository | repository_re | repository_fn |
++------------+---------------+---------------+
+| branch     | branch_re     | branch_fn     |
++------------+---------------+---------------+
+| category   | category_re   | category_fn   |
++------------+---------------+---------------+
+| filter_fn                                  |
++--------------------------------------------+
+
 A Change passes the filter only if *all* arguments are satisfied.  If no
 filter object is given to a scheduler, then all changes will be built (subject
 to any other restrictions the scheduler enforces).
