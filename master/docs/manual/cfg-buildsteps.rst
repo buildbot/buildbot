@@ -8,12 +8,12 @@ Build Steps
     go over this file to organize into classes
     and be sure all index entries are in place
 
-.. TODO:
-.. @bsindex buildbot.steps.python_twisted.HLint
-.. @bsindex buildbot.steps.python_twisted.Trial
-.. @bsindex buildbot.steps.python_twisted.ProcessDocs
-.. @bsindex buildbot.steps.python_twisted.BuildDebs
-.. @bsindex buildbot.steps.python_twisted.RemovePYCs
+.. todo::
+    buildbot.steps.python_twisted.HLint
+    buildbot.steps.python_twisted.Trial
+    buildbot.steps.python_twisted.ProcessDocs
+    buildbot.steps.python_twisted.BuildDebs
+    buildbot.steps.python_twisted.RemovePYCs
 
 :class:`BuildStep`\s are usually specified in the buildmaster's
 configuration file, in a list that goes into the :class:`BuildFactory`.
@@ -31,6 +31,15 @@ the :meth:`addStep` method::
     f.addStep(source.SVN(svnurl="http://svn.example.org/Trunk/"))
     f.addStep(shell.ShellCommand(command=["make", "all"]))
     f.addStep(shell.ShellCommand(command=["make", "test"]))
+
+The basic behavior for a :class:`BuildStep` is to:
+
+  * run for a while, then stop
+  * possibly invoke some RemoteCommands on the attached build slave
+  * possibly produce a set of log files
+  * finish with a status described by one of four values defined in
+    :mod:`buildbot.status.builder`: ``SUCCESS``, ``WARNINGS``, ``FAILURE``, ``SKIPPED``
+  * provide a list of short strings to describe the step
 
 The rest of this section lists all the standard :class:`BuildStep` objects
 available for use in a :class:`Build`, and the parameters which can be used to
@@ -1691,7 +1700,7 @@ correctly unless you add 'call' before your batch file's name:
     base directory. The absolute path of the workdir will thus be the
     slave's basedir (set as an option to ``buildbot create-slave``,
     :ref:`Creating-a-buildslave`) plus the builder's basedir (set in the
-    builder's ``c['builddir']`` key in :file:`master.cfg`) plus the workdir
+    builder's :bbcfg:`builddir` key in :file:`master.cfg`) plus the workdir
     itself (a class-level attribute of the BuildFactory, defaults to
     :file:`build`).
 

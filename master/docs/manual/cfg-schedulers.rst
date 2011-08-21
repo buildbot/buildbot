@@ -15,10 +15,12 @@ based on other events in the buildmaster.
 Configuring Schedulers
 ~~~~~~~~~~~~~~~~~~~~~~
 
-``c['schedulers']`` is a list of Scheduler instances, each
-of which causes builds to be started on a particular set of
-Builders. The two basic Scheduler classes you are likely to start
-with are :class:`SingleBranchScheduler` and :class:`Periodic`, but you can write a
+.. bbcfg:: schedulers
+
+The :bbcfg:`schedulers` configuration parameter gives a list of Scheduler
+instances, each of which causes builds to be started on a particular set of
+Builders. The two basic Scheduler classes you are likely to start with are
+:class:`SingleBranchScheduler` and :class:`Periodic`, but you can write a
 customized subclass to implement more complicated build scheduling.
 
 Scheduler arguments should always be specified by name (as keyword arguments),
@@ -507,7 +509,7 @@ connections on a specific ``port``, and authenticates against
 ``userport``.
 
 The buildmaster must have a scheduler instance in the config file's
-``c['schedulers']`` list to receive try requests. This lets the
+:bbcfg:`schedulers` list to receive try requests. This lets the
 administrator control who may initiate these `trial` builds, which branches
 are eligible for trial builds, and which Builders should be used for them.
 

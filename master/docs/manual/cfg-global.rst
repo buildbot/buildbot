@@ -11,28 +11,25 @@ The keys in this section affect the operations of the buildmaster globally.
 Database Specification
 ~~~~~~~~~~~~~~~~~~~~~~
 
+.. bbcfg:: db_url
+
 Buildbot requires a connection to a database to maintain certain state
 information, such as tracking pending build requests.  By default this is
 stored in a sqlite file called :file:`state.sqlite` in the base directory of your
 master.  This can be overridden with the ``db_url`` parameter.
 
 The format of this parameter is completely documented at
-http://www.sqlalchemy.org/docs/dialects/, but is generally of the form:
-
-.. code-block:: none
-
-    driver://[username:password@]host:port/database[?args]
-
-For sqlite databases, since there is no host and port, relative paths are
-specified with ``sqlite:///`` and absolute paths with ``sqlite:////``.
-Examples:
+http://www.sqlalchemy.org/docs/dialects/, but is generally of the form
+``driver://[username:password@]host:port/database[?args]``.
 
 Notes for particular database backends:
 
 SQLite
 ++++++
 
-.. code-block:: python
+For sqlite databases, since there is no host and port, relative paths are
+specified with ``sqlite:///`` and absolute paths with ``sqlite:////``.
+Examples::
 
     c['db_url'] = "sqlite:///state.sqlite"
 
@@ -134,6 +131,9 @@ One suggested configuration is to have one buildbot master configured with just
 the scheduler and change sources; and then other masters configured with just
 the builders.
 
+.. bbcfg:: multiMaster
+.. bbcfg:: db_poll_interval
+
 To enable multi-master mode in this configuration, you will need to set the
 ``multiMaster`` option so that buildbot doesn't warn about missing schedulers or
 builders. You will also need to set ``db_poll_interval`` to the masters with only
@@ -156,31 +156,30 @@ Three basic settings describe the buildmaster in status reports. ::
     c['titleURL'] = "http://buildbot.sourceforge.net/"
     c['buildbotURL'] = "http://localhost:8010/"
 
-.. index:: c['title']
+.. bbcfg:: title
 
-``title`` is a short string that will appear at the top of this
+:bbcfg:`title` is a short string that will appear at the top of this
 buildbot installation's :class:`html.WebStatus` home page (linked to the
-``titleURL``), and is embedded in the title of the waterfall HTML
+:bbcfg:`titleURL`), and is embedded in the title of the waterfall HTML
 page.
 
-.. index:: c['titleURL']
+.. bbcfg:: titleURL
 
-``titleURL`` is a URL string that must end with a slash (``/``).
+:bbcfg:`titleURL` is a URL string that must end with a slash (``/``).
 HTML status displays will show ``title`` as a link to
-``titleURL``.  This URL is often used to provide a link from
+:bbcfg:`titleURL`.  This URL is often used to provide a link from
 buildbot HTML pages to your project's home page.
 
-.. index:: c['buildbotURL']
+.. bbcfg:: buildbotURL
 
-The ``buildbotURL`` string should point to the location where the buildbot's
+The :bbcfg:`buildbotURL` string should point to the location where the buildbot's
 internal web server is visible. This URL must end with a slash (``/``).
 This typically uses the port number set for the web status (:ref:`WebStatus`):
 the buildbot needs your help to figure out a suitable externally-visible host
 URL.
 
-
 When status notices are sent to users (either by email or over IRC),
-``buildbotURL`` will be used to create a URL to the specific build
+:bbcfg:`buildbotURL` will be used to create a URL to the specific build
 or problem that they are being notified about. It will also be made
 available to queriers (over IRC) who want to find out where to get
 more information about this buildbot.
@@ -197,55 +196,39 @@ Log Handling
     c['logMaxSize'] = 1024*1024 # 1M
     c['logMaxTailSize'] = 32768
 
-.. index::
-   logCompressionLimit
-   BuildMaster Config; logCompressionLimit
+.. bbcfg:: logCompressionLimit
 
-The ``logCompressionLimit`` enables compression of build logs on
+The :bbcfg:`logCompressionLimit` enables compression of build logs on
 disk for logs that are bigger than the given size, or disables that
 completely if set to ``False``. The default value is 4k, which should
 be a reasonable default on most file systems. This setting has no impact
 on status plugins, and merely affects the required disk space on the
 master for build logs.
 
-.. index::
-   logCompressionMethod
-   BuildMaster Config; logCompressionMethod
+.. bbcfg:: logCompressionMethod
 
-The ``logCompressionMethod`` controls what type of compression is used for
+The :bbcfg:`logCompressionMethod` controls what type of compression is used for
 build logs.  The default is 'bz2', the other valid option is 'gz'.  'bz2'
 offers better compression at the expense of more CPU time.
 
-.. index::
-   logMaxSize
-   BuildMaster Config; logMaxSize
+.. bbcfg:: logMaxSize
 
-The ``logMaxSize`` parameter sets an upper limit (in bytes) to how large
+The :bbcfg:`logMaxSize` parameter sets an upper limit (in bytes) to how large
 logs from an individual build step can be.  The default value is None, meaning
-no upper limit to the log size.  Any output exceeding ``logMaxSize`` will be
+no upper limit to the log size.  Any output exceeding :bbcfg:`logMaxSize` will be
 truncated, and a message to this effect will be added to the log's HEADER
 channel.
 
-.. index::
-   logMaxTailSize
-   BuildMaster Config; logMaxTailSize
+.. bbcfg:: logMaxTailSize
 
-If ``logMaxSize`` is set, and the output from a step exceeds the maximum,
-the ``logMaxTailSize`` parameter controls how much of the end of the build
+If :bbcfg:`logMaxSize` is set, and the output from a step exceeds the maximum,
+the :bbcfg:`logMaxTailSize` parameter controls how much of the end of the build
 log will be kept.  The effect of setting this parameter is that the log will
-contain the first ``logMaxSize`` bytes and the last ``logMaxTailSize``
+contain the first :bbcfg:`logMaxSize` bytes and the last :bbcfg:`logMaxTailSize`
 bytes of output.  Don't set this value too high, as the the tail of the log is
 kept in memory.
 
 .. _Data-Lifetime:
-
-.. index::
-   logHorizon, buildCacheSize, changeHorizon, buildHorizon, eventHorizon
-   BuildMaster Config; logHorizon
-   BuildMaster Config; buildCacheSize
-   BuildMaster Config; changeHorizon
-   BuildMaster Config; buildHorizon
-   BuildMaster Config; eventHorizon
 
 Data Lifetime
 ~~~~~~~~~~~~~
@@ -264,26 +247,33 @@ Horizons
 Buildbot stores historical information on disk in the form of "Pickle" files
 and compressed logfiles.  In a large installation, these can quickly consume
 disk space, yet in many cases developers never consult this historical
-information.  
+information.
 
-The ``c['changeHorizon']`` key determines how many changes the master will
+.. bbcfg:: changeHorizon
+.. bbcfg:: buildHorizon
+.. bbcfg:: eventHorizon
+.. bbcfg:: logHorizon
+
+The :bbcfg:`changeHorizon` key determines how many changes the master will
 keep a record of. One place these changes are displayed is on the waterfall
 page.  This parameter defaults to 0, which means keep all changes indefinitely.
 
-The ``buildHorizon`` specifies the minimum number of builds for each builder
-which should be kept on disk.  The ``eventHorizon`` specifies the minumum
+The :bbcfg:`buildHorizon` specifies the minimum number of builds for each builder
+which should be kept on disk.  The :bbcfg:`eventHorizon` specifies the minumum
 number of events to keep -- events mostly describe connections and
 disconnections of slaves, and are seldom helpful to developers.  The
-``logHorizon`` gives the minimum number of builds for which logs should be
-maintained; this parameter must be less than ``buildHorizon``. Builds older
-than ``logHorizon`` but not older than ``buildHorizon`` will maintain
+:bbcfg:`logHorizon` gives the minimum number of builds for which logs should be
+maintained; this parameter must be less than :bbcfg:`buildHorizon`. Builds older
+than :bbcfg:`logHorizon` but not older than :bbcfg:`buildHorizon` will maintain
 their overall status and the status of each step, but the logfiles will be
 deleted.
 
 Caches
 ++++++
 
-The ``caches`` configuration key contains the configuration for Buildbot's
+.. bbcfg:: caches
+
+The :bbcfg:`caches` configuration key contains the configuration for Buildbot's
 in-memory caches.  These caches keep frequently-used objects in memory to avoid
 unnecessary trips to the database or to pickle files.  Caches are divided by
 object type, and each has a configurable maximum size.  The default size for
@@ -302,7 +292,7 @@ The available caches are:
     something like 10000 isn't unreasonable.
 
     This parameter is the same as the deprecated global parameter
-    ``changeCacheSize``.
+    :bbcfg:`changeCacheSize`.
 
 ``chdicts``
     The number of rows from the ``changes`` table to cache in memory.  This
@@ -332,7 +322,9 @@ The available caches are:
     The number of rows from the ``users`` table to cache in memory.  Note that for
     a given user there will be a row for each attribute that user has.
 
-The *global* ``buildCacheSize`` parameter gives the number of builds
+.. bbcfg:: buildCacheSize
+
+The *global* :bbcfg:`buildCacheSize` parameter gives the number of builds
 for each builder which are cached in memory.  This number should be larger than
 the number of builds required for commonly-used status displays (the waterfall
 or grid views), so that those displays do not miss the cache on a
@@ -342,30 +334,34 @@ refresh. ::
 
 .. _Merging-Build-Requests-Global:
 
-.. index:: BuildMaster Config; mergeRequests
+.. index::
+    Build; merging
 
 Merging Build Requests (global)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is a global default value for builders' ``mergeRequests`` parameter,
+.. bbcfg:: mergeRequests
+
+This is a global default value for builders' :bbcfg:`mergeRequests` parameter,
 and controls the merging of build requests.  See :ref:`Merging-Build-Requests`
 for more details.
 
 .. index::
-   prioritizeBuilders
-   BuildMaster Config; prioritizeBuilders
+   Builder; priority
 
 .. _Prioritizing-Builders:
-    
+
 Prioritizing Builders
 ~~~~~~~~~~~~~~~~~~~~~
+
+.. bbcfg:: prioritizeBuilders
 
 By default, buildbot will attempt to start builds on builders in order from the
 builder with the highest priority or oldest pending requst to the
 lowest priority, newest request. This behaviour can be
-customized with the ``c['prioritizeBuilders']`` configuration key.
+customized with the :bbcfg:`prioritizeBuilders` configuration key.
 This key specifies a function which is called with two arguments: a
-``BuildMaster`` and a list of :class:`Builder` objects. It
+:bbcfg:`BuildMaster` and a list of :class:`Builder` objects. It
 should return a list of :class:`Builder` objects in the desired order.
 It may also remove items from the list if builds should not be started
 on those builders. If necessary, this function can return its
@@ -389,14 +385,12 @@ For that purpose, see :ref:`Prioritizing-Builds`. ::
     
     c['prioritizeBuilders'] = prioritizeBuilders
 
-.. index::
-   slavePortnum
-   BuildMaster Config; slavePortnum
-
 .. _Setting-the-PB-Port-for-Slaves:
 
 Setting the PB Port for Slaves
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. bbcfg:: slavePortnum
 
 ::
 
@@ -415,7 +409,7 @@ low-numbered ports. If your buildmaster is behind a firewall or a NAT
 box of some sort, you may have to configure your firewall to permit
 inbound connections to this port.
 
-``c['slavePortnum']`` is a *strports* specification string,
+:bbcfg:`slavePortnum` is a *strports* specification string,
 defined in the ``twisted.application.strports`` module (try
 ``pydoc twisted.application.strports`` to get documentation on
 the format). This means that you can have the buildmaster listen on a
@@ -429,14 +423,12 @@ and they are all configured to contact the buildmaster at
 
 .. _Defining-Global-Properties:
 
-.. index::
-   properties
-   BuildMaster Config; properties
-
 Defining Global Properties
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``'properties'`` configuration key defines a dictionary
+.. bbcfg:: properties
+
+The :bbcfg:`properties` configuration key defines a dictionary
 of properties that will be available to all builds started by the
 buildmaster::
 
@@ -445,34 +437,33 @@ buildmaster::
         'release-stage' : 'alpha'
     }
 
-.. index::
-   debugPassword
-   BuildMaster Config; debugPassword
-
 .. _Debug-Options:
     
 Debug Options
 ~~~~~~~~~~~~~
 
-If you set ``c['debugPassword']``, then you can connect to the
+.. bbcfg:: debugPassword
+
+If you set :bbcfg:`debugPassword`, then you can connect to the
 buildmaster with the diagnostic tool launched by :samp:`buildbot
 debugclient {MASTER}:{PORT}`. From this tool, you can reload the config
 file, manually force builds, and inject changes, which may be useful
 for testing your buildmaster without actually commiting changes to
 your repository (or before you have the Change Sources set up). The
 debug tool uses the same port number as the slaves do:
-``c['slavePortnum']``, and is authenticated with this password. ::
+:bbcfg:`slavePortnum`, and is authenticated with this password. ::
 
     c['debugPassword'] = "debugpassword"
 
 .. index::
-   manhole
-   BuildMaster Config; manhole
+   Manhole
 
 Manhole
 ~~~~~~~
 
-If you set ``c['manhole']`` to an instance of one of the classes in
+.. bbcfg:: manhole
+
+If you set :bbcfg:`manhole` to an instance of one of the classes in
 ``buildbot.manhole``, you can telnet or ssh into the buildmaster
 and get an interactive Python shell, which may be useful for debugging
 buildbot internals. It is probably only useful for buildbot
@@ -531,7 +522,7 @@ To have the :class:`Manhole` listen on all interfaces, use
 or even UNIX-domain sockets if you want.
 
 Note that using any :class:`Manhole` requires that the `TwistedConch`_ package be
-installed, and that you be using Twisted version 2.0 or later.
+installed.
 
 The buildmaster's SSH server will use a different host key than the
 normal sshd running on a typical unix host. This will cause the ssh
@@ -586,17 +577,17 @@ A manhole session might look like::
 
 .. _Metrics-Options:
 
-.. index:: c['metrics']
-
 Metrics Options
 ~~~~~~~~~~~~~~~
+
+.. bbcfg:: metrics
 
 ::
 
     c['metrics'] = dict(log_interval=10, periodic_interval=10)
 
-``c['metrics']`` can be a dictionary that configures various aspects
-of the metrics subsystem. If ``c['metrics']`` is ``None``, then metrics
+:bbcfg:`metrics` can be a dictionary that configures various aspects
+of the metrics subsystem. If :bbcfg:`metrics` is ``None``, then metrics
 collection, logging and reporting will be disabled. 
 
 ``log_interval`` determines how often metrics should be logged to
@@ -611,12 +602,12 @@ changed via a reconfig.
 
 Read more about metrics in the :ref:`Metrics` section of the documentation.
 
-.. index:: c['user_managers']
-
 .. _Users-Options:
 
 Users Options
 ~~~~~~~~~~~~~
+
+.. bbcfg:: user_managers
 
 ::
 
@@ -626,7 +617,7 @@ Users Options
                                                        passwd="userpw",
                                                        port=9990))
 
-``c[user_manager]`` contains a list of ways to manually manage User Objects
+:bbcfg:`user_managers` contains a list of ways to manually manage User Objects
 within Buildbot (see :ref:`User-Objects`). Currently implemented is a
 commandline tool `buildbot user`, described at length in :ref:`user`.
 In the future, a web client will also be able to manage User Objects and
@@ -650,10 +641,10 @@ As shown above, to enable the `buildbot user` tool, you must initialize a
 
 .. _Input-Validation:
 
-.. index:: c['validation']
-
 Input Validation
 ~~~~~~~~~~~~~~~~
+
+.. bbcfg:: validation
 
 ::
 

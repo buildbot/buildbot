@@ -21,21 +21,15 @@ The standard ones provided with Buildbot are documented later,
 :ref:`Build-Steps`. You can also write your own subclasses to use in
 builds.
 
-The basic behavior for a :class:`BuildStep` is to:
-
-  * run for a while, then stop
-  * possibly invoke some RemoteCommands on the attached build slave
-  * possibly produce a set of log files
-  * finish with a status described by one of four values defined in
-    :mod:`buildbot.status.builder`: ``SUCCESS``, ``WARNINGS``, ``FAILURE``, ``SKIPPED``
-  * provide a list of short strings to describe the step
+.. note::
+    Build factories are used with builders, and are not added directly to the
+    buildmaster configuration dictionary.
 
 .. _BuildFactory:
-  
+
 .. index::
-   BuildFactory
-   Build Factory; BuildFactory
-  
+   Build Factory
+
 BuildFactory
 ~~~~~~~~~~~~
 
