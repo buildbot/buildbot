@@ -181,7 +181,7 @@ OpenCSW
 
 Gentoo
     S: Maintained
-    M: Dustin J. Mitchell <dustin@v.igoros.us>
+    M: Dustin J. Mitchell <dustin@v.igoro.us>
     U: http://packages.gentoo.org/package/dev-util/buildbot
 
 
@@ -189,7 +189,7 @@ Gentoo
 
 Security
     D: Contacts members of this team directly with any security concerns
-    M: Dustin J. Mitchell <dustin@v.igoros.us>
+    M: Dustin J. Mitchell <dustin@v.igoro.us>
     M: Amber Yust <ayust@yelp.com>
     M: Steve Milner <smilner@redhat.com>
     U: http://trac.buildbot.net/wiki/SecurityPolicy
@@ -197,7 +197,7 @@ Security
 Metabuildbot Slave Donors
     D: Maintainers of buildslaves for the Metabuildbot
     M: Steve Milner <smilner@redhat.com>
-    M: Dustin J. Mitchell <dustin@v.igoros.us>
+    M: Dustin J. Mitchell <dustin@v.igoro.us>
     M: Mozilla Release Engineering <release@mozilla.com>
     M: Marc-Antoine Ruel <maruel@chromium.org>
     M: Dustin Sallings <dustin@spy.net>
@@ -205,7 +205,7 @@ Metabuildbot Slave Donors
 
 Committers
     D: People who can commit changes to the main Buildbot repository
-    M: Dustin J. Mitchell <dustin@v.igoros.us>
+    M: Dustin J. Mitchell <dustin@v.igoro.us>
     M: Amber Yust <ayust@yelp.com>
     M: Ben Hearsum <bhearsum@mozilla.com>
     M: Brian Warner <warner@lothar.com>
