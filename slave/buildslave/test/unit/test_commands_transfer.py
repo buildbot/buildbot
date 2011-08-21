@@ -21,7 +21,7 @@ import StringIO
 
 from twisted.trial import unittest
 from twisted.internet import defer, reactor
-from twisted.python import runtime
+from twisted.python import runtime, failure
 
 from buildslave.test.fake.remote import FakeRemote
 from buildslave.test.util.command import CommandTestMixin
@@ -38,15 +38,23 @@ class FakeMasterMethods(object):
         self.delay_write = False
         self.count_writes = False
         self.keep_data = False
+        self.write_out_of_space_at = None
 
         self.delay_read = False
         self.count_reads = False
+
+        self.unpack_fail = False
 
         self.written = False
         self.read = False
         self.data = ''
 
     def remote_write(self, data):
+        if self.write_out_of_space_at is not None:
+            self.write_out_of_space_at -= len(data)
+            if self.write_out_of_space_at <= 0:
+                f = failure.Failure(RuntimeError("out of space"))
+                return defer.fail(f)
         if self.count_writes:
             self.add_update('write %d' % len(data))
         elif not self.written:
@@ -81,6 +89,8 @@ class FakeMasterMethods(object):
 
     def remote_unpack(self):
         self.add_update('unpack')
+        if self.unpack_fail:
+            return defer.fail(failure.Failure(RuntimeError("out of space")))
 
     def remote_utime(self,accessed_modified):
         self.add_update('utime - %s' % accessed_modified[0])
@@ -177,6 +187,35 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
                     'close',
                     {'rc': 1,
                      'stderr': "Cannot open file '%s' for upload" % df}
+                ])
+        d.addCallback(check)
+        return d
+
+    def test_out_of_space(self):
+        self.fakemaster.write_out_of_space_at = 70
+        self.fakemaster.count_writes = True    # get actual byte counts
+
+        self.make_command(transfer.SlaveFileUploadCommand, dict(
+            workdir='workdir',
+            slavesrc='data',
+            writer=FakeRemote(self.fakemaster),
+            maxsize=1000,
+            blocksize=64,
+            keepstamp=False,
+        ))
+
+        d = self.run_command()
+        def cb(_):
+            self.fail("shouldn't get here")
+        def eb(f):
+            f.trap(RuntimeError) # expected
+        d.addCallbacks(cb, eb)
+
+        def check(_):
+            self.assertUpdates([
+                    {'header': 'sending %s' % self.datafile},
+                    'write 64', 'close',
+                    {'rc': 1}
                 ])
         d.addCallback(check)
         return d
@@ -304,6 +343,36 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
     # except bz2 can't operate in stream mode on py24
     if sys.version_info[:2] <= (2,4):
         test_simple_bz2.skip = "bz2 stream decompression not supported on Python-2.4"
+
+    def test_out_of_space_unpack(self):
+        self.fakemaster.keep_data = True 
+        self.fakemaster.unpack_fail = True 
+
+        self.make_command(transfer.SlaveDirectoryUploadCommand, dict(
+            workdir='workdir',
+            slavesrc='data',
+            writer=FakeRemote(self.fakemaster),
+            maxsize=None,
+            blocksize=512,
+            compress=None
+        ))
+
+        d = self.run_command()
+        def cb(_):
+            self.fail("shouldn't get here")
+        def eb(f):
+            f.trap(RuntimeError) # expected
+        d.addCallbacks(cb, eb)
+
+        def check(_):
+            self.assertUpdates([
+                    {'header': 'sending %s' % self.datadir},
+                    'write(s)', 'unpack',
+                    {'rc': 1}
+                ])
+        d.addCallback(check)
+
+        return d
 
     # this is just a subclass of SlaveUpload, so the remaining permutations
     # are already tested
