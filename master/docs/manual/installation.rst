@@ -416,9 +416,6 @@ typical invocation (with Mac-Roman encoding) might look like:
 If your Changes pickle uses multiple encodings, you're on your own, but the
 script in contrib may provide a good starting point for the fix.
 
-.. _Creating-a-buildslave:
-
-
 .. _Upgrading-a-Buildmaster-to-Later-Version:
 
 Upgrading a Buildmaster to Later Versions
@@ -426,6 +423,8 @@ Upgrading a Buildmaster to Later Versions
 
 Up to Buildbot version |version|, no further steps beyond those described
 above are required.
+
+.. _Creating-a-buildslave:
 
 Creating a buildslave
 ---------------------
@@ -629,7 +628,7 @@ Other Buildslave Configuration
     :file:`buildbot.tac` file by adding a ``unicode_encoding``
     argument  to the BuildSlave constructor.
 
-``allow_constructor``
+``allow_shutdown``
     allow_shutdown can be passed to the BuildSlave constructor in buildbot.tac.  If
     set, it allows the buildslave to initiate a graceful shutdown, meaning that it
     will ask the master to shut down the slave when the current build, if any, is
@@ -773,17 +772,19 @@ reads the configuration in :file:`/etc/default/buildbot`).
 
 Buildbot also comes with its own init scripts that provide support for
 controlling multi-slave and multi-master setups (mostly because they are based
-on the init script from the debian package).  With a little modification these
-scripts can be used both on debian and rhel based distributions and may thus
+on the init script from the Debian package).  With a little modification these
+scripts can be used both on Debian and RHEL-based distributions and may thus
 prove helpful to package maintainers who are working on buildbot (or those that
 haven't yet split buildbot into master and slave packages). 
 
 .. code-block:: bash
 
-    # install as /etc/default|sysconfig/buildslave
+    # install as /etc/default/buildslave
+    #         or /etc/sysconfig/buildslave
     master/contrib/init-scripts/buildslave.default 
 
-    # install /etc/default|sysconfig/buildslave
+    # install as /etc/default/buildmaster
+    #         or /etc/sysconfig/buildmaster
     master/contrib/init-scripts/buildmaster.default 
 
     # install as /etc/init.d/buildslave
@@ -832,7 +833,7 @@ buildmaster and buildslave will respond to this by shutting down
 normally.
 
 The buildmaster will respond to a ``SIGHUP`` by re-reading its
-config file. Of course, this only works on unix-like systems with
+config file. Of course, this only works on Unix-like systems with
 signal support, and won't work on Windows. The following shortcut is
 available:
 
@@ -958,7 +959,7 @@ slaves have travelled). Again, :samp:`buildslave restart {BASEDIR}` will
 speed up the process.
 
 .. [#f1] This ``@reboot`` syntax is understood by Vixie cron, which is the flavor
-    usually provided with linux systems. Other unices may have a cron that
+    usually provided with Linux systems. Other unices may have a cron that
     doesn't understand ``@reboot``:
 
 
