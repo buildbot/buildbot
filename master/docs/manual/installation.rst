@@ -264,7 +264,7 @@ Buildmaster Options
 '''''''''''''''''''
 
 This section lists options to the ``create-master`` command.
-You can also type ``buildslave create-master --help`` for an up-to-the-moment summary.
+You can also type ``buildbot create-master --help`` for an up-to-the-moment summary.
 
 ``--force``
 
