@@ -4,12 +4,14 @@
 Buildslaves
 -----------
 
-The ``c['slaves']`` key is a list of known buildslaves. In the common case,
-each buildslave is defined by an instance of the :class:`BuildSlave` class.  It
-represents a standard, manually started machine that will try to connect to
-the buildbot master as a slave.  Contrast these with the "on-demand" latent
-buildslaves, such as the Amazon Web Service Elastic Compute Cloud latent
-buildslave discussed below.
+.. bb:cfg:: slaves
+
+The :bb:cfg:`slaves` configuration key specifies a list of known buildslaves. In
+the common case, each buildslave is defined by an instance of the
+:class:`BuildSlave` class.  It represents a standard, manually started machine
+that will try to connect to the buildbot master as a slave.  Contrast these
+with the "on-demand" latent buildslaves, such as the Amazon Web Service Elastic
+Compute Cloud latent buildslave discussed below.
 
 The :class:`BuildSlave` class is instantiated with two values: (``slavename``,
 ``slavepassword``). These are the same two values that need to be provided to the

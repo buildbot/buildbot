@@ -106,35 +106,26 @@ should be a breeze.
 
 .. _Configuring-Change-Sources:
 
-.. index::
-   change_source
-   BuildMaster Config; change_source
+.. index:: Change Sources
 
 Configuring Change Sources
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :file:`master.cfg` configuration file has a dictionary key named
-``BuildmasterConfig['change_source']``, which holds the active
-:class:`IChangeSource` object. The config file will typically create an
-object from one of the classes described below and stuff it into this
-key.
+.. bb:cfg:: change_source
 
-Each buildmaster typically has just a single :class:`ChangeSource`, since it is
-only watching a single source tree. But if, for some reason, you need
-multiple sources, just set ``c['change_source']`` to a list of
-:class:`ChangeSources`. ::
+The :bb:cfg:`change_source` configuration key holds all active
+change sources for the confguration.
 
-    s = PBChangeSource()
-    c['change_source'] = [s]
+Most configurations have a single :class:`ChangeSource`, watching only a single
+tree::
 
-Each source tree has a nominal `top`. Each :class:`Change` has a list of
-filenames, which are all relative to this top location. The
-:class:`ChangeSource` is responsible for doing whatever is necessary to
-accomplish this. Most sources have a ``prefix`` argument: a partial
-pathname which is stripped from the front of all filenames provided to
-that :class:`ChangeSource`. Files which are outside this sub-tree are
-ignored by the changesource: it does not generate :class:`Change`\s for those
-files.
+    c['change_source'] = PBChangeSource()
+
+For more advanced configurations, the parameter can be a list of change sources::
+
+    source1 = ...
+    source2 = ...
+    c['change_source'] = [ source1, source1 ]
 
 Repository and Project
 ++++++++++++++++++++++
@@ -180,7 +171,7 @@ each has a different parsing function. There is a separate
 ChangeSource variant for each parsing function.
 
 Once you've chosen a maildir location and a parsing function, create
-the change source and put it in ``c['change_source']``\ ::
+the change source and put it in :bb:cfg:`change_source` ::
 
     from buildbot.changes.mail import SyncmailMaildirSource
     c['change_source'] = SyncmailMaildirSource("~/maildir-buildbot",

@@ -31,6 +31,8 @@ sample file. If you *are* comfortable writing Python code,
 however, you can use all the power of a full programming language to
 achieve more complicated configurations.
 
+.. index: BuildMaster Config
+
 The ``BuildmasterConfig`` name is the only one which matters: all
 other names defined during the execution of the file are discarded.
 When parsing the config file, the Buildmaster generally compares the
@@ -44,7 +46,7 @@ typically starts with something like::
 
     BuildmasterConfig = c = {}
 
-Therefore a config key of ``change_source`` will usually appear in
+Therefore a config key like :bb:cfg:`change_source` will usually appear in
 :file:`master.cfg` as ``c['change_source']``.
 
 ..
@@ -82,8 +84,9 @@ file.
     the base directory for the buildmaster. This string has not been
     expanded, so it may start with a tilde. It needs to be expanded before
     use. The config file is located in ::
-    
+
         os.path.expanduser(os.path.join(basedir, 'master.cfg'))
+
 ``__file__``
    the absolute path of the config file. The config file's directory is located in
    ``os.path.dirname(__file__)``.
