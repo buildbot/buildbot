@@ -128,7 +128,7 @@ class PyFlakes(ShellCommand):
 
 class PyLint(ShellCommand):
     '''A command that knows about pylint output.
-    It's a good idea to add --output-format=parseable to your
+    It is a good idea to add --output-format=parseable to your
     command, since it includes the filename in the message.
     '''
     name = "pylint"
@@ -274,7 +274,7 @@ class Sphinx(ShellCommand):
                         warnings.append(line)
                         self.warnings += 1
         if self.warnings > 0:
-            self.addCompleteLog('warnings', "".join(warnings))
+            self.addCompleteLog('warnings', "\n".join(warnings))
 
         self.step_status.setStatistic('warnings', self.warnings)
 

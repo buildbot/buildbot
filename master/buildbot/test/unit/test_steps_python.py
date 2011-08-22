@@ -74,7 +74,7 @@ build succeeded, 2 warnings.'''
 warnings = '''\
 file.rst:18: (WARNING/2) Literal block expected; none found.
 index.rst:: WARNING: toctree contains reference to document 'preamble' that \
-doesn't have a title: no link will be generated
+doesn't have a title: no link will be generated\
 '''
 
 class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
@@ -85,7 +85,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
-    def test_builddir_requred(self):
+    def test_builddir_required(self):
         self.assertRaises(TypeError, lambda :
                 python.Sphinx())
 
@@ -98,7 +98,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
                 stdout=log_output_success)
             + 0
         )
-        self.expectOutcome(result=SUCCESS, status_text=["sphinx"])
+        self.expectOutcome(result=SUCCESS, status_text=["sphinx", "0 warnings"])
         return self.runStep()
 
     def test_failure(self):
@@ -110,7 +110,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
                 stdout='oh noes!')
             + 1
         )
-        self.expectOutcome(result=FAILURE, status_text=["sphinx", "failed"])
+        self.expectOutcome(result=FAILURE, status_text=["sphinx", "0 warnings", "failed"])
         return self.runStep()
 
     def test_nochange(self):
@@ -123,7 +123,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["sphinx"])
+                status_text=["sphinx", "0 warnings"])
         return self.runStep()
 
     def test_warnings(self):
@@ -161,5 +161,5 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
                 stdout=log_output_success)
             + 0
         )
-        self.expectOutcome(result=SUCCESS, status_text=["sphinx"])
+        self.expectOutcome(result=SUCCESS, status_text=["sphinx", "0 warnings"])
         return self.runStep()
