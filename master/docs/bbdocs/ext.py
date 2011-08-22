@@ -13,22 +13,83 @@
 #
 # Copyright Buildbot Team Members
 
-def setup_bbcfg_xref(app):
-    """
-    Set up a 'cfg' cross reference type, so that Buildbot master.cfg
-    configuration parameters can be referenced and indexed. ::
+from docutils import nodes
+from sphinx.domains import Domain, ObjType
+from sphinx.roles import XRefRole
+from sphinx.util.compat import Directive
+from sphinx.util import ws_re
+from sphinx.util.nodes import make_refnode
+from sphinx import addnodes
 
-        .. bbcfg:: schedulers
+class BBCfgDirective(Directive):
+    indextemplate = 'single: BuildMaster Config; %s'
 
-        Schedulers
-        ==========
+    has_content = False
+    required_arguments = 1
+    optional_arguments = 0
+    final_argument_whitespace = True
+    option_spec = {}
 
-    and a later reference::
+    def run(self):
+        env = self.state.document.settings.env
+        # normalize whitespace in fullname like XRefRole does
+        fullname = ws_re.sub(' ', self.arguments[0].strip())
+        targetname = '%s-%s' % (self.name, fullname)
 
-        blah blah blah see :bbcfg:`schedulers` blah
-    """
+        # keep the target
+        env.domaindata['bb']['cfg-targets'][fullname] = env.docname, targetname
 
-    app.add_crossref_type('bbcfg', 'bbcfg', 'single: BuildMaster Config; %s')
+        # make up the descriptor: an index entry and a target
+        inode = addnodes.index(entries=[
+            ('single', 'Buildmaster Config; %s' % (fullname,), targetname,
+                targetname),
+        ])
+        node = nodes.target('', '', ids=[targetname])
+        ret = [inode, node]
+
+        # add the target to the document
+        self.state.document.note_explicit_target(node)
+
+        return ret 
+
+class BBDomain(Domain):
+    name = 'bb'
+    label = 'Buildbot'
+
+    object_types = {
+        'cfg' : ObjType('cfg', 'cfg'),
+    }
+
+    directives = {
+        'cfg' : BBCfgDirective,
+    }
+
+    roles = {
+        'cfg' : XRefRole(),
+    }
+
+    initial_data = {
+        'objects' : {}, # (objtype, shortname) -> (docname, targetname)
+        'cfg-targets' : {} # cfg param name -> (docname, targetname)
+    }
+
+    def resolve_xref(self, env, fromdocname, builder, typ, target, node,
+                     contnode):
+        map = self.data['%s-targets' % typ]
+        try:
+            todocname, targetname = map[target]
+        except KeyError:
+            return None
+        return make_refnode(builder, fromdocname,
+                            todocname, targetname,
+                            contnode, target)
+
+        objects = self.data['objects']
+        print objects
+        objtypes = self.objtypes_for_role(typ)
+        for objtype in objtypes:
+            if (objtype, target) in objects:
+                todocname, target = objects[objtype, target]
 
 def setup(app):
-    setup_bbcfg_xref(app)
+    app.add_domain(BBDomain)

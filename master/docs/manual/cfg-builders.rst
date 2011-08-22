@@ -5,7 +5,7 @@
 Builder Configuration
 ---------------------
 
-The :bbcfg:`builders` configuration key is a list of objects giving
+The :bb:cfg:`builders` configuration key is a list of objects giving
 configuration for the Builders.  For more information, see :ref:`Builder`.  The
 class definition for the builder configuration is in :file:`buildbot.config`.
 In the configuration file, its use looks like::
@@ -25,7 +25,7 @@ The constructor takes the following keyword arguments:
 
 ``slavenames``
     These arguments specify the buildslave or buildslaves that will be used by this
-    Builder.  All slaves names must appear in the :bbcfg:`slaves` list. Each
+    Builder.  All slaves names must appear in the :bb:cfg:`slaves` list. Each
     buildslave can accomodate multiple :class:`Builder`\s.  The ``slavenames`` parameter
     can be a list of names, while ``slavename`` can specify only one slave.
 
@@ -129,7 +129,7 @@ When more than one build request is available for a builder, Buildbot can
 requests arrive more quickly than the available slaves can satisfy them, but
 has the drawback that separate results for each build are not available.
 
-This behavior can be controlled globally, using the :bbcfg:`mergeRequests`
+This behavior can be controlled globally, using the :bb:cfg:`mergeRequests`
 parameter, and on a per-:class:`Builder` basis, using the ``mergeRequests`` argument
 to the :class:`Builder` configuration.  If ``mergeRequests`` is given, it completely
 overrides the global configuration.

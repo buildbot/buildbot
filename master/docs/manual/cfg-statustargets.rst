@@ -4,11 +4,11 @@
 Status Targets
 --------------
 
-.. bbcfg: status
+.. bb:cfg: status
 
 The Buildmaster has a variety of ways to present build status to
 various users. Each such delivery method is a `Status Target` object
-in the configuration's :bbcfg:`status` list. To add status targets, you
+in the configuration's :bb:cfg:`status` list. To add status targets, you
 just append more objects to this list::
 
     c['status'] = []

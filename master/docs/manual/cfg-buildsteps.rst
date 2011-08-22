@@ -1700,7 +1700,7 @@ correctly unless you add 'call' before your batch file's name:
     base directory. The absolute path of the workdir will thus be the
     slave's basedir (set as an option to ``buildbot create-slave``,
     :ref:`Creating-a-buildslave`) plus the builder's basedir (set in the
-    builder's :bbcfg:`builddir` key in :file:`master.cfg`) plus the workdir
+    builder's :bb:cfg:`builddir` key in :file:`master.cfg`) plus the workdir
     itself (a class-level attribute of the BuildFactory, defaults to
     :file:`build`).
 

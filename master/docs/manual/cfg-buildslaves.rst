@@ -4,9 +4,9 @@
 Buildslaves
 -----------
 
-.. bbcfg:: slaves
+.. bb:cfg:: slaves
 
-The :bbcfg:`slaves` configuration key specifies a list of known buildslaves. In
+The :bb:cfg:`slaves` configuration key specifies a list of known buildslaves. In
 the common case, each buildslave is defined by an instance of the
 :class:`BuildSlave` class.  It represents a standard, manually started machine
 that will try to connect to the buildbot master as a slave.  Contrast these

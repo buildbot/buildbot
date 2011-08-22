@@ -46,7 +46,7 @@ typically starts with something like::
 
     BuildmasterConfig = c = {}
 
-Therefore a config key like :bbcfg:`change_source` will usually appear in
+Therefore a config key like :bb:cfg:`change_source` will usually appear in
 :file:`master.cfg` as ``c['change_source']``.
 
 ..
