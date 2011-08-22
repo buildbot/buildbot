@@ -1,5 +1,7 @@
 .. -*- rst -*-
 
+.. bb:cfg:: builders
+
 .. _Builder-Configuration:
 
 Builder Configuration

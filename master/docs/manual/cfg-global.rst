@@ -6,12 +6,12 @@ Global Configuration
 
 The keys in this section affect the operations of the buildmaster globally.
 
+.. bb:cfg:: db_url
+
 .. _Database-Specification:
 
 Database Specification
 ~~~~~~~~~~~~~~~~~~~~~~
-
-.. bb:cfg:: db_url
 
 Buildbot requires a connection to a database to maintain certain state
 information, such as tracking pending build requests.  By default this is
@@ -87,6 +87,9 @@ Postgres
 
 No special configuration is required to use Postgres.
 
+.. bb:cfg:: multiMaster
+.. bb:cfg:: db_poll_interval
+
 .. _Multi-master-mode:
 
 Multi-master mode
@@ -131,9 +134,6 @@ One suggested configuration is to have one buildbot master configured with just
 the scheduler and change sources; and then other masters configured with just
 the builders.
 
-.. bb:cfg:: multiMaster
-.. bb:cfg:: db_poll_interval
-
 To enable multi-master mode in this configuration, you will need to set the
 ``multiMaster`` option so that buildbot doesn't warn about missing schedulers or
 builders. You will also need to set ``db_poll_interval`` to the masters with only
@@ -144,6 +144,10 @@ builders check the database for new build requests at the configured interval. :
     c['multiMaster'] = True
     # Check for new build requests every 60 seconds
     c['db_poll_interval'] = 60
+
+.. bb:cfg:: buildbotURL
+.. bb:cfg:: titleURL
+.. bb:cfg:: title
 
 .. _Site-Definitions:
 
@@ -156,21 +160,15 @@ Three basic settings describe the buildmaster in status reports. ::
     c['titleURL'] = "http://buildbot.sourceforge.net/"
     c['buildbotURL'] = "http://localhost:8010/"
 
-.. bb:cfg:: title
-
 :bb:cfg:`title` is a short string that will appear at the top of this
 buildbot installation's :class:`html.WebStatus` home page (linked to the
 :bb:cfg:`titleURL`), and is embedded in the title of the waterfall HTML
 page.
 
-.. bb:cfg:: titleURL
-
 :bb:cfg:`titleURL` is a URL string that must end with a slash (``/``).
 HTML status displays will show ``title`` as a link to
 :bb:cfg:`titleURL`.  This URL is often used to provide a link from
 buildbot HTML pages to your project's home page.
-
-.. bb:cfg:: buildbotURL
 
 The :bb:cfg:`buildbotURL` string should point to the location where the buildbot's
 internal web server is visible. This URL must end with a slash (``/``).
@@ -184,6 +182,11 @@ or problem that they are being notified about. It will also be made
 available to queriers (over IRC) who want to find out where to get
 more information about this buildbot.
 
+.. bb:cfg:: logCompressionLimit
+.. bb:cfg:: logCompressionMethod
+.. bb:cfg:: logMaxSize
+.. bb:cfg:: logMaxTailSize
+
 .. _Log-Handling:
 
 Log Handling
@@ -196,7 +199,6 @@ Log Handling
     c['logMaxSize'] = 1024*1024 # 1M
     c['logMaxTailSize'] = 32768
 
-.. bb:cfg:: logCompressionLimit
 
 The :bb:cfg:`logCompressionLimit` enables compression of build logs on
 disk for logs that are bigger than the given size, or disables that
@@ -205,21 +207,15 @@ be a reasonable default on most file systems. This setting has no impact
 on status plugins, and merely affects the required disk space on the
 master for build logs.
 
-.. bb:cfg:: logCompressionMethod
-
 The :bb:cfg:`logCompressionMethod` controls what type of compression is used for
 build logs.  The default is 'bz2', the other valid option is 'gz'.  'bz2'
 offers better compression at the expense of more CPU time.
-
-.. bb:cfg:: logMaxSize
 
 The :bb:cfg:`logMaxSize` parameter sets an upper limit (in bytes) to how large
 logs from an individual build step can be.  The default value is None, meaning
 no upper limit to the log size.  Any output exceeding :bb:cfg:`logMaxSize` will be
 truncated, and a message to this effect will be added to the log's HEADER
 channel.
-
-.. bb:cfg:: logMaxTailSize
 
 If :bb:cfg:`logMaxSize` is set, and the output from a step exceeds the maximum,
 the :bb:cfg:`logMaxTailSize` parameter controls how much of the end of the build
@@ -241,6 +237,11 @@ Data Lifetime
     c['logHorizon'] = 40
     c['buildCacheSize'] = 15
 
+.. bb:cfg:: changeHorizon
+.. bb:cfg:: buildHorizon
+.. bb:cfg:: eventHorizon
+.. bb:cfg:: logHorizon
+
 Horizons
 ++++++++
 
@@ -248,11 +249,6 @@ Buildbot stores historical information on disk in the form of "Pickle" files
 and compressed logfiles.  In a large installation, these can quickly consume
 disk space, yet in many cases developers never consult this historical
 information.
-
-.. bb:cfg:: changeHorizon
-.. bb:cfg:: buildHorizon
-.. bb:cfg:: eventHorizon
-.. bb:cfg:: logHorizon
 
 The :bb:cfg:`changeHorizon` key determines how many changes the master will
 keep a record of. One place these changes are displayed is on the waterfall
@@ -268,10 +264,10 @@ than :bb:cfg:`logHorizon` but not older than :bb:cfg:`buildHorizon` will maintai
 their overall status and the status of each step, but the logfiles will be
 deleted.
 
+.. bb:cfg:: caches
+
 Caches
 ++++++
-
-.. bb:cfg:: caches
 
 The :bb:cfg:`caches` configuration key contains the configuration for Buildbot's
 in-memory caches.  These caches keep frequently-used objects in memory to avoid
@@ -332,15 +328,15 @@ refresh. ::
 
     c['buildCacheSize'] = 15
 
-.. _Merging-Build-Requests-Global:
+.. bb:cfg:: mergeRequests
 
 .. index::
     Build; merging
 
+.. _Merging-Build-Requests-Global:
+
 Merging Build Requests (global)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. bb:cfg:: mergeRequests
 
 This is a global default value for builders' :bb:cfg:`mergeRequests` parameter,
 and controls the merging of build requests.  See :ref:`Merging-Build-Requests`
@@ -349,12 +345,12 @@ for more details.
 .. index::
    Builder; priority
 
+.. bb:cfg:: prioritizeBuilders
+
 .. _Prioritizing-Builders:
 
 Prioritizing Builders
 ~~~~~~~~~~~~~~~~~~~~~
-
-.. bb:cfg:: prioritizeBuilders
 
 By default, buildbot will attempt to start builds on builders in order from the
 builder with the highest priority or oldest pending requst to the
@@ -385,12 +381,12 @@ For that purpose, see :ref:`Prioritizing-Builds`. ::
     
     c['prioritizeBuilders'] = prioritizeBuilders
 
+.. bb:cfg:: slavePortnum
+
 .. _Setting-the-PB-Port-for-Slaves:
 
 Setting the PB Port for Slaves
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. bb:cfg:: slavePortnum
 
 ::
 
@@ -423,10 +419,10 @@ and they are all configured to contact the buildmaster at
 
 .. _Defining-Global-Properties:
 
+.. bb:cfg:: properties
+
 Defining Global Properties
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. bb:cfg:: properties
 
 The :bb:cfg:`properties` configuration key defines a dictionary
 of properties that will be available to all builds started by the
@@ -437,12 +433,12 @@ buildmaster::
         'release-stage' : 'alpha'
     }
 
+.. bb:cfg:: debugPassword
+
 .. _Debug-Options:
     
 Debug Options
 ~~~~~~~~~~~~~
-
-.. bb:cfg:: debugPassword
 
 If you set :bb:cfg:`debugPassword`, then you can connect to the
 buildmaster with the diagnostic tool launched by :samp:`buildbot
@@ -458,10 +454,10 @@ debug tool uses the same port number as the slaves do:
 .. index::
    Manhole
 
+.. bb:cfg:: manhole
+
 Manhole
 ~~~~~~~
-
-.. bb:cfg:: manhole
 
 If you set :bb:cfg:`manhole` to an instance of one of the classes in
 ``buildbot.manhole``, you can telnet or ssh into the buildmaster
@@ -575,12 +571,12 @@ A manhole session might look like::
     >>> win32 = _
     >>> win32.category = 'w32'
 
+.. bb:cfg:: metrics
+
 .. _Metrics-Options:
 
 Metrics Options
 ~~~~~~~~~~~~~~~
-
-.. bb:cfg:: metrics
 
 ::
 
@@ -602,12 +598,12 @@ changed via a reconfig.
 
 Read more about metrics in the :ref:`Metrics` section of the documentation.
 
+.. bb:cfg:: user_managers
+
 .. _Users-Options:
 
 Users Options
 ~~~~~~~~~~~~~
-
-.. bb:cfg:: user_managers
 
 ::
 
@@ -639,12 +635,12 @@ As shown above, to enable the `buildbot user` tool, you must initialize a
     The PB connection `port` must be different than `c['slavePortnum']`
     and be specified when calling `buildbot user`
 
+.. bb:cfg:: validation
+
 .. _Input-Validation:
 
 Input Validation
 ~~~~~~~~~~~~~~~~
-
-.. bb:cfg:: validation
 
 ::
 

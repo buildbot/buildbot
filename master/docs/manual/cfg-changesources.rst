@@ -110,10 +110,10 @@ should be a breeze.
 
 .. index:: Change Sources
 
+.. bb:cfg:: change_source
+
 Configuring Change Sources
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. bb:cfg:: change_source
 
 The :bb:cfg:`change_source` configuration key holds all active
 change sources for the confguration.
@@ -173,7 +173,7 @@ each has a different parsing function. There is a separate
 ChangeSource variant for each parsing function.
 
 Once you've chosen a maildir location and a parsing function, create
-the change source and put it in :bb:cfg:`change_source` ::
+the change source and put it in ``change_source`` ::
 
     from buildbot.changes.mail import SyncmailMaildirSource
     c['change_source'] = SyncmailMaildirSource("~/maildir-buildbot",

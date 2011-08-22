@@ -1,10 +1,10 @@
 .. -*- rst -*-
 .. _Buildslaves:
 
+.. bb:cfg:: slaves
+
 Buildslaves
 -----------
-
-.. bb:cfg:: slaves
 
 The :bb:cfg:`slaves` configuration key specifies a list of known buildslaves. In
 the common case, each buildslave is defined by an instance of the
