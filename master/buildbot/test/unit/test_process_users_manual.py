@@ -69,7 +69,25 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
             def real_check(usdict):
                 self.assertEqual(usdict, dict(uid=1,
                                               identifier='x',
+                                              bb_username=None,
+                                              bb_password=None,
                                               git='x'))
+            d.addCallback(real_check)
+            return d
+        d.addCallback(check_get)
+        return d
+
+    def test_perspective_commandline_add_bb(self):
+        d = self.call_perspective_commandline('add', None,
+                                              [{'identifier':'marla',
+                                                'bb_creds': ('marla', 'cancer')}])
+        def check_get(_):
+            d = self.master.db.users.getUser(1)
+            def real_check(usdict):
+                self.assertEqual(usdict, dict(uid=1,
+                                              identifier='marla',
+                                              bb_username='marla',
+                                              bb_password='cancer'))
             d.addCallback(real_check)
             return d
         d.addCallback(check_get)
@@ -86,7 +104,29 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
             def real_check(usdict):
                 self.assertEqual(usdict, dict(uid=1,
                                               identifier='x',
+                                              bb_username=None,
+                                              bb_password=None,
                                               svn='y'))
+            d.addCallback(real_check)
+            return d
+        d.addCallback(check)
+        return d
+
+    def test_perspective_commandline_update_bb(self):
+        d = self.call_perspective_commandline('add', None,
+                                              [{'identifier':'x',
+                                                'bb_creds':('x', 'yep')}])
+        d.addCallback(lambda _ :
+                          self.call_perspective_commandline('update', None,
+                                             [{'identifier':'x',
+                                               'bb_creds':('a', 'yes')}]))
+        def check(_):
+            d = self.master.db.users.getUser(1)
+            def real_check(usdict):
+                self.assertEqual(usdict, dict(uid=1,
+                                              identifier='x',
+                                              bb_username='a',
+                                              bb_password='yes'))
             d.addCallback(real_check)
             return d
         d.addCallback(check)
@@ -118,6 +158,8 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
             def real_check(res):
                 self.assertEqual(res, dict(uid=1,
                                            identifier='x',
+                                           bb_username=None,
+                                           bb_password=None,
                                            svn='x'))
             d.addCallback(real_check)
             return d
@@ -136,6 +178,8 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
             def real_check(res):
                 self.assertEqual(res, dict(uid=1,
                                            identifier='x',
+                                           bb_username=None,
+                                           bb_password=None,
                                            svn='x',
                                            git='x@c'))
             d.addCallback(real_check)
@@ -185,7 +229,7 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
                           self.call_perspective_commandline('get', ['x@y'], None))
         def check(result):
             exp_format = 'user(s) found:\ngit: x <x@y>\nidentifier: x@y\n' \
-                         'uid: 1\n\n'
+                         'bb_username: None\nuid: 1\n\n'
             self.assertEqual(result, exp_format)
         d.addCallback(check)
         return d

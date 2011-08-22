@@ -15,11 +15,19 @@
 
 
 import os
-from zope.interface import Interface, implements
+from zope.interface import Interface, Attribute, implements
 from buildbot.status.web.base import HtmlResource
+from buildbot.process.users import users
 
 class IAuth(Interface):
-    """Represent an authentication method."""
+    """
+    Represent an authentication method.
+
+    Note that each IAuth instance contains a link to the BuildMaster that
+    will be set once the IAuth instance is initialized.
+    """
+
+    master = Attribute('master', "Link to BuildMaster, set when initialized")
 
     def authenticate(self, user, passwd):
             """Check whether C{user} / C{passwd} are valid."""
@@ -28,6 +36,7 @@ class IAuth(Interface):
             """Get the reason authentication failed."""
 
 class AuthBase:
+    master = None  # set in status.web.baseweb
     err = ""
 
     def errmsg(self):
@@ -97,6 +106,33 @@ class HTPasswdAuth(AuthBase):
         else:
             self.err = "Invalid user/passwd"
         return res
+
+class UsersAuth(AuthBase):
+    """Implement authentication against users in database"""
+    implements(IAuth)
+
+    def authenticate(self, user, passwd):
+        """
+        It checks for a matching uid in the database for the credentials
+        and return True if a match is found, False otherwise.
+
+        @param user: username portion of user credentials
+        @type user: string
+
+        @param passwd: password portion of user credentials
+        @type passwd: string
+
+        @returns: boolean via deferred.
+        """
+        d = self.master.db.users.getUserByUsername(user)
+        def check_creds(user):
+            if user:
+                if users.check_passwd(passwd, user['bb_password']):
+                    return True
+            self.err = "no user found with those credentials"
+            return False
+        d.addCallback(check_creds)
+        return d
 
 class AuthFailResource(HtmlResource):
     pageTitle = "Authentication Failed"

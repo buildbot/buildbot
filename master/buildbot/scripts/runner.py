@@ -1219,15 +1219,15 @@ class UserOptions(OptionsWithOptionsFile):
 
     longdesc = """
     Currently implemented types for --info= are:\n
-    git, svn, hg, cvs, darcs, bzr
+    git, svn, hg, cvs, darcs, bzr, email, bb_username, bb_password
     """
 
 def users_client(config, runReactor=False):
     from buildbot.clients import usersclient
-    from buildbot.process.users import users    # for srcs
+    from buildbot.process.users import users    # for srcs, encrypt
 
     # accepted attr_types by `buildbot user`, in addition to users.srcs
-    attr_types = ['identifier', 'email']
+    attr_types = ['identifier', 'email', 'bb_username', 'bb_password']
 
     master = config.get('master')
     assert master, "you must provide the master location"
@@ -1284,8 +1284,30 @@ def users_client(config, runReactor=False):
                 if attr_type not in users.srcs + attr_types:
                     raise ValueError("Type not a valid attr_type, must be in: "
                                      "%r" % (users.srcs + attr_types))
+
+                if ('bb_username' == attr_type or 'bb_password' == attr_type):
+                    try:
+                        if (user['bb_username'] is None or
+                            user['bb_password'] is None):
+                            raise AssertionError("must supply both bb_username"
+                                                 " and bb_password or neither")
+                    except KeyError:
+                        raise AssertionError("must supply both bb_username "
+                                             "and bb_password or neither")
             if op == 'add':
-                user['identifier'] = user.values()[0]
+                if 'bb_username' in user:
+                    if len(user) > 2:
+                        raise ValueError("can not use add with bb_username/"
+                                         "bb_password and other attributes.")
+                    user['identifier'] = user['bb_username']
+                else:
+                    user['identifier'] = user.values()[0]
+
+            if 'bb_username' in user:
+                bb_password = users.encrypt(user['bb_password'])
+                user['bb_creds'] = (user['bb_username'], bb_password)
+                user.pop('bb_username')
+                user.pop('bb_password')
 
     uc = usersclient.UsersClient(master, username, passwd, port)
     d = uc.send(op, ids, info)

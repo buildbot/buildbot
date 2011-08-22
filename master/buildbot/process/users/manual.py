@@ -93,7 +93,8 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
             for user in results:
                 if user:
                     for key in user:
-                        formatted_results += "%s: %s\n" % (key, user[key])
+                        if key != 'bb_password':
+                            formatted_results += "%s: %s\n" % (key, user[key])
                     formatted_results += "\n"
                 else:
                     formatted_results += "no match found\n"
@@ -166,18 +167,36 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                 for attr in user:
                     if op == 'update' or once_through:
                         if uid:
-                            d = self.master.db.users.updateUser(
-                                                         uid=uid,
-                                                         identifier=ident,
-                                                         attr_type=attr,
-                                                         attr_data=user[attr])
+                            if 'bb_creds' == attr:
+                                d = self.master.db.users.updateUser(
+                                                     uid=uid,
+                                                     bb_username=user[attr][0],
+                                                     bb_password=user[attr][1],
+                                                     identifier=ident)
+                            else:
+                                d = self.master.db.users.updateUser(
+                                                     uid=uid,
+                                                     identifier=ident,
+                                                     attr_type=attr,
+                                                     attr_data=user[attr])
                         else:
                             log.msg("Unable to find uid for identifier %s"
                                     % user)
                     elif op == 'add':
-                        d = self.master.db.users.addUser(identifier=ident,
-                                                         attr_type=attr,
-                                                         attr_data=user[attr])
+                        if 'bb_creds' == attr:
+                            d = self.master.db.users.addUser(
+                                                    identifier=ident,
+                                                    bb_username=user[attr][0],
+                                                    bb_password=user[attr][1],
+                                                    attr_type=None,
+                                                    attr_data=None)
+                        else:
+                            d = self.master.db.users.addUser(
+                                                    identifier=ident,
+                                                    bb_username=None,
+                                                    bb_password=None,
+                                                    attr_type=attr,
+                                                    attr_data=user[attr])
                         once_through = True
                     wfd = defer.waitForDeferred(d)
                     yield wfd

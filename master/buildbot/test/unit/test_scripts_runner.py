@@ -22,6 +22,7 @@ from twisted.trial import unittest
 from twisted.internet import defer, reactor
 from buildbot.scripts import runner, checkconfig
 from buildbot.clients import sendchange, usersclient
+from buildbot.process.users import users
 
 class OptionsMixin(object):
 
@@ -763,6 +764,34 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
         d.addCallbacks(cb, eb)
         return d
 
+    def test_usersclient_bb_and_attr(self):
+        d = defer.maybeDeferred(lambda :
+                    runner.users_client(dict(master='a:9990', username="x",
+                                              passwd="y", op='add', ids=None,
+                                              info=[{'svn':'y',
+                                                     'bb_username':'ha',
+                                                     'bb_password':'ho'}])))
+        def cb(_):
+            self.fail("shouldn't succeed")
+        def eb(f):
+            f.trap(ValueError)
+            pass # A-OK
+        d.addCallbacks(cb, eb)
+        return d
+
+    def test_usersclient_bb_half(self):
+        d = defer.maybeDeferred(lambda :
+                    runner.users_client(dict(master='a:9990', username="x",
+                                              passwd="y", op='add', ids=None,
+                                              info=[{'bb_username':'ha'}])))
+        def cb(_):
+            self.fail("shouldn't succeed")
+        def eb(f):
+            f.trap(AssertionError)
+            pass # A-OK
+        d.addCallbacks(cb, eb)
+        return d
+
     def test_usersclient_send_ids(self):
         d = runner.users_client(dict(master='a:9990', username="x",
                                      passwd="y", op='get', ids=['me', 'you'],
@@ -798,5 +827,27 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
                               c.ids, c.info),
                              ('a', 9990, "x", "y", 'add', None,
                               [{'identifier':'x <h@c>','git': 'x <h@c>'}]))
+        d.addCallback(check)
+        return d
+
+    def test_usersclient_send_add_info_bb(self):
+        # since os.urandom() changes each time, we need to patch encrypt()
+        encrypted = users.encrypt("sekret")
+        def _fake_encrypt(passwd):
+            return encrypted
+        self.patch(users, 'encrypt', _fake_encrypt)
+
+        d = runner.users_client(dict(master='a:9990', username="x",
+                                     passwd="y", op='add', ids=None,
+                                     info=[{'bb_username':'x',
+                                            'bb_password':'sekret'}]))
+        def check(_):
+            c = self.usersclient
+            self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
+                              c.ids, c.info),
+                             ('a', 9990, "x", "y", 'add', None,
+                              [{'identifier':'x',
+                                'bb_creds':('x', encrypted)
+                                }]))
         d.addCallback(check)
         return d

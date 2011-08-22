@@ -13,10 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
+import os
 from twisted.python import log
 from twisted.internet import defer
 
+try:
+    from hashlib import md5
+    assert md5
+except ImportError:
+    # For Python 2.4
+    import md5
+
 srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr']
+salt_len = 8
 
 @defer.deferredGenerator
 def createUserObject(master, author, src=None):
@@ -48,6 +57,7 @@ def createUserObject(master, author, src=None):
         return
 
     d = master.db.users.addUser(identifier=usdict['identifier'],
+                                bb_username=None, bb_password=None,
                                 attr_type=usdict['attr_type'],
                                 attr_data=usdict['attr_data'])
     wfd = defer.waitForDeferred(d)
@@ -77,3 +87,44 @@ def getUserContact(master, contact_type=None, uid=None):
     d = master.db.users.getUser(uid)
     d.addCallback(lambda usdict: usdict and usdict.get(contact_type))
     return d
+
+def encrypt(passwd):
+    """
+    Encrypts the incoming password after adding some salt to store
+    it in the database.
+
+    @param passwd: password portion of user credentials
+    @type passwd: string
+
+    @returns: encrypted/salted string
+    """
+    try:
+        m = md5()
+    except TypeError:
+        m = md5.new()
+
+    salt = os.urandom(salt_len).encode('hex_codec')
+    m.update(passwd + salt)
+    crypted = salt + m.hexdigest()
+    return crypted
+
+def check_passwd(guess, passwd):
+    """
+    Tests to see if the guess, after salting and hashing, matches the
+    passwd from the database.
+
+    @param guess: incoming password trying to be used for authentication
+    @param passwd: already encrypted password from the database
+
+    @returns: boolean
+    """
+    try:
+        m = md5()
+    except TypeError:
+        m = md5.new()
+
+    salt = passwd[:salt_len * 2]  # salt_len * 2 due to encode('hex_codec')
+    m.update(guess + salt)
+    crypted_guess = salt + m.hexdigest()
+
+    return (crypted_guess == passwd)
