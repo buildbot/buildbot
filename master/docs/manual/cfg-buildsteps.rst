@@ -234,26 +234,29 @@ and returns a string value that will be used to replace that key::
 Properties Objects
 ##################
 
-The available methods on a properties object are those described by the
-``IProperties`` interface.  Specifically:
+.. class:: buildbot.interfaces.IProperties
 
-``getProperty(propname, default=None)``
+   The available methods on a properties object are those described by the
+   ``IProperties`` interface.  Specifically:
 
-    Get a named property, returning the default value if the property is not found.
 
-``hasProperty(propname)``
+   .. method:: getProperty(propname, default=None)
 
-    Determine whether the named property exists.
+      Get a named property, returning the default value if the property is not found.
 
-``setProperty(propname, value, source)``
+   .. method:: hasProperty(propname)
 
-    Set a property's value, also specifying the source for this value.
+      Determine whether the named property exists.
 
-``getProperties()``
+   .. method:: setProperty(propname, value, source)
 
-    Get a Properties (:class:`buildbot.process.properties.Properties`) instance.  The
-    interface of this class is not finalized; where possible, use the other
-    ``IProperties`` methods.
+      Set a property's value, also specifying the source for this value.
+
+   .. method:: getProperties()
+
+      Get a :class:`buildbot.process.properties.Properties` instance.  The
+      interface of this class is not finalized; where possible, use the other
+      `` IProperties`` methods.
 
 Positional Arguments
 ####################
@@ -2241,7 +2244,7 @@ and ``stderr="error\n"``.
 SubunitShellCommand
 +++++++++++++++++++
 
-.. @bsindex buildbot.steps.subunit.SubunitShellCommand
+.. py:class:: buildbot.steps.subunit.SubunitShellCommand
 
 This buildstep is similar to :class:`ShellCommand`, except that it runs the log content
 through a subunit filter to extract test and failure counts. ::
@@ -2331,6 +2334,8 @@ same place where the generated install tarball is placed. ::
 PyFlakes
 ++++++++
 
+.. py:class:: buildbot.steps.python.PyFlakes
+
 `PyFlakes <http://divmod.org/trac/wiki/DivmodPyflakes>`_ is a tool
 to perform basic static analysis of Python code to look for simple
 errors, like missing imports and references of undefined names. It is
@@ -2349,6 +2354,49 @@ with a ``pyflakes`` target. You might want to use something like
     from buildbot.steps.python import PyFlakes
     # ...
     f.addStep(PyFlakes(command=["pyflakes", "src"]))
+
+.. _Step-Sphinx:
+
+.. index::
+   Sphinx
+   Build Steps; Sphinx
+
+Sphinx
+++++++
+
+.. py:class:: buildbot.steps.python.Sphinx
+
+`Shinx <http://sphinx.pocoo.org/>`_ is  the Python Documentation
+Generator. It uses `RestructuredText <http://docutils.sourceforge.net/rst.html>`_
+as input format.
+
+The :class:`buildbot.steps.python.Sphinx` step will run
+:program:`sphinx-build` or any other program spcified in its
+``sphinx`` argument and count the various warnings and error it
+detects.
+
+This step takes the following arguments:
+
+``sphinx_builddir``
+   (required) Name of the directory where the documentation will be generated.
+
+``sphinx_sourcedir``
+   (optional, defaulting to ``.``), Name the directory where the
+   :file:`conf.py` file will be found
+
+``sphinx_builder``
+   (optional) Indicates the builder to use.
+
+``sphinx``
+   (optional, defaulting to :program:`shinx-build`) Indicates the
+   executable to run.
+
+``tags``
+   (optional) List of ``tags`` to pass to :program:`sphinx-build`
+
+``defines``
+   (optional) Dictionnary of defines to overwrite values of the
+   :file:`conf.py` file.
 
 .. _Step-PyLint:
     
