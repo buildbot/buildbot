@@ -15,7 +15,8 @@
 
 
 from twisted.web import html
-from twisted.internet import defer
+from twisted.internet import defer, reactor
+from twisted.web.util import Redirect, DeferredResource
 
 import urllib, time
 from twisted.python import log
@@ -86,42 +87,40 @@ class ForceBuildActionResource(ActionResource):
 
 class StopBuildActionResource(ActionResource):
 
-    def __init__(self, build_status, auth_ok):
+    def __init__(self, build_status):
         self.build_status = build_status
         self.action = "stopBuild"
-        self.auth_ok = auth_ok
 
     @defer.deferredGenerator
     def performAction(self, req):
-        url = None
-        if not self.auth_ok:
-            d = self.getAuthz(req).actionAllowed(self.action, req, self.build_status)
-            wfd = defer.waitForDeferred(d)
-            yield wfd
-            res = wfd.getResult()
+        d = self.getAuthz(req).actionAllowed(self.action, req,
+                                             self.build_status)
+        wfd = defer.waitForDeferred(d)
+        yield wfd
+        res = wfd.getResult()
 
-            if not res:
-                url = path_to_authfail(req)
+        if not res:
+            yield path_to_authfail(req)
+            return
 
-        if url is None:
-            b = self.build_status
-            log.msg("web stopBuild of build %s:%s" % \
-                        (b.getBuilder().getName(), b.getNumber()))
-            name = req.args.get("username", ["<unknown>"])[0]
-            comments = req.args.get("comments", ["<no reason specified>"])[0]
-            # html-quote both the username and comments, just to be safe
-            reason = ("The web-page 'stop build' button was pressed by "
-                      "'%s': %s\n" % (html.escape(name), html.escape(comments)))
+        b = self.build_status
+        log.msg("web stopBuild of build %s:%s" % \
+                    (b.getBuilder().getName(), b.getNumber()))
+        name = req.args.get("username", ["<unknown>"])[0]
+        comments = req.args.get("comments", ["<no reason specified>"])[0]
+        # html-quote both the username and comments, just to be safe
+        reason = ("The web-page 'stop build' button was pressed by "
+                  "'%s': %s\n" % (html.escape(name), html.escape(comments)))
 
-            c = interfaces.IControl(self.getBuildmaster(req))
-            bldrc = c.getBuilder(self.build_status.getBuilder().getName())
-            if bldrc:
-                bldc = bldrc.getBuild(self.build_status.getNumber())
-                if bldc:
-                    bldc.stopBuild(reason)
+        c = interfaces.IControl(self.getBuildmaster(req))
+        bldrc = c.getBuilder(self.build_status.getBuilder().getName())
+        if bldrc:
+            bldc = bldrc.getBuild(self.build_status.getNumber())
+            if bldc:
+                bldc.stopBuild(reason)
 
-            url = path_to_builder(req, self.build_status.getBuilder())
-        yield url
+        yield path_to_builder(req, self.build_status.getBuilder())
+        return
 
 # /builders/$builder/builds/$buildnum
 class StatusResourceBuild(HtmlResource):
@@ -242,7 +241,32 @@ class StatusResourceBuild(HtmlResource):
         return template.render(**cxt)
 
     def stop(self, req, auth_ok=False):
-        return StopBuildActionResource(self.build_status, auth_ok)
+        # check if this is allowed
+        if not auth_ok:
+            return StopBuildActionResource(self.build_status)
+
+        b = self.build_status
+        log.msg("web stopBuild of build %s:%s" % \
+                (b.getBuilder().getName(), b.getNumber()))
+        name = req.args.get("username", ["<unknown>"])[0]
+        comments = req.args.get("comments", ["<no reason specified>"])[0]
+        # html-quote both the username and comments, just to be safe
+        reason = ("The web-page 'stop build' button was pressed by "
+                  "'%s': %s\n" % (html.escape(name), html.escape(comments)))
+
+        c = interfaces.IControl(self.getBuildmaster(req))
+        bldrc = c.getBuilder(self.build_status.getBuilder().getName())
+        if bldrc:
+            bldc = bldrc.getBuild(self.build_status.getNumber())
+            if bldc:
+                bldc.stopBuild(reason)
+
+        # we're at http://localhost:8080/svn-hello/builds/5/stop?[args] and
+        # we want to go to: http://localhost:8080/svn-hello
+        r = Redirect(path_to_builder(req, self.build_status.getBuilder()))
+        d = defer.Deferred()
+        reactor.callLater(1, d.callback, r)
+        return DeferredResource(d)
 
     def rebuild(self, req):
         return ForceBuildActionResource(self.build_status,

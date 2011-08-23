@@ -28,6 +28,168 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
 
+class ForceAllBuildsActionResource(ActionResource):
+
+    def __init__(self, status, selectedOrAll):
+        self.status = status
+        self.selectedOrAll = selectedOrAll
+        self.action = "forceAllBuilds"
+
+    @defer.deferredGenerator
+    def performAction(self, req):
+        authz = self.getAuthz(req)
+        d = authz.actionAllowed('forceAllBuilds', req)
+        wfd = defer.waitForDeferred(d)
+        yield wfd
+        res = wfd.getResult()
+
+        if not res:
+            yield path_to_authfail(req)
+            return
+
+        builders = None
+        if self.selectedOrAll == 'all':
+            builders = self.status.getBuilderNames()
+        elif self.selectedOrAll == 'selected':
+            builders = [b for b in req.args.get("selected", []) if b]
+
+        for bname in builders:
+            builder_status = self.status.getBuilder(bname)
+            build = StatusResourceBuilder(builder_status)
+            build.force(req, auth_ok=True) # auth_ok because we already checked
+
+        # back to the welcome page
+        yield path_to_root(req)
+
+class StopAllBuildsActionResource(ActionResource):
+
+    def __init__(self, status, selectedOrAll):
+        self.status = status
+        self.selectedOrAll = selectedOrAll
+        self.action = "stopAllBuilds"
+
+    @defer.deferredGenerator
+    def performAction(self, req):
+        authz = self.getAuthz(req)
+        d = authz.actionAllowed('stopAllBuilds', req)
+        wfd = defer.waitForDeferred(d)
+        yield wfd
+        res = wfd.getResult()
+        if not res:
+            yield path_to_authfail(req)
+            return
+
+        builders = None
+        if self.selectedOrAll == 'all':
+            builders = self.status.getBuilderNames()
+        elif self.selectedOrAll == 'selected':
+            builders = [b for b in req.args.get("selected", []) if b]
+
+        for bname in builders:
+            builder_status = self.status.getBuilder(bname)
+            (state, current_builds) = builder_status.getState()
+            if state != "building":
+                continue
+            for b in current_builds:
+                build_status = builder_status.getBuild(b.number)
+                if not build_status:
+                    continue
+                build = StatusResourceBuild(build_status)
+                build.stop(req, auth_ok=True)
+        # go back to the welcome page
+        yield path_to_root(req)
+
+class PingBuilderActionResource(ActionResource):
+
+    def __init__(self, builder_status):
+        self.builder_status = builder_status
+        self.action = "pingBuilder"
+
+    @defer.deferredGenerator
+    def performAction(self, req):
+        log.msg("web ping of builder '%s'" % self.builder_status.getName())
+        d = self.getAuthz(req).actionAllowed('pingBuilder', req, self.builder_status)
+        wfd = defer.waitForDeferred(d)
+        yield wfd
+        res = wfd.getResult()
+        if not res:
+            log.msg("..but not authorized")
+            yield path_to_authfail(req)
+            return
+
+        c = interfaces.IControl(self.getBuildmaster(req))
+        bc = c.getBuilder(self.builder_status.getName())
+        bc.ping()
+        # send the user back to the builder page
+        yield path_to_builder(req, self.builder_status)
+
+class ForceBuildActionResource(ActionResource):
+
+    def __init__(self, builder_status, req_args):
+        self.builder_status = builder_status
+        self.req_args = req_args
+        self.action = "forceBuild"
+
+    @defer.deferredGenerator
+    def performAction(self, req):
+        # check if this is allowed
+        d = self.getAuthz(req).actionAllowed(self.action, req,
+                                             self.builder_status)
+        wfd = defer.waitForDeferred(d)
+        yield wfd
+        res = wfd.getResult()
+        if not res:
+            log.msg("..but not authorized")
+            yield path_to_authfail(req)
+            return
+
+        master = self.getBuildmaster(req)
+
+        # keep weird stuff out of the branch revision, and property strings.
+        branch_validate = master.config.validation['branch']
+        revision_validate = master.config.validation['revision']
+        if not branch_validate.match(self.req_args['branch']):
+            log.msg("bad branch '%s'" % self.req_args['branch'])
+            yield path_to_builder(req, self.builder_status)
+            return
+        if not revision_validate.match(self.req_args['revision']):
+            log.msg("bad revision '%s'" % self.req_args['revision'])
+            yield path_to_builder(req, self.builder_status)
+            return
+        properties = getAndCheckProperties(req)
+        if properties is None:
+            yield path_to_builder(req, self.builder_status)
+            return
+        if not self.req_args['branch']:
+            self.req_args['branch'] = None
+        if not self.req_args['revision']:
+            self.req_args['revision'] = None
+
+        d = master.db.sourcestamps.addSourceStamp(
+                                      branch=self.req_args['branch'],
+                                      revision=self.req_args['revision'],
+                                      project=self.req_args['project'],
+                                      repository=self.req_args['repository'])
+        wfd = defer.waitForDeferred(d)
+        yield wfd
+        ssid = wfd.getResult()
+
+        r = ("The web-page 'force build' button was pressed by '%s': %s\n"
+             % (html.escape(self.req_args['name']),
+                html.escape(self.req_args['reason'])))
+        d = master.addBuildset(builderNames=[self.builder_status.getName()],
+                               ssid=ssid, reason=r,
+                               properties=properties.asDict())
+        wfd = defer.waitForDeferred(d)
+        yield wfd
+        tup = wfd.getResult()
+        # check that (bsid, brids) were properly stored
+        if not isinstance(tup, (int, dict)):
+            log.err("(ignored) while trying to force build")
+
+        # send the user back to the builder page
+        yield path_to_builder(req, self.builder_status)
+
 # /builders/$builder
 class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     addSlash = True
@@ -147,11 +309,11 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 self.builder_status.getName(), branch, revision, repository,
                 project, name))
 
-        # check if this is allowed
         if not auth_ok:
-            if not self.getAuthz(req).actionAllowed('forceBuild', req, self.builder_status):
-                log.msg("..but not authorized")
-                return Redirect(path_to_authfail(req))
+            req_args = dict(name=name, reason=reason, branch=branch,
+                            revision=revision, repository=repository,
+                            project=project)
+            return ForceBuildActionResource(self.builder_status, req_args)
 
         master = self.getBuildmaster(req)
 
@@ -186,15 +348,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         return Redirect(path_to_builder(req, self.builder_status))
 
     def ping(self, req):
-        log.msg("web ping of builder '%s'" % self.builder_status.getName())
-        if not self.getAuthz(req).actionAllowed('pingBuilder', req, self.builder_status):
-            log.msg("..but not authorized")
-            return Redirect(path_to_authfail(req))
-        c = interfaces.IControl(self.getBuildmaster(req))
-        bc = c.getBuilder(self.builder_status.getName())
-        bc.ping()
-        # send the user back to the builder page
-        return Redirect(path_to_builder(req, self.builder_status))
+        return PingBuilderActionResource(self.builder_status)
 
     def getChild(self, path, req):
         if path == "force":
@@ -241,8 +395,12 @@ class CancelChangeResource(ActionResource):
             for build_req in brcontrols:
                 if cancel_all or (build_req.brid == request_id):
                     log.msg("Cancelling %s" % build_req)
-                    if authz.actionAllowed('cancelPendingBuild',
-                                           req, build_req):
+                    d = authz.actionAllowed('cancelPendingBuild',
+                                            req, build_req)
+                    wfd = defer.waitForDeferred(d)
+                    yield wfd
+                    res = wfd.getResult()
+                    if res:
                         build_req.cancel()
                     else:
                         yield path_to_authfail(req)
@@ -292,8 +450,11 @@ class StopChangeMixin(object):
                     if change.number == request_change:
                         control = build_controls[build_req.brid]
                         log.msg("Cancelling %s" % control)
-                        if (auth_ok or authz.actionAllowed('stopChange',
-                                                            req, control)):
+                        d = authz.actionAllowed('stopChange', req, control)
+                        wfd = defer.waitForDeferred(d)
+                        yield wfd
+                        res = wfd.getResult()
+                        if (auth_ok or res):
                             control.cancel()
                         else:
                             yield False
@@ -332,7 +493,10 @@ class StopChangeAllResource(StopChangeMixin, ActionResource):
     def performAction(self, req):
         """Cancel all pending builds that include a given numbered change."""
         authz = self.getAuthz(req)
-        if not authz.actionAllowed('stopChange', req):
+        wfd = defer.waitForDeferred(authz.actionAllowed('stopChange', req))
+        yield wfd
+        res = wfd.getResult()
+        if not res:
             yield path_to_authfail(req)
             return
 
@@ -366,36 +530,10 @@ class StatusResourceAllBuilders(HtmlResource, BuildLineMixin):
         return HtmlResource.getChild(self, path, req)
 
     def forceall(self, req):
-        authz = self.getAuthz(req)
-        if not authz.actionAllowed('forceAllBuilds', req):
-            return Redirect(path_to_authfail(req))
-
-        for bname in self.status.getBuilderNames():
-            builder_status = self.status.getBuilder(bname)
-            build = StatusResourceBuilder(builder_status)
-            build.force(req, auth_ok=True) # auth_ok because we already checked
-        # back to the welcome page
-        return Redirect(path_to_root(req))
+        return ForceAllBuildsActionResource(self.status, 'all')
 
     def stopall(self, req):
-        authz = self.getAuthz(req)
-        if not authz.actionAllowed('stopAllBuilds', req):
-            return Redirect(path_to_authfail(req))
-
-        for bname in self.status.getBuilderNames():
-            builder_status = self.status.getBuilder(bname)
-            (state, current_builds) = builder_status.getState()
-            if state != "building":
-                continue
-            for b in current_builds:
-                build_status = builder_status.getBuild(b.number)
-                if not build_status:
-                    continue
-                build = StatusResourceBuild(build_status)
-                build.stop(req, auth_ok=True)
-        # go back to the welcome page
-        return Redirect(path_to_root(req))
-
+        return StopAllBuildsActionResource(self.status, 'all')
 
 # /builders/_selected
 class StatusResourceSelectedBuilders(HtmlResource, BuildLineMixin):
@@ -413,36 +551,10 @@ class StatusResourceSelectedBuilders(HtmlResource, BuildLineMixin):
         return HtmlResource.getChild(self, path, req)
 
     def forceselected(self, req):
-        authz = self.getAuthz(req)
-        if not authz.actionAllowed('forceAllBuilds', req):
-            return Redirect(path_to_authfail(req))
-
-        for bname in [b for b in req.args.get("selected", []) if b]:
-            builder_status = self.status.getBuilder(bname)
-            build = StatusResourceBuilder(builder_status)
-            build.force(req, auth_ok=True) # auth_ok because we already checked
-        # back to the welcome page
-        return Redirect(path_to_root(req))
+        return ForceAllBuildsActionResource(self.status, 'selected')
 
     def stopselected(self, req):
-        authz = self.getAuthz(req)
-        if not authz.actionAllowed('stopAllBuilds', req):
-            return Redirect(path_to_authfail(req))
-
-        for bname in [b for b in req.args.get("selected", []) if b]:
-            builder_status = self.status.getBuilder(bname)
-            (state, current_builds) = builder_status.getState()
-            if state != "building":
-                continue
-            for b in current_builds:
-                build_status = builder_status.getBuild(b.number)
-                if not build_status:
-                    continue
-                build = StatusResourceBuild(build_status)
-                build.stop(req, auth_ok=True)
-        # go back to the welcome page
-        return Redirect(path_to_root(req))
-
+        return StopAllBuildsActionResource(self.status, 'selected')
 
 # /builders
 class BuildersResource(HtmlResource):
