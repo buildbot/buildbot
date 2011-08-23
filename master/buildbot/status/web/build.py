@@ -15,20 +15,113 @@
 
 
 from twisted.web import html
-from twisted.web.util import Redirect, DeferredResource
-from twisted.internet import defer, reactor
+from twisted.internet import defer
 
 import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, \
      css_classes, path_to_build, path_to_builder, path_to_slave, \
-     getAndCheckProperties, path_to_authfail
+     getAndCheckProperties, ActionResource, path_to_authfail
 
 from buildbot.status.web.step import StepsResource
 from buildbot.status.web.tests import TestsResource
 from buildbot import util, interfaces
 
+class ForceBuildActionResource(ActionResource):
 
+    def __init__(self, build_status, builder):
+        self.build_status = build_status
+        self.builder = builder
+        self.action = "forceBuild"
+
+    @defer.deferredGenerator
+    def performAction(self, req):
+        url = None
+        d = self.getAuthz(req).actionAllowed(self.action, req, self.builder)
+        wfd = defer.waitForDeferred(d)
+        yield wfd
+        res = wfd.getResult()
+
+        if not res:
+            url = path_to_authfail(req)
+        else:
+            # get a control object
+            c = interfaces.IControl(self.getBuildmaster(req))
+            bc = c.getBuilder(self.builder.getName())
+
+            b = self.build_status
+            builder_name = self.builder.getName()
+            log.msg("web rebuild of build %s:%s" % (builder_name, b.getNumber()))
+            name = req.args.get("username", ["<unknown>"])[0]
+            comments = req.args.get("comments", ["<no reason specified>"])[0]
+            reason = ("The web-page 'rebuild' button was pressed by "
+                      "'%s': %s\n" % (name, comments))
+            extraProperties = getAndCheckProperties(req)
+            if not bc or not b.isFinished() or extraProperties is None:
+                log.msg("could not rebuild: bc=%s, isFinished=%s"
+                        % (bc, b.isFinished()))
+                # TODO: indicate an error
+            else:
+                d = bc.rebuildBuild(b, reason, extraProperties)
+                wfd = defer.waitForDeferred(d)
+                yield wfd
+                tup = wfd.getResult()
+                # check that (bsid, brids) were properly stored
+                if not isinstance(tup, (int, dict)):
+                    log.err("while rebuilding a build")
+            # we're at
+            # http://localhost:8080/builders/NAME/builds/5/rebuild?[args]
+            # Where should we send them?
+            #
+            # Ideally it would be to the per-build page that they just started,
+            # but we don't know the build number for it yet (besides, it might
+            # have to wait for a current build to finish). The next-most
+            # preferred place is somewhere that the user can see tangible
+            # evidence of their build starting (or to see the reason that it
+            # didn't start). This should be the Builder page.
+
+            url = path_to_builder(req, self.builder)
+        yield url
+
+
+class StopBuildActionResource(ActionResource):
+
+    def __init__(self, build_status, auth_ok):
+        self.build_status = build_status
+        self.action = "stopBuild"
+        self.auth_ok = auth_ok
+
+    @defer.deferredGenerator
+    def performAction(self, req):
+        url = None
+        if not self.auth_ok:
+            d = self.getAuthz(req).actionAllowed(self.action, req, self.build_status)
+            wfd = defer.waitForDeferred(d)
+            yield wfd
+            res = wfd.getResult()
+
+            if not res:
+                url = path_to_authfail(req)
+
+        if url is None:
+            b = self.build_status
+            log.msg("web stopBuild of build %s:%s" % \
+                        (b.getBuilder().getName(), b.getNumber()))
+            name = req.args.get("username", ["<unknown>"])[0]
+            comments = req.args.get("comments", ["<no reason specified>"])[0]
+            # html-quote both the username and comments, just to be safe
+            reason = ("The web-page 'stop build' button was pressed by "
+                      "'%s': %s\n" % (html.escape(name), html.escape(comments)))
+
+            c = interfaces.IControl(self.getBuildmaster(req))
+            bldrc = c.getBuilder(self.build_status.getBuilder().getName())
+            if bldrc:
+                bldc = bldrc.getBuild(self.build_status.getNumber())
+                if bldc:
+                    bldc.stopBuild(reason)
+
+            url = path_to_builder(req, self.build_status.getBuilder())
+        yield url
 
 # /builders/$builder/builds/$buildnum
 class StatusResourceBuild(HtmlResource):
@@ -149,73 +242,11 @@ class StatusResourceBuild(HtmlResource):
         return template.render(**cxt)
 
     def stop(self, req, auth_ok=False):
-        # check if this is allowed
-        if not auth_ok:
-            if not self.getAuthz(req).actionAllowed('stopBuild', req, self.build_status):
-                return Redirect(path_to_authfail(req))
-
-        b = self.build_status
-        log.msg("web stopBuild of build %s:%s" % \
-                (b.getBuilder().getName(), b.getNumber()))
-        name = req.args.get("username", ["<unknown>"])[0]
-        comments = req.args.get("comments", ["<no reason specified>"])[0]
-        # html-quote both the username and comments, just to be safe
-        reason = ("The web-page 'stop build' button was pressed by "
-                  "'%s': %s\n" % (html.escape(name), html.escape(comments)))
-
-        c = interfaces.IControl(self.getBuildmaster(req))
-        bldrc = c.getBuilder(self.build_status.getBuilder().getName())
-        if bldrc:
-            bldc = bldrc.getBuild(self.build_status.getNumber())
-            if bldc:
-                bldc.stopBuild(reason)
-
-        # we're at http://localhost:8080/svn-hello/builds/5/stop?[args] and
-        # we want to go to: http://localhost:8080/svn-hello
-        r = Redirect(path_to_builder(req, self.build_status.getBuilder()))
-        d = defer.Deferred()
-        reactor.callLater(1, d.callback, r)
-        return DeferredResource(d)
+        return StopBuildActionResource(self.build_status, auth_ok)
 
     def rebuild(self, req):
-        # check auth
-        if not self.getAuthz(req).actionAllowed('forceBuild', req, self.build_status.getBuilder()):
-            return Redirect(path_to_authfail(req))
-
-        # get a control object
-        c = interfaces.IControl(self.getBuildmaster(req))
-        bc = c.getBuilder(self.build_status.getBuilder().getName())
-
-        b = self.build_status
-        builder_name = b.getBuilder().getName()
-        log.msg("web rebuild of build %s:%s" % (builder_name, b.getNumber()))
-        name = req.args.get("username", ["<unknown>"])[0]
-        comments = req.args.get("comments", ["<no reason specified>"])[0]
-        reason = ("The web-page 'rebuild' button was pressed by "
-                  "'%s': %s\n" % (name, comments))
-        extraProperties = getAndCheckProperties(req)
-        if not bc or not b.isFinished() or extraProperties is None:
-            log.msg("could not rebuild: bc=%s, isFinished=%s"
-                    % (bc, b.isFinished()))
-            # TODO: indicate an error
-        else:
-            d = bc.rebuildBuild(b, reason, extraProperties)
-            d.addErrback(log.err, "while rebuilding a build")
-        # we're at
-        # http://localhost:8080/builders/NAME/builds/5/rebuild?[args]
-        # Where should we send them?
-        #
-        # Ideally it would be to the per-build page that they just started,
-        # but we don't know the build number for it yet (besides, it might
-        # have to wait for a current build to finish). The next-most
-        # preferred place is somewhere that the user can see tangible
-        # evidence of their build starting (or to see the reason that it
-        # didn't start). This should be the Builder page.
-
-        r = Redirect(path_to_builder(req, self.build_status.getBuilder()))
-        d = defer.Deferred()
-        reactor.callLater(1, d.callback, r)
-        return DeferredResource(d)
+        return ForceBuildActionResource(self.build_status,
+                                        self.build_status.getBuilder())
 
     def getChild(self, path, req):
         if path == "stop":
