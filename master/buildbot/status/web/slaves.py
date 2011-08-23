@@ -18,10 +18,34 @@ import time, urllib
 from twisted.web import html
 from twisted.web.util import Redirect
 from twisted.web.error import NoResource
+from twisted.internet import defer
 
 from buildbot.status.web.base import HtmlResource, abbreviate_age, \
-    BuildLineMixin, path_to_slave, path_to_authfail
+    BuildLineMixin, ActionResource, path_to_slave, path_to_authfail
 from buildbot import util
+
+class ShutdownActionResource(ActionResource):
+
+    def __init__(self, slave):
+        self.slave = slave
+        self.action = "gracefulShutdown"
+
+    @defer.deferredGenerator
+    def performAction(self, request):
+        d = self.getAuthz(request).actionAllowed(self.action,
+                                                 request,
+                                                 self.slave)
+        wfd = defer.waitForDeferred(d)
+        yield wfd
+        res = wfd.getResult()
+
+        url = None
+        if res:
+            self.slave.setGraceful(True)
+            url = path_to_slave(request, self.slave)
+        else:
+            url = path_to_authfail(request)
+        yield url
 
 # /buildslaves/$slavename
 class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
@@ -37,10 +61,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         s = self.getStatus(req)
         slave = s.getSlave(self.slavename)
         if path == "shutdown":
-            if self.getAuthz(req).actionAllowed("gracefulShutdown", req, slave):
-                slave.setGraceful(True)
-            else:
-                return Redirect(path_to_authfail(req))
+            return ShutdownActionResource(slave)
         return Redirect(path_to_slave(req, slave))
 
     def content(self, request, ctx):        
