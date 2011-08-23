@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from docutils import nodes
-from sphinx.domains import Domain, ObjType
+from sphinx.domains import Domain, ObjType, Index
 from sphinx.roles import XRefRole
 from sphinx.util.compat import Directive
 from sphinx.util import ws_re
@@ -37,7 +37,8 @@ class BBCfgDirective(Directive):
         targetname = '%s-%s' % (self.name, fullname)
 
         # keep the target
-        env.domaindata['bb']['cfg-targets'][fullname] = env.docname, targetname
+        targets = env.domaindata['bb']['targets'].setdefault('cfg', {})
+        targets[fullname] = env.docname, targetname
 
         # make up the descriptor: an index entry and a target
         inode = addnodes.index(entries=[
@@ -51,6 +52,22 @@ class BBCfgDirective(Directive):
         self.state.document.note_explicit_target(node)
 
         return ret 
+
+
+class BBCfgIndex(Index):
+    name = "cfg"
+    localname = "Buildmaster Configuration Index"
+
+    def generate(self, docnames=None):
+        content = {}
+        cfg_targets = self.domain.data['targets'].get('cfg', {})
+        for name, (docname, targetname) in cfg_targets.iteritems():
+            letter = name[0].lower()
+            content.setdefault(letter, []).append(
+                (name, 0, docname, targetname, '', '', ''))
+        content = [ (l, content[l])
+                    for l in sorted(content.keys()) ]
+        return (content, False)
 
 class BBDomain(Domain):
     name = 'bb'
@@ -66,16 +83,41 @@ class BBDomain(Domain):
 
     roles = {
         'cfg' : XRefRole(),
+        'index' : XRefRole()
     }
 
     initial_data = {
-        'objects' : {}, # (objtype, shortname) -> (docname, targetname)
-        'cfg-targets' : {} # cfg param name -> (docname, targetname)
+        'targets' : {}, # kinda -> target -> (docname, targetname)
     }
+
+    indices = [
+        BBCfgIndex,
+    ]
+
+    def resolve_index_ref(self, env, fromdocname, builder, typ, target, node,
+                     contnode):
+        # find the index object, to get its full name
+        for idx in self.indices:
+            if idx.name == target:
+                break
+        else:
+            raise KeyError("no index named '%s'" % target)
+
+        # indexes appear to be automatically generated at doc DOMAIN-NAME
+        todocname = "bb-%s" % target
+
+        node = nodes.reference('', '', internal=True)
+        node['refuri'] = builder.get_relative_uri(fromdocname, todocname)
+        node['reftitle'] = idx.localname
+        node.append(nodes.emphasis(idx.localname, idx.localname))
+        return node
 
     def resolve_xref(self, env, fromdocname, builder, typ, target, node,
                      contnode):
-        map = self.data['%s-targets' % typ]
+        if typ == 'index':
+            return self.resolve_index_ref(env, fromdocname, builder, typ,
+                                        target, node, contnode)
+        map = self.data['targets'].get(typ, {})
         try:
             todocname, targetname = map[target]
         except KeyError:
@@ -83,13 +125,6 @@ class BBDomain(Domain):
         return make_refnode(builder, fromdocname,
                             todocname, targetname,
                             contnode, target)
-
-        objects = self.data['objects']
-        print objects
-        objtypes = self.objtypes_for_role(typ)
-        for objtype in objtypes:
-            if (objtype, target) in objects:
-                todocname, target = objects[objtype, target]
 
 def setup(app):
     app.add_domain(BBDomain)

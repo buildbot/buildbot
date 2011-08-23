@@ -17,6 +17,7 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
+* :bb:index:`cfg`
 * :ref:`modindex`
 * :ref:`search`
 

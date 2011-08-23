@@ -49,10 +49,7 @@ typically starts with something like::
 Therefore a config key like :bb:cfg:`change_source` will usually appear in
 :file:`master.cfg` as ``c['change_source']``.
 
-..
-    This doesn't work yet - need better indexing:
-    See :ref:`Configuration-Index` for a full list of ``BuildMasterConfig``
-    keys.
+See :bb:index:`cfg` for a full list of ``BuildMasterConfig`` keys.
 
 .. _Basic-Python-Syntax:
 
