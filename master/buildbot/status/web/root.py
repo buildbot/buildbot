@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.web.util import redirectTo
+from twisted.internet import defer
 
 from buildbot.status.web.base import HtmlResource, path_to_authfail
 from buildbot.util.eventual import eventually
@@ -21,21 +22,31 @@ from buildbot.util.eventual import eventually
 class RootPage(HtmlResource):
     pageTitle = "Buildbot"
 
+    @defer.deferredGenerator
     def content(self, request, cxt):
         status = self.getStatus(request)
 
+        d = self.getAuthz(request).actionAllowed("cleanShutdown", request)
+        wfd = defer.waitForDeferred(d)
+        yield wfd
+        res = wfd.getResult()
+
         if request.path == '/shutdown':
-            if self.getAuthz(request).actionAllowed("cleanShutdown", request):
+            if res:
                 eventually(status.cleanShutdown)
-                return redirectTo("/", request)
+                yield redirectTo("/", request)
+                return
             else:
-                return redirectTo(path_to_authfail(request), request)
+                yield redirectTo(path_to_authfail(request), request)
+                return
         elif request.path == '/cancel_shutdown':
-            if self.getAuthz(request).actionAllowed("cleanShutdown", request):
+            if res:
                 eventually(status.cancelCleanShutdown)
-                return redirectTo("/", request)
+                yield redirectTo("/", request)
+                return
             else:
-                return redirectTo(path_to_authfail(request), request)
+                yield redirectTo(path_to_authfail(request), request)
+                return
 
         cxt.update(
                 shutting_down = status.shuttingDown,
@@ -43,4 +54,5 @@ class RootPage(HtmlResource):
                 cancel_shutdown_url = request.childLink("cancel_shutdown"),
                 )
         template = request.site.buildbot_service.templates.get_template("root.html")
-        return template.render(**cxt)
+        yield template.render(**cxt)
+        return
