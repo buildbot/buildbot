@@ -94,6 +94,35 @@ class TestFileUpload(unittest.TestCase):
         self.assertAlmostEquals(timestamp[0],desttimestamp[0],places=5)
         self.assertAlmostEquals(timestamp[1],desttimestamp[1],places=5)
 
+    def testURL(self):
+        s = FileUpload(slavesrc=__file__, masterdest=self.destfile, url="http://server/file")
+        s.build = Mock()
+        s.build.getProperties.return_value = Properties()
+        s.build.getSlaveCommandVersion.return_value = "2.13"
+
+        s.step_status = Mock()
+        s.step_status.addURL = Mock()
+        s.buildslave = Mock()
+        s.remote = Mock()
+        s.start()
+
+        for c in s.remote.method_calls:
+            name, command, args = c
+            commandName = command[3]
+            kwargs = command[-1]
+            if commandName == 'uploadFile':
+                self.assertEquals(kwargs['slavesrc'], __file__)
+                writer = kwargs['writer']
+                writer.remote_write(open(__file__, "rb").read())
+                self.assert_(not os.path.exists(self.destfile))
+                writer.remote_close()
+                break
+        else:
+            self.assert_(False, "No uploadFile command found")
+
+        s.step_status.addURL.assert_called_once_with(
+            os.path.basename(self.destfile), "http://server/file")
+
 class TestStringDownload(unittest.TestCase):
     def testBasic(self):
         s = StringDownload("Hello World", "hello.txt")
