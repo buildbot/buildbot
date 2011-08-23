@@ -194,9 +194,14 @@ class Repo(SourceBaseCommand):
 
     def _didSync(self, dummy):
         if self.tarball and not os.path.exists(self.tarball):
-            return self._tarCmd(['-cvzf', self.tarball, ".repo"], self._doDownload)
+            return self._tarCmd(['-cvzf', self.tarball, ".repo"], self._doManifest)
         else:
-            return self._doDownload(None)
+            return self._doManifest(None)
+
+    def _doManifest(self, dummy):
+        command = ['manifest', '-r', '-o', 'manifest-original.xml']
+        return self._repoCmd(command, self._doDownload, abandonOnFailure=False)
+
 
     def _doDownload(self, dummy):
         if hasattr(self.command, 'stderr') and self.command.stderr:
