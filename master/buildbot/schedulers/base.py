@@ -65,7 +65,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                   "of Builder names.")
         assert isinstance(builderNames, (list, tuple)), errmsg
         for b in builderNames:
-            assert isinstance(b, str), errmsg
+            assert isinstance(b, basestring), errmsg
         self.builderNames = builderNames
         "list of builder names to start in each buildset"
 

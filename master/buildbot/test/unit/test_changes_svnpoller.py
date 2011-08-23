@@ -412,6 +412,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
             self.failUnlessEqual(c['revision'], '2')
             self.failUnlessEqual(c['files'], ['']) # signals a new branch
             self.failUnlessEqual(c['comments'], "make_branch")
+            self.failUnlessEqual(c['src'], "svn")
             self.failUnlessEqual(s.last_change, 2)
         d.addCallback(check_third)
 
@@ -428,11 +429,13 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
             self.failUnlessEqual(c['revision'], '3')
             self.failUnlessEqual(c['files'], ["main.c"])
             self.failUnlessEqual(c['comments'], "commit_on_branch")
+            self.failUnlessEqual(c['src'], "svn")
             c = self.changes_added[1]
             self.failUnlessEqual(c['branch'], None)
             self.failUnlessEqual(c['revision'], '4')
             self.failUnlessEqual(c['files'], ["version.c"])
             self.failUnlessEqual(c['comments'], "revised_to_2")
+            self.failUnlessEqual(c['src'], "svn")
             self.failUnlessEqual(s.last_change, 4)
         d.addCallback(check_fourth)
 

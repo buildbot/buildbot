@@ -399,7 +399,7 @@ class Builder(pb.Referenceable, service.MultiService):
     def updateBigStatus(self):
         if not self.slaves:
             self.builder_status.setBigState("offline")
-        elif self.building:
+        elif self.building or self.old_building:
             self.builder_status.setBigState("building")
         else:
             self.builder_status.setBigState("idle")

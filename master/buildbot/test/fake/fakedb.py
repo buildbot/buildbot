@@ -155,6 +155,15 @@ class ChangeProperty(Row):
 
     required_columns = ('changeid',)
 
+class ChangeUser(Row):
+    table = "change_users"
+
+    defaults = dict(
+        changeid = None,
+        uid = None,
+    )
+
+    required_columns = ('changeid',)
 
 class Patch(Row):
     table = "patches"
@@ -287,6 +296,27 @@ class ObjectState(Row):
 
     required_columns = ( 'objectid', )
 
+class User(Row):
+    table = "users"
+
+    defaults = dict(
+        uid = None,
+        identifier = 'soap',
+    )
+
+    id_column = 'uid'
+
+class UserInfo(Row):
+    table = "users_info"
+
+    defaults = dict(
+        uid = None,
+        attr_type = 'git',
+        attr_data = 'Tyler Durden <tyler@mayhem.net>',
+    )
+
+    required_columns = ( 'uid', )
+
 class Build(Row):
     table = "builds"
 
@@ -329,7 +359,8 @@ class FakeChangesComponent(FakeDBComponent):
                     revision=row.revision, when=row.when_timestamp,
                     branch=row.branch, category=row.category,
                     revlink=row.revlink, properties=properties.Properties(),
-                    repository=row.repository, project=row.project))
+                    repository=row.repository, project=row.project,
+                    uid=None))
                 self.changes[row.changeid] = ch
 
             elif isinstance(row, ChangeFile):
@@ -346,6 +377,10 @@ class FakeChangesComponent(FakeDBComponent):
                 v, s = json.loads(vs)
                 ch.properties.setProperty(n, v, s)
 
+            elif isinstance(row, ChangeUser):
+                ch = self.changes[row.changeid]
+                ch.uid = row.uid
+
     # component methods
 
     def getLatestChangeid(self):
@@ -359,6 +394,13 @@ class FakeChangesComponent(FakeDBComponent):
         except KeyError:
             ch = None
         return defer.succeed(self._ch2chdict(ch))
+
+    def getChangeUids(self, changeid):
+        try:
+            ch_uids = [self.changes[changeid].uid]
+        except KeyError:
+            ch_uids = []
+        return defer.succeed(ch_uids)
 
     # TODO: addChange
     # TODO: getRecentChanges
@@ -978,6 +1020,95 @@ class FakeBuildsComponent(FakeDBComponent):
             if b:
                 b.finish_time = now
 
+class FakeUsersComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.users = {}
+        self.users_info = {}
+        self.id_num = 0
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, User):
+                self.users[row.uid] = dict(identifier=row.identifier)
+
+            if isinstance(row, UserInfo):
+                assert row.uid in self.users
+                if row.uid not in self.users_info:
+                    self.users_info[row.uid] = [dict(attr_type=row.attr_type,
+                                                     attr_data=row.attr_data)]
+                else:
+                    self.users_info[row.uid].append(
+                                                dict(attr_type=row.attr_type,
+                                                     attr_data=row.attr_data))
+
+    def _user2dict(self, uid):
+        usdict = None
+        if uid in self.users:
+            usdict = self.users[uid]
+            infos = self.users_info[uid]
+            for attr in infos:
+                usdict[attr['attr_type']] = attr['attr_data']
+            usdict['uid'] = uid
+        return usdict
+
+    def nextId(self):
+        self.id_num += 1
+        return self.id_num
+
+    # component methods
+
+    def addUser(self, identifier, attr_type, attr_data):
+        for uid in self.users_info:
+            attrs = self.users_info[uid]
+            for attr in attrs:
+                if (attr_type == attr['attr_type'] and
+                    attr_data == attr['attr_data']):
+                    return defer.succeed(uid)
+
+        uid = self.nextId()
+        self.db.insertTestData([User(uid=uid, identifier=identifier)])
+        self.db.insertTestData([UserInfo(uid=uid,
+                                         attr_type=attr_type,
+                                         attr_data=attr_data)])
+        return defer.succeed(uid)
+
+    def getUser(self, uid):
+        usdict = None
+        if uid in self.users:
+            usdict = self._user2dict(uid)
+        return defer.succeed(usdict)
+
+    def updateUser(self, uid=None, identifier=None, attr_type=None,
+                   attr_data=None):
+        assert uid is not None
+
+        if identifier is not None:
+            self.users[uid]['identifier'] = identifier
+
+        if attr_type is not None:
+            assert attr_data is not None
+            infos = self.users_info[uid]
+            for attr in infos:
+                if attr_type == attr['attr_type']:
+                    attr['attr_data'] = attr_data
+                    break
+            else:
+                infos.append(dict(attr_type=attr_type,
+                                  attr_data=attr_data))
+        return defer.succeed(None)
+
+    def removeUser(self, uid):
+        if uid in self.users:
+            self.users.pop(uid)
+            self.users_info.pop(uid)
+        return defer.succeed(None)
+
+    def identifierToUid(self, identifier):
+        for uid in self.users:
+            if identifier == self.users[uid]['identifier']:
+                return defer.succeed(uid)
+        return defer.succeed(None)
 
 class FakeDBConnector(object):
     """
@@ -1004,6 +1135,8 @@ class FakeDBConnector(object):
         self.buildrequests = comp = FakeBuildRequestsComponent(self, testcase)
         self._components.append(comp)
         self.builds = comp = FakeBuildsComponent(self, testcase)
+        self._components.append(comp)
+        self.users = comp = FakeUsersComponent(self, testcase)
         self._components.append(comp)
 
     def insertTestData(self, rows):

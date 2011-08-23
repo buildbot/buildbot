@@ -40,6 +40,7 @@ class Sender(unittest.TestCase):
         self.conn_host = self.conn_port = None
         self.lostConnection = False
         self.added_changes = []
+        self.vc_used = None
 
     def _fake_PBClientFactory(self):
         return self.factory
@@ -54,19 +55,20 @@ class Sender(unittest.TestCase):
         self.assertIdentical(factory, self.factory)
         self.factory.login_d.callback(self.remote)
 
-    def _fake_callRemote(self, method, change):
+    def _fake_callRemote(self, method, change, src):
         self.assertEqual(method, 'addChange')
         self.added_changes.append(change)
+        self.vc_used = src
         return defer.succeed(None)
 
     def _fake_loseConnection(self):
         self.lostConnection = True
 
-    def assertProcess(self, host, port, username, password, changes):
-        self.assertEqual([host, port, username, password, changes],
+    def assertProcess(self, host, port, username, password, changes, vc=None):
+        self.assertEqual([host, port, username, password, changes, vc],
                 [ self.conn_host, self.conn_port,
                   self.creds.username, self.creds.password,
-                  self.added_changes])
+                  self.added_changes, self.vc_used])
 
     def test_send_minimal(self):
         s = sendchange.Sender('localhost:1234')
@@ -93,14 +95,14 @@ class Sender(unittest.TestCase):
     def test_send_full(self):
         s = sendchange.Sender('localhost:1234')
         d = s.send('branch', 'rev', 'comm', ['a'], who='me', category='cats',
-                   when=1234, properties={'a':'b'}, repository='r',
+                   when=1234, properties={'a':'b'}, repository='r', vc='git',
                    project='p', revlink='rl')
         def check(_):
             self.assertProcess('localhost', 1234, 'change', 'changepw', [
                 dict(project='p', repository='r', who='me', files=['a'],
                     comments='comm', branch='branch', revision='rev',
                     category='cats', when=1234, properties={'a':'b'},
-                    revlink='rl')])
+                    revlink='rl')], vc='git')
         d.addCallback(check)
         return d
 

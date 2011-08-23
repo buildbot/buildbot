@@ -454,7 +454,7 @@ class LogFile:
 
         @param channel: channel to add a chunk for
         @param text: chunk of text
-        @param _no_atchers: private
+        @param _no_watchers: private
         """
 
         assert not self.finished, "logfile is already finished"

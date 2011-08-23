@@ -106,6 +106,7 @@ class SlaveFileUploadCommand(TransferCommand):
                 d1.addCallback(_utime_ok)
             return d1
         def _close_err(f):
+            self.rc = 1
             self.fp = None
             # call remote's close(), but keep the existing failure
             d1 = self.writer.callRemote("close")
@@ -224,9 +225,11 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
         def unpack(res):
-            # unpack the archive, but pass through any errors from _loop
             d1 = self.writer.callRemote("unpack")
-            d1.addErrback(log.err)
+            def unpack_err(f):
+                self.rc = 1
+                return f
+            d1.addErrback(unpack_err)
             d1.addCallback(lambda ignored: res)
             return d1
         d.addCallback(unpack)

@@ -1,14 +1,22 @@
 include MANIFEST.in README NEWS CREDITS COPYING UPGRADING
 
 include docs/examples/*.cfg
-include docs/tutorial/*.txt docs/tutorial/Makefile docs/tutorial/conf.py.in
-include docs/tutorial/_images/*.png
-include docs/*.texinfo
-include docs/*.png docs/images/*.png docs/images/*.svg docs/images/*.txt docs/images/*.ai
-include docs/images/icon.blend docs/images/Makefile
+include docs/conf.py
 include docs/Makefile
-include docs/version.py
 include docs/buildbot.1
+include docs/*.png
+include docs/*.rst
+include docs/_images/*
+include docs/_static/*
+include docs/_templates/*
+include docs/tutorial/*.rst
+include docs/tutorial/_images/*.png
+include docs/manual/*.rst
+include docs/manual/_images/*.svg
+include docs/manual/_images/*.txt
+include docs/manual/_images/*.ai
+include docs/manual/_images/icon.blend
+include docs/manual/_images/Makefile
 
 include buildbot/scripts/sample.cfg
 include buildbot/status/web/files/*

@@ -133,7 +133,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
             ui.status("rev %s sent\n" % c['revision'])
         return s.send(c['branch'], c['revision'], c['comments'],
                       c['files'], c['username'], category=category,
-                      repository=repository, project=project)
+                      repository=repository, project=project, vc='hg')
 
     try:    # first try Mercurial 1.1+ api
         start = repo[node].rev()

@@ -296,6 +296,7 @@ class TestMailNotifier(unittest.TestCase):
             b.results = 0
             b.getSourceStamp.return_value = ss = Mock(name='ss')
             ss.patch = None
+            ss.changes = []
             b.getLogs.return_value = [ l ]
         d = mn.buildMessage("mybldr", builds, 0)
         def check(_):
@@ -304,6 +305,110 @@ class TestMailNotifier(unittest.TestCase):
                 'mybldr', 'TITLE', 0, builds, [], logs)
         d.addCallback(check)
         return d
+
+    def do_test_sendToInterestedUsers(self, lookup=None, extraRecipients=[],
+                                      exp_called_with=None, exp_TO=None,
+                                      exp_CC=None):
+        from email.Message import Message
+        m = Message()
+
+        mn = MailNotifier(fromaddr='from@example.org',
+                          lookup=lookup,
+                          extraRecipients=extraRecipients)
+        mn.sendMessage = Mock()
+
+        def fakeGetBuild(number):
+            return build
+        def fakeGetBuilder(buildername):
+            if buildername == builder.name:
+                return builder
+            return None
+        def fakeGetBuildRequests(self, bsid):
+            return defer.succeed([{"buildername":"Builder", "brid":1}])
+
+        builder = Mock()
+        builder.getBuild = fakeGetBuild
+        builder.name = "Builder"
+
+        build = FakeBuildStatus(name="build")
+        build.result = FAILURE
+        build.finished = True
+        build.reason = "testReason"
+        build.builder = builder
+
+        def fakeCreateEmail(msgdict, builderName, title, results, builds=None,
+                            patches=None, logs=None):
+            # only concerned with m['To'] and m['CC'], which are added in
+            # _got_recipients later
+            return m
+        mn.createEmail = fakeCreateEmail
+
+        self.db = fakedb.FakeDBConnector(self)
+        self.db.insertTestData([fakedb.Buildset(id=99, sourcestampid=127,
+                                                results=SUCCESS,
+                                                reason="testReason"),
+                                fakedb.BuildRequest(id=11, buildsetid=99,
+                                                    buildername='Builder'),
+                                fakedb.Build(number=0, brid=11),
+                                fakedb.Change(changeid=9123),
+                                fakedb.ChangeUser(changeid=9123, uid=1),
+                                fakedb.User(uid=1, identifier="tdurden"),
+                                fakedb.UserInfo(uid=1, attr_type='svn',
+                                            attr_data="tdurden"),
+                                fakedb.UserInfo(uid=1, attr_type='email',
+                                            attr_data="tyler@mayhem.net")
+                                ])
+
+        # fake sourcestamp with relevant user bits
+        ss = Mock(name="sourcestamp")
+        fake_change = Mock(name="change")
+        fake_change.number = 9123
+        ss.changes = [fake_change]
+        ss.patch, ss.addPatch = None, None
+
+        def fakeGetSS():
+            return ss
+        build.getSourceStamp = fakeGetSS
+
+        def _getInterestedUsers():
+            # 'narrator' in this case is the owner, which tests the lookup
+            return ["Big Bob <bob@mayhem.net>", "narrator"]
+        build.getInterestedUsers = _getInterestedUsers
+
+        def _getResponsibleUsers():
+            return ["Big Bob <bob@mayhem.net>"]
+        build.getResponsibleUsers = _getResponsibleUsers
+
+        mn.parent = self
+        self.status = mn.master_status = mn.buildMessageDict = Mock()
+        mn.master_status.getBuilder = fakeGetBuilder
+        mn.buildMessageDict.return_value = {"body": "body", "type": "text"}
+
+        mn.buildMessage(builder.name, [build], build.result)
+        mn.sendMessage.assert_called_with(m, exp_called_with)
+        self.assertEqual(m['To'], exp_TO)
+        self.assertEqual(m['CC'], exp_CC)
+
+    def test_sendToInterestedUsers_lookup(self):
+        self.do_test_sendToInterestedUsers(
+                           lookup="example.org",
+                           exp_called_with=['Big Bob <bob@mayhem.net>',
+                                            'narrator@example.org'],
+                           exp_TO="Big Bob <bob@mayhem.net>, " \
+                                  "narrator@example.org")
+
+    def test_buildMessage_sendToInterestedUsers_no_lookup(self):
+        self.do_test_sendToInterestedUsers(
+                                   exp_called_with=['tyler@mayhem.net'],
+                                   exp_TO="tyler@mayhem.net")
+
+    def test_buildMessage_sendToInterestedUsers_extraRecipients(self):
+        self.do_test_sendToInterestedUsers(
+                                   extraRecipients=["marla@mayhem.net"],
+                                   exp_called_with=['tyler@mayhem.net',
+                                                    'marla@mayhem.net'],
+                                   exp_TO="tyler@mayhem.net",
+                                   exp_CC="marla@mayhem.net")
 
 def create_msgdict():
     unibody = u'Unicode body with non-ascii (\u00E5\u00E4\u00F6).'

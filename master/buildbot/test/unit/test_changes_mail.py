@@ -55,7 +55,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
         mds = mail.MaildirSource(self.maildir)
         self.assertSubstring(self.maildir, mds.describe())
 
-    def test_messageReceived(self):
+    def test_messageReceived_svn(self):
         self.populateMaildir()
         mds = mail.MaildirSource(self.maildir)
         self.attachChangeSource(mds)
@@ -63,7 +63,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
         # monkey-patch in a parse method
         def parse(message, prefix):
             assert 'this is a test' in message.get_payload()
-            return dict(fake_chdict=1)
+            return ('svn', dict(fake_chdict=1))
         mds.parse = parse
 
         d = mds.messageReceived('newmsg')
@@ -71,5 +71,26 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
             self.assertMailProcessed()
             self.assertEqual(len(self.changes_added), 1)
             self.assertEqual(self.changes_added[0]['fake_chdict'], 1)
+            self.assertEqual(self.changes_added[0]['src'], 'svn')
+        d.addCallback(check)
+        return d
+
+    def test_messageReceived_bzr(self):
+        self.populateMaildir()
+        mds = mail.MaildirSource(self.maildir)
+        self.attachChangeSource(mds)
+
+        # monkey-patch in a parse method
+        def parse(message, prefix):
+            assert 'this is a test' in message.get_payload()
+            return ('bzr', dict(fake_chdict=1))
+        mds.parse = parse
+
+        d = mds.messageReceived('newmsg')
+        def check(_):
+            self.assertMailProcessed()
+            self.assertEqual(len(self.changes_added), 1)
+            self.assertEqual(self.changes_added[0]['fake_chdict'], 1)
+            self.assertEqual(self.changes_added[0]['src'], 'bzr')
         d.addCallback(check)
         return d

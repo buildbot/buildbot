@@ -46,6 +46,7 @@ def sendchange_cmd(master, revisionData):
         "--revision=%s" % revisionData['revision'],
         "--username=%s" % revisionData['author'],
         "--comments=%s" % revisionData['comments'],
+        "--vc=%s" % 'svn',
         ]
     if opts.category:
         cmd.append("--category=%s" % opts.category)

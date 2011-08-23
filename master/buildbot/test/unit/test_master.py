@@ -23,6 +23,7 @@ from buildbot.test.util import dirs
 from buildbot.test.fake import fakedb
 from buildbot.util import epoch2datetime
 from buildbot.changes import changes
+from buildbot.process.users import users
 
 class Subscriptions(dirs.DirsMixin, unittest.TestCase):
 
@@ -80,7 +81,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
                     files=None, comments=None, is_dir=0, links=None,
                     revision=None, when_timestamp=None, branch=None,
                     category=None, revlink='', properties={}, repository='',
-                    project='')
+                    project='', uid=None)
 
             self.master.db.changes.getChange.assert_called_with(changeid)
             # addChange returned the right value
@@ -95,7 +96,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         default_db_kwargs = dict(files=None, comments=None, author=None,
                 is_dir=0, links=None, revision=None, when_timestamp=None,
                 branch=None, category=None, revlink='', properties={},
-                repository='', project='')
+                repository='', project='', uid=None)
         k = default_db_kwargs
         k.update(exp_db_kwargs)
         exp_db_kwargs = k
@@ -154,6 +155,29 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         return self.do_test_addChange_args(
                 args=('me', ['a'], 'com'),
                 exp_db_kwargs=dict(author='me', files=['a'], comments='com'))
+
+    def do_test_createUserObjects_args(self, args=(), kwargs={}, exp_args=()):
+        got = []
+        def fake_createUserObject(*args, **kwargs):
+            got[:] = args, kwargs
+            # use an exception as a quick way to bail out of the remainder
+            # of the createUserObject method
+            return defer.fail(RuntimeError)
+
+        self.patch(users, 'createUserObject', fake_createUserObject)
+
+        d = self.master.addChange(*args, **kwargs)
+        d.addCallback(lambda _ : self.fail("should not succeed"))
+        def check(f):
+            self.assertEqual(got, [exp_args, {}])
+        d.addErrback(check)
+        return d
+
+    def test_addChange_createUserObject_args(self):
+        # who should come through as author
+        return self.do_test_createUserObjects_args(
+                kwargs=dict(who='me', src='git'),
+                exp_args=(self.master, 'me', 'git'))
 
     def test_buildset_subscription(self):
         self.master.db = mock.Mock()

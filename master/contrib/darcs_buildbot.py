@@ -163,7 +163,7 @@ def sendChanges(master):
         branch = None
         print " %s" % c['revision']
         return s.send(branch, c.get('context'), c['comments'], c['files'],
-                      c['username'])
+                      c['username'], vc='darcs')
     for c in changes:
         d.addCallback(_send, c)
 

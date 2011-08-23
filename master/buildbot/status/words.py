@@ -31,7 +31,7 @@ from buildbot import version
 from buildbot.interfaces import IStatusReceiver
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status import base
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, RETRY
 from buildbot.scripts.runner import ForceOptions
 
 # twisted.internet.ssl requires PyOpenSSL, so be resilient if it's missing
@@ -352,6 +352,7 @@ class Contact(base.StatusReceiver):
         WARNINGS: "Warnings",
         FAILURE: "Failure",
         EXCEPTION: "Exception",
+        RETRY: "Retry",
         }
 
     def buildFinished(self, builderName, build, results):
@@ -572,7 +573,7 @@ class Contact(base.StatusReceiver):
             self.send("I'm baaaaaaaaaaack!")
         else:
             self.send("You hadn't told me to be quiet, but it's the thought that counts, right?")
-    command_MUTE.usage = "unmute - disable a previous 'mute'"
+    command_UNMUTE.usage = "unmute - disable a previous 'mute'"
 
     def build_commands(self):
         commands = []

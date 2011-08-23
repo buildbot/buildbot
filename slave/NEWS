@@ -11,6 +11,12 @@ In previous versions, if a slave received UnauthorizedLogin from the master, it
 would stop retrying and exit.  This has proven to be less helpful than simply
 retrying, so as of this version the slave will continue to retry.
 
+** Deprecations, Removals, and Non-Compatible Changes
+
+*** The format of the data that determines whether a directory requires a new
+checkout has changed for Perforce.  The first build (only) after an upgrade may
+do an unnecessary full checkout.
+
 * Buildbot-Slave 0.8.4 (June 12, 2011)
 
 ** Monotone support
