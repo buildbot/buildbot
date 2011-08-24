@@ -31,6 +31,8 @@ class Repo(SourceBaseCommand):
     ['manifest_branch'] (optional): Which manifest repo version (i.e. branch or tag)
                                     to retrieve. Default: "master".
     ['manifest_file'] (optional):   Which manifest file to use. Default: "default.xml".
+    ['manifest_override_url'] (optional):   Which manifest file to use as an overide. Default: None.
+    			     This is usually set by forced build to build over a known working base
     ['tarball'] (optional):         The tarball base to accelerate the fetch.
     ['repo_downloads'] (optional):  Repo downloads to do. Computer from GerritChangeSource
                                     and forced build properties.
@@ -43,6 +45,7 @@ class Repo(SourceBaseCommand):
         self.manifest_url = args.get('manifest_url')
         self.manifest_branch = args.get('manifest_branch')
         self.manifest_file =  args.get('manifest_file')
+        self.manifest_override_url =  args.get('manifest_override_url')
         self.tarball = args.get('tarball')
         self.repo_downloads = args.get('repo_downloads')
         # we're using string instead of an array here, because it will be transferred back
@@ -86,6 +89,16 @@ class Repo(SourceBaseCommand):
         cmdexec.addCallback(callback)
         return cmdexec
 
+    def _wgetCmd(self, cmds, callback):
+        cmd = ["wget"] + cmds
+        c = runprocess.RunProcess(self.builder, cmd, self._fullSrcdir(),
+                                  sendRC=False, timeout=self.timeout,
+                                  maxTime=self.maxTime, usePTY=False)
+        self.command = c
+        cmdexec = c.start()
+        cmdexec.addCallback(callback)
+        return cmdexec
+
     def _gitCmd(self, subdir, cmds, callback):
         cmd = ["git"] + cmds
         c = runprocess.RunProcess(self.builder, cmd, os.path.join(self._fullSrcdir(), subdir),
@@ -115,12 +128,17 @@ class Repo(SourceBaseCommand):
         # on fresh init, this file may confuse repo.
         if os.path.exists(os.path.join(self._fullSrcdir(), ".repo/project.list")):
             os.unlink(os.path.join(self._fullSrcdir(), ".repo/project.list"))
+        # remove previous overriden manifest
+        if os.path.exists(os.path.join(self._fullSrcdir(), ".repo/manifests")):
+            os.system("cd %s/.repo; ln -sf manifests/%s manifest.xml"%(self._fullSrcdir(),self.manifest_file))
         return self._repoCmd(['init', '-u', self.manifest_url, '-b', self.manifest_branch, '-m', self.manifest_file], self._didInit)
 
     def _didInit(self, res):
         return self.doVCUpdate()
 
     def doVCUpdate(self):
+        # remove previous overriden manifest even on partial sync
+        os.system("cd %s/.repo; ln -sf manifests/%s manifest.xml"%(self._fullSrcdir(),self.manifest_file))
         command = ['forall', '-c', 'git', 'clean', '-f', '-d', '-x']
         return self._repoCmd(command, self._doClean2, abandonOnFailure=False)
 
@@ -130,9 +148,21 @@ class Repo(SourceBaseCommand):
 
     def _doClean3(self,dummy):
         command = ['clean', '-f', '-d', '-x']
-        return self._gitCmd(".repo/manifests",command, self._doSync)
+        return self._gitCmd(".repo/manifests",command, self._doManifestOveride)
+
+    def _doManifestOveride(self, dummy):
+        if self.manifest_override_url:
+            self.sendStatus({"header": "overriding manifest with %s\n" %(self.manifest_override_url)})
+            if os.path.exists(os.path.join(self._fullSrcdir(), self.manifest_override_url)):
+                os.system("cd %s; cp -f %s manifest_override.xml"%(self._fullSrcdir(),self.manifest_override_url))
+            else:
+                command = [self.manifest_override_url, '-O', 'manifest_override.xml']
+                return self._wgetCmd(command, self._doSync)
+        return self._doSync(None)
 
     def _doSync(self, dummy):
+        if self.manifest_override_url:
+            os.system("cd %s/.repo; ln -sf ../manifest_override.xml manifest.xml"%(self._fullSrcdir()))
         command = ['sync']
         self.sendStatus({"header": "synching manifest %s from branch %s from %s\n"
                                    % (self.manifest_file, self.manifest_branch, self.manifest_url)})
