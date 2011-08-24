@@ -64,7 +64,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
     def __init__(self, p4port=None, p4user=None, p4passwd=None,
                  p4base='//', p4bin='p4',
                  split_file=lambda branchfile: (None, branchfile),
-                 pollInterval=60 * 10, histmax=None, pollinterval=-2):
+                 pollInterval=60 * 10, histmax=None, pollinterval=-2,
+                 encoding='utf8'):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
@@ -76,6 +77,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         self.p4bin = p4bin
         self.split_file = split_file
         self.pollInterval = pollInterval
+        self.encoding = encoding
 
     def describe(self):
         return "p4source %s %s" % (self.p4port, self.p4base)
@@ -140,6 +142,9 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             wfd = defer.waitForDeferred(self._get_process_output(args))
             yield wfd
             result = wfd.getResult()
+
+            # decode the result from its designated encoding
+            result = result.decode(self.encoding)
 
             lines = result.split('\n')
             # SF#1555985: Wade Brainerd reports a stray ^M at the end of the date

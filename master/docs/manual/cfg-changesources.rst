@@ -771,6 +771,10 @@ depot for changes. It accepts the following arguments:
     number occur since the last poll, older changes will be silently
     ignored.
 
+``encoding``
+    The character encoding of ``p4``\'s output.  This defaults to "utf8", but
+    if your commit messages are in another encoding, specify that here.
+
 Example
 +++++++
 

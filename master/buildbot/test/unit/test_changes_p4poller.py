@@ -37,10 +37,12 @@ change_4_log = \
 
 	short desc truncated because this is a long description.
 """
+
 change_3_log = \
-"""Change 3 by bob@testclient on 2006/04/13 21:51:39
+u"""Change 3 by bob@testclient on 2006/04/13 21:51:39
 
 	short desc truncated because this is a long description.
+    ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.
 """
 
 change_2_log = \
@@ -122,14 +124,18 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                          split_file=lambda x: x.split('/', 1)))
         self.assertSubstring("p4source", self.changesource.describe())
 
-    def test_poll_successful(self):
+    def do_test_poll_successful(self, **kwargs):
+        encoding = kwargs.get('encoding', 'utf8')
         self.attachChangeSource(
                 P4Source(p4port=None, p4user=None,
                          p4base='//depot/myproject/',
-                         split_file=lambda x: x.split('/', 1)))
+                         split_file=lambda x: x.split('/', 1),
+                         **kwargs))
         self.add_p4_changes_result(first_p4changes)
         self.add_p4_changes_result(second_p4changes)
-        self.update_p4_describe_results(p4change)
+        encoded_p4change = p4change.copy()
+        encoded_p4change[3] = encoded_p4change[3].encode(encoding)
+        self.update_p4_describe_results(encoded_p4change)
 
         # The first time, it just learns the change to start at.
         self.assert_(self.changesource.last_change is None)
@@ -163,19 +169,25 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 dict(author='bob',
                      files=['branch_b_file',
                             'whatbranch'],
-                     comments=change_3_log,
+                     comments=change_3_log, # converted to unicode correctly
                      revision='3',
                      when_timestamp=self.makeTime("2006/04/13 21:51:39"),
                      branch='branch_b'))
             self.assertEquals(self.changes_added[2],
                 dict(author='bob',
                      files=['whatbranch'],
-                     comments=change_3_log,
+                     comments=change_3_log, # converted to unicode correctly
                      revision='3',
                      when_timestamp=self.makeTime("2006/04/13 21:51:39"),
                      branch='branch_c'))
         d.addCallback(check_second_check)
         return d
+
+    def test_poll_successful_default_encoding(self):
+        return self.do_test_poll_successful()
+
+    def test_poll_successful_macroman_encoding(self):
+        return self.do_test_poll_successful(encoding='macroman')
 
     def test_poll_failed_changes(self):
         self.attachChangeSource(
