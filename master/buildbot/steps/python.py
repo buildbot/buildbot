@@ -128,7 +128,7 @@ class PyFlakes(ShellCommand):
 
 class PyLint(ShellCommand):
     '''A command that knows about pylint output.
-    It's a good idea to add --output-format=parseable to your
+    It is a good idea to add --output-format=parseable to your
     command, since it includes the filename in the message.
     '''
     name = "pylint"
@@ -210,4 +210,90 @@ class PyLint(ShellCommand):
         if self.getProperty("pylint-total"):
             return WARNINGS
         return SUCCESS
+
+class Sphinx(ShellCommand):
+    ''' A Step to build sphinx documentation '''
+
+    name = "sphinx"
+    description = ["running", "sphinx"]
+    descriptionDone = ["sphinx"]
+
+    
+
+    def __init__(self, sphinx_sourcedir='.', sphinx_builddir=None,
+                sphinx_builder=None, sphinx = 'sphinx-build', tags = [],
+                defines = {}, **kwargs):
+
+        if sphinx_builddir is None:
+            # Who the heck is not interested in the built doc ?
+            raise TypeError("Sphinx argument sphinx_builddir is required")
+
+        self.warnings = 0
+        self.success = False
+        ShellCommand.__init__(self, **kwargs)
+
+        # build the command
+        command = [sphinx]
+        if sphinx_builder is not None:
+            command.extend(['-b', sphinx_builder])
+
+        for tag in tags:
+            command.extend(['-t', tag])
+
+        for key in sorted(defines):
+            if defines[key] is None:
+                command.extend(['-D', key])
+            elif isinstance(defines[key], bool):
+                command.extend(['-D',
+                               '%s=%d' % (key, defines[key] and 1 or 0)])
+            else:
+                command.extend(['-D', '%s=%s' % (key, defines[key])])
+
+        command.extend([sphinx_sourcedir, sphinx_builddir])
+        self.setCommand(command)
+
+        self.addFactoryArguments(
+            sphinx = sphinx,
+            sphinx_sourcedir = sphinx_sourcedir,
+            sphinx_builddir = sphinx_builddir,
+            sphinx_builder = sphinx_builder,
+            tags = tags,
+            defines = defines,
+        )
+
+    def evaluateCommand(self, cmd):
+        if self.success:
+            if self.warnings == 0:
+                return SUCCESS
+            else:
+                return WARNINGS
+        else:
+            return FAILURE
+
+    def createSummary(self, log):
+
+        msgs = ['WARNING', 'ERROR', 'SEVERE']
+
+        warnings = []
+        for line in log.readlines():
+            if line.startswith('build succeeded') or \
+                    line.startswith('no targets are out of date.'):
+                self.success = True
+            else:
+                for msg in msgs:
+                    if msg in line:
+                        warnings.append(line)
+                        self.warnings += 1
+        if self.warnings > 0:
+            self.addCompleteLog('warnings', "\n".join(warnings))
+
+        self.step_status.setStatistic('warnings', self.warnings)
+
+    def describe(self, done=False):
+        if not done:
+            return ["building"]
+
+        description = [self.name]
+        description.append('%d warnings' % self.warnings)
+        return description
 
