@@ -42,7 +42,8 @@ def googleCodePollerForProject(project, vcs, pollinterval=3600):
 
 class GoogleCodeAtomPoller(base.ChangeSource):
     """This source will poll a GoogleCode Atom feed for changes and
-    submit them to the change master. Works for both Svn and Hg repos.
+    submit them to the change master. Works for both Svn, Git, and Hg
+    repos.
     TODO: branch processing
     """
 
@@ -75,6 +76,9 @@ class GoogleCodeAtomPoller(base.ChangeSource):
                 break
             elif word == 'hgchanges':
                 self.src = 'hg'
+                break
+            elif word == 'gitchanges':
+                self.src = 'git'
                 break
 
     def startService(self):
