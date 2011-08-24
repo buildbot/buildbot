@@ -206,11 +206,6 @@ class VC6(VisualStudio):
 
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio'
 
-    def __init__(self, **kwargs):  
-
-        # always upcall !
-        VisualStudio.__init__(self, **kwargs)
-
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
 
@@ -250,11 +245,6 @@ class VC6(VisualStudio):
 
 class VC7(VisualStudio):
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio .NET 2003'
-
-    def __init__(self, **kwargs):  
-
-        # always upcall !
-        VisualStudio.__init__(self, **kwargs)
 
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
@@ -300,8 +290,10 @@ VS2003 = VC7
 class VC8(VC7):
     
     # Our ones
-    arch = "x86"
+    arch = None
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 8'
+
+    renderables = ['arch']
 
     def __init__(self, arch = "x86", **kwargs):
         self.arch = arch
