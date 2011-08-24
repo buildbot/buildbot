@@ -95,6 +95,8 @@ class VisualStudio(ShellCommand):
     PATH = []
     INCLUDE = []
     LIB = []
+
+    renderables = [ 'projectfile', 'config', 'project' ]
     
     def __init__(self, 
                 installdir = None,
