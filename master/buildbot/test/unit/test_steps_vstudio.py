@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-from buildbot.status.results import FAILURE, SUCCESS, WARNINGS
+from buildbot.status.results import SUCCESS
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps import vstudio
 from buildbot.test.fake.remotecommand import ExpectShell
