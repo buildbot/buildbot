@@ -86,6 +86,8 @@ Git
  * github change hook (specifically designed for GitHub notifications,
    but requiring a publicly-accessible WebStatus)
  * :class:`gitpoller.GitPoller` (polling a remote git repository)
+ * :file:`contrib/googlecode_atom.py`\'s GoogleCodeAtomPoller (polling the
+   commit feed for a GoogleCode Git repository)
 
 
 Repo/Git
@@ -1328,7 +1330,7 @@ GoogleCodeAtomPoller
 ~~~~~~~~~~~~~~~~~~~~
 
 The :class:`GoogleCodeAtomPoller` periodically polls a Google Code Project's
-commit feed for changes. Works on both SVN and Mercurial repositories. Branches
+commit feed for changes. Works on SVN, Git, and Mercurial repositories. Branches
 are not understood (yet). It accepts the following arguments:
 
 ``feedurl``
