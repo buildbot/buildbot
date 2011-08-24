@@ -948,6 +948,7 @@ class Repo(Source):
         self.args.update({'manifest_branch': manifest_branch,
                           'manifest_file': manifest_file,
                           'tarball': tarball,
+                          'manifest_override_url': None
                           })
 
     def computeSourceRevision(self, changes):
@@ -1010,6 +1011,12 @@ class Repo(Source):
     def startVC(self, branch, revision, patch):
         self.args['manifest_url'] = self.manifest_url
 
+        # manifest override
+        self.args['manifest_override_url'] = None
+        try:
+            self.args['manifest_override_url'] = self.build.getProperty("manifest_override_url")
+        except KeyError:
+            pass
         # only master has access to properties, so we must implement this here.
         d = self.buildDownloadList()
         d.addCallback(self.continueStartVC, branch, revision, patch)
