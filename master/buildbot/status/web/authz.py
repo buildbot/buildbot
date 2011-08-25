@@ -31,6 +31,7 @@ class Authz(object):
             'cancelPendingBuild',
             'stopChange',
             'cleanShutdown',
+            'showUsersPage',
     ]
 
     def __init__(self,

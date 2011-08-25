@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h1>User: {{ user_identifier|e }}</h1>
+
+<div class="column">
+
+<table class="info">
+
+<tr>
+  <th>Attribute Type</th>
+  <th>Attribute Value</th>
+</tr>
+
+{% for attr in user %}
+  <tr class="{{ loop.cycle('alt','') }}">
+
+  <td>{{ attr|e }}</td>
+  <td>{{ user[attr]|e }}</td>
+
+  </tr>
+{% endfor %}
+
+</table>
+
+</div>
+
+{% endblock %}

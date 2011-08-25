@@ -145,6 +145,27 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         d = self.db.pool.do(thd)
         return d
 
+    def getUsers(self):
+        """
+        This is used by the C{WebStatus} Users page to get all the entries
+        from the users table. This doesn't bother with grabbing attributes,
+        as those are fetched when loading individual user pages.
+
+        @returns: list of dicts via Deferred
+        """
+        def thd(conn):
+            tbl = self.db.model.users
+            rows = conn.execute(tbl.select()).fetchall()
+
+            dicts = []
+            if rows:
+                for row in rows:
+                    ud = dict(uid=row.uid, identifier=row.identifier)
+                    dicts.append(ud)
+            return dicts
+        d = self.db.pool.do(thd)
+        return d
+
     def updateUser(self, uid=None, identifier=None, attr_type=None,
                    attr_data=None, _race_hook=None):
         """

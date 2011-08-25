@@ -262,3 +262,14 @@
  </form>
 {% endmacro %}
 
+{% macro show_users(users_url, authz) %}
+  <form method="post" action="{{ users_url }}" class='command show_users'>
+    <p>To show users, press the 'Show Users' button</p>
+
+  {% if authz.needAuthForm('showUsersPage') %}
+    {{ auth() }}
+  {% endif %}
+
+    <input type="submit" value="Show Users" />
+  </form>
+{% endmacro %}
