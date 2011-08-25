@@ -1203,6 +1203,13 @@ If the `categories` is set to a category of builders (see categories
 option in :ref:`Builder-Configuration`) changes related to only that 
 category of builders will be sent to the channel.
 
+If the `useRevisions` option is set to `True`, the IRC bot will send status messages
+that replace the build number with a list of revisions that are contained in that
+build. So instead of seeing `build #253 of ...`, you would see something like
+`build containing revisions [a87b2c4]`. Revisions that are stored as hashes are
+shortened to 7 characters in length, as multiple revisions can be contained in one
+build and may exceed the IRC message length limit.
+
 .. _PBListener:
     
 PBListener
