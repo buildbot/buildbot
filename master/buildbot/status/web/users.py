@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import urllib
-from twisted.python import log
 from twisted.internet import defer
 from twisted.web.util import redirectTo
 from buildbot.status.web.base import HtmlResource, path_to_authfail, \
@@ -124,7 +123,6 @@ class UsersResource(HtmlResource):
                 yield redirectTo(path_to_authfail(req), req)
                 return
 
-        s = self.getStatus(req)
         ctx['authz'] = self.getAuthz(req)
         ctx['table_link'] = req.childLink("table")
         template = req.site.buildbot_service.templates.get_template("users.html")
