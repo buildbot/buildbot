@@ -54,14 +54,47 @@ class BBCfgDirective(Directive):
         return ret 
 
 
+class BBSchedDirective(Directive):
+    indextemplate = 'single: Scheduler; %s'
+
+    has_content = False
+    required_arguments = 1
+    optional_arguments = 0
+    final_argument_whitespace = True
+    option_spec = {}
+
+    def run(self):
+        env = self.state.document.settings.env
+        # normalize whitespace in fullname like XRefRole does
+        fullname = ws_re.sub(' ', self.arguments[0].strip())
+        targetname = '%s-%s' % (self.name, fullname)
+
+        # keep the target
+        targets = env.domaindata['bb']['targets'].setdefault('sched', {})
+        targets[fullname] = env.docname, targetname
+
+        # make up the descriptor: an index entry and a target
+        inode = addnodes.index(entries=[
+            ('single', 'Scheduler; %s' % (fullname,), targetname,
+                targetname),
+        ])
+        node = nodes.target('', '', ids=[targetname])
+        ret = [inode, node]
+
+        # add the target to the document
+        self.state.document.note_explicit_target(node)
+
+        return ret 
+
+
 class BBCfgIndex(Index):
     name = "cfg"
     localname = "Buildmaster Configuration Index"
 
     def generate(self, docnames=None):
         content = {}
-        cfg_targets = self.domain.data['targets'].get('cfg', {})
-        for name, (docname, targetname) in cfg_targets.iteritems():
+        idx_targets = self.domain.data['targets'].get('cfg', {})
+        for name, (docname, targetname) in idx_targets.iteritems():
             letter = name[0].lower()
             content.setdefault(letter, []).append(
                 (name, 0, docname, targetname, '', '', ''))
@@ -69,29 +102,50 @@ class BBCfgIndex(Index):
                     for l in sorted(content.keys()) ]
         return (content, False)
 
+
+class BBSchedIndex(Index):
+    name = "sched"
+    localname = "Scheduler Index"
+
+    def generate(self, docnames=None):
+        content = {}
+        idx_targets = self.domain.data['targets'].get('sched', {})
+        for name, (docname, targetname) in idx_targets.iteritems():
+            letter = name[0].lower()
+            content.setdefault(letter, []).append(
+                (name, 0, docname, targetname, '', '', ''))
+        content = [ (l, content[l])
+                    for l in sorted(content.keys()) ]
+        return (content, False)
+
+
 class BBDomain(Domain):
     name = 'bb'
     label = 'Buildbot'
 
     object_types = {
         'cfg' : ObjType('cfg', 'cfg'),
+        'sched' : ObjType('sched', 'sched'),
     }
 
     directives = {
         'cfg' : BBCfgDirective,
+        'sched' : BBSchedDirective,
     }
 
     roles = {
         'cfg' : XRefRole(),
-        'index' : XRefRole()
+        'sched' : XRefRole(),
+        'index' : XRefRole(),
     }
 
     initial_data = {
-        'targets' : {}, # kinda -> target -> (docname, targetname)
+        'targets' : {}, # kind -> target -> (docname, targetname)
     }
 
     indices = [
         BBCfgIndex,
+        BBSchedIndex,
     ]
 
     def resolve_index_ref(self, env, fromdocname, builder, typ, target, node,

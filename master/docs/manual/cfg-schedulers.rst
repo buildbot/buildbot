@@ -162,6 +162,9 @@ A Change passes the filter only if *all* arguments are satisfied.  If no
 filter object is given to a scheduler, then all changes will be built (subject
 to any other restrictions the scheduler enforces).
 
+.. bb:sched:: SingleBranchScheduler
+.. bb:sched:: Scheduler
+
 .. _Scheduler-SingleBranchScheduler:
 
 SingleBranchScheduler
@@ -188,7 +191,7 @@ The arguments to this scheduler are:
 ``fileIsImportant``
 
 ``change_filter``
-    :ref:`Configuring-Schedulers`
+    See :ref:`Configuring-Schedulers`.
 
 ``onlyImportant``
 
@@ -252,6 +255,8 @@ The old names for this scheduler, ``buildbot.scheduler.Scheduler`` and
 ``buildbot.schedulers.basic.Scheduler``, are deprecated in favor of the more
 accurate name ``buildbot.schedulers.basic.SingleBranchScheduler``.
 
+.. bb:sched:: AnyBranchScheduler
+
 .. _AnyBranchScheduler:
 
 AnyBranchScheduler
@@ -271,7 +276,7 @@ The arguments to this scheduler are:
 ``fileIsImportant``
 
 ``change_filter``
-    :ref:`Configuring-Schedulers`
+    See :ref:`Configuring-Schedulers`.
 
 ``onlyImportant``
 
@@ -288,6 +293,8 @@ The arguments to this scheduler are:
 ``categories`` (deprecated; use change_filter)
     A list of categories of changes that this scheduler will respond to.  If this
     is specified, then any non-matching changes are ignored.
+
+.. bb:sched:: Dependent
 
 .. _Dependent-Scheduler:
     
@@ -333,6 +340,7 @@ The keyword arguments to this scheduler are:
 ``builderNames``
 
 ``properties``
+    See :ref:`Configuring-Schedulers`.
 
 ``upstream``
     The upstream scheduler to watch.  Note that this is an *instance*,
@@ -347,6 +355,8 @@ Example::
                               upstream=tests, # <- no quotes!
                               builderNames=["make-tarball", "make-deb", "make-rpm"])
     c['schedulers'] = [tests, package]
+
+.. bb:sched:: Periodic
 
 .. _Periodic-Scheduler:
     
@@ -386,6 +396,8 @@ depending upon when it was first activated.
 
 .. _Nightly-Scheduler:
 
+.. bb:sched:: Nightly
+
 Nightly Scheduler
 ~~~~~~~~~~~~~~~~~
 
@@ -415,6 +427,7 @@ The full list of parameters is:
 ``fileIsImportant``
 
 ``onlyImportant``
+    See :ref:`Configuring-Schedulers`.
 
 ``branch``
     (required) The branch to build when the time comes.  Remember that
@@ -489,6 +502,9 @@ Finally, this example will run only on December 24th::
             dayOfMonth=24,
             hour=12,
             minute=0)
+
+.. bb:sched:: Try_Jobdir
+.. bb:sched:: Try_Userpass
 
 .. _Try-Schedulers:
             
@@ -621,6 +637,8 @@ Like most places in the buildbot, the ``port`` argument takes a
 `strports` specification. See :mod:`twisted.application.strports` for
 details.
 
+.. bb:sched:: Triggerable
+
 .. index:: Triggers
 
 .. _Triggerable-Scheduler:
@@ -642,8 +660,11 @@ to perform some work for them, perhaps on other buildslaves.
 The parameters are just the basics:
 
 ``name``
+
 ``builderNames``
+
 ``properties``
+    See :ref:`Configuring-Schedulers`.
 
 This class is only useful in conjunction with the :class:`Trigger` step.
 Here is a fully-worked example::
