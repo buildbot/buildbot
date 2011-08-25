@@ -351,6 +351,22 @@ be used to access them.
     As with ``/one_line_per_build``, this page will also honor
     ``builder=`` and ``branch=`` arguments.
 
+``/users``
+    This page exists for authentication reasons when checking ``showUsersPage``.
+    It'll redirect to ``/authfail`` on ``False``, ``/users/table`` on ``True``,
+    and give a username/password login prompt on ``'auth'``. Passing or failing
+    results redirect to the same pages as ``False`` and ``True``.
+
+``/users/table``
+    This page shows a table containing users that are stored in the database.
+    It has columns for their respective ``uid`` and ``identifier`` values,
+    with the ``uid`` values being clickable for more detailed information
+    relating to a user.
+
+``/users/table/{NN}``
+    Shows all the attributes stored in the database relating to the user
+    with uid ``{NN}`` in a table.
+
 ``/about``
     This page gives a brief summary of the Buildbot itself: software
     version, versions of some libraries that the Buildbot depends upon,
@@ -437,6 +453,9 @@ authentication.  The actions are:
 
 ``cleanShutdown``
     shut down the master gracefully, without interrupting builds
+
+``showUsersPage``
+    access to page displaying users in the database, see :ref:`User-Objects`
 
 For each of these actions, you can configure buildbot to never allow the
 action, always allow the action, allow the action to any authenticated user, or

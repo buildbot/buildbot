@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% import 'forms.html' as forms %}
+
+{% block content %}
+
+<h1>Users</h1>
+
+{%- if authz.needAuthForm('showUsersPage') -%}
+  {{ forms.show_users(table_link, authz) }}
+{% endif %}
+
+{% endblock %}
