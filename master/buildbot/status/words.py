@@ -49,8 +49,9 @@ class IrcBuildRequest:
     hasStarted = False
     timer = None
 
-    def __init__(self, parent):
+    def __init__(self, parent, useRevisions=False):
         self.parent = parent
+        self.useRevisions = useRevisions
         self.timer = reactor.callLater(5, self.soon)
 
     def soon(self):
@@ -65,7 +66,10 @@ class IrcBuildRequest:
             self.timer.cancel()
             del self.timer
         eta = s.getETA()
-        response = "build #%d forced" % s.getNumber()
+        if self.useRevisions:
+            response = "build containing revision(s) [%s] forced" % s.getRevisions()
+        else:
+            response = "build #%d forced" % s.getNumber()
         if eta is not None:
             response = "build forced [ETA %s]" % self.parent.convertTime(eta)
         self.parent.send(response)
@@ -93,6 +97,7 @@ class Contact(base.StatusReceiver):
         self.notify_events = {}
         self.subscribed = 0
         self.muted = False
+        self.useRevisions = channel.useRevisions
         self.reported_builds = [] # tuples (when, buildername, buildnum)
         self.add_notification_events(channel.notify_events)
 
@@ -298,8 +303,12 @@ class Contact(base.StatusReceiver):
             assert not build.isFinished()
             d = build.waitUntilFinished()
             d.addCallback(self.watchedBuildFinished)
-            r = "watching build %s #%d until it finishes" \
-                % (which, build.getNumber())
+            if self.useRevisions:
+                r = "watching build %s containing revision(s) [%s] until it finishes" \
+                    % (which, build.getRevisions())
+            else:
+                r = "watching build %s #%d until it finishes" \
+                    % (which, build.getNumber())
             eta = build.getETA()
             if eta is not None:
                 r += " [%s]" % self.convertTime(eta)
@@ -339,11 +348,15 @@ class Contact(base.StatusReceiver):
             log.msg('Not notifying for a build when started-notification disabled')
             return
 
-        r = "build #%d of %s started, including [%s]" % \
-           (build.getNumber(),
-            builder.getName(),
-            ", ".join([str(c.revision) for c in build.getChanges()])
-            )
+        if self.useRevisions:
+            r = "build containing revision(s) [%s] on %s started" % \
+                (build.getRevisions(), builder.getName())
+        else:
+            r = "build #%d of %s started, including [%s]" % \
+                (build.getNumber(),
+                 builder.getName(),
+                 ", ".join([str(c.revision) for c in build.getChanges()])
+                 )
 
         self.send(r)
 
@@ -370,12 +383,19 @@ class Contact(base.StatusReceiver):
 
         builder_name = builder.getName()
         buildnum = build.getNumber()
+        buildrevs = build.getRevisions()
 
         if self.reportBuild(builder_name, buildnum):
-            r = "build #%d of %s is complete: %s" % \
-                (buildnum,
-                 builder_name,
-                 self.results_descriptions.get(build.getResults(), "??"))
+            if self.useRevisions:
+                r = "build containing revision(s) [%s] on %s is complete: %s" % \
+                    (buildrevs,
+                     builder_name,
+                     self.results_descriptions.get(build.getResults(), "??"))
+            else:
+                r = "build #%d of %s is complete: %s" % \
+                    (buildnum,
+                     builder_name,
+                     self.results_descriptions.get(build.getResults(), "??"))
             r += " [%s]" % " ".join(build.getText())
             buildurl = self.channel.status.getURLForThing(build)
             if buildurl:
@@ -421,12 +441,19 @@ class Contact(base.StatusReceiver):
 
         builder_name = b.getBuilder().getName()
         buildnum = b.getNumber()
+        buildrevs = b.getRevisions()
 
         if self.reportBuild(builder_name, buildnum):
-            r = "Hey! build %s #%d is complete: %s" % \
-                (builder_name, 
-                 buildnum,
-                 self.results_descriptions.get(b.getResults(), "??"))
+            if self.useRevisions:
+                r = "Hey! build %s containing revision(s) [%s] is complete: %s" % \
+                    (builder_name, 
+                     buildrevs,
+                     self.results_descriptions.get(b.getResults(), "??"))
+            else:
+                r = "Hey! build %s #%d is complete: %s" % \
+                    (builder_name, 
+                     buildnum,
+                     self.results_descriptions.get(b.getResults(), "??"))
             r += " [%s]" % " ".join(b.getText())
             self.send(r)
             buildurl = self.channel.status.getURLForThing(b)
@@ -470,7 +497,7 @@ class Contact(base.StatusReceiver):
         ss = SourceStamp(branch=branch, revision=revision)
         d = bc.submitBuildRequest(ss, reason)
         def subscribe(buildreq):
-            ireq = IrcBuildRequest(self)
+            ireq = IrcBuildRequest(self, self.useRevisions)
             buildreq.subscribe(ireq.started)
         d.addCallback(subscribe)
         d.addErrback(log.err, "while forcing a build")
@@ -497,6 +524,7 @@ class Contact(base.StatusReceiver):
             return
         for build in builds:
             num = build.getNumber()
+            revs = build.getRevisions()
 
             # obtain the BuildControl object
             buildcontrol = buildercontrol.getBuild(num)
@@ -504,7 +532,11 @@ class Contact(base.StatusReceiver):
             # make it stop
             buildcontrol.stopBuild(r)
 
-            self.send("build %d interrupted" % num)
+            if self.useRevisions:
+                response = "build containing revision(s) [%s] interrupted" % revs
+            else:
+                response = "build %d interrupted" % num
+            self.send(response)
 
     command_STOP.usage = "stop build <which> <reason> - Stop a running build"
 
@@ -724,7 +756,9 @@ class IrcStatusBot(irc.IRCClient):
     implements(IChannel)
     contactClass = IRCContact
 
-    def __init__(self, nickname, password, channels, status, categories, notify_events, noticeOnChannel = False, showBlameList = False):
+    def __init__(self, nickname, password, channels, status, categories,
+                 notify_events, noticeOnChannel=False, useRevisions=False,
+                 showBlameList=False):
         """
         @type  nickname: string
         @param nickname: the nickname by which this bot should be known
@@ -739,6 +773,10 @@ class IrcStatusBot(irc.IRCClient):
         @param noticeOnChannel: Defaults to False. If True, error messages
                                 for bot commands will be sent to the channel
                                 as notices. Otherwise they are sent as a msg.
+        @type  useRevisions: boolean
+        @param useRevisions: if True, messages from the bot will use the
+                             revisions from the Changes in the build and not
+                             the build number.
         """
         self.nickname = nickname
         self.channels = channels
@@ -751,6 +789,7 @@ class IrcStatusBot(irc.IRCClient):
         self.hasQuit = 0
         self.contacts = {}
         self.noticeOnChannel = noticeOnChannel
+        self.useRevisions = useRevisions
         self.showBlameList = showBlameList
 
     def msgOrNotice(self, dest, message):
@@ -856,7 +895,8 @@ class IrcStatusFactory(ThrottledClientFactory):
     shuttingDown = False
     p = None
 
-    def __init__(self, nickname, password, channels, categories, notify_events, noticeOnChannel = False, showBlameList = False):
+    def __init__(self, nickname, password, channels, categories, notify_events,
+                 noticeOnChannel=False, useRevisions=False, showBlameList=False):
         #ThrottledClientFactory.__init__(self) # doesn't exist
         self.status = None
         self.nickname = nickname
@@ -865,6 +905,7 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.categories = categories
         self.notify_events = notify_events
         self.noticeOnChannel = noticeOnChannel
+        self.useRevisions = useRevisions
         self.showBlameList = showBlameList
 
     def __getstate__(self):
@@ -882,6 +923,7 @@ class IrcStatusFactory(ThrottledClientFactory):
                           self.channels, self.status,
                           self.categories, self.notify_events,
                           noticeOnChannel = self.noticeOnChannel,
+                          useRevisions = self.useRevisions,
                           showBlameList = self.showBlameList)
         p.factory = self
         p.status = self.status
@@ -915,12 +957,12 @@ class IRC(base.StatusReceiverMultiService):
 
     compare_attrs = ["host", "port", "nick", "password",
                      "channels", "allowForce", "useSSL",
-                     "categories"]
+                     "useRevisions", "categories"]
 
     def __init__(self, host, nick, channels, port=6667, allowForce=False,
                  categories=None, password=None, notify_events={},
                  noticeOnChannel = False, showBlameList = True,
-                 useSSL=False):
+                 useRevisions=False, useSSL=False):
         base.StatusReceiverMultiService.__init__(self)
 
         assert allowForce in (True, False) # TODO: implement others
@@ -932,12 +974,14 @@ class IRC(base.StatusReceiverMultiService):
         self.channels = channels
         self.password = password
         self.allowForce = allowForce
+        self.useRevisions = useRevisions
         self.categories = categories
         self.notify_events = notify_events
         log.msg('Notify events %s' % notify_events)
         self.f = IrcStatusFactory(self.nick, self.password,
                                   self.channels, self.categories, self.notify_events,
                                   noticeOnChannel = noticeOnChannel,
+                                  useRevisions = useRevisions,
                                   showBlameList = showBlameList)
 
         # don't set up an actual ClientContextFactory if we're running tests.

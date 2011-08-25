@@ -165,6 +165,9 @@ class RemoteBuild(pb.Referenceable):
     def remote_getChanges(self):
         return [IRemote(c) for c in self.b.getChanges()]
 
+    def remote_getRevisions(self):
+        return self.b.getRevisions()
+
     def remote_getResponsibleUsers(self):
         return self.b.getResponsibleUsers()
 

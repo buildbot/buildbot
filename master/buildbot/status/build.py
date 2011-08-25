@@ -96,6 +96,15 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     def getChanges(self):
         return self.changes
 
+    def getRevisions(self):
+        revs = []
+        for c in self.changes:
+            rev = str(c.revision)
+            if rev > 7:  # for long hashes
+                rev = rev[:7]
+            revs.append(rev)
+        return ", ".join(revs)
+
     def getResponsibleUsers(self):
         return self.blamelist
 

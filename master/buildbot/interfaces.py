@@ -475,6 +475,10 @@ class IBuildStatus(Interface):
         """Return a list of Change objects which represent which source
         changes went into the build."""
 
+    def getRevisions():
+        """Returns a string representing the list of revisions that led to
+        the build, rendered from each Change.revision"""
+
     def getResponsibleUsers():
         """Return a list of Users who are to blame for the changes that went
         into this build. If anything breaks (at least anything that wasn't
