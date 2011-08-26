@@ -21,8 +21,14 @@ from sphinx.util import ws_re
 from sphinx.util.nodes import make_refnode
 from sphinx import addnodes
 
-class BBCfgDirective(Directive):
-    indextemplate = 'single: BuildMaster Config; %s'
+
+class BBRefTargetDirective(Directive):
+    """
+    A directive that can be a target for references.  Attributes:
+
+    @cvar ref_type: same as directive name
+    @cvar indextemplates: templates for main index entries, if any
+    """
 
     has_content = False
     required_arguments = 1
@@ -34,89 +40,107 @@ class BBCfgDirective(Directive):
         env = self.state.document.settings.env
         # normalize whitespace in fullname like XRefRole does
         fullname = ws_re.sub(' ', self.arguments[0].strip())
-        targetname = '%s-%s' % (self.name, fullname)
+        targetname = '%s-%s' % (self.ref_type, fullname)
 
-        # keep the target
-        targets = env.domaindata['bb']['targets'].setdefault('cfg', {})
+        # keep the target; this may be used to generate a BBIndex later
+        targets = env.domaindata['bb']['targets'].setdefault(self.ref_type, {})
         targets[fullname] = env.docname, targetname
 
-        # make up the descriptor: an index entry and a target
-        inode = addnodes.index(entries=[
-            ('single', 'Buildmaster Config; %s' % (fullname,), targetname,
-                targetname),
-        ])
+        # make up the descriptor: a target and potentially an index descriptor
         node = nodes.target('', '', ids=[targetname])
-        ret = [inode, node]
+        ret = [node]
 
         # add the target to the document
         self.state.document.note_explicit_target(node)
 
-        return ret 
+        # append the index node if necessary
+        entries = []
+        for tpl in self.indextemplates:
+            colon = tpl.find(':')
+            if colon != -1:
+                indextype = tpl[:colon].strip()
+                indexentry = tpl[colon+1:].strip() % (fullname,)
+            else:
+                indextype = 'single'
+                indexentry = tpl % (fullname,)
+            entries.append((indextype, indexentry, targetname, targetname))
 
-
-class BBSchedDirective(Directive):
-    indextemplate = 'single: Scheduler; %s'
-
-    has_content = False
-    required_arguments = 1
-    optional_arguments = 0
-    final_argument_whitespace = True
-    option_spec = {}
-
-    def run(self):
-        env = self.state.document.settings.env
-        # normalize whitespace in fullname like XRefRole does
-        fullname = ws_re.sub(' ', self.arguments[0].strip())
-        targetname = '%s-%s' % (self.name, fullname)
-
-        # keep the target
-        targets = env.domaindata['bb']['targets'].setdefault('sched', {})
-        targets[fullname] = env.docname, targetname
-
-        # make up the descriptor: an index entry and a target
-        inode = addnodes.index(entries=[
-            ('single', 'Scheduler; %s' % (fullname,), targetname,
-                targetname),
-        ])
-        node = nodes.target('', '', ids=[targetname])
-        ret = [inode, node]
-
-        # add the target to the document
-        self.state.document.note_explicit_target(node)
+        if entries:
+            inode = addnodes.index(entries=entries)
+            ret.insert(0, inode)
 
         return ret 
 
+    @classmethod
+    def resolve_ref(cls, domain, env, fromdocname, builder, typ, target, node,
+                     contnode):
+        """
+        Resolve a reference to a directive of this class
+        """
+        targets = domain.data['targets'].get(cls.ref_type, {})
+        try:
+            todocname, targetname = targets[target]
+        except KeyError:
+            print "MISSING BB REFERENCE: bb:%s:%s" % (cls.ref_type, target)
+            return None
 
-class BBCfgIndex(Index):
-    name = "cfg"
-    localname = "Buildmaster Configuration Index"
+        return make_refnode(builder, fromdocname,
+                            todocname, targetname,
+                            contnode, target)
+
+
+def make_ref_target_directive(ref_type, indextemplates=None):
+    """
+    Create and return a L{BBRefTargetDirective} subclass.
+    """
+    return type("BB%sRefTargetDirective" % (ref_type.capitalize(),),
+                (BBRefTargetDirective,),
+                dict(ref_type=ref_type, indextemplates=indextemplates))
+
+
+class BBIndex(Index):
+    """
+    A Buildbot-specific index.
+
+    @cvar name: same name as the directive and xref role
+    @cvar localname: name of the index document
+    """
 
     def generate(self, docnames=None):
         content = {}
-        idx_targets = self.domain.data['targets'].get('cfg', {})
+        idx_targets = self.domain.data['targets'].get(self.name, {})
         for name, (docname, targetname) in idx_targets.iteritems():
-            letter = name[0].lower()
+            letter = name[0].upper()
             content.setdefault(letter, []).append(
                 (name, 0, docname, targetname, '', '', ''))
         content = [ (l, content[l])
                     for l in sorted(content.keys()) ]
         return (content, False)
 
+    @classmethod
+    def resolve_ref(cls, domain, env, fromdocname, builder, typ, target, node,
+                     contnode):
+        """
+        Resolve a reference to an index to the document containing the index,
+        using the index's C{localname} as the content of the link.
+        """
+        # indexes appear to be automatically generated at doc DOMAIN-NAME
+        todocname = "bb-%s" % target
 
-class BBSchedIndex(Index):
-    name = "sched"
-    localname = "Scheduler Index"
+        node = nodes.reference('', '', internal=True)
+        node['refuri'] = builder.get_relative_uri(fromdocname, todocname)
+        node['reftitle'] = cls.localname
+        node.append(nodes.emphasis(cls.localname, cls.localname))
+        return node
 
-    def generate(self, docnames=None):
-        content = {}
-        idx_targets = self.domain.data['targets'].get('sched', {})
-        for name, (docname, targetname) in idx_targets.iteritems():
-            letter = name[0].lower()
-            content.setdefault(letter, []).append(
-                (name, 0, docname, targetname, '', '', ''))
-        content = [ (l, content[l])
-                    for l in sorted(content.keys()) ]
-        return (content, False)
+
+def make_index(name, localname):
+    """
+    Create and return a L{BBIndex} subclass, for use in the domain's C{indices}
+    """
+    return type("BB%sIndex" % (name.capitalize(),),
+                (BBIndex,),
+                dict(name=name, localname=localname))
 
 
 class BBDomain(Domain):
@@ -129,8 +153,16 @@ class BBDomain(Domain):
     }
 
     directives = {
-        'cfg' : BBCfgDirective,
-        'sched' : BBSchedDirective,
+        'cfg' : make_ref_target_directive('cfg',
+                indextemplates=[
+                    'single: Buildmaster Config; %s',
+                    'single: %s (Buildmaster Config)',
+                ]),
+        'sched' : make_ref_target_directive('sched',
+                indextemplates=[
+                    'single: Schedulers; %s',
+                    'single: %s Scheduler',
+                ]),
     }
 
     roles = {
@@ -140,45 +172,29 @@ class BBDomain(Domain):
     }
 
     initial_data = {
-        'targets' : {}, # kind -> target -> (docname, targetname)
+        'targets' : {}, # type -> target -> (docname, targetname)
     }
 
     indices = [
-        BBCfgIndex,
-        BBSchedIndex,
+        make_index("cfg", "Buildmaster Configuration Index"),
+        make_index("sched", "Scheduler Index"),
     ]
-
-    def resolve_index_ref(self, env, fromdocname, builder, typ, target, node,
-                     contnode):
-        # find the index object, to get its full name
-        for idx in self.indices:
-            if idx.name == target:
-                break
-        else:
-            raise KeyError("no index named '%s'" % target)
-
-        # indexes appear to be automatically generated at doc DOMAIN-NAME
-        todocname = "bb-%s" % target
-
-        node = nodes.reference('', '', internal=True)
-        node['refuri'] = builder.get_relative_uri(fromdocname, todocname)
-        node['reftitle'] = idx.localname
-        node.append(nodes.emphasis(idx.localname, idx.localname))
-        return node
 
     def resolve_xref(self, env, fromdocname, builder, typ, target, node,
                      contnode):
         if typ == 'index':
-            return self.resolve_index_ref(env, fromdocname, builder, typ,
-                                        target, node, contnode)
-        map = self.data['targets'].get(typ, {})
-        try:
-            todocname, targetname = map[target]
-        except KeyError:
-            return None
-        return make_refnode(builder, fromdocname,
-                            todocname, targetname,
-                            contnode, target)
+            for idx in self.indices:
+                if idx.name == target:
+                    break
+            else:
+                raise KeyError("no index named '%s'" % target)
+            return idx.resolve_ref(self, env, fromdocname, builder, typ,
+                            target, node, contnode)
+        elif typ in self.directives:
+            dir = self.directives[typ]
+            return dir.resolve_ref(self, env, fromdocname, builder, typ,
+                            target, node, contnode)
+
 
 def setup(app):
     app.add_domain(BBDomain)
