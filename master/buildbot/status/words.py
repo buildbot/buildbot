@@ -33,6 +33,7 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.status import base
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, RETRY
 from buildbot.scripts.runner import ForceOptions
+from buildbot.process.properties import Properties
 
 # twisted.internet.ssl requires PyOpenSSL, so be resilient if it's missing
 try:
@@ -461,7 +462,7 @@ class Contact(base.StatusReceiver):
                 self.send("Build details are at %s" % buildurl)
 
     def command_FORCE(self, args, who):
-        errReply = "try 'force build [--branch=BRANCH] [--revision=REVISION] <WHICH> <REASON>'"
+        errReply = "try 'force build [--branch=BRANCH] [--revision=REVISION] [--props=PROP1=VAL1,PROP2=VAL2...]  <WHICH> <REASON>'"
         args = shlex.split(args)
         if not args:
             raise UsageError(errReply)
@@ -475,13 +476,16 @@ class Contact(base.StatusReceiver):
         branch = opts['branch']
         revision = opts['revision']
         reason = opts['reason']
+        props = opts['props']
 
         if which is None:
             raise UsageError("you must provide a Builder, " + errReply)
 
-        # keep weird stuff out of the branch and revision strings. 
+        # keep weird stuff out of the branch, revision, and properties args.
         branch_validate = self.master.config.validation['branch']
         revision_validate = self.master.config.validation['revision']
+        pname_validate = self.master.config.validation['property_name']
+        pval_validate = self.master.config.validation['property_value']
         if branch and not branch_validate.match(branch):
             log.msg("bad branch '%s'" % branch)
             self.send("sorry, bad branch '%s'" % branch)
@@ -491,11 +495,33 @@ class Contact(base.StatusReceiver):
             self.send("sorry, bad revision '%s'" % revision)
             return
 
+        properties = None
+        if props:
+            # split props into name:value dict
+            pdict = {}
+            propertylist = props.split(",")
+            for i in range(0,len(propertylist)):
+                splitproperty = propertylist[i].split("=", 1)
+                pdict[splitproperty[0]] = splitproperty[1]
+
+            # set properties
+            properties = Properties()
+            for prop in pdict:
+                pname = prop
+                pvalue = pdict[prop]
+                if not pname_validate.match(pname) \
+                        or not pval_validate.match(pvalue):
+                    log.msg("bad property name='%s', value='%s'" % (pname, pvalue))
+                    self.send("sorry, bad property name='%s', value='%s'" %
+                              (pname, pvalue))
+                    return
+                properties.setProperty(pname, pvalue, "Force Build IRC")
+
         bc = self.getControl(which)
 
         reason = "forced: by %s: %s" % (self.describeUser(who), reason)
         ss = SourceStamp(branch=branch, revision=revision)
-        d = bc.submitBuildRequest(ss, reason)
+        d = bc.submitBuildRequest(ss, reason, props=properties.asDict())
         def subscribe(buildreq):
             ireq = IrcBuildRequest(self, self.useRevisions)
             buildreq.subscribe(ireq.started)
@@ -503,7 +529,7 @@ class Contact(base.StatusReceiver):
         d.addErrback(log.err, "while forcing a build")
 
 
-    command_FORCE.usage = "force build [--branch=branch] [--revision=revision] <which> <reason> - Force a build"
+    command_FORCE.usage = "force build [--branch=branch] [--revision=revision] [--props=prop1=val1,prop2=val2...] <which> <reason> - Force a build"
 
     def command_STOP(self, args, who):
         args = shlex.split(args)

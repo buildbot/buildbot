@@ -938,6 +938,10 @@ class ForceOptions(OptionsWithOptionsFile):
         ["branch", None, None, "which branch to build"],
         ["revision", None, None, "which revision to build"],
         ["reason", None, None, "the reason for starting the build"],
+        ["props", None, None,
+         "A set of properties made available in the build environment, "
+         "format is --properties=prop1=value1,prop2=value2,.. "
+         "option can be specified multiple times."],
         ]
 
     def parseArgs(self, *args):
