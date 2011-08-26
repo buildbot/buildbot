@@ -265,6 +265,7 @@ their overall status and the status of each step, but the logfiles will be
 deleted.
 
 .. bb:cfg:: caches
+.. bb:cfg:: changeCacheSize
 
 Caches
 ++++++
@@ -357,7 +358,7 @@ builder with the highest priority or oldest pending requst to the
 lowest priority, newest request. This behaviour can be
 customized with the :bb:cfg:`prioritizeBuilders` configuration key.
 This key specifies a function which is called with two arguments: a
-:bb:cfg:`BuildMaster` and a list of :class:`Builder` objects. It
+:class:`BuildMaster` and a list of :class:`Builder` objects. It
 should return a list of :class:`Builder` objects in the desired order.
 It may also remove items from the list if builds should not be started
 on those builders. If necessary, this function can return its

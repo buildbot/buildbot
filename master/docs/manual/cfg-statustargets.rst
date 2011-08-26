@@ -4,7 +4,7 @@
 Status Targets
 --------------
 
-.. bb:cfg: status
+.. bb:cfg:: status
 
 The Buildmaster has a variety of ways to present build status to
 various users. Each such delivery method is a `Status Target` object
