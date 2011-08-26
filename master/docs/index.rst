@@ -4,6 +4,9 @@
 
 This is the BuildBot documentation for Buildbot version |version|.
 
+If you are evaluating Buildbot and would like to get started quickly, start
+with the :doc:`Tutorial <tutorial/index>`.
+
 Table Of Contents
 -----------------
 
