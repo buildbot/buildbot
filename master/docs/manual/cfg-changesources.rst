@@ -25,88 +25,87 @@ work around this, but true support for multi-tree builds remains elusive.
 Choosing a Change Source
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are a variety of :class:`ChangeSource`\s available, some of which are
+There are a variety of :class:`ChangeSource` classes available, some of which are
 meant to be used in conjunction with other tools to deliver :class:`Change`
 events from the VC repository to the buildmaster.
 
 As a quick guide, here is a list of VC systems and the :class:`ChangeSource`\s
-that might be useful with them. All of these :class:`ChangeSource`\s are in the
-:mod:`buildbot.changes` module.
+that might be useful with them. 
 
 CVS
- * :class:`mail.CVSMaildirSource` (watching mail sent by @code{contrib/buildbot_cvs_mail.py} script) 
- * :class:`pb.PBChangeSource` (listening for connections from ``buildbot
+ * :bb:chsrc:`CVSMaildirSource` (watching mail sent by ``contrib/buildbot_cvs_mail.py`` script) 
+ * :bb:chsrc:`PBChangeSource` (listening for connections from ``buildbot
    sendchange`` run in a loginfo script)
- * :class:`pb.PBChangeSource` (listening for connections from a long-running
+ * :bb:chsrc:`PBChangeSource` (listening for connections from a long-running
    :file:`contrib/viewcvspoll.py` polling process which examines the ViewCVS
    database directly
- * change_hook in WebStatus (:class:`status.web.change_hook`)
+ * :bb:chsrc:`Change Hooks` in WebStatus
 
 SVN
- * :class:`pb.PBChangeSource` (listening for connections from
+ * :bb:chsrc:`PBChangeSource` (listening for connections from
    :file:`contrib/svn_buildbot.py` run in a postcommit script)
- * :class:`pb.PBChangeSource` (listening for connections from a long-running
+ * :bb:chsrc:`PBChangeSource` (listening for connections from a long-running
    :file:`contrib/svn_watcher.py` or :file:`contrib/svnpoller.py` polling
    process
- * :class:`mail.SVNCommitEmailMaildirSource` (watching for email sent by
+ * :bb:chsrc:`SVNCommitEmailMaildirSource` (watching for email sent by
    :file:`commit-email.pl`)
- * :class:`svnpoller.SVNPoller` (polling the SVN repository)
- * change_hook in WebStatus (:class:`status.web.change_hook`)
- * :file:`contrib/googlecode_atom.py`\'s GoogleCodeAtomPoller (polling the
-   commit feed for a GoogleCode SVN repository)
+ * :bb:chsrc:`SVNPoller` (polling the SVN repository)
+ * :bb:chsrc:`Change Hooks` in WebStatus
+ * :bb:chsrc:`GoogleCodeAtomPoller` (polling the
+   commit feed for a GoogleCode Git repository)
 
 Darcs
- * :class:`pb.PBChangeSource` (listening for connections from
-   :file:`contrib/darcs_buildbot.py` in a commit script 
- * change_hook in WebStatus (:class:`status.web.change_hook`)
+ * :bb:chsrc:`PBChangeSource` (listening for connections from
+   :file:`contrib/darcs_buildbot.py` in a commit script)
+ * :bb:chsrc:`Change Hooks` in WebStatus
 
 Mercurial
- * :class:`pb.PBChangeSource` (listening for connections from
+ * :bb:chsrc:`PBChangeSource` (listening for connections from
    :file:`contrib/hg_buildbot.py` run in an 'changegroup' hook)
- * change_hook in WebStatus (:class:`status.web.change_hook`)
- * :class:`pb.PBChangeSource` (listening for connections from
+ * :bb:chsrc:`Change Hooks` in WebStatus
+ * :bb:chsrc:`PBChangeSource` (listening for connections from
    :file:`buildbot/changes/hgbuildbot.py` run as an in-process 'changegroup'
    hook)
- * :file:`contrib/googlecode_atom.py`\'s GoogleCodeAtomPoller (polling the
-   commit feed for a GoogleCode Mercurial repository)
+ * :bb:chsrc:`GoogleCodeAtomPoller` (polling the
+   commit feed for a GoogleCode Git repository)
 
 Bzr (the newer Bazaar)
- * :class:`pb.PBChangeSource` (listening for connections from
+ * :bb:chsrc:`PBChangeSource` (listening for connections from
    :file:`contrib/bzr_buildbot.py` run in a post-change-branch-tip or commit hook)
- * :file:`contrib/bzr_buildbot.py`\'s :class:`BzrPoller` (polling the Bzr repository) 
- * change_hook in WebStatus (:class:`status.web.change_hook`)
+ * :bb:chsrc:`BzrPoller` (polling the Bzr repository)
+ * :bb:chsrc:`Change Hooks` in WebStatus
 
 Git
- * :class:`pb.PBChangeSource` (listening for connections from
+ * :bb:chsrc:`PBChangeSource` (listening for connections from
    :file:`contrib/git_buildbot.py` run in the post-receive hook)
- * :class:`pb.PBChangeSource` (listening for connections from
+ * :bb:chsrc:`PBChangeSource` (listening for connections from
    :file:`contrib/github_buildbot.py`, which listens for notifications
    from GitHub)
- * change_hook in WebStatus (:class:`status.web.change_hook`)
+ * :bb:chsrc:`Change Hooks` in WebStatus
  * github change hook (specifically designed for GitHub notifications,
    but requiring a publicly-accessible WebStatus)
- * :class:`gitpoller.GitPoller` (polling a remote git repository)
- * :file:`contrib/googlecode_atom.py`\'s GoogleCodeAtomPoller (polling the
+ * :bb:chsrc:`GitPoller` (polling a remote git repository)
+ * :bb:chsrc:`GoogleCodeAtomPoller` (polling the
    commit feed for a GoogleCode Git repository)
 
 
 Repo/Git
- * :class:`gerritchangesource.GerritChangeSource` connects to Gerrit
+ * :bb:chsrc:`GerritChangeSource` connects to Gerrit
    via SSH to get a live stream of changes
 
 Monotone
- * :class:`pb.PBChangeSource` (listening for connections from
+ * :bb:chsrc:`PBChangeSource` (listening for connections from
    :file:`monotone-buildbot.lua`, which is available with monotone)
 
-All VC systems can be driven by a :class:`PBChangeSource` and the
-``buildbot sendchange`` tool run from some form of commit script.
-If you write an email parsing function, they can also all be driven by
-a suitable :class:`MaildirSource`. Additionally, handlers for web-based
-notification (i.e. from GitHub) can be used with WebStatus' change_hook
-module. The interface is simple, so adding your own handlers (and sharing!)
-should be a breeze.
+All VC systems can be driven by a :bb:chsrc:`PBChangeSource` and the ``buildbot
+sendchange`` tool run from some form of commit script.  If you write an email
+parsing function, they can also all be driven by a suitable :ref:`mail-parsing
+source <Mail-parsing-ChangeSources>`. Additionally, handlers for web-based
+notification (i.e. from GitHub) can be used with WebStatus' change_hook module.
+The interface is simple, so adding your own handlers (and sharing!) should be a
+breeze.
 
-.. _Configuring-Change-Sources:
+See :bb:index:`chsrc` for a full list of change sources.
 
 .. index:: Change Sources
 
@@ -180,7 +179,7 @@ the change source and put it in ``change_source`` ::
                                                prefix="/trunk/")
 
 .. _Subscribing-the-Buildmaster:
-                                               
+
 Subscribing the Buildmaster
 +++++++++++++++++++++++++++
 
@@ -273,18 +272,18 @@ buildbot tools to parse them, are:
 
 CVS
     Buildbot CVS MailNotifier
-        :ref:`CVSMaildirSource`
+        :bb:chsrc:`CVSMaildirSource`
 
 SVN
     svnmailer
         http://opensource.perlig.de/en/svnmailer/
 
     :file:`commit-email.pl`
-        :ref:`SVNCommitEmailMaildirSource`
+        :bb:chsrc:`SVNCommitEmailMaildirSource`
 
 Bzr
     Launchpad
-        :ref:`BzrLaunchpadEmailMaildirSource`
+        :bb:chsrc:`BzrLaunchpadEmailMaildirSource`
 
 Mercurial
     NotifyExtension
@@ -308,6 +307,7 @@ is ignored. If the filename *does* start with the prefix, that
 prefix is stripped from the filename before any further processing is
 done. Thus the prefix usually ends with a slash.
 
+.. bb:chsrc:: CVSMaildirSource
 
 .. _CVSMaildirSource:
 
@@ -322,7 +322,7 @@ contrib directory.
 The script sends an email containing all the files submitted in
 one directory. It is invoked by using the :file:`CVSROOT/loginfo` facility.
 
-The Buildbot's :class:`CVSMaildirSource` knows how to parse 
+The Buildbot's :bb:chsrc:`CVSMaildirSource` knows how to parse 
 these messages and turn them into Change objects. It takes two parameters, 
 the directory name of the maildir root, and an optional function to create
 a URL for each file. The function takes three parameters::
@@ -353,7 +353,7 @@ cd to the CVSROOT directory and edit the file loginfo, adding a line like::
 
     SomeModule /cvsroot/CVSROOT/buildbot_cvs_mail.py --cvsroot :ext:example.com:/cvsroot -e buildbot -P SomeModule %@{sVv@}
 
-.. note:: For cvs version 1.12.x, the '@code{--path %p}' option is required.
+.. note:: For cvs version 1.12.x, the ``--path %p`` option is required.
    Version 1.11.x and 1.12.x report the directory path differently.
 
 The above example you put the buildbot_cvs_mail.py script under /cvsroot/CVSROOT. 
@@ -433,14 +433,16 @@ The following is an abreviated form of buildbot_cvs_mail.py --help::
             CVS %@{sVv@} loginfo expansion.  When invoked by CVS, this will be a single
             string containing the files that are changing.
 
+.. bb:chsrc:: SVNCommitEmailMaildirSource
+
 .. _SVNCommitEmailMaildirSource:
     
-SVNCommit‍EmailMaildirSource
+SVNCommitEmailMaildirSource
 ++++++++++++++++++++++++++++
 
 .. py:class:: buildbot.changes.mail.SVNCommitEmailMaildirSource
 
-:class:`SVNCommitEmailMaildirSource` parses message sent out by the
+:bb:chsrc:`SVNCommitEmailMaildirSource` parses message sent out by the
 :file:`commit-email.pl` script, which is included in the Subversion
 distribution.
 
@@ -450,14 +452,16 @@ it creates will be associated with the default (i.e. trunk) branch. ::
     from buildbot.changes.mail import SVNCommitEmailMaildirSource
     c['change_source'] = SVNCommitEmailMaildirSource("~/maildir-buildbot")
 
+.. bb:chsrc:: BzrLaunchpadEmailMaildirSource
+
 .. _BzrLaunchpadEmailMaildirSource:
     
-BzrLaunchpad‍EmailMaildirSource
+BzrLaunchpadEmailMaildirSource
 +++++++++++++++++++++++++++++++
 
 .. py:class:: buildbot.changes.mail.BzrLaunchpadEmailMaildirSource
 
-:class:`BzrLaunchpadEmailMaildirSource` parses the mails that are sent to
+:bb:chsrc:`BzrLaunchpadEmailMaildirSource` parses the mails that are sent to
 addresses that subscribe to branch revision notifications for a bzr branch
 hosted on Launchpad.
 
@@ -485,6 +489,8 @@ avoid new pushes of merges changing the meaning of old revision numbers. ::
     bm = { 'lp:~maria-captains/maria/5.1' : '5.1', 'lp:~maria-captains/maria/6.0' : '6.0' }
     c['change_source'] = BzrLaunchpadEmailMaildirSource("~/maildir-buildbot", branchMap = bm)
 
+.. bb:chsrc:: PBChangeSource
+
 .. _PBChangeSource:
 
 PBChangeSource
@@ -492,7 +498,7 @@ PBChangeSource
 
 .. py:class:: buildbot.changes.pb.PBChangeSource
 
-:class:`PBChangeSource` actually listens on a TCP port for
+:bb:chsrc:`PBChangeSource` actually listens on a TCP port for
 clients to connect and push change notices *into* the
 Buildmaster. This is used by the built-in ``buildbot sendchange``
 notification tool, as well as several version-control hook
@@ -502,19 +508,19 @@ instead of some kind of subscription scheme, for example a script
 which is run out of an email :file:`.forward` file. This ChangeSource
 always runs on the same TCP port as the slaves.  It shares the same
 protocol, and in fact shares the same space of "usernames", so you
-cannot configure a :class:`PBChangeSource` with the same name as a slave.
+cannot configure a :bb:chsrc:`PBChangeSource` with the same name as a slave.
 
 If you have a publicly accessible slave port, and are using
-:class:`PBChangeSource`, *you must establish a secure username and password
+:bb:chsrc:`PBChangeSource`, *you must establish a secure username and password
 for the change source*.  If your sendchange credentials are known (e.g., the
 defaults), then your buildmaster is susceptible to injection of arbitrary
 changes, which (depending on the build factories) could lead to arbitrary code
 execution on buildslaves.
 
-The :class:`PBChangeSource` is created with the following arguments.
+The :bb:chsrc:`PBChangeSource` is created with the following arguments.
 
 `port`
-    which port to listen on. If @code{None} (which is the default), it
+    which port to listen on. If ``None`` (which is the default), it
     shares the port used for buildslave connections.
 
 `user` and `passwd`
@@ -533,14 +539,14 @@ The :class:`PBChangeSource` is created with the following arguments.
     represent branches as parent directories within the repository (like
     SVN and Perforce). Use a prefix of ``trunk/`` or
     ``project/branches/foobranch/`` to only follow one branch and to get
-    correct tree-relative filenames. Without a prefix, the :class:`PBChangeSource`
+    correct tree-relative filenames. Without a prefix, the :bb:chsrc:`PBChangeSource`
     will probably deliver Changes with filenames like :file:`trunk/foo.c`
     instead of just :file:`foo.c`. Of course this also depends upon the
     tool sending the Changes in (like :command:`buildbot sendchange`) and
     what filenames it is delivering: that tool may be filtering and
     stripping prefixes at the sending end.
 
-The following hooks are useful for sending changes to a :class:`PBChangeSource`\:
+The following hooks are useful for sending changes to a :bb:chsrc:`PBChangeSource`\:
 
 .. _Mercurial-Hook:
 
@@ -551,7 +557,7 @@ Since Mercurial is written in python, the hook script can invoke
 Buildbot's :meth:`sendchange` function directly, rather than having to
 spawn an external process. This function delivers the same sort of
 changes as :command:`buildbot sendchange` and the various hook scripts in
-:file:`contrib/`, so you'll need to add a :class:`pb.PBChangeSource` to your
+:file:`contrib/`, so you'll need to add a :bb:chsrc:`PBChangeSource` to your
 buildmaster to receive these changes.
 
 To set this up, first choose a Mercurial repository that represents
@@ -587,7 +593,7 @@ whereas the ``incoming`` hook is run with just one revision at a
 time. The ``hgbuildbot.hook`` function will only work with the
 ``changegroup`` hook.
 
-If the buildmaster :class:`PBChangeSource` is configured to require
+If the buildmaster :bb:chsrc:`PBChangeSource` is configured to require
 sendchange credentials then you can set these with the ``auth``
 parameter. When this parameter is not set it defaults to
 ``change:changepw``, which are the defaults for the ``user`` and
@@ -717,8 +723,8 @@ with these keys:
     append the branch name to the baseURL.
 
 .. note:: The bzr smart server (as of version 2.2.2) doesn't know how
-   to resolve @code{bzr://} urls into absolute paths so any paths in
-   @code{locations.conf} won't match, hence no change notifications
+   to resolve ``bzr://`` urls into absolute paths so any paths in
+   ``locations.conf`` won't match, hence no change notifications
    will be sent to Buildbot. Setting configuration parameters globally
    or in-branch might still work. When buildbot no longer has a
    hardcoded password, it will be a configuration option here as well.
@@ -732,12 +738,14 @@ Here's a simple example that you might have in your
     buildbot_on = change
     buildbot_server = localhost
 
+.. bb:chsrc:: P4Source
+
 .. _P4Source:
     
 P4Source
 ~~~~~~~~
 
-The :class:`P4Source` periodically polls a `Perforce <http://www.perforce.com/>`_
+The :bb:chsrc:`P4Source` periodically polls a `Perforce <http://www.perforce.com/>`_
 depot for changes. It accepts the following arguments:
 
 ``p4base``
@@ -789,12 +797,14 @@ components after. ::
                          )
     c['change_source'] = s
 
+.. bb:chsrc:: BonsaiPoller
+
 .. _BonsaiPoller:
     
 BonsaiPoller
 ~~~~~~~~~~~~
 
-The :class:`BonsaiPoller` periodically polls a Bonsai server. This is a
+The :bb:chsrc:`BonsaiPoller` periodically polls a Bonsai server. This is a
 CGI script accessed through a web server that provides information
 about a CVS tree, for example the Mozilla bonsai server at
 http://bonsai.mozilla.org. Bonsai servers are usable by both
@@ -803,7 +813,7 @@ a query which asks about any files in the specified branch which have
 changed since the last query.
 
 
-:class:`BonsaiPoller` accepts the following arguments:
+:bb:chsrc:`BonsaiPoller` accepts the following arguments:
 
 ``bonsaiURL``
     The base URL of the Bonsai server, e.g., ``http://bonsai.mozilla.org``
@@ -828,6 +838,8 @@ changed since the last query.
     The project name to attach to all change objects produced by this
     change source.
 
+.. bb:chsrc:: SVNPoller
+
 .. _SVNPoller:
 
 SVNPoller
@@ -835,13 +847,13 @@ SVNPoller
 
 .. py:class:: buildbot.changes.svnpoller.SVNPoller
 
-The :class:`buildbot.changes.svnpoller.SVNPoller` is a ChangeSource
+The :bb:chsrc:`SVNPoller` is a ChangeSource
 which periodically polls a `Subversion <http://subversion.tigris.org/>`_
 repository for new revisions, by running the ``svn log``
 command in a subshell. It can watch a single branch or multiple
 branches.
 
-:class:`SVNPoller` accepts the following arguments:
+:bb:chsrc:`SVNPoller` accepts the following arguments:
 
 ``svnurl``
     The base URL path to watch, like
@@ -853,13 +865,13 @@ branches.
     to get to the repository), and the sub-path within the repository's
     virtual filesystem for the project and branch of interest.
     
-    The :class:`SVNPoller` will only pay attention to files inside the
+    The :bb:chsrc:`SVNPoller` will only pay attention to files inside the
     subdirectory specified by the complete svnurl.
 
 ``split_file``
     A function to convert pathnames into ``(branch, relative_pathname)``
     tuples. Use this to explain your repository's branch-naming policy to
-    :class:`SVNPoller`. This function must accept a single string and return
+    :bb:chsrc:`SVNPoller`. This function must accept a single string and return
     a two-entry tuple. There are a few utility functions in
     :mod:`buildbot.changes.svnpoller` that can be used as a
     :meth:`split_file` function, see below for details.
@@ -867,12 +879,12 @@ branches.
     The default value always returns ``(None, path)``, which indicates that
     all files are on the trunk.
     
-    Subclasses of :class:`SVNPoller` can override the :meth:`split_file`
+    Subclasses of :bb:chsrc:`SVNPoller` can override the :meth:`split_file`
     method instead of using the ``split_file=`` argument.
 
 ``project``
-    Set the name of the project to be used for the :class:`SVNPoller`.
-    This will then be set in any changes generated by the :class:`SVNPoller`,
+    Set the name of the project to be used for the :bb:chsrc:`SVNPoller`.
+    This will then be set in any changes generated by the :bb:chsrc:`SVNPoller`,
     and can be used in a Change Filter for triggering particular builders.
 
 ``svnuser``
@@ -894,7 +906,7 @@ branches.
 
 ``histmax``
     The maximum number of changes to inspect at a time. Every ``pollinterval``
-    seconds, the :class:`SVNPoller` asks for the last HISTMAX changes and
+    seconds, the :bb:chsrc:`SVNPoller` asks for the last HISTMAX changes and
     looks through them for any ones it does not already know about. If
     more than ``histmax`` revisions have been committed since the last poll,
     older changes will be silently ignored. Larger values of ``histmax`` will
@@ -904,7 +916,7 @@ branches.
 ``svnbin``
     This controls the :command:`svn` executable to use. If subversion is
     installed in a weird place on your system (outside of the
-    buildmaster's :envvar:`PATH`), use this to tell :class:`SVNPoller` where
+    buildmaster's :envvar:`PATH`), use this to tell :bb:chsrc:`SVNPoller` where
     to find it. The default value of `svn` will almost always be
     sufficient.
 
@@ -929,9 +941,9 @@ Branches
 Each source file that is tracked by a Subversion repository has a
 fully-qualified SVN URL in the following form:
 :samp:`({REPOURL})({PROJECT-plus-BRANCH})({FILEPATH})`. When you create the
-:class:`SVNPoller`, you give it a ``svnurl`` value that includes all
+:bb:chsrc:`SVNPoller`, you give it a ``svnurl`` value that includes all
 of the :samp:`{REPOURL}` and possibly some portion of the :samp:`{PROJECT-plus-BRANCH}`
-string. The :class:`SVNPoller` is responsible for producing Changes that
+string. The :bb:chsrc:`SVNPoller` is responsible for producing Changes that
 contain a branch name and a :samp:`{FILEPATH}` (which is relative to the top of
 a checked-out tree). The details of how these strings are split up
 depend upon how your repository names its branches.
@@ -964,13 +976,13 @@ fully-qualified SVN URL for the trunk version of :command:`trial` would be
 SVNURL for that file on a branch named `1.5.x` would be
 `svn://svn.twistedmatrix.com/svn/Twisted/branches/1.5.x/bin/trial`.
 
-To set up a :class:`SVNPoller` that watches the Twisted trunk (and
+To set up a :bb:chsrc:`SVNPoller` that watches the Twisted trunk (and
 nothing else), we would use the following::
 
     from buildbot.changes.svnpoller import SVNPoller
     c['change_source'] = SVNPoller("svn://svn.twistedmatrix.com/svn/Twisted/trunk")
 
-In this case, every Change that our :class:`SVNPoller` produces will
+In this case, every Change that our :bb:chsrc:`SVNPoller` produces will
 have ``.branch=None``, to indicate that the Change is on the trunk.
 No other sub-projects or branches will be tracked.
 
@@ -978,7 +990,7 @@ If we want our ChangeSource to follow multiple branches, we have to do
 two things. First we have to change our ``svnurl=`` argument to
 watch more than just ``.../Twisted/trunk``. We will set it to
 ``.../Twisted`` so that we'll see both the trunk and all the branches.
-Second, we have to tell :class:`SVNPoller` how to split the
+Second, we have to tell :bb:chsrc:`SVNPoller` how to split the
 :samp:`({PROJECT-plus-BRANCH})({FILEPATH})` strings it gets from the repository
 out into :samp:`({BRANCH})` and :samp:`({FILEPATH})` pairs.
 
@@ -987,7 +999,7 @@ is responsible for splitting something like
 ``branches/1.5.x/bin/trial`` into ``branch='branches/1.5.x'`` and
 ``filepath='bin/trial'``. This function is always given a string
 that names a file relative to the subdirectory pointed to by the
-:class:`SVNPoller`\'s ``svnurl=`` argument. It is expected to return a
+:bb:chsrc:`SVNPoller`\'s ``svnurl=`` argument. It is expected to return a
 :samp:`({BRANCHNAME}, {FILEPATH})` tuple (in which :samp:`{FILEPATH}` is relative to the
 branch indicated), or ``None`` to indicate that the file is outside any
 project of interest.
@@ -1013,7 +1025,7 @@ scheme, the following function will work::
 
 This function is provided as
 :meth:`buildbot.changes.svnpoller.split_file_branches` for your
-convenience. So to have our Twisted-watching :class:`SVNPoller` follow
+convenience. So to have our Twisted-watching :bb:chsrc:`SVNPoller` follow
 multiple branches, we would use this::
 
     from buildbot.changes.svnpoller import SVNPoller, split_file_branches
@@ -1051,7 +1063,7 @@ The whole Nevow trunk would be checked out with
 trunk would be checked out using
 ``http://divmod.org/svn/Divmod/trunk/Quotient``.
 
-Now suppose we want to have an :class:`SVNPoller` that only cares about
+Now suppose we want to have an :bb:chsrc:`SVNPoller` that only cares about
 the Nevow trunk. This case looks just like the
 :samp:`{PROJECT}/{BRANCH}` layout
 described earlier::
@@ -1108,6 +1120,8 @@ The following definition for :meth:`my_file_splitter` will do the job::
             return None # wrong project
         return (branch, '/'.join(pieces))
 
+.. bb:chsrc:: BzrPoller
+
 .. _Bzr-Poller:
         
 Bzr Poller
@@ -1138,25 +1152,27 @@ privileges. You may also want to specify these optional values.
     responsible for the change. set this value to ``True`` if this is pointed against
     a PQM-managed branch.
 
+.. bb:chsrc:: GitPoller
+
 .. _GitPoller:
     
 GitPoller
 ~~~~~~~~~
 
 If you cannot take advantage of post-receive hooks as provided by
-:file:`contrib/git_buildbot.py` for example, then you can use the :class:`GitPoller`.
+:file:`contrib/git_buildbot.py` for example, then you can use the :bb:chsrc:`GitPoller`.
 
-The :class:`GitPoller` periodically fetches from a remote git repository and
+The :bb:chsrc:`GitPoller` periodically fetches from a remote git repository and
 processes any changes. It requires its own working directory for operation, which
 can be specified via the ``workdir`` property. By default a temporary directory will
 be used.
 
-The :class:`GitPoller` only works with git ``1.7`` and up, out of the
+The :bb:chsrc:`GitPoller` only works with git ``1.7`` and up, out of the
 box.  If you're using earlier versions of git, you can get things to
 work by manually creating an empty repository in
 :samp:`{tempdir}/gitpoller_work``.
 
-:class:`GitPoller` accepts the following arguments:
+:bb:chsrc:`GitPoller` accepts the following arguments:
 
 ``repourl``
     the git-url that describes the remote repository, e.g.
@@ -1181,7 +1197,7 @@ work by manually creating an empty repository in
 
 ``fetch_refspec``
     One or more refspecs to use when fetching updates for the
-    repository. By default, the :class:`GitPoller` will simply fetch
+    repository. By default, the :bb:chsrc:`GitPoller` will simply fetch
     all refs. If your repository is large enough that this would be
     unwise (or active enough on irrelevant branches that it'd be a
     waste of time to fetch them all), you may wish to specify only a
@@ -1191,14 +1207,14 @@ work by manually creating an empty repository in
 
 ``category``
     Set the category to be used for the changes produced by the
-    :class:`GitPoller`. This will then be set in any changes generated
-    by the :class:`GitPoller`, and can be used in a Change Filter for
+    :bb:chsrc:`GitPoller`. This will then be set in any changes generated
+    by the :bb:chsrc:`GitPoller`, and can be used in a Change Filter for
     triggering particular builders.
 
 ``project``
     Set the name of the project to be used for the
-    :class:`GitPoller`. This will then be set in any changes generated
-    by the @code{GitPoller}, and can be used in a Change Filter for
+    :bb:chsrc:`GitPoller`. This will then be set in any changes generated
+    by the ``GitPoller``, and can be used in a Change Filter for
     triggering particular builders.
 
 ``usetimestamps``
@@ -1222,6 +1238,8 @@ Example
                                    branch='great_new_feature',
                                    workdir='/home/buildbot/gitpoller_workdir')
 
+.. bb:chsrc:: GerritChangeSource
+
 .. _GerritChangeSource:
 
 GerritChangeSource
@@ -1229,7 +1247,7 @@ GerritChangeSource
 
 .. py:class:: buildbot.changes.gerritchangesource.GerritChangeSource
 
-The :class:`GerritChangeSource` class connects to a Gerrit server by its SSH
+The :bb:chsrc:`GerritChangeSource` class connects to a Gerrit server by its SSH
 interface and uses its event source mechanism,
 `gerrit stream-events <http://gerrit.googlecode.com/svn/documentation/2.1.6/cmd-stream-events.html>`_.
 
@@ -1317,7 +1335,9 @@ Example
 
 see 
 :file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot
-distribution for an example setup of :class:`GerritChangeSource`.
+distribution for an example setup of :bb:chsrc:`GerritChangeSource`.
+
+.. bb:chsrc:: Change Hooks
 
 .. _Change-Hooks-HTTP-Notifications:
 
@@ -1328,12 +1348,14 @@ Buildbot already provides a web frontend, and that frontend can easily be used
 to receive HTTP push notifications of commits from services like GitHub.  See
 :ref:`Change-Hooks` for more information.
 
+.. bb:chsrc:: GoogleCodeAtomPoller
+
 .. _GoogleCodeAtomPoller:
                                    
 GoogleCodeAtomPoller
 ~~~~~~~~~~~~~~~~~~~~
 
-The :class:`GoogleCodeAtomPoller` periodically polls a Google Code Project's
+The :bb:chsrc:`GoogleCodeAtomPoller` periodically polls a Google Code Project's
 commit feed for changes. Works on SVN, Git, and Mercurial repositories. Branches
 are not understood (yet). It accepts the following arguments:
 

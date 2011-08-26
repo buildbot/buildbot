@@ -150,6 +150,7 @@ class BBDomain(Domain):
     object_types = {
         'cfg' : ObjType('cfg', 'cfg'),
         'sched' : ObjType('sched', 'sched'),
+        'chsrc' : ObjType('chsrc', 'chsrc'),
     }
 
     directives = {
@@ -163,11 +164,18 @@ class BBDomain(Domain):
                     'single: Schedulers; %s',
                     'single: %s Scheduler',
                 ]),
+        'chsrc' : make_ref_target_directive('chsrc',
+                indextemplates=[
+                    'single: Change Sources; %s',
+                    'single: %s Change Sources',
+                ]),
     }
 
     roles = {
         'cfg' : XRefRole(),
         'sched' : XRefRole(),
+        'chsrc' : XRefRole(),
+
         'index' : XRefRole(),
     }
 
@@ -178,6 +186,7 @@ class BBDomain(Domain):
     indices = [
         make_index("cfg", "Buildmaster Configuration Index"),
         make_index("sched", "Scheduler Index"),
+        make_index("chsrc", "Change Source Index"),
     ]
 
     def resolve_xref(self, env, fromdocname, builder, typ, target, node,

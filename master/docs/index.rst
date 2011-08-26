@@ -16,12 +16,13 @@ Table Of Contents
    manual/index
    tutorial/index
 
-Indices and tables
+Indices and Tables
 ==================
 
 * :ref:`genindex`
 * :bb:index:`cfg`
 * :bb:index:`sched`
+* :bb:index:`chsrc`
 * :ref:`modindex`
 * :ref:`search`
 

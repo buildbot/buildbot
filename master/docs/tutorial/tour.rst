@@ -323,6 +323,6 @@ option on 'buildbot try' to pass your email address.
 To make a description of the change show up, use the
 --properties=comment="this is a comment" option on 'buildbot try'.
 
-To use ssl instead of a private username/password database, see
-:ref:`Try-Schedulers`.
+To use ssh instead of a private username/password database, see
+:bb:sched:`Try_Jobdir`.
 
