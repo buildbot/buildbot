@@ -806,6 +806,8 @@ Live Status Clients
 The Buildbot also offers a desktop status client interface which can display
 real-time build status in a GUI panel on the developer's desktop.
 
+.. index:: Properties
+
 .. _Build-Properties:
 
 Build Properties
