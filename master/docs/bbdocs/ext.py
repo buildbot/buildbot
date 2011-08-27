@@ -113,7 +113,7 @@ class BBIndex(Index):
             letter = name[0].upper()
             content.setdefault(letter, []).append(
                 (name, 0, docname, targetname, '', '', ''))
-        content = [ (l, content[l])
+        content = [ (l, sorted(content[l], key=lambda tup : tup[0].lower()))
                     for l in sorted(content.keys()) ]
         return (content, False)
 
