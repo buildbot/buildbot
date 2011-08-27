@@ -1184,12 +1184,13 @@ as shown in the example earlier.
 If the ``allowForce=True`` option was used, some addtional commands
 will be available:
 
-:samp:`force build [--branch={BRANCH}] [--revision={REVISION}] {BUILDER} {REASON}`
+:samp:`force build [--branch={BRANCH}] [--revision={REVISION}] [--props=PROP1=VAL1,PROP2=VAL2...] {BUILDER} {REASON}`
     Tell the given :class:`Builder` to start a build of the latest code. The user
     requesting the build and *REASON* are recorded in the :class:`Build` status. The
     buildbot will announce the build's status when it finishes.The
     user can specify a branch and/or revision with the optional
-    parameters :samp:`--branch={BRANCH}` and :samp:`--revision={REVISION}`.
+    parameters :samp:`--branch={BRANCH}` and :samp:`--revision={REVISION}`. The user
+    can also give a list of properties with :samp:`--props={PROP1=VAL1,PROP2=VAL2..}`.
 
 
 :samp:`stop build {BUILDER} {REASON}`
