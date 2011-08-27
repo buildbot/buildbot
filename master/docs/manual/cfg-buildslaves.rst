@@ -102,7 +102,7 @@ provide a list of addresses instead of a single one::
                               ),
                   ]
 
-The email sent this way will use a :class:`MailNotifier` (:ref:`MailNotifier`)
+The email sent this way will use a :class:`MailNotifier` (:bb:status:`MailNotifier`)
 status target, if one is configured. This provides a way for you to
 control the *from* address of the email, as well as the relayhost
 (aka *smarthost*) to use as an SMTP server. If no :class:`MailNotifier` is

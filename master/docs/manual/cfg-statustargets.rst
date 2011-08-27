@@ -1,10 +1,9 @@
-.. -*- rst -*-
+.. bb:cfg:: status
+
 .. _Status-Targets:
 
 Status Targets
 --------------
-
-.. bb:cfg:: status
 
 The Buildmaster has a variety of ways to present build status to
 various users. Each such delivery method is a `Status Target` object
@@ -42,7 +41,10 @@ show status for Builders that are in one of the named categories.
     builder events, in which case they must define :meth:`builderAdded` and related
     methods. See the docstrings in :file:`buildbot/interfaces.py` for full details.
 
-.. _WebStatus:
+The remainder of this section describes each built-in status target.  A full
+list of status targets is available in the :bb:index:`status`.
+
+.. bb:status:: WebStatus
 
 WebStatus
 ~~~~~~~~~
@@ -80,8 +82,6 @@ about that build. By adding query arguments to the URL used to reach
 this page, you can narrow the display to builds that involved certain
 branches, or which ran on certain :class:`Builder`\s. These pages are described
 in great detail below.
-
-.. _WebStatus-Configuration:
 
 Configuration
 +++++++++++++
@@ -124,8 +124,6 @@ resources.
 
 The following section describes the special URLs and the status views
 they provide.
-
-.. _Buildbot-Web-Resources:
 
 Buildbot Web Resources
 ++++++++++++++++++++++
@@ -314,7 +312,7 @@ be used to access them.
 
 ``/changes``
     This provides a brief description of the :class:`ChangeSource` in use
-    (:ref:`Change-Sources`).
+    (see :ref:`Change-Sources`).
 
 :samp:`/changes/{NN}`
     This shows detailed information about the numbered :class:`Change`: who was the
@@ -381,12 +379,8 @@ by other programs, rather than humans.
     contrib/post_build_request.py. See :ref:`Change-Hooks` for more
     details.
 
-.. _WebStatus-Configuration-Parameters:
-
 WebStatus Configuration Parameters
 ++++++++++++++++++++++++++++++++++
-
-.. _HTTP-Connection:
 
 HTTP Connection
 ###############
@@ -415,8 +409,6 @@ files that will be displayed alongside the various built-in URLs buildbot
 supplies.  This is most often used to supply CSS files (:file:`/buildbot.css`)
 and a top-level navigational file (:file:`/index.html`), but can also serve any
 other files required - even build results!
-
-.. _Authorization:
 
 Authorization
 #############
@@ -473,8 +465,6 @@ This is all configured with the :class:`Authz` class::
 Each of the actions listed above is an option to :class:`Authz`.  You can specify
 ``False`` (the default) to prohibit that action or ``True`` to enable it.
 
-.. _Authentication:
-
 Authentication
 ##############
 
@@ -521,8 +511,6 @@ The ``forceBuild`` and ``pingBuilder`` actions both supply a
 object.  The ``cancelPendingBuild`` action supplies a :class:`BuildRequest`.  The
 remainder do not supply any extra arguments.
 
-.. _Logging-configuration:
-
 Logging configuration
 #####################
 
@@ -538,8 +526,6 @@ parameters if you need a different behaviour.
 ``maxRotatedFiles``
     The maximum number of old log files to keep. 
 
-.. _URL-decorating-options:
-    
 URL-decorating options
 ######################
 
@@ -603,8 +589,6 @@ repositories
 Same as the projects arg above, a dict or callable mapping project names
 to URLs.
 
-.. _Display-Specific-Options:
-
 Display-Specific Options
 ########################
 
@@ -667,9 +651,9 @@ Note that there is a standalone HTTP server available for receiving GitHub
 notifications, as well: :file:`contrib/github_buildbot.py`.  This script may be
 useful in cases where you cannot expose the WebStatus for public consumption.
 
-.. index:: email, mail
+.. bb:status:: MailNotifier
 
-.. _MailNotifier:
+.. index:: single: email; MailNotifier
 
 MailNotifier
 ~~~~~~~~~~~~
@@ -739,7 +723,7 @@ set ``useTls``::
 
 .. note:: If you see ``twisted.mail.smtp.TLSRequiredError`` exceptions in
    the log while using TLS, this can be due *either* to the server not
-   supporting TLS or to a missing pyopenssl package on the buildmaster system.
+   supporting TLS or to a missing `PyOpenSSL`_ package on the buildmaster system.
 
 In some cases it is desirable to have different information then what is
 provided in a standard MailNotifier message. For this purpose MailNotifier
@@ -859,8 +843,6 @@ given below::
                       mode='failing',
                       extraRecipients=['listaddr@example.org'],
                       messageFormatter=message_formatter)
-
-.. _MailNotifier-arguments:
 
 MailNotifier arguments
 ++++++++++++++++++++++
@@ -1073,9 +1055,9 @@ Log information ::
                                            log.getName())
         logs.append((log_name, log_url, log_body, log_status))
 
-.. index:: IRC
+.. bb:status:: IRC
 
-.. _IRC-Bot:
+.. index:: IRC
 
 IRC Bot
 ~~~~~~~
@@ -1200,7 +1182,7 @@ will be available:
     wait for the first build (which is destined to fail) to complete
     before starting the second (hopefully fixed) build.
 
-If the `categories` is set to a category of builders (see categories
+If the `categories` is set to a category of builders (see the categories
 option in :ref:`Builder-Configuration`) changes related to only that 
 category of builders will be sent to the channel.
 
@@ -1211,8 +1193,8 @@ build. So instead of seeing `build #253 of ...`, you would see something like
 shortened to 7 characters in length, as multiple revisions can be contained in one
 build and may exceed the IRC message length limit.
 
-.. _PBListener:
-    
+.. bb:status:: PBListener
+
 PBListener
 ~~~~~~~~~~
 
@@ -1228,11 +1210,11 @@ PBListener
 
 This sets up a PB listener on the given TCP port, to which a PB-based
 status client can connect and retrieve status information.
-:command:`buildbot statusgui` (:ref:`statusgui`) is an example of such a
+:command:`buildbot statusgui` (:bb:cmdline:`statusgui`) is an example of such a
 status client. The ``port`` argument can also be a strports
 specification string.
 
-.. _StatusPush:
+.. bb:status:: StatusPush
 
 StatusPush
 ~~~~~~~~~~
@@ -1258,7 +1240,7 @@ should pop items from the queue and then queue the next callback.
 If no items were poped from ``self.queue``, ``retryDelay`` seconds will be
 waited instead.
 
-.. _HttpStatusPush:
+.. bb:status:: HttpStatusPush
 
 HttpStatusPush
 ~~~~~~~~~~~~~~
@@ -1277,7 +1259,7 @@ HttpStatusPush
 ``serverUrl``, with all the items json-encoded. It is useful to create a
 status front end outside of buildbot for better scalability.
 
-.. _GerritStatusPush:
+.. bb:status:: GerritStatusPush
 
 GerritStatusPush
 ~~~~~~~~~~~~~~~~
@@ -1307,12 +1289,8 @@ GerritStatusPush
 
 GerritStatusPush sends review of the :class:`Change` back to the Gerrit server.
 
-.. _Writing-New-Status-Plugins:
-
 Writing New Status Plugins
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. TODO: this needs a lot more examples
 
 Each status plugin is an object which provides the
 :class:`twisted.application.service.IService` interface, which creates a

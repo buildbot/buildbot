@@ -516,10 +516,10 @@ Try Schedulers
 
 This scheduler allows developers to use the :command:`buildbot try`
 command to trigger builds of code they have not yet committed. See
-:ref:`try` for complete details.
+:bb:cmdline:`try` for complete details.
 
-Two implementations are available: :class:`Try_Jobdir` and
-:class:`Try_Userpass`.  The former monitors a job directory, specified
+Two implementations are available: :bb:sched:`Try_Jobdir` and
+:bb:sched:`Try_Userpass`.  The former monitors a job directory, specified
 by the ``jobdir`` parameter, while the latter listens for PB
 connections on a specific ``port``, and authenticates against
 ``userport``.

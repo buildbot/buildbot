@@ -172,7 +172,7 @@ buildbot HTML pages to your project's home page.
 
 The :bb:cfg:`buildbotURL` string should point to the location where the buildbot's
 internal web server is visible. This URL must end with a slash (``/``).
-This typically uses the port number set for the web status (:ref:`WebStatus`):
+This typically uses the port number set for the web status (:bb:status:`WebStatus`):
 the buildbot needs your help to figure out a suitable externally-visible host
 URL.
 
@@ -616,7 +616,7 @@ Users Options
 
 :bb:cfg:`user_managers` contains a list of ways to manually manage User Objects
 within Buildbot (see :ref:`User-Objects`). Currently implemented is a
-commandline tool `buildbot user`, described at length in :ref:`user`.
+commandline tool `buildbot user`, described at length in :bb:cmdline:`user`.
 In the future, a web client will also be able to manage User Objects and
 their attributes.
 

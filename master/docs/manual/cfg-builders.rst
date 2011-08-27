@@ -90,7 +90,7 @@ Other optional keys may be set on each :class:`Builder`:
 
 ``env``
     A Builder may be given a dictionary of environment variables in this parameter.
-    The variables are used in :ref:`Step-ShellCommand` steps in builds created by this
+    The variables are used in :bb:step:`ShellCommand` steps in builds created by this
     builder. The environment variables will override anything in the buildslave's
     environment. Variables passed directly to a :class:`ShellCommand` will override
     variables of the same name passed to the Builder.

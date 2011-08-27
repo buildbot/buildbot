@@ -400,7 +400,7 @@ own builds.
 Note that ``actionAllowed`` returns a ``Deferred`` instance, so you must wait
 for the ``Deferred`` and yield the ``Redirect`` instead of returning it.
 
-The available actions are listed in :ref:`WebStatus-Configuration-Parameters`.
+The available actions are described in :bb:status:`WebStatus`.
 
 
 .. _Obfuscating-Passwords:
@@ -866,7 +866,7 @@ metrics inside the buildbot master process. Currently these are logged
 periodically according to the ``log_interval`` configuration
 setting of the @ref{Metrics Options} configuration.
 
-If :ref:`WebStatus` is enabled, the metrics data is also available
+If :bb:status:`WebStatus` is enabled, the metrics data is also available
 via ``/json/metrics``. 
 
 The metrics subsystem is implemented in

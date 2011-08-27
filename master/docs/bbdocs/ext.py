@@ -151,6 +151,9 @@ class BBDomain(Domain):
         'cfg' : ObjType('cfg', 'cfg'),
         'sched' : ObjType('sched', 'sched'),
         'chsrc' : ObjType('chsrc', 'chsrc'),
+        'step' : ObjType('step', 'step'),
+        'status' : ObjType('status', 'status'),
+        'cmdline' : ObjType('cmdline', 'cmdline'),
     }
 
     directives = {
@@ -167,7 +170,22 @@ class BBDomain(Domain):
         'chsrc' : make_ref_target_directive('chsrc',
                 indextemplates=[
                     'single: Change Sources; %s',
-                    'single: %s Change Sources',
+                    'single: %s Change Source',
+                ]),
+        'step' : make_ref_target_directive('step',
+                indextemplates=[
+                    'single: Build Steps; %s',
+                    'single: %s Build Step',
+                ]),
+        'status' : make_ref_target_directive('status',
+                indextemplates=[
+                    'single: Status Targets; %s',
+                    'single: %s Status Target',
+                ]),
+        'cmdline' : make_ref_target_directive('cmdline',
+                indextemplates=[
+                    'single: Command Line Subcommands; %s',
+                    'single: %s Command Line Subcommand',
                 ]),
     }
 
@@ -175,6 +193,9 @@ class BBDomain(Domain):
         'cfg' : XRefRole(),
         'sched' : XRefRole(),
         'chsrc' : XRefRole(),
+        'step' : XRefRole(),
+        'status' : XRefRole(),
+        'cmdline' : XRefRole(),
 
         'index' : XRefRole(),
     }
@@ -187,6 +208,9 @@ class BBDomain(Domain):
         make_index("cfg", "Buildmaster Configuration Index"),
         make_index("sched", "Scheduler Index"),
         make_index("chsrc", "Change Source Index"),
+        make_index("step", "Build Step Index"),
+        make_index("status", "Status Target Index"),
+        make_index("cmdline", "Command Line Index"),
     ]
 
     def resolve_xref(self, env, fromdocname, builder, typ, target, node,

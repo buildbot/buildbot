@@ -23,6 +23,9 @@ Indices and Tables
 * :bb:index:`cfg`
 * :bb:index:`sched`
 * :bb:index:`chsrc`
+* :bb:index:`step`
+* :bb:index:`status`
+* :bb:index:`cmdline`
 * :ref:`modindex`
 * :ref:`search`
 

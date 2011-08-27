@@ -866,7 +866,7 @@ instance. This behaviour is useful when writing scripts that stop, start
 and restart Buildbot.
 
 A buildslave may also be gracefully shutdown from the
-:ref:`WebStatus` status plugin. This is useful to shutdown a
+:bb:status:`WebStatus` status plugin. This is useful to shutdown a
 buildslave without interrupting any current builds. The buildmaster
 will wait until the buildslave is finished all its current builds, and
 will then tell the buildslave to shutdown.

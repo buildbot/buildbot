@@ -16,9 +16,11 @@ which have their own options. One can run these tools in the following way:
 .. code-block:: none
 
    buildbot [global options] command [command options]
+   buildslave [global options] command [command options]
 
-Global options are the same for both tools which perform the following
-actions:
+The ``buildbot`` command is used on the master, while ``buildlsave`` is used on
+the slave.  Global options are the same for both tools which perform the
+following actions:
 
 --help
     Print general help about available commands and global options and exit.
@@ -31,7 +33,7 @@ actions:
     Print current buildbot version and exit. All subsequent arguments are
     ignored.
 
-One can also get help on any command by specifying ``--help`` as a
+You can get help on any command by specifying ``--help`` as a
 command option:
 
 .. code-block:: none
@@ -41,7 +43,8 @@ command option:
 You can also use manual pages for :command:`buildbot` and
 :command:`buildslave` for quick reference on command-line options.
 
-.. _buildbot:
+The remainder of this section describes each buildbot command.  See
+:bb:index:`cmdline` for a full list.
 
 buildbot
 --------
@@ -52,7 +55,10 @@ Some of its subcommands are intended for buildmaster admins, while
 some are for developers who are editing the code that the buildbot is
 monitoring.
 
-.. _Administrator-Tools:
+.. bb:cmdline:: create-master
+.. bb:cmdline:: start (buildbot)
+.. bb:cmdline:: stop (buildbot)
+.. bb:cmdline:: sighup
 
 Administrator Tools
 ~~~~~~~~~~~~~~~~~~~
@@ -64,47 +70,53 @@ buildmaster administrators:
 
     This creates a new directory and populates it with files that allow it
     to be used as a buildmaster's base directory.
-    
+
     You will usually want to use the :option:`-r` option to create a relocatable
     :file:`buildbot.tac`.  This allows you to move the master directory without
     editing this file.
-    
-    :samp:`buildbot create-master -r {BASEDIR}`
 
-``start (buildbot)``
+.. code-block:: none
+
+    buildbot create-master -r {BASEDIR}
+
+``start``
 
     This starts a buildmaster which was already created in the given base
     directory. The daemon is launched in the background, with events logged
     to a file named :file:`twistd.log`.
 
-``stop (buildbot)``
+``stop``
 
     This terminates the daemon (either buildmaster or buildslave) running
     in the given directory.
-    
-    :samp:`buildbot stop {BASEDIR}`
+
+.. code-block:: none
+
+    buildbot stop {BASEDIR}
 
 ``sighup``
 
     This sends a SIGHUP to the buildmaster running in the given directory,
     which causes it to re-read its :file:`master.cfg` file.
-    
-    :samp:`buildbot sighup {BASEDIR}`
 
-.. _Developer-Tools:
-    
+.. code-block:: none
+
+    buildbot sighup {BASEDIR}
+
 Developer Tools
 ~~~~~~~~~~~~~~~
 
 These tools are provided for use by the developers who are working on
 the code that the buildbot is monitoring.
 
-.. _statuslog:
+.. bb:cmdline:: statuslog
 
 statuslog
 +++++++++
 
-    :samp:`buildbot statuslog --master {MASTERHOST}:{PORT}`
+.. code-block:: none
+
+    buildbot statuslog --master {MASTERHOST}:{PORT}
 
 This command starts a simple text-based status client, one which just
 prints out a new line each time an event occurs on the buildmaster.
@@ -122,27 +134,27 @@ a :class:`PBListener` port.
 
 The :option:`--master` option can also be provided by the
 ``masterstatus`` name in :file:`.buildbot/options`
-(:ref:`buildbot-config-directory`).
+(see :ref:`buildbot-config-directory`).
 
-.. _statusgui:
+.. bb:cmdline:: statusgui
 
 statusgui
 +++++++++
 
-.. @cindex statusgui
-
-If you have set up a :class:`PBListener` (:ref:`PBListener`), you will be able
+If you have set up a :bb:status:`PBListener`, you will be able
 to monitor your Buildbot using a simple Gtk+ application invoked with
 the ``buildbot statusgui`` command:
 
-    :samp:`buildbot statusgui --master {MASTERHOST}:{PORT}`
+.. code-block:: none
+
+    buildbot statusgui --master {MASTERHOST}:{PORT}
 
 This command starts a simple Gtk+-based status client, which contains a few
 boxes for each Builder that change color as events occur. It uses the same
 ``--master`` argument and ``masterstatus`` option as the
-``buildbot statuslog`` command (:ref:`statuslog`).
+``buildbot statuslog`` command (:bb:cmdline:`statuslog`).
 
-.. _try:
+.. bb:cmdline:: try
 
 try
 +++
@@ -168,9 +180,9 @@ There is an alternate form which accepts a pre-made patch file
 form does not require a local tree to run from. See :ref:`try--diff` concerning
 the ``--diff`` command option.
 
-
-For this command to work, several pieces must be in place: the :ref:`Try-Schedulers`,
-as well as some client-side configuration.
+For this command to work, several pieces must be in place: the
+:bb:sched:`Try_Jobdir` or ::bb:sched:`Try_Userpass`, as well as some client-side
+configuration.
 
 Locating the master
 ###################
@@ -360,7 +372,7 @@ Perforce
     revision. This is followed by a ``p4 diff -du`` to obtain the patch.
     A p4 patch differs sligtly from a normal diff. It contains full depot
     paths and must be converted to paths relative to the branch top. To convert
-    the following restriction is imposed. The p4base (see :ref:`P4Source`)
+    the following restriction is imposed. The p4base (see :bb:chsrc:`P4Source`)
     is assumed to be ``//depot``
 
 Darcs
@@ -460,14 +472,12 @@ options that relate to a local tree, specifically :option:`--vc`,
 be ignored. Of course you must still specify how to get to the
 buildmaster (with :option:`--connect`, :option:`--tryhost`, etc).
 
-.. _Other-Tools:
-
 Other Tools
 ~~~~~~~~~~~
 
 These tools are generally used by buildmaster administrators.
 
-.. _sendchange:
+.. bb:cmdline:: sendchange
 
 sendchange
 ++++++++++
@@ -475,7 +485,7 @@ sendchange
 This command is used to tell the buildmaster about source changes. It
 is intended to be used from within a commit script, installed on the
 VC server. It requires that you have a :class:`PBChangeSource`
-(:ref:`PBChangeSource`) running in the buildmaster (by being set in
+(:bb:chsrc:`PBChangeSource`) running in the buildmaster (by being set in
 ``c['change_source']``).
 
 .. code-block:: none
@@ -490,7 +500,7 @@ sendchange will prompt for it.  If both are omitted, the old default (username
 well-known, and should not be used on an internet-accessible port.
 
 The :option:`master` and :option:`username` arguments can also be given in the
-options file (:ref:`buildbot-config-directory`).  There are other (optional)
+options file (see :ref:`buildbot-config-directory`).  There are other (optional)
 arguments which can influence the ``Change`` that gets submitted:
 
 --branch
@@ -546,24 +556,26 @@ arguments which can influence the ``Change`` that gets submitted:
     ``svn``, ``darcs``, ``hg``, ``bzr``, ``git``, ``mtn``, or ``p4``.
     Defaults to ``None``.
 
-.. _debugclient:
-    
+.. bb:cmdline:: debugclient
+
 debugclient
 +++++++++++
 
-    :samp:`buildbot debugclient --master {MASTERHOST}:{PORT} --passwd {DEBUGPW}`
+.. code-block:: none
+
+    buildbot debugclient --master {MASTERHOST}:{PORT} --passwd {DEBUGPW}
 
 This launches a small Gtk+/Glade-based debug tool, connecting to the
 buildmaster's ``debug port``. This debug port shares the same port
-number as the slaveport (:ref:`Setting-the-PB-Port-for-Slaves`), but the
+number as the slaveport (see :ref:`Setting-the-PB-Port-for-Slaves`), but the
 ``debugPort`` is only enabled if you set a debug password in the
-buildmaster's config file (:ref:`Debug-Options`). The
+buildmaster's config file (see :ref:`Debug-Options`). The
 :option:`--passwd` option must match the ``c['debugPassword']``
 value.
 
 :option:`--master` can also be provided in :file:`.debug/options` by the
 ``master`` key. :option:`--passwd` can be provided by the
-``debugPassword`` key.  :ref:`buildbot-config-directory`.
+``debugPassword`` key.  See :ref:`buildbot-config-directory`.
 
 The :guilabel:`Connect` button must be pressed before any of the other
 buttons will be active. This establishes the connection to the
@@ -606,7 +618,7 @@ buildmaster. The other sections of the tool are as follows:
     :class:`Builder`, but the status-assignment code was changed in an incompatible
     way and these buttons are no longer meaningful.
 
-.. _user:
+.. bb:cmdline:: user
 
 user
 ++++
@@ -748,44 +760,44 @@ Note carefully that the names in the :file:`options` file usually do not match
 the command-line option name.
 
 ``masterstatus``
-    Equivalent to :option:`--master` for :ref:`statuslog` and :ref:`statusgui`, this
+    Equivalent to :option:`--master` for :bb:cmdline:`statuslog` and :bb:cmdline:`statusgui`, this
     gives the location of the :class:`client.PBListener` status port.
 
 ``master``
-    Equivalent to :option:`--master` for :ref:`debugclient` and :ref:`sendchange`.
+    Equivalent to :option:`--master` for :bb:cmdline:`debugclient` and :bb:cmdline:`sendchange`.
     This option is used for two purposes.  It is the location of the
     ``debugPort`` for ``debugclient`` and the location of the
     :class:`pb.PBChangeSource` for ```sendchange``.  Generally these are the
     same port.
 
 ``debugPassword``
-    Equivalent to :option:`--passwd` for :ref:`debugclient`.
+    Equivalent to :option:`--passwd` for :bb:cmdline:`debugclient`.
 
     .. important::
 
-        XXX Must match the value of ``c['debugPassword']``, used to protect the
-        debug port, for the :command:`debugclient` command.
+        This value must match the value of :bb:cfg:`debugPassword`, used to
+        protect the debug port, for the :bb:cmdline:`debugclient` command.
 
 ``username``
-    Equivalent to :option:`--username` for the :ref:`sendchange` command.
+    Equivalent to :option:`--username` for the :bb:cmdline:`sendchange` command.
 
 ``branch``
-    Equivalent to :option:`--branch` for the :ref:`sendchange` command.
+    Equivalent to :option:`--branch` for the :bb:cmdline:`sendchange` command.
 
 ``category``
-    Equivalent to :option:`--category` for the :ref:`sendchange` command.
+    Equivalent to :option:`--category` for the :bb:cmdline:`sendchange` command.
 
 ``try_connect``
-    Equivalent to :option:`--connect`, this specifies how the :ref:`try` command should
+    Equivalent to :option:`--connect`, this specifies how the :bb:cmdline:`try` command should
     deliver its request to the buildmaster. The currently accepted values are
     ``ssh`` and ``pb``.
 
 ``try_builders``
     Equivalent to :option:`--builders`, specifies which builders should be used for
-    the :ref:`try` build.
+    the :bb:cmdline:`try` build.
 
 ``try_vc``
-    Equivalent to :option:`--vc` for :ref:`try`, this specifies the version control
+    Equivalent to :option:`--vc` for :bb:cmdline:`try`, this specifies the version control
     system being used.
 
 ``try_branch``
@@ -823,11 +835,8 @@ the command-line option name.
 
 ``masterstatus``
     ``try_wait`` and ``masterstatus`` (equivalent to :option:`--wait` and
-    ``master``, respectively) are used to ask the :ref:`try` command to wait for
+    ``master``, respectively) are used to ask the :bb:cmdline:`try` command to wait for
     the requested build to complete.
-
-
-.. _buildslave:
 
 buildslave
 ----------
@@ -836,7 +845,7 @@ buildslave
 only and does not provide any additional functionality. One can create,
 start, stop and restart the buildslave.
 
-.. _create-slave:
+.. bb:cmdline:: create-slave
 
 create-slave
 ~~~~~~~~~~~~
@@ -853,7 +862,7 @@ The :option:`-r` option is advisable here, just like for
 
 The create-slave options are described in :ref:`Buildslave-Options`.
 
-.. _start-buildslave:
+.. bb:cmdline:: start (buildslave)
 
 start
 ~~~~~
@@ -864,7 +873,7 @@ to a file named :file:`twistd.log`. ::
 
     buildbot start BASEDIR
 
-.. _stop-buildslave:
+.. bb:cmdline:: stop (buildslave)
 
 stop
 ~~~~
