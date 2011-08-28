@@ -13,4 +13,3 @@ Buildbot Manual
    customization
    cmdline
    resources
-   developer

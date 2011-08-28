@@ -1,5 +1,5 @@
-Developer Information
-=====================
+Developer's Documentation
+=========================
 
 This chapter is the official repository for the collected wisdom of the
 Buildbot hackers.
