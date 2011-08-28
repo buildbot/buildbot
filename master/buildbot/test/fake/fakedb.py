@@ -1063,32 +1063,19 @@ class FakeUsersComponent(FakeDBComponent):
 
     # component methods
 
-    def addUser(self, identifier, bb_username, bb_password,
-                attr_type, attr_data):
-        if bb_username:
-            for uid in self.users:
-                cols = self.users[uid]
-                if (bb_username == cols['bb_username'] and
-                    bb_password == cols['bb_password']):
+    def addUser(self, identifier, attr_type, attr_data):
+        for uid in self.users_info:
+            attrs = self.users_info[uid]
+            for attr in attrs:
+                if (attr_type == attr['attr_type'] and
+                    attr_data == attr['attr_data']):
                     return defer.succeed(uid)
-        else:
-            for uid in self.users_info:
-                attrs = self.users_info[uid]
-                for attr in attrs:
-                    if (attr_type == attr['attr_type'] and
-                        attr_data == attr['attr_data']):
-                        return defer.succeed(uid)
 
         uid = self.nextId()
-        if bb_username:
-            self.db.insertTestData([User(uid=uid, identifier=identifier,
-                                         bb_username=bb_username,
-                                         bb_password=bb_password)])
-        else:
-            self.db.insertTestData([User(uid=uid, identifier=identifier)])
-            self.db.insertTestData([UserInfo(uid=uid,
-                                             attr_type=attr_type,
-                                             attr_data=attr_data)])
+        self.db.insertTestData([User(uid=uid, identifier=identifier)])
+        self.db.insertTestData([UserInfo(uid=uid,
+                                         attr_type=attr_type,
+                                         attr_data=attr_data)])
         return defer.succeed(uid)
 
     def getUser(self, uid):

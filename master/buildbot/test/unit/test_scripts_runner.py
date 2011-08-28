@@ -526,7 +526,7 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
     def test_defaults(self):
         opts = self.parse()
         exp = dict(master=None, username=None, passwd=None, op=None,
-                   ids=[], info=[])
+                   bb_username=None, bb_password=None, ids=[], info=[])
         self.assertOptions(opts, exp)
 
     def test_synopsis(self):
@@ -545,6 +545,10 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
         opts = self.parse("--info", "git=Tyler Durden <tyler@mayhem.net>")
         self.assertEqual(opts['info'],
                          [dict(git='Tyler Durden <tyler@mayhem.net>')])
+
+    def test_info_only_id(self):
+        opts = self.parse("--info", "tdurden")
+        self.assertEqual(opts['info'], [dict(identifier='tdurden')])
 
     def test_info_with_id(self):
         opts = self.parse("--info", "tdurden:svn=marla")
@@ -586,8 +590,10 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
             self.passwd = passwd
             self.fail = False
 
-        def send(self, op, ids, info):
+        def send(self, op, bb_username, bb_password, ids, info):
             self.op = op
+            self.bb_username = bb_username
+            self.bb_password = bb_password
             self.ids = ids
             self.info = info
             d = defer.Deferred()
@@ -653,6 +659,32 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
         d = defer.maybeDeferred(lambda :
                     runner.users_client(dict(master='a:9990', username="x",
                                              passwd="y", op='edit')))
+        def cb(_):
+            self.fail("shouldn't succeed")
+        def eb(f):
+            f.trap(AssertionError)
+            pass # A-OK
+        d.addCallbacks(cb, eb)
+        return d
+
+    def test_usersclient_just_bb_username(self):
+        d = defer.maybeDeferred(lambda :
+                    runner.users_client(dict(master='a:9990', username="x",
+                                             passwd="y", bb_username='buddy',
+                                             op='update')))
+        def cb(_):
+            self.fail("shouldn't succeed")
+        def eb(f):
+            f.trap(AssertionError)
+            pass # A-OK
+        d.addCallbacks(cb, eb)
+        return d
+
+    def test_usersclient_bb_not_update(self):
+        d = defer.maybeDeferred(lambda :
+                    runner.users_client(dict(master='a:9990', username="x",
+                                             passwd="y", bb_username='buddy',
+                                             bb_password='hey', op='add')))
         def cb(_):
             self.fail("shouldn't succeed")
         def eb(f):
@@ -764,37 +796,10 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
         d.addCallbacks(cb, eb)
         return d
 
-    def test_usersclient_bb_and_attr(self):
-        d = defer.maybeDeferred(lambda :
-                    runner.users_client(dict(master='a:9990', username="x",
-                                              passwd="y", op='add', ids=None,
-                                              info=[{'svn':'y',
-                                                     'bb_username':'ha',
-                                                     'bb_password':'ho'}])))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(ValueError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
-
-    def test_usersclient_bb_half(self):
-        d = defer.maybeDeferred(lambda :
-                    runner.users_client(dict(master='a:9990', username="x",
-                                              passwd="y", op='add', ids=None,
-                                              info=[{'bb_username':'ha'}])))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
-
     def test_usersclient_send_ids(self):
         d = runner.users_client(dict(master='a:9990', username="x",
-                                     passwd="y", op='get', ids=['me', 'you'],
+                                     passwd="y", op='get', bb_username=None,
+                                     bb_password=None, ids=['me', 'you'],
                                      info=None))
         def check(_):
             c = self.usersclient
@@ -805,49 +810,34 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
         return d
 
     def test_usersclient_send_update_info(self):
-        d = runner.users_client(dict(master='a:9990', username="x",
-                                     passwd="y", op='update', ids=None,
-                                     info=[{'identifier':'x', 'svn':'x'}]))
-        def check(_):
-            c = self.usersclient
-            self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
-                              c.ids, c.info),
-                             ('a', 9990, "x", "y", 'update', None,
-                              [{'identifier':'x', 'svn':'x'}]))
-        d.addCallback(check)
-        return d
-
-    def test_usersclient_send_add_info(self):
-        d = runner.users_client(dict(master='a:9990', username="x",
-                                     passwd="y", op='add', ids=None,
-                                     info=[{'git':'x <h@c>'}]))
-        def check(_):
-            c = self.usersclient
-            self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
-                              c.ids, c.info),
-                             ('a', 9990, "x", "y", 'add', None,
-                              [{'identifier':'x <h@c>','git': 'x <h@c>'}]))
-        d.addCallback(check)
-        return d
-
-    def test_usersclient_send_add_info_bb(self):
-        # since os.urandom() changes each time, we need to patch encrypt()
-        encrypted = users.encrypt("sekret")
+        encrypted = users.encrypt("day")
         def _fake_encrypt(passwd):
             return encrypted
         self.patch(users, 'encrypt', _fake_encrypt)
 
         d = runner.users_client(dict(master='a:9990', username="x",
-                                     passwd="y", op='add', ids=None,
-                                     info=[{'bb_username':'x',
-                                            'bb_password':'sekret'}]))
+                                     passwd="y", op='update', bb_username='bud',
+                                     bb_password='day', ids=None,
+                                     info=[{'identifier':'x', 'svn':'x'}]))
         def check(_):
             c = self.usersclient
             self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
-                              c.ids, c.info),
-                             ('a', 9990, "x", "y", 'add', None,
-                              [{'identifier':'x',
-                                'bb_creds':('x', encrypted)
-                                }]))
+                              c.bb_username, c.bb_password, c.ids, c.info),
+                             ('a', 9990, "x", "y", 'update', 'bud', encrypted,
+                              None, [{'identifier':'x', 'svn':'x'}]))
+        d.addCallback(check)
+        return d
+
+    def test_usersclient_send_add_info(self):
+        d = runner.users_client(dict(master='a:9990', username="x",
+                                     passwd="y", op='add', bb_username=None,
+                                     bb_password=None, ids=None,
+                                     info=[{'git':'x <h@c>'}]))
+        def check(_):
+            c = self.usersclient
+            self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
+                              c.bb_username, c.bb_password, c.ids, c.info),
+                             ('a', 9990, "x", "y", 'add', None, None, None,
+                              [{'identifier':'x <h@c>','git': 'x <h@c>'}]))
         d.addCallback(check)
         return d

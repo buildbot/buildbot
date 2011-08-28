@@ -38,8 +38,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
     with conflicting names will be ignored.
     """
 
-    def addUser(self, identifier, bb_username, bb_password,
-                attr_type, attr_data, _race_hook=None):
+    def addUser(self, identifier, attr_type, attr_data, _race_hook=None):
         """
         Get an existing user, or add a new one, based on the given attribute.
 
@@ -55,18 +54,10 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         arguments but different identifiers, as this can lead to creation of
         multiple users.
 
-        Also note that this can be called with either C{bb_username} and
-        C{bb_password} or C{attr_type} and C{attr_data}, but the method assumes
-        that it won't be called with both pairs. When creating a new user from
-        C{bb_username}/C{password} credentials, the C{bb_username} will be used
-        as the new user's C{identifier}.
-
         For future compatibility, always use keyword parameters to call this
         method.
 
         @param identifier: identifier to use for a new user
-        @param bb_username: username portion of user credentials
-        @param bb_password: password portion of user credentials
         @param attr_type: attribute type to search for and/or add
         @param attr_data: attribute data to add
         @param _race_hook: for testing
@@ -77,14 +68,9 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             tbl_info = self.db.model.users_info
 
             # try to find the user
-            if bb_username:
-                q = sa.select([ tbl.c.uid ],
-                           whereclause=and_(tbl.c.bb_username == bb_username,
-                                            tbl.c.bb_password == bb_password))
-            else:
-                q = sa.select([ tbl.c.uid ],
-                           whereclause=and_(tbl_info.c.attr_type == attr_type,
-                                            tbl_info.c.attr_data == attr_data))
+            q = sa.select([ tbl.c.uid ],
+                        whereclause=and_(tbl_info.c.attr_type == attr_type,
+                                tbl_info.c.attr_data == attr_data))
             rows = conn.execute(q).fetchall()
             if rows:
                 return rows[0].uid
@@ -96,19 +82,12 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             # time from the perspective of other masters.
             transaction = conn.begin()
             try:
-                if bb_username:
-                    r = conn.execute(tbl.insert(),
-                                     dict(identifier=identifier,
-                                          bb_username=bb_username,
-                                          bb_password=bb_password))
-                    uid = r.inserted_primary_key[0]
-                else:
-                    r = conn.execute(tbl.insert(), dict(identifier=identifier))
-                    uid = r.inserted_primary_key[0]
+                r = conn.execute(tbl.insert(), dict(identifier=identifier))
+                uid = r.inserted_primary_key[0]
 
-                    conn.execute(tbl_info.insert(),
-                                 dict(uid=uid, attr_type=attr_type,
-                                      attr_data=attr_data))
+                conn.execute(tbl_info.insert(),
+                        dict(uid=uid, attr_type=attr_type,
+                             attr_data=attr_data))
 
                 transaction.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
@@ -237,6 +216,12 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         items.  If no user with that uid exists, the method will return
         silently.
 
+        Note that since updateUser can be called with identifier, yet have
+        bb_username/bb_password values, the method builds a dict of values
+        to update in the users table. This allows the bb_username and
+        bb_password values to update independently from the identifier, and
+        vice versa.
+
         @param uid: user id of the user to change
         @type uid: int
 
@@ -246,7 +231,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         @param bb_username: (optional) new username portion of user creds
         @type bb_username: string
 
-        @param bb_password: (optional) new password portion of user creds
+        @param bb_password: (optional) new hashed password portion of user
+                            creds
         @type bb_password: string
 
         @param attr_type: (optional) attribute type to update
@@ -262,21 +248,22 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
+            update_dict = {}
 
-            # first, update the identifier
+            # first, add the identifier is it exists
             if identifier is not None:
-                conn.execute(
-                    tbl.update(whereclause=tbl.c.uid == uid),
-                    identifier=identifier)
+                update_dict['identifier'] = identifier
 
-            # then, update the creds
+            # then, add the creds if they exist
             if bb_username is not None:
                 assert bb_password is not None
+                update_dict['bb_username'] = bb_username
+                update_dict['bb_password'] = bb_password
 
-                # try to update, fail silently if no uid matches
+            # update the users table if it needs to be updated
+            if update_dict:
                 q = tbl.update(whereclause=(tbl.c.uid == uid))
-                res = conn.execute(q, bb_username=bb_username,
-                                   bb_password=bb_password)
+                res = conn.execute(q, update_dict)
 
             # then, update the attributes, carefully handling the potential
             # update-or-insert race condition.

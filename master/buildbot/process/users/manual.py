@@ -48,17 +48,13 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
     def __init__(self, master):
         self.master = master
 
-    def formatResults(self, op, info, results):
+    def formatResults(self, op, results):
         """
         This formats the results of the database operations for printing
         back to the caller
 
         @param op: operation to perform (add, remove, update, get)
         @type op: string
-
-        @param info: type/value pairs for each user that will be added
-                     or updated in the database
-        @type info: list of dictionaries or None
 
         @param results: results from db queries in perspective_commandline
         @type results: list
@@ -101,7 +97,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
         return formatted_results
 
     @defer.deferredGenerator
-    def perspective_commandline(self, op, ids, info):
+    def perspective_commandline(self, op, bb_username, bb_password, ids, info):
         """
         This performs the requested operations from the `buildbot user`
         call by calling the proper buildbot.db.users methods based on
@@ -110,6 +106,12 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
 
         @param op: operation to perform (add, remove, update, get)
         @type op: string
+
+        @param bb_username: username portion of auth credentials
+        @type bb_username: string
+
+        @param bb_password: hashed password portion of auth credentials
+        @type bb_password: hashed string
 
         @param ids: user identifiers used to find existing users
         @type ids: list of strings or None
@@ -162,52 +164,54 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                 yield wfd
                 uid = wfd.getResult()
 
-                # when adding, we update the user after the first attr
-                once_through = False
-                for attr in user:
-                    if op == 'update' or once_through:
-                        if uid:
-                            if 'bb_creds' == attr:
+                # if only an identifier was in user, we're updating only
+                # the bb_username and bb_password.
+                if not user:
+                    if uid:
+                        d = self.master.db.users.updateUser(
+                                                       uid=uid,
+                                                       identifier=ident,
+                                                       bb_username=bb_username,
+                                                       bb_password=bb_password)
+                        wfd = defer.waitForDeferred(d)
+                        yield wfd
+                        results.append(ident)
+                        result = wfd.getResult()
+                    else:
+                        log.msg("Unable to find uid for identifier %s"
+                                % user)
+                else:
+                    # when adding, we update the user after the first attr
+                    once_through = False
+                    for attr in user:
+                        if op == 'update' or once_through:
+                            if uid:
                                 d = self.master.db.users.updateUser(
-                                                     uid=uid,
-                                                     bb_username=user[attr][0],
-                                                     bb_password=user[attr][1],
-                                                     identifier=ident)
+                                                      uid=uid,
+                                                      identifier=ident,
+                                                      bb_username=bb_username,
+                                                      bb_password=bb_password,
+                                                      attr_type=attr,
+                                                      attr_data=user[attr])
                             else:
-                                d = self.master.db.users.updateUser(
-                                                     uid=uid,
-                                                     identifier=ident,
-                                                     attr_type=attr,
-                                                     attr_data=user[attr])
-                        else:
-                            log.msg("Unable to find uid for identifier %s"
-                                    % user)
-                    elif op == 'add':
-                        if 'bb_creds' == attr:
+                                log.msg("Unable to find uid for identifier %s"
+                                        % user)
+                        elif op == 'add':
                             d = self.master.db.users.addUser(
-                                                    identifier=ident,
-                                                    bb_username=user[attr][0],
-                                                    bb_password=user[attr][1],
-                                                    attr_type=None,
-                                                    attr_data=None)
-                        else:
-                            d = self.master.db.users.addUser(
-                                                    identifier=ident,
-                                                    bb_username=None,
-                                                    bb_password=None,
-                                                    attr_type=attr,
-                                                    attr_data=user[attr])
-                        once_through = True
-                    wfd = defer.waitForDeferred(d)
-                    yield wfd
-                    results.append(ident)
-                    result = wfd.getResult()
+                                                      identifier=ident,
+                                                      attr_type=attr,
+                                                      attr_data=user[attr])
+                            once_through = True
+                        wfd = defer.waitForDeferred(d)
+                        yield wfd
+                        results.append(ident)
+                        result = wfd.getResult()
 
-                    # result is None from updateUser calls
-                    if result:
-                        results.append(result)
-                        uid = result
-        results = self.formatResults(op, info, results)
+                        # result is None from updateUser calls
+                        if result:
+                            results.append(result)
+                            uid = result
+        results = self.formatResults(op, results)
         yield results
 
 class CommandlineUserManager(UsersBase):

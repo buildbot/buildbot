@@ -1174,6 +1174,12 @@ class UserOptions(OptionsWithOptionsFile):
          "Password for PB authentication"],
         ["op", None, None,
          "User management operation: add, remove, update, get"],
+        ["bb_username", None, None,
+         "Username to set for a given user. Only availabe on 'update', "
+         "and bb_password must be given as well."],
+        ["bb_password", None, None,
+         "Password to set for a given user. Only availabe on 'update', "
+         "and bb_username must be given as well."],
         ["ids", None, None,
          "User's identifiers, used to find users in 'remove' and 'get' "
          "Can be specified multiple times (--ids=id1,id2,id3)"],
@@ -1202,24 +1208,29 @@ class UserOptions(OptionsWithOptionsFile):
         # splits info into type/value dictionary, appends to info
         info_list = option.split(",")
         info_elem = {}
-        for i in range(0, len(info_list)):
-            split_info = info_list[i].split("=", 1)
 
-            # pull identifier from update --info
-            if ":" in split_info[0]:
-                split_id = split_info[0].split(":")
-                info_elem["identifier"] = split_id[0]
-                split_info[0] = split_id[1]
+        if len(info_list) == 1 and '=' not in info_list[0]:
+            info_elem["identifier"] = info_list[0]
+            self['info'].append(info_elem)
+        else:
+            for i in range(0, len(info_list)):
+                split_info = info_list[i].split("=", 1)
 
-            info_elem[split_info[0]] = split_info[1]
-        self['info'].append(info_elem)
+                # pull identifier from update --info
+                if ":" in split_info[0]:
+                    split_id = split_info[0].split(":")
+                    info_elem["identifier"] = split_id[0]
+                    split_info[0] = split_id[1]
+
+                info_elem[split_info[0]] = split_info[1]
+            self['info'].append(info_elem)
 
     def getSynopsis(self):
         return "Usage:    buildbot user [options]"
 
     longdesc = """
     Currently implemented types for --info= are:\n
-    git, svn, hg, cvs, darcs, bzr, email, bb_username, bb_password
+    git, svn, hg, cvs, darcs, bzr, email
     """
 
 def users_client(config, runReactor=False):
@@ -1227,7 +1238,7 @@ def users_client(config, runReactor=False):
     from buildbot.process.users import users    # for srcs, encrypt
 
     # accepted attr_types by `buildbot user`, in addition to users.srcs
-    attr_types = ['identifier', 'email', 'bb_username', 'bb_password']
+    attr_types = ['identifier', 'email']
 
     master = config.get('master')
     assert master, "you must provide the master location"
@@ -1246,6 +1257,18 @@ def users_client(config, runReactor=False):
     username = config.get('username')
     passwd = config.get('passwd')
     assert username and passwd, "A username and password pair must be given"
+
+    bb_username = config.get('bb_username')
+    bb_password = config.get('bb_password')
+    if bb_username or bb_password:
+        if op != 'update':
+            raise AssertionError("bb_username and bb_password only work "
+                                 "with update")
+        if not bb_username or not bb_password:
+            raise AssertionError("Must specify both bb_username and "
+                                 "bb_password or neither.")
+
+        bb_password = users.encrypt(bb_password)
 
     # check op and proper args
     info = config.get('info')
@@ -1285,32 +1308,11 @@ def users_client(config, runReactor=False):
                     raise ValueError("Type not a valid attr_type, must be in: "
                                      "%r" % (users.srcs + attr_types))
 
-                if ('bb_username' == attr_type or 'bb_password' == attr_type):
-                    try:
-                        if (user['bb_username'] is None or
-                            user['bb_password'] is None):
-                            raise AssertionError("must supply both bb_username"
-                                                 " and bb_password or neither")
-                    except KeyError:
-                        raise AssertionError("must supply both bb_username "
-                                             "and bb_password or neither")
             if op == 'add':
-                if 'bb_username' in user:
-                    if len(user) > 2:
-                        raise ValueError("can not use add with bb_username/"
-                                         "bb_password and other attributes.")
-                    user['identifier'] = user['bb_username']
-                else:
-                    user['identifier'] = user.values()[0]
-
-            if 'bb_username' in user:
-                bb_password = users.encrypt(user['bb_password'])
-                user['bb_creds'] = (user['bb_username'], bb_password)
-                user.pop('bb_username')
-                user.pop('bb_password')
+                user['identifier'] = user.values()[0]
 
     uc = usersclient.UsersClient(master, username, passwd, port)
-    d = uc.send(op, ids, info)
+    d = uc.send(op, bb_username, bb_password, ids, info)
 
     if runReactor:
         from twisted.internet import reactor

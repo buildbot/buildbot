@@ -18,11 +18,11 @@ from twisted.python import log
 from twisted.internet import defer
 
 try:
-    from hashlib import md5
-    assert md5
+    from hashlib import sha1 as sha
+    assert sha
 except ImportError:
     # For Python 2.4
-    import md5
+    import sha
 
 srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr']
 salt_len = 8
@@ -57,7 +57,6 @@ def createUserObject(master, author, src=None):
         return
 
     d = master.db.users.addUser(identifier=usdict['identifier'],
-                                bb_username=None, bb_password=None,
                                 attr_type=usdict['attr_type'],
                                 attr_data=usdict['attr_data'])
     wfd = defer.waitForDeferred(d)
@@ -99,9 +98,9 @@ def encrypt(passwd):
     @returns: encrypted/salted string
     """
     try:
-        m = md5()
+        m = sha()
     except TypeError:
-        m = md5.new()
+        m = sha.new()
 
     salt = os.urandom(salt_len).encode('hex_codec')
     m.update(passwd + salt)
@@ -119,9 +118,9 @@ def check_passwd(guess, passwd):
     @returns: boolean
     """
     try:
-        m = md5()
+        m = sha()
     except TypeError:
-        m = md5.new()
+        m = sha.new()
 
     salt = passwd[:salt_len * 2]  # salt_len * 2 due to encode('hex_codec')
     m.update(guess + salt)

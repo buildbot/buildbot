@@ -62,8 +62,8 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
         return persp.perspective_commandline(*args)
 
     def test_perspective_commandline_add(self):
-        d = self.call_perspective_commandline('add', None, [{'identifier':'x',
-                                                             'git': 'x'}])
+        d = self.call_perspective_commandline('add', None, None, None,
+                                              [{'identifier':'x', 'git': 'x'}])
         def check_get(_):
             d = self.master.db.users.getUser(1)
             def real_check(usdict):
@@ -77,27 +77,12 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
         d.addCallback(check_get)
         return d
 
-    def test_perspective_commandline_add_bb(self):
-        d = self.call_perspective_commandline('add', None,
-                                              [{'identifier':'marla',
-                                                'bb_creds': ('marla', 'cancer')}])
-        def check_get(_):
-            d = self.master.db.users.getUser(1)
-            def real_check(usdict):
-                self.assertEqual(usdict, dict(uid=1,
-                                              identifier='marla',
-                                              bb_username='marla',
-                                              bb_password='cancer'))
-            d.addCallback(real_check)
-            return d
-        d.addCallback(check_get)
-        return d
-
     def test_perspective_commandline_update(self):
-        d = self.call_perspective_commandline('add', None,
+        d = self.call_perspective_commandline('add', None, None, None,
                                               [{'identifier':'x', 'svn':'x'}])
         d.addCallback(lambda _ :
-                          self.call_perspective_commandline('update', None,
+                          self.call_perspective_commandline(
+                                             'update', None, None, None,
                                              [{'identifier':'x', 'svn':'y'}]))
         def check(_):
             d = self.master.db.users.getUser(1)
@@ -113,31 +98,57 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
         return d
 
     def test_perspective_commandline_update_bb(self):
-        d = self.call_perspective_commandline('add', None,
+        d = self.call_perspective_commandline('add', None, None, None,
                                               [{'identifier':'x',
-                                                'bb_creds':('x', 'yep')}])
+                                                'svn':'x'}])
         d.addCallback(lambda _ :
-                          self.call_perspective_commandline('update', None,
-                                             [{'identifier':'x',
-                                               'bb_creds':('a', 'yes')}]))
+                          self.call_perspective_commandline(
+                                             'update', 'bb_user',
+                                             'hashed_bb_pass', None,
+                                             [{'identifier':'x'}]))
         def check(_):
             d = self.master.db.users.getUser(1)
             def real_check(usdict):
                 self.assertEqual(usdict, dict(uid=1,
                                               identifier='x',
-                                              bb_username='a',
-                                              bb_password='yes'))
+                                              bb_username='bb_user',
+                                              bb_password='hashed_bb_pass',
+                                              svn='x'))
+            d.addCallback(real_check)
+            return d
+        d.addCallback(check)
+        return d
+
+    def test_perspective_commandline_update_both(self):
+        d = self.call_perspective_commandline('add', None, None, None,
+                                              [{'identifier':'x',
+                                                'svn':'x'}])
+        d.addCallback(lambda _ :
+                          self.call_perspective_commandline(
+                                             'update', 'bb_user',
+                                             'hashed_bb_pass', None,
+                                             [{'identifier':'x',
+                                               'svn':'y'}]))
+        def check(_):
+            d = self.master.db.users.getUser(1)
+            def real_check(usdict):
+                self.assertEqual(usdict, dict(uid=1,
+                                              identifier='x',
+                                              bb_username='bb_user',
+                                              bb_password='hashed_bb_pass',
+                                              svn='y'))
             d.addCallback(real_check)
             return d
         d.addCallback(check)
         return d
 
     def test_perspective_commandline_remove(self):
-        d = self.call_perspective_commandline('add', None,
+        d = self.call_perspective_commandline('add', None, None, None,
                                               [{'identifier':'h@c',
                                                 'git': 'hi <h@c>'}])
         d.addCallback(lambda _ :
-                          self.call_perspective_commandline('remove', ['x'], None))
+                          self.call_perspective_commandline('remove', None,
+                                                            None, ['x'], None))
         def check(_):
             d = self.master.db.users.getUser('x')
             def real_check(res):
@@ -148,11 +159,12 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
         return d
 
     def test_perspective_commandline_get(self):
-        d = self.call_perspective_commandline('add', None,
+        d = self.call_perspective_commandline('add', None, None, None,
                                               [{'identifier':'x',
                                                 'svn':'x'}])
         d.addCallback(lambda _ :
-                          self.call_perspective_commandline('get', ['x'], None))
+                          self.call_perspective_commandline('get', None, None,
+                                                            ['x'], None))
         def check(_):
             d = self.master.db.users.getUser(1)
             def real_check(res):
@@ -167,12 +179,13 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
         return d
 
     def test_perspective_commandline_get_multiple_attrs(self):
-        d = self.call_perspective_commandline('add', None,
+        d = self.call_perspective_commandline('add', None, None, None,
                                               [{'identifier': 'x',
                                                 'svn': 'x',
                                                 'git': 'x@c'}])
         d.addCallback(lambda _ :
-                          self.call_perspective_commandline('get', ['x'], None))
+                          self.call_perspective_commandline('get', None, None,
+                                                            ['x'], None))
         def check(_):
             d = self.master.db.users.getUser(1)
             def real_check(res):
@@ -188,8 +201,8 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
         return d
 
     def test_perspective_commandline_add_format(self):
-        d = self.call_perspective_commandline('add', None, [{'identifier':'x',
-                                                             'svn':'x'}])
+        d = self.call_perspective_commandline('add', None, None, None, 
+                                              [{'identifier':'x', 'svn':'x'}])
         def check(result):
             exp_format = "user(s) added:\nidentifier: x\nuid: 1\n\n"
             self.assertEqual(result, exp_format)
@@ -197,10 +210,10 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
         return d
 
     def test_perspective_commandline_update_format(self):
-        d = self.call_perspective_commandline('add', None, [{'identifier':'x',
-                                                             'svn':'x'}])
+        d = self.call_perspective_commandline('add', None, None, None,
+                                              [{'identifier':'x', 'svn':'x'}])
         d.addCallback(lambda _ :
-                  self.call_perspective_commandline('update', None,
+                  self.call_perspective_commandline('update', None, None, None,
                                                     [{'identifier':'x',
                                                       'svn':'y'}]))
         def check(result):
@@ -210,10 +223,11 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
         return d
 
     def test_perspective_commandline_remove_format(self):
-        d = self.call_perspective_commandline('add', None,
+        d = self.call_perspective_commandline('add', None, None, None,
                                               [{'identifier':'h@c',
                                                 'git': 'hi <h@c>'}])
         d.addCallback(lambda _ : self.call_perspective_commandline('remove',
+                                                                   None, None,
                                                                    ['h@c'],
                                                                    None))
         def check(result):
@@ -223,10 +237,11 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
         return d
 
     def test_perspective_commandline_get_format(self):
-        d = self.call_perspective_commandline('add', None, [{'identifier':'x@y',
-                                                             'git': 'x <x@y>'}])
+        d = self.call_perspective_commandline('add', None, None, None,
+                                              [{'identifier':'x@y', 'git': 'x <x@y>'}])
         d.addCallback(lambda _ :
-                          self.call_perspective_commandline('get', ['x@y'], None))
+                          self.call_perspective_commandline('get', None, None,
+                                                            ['x@y'], None))
         def check(result):
             exp_format = 'user(s) found:\ngit: x <x@y>\nidentifier: x@y\n' \
                          'bb_username: None\nuid: 1\n\n'
@@ -235,7 +250,7 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
         return d
 
     def test_perspective_commandline_remove_no_match_format(self):
-        d = self.call_perspective_commandline('remove', ['x'], None)
+        d = self.call_perspective_commandline('remove', None, None, ['x'], None)
         def check(result):
             exp_format = "user(s) removed:\n"
             self.assertEqual(result, exp_format)
@@ -243,7 +258,7 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
         return d
 
     def test_perspective_commandline_get_no_match_format(self):
-        d = self.call_perspective_commandline('get', ['x'], None)
+        d = self.call_perspective_commandline('get', None, None, ['x'], None)
         def check(result):
             exp_format = "user(s) found:\nno match found\n"
             self.assertEqual(result, exp_format)

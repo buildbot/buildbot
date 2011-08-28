@@ -80,8 +80,6 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
 
     def test_addUser_new(self):
         d = self.db.users.addUser(identifier='soap',
-                                  bb_username=None,
-                                  bb_password=None,
                                   attr_type='subspace_net_handle',
                                   attr_data='Durden0924')
         def check_user(uid):
@@ -101,31 +99,10 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         d.addCallback(check_user)
         return d
 
-    def test_addUser_new_bb(self):
-        d = self.db.users.addUser(identifier='marla',
-                                  bb_username='marla',
-                                  bb_password='cancer',
-                                  attr_type=None,
-                                  attr_data=None)
-        def check_user(uid):
-            def thd(conn):
-                users_tbl = self.db.model.users
-                users = conn.execute(users_tbl.select()).fetchall()
-                self.assertEqual(len(users), 1)
-                self.assertEqual(users[0].uid, uid)
-                self.assertEqual(users[0].identifier, 'marla')
-                self.assertEqual(users[0].bb_username, 'marla')
-                self.assertEqual(users[0].bb_password, 'cancer')
-            return self.db.pool.do(thd)
-        d.addCallback(check_user)
-        return d
-
     def test_addUser_existing(self):
         d = self.insertTestData(self.user1_rows)
         d.addCallback(lambda _ : self.db.users.addUser(
                                   identifier='soapy',
-                                  bb_username=None,
-                                  bb_password=None,
                                   attr_type='IPv9',
                                   attr_data='0578cc6.8db024'))
         def check_user(uid):
@@ -146,26 +123,6 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         d.addCallback(check_user)
         return d
 
-    def test_addUser_existing_bb(self):
-        d = self.insertTestData(self.user3_rows)
-        d.addCallback(lambda _ : self.db.users.addUser(identifier='marla',
-                                                       bb_username='marla',
-                                                       bb_password='cancer',
-                                                       attr_type=None,
-                                                       attr_data=None))
-        def check_user(uid):
-            def thd(conn):
-                users_tbl = self.db.model.users
-                users = conn.execute(users_tbl.select()).fetchall()
-                self.assertEqual(len(users), 1)
-                self.assertEqual(users[0].uid, uid)
-                self.assertEqual(users[0].identifier, 'marla')
-                self.assertEqual(users[0].bb_username, 'marla')
-                self.assertEqual(users[0].bb_password, 'cancer')
-            return self.db.pool.do(thd)
-        d.addCallback(check_user)
-        return d
-
     def test_addUser_race(self):
         def race_thd(conn):
             # note that this assumes that both inserts can happen "at once".
@@ -178,8 +135,6 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
                     uid=99, attr_type='subspace_net_handle',
                     attr_data='Durden0924')
         d = self.db.users.addUser(identifier='soap',
-                                  bb_username=None,
-                                  bb_password=None,
                                   attr_type='subspace_net_handle',
                                   attr_data='Durden0924',
                                   _race_hook=race_thd)
@@ -205,8 +160,6 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         d = self.insertTestData(self.user1_rows)
         d.addCallback(lambda _ : self.db.users.addUser(
                                   identifier='soap',
-                                  bb_username=None,
-                                  bb_password=None,
                                   attr_type='telepathIO(tm)',
                                   attr_data='hmm,lye'))
         def cb(_):

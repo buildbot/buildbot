@@ -24,7 +24,7 @@ class UsersTests(unittest.TestCase):
     def setUp(self):
         self.master = mock.Mock()
         self.master.db = self.db = fakedb.FakeDBConnector(self)
-        self.test_md5 = users.encrypt("cancer")
+        self.test_sha = users.encrypt("cancer")
 
     def test_createUserObject_no_src(self):
         d = users.createUserObject(self.master, "Tyler Durden", None)
@@ -148,5 +148,5 @@ class UsersTests(unittest.TestCase):
         return d
 
     def test_check_passwd(self):
-        res = users.check_passwd("cancer", self.test_md5)
+        res = users.check_passwd("cancer", self.test_sha)
         self.assertEqual(res, True)
