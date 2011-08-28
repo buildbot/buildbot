@@ -1,5 +1,7 @@
-Developer's Documentation
-=========================
+.. _Buildbot Development:
+
+Buildbot Development
+====================
 
 This chapter is the official repository for the collected wisdom of the
 Buildbot hackers.
