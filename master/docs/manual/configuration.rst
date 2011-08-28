@@ -16,6 +16,7 @@ components.
     cfg-buildslaves
     cfg-builders
     cfg-buildfactories
+    cfg-properties
     cfg-buildsteps
     cfg-interlocks
     cfg-statustargets

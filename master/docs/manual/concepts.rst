@@ -814,27 +814,15 @@ Build Properties
 ----------------
 
 Each build has a set of *Build Properties*, which can be used by its
-:class:`BuildStep`\s to modify their actions.  These properties, in the form of
+build steps to modify their actions.  These properties, in the form of
 key-value pairs, provide a general framework for dynamically altering
 the behavior of a build based on its circumstances.
 
-Properties come from a number of places:
-
-* global configuration -- These properties apply to all builds.
-* schedulers -- A scheduler can specify properties available to all the builds it
-  starts.
-* changes -- A change can have properties attached to it. These are usually specified
-  through a change source (:ref:`Change-Sources`), the "Force Build" form on
-  the web interface (:bb:status:`WebStatus`), or sendchange (:bb:cmdline:`sendchange`).
-* buildslaves -- A buildslave can pass properties on to the builds it performs.
-* builds -- A build automatically sets a number of properties on itself.
-* builders -- A builder can set properties on all the builds it runs.
-* steps -- The steps of a build can set properties that are available to subsequent
-  steps.  In particular, source steps set a number of properties.
-
-If the same property is supplied in multiple places, the final appearance takes
-precedence.  For example, a property set in a builder configuration will
-override one supplied by a scheduler.
+Properties form a simple kind of variable in a build.  Some properties are set
+when the build starts, and properties can be changed as a build progresses --
+properties set or changed in one step may be accessed in subsequent steps.
+Property values can be numbers, strings, lists, or dictionaries - basically,
+anything that can be represented in JSON.
 
 Properties are very flexible, and can be used to implement all manner
 of functionality.  Here are some examples:

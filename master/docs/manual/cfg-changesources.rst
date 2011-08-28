@@ -1268,6 +1268,8 @@ This class adds a change to the buildbot system for each of the following events
 This class will populate the property list of the triggered build with the info
 received from Gerrit server in JSON format.
 
+.. index:: Properties; from GerritChangeSource
+
 In case of ``patchset-created`` event, these properties will be:
 
 ``event.change.branch``

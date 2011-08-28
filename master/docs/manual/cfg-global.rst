@@ -418,7 +418,7 @@ This might be useful if you only run buildslaves on the same machine,
 and they are all configured to contact the buildmaster at
 ``localhost:10000``.
 
-.. _Defining-Global-Properties:
+.. index:: Properties; global
 
 .. bb:cfg:: properties
 

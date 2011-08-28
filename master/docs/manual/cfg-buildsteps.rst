@@ -97,256 +97,6 @@ Arguments common to all :class:`BuildStep` subclasses:
     list of actual :class:`Lock` instances, not names. Also note that all Locks must have
     unique names.  See :ref:`Interlocks`.
 
-.. index:: Properties
-
-Using Build Properties
-~~~~~~~~~~~~~~~~~~~~~~
-
-Build properties are a generalized way to provide configuration
-information to build steps; see :ref:`Build-Properties`.
-
-Some build properties are inherited from external sources -- global
-properties, schedulers, or buildslaves.  Some build properties are
-set when the build starts, such as the :class:`SourceStamp` information. Other
-properties can be set by BuildSteps as they run, for example the
-various Source steps will set the ``got_revision`` property to the
-source revision that was actually checked out (which can be useful
-when the SourceStamp in use merely requested the `latest revision`:
-``got_revision`` will tell you what was actually built).
-
-In custom :class:`BuildSteps`, you can get and set the build properties with
-the :meth:`getProperty`/:meth:`setProperty` methods. Each takes a string
-for the name of the property, and returns or accepts an
-arbitrary [#]_ object. For example::
-
-    class MakeTarball(ShellCommand):
-        def start(self):
-            if self.getProperty("os") == "win":
-                self.setCommand([ ... ]) # windows-only command
-            else:
-                self.setCommand([ ... ]) # equivalent for other systems
-            ShellCommand.start(self)
-
-
-.. index:: single: Properties; Property
-
-.. _Property:
-
-Property
-++++++++
-
-You can use build properties in most step paramaters.  Please file bugs for any
-parameters which do not accept properties.  The simplest form is to wrap the
-property name with :class:`Property`, passing an optional default
-argument. ::
-
-   from buildbot.steps.trigger import Trigger
-   form buildbot.process.properties import Property
-
-   f.addStep(Trigger(waitForFinish=False, schedulerNames=['build-dependents'], alwaysUseLatest=True,
-             set_properties=@{'coq_revision': Property("got_revision")@}))
-
-You can specify a default value by passing a ``default`` argument to
-:class:`Property`. This is normally used when the property doesn't exist,
-or when the value is something Python regards as ``False``. The ``defaultWhenFalse``
-argument can be used to force buildbot to use the default argument only
-if the parameter is not set.
-
-.. _WithProperties:
-
-WithProperties
-++++++++++++++
-
-
-You can use build properties in :class:`ShellCommand`\s by using the
-``WithProperties`` wrapper when setting the arguments of
-the :class:`ShellCommand`. This interpolates the named build properties
-into the generated shell command.  Most step parameters accept
-``WithProperties``.
-
-You can use python dictionary-style string interpolation by using
-the ``%(propname)s`` syntax. In this form, the property name goes
-in the parentheses::
-
-    from buildbot.steps.shell import ShellCommand
-    from buildbot.process.properties import WithProperties
-    
-    f.addStep(ShellCommand(
-              command=["tar", "czf",
-                       WithProperties("build-%s.tar.gz", "revision"),
-                       "source"]))
-
-If this :class:`BuildStep` were used in a tree obtained from Subversion, it
-would create a tarball with a name like :file:`build-1234.tar.gz`.
-
-Don't forget the extra ``s`` after the closing parenthesis! This is
-the cause of many confusing errors.
-
-The dictionary-style interpolation supports a number of more advanced
-syntaxes, too.
-
-``propname:-replacement``
-    If ``propname`` exists, substitute its value; otherwise,
-    substitute ``replacement``. ``replacement`` may be empty
-    (``%(propname:-)s``)
-
-``propname:~replacement``
-    Like ``propname:-replacement``, but only substitutes the value
-    of property ``propname`` if it is something Python regards as ``True``.
-    Python considers ``None``, 0, empty lists, and the empty string to be 
-    false, so such values will be replaced by ``replacement``.
-
-``propname:+replacement``
-    If ``propname`` exists, substitute ``replacement``; otherwise,
-    substitute an empty string.
-
-Although these are similar to shell substitutions, no other
-substitutions are currently supported, and ``replacement`` in the
-above cannot contain more substitutions.
-
-Note: like python, you can either do positional-argument interpolation
-*or* keyword-argument interpolation, not both. Thus you cannot use
-a string like ``WithProperties("foo-%(revision)s-%s", "branch")``.
-
-
-Callables
-#########
-
-If you need to do more complex substitution, you can pass keyword
-arguments to ``WithProperties``. The value of each keyword argument
-should be a function that takes one argument (the existing properties)
-and returns a string value that will be used to replace that key::
-
-    WithProperties('%(now)s', now=lambda _: time.clock())
-
-    def determine_foo(props):
-        if props.hasProperty('bar'):
-            return props['bar']
-        elif props.hasProperty('baz'):
-            return props['baz']
-        return 'qux'
-
-    WithProperties('%(foo)s', foo=determine_foo)
-
-Properties Objects
-##################
-
-.. class:: buildbot.interfaces.IProperties
-
-   The available methods on a properties object are those described by the
-   ``IProperties`` interface.  Specifically:
-
-
-   .. method:: getProperty(propname, default=None)
-
-      Get a named property, returning the default value if the property is not found.
-
-   .. method:: hasProperty(propname)
-
-      Determine whether the named property exists.
-
-   .. method:: setProperty(propname, value, source)
-
-      Set a property's value, also specifying the source for this value.
-
-   .. method:: getProperties()
-
-      Get a :class:`buildbot.process.properties.Properties` instance.  The
-      interface of this class is not finalized; where possible, use the other
-      `` IProperties`` methods.
-
-Positional Arguments
-####################
-
-The :func:`WithProperties` function also does ``printf``\-style string
-interpolation with positional arguments, using strings obtained by calling
-``props.getProperty(propname)``. Note that for every ``%s`` (or
-``%d``, etc), you must have exactly one additional argument to
-indicate which build property you want to insert. ::
-
-    from buildbot.steps.shell import ShellCommand
-    from buildbot.process.properties import WithProperties
-
-    f.addStep(ShellCommand(
-              command=["tar", "czf",
-                       WithProperties("build-%s.tar.gz", "revision"),
-                       "source"]))
-
-.. note:: like python, you can either do positional-argument interpolation
-   *or* keyword-argument interpolation, not both. Thus you cannot use
-   a string like ``WithProperties("foo-%(revision)s-%s", "branch")``.
-
-
-.. _Common-Build-Properties:
-
-Common Build Properties
-+++++++++++++++++++++++
-
-The following build properties are set when the build is started, and
-are available to all steps.
-
-``branch``
-    This comes from the build's :class:`SourceStamp`, and describes which branch is
-    being checked out. This will be ``None`` (which interpolates into
-    ``WithProperties`` as an empty string) if the build is on the
-    default branch, which is generally the trunk. Otherwise it will be a
-    string like ``branches/beta1.4``. The exact syntax depends upon the VC
-    system being used.
-
-``revision``
-    This also comes from the :class:`SourceStamp`, and is the revision of the source code
-    tree that was requested from the VC system. When a build is requested of a
-    specific revision (as is generally the case when the build is triggered by
-    Changes), this will contain the revision specification. This is always a
-    string, although the syntax depends upon the VC system in use: for SVN it is an
-    integer, for Mercurial it is a short string, for Darcs it is a rather large
-    string, etc.
-    
-    If the :guilabel:`force build` button was pressed, the revision will be ``None``,
-    which means to use the most recent revision available.  This is a `trunk
-    build`. This will be interpolated as an empty string.
-
-``got_revision``
-    This is set when a :class:`Source` step checks out the source tree, and
-    provides the revision that was actually obtained from the VC system.
-    In general this should be the same as ``revision``, except for
-    trunk builds, where ``got_revision`` indicates what revision was
-    current when the checkout was performed. This can be used to rebuild
-    the same source code later.
-    
-    .. note:: For some VC systems (Darcs in particular), the revision is a
-       large string containing newlines, and is not suitable for interpolation
-       into a filename.
-
-``buildername``
-    This is a string that indicates which :class:`Builder` the build was a part of.
-    The combination of buildername and buildnumber uniquely identify a
-    build.
-
-``buildnumber``
-    Each build gets a number, scoped to the :class:`Builder` (so the first build
-    performed on any given :class:`Builder` will have a build number of 0). This
-    integer property contains the build's number.
-
-``slavename``
-    This is a string which identifies which buildslave the build is
-    running on.
-
-``scheduler``
-    If the build was started from a scheduler, then this property will
-    contain the name of that scheduler.
-
-``repository``
-    The repository of the sourcestamp for this build
-
-``project``
-    The project of the sourcestamp for this build
-
-``workdir``
-
-    The absolute path of the base working directory on the slave, of the current
-    builder.
-
 .. _Source-Checkout:
 
 Source Checkout
@@ -433,7 +183,7 @@ parameters are mostly to specify where exactly the sources are coming from.
 
     ``None``
         In the case where no parameter is specified, the repository URL will
-        be taken directly from the Change property. This value should be used
+        be taken directly from the Change attribute. This value should be used
         if your ChangeSource step has all the information about how to reach
         the Change.
 
@@ -444,19 +194,19 @@ parameters are mostly to specify where exactly the sources are coming from.
 
     format string
         If the parameter is a string containing @code{%s}, then the
-        repository property from the Change will be substituted in
+        repository attribute from the Change will be substituted in
         place of the ``%s``. This is usefull when the ChangeSource
         step knows where the repository resides locally, but doesn't
         know the scheme used to access it. For instance,
-        ``ssh://server/%s`` makes sense if the repository property is
+        ``ssh://server/%s`` makes sense if the repository attribute is
         the local path of the repository.
 
     dict
         In this case, the repository URL will be the value indexed by the
-        repository property in the dict given as parameter.
+        repository attribute in the dict given as parameter.
 
     callable
-        The callable given as parameter will take the repository property from
+        The callable given as parameter will take the repository attribute from
         the Change and its return value will be used as repository URL.
 
 ``timeout``
@@ -969,29 +719,29 @@ sources are coming from.
 
     ``None``
         In the case where no paraneter is specified, the repository url will be
-        taken exactly from the Change property. You are looking for that one if
+        taken exactly from the Change attribute. You are looking for that one if
         your ChangeSource step has all informations about how to reach the
         Change.
-    
-    ``string``
+
+    string
         The parameter might be a string, in this case, this string will be taken
         as the repository url, and nothing more. the value coming from the
         ChangeSource step will be forgotten.
-    
-    ``format string``
+
+    format string
         If the parameter is a string containing ``%s``, then this the
-        repository property from the :class:`Change` will be place in place of the
+        repository attribute from the :class:`Change` will be place in place of the
         ``%s``. This is usefull when the change source knows where the
         repository resides locally, but don't know the scheme used to access
         it. For instance ``ssh://server/%s`` makes sense if the the
-        repository property is the local path of the repository.
-    
-    ``dict``
+        repository attribute is the local path of the repository.
+
+    dict
         In this case, the repository URL will be the value indexed by the
-        repository property in the dict given as parameter.
-    
-    ``callable``
-        The callable given as parameter will take the repository property from
+        repository attribute in the dict given as parameter.
+
+    callable
+        The callable given as parameter will take the repository attribute from
         the Change and its return value will be used as repository URL.
 
     .. note:: this is quite similar to the mechanism used by the
@@ -1469,6 +1219,8 @@ This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will automa
 Gerrit's "virtual branch" (``refs/changes/*``) to download the additionnal changes
 introduced by a pending changeset.
 
+.. index:: Properties; Gerrit integration
+
 Gerrit integration can be also triggered using forced build with ``gerrit_change``
 property with value in format: ``change_number/patchset_number``.
 
@@ -1526,6 +1278,8 @@ The Repo step takes the following arguments:
 This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will
 automatically use the :command:`repo download` command of repo to
 download the additionnal changes introduced by a pending changeset.
+
+.. index:: Properties; Gerrit integration
 
 Gerrit integration can be also triggered using forced build with following properties:
 ``repo_d``, ``repo_d[0-9]``, ``repo_download``, ``repo_download[0-9]``
@@ -1781,6 +1535,8 @@ but you can change this by providing a ``command=`` parameter.
 Compile
 +++++++
 
+.. index:: Properties; warnings-count
+
 This is meant to handle compiling or building a project written in C.
 The default command is ``make all``. When the compile is finished,
 the log file is scanned for GCC warning messages, a summary log is
@@ -1792,7 +1548,6 @@ warnings are found in one step, and three are found in another step, the
 overall build will have a `warnings-count` property of 5). Each step can be
 optionally given a maximum number of warnings via the maxWarnCount parameter.
 If this limit is exceeded, the step will be marked as a failure.
-
 
 The default regular expression used to detect a warning is
 ``'.*warning[: ].*'`` , which is fairly liberal and may cause
@@ -1971,10 +1726,12 @@ test`, and the ``warnOnFailure`` flag is set.
 TreeSize
 ++++++++
 
+.. index:: Properties; tree-size-KiB
+
 This is a simple command that uses the :command:`du` tool to measure the size
 of the code tree. It puts the size (as a count of 1024-byte blocks,
 aka 'KiB' or 'kibibytes') on the step's status text, and sets a build
-property named 'tree-size-KiB' with the same value.
+property named ``tree-size-KiB`` with the same value.
 
 .. bb:step:: PerlModuleTest
 
@@ -2066,55 +1823,7 @@ Example use::
 
 ``mtr_subdir``
     The subdirectory in which to look for server error log files. Defaults to
-    :file:`mysql-test`, which is usually correct. ``WithProperties`` is supported.
-
-.. bb:step:: SetProperty
-
-.. _Step-SetProperty:
-
-SetProperty
-+++++++++++
-
-.. py:class:: buildbot.steps.shell.SetProperty
-
-This buildstep is similar to :bb:step:`ShellCommand`, except that it captures the
-output of the command into a property.  It is usually used like this::
-
-    from buildbot.steps import shell
-    f.addStep(shell.SetProperty(command="uname -a", property="uname"))
-
-This runs ``uname -a`` and captures its stdout, stripped of leading
-and trailing whitespace, in the property ``uname``.  To avoid stripping,
-add ``strip=False``.
-
-The ``property`` argument can be specified as a  ``WithProperties``
-object, allowing the property name to be built from other property values.
-
-The more advanced usage allows you to specify a function to extract
-properties from the command output.  Here you can use regular
-expressions, string interpolation, or whatever you would like. In this
-form, :func:`extract_fn` should be passed, and not :class:`Property`. 
-The :func:`extract_fn` function is called with three arguments: the exit status of the
-command, its standard output as a string, and its standard error as
-a string.  It should return a dictionary containing all new properties. ::
-
-    def glob2list(rc, stdout, stderr):
-        jpgs = [ l.strip() for l in stdout.split('\n') ]
-        return { 'jpgs' : jpgs }
-    f.addStep(SetProperty(command="ls -1 *.jpg", extract_fn=glob2list))
-
-Note that any ordering relationship of the contents of stdout and
-stderr is lost.  For example, given ::
-
-    f.addStep(SetProperty(
-        command="echo output1; echo error >&2; echo output2",
-        extract_fn=my_extract))
-
-Then ``my_extract`` will see ``stdout="output1\noutput2\n"``
-and ``stderr="error\n"``.
-
-.. seealso:: :ref:`Setting-Properties`
-
+    :file:`mysql-test`, which is usually correct. :ref:`WithProperties` is supported.
 
 .. bb:step:: SubunitShellCommand
 
@@ -2517,6 +2226,8 @@ you can use one of the string download steps.
 :bb:step:`JSONStringDownload` is similar, except it takes an ``o`` argument, which must be json
 serializable, and transfers that as a json-encoded string to the slave.
 
+.. index:: Properties; JSONPropertiesDownload
+
 :bb:step:`JSONPropertiesDownload` transfers a json-encoded string that represents a
 dictionary where properties maps to a dictionary of build property ``name`` to
 property ``value``; and ``sourcestamp`` represents the build's sourcestamp.
@@ -2553,20 +2264,72 @@ In this example, the step renames a tarball based on the day of the week. ::
    variables to the subprocess.  To pass an explicit environment instead, add an
    ``env={..}`` argument.
 
-.. bb:step:: SetPropertiesFromEnv
+.. index:: Properties; from steps
 
 .. _Setting-Properties:
 
 Setting Properties
 ~~~~~~~~~~~~~~~~~~
 
+These steps set properties on the master based on information from the slave.
+
+.. bb:step:: SetProperty
+
+.. _Step-SetProperty:
+
+SetProperty
++++++++++++
+
+.. py:class:: buildbot.steps.shell.SetProperty
+
+This buildstep is similar to :bb:step:`ShellCommand`, except that it captures the
+output of the command into a property.  It is usually used like this::
+
+    from buildbot.steps import shell
+    f.addStep(shell.SetProperty(command="uname -a", property="uname"))
+
+This runs ``uname -a`` and captures its stdout, stripped of leading
+and trailing whitespace, in the property ``uname``.  To avoid stripping,
+add ``strip=False``.
+
+The ``property`` argument can be specified as a  :ref:`WithProperties`
+object, allowing the property name to be built from other property values.
+
+The more advanced usage allows you to specify a function to extract
+properties from the command output.  Here you can use regular
+expressions, string interpolation, or whatever you would like. In this
+form, :func:`extract_fn` should be passed, and not :class:`Property`. 
+The :func:`extract_fn` function is called with three arguments: the exit status of the
+command, its standard output as a string, and its standard error as
+a string.  It should return a dictionary containing all new properties. ::
+
+    def glob2list(rc, stdout, stderr):
+        jpgs = [ l.strip() for l in stdout.split('\n') ]
+        return { 'jpgs' : jpgs }
+    f.addStep(SetProperty(command="ls -1 *.jpg", extract_fn=glob2list))
+
+Note that any ordering relationship of the contents of stdout and
+stderr is lost.  For example, given ::
+
+    f.addStep(SetProperty(
+        command="echo output1; echo error >&2; echo output2",
+        extract_fn=my_extract))
+
+Then ``my_extract`` will see ``stdout="output1\noutput2\n"``
+and ``stderr="error\n"``.
+
+.. bb:step:: SetPropertiesFromEnv
+
 .. py:class:: buildbot.steps.slave.SetPropertiesFromEnv
 
-In Buildbot-0.8.3 and higher, slaves provide their environment variables to the
-master on connect.  These can be copied into Buildbot properties with the
-:bb:step:`SetPropertiesFromEnv` step.  Pass a variable or list of variables in the
-``variables`` parameter, then simply use the values as properties in a later
-step.
+SetPropertiesFromEnv
+++++++++++++++++++++
+
+Buildbot slaves (later than version 0.8.3) provide their environment variables
+to the master on connect.  These can be copied into Buildbot properties with
+the :bb:step:`SetPropertiesFromEnv` step.  Pass a variable or list of variables
+in the ``variables`` parameter, then simply use the values as properties in a
+later step.
 
 Note that on Windows, environment variables are case-insensitive, but Buildbot
 property names are case sensitive.  The property will have exactly the variable
@@ -2585,10 +2348,7 @@ Note that this step requires that the Buildslave be at least version 0.8.3.
 For previous versions, no environment variables are available (the slave
 environment will appear to be empty).
 
-.. seealso::
-  
-   :ref:`Step-SetProperty`, which runs a command on the slave and sets a
-   property based on the result.
+.. index:: Properties; triggering schedulers
 
 .. bb:step:: Trigger
 
@@ -2966,13 +2726,13 @@ tests fail, you can use its name for a Web 2.1 startup company, make
 millions of dollars, and hire engineers to fix the bugs for you, while
 you spend your afternoons lazily hang-gliding along a scenic pacific
 beach, blissfully unconcerned about the state of your
-tests. [#]_
+tests. [#framboozle_reg]_
 
 To run a Framboozle-enabled test suite, you just run the 'framboozler'
 command from the top of your source code tree. The 'framboozler'
 command emits a bunch of stuff to stdout, but the most interesting bit
 is that it emits the line "FNURRRGH!" every time it finishes running a
-test case [#]_. You'd like to have a test-case counting LogObserver that
+test case You'd like to have a test-case counting LogObserver that
 watches for these lines and counts them, because counting them will
 help the buildbot more accurately calculate how long the build will
 take, and this will let you know exactly how long you can sneak out of
@@ -3220,13 +2980,4 @@ Of course if the build is run under a PTY, then stdout and stderr will
 be merged before the buildbot ever sees them, so such interleaving
 will be unavoidable.
 
-.. [#] Build properties are serialized along with the
-    build results, so they must be serializable. For this reason, the
-    value of any build property should be simple inert data: strings,
-    numbers, lists, tuples, and dictionaries. They should not contain
-    class instances.
-    
-.. [#] framboozle.com is still available. Remember, I get 10% :).
-
-.. [#] Framboozle gets very excited about running unit tests.
-
+.. [#framboozle_reg] framboozle.com is still available. Remember, I get 10% :).

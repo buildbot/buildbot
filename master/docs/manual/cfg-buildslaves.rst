@@ -31,6 +31,8 @@ describing the problem will be put in the log file (see :ref:`Logfiles`). ::
                    BuildSlave('bot-bsd', 'bsdpasswd'),
                   ]
 
+.. index:: Properties; from buildslave
+
 :class:`BuildSlave` objects can also be created with an optional
 ``properties`` argument, a dictionary specifying properties that
 will be available to any builds performed on this slave.  For example::

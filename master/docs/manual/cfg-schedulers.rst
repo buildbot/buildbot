@@ -39,6 +39,8 @@ available with all schedulers.
     This is the set of builders which this scheduler should trigger, specified
     as a list of names (strings).
 
+.. index:: Properties; from scheduler
+
 ``properties``
     This is a dictionary specifying properties that will be transmitted to all
     builds started by this scheduler.  The ``owner`` property may be of

@@ -1166,6 +1166,8 @@ as shown in the example earlier.
 If the ``allowForce=True`` option was used, some addtional commands
 will be available:
 
+.. index:: Properties; from forced build
+
 :samp:`force build [--branch={BRANCH}] [--revision={REVISION}] [--props=PROP1=VAL1,PROP2=VAL2...] {BUILDER} {REASON}`
     Tell the given :class:`Builder` to start a build of the latest code. The user
     requesting the build and *REASON* are recorded in the :class:`Build` status. The
