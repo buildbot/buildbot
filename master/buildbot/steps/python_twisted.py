@@ -192,6 +192,7 @@ class Trial(ShellCommand):
     logfiles = {"test.log": "_trial_temp/test.log"}
     # we use test.log to track Progress at the end of __init__()
 
+    renderables = ['tests']
     flunkOnFailure = True
     python = None
     trial = "trial"
