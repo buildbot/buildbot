@@ -6,30 +6,36 @@
 Buildslaves
 -----------
 
-The :bb:cfg:`slaves` configuration key specifies a list of known buildslaves. In
-the common case, each buildslave is defined by an instance of the
+The :bb:cfg:`slaves` configuration key specifies a list of known buildslaves.
+In the common case, each buildslave is defined by an instance of the
 :class:`BuildSlave` class.  It represents a standard, manually started machine
-that will try to connect to the buildbot master as a slave.  Contrast these
-with the "on-demand" latent buildslaves, such as the Amazon Web Service Elastic
-Compute Cloud latent buildslave discussed below.
+that will try to connect to the buildbot master as a slave.  Buildbot also
+supports "on-demand", or latent, buildslaves, which allow buildbot to
+dynamically start and stop buildslave instances.
 
-The :class:`BuildSlave` class is instantiated with two values: (``slavename``,
-``slavepassword``). These are the same two values that need to be provided to the
-buildslave administrator when they create the buildslave.
+A :class:`BuildSlave` instance is created with a ``slavename`` and a
+``slavepassword``. These are the same two values that need to be provided to
+the buildslave administrator when they create the buildslave.
 
-The slavenames must be unique, of course. The password exists to
+The slavename must be unique, of course. The password exists to
 prevent evildoers from interfering with the buildbot by inserting
 their own (broken) buildslaves into the system and thus displacing the
 real ones.
 
-Buildslaves with an unrecognized slavename or a non-matching password
-will be rejected when they attempt to connect, and a message
-describing the problem will be put in the log file (see :ref:`Logfiles`). ::
+Buildslaves with an unrecognized slavename or a non-matching password will be
+rejected when they attempt to connect, and a message describing the problem
+will be written to the log file (see :ref:`Logfiles`). 
+
+A configuration for two slaves would look like::
 
     from buildbot.buildslave import BuildSlave
-    c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd'),
-                   BuildSlave('bot-bsd', 'bsdpasswd'),
-                  ]
+    c['slaves'] = [
+        BuildSlave('bot-solaris', 'solarispasswd'),
+        BuildSlave('bot-bsd', 'bsdpasswd'),
+    ]
+
+BuildSlave Options
+~~~~~~~~~~~~~~~~~~
 
 .. index:: Properties; from buildslave
 
@@ -37,22 +43,23 @@ describing the problem will be put in the log file (see :ref:`Logfiles`). ::
 ``properties`` argument, a dictionary specifying properties that
 will be available to any builds performed on this slave.  For example::
 
-    from buildbot.buildslave import BuildSlave
-    c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
-                        properties=@{'os':'solaris'@}),
-                  ]
+    c['slaves'] = [
+        BuildSlave('bot-solaris', 'solarispasswd',
+                    properties={ 'os':'solaris' }),
+    ]
+
+.. index:: Build Slaves; limiting concurrency
 
 The :class:`BuildSlave` constructor can also take an optional
 ``max_builds`` parameter to limit the number of builds that it
 will execute simultaneously::
 
-    from buildbot.buildslave import BuildSlave
-    c['slaves'] = [BuildSlave("bot-linux", "linuxpassword", max_builds=2)]
+    c['slaves'] = [
+        BuildSlave("bot-linux", "linuxpassword", max_builds=2)
+    ]
 
-.. _Master-slave-TCP-Keepalive:
-
-Master-slave TCP keepalive
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Master-Slave TCP Keepalive
+++++++++++++++++++++++++++
 
 By default, the buildmaster sends a simple, non-blocking message to each slave
 every hour.  These keepalives ensure that traffic is flowing over the
@@ -62,9 +69,10 @@ problems before a build is started.
 The interval can be modified by specifying the interval in seconds using the
 ``keepalive_interval`` parameter of BuildSlave::
 
-    c['slaves'] = [BuildSlave('bot-linux', 'linuxpasswd',
-                              keepalive_interval=3600),
-                  ]
+    c['slaves'] = [
+        BuildSlave('bot-linux', 'linuxpasswd',
+                    keepalive_interval=3600),
+    ]
 
 The interval can be set to ``None`` to disable this functionality
 altogether.
@@ -72,7 +80,7 @@ altogether.
 .. _When-Buildslaves-Go-Missing:
 
 When Buildslaves Go Missing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
++++++++++++++++++++++++++++
 
 Sometimes, the buildslaves go away. One very common reason for this is
 when the buildslave process is started once (manually) and left
@@ -82,11 +90,13 @@ automatically restarted.
 If you'd like to have the administrator of the buildslave (or other
 people) be notified by email when the buildslave has been missing for
 too long, just add the ``notify_on_missing=`` argument to the
-:class:`BuildSlave` definition::
+:class:`BuildSlave` definition.  This value can be a single email
+address, or a list of addresses::
 
-    c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
-                              notify_on_missing="bob@@example.com"),
-                  ]
+    c['slaves'] = [
+        BuildSlave('bot-solaris', 'solarispasswd',
+                    notify_on_missing="bob@@example.com"),
+    ]
 
 By default, this will send email when the buildslave has been
 disconnected for more than one hour. Only one email per
@@ -97,19 +107,20 @@ is 3600).
 You can have the buildmaster send email to multiple recipients: just
 provide a list of addresses instead of a single one::
 
-    c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
-                              notify_on_missing=["bob@@example.com",
-                                                 "alice@@example.org"],
-                              missing_timeout=300, # notify after 5 minutes
-                              ),
-                  ]
+    c['slaves'] = [
+        BuildSlave('bot-solaris', 'solarispasswd',
+                    notify_on_missing=["bob@@example.com",
+                                        "alice@@example.org"],
+                    missing_timeout=300, # notify after 5 minutes
+        ),
+    ]
 
-The email sent this way will use a :class:`MailNotifier` (:bb:status:`MailNotifier`)
-status target, if one is configured. This provides a way for you to
-control the *from* address of the email, as well as the relayhost
-(aka *smarthost*) to use as an SMTP server. If no :class:`MailNotifier` is
-configured on this buildmaster, the buildslave-missing emails will be
-sent using a default configuration.
+The email sent this way will use a :class:`MailNotifier` (see
+:bb:status:`MailNotifier`) status target, if one is configured. This provides a
+way for you to control the *from* address of the email, as well as the
+relayhost (aka *smarthost*) to use as an SMTP server. If no
+:class:`MailNotifier` is configured on this buildmaster, the buildslave-missing
+emails will be sent using a default configuration.
 
 Note that if you want to have a :class:`MailNotifier` for buildslave-missing
 emails but not for regular build emails, just create one with
@@ -119,12 +130,17 @@ emails but not for regular build emails, just create one with
     m = mail.MailNotifier(fromaddr="buildbot@@localhost", builders=[],
                           relayhost="smtp.example.org")
     c['status'].append(m)
-    c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
-                              notify_on_missing="bob@@example.com"),
-                  ]
+
+    from buildbot.buildslave import BuildSlave
+    c['slaves'] = [
+            BuildSlave('bot-solaris', 'solarispasswd',
+                        notify_on_missing="bob@@example.com"),
+    ]
+
+.. index:: BuildSlaves; latent
 
 .. _Latent-Buildslaves:
-                  
+
 Latent Buildslaves
 ~~~~~~~~~~~~~~~~~~
 
@@ -140,8 +156,6 @@ The buildslaves that are started on-demand are called "latent" buildslaves.
 As of this writing, buildbot ships with an abstract base class for building
 latent buildslaves, and a concrete implementation for AWS EC2.
 
-.. _AWS-EC2:
-
 .. index::
    AWS EC2
    BuildSlaves; AWS EC2
@@ -149,7 +163,7 @@ latent buildslaves, and a concrete implementation for AWS EC2.
 Amazon Web Services Elastic Compute Cloud ("AWS EC2")
 +++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-`AWS EC2 <http://aws.amazon.com/ec2/>`_ is a web service that allows you to
+`EC2 <http://aws.amazon.com/ec2/>`_ is a web service that allows you to
 start virtual machines in an Amazon data center. Please see their website for
 details, incuding costs. Using the AWS EC2 latent buildslaves involves getting
 an EC2 account with AWS and setting up payment; customizing one or more EC2
@@ -161,8 +175,8 @@ Get an AWS EC2 Account
 ######################
 
 To start off, to use the AWS EC2 latent buildslave, you need to get an AWS
-developer account and sign up for EC2. These instructions may help you get
-started:
+developer account and sign up for EC2. Although Amazon often changes this
+process, these instructions should help you get started:
 
   1. Go to http://aws.amazon.com/ and click to "Sign Up Now" for an AWS account.
 
@@ -337,8 +351,6 @@ instance.  It defaults to 10 minutes.
 ``keypair_name`` and ``security_name`` allow you to specify different names for
 these AWS EC2 values.  They both default to ``latent_buildbot_slave``.
 
-.. _BuildSlave-Libvirt:
-
 .. index::
    libvirt
    BuildSlaves; libvirt
@@ -442,8 +454,6 @@ won't be able to find a VM to start.
     like that used with ``virsh define``. The VM will be created
     automatically when needed, and destroyed when not needed any longer.
 
-.. _Dangers-with-Latent-Buildslaves:
-
 Dangers with Latent Buildslaves
 +++++++++++++++++++++++++++++++
 
@@ -462,30 +472,3 @@ to the same latent buildslave, it is likely that the system will become
 confused.  This should not occur, unless, for instance, you configure a normal
 build slave to connect with the authentication of a latent buildbot.  If this
 situation does occurs, stop all attached instances and restart the master.
-
-.. _Writing-New-Latent-Buildslaves:
-
-Writing New Latent Buildslaves
-++++++++++++++++++++++++++++++
-
-Writing a new latent buildslave should only require subclassing
-:class:`buildbot.buildslave.AbstractLatentBuildSlave` and implementing
-:meth:`start_instance` and :meth:`stop_instance`. ::
-
-    def start_instance(self):
-        # responsible for starting instance that will try to connect with this
-        # master. Should return deferred. Problems should use an errback. The
-        # callback value can be None, or can be an iterable of short strings to
-        # include in the "substantiate success" status message, such as
-        # identifying the instance that started.
-        raise NotImplementedError
-    
-    def stop_instance(self, fast=False):
-        # responsible for shutting down instance. Return a deferred. If `fast`,
-        # we're trying to shut the master down, so callback as soon as is safe.
-        # Callback value is ignored.
-        raise NotImplementedError
-
-See :class:`buildbot.ec2buildslave.EC2LatentBuildSlave` for an example, or see the
-test example :class:`buildbot.test_slaves.FakeLatentBuildSlave`.
-

@@ -327,3 +327,28 @@ seconds.  This method should return a Deferred to signal its completion.
 
 Aside from the service methods, the other concerns in the previous section
 apply here, too.
+
+Writing a New Latent Buildslave Implementation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Writing a new latent buildslave should only require subclassing
+:class:`buildbot.buildslave.AbstractLatentBuildSlave` and implementing
+:meth:`start_instance` and :meth:`stop_instance`. ::
+
+    def start_instance(self):
+        # responsible for starting instance that will try to connect with this
+        # master. Should return deferred. Problems should use an errback. The
+        # callback value can be None, or can be an iterable of short strings to
+        # include in the "substantiate success" status message, such as
+        # identifying the instance that started.
+        raise NotImplementedError
+    
+    def stop_instance(self, fast=False):
+        # responsible for shutting down instance. Return a deferred. If `fast`,
+        # we're trying to shut the master down, so callback as soon as is safe.
+        # Callback value is ignored.
+        raise NotImplementedError
+
+See :class:`buildbot.ec2buildslave.EC2LatentBuildSlave` for an example, or see
+the test example :class:`buildbot.test_slaves.FakeLatentBuildSlave`.
+
