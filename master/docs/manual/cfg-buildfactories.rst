@@ -57,7 +57,7 @@ Finally, you can also add a sequence of steps all at once::
     f.addSteps(all_steps)
 
 Attributes
-++++++++++
+~~~~~~~~~~
 
 The following attributes can be set on a build factory after it is created, e.g., ::
 

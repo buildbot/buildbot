@@ -361,7 +361,7 @@ Aside from the service methods, the other concerns in the previous section
 apply here, too.
 
 Writing a New Latent Buildslave Implementation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------------
 
 Writing a new latent buildslave should only require subclassing
 :class:`buildbot.buildslave.AbstractLatentBuildSlave` and implementing
@@ -405,6 +405,8 @@ skeleton of such a project would look like::
     f.buildClass = DynamicBuild
     f.addStep(...)
 
+.. _Factory-Workdir-Functions:
+
 Factory Workdir Functions
 -------------------------
 
@@ -446,3 +448,76 @@ You could make the :func:`workdir()` function compute other paths, based on
 parts of the repo URL in the sourcestamp, or lookup in a lookup table
 based on repo URL. As long as there is a permanent 1:1 mapping between
 repos and workdir, this will work.
+
+Advanced Property Interpolation
+-------------------------------
+
+If the simple string substitutions described in :ref:`Properties` are not
+sufficent, more complex substitutions can be achieved with
+:class:`WithProperties` and Python functions.  This only works with
+dictionary-style interpolation.
+
+The function should take one argument - a properties object, described below -
+and should return a string.  Pass the function as a keyword argument to
+:class:`WithProperties`, and use the name of that keyword argument in the
+interpolating string. For example::
+
+    def determine_foo(props):
+        if props.hasProperty('bar'):
+            return props['bar']
+        elif props.hasProperty('baz'):
+            return props['baz']
+        return 'qux'
+    WithProperties('%(foo)s', foo=determine_foo)
+
+or, more practically, ::
+
+    WithProperties('%(now)s', now=lambda _: time.clock())
+
+Properties Objects
+~~~~~~~~~~~~~~~~~~
+
+.. class:: buildbot.interfaces.IProperties
+
+   The available methods on a properties object are those described by the
+   ``IProperties`` interface.  Specifically:
+
+
+   .. method:: getProperty(propname, default=None)
+
+      Get a named property, returning the default value if the property is not found.
+
+   .. method:: hasProperty(propname)
+
+      Determine whether the named property exists.
+
+   .. method:: setProperty(propname, value, source)
+
+      Set a property's value, also specifying the source for this value.
+
+   .. method:: getProperties()
+
+      Get a :class:`buildbot.process.properties.Properties` instance.  The
+      interface of this class is not finalized; where possible, use the other
+      ``IProperties`` methods.
+
+Properties in Custom Steps
+--------------------------
+
+In custom :class:`BuildSteps`, you can get and set the build properties with
+the :meth:`getProperty`/:meth:`setProperty` methods. Each takes a string
+for the name of the property, and returns or accepts an
+arbitrary object. For example::
+
+    class MakeTarball(ShellCommand):
+        def start(self):
+            if self.getProperty("os") == "win":
+                self.setCommand([ ... ]) # windows-only command
+            else:
+                self.setCommand([ ... ]) # equivalent for other systems
+            ShellCommand.start(self)
+
+Remember that properties set in a step may not be available until the next step
+begins.  In particular, any :class:`Property` or :class:`WithProperties`
+instances for the current step are interpoloated before the ``start`` method
+begins.

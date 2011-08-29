@@ -39,16 +39,12 @@ override one supplied by a scheduler.
 Properties are stored internally in JSON format, so they are limited to basic
 types of data: numbers, strings, lists, and dictionaries.
 
-.. note:: Properties are defined while a build is in progress; their values are
-    not available when the configuration file is parsed.  This can sometimes
-    confuse newcomers to Buildbot!
-
 .. index:: single: Properties; Common Properties
 
 .. _Common-Build-Properties:
 
 Common Build Properties
-+++++++++++++++++++++++
+-----------------------
 
 The following build properties are set when the build is started, and
 are available to all steps.
@@ -134,6 +130,21 @@ are available to all steps.
     The absolute path of the base working directory on the slave, of the current
     builder.
 
+Using Properties in Steps
+-------------------------
+
+For the most part, properties are used to alter the behavior of build steps
+during a build.  This is done by annotating the step definition in
+``master.cfg`` with placeholders.  When the step is executed, these
+placeholders will be replaced using the current values of the build properties.
+
+.. note:: Properties are defined while a build is in progress; their values are
+    not available when the configuration file is parsed.  This can sometimes
+    confuse newcomers to Buildbot!
+
+You can use build properties in most step paramaters.  Please file bugs for any
+parameters which do not accept properties.
+
 .. index:: single: Properties; Property
 
 .. _Property:
@@ -141,56 +152,72 @@ are available to all steps.
 Property
 ++++++++
 
-You can use build properties in most step paramaters.  Please file bugs for any
-parameters which do not accept properties.  The simplest form is to wrap the
-property name with :class:`Property`, passing an optional default
-argument. ::
+The simplest form of annotation is to wrap the property name with
+:class:`Property`::
 
-   from buildbot.steps.trigger import Trigger
+   from buildbot.steps.shell import ShellCommand
    form buildbot.process.properties import Property
 
-   f.addStep(Trigger(waitForFinish=False, schedulerNames=['build-dependents'], alwaysUseLatest=True,
-             set_properties=@{'coq_revision': Property("got_revision")@}))
+   f.addStep(ShellCommand(command=[ 'echo', 'buildername:', Property('buildername') ])
 
-You can specify a default value by passing a ``default`` argument to
-:class:`Property`. This is normally used when the property doesn't exist,
-or when the value is something Python regards as ``False``. The ``defaultWhenFalse``
-argument can be used to force buildbot to use the default argument only
-if the parameter is not set.
+You can specify a default value by passing a ``default`` keyword argument::
 
-.. Index:: single; Properties; WithProperty
+   f.addStep(ShellCommand(command=[ 'echo', 'warnings:',
+                                    Property('warnings', default='none') ])
+
+The default value is used when the property doesn't exist, or when the value is
+something Python regards as ``False``. The ``defaultWhenFalse`` argument can be
+set to ``False`` to force buildbot to use the default argument only if the
+parameter is not set::
+
+   f.addStep(ShellCommand(command=[ 'echo', 'warnings:',
+                    Property('warnings', default='none', defaultWhenFalse=False) ])
+
+.. Index:: single; Properties; WithProperties
 
 .. _WithProperties:
 
 WithProperties
 ++++++++++++++
 
-You can use build properties in :class:`ShellCommand`\s by using the
-``WithProperties`` wrapper when setting the arguments of
-the :class:`ShellCommand`. This interpolates the named build properties
-into the generated shell command.  Most step parameters accept
-``WithProperties``.
+:class:`Property` can only be used to replace an entire argument: in the
+example above, it replaces an argument to ``echo``.  Often, properties need to
+be interpolated into strings, instead.  The tool for that job is
+:class:`WithProperties`. 
 
-You can use python dictionary-style string interpolation by using
-the ``%(propname)s`` syntax. In this form, the property name goes
-in the parentheses::
+The simplest use of this class is with positional string interpolation.  Here,
+``%s`` is used as a placeholder, and property names are given as subsequent
+arguments::
 
     from buildbot.steps.shell import ShellCommand
     from buildbot.process.properties import WithProperties
-    
     f.addStep(ShellCommand(
               command=["tar", "czf",
-                       WithProperties("build-%s.tar.gz", "revision"),
+                       WithProperties("build-%s-%s.tar.gz", "branch", "revision"),
                        "source"]))
 
-If this :class:`BuildStep` were used in a tree obtained from Subversion, it
-would create a tarball with a name like :file:`build-1234.tar.gz`.
+If this :class:`BuildStep` were used in a tree obtained from Git, it would
+create a tarball with a name like
+:file:`build-master-a7d3a333db708e786edb34b6af646edd8d4d3ad9.tar.gz`.
 
-Don't forget the extra ``s`` after the closing parenthesis! This is
-the cause of many confusing errors.
+.. index:: unsupported format character
+
+The more common pattern is to use python dictionary-style string interpolation
+by using the ``%(propname)s`` syntax. In this form, the property name goes in
+the parentheses, as above.  A common mistake is to omit the trailing "s",
+leading to a rather obscure error from Python ("ValueError: unsupported format
+character"). ::
+
+   from buildbot.steps.shell import ShellCommand
+   from buildbot.process.properties import WithProperties
+   f.addStep(ShellCommand(command=[ 'make', WithProperties('REVISION=%(got_revision)s'),
+                                    'dist' ])
+
+This example will result in a ``make`` command with an argument like
+``REVISION=12098``.
 
 The dictionary-style interpolation supports a number of more advanced
-syntaxes, too.
+syntaxes in the parentheses.
 
 ``propname:-replacement``
     If ``propname`` exists, substitute its value; otherwise,
@@ -211,91 +238,7 @@ Although these are similar to shell substitutions, no other
 substitutions are currently supported, and ``replacement`` in the
 above cannot contain more substitutions.
 
-Note: like python, you can either do positional-argument interpolation
-*or* keyword-argument interpolation, not both. Thus you cannot use
-a string like ``WithProperties("foo-%(revision)s-%s", "branch")``.
-
-
-Callables
-#########
-
-If you need to do more complex substitution, you can pass keyword
-arguments to ``WithProperties``. The value of each keyword argument
-should be a function that takes one argument (the existing properties)
-and returns a string value that will be used to replace that key::
-
-    WithProperties('%(now)s', now=lambda _: time.clock())
-
-    def determine_foo(props):
-        if props.hasProperty('bar'):
-            return props['bar']
-        elif props.hasProperty('baz'):
-            return props['baz']
-        return 'qux'
-
-    WithProperties('%(foo)s', foo=determine_foo)
-
-Properties Objects
-##################
-
-.. class:: buildbot.interfaces.IProperties
-
-   The available methods on a properties object are those described by the
-   ``IProperties`` interface.  Specifically:
-
-
-   .. method:: getProperty(propname, default=None)
-
-      Get a named property, returning the default value if the property is not found.
-
-   .. method:: hasProperty(propname)
-
-      Determine whether the named property exists.
-
-   .. method:: setProperty(propname, value, source)
-
-      Set a property's value, also specifying the source for this value.
-
-   .. method:: getProperties()
-
-      Get a :class:`buildbot.process.properties.Properties` instance.  The
-      interface of this class is not finalized; where possible, use the other
-      ``IProperties`` methods.
-
-Positional Arguments
-####################
-
-The :func:`WithProperties` function also does ``printf``\-style string
-interpolation with positional arguments, using strings obtained by calling
-``props.getProperty(propname)``. Note that for every ``%s`` (or
-``%d``, etc), you must have exactly one additional argument to
-indicate which build property you want to insert. ::
-
-    from buildbot.steps.shell import ShellCommand
-    from buildbot.process.properties import WithProperties
-
-    f.addStep(ShellCommand(
-              command=["tar", "czf",
-                       WithProperties("build-%s.tar.gz", "revision"),
-                       "source"]))
-
-.. note:: like python, you can either do positional-argument interpolation
-   *or* keyword-argument interpolation, not both. Thus you cannot use
-   a string like ``WithProperties("foo-%(revision)s-%s", "branch")``.
-
-Properties in Custom Steps
-++++++++++++++++++++++++++
-
-In custom :class:`BuildSteps`, you can get and set the build properties with
-the :meth:`getProperty`/:meth:`setProperty` methods. Each takes a string
-for the name of the property, and returns or accepts an
-arbitrary object. For example::
-
-    class MakeTarball(ShellCommand):
-        def start(self):
-            if self.getProperty("os") == "win":
-                self.setCommand([ ... ]) # windows-only command
-            else:
-                self.setCommand([ ... ]) # equivalent for other systems
-            ShellCommand.start(self)
+Note: like python, you can use either positional interpolation *or*
+dictionary-style interpolation, not both. Thus you cannot use a string like
+``WithProperties("foo-%(revision)s-%s", "branch")``.
 
