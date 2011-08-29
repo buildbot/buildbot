@@ -121,7 +121,7 @@ class Trigger(LoggingBuildStep):
             dl = []
             for scheduler in triggered_schedulers:
                 sch = all_schedulers[scheduler]
-                dl.append(sch.trigger(ssid, set_props=props_to_set))
+                dl.append(sch.trigger(ssid, set_props=props_to_set, update_trigger_step=self))
             self.step_status.setText(['triggered'] + triggered_schedulers)
 
             if self.waitForFinish:
