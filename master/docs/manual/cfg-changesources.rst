@@ -1,4 +1,3 @@
-.. -*- rst -*-
 .. _Change-Sources:
 
 Change Sources
@@ -30,7 +29,10 @@ meant to be used in conjunction with other tools to deliver :class:`Change`
 events from the VC repository to the buildmaster.
 
 As a quick guide, here is a list of VC systems and the :class:`ChangeSource`\s
-that might be useful with them. 
+that might be useful with them.  Note that some of these modules are in
+Buildbot's "contrib" directory, meaning that they have been offered by other
+users in hopes they may be useful, and might require some additional work to
+make them functional.
 
 CVS
  * :bb:chsrc:`CVSMaildirSource` (watching mail sent by ``contrib/buildbot_cvs_mail.py`` script) 
@@ -118,7 +120,7 @@ The :bb:cfg:`change_source` configuration key holds all active
 change sources for the confguration.
 
 Most configurations have a single :class:`ChangeSource`, watching only a single
-tree::
+tree, e.g., ::
 
     c['change_source'] = PBChangeSource()
 
@@ -331,7 +333,7 @@ a URL for each file. The function takes three parameters::
     oldRev - old revision of the file
     newRev - new revision of the file
 
-It must return, oldly enough, a url for the file in question. For example::
+It must return, a url for the file in question. For example::
 
     def fileToUrl( file, oldRev, newRev ):
         return 'http://example.com/cgi-bin/cvsweb.cgi/' + file + '?rev=' + newRev
@@ -364,79 +366,12 @@ This is expanded to the files that were modified.
 
 Additional entries can be added to support more modules.
 
-The following is an abreviated form of buildbot_cvs_mail.py --help::
-
-    Usage:
-
-        buildbot-cvs-mail [options] %@{sVv@}
-
-    Where options are:
-
-        --category=category
-        -C
-            Category for change. This becomes the Change.category attribute.
-            This may not make sense to specify it here, as category is meant
-            to distinguish the diffrent types of bots inside a same project,
-            such as "test", "docs", "full"
-        
-        --cvsroot=<path>
-        -c
-            CVSROOT for use by buildbot slaves to checkout code.
-            This becomes the Change.repository attribute. 
-            Exmaple: :ext:myhost:/cvsroot
-    
-        --email=email
-        -e email
-            Email address of the buildbot.
-
-        --fromhost=hostname
-        -f hostname
-            The hostname that email messages appear to be coming from.  The From:
-            header of the outgoing message will look like user@@hostname.  By
-            default, hostname is the machine's fully qualified domain name.
-
-        --help / -h
-            Print this text.
-
-        -m hostname
-        --mailhost=hostname
-            The hostname of an available SMTP server.  The default is
-            'localhost'.
-
-        --mailport=port
-            The port number of SMTP server.  The default is '25'.
-
-        --quiet / -q
-            Don't print as much status to stdout.
-
-        --path=path
-        -p path
-            The path for the files in this update. This comes from the %p parameter
-            in loginfo for CVS version 1.12.x. Do not use this for CVS version 1.11.x
-
-        --project=project
-        -P project
-            The project for the source. Use the CVS module being modified. This 
-            becomes the Change.project attribute.
-        
-        -R ADDR
-        --reply-to=ADDR
-            Add a "Reply-To: ADDR" header to the email message.
-
-        -t
-        --testing
-            Construct message and send to stdout for testing
-
-    The rest of the command line arguments are:
-
-        %@{sVv@}
-            CVS %@{sVv@} loginfo expansion.  When invoked by CVS, this will be a single
-            string containing the files that are changing.
+See :command:`buildbot_cvs_mail.py --help`` for more information on the available options.
 
 .. bb:chsrc:: SVNCommitEmailMaildirSource
 
 .. _SVNCommitEmailMaildirSource:
-    
+
 SVNCommitEmailMaildirSource
 ++++++++++++++++++++++++++++
 
@@ -534,17 +469,22 @@ The :bb:chsrc:`PBChangeSource` is created with the following arguments.
     removed. If all the filenames in a given Change are removed, the that
     whole Change will be dropped. This string should probably end with a
     directory separator.
-    
+
     This is useful for changes coming from version control systems that
-    represent branches as parent directories within the repository (like
-    SVN and Perforce). Use a prefix of ``trunk/`` or
+    represent branches as parent directories within the repository (like SVN
+    and Perforce). Use a prefix of ``trunk/`` or
     ``project/branches/foobranch/`` to only follow one branch and to get
-    correct tree-relative filenames. Without a prefix, the :bb:chsrc:`PBChangeSource`
-    will probably deliver Changes with filenames like :file:`trunk/foo.c`
-    instead of just :file:`foo.c`. Of course this also depends upon the
-    tool sending the Changes in (like :command:`buildbot sendchange`) and
-    what filenames it is delivering: that tool may be filtering and
-    stripping prefixes at the sending end.
+    correct tree-relative filenames. Without a prefix, the
+    :bb:chsrc:`PBChangeSource` will probably deliver Changes with filenames
+    like :file:`trunk/foo.c` instead of just :file:`foo.c`. Of course this also
+    depends upon the tool sending the Changes in (like :bb:cmdline:`buildbot
+    sendchange <sendchange>`) and what filenames it is delivering: that tool
+    may be filtering and stripping prefixes at the sending end.
+
+For example::
+
+    from buildbot.changes import pb
+    c['changes'] = pb.PBChangeSource(port=9999, user='laura', password='fpga')
 
 The following hooks are useful for sending changes to a :bb:chsrc:`PBChangeSource`\:
 
@@ -847,11 +787,10 @@ SVNPoller
 
 .. py:class:: buildbot.changes.svnpoller.SVNPoller
 
-The :bb:chsrc:`SVNPoller` is a ChangeSource
-which periodically polls a `Subversion <http://subversion.tigris.org/>`_
-repository for new revisions, by running the ``svn log``
-command in a subshell. It can watch a single branch or multiple
-branches.
+The :bb:chsrc:`SVNPoller` is a ChangeSource which periodically polls a
+`Subversion <http://subversion.tigris.org/>`_ repository for new revisions, by
+running the ``svn log`` command in a subshell. It can watch a single branch or
+multiple branches.
 
 :bb:chsrc:`SVNPoller` accepts the following arguments:
 
@@ -871,21 +810,22 @@ branches.
 ``split_file``
     A function to convert pathnames into ``(branch, relative_pathname)``
     tuples. Use this to explain your repository's branch-naming policy to
-    :bb:chsrc:`SVNPoller`. This function must accept a single string and return
-    a two-entry tuple. There are a few utility functions in
-    :mod:`buildbot.changes.svnpoller` that can be used as a
-    :meth:`split_file` function, see below for details.
-    
+    :bb:chsrc:`SVNPoller`. This function must accept a single string (the
+    pathname relative to the repository) and return a two-entry tuple. There
+    are a few utility functions in :mod:`buildbot.changes.svnpoller` that can
+    be used as a :meth:`split_file` function; see below for details.
+
     The default value always returns ``(None, path)``, which indicates that
     all files are on the trunk.
-    
+
     Subclasses of :bb:chsrc:`SVNPoller` can override the :meth:`split_file`
     method instead of using the ``split_file=`` argument.
 
 ``project``
-    Set the name of the project to be used for the :bb:chsrc:`SVNPoller`.
-    This will then be set in any changes generated by the :bb:chsrc:`SVNPoller`,
-    and can be used in a Change Filter for triggering particular builders.
+    Set the name of the project to be used for the :bb:chsrc:`SVNPoller`.  This
+    will then be set in any changes generated by the :bb:chsrc:`SVNPoller`, and
+    can be used in a :ref:`Change Filter <Change-Filters>` for triggering
+    particular builders.
 
 ``svnuser``
     An optional string parameter. If set, the :option:`--user` argument will
@@ -906,8 +846,8 @@ branches.
 
 ``histmax``
     The maximum number of changes to inspect at a time. Every ``pollinterval``
-    seconds, the :bb:chsrc:`SVNPoller` asks for the last HISTMAX changes and
-    looks through them for any ones it does not already know about. If
+    seconds, the :bb:chsrc:`SVNPoller` asks for the last ``histmax`` changes and
+    looks through them for any revisions it does not already know about. If
     more than ``histmax`` revisions have been committed since the last poll,
     older changes will be silently ignored. Larger values of ``histmax`` will
     cause more time and memory to be consumed on each poll attempt.
@@ -930,195 +870,32 @@ branches.
     viewer.
 
 ``cachepath``
-    If specified, buildbot will cache processed revisions between
-    restarts. This means you don't miss changes that were committed if
-    the master is down for any reason.
+    If specified, this is a pathname of a cache file that :bb:chsrc:`SVNPoller`
+    will use to store its state between restarts of the master.
 
-
-Branches
-++++++++
-
-Each source file that is tracked by a Subversion repository has a
-fully-qualified SVN URL in the following form:
-:samp:`({REPOURL})({PROJECT-plus-BRANCH})({FILEPATH})`. When you create the
-:bb:chsrc:`SVNPoller`, you give it a ``svnurl`` value that includes all
-of the :samp:`{REPOURL}` and possibly some portion of the :samp:`{PROJECT-plus-BRANCH}`
-string. The :bb:chsrc:`SVNPoller` is responsible for producing Changes that
-contain a branch name and a :samp:`{FILEPATH}` (which is relative to the top of
-a checked-out tree). The details of how these strings are split up
-depend upon how your repository names its branches.
-
-PROJECT/BRANCHNAME/FILEPATH repositories
-########################################
-
-One common layout is to have all the various projects that share a
-repository get a single top-level directory each. Then under a given
-project's directory, you get two subdirectories, one named :file:`trunk`
-and another named :file:`branches`. Under :file:`branches` you have a bunch of
-other directories, one per branch, with names like :file:`1.5.x` and
-:file:`testing`. It is also common to see directories like :file:`tags` and
-:file:`releases` next to :file:`branches` and :file:`trunk`.
-
-For example, the Twisted project has a subversion server on
-``svn.twistedmatrix.com`` that hosts several sub-projects. The
-repository is available through a SCHEME of ``svn:``. The primary
-sub-project is Twisted, of course, with a repository root of
-``svn://svn.twistedmatrix.com/svn/Twisted``. Another sub-project is
-Informant, with a root of
-``svn://svn.twistedmatrix.com/svn/Informant``, etc. Inside any
-checked-out Twisted tree, there is a file named :file:`bin/trial` (which is
-used to run unit test suites).
-
-The trunk for Twisted is in
-`svn://svn.twistedmatrix.com/svn/Twisted/trunk`, and the
-fully-qualified SVN URL for the trunk version of :command:`trial` would be
-`svn://svn.twistedmatrix.com/svn/Twisted/trunk/bin/trial`. The same
-SVNURL for that file on a branch named `1.5.x` would be
-`svn://svn.twistedmatrix.com/svn/Twisted/branches/1.5.x/bin/trial`.
-
-To set up a :bb:chsrc:`SVNPoller` that watches the Twisted trunk (and
-nothing else), we would use the following::
+Several split file functions are available for common SVN repository layouts.
+For a poller that is only monitoring trunk, the default split file function
+is available explicitly as ``split_file_alwaystrunk``::
 
     from buildbot.changes.svnpoller import SVNPoller
-    c['change_source'] = SVNPoller("svn://svn.twistedmatrix.com/svn/Twisted/trunk")
+    from buildbot.changes.svnpoller import split_file_alwaystrunk
+    c['change_source'] = SVNPoller(
+        svnurl="svn://svn.twistedmatrix.com/svn/Twisted/trunk",
+        split_file=split_file_alwaystrunk)
 
-In this case, every Change that our :bb:chsrc:`SVNPoller` produces will
-have ``.branch=None``, to indicate that the Change is on the trunk.
-No other sub-projects or branches will be tracked.
 
-If we want our ChangeSource to follow multiple branches, we have to do
-two things. First we have to change our ``svnurl=`` argument to
-watch more than just ``.../Twisted/trunk``. We will set it to
-``.../Twisted`` so that we'll see both the trunk and all the branches.
-Second, we have to tell :bb:chsrc:`SVNPoller` how to split the
-:samp:`({PROJECT-plus-BRANCH})({FILEPATH})` strings it gets from the repository
-out into :samp:`({BRANCH})` and :samp:`({FILEPATH})` pairs.
-
-We do the latter by providing a :meth:`split_file` function. This function
-is responsible for splitting something like
-``branches/1.5.x/bin/trial`` into ``branch='branches/1.5.x'`` and
-``filepath='bin/trial'``. This function is always given a string
-that names a file relative to the subdirectory pointed to by the
-:bb:chsrc:`SVNPoller`\'s ``svnurl=`` argument. It is expected to return a
-:samp:`({BRANCHNAME}, {FILEPATH})` tuple (in which :samp:`{FILEPATH}` is relative to the
-branch indicated), or ``None`` to indicate that the file is outside any
-project of interest.
-
-(note that we want to see ``branches/1.5.x`` rather than just
-``1.5.x`` because when we perform the SVN checkout, we will probably
-append the branch name to the ``baseURL``, which requires that we keep the
-``branches`` component in there. Other VC schemes use a different
-approach towards branches and may not require this artifact.)
-
-If your repository uses this same :samp:`{PROJECT}/{BRANCH}/{FILEPATH}` naming
-scheme, the following function will work::
-
-    def split_file_branches(path):
-        pieces = path.split('/')
-        if pieces[0] == 'trunk':
-            return (None, '/'.join(pieces[1:]))
-        elif pieces[0] == 'branches':
-            return ('/'.join(pieces[0:2]),
-                    '/'.join(pieces[2:]))
-        else:
-            return None
-
-This function is provided as
-:meth:`buildbot.changes.svnpoller.split_file_branches` for your
-convenience. So to have our Twisted-watching :bb:chsrc:`SVNPoller` follow
-multiple branches, we would use this::
-
-    from buildbot.changes.svnpoller import SVNPoller, split_file_branches
-    c['change_source'] = SVNPoller("svn://svn.twistedmatrix.com/svn/Twisted",
-                                   split_file=split_file_branches)
-
-Changes for all sorts of branches (with names like ``branches/1.5.x``,
-and ``None`` to indicate the trunk) will be delivered to the Schedulers.
-Each Scheduler is then free to use or ignore each branch as it sees
-fit.
-
-BRANCHNAME/PROJECT/FILEPATH repositories
-########################################
-
-Another common way to organize a Subversion repository is to put the
-branch name at the top, and the projects underneath. This is
-especially frequent when there are a number of related sub-projects
-that all get released in a group.
-
-For example, `Divmod.org <http://Divmod.org>`_ hosts a project named `Nevow` as well as one
-named `Quotient`. In a checked-out Nevow tree there is a directory
-named `formless` that contains a python source file named
-:file:`webform.py`. This repository is accessible via webdav (and thus
-uses an `http:` scheme) through the divmod.org hostname. There are
-many branches in this repository, and they use a
-:samp:`({BRANCHNAME})/({PROJECT})` naming policy.
-
-The fully-qualified SVN URL for the trunk version of :file:`webform.py` is
-``http://divmod.org/svn/Divmod/trunk/Nevow/formless/webform.py``.
-You can do an :command:`svn co` with that URL and get a copy of the latest
-version. The 1.5.x branch version of this file would have a URL of
-``http://divmod.org/svn/Divmod/branches/1.5.x/Nevow/formless/webform.py``.
-The whole Nevow trunk would be checked out with
-``http://divmod.org/svn/Divmod/trunk/Nevow``, while the Quotient
-trunk would be checked out using
-``http://divmod.org/svn/Divmod/trunk/Quotient``.
-
-Now suppose we want to have an :bb:chsrc:`SVNPoller` that only cares about
-the Nevow trunk. This case looks just like the
-:samp:`{PROJECT}/{BRANCH}` layout
-described earlier::
+For repositories with the ``{PROJECT}/trunk`` and
+``{PROJECT}/branches/{BRANCH}`` layout, ``split_file_branches`` will do the
+job::
 
     from buildbot.changes.svnpoller import SVNPoller
-    c['change_source'] = SVNPoller("http://divmod.org/svn/Divmod/trunk/Nevow")
+    from buildbot.changes.svnpoller import split_file_branches
+    c['change_source'] = SVNPoller(
+        svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
+        split_file=split_file_branches)
 
-But what happens when we want to track multiple Nevow branches? We
-have to point our ``svnurl=`` high enough to see all those
-branches, but we also don't want to include Quotient changes (since
-we're only building Nevow). To accomplish this, we must rely upon the
-:meth:`split_file` function to help us tell the difference between
-files that belong to Nevow and those that belong to Quotient, as well
-as figuring out which branch each one is on. ::
-
-    from buildbot.changes.svnpoller import SVNPoller
-    c['change_source'] = SVNPoller("http://divmod.org/svn/Divmod",
-                                   split_file=my_file_splitter)
-
-The :meth:`my_file_splitter` function will be called with
-repository-relative pathnames like:
-
-:file:`trunk/Nevow/formless/webform.py`
-    This is a Nevow file, on the trunk. We want the Change that includes this
-    to see a filename of :file:`formless/webform.py`, and a branch of
-    ``None``
-
-:file:`branches/1.5.x/Nevow/formless/webform.py`
-    This is a Nevow file, on a branch. We want to get
-    ``branch='branches/1.5.x'`` and ``filename='formless/webform.py'``.
-
-:file:`trunk/Quotient/setup.py`
-    This is a Quotient file, so we want to ignore it by having
-    :meth:`my_file_splitter` return ``None``.
-
-:file:`branches/1.5.x/Quotient/setup.py`
-    This is also a Quotient file, which should be ignored.
-
-The following definition for :meth:`my_file_splitter` will do the job::
-
-    def my_file_splitter(path):
-        pieces = path.split('/')
-        if pieces[0] == 'trunk':
-            branch = None
-            pieces.pop(0) # remove 'trunk'
-        elif pieces[0] == 'branches':
-            pieces.pop(0) # remove 'branches'
-            # grab branch name
-            branch = 'branches/' + pieces.pop(0)
-        else:
-            return None # something weird
-        projectname = pieces.pop(0)
-        if projectname != 'Nevow':
-            return None # wrong project
-        return (branch, '/'.join(pieces))
+The :bb:chsrc:`SVNPoller` is highly adaptable to various Subversion layouts.
+See :ref:`Customizing-SVNPoller` for details and some common scenarios.
 
 .. bb:chsrc:: BzrPoller
 
@@ -1132,8 +909,19 @@ use, put :file:`contrib/bzr_buildbot.py` somewhere that your buildbot
 configuration can import it. Even putting it in the same directory as the :file:`master.cfg`
 should work. Install the poller in the buildbot configuration as with any
 other change source. Minimally, provide a URL that you want to poll (``bzr://``,
-``bzr+ssh://``, or ``lp:``), though make sure the buildbot user has necessary
-privileges. You may also want to specify these optional values.
+``bzr+ssh://``, or ``lp:``), making sure the buildbot user has necessary
+privileges. ::
+
+    # bzr_buildbot.py in the same directory as master.cfg
+    from bzr_buildbot import BzrPoller
+    c['change_source'] = BzrPoller(
+        url='bzr://hostname/my_project',
+        poll_interval=300)
+
+The ``BzrPoller`` parameters are:
+
+``url``
+    The URL to poll.
 
 ``poll_interval``
     The number of seconds to wait between polls.  Defaults to 10 minutes.
@@ -1167,12 +955,8 @@ processes any changes. It requires its own working directory for operation, whic
 can be specified via the ``workdir`` property. By default a temporary directory will
 be used.
 
-The :bb:chsrc:`GitPoller` only works with git ``1.7`` and up, out of the
-box.  If you're using earlier versions of git, you can get things to
-work by manually creating an empty repository in
-:samp:`{tempdir}/gitpoller_work``.
-
-:bb:chsrc:`GitPoller` accepts the following arguments:
+The :bb:chsrc:`GitPoller` requires git-1.7 and later.  It accepts the following
+arguments:
 
 ``repourl``
     the git-url that describes the remote repository, e.g.
@@ -1188,7 +972,6 @@ work by manually creating an empty repository in
     what you want.  If this is a relative path, it will be interpreted
     relative to the master's basedir.
 
-                
 ``pollinterval``
     interval in seconds between polls, default is 10 minutes
 
@@ -1228,11 +1011,8 @@ work by manually creating an empty repository in
     applied to file names since git will translate non-ascii file
     names to unreadable escape sequences.
 
-Example
-+++++++
+An configuration for the git poller might look like this::
 
-::
-    
     from buildbot.changes.gitpoller import GitPoller
     c['change_source'] = GitPoller('git@@example.com:foobaz/myrepo.git',
                                    branch='great_new_feature',
@@ -1326,18 +1106,13 @@ In case of ``ref-updated`` event, these properties will be:
 ``event.submitter.name``
     Submitter's name (merger responsible)
 
-Example
-+++++++
-
-::
+A configuration for this source might look like::
 
     from buildbot.changes.gerritchangesource import GerritChangeSource
     c['change_source'] = GerritChangeSource(gerrit_server, gerrit_user)
 
-
-see 
-:file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot
-distribution for an example setup of :bb:chsrc:`GerritChangeSource`.
+see :file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution
+for a full example setup of :bb:chsrc:`GerritChangeSource`.
 
 .. bb:chsrc:: Change Hooks
 
@@ -1353,7 +1128,7 @@ to receive HTTP push notifications of commits from services like GitHub.  See
 .. bb:chsrc:: GoogleCodeAtomPoller
 
 .. _GoogleCodeAtomPoller:
-                                   
+
 GoogleCodeAtomPoller
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -1367,16 +1142,10 @@ are not understood (yet). It accepts the following arguments:
 ``pollinterval`` 
     Polling frequency for the feed (in seconds). Default is 1 hour (OPTIONAL)
 
-
-Example
-+++++++
-
-To poll the Ostinato project's commit feed every 3 hours, use ::
+As an example, to poll the Ostinato project's commit feed every 3 hours, the
+configuration would look like this::
 
     from contrib.googlecode_atom import GoogleCodeAtomPoller
-    poller = GoogleCodeAtomPoller(
+    c['change_source'] = GoogleCodeAtomPoller(
         feedurl="http://code.google.com/feeds/p/ostinato/hgchanges/basic",
         pollinterval=10800) 
-    c['change_source'] = [ poller ]
-
-
