@@ -1291,30 +1291,6 @@ GerritStatusPush
 
 GerritStatusPush sends review of the :class:`Change` back to the Gerrit server.
 
-Writing New Status Plugins
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Each status plugin is an object which provides the
-:class:`twisted.application.service.IService` interface, which creates a
-tree of Services with the buildmaster at the top [not strictly true].
-The status plugins are all children of an object which implements
-:class:`buildbot.interfaces.IStatus`, the main status object. From this
-object, the plugin can retrieve anything it wants about current and
-past builds. It can also subscribe to hear about new and upcoming
-builds.
-
-Status plugins which only react to human queries (like the Waterfall
-display) never need to subscribe to anything: they are idle until
-someone asks a question, then wake up and extract the information they
-need to answer it, then they go back to sleep. Plugins which need to
-act spontaneously when builds complete (like the :class:`MailNotifier` plugin)
-need to subscribe to hear about new builds.
-
-If the status plugin needs to run network services (like the HTTP
-server used by the Waterfall plugin), they can be attached as Service
-children of the plugin itself, using the :class:`IServiceCollection`
-interface.
-
 .. [#] Apparently this is the same way http://buildd.debian.org displays build status
 
 .. [#] It may even be possible to provide SSL access by using a
