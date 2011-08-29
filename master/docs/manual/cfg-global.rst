@@ -260,6 +260,19 @@ deleted.
 Caches
 ++++++
 
+::
+
+    c['caches'] = {
+        'Changes' : 100,     # a.k.a. c['changeCacheSize']
+        'chdicts' : 100,
+        'BuildRequests' : 10,
+        'SourceStamps' : 20,
+        'ssdicts' : 20,
+        'objectids' : 10,
+        'usdicts' : 100,
+    }
+    c['buildCacheSize'] = 500
+
 The :bb:cfg:`caches` configuration key contains the configuration for Buildbot's
 in-memory caches.  These caches keep frequently-used objects in memory to avoid
 unnecessary trips to the database or to pickle files.  Caches are divided by
@@ -326,12 +339,16 @@ refresh. ::
 Merging Build Requests
 ~~~~~~~~~~~~~~~~~~~~~~
 
+::
+
+    c['mergeRequests'] = False
+
 This is a global default value for builders' :bb:cfg:`mergeRequests` parameter,
 and controls the merging of build requests.  This parameter can be overridden
 on a per-builder basis.  See :ref:`Merging-Build-Requests` for the allowed
 values for this parameter.
 
-.. index:: Builder; priority
+.. index:: Builders; priority
 
 .. bb:cfg:: prioritizeBuilders
 
@@ -340,34 +357,23 @@ values for this parameter.
 Prioritizing Builders
 ~~~~~~~~~~~~~~~~~~~~~
 
-By default, buildbot will attempt to start builds on builders in order from the
-builder with the highest priority or oldest pending requst to the
-lowest priority, newest request. This behaviour can be
-customized with the :bb:cfg:`prioritizeBuilders` configuration key.
-This key specifies a function which is called with two arguments: a
-:class:`BuildMaster` and a list of :class:`Builder` objects. It
-should return a list of :class:`Builder` objects in the desired order.
-It may also remove items from the list if builds should not be started
-on those builders. If necessary, this function can return its
-results via a Deferred (it is called with ``maybeDeferred``).
-
-This parameter controls the order in which builders are activated.  It does not
-affect the order in which a builder processes the build requests in its queue.
-For that purpose, see :ref:`Prioritizing-Builds`. ::
+::
 
     def prioritizeBuilders(buildmaster, builders):
-        """Prioritize builders.  'finalRelease' builds have the highest
-        priority, so they should be built before running tests, or
-        creating builds."""
-        builderPriorities = {
-            "finalRelease": 0,
-            "test": 1,
-            "build": 2,
-        }
-        builders.sort(key=lambda b: builderPriorities.get(b.name, 0))
-        return builders
-    
+        # ...
     c['prioritizeBuilders'] = prioritizeBuilders
+
+By default, buildbot will attempt to start builds on builders in order,
+beginning with the builder with the oldest pending request.  This behaviour can
+be customized with the :bb:cfg:`prioritizeBuilders` configuration key, which
+takes a callable.  See :ref:`Builder-Priority-Functions` for details on this
+callable.
+
+This parameter controls the order in which builders are permitted to start
+builds, and is relevant in cases where there is resource contention between
+builders, e.g., for a test database.  It does not affect the order in which a
+builder processes the build requests in its queue.  For that purpose, see
+:ref:`Prioritizing-Builds`.
 
 .. bb:cfg:: slavePortnum
 
@@ -439,8 +445,7 @@ debug tool uses the same port number as the slaves do:
 
     c['debugPassword'] = "debugpassword"
 
-.. index::
-   Manhole
+.. index:: Manhole
 
 .. bb:cfg:: manhole
 
@@ -483,9 +488,9 @@ combination to grant access, one of them uses an SSH-style
     privileges to both the buildmaster and all the buildslaves (and to all
     accounts which then run code produced by the buildslaves), it is
     highly recommended that you use one of the SSH manholes instead.
-    
+
 ::
-    
+
     # some examples:
     from buildbot import manhole
     c['manhole'] = manhole.AuthorizedKeysManhole(1234, "authorized_keys")
@@ -525,7 +530,6 @@ file:
     # if you use AuthorizedKeysManhole, this probably doesn't matter.
     User admin
 
-
 Using Manhole
 +++++++++++++
 
@@ -561,8 +565,6 @@ A manhole session might look like::
 
 .. bb:cfg:: metrics
 
-.. _Metrics-Options:
-
 Metrics Options
 ~~~~~~~~~~~~~~~
 
@@ -584,7 +586,8 @@ reactor delay. This defaults to 10s. If set to 0 or ``None``, then
 periodic collection of this data is disabled. This value can also be
 changed via a reconfig. 
 
-Read more about metrics in the :ref:`Metrics` section of the documentation.
+Read more about metrics in the :ref:`Metrics` section in the developer
+documentation.
 
 .. bb:cfg:: user_managers
 
@@ -648,7 +651,5 @@ untrusted users may raise security concerns.
 The keys describe the type of input validated; the values are compiled regular
 expressions against which the input will be matched.  The defaults for each
 type of input are those given in the example, above.
-    
 
 .. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch
-

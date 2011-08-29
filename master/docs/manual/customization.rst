@@ -17,3 +17,4 @@ the ``NEWS`` file.
 
     cust-changesources
     cust-mergerequests
+    cust-builderpriority
