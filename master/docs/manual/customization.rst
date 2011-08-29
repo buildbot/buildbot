@@ -501,8 +501,295 @@ Properties Objects
       interface of this class is not finalized; where possible, use the other
       ``IProperties`` methods.
 
-Properties in Custom Steps
---------------------------
+Writing New BuildSteps
+----------------------
+
+While it is a good idea to keep your build process self-contained in
+the source code tree, sometimes it is convenient to put more
+intelligence into your Buildbot configuration. One way to do this is
+to write a custom :class:`BuildStep`. Once written, this Step can be used in
+the :file:`master.cfg` file.
+
+The best reason for writing a custom :class:`BuildStep` is to better parse the
+results of the command being run. For example, a :class:`BuildStep` that knows
+about JUnit could look at the logfiles to determine which tests had
+been run, how many passed and how many failed, and then report more
+detailed information than a simple ``rc==0`` -based `good/bad`
+decision.
+
+Writing BuildStep Constructors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:class:`BuildStep` classes have some extra equipment, because they are their own
+factories.  Consider the use of a :class:`BuildStep` in :file:`master.cfg`::
+
+    f.addStep(MyStep(someopt="stuff", anotheropt=1))
+
+This creates a single instance of class ``MyStep``.  However, Buildbot needs
+a new object each time the step is executed.  this is accomplished by storing
+the information required to instantiate a new object in the :attr:`factory`
+attribute.  When the time comes to construct a new :class:`Build`, :class:`BuildFactory` consults
+this attribute (via :meth:`getStepFactory`) and instantiates a new step object.
+
+When writing a new step class, then, keep in mind are that you cannot do
+anything "interesting" in the constructor -- limit yourself to checking and
+storing arguments.  To ensure that these arguments are provided to any new
+objects, call :meth:`self.addFactoryArguments` with any keyword arguments your
+constructor needs.
+
+Keep a ``**kwargs`` argument on the end of your options, and pass that up to
+the parent class's constructor.
+
+The whole thing looks like this::
+
+    class Frobnify(LoggingBuildStep):
+        def __init__(self,
+                frob_what="frobee",
+                frob_how_many=None,
+                frob_how=None,
+                **kwargs):
+    
+            # check
+            if frob_how_many is None:
+                raise TypeError("Frobnify argument how_many is required")
+    
+            # call parent
+            LoggingBuildStep.__init__(self, **kwargs)
+    
+            # set Frobnify attributes
+            self.frob_what = frob_what
+            self.frob_how_many = how_many
+            self.frob_how = frob_how
+    
+            # and record arguments for later
+            self.addFactoryArguments(
+                frob_what=frob_what,
+                frob_how_many=frob_how_many,
+                frob_how=frob_how)
+    
+    class FastFrobnify(Frobnify):
+        def __init__(self,
+                speed=5,
+                **kwargs)
+            Frobnify.__init__(self, **kwargs)
+            self.speed = speed
+            self.addFactoryArguments(
+                speed=speed)
+
+BuildStep LogFiles
+~~~~~~~~~~~~~~~~~~
+
+Each BuildStep has a collection of `logfiles`. Each one has a short
+name, like `stdio` or `warnings`. Each :class:`LogFile` contains an
+arbitrary amount of text, usually the contents of some output file
+generated during a build or test step, or a record of everything that
+was printed to :file:`stdout`/:file:`stderr` during the execution of some command.
+
+These :class:`LogFile`\s are stored to disk, so they can be retrieved later.
+
+Each can contain multiple `channels`, generally limited to three
+basic ones: stdout, stderr, and `headers`. For example, when a
+ShellCommand runs, it writes a few lines to the `headers` channel to
+indicate the exact argv strings being run, which directory the command
+is being executed in, and the contents of the current environment
+variables. Then, as the command runs, it adds a lot of :file:`stdout` and
+:file:`stderr` messages. When the command finishes, a final `header`
+line is added with the exit code of the process.
+
+Status display plugins can format these different channels in
+different ways. For example, the web page shows LogFiles as text/html,
+with header lines in blue text, stdout in black, and stderr in red. A
+different URL is available which provides a text/plain format, in
+which stdout and stderr are collapsed together, and header lines are
+stripped completely. This latter option makes it easy to save the
+results to a file and run :command:`grep` or whatever against the
+output.
+
+Each :class:`BuildStep` contains a mapping (implemented in a python dictionary)
+from :class:`LogFile` name to the actual :class:`LogFile` objects. Status plugins can
+get a list of LogFiles to display, for example, a list of HREF links
+that, when clicked, provide the full contents of the :class:`LogFile`.
+
+Using LogFiles in custom BuildSteps
+###################################
+
+The most common way for a custom :class:`BuildStep` to use a :class:`LogFile` is to
+summarize the results of a :bb:step:`ShellCommand` (after the command has
+finished running). For example, a compile step with thousands of lines
+of output might want to create a summary of just the warning messages.
+If you were doing this from a shell, you would use something like:
+
+.. code-block:: bash
+
+    grep "warning:" output.log >warnings.log
+
+In a custom BuildStep, you could instead create a ``warnings`` :class:`LogFile`
+that contained the same text. To do this, you would add code to your
+:meth:`createSummary` method that pulls lines from the main output log
+and creates a new :class:`LogFile` with the results::
+
+    def createSummary(self, log):
+        warnings = []
+        sio = StringIO.StringIO(log.getText())
+        for line in sio.readlines():
+            if "warning:" in line:
+                warnings.append()
+        self.addCompleteLog('warnings', "".join(warnings))
+
+This example uses the :meth:`addCompleteLog` method, which creates a
+new :class:`LogFile`, puts some text in it, and then `closes` it, meaning
+that no further contents will be added. This :class:`LogFile` will appear in
+the HTML display under an HREF with the name `warnings`, since that
+is the name of the :class:`LogFile`.
+
+You can also use :meth:`addHTMLLog` to create a complete (closed)
+:class:`LogFile` that contains HTML instead of plain text. The normal :class:`LogFile`
+will be HTML-escaped if presented through a web page, but the HTML
+:class:`LogFile` will not. At the moment this is only used to present a pretty
+HTML representation of an otherwise ugly exception traceback when
+something goes badly wrong during the :class:`BuildStep`.
+
+In contrast, you might want to create a new :class:`LogFile` at the beginning
+of the step, and add text to it as the command runs. You can create
+the :class:`LogFile` and attach it to the build by calling :meth:`addLog`, which
+returns the :class:`LogFile` object. You then add text to this :class:`LogFile` by
+calling methods like :meth:`addStdout` and :meth:`addHeader`. When you
+are done, you must call the :meth:`finish` method so the :class:`LogFile` can be
+closed. It may be useful to create and populate a :class:`LogFile` like this
+from a :class:`LogObserver` method - see :ref:`Adding-LogObservers`.
+
+The ``logfiles=`` argument to :bb:step:`ShellCommand` (see
+:bb:step:`ShellCommand`) creates new :class:`LogFile`\s and fills them in realtime
+by asking the buildslave to watch a actual file on disk. The
+buildslave will look for additions in the target file and report them
+back to the :class:`BuildStep`. These additions will be added to the :class:`LogFile` by
+calling :meth:`addStdout`. These secondary LogFiles can be used as the
+source of a LogObserver just like the normal :file:`stdio` :class:`LogFile`.
+
+Reading Logfiles
+~~~~~~~~~~~~~~~~
+
+Once a :class:`LogFile` has been added to a :class:`BuildStep` with :meth:`addLog()`,
+:meth:`addCompleteLog()`, :meth:`addHTMLLog()`, or ``logfiles=}``,
+your :class:`BuildStep` can retrieve it by using :meth:`getLog()`::
+
+    class MyBuildStep(ShellCommand):
+        logfiles = @{ "nodelog": "_test/node.log" @}
+    
+        def evaluateCommand(self, cmd):
+            nodelog = self.getLog("nodelog")
+            if "STARTED" in nodelog.getText():
+                return SUCCESS
+            else:
+                return FAILURE
+
+For a complete list of the methods you can call on a :class:`LogFile`, please
+see the docstrings on the :class:`IStatusLog` class in
+:file:`buildbot/interfaces.py`.
+
+.. _Adding-LogObservers:
+
+Adding LogObservers
+~~~~~~~~~~~~~~~~~~~
+
+Most shell commands emit messages to stdout or stderr as they operate,
+especially if you ask them nicely with a :option:`--verbose` flag of some
+sort. They may also write text to a log file while they run. Your
+:class:`BuildStep` can watch this output as it arrives, to keep track of how
+much progress the command has made. You can get a better measure of
+progress by counting the number of source files compiled or test cases
+run than by merely tracking the number of bytes that have been written
+to stdout. This improves the accuracy and the smoothness of the ETA
+display.
+
+To accomplish this, you will need to attach a :class:`LogObserver` to
+one of the log channels, most commonly to the :file:`stdio` channel but
+perhaps to another one which tracks a log file. This observer is given
+all text as it is emitted from the command, and has the opportunity to
+parse that output incrementally. Once the observer has decided that
+some event has occurred (like a source file being compiled), it can
+use the :meth:`setProgress` method to tell the :class:`BuildStep` about the
+progress that this event represents.
+
+There are a number of pre-built :class:`LogObserver` classes that you
+can choose from (defined in :mod:`buildbot.process.buildstep`, and of
+course you can subclass them to add further customization. The
+:class:`LogLineObserver` class handles the grunt work of buffering and
+scanning for end-of-line delimiters, allowing your parser to operate
+on complete :file:`stdout`/:file:`stderr` lines. (Lines longer than a set maximum
+length are dropped; the maximum defaults to 16384 bytes, but you can
+change it by calling :meth:`setMaxLineLength()` on your
+:class:`LogLineObserver` instance.  Use ``sys.maxint`` for effective
+infinity.)
+
+For example, let's take a look at the :class:`TrialTestCaseCounter`,
+which is used by the :bb:step:`Trial` step to count test cases as they are run.
+As Trial executes, it emits lines like the following:
+
+.. code-block:: none
+
+    buildbot.test.test_config.ConfigTest.testDebugPassword ... [OK]
+    buildbot.test.test_config.ConfigTest.testEmpty ... [OK]
+    buildbot.test.test_config.ConfigTest.testIRC ... [FAIL]
+    buildbot.test.test_config.ConfigTest.testLocks ... [OK]
+
+When the tests are finished, trial emits a long line of `======` and
+then some lines which summarize the tests that failed. We want to
+avoid parsing these trailing lines, because their format is less
+well-defined than the `[OK]` lines.
+
+The parser class looks like this::
+
+    from buildbot.process.buildstep import LogLineObserver
+    
+    class TrialTestCaseCounter(LogLineObserver):
+        _line_re = re.compile(r'^([\w\.]+) \.\.\. \[([^\]]+)\]$')
+        numTests = 0
+        finished = False
+    
+        def outLineReceived(self, line):
+            if self.finished:
+                return
+            if line.startswith("=" * 40):
+                self.finished = True
+                return
+    
+            m = self._line_re.search(line.strip())
+            if m:
+                testname, result = m.groups()
+                self.numTests += 1
+                self.step.setProgress('tests', self.numTests)
+
+This parser only pays attention to stdout, since that's where trial
+writes the progress lines. It has a mode flag named ``finished`` to
+ignore everything after the ``====`` marker, and a scary-looking
+regular expression to match each line while hopefully ignoring other
+messages that might get displayed as the test runs.
+
+Each time it identifies a test has been completed, it increments its
+counter and delivers the new progress value to the step with
+@code{self.step.setProgress}. This class is specifically measuring
+progress along the `tests` metric, in units of test cases (as
+opposed to other kinds of progress like the `output` metric, which
+measures in units of bytes). The Progress-tracking code uses each
+progress metric separately to come up with an overall completion
+percentage and an ETA value.
+
+To connect this parser into the :bb:step:`Trial` build step,
+``Trial.__init__`` ends with the following clause::
+
+    # this counter will feed Progress along the 'test cases' metric
+    counter = TrialTestCaseCounter()
+    self.addLogObserver('stdio', counter)
+    self.progressMetrics += ('tests',)
+
+This creates a :class:`TrialTestCaseCounter` and tells the step that the
+counter wants to watch the :file:`stdio` log. The observer is
+automatically given a reference to the step in its :attr:`step`
+attribute.
+
+Using Properties
+~~~~~~~~~~~~~~~~
 
 In custom :class:`BuildSteps`, you can get and set the build properties with
 the :meth:`getProperty`/:meth:`setProperty` methods. Each takes a string
@@ -521,3 +808,266 @@ Remember that properties set in a step may not be available until the next step
 begins.  In particular, any :class:`Property` or :class:`WithProperties`
 instances for the current step are interpoloated before the ``start`` method
 begins.
+
+.. index:: links, BuildStep URLs, addURL
+
+BuildStep URLs
+~~~~~~~~~~~~~~
+
+Each BuildStep has a collection of `links`. Like its collection of
+LogFiles, each link has a name and a target URL. The web status page
+creates HREFs for each link in the same box as it does for LogFiles,
+except that the target of the link is the external URL instead of an
+internal link to a page that shows the contents of the LogFile.
+
+These external links can be used to point at build information hosted
+on other servers. For example, the test process might produce an
+intricate description of which tests passed and failed, or some sort
+of code coverage data in HTML form, or a PNG or GIF image with a graph
+of memory usage over time. The external link can provide an easy way
+for users to navigate from the buildbot's status page to these
+external web sites or file servers. Note that the step itself is
+responsible for insuring that there will be a document available at
+the given URL (perhaps by using :command:`scp` to copy the HTML output
+to a :file:`~/public_html/` directory on a remote web server). Calling
+:meth:`addURL` does not magically populate a web server.
+
+To set one of these links, the :class:`BuildStep` should call the :meth:`addURL`
+method with the name of the link and the target URL. Multiple URLs can
+be set.
+
+In this example, we assume that the ``make test`` command causes
+a collection of HTML files to be created and put somewhere on the
+coverage.example.org web server, in a filename that incorporates the
+build number. ::
+
+    class TestWithCodeCoverage(BuildStep):
+        command = ["make", "test",
+                   WithProperties("buildnum=%s", "buildnumber")]
+    
+        def createSummary(self, log):
+            buildnumber = self.getProperty("buildnumber")
+            url = "http://coverage.example.org/builds/%s.html" % buildnumber
+            self.addURL("coverage", url)
+
+You might also want to extract the URL from some special message
+output by the build process itself::
+
+    class TestWithCodeCoverage(BuildStep):
+        command = ["make", "test",
+                   WithProperties("buildnum=%s", "buildnumber")]
+    
+        def createSummary(self, log):
+            output = StringIO(log.getText())
+            for line in output.readlines():
+                if line.startswith("coverage-url:"):
+                    url = line[len("coverage-url:"):].strip()
+                    self.addURL("coverage", url)
+                    return
+
+Note that a build process which emits both :file:`stdout` and :file:`stderr` might
+cause this line to be split or interleaved between other lines. It
+might be necessary to restrict the :meth:`getText()` call to only stdout with
+something like this::
+
+    output = StringIO("".join([c[1]
+                               for c in log.getChunks()
+                               if c[0] == LOG_CHANNEL_STDOUT]))
+
+Of course if the build is run under a PTY, then stdout and stderr will
+be merged before the buildbot ever sees them, so such interleaving
+will be unavoidable.
+
+A Somewhat Whimsical Example
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Let's say that we've got some snazzy new unit-test framework called
+Framboozle. It's the hottest thing since sliced bread. It slices, it
+dices, it runs unit tests like there's no tomorrow. Plus if your unit
+tests fail, you can use its name for a Web 2.1 startup company, make
+millions of dollars, and hire engineers to fix the bugs for you, while
+you spend your afternoons lazily hang-gliding along a scenic pacific
+beach, blissfully unconcerned about the state of your
+tests. [#framboozle_reg]_
+
+To run a Framboozle-enabled test suite, you just run the 'framboozler'
+command from the top of your source code tree. The 'framboozler'
+command emits a bunch of stuff to stdout, but the most interesting bit
+is that it emits the line "FNURRRGH!" every time it finishes running a
+test case You'd like to have a test-case counting LogObserver that
+watches for these lines and counts them, because counting them will
+help the buildbot more accurately calculate how long the build will
+take, and this will let you know exactly how long you can sneak out of
+the office for your hang-gliding lessons without anyone noticing that
+you're gone.
+
+This will involve writing a new :class:`BuildStep` (probably named
+"Framboozle") which inherits from :bb:step:`ShellCommand`. The :class:`BuildStep` class
+definition itself will look something like this::
+
+    from buildbot.steps.shell import ShellCommand
+    from buildbot.process.buildstep import LogLineObserver
+    
+    class FNURRRGHCounter(LogLineObserver):
+        numTests = 0
+        def outLineReceived(self, line):
+            if "FNURRRGH!" in line:
+                self.numTests += 1
+                self.step.setProgress('tests', self.numTests)
+    
+    class Framboozle(ShellCommand):
+        command = ["framboozler"]
+    
+        def __init__(self, **kwargs):
+            ShellCommand.__init__(self, **kwargs)   # always upcall!
+            counter = FNURRRGHCounter())
+            self.addLogObserver('stdio', counter)
+            self.progressMetrics += ('tests',)
+
+So that's the code that we want to wind up using. How do we actually
+deploy it?
+
+You have a couple of different options.
+
+Option 1: The simplest technique is to simply put this text
+(everything from START to FINISH) in your :FILE:`master.cfg` file, somewhere
+before the :class:`BuildFactory` definition where you actually use it in a
+clause like::
+
+    f = BuildFactory()
+    f.addStep(SVN(svnurl="stuff"))
+    f.addStep(Framboozle())
+
+Remember that :file:`master.cfg` is secretly just a python program with one
+job: populating the :file:`BuildmasterConfig` dictionary. And python programs
+are allowed to define as many classes as they like. So you can define
+classes and use them in the same file, just as long as the class is
+defined before some other code tries to use it.
+
+This is easy, and it keeps the point of definition very close to the
+point of use, and whoever replaces you after that unfortunate
+hang-gliding accident will appreciate being able to easily figure out
+what the heck this stupid "Framboozle" step is doing anyways. The
+downside is that every time you reload the config file, the Framboozle
+class will get redefined, which means that the buildmaster will think
+that you've reconfigured all the Builders that use it, even though
+nothing changed. Bleh.
+
+Option 2: Instead, we can put this code in a separate file, and import
+it into the master.cfg file just like we would the normal buildsteps
+like :bb:step:`ShellCommand` and :bb:step:`SVN`.
+
+Create a directory named ~/lib/python, put everything from START to
+FINISH in :file:`~/lib/python/framboozle.py`, and run your buildmaster using:
+
+.. code-block:: bash
+
+    PYTHONPATH=~/lib/python buildbot start MASTERDIR
+
+or use the :file:`Makefile.buildbot` to control the way
+``buildbot start`` works. Or add something like this to
+something like your :file:`~/.bashrc` or :file:`~/.bash_profile` or :file:`~/.cshrc`:
+
+.. code-block:: bash
+
+    export PYTHONPATH=~/lib/python
+
+Once we've done this, our :file:`master.cfg` can look like::
+
+    from framboozle import Framboozle
+    f = BuildFactory()
+    f.addStep(SVN(svnurl="stuff"))
+    f.addStep(Framboozle())
+
+or::
+
+    import framboozle
+    f = BuildFactory()
+    f.addStep(SVN(svnurl="stuff"))
+    f.addStep(framboozle.Framboozle())
+
+(check out the python docs for details about how "import" and "from A
+import B" work).
+
+What we've done here is to tell python that every time it handles an
+"import" statement for some named module, it should look in our
+:file:`~/lib/python/` for that module before it looks anywhere else. After our
+directories, it will try in a bunch of standard directories too
+(including the one where buildbot is installed). By setting the
+:envvar:`PYTHONPATH` environment variable, you can add directories to the front
+of this search list.
+
+Python knows that once it "import"s a file, it doesn't need to
+re-import it again. This means that reconfiguring the buildmaster
+(with ``buildbot reconfig``, for example) won't make it think the
+Framboozle class has changed every time, so the Builders that use it
+will not be spuriously restarted. On the other hand, you either have
+to start your buildmaster in a slightly weird way, or you have to
+modify your environment to set the :envvar:`PYTHONPATH` variable.
+
+
+Option 3: Install this code into a standard python library directory
+
+Find out what your python's standard include path is by asking it:
+
+.. code-block:: none
+
+    80:warner@@luther% python
+    Python 2.4.4c0 (#2, Oct  2 2006, 00:57:46)
+    [GCC 4.1.2 20060928 (prerelease) (Debian 4.1.1-15)] on linux2
+    Type "help", "copyright", "credits" or "license" for more information.
+    >>> import sys
+    >>> import pprint
+    >>> pprint.pprint(sys.path)
+    ['',
+     '/usr/lib/python24.zip',
+     '/usr/lib/python2.4',
+     '/usr/lib/python2.4/plat-linux2',
+     '/usr/lib/python2.4/lib-tk',
+     '/usr/lib/python2.4/lib-dynload',
+     '/usr/local/lib/python2.4/site-packages',
+     '/usr/lib/python2.4/site-packages',
+     '/usr/lib/python2.4/site-packages/Numeric',
+     '/var/lib/python-support/python2.4',
+     '/usr/lib/site-python']
+
+In this case, putting the code into
+/usr/local/lib/python2.4/site-packages/framboozle.py would work just
+fine. We can use the same :file:`master.cfg` ``import framboozle`` statement as
+in Option 2. By putting it in a standard include directory (instead of
+the decidedly non-standard :file:`~/lib/python`), we don't even have to set
+:envvar:`PYTHONPATH` to anything special. The downside is that you probably have
+to be root to write to one of those standard include directories.
+
+
+Option 4: Submit the code for inclusion in the Buildbot distribution
+
+Make a fork of buildbot on http://github.com/djmitche/buildbot or post a patch
+in a bug at http://buildbot.net.  In either case, post a note about your patch
+to the mailing list, so others can provide feedback and, eventually, commit it.
+
+    from buildbot.steps import framboozle
+    f = BuildFactory()
+    f.addStep(SVN(svnurl="stuff"))
+    f.addStep(framboozle.Framboozle())
+
+And then you don't even have to install framboozle.py anywhere on your system,
+since it will ship with Buildbot. You don't have to be root, you don't have to
+set :envvar:`PYTHONPATH`. But you do have to make a good case for Framboozle
+being worth going into the main distribution, you'll probably have to provide
+docs and some unit test cases, you'll need to figure out what kind of beer the
+author likes (IPA's and Stouts for Dustin), and then you'll have to wait until
+the next release. But in some environments, all this is easier than getting
+root on your buildmaster box, so the tradeoffs may actually be worth it.
+
+Putting the code in master.cfg (1) makes it available to that
+buildmaster instance. Putting it in a file in a personal library
+directory (2) makes it available for any buildmasters you might be
+running. Putting it in a file in a system-wide shared library
+directory (3) makes it available for any buildmasters that anyone on
+that system might be running. Getting it into the buildbot's upstream
+repository (4) makes it available for any buildmasters that anyone in
+the world might be running. It's all a matter of how widely you want
+to deploy that new class.
+
+.. [#framboozle_reg] framboozle.com is still available. Remember, I get 10% :).
