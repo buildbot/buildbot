@@ -18,6 +18,8 @@ from buildbot.steps import python_twisted
 from buildbot.status.results import SUCCESS
 from buildbot.test.util import steps
 from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.process.properties import Property
+
 
 
 class Trial(steps.BuildStepMixin, unittest.TestCase):
@@ -113,4 +115,22 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS, status_text=['2 tests', 'passed'])
         return self.runStep()
+        
+    def testProperties(self):
+        self.setupStep(python_twisted.Trial(workdir='build',
+                                     tests = Property('test_list'),
+                                     testpath=None))
+        self.properties.setProperty('test_list',['testname'], 'Test')
+
+        self.expectCommands(
+            ExpectShell(workdir='build',
+                        command=['trial', '--reporter=bwverbose', 'testname'],
+                        usePTY="slave-config",
+                        logfiles={'test.log': '_trial_temp/test.log'})
+            + ExpectShell.log('stdio', stdout="Ran 2 tests\n")
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=['2 tests', 'passed'])
+        return self.runStep()
+
 
