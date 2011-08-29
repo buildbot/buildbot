@@ -523,9 +523,6 @@ class Builder(pb.Referenceable, service.MultiService):
             yield False
             return
 
-        # let status know
-        self.master.status.build_started(req.id, self.name, bs)
-
         # start the build. This will first set up the steps, then tell the
         # BuildStatus that it has started, which will announce it to the world
         # (through our BuilderStatus object, which is its parent).  Finally it
@@ -536,6 +533,9 @@ class Builder(pb.Referenceable, service.MultiService):
         d.addCallback(self.buildFinished, slavebuilder, bids)
         # this shouldn't happen. if it does, the slave will be wedged
         d.addErrback(log.err)
+
+        # let status know
+        self.master.status.build_started(req.id, self.name, bs)
 
         # make sure the builder's status is represented correctly
         self.updateBigStatus()

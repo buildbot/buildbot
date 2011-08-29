@@ -182,6 +182,15 @@ class Status:
         d.addCallback(make_status_objects)
         return d
 
+    def getBuildRequestStatus(self, brid):
+        db = self.master.db
+        d = db.buildrequests.getBuildRequest(brid)
+        def make_status(br):
+            builder = self.getBuilder(br["buildername"])
+            return buildrequest.BuildRequestStatus(builder.name, brid, self)
+        d.addCallback(make_status)
+        return d
+
     def generateFinishedBuilds(self, builders=[], branches=[],
                                num_builds=None, finished_before=None,
                                max_search=200):
