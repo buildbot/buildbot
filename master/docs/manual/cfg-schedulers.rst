@@ -128,8 +128,8 @@ or accept any of a set of values::
 
     my_filter = ChangeFilter(project = ['myproject', 'jimsproject'])
 
-It can apply a regular expression, use the attribute name with a suffix of
-``_re``::
+or apply a regular expression, using the attribute name with a "``_re``"
+suffix::
 
     my_filter = ChangeFilter(category_re = '.*deve.*')
     # or, to use regular expression flags:
@@ -193,9 +193,9 @@ The arguments to this scheduler are:
 ``fileIsImportant``
 
 ``change_filter``
-    See :ref:`Configuring-Schedulers`.
 
 ``onlyImportant``
+    See :ref:`Configuring-Schedulers`.
 
 ``treeStableTimer``
     The scheduler will wait for this many seconds before starting the
@@ -278,19 +278,17 @@ The arguments to this scheduler are:
 ``fileIsImportant``
 
 ``change_filter``
-    See :ref:`Configuring-Schedulers`.
 
 ``onlyImportant``
+    See :ref:`Configuring-Schedulers`.
 
 ``treeStableTimer``
-    The scheduler will wait for this many seconds before starting the
-    build. If new changes are made during this interval, the timer will be
-    restarted, so really the build will be started after a change and then
-    after this many seconds of inactivity.
+    The scheduler will wait for this many seconds before starting the build. If
+    new changes are made *on the same branch* during this interval, the timer
+    will be restarted.
 
 ``branches`` (deprecated; use change_filter)
-    This scheduler will pay attention to any number of branches, ignoring
-    Changes that occur on other branches. 
+    Changes on branches not specified on this list will be ignored.
 
 ``categories`` (deprecated; use change_filter)
     A list of categories of changes that this scheduler will respond to.  If this
@@ -428,18 +426,22 @@ The full list of parameters is:
 
 ``fileIsImportant``
 
+``change_filter``
+
 ``onlyImportant``
-    See :ref:`Configuring-Schedulers`.
+    See :ref:`Configuring-Schedulers`.  Note that ``fileIsImportant`` and
+    ``change_filter`` are only relevant if ``onlyIfChanged`` is
+    ``True``.
+
+``onlyIfChanged``
+    If this is true, then builds will not be scheduled at the designated time
+    *unless* the specified branch has seen an important change since
+    the previous build.
 
 ``branch``
     (required) The branch to build when the time comes.  Remember that
     a value of ``None`` here means the default branch, and will not
     match other branches!
-
-``change_filter``
-    :ref:`Configuring-Schedulers`.  Note that ``fileIsImportant`` and
-    ``change_filter`` are only relevant if ``onlyIfChanged`` is
-    ``True``.
 
 ``minute``
     The minute of the hour on which to start the build.  This defaults
@@ -461,49 +463,48 @@ The full list of parameters is:
     The day of the week to start a build, with Monday = 0.  This defauls
     to \*, meaning every day of the week.
 
-``onlyIfChanged``
-    If this is true, then builds will not be scheduled at the designated time
-    *unless* the specified branch has seen an important change since
-    the previous build.
-
 For example, the following master.cfg clause will cause a build to be
 started every night at 3:00am::
 
     from buildbot.schedulers import timed
-    s = timed.Nightly(name='nightly',
+    c['schedulers'].append(
+        timed.Nightly(name='nightly',
             branch='master',
             builderNames=['builder1', 'builder2'],
             hour=3,
-            minute=0)
+            minute=0))
 
 This scheduler will perform a build each monday morning at 6:23am and
 again at 8:23am, but only if someone has committed code in the interim::
 
-    s = timed.Nightly(name='BeforeWork',
+    c['schedulers'].append(
+        timed.Nightly(name='BeforeWork',
              branch=`default`,
              builderNames=['builder1'],
              dayOfWeek=0,
              hour=[6,8],
              minute=23,
-             onlyIfChanged=True)
+             onlyIfChanged=True))
 
 The following runs a build every two hours, using Python's :func:`range`
 function::
 
-    s = timed.Nightly(name='every2hours',
+    c.schedulers.append(
+        timed.Nightly(name='every2hours',
             branch=None, # default branch
             builderNames=['builder1'],
-            hour=range(0, 24, 2))
+            hour=range(0, 24, 2)))
 
 Finally, this example will run only on December 24th::
 
-    s = timed.Nightly(name='SleighPreflightCheck',
+    c['schedulers'].append(
+        timed.Nightly(name='SleighPreflightCheck',
             branch=None, # default branch
             builderNames=['flying_circuits', 'radar'],
             month=12,
             dayOfMonth=24,
             hour=12,
-            minute=0)
+            minute=0))
 
 .. bb:sched:: Try_Jobdir
 .. bb:sched:: Try_Userpass
