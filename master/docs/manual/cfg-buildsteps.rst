@@ -102,23 +102,30 @@ Arguments common to all :class:`BuildStep` subclasses:
 Source Checkout
 ~~~~~~~~~~~~~~~
 
-.. caution:: New source checkout steps are recently developed
-    and not stable yet. If you find any bugs please report them
-    on the `Buildbot Trac <http://trac.buildbot.net/newticket>`_. Old source steps
-    are :ref:`Source-Checkout-Old`.
-
 .. py:module:: buildbot.steps.source
 
-At the moment, Buildbot contains two implementations of source steps.  The new
-implementation handles most of the logic on the master side, and has a simpler,
-more unified approach.  The older implementation
-(:ref:`Source-Checkout-Old`) handles the logic on the slave side, and
+At the moment, Buildbot contains two implementations of most source steps.  The
+new implementation handles most of the logic on the master side, and has a
+simpler, more unified approach.  The older implementation
+(:ref:`Source-Checkout-Slave-Side`) handles the logic on the slave side, and
 some of the classes have a bewildering array of options.
+
+.. caution:: Master-side source checkout steps are recently developed and not
+    stable yet. If you find any bugs please report them on the `Buildbot Trac
+    <http://trac.buildbot.net/newticket>`_. The older Slave-side described source
+    steps are :ref:`Source-Checkout-Slave-Side`.
 
 New users should, where possible, use the new implementations.  The old
 implementations will be deprecated in a later release.  Old users should take
 this opportunity to switch to the new implementations while both are supported
 by Buildbot.
+
+Some version control systems have not yet been implemented as master-side
+steps.  If you are interested in continued support for such a version control
+system, please consider helping the Buildbot developers to create such an
+implementation.  In particular, version-control systems with proprietary
+licenses will not be supported without access to the verscion-contorl system
+for development.
 
 Parameters
 ++++++++++
@@ -626,10 +633,15 @@ arguments:
     updated then copied to ``build`` for next steps.
 
 
-.. _Source-Checkout-Old:
+.. _Source-Checkout-Slave-Side:
 
-Source Checkout (Old)
-~~~~~~~~~~~~~~~~~~~~~
+Source Checkout (Slave-Side)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This section describes the more mature slave-side source steps.  Where
+possible, new users should use the master-side source checkout steps, as the
+slave-side steps will be removed in a future version.  See
+:ref:`Source-Checkout`.
 
 The first step of any build is typically to acquire the source code
 from which the build will be performed. There are several classes to
@@ -776,14 +788,14 @@ to use the ``mode='clobber'`` setting.
 Each VC system has a corresponding source checkout class: their
 arguments are described on the following pages.
 
-.. bb:step:: CVS (Old)
+.. bb:step:: CVS (Slave-Side)
 
-.. _Step-CVS-Old:
+.. _Step-CVS-Slave-Side:
 
-CVS (Old)
-+++++++++
+CVS (Slave-Side)
+++++++++++++++++
 
-The :class:`CVS <CVS (Old)>` build step performs a `CVS <http://www.nongnu.org/cvs/>`_
+The :class:`CVS <CVS (Slave-Side)>` build step performs a `CVS <http://www.nongnu.org/cvs/>`_
 checkout or update. It takes the following arguments:
 
 ``cvsroot``
@@ -819,14 +831,14 @@ checkout or update. It takes the following arguments:
     known Change and the value used for the :option:`-D` option. Defaults to
     half of the parent :class:`Build`\'s ``treeStableTimer``.
 
-.. bb:step:: SVN (Old)
+.. bb:step:: SVN (Slave-Side)
 
-.. _Step-SVN-Old:
+.. _Step-SVN-Slave-Side:
 
-SVN (Old)
-+++++++++
+SVN (Slave-Side)
+++++++++++++++++
 
-The :bb:step:`SVN <SVN (Old)>` build step performs a
+The :bb:step:`SVN <SVN (Slave-Side)>` build step performs a
 `Subversion <http://subversion.tigris.org>`_ checkout or update.
 There are two basic ways of setting up the checkout step, depending
 upon whether you are using multiple branches or not.
@@ -910,15 +922,15 @@ should preferentially create the ``SVN`` step with the
 If you are using branches, you must also make sure your
 :class:`ChangeSource` will report the correct branch names.
 
-.. bb:step:: Darcs (Old)
+.. bb:step:: Darcs (Slave-Side)
 
-Darcs (Old)
-+++++++++++
+Darcs (Slave-Side)
+++++++++++++++++++
 
-The :bb:step:`Darcs <Darcs (Old)>` build step performs a
+The :bb:step:`Darcs <Darcs (Slave-Side)>` build step performs a
 `Darcs <http://darcs.net/>`_ checkout or update.
 
-Like :bb:step:`SVN <SVN (Old)>`, this step can either be configured to always check
+Like :bb:step:`SVN <SVN (Slave-Side)>`, this step can either be configured to always check
 out a specific tree, or set up to pull from a particular branch that
 gets specified separately for each build. Also like SVN, the
 repository URL given to Darcs is created by concatenating a
@@ -950,16 +962,16 @@ The Darcs step takes the following arguments:
     own. This will be appended to ``baseURL`` to create the string that
     will be passed to the ``darcs get`` command.
 
-.. bb:step:: Mercurial (Old)
+.. bb:step:: Mercurial (Slave-Side)
 
-Mercurial (Old)
-+++++++++++++++
+Mercurial (Slave-Side)
+++++++++++++++++++++++
 
-The :bb:step:`Mercurial <Mercurial (Old)>` build step performs a
+The :bb:step:`Mercurial <Mercurial (Slave-Side)>` build step performs a
 `Mercurial <http://selenic.com/mercurial>`_ (aka `hg`) checkout
 or update.
 
-Branches are available in two modes: `dirname` like :bb:step:`Darcs <Darcs (Old)>`, or
+Branches are available in two modes: `dirname` like :bb:step:`Darcs <Darcs (Slave-Side)>`, or
 `inrepo`, which uses the repository internal branches. Make sure this
 setting matches your changehook, if you have that installed.
 
@@ -992,10 +1004,10 @@ The Mercurial step takes the following arguments:
     at each branch change. Otherwise, just
     update to the branch.
 
-.. bb:step:: Bzr (Old)
+.. bb:step:: Bzr (Slave-Side)
 
-Bzr (Old)
-+++++++++
+Bzr (Slave-Side)
+++++++++++++++++
 
 bzr is a descendant of Arch/Baz, and is frequently referred to
 as simply `Bazaar`. The repository-vs-workspace model is similar to
@@ -1026,12 +1038,12 @@ arguments:
     downloaded if not using update/copy mode, or if using update/copy mode with
     multiple branches.
 
-.. bb:step:: P4 (Old)
+.. bb:step:: P4 (Slave-Side)
 
-P4 (Old)
-++++++++
+P4 (Slave-Side)
++++++++++++++++
 
-The :bb:step:`P4 (Old)` build step creates a `Perforce <http://www.perforce.com/>`_
+The :bb:step:`P4 (Slave-Side)` build step creates a `Perforce <http://www.perforce.com/>`_
 client specification and performs an update.
 
 ``p4base``
@@ -1073,12 +1085,12 @@ client specification and performs an update.
     added directly to the client spec's ``LineEnd`` property.  The default is
     ``local``.
 
-.. bb:step:: Git (Old)
+.. bb:step:: Git (Slave-Side)
 
-Git (Old)
-+++++++++
+Git (Slave-Side)
+++++++++++++++++
 
-The :bb:step:`Git <Git (Old)>` build step clones or updates a `Git <http://git.or.cz/>`_
+The :bb:step:`Git <Git (Slave-Side)>` build step clones or updates a `Git <http://git.or.cz/>`_
 repository and checks out the specified branch or revision. Note
 that the buildbot supports Git version 1.2.0 and later: earlier
 versions (such as the one shipped in Ubuntu 'Dapper') do not support
@@ -1126,12 +1138,12 @@ introduced by a pending changeset.
 Gerrit integration can be also triggered using forced build with ``gerrit_change``
 property with value in format: ``change_number/patchset_number``.
 
-.. bb:step:: BK (Old)
+.. bb:step:: BK (Slave-Side)
 
-BitKeeper (Old)
-+++++++++++++++
+BitKeeper (Slave-Side)
+++++++++++++++++++++++
 
-The :bb:step:`BK <BK (Old)>` build step performs a `BitKeeper <http://www.bitkeeper.com/>`_
+The :bb:step:`BK <BK (Slave-Side)>` build step performs a `BitKeeper <http://www.bitkeeper.com/>`_
 checkout or update.
 
 The BitKeeper step takes the following arguments:
@@ -1145,14 +1157,14 @@ The BitKeeper step takes the following arguments:
     to which a branch name will be appended. It should probably end in a
     slash.
 
-.. bb:step:: Repo (Old)
+.. bb:step:: Repo (Slave-Side)
 
-Repo (Old)
-++++++++++
+Repo (Slave-Side)
++++++++++++++++++
 
 .. py:class:: buildbot.steps.source.Repo
 
-The :bb:step:`Repo (Old)` build step performs a `Repo <http://lwn.net/Articles/304488/>`_
+The :bb:step:`Repo (Slave-Side)` build step performs a `Repo <http://lwn.net/Articles/304488/>`_
 init and sync.
 
 The Repo step takes the following arguments:
@@ -1191,12 +1203,12 @@ This feature allows integrators to build with several pending interdependent cha
 which at the moment cannot be described properly in Gerrit, and can only be described
 by humans.
 
-.. bb:step:: Monotone (Old)
+.. bb:step:: Monotone (Slave-Side)
 
-Monotone (Old)
-++++++++++++++
+Monotone (Slave-Side)
++++++++++++++++++++++
 
-The :bb:step:`Monotone <Monotone (Old)>` build step performs a
+The :bb:step:`Monotone <Monotone (Slave-Side)>` build step performs a
 `Monotone <http://www.monotone.ca>`_, (aka ``mtn``) checkout
 or update.
 
