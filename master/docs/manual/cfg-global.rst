@@ -1,6 +1,3 @@
-.. -*- rst -*-
-.. _Global-Configuration-global:
-
 Global Configuration
 --------------------
 
@@ -149,12 +146,10 @@ builders check the database for new build requests at the configured interval. :
 .. bb:cfg:: titleURL
 .. bb:cfg:: title
 
-.. _Site-Definitions:
-
 Site Definitions
 ~~~~~~~~~~~~~~~~~~~
 
-Three basic settings describe the buildmaster in status reports. ::
+Three basic settings describe the buildmaster in status reports::
 
     c['title'] = "Buildbot"
     c['titleURL'] = "http://buildbot.sourceforge.net/"
@@ -187,8 +182,6 @@ more information about this buildbot.
 .. bb:cfg:: logMaxSize
 .. bb:cfg:: logMaxTailSize
 
-.. _Log-Handling:
-
 Log Handling
 ~~~~~~~~~~~~
 
@@ -199,16 +192,15 @@ Log Handling
     c['logMaxSize'] = 1024*1024 # 1M
     c['logMaxTailSize'] = 32768
 
-
 The :bb:cfg:`logCompressionLimit` enables compression of build logs on
 disk for logs that are bigger than the given size, or disables that
-completely if set to ``False``. The default value is 4k, which should
+completely if set to ``False``. The default value is 4096, which should
 be a reasonable default on most file systems. This setting has no impact
 on status plugins, and merely affects the required disk space on the
 master for build logs.
 
 The :bb:cfg:`logCompressionMethod` controls what type of compression is used for
-build logs.  The default is 'bz2', the other valid option is 'gz'.  'bz2'
+build logs.  The default is 'bz2', and the other valid option is 'gz'.  'bz2'
 offers better compression at the expense of more CPU time.
 
 The :bb:cfg:`logMaxSize` parameter sets an upper limit (in bytes) to how large
@@ -224,18 +216,8 @@ contain the first :bb:cfg:`logMaxSize` bytes and the last :bb:cfg:`logMaxTailSiz
 bytes of output.  Don't set this value too high, as the the tail of the log is
 kept in memory.
 
-.. _Data-Lifetime:
-
 Data Lifetime
 ~~~~~~~~~~~~~
-
-::
-
-    c['changeHorizon'] = 200
-    c['buildHorizon'] = 100
-    c['eventHorizon'] = 50
-    c['logHorizon'] = 40
-    c['buildCacheSize'] = 15
 
 .. bb:cfg:: changeHorizon
 .. bb:cfg:: buildHorizon
@@ -244,6 +226,14 @@ Data Lifetime
 
 Horizons
 ++++++++
+
+::
+
+    c['changeHorizon'] = 200
+    c['buildHorizon'] = 100
+    c['eventHorizon'] = 50
+    c['logHorizon'] = 40
+    c['buildCacheSize'] = 15
 
 Buildbot stores historical information on disk in the form of "Pickle" files
 and compressed logfiles.  In a large installation, these can quickly consume
@@ -321,7 +311,7 @@ The available caches are:
 
 .. bb:cfg:: buildCacheSize
 
-The *global* :bb:cfg:`buildCacheSize` parameter gives the number of builds
+The :bb:cfg:`buildCacheSize` parameter gives the number of builds
 for each builder which are cached in memory.  This number should be larger than
 the number of builds required for commonly-used status displays (the waterfall
 or grid views), so that those displays do not miss the cache on a
@@ -331,20 +321,17 @@ refresh. ::
 
 .. bb:cfg:: mergeRequests
 
-.. index::
-    Build; merging
+.. index:: Builds; merging
 
-.. _Merging-Build-Requests-Global:
-
-Merging Build Requests (global)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Merging Build Requests
+~~~~~~~~~~~~~~~~~~~~~~
 
 This is a global default value for builders' :bb:cfg:`mergeRequests` parameter,
-and controls the merging of build requests.  See :ref:`Merging-Build-Requests`
-for more details.
+and controls the merging of build requests.  This parameter can be overridden
+on a per-builder basis.  See :ref:`Merging-Build-Requests` for the allowed
+values for this parameter.
 
-.. index::
-   Builder; priority
+.. index:: Builder; priority
 
 .. bb:cfg:: prioritizeBuilders
 

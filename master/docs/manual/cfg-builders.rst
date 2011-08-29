@@ -111,8 +111,7 @@ Other optional keys may be set on each :class:`Builder`:
         ]
 
 ``mergeRequests``
-    Specifies how build requests for this builder should be merged, overriding the
-    :ref:`global option<Merging-Build-Requests-global>`. See
+    Specifies how build requests for this builder should be merged> See
     :ref:`Merging-Build-Requests` for details.
 
 ``properties``
@@ -120,6 +119,7 @@ Other optional keys may be set on each :class:`Builder`:
     specific for this builder in this parameter. Those values can be used
     later on like other properties. :ref:`WithProperties`.
 
+.. index:: Builds; merging
 
 .. _Merging-Build-Requests:
 
@@ -150,35 +150,10 @@ This algorithm is implemented by the :class:`SourceStamp` method :func:`canBeMer
 A configuration value of ``False`` indicates that requests should never be
 merged.
 
-If the configuration value is a callable, that callable will be invoked with
-three positional arguments: a :class:`Builder` object and two :class:`BuildRequest`
-objects. It should return true if the requests can be merged, and False
-otherwise. For example::
+The configuration value can also be a callable, specifying a custom merging
+function.  See :ref:`Merge-Request-Functions` for details.
 
-    def mergeRequests(builder, req1, req2):
-        "any requests with the same branch can be merged"
-        return req1.branch == req2.branch
-    c['mergeRequests'] = mergeRequests
-
-In many cases, the details of the :class:`SourceStamp`\s and :class:`BuildRequest`\s are important.
-In this example, only :class:`BuildRequest`\s with the same "reason" are merged; thus
-developers forcing builds for different reasons will see distinct builds.  Note
-the use of the :func:`canBeMergedWith` method to access the source stamp
-compatibility algorithm.
-
-.. code-block:: python
-
-   def mergeRequests(builder, req1, req2):
-       if req1.source.canBeMergedWith(req2.source) and  req1.reason == req2.reason:
-          return True
-       return False
-   c['mergeRequests'] = mergeRequests
-
-If it's necessary to perform some blocking operation to determine whether two
-requests can be merged, then the ``mergeRequests`` callable may return its
-result via Deferred.  Note, however, that the number of invocations of the
-callable is proportional to the square of the request queue length, so a
-long-running callable may cause undesirable delays when the queue length grows.
+.. index:: Builds; priority
 
 .. _Prioritizing-Builds:
 
