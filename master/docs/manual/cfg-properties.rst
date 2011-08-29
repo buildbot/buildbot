@@ -39,6 +39,10 @@ override one supplied by a scheduler.
 Properties are stored internally in JSON format, so they are limited to basic
 types of data: numbers, strings, lists, and dictionaries.
 
+.. note:: Properties are defined while a build is in progress; their values are
+    not available when the configuration file is parsed.  This can sometimes
+    confuse newcomers to Buildbot!
+
 .. index:: single: Properties; Common Properties
 
 .. _Common-Build-Properties:
