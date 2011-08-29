@@ -8,9 +8,10 @@ Builder Configuration
 ---------------------
 
 The :bb:cfg:`builders` configuration key is a list of objects giving
-configuration for the Builders.  For more information, see :ref:`Builder`.  The
-class definition for the builder configuration is in :file:`buildbot.config`.
-In the configuration file, its use looks like::
+configuration for the Builders.  For more information on the function of
+Builders in Buildbot, see :ref:`the Concepts chapter <Builder>`.  The class
+definition for the builder configuration is in :file:`buildbot.config`.  In the
+configuration file, its use looks like::
 
     from buildbot.config import BuilderConfig
     c['builders'] = [
@@ -18,7 +19,7 @@ In the configuration file, its use looks like::
         BuilderConfig(name='thorough', slavename='bot1', factory=f_thorough),
     ]
 
-The constructor takes the following keyword arguments:
+``BuilderConfig`` takes the following keyword arguments:
 
 ``name``
     This specifies the Builder's name, which is used in status reports.
@@ -26,36 +27,33 @@ The constructor takes the following keyword arguments:
 ``slavename``
 
 ``slavenames``
-    These arguments specify the buildslave or buildslaves that will be used by this
-    Builder.  All slaves names must appear in the :bb:cfg:`slaves` list. Each
-    buildslave can accomodate multiple :class:`Builder`\s.  The ``slavenames`` parameter
-    can be a list of names, while ``slavename`` can specify only one slave.
+    These arguments specify the buildslave or buildslaves that will be used by
+    this Builder.  All slaves names must appear in the :bb:cfg:`slaves`
+    configuration parameter. Each buildslave can accomodate multiple
+    builders.  The ``slavenames`` parameter can be a list of names,
+    while ``slavename`` can specify only one slave.
 
 ``factory``
     This is a :class:`buildbot.process.factory.BuildFactory` instance which
-    controls how the build is performed. Full details appear in their own
-    section, :ref:`Build-Factories`. Parameters like the location of the CVS
-    repository and the compile-time options used for the build are
-    generally provided as arguments to the factory's constructor.
+    controls how the build is performed by defining the steps in the build.
+    Full details appear in their own section, :ref:`Build-Factories`. 
 
-
-Other optional keys may be set on each :class:`Builder`:
+Other optional keys may be set on each ``BuilderConfig``:
 
 ``builddir``
-    Specifies the name of a subdirectory (under the base directory) in which
-    everything related to this builder will be placed on the buildmaster.
-    This holds build status information. If not set, defaults to ``name``
-    with some characters escaped. Each builder must have a unique build
-    directory.
+    Specifies the name of a subdirectory of the master's basedir in which
+    everything related to this builder will be stored.  This holds build status
+    information. If not set, this parameter defaults to the builder name, with
+    some characters escaped. Each builder must have a unique build directory.
 
 ``slavebuilddir``
-    Specifies the name of a subdirectory (under the base directory) in which
-    everything related to this builder will be placed on the buildslave.
-    This is where checkouts, compiles, and tests are run. If not set,
-    defaults to ``builddir``. If a slave is connected to multiple builders
-    that share the same ``slavebuilddir``, make sure the slave is set to
-    run one build at a time or ensure this is fine to run multiple builds from
-    the same directory simultaneously.
+    Specifies the name of a subdirectory (under the slave's configured base
+    directory) in which everything related to this builder will be placed on
+    the buildslave.  This is where checkouts, compiles, and tests are run. If
+    not set, defaults to ``builddir``. If a slave is connected to multiple
+    builders that share the same ``slavebuilddir``, make sure the slave is set
+    to run one build at a time or ensure this is fine to run multiple builds
+    from the same directory simultaneously.
 
 ``category``
     If provided, this is a string that identifies a category for the
@@ -86,7 +84,8 @@ Other optional keys may be set on each :class:`Builder`:
     Deferred which should fire with the same results.
 
 ``locks``
-    This argument specifies a list of locks that apply to this builder; :ref:`Interlocks`.
+    This argument specifies a list of locks that apply to this builder; see
+    :ref:`Interlocks`.
 
 ``env``
     A Builder may be given a dictionary of environment variables in this parameter.
@@ -110,9 +109,13 @@ Other optional keys may be set on each :class:`Builder`:
                 env=@{'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'@}),
         ]
 
+.. index:: Builds; merging
+
 ``mergeRequests``
-    Specifies how build requests for this builder should be merged> See
-    :ref:`Merging-Build-Requests` for details.
+    Specifies how build requests for this builder should be merged. See
+    :ref:`Merging-Build-Requests`, below.
+
+.. index:: Properties; builder
 
 ``properties``
     A builder may be given a dictionnary of :ref:`Build-Properties`
@@ -163,19 +166,16 @@ Prioritizing Builds
 The :class:`BuilderConfig` parameter ``nextBuild`` can be use to prioritize
 build requests within a builder. Note that this is orthogonal to
 :ref:`Prioritizing-Builders`, which controls the order in which builders are
-called on to start their builds.
+called on to start their builds.  The details of writing such a function are in
+:ref:`Build-Priority-Functions`.
 
-.. code-block:: python
+Such a function can be provided to the BuilderConfig as follows::
 
-   def nextBuild(bldr, requests):
-       for r in requests:
-           if r.source.branch == 'release':
-               return r
-       return requests[0]
-
-   c['builders'] = [
-     BuilderConfig(name='test', factory=f,
-           nextBuild=nextBuild,
-           slavenames=['slave1', 'slave2', 'slave3', 'slave4']), 
-   ]
+    def pickNextBuild(builder, requests):
+        # ...
+    c['builders'] = [
+        BuilderConfig(name='test', factory=f,
+            nextBuild=pickNextBuild,
+            slavenames=['slave1', 'slave2', 'slave3', 'slave4']), 
+    ]
 

@@ -92,6 +92,38 @@ A simple ``prioritizeBuilders`` implementation might look like this::
 
     c['prioritizeBuilders'] = prioritizeBuilders
 
+.. index:: Builds; priority
+
+.. _Build-Priority-Functions:
+
+Build Priority Functions
+------------------------
+
+When a builder has multiple pending build requests, it uses a ``nextBuild``
+function to decide which build it should start first.  This function is given
+two parameters: the :class:`Builder`, and a list of :class:`BuildRequest`
+objects representing pending build requests.
+
+A simple function to prioritize release builds over other builds might look
+like this::
+
+   def nextBuild(bldr, requests):
+       for r in requests:
+           if r.source.branch == 'release':
+               return r
+       return requests[0]
+
+If some non-immediate result must be calculated, the ``nextBuild`` function can
+also return a Deferred::
+
+    def nextBuild(bldr, requests):
+        d = get_request_priorities(requests)
+        def pick(priorities):
+            if requests:
+                return sorted(zip(priorities, requests))[0][1]
+        d.addCallback(pick)
+        return d
+
 .. _Customizing-SVNPoller:
 
 Customizing SVNPoller
