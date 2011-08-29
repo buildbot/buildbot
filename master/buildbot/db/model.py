@@ -300,8 +300,6 @@ class Model(base.DBConnectorComponent):
         sa.Column('schedulerid', sa.Integer, primary_key=True), # TODO: rename to id
         # scheduler's name in master.cfg
         sa.Column('name', sa.String(128), nullable=False),
-        # JSON-encoded state for this scheduler
-        sa.Column('state', sa.String(1024), nullable=False),
         # scheduler's class name, basically representing a "type" for the state
         sa.Column('class_name', sa.String(128), nullable=False),
     )
