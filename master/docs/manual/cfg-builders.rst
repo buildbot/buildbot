@@ -127,7 +127,7 @@ Other optional keys may be set on each ``BuilderConfig``:
 .. _Merging-Build-Requests:
 
 Merging Build Requests
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~
 
 When more than one build request is available for a builder, Buildbot can
 "merge" the requests into a single build.  This is desirable when build
@@ -161,7 +161,7 @@ function.  See :ref:`Merge-Request-Functions` for details.
 .. _Prioritizing-Builds:
 
 Prioritizing Builds
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 The :class:`BuilderConfig` parameter ``nextBuild`` can be use to prioritize
 build requests within a builder. Note that this is orthogonal to

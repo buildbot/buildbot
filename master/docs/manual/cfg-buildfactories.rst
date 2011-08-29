@@ -1,25 +1,14 @@
-.. -*- rst -*-
 .. _Build-Factories:
 
 Build Factories
----------------
+===============
 
-Each Builder is equipped with a ``build factory``, which is
-responsible for producing the actual :class:`Build` objects that perform
-each build. This factory is created in the configuration file, and
-attached to a Builder through the ``factory`` element of its
-dictionary.
+Each Builder is equipped with a ``build factory``, which is defines the steps
+used to perform that particular type of build.  This factory is created in the
+configuration file, and attached to a Builder through the ``factory`` element
+of its dictionary.
 
-The standard :class:`BuildFactory` object creates :class:`Build` objects
-by default. These Builds will each execute a collection of :class:`BuildStep`\s
-in a fixed sequence. Each step can affect the results of the build,
-but in general there is little intelligence to tie the different steps
-together. 
-
-The steps used by these builds are all subclasses of :class:`BuildStep`.
-The standard ones provided with Buildbot are documented later,
-:ref:`Build-Steps`. You can also write your own subclasses to use in
-builds.
+The steps used by these builds are defined in the next section, :ref:`Build-Steps`.
 
 .. note::
     Build factories are used with builders, and are not added directly to the
@@ -27,24 +16,26 @@ builds.
 
 .. _BuildFactory:
 
-.. index::
-   Build Factory
+.. index:: Build Factory
 
-BuildFactory
-~~~~~~~~~~~~
-
-.. py:class:: buildbot.process.factory.BuildFactory
+Defining a Build Factory
+------------------------
 
 A :class:`BuildFactory` defines the steps that every build will follow.  Think of it as
-a glorified script.  For example, a build which consists of a CVS checkout
-followed by a ``make build`` would be constructed as follows::
+a glorified script.  For example, a build factory which consists of a CVS checkout
+followed by a ``make build`` would be configured as follows::
 
-    from buildbot.steps import source, shell
+    from buildbot.steps import svn, shell
     from buildbot.process import factory
-    
+
     f = factory.BuildFactory()
-    f.addStep(source.CVS(cvsroot=CVSROOT, cvsmodule="project", mode="update"))
+    f.addStep(svn.SVN(svnurl="http://..", mode="incremental"))
     f.addStep(shell.Compile(command=["make", "build"]))
+
+This factory would then be attached to one builder (or several, if desired)::
+
+    c['builders'].append(
+        BuilderConfig(name='quick', slavenames=['bot1', 'bot2'], factory=f))
 
 It is also possible to pass a list of steps into the
 :class:`BuildFactory` when it is created. Using :meth:`addStep` is
@@ -68,6 +59,11 @@ Finally, you can also add a sequence of steps all at once::
 Attributes
 ++++++++++
 
+The following attributes can be set on a build factory after it is created, e.g., ::
+
+    f = factory.BuildFactory()
+    f.useProgress = False
+
 :attr:`useProgress`
     (defaults to ``True``): if ``True``, the buildmaster keeps track of how long
     each step takes, so it can provide estimates of how long future builds
@@ -80,120 +76,19 @@ Attributes
     (defaults to 'build'): workdir given to every build step created by
     this factory as default. The workdir can be overridden in a build step
     definition.
-    If this attribute is set to a string, that string will be used
-    for constructing the workdir (buildslave base + builder builddir +
-    workdir). If this attributed is set to a Python callable, that
-    callable will be called with SourceStamp as single parameter and
-    is supposed to return a string which will be used as above.
-    The latter is useful in scenarios with multiple repositories
-    submitting changes to BuildBot. In this case you likely will want
-    to have a dedicated workdir per repository, since otherwise a
-    sourcing step with mode = "update" will fail as a workdir with
-    a working copy of repository A can't be "updated" for changes
-    from a repository B. Here is an example how you can achive
-    workdir-per-repo::
 
-        #
-        # pre-repository working directory
-        #
-        def workdir(source_stamp):
-            return hashlib.md5 (source_stamp.repository).hexdigest()[:8]
-        
-        build = factory.BuildFactory()
-        build.workdir = workdir
-        
-        build.addStep(Git(mode="update"))
-        # ...
-        builders.append ({'name': 'mybuilder',
-                          'slavename': 'myslave',
-                          'builddir': 'mybuilder',
-                          'factory': build})
-        
-        # You'll end up with workdirs like:
-        #
-        # Repo1 => <buildslave-base>/mybuilder/a78890ba
-        # Repo2	=> <buildslave-base>/mybuilder/0823ba88
-        # ...
+    If this attribute is set to a string, that string will be used for
+    constructing the workdir (buildslave base + builder builddir + workdir).
+    The attribute can also be a Python callable, for more complex cases, as
+    described in :ref:`Factory-Workdir-Functions`.
 
-    You could make the :func:`workdir()` function compute other paths, based on
-    parts of the repo URL in the sourcestamp, or lookup in a lookup table
-    based on repo URL. As long as there is a permanent 1:1 mapping between
-    repos and workdir this will work.
+Predefined Build Factories
+--------------------------
 
-Implementation Note
-+++++++++++++++++++
-
-The default :class:`BuildFactory`, provided in the
-:mod:`buildbot.process.factory` module, contains an internal list of
-`BuildStep specifications`: a list of ``(step_class, kwargs)``
-tuples for each. These specification tuples are constructed when the
-config file is read, by asking the instances passed to :meth:`addStep`
-for their subclass and arguments.
-
-To support config files from buildbot-0.7.5 and earlier,
-:meth:`addStep` also accepts the ``f.addStep(shell.Compile,
-command=["make","build"])`` form, although its use is discouraged
-because then the ``Compile`` step doesn't get to validate or
-complain about its arguments until build time. The modern
-pass-by-instance approach allows this validation to occur while the
-config file is being loaded, where the admin has a better chance of
-noticing problems.
-
-When asked to create a :class:`Build`, the :class:`BuildFactory` puts a copy of
-the list of step specifications into the new :class:`Build` object. When the
-:class:`Build` is actually started, these step specifications are used to
-create the actual set of :class:`BuildStep`\s, which are then executed one at a
-time. This serves to give each Build an independent copy of each step.
-
-Each step can affect the build process in the following ways:
-
-  * If the step's :attr:`haltOnFailure` attribute is ``True``, then a failure
-    in the step (i.e. if it completes with a result of ``FAILURE``) will cause
-    the whole build to be terminated immediately: no further steps will be
-    executed, with the exception of steps with :attr:`alwaysRun` set to
-    ``True``. :attr:`haltOnFailure` is useful for setup steps upon which the
-    rest of the build depends: if the CVS checkout or :command:`./configure`
-    process fails, there is no point in trying to compile or test the
-    resulting tree.
-
-  * If the step's :attr:`alwaysRun` attribute is ``True``, then it will always
-    be run, regardless of if previous steps have failed. This is useful
-    for cleanup steps that should always be run to return the build
-    directory or build slave into a good state.
-
-  * If the :attr:`flunkOnFailure` or :attr:`flunkOnWarnings` flag is set,
-    then a result of ``FAILURE`` or ``WARNINGS`` will mark the build as a whole as
-    ``FAILED``. However, the remaining steps will still be executed. This is
-    appropriate for things like multiple testing steps: a failure in any
-    one of them will indicate that the build has failed, however it is
-    still useful to run them all to completion.
-
-  * Similarly, if the :attr:`warnOnFailure` or :attr:`warnOnWarnings` flag
-    is set, then a result of ``FAILURE`` or ``WARNINGS`` will mark the build as
-    having ``WARNINGS``, and the remaining steps will still be executed. This
-    may be appropriate for certain kinds of optional build or test steps.
-    For example, a failure experienced while building documentation files
-    should be made visible with a ``WARNINGS`` result but not be serious
-    enough to warrant marking the whole build with a ``FAILURE``.
-
-In addition, each :class:`Step` produces its own results, may create logfiles,
-etc. However only the flags described above have any effect on the
-build as a whole.
-
-The pre-defined :class:`BuildStep`\s like :class:`CVS` and :class:`Compile` have
-reasonably appropriate flags set on them already. For example, without
-a source tree there is no point in continuing the build, so the
-:class:`CVS` class has the :attr:`haltOnFailure` flag set to ``True``. Look
-in :file:`buildbot/steps/*.py` to see how the other :class:`Step`\s are
-marked.
-
-Each :class:`Step` is created with an additional ``workdir`` argument that
-indicates where its actions should take place. This is specified as a
-subdirectory of the slave builder's base directory, with a default
-value of :file:`build`. This is only implemented as a step argument (as
-opposed to simply being a part of the base directory) because the
-CVS/SVN steps need to perform their checkouts from the parent
-directory.
+Buildbot includes a few predefined build factories that perform common build
+sequences.  In practice, these are rarely used, as every site has slightly
+different requirements, but the source for these factories may provide examples
+for implementation of those requirements.
 
 .. _GNUAutoconf:
 

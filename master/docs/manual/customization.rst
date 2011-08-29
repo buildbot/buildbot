@@ -384,3 +384,65 @@ Writing a new latent buildslave should only require subclassing
 See :class:`buildbot.ec2buildslave.EC2LatentBuildSlave` for an example, or see
 the test example :class:`buildbot.test_slaves.FakeLatentBuildSlave`.
 
+Custom Build Classes
+--------------------
+
+The standard :class:`BuildFactory` object creates :class:`Build` objects
+by default. These Builds will each execute a collection of :class:`BuildStep`\s
+in a fixed sequence. Each step can affect the results of the build,
+but in general there is little intelligence to tie the different steps
+together. 
+
+By setting the factory's ``buildClass`` attribute to a different class, you can
+instantiate a different build class.  This might be useful, for example, to
+create a build class that dynamically determines which steps to run.  The
+skeleton of such a project would look like::
+
+    class DynamicBuild(Build):
+        # .. override some methods
+
+    f = factory.BuildFactory()
+    f.buildClass = DynamicBuild
+    f.addStep(...)
+
+Factory Workdir Functions
+-------------------------
+
+It is sometimes helpful to have a build's workdir determined at runtime based
+on the parameters of the build.  To accomplish this, set the ``workdir``
+attribute of the build factory to a callable.  That callable will be invoked
+with the :class:`SourceStamp` for the build, and should return the appropriate
+workdir.  Note that the value must be returned immediately - Deferreds are not
+supported.
+
+This can be useful, for exmaple, in scenarios with multiple repositories
+submitting changes to BuildBot. In this case you likely will want to have a
+dedicated workdir per repository, since otherwise a sourcing step with mode =
+"update" will fail as a workdir with a working copy of repository A can't be
+"updated" for changes from a repository B. Here is an example how you can
+achive workdir-per-repo::
+
+        def workdir(source_stamp):
+            return hashlib.md5 (source_stamp.repository).hexdigest()[:8]
+
+        build = factory.BuildFactory()
+        build.workdir = workdir
+
+        build.addStep(Git(mode="update"))
+        # ...
+        builders.append ({'name': 'mybuilder',
+                          'slavename': 'myslave',
+                          'builddir': 'mybuilder',
+                          'factory': build})
+
+The end result is a set of workdirs like
+
+.. code-block:: none
+
+    Repo1 => <buildslave-base>/mybuilder/a78890ba
+    Repo2 => <buildslave-base>/mybuilder/0823ba88
+
+You could make the :func:`workdir()` function compute other paths, based on
+parts of the repo URL in the sourcestamp, or lookup in a lookup table
+based on repo URL. As long as there is a permanent 1:1 mapping between
+repos and workdir, this will work.
