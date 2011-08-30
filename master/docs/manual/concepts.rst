@@ -391,7 +391,7 @@ Build Properties
 ################
 
 A Change may have one or more properties attached to it, usually specified
-through the Force Build form or :ref:`sendchange`. Properties are discussed
+through the Force Build form or :bb:cmdline:`sendchange`. Properties are discussed
 in detail in the :ref:`Build-Properties` section.
 
 Links
@@ -510,7 +510,7 @@ There are a couple of different likely values for the
     This checks out the tree at the given revision *REV*, then applies a
     patch (using ``patch -pLEVEL <DIFF``) from inside the relative
     directory *SUBDIR_ROOT*. Item *SUBDIR_ROOT* is optional and defaults to the
-    builder working directory. The :ref:`try` feature uses this kind of
+    builder working directory. The :bb:cmdline:`try` command creates this kind of
     :class:`SourceStamp`. If ``patch`` is ``None``, the patching step is
     bypassed.
 
@@ -628,7 +628,7 @@ changes to the source code, causing builds which may succeed or fail.
 
 Users also may have different levels of authorization when issuing Buildbot
 commands, such as forcing a build from the web interface or from an IRC channel
-(see :ref:`WebStatus-Configuration-Parameters` and :ref:`IRC-Bot`).
+(see :bb:status:`WebStatus` and :bb:status:`IRC`).
 
 Each developer is primarily known through the source control system. Each
 :class:`Change` object that arrives is tagged with a :attr:`who` field that
@@ -692,8 +692,8 @@ For managing users manually, use the ``buildbot user`` command, which allows
 you to add, remove, update, and show various attributes of users in the Buildbot
 database (see :ref:`Command-line-Tool`).
 
-To show all of the users in the database in a more pretty manner, a page in
-the ``WebStatus``, which is described in :ref:`Buildbot-Web-Resources`.
+To show all of the users in the database in a more pretty manner, use the users page in
+the :bb:Status:`WebStatus`.
 
 Uses
 ++++
@@ -730,8 +730,7 @@ resolved.
 Email Addresses
 ~~~~~~~~~~~~~~~
 
-The :class:`buildbot.status.mail.MailNotifier` class
-(:ref:`MailNotifier`) provides a status target which can send email
+The :bb:status:`MailNotifier` is a status target which can send email
 about the results of each build. It accepts a static list of email
 addresses to which each message should be delivered, but it can also
 be configured to send mail to the :class:`Build`\'s Interested Users. To do
@@ -807,33 +806,23 @@ Live Status Clients
 The Buildbot also offers a desktop status client interface which can display
 real-time build status in a GUI panel on the developer's desktop.
 
+.. index:: Properties
+
 .. _Build-Properties:
 
 Build Properties
 ----------------
 
 Each build has a set of *Build Properties*, which can be used by its
-:class:`BuildStep`\s to modify their actions.  These properties, in the form of
+build steps to modify their actions.  These properties, in the form of
 key-value pairs, provide a general framework for dynamically altering
 the behavior of a build based on its circumstances.
 
-Properties come from a number of places:
-
-* global configuration -- These properties apply to all builds.
-* schedulers -- A scheduler can specify properties available to all the builds it
-  starts.
-* changes -- A change can have properties attached to it. These are usually specified
-  through a change source (:ref:`Change-Sources`), the "Force Build" form on
-  the web interface (:ref:`WebStatus`), or sendchange (:ref:`sendchange`).
-* buildslaves -- A buildslave can pass properties on to the builds it performs.
-* builds -- A build automatically sets a number of properties on itself.
-* builders -- A builder can set properties on all the builds it runs.
-* steps -- The steps of a build can set properties that are available to subsequent
-  steps.  In particular, source steps set a number of properties.
-
-If the same property is supplied in multiple places, the final appearance takes
-precedence.  For example, a property set in a builder configuration will
-override one supplied by a scheduler.
+Properties form a simple kind of variable in a build.  Some properties are set
+when the build starts, and properties can be changed as a build progresses --
+properties set or changed in one step may be accessed in subsequent steps.
+Property values can be numbers, strings, lists, or dictionaries - basically,
+anything that can be represented in JSON.
 
 Properties are very flexible, and can be used to implement all manner
 of functionality.  Here are some examples:

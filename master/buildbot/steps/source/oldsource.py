@@ -1307,7 +1307,10 @@ class P4(Source):
         self.startCommand(cmd)
 
 class P4Sync(Source):
-    """This is a partial solution for using a P4 source repository. You are
+    """
+    DEPRECATED - will be removed in 0.8.5.
+    
+    This is a partial solution for using a P4 source repository. You are
     required to manually set up each build slave with a useful P4
     environment, which means setting various per-slave environment variables,
     and creating a P4 client specification which maps the right files into

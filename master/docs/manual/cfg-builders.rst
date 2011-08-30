@@ -8,9 +8,10 @@ Builder Configuration
 ---------------------
 
 The :bb:cfg:`builders` configuration key is a list of objects giving
-configuration for the Builders.  For more information, see :ref:`Builder`.  The
-class definition for the builder configuration is in :file:`buildbot.config`.
-In the configuration file, its use looks like::
+configuration for the Builders.  For more information on the function of
+Builders in Buildbot, see :ref:`the Concepts chapter <Builder>`.  The class
+definition for the builder configuration is in :file:`buildbot.config`.  In the
+configuration file, its use looks like::
 
     from buildbot.config import BuilderConfig
     c['builders'] = [
@@ -18,7 +19,7 @@ In the configuration file, its use looks like::
         BuilderConfig(name='thorough', slavename='bot1', factory=f_thorough),
     ]
 
-The constructor takes the following keyword arguments:
+``BuilderConfig`` takes the following keyword arguments:
 
 ``name``
     This specifies the Builder's name, which is used in status reports.
@@ -26,36 +27,33 @@ The constructor takes the following keyword arguments:
 ``slavename``
 
 ``slavenames``
-    These arguments specify the buildslave or buildslaves that will be used by this
-    Builder.  All slaves names must appear in the :bb:cfg:`slaves` list. Each
-    buildslave can accomodate multiple :class:`Builder`\s.  The ``slavenames`` parameter
-    can be a list of names, while ``slavename`` can specify only one slave.
+    These arguments specify the buildslave or buildslaves that will be used by
+    this Builder.  All slaves names must appear in the :bb:cfg:`slaves`
+    configuration parameter. Each buildslave can accomodate multiple
+    builders.  The ``slavenames`` parameter can be a list of names,
+    while ``slavename`` can specify only one slave.
 
 ``factory``
     This is a :class:`buildbot.process.factory.BuildFactory` instance which
-    controls how the build is performed. Full details appear in their own
-    section, :ref:`Build-Factories`. Parameters like the location of the CVS
-    repository and the compile-time options used for the build are
-    generally provided as arguments to the factory's constructor.
+    controls how the build is performed by defining the steps in the build.
+    Full details appear in their own section, :ref:`Build-Factories`. 
 
-
-Other optional keys may be set on each :class:`Builder`:
+Other optional keys may be set on each ``BuilderConfig``:
 
 ``builddir``
-    Specifies the name of a subdirectory (under the base directory) in which
-    everything related to this builder will be placed on the buildmaster.
-    This holds build status information. If not set, defaults to ``name``
-    with some characters escaped. Each builder must have a unique build
-    directory.
+    Specifies the name of a subdirectory of the master's basedir in which
+    everything related to this builder will be stored.  This holds build status
+    information. If not set, this parameter defaults to the builder name, with
+    some characters escaped. Each builder must have a unique build directory.
 
 ``slavebuilddir``
-    Specifies the name of a subdirectory (under the base directory) in which
-    everything related to this builder will be placed on the buildslave.
-    This is where checkouts, compiles, and tests are run. If not set,
-    defaults to ``builddir``. If a slave is connected to multiple builders
-    that share the same ``slavebuilddir``, make sure the slave is set to
-    run one build at a time or ensure this is fine to run multiple builds from
-    the same directory simultaneously.
+    Specifies the name of a subdirectory (under the slave's configured base
+    directory) in which everything related to this builder will be placed on
+    the buildslave.  This is where checkouts, compiles, and tests are run. If
+    not set, defaults to ``builddir``. If a slave is connected to multiple
+    builders that share the same ``slavebuilddir``, make sure the slave is set
+    to run one build at a time or ensure this is fine to run multiple builds
+    from the same directory simultaneously.
 
 ``category``
     If provided, this is a string that identifies a category for the
@@ -86,11 +84,12 @@ Other optional keys may be set on each :class:`Builder`:
     Deferred which should fire with the same results.
 
 ``locks``
-    This argument specifies a list of locks that apply to this builder; :ref:`Interlocks`.
+    This argument specifies a list of locks that apply to this builder; see
+    :ref:`Interlocks`.
 
 ``env``
     A Builder may be given a dictionary of environment variables in this parameter.
-    The variables are used in :ref:`Step-ShellCommand` steps in builds created by this
+    The variables are used in :bb:step:`ShellCommand` steps in builds created by this
     builder. The environment variables will override anything in the buildslave's
     environment. Variables passed directly to a :class:`ShellCommand` will override
     variables of the same name passed to the Builder.
@@ -110,21 +109,25 @@ Other optional keys may be set on each :class:`Builder`:
                 env=@{'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'@}),
         ]
 
+.. index:: Builds; merging
+
 ``mergeRequests``
-    Specifies how build requests for this builder should be merged, overriding the
-    :ref:`global option<Merging-Build-Requests-global>`. See
-    :ref:`Merging-Build-Requests` for details.
+    Specifies how build requests for this builder should be merged. See
+    :ref:`Merging-Build-Requests`, below.
+
+.. index:: Properties; builder
 
 ``properties``
     A builder may be given a dictionnary of :ref:`Build-Properties`
     specific for this builder in this parameter. Those values can be used
     later on like other properties. :ref:`WithProperties`.
 
+.. index:: Builds; merging
 
 .. _Merging-Build-Requests:
 
 Merging Build Requests
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~
 
 When more than one build request is available for a builder, Buildbot can
 "merge" the requests into a single build.  This is desirable when build
@@ -150,57 +153,29 @@ This algorithm is implemented by the :class:`SourceStamp` method :func:`canBeMer
 A configuration value of ``False`` indicates that requests should never be
 merged.
 
-If the configuration value is a callable, that callable will be invoked with
-three positional arguments: a :class:`Builder` object and two :class:`BuildRequest`
-objects. It should return true if the requests can be merged, and False
-otherwise. For example::
+The configuration value can also be a callable, specifying a custom merging
+function.  See :ref:`Merge-Request-Functions` for details.
 
-    def mergeRequests(builder, req1, req2):
-        "any requests with the same branch can be merged"
-        return req1.branch == req2.branch
-    c['mergeRequests'] = mergeRequests
-
-In many cases, the details of the :class:`SourceStamp`\s and :class:`BuildRequest`\s are important.
-In this example, only :class:`BuildRequest`\s with the same "reason" are merged; thus
-developers forcing builds for different reasons will see distinct builds.  Note
-the use of the :func:`canBeMergedWith` method to access the source stamp
-compatibility algorithm.
-
-.. code-block:: python
-
-   def mergeRequests(builder, req1, req2):
-       if req1.source.canBeMergedWith(req2.source) and  req1.reason == req2.reason:
-          return True
-       return False
-   c['mergeRequests'] = mergeRequests
-
-If it's necessary to perform some blocking operation to determine whether two
-requests can be merged, then the ``mergeRequests`` callable may return its
-result via Deferred.  Note, however, that the number of invocations of the
-callable is proportional to the square of the request queue length, so a
-long-running callable may cause undesirable delays when the queue length grows.
+.. index:: Builds; priority
 
 .. _Prioritizing-Builds:
 
 Prioritizing Builds
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 The :class:`BuilderConfig` parameter ``nextBuild`` can be use to prioritize
 build requests within a builder. Note that this is orthogonal to
 :ref:`Prioritizing-Builders`, which controls the order in which builders are
-called on to start their builds.
+called on to start their builds.  The details of writing such a function are in
+:ref:`Build-Priority-Functions`.
 
-.. code-block:: python
+Such a function can be provided to the BuilderConfig as follows::
 
-   def nextBuild(bldr, requests):
-       for r in requests:
-           if r.source.branch == 'release':
-               return r
-       return requests[0]
-
-   c['builders'] = [
-     BuilderConfig(name='test', factory=f,
-           nextBuild=nextBuild,
-           slavenames=['slave1', 'slave2', 'slave3', 'slave4']), 
-   ]
+    def pickNextBuild(builder, requests):
+        # ...
+    c['builders'] = [
+        BuilderConfig(name='test', factory=f,
+            nextBuild=pickNextBuild,
+            slavenames=['slave1', 'slave2', 'slave3', 'slave4']), 
+    ]
 

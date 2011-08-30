@@ -41,6 +41,9 @@ addChange(). This lets the buildmaster know which VCS the Change is coming
 from, such as 'git' or 'svn'. This means that you need to use the version
 of your contrib script that corresponds to your buildmaster.
 
+*** The un-documented P4Sync source step has been deprecated and will be
+removed in the next version.
+
 ** Customizable validation regexps
 
 The global c['validation'] parameter can be used to adjust the regular

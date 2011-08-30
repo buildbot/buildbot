@@ -51,10 +51,13 @@ Therefore a config key like :bb:cfg:`change_source` will usually appear in
 
 See :bb:index:`cfg` for a full list of ``BuildMasterConfig`` keys.
 
-.. _Basic-Python-Syntax:
-
 Basic Python Syntax
 ~~~~~~~~~~~~~~~~~~~
+
+The master configuration file is interpreted as Python, allowing the full
+flexibility of the language.  For the configurations described in this section,
+a detailed knowledge of Python is not required, but the basic syntax is easily
+described.
 
 Python comments start with a hash character ``#``, tuples are defined with
 ``(parenthesis, pairs)``, and lists (arrays) are defined with ``[square,
@@ -65,9 +68,10 @@ instantiation) can use named parameters, like ``w =
 html.Waterfall(http_port=8010)``.
 
 The config file starts with a series of ``import`` statements, which make
-various kinds of :class:`Step`\s and :class:`Status` targets available for later use. The main
-``BuildmasterConfig`` dictionary is created, then it is populated with a
-variety of keys, described section-by-section in subsequent chapters. 
+various kinds of :class:`Step`\s and :class:`Status` targets available for
+later use. The main ``BuildmasterConfig`` dictionary is created, then it is
+populated with a variety of keys, described section-by-section in subsequent
+chapters. 
 
 .. _Predefined-Config-File-Symbols:
 
@@ -111,8 +115,7 @@ they will be announced by checkconfig. In this case, the config file
 will work, but you should really remove the deprecated items and use
 the recommended replacements instead:
 
-.. code-block:: bash
-
+.. code-block:: none
 
    % buildbot checkconfig master.cfg
    /usr/lib/python2.4/site-packages/buildbot/master.py:559: DeprecationWarning: c['sources'] is
@@ -120,10 +123,9 @@ the recommended replacements instead:
      warnings.warn(m, DeprecationWarning)
    Config file is good!
 
-
 If the config file is simply broken, that will be caught too:
 
-.. code-block:: bash
+.. code-block:: none
 
    % buildbot checkconfig master.cfg
    Traceback (most recent call last):
@@ -137,16 +139,14 @@ If the config file is simply broken, that will be caught too:
        c[bogus] = "stuff"
    NameError: name 'bogus' is not defined
 
-.. _Loading-the-Config-File:
-    
 Loading the Config File
 -----------------------
 
 The config file is only read at specific points in time. It is first
-read when the buildmaster is launched. If the configuration is invalid, the
-master will display the errors in the console output, but will not exit.
+read when the buildmaster is launched.
 
-.. _Reloading-the-config-file-reconfig:
+.. note: If the configuration is invalid, the master will display the errors in
+    the console output, but will not exit.
 
 Reloading the Config File (reconfig)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -195,7 +195,6 @@ which get queued after the reconfig) will use the new process.
       :class:`Scheduler` will always be reloaded.  This occurs most commonly when a callable
       is passed as a configuration parameter.
 
-
    The bbproto project (at https://github.com/dabrahams/bbproto) may help to
    construct large (multi-file) configurations which can be effectively reloaded
    and reconfigured.
@@ -203,9 +202,6 @@ which get queued after the reconfig) will use the new process.
 Reconfig by Debug Client
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The debug tool (:samp:`buildbot debugclient --master {HOST}:{PORT}`) has a
-:guilabel:`Reload .cfg` button which will also trigger a reload. In the
-future, there will be other ways to accomplish this step (probably a
-password-protected button on the web page, as well as a privileged IRC
-command).
-
+The :bb:cmdline:`debug tool <debugclient>` (:samp:`buildbot debugclient
+--master {HOST}:{PORT}`) has a :guilabel:`Reload .cfg` button which will also
+trigger a reload.

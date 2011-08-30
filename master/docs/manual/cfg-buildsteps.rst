@@ -1,19 +1,7 @@
-.. -*- rst -*-
 .. _Build-Steps:
 
 Build Steps
------------
-
-.. todo::
-    go over this file to organize into classes
-    and be sure all index entries are in place
-
-.. todo::
-    buildbot.steps.python_twisted.HLint
-    buildbot.steps.python_twisted.Trial
-    buildbot.steps.python_twisted.ProcessDocs
-    buildbot.steps.python_twisted.BuildDebs
-    buildbot.steps.python_twisted.RemovePYCs
+===========
 
 :class:`BuildStep`\s are usually specified in the buildmaster's
 configuration file, in a list that goes into the :class:`BuildFactory`.
@@ -41,14 +29,12 @@ The basic behavior for a :class:`BuildStep` is to:
     :mod:`buildbot.status.builder`: ``SUCCESS``, ``WARNINGS``, ``FAILURE``, ``SKIPPED``
   * provide a list of short strings to describe the step
 
-The rest of this section lists all the standard :class:`BuildStep` objects
+The rest of this section describes all the standard :class:`BuildStep` objects
 available for use in a :class:`Build`, and the parameters which can be used to
-control each.
-
-.. _Common-Parameters:
+control each.  A full list of build steps is available in the :bb:index:`step`.
 
 Common Parameters
-~~~~~~~~~~~~~~~~~
+-----------------
 
 All :class:`BuildStep`\s accept some common parameters. Some of these control
 how their individual status affects the overall build. Others are used
@@ -105,285 +91,38 @@ Arguments common to all :class:`BuildStep` subclasses:
     list of actual :class:`Lock` instances, not names. Also note that all Locks must have
     unique names.  See :ref:`Interlocks`.
 
-.. _Using-Build-Properties:
-
-.. index:: Properties
-
-Using Build Properties
-~~~~~~~~~~~~~~~~~~~~~~
-
-Build properties are a generalized way to provide configuration
-information to build steps; see :ref:`Build-Properties`.
-
-Some build properties are inherited from external sources -- global
-properties, schedulers, or buildslaves.  Some build properties are
-set when the build starts, such as the :class:`SourceStamp` information. Other
-properties can be set by BuildSteps as they run, for example the
-various Source steps will set the ``got_revision`` property to the
-source revision that was actually checked out (which can be useful
-when the SourceStamp in use merely requested the `latest revision`:
-``got_revision`` will tell you what was actually built).
-
-In custom :class:`BuildSteps`, you can get and set the build properties with
-the :meth:`getProperty`/:meth:`setProperty` methods. Each takes a string
-for the name of the property, and returns or accepts an
-arbitrary [#]_ object. For example::
-
-    class MakeTarball(ShellCommand):
-        def start(self):
-            if self.getProperty("os") == "win":
-                self.setCommand([ ... ]) # windows-only command
-            else:
-                self.setCommand([ ... ]) # equivalent for other systems
-            ShellCommand.start(self)
-
-
-.. index:: Property
-
-.. _Property:
-
-Property
-++++++++
-
-You can use build properties in most step paramaters.  Please file bugs for any
-parameters which do not accept properties.  The simplest form is to wrap the
-property name with :class:`Property`, passing an optional default
-argument. ::
-
-   from buildbot.steps.trigger import Trigger
-   form buildbot.process.properties import Property
-
-   f.addStep(Trigger(waitForFinish=False, schedulerNames=['build-dependents'], alwaysUseLatest=True,
-             set_properties=@{'coq_revision': Property("got_revision")@}))
-
-You can specify a default value by passing a ``default`` argument to
-:class:`Property`. This is normally used when the property doesn't exist,
-or when the value is something Python regards as ``False``. The ``defaultWhenFalse``
-argument can be used to force buildbot to use the default argument only
-if the parameter is not set.
-
-.. index:: WithProperties
-
-.. _WithProperties:
-
-WithProperties
-++++++++++++++
-
-
-You can use build properties in :class:`ShellCommand`\s by using the
-``WithProperties`` wrapper when setting the arguments of
-the :class:`ShellCommand`. This interpolates the named build properties
-into the generated shell command.  Most step parameters accept
-``WithProperties``.
-
-You can use python dictionary-style string interpolation by using
-the ``%(propname)s`` syntax. In this form, the property name goes
-in the parentheses::
-
-    from buildbot.steps.shell import ShellCommand
-    from buildbot.process.properties import WithProperties
-    
-    f.addStep(ShellCommand(
-              command=["tar", "czf",
-                       WithProperties("build-%s.tar.gz", "revision"),
-                       "source"]))
-
-If this :class:`BuildStep` were used in a tree obtained from Subversion, it
-would create a tarball with a name like :file:`build-1234.tar.gz`.
-
-Don't forget the extra ``s`` after the closing parenthesis! This is
-the cause of many confusing errors.
-
-The dictionary-style interpolation supports a number of more advanced
-syntaxes, too.
-
-``propname:-replacement``
-    If ``propname`` exists, substitute its value; otherwise,
-    substitute ``replacement``. ``replacement`` may be empty
-    (``%(propname:-)s``)
-
-``propname:~replacement``
-    Like ``propname:-replacement``, but only substitutes the value
-    of property ``propname`` if it is something Python regards as ``True``.
-    Python considers ``None``, 0, empty lists, and the empty string to be 
-    false, so such values will be replaced by ``replacement``.
-
-``propname:+replacement``
-    If ``propname`` exists, substitute ``replacement``; otherwise,
-    substitute an empty string.
-
-Although these are similar to shell substitutions, no other
-substitutions are currently supported, and ``replacement`` in the
-above cannot contain more substitutions.
-
-Note: like python, you can either do positional-argument interpolation
-*or* keyword-argument interpolation, not both. Thus you cannot use
-a string like ``WithProperties("foo-%(revision)s-%s", "branch")``.
-
-
-Callables
-#########
-
-If you need to do more complex substitution, you can pass keyword
-arguments to ``WithProperties``. The value of each keyword argument
-should be a function that takes one argument (the existing properties)
-and returns a string value that will be used to replace that key::
-
-    WithProperties('%(now)s', now=lambda _: time.clock())
-
-    def determine_foo(props):
-        if props.hasProperty('bar'):
-            return props['bar']
-        elif props.hasProperty('baz'):
-            return props['baz']
-        return 'qux'
-
-    WithProperties('%(foo)s', foo=determine_foo)
-
-Properties Objects
-##################
-
-.. class:: buildbot.interfaces.IProperties
-
-   The available methods on a properties object are those described by the
-   ``IProperties`` interface.  Specifically:
-
-
-   .. method:: getProperty(propname, default=None)
-
-      Get a named property, returning the default value if the property is not found.
-
-   .. method:: hasProperty(propname)
-
-      Determine whether the named property exists.
-
-   .. method:: setProperty(propname, value, source)
-
-      Set a property's value, also specifying the source for this value.
-
-   .. method:: getProperties()
-
-      Get a :class:`buildbot.process.properties.Properties` instance.  The
-      interface of this class is not finalized; where possible, use the other
-      `` IProperties`` methods.
-
-Positional Arguments
-####################
-
-The :func:`WithProperties` function also does ``printf``\-style string
-interpolation with positional arguments, using strings obtained by calling
-``props.getProperty(propname)``. Note that for every ``%s`` (or
-``%d``, etc), you must have exactly one additional argument to
-indicate which build property you want to insert. ::
-
-    from buildbot.steps.shell import ShellCommand
-    from buildbot.process.properties import WithProperties
-
-    f.addStep(ShellCommand(
-              command=["tar", "czf",
-                       WithProperties("build-%s.tar.gz", "revision"),
-                       "source"]))
-
-.. note:: like python, you can either do positional-argument interpolation
-   *or* keyword-argument interpolation, not both. Thus you cannot use
-   a string like ``WithProperties("foo-%(revision)s-%s", "branch")``.
-
-
-.. _Common-Build-Properties:
-
-Common Build Properties
-+++++++++++++++++++++++
-
-The following build properties are set when the build is started, and
-are available to all steps.
-
-``branch``
-    This comes from the build's :class:`SourceStamp`, and describes which branch is
-    being checked out. This will be ``None`` (which interpolates into
-    ``WithProperties`` as an empty string) if the build is on the
-    default branch, which is generally the trunk. Otherwise it will be a
-    string like ``branches/beta1.4``. The exact syntax depends upon the VC
-    system being used.
-
-``revision``
-    This also comes from the :class:`SourceStamp`, and is the revision of the source code
-    tree that was requested from the VC system. When a build is requested of a
-    specific revision (as is generally the case when the build is triggered by
-    Changes), this will contain the revision specification. This is always a
-    string, although the syntax depends upon the VC system in use: for SVN it is an
-    integer, for Mercurial it is a short string, for Darcs it is a rather large
-    string, etc.
-    
-    If the :guilabel:`force build` button was pressed, the revision will be ``None``,
-    which means to use the most recent revision available.  This is a `trunk
-    build`. This will be interpolated as an empty string.
-
-``got_revision``
-    This is set when a :class:`Source` step checks out the source tree, and
-    provides the revision that was actually obtained from the VC system.
-    In general this should be the same as ``revision``, except for
-    trunk builds, where ``got_revision`` indicates what revision was
-    current when the checkout was performed. This can be used to rebuild
-    the same source code later.
-    
-    .. note:: For some VC systems (Darcs in particular), the revision is a
-       large string containing newlines, and is not suitable for interpolation
-       into a filename.
-
-``buildername``
-    This is a string that indicates which :class:`Builder` the build was a part of.
-    The combination of buildername and buildnumber uniquely identify a
-    build.
-
-``buildnumber``
-    Each build gets a number, scoped to the :class:`Builder` (so the first build
-    performed on any given :class:`Builder` will have a build number of 0). This
-    integer property contains the build's number.
-
-``slavename``
-    This is a string which identifies which buildslave the build is
-    running on.
-
-``scheduler``
-    If the build was started from a scheduler, then this property will
-    contain the name of that scheduler.
-
-``repository``
-    The repository of the sourcestamp for this build
-
-``project``
-    The project of the sourcestamp for this build
-
-``workdir``
-
-    The absolute path of the base working directory on the slave, of the current
-    builder.
-
 .. _Source-Checkout:
 
 Source Checkout
-~~~~~~~~~~~~~~~
-
-.. caution:: New source checkout steps are recently developed
-    and not stable yet. If you find any bugs please report them
-    `here <http://trac.buildbot.net/newticket>`_. Old source steps
-    are :ref:`Source-Checkout-Old`.
+---------------
 
 .. py:module:: buildbot.steps.source
 
-At the moment, Buildbot contains two implementations of source steps.  The new
-implementation handles most of the logic on the master side, and has a simpler,
-more unified approach.  The older implementation
-(:ref:`Source-Checkout-Old`) handles the logic on the slave side, and
+At the moment, Buildbot contains two implementations of most source steps.  The
+new implementation handles most of the logic on the master side, and has a
+simpler, more unified approach.  The older implementation
+(:ref:`Source-Checkout-Slave-Side`) handles the logic on the slave side, and
 some of the classes have a bewildering array of options.
+
+.. caution:: Master-side source checkout steps are recently developed and not
+    stable yet. If you find any bugs please report them on the `Buildbot Trac
+    <http://trac.buildbot.net/newticket>`_. The older Slave-side described source
+    steps are :ref:`Source-Checkout-Slave-Side`.
 
 New users should, where possible, use the new implementations.  The old
 implementations will be deprecated in a later release.  Old users should take
 this opportunity to switch to the new implementations while both are supported
 by Buildbot.
 
-Parameters
-++++++++++
+Some version control systems have not yet been implemented as master-side
+steps.  If you are interested in continued support for such a version control
+system, please consider helping the Buildbot developers to create such an
+implementation.  In particular, version-control systems with proprietary
+licenses will not be supported without access to the verscion-contorl system
+for development.
+
+Common Parameters
++++++++++++++++++
 
 All source checkout steps accept some common parameters to control how they get
 the sources and where they should be placed. The remaining per-VC-system
@@ -439,13 +178,13 @@ parameters are mostly to specify where exactly the sources are coming from.
     are running. The concept explained here is common to all steps and
     applies to ``repourl`` as well as for ``baseURL`` (when
     applicable). Buildbot, now being aware of the repository name via the
-    :class:`ChangeSource` step might in some cases not need the repository URL. There
+    change source, might in some cases not need the repository URL. There
     are multiple way to pass it through to this step, corresponding to
     the type of the parameter given to this step:
 
     ``None``
         In the case where no parameter is specified, the repository URL will
-        be taken directly from the Change property. This value should be used
+        be taken directly from the Change attribute. This value should be used
         if your ChangeSource step has all the information about how to reach
         the Change.
 
@@ -456,19 +195,19 @@ parameters are mostly to specify where exactly the sources are coming from.
 
     format string
         If the parameter is a string containing @code{%s}, then the
-        repository property from the Change will be substituted in
+        repository attribute from the Change will be substituted in
         place of the ``%s``. This is usefull when the ChangeSource
         step knows where the repository resides locally, but doesn't
         know the scheme used to access it. For instance,
-        ``ssh://server/%s`` makes sense if the repository property is
+        ``ssh://server/%s`` makes sense if the repository attribute is
         the local path of the repository.
 
     dict
         In this case, the repository URL will be the value indexed by the
-        repository property in the dict given as parameter.
+        repository attribute in the dict given as parameter.
 
     callable
-        The callable given as parameter will take the repository property from
+        The callable given as parameter will take the repository attribute from
         the Change and its return value will be used as repository URL.
 
 ``timeout``
@@ -483,32 +222,27 @@ parameters are mostly to specify where exactly the sources are coming from.
     easier to set logEnviron=False.
 
 ``env``
-    a dictionary of environment strings which will be added to the
-    child command's environment.
+    a dictionary of environment strings which will be added to the child
+    command's environment.  The usual property interpolations can be used in
+    environment variable names and values - see :ref:`Properties`.
 
-Use of :ref:`WithProperties` with string, dict and callable is supported.
-
+.. bb:step:: Mercurial
 
 .. _Step-Mercurial:
-
-.. index:: Mercurial Checkout
 
 Mercurial
 +++++++++
 
 .. py:class:: buildbot.steps.source.mercurial.Mercurial
 
-The :class:`Mercurial` build step performs a `Mercurial <http://selenic.com/mercurial>`_
+The :bb:step:`Mercurial` build step performs a `Mercurial <http://selenic.com/mercurial>`_
 (aka ``hg``) checkout or update.
 
 Branches are available in two modes: ``dirname``, where the name of the branch is
 a suffix of the name of the repository, or ``inrepo``, which uses hg's
 named-branches support. Make sure this setting matches your changehook, if you
-have that installed.
+have that installed. ::
 
-.. code-block:: python
-
-   factory = BuildFactory()
    from buildbot.steps.source.mercurial import Mercurial
    factory.addStep(Mercurial(repourl='path/to/repo', mode='full',
                              method='fresh', branchType='inrepo'))
@@ -561,10 +295,9 @@ The Mercurial step takes the following arguments:
       before pull/update. This is equivalent to :command:`hg purge`
       then pull/update. 
 
+.. bb:step:: Git
 
 .. _Step-Git:
-
-.. index:: Git Checkout
 
 Git
 +++
@@ -575,7 +308,11 @@ The ``Git`` build step clones or updates a `Git <http://git.or.cz/>`_
 repository and checks out the specified branch or revision. Note that
 the buildbot supports Git version 1.2.0 and later: earlier versions
 (such as the one shipped in Ubuntu 'Dapper') do not support the
-:command:`git init` command that the buildbot uses.
+:command:`git init` command that the buildbot uses. ::
+
+   from buildbot.steps.source.git import Git
+   factory.addStep(Git(repourl='git://path/to/repo', mode='full',
+                             method='clobber', submodules=True))
 
 The Git step takes the following arguments:
 
@@ -647,25 +384,21 @@ The Git step takes the following arguments:
       performs all the incremental checkout behavior in ``source``
       directory.
 
-.. _Step-SVN:
+.. bb:step:: SVN
 
-.. index::
-   SVN Checkout 
-   SVN
-   Build Steps; SVN
+.. _Step-SVN:
 
 SVN
 +++
 
 .. py:class:: buildbot.steps.source.svn.SVN
 
-
-The :class:`SVN` build step performs a `Subversion <http://subversion.tigris.org>`_
+The :bb:step:`SVN` build step performs a `Subversion <http://subversion.tigris.org>`_
 checkout or update. There are two
 basic ways of setting up the checkout step, depending upon whether you
 are using multiple branches or not.
 
-The most versatile way to create the :class:`SVN` step is with the
+The most versatile way to create the :bb:step:`SVN` step is with the
 ``svnurl`` argument:
 
 ``svnurl``
@@ -678,14 +411,18 @@ The most versatile way to create the :class:`SVN` step is with the
    through HTTP at a URL of ``http://svn.example.com/repos``, and
    you wanted to check out the ``trunk/calc`` sub-tree, you would
    use ``svnurl="http://svn.example.com/repos/trunk/calc"`` as an
-   argument to your :class:`SVN` step.
+   argument to your :bb:step:`SVN` step.
 
 The ``svnurl`` argument can be considered as a universal means to
-create the :class:`SVN` step as it ignores the branch information in the
-:class:`SourceStamp`.
+create the :bb:step:`SVN` step as it ignores the branch information in the
+:class:`SourceStamp`. ::
+
+   from buildbot.steps.source.svn import SVN
+   factory.append(SVN(mode='full',
+                  svnurl='svn://svn.example.org/svn/myproject/trunk'))
 
 Alternatively, if you are building from multiple branches, then you
-should preferentially create the :class:`SVN` step with the
+should preferentially create the :bb:step:`SVN` step with the
 ``baseURL`` and ``defaultBranch`` arguments instead:
 
 ``baseURL``
@@ -698,19 +435,20 @@ should preferentially create the :class:`SVN` step with the
    placeholder, which will be replaced either by the branch in the
    SourceStamp or the default specified in ``defaultBranch``. ::
 
-      source.SVN( mode='update',
-                  baseURL='svn://svn.example.org/svn/%%BRANCH%%/myproject',
-                  defaultBranch='trunk' )
+        from buildbot.steps.source.svn import SVN
+        factory.append(SVN(mode='incremental',
+                        baseURL='svn://svn.example.org/svn/%%BRANCH%%/myproject',
+                        defaultBranch='trunk'))
 
 ``defaultBranch``
    (optional): this specifies the name of the branch to use when a
    Build does not provide one of its own. This is a string that will
    be appended to ``baseURL`` to create the URL that will be passed to
    the :command:`svn checkout` command. If you use ``baseURL``
-   without specifying ``defaultBranch`` every :class:`ChangeStamp`
+   without specifying ``defaultBranch`` every :class:`SourceStamp`
    must come with a valid (not None) ``branch``.
 
-   It is possible to mix to have a mix of :class:`SVN` steps that use
+   It is possible to mix to have a mix of :bb:step:`SVN` steps that use
    either the ``svnurl` or ``baseURL`` arguments but not both at
    the same time.
 
@@ -776,23 +514,26 @@ should preferentially create the :class:`SVN` step with the
 If you are using branches, you must also make sure your
 ``ChangeSource`` will report the correct branch names.
 
-.. _Step-CVS:
+.. bb:step:: CVS
 
-.. index::
-   CVS Checkout 
-   CVS
-   Build Steps; CVS
+.. _Step-CVS:
 
 CVS
 +++
 
 .. py:class:: buildbot.steps.source.cvs.CVS
 
-The :class:`CVS` build step performs a `CVS <http://www.nongnu.org/cvs/>`_
-heckout or update. It takes the following arguments:
+The :bb:step:`CVS` build step performs a `CVS <http://www.nongnu.org/cvs/>`_
+checkout or update. ::
+
+   from buildbot.steps.source.cvs import CVS
+   factory.append(CVS(mode='incremental',
+                  cvsroot=':pserver:me@cvs.sourceforge.net:/cvsroot/myproj',
+                  cvsmodule='buildbot'))
+
+This step takes the following arguments:
 
 ``cvsroot``
-
     (required): specify the CVSROOT value, which points to a CVS repository,
     probably on a remote machine. For example, if Buildbot was hosted in CVS
     then the cvsroot value you would use to get a copy of the Buildbot source
@@ -822,27 +563,25 @@ heckout or update. It takes the following arguments:
     take the values shown below. If no value is given, it defaults to
     ``fresh``.
 
-``clobber``
-    This specifies to remove the ``workdir`` and make a full checkout.
+    ``clobber``
+        This specifies to remove the ``workdir`` and make a full checkout.
 
-``fresh``
-    This method first runs ``cvsdisard`` in the build directory, then updates
-    it.  This requires ``cvsdiscard`` which is a part of the cvsutil package.
+    ``fresh``
+        This method first runs ``cvsdisard`` in the build directory, then updates
+        it.  This requires ``cvsdiscard`` which is a part of the cvsutil package.
 
-``clean``
-    This method is the same as ``method='fresh'``, but it runs ``cvsdiscard
-    --ignore`` instead of ``cvsdiscard``.
+    ``clean``
+        This method is the same as ``method='fresh'``, but it runs ``cvsdiscard
+        --ignore`` instead of ``cvsdiscard``.
 
-``copy``
-    This maintains a ``source`` directory for source, which it updates copies to
-    the build directory.  This allows Buildbot to start with a fresh directory,
-    without downloading the entire repository on every build.
+    ``copy``
+        This maintains a ``source`` directory for source, which it updates copies to
+        the build directory.  This allows Buildbot to start with a fresh directory,
+        without downloading the entire repository on every build.
+
+.. bb:step:: Bzr
 
 .. _Step-Bzr:
-
-.. index::
-   Bzr
-   Build Steps; Bzr
 
 Bzr
 +++
@@ -853,8 +592,13 @@ bzr is a descendant of Arch/Baz, and is frequently referred to
 as simply `Bazaar`. The repository-vs-workspace model is similar to
 Darcs, but it uses a strictly linear sequence of revisions (one
 history per branch) like Arch. Branches are put in subdirectories.
-This makes it look very much like Mercurial. It takes the following
-arguments:
+This makes it look very much like Mercurial. ::
+
+   from buildbot.steps.source.cvs import Bzr
+   factory.append(Bzr(mode='incremental',
+                  repourl='lp:~knielsen/maria/tmp-buildbot-test'))
+
+The step takes the following arguments:
 
 ``repourl``
     (required unless ``baseURL`` is provided): the URL at which the
@@ -878,28 +622,33 @@ arguments:
     take the values shown below. If no value is given, it defaults to
     ``fresh``.
 
-``clobber``
-    This specifies to remove the ``workdir`` and make a full checkout.
+    ``clobber``
+        This specifies to remove the ``workdir`` and make a full checkout.
 
-``fresh``
-    This method first runs ``bzr clean-tree`` to remove all the unversioned
-    files then ``update`` the repo. This remove all unversioned files
-    including those in .bzrignore.
+    ``fresh``
+        This method first runs ``bzr clean-tree`` to remove all the unversioned
+        files then ``update`` the repo. This remove all unversioned files
+        including those in .bzrignore.
 
-``clean``
-    This is same as fresh except that it doesn't remove the files mentioned
-    in .bzrginore i.e, by running ``bzr clean-tree --ignore``.
+    ``clean``
+        This is same as fresh except that it doesn't remove the files mentioned
+        in .bzrginore i.e, by running ``bzr clean-tree --ignore``.
 
-``copy``
-    A local bzr repository is maintained and the repo is copied to ``build``
-    directory for each build. Before each build the local bzr repo is
-    updated then copied to ``build`` for next steps.
+    ``copy``
+        A local bzr repository is maintained and the repo is copied to ``build``
+        directory for each build. Before each build the local bzr repo is
+        updated then copied to ``build`` for next steps.
 
 
-.. _Source-Checkout-Old:
+.. _Source-Checkout-Slave-Side:
 
-Source Checkout (Old)
-~~~~~~~~~~~~~~~~~~~~~
+Source Checkout (Slave-Side)
+----------------------------
+
+This section describes the more mature slave-side source steps.  Where
+possible, new users should use the master-side source checkout steps, as the
+slave-side steps will be removed in a future version.  See
+:ref:`Source-Checkout`.
 
 The first step of any build is typically to acquire the source code
 from which the build will be performed. There are several classes to
@@ -962,7 +711,7 @@ sources are coming from.
         tarballs (to avoid including the metadata in the tar file).
 
 ``workdir``
-    like all :class:`Step`\s, this indicates the directory where the build will take
+    As for all steps, this indicates the directory where the build will take
     place. Source Steps are special in that they perform some operations
     outside of the workdir (like creating the workdir itself).
 
@@ -983,35 +732,35 @@ sources are coming from.
     are running. The concept explained here is common to all steps and
     applies to ``repourl`` as well as for ``baseURL`` (when
     aplicable). Buildbot, now being aware of the repository name via the
-    :class:`ChangeSource` step might in some cases not need the repository url. There
+    change source, might in some cases not need the repository url. There
     are multiple way to pass it through to this step, those correspond to
     the type of the parameter given to this step:
 
     ``None``
         In the case where no paraneter is specified, the repository url will be
-        taken exactly from the Change property. You are looking for that one if
+        taken exactly from the Change attribute. You are looking for that one if
         your ChangeSource step has all informations about how to reach the
         Change.
-    
-    ``string``
+
+    string
         The parameter might be a string, in this case, this string will be taken
         as the repository url, and nothing more. the value coming from the
         ChangeSource step will be forgotten.
-    
-    ``format string``
+
+    format string
         If the parameter is a string containing ``%s``, then this the
-        repository property from the :class:`Change` will be place in place of the
-        ``%s``. This is usefull when the :class:`ChangeSource` step knows where the
+        repository attribute from the :class:`Change` will be place in place of the
+        ``%s``. This is usefull when the change source knows where the
         repository resides locally, but don't know the scheme used to access
         it. For instance ``ssh://server/%s`` makes sense if the the
-        repository property is the local path of the repository.
-    
-    ``dict``
+        repository attribute is the local path of the repository.
+
+    dict
         In this case, the repository URL will be the value indexed by the
-        repository property in the dict given as parameter.
-    
-    ``callable``
-        The callable given as parameter will take the repository property from
+        repository attribute in the dict given as parameter.
+
+    callable
+        The callable given as parameter will take the repository attribute from
         the Change and its return value will be used as repository URL.
 
     .. note:: this is quite similar to the mechanism used by the
@@ -1046,13 +795,14 @@ to use the ``mode='clobber'`` setting.
 Each VC system has a corresponding source checkout class: their
 arguments are described on the following pages.
 
-.. _Step-CVS-Old:
+.. bb:step:: CVS (Slave-Side)
 
-CVS (Old)
-+++++++++
+.. _Step-CVS-Slave-Side:
 
+CVS (Slave-Side)
+++++++++++++++++
 
-The :class:`CVS` build step performs a `CVS <http://www.nongnu.org/cvs/>`_
+The :class:`CVS <CVS (Slave-Side)>` build step performs a `CVS <http://www.nongnu.org/cvs/>`_
 checkout or update. It takes the following arguments:
 
 ``cvsroot``
@@ -1088,17 +838,19 @@ checkout or update. It takes the following arguments:
     known Change and the value used for the :option:`-D` option. Defaults to
     half of the parent :class:`Build`\'s ``treeStableTimer``.
 
-.. _Step-SVN-Old:
+.. bb:step:: SVN (Slave-Side)
 
-SVN (Old)
-+++++++++
+.. _Step-SVN-Slave-Side:
 
-The :class:`SVN` build step performs a
+SVN (Slave-Side)
+++++++++++++++++
+
+The :bb:step:`SVN <SVN (Slave-Side)>` build step performs a
 `Subversion <http://subversion.tigris.org>`_ checkout or update.
 There are two basic ways of setting up the checkout step, depending
 upon whether you are using multiple branches or not.
 
-The most versatile way to create the :class:`SVN` step is with the
+The most versatile way to create the ``SVN`` step is with the
 ``svnurl`` argument:
 
 ``svnurl``
@@ -1111,14 +863,14 @@ The most versatile way to create the :class:`SVN` step is with the
     ``http://svn.example.com/repos``, and you wanted to check out the
     ``trunk/calc`` sub-tree, you would use
     ``svnurl="http://svn.example.com/repos/trunk/calc"`` as an argument
-    to your :class:`SVN` step.
+    to your ``SVN`` step.
 
 The ``svnurl`` argument can be considered as a universal means to
-create the :class:`SVN` step as it ignores the branch information in the
+create the ``SVN`` step as it ignores the branch information in the
 SourceStamp.
 
 Alternatively, if you are building from multiple branches, then you
-should preferentially create the :class:`SVN` step with the
+should preferentially create the ``SVN`` step with the
 ``baseURL`` and ``defaultBranch`` arguments instead:
 
 ``baseURL``
@@ -1131,7 +883,7 @@ should preferentially create the :class:`SVN` step with the
     ``baseURL`` to create the string that will be passed to the
     ``svn checkout`` command.
 
-    It is possible to mix to have a mix of :class:`SVN` steps that use
+    It is possible to mix to have a mix of ``SVN`` steps that use
     either the ``svnurl`` or  ``baseURL`` arguments but not both at
     the same time.
 
@@ -1174,120 +926,18 @@ should preferentially create the :class:`SVN` step with the
     depth-infinity. Infinity is equivalent to SVN default update behavior, without
     specifying any depth argument.
 
-
 If you are using branches, you must also make sure your
 :class:`ChangeSource` will report the correct branch names.
 
-branch example
-##############
+.. bb:step:: Darcs (Slave-Side)
 
-Let's suppose that the `MyProject` repository uses branches for the
-trunk, for various users' individual development efforts, and for
-several new features that will require some amount of work (involving
-multiple developers) before they are ready to merge onto the trunk.
-Such a repository might be organized as follows:
+Darcs (Slave-Side)
+++++++++++++++++++
 
-.. code-block:: none
-
-    svn://svn.example.org/MyProject/trunk
-    svn://svn.example.org/MyProject/branches/User1/foo
-    svn://svn.example.org/MyProject/branches/User1/bar
-    svn://svn.example.org/MyProject/branches/User2/baz
-    svn://svn.example.org/MyProject/features/newthing
-    svn://svn.example.org/MyProject/features/otherthing
-
-Further assume that we want the Buildbot to run tests against the
-trunk and against all the feature branches (i.e., do a
-checkout/compile/build of branch *X* when a file has been changed on
-branch *X*, when *X* is in the set [trunk, features/newthing,
-features/otherthing]). We do not want the Buildbot to automatically
-build any of the user branches, but it should be willing to build a
-user branch when explicitly requested (most likely by the user who
-owns that branch).
-
-There are three things that need to be set up to accomodate this
-system. The first is a :class:`ChangeSource` that is capable of identifying the
-branch which owns any given file. This depends upon a user-supplied
-function, in an external program that runs in the SVN commit hook and
-connects to the buildmaster's :class:`PBChangeSource` over a TCP
-connection. (you can use the ``buildbot sendchange`` utility
-for this purpose, but you will still need an external program to
-decide what value should be passed to the :option:`--branch=` argument).
-For example, a change to a file with the SVN url of
-``svn://svn.example.org/MyProject/features/newthing/src/foo.c`` should
-be broken down into a :class:`Change` instance with
-``branch='features/newthing'`` and ``file='src/foo.c'``.
-
-The second piece is an :class:`AnyBranchScheduler` which will pay
-attention to the desired branches. It will not pay attention to the
-user branches, so it will not automatically start builds in response
-to changes there. The :class:`AnyBranchScheduler` class requires you to
-explicitly list all the branches you want it to use, but it would not
-be difficult to write a subclass which used
-``branch.startswith('features/')`` to remove the need for this
-explicit list. Or, if you want to build user branches too, you can use
-:class:`AnyBranchScheduler` with ``branches=None`` to indicate that you want
-it to pay attention to all branches.
-
-The third piece is an :class:`SVN` checkout step that is configured to
-handle the branches correctly, with a ``baseURL`` value that
-matches the way the :class:`ChangeSource` splits each file's URL into base,
-branch, and file. ::
-
-    from buildbot.changes.pb import PBChangeSource
-    from buildbot.scheduler import AnyBranchScheduler
-    from buildbot.process import source, factory
-    from buildbot.steps import source, shell
-    
-    c['change_source'] = PBChangeSource()
-    s1 = AnyBranchScheduler('main',
-                            ['trunk', 'features/newthing', 'features/otherthing'],
-                            10*60, ['test-i386', 'test-ppc'])
-    c['schedulers'] = [s1]
-    
-    f = factory.BuildFactory()
-    f.addStep(source.SVN(mode='update',
-                         baseURL='svn://svn.example.org/MyProject/',
-                         defaultBranch='trunk'))
-    f.addStep(shell.Compile(command="make all"))
-    f.addStep(shell.Test(command="make test"))
-    
-    c['builders'] = [
-      {'name':'test-i386', 'slavename':'bot-i386', 'builddir':'test-i386',
-                           'factory':f },
-      {'name':'test-ppc', 'slavename':'bot-ppc', 'builddir':'test-ppc',
-                          'factory':f },
-     ]
-
-In this example, when a change arrives with a ``branch`` attribute
-of `trunk`, the resulting build will have an SVN step that
-concatenates ``svn://svn.example.org/MyProject/`` (the ``baseURL``) with
-``trunk`` (the branch name) to get the correct svn command. If the
-``newthing`` branch has a change to :file:`src/foo.c`, then the SVN step
-will concatenate ``svn://svn.example.org/MyProject/`` with
-``features/newthing`` to get the svnurl for checkout.
-
-For added flexibility, ``baseURL`` may contain a ``%%BRANCH%%``
-placeholder, which will be replaced either by the branch in the SourceStamp or
-the default specified in ``defaultBranch``. ::
-
-    source.SVN( mode='update',
-                baseURL='svn://svn.example.org/svn/%%BRANCH%%/myproject',
-                defaultBranch='trunk' )
-
-.. index::
-   Darcs (Old)
-   Build Steps; Darcs (Old)
-
-.. _Step-Darcs-Old:
-
-Darcs (Old)
-+++++++++++
-
-The :class:`Darcs` build step performs a
+The :bb:step:`Darcs <Darcs (Slave-Side)>` build step performs a
 `Darcs <http://darcs.net/>`_ checkout or update.
 
-Like :ref:`Step-SVN-Old`, this step can either be configured to always check
+Like :bb:step:`SVN <SVN (Slave-Side)>`, this step can either be configured to always check
 out a specific tree, or set up to pull from a particular branch that
 gets specified separately for each build. Also like SVN, the
 repository URL given to Darcs is created by concatenating a
@@ -1319,20 +969,16 @@ The Darcs step takes the following arguments:
     own. This will be appended to ``baseURL`` to create the string that
     will be passed to the ``darcs get`` command.
 
-.. _Step-Mercurial-Old:
+.. bb:step:: Mercurial (Slave-Side)
 
-.. index::
-   Mercurial (Old)
-   Build Steps; Mercurial (Old)
-    
-Mercurial (Old)
-+++++++++++++++
+Mercurial (Slave-Side)
+++++++++++++++++++++++
 
-The :class:`Mercurial` build step performs a
+The :bb:step:`Mercurial <Mercurial (Slave-Side)>` build step performs a
 `Mercurial <http://selenic.com/mercurial>`_ (aka `hg`) checkout
 or update.
 
-Branches are available in two modes: `dirname` like :ref:`Step-Darcs-Old`\, or
+Branches are available in two modes: `dirname` like :bb:step:`Darcs <Darcs (Slave-Side)>`, or
 `inrepo`, which uses the repository internal branches. Make sure this
 setting matches your changehook, if you have that installed.
 
@@ -1365,14 +1011,10 @@ The Mercurial step takes the following arguments:
     at each branch change. Otherwise, just
     update to the branch.
 
-.. _Step-Bzr-Old:
+.. bb:step:: Bzr (Slave-Side)
 
-.. index::
-   Bzr (Old)
-   Build Steps; Bzr (Old)
-
-Bzr (Old)
-+++++++++
+Bzr (Slave-Side)
+++++++++++++++++
 
 bzr is a descendant of Arch/Baz, and is frequently referred to
 as simply `Bazaar`. The repository-vs-workspace model is similar to
@@ -1403,21 +1045,12 @@ arguments:
     downloaded if not using update/copy mode, or if using update/copy mode with
     multiple branches.
 
-.. _Step-P4-Old:
+.. bb:step:: P4 (Slave-Side)
 
-.. index::
-   P4 (Old), Perforce (Old)
-   Build Steps; P4 (Old)
-   
-P4 (Old)
-++++++++
+P4 (Slave-Side)
++++++++++++++++
 
-.. @cindex Perforce Update
-.. @bsindex buildbot.steps.source.P4
-.. TODO @bsindex buildbot.steps.source.P4Sync
-
-
-The :class:`P4` build step creates a `Perforce <http://www.perforce.com/>`_
+The :bb:step:`P4 (Slave-Side)` build step creates a `Perforce <http://www.perforce.com/>`_
 client specification and performs an update.
 
 ``p4base``
@@ -1456,28 +1089,21 @@ client specification and performs an update.
 
 ``p4line_end``
     (optional): The type of line ending handling P4 should use.  This is
-    added directly to the cliet spec's :class:`LineEnd` property.  The default is
+    added directly to the client spec's ``LineEnd`` property.  The default is
     ``local``.
 
-.. _Step-Git-Old:
+.. bb:step:: Git (Slave-Side)
 
-.. index::
-   Git (Old)
-   Build Steps; Git (Old)
+Git (Slave-Side)
+++++++++++++++++
 
-Git (Old)
-+++++++++
-
-.. @cindex Git Checkout
-.. @bsindex buildbot.steps.source.Git
-
-The :class:`Git` build step clones or updates a `Git <http://git.or.cz/>`_
+The :bb:step:`Git <Git (Slave-Side)>` build step clones or updates a `Git <http://git.or.cz/>`_
 repository and checks out the specified branch or revision. Note
 that the buildbot supports Git version 1.2.0 and later: earlier
 versions (such as the one shipped in Ubuntu 'Dapper') do not support
 the ``git init`` command that the buildbot uses.
 
-The :class:`Git` step takes the following arguments:
+The ``Git`` step takes the following arguments:
 
 ``repourl``
     (required): the URL of the upstream Git repository.
@@ -1510,26 +1136,21 @@ The :class:`Git` step takes the following arguments:
     fetch}). This solves issues of long fetches being killed due to
     lack of output, but requires Git 1.7.2 or later.
 
-This Source step integrates with :ref:`GerritChangeSource`, and will automatically use
+This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will automatically use
 Gerrit's "virtual branch" (``refs/changes/*``) to download the additionnal changes
 introduced by a pending changeset.
+
+.. index:: Properties; Gerrit integration
 
 Gerrit integration can be also triggered using forced build with ``gerrit_change``
 property with value in format: ``change_number/patchset_number``.
 
-.. _Step-BitKeeper-Old:
+.. bb:step:: BK (Slave-Side)
 
-.. index::
-   BitKeeper (Old)
-   Build Steps; BitKeeper (Old)
+BitKeeper (Slave-Side)
+++++++++++++++++++++++
 
-BitKeeper (Old)
-+++++++++++++++
-
-.. @cindex BitKeeper Checkout
-.. @bsindex buildbot.steps.source.BK
-
-The :class:`BK` build step performs a `BitKeeper <http://www.bitkeeper.com/>`_
+The :bb:step:`BK <BK (Slave-Side)>` build step performs a `BitKeeper <http://www.bitkeeper.com/>`_
 checkout or update.
 
 The BitKeeper step takes the following arguments:
@@ -1543,16 +1164,14 @@ The BitKeeper step takes the following arguments:
     to which a branch name will be appended. It should probably end in a
     slash.
 
-.. _Step-Repo-Old:
+.. bb:step:: Repo (Slave-Side)
 
-.. index:: Repo init sync
-
-Repo (Old)
-++++++++++
+Repo (Slave-Side)
++++++++++++++++++
 
 .. py:class:: buildbot.steps.source.Repo
 
-The :class:`Repo` build step performs a `Repo <http://lwn.net/Articles/304488/>`_
+The :bb:step:`Repo (Slave-Side)` build step performs a `Repo <http://lwn.net/Articles/304488/>`_
 init and sync.
 
 The Repo step takes the following arguments:
@@ -1577,9 +1196,11 @@ The Repo step takes the following arguments:
     directory which contains all the git objects. This feature helps
     to minimize network usage on very big projects.
 
-This Source step integrates with :ref:`GerritChangeSource`, and will
+This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will
 automatically use the :command:`repo download` command of repo to
 download the additionnal changes introduced by a pending changeset.
+
+.. index:: Properties; Gerrit integration
 
 Gerrit integration can be also triggered using forced build with following properties:
 ``repo_d``, ``repo_d[0-9]``, ``repo_download``, ``repo_download[0-9]``
@@ -1589,20 +1210,12 @@ This feature allows integrators to build with several pending interdependent cha
 which at the moment cannot be described properly in Gerrit, and can only be described
 by humans.
 
-.. _Step-Monotone-Old:
-    
-.. index::
-   Monotone (Old), mtn (Old)
-   Build Steps; Monotone (Old)
+.. bb:step:: Monotone (Slave-Side)
 
-Monotone (Old)
-++++++++++++++
+Monotone (Slave-Side)
++++++++++++++++++++++
 
-.. @cindex Monotone Checkout
-.. @bsindex buildbot.steps.source.Monotone
-
-
-The :class:`Monotone` build step performs a
+The :bb:step:`Monotone <Monotone (Slave-Side)>` build step performs a
 `Monotone <http://www.monotone.ca>`_, (aka ``mtn``) checkout
 or update.
 
@@ -1619,19 +1232,15 @@ The Monotone step takes the following arguments:
     this is a boolean that has a pull from the repository use
     ``--ticker=dot`` instead of the default ``--ticker=none``.
 
-.. index::
-   ShellCommand
-   Build Steps; ShellCommand
-
-.. _Step-ShellCommand:
+.. bb:step:: ShellCommand
 
 ShellCommand
-~~~~~~~~~~~~
+------------
 
 Most interesting steps involve exectuing a process of some sort on the
-buildslave.  The :class:`ShellCommand` class handles this activity.
+buildslave.  The :bb:step:`ShellCommand` class handles this activity.
 
-Several subclasses of :class:`ShellCommand` are provided as starting points for
+Several subclasses of :bb:step:`ShellCommand` are provided as starting points for
 common build steps.
 
 Using ShellCommands
@@ -1656,7 +1265,7 @@ if you're running a batch file, the error level does not get propagated
 correctly unless you add 'call' before your batch file's name:
 ``cmd=['call', 'myfile.bat', ...]``.
 
-:class:`ShellCommand` arguments:
+The :bb:step:`ShellCommand` arguments are:
 
 ``command``
     a list of strings (preferred) or single string (discouraged) which
@@ -1679,6 +1288,7 @@ correctly unless you add 'call' before your batch file's name:
 
     For example::
     
+        from buildbot.steps.shell import ShellCommand
         f.addStep(ShellCommand(command=["make", "test"],
                                workdir="build/tests"))
 
@@ -1687,6 +1297,7 @@ correctly unless you add 'call' before your batch file's name:
     command's environment. For example, to run tests with a different i18n
     language setting, you might use ::
 
+        from buildbot.steps.shell import ShellCommand
         f.addStep(ShellCommand(command=["make", "test"],
                                env={'LANG': 'fr_FR'}))
 
@@ -1700,6 +1311,7 @@ correctly unless you add 'call' before your batch file's name:
     to any existing :envvar:`PYTHONPATH` setting, you would do something like the
     following::
     
+        from buildbot.steps.shell import ShellCommand
         f.addStep(ShellCommand(
                       command=["make", "test"],
                       env={'PYTHONPATH': ["/usr/local/lib/python2.3",
@@ -1711,6 +1323,7 @@ correctly unless you add 'call' before your batch file's name:
     in the example below. Variables that doesn't exists on the slave will be
     replaced by ``""``. ::
     
+        from buildbot.steps.shell import ShellCommand
         f.addStep(ShellCommand(
                       command=["make", "test"],
                       env={'PATH': "/home/buildbot/bin:${PATH}"}))
@@ -1773,6 +1386,7 @@ correctly unless you add 'call' before your batch file's name:
     for ``follow`` is ``False``, which gives the same behavior as just
     providing a string filename. ::
     
+        from buildbot.steps.shell import ShellCommand
         f.addStep(ShellCommand(
                       command=["make", "test"],
                       logfiles={"triallog": "_trial_temp/test.log"}))
@@ -1780,6 +1394,7 @@ correctly unless you add 'call' before your batch file's name:
     The above example will add a log named 'triallog' on the master,
     based on :file:`_trial_temp/test.log` on the slave. ::
 
+        from buildbot.steps.shell import ShellCommand
         f.addStep(ShellCommand(
                       command=["make", "test"],
                       logfiles={"triallog": {"filename": "_trial_temp/test.log",
@@ -1821,6 +1436,7 @@ correctly unless you add 'call' before your batch file's name:
     This may be a bit too wide to fit comfortably on the Waterfall
     display. ::
     
+        from buildbot.steps.shell import ShellCommand
         f.addStep(ShellCommand(command=["make", "test"],
                                description=["testing"],
                                descriptionDone=["tests"]))
@@ -1830,11 +1446,7 @@ correctly unless you add 'call' before your batch file's name:
     environment variables on the slave.  In situations where the environment is not
     relevant and is long, it may be easier to set ``logEnviron=False``.
 
-.. _Step-Configure:
-
-.. index::
-   Configure
-   Build Steps; Configure
+.. bb:step:: Configure
 
 Configure
 +++++++++
@@ -1844,18 +1456,18 @@ Configure
 This is intended to handle the :command:`./configure` step from
 autoconf-style projects, or the ``perl Makefile.PL`` step from perl
 :file:`MakeMaker.pm`-style modules. The default command is :command:`./configure`
-but you can change this by providing a ``command=`` parameter.
+but you can change this by providing a ``command=`` parameter. The arguments are
+identical to :bb:step:`ShellCommand`. ::
 
-.. _Step-Compile:
+        from buildbot.steps.shell import Configure
+        f.addStep(Configure())
 
-.. index::
-   Compile
-   Build Steps; Compile
+.. bb:step:: Compile
 
 Compile
 +++++++
 
-.. @bsindex buildbot.steps.shell.Compile
+.. index:: Properties; warnings-count
 
 This is meant to handle compiling or building a project written in C.
 The default command is ``make all``. When the compile is finished,
@@ -1863,12 +1475,11 @@ the log file is scanned for GCC warning messages, a summary log is
 created with any problems that were seen, and the step is marked as
 WARNINGS if any were discovered. Through the :class:`WarningCountingShellCommand`
 superclass, the number of warnings is stored in a Build Property named
-`warnings-count`, which is accumulated over all :class:`Compile` steps (so if two
+`warnings-count`, which is accumulated over all :bb:step:`Compile` steps (so if two
 warnings are found in one step, and three are found in another step, the
 overall build will have a `warnings-count` property of 5). Each step can be
 optionally given a maximum number of warnings via the maxWarnCount parameter.
 If this limit is exceeded, the step will be marked as a failure.
-
 
 The default regular expression used to detect a warning is
 ``'.*warning[: ].*'`` , which is fairly liberal and may cause
@@ -1876,6 +1487,7 @@ false-positives. To use a different regexp, provide a
 ``warningPattern=`` argument, or use a subclass which sets the
 ``warningPattern`` attribute::
 
+    from buildbot.steps.shell import Compile
     f.addStep(Compile(command=["make", "test"],
                       warningPattern="^Warning: "))
 
@@ -1949,17 +1561,13 @@ entered into in the first matched group. The defaults, which are suitable for
 as well, and collect them into a separate logfile, along with the
 source code filenames involved).
 
-.. _Step-Visual-C:
-
-.. index::
-   VC6, VC7, VC8, VS2003, VS2005, VS2008, VCExpress9
-   Build Steps; VC6
-   Build Steps; VC7
-   Build Steps; VC8
-   Build Steps; VC2003
-   Build Steps; VC2005
-   Build Steps; VC2008
-   Build Steps; VCExpress9
+.. bb:step:: VC6
+.. bb:step:: VC7
+.. bb:step:: VC8
+.. bb:step:: VC2003
+.. bb:step:: VC2005
+.. bb:step:: VC2008
+.. bb:step:: VCExpress9
 
 Visual C++
 ++++++++++
@@ -2038,60 +1646,66 @@ Here is an example on how to use this step::
             INCLUDE=[r'D:\WINDDK\Include\wnet'],
             LIB=[r'D:\WINDDK\lib\wnet\amd64']))
 
-.. index::
-   Test
-   Build Steps; Test
-
-.. _Step-Test:
+.. bb:step:: Test
 
 Test
 ++++
 
+::
+
+    from buildbot.steps.shell import Test
+    f.addStep(Test())
+
 This is meant to handle unit tests. The default command is :command:`make
-test`, and the ``warnOnFailure`` flag is set.
+test`, and the ``warnOnFailure`` flag is set. The other arguments are identical
+to :bb:step:`ShellCommand`.
 
-.. _Step-TreeSize:
+.. bb:step:: TreeSize
 
-.. index::
-   TreeSize
-   Build Steps; TreeSize
+.. index:: Properties; tree-size-KiB
 
 TreeSize
 ++++++++
 
+::
+
+    from buildbot.steps.shell import TreeSize
+    f.addStep(TreeSize())
+
 This is a simple command that uses the :command:`du` tool to measure the size
-of the code tree. It puts the size (as a count of 1024-byte blocks,
-aka 'KiB' or 'kibibytes') on the step's status text, and sets a build
-property named 'tree-size-KiB' with the same value.
+of the code tree. It puts the size (as a count of 1024-byte blocks, aka 'KiB'
+or 'kibibytes') on the step's status text, and sets a build property named
+``tree-size-KiB`` with the same value.  All arguments are identical to
+:bb:step:`ShellCommand`.
 
-.. _Step-PerlModuleTest:
-
-.. index::
-   PerlModuleTest
-   Build Steps; PerlModuleTest
+.. bb:step:: PerlModuleTest
 
 PerlModuleTest
 ++++++++++++++
 
-This is a simple command that knows how to run tests of perl modules.
-It parses the output to determine the number of tests passed and
-failed and total number executed, saving the results for later query.
+::
 
-.. _Step-MTR:    
-    
-.. index::
-   MTR
-   Build Steps; MTR
+    from buildbot.steps.shell import PerlModuleTest
+    f.append(PerlModuleTest())
 
-Testing with mysql-test-run
-+++++++++++++++++++++++++++
+This is a simple command that knows how to run tests of perl modules.  It
+parses the output to determine the number of tests passed and failed and total
+number executed, saving the results for later query.  The command is ``prove
+--lib lib -r t``, although this can be overridden with the ``command``
+argument.  All other arguments are identical to those for
+:bb:step:`ShellCommand`.
 
-The :class:`process.mtrlogobserver.MTR` class is a subclass of :class:`Test`
-(:ref:`Step-Test`). It is used to run test suites using the mysql-test-run program,
+.. bb:step:: MTR
+
+MTR (mysql-test-run)
+++++++++++++++++++++
+
+The :bb:step:`MTR` class is a subclass of :bb:step:`Test`.
+It is used to run test suites using the mysql-test-run program,
 as used in MySQL, Drizzle, MariaDB, and MySQL storage engine plugins.
 
 The shell command to run the test suite is specified in the same way as for
-the :class:`Test` class. The :class:`MTR` class will parse the output of running the test suite,
+the :bb:step:`Test` class. The :bb:step:`MTR` class will parse the output of running the test suite,
 and use the count of tests executed so far to provide more accurate completion
 time estimates. Any test failures that occur during the test are summarized on
 the Waterfall Display.
@@ -2121,7 +1735,7 @@ Example use::
     myFactory.addStep(MTR(workdir="mysql-test", dbpool=myPool,
                           command=["perl", "mysql-test-run.pl", "--force"]))
 
-:class:`MTR` arguments:
+The :bb:step:`MTR` step's arguments are:
 
 ``textLimit``
     Maximum number of test failures to show on the waterfall page (to not flood
@@ -2162,70 +1776,18 @@ Example use::
 
 ``mtr_subdir``
     The subdirectory in which to look for server error log files. Defaults to
-    :file:`mysql-test`, which is usually correct. ``WithProperties`` is supported.
+    :file:`mysql-test`, which is usually correct. :ref:`WithProperties` is supported.
 
-.. index::
-   SetProperty
-   Build Steps; SetProperty
-
-.. _Step-SetProperty:
-
-SetProperty
-+++++++++++
-
-.. py:class:: buildbot.steps.shell.SetProperty
-
-This buildstep is similar to :class:`ShellCommand`, except that it captures the
-output of the command into a property.  It is usually used like this::
-
-    from buildbot.steps import shell
-    f.addStep(shell.SetProperty(command="uname -a", property="uname"))
-
-This runs ``uname -a`` and captures its stdout, stripped of leading
-and trailing whitespace, in the property ``uname``.  To avoid stripping,
-add ``strip=False``.
-
-The ``property`` argument can be specified as a  ``WithProperties``
-object, allowing the property name to be built from other property values.
-
-The more advanced usage allows you to specify a function to extract
-properties from the command output.  Here you can use regular
-expressions, string interpolation, or whatever you would like. In this
-form, :func:`extract_fn` should be passed, and not :class:`Property`. 
-The :func:`extract_fn` function is called with three arguments: the exit status of the
-command, its standard output as a string, and its standard error as
-a string.  It should return a dictionary containing all new properties. ::
-
-    def glob2list(rc, stdout, stderr):
-        jpgs = [ l.strip() for l in stdout.split('\n') ]
-        return { 'jpgs' : jpgs }
-    f.addStep(SetProperty(command="ls -1 *.jpg", extract_fn=glob2list))
-
-Note that any ordering relationship of the contents of stdout and
-stderr is lost.  For example, given ::
-
-    f.addStep(SetProperty(
-        command="echo output1; echo error >&2; echo output2",
-        extract_fn=my_extract))
-
-Then ``my_extract`` will see ``stdout="output1\noutput2\n"``
-and ``stderr="error\n"``.
-
-
-.. seealso:: :ref:`Setting-Properties`
+.. bb:step:: SubunitShellCommand
 
 .. _Step-SubunitShellCommand:
-
-.. index::
-   SubunitShellCommand
-   Build Steps; SubunitShellCommand
 
 SubunitShellCommand
 +++++++++++++++++++
 
 .. py:class:: buildbot.steps.subunit.SubunitShellCommand
 
-This buildstep is similar to :class:`ShellCommand`, except that it runs the log content
+This buildstep is similar to :bb:step:`ShellCommand`, except that it runs the log content
 through a subunit filter to extract test and failure counts. ::
 
     from buildbot.steps.subunit import SubunitShellCommand
@@ -2240,9 +1802,11 @@ default ``failureOnNoTests`` is False.
 .. _Slave-Filesystem-Steps:
 
 Slave Filesystem Steps
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 Here are some buildsteps for manipulating the slaves filesystem.
+
+.. bb:step:: RemoveDirectory
 
 .. _RemoveDirectory:
 
@@ -2259,16 +1823,14 @@ This command recursively deletes a directory on the slave. ::
 .. _Python-BuildSteps:
 
 Python BuildSteps
-~~~~~~~~~~~~~~~~~
+-----------------
 
 Here are some :class:`BuildStep`\s that are specifcally useful for projects
 implemented in Python.
 
-.. _Step-BuildEPYDoc:
+.. bb:step:: BuildEPYDoc
 
-.. index::
-   BuildEPYDoc
-   Build Steps; BuildEPYDoc
+.. _Step-BuildEPYDoc:
 
 BuildEPYDoc
 +++++++++++
@@ -2281,7 +1843,7 @@ all the :file:`.py` files from your source tree, processes the docstrings
 therein, and creates a large tree of :file:`.html` files (or a single :file:`.pdf`
 file).
 
-The :class:`buildbot.steps.python.BuildEPYDoc` step will run
+The :bb:step:`BuildEPYDoc` step will run
 :command:`epydoc` to produce this API documentation, and will count the
 errors and warnings from its output.
 
@@ -2301,14 +1863,11 @@ might instead want to bundle them into a tarball and publish it in the
 same place where the generated install tarball is placed. ::
 
     from buildbot.steps.python import BuildEPYDoc
-    # ...
     f.addStep(BuildEPYDoc(command=["epydoc", "-o", "apiref", "source/mypkg"]))
 
-.. _Step-PyFlake:
+.. bb:step:: PyFlakes
 
-.. index::
-   PyFlakes
-   Build Steps; PyFlakes
+.. _Step-PyFlake:
 
 PyFlakes
 ++++++++
@@ -2322,7 +1881,7 @@ like a fast and simple form of the C :command:`lint` program. Other tools
 (like `pychecker <http://pychecker.sourceforge.net/>`_\)
 provide more detailed results but take longer to run.
 
-The :class:`buildbot.steps.python.PyFlakes` step will run pyflakes and
+The :bb:step:`PyFlakes` step will run pyflakes and
 count the various kinds of errors and warnings it detects.
 
 You must supply the command line to be used. The default is
@@ -2331,14 +1890,11 @@ with a ``pyflakes`` target. You might want to use something like
 ``pyflakes .`` or ``pyflakes src``. ::
 
     from buildbot.steps.python import PyFlakes
-    # ...
     f.addStep(PyFlakes(command=["pyflakes", "src"]))
 
-.. _Step-Sphinx:
+.. bb:step:: Sphinx
 
-.. index::
-   Sphinx
-   Build Steps; Sphinx
+.. _Step-Sphinx:
 
 Sphinx
 ++++++
@@ -2349,10 +1905,13 @@ Sphinx
 Generator. It uses `RestructuredText <http://docutils.sourceforge.net/rst.html>`_
 as input format.
 
-The :class:`buildbot.steps.python.Sphinx` step will run
+The :bb:step:`Sphinx` step will run
 :program:`sphinx-build` or any other program spcified in its
 ``sphinx`` argument and count the various warnings and error it
-detects.
+detects. ::
+
+    from buildbot.steps.python import Sphinx
+    f.addStep(Sphinx(sphinx_builddir="_build"))
 
 This step takes the following arguments:
 
@@ -2377,24 +1936,22 @@ This step takes the following arguments:
    (optional) Dictionnary of defines to overwrite values of the
    :file:`conf.py` file.
 
+.. bb:step:: PyLint
+
 .. _Step-PyLint:
     
-.. index::
-   PyLint
-   Build Steps; PyLint
-
 PyLint
 ++++++
 
-Similarly, the :class:`buildbot.steps.python.PyLint` step will run :command:`pylint` and
+Similarly, the :bb:step:`PyLint` step will run :command:`pylint` and
 analyze the results.
 
 You must supply the command line to be used. There is no default. ::
 
     from buildbot.steps.python import PyLint
-    # ...
     f.addStep(PyLint(command=["pylint", "src"]))
 
+.. bb:step:: Trial
 
 .. _Step-Trial:
 
@@ -2459,7 +2016,7 @@ it can be seen as part of the status output. ::
     from buildbot.steps.python_twisted import Trial
     f.addStep(Trial(tests='petmail.test'))
 
-.. _RemovePYCs:
+.. bb:step:: RemovePYCs
 
 RemovePYCs
 ++++++++++
@@ -2475,16 +2032,13 @@ habit of finding old test modules. ::
     from buildbot.steps.python_twisted import RemovePYCs
     f.addStep(RemovePYCs())
 
-.. _Transferring-Files:
-    
-.. index::
-   FileUpload, FileDownload, DirectoryUpload, File Transfer
-   Build Steps; FileUpload
-   Build Steps; FileDownload
-   Build Steps; DirectoryUpload
+.. index:: File Transfer
+
+.. bb:step:: FileUpload
+.. bb:step:: FileDownload
 
 Transferring Files
-~~~~~~~~~~~~~~~~~~
+------------------
 
 .. py:class:: buildbot.steps.transfer.FileUpload
 .. py:class:: buildbot.steps.transfer.FileDownload
@@ -2493,9 +2047,9 @@ Most of the work involved in a build will take place on the
 buildslave. But occasionally it is useful to do some work on the
 buildmaster side. The most basic way to involve the buildmaster is
 simply to move a file from the slave to the master, or vice versa.
-There are a pair of :class:`BuildStep`\s named :class:`FileUpload` and
-:class:`FileDownload` to provide this functionality. :class:`FileUpload`
-moves a file *up to* the master, while :class:`FileDownload` moves
+There are a pair of steps named :bb:step:`FileUpload` and
+:bb:step:`FileDownload` to provide this functionality. :bb:step:`FileUpload`
+moves a file *up to* the master, while :bb:step:`FileDownload` moves
 a file *down from* the master.
 
 As an example, let's assume that there is a step which produces an
@@ -2521,7 +2075,7 @@ interpreted relative to the builder's working directory.
 
 
 To move a file from the master to the slave, use the
-:class:`FileDownload` command. For example, let's assume that some step
+:bb:step:`FileDownload` command. For example, let's assume that some step
 requires a configuration file that, for whatever reason, could not be
 recorded in the source code repository or generated on the buildslave
 side::
@@ -2533,7 +2087,7 @@ side::
                            slavedest="build_config.txt"))
     f.addStep(ShellCommand(command=["make", "config"]))
 
-Like :class:`FileUpload`, the ``mastersrc=`` argument is interpreted
+Like :bb:step:`FileUpload`, the ``mastersrc=`` argument is interpreted
 relative to the buildmaster's base directory, and the
 ``slavedest=`` argument is relative to the builder's working
 directory. If the buildslave is running in :file:`~buildslave`, and the
@@ -2569,13 +2123,15 @@ the modified and accessed time of the destination file to match the
 times of the source file.  When ``False`` (the default), the modified and accessed times
 of the destination file are set to the current time on the buildmaster.
 
+.. bb:step:: DirectoryUpload
+
 Transfering Directories
 +++++++++++++++++++++++
 
 .. py:class:: buildbot.steps.transfer.DirectoryUpload
 
 To transfer complete directories from the buildslave to the master, there
-is a :class:`BuildStep` named :class:`DirectoryUpload`. It works like :class:`FileUpload`,
+is a :class:`BuildStep` named :bb:step:`DirectoryUpload`. It works like :bb:step:`FileUpload`,
 just for directories. However it does not support the ``maxsize``,
 ``blocksize`` and ``mode`` arguments. As an example, let's assume an
 generated project documentation, which consists of many files (like the output
@@ -2590,24 +2146,23 @@ the directory can be found under :file:`docs`::
     f.addStep(DirectoryUpload(slavesrc="docs",
                     masterdest="~/public_html/docs"))
 
-The :class:`DirectoryUpload` step will create all necessary directories and
+The :bb:step:`DirectoryUpload` step will create all necessary directories and
 transfers empty directories, too.
 
-
 The ``maxsize`` and ``blocksize`` parameters are the same as for
-:class:`FileUpload`, although note that the size of the transferred data is
+:bb:step:`FileUpload`, although note that the size of the transferred data is
 implementation-dependent, and probably much larger than you expect due to the
 encoding used (currently tar).
 
 The optional ``compress`` argument can be given as ``'gz'`` or
 ``'bz2'`` to compress the datastream.
 
-
-
-.. _Transfering-Strings:
+.. bb:step:: StringDownload
+.. bb:step:: JSONStringDownload
+.. bb:step:: JSONPropertiesDownload
 
 Transfering Strings
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 .. py:class:: buildbot.steps.transfer.StringDownload
 .. py:class:: buildbot.steps.transfer.JSONStringDownload
@@ -2615,35 +2170,45 @@ Transfering Strings
 
 Sometimes it is useful to transfer a calculated value from the master to the
 slave. Instead of having to create a temporary file and then use FileDownload,
-you can use one of the string download steps.
+you can use one of the string download steps.  ::
 
-:class:`StringDownload` works just like :class:`FileDownload` except it takes a single argument,
-``s``, representing the string to download instead of a ``mastersrc`` argument.
+    from buildbot.steps.transfer import StringDownload
+    f.append(StringDownload(WithProperties("%(branch)s-%(got_revision)s\n"),
+            slavedest="buildid.txt"))
 
-:class:`JSONStringDownload` is similar, except it takes an ``o`` argument, which must be json
-serializable, and transfers that as a json-encoded string to the slave.
+:bb:step:`StringDownload` works just like :bb:step:`FileDownload` except it takes a single argument,
+``s``, representing the string to download instead of a ``mastersrc`` argument. ::
 
-:class:`JSONPropertiesDownload` transfers a json-encoded string that represents a
+    from buildbot.steps.transfer import JSONStringDownload
+    buildinfo = { ... }
+    f.append(JSONStringDownload(buildinfo, slavedest="buildinfo.json"))
+
+:bb:step:`JSONStringDownload` is similar, except it takes an ``o`` argument, which must be JSON
+serializable, and transfers that as a JSON-encoded string to the slave.
+
+.. index:: Properties; JSONPropertiesDownload
+
+::
+    from buildbot.steps.transfer import JSONPropertiesDownload
+    f.append(JSONPropertiesDownload(slavedest="build-properties.json"))
+
+:bb:step:`JSONPropertiesDownload` transfers a json-encoded string that represents a
 dictionary where properties maps to a dictionary of build property ``name`` to
 property ``value``; and ``sourcestamp`` represents the build's sourcestamp.
 
-.. _MasterShellCommand:
-
-.. index::
-   MasterShellCommand
-   Build Steps; MasterShellCommand
+.. bb:step:: MasterShellCommand
 
 Running Commands on the Master
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 .. py:class:: buildbot.steps.master.MasterShellCommand
 
 Occasionally, it is useful to execute some task on the master, for example to
 create a directory, deploy a build result, or trigger some other centralized
 processing.  This is possible, in a limited fashion, with the
-:class:`MasterShellCommand` step.
+:bb:step:`MasterShellCommand` step.
 
-This step operates similarly to a regular :class:`ShellCommand`, but executes on
+This step operates similarly to a regular :bb:step:`ShellCommand`, but executes on
 the master, instead of the slave.  To be clear, the enclosing :class:`Build`
 object must still have a slave object, just as for any other step -- only, in
 this step, the slave does not do anything.
@@ -2663,18 +2228,72 @@ In this example, the step renames a tarball based on the day of the week. ::
    variables to the subprocess.  To pass an explicit environment instead, add an
    ``env={..}`` argument.
 
+.. index:: Properties; from steps
+
 .. _Setting-Properties:
 
 Setting Properties
-~~~~~~~~~~~~~~~~~~
+------------------
+
+These steps set properties on the master based on information from the slave.
+
+.. bb:step:: SetProperty
+
+.. _Step-SetProperty:
+
+SetProperty
++++++++++++
+
+.. py:class:: buildbot.steps.shell.SetProperty
+
+This buildstep is similar to :bb:step:`ShellCommand`, except that it captures the
+output of the command into a property.  It is usually used like this::
+
+    from buildbot.steps import shell
+    f.addStep(shell.SetProperty(command="uname -a", property="uname"))
+
+This runs ``uname -a`` and captures its stdout, stripped of leading
+and trailing whitespace, in the property ``uname``.  To avoid stripping,
+add ``strip=False``.
+
+The ``property`` argument can be specified as a  :ref:`WithProperties`
+object, allowing the property name to be built from other property values.
+
+The more advanced usage allows you to specify a function to extract
+properties from the command output.  Here you can use regular
+expressions, string interpolation, or whatever you would like. In this
+form, :func:`extract_fn` should be passed, and not :class:`Property`. 
+The :func:`extract_fn` function is called with three arguments: the exit status of the
+command, its standard output as a string, and its standard error as
+a string.  It should return a dictionary containing all new properties. ::
+
+    def glob2list(rc, stdout, stderr):
+        jpgs = [ l.strip() for l in stdout.split('\n') ]
+        return { 'jpgs' : jpgs }
+    f.addStep(SetProperty(command="ls -1 *.jpg", extract_fn=glob2list))
+
+Note that any ordering relationship of the contents of stdout and
+stderr is lost.  For example, given ::
+
+    f.addStep(SetProperty(
+        command="echo output1; echo error >&2; echo output2",
+        extract_fn=my_extract))
+
+Then ``my_extract`` will see ``stdout="output1\noutput2\n"``
+and ``stderr="error\n"``.
+
+.. bb:step:: SetPropertiesFromEnv
 
 .. py:class:: buildbot.steps.slave.SetPropertiesFromEnv
 
-In Buildbot-0.8.3 and higher, slaves provide their environment variables to the
-master on connect.  These can be copied into Buildbot properties with the
-:class:`SetPropertiesFromEnv` step.  Pass a variable or list of variables in the
-``variables`` parameter, then simply use the values as properties in a later
-step.
+SetPropertiesFromEnv
+++++++++++++++++++++
+
+Buildbot slaves (later than version 0.8.3) provide their environment variables
+to the master on connect.  These can be copied into Buildbot properties with
+the :bb:step:`SetPropertiesFromEnv` step.  Pass a variable or list of variables
+in the ``variables`` parameter, then simply use the values as properties in a
+later step.
 
 Note that on Windows, environment variables are case-insensitive, but Buildbot
 property names are case sensitive.  The property will have exactly the variable
@@ -2693,22 +2312,17 @@ Note that this step requires that the Buildslave be at least version 0.8.3.
 For previous versions, no environment variables are available (the slave
 environment will appear to be empty).
 
-.. seealso::
-  
-   :ref:`Step-SetProperty`, which runs a command on the slave and sets a
-   property based on the result.
+.. index:: Properties; triggering schedulers
 
-.. index::
-   Trigger
-   Build Steps; Trigger
+.. bb:step:: Trigger
 
 .. _Triggering-Schedulers:
 
 Triggering Schedulers
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 The counterpart to the Triggerable described in section
-:ref:`Triggerable-Scheduler` is the :class:`Trigger` :class:`BuildStep`. ::
+:bb:Sched:`Triggerable` is the :bb:step:`Trigger` build step::
 
     from buildbot.steps.trigger import Trigger
     f.addStep(Trigger(schedulerNames=['build-prep'],
@@ -2717,7 +2331,7 @@ The counterpart to the Triggerable described in section
                       set_properties=@{ 'quick' : False @},
                       copy_properties=[ 'release_code_name' ]))
 
-The ``schedulerNames=`` argument lists the :class:`Triggerable`\s
+The ``schedulerNames=`` argument lists the :bb:sched:`Triggerable` schedulers
 that should be triggered when this step is executed.  Note that
 it is possible, but not advisable, to create a cycle where a build
 continually triggers itself, because the schedulers are specified
@@ -2731,7 +2345,7 @@ succeeds immediately after triggering the schedulers.
 The SourceStamp to use for the triggered build is controlled by the arguments
 ``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp``.
 If ``updateSourceStamp`` is ``True`` (the default), then step updates
-the :class:`SourceStamp` given to the :class:`Triggerable`\s to include
+the :class:`SourceStamp` given to the :bb:sched:`Triggerable` schedulers to include
 ``got_revision`` (the revision actually used in this build) as
 ``revision`` (the revision to use in the triggered builds). This is
 useful to ensure that all of the builds use exactly the same
@@ -2753,21 +2367,19 @@ sophisticated ``set_properties``, which takes a dictionary mapping property
 names to values.  You may use :ref:`WithProperties` here to dynamically
 construct new property values.
 
-.. _Miscellaneous-BuildSteps:
-
 Miscellaneous BuildSteps
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 A number of steps do not fall into any particular category.
 
-.. _HLint:
+.. bb:step:: HLint
 
 HLint
 +++++
 
 .. py:class:: buildbot.steps.python_twisted.HLint
 
-The :class:`HLint` step runs Twisted Lore, a lint-like checker over a set of
+The :bb:step:`HLint` step runs Twisted Lore, a lint-like checker over a set of
 ``.xhtml`` files.  Any deviations from recommended style is flagged and put
 in the output log.  
 
@@ -2780,579 +2392,4 @@ Python executable to use to run Lore. ::
 
     from buildbot.steps.python_twisted import HLint
     f.addStep(HLint())
-
-.. _Writing-New-BuildSteps:
-
-Writing New BuildSteps
-~~~~~~~~~~~~~~~~~~~~~~
-
-While it is a good idea to keep your build process self-contained in
-the source code tree, sometimes it is convenient to put more
-intelligence into your Buildbot configuration. One way to do this is
-to write a custom :class:`BuildStep`. Once written, this Step can be used in
-the :file:`master.cfg` file.
-
-The best reason for writing a custom :class:`BuildStep` is to better parse the
-results of the command being run. For example, a :class:`BuildStep` that knows
-about JUnit could look at the logfiles to determine which tests had
-been run, how many passed and how many failed, and then report more
-detailed information than a simple ``rc==0`` -based `good/bad`
-decision.
-
-.. _Writing-BuildStep-Constructors:
-
-Writing BuildStep Constructors
-++++++++++++++++++++++++++++++
-
-:class:`BuildStep` classes have some extra equipment, because they are their own
-factories.  Consider the use of a :class:`BuildStep` in :file:`master.cfg`::
-
-    f.addStep(MyStep(someopt="stuff", anotheropt=1))
-
-This creates a single instance of class :class:`MyStep`.  However, Buildbot needs
-a new object each time the step is executed.  this is accomplished by storing
-the information required to instantiate a new object in the :attr:`factory`
-attribute.  When the time comes to construct a new :class:`Build`, :class:`BuildFactory` consults
-this attribute (via :meth:`getStepFactory`) and instantiates a new step object.
-
-When writing a new step class, then, keep in mind are that you cannot do
-anything "interesting" in the constructor -- limit yourself to checking and
-storing arguments.  To ensure that these arguments are provided to any new
-objects, call :meth:`self.addFactoryArguments` with any keyword arguments your
-constructor needs.
-
-Keep a ``**kwargs`` argument on the end of your options, and pass that up to
-the parent class's constructor.
-
-The whole thing looks like this::
-
-    class Frobnify(LoggingBuildStep):
-        def __init__(self,
-                frob_what="frobee",
-                frob_how_many=None,
-                frob_how=None,
-                **kwargs):
-    
-            # check
-            if frob_how_many is None:
-                raise TypeError("Frobnify argument how_many is required")
-    
-            # call parent
-            LoggingBuildStep.__init__(self, **kwargs)
-    
-            # set Frobnify attributes
-            self.frob_what = frob_what
-            self.frob_how_many = how_many
-            self.frob_how = frob_how
-    
-            # and record arguments for later
-            self.addFactoryArguments(
-                frob_what=frob_what,
-                frob_how_many=frob_how_many,
-                frob_how=frob_how)
-    
-    class FastFrobnify(Frobnify):
-        def __init__(self,
-                speed=5,
-                **kwargs)
-            Frobnify.__init__(self, **kwargs)
-            self.speed = speed
-            self.addFactoryArguments(
-                speed=speed)
-
-.. _BuildStep-LogFiles:
-                
-BuildStep LogFiles
-++++++++++++++++++
-
-Each BuildStep has a collection of `logfiles`. Each one has a short
-name, like `stdio` or `warnings`. Each :class:`LogFile` contains an
-arbitrary amount of text, usually the contents of some output file
-generated during a build or test step, or a record of everything that
-was printed to :file:`stdout`/:file:`stderr` during the execution of some command.
-
-These :class:`LogFile`\s are stored to disk, so they can be retrieved later.
-
-Each can contain multiple `channels`, generally limited to three
-basic ones: stdout, stderr, and `headers`. For example, when a
-ShellCommand runs, it writes a few lines to the `headers` channel to
-indicate the exact argv strings being run, which directory the command
-is being executed in, and the contents of the current environment
-variables. Then, as the command runs, it adds a lot of :file:`stdout` and
-:file:`stderr` messages. When the command finishes, a final `header`
-line is added with the exit code of the process.
-
-Status display plugins can format these different channels in
-different ways. For example, the web page shows LogFiles as text/html,
-with header lines in blue text, stdout in black, and stderr in red. A
-different URL is available which provides a text/plain format, in
-which stdout and stderr are collapsed together, and header lines are
-stripped completely. This latter option makes it easy to save the
-results to a file and run :command:`grep` or whatever against the
-output.
-
-Each :class:`BuildStep` contains a mapping (implemented in a python dictionary)
-from :class:`LogFile` name to the actual :class:`LogFile` objects. Status plugins can
-get a list of LogFiles to display, for example, a list of HREF links
-that, when clicked, provide the full contents of the :class:`LogFile`.
-
-Using LogFiles in custom BuildSteps
-###################################
-
-The most common way for a custom :class:`BuildStep` to use a :class:`LogFile` is to
-summarize the results of a :class:`ShellCommand` (after the command has
-finished running). For example, a compile step with thousands of lines
-of output might want to create a summary of just the warning messages.
-If you were doing this from a shell, you would use something like:
-
-.. code-block:: bash
-
-    grep "warning:" output.log >warnings.log
-
-In a custom BuildStep, you could instead create a `warnings` :class:`LogFile`
-that contained the same text. To do this, you would add code to your
-:meth:`createSummary` method that pulls lines from the main output log
-and creates a new :class:`LogFile` with the results::
-
-    def createSummary(self, log):
-        warnings = []
-        sio = StringIO.StringIO(log.getText())
-        for line in sio.readlines():
-            if "warning:" in line:
-                warnings.append()
-        self.addCompleteLog('warnings', "".join(warnings))
-
-This example uses the :meth:`addCompleteLog` method, which creates a
-new :class:`LogFile`, puts some text in it, and then `closes` it, meaning
-that no further contents will be added. This :class:`LogFile` will appear in
-the HTML display under an HREF with the name `warnings`, since that
-is the name of the :class:`LogFile`.
-
-You can also use :meth:`addHTMLLog` to create a complete (closed)
-:class:`LogFile` that contains HTML instead of plain text. The normal :class:`LogFile`
-will be HTML-escaped if presented through a web page, but the HTML
-:class:`LogFile` will not. At the moment this is only used to present a pretty
-HTML representation of an otherwise ugly exception traceback when
-something goes badly wrong during the :class:`BuildStep`.
-
-In contrast, you might want to create a new :class:`LogFile` at the beginning
-of the step, and add text to it as the command runs. You can create
-the :class:`LogFile` and attach it to the build by calling :meth:`addLog`, which
-returns the :class:`LogFile` object. You then add text to this :class:`LogFile` by
-calling methods like :meth:`addStdout` and :meth:`addHeader`. When you
-are done, you must call the :meth:`finish` method so the :class:`LogFile` can be
-closed. It may be useful to create and populate a :class:`LogFile` like this
-from a :class:`LogObserver` method :ref:`Adding-LogObservers`.
-
-The ``logfiles=`` argument to :class:`ShellCommand` (see
-:ref:`Step-ShellCommand`) creates new :class:`LogFile`\s and fills them in realtime
-by asking the buildslave to watch a actual file on disk. The
-buildslave will look for additions in the target file and report them
-back to the :class:`BuildStep`. These additions will be added to the :class:`LogFile` by
-calling :meth:`addStdout`. These secondary LogFiles can be used as the
-source of a LogObserver just like the normal :file:`stdio` :class:`LogFile`.
-
-.. _Reading-Logfiles:
-
-Reading Logfiles
-++++++++++++++++
-
-Once a :class:`LogFile` has been added to a :class:`BuildStep` with :meth:`addLog()`,
-:meth:`addCompleteLog()`, :meth:`addHTMLLog()`, or ``logfiles=}``,
-your :class:`BuildStep` can retrieve it by using :meth:`getLog()`::
-
-    class MyBuildStep(ShellCommand):
-        logfiles = @{ "nodelog": "_test/node.log" @}
-    
-        def evaluateCommand(self, cmd):
-            nodelog = self.getLog("nodelog")
-            if "STARTED" in nodelog.getText():
-                return SUCCESS
-            else:
-                return FAILURE
-
-For a complete list of the methods you can call on a :class:`LogFile`, please
-see the docstrings on the :class:`IStatusLog` class in
-:file:`buildbot/interfaces.py`.
-
-.. _Adding-LogObservers:
-
-Adding LogObservers
-+++++++++++++++++++
-
-.. @cindex LogObserver
-.. @cindex LogLineObserver
-
-Most shell commands emit messages to stdout or stderr as they operate,
-especially if you ask them nicely with a :option:`--verbose` flag of some
-sort. They may also write text to a log file while they run. Your
-:class:`BuildStep` can watch this output as it arrives, to keep track of how
-much progress the command has made. You can get a better measure of
-progress by counting the number of source files compiled or test cases
-run than by merely tracking the number of bytes that have been written
-to stdout. This improves the accuracy and the smoothness of the ETA
-display.
-
-To accomplish this, you will need to attach a :class:`LogObserver` to
-one of the log channels, most commonly to the :file:`stdio` channel but
-perhaps to another one which tracks a log file. This observer is given
-all text as it is emitted from the command, and has the opportunity to
-parse that output incrementally. Once the observer has decided that
-some event has occurred (like a source file being compiled), it can
-use the :meth:`setProgress` method to tell the :class:`BuildStep` about the
-progress that this event represents.
-
-There are a number of pre-built :class:`LogObserver` classes that you
-can choose from (defined in :mod:`buildbot.process.buildstep`, and of
-course you can subclass them to add further customization. The
-:class:`LogLineObserver` class handles the grunt work of buffering and
-scanning for end-of-line delimiters, allowing your parser to operate
-on complete :file:`stdout`/:file:`stderr` lines. (Lines longer than a set maximum
-length are dropped; the maximum defaults to 16384 bytes, but you can
-change it by calling :meth:`setMaxLineLength()` on your
-:class:`LogLineObserver` instance.  Use ``sys.maxint`` for effective
-infinity.)
-
-For example, let's take a look at the :class:`TrialTestCaseCounter`,
-which is used by the :ref:`Step-Trial` step to count test cases as they are run.
-As Trial executes, it emits lines like the following:
-
-.. code-block:: none
-
-    buildbot.test.test_config.ConfigTest.testDebugPassword ... [OK]
-    buildbot.test.test_config.ConfigTest.testEmpty ... [OK]
-    buildbot.test.test_config.ConfigTest.testIRC ... [FAIL]
-    buildbot.test.test_config.ConfigTest.testLocks ... [OK]
-
-When the tests are finished, trial emits a long line of `======` and
-then some lines which summarize the tests that failed. We want to
-avoid parsing these trailing lines, because their format is less
-well-defined than the `[OK]` lines.
-
-The parser class looks like this::
-
-    from buildbot.process.buildstep import LogLineObserver
-    
-    class TrialTestCaseCounter(LogLineObserver):
-        _line_re = re.compile(r'^([\w\.]+) \.\.\. \[([^\]]+)\]$')
-        numTests = 0
-        finished = False
-    
-        def outLineReceived(self, line):
-            if self.finished:
-                return
-            if line.startswith("=" * 40):
-                self.finished = True
-                return
-    
-            m = self._line_re.search(line.strip())
-            if m:
-                testname, result = m.groups()
-                self.numTests += 1
-                self.step.setProgress('tests', self.numTests)
-
-This parser only pays attention to stdout, since that's where trial
-writes the progress lines. It has a mode flag named ``finished`` to
-ignore everything after the ``====`` marker, and a scary-looking
-regular expression to match each line while hopefully ignoring other
-messages that might get displayed as the test runs.
-
-Each time it identifies a test has been completed, it increments its
-counter and delivers the new progress value to the step with
-@code{self.step.setProgress}. This class is specifically measuring
-progress along the `tests` metric, in units of test cases (as
-opposed to other kinds of progress like the `output` metric, which
-measures in units of bytes). The Progress-tracking code uses each
-progress metric separately to come up with an overall completion
-percentage and an ETA value.
-
-To connect this parser into the :class:`Trial` :class:`BuildStep`,
-``Trial.__init__`` ends with the following clause::
-
-    # this counter will feed Progress along the 'test cases' metric
-    counter = TrialTestCaseCounter()
-    self.addLogObserver('stdio', counter)
-    self.progressMetrics += ('tests',)
-
-This creates a :class:`TrialTestCaseCounter` and tells the step that the
-counter wants to watch the :file:`stdio` log. The observer is
-automatically given a reference to the step in its :attr:`step`
-attribute.
-
-A Somewhat Whimsical Example
-############################
-
-Let's say that we've got some snazzy new unit-test framework called
-Framboozle. It's the hottest thing since sliced bread. It slices, it
-dices, it runs unit tests like there's no tomorrow. Plus if your unit
-tests fail, you can use its name for a Web 2.1 startup company, make
-millions of dollars, and hire engineers to fix the bugs for you, while
-you spend your afternoons lazily hang-gliding along a scenic pacific
-beach, blissfully unconcerned about the state of your
-tests. [#]_
-
-To run a Framboozle-enabled test suite, you just run the 'framboozler'
-command from the top of your source code tree. The 'framboozler'
-command emits a bunch of stuff to stdout, but the most interesting bit
-is that it emits the line "FNURRRGH!" every time it finishes running a
-test case [#]_. You'd like to have a test-case counting LogObserver that
-watches for these lines and counts them, because counting them will
-help the buildbot more accurately calculate how long the build will
-take, and this will let you know exactly how long you can sneak out of
-the office for your hang-gliding lessons without anyone noticing that
-you're gone.
-
-This will involve writing a new :class:`BuildStep` (probably named
-"Framboozle") which inherits from :class:`ShellCommand`. The :class:`BuildStep` class
-definition itself will look something like this::
-
-    # START
-    from buildbot.steps.shell import ShellCommand
-    from buildbot.process.buildstep import LogLineObserver
-    
-    class FNURRRGHCounter(LogLineObserver):
-        numTests = 0
-        def outLineReceived(self, line):
-            if "FNURRRGH!" in line:
-                self.numTests += 1
-                self.step.setProgress('tests', self.numTests)
-    
-    class Framboozle(ShellCommand):
-        command = ["framboozler"]
-    
-        def __init__(self, **kwargs):
-            ShellCommand.__init__(self, **kwargs)   # always upcall!
-            counter = FNURRRGHCounter())
-            self.addLogObserver('stdio', counter)
-            self.progressMetrics += ('tests',)
-    # FINISH
-
-So that's the code that we want to wind up using. How do we actually
-deploy it?
-
-You have a couple of different options.
-
-Option 1: The simplest technique is to simply put this text
-(everything from START to FINISH) in your :FILE:`master.cfg` file, somewhere
-before the :class:`BuildFactory` definition where you actually use it in a
-clause like::
-
-    f = BuildFactory()
-    f.addStep(SVN(svnurl="stuff"))
-    f.addStep(Framboozle())
-
-Remember that :file:`master.cfg` is secretly just a python program with one
-job: populating the :file:`BuildmasterConfig` dictionary. And python programs
-are allowed to define as many classes as they like. So you can define
-classes and use them in the same file, just as long as the class is
-defined before some other code tries to use it.
-
-This is easy, and it keeps the point of definition very close to the
-point of use, and whoever replaces you after that unfortunate
-hang-gliding accident will appreciate being able to easily figure out
-what the heck this stupid "Framboozle" step is doing anyways. The
-downside is that every time you reload the config file, the Framboozle
-class will get redefined, which means that the buildmaster will think
-that you've reconfigured all the Builders that use it, even though
-nothing changed. Bleh.
-
-Option 2: Instead, we can put this code in a separate file, and import
-it into the master.cfg file just like we would the normal buildsteps
-like :class:`ShellCommand` and :class:`SVN`.
-
-Create a directory named ~/lib/python, put everything from START to
-FINISH in :file:`~/lib/python/framboozle.py`, and run your buildmaster using:
-
-.. code-block:: bash
-
-    PYTHONPATH=~/lib/python buildbot start MASTERDIR
-
-or use the :file:`Makefile.buildbot` to control the way
-``buildbot start`` works. Or add something like this to
-something like your :file:`~/.bashrc` or :file:`~/.bash_profile` or :file:`~/.cshrc`:
-
-.. code-block:: bash
-
-    export PYTHONPATH=~/lib/python
-
-Once we've done this, our :file:`master.cfg` can look like::
-
-    from framboozle import Framboozle
-    f = BuildFactory()
-    f.addStep(SVN(svnurl="stuff"))
-    f.addStep(Framboozle())
-
-or::
-
-    import framboozle
-    f = BuildFactory()
-    f.addStep(SVN(svnurl="stuff"))
-    f.addStep(framboozle.Framboozle())
-
-(check out the python docs for details about how "import" and "from A
-import B" work).
-
-What we've done here is to tell python that every time it handles an
-"import" statement for some named module, it should look in our
-:file:`~/lib/python/` for that module before it looks anywhere else. After our
-directories, it will try in a bunch of standard directories too
-(including the one where buildbot is installed). By setting the
-:envvar:`PYTHONPATH` environment variable, you can add directories to the front
-of this search list.
-
-Python knows that once it "import"s a file, it doesn't need to
-re-import it again. This means that reconfiguring the buildmaster
-(with ``buildbot reconfig``, for example) won't make it think the
-Framboozle class has changed every time, so the Builders that use it
-will not be spuriously restarted. On the other hand, you either have
-to start your buildmaster in a slightly weird way, or you have to
-modify your environment to set the :envvar:`PYTHONPATH` variable.
-
-
-Option 3: Install this code into a standard python library directory
-
-Find out what your python's standard include path is by asking it:
-
-.. code-block:: none
-
-    80:warner@@luther% python
-    Python 2.4.4c0 (#2, Oct  2 2006, 00:57:46)
-    [GCC 4.1.2 20060928 (prerelease) (Debian 4.1.1-15)] on linux2
-    Type "help", "copyright", "credits" or "license" for more information.
-    >>> import sys
-    >>> import pprint
-    >>> pprint.pprint(sys.path)
-    ['',
-     '/usr/lib/python24.zip',
-     '/usr/lib/python2.4',
-     '/usr/lib/python2.4/plat-linux2',
-     '/usr/lib/python2.4/lib-tk',
-     '/usr/lib/python2.4/lib-dynload',
-     '/usr/local/lib/python2.4/site-packages',
-     '/usr/lib/python2.4/site-packages',
-     '/usr/lib/python2.4/site-packages/Numeric',
-     '/var/lib/python-support/python2.4',
-     '/usr/lib/site-python']
-
-In this case, putting the code into
-/usr/local/lib/python2.4/site-packages/framboozle.py would work just
-fine. We can use the same :file:`master.cfg` ``import framboozle`` statement as
-in Option 2. By putting it in a standard include directory (instead of
-the decidedly non-standard :file:`~/lib/python`), we don't even have to set
-:envvar:`PYTHONPATH` to anything special. The downside is that you probably have
-to be root to write to one of those standard include directories.
-
-
-Option 4: Submit the code for inclusion in the Buildbot distribution
-
-Make a fork of buildbot on http://github.com/djmitche/buildbot or post a patch
-in a bug at http://buildbot.net.  In either case, post a note about your patch
-to the mailing list, so others can provide feedback and, eventually, commit it.
-
-    from buildbot.steps import framboozle
-    f = BuildFactory()
-    f.addStep(SVN(svnurl="stuff"))
-    f.addStep(framboozle.Framboozle())
-
-And then you don't even have to install framboozle.py anywhere on your
-system, since it will ship with Buildbot. You don't have to be root,
-you don't have to set :envvar:  `PYTHONPATH`. But you do have to make a good case
-for Framboozle being worth going into the main distribution, you'll
-probably have to provide docs and some unit test cases, you'll need to
-figure out what kind of beer the author likes, and then you'll have to
-wait until the next release. But in some environments, all this is
-easier than getting root on your buildmaster box, so the tradeoffs may
-actually be worth it.
-
-Putting the code in master.cfg (1) makes it available to that
-buildmaster instance. Putting it in a file in a personal library
-directory (2) makes it available for any buildmasters you might be
-running. Putting it in a file in a system-wide shared library
-directory (3) makes it available for any buildmasters that anyone on
-that system might be running. Getting it into the buildbot's upstream
-repository (4) makes it available for any buildmasters that anyone in
-the world might be running. It's all a matter of how widely you want
-to deploy that new class.
-
-.. _BuildStep-URLs:
-
-.. index:: links, BuildStep URLs, addURL
-
-BuildStep URLs
-++++++++++++++
-
-
-Each BuildStep has a collection of `links`. Like its collection of
-LogFiles, each link has a name and a target URL. The web status page
-creates HREFs for each link in the same box as it does for LogFiles,
-except that the target of the link is the external URL instead of an
-internal link to a page that shows the contents of the LogFile.
-
-These external links can be used to point at build information hosted
-on other servers. For example, the test process might produce an
-intricate description of which tests passed and failed, or some sort
-of code coverage data in HTML form, or a PNG or GIF image with a graph
-of memory usage over time. The external link can provide an easy way
-for users to navigate from the buildbot's status page to these
-external web sites or file servers. Note that the step itself is
-responsible for insuring that there will be a document available at
-the given URL (perhaps by using :command:`scp` to copy the HTML output
-to a :file:`~/public_html/` directory on a remote web server). Calling
-:meth:`addURL` does not magically populate a web server.
-
-To set one of these links, the :class:`BuildStep` should call the :meth:`addURL`
-method with the name of the link and the target URL. Multiple URLs can
-be set.
-
-In this example, we assume that the ``make test`` command causes
-a collection of HTML files to be created and put somewhere on the
-coverage.example.org web server, in a filename that incorporates the
-build number. ::
-
-    class TestWithCodeCoverage(BuildStep):
-        command = ["make", "test",
-                   WithProperties("buildnum=%s", "buildnumber")]
-    
-        def createSummary(self, log):
-            buildnumber = self.getProperty("buildnumber")
-            url = "http://coverage.example.org/builds/%s.html" % buildnumber
-            self.addURL("coverage", url)
-
-You might also want to extract the URL from some special message
-output by the build process itself::
-
-    class TestWithCodeCoverage(BuildStep):
-        command = ["make", "test",
-                   WithProperties("buildnum=%s", "buildnumber")]
-    
-        def createSummary(self, log):
-            output = StringIO(log.getText())
-            for line in output.readlines():
-                if line.startswith("coverage-url:"):
-                    url = line[len("coverage-url:"):].strip()
-                    self.addURL("coverage", url)
-                    return
-
-Note that a build process which emits both :file:`stdout` and :file:`stderr` might
-cause this line to be split or interleaved between other lines. It
-might be necessary to restrict the :meth:`getText()` call to only stdout with
-something like this::
-
-    output = StringIO("".join([c[1]
-                               for c in log.getChunks()
-                               if c[0] == LOG_CHANNEL_STDOUT]))
-
-Of course if the build is run under a PTY, then stdout and stderr will
-be merged before the buildbot ever sees them, so such interleaving
-will be unavoidable.
-
-.. [#] Build properties are serialized along with the
-    build results, so they must be serializable. For this reason, the
-    value of any build property should be simple inert data: strings,
-    numbers, lists, tuples, and dictionaries. They should not contain
-    class instances.
-    
-.. [#] framboozle.com is still available. Remember, I get 10% :).
-
-.. [#] Framboozle gets very excited about running unit tests.
 

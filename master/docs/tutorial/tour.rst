@@ -293,7 +293,7 @@ To set this up, add the following lines to master.cfg::
                                       port=5555,
                                       userpass=[('sampleuser','samplepass')]))
 
-Then you can submit changes using the :ref:`try` command.
+Then you can submit changes using the :bb:cmdline:`try` command.
 
 Let's try this out by making a one-line change to pyflakes, say,
 to make it trace the tree by default::
