@@ -13,11 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 from twisted.trial import unittest
-from twisted.internet import defer
 from buildbot.db import schedulers
-from buildbot.util import json
 from buildbot.test.util import connector_component
 from buildbot.test.fake import fakedb
 
@@ -39,13 +36,13 @@ class TestSchedulersConnectorComponent(
     def tearDown(self):
         return self.tearDownConnectorComponent()
 
-    def checkScheduler(self, schedulerid, name, class_name, state):
+    def checkScheduler(self, schedulerid, name, class_name):
         def thd(conn):
             q = self.db.model.schedulers.select(
                 whereclause=(self.db.model.schedulers.c.schedulerid == schedulerid))
             for row in conn.execute(q):
-                self.assertEqual([ row.schedulerid, row.name, row.class_name, row.state ],
-                                 [ schedulerid, name, class_name, state ])
+                self.assertEqual([ row.schedulerid, row.name, row.class_name],
+                                 [ schedulerid, name, class_name])
         return self.db.pool.do(thd)
 
     # test data
@@ -66,63 +63,6 @@ class TestSchedulersConnectorComponent(
         return self.db.pool.do(thd)
 
     # tests
-
-    def test_getState_good(self):
-        d = self.insertTestData([
-            fakedb.Scheduler(schedulerid=10, state='{ "foo":"bar" }')
-        ])
-        d.addCallback(lambda _ : self.db.schedulers.getState(10))
-        def check(state):
-            self.assertEqual(state, dict(foo="bar"))
-        d.addCallback(check)
-        return d
-
-    def test_getState_bad(self):
-        d = self.insertTestData([
-            fakedb.Scheduler(schedulerid=10, state='{ 99notjs0n }')
-        ])
-        d.addCallback(lambda _ : self.db.schedulers.getState(10))
-        def check(state):
-            self.assertEqual(state, {})
-        d.addCallback(check)
-        return d
-
-    def test_getState_missing(self):
-        d = defer.succeed(None)
-        d.addCallback(lambda _ : self.db.schedulers.getState(10))
-        def check(state):
-            self.assertEqual(state, {})
-        d.addCallback(check)
-        return d
-
-    def test_setState(self):
-        d = self.insertTestData([
-            fakedb.Scheduler(schedulerid=99, state='{}')
-        ])
-        d.addCallback(lambda _ : self.db.schedulers.setState(99, dict(abc="def")))
-        def check(state):
-            def thd(conn):
-                r = conn.execute(self.db.model.schedulers.select())
-                rows = r.fetchall()
-                self.assertEqual(len(rows), 1)
-                self.assertEqual(rows[0].schedulerid, 99)
-                self.assertEqual(json.loads(rows[0].state), dict(abc="def"))
-            return self.db.pool.do(thd)
-        d.addCallback(check)
-        return d
-
-    def test_setState_unJSON(self):
-        d = self.insertTestData([
-            fakedb.Scheduler(schedulerid=99, state='{}')
-        ])
-        d.addCallback(lambda _ : self.db.schedulers.setState(99, mock.Mock()))
-        def cb(_):
-            self.fail("should have raised a failure")
-        def eb(f):
-            f.trap(TypeError)
-        d.addCallbacks(cb, eb)
-        return d
-
     def test_classifyChanges(self):
         d = self.insertTestData([ self.change3, self.change4,
                                   self.scheduler24 ])
@@ -223,37 +163,36 @@ class TestSchedulersConnectorComponent(
     def test_getSchedulerId_first_time(self):
         d = self.insertTestData([
             fakedb.Scheduler(name='distractor', class_name='Weekly',
-                schedulerid=992, state='{"foo": "bar"}')
+                schedulerid=992)
         ])
         d.addCallback(lambda _ :
                 self.db.schedulers.getSchedulerId('mysched', 'Nightly'))
         d.addCallback(lambda schid :
-                self.checkScheduler(schid, 'mysched', 'Nightly', '{}'))
+                self.checkScheduler(schid, 'mysched', 'Nightly'))
         return d
 
     def test_getSchedulerId_existing(self):
         d = self.insertTestData([
             fakedb.Scheduler(name='mysched', class_name='Nightly',
-                schedulerid=992, state='{"foo": "bar"}')
+                schedulerid=992)
         ])
         d.addCallback(lambda _ :
                 self.db.schedulers.getSchedulerId('mysched', 'Nightly'))
         def check(schid):
             self.assertEqual(schid, 992)
-            return self.checkScheduler(992, 'mysched', 'Nightly', '{"foo": "bar"}')
+            return self.checkScheduler(992, 'mysched', 'Nightly')
         d.addCallback(check)
         return d
 
     def test_getSchedulerId_upgrade(self):
         d = self.insertTestData([
-            fakedb.Scheduler(name='mysched', class_name='', schedulerid=992,
-                state='{}')
+            fakedb.Scheduler(name='mysched', class_name='', schedulerid=992)
         ])
         d.addCallback(lambda _ :
                 self.db.schedulers.getSchedulerId('mysched', 'Hourly'))
         def check(schid):
             self.assertEqual(schid, 992)
             # class has been filled in
-            return self.checkScheduler(992, 'mysched', 'Hourly', '{}')
+            return self.checkScheduler(992, 'mysched', 'Hourly')
         d.addCallback(check)
         return d
