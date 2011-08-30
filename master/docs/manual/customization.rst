@@ -4,13 +4,31 @@ Customization
 =============
 
 For advanced users, Buildbot acts as a framework supporting a customized build
-framework.  For the most part, such configurations consist of subclasses set up
-for use in a regular Buildbot configuration file.
+application.  For the most part, such configurations consist of subclasses set
+up for use in a regular Buildbot configuration file.
 
-This chapter describes some of the more common customizations made to Buildbot.
-Future versions of Buildbot will ensure compatibility with the customizations
-described here, and where that is not possible the changes will be announced in
-the ``NEWS`` file.
+This chapter describes some of the more common idioms in advanced Buildbot
+configurations.
+
+Programmatic Configuration Generation
+-------------------------------------
+
+Bearing in mind that ``master.cfg`` is a Python file, large configurations can
+be shortened considerably by judicious use of Python loops.  For example, the
+following will generate a builder for each of a range of supported versions of
+Python::
+
+    pythons = [ 'python2.4', 'python2.5', 'python2.6', 'python2.7',
+                'python3.2', python3.3' ]
+    pytest_slaves = [ "slave%s" % n for n in range(10) ]
+    for python in pythons:
+        f = BuildFactory()
+        f.addStep(SVN(..))
+        f.addStep(ShellCommand(command=[ python, 'test.py' ]))
+        c['builders'].append(BuilderConfig(
+                name="test-%s" % python,
+                factory=f,
+                slavenames=pytest_slaves))
 
 .. _Merge-Request-Functions:
 
