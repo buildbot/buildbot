@@ -85,7 +85,6 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         @param number: build number
 
         @param _reactor: reactor to use (for testing)
-        @param _race_hook: hook for testing
 
         @returns: build ID via Deferred
         """
