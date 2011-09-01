@@ -55,6 +55,12 @@ repository = None
 
 project = None
 
+# Username portion of PB login credentials to send the changes to the master
+username = "change"
+
+# Password portion of PB login credentials to send the changes to the master
+auth = "changepw"
+
 # When converting strings to unicode, assume this encoding. 
 # (set with --encoding)
 
@@ -286,7 +292,7 @@ def process_changes():
     port = int(port)
 
     f = pb.PBClientFactory()
-    d = f.login(credentials.UsernamePassword("change", "changepw"))
+    d = f.login(credentials.UsernamePassword(username, auth))
     reactor.connectTCP(host, port, f)
 
     d.addErrback(connectFailed)
@@ -317,6 +323,15 @@ def parse_options():
                      { "encoding" : encoding })
     parser.add_option("-e", "--encoding", action="store", type="string", 
                       help=encoding_help)
+    username_help = ("Username used in PB connection auth, defaults to "
+                     "%(username)s." % { "username" : username })
+    parser.add_option("-u", "--username", action="store", type="string",
+                      help=username_help)
+    auth_help = ("Password used in PB connection auth, defaults to "
+                     "%(auth)s." % { "auth" : auth })
+    # 'a' instead of 'p' due to collisions with the project short option
+    parser.add_option("-a", "--auth", action="store", type="string",
+                      help=auth_help)
     options, args = parser.parse_args()
     return options
 
@@ -356,6 +371,12 @@ try:
 
     if options.project:
         project = options.project
+
+    if options.username:
+        username = options.username
+
+    if options.auth:
+        auth = options.auth
 
     if options.encoding:
         encoding = options.encoding
