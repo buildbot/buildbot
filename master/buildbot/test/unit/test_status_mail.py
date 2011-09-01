@@ -307,6 +307,7 @@ class TestMailNotifier(unittest.TestCase):
         return d
 
     def do_test_sendToInterestedUsers(self, lookup=None, extraRecipients=[],
+                                      sendToInterestedUsers=True,
                                       exp_called_with=None, exp_TO=None,
                                       exp_CC=None):
         from email.Message import Message
@@ -314,6 +315,7 @@ class TestMailNotifier(unittest.TestCase):
 
         mn = MailNotifier(fromaddr='from@example.org',
                           lookup=lookup,
+                          sendToInterestedUsers=sendToInterestedUsers,
                           extraRecipients=extraRecipients)
         mn.sendMessage = Mock()
 
@@ -409,6 +411,12 @@ class TestMailNotifier(unittest.TestCase):
                                                     'marla@mayhem.net'],
                                    exp_TO="tyler@mayhem.net",
                                    exp_CC="marla@mayhem.net")
+    def test_sendToInterestedUsers_False(self):
+        self.do_test_sendToInterestedUsers(
+                                   extraRecipients=["marla@mayhem.net"],
+                                   sendToInterestedUsers=False,
+                                   exp_called_with=['marla@mayhem.net'],
+                                   exp_TO="marla@mayhem.net")
 
 def create_msgdict():
     unibody = u'Unicode body with non-ascii (\u00E5\u00E4\u00F6).'
