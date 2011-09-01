@@ -605,6 +605,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                     d.addCallback(self.useLookup)
                 else:
                     d.addCallback(self.useUsers)
+        else:
+            d = defer.DeferredList(self.dl)
         d.addCallback(self._gotRecipients, self.recipients, m)
         return d
 
