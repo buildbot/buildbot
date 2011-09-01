@@ -256,7 +256,7 @@ class SVN(Source):
         d = self.runCommand(cmd)
         def _setrev(res):
             output = self.getLog('stdio').readlines()[-1].strip()
-            revision = output.rstrip('MS')
+            revision = output.rstrip('MSP')
             revision = revision.split(':')[-1]
             try:
                 int(revision)

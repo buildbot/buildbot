@@ -195,7 +195,7 @@ class SVN(SourceBaseCommand):
         def _parse(res):
             r_raw = c.stdout.strip()
             # Extract revision from the version "number" string
-            r = r_raw.rstrip('MS')
+            r = r_raw.rstrip('MSP')
             r = r.split(':')[-1]
             got_version = None
             try:
