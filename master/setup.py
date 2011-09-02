@@ -217,6 +217,7 @@ setup_args = {
               "buildbot.steps.package.rpm",
               "buildbot.steps.source",
               "buildbot.process",
+              "buildbot.process.users",
               "buildbot.clients",
               "buildbot.monkeypatches",
               "buildbot.schedulers",
