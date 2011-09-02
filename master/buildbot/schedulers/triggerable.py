@@ -28,7 +28,7 @@ class Triggerable(base.BaseScheduler):
         self._bsc_subscription = None
         self.reason = "Triggerable(%s)" % name
 
-    def trigger(self, ssid, set_props=None):
+    def trigger(self, ssid, set_props=None, update_trigger_step=None):
         """Trigger this scheduler with the given sourcestamp ID. Returns a
         deferred that will fire when the buildset is finished."""
         # properties for this buildset are composed of our own properties,
@@ -46,7 +46,18 @@ class Triggerable(base.BaseScheduler):
                     properties=props)
         else:
             d = self.addBuildsetForLatest(reason=self.reason, properties=props)
+
+        def setup_buildstatus(buildstatus):
+            def build_started(bs):
+                update_trigger_step.addURL(bs.builder.name,
+                                            self.master.status.getURLForThing(bs))
+                buildstatus.unsubscribe(build_started)
+            buildstatus.subscribe(build_started)
         def setup_waiter((bsid,brids)):
+            if update_trigger_step:
+                for bn, brid in brids.iteritems():
+                    d = self.master.status.getBuildRequestStatus(brid)
+                    d.addCallback(setup_buildstatus)
             self._waiters[bsid] = d = defer.Deferred()
             self._updateWaiters()
             return d
