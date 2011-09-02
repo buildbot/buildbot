@@ -100,6 +100,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         sourcestamp.revision = ssdict['revision']
         sourcestamp.project = ssdict['project']
         sourcestamp.repository = ssdict['repository']
+        sourcestamp._getSourceStampId_lock = defer.DeferredLock();
 
         sourcestamp.patch = None
         if ssdict['patch_body']:
