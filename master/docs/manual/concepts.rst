@@ -707,7 +707,7 @@ to notify users through the ``MailNotifier``. This process is explained
 more clearly in :ref:``Email-Addresses``.
 
 Another way to utilize `User Objects` is through `UsersAuth` for web authentication
-(see :ref:`WebStatus-Configuration-Parameters`). To use `UsersAuth`, you need to
+(see :bb:status:`WebStatus`). To use `UsersAuth`, you need to
 set a `bb_username` and `bb_password` via the ``buildbot user`` command line tool
 to check against. The password will be encrypted before storing in the database
 along with other user attributes.
