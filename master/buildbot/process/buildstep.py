@@ -286,6 +286,9 @@ class LoggedRemoteCommand(RemoteCommand):
         self.stdout = ''
         RemoteCommand.__init__(self, remote_command, args, **kwargs)
 
+        self._startTime = None
+        self._remoteElapsed = None
+
     def __repr__(self):
         return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
 
@@ -320,8 +323,6 @@ class LoggedRemoteCommand(RemoteCommand):
         assert logfileName not in self.delayedLogs
         self.logs[logfileName] = loog
         self._closeWhenFinished[logfileName] = closeWhenFinished
-        self._startTime = None
-        self._remoteElapsed = None
 
     def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
         assert logfileName not in self.logs
