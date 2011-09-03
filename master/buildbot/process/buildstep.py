@@ -278,11 +278,13 @@ class LoggedRemoteCommand(RemoteCommand):
     rc = None
     debug = False
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, remote_command, args, collectStdout=False, **kwargs):
         self.logs = {}
         self.delayedLogs = {}
         self._closeWhenFinished = {}
-        RemoteCommand.__init__(self, *args, **kwargs)
+        self.collectStdout = collectStdout
+        self.stdout = ''
+        RemoteCommand.__init__(self, remote_command, args, **kwargs)
 
     def __repr__(self):
         return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
@@ -339,6 +341,8 @@ class LoggedRemoteCommand(RemoteCommand):
     def addStdout(self, data):
         if 'stdio' in self.logs:
             self.logs['stdio'].addStdout(data)
+        if self.collectStdout:
+            self.stdout += data
     def addStderr(self, data):
         if 'stdio' in self.logs:
             self.logs['stdio'].addStderr(data)
@@ -483,7 +487,8 @@ class RemoteShellCommand(LoggedRemoteCommand):
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=20*60, maxTime=None, logfiles={},
-                 usePTY="slave-config", logEnviron=True):
+                 usePTY="slave-config", logEnviron=True,
+                 collectStdout=False):
         """
         @type  workdir: string
         @param workdir: directory where the command ought to run,
@@ -529,6 +534,12 @@ class RemoteShellCommand(LoggedRemoteCommand):
         @param maxTime: tell the remote that if the command fails to complete
                         in this number of seconds, the command should be
                         killed.  Use None to disable maxTime.
+
+        @type collectStdout: boolean
+        @param collectStdout: if true, then the command's stdout is collected,
+            separately from the logfiles, in the C{stdout} attribute.  This is
+            most useful for commands with short output, e.g., a version-control
+            revision.
         """
 
         self.command = command # stash .command, set it later

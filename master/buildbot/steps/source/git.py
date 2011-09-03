@@ -228,21 +228,22 @@ class Git(Source):
         return d
 
     def parseGotRevision(self, _):
-        d = self._dovccmd(['rev-parse', 'HEAD'])
-        def setrev(res):
-            revision = self.getLog('stdio').readlines()[-1].strip()
+        d = self._dovccmd(['rev-parse', 'HEAD'], collectStdout=True)
+        def setrev(stdout):
+            revision = stdout.strip()
             if len(revision) != 40:
                 raise failure.Failure
             log.msg("Got Git revision %s" % (revision, ))
             self.setProperty('got_revision', revision, 'Source')
-            return res
+            return 0
         d.addCallback(setrev)
         return d
 
-    def _dovccmd(self, command, abandonOnFailure=True):
+    def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['git'] + command,
                                            env=self.env,
-                                           logEnviron=self.logEnviron)
+                                           logEnviron=self.logEnviron,
+                                           collectStdout=collectStdout)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting git command : git %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
@@ -250,7 +251,10 @@ class Git(Source):
             if abandonOnFailure and cmd.rc != 0:
                 log.msg("Source step failed while running command %s" % cmd)
                 raise failure.Failure(cmd.rc)
-            return cmd.rc
+            if collectStdout:
+                return cmd.stdout
+            else:
+                return cmd.rc
         d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 

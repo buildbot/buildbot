@@ -196,14 +196,14 @@ class Mercurial(Source):
         return d
 
     def parseGotRevision(self, _):
-        d = self._dovccmd(['identify', '--id', '--debug'])
-        def _setrev(res):
-            revision = self.getLog('stdio').readlines()[-1].strip()
+        d = self._dovccmd(['identify', '--id', '--debug'], collectStdout=True)
+        def _setrev(stdout):
+            revision = stdout.strip()
             if len(revision) != 40:
                 raise ValueError("Incorrect revision id")
             log.msg("Got Mercurial revision %s" % (revision, ))
             self.setProperty('got_revision', revision, 'Source')
-            return res
+            return 0
         d.addCallback(_setrev)
         return d
 
@@ -241,12 +241,13 @@ class Mercurial(Source):
         d.addCallback(self._checkBranchChange)
         return d
 
-    def _dovccmd(self, command):
+    def _dovccmd(self, command, collectStdout=False):
         if not command:
             raise ValueError("No command specified")
         cmd = buildstep.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command,
                                            env=self.env,
-                                           logEnviron=self.logEnviron)
+                                           logEnviron=self.logEnviron,
+                                           collectStdout=collectStdout)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting mercurial command : hg %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
@@ -254,7 +255,10 @@ class Mercurial(Source):
             if cmd.rc != 0:
                 log.msg("Source step failed while running command %s" % cmd)
                 raise failure.Failure(cmd.rc)
-            return cmd.rc
+            if collectStdout:
+                return cmd.stdout
+            else:
+                return cmd.rc
         d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
@@ -275,10 +279,9 @@ class Mercurial(Source):
         if self.branchType == 'dirname':
             return defer.succeed(self.branch)
         else:
-            d = self._dovccmd(['identify', '--branch'])
-            def _getbranch(res):
-                branch = self.getLog('stdio').readlines()[-1].strip()
-                return branch
+            d = self._dovccmd(['identify', '--branch'], collectStdout=True)
+            def _getbranch(stdout):
+                return stdout.strip()
             d.addCallback(_getbranch).addErrback
             return d
 

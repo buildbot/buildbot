@@ -207,17 +207,21 @@ class Bzr(Source):
         lastChange = max([int(c.revision) for c in changes])
         return lastChange
 
-    def _dovccmd(self, command, abandonOnFailure=True):
+    def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['bzr'] + command,
                                            env=self.env,
-                                           logEnviron=self.logEnviron)
+                                           logEnviron=self.logEnviron,
+                                           collectStdout=collectStdout)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
             if abandonOnFailure and cmd.rc != 0:
                 log.msg("Source step failed while running command %s" % cmd)
                 raise failure.Failure(cmd.rc)
-            return cmd.rc
+            if collectStdout:
+                return cmd.stdout
+            else:
+                return cmd.rc
         d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
@@ -239,9 +243,10 @@ class Bzr(Source):
             return 'fresh'
 
     def parseGotRevision(self, _):
-        d = self._dovccmd(["version-info", "--custom", "--template='{revno}"])
-        def setrev(res):
-            revision = self.getLog('stdio').readlines()[-1].strip("'")
+        d = self._dovccmd(["version-info", "--custom", "--template='{revno}"],
+                          collectStdout=True)
+        def setrev(stdout):
+            revision = stdout.strip("'")
             try:
                 revision = int(revision)
             except ValueError:
@@ -250,7 +255,7 @@ class Bzr(Source):
 
             log.msg("Got Git revision %s" % (revision, ))
             self.setProperty('got_revision', revision, 'Source')
-            return res
+            return 0
         d.addCallback(setrev)
         return d
     

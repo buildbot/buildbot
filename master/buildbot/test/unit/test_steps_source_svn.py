@@ -213,8 +213,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio', stdout='100')
+            + ExpectShell.log('stdio', stdout='\n')
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -250,8 +250,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='\n')
-            + ExpectShell.log('stdio', stdout='100')
+            + ExpectShell.log('stdio', stdout='100\n')
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -281,8 +280,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='\n')
-            + ExpectShell.log('stdio', stdout='100')
+            + ExpectShell.log('stdio', stdout='100\n')
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -305,7 +303,6 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio', stdout='100')
             + 0,
         )
@@ -345,7 +342,6 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio', stdout='100')
             + 0,
         )
@@ -383,7 +379,6 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio', stdout='100')
             + 0,
         )

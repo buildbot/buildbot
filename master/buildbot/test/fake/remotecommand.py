@@ -36,10 +36,13 @@ class FakeRemoteCommand(object):
 
 class FakeLoggedRemoteCommand(FakeRemoteCommand):
 
-    def __init__(self, *args, **kwargs):
-        FakeRemoteCommand.__init__(self, *args, **kwargs)
+    def __init__(self, remote_command, args, collectStdout=False, **kwargs):
+        FakeRemoteCommand.__init__(self, remote_command, args, **kwargs)
         self.logs = {}
         self.rc = -999
+        self.collectStdout = collectStdout
+        if collectStdout:
+            self.stdout = ''
 
     def useLog(self, loog, closeWhenFinished=False, logfileName=None):
         if not logfileName:
@@ -52,12 +55,13 @@ class FakeRemoteShellCommand(FakeLoggedRemoteCommand):
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=DEFAULT_TIMEOUT, maxTime=DEFAULT_MAXTIME, logfiles={},
-                 usePTY=DEFAULT_USEPTY, logEnviron=True):
+                 usePTY=DEFAULT_USEPTY, logEnviron=True, collectStdout=False):
         args = dict(workdir=workdir, command=command, env=env or {},
                 want_stdout=want_stdout, want_stderr=want_stderr,
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
-        FakeLoggedRemoteCommand.__init__(self, "shell", args)
+        FakeLoggedRemoteCommand.__init__(self, "shell", args,
+                collectStdout=collectStdout)
 
 
 class FakeLogFile(object):
@@ -217,6 +221,8 @@ class ExpectLogged(Expect):
                 command.logs[name].addHeader(streams['header'])
             if 'stdout' in streams:
                 command.logs[name].addStdout(streams['stdout'])
+                if command.collectStdout:
+                    command.stdout += streams['stdout']
             if 'stderr' in streams:
                 command.logs[name].addStderr(streams['stderr'])
         else:

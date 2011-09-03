@@ -182,7 +182,7 @@ class SVN(Source):
         d.addCallbacks(self.finished, self.checkDisconnect)
         return d
 
-    def _dovccmd(self, command):
+    def _dovccmd(self, command, collectStdout=False):
         if not command:
             raise ValueError("No command specified")
         command.extend(['--non-interactive', '--no-auth-cache'])
@@ -197,7 +197,8 @@ class SVN(Source):
 
         cmd = buildstep.RemoteShellCommand(self.workdir, ['svn'] + command,
                                            env=self.env,
-                                           logEnviron=self.logEnviron)
+                                           logEnviron=self.logEnviron,
+                                           collectStdout=collectStdout)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting SVN command : svn %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
@@ -205,7 +206,10 @@ class SVN(Source):
             if cmd.rc != 0:
                 log.msg("Source step failed while running command %s" % cmd)
                 raise failure.Failure(cmd.rc)
-            return cmd.rc
+            if collectStdout:
+                return cmd.stdout
+            else:
+                return cmd.rc
         d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
@@ -251,24 +255,25 @@ class SVN(Source):
     def parseGotRevision(self, _):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['svnversion'],
                                            env=self.env,
-                                           logEnviron=self.logEnviron,)
+                                           logEnviron=self.logEnviron,
+                                           collectStdout=True)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
-        def _setrev(res):
-            output = self.getLog('stdio').readlines()[-1].strip()
-            revision = output.rstrip('MSP')
+        def _setrev(_):
+            stdout = cmd.stdout.strip()
+            revision = stdout.rstrip('MSP')
             revision = revision.split(':')[-1]
             try:
                 int(revision)
             except ValueError:
                 msg =("SVN.parseGotRevision unable to parse output "
-                      "of svnversion: '%s'" % output)
+                      "of svnversion: '%s'" % stdout)
                 log.msg(msg)
                 raise
 
             log.msg("Got SVN revision %s" % (revision, ))
             self.setProperty('got_revision', revision, 'Source')
-            return res
+            return 0
         d.addCallback(lambda _: _setrev(cmd.rc))
         return d
 
@@ -277,12 +282,10 @@ class SVN(Source):
         command = ['status', '--xml']
         if ignore_ignores:
             command.append('--no-ignore')
-        c = self._dovccmd(command)
-        def parseAndRemove(_):
-            output = self.getLog('stdio').getText()
-            output = output[output.find('<'):]
+        d = self._dovccmd(command, collectStdout=True)
+        def parseAndRemove(stdout):
             files = []
-            for filename in self.getUnversionedFiles(output, self.keep_on_purge):
+            for filename in self.getUnversionedFiles(stdout, self.keep_on_purge):
                 filename = self.workdir+'/'+str(filename)
                 files.append(filename)
             if len(files) == 0:
@@ -298,14 +301,14 @@ class SVN(Source):
                     d = self.runCommand(cmd)
                     d.addCallback(lambda _: cmd.rc)
             return d
-        c.addCallback(parseAndRemove)
+        d.addCallback(parseAndRemove)
         def evaluateCommand(rc):
             if rc != 0:
                 log.msg("Failed removing files")
                 raise failure.Failure(rc)
             return rc
-        c.addCallback(evaluateCommand)
-        return c
+        d.addCallback(evaluateCommand)
+        return d
 
     @staticmethod
     def getUnversionedFiles(xmlStr, keep_on_purge):
