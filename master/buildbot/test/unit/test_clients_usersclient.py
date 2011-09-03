@@ -50,9 +50,10 @@ class TestUsersClient(unittest.TestCase):
         self.assertIdentical(factory, self.factory)
         self.factory.login_d.callback(self.remote)
 
-    def _fake_callRemote(self, method, op, ids, info):
+    def _fake_callRemote(self, method, op, bb_username, bb_password, ids, info):
         self.assertEqual(method, 'commandline')
-        self.called_with = dict(op=op, ids=ids, info=info)
+        self.called_with = dict(op=op, bb_username=bb_username,
+                                bb_password=bb_password, ids=ids, info=info)
         return defer.succeed(None)
 
     def _fake_loseConnection(self):
@@ -64,19 +65,22 @@ class TestUsersClient(unittest.TestCase):
 
     def test_usersclient_info(self):
         uc = usersclient.UsersClient('localhost', "user", "userpw", 1234)
-        d = uc.send('add', None, [{'identifier':'x', 'svn':'x'}])
+        d = uc.send('update', 'bb_user', 'hashed_bb_pass', None,
+                    [{'identifier':'x', 'svn':'x'}])
         def check(_):
             self.assertProcess('localhost', 1234,
-                               dict(op='add', ids=None,
+                               dict(op='update', bb_username='bb_user',
+                                    bb_password='hashed_bb_pass', ids=None,
                                     info=[dict(identifier='x', svn='x')]))
         d.addCallback(check)
         return d
 
     def test_usersclient_ids(self):
         uc = usersclient.UsersClient('localhost', "user", "userpw", 1234)
-        d = uc.send('remove', ['x'], None)
+        d = uc.send('remove', None, None, ['x'], None)
         def check(_):
             self.assertProcess('localhost', 1234,
-                               dict(op='remove', ids=['x'], info=None))
+                               dict(op='remove', bb_username=None,
+                                    bb_password=None, ids=['x'], info=None))
         d.addCallback(check)
         return d

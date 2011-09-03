@@ -47,17 +47,33 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         fakedb.UserInfo(uid=2, attr_type='irc', attr_data='durden')
     ]
 
+    user3_rows = [
+        fakedb.User(uid=3, identifier='marla', bb_username='marla',
+                    bb_password='cancer')
+    ]
+
     user1_dict = {
         'uid': 1,
         'identifier': u'soap',
+        'bb_username': None,
+        'bb_password': None,
         'IPv9': u'0578cc6.8db024',
     }
 
     user2_dict = {
         'uid': 2,
         'identifier': u'lye',
+        'bb_username': None,
+        'bb_password': None,
         'irc': u'durden',
         'git': u'Tyler Durden <tyler@mayhem.net>'
+    }
+
+    user3_dict = {
+        'uid': 3,
+        'identifier': u'marla',
+        'bb_username': u'marla',
+        'bb_password': u'cancer',
     }
 
     # tests
@@ -164,6 +180,16 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         d.addCallback(check1)
         return d
 
+    def test_getUser_bb(self):
+        d = self.insertTestData(self.user3_rows)
+        def get3(_):
+            return self.db.users.getUser(3)
+        d.addCallback(get3)
+        def check3(usdict):
+            self.assertEqual(usdict, self.user3_dict)
+        d.addCallback(check3)
+        return d
+
     def test_getUser_multi_attr(self):
         d = self.insertTestData(self.user2_rows)
         def get1(_):
@@ -212,6 +238,26 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         d.addCallback(check)
         return d
 
+    def test_getUserByUsername(self):
+        d = self.insertTestData(self.user3_rows)
+        def get3(_):
+            return self.db.users.getUserByUsername("marla")
+        d.addCallback(get3)
+        def check3(res):
+            self.assertEqual(res, self.user3_dict)
+        d.addCallback(check3)
+        return d
+
+    def test_getUserByUsername_no_match(self):
+        d = self.insertTestData(self.user3_rows)
+        def get3(_):
+            return self.db.users.getUserByUsername("tyler")
+        d.addCallback(get3)
+        def check3(none):
+            self.assertEqual(none, None)
+        d.addCallback(check3)
+        return d
+
     def test_updateUser_existing_type(self):
         d = self.insertTestData(self.user1_rows)
         def update1(_):
@@ -258,18 +304,36 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         d.addCallback(check1)
         return d
 
-    def test_updateUser_both(self):
+    def test_updateUser_bb(self):
+        d = self.insertTestData(self.user3_rows)
+        def update3(_):
+            return self.db.users.updateUser(
+                uid=3, bb_username='boss', bb_password='fired')
+        d.addCallback(update3)
+        def get3(_):
+            return self.db.users.getUser(3)
+        d.addCallback(get3)
+        def check3(usdict):
+            self.assertEqual(usdict['bb_username'], 'boss')
+            self.assertEqual(usdict['bb_password'], 'fired')
+            self.assertEqual(usdict['identifier'], 'marla') # no change
+        d.addCallback(check3)
+        return d
+
+    def test_updateUser_all(self):
         d = self.insertTestData(self.user1_rows)
         def update1(_):
             return self.db.users.updateUser(
-                uid=1, identifier='lye',
-                attr_type='IPv4', attr_data='123.134.156.167')
+                uid=1, identifier='lye', bb_username='marla',
+                bb_password='cancer', attr_type='IPv4', attr_data='123.134.156.167')
         d.addCallback(update1)
         def get1(_):
             return self.db.users.getUser(1)
         d.addCallback(get1)
         def check1(usdict):
             self.assertEqual(usdict['identifier'], 'lye')
+            self.assertEqual(usdict['bb_username'], 'marla')
+            self.assertEqual(usdict['bb_password'], 'cancer')
             self.assertEqual(usdict['IPv4'], '123.134.156.167')
             self.assertEqual(usdict['IPv9'], '0578cc6.8db024') # no change
         d.addCallback(check1)
@@ -315,6 +379,20 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         def update3(_):
             return self.db.users.updateUser(
                 uid=3, attr_type='abcd', attr_data='efgh')
+        d.addCallback(update3)
+        def get1(_):
+            return self.db.users.getUser(1)
+        d.addCallback(get1)
+        def check1(usdict):
+            self.assertEqual(usdict['IPv9'], '0578cc6.8db024') # no change
+        d.addCallback(check1)
+        return d
+
+    def test_update_NoMatch_bb(self):
+        d = self.insertTestData(self.user1_rows)
+        def update3(_):
+            return self.db.users.updateUser(
+                uid=3, attr_type='marla', attr_data='cancer')
         d.addCallback(update3)
         def get1(_):
             return self.db.users.getUser(1)

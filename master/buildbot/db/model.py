@@ -343,6 +343,12 @@ class Model(base.DBConnectorComponent):
 
         # identifier (nickname) for this user; used for display
         sa.Column("identifier", sa.String(256), nullable=False),
+
+        # username portion of user credentials for authentication
+        sa.Column("bb_username", sa.String(128)),
+
+        # password portion of user credentials for authentication
+        sa.Column("bb_password", sa.String(128)),
     )
     """This table identifies individual users, and contains buildbot-specific
     information about those users."""
@@ -396,6 +402,7 @@ class Model(base.DBConnectorComponent):
     sa.Index('users_info_attrs', users_info.c.attr_type,
             users_info.c.attr_data, unique=True)
     sa.Index('change_users_changeid', change_users.c.changeid)
+    sa.Index('users_bb_user', users.c.bb_username, unique=True)
 
     #
     # migration support

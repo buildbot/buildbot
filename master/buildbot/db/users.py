@@ -140,6 +140,48 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             # matches one of these keys.
             usdict['uid'] = users_row.uid
             usdict['identifier'] = users_row.identifier
+            usdict['bb_username'] = users_row.bb_username
+            usdict['bb_password'] = users_row.bb_password
+
+            return usdict
+        d = self.db.pool.do(thd)
+        return d
+
+    def getUserByUsername(self, username):
+        """
+        This looks up a user by a given bb_username, returning None if no
+        matching user is found.
+
+        @param username: username portion of user credentials
+        @type username: string
+
+        @returns: usdict or None via deferred
+        """
+        def thd(conn):
+            tbl = self.db.model.users
+            tbl_info = self.db.model.users_info
+
+            q = tbl.select(whereclause=(tbl.c.bb_username == username))
+            users_row = conn.execute(q).fetchone()
+
+            if not users_row:
+                return None
+
+            # make UsDict to return
+            usdict = UsDict()
+
+            # gather all attr_type and attr_data entries from users_info table
+            q = tbl_info.select(whereclause=(tbl_info.c.uid == users_row.uid))
+            rows = conn.execute(q).fetchall()
+            for row in rows:
+                usdict[row.attr_type] = row.attr_data
+
+            # add the users_row data *after* the attributes in case attr_type
+            # matches one of these keys.
+            usdict['uid'] = users_row.uid
+            usdict['identifier'] = users_row.identifier
+            usdict['bb_username'] = users_row.bb_username
+            usdict['bb_password'] = users_row.bb_password
 
             return usdict
         d = self.db.pool.do(thd)
@@ -166,18 +208,32 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         d = self.db.pool.do(thd)
         return d
 
-    def updateUser(self, uid=None, identifier=None, attr_type=None,
-                   attr_data=None, _race_hook=None):
+    def updateUser(self, uid=None, identifier=None, bb_username=None,
+                   bb_password=None, attr_type=None, attr_data=None,
+                   _race_hook=None):
         """
         Updates the current attribute and identifier for the given user.
         items.  If no user with that uid exists, the method will return
         silently.
+
+        Note that since updateUser can be called with identifier, yet have
+        bb_username/bb_password values, the method builds a dict of values
+        to update in the users table. This allows the bb_username and
+        bb_password values to update independently from the identifier, and
+        vice versa.
 
         @param uid: user id of the user to change
         @type uid: int
 
         @param identifier: (optional) new identifier for this user
         @type identifier: string
+
+        @param bb_username: (optional) new username portion of user creds
+        @type bb_username: string
+
+        @param bb_password: (optional) new hashed password portion of user
+                            creds
+        @type bb_password: string
 
         @param attr_type: (optional) attribute type to update
         @type attr_type: string
@@ -192,12 +248,22 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
+            update_dict = {}
 
-            # first, update the identifier
+            # first, add the identifier is it exists
             if identifier is not None:
-                conn.execute(
-                    tbl.update(whereclause=tbl.c.uid == uid),
-                    identifier=identifier)
+                update_dict['identifier'] = identifier
+
+            # then, add the creds if they exist
+            if bb_username is not None:
+                assert bb_password is not None
+                update_dict['bb_username'] = bb_username
+                update_dict['bb_password'] = bb_password
+
+            # update the users table if it needs to be updated
+            if update_dict:
+                q = tbl.update(whereclause=(tbl.c.uid == uid))
+                res = conn.execute(q, update_dict)
 
             # then, update the attributes, carefully handling the potential
             # update-or-insert race condition.
