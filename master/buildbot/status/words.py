@@ -17,7 +17,7 @@
 # code to deliver build status through twisted.words (instant messaging
 # protocols: irc, etc)
 
-import re, shlex
+import re, shlex, random
 from string import join, capitalize, lower
 
 from zope.interface import Interface, implements
@@ -906,10 +906,18 @@ class IrcStatusBot(irc.IRCClient):
     # self.quit(message='')
 
 class ThrottledClientFactory(protocol.ClientFactory):
-    lostDelay = 2
-    failedDelay = 60
+    lostDelay = random.randint(1, 5)
+    failedDelay = random.randint(45, 60)
+
+    def __init__(self, lostDelay=None, failedDelay=None):
+        if lostDelay is not None:
+            self.lostDelay = lostDelay
+        if failedDelay is not None:
+            self.failedDelay = failedDelay
+
     def clientConnectionLost(self, connector, reason):
         reactor.callLater(self.lostDelay, connector.connect)
+
     def clientConnectionFailed(self, connector, reason):
         reactor.callLater(self.failedDelay, connector.connect)
 
@@ -922,8 +930,10 @@ class IrcStatusFactory(ThrottledClientFactory):
     p = None
 
     def __init__(self, nickname, password, channels, categories, notify_events,
-                 noticeOnChannel=False, useRevisions=False, showBlameList=False):
-        #ThrottledClientFactory.__init__(self) # doesn't exist
+                 noticeOnChannel=False, useRevisions=False, showBlameList=False,
+                 lostDelay=None, failedDelay=None):
+        ThrottledClientFactory.__init__(self, lostDelay=lostDelay,
+                                        failedDelay=failedDelay)
         self.status = None
         self.nickname = nickname
         self.password = password
@@ -983,12 +993,14 @@ class IRC(base.StatusReceiverMultiService):
 
     compare_attrs = ["host", "port", "nick", "password",
                      "channels", "allowForce", "useSSL",
-                     "useRevisions", "categories"]
+                     "useRevisions", "categories",
+                     "lostDelay", "failedDelay"]
 
     def __init__(self, host, nick, channels, port=6667, allowForce=False,
                  categories=None, password=None, notify_events={},
                  noticeOnChannel = False, showBlameList = True,
-                 useRevisions=False, useSSL=False):
+                 useRevisions=False, useSSL=False,
+                 lostDelay=None, failedDelay=None):
         base.StatusReceiverMultiService.__init__(self)
 
         assert allowForce in (True, False) # TODO: implement others
@@ -1008,7 +1020,8 @@ class IRC(base.StatusReceiverMultiService):
                                   self.channels, self.categories, self.notify_events,
                                   noticeOnChannel = noticeOnChannel,
                                   useRevisions = useRevisions,
-                                  showBlameList = showBlameList)
+                                  showBlameList = showBlameList,
+                                  lostDelay = lostDelay, failedDelay = failedDelay)
 
         # don't set up an actual ClientContextFactory if we're running tests.
         if self.in_test_harness:
