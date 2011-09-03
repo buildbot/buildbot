@@ -151,7 +151,7 @@ class Git(Source):
         def checkout(updatable):
             if updatable:
                 if self.revision:
-                    d = self._dovccmd(['cat-file', '-e', self.revision])
+                    d = self._dovccmd(['cat-file', '-e', self.revision], False)
                 else:
                     d = defer.succeed(1)
                 d.addCallback(fetch)
