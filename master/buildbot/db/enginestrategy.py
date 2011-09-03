@@ -130,7 +130,17 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
                     # sqlalchemy will re-create the connection
                     raise sa.exc.DisconnectionError()
                 raise
-        sa.event.listen(Pool, 'checkout', checkout_listener)
+
+        # older versions of sqlalchemy require the listener to be specified
+        # in the kwargs, in a class instance
+        if hasattr(sa, '__version__') and sa.__version__.startswith('0.6'):
+            class ReconnectingListener(object):
+                pass
+            rcl = ReconnectingListener()
+            rcl.checkout = checkout_listener
+            kwargs['listeners'] = [ rcl ]
+        else:
+            sa.event.listen(Pool, 'checkout', checkout_listener)
 
         return u, kwargs, None
 
