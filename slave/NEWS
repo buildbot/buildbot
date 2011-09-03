@@ -3,7 +3,7 @@ Major User visible changes in Buildslave.             -*- outline -*-
    http://github.com/buildbot/buildbot/commits/master
 
 
-* Next Version
+* Buildbot-Slave 0.8.5
 
 ** Retry on UnauthorizedLogin
 

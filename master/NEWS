@@ -3,7 +3,7 @@ Major User visible changes in Buildbot.             -*- outline -*-
    http://github.com/buildbot/buildbot/commits/master
 
 
-* Next Version
+* Buildbot 0.8.5
 
 ** EC2 instances are now terminated instead of stopped.
 
