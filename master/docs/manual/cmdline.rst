@@ -650,6 +650,16 @@ see :ref:`Concepts-Users`.
     :option:`add`, :option:`update`, :option:`remove`, and
     :option:`show`. Each are described in full in the following sections.
 
+--bb_username
+    Used with the :option:`update` option, this sets the user's username
+    for web authentication in the database. It requires :option:`bb_password`
+    to be set along with it.
+
+--bb_password
+    Also used with the :option:`update` option, this sets the password
+    portion of a user's web authentication credentials into the database.
+    The password is first encrypted prior to storage for security reasons.
+
 --ids
     When working with users, you need to be able to refer to them by
     unique identifiers to find particular users in the database. The
@@ -726,6 +736,11 @@ For :option:`show`:
     buildbot user --master={MASTERHOST} --op=show \
             --username={USER} --passwd={USERPW} \
             --ids={ID1},{ID2},...
+
+A note on :option:`update`: when updating the :option:`bb_username`
+and :option:`bb_password`, the :option:`info` doesn't need to have
+additional ``{TYPE}={VALUE}`` pairs to update and can just take
+the ``{ID}`` portion.
 
 .. _buildbot-config-directory:
 

@@ -376,7 +376,10 @@ class WebStatus(service.MultiService):
         # parent=None), any remaining HTTP clients of this WebStatus will still
         # be able to get reasonable results.
         self.master = parent
-        
+
+        # set master in IAuth instance
+        self.authz.auth.master = self.master
+
         def either(a,b): # a if a else b for py2.4
             if a:
                 return a

@@ -485,11 +485,15 @@ keyword argument to :class:`Authz`, and specify the action as ``"auth"``. ::
     # or
     from buildbot.status.web.auth import HTPasswdAuth
     auth = (HTPasswdAuth('/path/to/htpasswd'))
+    # or
+    from buildbot.status.web.auth import UsersAuth
+    auth = UsersAuth()
 
 The class :class:`BasicAuth` implements a basic authentication mechanism using a
 list of user/password tuples provided from the configuration file.  The class
 `HTPasswdAuth` implements an authentication against an :file:`.htpasswd`
-file.
+file. The :class:`UsersAuth` works with :ref:`User-Objects` to check for valid
+user credentials.
 
 If you need still-more flexibility, pass a function for the authentication
 action.  That function will be called with an authenticated username and some
