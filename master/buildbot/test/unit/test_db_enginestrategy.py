@@ -25,7 +25,7 @@ class BuildbotEngineStrategy_special_cases(unittest.TestCase):
     # used several times below
     mysql_kwargs = dict(basedir='my-base-dir',
             connect_args=dict(init_command='SET storage_engine=MyISAM'),
-            listeners=['ReconnectingListener'], pool_recycle=3600)
+            pool_recycle=3600)
     sqlite_kwargs = dict(basedir='/my-base-dir', poolclass=NullPool)
 
     def setUp(self):

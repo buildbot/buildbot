@@ -24,26 +24,15 @@ special cases that Buildbot needs.  Those include:
 """
 
 import os
-import sqlalchemy
+import sqlalchemy as sa
 from twisted.python import log
 from sqlalchemy.engine import strategies, url
-from sqlalchemy.pool import NullPool
+from sqlalchemy.pool import NullPool, Pool
 
 # from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html
 class ReconnectingListener(object):
     def __init__(self):
         self.retried = False
-    def checkout(self, dbapi_con, con_record, con_proxy):
-        try:
-            try:
-                dbapi_con.ping(False)
-            except TypeError:
-                dbapi_con.ping()
-        except dbapi_con.OperationalError, ex:
-            if ex.args[0] in (2006, 2013, 2014, 2045, 2055):
-                # sqlalchemy will re-create the connection
-                raise sqlalchemy.exc.DisconnectionError()
-            raise
 
 class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
     """
@@ -132,7 +121,16 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         # one.  This provides a measure of additional safety over
         # the pool_recycle parameter, and is useful when e.g., the
         # mysql server goes away
-        kwargs['listeners'] = [ ReconnectingListener() ]
+        def checkout_listener(dbapi_con, con_record, con_proxy):
+            try:
+                cursor = dbapi_con.cursor()
+                cursor.execute("SELECT 1")
+            except dbapi_con.OperationalError, ex:
+                if ex.args[0] in (2006, 2013, 2014, 2045, 2055):
+                    # sqlalchemy will re-create the connection
+                    raise sa.exc.DisconnectionError()
+                raise
+        sa.event.listen(Pool, 'checkout', checkout_listener)
 
         return u, kwargs, None
 
@@ -180,4 +178,4 @@ BuildbotEngineStrategy()
 def create_engine(*args, **kwargs):
     kwargs['strategy'] = 'buildbot'
 
-    return sqlalchemy.create_engine(*args, **kwargs)
+    return sa.create_engine(*args, **kwargs)
