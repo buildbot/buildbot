@@ -18,6 +18,7 @@ import cPickle
 import tarfile
 import mock
 import shutil
+import textwrap
 from twisted.python import util
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -503,3 +504,32 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
             self.failUnless(c is None)
         d.addCallback(check)
         return d
+
+class TestPickles(unittest.TestCase):
+
+    def test_sourcestamp_081(self):
+        # an empty pickled sourcestamp from 0.8.1
+        pkl = textwrap.dedent("""\
+                (ibuildbot.sourcestamp
+                SourceStamp
+                p1
+                (dp2
+                S'repository'
+                p3
+                S''
+                sS'buildbot.sourcestamp.SourceStamp.persistenceVersion'
+                p4
+                I2
+                sS'patch'
+                p5
+                NsS'project'
+                p6
+                S''
+                sS'branch'
+                p7
+                NsS'revision'
+                p8
+                Nsb.""")
+        ss = cPickle.loads(pkl)
+        self.assertTrue(ss.revision is None)
+        self.assertTrue(hasattr(ss, '_getSourceStampId_lock'))

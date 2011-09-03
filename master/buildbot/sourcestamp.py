@@ -100,7 +100,6 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         sourcestamp.revision = ssdict['revision']
         sourcestamp.project = ssdict['project']
         sourcestamp.repository = ssdict['repository']
-        sourcestamp._getSourceStampId_lock = defer.DeferredLock();
 
         sourcestamp.patch = None
         if ssdict['patch_body']:
@@ -131,6 +130,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     def __init__(self, branch=None, revision=None, patch=None,
                  patch_info=None, changes=None, project='', repository='',
                  _fromSsdict=False, _ignoreChanges=False):
+        self._getSourceStampId_lock = defer.DeferredLock();
+
         # skip all this madness if we're being built from the database
         if _fromSsdict:
             return
@@ -158,7 +159,6 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
                 revision = str(revision)
 
         self.revision = revision
-        self._getSourceStampId_lock = defer.DeferredLock();
 
     def canBeMergedWith(self, other):
         # this algorithm implements the "compatible" mergeRequests defined in
@@ -241,6 +241,10 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         result['project'] = self.project
         result['repository'] = self.repository
         return result
+
+    def __setstate__(self, d):
+        styles.Versioned.__setstate__(self, d)
+        self._getSourceStampId_lock = defer.DeferredLock();
 
     def upgradeToVersion1(self):
         # version 0 was untyped; in version 1 and later, types matter.
