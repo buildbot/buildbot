@@ -419,7 +419,8 @@ def send_change(branch, old_revno, old_revid, new_revno, new_revid, hook):
     def sendChanges(remote):
         """Send changes to buildbot."""
         bzrlib.trace.mutter("bzrbuildout sending changes: %s", change)
-        return remote.callRemote('addChange', change, src='bzr')
+        change['src'] = 'bzr'
+        return remote.callRemote('addChange', change)
 
     deferred.addCallback(sendChanges)
 

@@ -55,20 +55,19 @@ class Sender(unittest.TestCase):
         self.assertIdentical(factory, self.factory)
         self.factory.login_d.callback(self.remote)
 
-    def _fake_callRemote(self, method, change, src):
+    def _fake_callRemote(self, method, change):
         self.assertEqual(method, 'addChange')
         self.added_changes.append(change)
-        self.vc_used = src
         return defer.succeed(None)
 
     def _fake_loseConnection(self):
         self.lostConnection = True
 
-    def assertProcess(self, host, port, username, password, changes, vc=None):
-        self.assertEqual([host, port, username, password, changes, vc],
+    def assertProcess(self, host, port, username, password, changes):
+        self.assertEqual([host, port, username, password, changes],
                 [ self.conn_host, self.conn_port,
                   self.creds.username, self.creds.password,
-                  self.added_changes, self.vc_used])
+                  self.added_changes])
 
     def test_send_minimal(self):
         s = sendchange.Sender('localhost:1234')
@@ -77,7 +76,8 @@ class Sender(unittest.TestCase):
             self.assertProcess('localhost', 1234, 'change', 'changepw', [
                 dict(project='', repository='', who=None, files=['a'],
                     comments='comm', branch='branch', revision='rev',
-                    category=None, when=None, properties={}, revlink='')])
+                    category=None, when=None, properties={}, revlink='',
+                    src=None)])
         d.addCallback(check)
         return d
 
@@ -88,7 +88,8 @@ class Sender(unittest.TestCase):
             self.assertProcess('localhost', 1234, 'me', 'sekrit', [
                 dict(project='', repository='', who=None, files=['a'],
                     comments='comm', branch='branch', revision='rev',
-                    category=None, when=None, properties={}, revlink='')])
+                    category=None, when=None, properties={}, revlink='',
+                    src=None)])
         d.addCallback(check)
         return d
 
@@ -102,7 +103,7 @@ class Sender(unittest.TestCase):
                 dict(project='p', repository='r', who='me', files=['a'],
                     comments='comm', branch='branch', revision='rev',
                     category='cats', when=1234, properties={'a':'b'},
-                    revlink='rl')], vc='git')
+                    revlink='rl', src='git')])
         d.addCallback(check)
         return d
 
@@ -114,7 +115,8 @@ class Sender(unittest.TestCase):
             self.assertProcess('localhost', 1234, 'change', 'changepw', [
                 dict(project='', repository='', who=None, files=['a', 'b'],
                     comments='comm', branch='branch', revision='rev',
-                    category=None, when=None, properties={}, revlink='')])
+                    category=None, when=None, properties={}, revlink='',
+                    src=None)])
         d.addCallback(check)
         return d
 
@@ -144,7 +146,8 @@ class Sender(unittest.TestCase):
                      category=u'\U0001F640', # WEARY CAT FACE
                      when=1234,
                      properties={u'\N{LATIN SMALL LETTER A WITH MACRON}':'b'},
-                     revlink=u'\U0001F517')]) # LINK SYMBOL
+                     revlink=u'\U0001F517', # LINK SYMBOL
+                     src=None)])
         d.addCallback(check)
         return d
 
@@ -178,7 +181,8 @@ class Sender(unittest.TestCase):
                      when=1234,
                      ## NOTE: not decoded!
                      properties={'\xc4\x81':'b'},
-                     revlink=u'\U0001F517')]) # LINK SYMBOL
+                     revlink=u'\U0001F517', # LINK SYMBOL
+                     src=None)])
         d.addCallback(check)
         return d
 
@@ -214,7 +218,8 @@ class Sender(unittest.TestCase):
                      when=1234,
                      ## NOTE: not decoded!
                      properties={'\xb9':'b'},
-                     revlink=u'\N{INVERTED QUESTION MARK}')]) # LINK SYMBOL
+                     revlink=u'\N{INVERTED QUESTION MARK}',
+                     src=None)])
         d.addCallback(check)
         return d
 

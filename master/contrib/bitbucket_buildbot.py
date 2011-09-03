@@ -129,7 +129,8 @@ class BitBucketBuildBot(resource.Resource):
         for key, value in change.iteritems():
             logging.debug("  %s: %s" % (key, value))
 
-        deferred = remote.callRemote('addChange', change, src=src)
+        change['src'] = src
+        deferred = remote.callRemote('addChange', change)
         deferred.addCallback(self.addChange, remote, changei, src)
         return deferred
 

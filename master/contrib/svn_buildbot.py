@@ -207,7 +207,8 @@ class ChangeSender:
                  'repository': unicode(slave_repo, encoding=encoding),
                  'comments': unicode(message, encoding=encoding),
                  'revision': revision,
-                 'project' : unicode(opts['project'] or "", encoding=encoding)
+                 'project' : unicode(opts['project'] or "", encoding=encoding),
+                 'src' : 'svn',
                  }
             if branch:
                 d['branch'] = unicode(branch, encoding=encoding)
@@ -231,7 +232,7 @@ class ChangeSender:
         return d
 
     def sendAllChanges(self, remote, changes):
-        dl = [remote.callRemote('addChange', change, src='svn')
+        dl = [remote.callRemote('addChange', change)
               for change in changes]
         return defer.DeferredList(dl)
 

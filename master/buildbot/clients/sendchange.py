@@ -31,7 +31,7 @@ class Sender:
         change = {'project': project, 'repository': repository, 'who': who,
                   'files': files, 'comments': comments, 'branch': branch,
                   'revision': revision, 'category': category, 'when': when,
-                  'properties': properties, 'revlink': revlink}
+                  'properties': properties, 'revlink': revlink, 'src': vc}
 
         for key in change:
             if type(change[key]) == str:
@@ -46,7 +46,7 @@ class Sender:
         reactor.connectTCP(self.host, self.port, f)
 
         def call_addChange(remote):
-            d = remote.callRemote('addChange', change, src=vc)
+            d = remote.callRemote('addChange', change)
             d.addCallback(lambda res: remote.broker.transport.loseConnection())
             return d
         d.addCallback(call_addChange)

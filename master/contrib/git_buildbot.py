@@ -85,7 +85,8 @@ def addChanges(remote, changei, src='git'):
         for key, value in c.iteritems():
             logging.debug("  %s: %s" % (key, value))
 
-        d = remote.callRemote('addChange', c, src=src)
+        c['src'] = src
+        d = remote.callRemote('addChange', c)
         return d
 
     finished_d = defer.Deferred()
