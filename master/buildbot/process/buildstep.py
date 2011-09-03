@@ -123,9 +123,6 @@ class RemoteCommand(pb.Referenceable):
 
         # Allow use of WithProperties in logfile path names.
         cmd_args = self.args
-        if cmd_args.has_key("logfiles") and cmd_args["logfiles"]:
-            cmd_args = cmd_args.copy()
-            cmd_args["logfiles"] = self.step.build.render(cmd_args["logfiles"])
 
         # This method only initiates the remote command.
         # We will receive remote_update messages as the command runs.
@@ -1088,6 +1085,8 @@ class LoggingBuildStep(BuildStep):
 
     parms = BuildStep.parms + ['logfiles', 'lazylogfiles', 'log_eval_func']
     cmd = None
+
+    renderables = [ 'logfiles', 'lazylogfiles' ]
 
     def __init__(self, logfiles={}, lazylogfiles=False, log_eval_func=None,
                  *args, **kwargs):
