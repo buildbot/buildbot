@@ -140,7 +140,14 @@ placeholders will be replaced using the current values of the build properties.
 
 .. note:: Properties are defined while a build is in progress; their values are
     not available when the configuration file is parsed.  This can sometimes
-    confuse newcomers to Buildbot!
+    confuse newcomers to Buildbot!  In particular, the following is a common error::
+
+        if Property('release_train') == 'alpha':
+            f.addStep(...)
+
+    This does not work because the value of the property is not available when
+    the ``if`` statement is executed.  However, Python will not detect this as
+    an error - you will just never see the step added to the factory.
 
 You can use build properties in most step paramaters.  Please file bugs for any
 parameters which do not accept properties.
