@@ -137,7 +137,7 @@ class Git(SourceBaseCommand):
             diffbranch = self.sourcedata != self.readSourcedata()
         except IOError:
             diffbranch = False
-        if diffbranch:
+        if diffbranch or self.sourcedirIsPatched():
             command = ['clean', '-f', '-d']
             if self.ignore_ignores:
                 command.append('-x')
