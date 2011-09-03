@@ -15,10 +15,11 @@
 
 
 import re
-
+import types
 from email.Message import Message
 from email.Utils import formatdate
 from email.MIMEText import MIMEText
+from email.MIMENonMultipart import MIMENonMultipart
 from email.MIMEMultipart import MIMEMultipart
 from StringIO import StringIO
 import urllib
@@ -491,6 +492,29 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         return attrs
 
+    def patch_to_attachment(self, patch, index):
+        # patches don't come with an encoding.  If the patch is valid utf-8,
+        # we'll attach it as MIMEText; otherwise, it gets attached as a binary
+        # file.  This will suit the vast majority of cases, since utf8 is by
+        # far the most common encoding.
+        if type(patch[1]) != types.UnicodeType:
+            try:
+                    unicode = patch[1].decode('utf8')
+            except UnicodeDecodeError:
+                unicode = None
+        else:
+            unicode = patch[1]
+
+        if unicode:
+            a = MIMEText(unicode.encode(ENCODING), _charset=ENCODING)
+        else:
+            # MIMEApplication is not present in Python-2.4 :(
+            a = MIMENonMultipart('application', 'octet-stream')
+            a.set_payload(patch[1])
+        a.add_header('Content-Disposition', "attachment",
+                    filename="source patch " + str(index) )
+        return a
+
     def createEmail(self, msgdict, builderName, title, results, builds=None,
                     patches=None, logs=None):
         text = msgdict['body'].encode(ENCODING)
@@ -523,9 +547,7 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         if patches:
             for (i, patch) in enumerate(patches):
-                a = MIMEText(patch[1].encode(ENCODING), _charset=ENCODING)
-                a.add_header('Content-Disposition', "attachment",
-                         filename="source patch " + str(i) )
+                a = self.patch_to_attachment(patch, i)
                 m.attach(a)
         if logs:
             for log in logs:

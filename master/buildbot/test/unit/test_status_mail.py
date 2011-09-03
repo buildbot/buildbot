@@ -93,7 +93,7 @@ class TestMailNotifier(unittest.TestCase):
         # note that the headers are *not* rendered
         self.assertIn('hhh: vvv', txt)
 
-    def test_createEmail_message_with_patch_and_log_contains_unicode(self):
+    def test_createEmail_message_with_patch_and_log_containing_unicode(self):
         builds = [ FakeBuildStatus(name="build") ]
         msgdict = create_msgdict()
         patches = [ ['', u'\u00E5\u00E4\u00F6', ''] ]
@@ -106,6 +106,17 @@ class TestMailNotifier(unittest.TestCase):
             m.as_string()
         except UnicodeEncodeError:
             self.fail('Failed to call as_string() on email message.')
+
+    def test_createEmail_message_with_nonascii_patch(self):
+        builds = [ FakeBuildStatus(name="build") ]
+        msgdict = create_msgdict()
+        patches = [ ['', '\x99\xaa', ''] ]
+        logs = [ FakeLog('simple log') ]
+        mn = MailNotifier('from@example.org', addLogs=True)
+        m = mn.createEmail(msgdict, u'builder', u'pr', SUCCESS,
+                           builds, patches, logs)
+        txt = m.as_string()
+        self.assertIn('application/octet-stream', txt)
 
     def test_init_enforces_categories_and_builders_are_mutually_exclusive(self):
         self.assertRaises(ParameterError,
