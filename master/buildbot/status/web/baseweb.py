@@ -378,7 +378,8 @@ class WebStatus(service.MultiService):
         self.master = parent
 
         # set master in IAuth instance
-        self.authz.auth.master = self.master
+        if self.authz.auth:
+            self.authz.auth.master = self.master
 
         def either(a,b): # a if a else b for py2.4
             if a:
