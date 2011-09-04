@@ -5,6 +5,17 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Buildbot 0.8.5
 
+** Better support for users in Buildbot (GSoC project)
+
+Buildbot now tracks user identity across version-control commits, IRC and web
+interactions, and Try submissions.
+
+** New and improved Source steps (GSoC project)
+
+Source steps have been rewritten to have a simpler, more consistent
+configuration, and to run on the master instead of the slave, allowing much
+more control over their behavior.
+
 ** EC2 instances are now terminated instead of stopped.
 
 This is really only relevant for EBS-backed instances, as Buildbot will now
@@ -54,12 +65,6 @@ user.
 
 All logging for SVNPoller now starts with "SVNPoller: ". Previously it was
 mixed case and not uniform.
-
-** New and improved Source steps
-
-Source steps have been rewritten to have a simpler, more consistent
-configuration, and to run on the master instead of the slave, allowing much
-more control over their behavior.  So far, Mercurial is complete.
 
 ** Source steps have logEnviron parameter
 
