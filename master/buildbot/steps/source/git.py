@@ -138,30 +138,47 @@ class Git(Source):
         yield wfd
         wfd.getResult()
 
+    @defer.deferredGenerator
     def incremental(self):
-        d = self._sourcedirIsUpdatable()
-        def fetch(res):
-            # if revision exists checkout to that revision
-            # else fetch and update
-            if res == 0:
-                return self._dovccmd(['reset', '--hard', self.revision])
-            else:
-                return self._doFetch(None)
+        wfd = defer.waitForDeferred(
+            self._sourcedirIsUpdatable())
+        yield wfd
+        updatable = wfd.getResult()
 
-        def checkout(updatable):
-            if updatable:
-                if self.revision:
-                    d = self._dovccmd(['cat-file', '-e', self.revision], False)
-                else:
-                    d = defer.succeed(1)
-                d.addCallback(fetch)
-            else:
-                d = self._doFull()
-            return d
+        # if not updateable, do a full checkout
+        if not updatable:
+            wfd = defer.waitForDeferred(
+                    self._doFull())
+            yield wfd
+            yield wfd.getResult() # return value
+            return
 
-        d.addCallback(checkout)
-        d.addCallback(self._updateSubmodule)
-        return d
+        # test for existence of the revision; rc=1 indicates it does not exist
+        if self.revision:
+            wfd = defer.waitForDeferred(
+                self._dovccmd(['cat-file', '-e', self.revision], False))
+            yield wfd
+            rc = wfd.getResult()
+        else:
+            rc = 1
+
+        # if revision exists checkout to that revision
+        # else fetch and update
+        if rc == 0:
+            wfd = defer.waitForDeferred(
+                    self._dovccmd(['reset', '--hard', self.revision]))
+            yield wfd
+            wfd.getResult()
+        else:
+            wfd = defer.waitForDeferred(
+                    self._doFetch(None))
+            yield wfd
+            wfd.getResult()
+
+        wfd = defer.waitForDeferred(
+                self._updateSubmodule(None))
+        yield wfd
+        wfd.getResult()
 
     def clean(self):
         command = ['clean', '-f', '-d']
