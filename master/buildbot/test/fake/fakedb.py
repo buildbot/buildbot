@@ -456,13 +456,6 @@ class FakeSchedulersComponent(FakeDBComponent):
 
     # component methods
 
-    def getState(self, schedulerid):
-        return defer.succeed(self.states.get(schedulerid, {}))
-
-    def setState(self, schedulerid, state):
-        self.states[schedulerid] = state
-        return defer.succeed(None)
-
     def classifyChanges(self, schedulerid, classifications):
         self.classifications.setdefault(schedulerid, {}).update(classifications)
         return defer.succeed(None)
@@ -491,18 +484,11 @@ class FakeSchedulersComponent(FakeDBComponent):
 
     # fake methods
 
-    def fakeState(self, schedulerid, state):
-        """Set the state dictionary for a scheduler"""
-        self.states[schedulerid] = state
-
     def fakeClassifications(self, schedulerid, classifications):
         """Set the set of classifications for a scheduler"""
         self.classifications[schedulerid] = classifications
 
     # assertions
-
-    def assertState(self, schedulerid, state):
-        self.t.assertEqual(self.states[schedulerid], state)
 
     def assertClassifications(self, schedulerid, classifications):
         self.t.assertEqual(
@@ -812,7 +798,7 @@ class FakeStateComponent(FakeDBComponent):
             json_value = self.states[objectid][name]
         except KeyError:
             if default is not object:
-                return default
+                return defer.succeed(default)
             raise
         return defer.succeed(json.loads(json_value))
 
@@ -832,6 +818,14 @@ class FakeStateComponent(FakeDBComponent):
     # assertions
 
     def assertState(self, objectid, **kwargs):
+        state = self.states[objectid]
+        for k,v in kwargs.iteritems():
+            self.t.assertIn(k, state)
+            self.t.assertEqual(json.loads(state[k]), v,
+                    "state is %r" % (state,))
+
+    def assertStateByClass(self, name, class_name, **kwargs):
+        objectid = self.objects[(name, class_name)]
         state = self.states[objectid]
         for k,v in kwargs.iteritems():
             self.t.assertIn(k, state)

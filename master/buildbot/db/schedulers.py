@@ -17,43 +17,14 @@
 Support for schedulers in the database
 """
 
-from buildbot.util import json
 import sqlalchemy as sa
 import sqlalchemy.exc
-from twisted.python import log
 from buildbot.db import base
 
 class SchedulersConnectorComponent(base.DBConnectorComponent):
     """
     A DBConnectorComponent to handle maintaining schedulers' state in the db.
     """
-
-    def getState(self, schedulerid):
-        """Get this scheduler's state, as a dictionary.  Returs a Deferred"""
-        def thd(conn):
-            schedulers_tbl = self.db.model.schedulers
-            q = sa.select([ schedulers_tbl.c.state ],
-                    whereclause=(schedulers_tbl.c.schedulerid == schedulerid))
-            row = conn.execute(q).fetchone()
-            if not row:
-                return {} # really shouldn't happen - the row should exist
-            try:
-                return json.loads(row.state)
-            except:
-                log.msg("JSON error loading state for scheduler #%s" % (schedulerid,))
-                return {}
-        return self.db.pool.do(thd)
-
-    def setState(self, schedulerid, state):
-        """Set this scheduler's stored state, represented as a JSON-able
-        dictionary.  Returs a Deferred.  Note that this will overwrite any
-        existing state; be careful with updates!"""
-        def thd(conn):
-            schedulers_tbl = self.db.model.schedulers
-            q = schedulers_tbl.update(
-                    whereclause=(schedulers_tbl.c.schedulerid == schedulerid))
-            conn.execute(q, state=json.dumps(state))
-        return self.db.pool.do(thd)
 
     # TODO: maybe only the singular is needed?
     def classifyChanges(self, schedulerid, classifications):
