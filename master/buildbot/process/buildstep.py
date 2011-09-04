@@ -556,7 +556,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
                 'usePTY': usePTY,
                 'logEnviron': logEnviron,
                 }
-        LoggedRemoteCommand.__init__(self, "shell", args)
+        LoggedRemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout)
 
     def start(self):
         self.args['command'] = self.command
