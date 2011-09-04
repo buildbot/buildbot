@@ -16,7 +16,6 @@
 from twisted.python import failure, log
 from twisted.application import service
 from twisted.internet import defer
-from buildbot import util
 from buildbot.process.properties import Properties
 from buildbot.util import ComparableMixin
 from buildbot.changes import changes
@@ -84,8 +83,8 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
         # internal variables
         self._change_subscription = None
-        self._state_lock = defer.DeferredLock()
         self._change_consumption_lock = defer.DeferredLock()
+        self._objectid = None
 
     ## service handling
 
@@ -109,39 +108,54 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
     ## state management
 
-    class Thunk: pass
-    def getState(self, key, default=Thunk):
+    @defer.deferredGenerator
+    def getState(self, *args, **kwargs):
         """
         For use by subclasses; get a named state value from the scheduler's
-        state, defaulting to DEFAULT; raises C{KeyError} if default is not
-        given and no value exists.  Scheduler must be started.  Returns the
-        value via a deferred.
-        """
-        d = self.master.db.schedulers.getState(self.schedulerid)
-        def get_value(state_dict):
-            if key in state_dict:
-                return state_dict[key]
-            if default is BaseScheduler.Thunk:
-                raise KeyError("state key '%s' not found" % (key,))
-            return default
-        d.addCallback(get_value)
-        return d
+        state, defaulting to DEFAULT.
 
-    @util.deferredLocked('_state_lock')
+        @param name: name of the value to retrieve
+        @param default: (optional) value to return if C{name} is not present
+        @returns: state value via a Deferred
+        @raises KeyError: if C{name} is not present and no default is given
+        @raises TypeError: if JSON parsing fails
+        """
+        # get the objectid, if not known
+        if self._objectid is None:
+            wfd = defer.waitForDeferred(
+                self.master.db.state.getObjectId(self.name,
+                                        self.__class__.__name__))
+            yield wfd
+            self._objectid = wfd.getResult()
+
+        wfd = defer.waitForDeferred(
+            self.master.db.state.getState(self._objectid, *args, **kwargs))
+        yield wfd
+        yield wfd.getResult()
+
+    @defer.deferredGenerator
     def setState(self, key, value):
         """
         For use by subclasses; set a named state value in the scheduler's
-        persistent state.  Note that value must be json-able. Returns a
-        Deferred.
+        persistent state.  Note that value must be json-able.
 
-        Note that this method is safe if called simultaneously in the same
-        process, although it is not safe between processes.
+        @param name: the name of the value to change
+        @param value: the value to set - must be a JSONable object
+        @param returns: Deferred
+        @raises TypeError: if JSONification fails
         """
-        d = self.master.db.schedulers.getState(self.schedulerid)
-        def set_value_and_store(state_dict):
-            state_dict[key] = value
-            return self.master.db.schedulers.setState(self.schedulerid, state_dict)
-        d.addCallback(set_value_and_store)
+        # get the objectid, if not known
+        if self._objectid is None:
+            wfd = defer.waitForDeferred(
+                self.master.db.state.getObjectId(self.name,
+                                        self.__class__.__name__))
+            yield wfd
+            self._objectid = wfd.getResult()
+
+        wfd = defer.waitForDeferred(
+            self.master.db.state.setState(self._objectid, key, value))
+        yield wfd
+        wfd.getResult()
 
     ## status queries
 
