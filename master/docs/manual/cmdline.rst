@@ -413,7 +413,7 @@ Monotone
     remotely-available repository that the build process'
     :class:`source.Monotone` will use.
 
-showing who built
+patch information
 #################
 
 You can provide the :option:`--who=dev` to designate who is running the
@@ -421,6 +421,10 @@ try build. This will add the ``dev`` to the Reason field on the try
 build's status web page. You can also set ``try_who = dev`` in the
 :file:`.buildbot/options` file. Note that :option:`--who=dev` will not
 work on version 0.8.3 or earlier masters.
+
+Similarly, :option:`--comment=COMMENT` will specify the comment for the patch,
+which is also displayed in the patch information.  The corresponding
+config-file option is ``try_comment``.
 
 Waiting for results
 ###################
