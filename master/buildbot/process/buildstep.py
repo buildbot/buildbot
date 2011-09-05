@@ -36,6 +36,11 @@ BuildStep and RemoteCommand classes for master-side representation of the
 build process
 """
 
+class BuildStepFailed(Exception):
+    """Indicates that the buildstep failed. This is useful as an errback to
+    skip other processing and jump right to the end.  It is handled by
+    L{BuildStep.failed}."""
+
 class RemoteCommand(pb.Referenceable):
     """
     I represent a single command to be run on the slave. I handle the details
@@ -936,11 +941,14 @@ class BuildStep(properties.PropertiesMixin):
         self.deferred.callback(results)
 
     def failed(self, why):
-        # if isinstance(why, pb.CopiedFailure): # a remote exception might
-        # only have short traceback, so formatFailure is not as useful as
-        # you'd like (no .frames, so no traceback is displayed)
-        log.msg("BuildStep.failed, traceback follows")
-        log.err(why)
+        # This can either be a BuildStepFailed exception/failure, meaning we
+        # should call self.finish, or it can be a real exception, which should
+        # be recorded as such.
+        if why.check(BuildStepFailed):
+            self.finished(FAILURE)
+            return
+
+        log.err(why, "BuildStep.failed; traceback follows")
         try:
             if self.progress:
                 self.progress.finish()

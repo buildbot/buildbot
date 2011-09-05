@@ -15,7 +15,7 @@
 
 from twisted.trial import unittest
 from buildbot.steps.source import cvs
-from buildbot.status.results import SUCCESS
+from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import sourcesteps
 from buildbot.test.fake.remotecommand import ExpectShell, ExpectLogged
 
@@ -280,3 +280,40 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
+
+    def test_command_fails(self):
+        self.setupStep(
+            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                    cvsmodule="mozilla/browser/", mode='incremental',
+                    login=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['cvs', '--version'])
+            + 128,
+            )
+
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+
+    def test_cvsdiscard_fails(self):
+        self.setupStep(
+            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                    cvsmodule="mozilla/browser/", mode='full', method='fresh',
+                    login=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['cvs', '--version'])
+            + 0,
+            ExpectLogged('stat', dict(file='wkdir/CVS',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['cvsdiscard', '--ignore'])
+            + ExpectShell.log('stdio',
+                stderr='FAIL!\n')
+            + 1,
+            )
+
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+

@@ -15,7 +15,7 @@
 
 from twisted.trial import unittest
 from buildbot.steps.source import mercurial
-from buildbot.status.results import SUCCESS
+from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import sourcesteps
 from buildbot.test.fake.remotecommand import ExpectShell, ExpectLogged
 
@@ -535,3 +535,16 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
+
+    def test_command_fails(self):
+        self.setupStep(
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                    mode='full', method='fresh', branchType='inrepo'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--version'])
+            + 1,
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+

@@ -249,7 +249,7 @@ class Git(Source):
         def setrev(stdout):
             revision = stdout.strip()
             if len(revision) != 40:
-                raise failure.Failure
+                raise buildstep.BuildStepFailed()
             log.msg("Got Git revision %s" % (revision, ))
             self.setProperty('got_revision', revision, 'Source')
             return 0
@@ -267,7 +267,7 @@ class Git(Source):
         def evaluateCommand(cmd):
             if abandonOnFailure and cmd.rc != 0:
                 log.msg("Source step failed while running command %s" % cmd)
-                raise failure.Failure(cmd.rc)
+                raise buildstep.BuildStepFailed()
             if collectStdout:
                 return cmd.stdout
             else:
@@ -313,7 +313,7 @@ class Git(Source):
         elif self.clobberOnFailure:
             d = self.clobber()
         else:
-            raise failure.Failure(res)
+            raise buildstep.BuildStepFailed()
 
         wfd = defer.waitForDeferred(d)
         yield wfd

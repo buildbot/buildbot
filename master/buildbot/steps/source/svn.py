@@ -15,7 +15,7 @@
 
 import xml
 
-from twisted.python import log, failure
+from twisted.python import log
 from twisted.internet import defer
 
 from buildbot.process import buildstep
@@ -133,13 +133,22 @@ class SVN(Source):
         d.addCallback(self._dovccmd)
         return d
 
+    @defer.deferredGenerator
     def clobber(self):
         cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
                                                       'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        d.addCallback(lambda _: self._dovccmd(['checkout', self.svnurl, '.']))
-        return d
+        wfd = defer.waitForDeferred(
+                self.runCommand(cmd))
+        yield wfd
+        wfd.getResult()
+        if cmd.rc != 0:
+            raise buildstep.BuildStepFailed()
+
+        wfd = defer.waitForDeferred(
+                self._dovccmd(['checkout', self.svnurl, '.']))
+        yield wfd
+        wfd.getResult()
 
     def fresh(self):
         d = self.purge(True)
@@ -151,27 +160,39 @@ class SVN(Source):
         d.addCallback(lambda _: self._dovccmd(['update']))
         return d
 
+    @defer.deferredGenerator
     def copy(self):
         cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
                                                       'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        self.workdir = 'source'
-        d.addCallback(self.incremental)
-        def copy(_):
-            cmd = buildstep.LoggedRemoteCommand('cpdir', 
-                                                {'fromdir': 'source',
-                                                 'todir':'build',
-                                                 'logEnviron': self.logEnviron,})
-            cmd.useLog(self.stdio_log, False)
-            d = self.runCommand(cmd)
-            return d
-        d.addCallback(copy)
-        def resetWorkdir(_):
+        wfd = defer.waitForDeferred(
+                self.runCommand(cmd))
+        yield wfd
+        wfd.getResult()
+
+        if cmd.rc != 0:
+            raise buildstep.BuildStepFailed()
+
+        try:
+            self.workdir = 'source'
+            wfd = defer.waitForDeferred(
+                    self.incremental(None))
+            yield wfd
+            wfd.getResult()
+        finally:
             self.workdir = 'build'
-            return 0
-        d.addCallback(resetWorkdir)
-        return d
+
+        cmd = buildstep.LoggedRemoteCommand('cpdir', 
+                    { 'fromdir': 'source', 'todir':'build',
+                      'logEnviron': self.logEnviron })
+        cmd.useLog(self.stdio_log, False)
+        wfd = defer.waitForDeferred(
+                self.runCommand(cmd))
+        yield wfd
+        wfd.getResult()
+
+        if cmd.rc != 0:
+            raise buildstep.BuildStepFailed()
 
     def finish(self, res):
         d = defer.succeed(res)
@@ -205,7 +226,7 @@ class SVN(Source):
         def evaluateCommand(cmd):
             if cmd.rc != 0:
                 log.msg("Source step failed while running command %s" % cmd)
-                raise failure.Failure(cmd.rc)
+                raise buildstep.BuildStepFailed()
             if collectStdout:
                 return cmd.stdout
             else:
@@ -269,7 +290,7 @@ class SVN(Source):
                 msg =("SVN.parseGotRevision unable to parse output "
                       "of svnversion: '%s'" % stdout)
                 log.msg(msg)
-                raise
+                raise buildstep.BuildStepFailed()
 
             log.msg("Got SVN revision %s" % (revision, ))
             self.setProperty('got_revision', revision, 'Source')
@@ -305,7 +326,7 @@ class SVN(Source):
         def evaluateCommand(rc):
             if rc != 0:
                 log.msg("Failed removing files")
-                raise failure.Failure(rc)
+                raise buildstep.BuildStepFailed()
             return rc
         d.addCallback(evaluateCommand)
         return d
@@ -316,7 +337,7 @@ class SVN(Source):
             result_xml = xml.dom.minidom.parseString(xmlStr)
         except xml.parsers.expat.ExpatError:
             log.err("Corrupted xml, aborting step")
-            raise ValueError
+            raise buildstep.BuildStepFailed()
 
         for entry in result_xml.getElementsByTagName('entry'):
             (wc_status,) = entry.getElementsByTagName('wc-status')

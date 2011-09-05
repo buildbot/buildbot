@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import log, failure
+from twisted.python import log
 from twisted.internet import defer
 
 from buildbot.process import buildstep
@@ -217,7 +217,7 @@ class Bzr(Source):
         def evaluateCommand(cmd):
             if abandonOnFailure and cmd.rc != 0:
                 log.msg("Source step failed while running command %s" % cmd)
-                raise failure.Failure(cmd.rc)
+                raise buildstep.BuildStepFailed()
             if collectStdout:
                 return cmd.stdout
             else:
@@ -251,7 +251,7 @@ class Bzr(Source):
                 revision = int(revision)
             except ValueError:
                 log.msg("Invalid revision number")
-                raise
+                raise buildstep.BuildStepFailed()
 
             log.msg("Got Git revision %s" % (revision, ))
             self.setProperty('got_revision', revision, 'Source')

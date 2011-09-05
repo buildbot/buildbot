@@ -15,7 +15,7 @@
 
 from twisted.trial import unittest
 from buildbot.steps.source import bzr
-from buildbot.status.results import SUCCESS
+from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import sourcesteps
 from buildbot.test.fake.remotecommand import ExpectShell, ExpectLogged
 
@@ -201,8 +201,54 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout='100\n')
             + 0,
             )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
+
+    def test_bad_revparse(self):
+        self.setupStep(
+            bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
+                    mode='incremental'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', '--version'])
+            + 0,
+            ExpectLogged('stat', dict(file='wkdir/.bzr',
+                                      logEnviron=True))
+            + 1,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'checkout',
+                                'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'version-info', '--custom', "--template='{revno}"])
+            + ExpectShell.log('stdio',
+                stdout='oiasdfj010laksjfd')
+            + 0,
+            )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+
+    def test_bad_checkout(self):
+        self.setupStep(
+            bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
+                    mode='incremental'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', '--version'])
+            + 0,
+            ExpectLogged('stat', dict(file='wkdir/.bzr',
+                                      logEnviron=True))
+            + 1,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'checkout',
+                                'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
+            + ExpectShell.log('stdio',
+                stderr='failed\n')
+            + 128,
+            )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+
