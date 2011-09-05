@@ -15,7 +15,7 @@
 
 ## Source step code for mercurial
 
-from twisted.python import log, failure
+from twisted.python import log
 from twisted.internet import defer
 
 from buildbot.process import buildstep
@@ -254,7 +254,7 @@ class Mercurial(Source):
         def evaluateCommand(cmd):
             if cmd.rc != 0:
                 log.msg("Source step failed while running command %s" % cmd)
-                raise failure.Failure(cmd.rc)
+                raise buildstep.BuildStepFailed()
             if collectStdout:
                 return cmd.stdout
             else:

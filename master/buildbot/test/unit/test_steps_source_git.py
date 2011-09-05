@@ -15,7 +15,7 @@
 
 from twisted.trial import unittest
 from buildbot.steps.source import git
-from buildbot.status.results import SUCCESS
+from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import sourcesteps
 from buildbot.test.fake.remotecommand import ExpectShell, ExpectLogged
 
@@ -56,6 +56,35 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_mode_full_clean_parsefail(self):
+        self.setupStep(
+                git.Git(repourl='http://github.com/buildbot/buildbot.git',
+                                    mode='full', method='clean'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + 0,
+            ExpectLogged('stat', dict(file='wkdir/.git',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-d'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'master'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+            + ExpectShell.log('stdio',
+                stderr="fatal: Could not parse object " 
+                    "'b08076bc71c7813038f2cefedff9c5b678d225a8'.\n")
+            + 128,
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
         return self.runStep()
 
     def test_mode_full_clean_no_existing_repo(self):
@@ -423,6 +452,36 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_revparse_failure(self):
+        self.setupStep(
+                git.Git(repourl='http://github.com/buildbot/buildbot.git',
+                        mode='full', method='clobber', progress=True), dict(
+                revision='abcdef01',
+                ))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + 0,
+            ExpectLogged('rmdir', dict(dir='wkdir',
+                                       logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clone',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 '.', '--progress'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'abcdef01'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                stdout='f6ada95a1d') # too short
+            + 0,
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
         return self.runStep()
 
     def test_mode_full_clobber_submodule(self):

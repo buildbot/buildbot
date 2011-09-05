@@ -16,7 +16,7 @@
 from email.Utils import formatdate
 import time
 
-from twisted.python import log, failure
+from twisted.python import log
 from twisted.internet import defer
 
 from buildbot.process import buildstep
@@ -174,7 +174,7 @@ class CVS(Source):
         d = self.runCommand(cmd)
         def evaluate(rc):
             if rc != 0:
-                raise failure.Failure
+                raise buildstep.BuildStepFailed()
             return rc
         d.addCallback(lambda _: evaluate(cmd.rc))
         return d
@@ -235,7 +235,7 @@ class CVS(Source):
         def evaluateCommand(cmd):
             if cmd.rc != 0:
                 log.msg("Source step failed while running command %s" % cmd)
-                raise failure.Failure(cmd.rc)
+                raise buildstep.BuildStepFailed()
             return cmd.rc
         d.addCallback(lambda _: evaluateCommand(cmd))
         return d

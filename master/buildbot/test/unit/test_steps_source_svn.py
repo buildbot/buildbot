@@ -15,8 +15,9 @@
 
 from twisted.trial import unittest
 from buildbot.steps.source import svn
-from buildbot.status.results import SUCCESS
+from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import sourcesteps
+from buildbot.process import buildstep
 from buildbot.test.fake.remotecommand import ExpectShell, ExpectLogged
 
 class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
@@ -476,6 +477,140 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
+    def test_command_fails(self):
+        self.setupStep(
+                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                        mode='incremental',username='user',
+                        password='pass', extra_args=['--random'],
+                        logEnviron=False))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'],
+                        logEnviron=False)
+            + 0,
+            ExpectLogged('stat', dict(file='wkdir/.svn',
+                                      logEnviron=False))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache', '--username', 'user',
+                                 '--password', 'pass', '--random'],
+                        logEnviron=False)
+            + 1,
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+
+    def test_bogus_svnversion(self):
+        self.setupStep(
+                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                        mode='incremental',username='user',
+                        password='pass', extra_args=['--random']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            ExpectLogged('stat', dict(file='wkdir/.svn',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache', '--username', 'user',
+                                 '--password', 'pass', '--random'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svnversion'])
+            + ExpectShell.log('stdio',
+                stdout='1x0y0')
+            + 0,
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+
+    def test_rmdir_fails_clobber(self):
+        self.setupStep(
+                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                                    mode='full', method='clobber'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            ExpectLogged('rmdir', {'dir': 'wkdir',
+                                   'logEnviron': True})
+            + 1,
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+
+    def test_rmdir_fails_copy(self):
+        self.setupStep(
+                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                                    mode='full', method='copy'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            ExpectLogged('rmdir', dict(dir='wkdir',
+                                       logEnviron=True))
+            + 1,
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+
+    def test_cpdir_fails_copy(self):
+        self.setupStep(
+                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                                    mode='full', method='copy'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            ExpectLogged('rmdir', dict(dir='wkdir',
+                                       logEnviron=True))
+            + 0,
+            ExpectLogged('stat', dict(file='source/.svn',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='source',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache'])
+            + 0,
+            ExpectLogged('cpdir', {'fromdir': 'source',
+                                   'todir': 'build',
+                                   'logEnviron': True})
+            + 1,
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+
+    def test_rmdir_fails_purge(self):
+        self.setupStep(
+                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                        mode='full',
+                        keep_on_purge=['svn_external_path/unversioned_file1']))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            ExpectLogged('stat', {'file': 'wkdir/.svn',
+                                  'logEnviron': True})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn',
+                                 'status', '--xml', '--no-ignore',
+                                 '--non-interactive', '--no-auth-cache'])
+            + ExpectShell.log('stdio',
+                stdout=self.svn_st_xml)
+            + 0,
+            ExpectLogged('rmdir', {'dir':
+                                   'wkdir/svn_external_path/unversioned_file2',
+                                   'logEnviron': True})
+            + 1,
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+
 class TestGetUnversionedFiles(unittest.TestCase):
     def test_getUnversionedFiles_does_not_list_externals(self):
         svn_st_xml = """<?xml version="1.0"?>
@@ -522,7 +657,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
             </target>
         </status>
         """
-        self.assertRaises(ValueError,
+        self.assertRaises(buildstep.BuildStepFailed,
                           lambda : list(svn.SVN.getUnversionedFiles(svn_st_xml, [])))
 
     def test_getUnversionedFiles_no_path(self):
@@ -560,3 +695,4 @@ class TestGetUnversionedFiles(unittest.TestCase):
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
         self.assertEquals(["svn_external_path/unversioned_file"], unversioned_files)
+
