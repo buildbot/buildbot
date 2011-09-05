@@ -117,24 +117,30 @@ class BuildStepMixin(object):
         # step overrides
 
         def addLog(name):
-            l = remotecommand.FakeLogFile(name)
+            l = remotecommand.FakeLogFile(name, step)
             ss.logs[name] = l
             return l
         step.addLog = addLog
 
         def addHTMLLog(name, html):
-            l = remotecommand.FakeLogFile(name)
+            l = remotecommand.FakeLogFile(name, step)
             l.addStdout(html)
             ss.logs[name] = l
             return l
         step.addHTMLLog = addHTMLLog
 
         def addCompleteLog(name, text):
-            l = remotecommand.FakeLogFile(name)
+            l = remotecommand.FakeLogFile(name, step)
             l.addStdout(text)
             ss.logs[name] = l
             return l
         step.addCompleteLog = addCompleteLog
+
+        step.logobservers = self.logobservers = {}
+        def addLogObserver(logname, observer):
+            self.logobservers.setdefault(logname, []).append(observer)
+            observer.step = step
+        step.addLogObserver = addLogObserver
 
         # set defaults
 
@@ -188,6 +194,7 @@ class BuildStepMixin(object):
         @returns: Deferred
         """
         self.remote = mock.Mock(name="SlaveBuilder(remote)")
+        # TODO: self.step.setupProgress()
         d = self.step.startStep(self.remote)
         def check(result):
             self.assertEqual(self.expected_remote_commands, [],

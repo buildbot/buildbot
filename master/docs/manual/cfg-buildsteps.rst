@@ -1561,6 +1561,7 @@ entered into in the first matched group. The defaults, which are suitable for
 as well, and collect them into a separate logfile, along with the
 source code filenames involved).
 
+.. index:: Visual Studio, Visual C++
 .. bb:step:: VC6
 .. bb:step:: VC7
 .. bb:step:: VC8
