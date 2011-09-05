@@ -62,12 +62,13 @@ class FakeRemoteShellCommand(FakeLoggedRemoteCommand):
 
 class FakeLogFile(object):
 
-    def __init__(self, name):
+    def __init__(self, name, step):
         self.name = name
         self.header = ''
         self.stdout = ''
         self.stderr = ''
         self.chunks = []
+        self.step = step
 
     def getName(self):
         return self.name
@@ -79,10 +80,16 @@ class FakeLogFile(object):
     def addStdout(self, data):
         self.stdout += data
         self.chunks.append((STDOUT, data))
+        if self.name in self.step.logobservers:
+            for obs in self.step.logobservers[self.name]:
+                obs.outReceived(data)
 
     def addStderr(self, data):
         self.stderr += data
         self.chunks.append((STDERR, data))
+        if self.name in self.step.logobservers:
+            for obs in self.step.logobservers[self.name]:
+                obs.errReceived(data)
 
     def readlines(self): # TODO: remove channel arg from logfile.py
         return self.stdout.split('\n')
@@ -99,6 +106,9 @@ class FakeLogFile(object):
             return [ (ch, data)
                         for (ch, data) in self.chunks
                         if ch in channels ]
+
+    def finish(self):
+        pass
 
 
 class ExpectRemoteRef(object):

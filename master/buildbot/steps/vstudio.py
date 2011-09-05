@@ -21,7 +21,7 @@ from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 
 import re
 
- 
+
 def addEnvPath(env, name, value):
     """ concat a path for this name """
     try:
@@ -36,7 +36,7 @@ def addEnvPath(env, name, value):
 
 class MSLogLineObserver(LogLineObserver):
 
-    _re_delimitor = re.compile(r'^(\d+>)?-{5}.+-{5}$')
+    _re_delimiter = re.compile(r'^(\d+>)?-{5}.+-{5}$')
     _re_file = re.compile(r'^(\d+>)?[^ ]+\.(cpp|c)$')
     _re_warning = re.compile(r' ?: warning [A-Z]+[0-9]+:')
     _re_error = re.compile(r' ?error ([A-Z]+[0-9]+)?\s?: ')
@@ -57,7 +57,7 @@ class MSLogLineObserver(LogLineObserver):
         self.stderrParser.delimiter = "\r\n"
 
     def outLineReceived(self, line):
-        if self._re_delimitor.search(line):
+        if self._re_delimiter.search(line):
             self.nbProjects += 1
             self.logwarnings.addStdout("%s\n" % line)
             self.logerrors.addStdout("%s\n" % line)
@@ -70,12 +70,14 @@ class MSLogLineObserver(LogLineObserver):
             self.logwarnings.addStdout("%s\n" % line)
             self.step.setProgress('warnings', self.nbWarnings)
         elif self._re_error.search("%s\n" % line):
-            # error is no progres indication
+            # error has no progress indication
             self.nbErrors += 1
             self.logerrors.addStderr("%s\n" % line)
-    
+
 
 class VisualStudio(ShellCommand):
+    # an *abstract* base class, which will not itself work as a buildstep
+
     name = "compile"
     description = "compiling"
     descriptionDone = "compile"
@@ -97,10 +99,10 @@ class VisualStudio(ShellCommand):
     LIB = []
 
     renderables = [ 'projectfile', 'config', 'project' ]
-    
-    def __init__(self, 
+
+    def __init__(self,
                 installdir = None,
-                mode = "rebuild", 
+                mode = "rebuild",
                 projectfile = None,
                 config = None,
                 useenv = False,
@@ -147,7 +149,6 @@ class VisualStudio(ShellCommand):
         self.logobserver = MSLogLineObserver(logwarnings, logerrors)
         self.addLogObserver('stdio', self.logobserver)
         ShellCommand.setupLogfiles(self, cmd, logfiles)
-
 
     def setupInstalldir(self):
         if not self.installdir:
@@ -241,7 +242,7 @@ class VC6(VisualStudio):
         if self.useenv:
             command.append("/USEENV")
         self.setCommand(command)
-        return VisualStudio.start(self)    
+        return VisualStudio.start(self)
 
 class VC7(VisualStudio):
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio .NET 2003'
@@ -267,7 +268,7 @@ class VC7(VisualStudio):
         addEnvPath(cmd.args['env'], "LIB", MSVCDir + '\\ATLMFC\\LIB')
         addEnvPath(cmd.args['env'], "LIB", MSVCDir + '\\PlatformSDK\\lib')
         addEnvPath(cmd.args['env'], "LIB", VCInstallDir + '\\SDK\\v1.1\\lib')
-        
+
     def start(self):
         command = ["devenv.com"]
         command.append(self.projectfile)
@@ -288,7 +289,7 @@ class VC7(VisualStudio):
 VS2003 = VC7
 
 class VC8(VC7):
-    
+
     # Our ones
     arch = None
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 8'
