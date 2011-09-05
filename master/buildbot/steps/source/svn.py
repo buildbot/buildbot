@@ -179,8 +179,10 @@ class SVN(Source):
                     self.incremental(None))
             yield wfd
             wfd.getResult()
-        finally:
+        except: # finally doesn't work in python-2.4
             self.workdir = 'build'
+            raise
+        self.workdir = 'build'
 
         cmd = buildstep.LoggedRemoteCommand('cpdir', 
                     { 'fromdir': 'source', 'todir':'build',
