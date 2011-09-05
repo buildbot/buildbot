@@ -118,11 +118,15 @@ def grab_commit_info(c, rev):
     f = os.popen("git show --raw --pretty=full %s" % rev, 'r')
 
     files = []
+    comments = []
 
     while True:
         line = f.readline()
         if not line:
             break
+
+        if line.startswith(4*' '):
+            comments.append(line[4:])
 
         m = re.match(r"^:.*[MAD]\s+(.+)$", line)
         if m:
@@ -138,6 +142,7 @@ def grab_commit_info(c, rev):
         if re.match(r"^Merge: .*$", line):
             files.append('merge')
 
+    c['comments'] = ''.join(comments)
     c['files'] = files
     status = f.close()
     if status:
@@ -154,7 +159,6 @@ def gen_changes(input, branch):
 
         m = re.match(r"^([0-9a-f]+) (.*)$", line.strip())
         c = {'revision': m.group(1),
-             'comments': unicode(m.group(2), encoding=encoding),
              'branch': unicode(branch, encoding=encoding),
         }
 
