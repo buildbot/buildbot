@@ -23,8 +23,7 @@
 #   c['change_source'] = [ poller ]
 #
 
-from time import strptime
-from calendar import timegm
+import datetime
 from xml.dom import minidom, Node
 
 from twisted.python import log, failure
@@ -32,7 +31,8 @@ from twisted.internet import defer, reactor
 from twisted.internet.task import LoopingCall
 from twisted.web.client import getPage
 
-from buildbot.changes import base, changes
+from buildbot.changes import base
+
 
 def googleCodePollerForProject(project, vcs, pollinterval=3600):
     return GoogleCodeAtomPoller(
@@ -140,9 +140,9 @@ class GoogleCodeAtomPoller(base.ChangeSource):
             if d["revision"] == self.lastChange:
                 break  # no more new changes
 
-            d["when"] = timegm(strptime(
+            d["when"] = datetime.datetime.strptime(
                 i.getElementsByTagName("updated")[0].firstChild.data,
-                "%Y-%m-%dT%H:%M:%SZ"))
+                "%Y-%m-%dT%H:%M:%SZ")
             d["author"] = i.getElementsByTagName(
                 "author")[0].getElementsByTagName("name")[0].firstChild.data
             # files and commit msg are separated by 2 consecutive <br/>
@@ -172,12 +172,12 @@ class GoogleCodeAtomPoller(base.ChangeSource):
         # Skip calling addChange() if this is the first successful poll.
         if self.lastChange is not None:
             for change in change_list:
-                c = changes.Change(revision = change["revision"],
-                                   who = change["author"],
-                                   files = change["files"],
-                                   comments = change["comments"],
-                                   when = change["when"],
-                                   branch = self.branch)
-                self.parent.addChange(c, src=self.src)
+                self.master.addChange(author=change["author"],
+                                      revision=change["revision"],
+                                      files=change["files"],
+                                      comments=change["comments"],
+                                      when_timestamp=change["when"],
+                                      branch=self.branch,
+                                      src=self.src)
         if change_list:
             self.lastChange = change_list[-1]["revision"]
