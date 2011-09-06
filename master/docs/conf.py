@@ -49,9 +49,12 @@ copyright = u'Buildbot Team Members'
 #
 # The short X.Y version.
 
-gl = {'__file__': '../buildbot/__init__.py'}
-execfile('../buildbot/__init__.py', gl)
-version = gl['version']
+if 'VERSION' in os.environ:
+    version = os.environ['VERSION']
+else:
+    gl = {'__file__': '../buildbot/__init__.py'}
+    execfile('../buildbot/__init__.py', gl)
+    version = gl['version']
 # The full version, including alpha/beta/rc tags.
 release = version
 
