@@ -33,6 +33,10 @@ The rest of this section describes all the standard :class:`BuildStep` objects
 available for use in a :class:`Build`, and the parameters which can be used to
 control each.  A full list of build steps is available in the :bb:index:`step`.
 
+.. index:: Buildstep Parameter
+
+.. _Buildstep-Common-Parameters:
+
 Common Parameters
 -----------------
 
@@ -47,6 +51,8 @@ Arguments common to all :class:`BuildStep` subclasses:
     the name used to describe the step on the status display. It is also
     used to give a name to any :class:`LogFile`\s created by this step.
 
+.. index:: Buildstep Parameter; haltOnFailure
+
 ``haltOnFailure``
     if ``True``, a ``FAILURE`` of this build step will cause the build to halt
     immediately. Steps with ``alwaysRun=True`` are still run. Generally
@@ -55,26 +61,38 @@ Arguments common to all :class:`BuildStep` subclasses:
     to ``haltOnFailure`` if something fails early on but not ``flunkOnFailure``.
     This can be achieved with ``haltOnFailure=True``, ``flunkOnFailure=False``.
 
+.. index:: Buildstep Parameter; flunkOnWarnings
+
 ``flunkOnWarnings``
     when ``True``, a ``WARNINGS`` or ``FAILURE`` of this build step will mark the
     overall build as ``FAILURE``. The remaining steps will still be executed.
 
+.. index:: Buildstep Parameter; flunkOnFailure
+
 ``flunkOnFailure``
     when ``True``, a ``FAILURE`` of this build step will mark the overall build as
     a ``FAILURE``. The remaining steps will still be executed.
+
+.. index:: Buildstep Parameter; warnOnWarnings
 
 ``warnOnWarnings``
     when ``True``, a ``WARNINGS`` or ``FAILURE`` of this build step will mark the
     overall build as having ``WARNINGS``. The remaining steps will still be
     executed.
 
+.. index:: Buildstep Parameter; warnOnFailure
+
 ``warnOnFailure``
     when ``True``, a ``FAILURE`` of this build step will mark the overall build as
     having ``WARNINGS``. The remaining steps will still be executed.
 
+.. index:: Buildstep Parameter; alwaysRun
+
 ``alwaysRun``
     if ``True``, this build step will always be run, even if a previous buildstep
     with ``haltOnFailure=True`` has failed.
+
+.. index:: Buildstep Parameter; doStepIf
 
 ``doStepIf``
     A step can be configured to only run under certain conditions.  To do this, set
@@ -83,6 +101,8 @@ Arguments common to all :class:`BuildStep` subclasses:
     return ``SKIPPED`` without doing anything.  Oherwise, the step will be executed
     normally.  If you set ``doStepIf`` to a function, that function should
     accept one parameter, which will be the :class:`Step` object itself.
+
+.. index:: Buildstep Parameter; locks
 
 ``locks``
     a list of ``Locks`` (instances of :class:`buildbot.locks.SlaveLock` or
