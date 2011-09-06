@@ -670,7 +670,7 @@ state
         :param default: (optional) value to return if C{name} is not present
         :returns: state value via a Deferred
         :raises KeyError: if ``name`` is not present and no default is given
-        :raises TypeError: if JSON parsing fails
+        :raises: TypeError if JSON parsing fails
 
         Get the state value for key ``name`` for the object with id
         ``objectid``.
@@ -682,7 +682,7 @@ state
         :param value: the value to set
         :type value: JSON-able value
         :param returns: Deferred
-        :raises TypeError: if JSONification fails
+        :raises: TypeError if JSONification fails
 
         Set the state value for ``name`` for the object with id ``objectid``,
         overwriting any existing value.
