@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-"""
-Support for buildsets in the database
-"""
-
 import itertools
 import sqlalchemy as sa
 from twisted.internet import reactor
@@ -46,31 +42,10 @@ def with_master_objectid(fn):
     return wrap
 
 class BuildRequestsConnectorComponent(base.DBConnectorComponent):
-    """
-    A DBConnectorComponent to handle buildrequests.  An instance is available
-    at C{master.db.buildrequests}.
-
-    Build Requests are represented as dictionaries with keys C{brid},
-    C{buildsetid}, C{buildername}, C{priority}, C{claimed} (boolean),
-    C{claimed_at}, C{mine} (boolean), C{complete}, C{results}, C{submitted_at},
-    and C{complete_at}.  The two time parameters (C{*_at}) are presented as
-    datetime objects.
-    """
+    # Documentation is in developer/database.rst
 
     @with_master_objectid
     def getBuildRequest(self, brid, _master_objectid=None):
-        """
-        Get a single BuildRequest, in the format described above.  Returns
-        C{None} if there is no such buildrequest.
-
-        Note that build requests are not cached, as the values in the database
-        are not fixed.
-
-        @param brid: build request id
-        @type brid: integer
-
-        @returns: Build request dictionary as above or None, via Deferred
-        """
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -90,39 +65,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     @with_master_objectid
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
             bsid=None, _master_objectid=None):
-        """
-        Get a list of build requests matching the given characteristics.  Note
-        that C{unclaimed}, C{my_claimed}, and C{other_claimed} all default to
-        C{False}, so at least one must be provided or no results will be
-        returned.
-
-        The C{claimed} parameter can be C{None} (the default) to ignore the
-        claimed status of requests; C{True} to return only claimed builds,
-        C{False} to return only unclaimed builds, or C{"mine"} to return only
-        builds claimed by this master instance.  A request is considered
-        unclaimed if its C{claimed_at} column is either NULL or 0, and it is
-        not complete.  If C{bsid} is specified, then only build requests for
-        that buildset will be returned.
-
-        A build is considered completed if its C{complete} column is 1; the
-        C{complete_at} column is not consulted.
-
-        Since this method is often used to detect changed build requests, it
-        always bypasses the cache.
-
-        @param buildername: limit results to buildrequests for this builder
-        @type buildername: string
-
-        @param complete: if true, limit to completed buildrequests; if false,
-        limit to incomplete buildrequests; if None, do not limit based on
-        completion.
-
-        @param claimed: see above
-
-        @param bsid: see above
-
-        @returns: List of build request dictionaries as above, via Deferred
-        """
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -157,31 +99,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     @with_master_objectid
     def claimBuildRequests(self, brids, _reactor=reactor,
                             _master_objectid=None):
-        """
-        Try to "claim" the indicated build requests for this buildmaster
-        instance.  The resulting deferred will fire normally on success, or
-        fail with L{AleadyClaimedError} if I{any} of the build requests are
-        already claimed by another master instance.  In this case, none of the
-        claims will take effect.
-
-        As of 0.8.5, this method can no longer be used to re-claim build
-        requests.  All given brids must be unclaimed.  Use
-        L{reclaimBuildRequests} to reclaim.
-
-        On database backends that do not enforce referential integrity (e.g.,
-        SQLite), this method will not prevent claims for nonexistent build
-        requests.  On database backends that do not support transactions
-        (MySQL), this method will not properly roll back any partial claims
-        made before an L{AlreadyClaimedError} was generated.
-
-        @param brids: ids of buildrequests to claim
-        @type brids: list
-
-        @param _reactor: reactor to use (for testing)
-
-        @returns: Deferred
-        """
-
         def thd(conn):
             transaction = conn.begin()
             tbl = self.db.model.buildrequest_claims
@@ -203,21 +120,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     @with_master_objectid
     def reclaimBuildRequests(self, brids, _reactor=reactor,
                             _master_objectid=None):
-        """
-        Re-claim the given build requests, updating the timestamp, but checking
-        that the requsts are owned by this master.  The resulting deferred will
-        fire normally on success, or fail with L{AleadyClaimedError} if I{any}
-        of the build requests are already claimed by another master instance,
-        or don't exist.  In this case, none of the reclaims will take effect.
-
-        @param brids: ids of buildrequests to reclaim
-        @type brids: list
-
-        @param _reactor: reactor to use (for testing)
-
-        @returns: Deferred
-        """
-
         def thd(conn):
             transaction = conn.begin()
             tbl = self.db.model.buildrequest_claims
@@ -247,17 +149,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     @with_master_objectid
     def unclaimBuildRequests(self, brids, _master_objectid=None):
-        """
-        Release this master's claim on all of the given build requests.  This
-        will not unclaim requests that are claimed by another master, but will
-        not fail in this case.  The method does not check whether a request is
-        completed.
-
-        @param brids: ids of buildrequests to unclaim
-        @type brids: list
-
-        @returns: Deferred
-        """
         def thd(conn):
             transaction = conn.begin()
             claims_tbl = self.db.model.buildrequest_claims
@@ -286,21 +177,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     @with_master_objectid
     def completeBuildRequests(self, brids, results, _reactor=reactor,
                                 _master_objectid=None):
-        """
-        Complete a set of build requests, all of which are owned by this master
-        instance.  This will fail with L{NotClaimedError} if the build request
-        is already completed or does not exist.
-
-        @param brids: build request IDs to complete
-        @type brids: integer
-
-        @param results: integer result code
-        @type results: integer
-
-        @param _reactor: reactor to use (for testing)
-
-        @returns: Deferred
-        """
         def thd(conn):
             transaction = conn.begin()
 
@@ -339,21 +215,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def unclaimExpiredRequests(self, old, _reactor=reactor):
-        """
-        Find any incomplete claimed builds which are older than C{old} seconds,
-        and clear their claim information.
-
-        This is intended to catch builds that were claimed by a master which
-        has since disappeared.  As a side effect, it will log a message if any
-        requests are unclaimed.
-
-        @param old: number of seconds after which a claim is considered old
-        @type old: int
-
-        @param _reactor: for testing
-
-        @returns: Deferred
-        """
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims

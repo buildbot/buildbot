@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-"""
-Support for creating and reading source stamps
-"""
-
 import base64
 from twisted.python import log
 from buildbot.db import base
@@ -25,17 +21,11 @@ class SsDict(dict):
     pass
 
 class SourceStampsConnectorComponent(base.DBConnectorComponent):
-    """
-    A DBConnectorComponent to handle source stamps in the database
-    """
+    # Documentation is in developer/database.rst
 
     def addSourceStamp(self, branch, revision, repository, project,
                           patch_body=None, patch_level=0, patch_author="",
                           patch_comment="", patch_subdir=None, changeids=[]):
-        """
-        Create a new SourceStamp instance with the given attributes, and return
-        its sourcestamp ID, via a Deferred.
-        """
         def thd(conn):
             # handle inserting a patch
             patchid = None

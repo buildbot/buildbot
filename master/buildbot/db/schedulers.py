@@ -13,24 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-"""
-Support for schedulers in the database
-"""
-
 import sqlalchemy as sa
 import sqlalchemy.exc
 from buildbot.db import base
 
 class SchedulersConnectorComponent(base.DBConnectorComponent):
-    """
-    A DBConnectorComponent to handle maintaining schedulers' state in the db.
-    """
+    # Documentation is in developer/database.rst
 
-    # TODO: maybe only the singular is needed?
     def classifyChanges(self, schedulerid, classifications):
-        """Record a collection of classifications in the scheduler_changes
-        table. CLASSIFICATIONS is a dictionary mapping CHANGEID to IMPORTANT
-        (boolean).  Returns a Deferred."""
         def thd(conn):
             tbl = self.db.model.scheduler_changes
             ins_q = tbl.insert()
@@ -56,10 +46,6 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def flushChangeClassifications(self, schedulerid, less_than=None):
-        """
-        Flush all scheduler_changes for L{schedulerid}, limiting to those less
-        than C{less_than} if the parameter is supplied.  Returns a Deferred.
-        """
         def thd(conn):
             scheduler_changes_tbl = self.db.model.scheduler_changes
             wc = (scheduler_changes_tbl.c.schedulerid == schedulerid)
@@ -71,19 +57,6 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
     class Thunk: pass
     def getChangeClassifications(self, schedulerid, branch=Thunk):
-        """
-        Return the scheduler_changes rows for this scheduler, in the form of a
-        dictionary mapping changeid to a boolean (important).  Returns a
-        Deferred.
-
-        @param schedulerid: scheduler to look up changes for
-        @type schedulerid: integer
-
-        @param branch: limit to changes with this branch
-        @type branch: string or None (for default branch)
-
-        @returns: dictionary via Deferred
-        """
         def thd(conn):
             scheduler_changes_tbl = self.db.model.scheduler_changes
             changes_tbl = self.db.model.changes

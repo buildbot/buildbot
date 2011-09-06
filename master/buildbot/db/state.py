@@ -25,37 +25,15 @@ class ObjDict(dict):
     pass
 
 class StateConnectorComponent(base.DBConnectorComponent):
-    """
-    A DBConnectorComponent to handle maintaining arbitrary key/value state for
-    Buildbot objects.  Objects are identified by their (user-visible) name and
-    their class.  This allows e.g., a 'nightly_smoketest' object of class
-    NightlyScheduler to maintain its state even if it moves between masters,
-    but avoids cross-contaminating state between different classes.
-
-    Note that the class is not interpreted literally, and can be any string
-    that will uniquely identify the class for the object; if classes are
-    renamed, they can continue to use the old names.
-    """
+    # Documentation is in developer/database.rst
 
     def getObjectId(self, name, class_name):
-        """
-        Get the object ID for this combination of a name and a class.  This
-        will add a row to the 'objects' table if none exists already.
-
-        @param name: name of the object
-        @param class_name: object class name
-        @returns: the objectid, via a Deferred.
-        """
-        # defer to a cached metho that only takes one parameter (a tuple)
+        # defer to a cached method that only takes one parameter (a tuple)
         return self._getObjectId((name, class_name)
                 ).addCallback(lambda objdict : objdict['id'])
 
     @base.cached('objectids')
     def _getObjectId(self, name_class_name_tuple):
-        """
-        Cache-compatible implementation of L{_getObjectId}, taking a single
-        parameter and returning a weakref-able value (a list).
-        """
         name, class_name = name_class_name_tuple
         def thd(conn):
             objects_tbl = self.db.model.objects
@@ -99,17 +77,6 @@ class StateConnectorComponent(base.DBConnectorComponent):
 
     class Thunk: pass
     def getState(self, objectid, name, default=Thunk):
-        """
-        Get the state value for C{name} for the object with id C{objectid}.
-
-        @param objectid: objectid on which the state should be checked
-        @param name: name of the value to retrieve
-        @param default: (optional) value to return if C{name} is not present
-        @returns: state value via a Deferred
-        @raises KeyError: if C{name} is not present and no default is given
-        @raises TypeError: if JSON parsing fails
-        """
-
         def thd(conn):
             object_state_tbl = self.db.model.object_state
             q = sa.select([ object_state_tbl.c.value_json ],
@@ -132,16 +99,6 @@ class StateConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def setState(self, objectid, name, value):
-        """
-        Set the state value for C{name} for the object with id C{objectid},
-        overwriting any existing value.
-
-        @param objectid: the objectid for which the state should be changed
-        @param name: the name of the value to change
-        @param value: the value to set - must be a JSONable object
-        @param returns: Deferred
-        @raises TypeError: if JSONification fails
-        """
         def thd(conn):
             object_state_tbl = self.db.model.object_state
 

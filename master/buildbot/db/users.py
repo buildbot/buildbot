@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-"""
-Support for users in the database
-"""
-
 import sqlalchemy as sa
 from sqlalchemy.sql.expression import and_
 
@@ -25,44 +21,10 @@ from buildbot.db import base
 class UsDict(dict):
     pass
 
-class MultipleMatchingUsersError(Exception):
-    pass
-
 class UsersConnectorComponent(base.DBConnectorComponent):
-    """
-    A DBConnectorComponent to handle getting users into and out of the
-    database.  An instance is available at C{master.db.users}.
-
-    Users are represented as user dictionaries, with keys C{uid},
-    C{identifier}, and all attribute types for the given user.  Attribute types
-    with conflicting names will be ignored.
-    """
+    # Documentation is in developer/database.rst
 
     def addUser(self, identifier, attr_type, attr_data, _race_hook=None):
-        """
-        Get an existing user, or add a new one, based on the given attribute.
-
-        This method is intended for use by other components of Buildbot, for
-        identifying users that may relate to Buildbot in several ways, e.g.,
-        IRC and Mercurial.  The IRC plugin would use an C{irc} attribute, while
-        Mercurial would use an C{hg} attribute, but both would find the same
-        user id.
-
-        Note that C{identifier} is I{not} used in the search for an existing
-        user.  The identifier should be based on the attributes, and care
-        should be taken to avoid calling this method with the same attribute
-        arguments but different identifiers, as this can lead to creation of
-        multiple users.
-
-        For future compatibility, always use keyword parameters to call this
-        method.
-
-        @param identifier: identifier to use for a new user
-        @param attr_type: attribute type to search for and/or add
-        @param attr_data: attribute data to add
-        @param _race_hook: for testing
-        @returns: user id via Deferred
-        """
         def thd(conn, no_recurse=False):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
@@ -105,18 +67,6 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
     @base.cached("usdicts")
     def getUser(self, uid):
-        """
-        Get a dictionary representing a given user, or None if no matching
-        user is found.
-
-        @param uid: user id to look up
-        @type key: int or string
-
-        @param no_cache: bypass cache and always fetch from database
-        @type no_cache: boolean
-
-        @returns: User dictionary via deferred
-        """
         def thd(conn):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
@@ -148,15 +98,6 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         return d
 
     def getUserByUsername(self, username):
-        """
-        This looks up a user by a given bb_username, returning None if no
-        matching user is found.
-
-        @param username: username portion of user credentials
-        @type username: string
-
-        @returns: usdict or None via deferred
-        """
         def thd(conn):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
@@ -188,13 +129,6 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         return d
 
     def getUsers(self):
-        """
-        This is used by the C{WebStatus} Users page to get all the entries
-        from the users table. This doesn't bother with grabbing attributes,
-        as those are fetched when loading individual user pages.
-
-        @returns: list of dicts via Deferred
-        """
         def thd(conn):
             tbl = self.db.model.users
             rows = conn.execute(tbl.select()).fetchall()
@@ -211,40 +145,6 @@ class UsersConnectorComponent(base.DBConnectorComponent):
     def updateUser(self, uid=None, identifier=None, bb_username=None,
                    bb_password=None, attr_type=None, attr_data=None,
                    _race_hook=None):
-        """
-        Updates the current attribute and identifier for the given user.
-        items.  If no user with that uid exists, the method will return
-        silently.
-
-        Note that since updateUser can be called with identifier, yet have
-        bb_username/bb_password values, the method builds a dict of values
-        to update in the users table. This allows the bb_username and
-        bb_password values to update independently from the identifier, and
-        vice versa.
-
-        @param uid: user id of the user to change
-        @type uid: int
-
-        @param identifier: (optional) new identifier for this user
-        @type identifier: string
-
-        @param bb_username: (optional) new username portion of user creds
-        @type bb_username: string
-
-        @param bb_password: (optional) new hashed password portion of user
-                            creds
-        @type bb_password: string
-
-        @param attr_type: (optional) attribute type to update
-        @type attr_type: string
-
-        @param attr_data: (optional) value for C{attr_type}
-        @type attr_data: string
-
-        @param _race_hook: for testing
-
-        @returns: Deferred
-        """
         def thd(conn):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
@@ -295,16 +195,6 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         return d
 
     def removeUser(self, uid):
-        """
-        Remove the user with the given uid from the database.  This will remove
-        the user from any associated tables as well.
-
-        @param uid: unique user id number
-        @type uid: int
-
-        @returns: Deferred
-        """
-
         def thd(conn):
             # delete from dependent tables first, followed by 'users'
             for tbl in [
@@ -317,16 +207,6 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         return d
 
     def identifierToUid(self, identifier):
-        """
-        Fetches a uid for a given identifier if one exists for use with the
-        other C{db.users} methods. This is called from the C{buildbot user}
-        command prior to calling one of the other C{db.users} methods.
-
-        @param identifier: identifier to search for and translate into uid
-        @type identifier: string
-
-        @returns: Uid or None via Deferred
-        """
         def thd(conn):
             tbl = self.db.model.users
 

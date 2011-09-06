@@ -21,6 +21,8 @@ http://www.sqlalchemy.org/docs/dialects/, but is generally of the form
 
 Notes for particular database backends:
 
+.. index:: SQLite
+
 SQLite
 ++++++
 
@@ -38,6 +40,8 @@ If you have trouble with "database is locked" exceptions, try adding
     c['db_url'] = "sqlite:///state.sqlite?serialize_access=1"
 
 and please file a bug at http://trac.buildbot.net.
+
+.. index:: MySQL
 
 MySQL
 +++++
@@ -74,6 +78,8 @@ recommends using ``--replicate-wild-ignore-table`` to ignore temporary
 tables that should not be replicated.  All Buildbot temporary tables begin with
 ``bbtmp_``, so an option such as
 ``--replicate-wild-ignore-table=bbtmp_.*`` may help.
+
+.. index:: Postgres
 
 Postgres
 ++++++++
