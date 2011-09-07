@@ -79,7 +79,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
     # tests
 
     def test_addUser_new(self):
-        d = self.db.users.addUser(identifier='soap',
+        d = self.db.users.findUserByAttr(identifier='soap',
                                   attr_type='subspace_net_handle',
                                   attr_data='Durden0924')
         def check_user(uid):
@@ -101,7 +101,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
 
     def test_addUser_existing(self):
         d = self.insertTestData(self.user1_rows)
-        d.addCallback(lambda _ : self.db.users.addUser(
+        d.addCallback(lambda _ : self.db.users.findUserByAttr(
                                   identifier='soapy',
                                   attr_type='IPv9',
                                   attr_data='0578cc6.8db024'))
@@ -134,7 +134,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
             conn.execute(self.db.model.users_info.insert(),
                     uid=99, attr_type='subspace_net_handle',
                     attr_data='Durden0924')
-        d = self.db.users.addUser(identifier='soap',
+        d = self.db.users.findUserByAttr(identifier='soap',
                                   attr_type='subspace_net_handle',
                                   attr_data='Durden0924',
                                   _race_hook=race_thd)
@@ -158,7 +158,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
 
     def test_addUser_existing_identifier(self):
         d = self.insertTestData(self.user1_rows)
-        d.addCallback(lambda _ : self.db.users.addUser(
+        d.addCallback(lambda _ : self.db.users.findUserByAttr(
                                   identifier='soap',
                                   attr_type='telepathIO(tm)',
                                   attr_data='hmm,lye'))

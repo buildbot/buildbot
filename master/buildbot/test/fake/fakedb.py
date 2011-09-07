@@ -1057,7 +1057,7 @@ class FakeUsersComponent(FakeDBComponent):
 
     # component methods
 
-    def addUser(self, identifier, attr_type, attr_data):
+    def findUserByAttr(self, identifier, attr_type, attr_data):
         for uid in self.users_info:
             attrs = self.users_info[uid]
             for attr in attrs:

@@ -703,7 +703,7 @@ users
     interfaces with Buildbot.  For example, a user may be identified as
     'djmitche' in Subversion, 'dustin@v.igoro.us' in Git, and 'dustin' on IRC.
     To support this functionality, each user as a set of attributes, keyed by
-    type.  The :py:meth:`addUser` method uses these attributes to match users,
+    type.  The :py:meth:`findUserByAttr` method uses these attributes to match users,
     adding a new user if no matching user is found.
 
     Users are identified canonically by *uid*, and are represented by *usdicts* (user
@@ -717,7 +717,7 @@ users
     All attributes are also included in the dictionary, keyed by type.  Types
     colliding with the keys above are ignored.
 
-    .. py:method:: addUser(identifier, attr_type, attr_data)
+    .. py:method:: findUserByAttr(identifier, attr_type, attr_data)
 
         :param identifier: identifier to use for a new user
         :param attr_type: attribute type to search for and/or add

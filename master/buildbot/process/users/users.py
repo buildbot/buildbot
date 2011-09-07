@@ -56,7 +56,7 @@ def createUserObject(master, author, src=None):
         log.msg("Unrecognized source argument: %s" % src)
         return
 
-    d = master.db.users.addUser(identifier=usdict['identifier'],
+    d = master.db.users.findUserByAttr(identifier=usdict['identifier'],
                                 attr_type=usdict['attr_type'],
                                 attr_data=usdict['attr_data'])
     wfd = defer.waitForDeferred(d)

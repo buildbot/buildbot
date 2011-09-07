@@ -197,7 +197,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                                 log.msg("Unable to find uid for identifier %s"
                                         % user)
                         elif op == 'add':
-                            d = self.master.db.users.addUser(
+                            d = self.master.db.users.findUserByAttr(
                                                       identifier=ident,
                                                       attr_type=attr,
                                                       attr_data=user[attr])

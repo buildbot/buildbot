@@ -24,7 +24,7 @@ class UsDict(dict):
 class UsersConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
-    def addUser(self, identifier, attr_type, attr_data, _race_hook=None):
+    def findUserByAttr(self, identifier, attr_type, attr_data, _race_hook=None):
         def thd(conn, no_recurse=False):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
@@ -56,7 +56,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                 transaction.rollback()
 
                 # try it all over again, in case there was an overlapping,
-                # identical call to addUser, but only retry once.
+                # identical call to findUserByAttr, but only retry once.
                 if no_recurse:
                     raise
                 return thd(conn, no_recurse=True)
