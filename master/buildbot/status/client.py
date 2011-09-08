@@ -568,7 +568,7 @@ class PBListener(base.StatusReceiverMultiService):
         self.cred = (user, passwd)
         p = portal.Portal(self)
         c = checkers.InMemoryUsernamePasswordDatabaseDontUse()
-        c.findUserByAttr(user, passwd)
+        c.addUser(user, passwd)
         p.registerChecker(c)
         f = pb.PBServerFactory(p)
         s = strports.service(port, f)
