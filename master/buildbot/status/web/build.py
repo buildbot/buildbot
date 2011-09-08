@@ -199,7 +199,8 @@ class StatusResourceBuild(HtmlResource):
                 step['css_class'] = "not_started"
                 step['time_to_run'] = ""
 
-            step['link'] = req.childLink("steps/%s" % urllib.quote(s.getName()))
+            step['link'] = req.childLink("steps/%s" % 
+                                    urllib.quote(s.getName(), safe=''))
             step['text'] = " ".join(s.getText())
             step['urls'] = map(lambda x:dict(url=x[1],logname=x[0]), s.getURLs().items())
 
@@ -207,8 +208,8 @@ class StatusResourceBuild(HtmlResource):
             for l in s.getLogs():
                 logname = l.getName()
                 step['logs'].append({ 'link': req.childLink("steps/%s/logs/%s" %
-                                           (urllib.quote(s.getName()),
-                                            urllib.quote(logname))), 
+                                           (urllib.quote(s.getName(), safe=''),
+                                            urllib.quote(logname, safe=''))), 
                                       'name': logname })
 
         ps = cxt['properties'] = []

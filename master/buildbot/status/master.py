@@ -132,7 +132,7 @@ class Status:
                 urllib.quote(bldr.getName(), safe=''),
                 build.getNumber(),
                 urllib.quote(step.getName(), safe=''),
-                urllib.quote(loog.getName()))
+                urllib.quote(loog.getName(), safe=''))
 
     def getChangeSources(self):
         return list(self.master.change_svc)
