@@ -4,9 +4,11 @@ all: docs.tgz
 
 VERSION=$(shell if [ -n "$$VERSION" ]; then echo $$VERSION; else PYTHONPATH=..:$${PYTHONPATH} python -c 'from buildbot import version; print version'; fi)
 
+TAR_TRANSFORM = $(shell if [[ `tar --version` =~ "bsdtar" ]]; then echo "-s '/^html/$(VERSION)/'"; else echo "--transform 's/^html/$(VERSION)/'"; fi)
+
 docs.tgz: clean html singlehtml images-png
 	cp _build/singlehtml/index.html _build/html/full.html
-	tar -C _build --transform 's/^html/$(VERSION)/' -zcf $@ html
+	tar -C _build $(TAR_TRANSFORM) -zcf $@ html
 
 images:
 	$(MAKE) -C images all
