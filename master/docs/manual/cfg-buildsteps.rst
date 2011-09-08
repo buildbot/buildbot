@@ -1957,6 +1957,11 @@ This step takes the following arguments:
    (optional) Dictionnary of defines to overwrite values of the
    :file:`conf.py` file.
 
+``mode``
+   (optional) String, one of ``full`` or ``incremental`` (the default).
+   If set to ``full``, indicates to Sphinx to rebuild everything without
+   re-using the previous build results.
+
 .. bb:step:: PyLint
 
 .. _Step-PyLint:

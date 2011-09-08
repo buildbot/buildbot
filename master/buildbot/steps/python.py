@@ -218,15 +218,19 @@ class Sphinx(ShellCommand):
     description = ["running", "sphinx"]
     descriptionDone = ["sphinx"]
 
-    
+    haltOnFailure = True
 
     def __init__(self, sphinx_sourcedir='.', sphinx_builddir=None,
-                sphinx_builder=None, sphinx = 'sphinx-build', tags = [],
-                defines = {}, **kwargs):
+                 sphinx_builder=None, sphinx = 'sphinx-build', tags = [],
+                 defines = {}, mode='incremental', **kwargs):
 
         if sphinx_builddir is None:
             # Who the heck is not interested in the built doc ?
             raise TypeError("Sphinx argument sphinx_builddir is required")
+
+        if mode not in ('incremental', 'full'):
+            raise TypeError("Sphinx argument mode has to be 'incremental' or 'full' is required")
+            
 
         self.warnings = 0
         self.success = False
@@ -249,6 +253,9 @@ class Sphinx(ShellCommand):
             else:
                 command.extend(['-D', '%s=%s' % (key, defines[key])])
 
+        if mode == 'full':
+            command.extend(['-E']) # Don't use a saved environment
+
         command.extend([sphinx_sourcedir, sphinx_builddir])
         self.setCommand(command)
 
@@ -259,25 +266,18 @@ class Sphinx(ShellCommand):
             sphinx_builder = sphinx_builder,
             tags = tags,
             defines = defines,
+            mode = mode,
         )
 
-    def evaluateCommand(self, cmd):
-        if self.success:
-            if self.warnings == 0:
-                return SUCCESS
-            else:
-                return WARNINGS
-        else:
-            return FAILURE
 
     def createSummary(self, log):
 
         msgs = ['WARNING', 'ERROR', 'SEVERE']
 
         warnings = []
-        for line in log.readlines():
-            if line.startswith('build succeeded') or \
-                    line.startswith('no targets are out of date.'):
+        for line in log.getText().split('\n'):
+            if (line.startswith('build succeeded') 
+                or line.startswith('no targets are out of date.')):
                 self.success = True
             else:
                 for msg in msgs:
@@ -289,6 +289,15 @@ class Sphinx(ShellCommand):
 
         self.step_status.setStatistic('warnings', self.warnings)
 
+    def evaluateCommand(self, cmd):
+        if self.success:
+            if self.warnings == 0:
+                return SUCCESS
+            else:
+                return WARNINGS
+        else:
+            return FAILURE
+
     def describe(self, done=False):
         if not done:
             return ["building"]
@@ -296,4 +305,3 @@ class Sphinx(ShellCommand):
         description = [self.name]
         description.append('%d warnings' % self.warnings)
         return description
-

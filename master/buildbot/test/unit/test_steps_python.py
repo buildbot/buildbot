@@ -271,6 +271,10 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
         self.assertRaises(TypeError, lambda :
                 python.Sphinx())
 
+    def test_bad_mode(self):
+        self.assertRaises(TypeError, lambda: python.Sphinx(
+                sphinx_builddir="_build", mode="don't care"))
+
     def test_success(self):
         self.setupStep(python.Sphinx(sphinx_builddir="_build"))
         self.expectCommands(
@@ -332,13 +336,14 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
                     sphinx_builder='css',
                     sphinx="/path/to/sphinx-build",
                     tags=['a', 'b'],
-                    defines=dict(empty=None, t=True, f=False, s="str")))
+                    defines=dict(empty=None, t=True, f=False, s="str"),
+                    mode='full'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=['/path/to/sphinx-build', '-b', 'css',
                                  '-t', 'a', '-t', 'b', '-D', 'empty',
                                  '-D', 'f=0', '-D', 's=str', '-D', 't=1',
-                                 'src', 'bld'])
+                                 '-E', 'src', 'bld'])
             + ExpectShell.log('stdio',
                 stdout=log_output_success)
             + 0
