@@ -35,14 +35,12 @@ class ReconnectingListener(object):
         self.retried = False
 
 class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
-    """
-    A subclass of the ThreadLocalEngineStrategy that can effectively interact
-    with Buildbot.
-
-    This adjusts the passed-in parameters to ensure that we get the behaviors
-    Buildbot wants from particular drivers, and wraps the outgoing Engine
-    object so that its methods run in threads and return deferreds.
-    """
+    # A subclass of the ThreadLocalEngineStrategy that can effectively interact
+    # with Buildbot.
+    # 
+    # This adjusts the passed-in parameters to ensure that we get the behaviors
+    # Buildbot wants from particular drivers, and wraps the outgoing Engine
+    # object so that its methods run in threads and return deferreds.
 
     name = 'buildbot'
 
@@ -183,8 +181,8 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
 BuildbotEngineStrategy()
 
 # this module is really imported for the side-effects, but pyflakes will like
-# us to use something from the module -- so offer a copy of create_engine, which
-# explicitly adds the strategy argument
+# us to use something from the module -- so offer a copy of create_engine,
+# which explicitly adds the strategy argument
 def create_engine(*args, **kwargs):
     kwargs['strategy'] = 'buildbot'
 

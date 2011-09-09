@@ -13,24 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-"""
-Base classes for database handling
-"""
-
 class DBConnectorComponent(object):
-    """
-    A fixed component of the DBConnector, handling one particular aspect of the
-    database.  Instances of subclasses are assigned to attributes of the
-    DBConnector object, so that they are available at e.g., C{master.db.model}
-    or C{master.db.changes}.  This parent class takes care of the necessary
-    backlinks and other housekeeping.
-    """
+    # A fixed component of the DBConnector, handling one particular aspect of
+    # the database.  Instances of subclasses are assigned to attributes of the
+    # DBConnector object, so that they are available at e.g.,
+    # C{master.db.model} or C{master.db.changes}.  This parent class takes care
+    # of the necessary backlinks and other housekeeping.
 
     connector = None
 
     def __init__(self, connector):
         self.db = connector
-        "backlink to the DBConnector object"
 
         # set up caches
         for method in dir(self.__class__):
@@ -60,18 +53,4 @@ class CachedMethod(object):
         return wrap
 
 def cached(cache_name):
-    """
-    A decorator for "getter" functions that fetch an object from the database
-    based on a single key.  The wrapped method will only be called if the named
-    cache does not contain the key.
-
-    The wrapped function must take one argument (the key); the wrapper will
-    take a key plus an optional C{no_cache} argument which, if true, will cause
-    it to invoke the underlying method even if the key is in the cache.
-
-    The resulting method will have a C{cache} attribute which can be used to
-    access the underlying cache.
-
-    @param cache_name: name of the cache to use
-    """
     return lambda method : CachedMethod(cache_name, method)

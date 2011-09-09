@@ -806,10 +806,6 @@ users
 
 .. todo::
 
-    connector
-    enginestrategy
-    exceptions
-    Caching
     Schema Changes
     Compatibility Notes
 
@@ -827,6 +823,37 @@ database layer.
     It's difficult to change the database schema significantly after it has
     been released, and very disruptive to users to change the database API.
     Consider very carefully the future-proofing of any changes here!
+
+The DB Connector and Components
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.db.connector
+
+.. py:class:: DBConnector
+
+    The root of the database connectors, ``master.db``, is a
+    :class:`~buildbot.db.connector.DBConnector` instance.  Its main purpose is
+    to hold reference to each of the connector components, but it also handles
+    timed cleanup tasks.
+
+    If you are adding a new connector component, import its module and create
+    an instance of it in this class's constructor.
+
+.. py:module:: buildbot.db.base
+
+.. py:class:: DBConnectorComponent
+
+    This is the base class for connector components.
+
+    There should be no need to override the constructor defined by this base
+    class.
+
+    .. py:attribute:: db
+
+        A reference to the :class:`~buildbot.db.connector.DBConnector`, so that
+        connector components can use e.g., ``self.db.pool`` or
+        ``self.db.model``.  In the unusual case that a connector component
+        needs access to the master, the easiest path is ``self.db.master``.
 
 Direct Database Access
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -901,7 +928,6 @@ object, ``conn``.
         This method is only used for schema manipulation, and should not be
         used in a running master.
 
-
 Database Schema
 ~~~~~~~~~~~~~~~
 
@@ -949,6 +975,48 @@ handled through the model.
         :returns: Deferred
 
         Upgrades the database to the most recent schema version.
+
+Caching
+~~~~~~~
+
+.. py:currentmodule:: buildbot.db.base
+
+Connector component methods that get an object based on an ID are good
+candidates for caching.  The :func:`~buildbot.db.base.cached` decorator
+makes this automatic:
+
+.. py:function:: cached(cachename)
+
+    :param cache_name: name of the cache to use
+
+    A decorator for "getter" functions that fetch an object from the database
+    based on a single key.  The wrapped method will only be called if the named
+    cache does not contain the key.
+
+    The wrapped function must take one argument (the key); the wrapper will
+    take a key plus an optional ``no_cache`` argument which, if true, will
+    cause it to invoke the underlying method even if the key is in the cache.
+
+    The resulting method will have a ``cache`` attribute which can be used to
+    access the underlying cache.
+
+In most cases, getter methods return a well-defined dictionary.  Unfortunately,
+Python does not handle weak references to bare dictionaries, so components must
+instantiate a subclass of ``dict``.  The whole assembly looks something like
+this::
+
+    class ThDict(dict):
+        pass
+
+    class ThingConnectorComponent(base.DBConnectorComponent):
+
+        @base.cached('thdicts')
+        def getThing(self, thid):
+            def thd(conn):
+                ...
+                thdict = ThDict(thid=thid, attr=row.attr, ...)
+                return thdict
+            return self.db.pool.do(thd)
 
 .. _Modifying-the-Database-Schema:
 

@@ -21,14 +21,12 @@ from buildbot.db import pool, model, changes, schedulers, sourcestamps
 from buildbot.db import state, buildsets, buildrequests, builds, users
 
 class DBConnector(service.MultiService):
-    """
-    The connection between Buildbot and its backend database.  This is
-    generally accessible as master.db, but is also used during upgrades.
-
-    Most of the interesting operations available via the connector are
-    implemented in connector components, available as attributes of this
-    object, and listed below.
-    """
+    # The connection between Buildbot and its backend database.  This is
+    # generally accessible as master.db, but is also used during upgrades.
+    # 
+    # Most of the interesting operations available via the connector are
+    # implemented in connector components, available as attributes of this
+    # object, and listed below.
 
     # Period, in seconds, of the cleanup task.  This master will perform
     # periodic cleanup actions on this schedule.
@@ -53,12 +51,13 @@ class DBConnector(service.MultiService):
         self.builds = builds.BuildsConnectorComponent(self)
         self.users = users.UsersConnectorComponent(self)
 
-        self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD, self.doCleanup)
+        self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD,
+                self._doCleanup)
         self.cleanup_timer.setServiceParent(self)
 
         self.changeHorizon = None # default value; set by master
 
-    def doCleanup(self):
+    def _doCleanup(self):
         """
         Perform any periodic database cleanup tasks.
 
