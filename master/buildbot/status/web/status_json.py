@@ -648,7 +648,8 @@ class SlaveJsonResource(JsonResource):
         for builderName in self.getBuilders():
             builds = []
             builder_status = self.status.getBuilder(builderName)
-            for i in range(1, builder_status.buildCacheSize - 1):
+            buildhistory = int(request.args.get('buildhistory', [builder_status.buildCacheSize - 1])[0])
+            for i in range(1, buildhistory):
                 build_status = builder_status.getBuild(-i)
                 if not build_status or not build_status.isFinished():
                     # If not finished, it will appear in runningBuilds.
