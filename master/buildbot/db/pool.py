@@ -53,14 +53,6 @@ def timed_do_fn(f):
     return wrap
 
 class DBThreadPool(threadpool.ThreadPool):
-    """
-    A pool of threads ready and waiting to execute queries.
-
-    If the engine has an C{optimal_thread_pool_size} attribute, then the
-    maxthreads of the thread pool will be set to that value.  This is most
-    useful for SQLite in-memory connections, where exactly one connection
-    (and thus thread) should be used.
-    """
 
     running = False
 
@@ -74,8 +66,14 @@ class DBThreadPool(threadpool.ThreadPool):
 
     def __init__(self, engine):
         pool_size = 5
+
+        # If the engine has an C{optimal_thread_pool_size} attribute, then the
+        # maxthreads of the thread pool will be set to that value.  This is
+        # most useful for SQLite in-memory connections, where exactly one
+        # connection (and thus thread) should be used.
         if hasattr(engine, 'optimal_thread_pool_size'):
             pool_size = engine.optimal_thread_pool_size
+
         threadpool.ThreadPool.__init__(self,
                         minthreads=1,
                         maxthreads=pool_size,
@@ -122,12 +120,6 @@ class DBThreadPool(threadpool.ThreadPool):
         self._stop()
 
     def do(self, callable, *args, **kwargs):
-        """
-        Call C{callable} in a thread, with a Connection as first argument.
-        Returns a deferred that will indicate the results of the callable.
-
-        Note: do not return any SQLAlchemy objects via this deferred!
-        """
         def thd():
             conn = self.engine.contextual_connect()
             if self.__broken_sqlite: # see bug #1810
@@ -142,11 +134,6 @@ class DBThreadPool(threadpool.ThreadPool):
         return threads.deferToThreadPool(reactor, self, thd)
 
     def do_with_engine(self, callable, *args, **kwargs):
-        """
-        Like L{do}, but with an SQLAlchemy Engine as the first argument.  This
-        is only used for schema manipulation, and is not used at master
-        runtime.
-        """
         def thd():
             if self.__broken_sqlite: # see bug #1810
                 self.engine.execute("select * from sqlite_master")

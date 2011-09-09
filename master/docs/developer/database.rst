@@ -808,7 +808,6 @@ users
 
     connector
     enginestrategy
-    pool
     exceptions
     Caching
     Schema Changes
@@ -828,6 +827,80 @@ database layer.
     It's difficult to change the database schema significantly after it has
     been released, and very disruptive to users to change the database API.
     Consider very carefully the future-proofing of any changes here!
+
+Direct Database Access
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.db.pool
+
+The connectors all use `SQLAlchemy Core
+<http://www.sqlalchemy.org/docs/index.html>`_ as a wrapper around database
+client drivers.  Unfortunately, SQLAlchemy is a synchronous library, so some
+extra work is required to use it in an asynchronous context like Buildbot.
+This is accomplished by deferring all database operations to threads, and
+returning a Deferred.  The :class:`~buildbot.db.pool.Pool` class takes care of
+the details.
+
+A connector method should look like this::
+
+    def myMethod(self, arg1, arg2):
+        def thd(conn):
+            q = ... # construct a query
+            for row in conn.execute(q):
+                ... # do something with the results
+            return ... # return an interesting value
+        return self.db.pool.do(thd)
+
+Picking that apart, the body of the method defines a function named ``thd``
+taking one argument, a :class:`Connection
+<sqlalchemy:sqlalchemy.engine.base.Connection>` object.  It then calls
+``self.db.pool.do``, passing the ``thd`` function.  This function is called in
+a thread, and can make blocking calls to SQLAlchemy as desired.  The ``do``
+method will return a Deferred that will fire with the return value of ``thd``,
+or with a failure representing any exceptions raised by ``thd``.
+
+The return value of ``thd`` must not be an SQLAlchemy object - in particular,
+any :class:`ResultProxy <sqlalchemy:sqlalchemy.engine.base.ResultProxy>`
+objects must be parsed into lists or other data structures before they are
+returned.
+
+.. warning::
+
+    As the name ``thd`` indicates, the function runs in a thread.  It should
+    not interact with any other part of Buildbot, nor with any of the Twisted
+    components that expect to be accessed from the main thread -- the reactor,
+    Deferreds, etc.
+
+Queries can be constructed using any of the SQLAlchemy core methods, using
+tables from :class:`~buildbot.db.model.Model`, and executed with the connection
+object, ``conn``.
+
+.. py:class:: DBThreadPool
+
+    .. py:method:: do(callable, ...)
+
+        :returns: Deferred
+
+        Call ``callable`` in a thread, with a :class:`Connection
+        <sqlalchemy:sqlalchemy.engine.base.Connection>` object as first
+        argument.  Returns a deferred that will fire with the results of the
+        callable, or with a failure representing any exception raised during
+        its execution.
+
+        Any additional positional or keyword arguments are passed to
+        ``callable``.
+
+    .. py:method:: do_with_engine(callable, ...)
+
+        :returns: Deferred
+
+        Similar to :meth:`do`, call ``callable`` in a thread, but with an
+        :class:`Engine <sqlalchemy:sqlalchemy.engine.base.Engine>` object as
+        first argument.
+
+        This method is only used for schema manipulation, and should not be
+        used in a running master.
+
 
 Database Schema
 ~~~~~~~~~~~~~~~
