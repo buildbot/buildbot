@@ -804,11 +804,6 @@ users
 
         Fetch a uid for the given identifier, if one exists.
 
-.. todo::
-
-    Schema Changes
-    Compatibility Notes
-
 Writing Database Connector Methods
 ----------------------------------
 
@@ -1023,4 +1018,60 @@ this::
 Modifying the Database Schema
 -----------------------------
 
-TODO
+
+Database Compatibility Notes
+----------------------------
+
+Or: "If you thought any database worked right, think again"
+
+Because Buildbot works over a wide range of databases, it is generally limited
+to database features present in all supported backends.  This section
+highlights a few things to watch out for.
+
+In general, Buildbot should be functional on all supported database backends.
+If use of a backend adds minor usage restrictions, or cannot implement some
+kinds of error checking, that is acceptable if the restrictions are
+well-documented in the manual.
+
+The metabuildbot tests Buildbot against all supported databases, so most
+compatibility errors will be caught before a release.
+
+Index Length in MySQL
+~~~~~~~~~~~~~~~~~~~~~
+
+MySQL only supports about 330-character indexes.  The actual index length is
+1000 bytes, but MySQL uses 3-byte encoding for UTF8 strings.  This is a
+longstanding bug in MySQL - see `"Specified key was too long; max key
+length is 1000 bytes" with utf8 <http://bugs.mysql.com/bug.php?id=4541>`_.
+While this makes sense for indexes used for record lookup, it limits the
+ability to use unique indexes to prevent duplicate rows.
+
+InnoDB has even more severe restrictions on key lengths, which is why the MySQL
+implementation requires a MyISAM storage engine.
+
+Transactions in MySQL
+~~~~~~~~~~~~~~~~~~~~~
+
+Unfortunately, use of the MyISAM storage engine precludes real transactions in
+MySQL.  ``transaction.commit()`` and ``transaction.rollback()`` are essentially
+no-ops: modifications to data in the database are visible to other users
+immediately, and are not reverted in a rollback.
+
+Referential Integrity in SQLite and MySQL
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Neither MySQL nor SQLite enforce referential integrity based on foreign keys.
+Postgres does enforce, however.  If possible, test your changes on Postgres
+before committing, to check that tables are added and removed in the proper
+order.
+
+Subqueries in MySQL
+~~~~~~~~~~~~~~~~~~~
+
+MySQL's query planner is easily confused by subqueries.  For example, a DELETE
+query specifying id's that are IN a subquery will not work.  The workaround is
+to run the subquery directly, and then execute a DELETE query for each returned
+id.
+
+If this weakness has a significant peformance impact, it would be acceptable to
+conditionalize use of the subquery on the database dialect.
