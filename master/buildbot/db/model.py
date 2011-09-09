@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-"""
-Storage for the database model (schema)
-"""
-
 import sqlalchemy as sa
 import migrate
 import migrate.versioning.schema
@@ -31,18 +27,6 @@ except ImportError:
     from migrate import exceptions
 
 class Model(base.DBConnectorComponent):
-    """
-    DBConnector component to handle the database model; an instance is available
-    at C{master.db.model}.
-
-    This class has attributes for each defined table, as well as methods to
-    handle schema migration (using sqlalchemy-migrate).  View the source to see
-    the table definitions.
-
-    Note that the Buildbot metadata is never bound to an engine, since that might
-    lead users to execute queries outside of the thread pool.
-    """
-
     #
     # schema
     #
@@ -61,6 +45,9 @@ class Model(base.DBConnectorComponent):
 
     # build requests
 
+    # A BuildRequest is a request for a particular build to be performed.  Each
+    # BuildRequest is a part of a Buildset.  BuildRequests are claimed by
+    # masters, to avoid multiple masters running the same build.
     buildrequests = sa.Table('buildrequests', metadata,
         sa.Column('id', sa.Integer,  primary_key=True),
         sa.Column('buildsetid', sa.Integer, sa.ForeignKey("buildsets.id"),
@@ -83,10 +70,9 @@ class Model(base.DBConnectorComponent):
         # time the buildrequest was completed, or NULL
         sa.Column('complete_at', sa.Integer),
     )
-    """A BuildRequest is a request for a particular build to be performed.
-    Each BuildRequest is a part of a BuildSet.  BuildRequests are claimed by
-    masters, to avoid multiple masters running the same build."""
 
+    # Each row in this table represents a claimed build request, where the
+    # claim is made by the object referenced by objectid.
     buildrequest_claims = sa.Table('buildrequest_claims', metadata,
         sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
             index=True, unique=True),
@@ -94,11 +80,11 @@ class Model(base.DBConnectorComponent):
             index=True, nullable=True),
         sa.Column('claimed_at', sa.Integer, nullable=False),
     )
-    """Each row in this table represents a claimed build request, where the
-    claim is made by the object referenced by objectid."""
 
     # builds
 
+    # This table contains basic information about each build.  Note that most
+    # data about a build is still stored in on-disk pickles.
     builds = sa.Table('builds', metadata,
         sa.Column('id', sa.Integer,  primary_key=True),
 
@@ -110,19 +96,19 @@ class Model(base.DBConnectorComponent):
         sa.Column('start_time', sa.Integer, nullable=False),
         sa.Column('finish_time', sa.Integer),
     )
-    """This table contains basic information about each build.  Note that most data
-    about a build is still stored in on-disk pickles."""
 
     # buildsets
 
+    # This table contains input properties for buildsets
     buildset_properties = sa.Table('buildset_properties', metadata,
         sa.Column('buildsetid', sa.Integer, sa.ForeignKey('buildsets.id'), nullable=False),
         sa.Column('property_name', sa.String(256), nullable=False),
         # JSON-encoded tuple of (value, source)
         sa.Column('property_value', sa.String(1024), nullable=False), # TODO: too short?
     )
-    """This table contains input properties for buildsets"""
 
+    # This table represents Buildsets - sets of BuildRequests that share the
+    # same original cause and source information.
     buildsets = sa.Table('buildsets', metadata,
         sa.Column('id', sa.Integer,  primary_key=True),
 
@@ -143,39 +129,39 @@ class Model(base.DBConnectorComponent):
         # etc - see master/buildbot/status/builder.py
         sa.Column('results', sa.SmallInteger), # TODO: synthesize from buildrequests
     )
-    """This table represents BuildSets - sets of BuildRequests that share the same
-    original cause and source information."""
 
     # changes
 
+    # Files touched in changes
     change_files = sa.Table('change_files', metadata,
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
         sa.Column('filename', sa.String(1024), nullable=False), # TODO: sa.Text
     )
-    """Files touched in changes"""
 
+    # Links (URLs) for changes
     change_links = sa.Table('change_links', metadata,
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
         sa.Column('link', sa.String(1024), nullable=False), # TODO: sa.Text
     )
-    """Links (URLs) for changes"""
 
+    # Properties for changes
     change_properties = sa.Table('change_properties', metadata,
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
         sa.Column('property_name', sa.String(256), nullable=False),
         # JSON-encoded tuple of (value, source)
         sa.Column('property_value', sa.String(1024), nullable=False), # TODO: too short?
     )
-    """Properties for changes"""
 
+    # users associated with this change; this allows multiple users for
+    # situations where a version-control system can represent both an author
+    # and committer, for example.
     change_users = sa.Table("change_users", metadata,
         sa.Column("changeid", sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
         # uid for the author of the change with the given changeid
         sa.Column("uid", sa.Integer, sa.ForeignKey('users.uid'), nullable=False)
     )
-    """Uid values for the User Objects created from the author of the Change that
-    has the corresponding changeid"""
 
+    # Changes to the source code, produced by ChangeSources
     changes = sa.Table('changes', metadata,
         # changeid also serves as 'change number'
         sa.Column('changeid', sa.Integer,  primary_key=True), # TODO: rename to 'id'
@@ -215,10 +201,10 @@ class Model(base.DBConnectorComponent):
         # later to filter changes
         sa.Column('project', sa.String(length=512), nullable=False, server_default=''),
     )
-    """Changes to the source code, produced by ChangeSources"""
 
     # sourcestamps
 
+    # Patches for SourceStamps that were generated through the try mechanism
     patches = sa.Table('patches', metadata,
         sa.Column('id', sa.Integer,  primary_key=True),
 
@@ -237,15 +223,17 @@ class Model(base.DBConnectorComponent):
         # subdirectory in which the patch should be applied; NULL for top-level
         sa.Column('subdir', sa.Text),
     )
-    """Patches for SourceStamps that were generated through the try mechanism"""
 
+    # The changes that led up to a particular source stamp.
     sourcestamp_changes = sa.Table('sourcestamp_changes', metadata,
         sa.Column('sourcestampid', sa.Integer, sa.ForeignKey('sourcestamps.id'), nullable=False),
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
     )
-    """The changes that led up to a particular source stamp."""
-    # TODO: changes should be the result of the difference of two sourcestamps!
 
+    # A sourcestamp identifies a particular instance of the source code.
+    # Ideally, this would always be absolute, but in practice source stamps can
+    # also mean "latest" (when revision is NULL), which is of course a
+    # time-dependent definition.
     sourcestamps = sa.Table('sourcestamps', metadata,
         sa.Column('id', sa.Integer,  primary_key=True),
 
@@ -265,36 +253,35 @@ class Model(base.DBConnectorComponent):
         # the project this source code represents
         sa.Column('project', sa.String(length=512), nullable=False, server_default=''),
     )
-    """A sourcestamp identifies a particular instance of the source code.
-    Ideally, this would always be absolute, but in practice source stamps can
-    also mean "latest" (when revision is NULL), which is of course a
-    time-dependent definition."""
 
     # schedulers
 
+    # This table references "classified" changes that have not yet been
+    # "processed".  That is, the scheduler has looked at these changes and
+    # determined that something should be done, but that hasn't happened yet.
+    # Rows are deleted from this table as soon as the scheduler is done with
+    # the change.
     scheduler_changes = sa.Table('scheduler_changes', metadata,
         sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.schedulerid')),
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid')),
         # true if this change is important to this scheduler
         sa.Column('important', sa.SmallInteger), # TODO: Boolean
     )
-    """This table references "classified" changes that have not yet been "processed".
-    That is, the scheduler has looked at these changes and determined that
-    something should be done, but that hasn't happened yet.  Rows are deleted
-    from this table as soon as the scheduler is done with the change."""
 
+    # This table references buildsets in which a particular scheduler is
+    # interested.  On every run, a scheduler checks its upstream buildsets for
+    # completion and reacts accordingly.  Records are never deleted from this
+    # table, but active is set to 0 when the record is no longer necessary."""
     scheduler_upstream_buildsets = sa.Table('scheduler_upstream_buildsets', metadata,
         sa.Column('buildsetid', sa.Integer, sa.ForeignKey('buildsets.id')),
         sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.schedulerid')),
         # true if this buildset is still active
         sa.Column('active', sa.SmallInteger), # TODO: redundant
     )
-    """This table references buildsets in which a particular scheduler is
-    interested.  On every run, a scheduler checks its upstream buildsets for
-    completion and reacts accordingly.  Records are never deleted from this
-    table, but active is set to 0 when the record is no longer necessary."""
-    # TODO: delete records eventually
 
+    # This table defines the schedulerid for each scheduler
+    # least, the last change that was analyzed, but is stored in an opaque JSON
+    # object.  Note that schedulers are never deleted.
     schedulers = sa.Table("schedulers", metadata,
         # unique ID for scheduler
         sa.Column('schedulerid', sa.Integer, primary_key=True), # TODO: rename to id
@@ -303,11 +290,9 @@ class Model(base.DBConnectorComponent):
         # scheduler's class name, basically representing a "type" for the state
         sa.Column('class_name', sa.String(128), nullable=False),
     )
-    """This table records the "state" for each scheduler.  This state is, at least,
-    the last change that was analyzed, but is stored in an opaque JSON object.
-    Note that schedulers are never deleted."""
-    # TODO: delete records eventually
 
+    # This table uniquely identifies objects that need to maintain state across
+    # invocations.
     objects = sa.Table("objects", metadata,
         # unique ID for this object
         sa.Column("id", sa.Integer, primary_key=True),
@@ -319,9 +304,9 @@ class Model(base.DBConnectorComponent):
         # prohibit multiple id's for the same object
         sa.UniqueConstraint('name', 'class_name', name='object_identity'),
     )
-    """This table uniquely identifies objects that need to maintain state
-    across invocations."""
 
+    # This table stores key/value pairs for objects, where the key is a string
+    # and the value is a JSON string.
     object_state = sa.Table("object_state", metadata,
         # object for which this value is set
         sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
@@ -334,9 +319,9 @@ class Model(base.DBConnectorComponent):
         # prohibit multiple values for the same object and name
         sa.UniqueConstraint('objectid', 'name', name='name_per_object'),
     )
-    """This table stores key/value pairs for objects, where the key is a string
-    and the value is a JSON string."""
 
+    # This table identifies individual users, and contains buildbot-specific
+    # information about those users.
     users = sa.Table("users", metadata,
         # unique user id number
         sa.Column("uid", sa.Integer, primary_key=True),
@@ -350,9 +335,9 @@ class Model(base.DBConnectorComponent):
         # password portion of user credentials for authentication
         sa.Column("bb_password", sa.String(128)),
     )
-    """This table identifies individual users, and contains buildbot-specific
-    information about those users."""
 
+    # This table stores information identifying a user that's related to a
+    # particular interface - a version-control system, status plugin, etc.
     users_info = sa.Table("users_info", metadata,
         # unique user id number
         sa.Column("uid", sa.Integer, sa.ForeignKey('users.uid'),
@@ -365,8 +350,6 @@ class Model(base.DBConnectorComponent):
         sa.Column("attr_data", sa.String(128), nullable=False),
     )
 
-    """This table stores information identifying a user that's related to a
-    particular interface - a version-control system, status plugin, etc."""
 
     # indexes
 
@@ -415,10 +398,8 @@ class Model(base.DBConnectorComponent):
     # 'migrate_version'
 
     repo_path = util.sibpath(__file__, "migrate")
-    "path to the SQLAlchemy-Migrate 'repository'"
 
     def is_current(self):
-        """Returns true (via deferred) if the database's version is up to date."""
         def thd(engine):
             # we don't even have to look at the old version table - if there's
             # no migrate_version, then we're not up to date.
@@ -435,8 +416,6 @@ class Model(base.DBConnectorComponent):
         return self.db.pool.do_with_engine(thd)
 
     def upgrade(self):
-        """Upgrade the database to the most recent schema version, returning a
-        deferred."""
 
         # here, things are a little tricky.  If we have a 'version' table, then
         # we need to version_control the database with the proper version

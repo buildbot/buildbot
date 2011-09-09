@@ -810,75 +810,76 @@ users
     enginestrategy
     pool
     exceptions
-    model
     Caching
     Schema Changes
     Compatibility Notes
 
-Outdated Info
--------------
+Writing Database Connector Methods
+----------------------------------
 
-Ignore this.
+The information above is intended for developers working on the rest of
+Buildbot, and treating the database layer as an abstraction.  The remainder of
+this section describes the internals of the database implementation, and is
+intended for developers modifying the schema or adding new methods to the
+database layer.
+
+.. warning::
+
+    It's difficult to change the database schema significantly after it has
+    been released, and very disruptive to users to change the database API.
+    Consider very carefully the future-proofing of any changes here!
 
 Database Schema
 ~~~~~~~~~~~~~~~
 
-The SQL for the database schema is available in
-:file:`master/buildbot/db/model.py`.  However, note that this file is not used
-for new installations or upgrades of the Buildbot database.
+.. py:module:: buildbot.db.model
 
-Instead, the :class:`buildbot.db.schema.DBSchemaManager` handles this task.  The
-operation of this class centers around a linear sequence of database versions.
-Versions start at 0, which is the old pickle-file format.  The manager has
-methods to query the version of the database, and the current version from the
-source code.  It also has an :meth:`upgrade` method which will upgrade the
-database to the latest version.  This operation is currently irreversible.
+Database connector methods access the database through SQLAlchemy, which
+requires access to Python objects represenging the database tables.  That is
+handled through the model.
 
-There is no operation to "install" the latest schema.  Instead, a fresh install
-of buildbot begins with an (empty) version-0 database, and upgrades to the
-current version.  This trades a bit of efficiency at install time for
-assurances that the upgrade code is well-tested.
+.. py:class:: Model
 
-Changing the Schema
-~~~~~~~~~~~~~~~~~~~
+    This class contains the canonical description of the buildbot schema, It is
+    presented in the form of SQLAlchemy :class:`Table
+    <sqlalchemy:sqlalchemy.schema.Table>` instances, as class variables.  At
+    runtime, the model is available at ``master.db.model``, so for example the
+    ``buildrequests`` table can be referred to as
+    ``master.db.model.buildrequests``, and columns are available in its ``c``
+    attribute.
 
-To make a change to the database schema, follow these steps:
+    The source file, ``master/buildbot/db/model.py``, contains comments
+    describing each table; that information is not replicated in this
+    documentation.
 
- 1. Increment ``CURRENT_VERSION`` in :file:`buildbot/db/schema/manager.py` by
-     one.  This is your new version number.
+    Note that the model is not used for new installations or upgrades of the
+    Buildbot database.  See :ref:`Modifying-the-Database-Schema` for more
+    information.
 
- 2. Create :file:`buildbot/db/schema/v{N}.py`, where *N* is your version number, by
-    copying the previous script and stripping it down.  This script should define a
-    subclass of :class:`buildbot.db.schema.base.Updater` named ``Updater``. 
-    
-    The class must define the method :meth:`upgrade`, which takes no arguments.  It
-    should upgrade the database from the previous version to your version,
-    including incrementing the number in the ``VERSION`` table, probably with an
-    ``UPDATE`` query.
-    
-    Consult the API documentation for the base class for information on the
-    attributes that are available.
+    .. py:attribute:: metadata
 
- 3. Edit :file:`buildbot/test/unit/test_db_schema_master.py`.  If your upgrade
-    involves moving data from the basedir into the database proper, then edit
-    :meth:`fill_basedir` to add some test data.
-    
-    Add code to :meth:`assertDatabaseOKEmpty` to check that your upgrade works on an
-    empty database.
-    
-    Add code to :meth:`assertDatabaseOKFull` to check that your upgrade works on a
-    database with pre-existing data.  Do this even if your changes do not move any
-    data from the basedir.
-    
-    Run the tests to find the bugs you introduced in step 2.
+        The model object also has a ``metadata`` attribute containing a
+        :class:`MetaData <sqlalchemy:sqlalchemy.schema.MetaData>` instance.
+        Connector methods should not need to access this object.  The metadata
+        is not bound to an engine.
 
- 4. Increment the version number in the ``test_get_current_version`` test in the)
-    same file.  Only do this after you've finished the previous step - a failure of
-    this test is a good reminder that testing isn't done yet.
+    The :py:class:`Model` class also defines some migration-related methods:
 
+    .. py:method:: is_current()
 
- 5. Updated the version number in :file:`buildbot/db/schema/tables.sql`, too.
+        :returns: boolean via Deferred
 
- 6. Finally, make the corresponding changes to :file:`buildbot/db/schema/tables.sql`.
+        Returns true if the current database's version is current.
 
+    .. py:method:: upgrade()
 
+        :returns: Deferred
+
+        Upgrades the database to the most recent schema version.
+
+.. _Modifying-the-Database-Schema:
+
+Modifying the Database Schema
+-----------------------------
+
+TODO
