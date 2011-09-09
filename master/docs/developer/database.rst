@@ -29,13 +29,6 @@ The database schema is maintained with `SQLAlchemy-Migrate
 <http://code.google.com/p/sqlalchemy-migrate/>`_.  This package handles the
 details of upgrading users between different schema versions.
 
-While the most up-to-date schema is available in
-:file:`master/buildbot/db/model.py`, this file is not used for new
-installations of Buildbot.  Instead, Buildbot begins with an empty database and
-applies all of the upgrade scripts.  This ensures that the upgrade scripts
-define the schema, so that existing and new users are always on an equal
-footing.
-
 API
 ---
 
@@ -1013,11 +1006,52 @@ this::
                 return thdict
             return self.db.pool.do(thd)
 
+Tests
+~~~~~
+
+It goes without saying that any new connector methods must be fully tested!
+
+You will also want to add an in-memory implementation of the methods to the
+fake classes in ``master/budilbot/test/fake/fakedb.py``.  Non-DB Buildbot code
+is tested using these fake implementations in order to isolate that code from
+the database code.
+
 .. _Modifying-the-Database-Schema:
 
 Modifying the Database Schema
 -----------------------------
 
+Changes to the schema are accomplished through migration scripts, supported by
+`SQLAlchemy-Migrate <http://code.google.com/p/sqlalchemy-migrate/>`_.  In fact,
+even new databases are created with the migration scripts -- a new database is
+a migrated version of an empty database.
+
+The schema is tracked by a version number, stored in the ``migrate_version``
+table.  This number is incremented for each change to the schema, and used to
+determine whether the database must be upgraded.  The master will refuse to run
+with an out-of-date database.
+
+To make a change to the schema, first consider how to handle any existing data.
+When adding new columns, this may not be necessary, but table refactorings can
+be complex and require caution so as not to lose information.
+
+Create a new script in ``master/buildbot/db/migrate/versions``, following the
+numbering scheme already present.  The script should have an ``update`` method,
+which takes an engine as a parameter, and ugprades the database, both changing
+the schema and performing any required data migrations.  The engine passed to
+this parameter is "enhanced" by SQLAlchemy-Migrate, with methods to handle
+adding, altering, and dropping columns.  See the SQLAlchemy-Migrate
+documentation for details.
+
+Finally, modify ``master/buildbot/db/model.py`` to represent the updated
+schema.  Buildbot's automated tests perform a rudimentary comparison of an
+upgraded database with the model, but it is important to check the details -
+key length, nullability, and so on can sometimes be missed by the checks.  If
+the schema and the upgrade scripts get out of sync, bizarre behavior can
+result.
+
+Finally, adjust the fake database table definitions in
+``master/buildbot/test/fake/fakedb.py`` according to your changes.
 
 Database Compatibility Notes
 ----------------------------
