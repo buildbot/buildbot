@@ -1,10 +1,16 @@
 The Buildbot Database
 =====================
 
-As of version 0.8.0, Buildbot has used a database for its storage backend.
-This section describes the database connector classes, which allow other parts
-of Buildbot to access the database.  It also describes how to modify the
-database schema and the connector classes themsleves.
+As of version 0.8.0, Buildbot has used a database as part of its storage
+backend.  This section describes the database connector classes, which allow
+other parts of Buildbot to access the database.  It also describes how to
+modify the database schema and the connector classes themsleves.
+
+.. note::
+
+    Buildbot is only half-migrated to a database backend.  Build and builder
+    status information is still stored on disk in pickle files.  This is
+    difficult to fix, although work is underway.
 
 Database Overview
 -----------------
