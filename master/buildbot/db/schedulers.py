@@ -73,18 +73,6 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def getSchedulerId(self, sched_name, sched_class):
-        """
-        Get the schedulerid for the given scheduler, creating a new schedulerid
-        if none is found.
-
-        Note that this makes no attempt to "claim" the schedulerid: schedulers
-        with the same name and class, but running in different masters, will be
-        assigned the same schedulerid - with disastrous results.
-
-        @param sched_name: the scheduler's configured name
-        @param sched_class: the class name of this scheduler
-        @returns: schedulerid, via a Deferred
-        """
         def thd(conn):
             # get a matching row, *or* one without a class_name (from 0.8.0)
             schedulers_tbl = self.db.model.schedulers

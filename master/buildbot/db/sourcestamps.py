@@ -62,24 +62,6 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
 
     @base.cached("ssdicts")
     def getSourceStamp(self, ssid):
-        """
-        Get a dictionary representing the given source stamp, or None if no
-        such source stamp exists.
-
-        The dictionary has keys C{ssid}, C{branch}, C{revision}, C{patch_body},
-        C{patch_level}, C{patch_subdir}, C{patch_author}, C{patch_comment},
-        C{repository}, C{project}, and C{changeids}.  Most are simple strings.
-        The C{changeids} key contains a set of change IDs.  The C{patch_*}
-        arguments will be C{None} if no patch is attached.  The last is a set of
-        changeids for this source stamp.
-
-        @param bsid: buildset ID
-
-        @param no_cache: bypass cache and always fetch from database
-        @type no_cache: boolean
-
-        @returns: dictionary as above, or None, via Deferred
-        """
         def thd(conn):
             tbl = self.db.model.sourcestamps
             q = tbl.select(whereclause=(tbl.c.id == ssid))
