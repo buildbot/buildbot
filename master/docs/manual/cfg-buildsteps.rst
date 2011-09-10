@@ -2428,6 +2428,49 @@ sophisticated ``set_properties``, which takes a dictionary mapping property
 names to values.  You may use :ref:`WithProperties` here to dynamically
 construct new property values.
 
+RPM-Related Steps
+-----------------
+
+.. bb:step:: RpmBuild
+
+These steps work with RPMs and spec files.  The :bb:step:`RpmBuild` step builds
+RPMs based on a spec file::
+
+    from buildbot.steps.package.rpm import RpmBuild
+    f.addStep(RpmBuild(specfile="proj.spec",
+            dist='.el5'))
+
+The step takes the following parameters
+
+``specfile``
+    The ``.spec`` file to build from
+
+``topdir``
+    Definition for ``_topdir``, defaulting to the workdir.
+
+``builddir``
+    Definition for ``_builddir``, defaulting to the workdir.
+
+``rpmdir``
+    Definition for ``_rpmdir``, defaulting to the workdir.
+
+``sourcedir``
+    Definition for ``_sourcedir``, defaulting to the workdir.
+
+``srcrpmdir``
+    Definition for ``_srcrpmdir``, defaulting to the workdir.
+
+``dist``
+    Distribution to build, used as the definition for ``_dist``.
+
+``autoRelease``
+    If true, use the auto-release mechanics.
+
+``vcsRevision``
+    If true, use the version-control revision mechanics.  This uses the
+    ``got_revision`` property to determine the revision and define
+    ``_revision``.
+
 Miscellaneous BuildSteps
 ------------------------
 
@@ -2437,8 +2480,6 @@ A number of steps do not fall into any particular category.
 
 HLint
 +++++
-
-.. py:class:: buildbot.steps.python_twisted.HLint
 
 The :bb:step:`HLint` step runs Twisted Lore, a lint-like checker over a set of
 ``.xhtml`` files.  Any deviations from recommended style is flagged and put
