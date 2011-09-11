@@ -24,11 +24,15 @@ class SubunitShellCommand(ShellCommand):
     def __init__(self, failureOnNoTests=False, *args, **kwargs):
         ShellCommand.__init__(self, *args, **kwargs)
         self.failureOnNoTests = failureOnNoTests
+        self.addFactoryArguments(failureOnNoTests=failureOnNoTests)
+
         # importing here gets around an import loop
         from buildbot.process import subunitlogobserver
+        
         self.ioObverser = subunitlogobserver.SubunitLogObserver()
         self.addLogObserver('stdio', self.ioObverser)
         self.progressMetrics = self.progressMetrics + ('tests', 'tests failed')
+
     def commandComplete(self, cmd):
         # figure out all statistics about the run
         ob = self.ioObverser
@@ -49,10 +53,9 @@ class SubunitShellCommand(ShellCommand):
                           (total,
                           total == 1 and "test" or "tests"),
                           "passed"]
-            elif self.failureOnNoTests:
-                results = FAILURE
-                text += ["no test is found"]
             else:
+                if self.failureOnNoTests:
+                    results = FAILURE
                 text += ["no tests", "run"]
         else:
             results = FAILURE
@@ -65,7 +68,7 @@ class SubunitShellCommand(ShellCommand):
                 text.append("%d %s" % \
                             (errors,
                              errors == 1 and "error" or "errors"))
-            text2 = "%d tes%s" % (count, (count == 1 and 't' or 'ts'))
+            text2 = "%d %s" % (count, (count == 1 and 'test' or 'tests'))
 
 
         if skips:
