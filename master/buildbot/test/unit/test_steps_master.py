@@ -15,6 +15,7 @@
 
 import sys
 import mock
+from twisted.python import runtime
 from twisted.internet import reactor
 from twisted.trial import unittest
 from buildbot.test.util import steps
@@ -49,7 +50,10 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         cmd = [ sys.executable, '-c', 'print "hello"' ]
         self.setupStep(
                 master.MasterShellCommand(command=cmd))
-        self.expectLogfile('stdio', "hello\n")
+        if runtime.platformType == 'win32':
+            self.expectLogfile('stdio', "hello\r\n")
+        else:
+            self.expectLogfile('stdio', "hello\n")
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
         return self.runStep()
 
@@ -66,8 +70,12 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                 master.MasterShellCommand(description='x', descriptionDone='y',
                                 env={'a':'b'}, path=['/usr/bin'], usePTY=True,
                                 command='true'))
+        if runtime.platformType == 'win32':
+            exp_argv = [ r'C:\WINDOWS\system32\cmd.exe', '/c', 'true' ]
+        else:
+            exp_argv = [ '/bin/sh', '-c', 'true' ]
         self.patchSpawnProcess(
-                exp_cmd='/bin/sh', exp_argv=['/bin/sh', '-c', 'true'],
+                exp_cmd=exp_argv[0], exp_argv=exp_argv,
                 exp_path=['/usr/bin'], exp_usePTY=True, exp_env={'a':'b'},
                 outputs=[
                     ('out', 'hello!\n'),
