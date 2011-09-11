@@ -39,8 +39,8 @@ from buildbot.status.web import console, feeds, grid, logs, olpb, root, slaves
 modules.extend([console, feeds, grid, logs, olpb, root, slaves])
 from buildbot.status.web import status_json, step, tests, waterfall
 modules.extend([status_json, step, tests, waterfall])
-from buildbot.steps import dummy, master, maxq, python, python_twisted, subunit
-modules.extend([dummy, master, maxq, python, python_twisted, subunit])
+from buildbot.steps import master, maxq, python, python_twisted, subunit
+modules.extend([master, maxq, python, python_twisted, subunit])
 from buildbot.steps import trigger, vstudio
 modules.extend([trigger, vstudio])
 from buildbot.steps.package.rpm import rpmbuild, rpmlint, rpmspec
