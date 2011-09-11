@@ -1827,19 +1827,30 @@ Slave Filesystem Steps
 
 Here are some buildsteps for manipulating the slaves filesystem.
 
-.. bb:step:: RemoveDirectory
+.. bb:step:: FileExists
 
-.. _RemoveDirectory:
+FileExists
+++++++++++
+
+This step will assert that a given file exists, failing if it does not.  The
+filename can be specified with a property. ::
+
+    from buildbot.steps.slave import FileExists
+    f.addStep(FileExists(file='test_data'))
+
+This step requires slave version 0.8.4 or later.
+
+.. bb:step:: RemoveDirectory
 
 RemoveDirectory
 +++++++++++++++
-
-.. py:class:: buildbot.steps.slave.RemoveDirectory
 
 This command recursively deletes a directory on the slave. ::
 
     from buildbot.steps.slave import RemoveDirectory
     f.addStep(RemoveDirectory(dir="build/build"))
+
+This step requires slave version 0.8.4 or later.
 
 .. _Python-BuildSteps:
 
@@ -2354,7 +2365,7 @@ The counterpart to the Triggerable described in section
     f.addStep(Trigger(schedulerNames=['build-prep'],
                       waitForFinish=True,
                       updateSourceStamp=True,
-                      set_properties=@{ 'quick' : False @},
+                      set_properties={ 'quick' : False },
                       copy_properties=[ 'release_code_name' ]))
 
 The ``schedulerNames=`` argument lists the :bb:sched:`Triggerable` schedulers

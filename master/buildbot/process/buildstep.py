@@ -392,6 +392,7 @@ class LoggedRemoteCommand(RemoteCommand):
         if update.has_key('elapsed'):
             self._remoteElapsed = update['elapsed']
 
+        # TODO: these should be handled at the RemoteCommand level
         for k in update:
             if k not in ('stdout', 'stderr', 'header', 'rc'):
                 if k not in self.updates:

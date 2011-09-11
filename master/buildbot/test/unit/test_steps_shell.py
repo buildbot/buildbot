@@ -170,7 +170,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
                 shell.ShellCommand(workdir='build', command="echo hello",
                                    usePTY=True),
-                slave_version='1.1')
+                slave_version=dict(shell='1.1'))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello')
             + 0
