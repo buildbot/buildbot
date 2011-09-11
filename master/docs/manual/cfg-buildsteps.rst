@@ -2419,3 +2419,18 @@ Python executable to use to run Lore. ::
     from buildbot.steps.python_twisted import HLint
     f.addStep(HLint())
 
+MaxQ
+++++
+
+.. bb:step:: MaxQ
+
+MaxQ (http://maxq.tigris.org/) is a web testing tool that allows you to record
+HTTP sessions and play them back.  The :bb:step:`MaxQ` step runs this
+framework. ::
+
+    from buildbot.steps.maxq import MaxQ
+    f.addStep(MaxQ(testdir='tests/'))
+
+The single argument, ``testdir``, specifies where the tests should be run.
+This directory will be passed to the ``run_maxq.py`` command, and the results
+analyzed.
