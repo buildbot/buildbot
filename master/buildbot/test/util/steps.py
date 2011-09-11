@@ -56,7 +56,7 @@ class BuildStepMixin(object):
 
     # utilities
 
-    def setupStep(self, step, slave_version="99.99", slave_env={}):
+    def setupStep(self, step, slave_version={'*':"99.99"}, slave_env={}):
         """
         Set up C{step} for testing.  This begins by using C{step} as a factory
         to create a I{new} step instance, thereby testing that the the factory
@@ -67,7 +67,9 @@ class BuildStepMixin(object):
         As a convenience, it calls the step's setDefaultWorkdir method with
         C{'wkdir'}.
 
-        @param slave_version: slave version to present; defaults to "99.99"
+        @param slave_version: slave version to present, as a dictionary mapping
+            command name to version.  A command name of '*' will apply for all
+            commands.
 
         @param slave_env: environment from the slave at slave startup
         """
@@ -79,7 +81,13 @@ class BuildStepMixin(object):
         # step.build
 
         b = self.build = fakebuild.FakeBuild()
-        b.getSlaveCommandVersion = lambda command, oldversion : slave_version
+        def getSlaveVersion(cmd, oldversion):
+            if cmd in slave_version:
+                return slave_version[cmd]
+            if '*' in slave_version:
+                return slave_version['*']
+            return oldversion
+        b.getSlaveCommandVersion = getSlaveVersion
         b.slaveEnvironment = slave_env.copy()
         step.setBuild(b)
 
@@ -92,7 +100,7 @@ class BuildStepMixin(object):
 
         # step.buildslave
 
-        step.buildslave = mock.Mock(name="buildslave")
+        self.buildslave = step.buildslave = mock.Mock(name="buildslave")
 
         # step.step_status
 
@@ -169,11 +177,11 @@ class BuildStepMixin(object):
         """
         self.exp_outcome = dict(result=result, status_text=status_text)
 
-    def expectProperty(self, property, value):
+    def expectProperty(self, property, value, source=None):
         """
         Expect the given property to be set when the step is complete.
         """
-        self.exp_properties[property] = value
+        self.exp_properties[property] = (value, source)
 
     def expectNoProperty(self, property):
         """
@@ -202,9 +210,12 @@ class BuildStepMixin(object):
             got_outcome = dict(result=result,
                         status_text=self.step_status.status_text)
             self.assertEqual(got_outcome, self.exp_outcome)
-            for pn, pv in self.exp_properties.iteritems():
-                self.failUnless(self.properties.hasProperty(pn))
+            for pn, (pv, ps) in self.exp_properties.iteritems():
+                self.failUnless(self.properties.hasProperty(pn),
+                        "missing %s" % pn)
                 self.assertEqual(self.properties.getProperty(pn), pv)
+                if ps is not None:
+                    self.assertEqual(self.properties.getPropertySource(pn), ps)
             for pn in self.exp_missing_properties:
                 self.failIf(self.properties.hasProperty(pn))
             for log, contents in self.exp_logfiles.iteritems():

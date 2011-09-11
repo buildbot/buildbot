@@ -41,6 +41,7 @@ class FakeLoggedRemoteCommand(FakeRemoteCommand):
         self.logs = {}
         self.rc = -999
         self.collectStdout = collectStdout
+        self.updates = {}
         if collectStdout:
             self.stdout = ''
 
@@ -192,12 +193,14 @@ class ExpectLogged(Expect):
     Define an expected L{LoggedRemoteCommand}, with the same arguments
 
     As with L{Expect}, extra behaviors can be added to the object; use
-    L{ExpectLogged.log} to add a logfile, or add an integer to specify the
-    return code (rc), or add a Failure instance to raise an exception::
+    L{ExpectLogged.log} to add a logfile, L{ExpectLogged.update} to add an
+    arbitrary update, or add an integer to specify the return code (rc), or add
+    a Failure instance to raise an exception::
 
         ExpectLogged('somecommand', { args='foo' })
             + ExpectLogged.log('stdio', stdout='foo!')
             + ExpectLogged.log('config.log', stdout='some info')
+            + ExpectLogged.update('status', 'running')
             + 0,      # (specifies the rc)
         ...
 
@@ -208,6 +211,10 @@ class ExpectLogged(Expect):
     @classmethod
     def log(self, name, **streams):
         return ('log', name, streams)
+
+    @classmethod
+    def update(self, name, value):
+        return ('update', name, value)
 
     def __add__(self, other):
         # special-case adding an integer (return code) or failure (error)
@@ -225,6 +232,8 @@ class ExpectLogged(Expect):
             command.rc = args[0]
         elif behavior == 'err':
             return defer.fail(args[0])
+        elif behavior == 'update':
+            command.updates.setdefault(args[0], []).append(args[1])
         elif behavior == 'log':
             name, streams = args
             if 'header' in streams:

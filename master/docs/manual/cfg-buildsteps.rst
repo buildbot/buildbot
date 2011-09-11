@@ -2354,7 +2354,7 @@ The counterpart to the Triggerable described in section
     f.addStep(Trigger(schedulerNames=['build-prep'],
                       waitForFinish=True,
                       updateSourceStamp=True,
-                      set_properties=@{ 'quick' : False @},
+                      set_properties={ 'quick' : False },
                       copy_properties=[ 'release_code_name' ]))
 
 The ``schedulerNames=`` argument lists the :bb:sched:`Triggerable` schedulers
@@ -2392,6 +2392,35 @@ scheduler.  To simply copy properties verbatim, list them in the
 sophisticated ``set_properties``, which takes a dictionary mapping property
 names to values.  You may use :ref:`WithProperties` here to dynamically
 construct new property values.
+
+Filesystem Commands
+-------------------
+
+.. bb:step:: FileExists
+
+FileExists
+++++++++++
+
+This step will assert that a given file exists, failing if it does not.  The
+filename can be specified with a property. ::
+
+    from buildbot.steps.slave import FileExists
+    f.addStep(FileExists(file='test_data'))
+
+This step requires slave version 0.8.4 or later.
+
+.. bb:step:: RemoveDirectory
+
+RemoveDirectory
++++++++++++++++
+
+This step will recursively remove the given directory and its contents on the
+slave.  The directory can be specified with a property.
+
+    from buildbot.steps.slave import RemoveDirectory
+    f.addStep(RemoveDirectory(dir='debug_logs/'))
+
+This step requires slave version 0.8.4 or later.
 
 Miscellaneous BuildSteps
 ------------------------

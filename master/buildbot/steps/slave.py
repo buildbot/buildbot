@@ -14,11 +14,11 @@
 # Copyright Buildbot Team Members
 
 import stat
-from buildbot.process.buildstep import BuildStep, LoggedRemoteCommand
-from buildbot.process.buildstep import SUCCESS, FAILURE
+from buildbot.process import buildstep
+from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.interfaces import BuildSlaveTooOldError
 
-class SetPropertiesFromEnv(BuildStep):
+class SetPropertiesFromEnv(buildstep.BuildStep):
     """
     Sets properties from envirionment variables on the slave.
 
@@ -29,7 +29,7 @@ class SetPropertiesFromEnv(BuildStep):
     descriptionDone='Set'
 
     def __init__(self, variables, source="SlaveEnvironment", **kwargs):
-        BuildStep.__init__(self, **kwargs)
+        buildstep.BuildStep.__init__(self, **kwargs)
         self.addFactoryArguments(variables = variables,
                                  source = source)
         self.variables = variables
@@ -43,7 +43,7 @@ class SetPropertiesFromEnv(BuildStep):
         fold_to_uppercase = (self.buildslave.slave_system == 'win32')
 
         properties = self.build.getProperties()
-        environ = self.buildslave.slave_environ
+        environ = self.build.slaveEnvironment
         variables = self.variables
         if isinstance(variables, str):
             variables = [self.variables]
@@ -58,7 +58,7 @@ class SetPropertiesFromEnv(BuildStep):
                                        runtime=True)
         self.finished(SUCCESS)
 
-class FileExists(BuildStep):
+class FileExists(buildstep.BuildStep):
     """
     Check for the existence of a file on the slave.
     """
@@ -73,7 +73,7 @@ class FileExists(BuildStep):
 
 
     def __init__(self, file, **kwargs):
-        BuildStep.__init__(self, **kwargs)
+        buildstep.BuildStep.__init__(self, **kwargs)
         self.addFactoryArguments(file = file)
         self.file = file
 
@@ -82,7 +82,7 @@ class FileExists(BuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about stat")
-        cmd = LoggedRemoteCommand('stat', {'file': self.file })
+        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.file })
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
@@ -100,7 +100,7 @@ class FileExists(BuildStep):
             self.step_status.setText(["Not a file."])
             self.finished(FAILURE)
 
-class RemoveDirectory(BuildStep):
+class RemoveDirectory(buildstep.BuildStep):
     """
     Remove a directory tree on the slave.
     """
@@ -114,7 +114,7 @@ class RemoveDirectory(BuildStep):
     flunkOnFailure = True
 
     def __init__(self, dir, **kwargs):
-        BuildStep.__init__(self, **kwargs)
+        buildstep.BuildStep.__init__(self, **kwargs)
         self.addFactoryArguments(dir = dir)
         self.dir = dir
 
@@ -123,7 +123,7 @@ class RemoveDirectory(BuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about rmdir")
-        cmd = LoggedRemoteCommand('rmdir', {'dir': self.dir })
+        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.dir })
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)

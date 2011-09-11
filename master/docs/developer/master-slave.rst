@@ -162,3 +162,4 @@ contents, e.g., ``header``, ``stdout``, or the name of a logfile.  If the
 key is ``rc``, then the value is the exit status of the command.  No further
 updates should be sent after an ``rc``.
 
+The ``stat`` command returns a ``stat`` update.
