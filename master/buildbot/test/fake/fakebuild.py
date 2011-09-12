@@ -32,6 +32,7 @@ components.registerAdapter(
 class FakeBuild(mock.Mock, properties.PropertiesMixin):
 
     def __init__(self, *args, **kwargs):
+        mock.Mock.__init__(self, *args, **kwargs)
         self.build_status = FakeBuildStatus()
         pr = self.build_status.properties = properties.Properties()
         pr.build = self

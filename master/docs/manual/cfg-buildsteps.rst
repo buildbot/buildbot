@@ -2369,22 +2369,23 @@ argument is ``False`` (the default) or not given, then the buildstep
 succeeds immediately after triggering the schedulers.
 
 The SourceStamp to use for the triggered build is controlled by the arguments
-``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp``.
-If ``updateSourceStamp`` is ``True`` (the default), then step updates
-the :class:`SourceStamp` given to the :bb:sched:`Triggerable` schedulers to include
-``got_revision`` (the revision actually used in this build) as
-``revision`` (the revision to use in the triggered builds). This is
-useful to ensure that all of the builds use exactly the same
-:class:`SourceStamp`, even if other :class:`Change`\s have occurred while the build was
-running. If ``updateSourceStamp`` is False (and neither of the other
-arguments are specified), then the exact same SourceStamp is used. If
-``alwaysUseLatest`` is True, then no SourceStamp is given, corresponding to
-using the latest revision of the repository specified in the Source step. This
-is useful if the triggered builds use to a different source repository.
-:class:`SourceStamp` accepts a dictionary containing the keys ``branch``,
-``revision``, ``branch``, ``repository``, ``project``, and
-optionally ``patch_level``, ``patch_level`` and ``patch_subdir`` and
-creates the corresponding SourceStamp.
+``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp``.  If
+``updateSourceStamp`` is ``True`` (the default), then step updates the
+:class:`SourceStamp` given to the :bb:sched:`Triggerable` schedulers to include
+``got_revision`` (the revision actually used in this build) as ``revision``
+(the revision to use in the triggered builds). This is useful to ensure that
+all of the builds use exactly the same :class:`SourceStamp`, even if other
+:class:`Change`\s have occurred while the build was running. If
+``updateSourceStamp`` is False (and neither of the other arguments are
+specified), then the exact same SourceStamp is used. If ``alwaysUseLatest`` is
+True, then no SourceStamp is given, corresponding to using the latest revision
+of the repository specified in the Source step. This is useful if the triggered
+builds use to a different source repository.  :class:`SourceStamp` accepts a
+dictionary containing the keys ``branch``, ``revision``, ``branch``,
+``repository``, ``project``, and optionally ``patch_level``, ``patch_level``
+and ``patch_subdir`` and creates the corresponding SourceStamp.  All of
+``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp`` can be
+specified using properties.
 
 Two parameters allow control of the properties that are passed to the triggered
 scheduler.  To simply copy properties verbatim, list them in the

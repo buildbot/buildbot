@@ -20,63 +20,17 @@ from twisted.python import log
 from twisted.internet import defer
 
 class Trigger(LoggingBuildStep):
-    """I trigger a scheduler.Triggerable, to use one or more Builders as if
-    they were a single buildstep (like a subroutine call).
-    """
     name = "trigger"
 
-    renderables = [ 'set_properties', 'schedulerNames', 'sourceStamp' ]
+    renderables = [ 'set_properties', 'schedulerNames', 'sourceStamp',
+                    'updateSourceStamp', 'alwaysUseLatest' ]
 
     flunkOnFailure = True
 
     def __init__(self, schedulerNames=[], sourceStamp=None, updateSourceStamp=None, alwaysUseLatest=False,
                  waitForFinish=False, set_properties={}, copy_properties=[], **kwargs):
-        """
-        Trigger the given schedulers when this step is executed.
-
-        @param schedulerNames: A list of scheduler names that should be
-                               triggered. Schedulers can be specified using
-                               WithProperties, if desired.
-
-        @param sourceStamp: A dict containing the source stamp to use for the
-                            build. Keys must include branch, revision, repository and
-                            project. In addition, patch_body, patch_level, and
-                            patch_subdir can be specified. Only one of
-                            sourceStamp, updateSourceStamp and alwaysUseLatest
-                            can be specified. Any of these can be specified using
-                            WithProperties, if desired.
-
-        @param updateSourceStamp: If True (the default), I will try to give
-                                  the schedulers an absolute SourceStamp for
-                                  their builds, so that a HEAD build will use
-                                  the same revision even if more changes have
-                                  occurred since my build's update step was
-                                  run. If False, I will use the original
-                                  SourceStamp unmodified.
-
-        @param alwaysUseLatest: If False (the default), I will give the
-                                SourceStamp of the current build to the
-                                schedulers (as controled by updateSourceStamp).
-                                If True, I will give the schedulers  an empty
-                                SourceStamp, corresponding to the latest
-                                revision.
-
-        @param waitForFinish: If False (the default), this step will finish
-                              as soon as I've started the triggered
-                              schedulers. If True, I will wait until all of
-                              the triggered schedulers have finished their
-                              builds.
-
-        @param set_properties: A dictionary of properties to set for any
-                               builds resulting from this trigger.  These
-                               properties will override properties set in the
-                               Triggered scheduler's constructor.
-
-        @param copy_properties: a list of property names to copy verbatim
-                                into any builds resulting from this trigger.
-
-        """
-        assert schedulerNames, "You must specify a scheduler to trigger"
+        if not schedulerNames:
+            raise ValueError("You must specify a scheduler to trigger")
         if sourceStamp and (updateSourceStamp is not None):
             raise ValueError("You can't specify both sourceStamp and updateSourceStamp")
         if sourceStamp and alwaysUseLatest:
@@ -105,7 +59,7 @@ class Trigger(LoggingBuildStep):
                                  copy_properties=copy_properties)
 
     def interrupt(self, reason):
-        if self.running:
+        if self.running and not self.ended:
             self.step_status.setText(["interrupted"])
             return self.end(EXCEPTION)
 
@@ -135,7 +89,7 @@ class Trigger(LoggingBuildStep):
         unknown_schedulers = []
         triggered_schedulers = []
 
-        # TODO: don't fire any schedulers if we discover an unknown one
+        # don't fire any schedulers if we discover an unknown one
         for scheduler in self.schedulerNames:
             scheduler = scheduler
             if all_schedulers.has_key(scheduler):
@@ -170,28 +124,28 @@ class Trigger(LoggingBuildStep):
                 dl.append(sch.trigger(ssid, set_props=props_to_set))
             self.step_status.setText(['triggered'] + triggered_schedulers)
 
-            d = defer.DeferredList(dl, consumeErrors=1)
             if self.waitForFinish:
-                return d
+                return defer.DeferredList(dl, consumeErrors=1)
             else:
                 # do something to handle errors
-                d.addErrback(log.err,
+                for d in dl:
+                    d.addErrback(log.err,
                         '(ignored) while invoking Triggerable schedulers:')
                 self.end(SUCCESS)
                 return None
         d.addCallback(start_builds)
 
         def cb(rclist):
-            rc = SUCCESS # (this rc is not the same variable as that above)
+            result = SUCCESS
             for was_cb, results in rclist:
                 # TODO: make this algo more configurable
                 if not was_cb:
-                    rc = EXCEPTION
+                    result = EXCEPTION
                     log.err(results)
                     break
                 if results == FAILURE:
-                    rc = FAILURE
-            return self.end(rc)
+                    result = FAILURE
+            return self.end(result)
         def eb(why):
             return self.end(FAILURE)
 
