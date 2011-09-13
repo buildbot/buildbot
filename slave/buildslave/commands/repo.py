@@ -139,16 +139,40 @@ class Repo(SourceBaseCommand):
     def doVCUpdate(self):
         # remove previous overriden manifest even on partial sync
         os.system("cd %s/.repo; ln -sf manifests/%s manifest.xml"%(self._fullSrcdir(),self.manifest_file))
-        command = ['forall', '-c', 'git', 'clean', '-f', '-d', '-x']
-        return self._repoCmd(command, self._doClean2, abandonOnFailure=False)
+        if self.repo_downloads:
+            self.sendStatus({'header': "will download:\n" + "repo download "+ "\nrepo download ".join(self.repo_downloads) + "\n"})
+        return self._doPreSyncCleanUp(None)
 
-    def _doClean2(self, dummy):
-        command = ['forall', '-c', 'git', 'reset', '--hard', 'HEAD']
-        return self._repoCmd(command, self._doClean3, abandonOnFailure=False)
+    # a simple shell script to gather all cleanup tweaks...
+    # doing them one by one just complicate the stuff
+    # and messup the stdio log
+    def _cleanupCommand(self):
+        command = """	set -v
+			if [ -d .repo/manifests ]
+			then
+				# repo just refuse to run if manifest is messed up
+				# so ensure we are in a known state
+			    	cd .repo/manifests
+				git fetch origin
+				git reset --hard remotes/origin/%(manifest_branch)s
+				git config branch.default.merge %(manifest_branch)s
+				cd ..
+				ln -sf manifests/%(manifest_file)s manifest.xml
+				cd ..
+			 fi
+			 find . -name .git/index.lock -exec rm -f {} \;
+		  	 repo forall -c git clean -f -d -x 2>/dev/null
+	  	 	 repo forall -c git reset --hard HEAD 2>/dev/null
+		     """%(self.__dict__)
+        return "\n".join([ s.strip() for s in command.splitlines()])
+    
+    def _doPreInitCleanUp(self, dummy):
+        command = self._cleanupCommand()
+        return self._Cmd(["bash", "-c", command], self._doInit, abandonOnFailure=False)
 
-    def _doClean3(self,dummy):
-        command = ['clean', '-f', '-d', '-x']
-        return self._gitCmd(".repo/manifests",command, self._doManifestOveride)
+    def _doPreSyncCleanUp(self, dummy):
+        command = self._cleanupCommand()
+        return self._Cmd(["bash", "-c", command], self._doManifestOveride, abandonOnFailure=False)
 
     def _doManifestOveride(self, dummy):
         if self.manifest_override_url:
