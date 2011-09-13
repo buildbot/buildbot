@@ -225,23 +225,6 @@ class _TransferBuildStep(BuildStep):
 
 
 class FileUpload(_TransferBuildStep):
-    """
-    Build step to transfer a file from the slave to the master.
-
-    arguments:
-
-    - ['slavesrc']   filename of source file at slave, relative to workdir
-    - ['masterdest'] filename of destination file at master
-    - ['workdir']    string with slave working directory relative to builder
-                     base dir, default 'build'
-    - ['maxsize']    maximum size of the file, default None (=unlimited)
-    - ['blocksize']  maximum size of each block being transfered
-    - ['mode']       file access mode for the resulting master-side file.
-                     The default (=None) is to leave it up to the umask of
-                     the buildmaster process.
-    - ['keepstamp']  whether to preserve file modified and accessed times
-
-    """
 
     name = 'upload'
 
@@ -312,21 +295,6 @@ class FileUpload(_TransferBuildStep):
 
 
 class DirectoryUpload(_TransferBuildStep):
-    """
-    Build step to transfer a directory from the slave to the master.
-
-    arguments:
-
-    - ['slavesrc']   name of source directory at slave, relative to workdir
-    - ['masterdest'] name of destination directory at master
-    - ['workdir']    string with slave working directory relative to builder
-                     base dir, default 'build'
-    - ['maxsize']    maximum size of the compressed tarfile containing the
-                     whole directory
-    - ['blocksize']  maximum size of each block being transfered
-    - ['compress']   compression type to use: one of [None, 'gz', 'bz2']
-
-    """
 
     name = 'upload'
 
@@ -438,27 +406,7 @@ class _FileReader(pb.Referenceable):
 
 
 class FileDownload(_TransferBuildStep):
-    """
-    Download the first 'maxsize' bytes of a file, from the buildmaster to the
-    buildslave. Set the mode of the file
 
-    Arguments::
-
-     ['mastersrc'] filename of source file at master
-     ['slavedest'] filename of destination file at slave
-     ['workdir']   string with slave working directory relative to builder
-                   base dir, default 'build'
-     ['maxsize']   maximum size of the file, default None (=unlimited)
-     ['blocksize'] maximum size of each block being transfered
-     ['mode']      use this to set the access permissions of the resulting
-                   buildslave-side file. This is traditionally an octal
-                   integer, like 0644 to be world-readable (but not
-                   world-writable), or 0600 to only be readable by
-                   the buildslave account, or 0755 to be world-executable.
-                   The default (=None) is to leave it up to the umask of
-                   the buildslave process.
-
-    """
     name = 'download'
 
     renderables = [ 'mastersrc', 'slavedest' ]
@@ -527,26 +475,7 @@ class FileDownload(_TransferBuildStep):
         d.addCallback(self.finished).addErrback(self.failed)
 
 class StringDownload(_TransferBuildStep):
-    """
-    Download the first 'maxsize' bytes of a string, from the buildmaster to the
-    buildslave. Set the mode of the file
 
-    Arguments::
-
-     ['s']         string to transfer
-     ['slavedest'] filename of destination file at slave
-     ['workdir']   string with slave working directory relative to builder
-                   base dir, default 'build'
-     ['maxsize']   maximum size of the file, default None (=unlimited)
-     ['blocksize'] maximum size of each block being transfered
-     ['mode']      use this to set the access permissions of the resulting
-                   buildslave-side file. This is traditionally an octal
-                   integer, like 0644 to be world-readable (but not
-                   world-writable), or 0600 to only be readable by
-                   the buildslave account, or 0755 to be world-executable.
-                   The default (=None) is to leave it up to the umask of
-                   the buildslave process.
-    """
     name = 'string_download'
 
     renderables = [ 'slavedest', 's' ]
@@ -604,14 +533,9 @@ class StringDownload(_TransferBuildStep):
         d.addCallback(self.finished).addErrback(self.failed)
 
 class JSONStringDownload(StringDownload):
-    """
-    Encode object o as a json string and save it on the buildslave
 
-    Arguments::
-
-     ['o']         object to encode and transfer
-    """
     name = "json_download"
+
     def __init__(self, o, slavedest, **buildstep_kwargs):
         if 's' in buildstep_kwargs:
             del buildstep_kwargs['s']
@@ -620,11 +544,9 @@ class JSONStringDownload(StringDownload):
         self.addFactoryArguments(o=o)
 
 class JSONPropertiesDownload(StringDownload):
-    """
-    Download the current build properties as a json string and save it on the
-    buildslave
-    """
+
     name = "json_properties_download"
+
     def __init__(self, slavedest, **buildstep_kwargs):
         self.super_class = StringDownload
         if 's' in buildstep_kwargs:

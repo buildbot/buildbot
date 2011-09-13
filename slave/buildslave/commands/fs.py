@@ -24,15 +24,6 @@ from buildslave import runprocess
 from buildslave.commands import base, utils
 
 class MakeDirectory(base.Command):
-    """This is a Command which creates a directory. The args dict contains
-    the following keys:
-
-        - ['dir'] (required): subdirectory which the command will create,
-                                  relative to the builder dir
-
-    MakeDirectory creates the following status messages:
-        - {'rc': rc} : when the process has terminated
-    """
 
     header = "mkdir"
 
@@ -50,26 +41,9 @@ class MakeDirectory(base.Command):
             self.sendStatus({'rc': 1})
 
 class RemoveDirectory(base.Command):
-    """This is a Command which removes a directory. The args dict contains
-    the following keys:
-
-        - ['dir'] (required): subdirectory which the command will create,
-                              relative to the builder dir. This argument
-                              can be either a single directory name as a string
-                              or list of directory names as a list.
-
-        - ['timeout']:  seconds of silence tolerated before we kill off the
-                        command
-
-        - ['maxTime']:  seconds before we kill off the command
-
-
-    RemoveDirectory creates the following status messages:
-        - {'rc': rc} : when the process has terminated
-    """
 
     header = "rmdir"
-    
+
     def setup(self,args):
         self.logEnviron = args.get('logEnviron',True)
 
@@ -156,25 +130,8 @@ class RemoveDirectory(base.Command):
         return d
 
 class CopyDirectory(base.Command):
-    """This is a Command which copies a directory. The args dict contains
-    the following keys:
 
-        - ['fromdir'] (required): subdirectory which the command will copy,
-                                  relative to the builder dir
-        - ['todir'] (required): subdirectory which the command will create,
-                                  relative to the builder dir
-
-        - ['timeout']:  seconds of silence tolerated before we kill off the
-                        command
-
-        - ['maxTime']:  seconds before we kill off the command
-
-
-    CopyDirectory creates the following status messages:
-        - {'rc': rc} : when the process has terminated
-    """
-
-    header = "rmdir"
+    header = "cpdir"
 
     def setup(self,args):
         self.logEnviron = args.get('logEnviron',True)
@@ -219,14 +176,6 @@ class CopyDirectory(base.Command):
         return d
 
 class StatFile(base.Command):
-    """This is a command which stats a file on the slave. The args dict contains the following keys:
-
-        - ['file'] (required): file to stat
-
-    StatFile creates the following status messages:
-        - {'rc': rc} : 0 if the file is found, 1 otherwise
-        - {'stat': stat} : if the files is found, stat contains the result of os.stat
-    """
 
     header = "stat"
 

@@ -170,17 +170,6 @@ class SlaveFileUploadCommand(TransferCommand):
 
 
 class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
-    """
-    Upload a directory from slave to build master
-    Arguments:
-
-        - ['workdir']:   base directory to use
-        - ['slavesrc']:  name of the slave-side directory to read from
-        - ['writer']:    RemoteReference to a transfer._DirectoryWriter object
-        - ['maxsize']:   max size (in bytes) of file to write
-        - ['blocksize']: max size for each data block
-        - ['compress']:  one of [None, 'bz2', 'gz']
-    """
     debug = False
 
     def setup(self, args):
