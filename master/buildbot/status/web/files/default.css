@@ -10,6 +10,11 @@ body.interface {
 	background-color: #fff;
 	color: #333;
 }
+.auth {
+position:absolute;
+top:5px;
+right:40px;
+}
 
 a:link,a:visited,a:active {
 	color: #444;

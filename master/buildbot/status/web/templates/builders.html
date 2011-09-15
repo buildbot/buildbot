@@ -23,7 +23,7 @@
 </table>
 
 {% if num_building > 0 %}
-  {% if authz.advertiseAction('stopAllBuilds') or authz.advertiseAction('stopBuild') %}
+  {% if authz.advertiseAction('stopAllBuilds', request) or authz.advertiseAction('stopBuild', request) %}
     <h2>Stop Selected Builds</h2>
     {{ forms.stop_build(path_to_root+"builders/_selected/stopselected", authz, on_selected=True, builders=builders, label='Selected Builds') }}
     <h2>Stop All Builds</h2>
@@ -32,11 +32,11 @@
 {% endif %}
   
 {% if num_online > 0 %}
-  {% if authz.advertiseAction('forceAllBuilds') or authz.advertiseAction('forceBuild') %}
+  {% if authz.advertiseAction('forceAllBuilds', request) or authz.advertiseAction('forceBuild', request) %}
     <h2>Force Selected Builds</h2>
-    {{ forms.force_build(path_to_root+"builders/_selected/forceselected", authz, on_selected=True, builders=builders) }}
+    {{ forms.force_build(path_to_root+"builders/_selected/forceselected", authz, request, on_selected=True, builders=builders) }}
     <h2>Force All Builds</h2>
-    {{ forms.force_build(path_to_root+"builders/_all/forceall", authz, on_all=True) }}
+    {{ forms.force_build(path_to_root+"builders/_all/forceall", authz,request, on_all=True) }}
   {% endif %}
 {% endif %}
 
