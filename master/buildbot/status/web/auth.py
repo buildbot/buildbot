@@ -16,7 +16,8 @@
 
 import os
 from zope.interface import Interface, Attribute, implements
-from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import HtmlResource, ActionResource, path_to_authfail
+
 from buildbot.process.users import users
 
 class IAuth(Interface):
@@ -32,6 +33,11 @@ class IAuth(Interface):
     def authenticate(self, user, passwd):
             """Check whether C{user} / C{passwd} are valid."""
 
+    def getUserInfo(self, user):
+            """return dict with user info.
+            dict( fullName="", email="", groups=[])
+            """
+
     def errmsg(self):
             """Get the reason authentication failed."""
 
@@ -41,6 +47,10 @@ class AuthBase:
 
     def errmsg(self):
         return self.err
+
+    def getUserInfo(self, user):
+        """default dummy impl"""
+        return dict(fullName=user, email=user+"@buildbot.net", groups=[ user ])
 
 class BasicAuth(AuthBase):
     implements(IAuth)
@@ -136,8 +146,25 @@ class UsersAuth(AuthBase):
 
 class AuthFailResource(HtmlResource):
     pageTitle = "Authentication Failed"
-
     def content(self, request, cxt):
         template = request.site.buildbot_service.templates.get_template("authfail.html")
         return template.render(**cxt)
     
+class LoginResource(ActionResource):
+    def performAction(self, request):
+        authz = self.getAuthz(request)
+        d = authz.login(request)
+        def on_login(res):
+            if res:
+                root = request.site.buildbot_service.master.status.getBuildbotURL()
+                return request.requestHeaders.getRawHeaders('referer',[root])[0]
+            else:
+                return path_to_authfail(request)
+        d.addBoth(on_login)
+        return d
+class LogoutResource(ActionResource):
+    def performAction(self, request):
+        authz = self.getAuthz(request)
+        authz.logout(request)
+        root = request.site.buildbot_service.master.status.getBuildbotURL()
+        return request.requestHeaders.getRawHeaders('referer',[root])[0]

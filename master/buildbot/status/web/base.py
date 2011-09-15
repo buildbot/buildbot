@@ -209,6 +209,7 @@ class ContextMixin(AccessorMixin):
                     pageTitle = self.getPageTitle(request),
                     welcomeurl = rootpath,
                     authz = self.getAuthz(request),
+                    request = request,
                     )
 
 

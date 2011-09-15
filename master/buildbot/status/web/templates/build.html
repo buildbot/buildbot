@@ -20,7 +20,7 @@ Build #{{ b.getNumber() }}
 
   {{ current_step }}
   
-  {% if authz.advertiseAction('stopBuild') %}
+  {% if authz.advertiseAction('stopBuild', request) %}
     <h2>Stop Build</h2>
     {{ forms.stop_build(build_url+"/stop", authz, on_all=False, short=False, label='This Build') }}
   {% endif %}
@@ -172,7 +172,7 @@ Build #{{ b.getNumber() }}
   <tr {{ 'class="alt"' if end else '' }}><td class="left">Elapsed</td><td>{{ elapsed }}</td></tr>
 </table>
 
-  {% if authz.advertiseAction('forceBuild') %}
+  {% if authz.advertiseAction('forceBuild', request) %}
     <h3>Resubmit Build:</h3>
     {{ forms.rebuild_build(build_url+"/rebuild", authz, exactly, ss) }}
   {% endif %}

@@ -50,7 +50,7 @@
 (not currently connected)
 {% else %}
 </p>
-  {% if authz.advertiseAction('gracefulShutdown') %}
+  {% if authz.advertiseAction('gracefulShutdown', request) %}
     <h2>Graceful Shutdown</h2>
     {% if slave.getGraceful() %}
       <p>Slave will shut down gracefully when it is idle.</p>
