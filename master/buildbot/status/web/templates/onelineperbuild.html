@@ -26,7 +26,7 @@
 {% if num_online > 0 %}
   {% if authz.advertiseAction('forceAllBuilds', request) %}
     <h2>Force All Builds</h2>
-    {{ forms.force_build("builders/_all/forceall", authz, request, True) }}
+    {{ forms.force_build("builders/_all/forceall", authz, request, True, force_schedulers=force_schedulers, default_props=default_props) }}
   {% endif %}
 {% endif %}
 

@@ -84,9 +84,9 @@
   {% endif %}
 {% endmacro %}
 
-{% macro force_build(force_url, authz, request, on_all=False, on_selected=False, builders=[]) %}
+{% macro force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props) %}
  <form method="post" name="force_build" action="{{ force_url }}" class="command forcebuild">
-
+   
   {% if on_all %}
      <p>To force a build on <strong>all Builders</strong>, fill out the following fields
           and push the 'Force Build' button</p>
@@ -97,10 +97,12 @@
 
      <table>
      {% for b in builders %}
+     {% if b.name in sch.builderNames %}
        <tr>
          <td align="center"><input type="checkbox" name="selected" value="{{ b.name }}"></td>
          <td class="box"><a href="{{ b.link }}">{{ b.name|e }}</a></td>
        </tr>
+       {% endif %}
      {% endfor %}
      </table>
 
@@ -108,46 +110,54 @@
      <p>To force a build, fill out the following fields and
         push the 'Force Build' button</p>
   {% endif %}
-  
-  {% if not authz.authenticated(request) %}
-  <div class="row">
-    <span class="label">Your name:</span>
-    <input type="text" name="username"/>
-  </div>
-  {% endif %}
-  
-  <div class="row">
-     <span class="label">Reason for build:</span>
-     <input type='text' name='comments' />
-  </div>
-  <div class="row">
-     <span class="label">Branch to build:</span>
-     <input type='text' name='branch' />
-  </div>
-  <div class="row">
-     <span class="label">Revision to build:</span>
-     <input type='text' name='revision' />
-  </div>
-  <div class="row">
-     <span class="label">Repository to build:</span>
-     <input type='text' name='repository' />
-  </div>
-  <div class="row">
-     <span class="label">Project to build:</span>
-     <input type='text' name='project' />
-  </div>
-  {% for i in range(1,4) %}
-  <div class="row">
-     Property {{ i }}
-     <span class="label">Name:</span>
-     <span class="field"><input type="text" name="property{{ i }}name" /></span>
-     <span class="label">Value:</span>
-     <span class="field"><input type="text" name="property{{ i }}value" /></span>
-  </div>
+  <input type='hidden' name='forcescheduler' value='{{sch.name}}' />
+  {% for f in sch.all_fields %}
+    {% if f.name != "username" or not authz.authenticated(request) %}
+    {% if f.type == "text" or f.type == "int"%}
+    <div class="row">
+       <span class="label">{{f.label}}</span>
+       <input type='text' size='{{f.size}}' name='{{f.name}}' value='{{default_props[sch.name+"."+f.name]}}' />
+    </div>
+    {% elif f.type == "bool"%}
+    <div class="row">
+       <input type='checkbox' name='checkbox' value='{{f.name}}' {{default_props[sch.name+"."+f.name]}} />
+       <span class="label">{{f.label}}</span>
+    </div>
+    {% elif f.type == "textarea" %}
+      <div class="row">
+       <span class="label">{{f.label}}</span><br>
+       <textarea name='{{f.name}}' rows={{f.rows}} cols={{f.cols}}>{{default_props[sch.name+"."+f.name]}}</textarea>
+    </div>
+    {% elif f.type == "anyproperty" %}
+    <div class="row">
+      {{ f.label }}
+       <span class="label">Name:</span>
+       <span class="field"><input type="text" name="{{ f.name }}name" /></span>
+       <span class="label">Value:</span>
+       <span class="field"><input type="text" name="{{ f.name }}value" /></span>
+    </div>
+    {% elif f.type == "list" %}
+    <div class="row">
+       <span class="label">{{f.label}}</span><br>
+       <span class="select">
+       <select name='{{f.name}}'>
+	 {% for c in f.choices %}
+	 <option {{(default_props[sch.name+"."+f.name] == c) and "selected" or ""}}>{{c}}</option>
+	 {% endfor %}
+       </select>
+       </span>
+    {% endif %}
+    {% endif %}
   {% endfor %}
   
   <input type="submit" value="Force Build" /> 
  </form>
+{% endmacro %}
+{% macro force_build(force_url, authz, request, on_all=False, on_selected=False, builders=[], force_schedulers={},default_props={}) %}
+ {% for name, sch in force_schedulers.items() %}
+    {{ force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch,default_props=default_props) }}
+  {% endfor %}
+ 
 {% endmacro %}
 
 {% macro graceful_shutdown(shutdown_url, authz) %}

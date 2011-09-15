@@ -18,7 +18,11 @@ from buildbot.schedulers.dependent import Dependent
 from buildbot.schedulers.timed import Periodic, Nightly
 from buildbot.schedulers.triggerable import Triggerable
 from buildbot.schedulers.trysched import Try_Jobdir, Try_Userpass
+from buildbot.schedulers.forcesched import ForceSched, FixedParameter, TextParameter, IntParameter
+from buildbot.schedulers.forcesched import ChoiceStringParameter, StringParameter, AnyPropertyParameter
 
 _hush_pyflakes = [Scheduler, AnyBranchScheduler, Dependent,
-                  Periodic, Nightly, Triggerable, Try_Jobdir, Try_Userpass]
+                  Periodic, Nightly, Triggerable, Try_Jobdir, Try_Userpass,
+                  ForceSched, FixedParameter, TextParameter, IntParameter,
+                  ChoiceStringParameter, StringParameter, AnyPropertyParameter]
 del _hush_pyflakes

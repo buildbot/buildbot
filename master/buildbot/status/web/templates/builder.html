@@ -100,7 +100,7 @@
 
 {% if authz.advertiseAction('forceBuild', request) %}
   <h2>Force build</h2>
-  {{ forms.force_build(builder_url+"/force", authz, request, False) }}
+  {{ forms.force_build(builder_url+"/force", authz, request, False, force_schedulers=force_schedulers,default_props=default_props) }}
 {% endif %}
 
 </div>
