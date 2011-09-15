@@ -29,14 +29,24 @@
         <a href="{{ path_to_root }}one_line_per_build">Recent Builds</a>
         <a href="{{ path_to_root }}buildslaves">Buildslaves</a>
         <a href="{{ path_to_root }}changes">Changesources</a>
-        {% if authz.advertiseAction('showUsersPage') %}
+        {% if authz.advertiseAction('showUsersPage', request) %}
           <a href="{{ path_to_root }}users">Users</a>
         {% endif %}
         - <a href="{{ path_to_root }}json/help">JSON API</a>
         - <a href="{{ path_to_root }}about">About</a>
+    <div class="auth">    
+    {% if authz.authenticated(request) %}
+    {{authz.currentUserHTML(request)}} 
+    |<a href="{{ path_to_root }}logout">Logout</a>
+    {% else %}
+    <form method="post" name="login" action="{{ path_to_root }}login">
+    <input type="text" name="username" size=10 />
+    <input type="password" name="passwd" size=10/>
+    <input type="submit" value="login" />
+    {% endif %}
+    </div>
     </div>
     {% endblock %}
-
     {%- block barecontent -%}
     <hr/>
 

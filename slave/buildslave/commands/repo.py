@@ -31,6 +31,8 @@ class Repo(SourceBaseCommand):
     ['manifest_branch'] (optional): Which manifest repo version (i.e. branch or tag)
                                     to retrieve. Default: "master".
     ['manifest_file'] (optional):   Which manifest file to use. Default: "default.xml".
+    ['manifest_override_url'] (optional):   Which manifest file to use as an overide. Default: None.
+    			     This is usually set by forced build to build over a known working base
     ['tarball'] (optional):         The tarball base to accelerate the fetch.
     ['repo_downloads'] (optional):  Repo downloads to do. Computer from GerritChangeSource
                                     and forced build properties.
@@ -43,6 +45,7 @@ class Repo(SourceBaseCommand):
         self.manifest_url = args.get('manifest_url')
         self.manifest_branch = args.get('manifest_branch')
         self.manifest_file =  args.get('manifest_file')
+        self.manifest_override_url =  args.get('manifest_override_url')
         self.tarball = args.get('tarball')
         self.repo_downloads = args.get('repo_downloads')
         # we're using string instead of an array here, because it will be transferred back
@@ -75,27 +78,17 @@ class Repo(SourceBaseCommand):
             d.addCallback(cb)
         return d
 
-    def _tarCmd(self, cmds, callback):
-        cmd = ["tar"] + cmds
-        c = runprocess.RunProcess(self.builder, cmd, self._fullSrcdir(),
+    def _Cmd(self, cmds, callback, abandonOnFailure=True):
+        c = runprocess.RunProcess(self.builder, cmds, self._fullSrcdir(),
                                   sendRC=False, timeout=self.timeout,
                                   maxTime=self.maxTime, usePTY=False,
                                   logEnviron=self.logEnviron)
         self.command = c
-        cmdexec = c.start()
-        cmdexec.addCallback(callback)
-        return cmdexec
-
-    def _gitCmd(self, subdir, cmds, callback):
-        cmd = ["git"] + cmds
-        c = runprocess.RunProcess(self.builder, cmd, os.path.join(self._fullSrcdir(), subdir),
-                                  sendRC=False, timeout=self.timeout,
-                                  maxTime=self.maxTime, usePTY=False,
-                                  logEnviron=self.logEnviron)
-        self.command = c
-        cmdexec = c.start()
-        cmdexec.addCallback(callback)
-        return cmdexec
+        d = c.start()
+        if abandonOnFailure:
+            d.addCallback(self._abandonOnFailure)
+        d.addCallback(callback)
+        return d
 
     def sourcedataMatches(self):
         try:
@@ -107,7 +100,7 @@ class Repo(SourceBaseCommand):
     def doVCFull(self):
         os.makedirs(self._fullSrcdir())
         if self.tarball and os.path.exists(self.tarball):
-            return self._tarCmd(['-xvzf', self.tarball], self._doInit)
+            return self._Cmd(['tar', '-xvzf', self.tarball], self._doPreInitCleanUp)
         else:
             return self._doInit(None)
 
@@ -121,18 +114,54 @@ class Repo(SourceBaseCommand):
         return self.doVCUpdate()
 
     def doVCUpdate(self):
-        command = ['forall', '-c', 'git', 'clean', '-f', '-d', '-x']
-        return self._repoCmd(command, self._doClean2, abandonOnFailure=False)
+        if self.repo_downloads:
+            self.sendStatus({'header': "will download:\n" + "repo download "+ "\nrepo download ".join(self.repo_downloads) + "\n"})
+        return self._doPreSyncCleanUp(None)
 
-    def _doClean2(self, dummy):
-        command = ['forall', '-c', 'git', 'reset', '--hard', 'HEAD']
-        return self._repoCmd(command, self._doClean3, abandonOnFailure=False)
+    # a simple shell script to gather all cleanup tweaks...
+    # doing them one by one just complicate the stuff
+    # and messup the stdio log
+    def _cleanupCommand(self):
+        command = """	set -v
+			if [ -d .repo/manifests ]
+			then
+				# repo just refuse to run if manifest is messed up
+				# so ensure we are in a known state
+			    	cd .repo/manifests
+				git fetch origin
+				git reset --hard remotes/origin/%(manifest_branch)s
+				git config branch.default.merge %(manifest_branch)s
+				cd ..
+				ln -sf manifests/%(manifest_file)s manifest.xml
+				cd ..
+			 fi
+			 find . -name .git/index.lock -exec rm -f {} \;
+		  	 repo forall -c git clean -f -d -x 2>/dev/null
+	  	 	 repo forall -c git reset --hard HEAD 2>/dev/null
+		     """%(self.__dict__)
+        return "\n".join([ s.strip() for s in command.splitlines()])
+    
+    def _doPreInitCleanUp(self, dummy):
+        command = self._cleanupCommand()
+        return self._Cmd(["bash", "-c", command], self._doInit, abandonOnFailure=False)
 
-    def _doClean3(self,dummy):
-        command = ['clean', '-f', '-d', '-x']
-        return self._gitCmd(".repo/manifests",command, self._doSync)
+    def _doPreSyncCleanUp(self, dummy):
+        command = self._cleanupCommand()
+        return self._Cmd(["bash", "-c", command], self._doManifestOveride, abandonOnFailure=False)
+
+    def _doManifestOveride(self, dummy):
+        if self.manifest_override_url:
+            self.sendStatus({"header": "overriding manifest with %s\n" %(self.manifest_override_url)})
+            if os.path.exists(os.path.join(self._fullSrcdir(), self.manifest_override_url)):
+                os.system("cd %s; cp -f %s manifest_override.xml"%(self._fullSrcdir(),self.manifest_override_url))
+            else:
+                command = ["wget", self.manifest_override_url, '-O', 'manifest_override.xml']
+                return self._Cmd(command, self._doSync)
+        return self._doSync(None)
 
     def _doSync(self, dummy):
+        if self.manifest_override_url:
+            os.system("cd %s/.repo; ln -sf ../manifest_override.xml manifest.xml"%(self._fullSrcdir()))
         command = ['sync']
         self.sendStatus({"header": "synching manifest %s from branch %s from %s\n"
                                    % (self.manifest_file, self.manifest_branch, self.manifest_url)})
@@ -140,13 +169,18 @@ class Repo(SourceBaseCommand):
 
     def _didSync(self, dummy):
         if self.tarball and not os.path.exists(self.tarball):
-            return self._tarCmd(['-cvzf', self.tarball, ".repo"], self._doDownload)
+            return self._Cmd(['tar', '-cvzf', self.tarball, ".repo"], self._doManifest)
         else:
-            return self._doDownload(None)
+            return self._doManifest(None)
+
+    def _doManifest(self, dummy):
+        command = ['manifest', '-r', '-o', 'manifest-original.xml']
+        return self._repoCmd(command, self._doDownload, abandonOnFailure=False)
+
 
     def _doDownload(self, dummy):
         if hasattr(self.command, 'stderr') and self.command.stderr:
-            if "Automatic cherry-pick failed" in self.command.stderr:
+            if "Automatic cherry-pick failed" in self.command.stderr or "Automatic revert failed" in self.command.stderr:
                 command = ['forall','-c' ,'git' ,'diff', 'HEAD']
                 self.cherry_pick_failed = True
                 return self._repoCmd(command, self._DownloadAbandon, abandonOnFailure = False, keepStderr=True) # call again

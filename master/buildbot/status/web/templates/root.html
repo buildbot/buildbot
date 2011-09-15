@@ -45,7 +45,7 @@
   <li class="{{ item_class.next() }}"><a href="about">About</a> this Buildbot</li>
 </ul>
 
-{%- if authz.advertiseAction('cleanShutdown') -%}
+{%- if authz.advertiseAction('cleanShutdown', request) -%}
 {%- if shutting_down -%}
 Master is shutting down<br/>
 {{ forms.cancel_clean_shutdown(cancel_shutdown_url, authz) }}

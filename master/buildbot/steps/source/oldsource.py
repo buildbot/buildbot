@@ -948,6 +948,7 @@ class Repo(Source):
         self.args.update({'manifest_branch': manifest_branch,
                           'manifest_file': manifest_file,
                           'tarball': tarball,
+                          'manifest_override_url': None
                           })
 
     def computeSourceRevision(self, changes):
@@ -985,7 +986,6 @@ class Repo(Source):
         in order to e.g. manage dependancies
         """
         downloads = self.build.getProperty("repo_downloads", [])
-
         # download patches based on GerritChangeSource events
         for change in self.build.allChanges():
             if (change.properties.has_key("event.type") and
@@ -1011,6 +1011,12 @@ class Repo(Source):
     def startVC(self, branch, revision, patch):
         self.args['manifest_url'] = self.manifest_url
 
+        # manifest override
+        self.args['manifest_override_url'] = None
+        try:
+            self.args['manifest_override_url'] = self.build.getProperty("manifest_override_url")
+        except KeyError:
+            pass
         # only master has access to properties, so we must implement this here.
         d = self.buildDownloadList()
         d.addCallback(self.continueStartVC, branch, revision, patch)
@@ -1025,8 +1031,7 @@ class Repo(Source):
         self.startCommand(cmd)
 
     def failedStartVC(self, failure):
-        self.interrupt("unable to build download list"+str(failure))
-        self.finished(FAILURE)
+        self.failed(failure)
 
     def commandComplete(self, cmd):
         if cmd.updates.has_key("repo_downloaded"):
