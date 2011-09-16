@@ -209,6 +209,7 @@ class ContextMixin(AccessorMixin):
                     pageTitle = self.getPageTitle(request),
                     welcomeurl = rootpath,
                     authz = self.getAuthz(request),
+                    alert_msg = request.args.get("alert_msg", [""])[0],
                     request = request,
                     )
 
@@ -227,11 +228,17 @@ class ActionResource(resource.Resource, AccessorMixin):
 
         @param request: the web request
         @returns: URL via Deferred
+		  can also return (URL, alert_msg) to display simple 
+		  feedback to user in case of failure
         """
 
     def render(self, request):
         d = defer.maybeDeferred(lambda : self.performAction(request))
         def redirect(url):
+            if isinstance(url, tuple):
+                url, alert_msg = url
+                if alert_msg:
+                    url += "?alert_msg="+urllib.quote(alert_msg, safe='')
             request.redirect(url)
             request.write("see <a href='%s'>%s</a>" % (url,url))
             try:

@@ -16,6 +16,16 @@ top:5px;
 right:40px;
 }
 
+.alert {
+  color: #c30000;
+  background-color: #f2dcdc;
+  padding: 5px 5px 5px 25px;
+  margin-bottom: 20px;
+  border-top:1px solid #ccc;
+  border-bottom:1px solid #ccc;
+  border-color: #c30000;
+  font-size: 20px;
+}
 a:link,a:visited,a:active {
 	color: #444;
 }

@@ -49,7 +49,12 @@
     {% endblock %}
     {%- block barecontent -%}
     <hr/>
-
+    
+    {% if alert_msg != "" %}
+    <div class="alert">    
+    {{ alert_msg }}
+    </div>
+    {% endif %}
     <div class="content">
       {%- block content -%}     
       {%- endblock -%}
