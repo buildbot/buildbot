@@ -72,7 +72,7 @@ BuildStep
 
     A step acts as a factory for more steps.  See
     :ref:`Writing-BuildStep-Constructors` for advice on writing subclass
-    constructors.  are used.
+    constructors.  The following methods handle this factory behavior.
 
     .. py:method:: addFactoryArguments(..)
 
@@ -184,7 +184,7 @@ BuildStep
 
         Note that this method does *not* return a Deferred.  When the step is
         done, it should call :meth:`finished`, with a result -- a constant from
-        :mod:`buildbot.status.results`.  The result which will be handed off to
+        :mod:`buildbot.status.results`.  The result will be handed off to
         the :class:`~buildbot.process.build.Build`.
 
         If the step encounters an exception, it should call :meth:`failed` with
@@ -432,6 +432,7 @@ LoggingBuildStep
             instance to start
 
         .. note::
+
             This method permits an optional ``errorMessages`` parameter,
             allowing errors detected early in the command process to be logged.
             It will be removed, and its use is deprecated.
