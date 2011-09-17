@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-
 import re
 
 from zope.interface import implements
@@ -31,61 +30,17 @@ from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION, RETRY, worst_status
 from buildbot.process import metrics, properties
 
-"""
-BuildStep and RemoteCommand classes for master-side representation of the
-build process
-"""
-
 class BuildStepFailed(Exception):
-    """Indicates that the buildstep failed. This is useful as an errback to
-    skip other processing and jump right to the end.  It is handled by
-    L{BuildStep.failed}."""
+    pass
 
 class RemoteCommand(pb.Referenceable):
-    """
-    I represent a single command to be run on the slave. I handle the details
-    of reliably gathering status updates from the slave (acknowledging each),
-    and (eventually, in a future release) recovering from interrupted builds.
-    This is the master-side object that is known to the slave-side
-    L{buildbot.slave.bot.SlaveBuilder}, to which status updates are sent.
-
-    My command should be started by calling .run(), which returns a
-    Deferred that will fire when the command has finished, or will
-    errback if an exception is raised.
-    
-    Typically __init__ or run() will set up self.remote_command to be a
-    string which corresponds to one of the SlaveCommands registered in
-    the buildslave, and self.args to a dictionary of arguments that will
-    be passed to the SlaveCommand instance.
-
-    start, remoteUpdate, and remoteComplete are available to be overridden
-
-    @type  commandCounter: list of one int
-    @cvar  commandCounter: provides a unique value for each
-                           RemoteCommand executed across all slaves
-    @type  active:         boolean
-    @ivar  active:         whether the command is currently running
-    """
 
     # class-level unique identifier generator for command ids
-    commandCounter = 0
+    _commandCounter = 0
 
     active = False
 
     def __init__(self, remote_command, args, ignore_updates=False):
-        """
-        @type  remote_command: string
-        @param remote_command: remote command to start.  This will be
-                               passed to
-                               L{buildbot.slave.bot.SlaveBuilder.remote_startCommand}
-                               and needs to have been registered
-                               slave-side in L{buildbot.slave.registry}
-        @type  args:           dict
-        @param args:           arguments to send to the remote command
-
-        @param ignore_updates: if true, ignore any updates from the slave side
-        """
-
         self.remote_command = remote_command
         self.args = args
         self.ignore_updates = ignore_updates
@@ -96,14 +51,14 @@ class RemoteCommand(pb.Referenceable):
         self.remote = remote
 
         # generate a new command id
-        cmd_id = RemoteCommand.commandCounter
-        RemoteCommand.commandCounter += 1
+        cmd_id = RemoteCommand._commandCounter
+        RemoteCommand._commandCounter += 1
         self.commandID = "%d" % cmd_id
 
         log.msg("%s: RemoteCommand.run [%s]" % (self, self.commandID))
         self.deferred = defer.Deferred()
 
-        d = defer.maybeDeferred(self.start)
+        d = defer.maybeDeferred(self._start)
 
         # _finished is called with an error for unknown commands, errors
         # that occur while the command is starting (including OSErrors in
@@ -117,15 +72,7 @@ class RemoteCommand(pb.Referenceable):
         # when our parent Step calls our .lostRemote() method.
         return self.deferred
 
-    def start(self):
-        """
-        Tell the slave to start executing the remote command.
-
-        @rtype:   L{twisted.internet.defer.Deferred}
-        @returns: a deferred that will fire when the remote command is
-                  done (with None as the result)
-        """
-
+    def _start(self):
         # Allow use of WithProperties in logfile path names.
         cmd_args = self.args
 
@@ -137,23 +84,34 @@ class RemoteCommand(pb.Referenceable):
                                    self.remote_command, cmd_args)
         return d
 
-    def interrupt(self, why):
-        # TODO: consider separating this into interrupt() and stop(), where
-        # stop() unconditionally calls _finished, but interrupt() merely
-        # asks politely for the command to stop soon.
+    def _finished(self, failure=None):
+        self.active = False
+        # call .remoteComplete. If it raises an exception, or returns the
+        # Failure that we gave it, our self.deferred will be errbacked. If
+        # it does not (either it ate the Failure or there the step finished
+        # normally and it didn't raise a new exception), self.deferred will
+        # be callbacked.
+        d = defer.maybeDeferred(self.remoteComplete, failure)
+        # arrange for the callback to get this RemoteCommand instance
+        # instead of just None
+        d.addCallback(lambda r: self)
+        # this fires the original deferred we returned from .run(),
+        # with self as the result, or a failure
+        d.addBoth(self.deferred.callback)
 
+    def interrupt(self, why):
         log.msg("RemoteCommand.interrupt", self, why)
         if not self.active:
             log.msg(" but this RemoteCommand is already inactive")
-            return
+            return defer.succeed(None)
         if not self.remote:
             log.msg(" but our .remote went away")
-            return
+            return defer.succeed(None)
         if isinstance(why, Failure) and why.check(error.ConnectionLost):
             log.msg("RemoteCommand.disconnect: lost slave")
             self.remote = None
             self._finished(why)
-            return
+            return defer.succeed(None)
 
         # tell the remote command to halt. Returns a Deferred that will fire
         # when the interrupt command has been delivered.
@@ -213,69 +171,10 @@ class RemoteCommand(pb.Referenceable):
             reactor.callLater(0, self._finished, failure)
         return None
 
-    def _finished(self, failure=None):
-        self.active = False
-        # call .remoteComplete. If it raises an exception, or returns the
-        # Failure that we gave it, our self.deferred will be errbacked. If
-        # it does not (either it ate the Failure or there the step finished
-        # normally and it didn't raise a new exception), self.deferred will
-        # be callbacked.
-        d = defer.maybeDeferred(self.remoteComplete, failure)
-        # arrange for the callback to get this RemoteCommand instance
-        # instead of just None
-        d.addCallback(lambda r: self)
-        # this fires the original deferred we returned from .run(),
-        # with self as the result, or a failure
-        d.addBoth(self.deferred.callback)
-
     def remoteComplete(self, maybeFailure):
-        """Subclasses can override this.
-
-        This is called when the RemoteCommand has finished. 'maybeFailure'
-        will be None if the command completed normally, or a Failure
-        instance in one of the following situations:
-
-         - the slave was lost before the command was started
-         - the slave didn't respond to the startCommand message
-         - the slave raised an exception while starting the command
-           (bad command name, bad args, OSError from missing executable)
-         - the slave raised an exception while finishing the command
-           (they send back a remote_complete message with a Failure payload)
-
-        and also (for now):
-         -  slave disconnected while the command was running
-        
-        This method should do cleanup, like closing log files. It should
-        normally return the 'failure' argument, so that any exceptions will
-        be propagated to the Step. If it wants to consume them, return None
-        instead."""
-
         return maybeFailure
 
 class LoggedRemoteCommand(RemoteCommand):
-    """
-
-    I am a L{RemoteCommand} which gathers output from the remote command into
-    one or more local log files. My C{self.logs} dictionary contains
-    references to these L{buildbot.status.logfile.LogFile} instances. Any
-    stdout/stderr/header updates from the slave will be put into
-    C{self.logs['stdio']}, if it exists. If the remote command uses other log
-    files, they will go into other entries in C{self.logs}.
-
-    If you want to use stdout or stderr, you should create a LogFile named
-    'stdio' and pass it to my useLog() message. Otherwise stdout/stderr will
-    be ignored, which is probably not what you want.
-
-    Unless you tell me otherwise, when my command completes I will close all
-    the LogFiles that I know about.
-
-    @ivar logs: maps logname to a LogFile instance
-    @ivar _closeWhenFinished: maps logname to a boolean. If true, this
-                              LogFile will be closed when the RemoteCommand
-                              finishes. LogFiles which are shared between
-                              multiple RemoteCommands should use False here.
-
-    """
 
     rc = None
     debug = False
@@ -295,29 +194,6 @@ class LoggedRemoteCommand(RemoteCommand):
         return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
 
     def useLog(self, loog, closeWhenFinished=False, logfileName=None):
-        """Start routing messages from a remote logfile to a local LogFile
-
-        I take a local ILogFile instance in 'loog', and arrange to route
-        remote log messages for the logfile named 'logfileName' into it. By
-        default this logfileName comes from the ILogFile itself (using the
-        name by which the ILogFile will be displayed), but the 'logfileName'
-        argument can be used to override this. For example, if
-        logfileName='stdio', this logfile will collect text from the stdout
-        and stderr of the command.
-
-        @param loog: an instance which implements ILogFile
-        @param closeWhenFinished: a boolean, set to False if the logfile
-                                  will be shared between multiple
-                                  RemoteCommands. If True, the logfile will
-                                  be closed when this ShellCommand is done
-                                  with it.
-        @param logfileName: a string, which indicates which remote log file
-                            should be routed into this ILogFile. This should
-                            match one of the keys of the logfiles= argument
-                            to ShellCommand.
-
-        """
-
         assert interfaces.ILogFile.providedBy(loog)
         if not logfileName:
             logfileName = loog.getName()
@@ -331,24 +207,26 @@ class LoggedRemoteCommand(RemoteCommand):
         assert logfileName not in self.delayedLogs
         self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
 
-    def start(self):
-        log.msg("LoggedRemoteCommand.start")
+    def _start(self):
+        log.msg("LoggedRemoteCommand._start")
         if 'stdio' not in self.logs:
             log.msg("LoggedRemoteCommand (%s) is running a command, but "
                     "it isn't being logged to anything. This seems unusual."
                     % self)
         self.updates = {}
         self._startTime = util.now()
-        return RemoteCommand.start(self)
+        return RemoteCommand._start(self)
 
     def addStdout(self, data):
         if 'stdio' in self.logs:
             self.logs['stdio'].addStdout(data)
         if self.collectStdout:
             self.stdout += data
+
     def addStderr(self, data):
         if 'stdio' in self.logs:
             self.logs['stdio'].addStderr(data)
+
     def addHeader(self, data):
         if 'stdio' in self.logs:
             self.logs['stdio'].addHeader(data)
@@ -483,68 +361,11 @@ class LogLineObserver(LogObserver):
 
 
 class RemoteShellCommand(LoggedRemoteCommand):
-    """This class helps you run a shell command on the build slave. It will
-    accumulate all the command's output into a Log named 'stdio'. When the
-    command is finished, it will fire a Deferred. You can then check the
-    results of the command and parse the output however you like."""
-
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=20*60, maxTime=None, logfiles={},
                  usePTY="slave-config", logEnviron=True,
                  collectStdout=False):
-        """
-        @type  workdir: string
-        @param workdir: directory where the command ought to run,
-                        relative to the Builder's home directory. Defaults to
-                        '.': the same as the Builder's homedir. This should
-                        probably be '.' for the initial 'cvs checkout'
-                        command (which creates a workdir), and the Build-wide
-                        workdir for all subsequent commands (including
-                        compiles and 'cvs update').
-
-        @type  command: list of strings (or string)
-        @param command: the shell command to run, like 'make all' or
-                        'cvs update'. This should be a list or tuple
-                        which can be used directly as the argv array.
-                        For backwards compatibility, if this is a
-                        string, the text will be given to '/bin/sh -c
-                        %s'.
-
-        @type  env:     dict of string->string
-        @param env:     environment variables to add or change for the
-                        slave.  Each command gets a separate
-                        environment; all inherit the slave's initial
-                        one.  TODO: make it possible to delete some or
-                        all of the slave's environment.
-
-        @type  want_stdout: bool
-        @param want_stdout: defaults to True. Set to False if stdout should
-                            be thrown away. Do this to avoid storing or
-                            sending large amounts of useless data.
-
-        @type  want_stderr: bool
-        @param want_stderr: False if stderr should be thrown away
-
-        @type  timeout: int
-        @param timeout: tell the remote that if the command fails to
-                        produce any output for this number of seconds,
-                        the command is hung and should be killed. Use
-                        None to disable the timeout.
-
-        @param logEnviron: whether to log env vars on the slave side
-
-        @type  maxTime: int
-        @param maxTime: tell the remote that if the command fails to complete
-                        in this number of seconds, the command should be
-                        killed.  Use None to disable maxTime.
-
-        @type collectStdout: boolean
-        @param collectStdout: if true, then the command's stdout is collected,
-            separately from the logfiles, in the C{stdout} attribute.  This is
-            most useful for commands with short output, e.g., a version-control
-            revision.
-        """
 
         self.command = command # stash .command, set it later
         if env is not None:
@@ -564,7 +385,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
                 }
         LoggedRemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout)
 
-    def start(self):
+    def _start(self):
         self.args['command'] = self.command
         if self.remote_command == "shell":
             # non-ShellCommand slavecommands are responsible for doing this
@@ -574,59 +395,20 @@ class RemoteShellCommand(LoggedRemoteCommand):
         what = "command '%s' in dir '%s'" % (self.args['command'],
                                              self.args['workdir'])
         log.msg(what)
-        return LoggedRemoteCommand.start(self)
+        return LoggedRemoteCommand._start(self)
 
     def __repr__(self):
         return "<RemoteShellCommand '%s'>" % repr(self.command)
 
 class BuildStep(properties.PropertiesMixin):
-    """
-    I represent a single step of the build process. This step may involve
-    zero or more commands to be run in the build slave, as well as arbitrary
-    processing on the master side. Regardless of how many slave commands are
-    run, the BuildStep will result in a single status value.
 
-    The step is started by calling startStep(), which returns a Deferred that
-    fires when the step finishes. See C{startStep} for a description of the
-    results provided by that Deferred.
-
-    __init__ and start are good methods to override. Don't forget to upcall
-    BuildStep.__init__ or bad things will happen.
-
-    To launch a RemoteCommand, pass it to .runCommand and wait on the
-    Deferred it returns.
-
-    Each BuildStep generates status as it runs. This status data is fed to
-    the L{buildbot.status.buildstep.BuildStepStatus} listener that sits in
-    C{self.step_status}. It can also feed progress data (like how much text
-    is output by a shell command) to the
-    L{buildbot.status.progress.StepProgress} object that lives in
-    C{self.progress}, by calling C{self.setProgress(metric, value)} as it
-    runs.
-
-    @type build: L{buildbot.process.build.Build}
-    @ivar build: the parent Build which is executing this step
-
-    @type progress: L{buildbot.status.progress.StepProgress}
-    @ivar progress: tracks ETA for the step
-
-    @type step_status: L{buildbot.status.buildstep.BuildStepStatus}
-    @ivar step_status: collects output status
-    """
-
-    # these parameters are used by the parent Build object to decide how to
-    # interpret our results. haltOnFailure will affect the build process
-    # immediately, the others will be taken into consideration when
-    # determining the overall build status.
-    #
-    # steps that are marked as alwaysRun will be run regardless of the outcome
-    # of previous steps (especially steps with haltOnFailure=True)
     haltOnFailure = False
     flunkOnWarnings = False
     flunkOnFailure = False
     warnOnWarnings = False
     warnOnFailure = False
     alwaysRun = False
+    doStepIf = True
 
     # properties set on a build step are, by nature, always runtime properties
     set_runtime_properties = True
@@ -646,6 +428,7 @@ class BuildStep(properties.PropertiesMixin):
              'warnOnFailure',
              'alwaysRun',
              'progressMetrics',
+             'useProgress',
              'doStepIf',
              ]
 
@@ -656,8 +439,6 @@ class BuildStep(properties.PropertiesMixin):
     build = None
     step_status = None
     progress = None
-    # doStepIf can be False, True, or a function that returns False or True
-    doStepIf = True
 
     def __init__(self, **kwargs):
         self.factory = (self.__class__, dict(kwargs))
@@ -678,22 +459,12 @@ class BuildStep(properties.PropertiesMixin):
         return [self.name]
 
     def setBuild(self, build):
-        # subclasses which wish to base their behavior upon qualities of the
-        # Build (e.g. use the list of changed files to run unit tests only on
-        # code which has been modified) should do so here. The Build is not
-        # available during __init__, but setBuild() will be called just
-        # afterwards.
         self.build = build
 
     def setBuildSlave(self, buildslave):
         self.buildslave = buildslave
 
     def setDefaultWorkdir(self, workdir):
-        # The Build calls this just after __init__().  ShellCommand
-        # and variants use a slave-side workdir, but some other steps
-        # do not. Subclasses which use a workdir should use the value
-        # set by this method unless they were constructed with
-        # something more specific.
         pass
 
     def addFactoryArguments(self, **kwargs):
@@ -714,36 +485,10 @@ class BuildStep(properties.PropertiesMixin):
         return None
 
     def setProgress(self, metric, value):
-        """BuildSteps can call self.setProgress() to announce progress along
-        some metric."""
         if self.progress:
             self.progress.setProgress(metric, value)
 
     def startStep(self, remote):
-        """Begin the step. This returns a Deferred that will fire when the
-        step finishes.
-
-        This deferred fires with a tuple of (result, [extra text]), although
-        older steps used to return just the 'result' value, so the receiving
-        L{base.Build} needs to be prepared to handle that too. C{result} is
-        one of the SUCCESS/WARNINGS/FAILURE/SKIPPED constants from
-        L{buildbot.status.builder}, and the extra text is a list of short
-        strings which should be appended to the Build's text results. This
-        text allows a test-case step which fails to append B{17 tests} to the
-        Build's status, in addition to marking the build as failing.
-
-        The deferred will errback if the step encounters an exception,
-        including an exception on the slave side (or if the slave goes away
-        altogether). Failures in shell commands (rc!=0) will B{not} cause an
-        errback, in general the BuildStep will evaluate the results and
-        decide whether to treat it as a WARNING or FAILURE.
-
-        @type remote: L{twisted.spread.pb.RemoteReference}
-        @param remote: a reference to the slave's
-                       L{buildbot.slave.bot.SlaveBuilder} instance where any
-                       RemoteCommands may be run
-        """
-
         self.remote = remote
         self.deferred = defer.Deferred()
         # convert all locks into their real form
@@ -836,73 +581,9 @@ class BuildStep(properties.PropertiesMixin):
             reactor.callLater(0, self._finishFinished, SKIPPED)
 
     def start(self):
-        """Begin the step. Override this method and add code to do local
-        processing, fire off remote commands, etc.
-
-        To spawn a command in the buildslave, create a RemoteCommand instance
-        and run it with self.runCommand::
-
-          c = RemoteCommandFoo(args)
-          d = self.runCommand(c)
-          d.addCallback(self.fooDone).addErrback(self.failed)
-
-        As the step runs, it should send status information to the
-        BuildStepStatus::
-
-          self.step_status.setText(['compile', 'failed'])
-          self.step_status.setText2(['4', 'warnings'])
-
-        To have some code parse stdio (or other log stream) in realtime, add
-        a LogObserver subclass. This observer can use self.step.setProgress()
-        to provide better progress notification to the step.::
-
-          self.addLogObserver('stdio', MyLogObserver())
-
-        To add a LogFile, use self.addLog. Make sure it gets closed when it
-        finishes. When giving a Logfile to a RemoteShellCommand, just ask it
-        to close the log when the command completes::
-
-          log = self.addLog('output')
-          cmd = RemoteShellCommand(args)
-          cmd.useLog(log, closeWhenFinished=True)
-
-        You can also create complete Logfiles with generated text in a single
-        step::
-
-          self.addCompleteLog('warnings', text)
-
-        When the step is done, it should call self.finished(result). 'result'
-        will be provided to the L{buildbot.process.build.Build}, and should be
-        one of the constants defined above: SUCCESS, WARNINGS, FAILURE, or
-        SKIPPED.
-
-        If the step encounters an exception, it should call self.failed(why).
-        'why' should be a Failure object. This automatically fails the whole
-        build with an exception. It is a good idea to add self.failed as an
-        errback to any Deferreds you might obtain.
-
-        If the step decides it does not need to be run, start() can return
-        the constant SKIPPED. This fires the callback immediately: it is not
-        necessary to call .finished yourself. This can also indicate to the
-        status-reporting mechanism that this step should not be displayed.
-
-        A step can be configured to only run under certain conditions.  To
-        do this, set the step's doStepIf to a boolean value, or to a function
-        that returns a boolean value.  If the value or function result is
-        False, then the step will return SKIPPED without doing anything,
-        otherwise the step will be executed normally.  If you set doStepIf
-        to a function, that function should accept one parameter, which will
-        be the Step object itself."""
-        
         raise NotImplementedError("your subclass must implement this method")
 
     def interrupt(self, reason):
-        """Halt the command, either because the user has decided to cancel
-        the build ('reason' is a string), or because the slave has
-        disconnected ('reason' is a ConnectionLost Failure). Any further
-        local processing should be skipped, and the Step completed with an
-        error status. The results text should say something useful like
-        ['step', 'interrupted'] or ['remote', 'lost']"""
         self.stopped = True
         if self._acquiringLock:
             lock, access, d = self._acquiringLock
@@ -977,32 +658,12 @@ class BuildStep(properties.PropertiesMixin):
     # utility methods that BuildSteps may find useful
 
     def slaveVersion(self, command, oldversion=None):
-        """Return the version number of the given slave command. For the
-        commands defined in buildbot.slave.commands, this is the value of
-        'cvs_ver' at the top of that file. Non-existent commands will return
-        a value of None. Buildslaves running buildbot-0.5.0 or earlier did
-        not respond to the version query: commands on those slaves will
-        return a value of OLDVERSION, so you can distinguish between old
-        buildslaves and missing commands.
-
-        If you know that <=0.5.0 buildslaves have the command you want (CVS
-        and SVN existed back then, but none of the other VC systems), then it
-        makes sense to call this with oldversion='old'. If the command you
-        want is newer than that, just leave oldversion= unspecified, and the
-        command will return None for a buildslave that does not implement the
-        command.
-        """
         return self.build.getSlaveCommandVersion(command, oldversion)
 
     def slaveVersionIsOlderThan(self, command, minversion):
         sv = self.build.getSlaveCommandVersion(command, None)
         if sv is None:
             return True
-        # the version we get back is a string form of the CVS version number
-        # of the slave's buildbot/slave/commands.py, something like 1.39 .
-        # This might change in the future (I might move away from CVS), but
-        # if so I'll keep updating that string with suitably-comparable
-        # values.
         if map(int, sv.split(".")) < map(int, minversion.split(".")):
             return True
         return False
@@ -1055,13 +716,6 @@ class BuildStep(properties.PropertiesMixin):
                 self._pendingLogObservers.remove((logname, observer))
 
     def addURL(self, name, url):
-        """Add a BuildStep URL to this step.
-
-        An HREF to this URL will be added to any HTML representations of this
-        step. This allows a step to provide links to external web pages,
-        perhaps to provide detailed HTML code coverage results or other forms
-        of build status.
-        """
         self.step_status.addURL(name, url)
 
     def runCommand(self, c):
@@ -1086,9 +740,6 @@ class OutputProgressObserver(LogObserver):
         self.step.setProgress(self.name, self.length)
 
 class LoggingBuildStep(BuildStep):
-    """This is an abstract base class, suitable for inheritance by all
-    BuildSteps that invoke RemoteCommands which emit stdout/stderr messages.
-    """
 
     progressMetrics = ('output',)
     logfiles = {}
@@ -1119,10 +770,6 @@ class LoggingBuildStep(BuildStep):
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
     def addLogFile(self, logname, filename):
-        """
-        This allows to add logfiles after construction, but before calling
-        startCommand().
-        """
         self.logfiles[logname] = filename
 
     def buildCommandKwargs(self):
@@ -1164,15 +811,6 @@ class LoggingBuildStep(BuildStep):
         d.addErrback(self.failed)
 
     def setupLogfiles(self, cmd, logfiles):
-        """Set up any additional logfiles= logs.
-
-        @param cmd: the LoggedRemoteCommand to add additional logs to.
-
-        @param logfiles: a dict of tuples (logname,remotefilename)
-                         specifying additional logs to watch. (note:
-                         the remotefilename component is currently
-                         ignored)
-        """
         for logname,remotefilename in logfiles.items():
             if self.lazylogfiles:
                 # Ask LoggedRemoteCommand to watch a logfile, but only add
@@ -1201,7 +839,7 @@ class LoggingBuildStep(BuildStep):
 
         if self.cmd:
             d = self.cmd.interrupt(reason)
-            return d
+            d.addErrback(log.err, 'while interrupting command')
 
     def checkDisconnect(self, f):
         f.trap(error.ConnectionLost)
@@ -1210,48 +848,13 @@ class LoggingBuildStep(BuildStep):
         self.step_status.setText2(["exception", "slave", "lost"])
         return self.finished(RETRY)
 
-    # to refine the status output, override one or more of the following
-    # methods. Change as little as possible: start with the first ones on
-    # this list and only proceed further if you have to    
-    #
-    # createSummary: add additional Logfiles with summarized results
-    # evaluateCommand: decides whether the step was successful or not
-    #
-    # getText: create the final per-step text strings
-    # describeText2: create the strings added to the overall build status
-    #
-    # getText2: only adds describeText2() when the step affects build status
-    #
-    # setStatus: handles all status updating
-
-    # commandComplete is available for general-purpose post-completion work.
-    # It is a good place to do one-time parsing of logfiles, counting
-    # warnings and errors. It should probably stash such counts in places
-    # like self.warnings so they can be picked up later by your getText
-    # method.
-
-    # TODO: most of this stuff should really be on BuildStep rather than
-    # ShellCommand. That involves putting the status-setup stuff in
-    # .finished, which would make it hard to turn off.
-
     def commandComplete(self, cmd):
-        """This is a general-purpose hook method for subclasses. It will be
-        called after the remote command has finished, but before any of the
-        other hook functions are called."""
         pass
 
-    def createSummary(self, log):
-        """To create summary logs, do something like this:
-        warnings = grep('^Warning:', log.getText())
-        self.addCompleteLog('warnings', warnings)
-        """
+    def createSummary(self, stdio):
         pass
 
     def evaluateCommand(self, cmd):
-        """Decide whether the command was SUCCESS, WARNINGS, or FAILURE.
-        Override this to, say, declare WARNINGS if there is any stderr
-        activity, or to say that rc!=0 is not actually an error."""
-
         if self.log_eval_func:
             return self.log_eval_func(cmd, self.step_status)
         if cmd.rc != 0:
@@ -1269,12 +872,6 @@ class LoggingBuildStep(BuildStep):
             return self.describe(True) + ["failed"]
 
     def getText2(self, cmd, results):
-        """We have decided to add a short note about ourselves to the overall
-        build description, probably because something went wrong. Return a
-        short list of short strings. If your subclass counts test failures or
-        warnings of some sort, this is a good place to announce the count."""
-        # return ["%d warnings" % warningcount]
-        # return ["%d tests" % len(failedTests)]
         return [self.name]
 
     def maybeGetText2(self, cmd, results):

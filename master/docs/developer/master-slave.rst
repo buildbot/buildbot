@@ -193,6 +193,8 @@ Defined Commands
 
 The following commands are defined on the slaves.
 
+.. _shell-command-args:
+
 shell
 .....
 
@@ -211,7 +213,7 @@ Runs a shell command on the slave.  This command takes the following arguments:
 ``env``
 
     A dictionary of environment variables to augment or replace the
-    existeing environment on the slave.  In this dictionary, ``PYTHONPATH``
+    existing environment on the slave.  In this dictionary, ``PYTHONPATH``
     is treated specially: it should be a list of path components, rather
     than a string, and will be prepended to the existing python path.
 

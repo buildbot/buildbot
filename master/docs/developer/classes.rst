@@ -12,3 +12,9 @@ The sections contained here document classes that can be used or subclassed.
     :maxdepth: 1
 
     cls-buildfactory
+    cls-remotecommands
+    cls-buildsteps
+
+.. todo::
+
+    cls-logobserver

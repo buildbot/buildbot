@@ -538,28 +538,56 @@ been run, how many passed and how many failed, and then report more
 detailed information than a simple ``rc==0`` -based `good/bad`
 decision.
 
+Buildbot has acquired a large fleet of build steps, and sports a number of
+knobs and hooks to make steps easier to write.  This section may seem a bit
+overwhelming, but most custom steps will only need to apply one or two of the
+techniques outlined here.
+
+For complete documentation of the build step interfaces, see
+:doc:`../developer/cls-buildsteps`.
+
+.. _Writing-BuildStep-Constructors:
+
 Writing BuildStep Constructors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:class:`BuildStep` classes have some extra equipment, because they are their own
-factories.  Consider the use of a :class:`BuildStep` in :file:`master.cfg`::
+Build steps act as their own factories, so their constructors are a bit more
+complex than necessary.  In the configuration file, a
+:class:`~buildbot.process.buildstep.BuildStep` object is instantiated, but
+because steps store state locally while executing, this object cannot be used
+during builds.  Instead, the build machinery calls the step's
+:meth:`~buildbot.process.buildstep.BuildStep.getStepFactory` method to get a
+tuple of a callable and keyword arguments that should be used to create a new
+instance.
+
+Consider the use of a :class:`BuildStep` in :file:`master.cfg`::
 
     f.addStep(MyStep(someopt="stuff", anotheropt=1))
 
-This creates a single instance of class ``MyStep``.  However, Buildbot needs
-a new object each time the step is executed.  this is accomplished by storing
-the information required to instantiate a new object in the :attr:`factory`
-attribute.  When the time comes to construct a new :class:`Build`, :class:`BuildFactory` consults
-this attribute (via :meth:`getStepFactory`) and instantiates a new step object.
+This creates a single instance of class ``MyStep``.  However, Buildbot needs a
+new object each time the step is executed.  this is accomplished by storing the
+information required to instantiate a new object in the
+:attr:`~buildbot.process.buildstep.BuildStep.factory` attribute.  When the time
+comes to construct a new :class:`~buildbot.process.build.Build`,
+:class:`~buildbot.process.factory.BuildFactory` consults this attribute (via
+:meth:`~buildbot.process.buildstep.BuildStep.getStepFactory`) and instantiates
+a new step object.
 
 When writing a new step class, then, keep in mind are that you cannot do
 anything "interesting" in the constructor -- limit yourself to checking and
-storing arguments.  To ensure that these arguments are provided to any new
-objects, call :meth:`self.addFactoryArguments` with any keyword arguments your
-constructor needs.
+storing arguments.  Each constructor in a sequence of :class:`BuildStep`
+subclasses must ensure the following:
+
+* the parent class's constructor is called with all otherwise-unspecified
+  keyword arguments.
+
+* all keyword arguments for the class itself are passed to
+  :meth:`addFactoryArguments`.
 
 Keep a ``**kwargs`` argument on the end of your options, and pass that up to
-the parent class's constructor.
+the parent class's constructor.  If the class overrides constructor arguments
+for the parent class, those should be updated in ``kwargs``, rather than passed
+directly (which will cause errors during instantiation).
 
 The whole thing looks like this::
 
@@ -573,6 +601,9 @@ The whole thing looks like this::
             # check
             if frob_how_many is None:
                 raise TypeError("Frobnify argument how_many is required")
+
+            # override a parent option
+            kwargs['parentOpt'] = 'xyz'
     
             # call parent
             LoggingBuildStep.__init__(self, **kwargs)
@@ -597,7 +628,41 @@ The whole thing looks like this::
             self.addFactoryArguments(
                 speed=speed)
 
-BuildStep LogFiles
+Running Commands
+~~~~~~~~~~~~~~~~
+
+To spawn a command in the buildslave, create a
+:class:`~buildbot.process.buildstep.RemoteCommand` instance in your step's
+``start`` method and run it with
+:meth:`~buildbot.process.buildstep.BuildStep.runCommand`::
+
+    cmd = LoggedRemoteCommand(args)
+    d = self.runCommand(cmd)
+
+To add a LogFile, use :meth:`~buildbot.process.buildstep.BuildStep.addLog`.
+Make sure the log gets closed when it finishes. When giving a Logfile to a
+:class:`~buildbot.process.buildstep.RemoteShellCommand`, just ask it to close
+the log when the command completes::
+
+    log = self.addLog('output')
+    cmd.useLog(log, closeWhenFinished=True)
+
+Updating Status
+~~~~~~~~~~~~~~~
+
+TBD
+
+.. todo::
+
+    What *is* the best way to do this?  From the docstring:
+
+    As the step runs, it should send status information to the
+    BuildStepStatus::
+
+        self.step_status.setText(['compile', 'failed'])
+        self.step_status.setText2(['4', 'warnings'])
+
+Capturing Logfiles
 ~~~~~~~~~~~~~~~~~~
 
 Each BuildStep has a collection of `logfiles`. Each one has a short
@@ -690,23 +755,23 @@ source of a LogObserver just like the normal :file:`stdio` :class:`LogFile`.
 Reading Logfiles
 ~~~~~~~~~~~~~~~~
 
-Once a :class:`LogFile` has been added to a :class:`BuildStep` with :meth:`addLog()`,
-:meth:`addCompleteLog()`, :meth:`addHTMLLog()`, or ``logfiles=}``,
-your :class:`BuildStep` can retrieve it by using :meth:`getLog()`::
+Once a :class:`~buildbot.status.logfile.LogFile` has been added to a
+:class:`~buildbot.process.buildstep.BuildStep` with
+:meth:`~buildbot.process.buildstep.BuildStep.addLog()`,
+:meth:`~buildbot.process.buildstep.BuildStep.addCompleteLog()`,
+:meth:`~buildbot.process.buildstep.BuildStep.addHTMLLog()`, or ``logfiles={}``,
+your :class:`~buildbot.process.buildstep.BuildStep.BuildStep` can retrieve it
+by using :meth:`~buildbot.process.buildstep.BuildStep.getLog()`::
 
     class MyBuildStep(ShellCommand):
         logfiles = @{ "nodelog": "_test/node.log" @}
-    
+
         def evaluateCommand(self, cmd):
             nodelog = self.getLog("nodelog")
             if "STARTED" in nodelog.getText():
                 return SUCCESS
             else:
                 return FAILURE
-
-For a complete list of the methods you can call on a :class:`LogFile`, please
-see the docstrings on the :class:`IStatusLog` class in
-:file:`buildbot/interfaces.py`.
 
 .. _Adding-LogObservers:
 
@@ -898,6 +963,12 @@ something like this::
 Of course if the build is run under a PTY, then stdout and stderr will
 be merged before the buildbot ever sees them, so such interleaving
 will be unavoidable.
+
+.. todo::
+
+    Step Progress
+    BuildStepFailed
+    Running Multiple Commands
 
 A Somewhat Whimsical Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
