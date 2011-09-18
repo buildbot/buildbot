@@ -211,6 +211,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     def getAbsoluteSourceStamp(self, got_revision):
         return SourceStamp(branch=self.branch, revision=got_revision,
                            patch=self.patch, repository=self.repository,
+                           patch_info=self.patch_info,
                            project=self.project, changes=self.changes,
                            _ignoreChanges=True)
 
