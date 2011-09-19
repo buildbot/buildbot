@@ -99,6 +99,8 @@ class TextParameter(StringParameter):
     """the number of columns textarea will have"""
     rows = 20
     """the number of rows textarea will have"""
+    def value_to_text(self, value):
+        """format value up to original text"""
 
 class IntParameter(StringParameter):
     """Represent an integer forced build parameter"""
@@ -252,6 +254,8 @@ class ForceSched(base.BaseScheduler):
                 real_properties.setProperty(pname, pvalue, "Force Build Form")
 
         real_properties.setProperty("owner", owner, "Force Build Form")
+        real_properties.setProperty("forcescheduler", self.name, "Force Build Form")
+
         d = master.db.sourcestamps.addSourceStamp(branch=branch,
                 revision=revision, project=project, repository=repository)
 
