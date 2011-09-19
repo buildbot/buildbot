@@ -1,11 +1,15 @@
 Major User visible changes in Buildbot.             -*- outline -*-
    see the git log for a detailed list of changes:
-   http://github.com/buildbot/buildbot/commits/master
+   https://github.com/buildbot/buildbot/compare/buildbot-0.8.4...buildbot-0.8.5
 
 
 * Next Version
 
 * Buildbot 0.8.5
+
+** Updated, sphinx-based documentation
+
+The Buildbot documentation has been ported to Sphinx and significantly refactored and extended.
 
 ** Better support for users in Buildbot (GSoC project)
 
