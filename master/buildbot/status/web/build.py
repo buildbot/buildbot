@@ -57,19 +57,24 @@ class ForceBuildActionResource(ActionResource):
             comments = req.args.get("comments", ["<no reason specified>"])[0]
             reason = ("The web-page 'rebuild' button was pressed by "
                       "'%s': %s\n" % (name, comments))
+            msg = ""
             extraProperties = getAndCheckProperties(req)
             if not bc or not b.isFinished() or extraProperties is None:
-                log.msg("could not rebuild: bc=%s, isFinished=%s"
-                        % (bc, b.isFinished()))
-                # TODO: indicate an error
+                msg = "could not rebuild: "
+                if b.isFinished():
+                    msg += "build still not finished "
+                if bc:
+                    msg += "could not get builder control"
             else:
                 d = bc.rebuildBuild(b, reason, extraProperties)
                 wfd = defer.waitForDeferred(d)
                 yield wfd
                 tup = wfd.getResult()
                 # check that (bsid, brids) were properly stored
-                if not isinstance(tup, (int, dict)):
-                    log.err("while rebuilding a build")
+                if not (isinstance(tup, tuple) and 
+                        isinstance(tup[0], int) and
+                        isinstance(tup[1], dict)):
+                    msg = "rebuilding a build failed "+ str(tup)
             # we're at
             # http://localhost:8080/builders/NAME/builds/5/rebuild?[args]
             # Where should we send them?
@@ -81,7 +86,7 @@ class ForceBuildActionResource(ActionResource):
             # evidence of their build starting (or to see the reason that it
             # didn't start). This should be the Builder page.
 
-            url = path_to_builder(req, self.builder)
+            url = path_to_builder(req, self.builder), msg
         yield url
 
 
