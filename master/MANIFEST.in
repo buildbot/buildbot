@@ -18,6 +18,7 @@ include docs/manual/_images/*.ai
 include docs/manual/_images/icon.blend
 include docs/manual/_images/Makefile
 include docs/bbdocs/*
+include docs/developer/*
 
 include buildbot/scripts/sample.cfg
 include buildbot/status/web/files/*
