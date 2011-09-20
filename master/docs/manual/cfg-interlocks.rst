@@ -87,7 +87,7 @@ locks at other times.
 To use locks, you add them with a ``locks`` argument to a build or a step.
 Each use of a lock is either in counting mode (that is, possibly shared with
 other builds) or in exclusive mode, and this is indicated with the syntax
-``lock.access(mode)``, where :data:`mode` is one of ``"counting"`` or ``"shared"``.
+``lock.access(mode)``, where :data:`mode` is one of ``"counting"`` or ``"exclusive"``.
 
 A build or build step proceeds only when it has acquired all locks. If a build
 or step needs a lot of locks, it may be starved [#]_ by other builds that need
