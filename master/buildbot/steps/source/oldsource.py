@@ -1034,10 +1034,16 @@ class Repo(Source):
         self.failed(failure)
 
     def commandComplete(self, cmd):
+        repo_downloaded = []
         if cmd.updates.has_key("repo_downloaded"):
             repo_downloaded = cmd.updates["repo_downloaded"][-1]
             if repo_downloaded:
                 self.setProperty("repo_downloaded", str(repo_downloaded), "Source")
+            else:
+                repo_downloaded = []
+        orig_downloads = self.getProperty("repo_downloads") or []
+        if len(orig_downloads) != len(repo_downloaded):
+            self.step_status.setText(["repo download issues"])
 
 
 class Bzr(Source):
