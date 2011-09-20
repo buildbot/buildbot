@@ -372,7 +372,6 @@ class BuilderPendingBuildsJsonResource(JsonResource):
         d.addCallback(to_dict)
         return d
 
-
 class BuilderJsonResource(JsonResource):
     help = """Describe a single builder.
 """
@@ -390,7 +389,12 @@ class BuilderJsonResource(JsonResource):
 
     def asDict(self, request):
         # buildbot.status.builder.BuilderStatus
-        return self.builder_status.asDict_async()
+        d = self.builder_status.asDict_async()
+        def add_scheds(d):
+            d['schedulers'] = [ s.name for s in self.status.master.allSchedulers() if self.builder_status.name in s.builderNames]
+            return d
+        d.addCallback(add_scheds)
+        return d
 
 
 class BuildersJsonResource(JsonResource):
