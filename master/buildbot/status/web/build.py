@@ -22,7 +22,7 @@ import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, \
      css_classes, path_to_build, path_to_builder, path_to_slave, \
-     getAndCheckProperties, ActionResource, path_to_authfail
+     getAndCheckProperties, ActionResource, path_to_authzfail
 from buildbot.schedulers.forcesched import ForceSched, TextParameter
 from buildbot.status.web.step import StepsResource
 from buildbot.status.web.tests import TestsResource
@@ -44,7 +44,7 @@ class ForceBuildActionResource(ActionResource):
         res = wfd.getResult()
 
         if not res:
-            url = path_to_authfail(req)
+            url = path_to_authzfail(req)
         else:
             # get a control object
             c = interfaces.IControl(self.getBuildmaster(req))
@@ -105,7 +105,7 @@ class StopBuildActionResource(ActionResource):
         res = wfd.getResult()
 
         if not res:
-            yield path_to_authfail(req)
+            yield path_to_authzfail(req)
             return
 
         b = self.build_status

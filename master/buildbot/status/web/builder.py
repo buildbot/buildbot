@@ -23,7 +23,7 @@ from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_slave, path_to_builder, path_to_change, \
     path_to_root, getAndCheckProperties, ICurrentBox, build_get_class, \
-    map_branches, path_to_authfail, ActionResource
+    map_branches, path_to_authzfail, ActionResource
 from buildbot.schedulers.forcesched import ForceSched
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
@@ -44,7 +44,7 @@ class ForceAllBuildsActionResource(ActionResource):
         res = wfd.getResult()
 
         if not res:
-            yield path_to_authfail(req)
+            yield path_to_authzfail(req)
             return
 
         builders = None
@@ -76,7 +76,7 @@ class StopAllBuildsActionResource(ActionResource):
         yield wfd
         res = wfd.getResult()
         if not res:
-            yield path_to_authfail(req)
+            yield path_to_authzfail(req)
             return
 
         builders = None
@@ -114,7 +114,7 @@ class PingBuilderActionResource(ActionResource):
         res = wfd.getResult()
         if not res:
             log.msg("..but not authorized")
-            yield path_to_authfail(req)
+            yield path_to_authzfail(req)
             return
 
         c = interfaces.IControl(self.getBuildmaster(req))
@@ -139,7 +139,7 @@ class ForceBuildActionResource(ActionResource):
         res = wfd.getResult()
         if not res:
             log.msg("..but not authorized")
-            yield path_to_authfail(req)
+            yield path_to_authzfail(req)
             return
 
         master = self.getBuildmaster(req)
@@ -341,7 +341,7 @@ class CancelChangeResource(ActionResource):
                     if res:
                         build_req.cancel()
                     else:
-                        yield path_to_authfail(req)
+                        yield path_to_authzfail(req)
                         return
                     if not cancel_all:
                         break
@@ -416,7 +416,7 @@ class StopChangeResource(StopChangeMixin, ActionResource):
         success = wfd.getResult()
 
         if not success:
-            yield path_to_authfail(req)
+            yield path_to_authzfail(req)
         else:
             yield path_to_builder(req, self.builder_status)
 
@@ -435,7 +435,7 @@ class StopChangeAllResource(StopChangeMixin, ActionResource):
         yield wfd
         res = wfd.getResult()
         if not res:
-            yield path_to_authfail(req)
+            yield path_to_authzfail(req)
             return
 
         for bname in self.status.getBuilderNames():
@@ -444,7 +444,7 @@ class StopChangeAllResource(StopChangeMixin, ActionResource):
                 self.stopChangeForBuilder(req, builder_status, auth_ok=True))
             yield wfd
             if not wfd.getResult():
-                yield path_to_authfail(req)
+                yield path_to_authzfail(req)
                 return
 
         yield path_to_root(req)

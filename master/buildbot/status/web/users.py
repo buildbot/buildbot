@@ -16,7 +16,7 @@
 import urllib
 from twisted.internet import defer
 from twisted.web.util import redirectTo
-from buildbot.status.web.base import HtmlResource, path_to_authfail, \
+from buildbot.status.web.base import HtmlResource, path_to_authzfail, \
     path_to_root, ActionResource
 
 class UsersActionResource(ActionResource):
@@ -31,7 +31,7 @@ class UsersActionResource(ActionResource):
         yield wfd
         res = wfd.getResult()
         if not res:
-            yield path_to_authfail(req)
+            yield path_to_authzfail(req)
             return
         # show the table
         yield path_to_root(req) + "users/table"
@@ -81,7 +81,7 @@ class UsersTableResource(HtmlResource):
         yield wfd
         res = wfd.getResult()
         if not res:
-            yield redirectTo(path_to_authfail(req), req)
+            yield redirectTo(path_to_authzfail(req), req)
             return
 
         s = self.getStatus(req)
@@ -120,7 +120,7 @@ class UsersResource(HtmlResource):
                 yield redirectTo("users/table", req)
                 return
             else:
-                yield redirectTo(path_to_authfail(req), req)
+                yield redirectTo(path_to_authzfail(req), req)
                 return
 
         ctx['authz'] = self.getAuthz(req)

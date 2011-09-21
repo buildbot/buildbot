@@ -123,6 +123,9 @@ def path_to_root(request):
 def path_to_authfail(request):
     return path_to_root(request) + "authfail"
 
+def path_to_authzfail(request):
+    return path_to_root(request) + "authzfail"
+
 def path_to_builder(request, builderstatus):
     return (path_to_root(request) +
             "builders/" +

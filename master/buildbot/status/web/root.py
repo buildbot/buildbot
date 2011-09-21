@@ -16,7 +16,7 @@
 from twisted.web.util import redirectTo
 from twisted.internet import defer
 
-from buildbot.status.web.base import HtmlResource, path_to_authfail
+from buildbot.status.web.base import HtmlResource, path_to_authzfail
 from buildbot.util.eventual import eventually
 
 class RootPage(HtmlResource):
@@ -37,7 +37,7 @@ class RootPage(HtmlResource):
                 yield redirectTo("/", request)
                 return
             else:
-                yield redirectTo(path_to_authfail(request), request)
+                yield redirectTo(path_to_authzfail(request), request)
                 return
         elif request.path == '/cancel_shutdown':
             if res:
@@ -45,7 +45,7 @@ class RootPage(HtmlResource):
                 yield redirectTo("/", request)
                 return
             else:
-                yield redirectTo(path_to_authfail(request), request)
+                yield redirectTo(path_to_authzfail(request), request)
                 return
 
         cxt.update(

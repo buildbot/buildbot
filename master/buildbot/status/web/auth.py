@@ -149,6 +149,11 @@ class AuthFailResource(HtmlResource):
     def content(self, request, cxt):
         template = request.site.buildbot_service.templates.get_template("authfail.html")
         return template.render(**cxt)
+class AuthzFailResource(HtmlResource):
+    pageTitle = "Authorization Failed"
+    def content(self, request, cxt):
+        template = request.site.buildbot_service.templates.get_template("authzfail.html")
+        return template.render(**cxt)
     
 class LoginResource(ActionResource):
     def performAction(self, request):
