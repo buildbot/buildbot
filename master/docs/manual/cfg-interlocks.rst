@@ -25,7 +25,7 @@ the lock counts the number of active readers. Secondly, the terms *read
 mode* and *write mode* are confusing in Buildbot context. They have been
 replaced by *counting mode* (since the lock counts them) and *exclusive
 mode*.  As a result of these changes, locks in Buildbot allow a number of
-builds (upto some fixed number) in counting mode, or they allow one build in
+builds (up to some fixed number) in counting mode, or they allow one build in
 exclusive mode.
 
 .. note:: Access modes are specified when a lock is used.  That is, it is
@@ -87,7 +87,7 @@ locks at other times.
 To use locks, you add them with a ``locks`` argument to a build or a step.
 Each use of a lock is either in counting mode (that is, possibly shared with
 other builds) or in exclusive mode, and this is indicated with the syntax
-``lock.access(mode)``, where :data:`mode` is one of ``"counting"`` or ``"shared"``.
+``lock.access(mode)``, where :data:`mode` is one of ``"counting"`` or ``"exclusive"``.
 
 A build or build step proceeds only when it has acquired all locks. If a build
 or step needs a lot of locks, it may be starved [#]_ by other builds that need
