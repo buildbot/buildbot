@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+# Portions Copyright 2011 MerMec Inc.
 
 import xml
 
@@ -34,13 +35,14 @@ class SVN(Source):
     def __init__(self, svnurl=None, baseURL=None, mode='incremental',
                  method=None, defaultBranch=None, username=None,
                  password=None, extra_args=None, keep_on_purge=None,
-                 depth=None, **kwargs):
+                 depth=None, outputdir='.', **kwargs):
 
         self.svnurl = svnurl
         self.baseURL = baseURL
         self.branch = defaultBranch
         self.username = username
         self.password = password
+        self.outputdir = outputdir
         self.extra_args = extra_args
         self.keep_on_purge = keep_on_purge or []
         self.depth = depth
@@ -52,6 +54,7 @@ class SVN(Source):
                                  mode=mode,
                                  method=method,
                                  defaultBranch=defaultBranch,
+                                 outputdir=outputdir,
                                  password=password,
                                  username=username,
                                  extra_args=extra_args,
@@ -108,7 +111,7 @@ class SVN(Source):
         yield wfd
         updatable = wfd.getResult()
         if not updatable:
-            d = self._dovccmd(['checkout', self.svnurl, '.'])
+            d = self._dovccmd(['checkout', self.svnurl, self.outputdir])
         elif self.method == 'clean':
             d = self.clean()
         elif self.method == 'fresh':
@@ -122,9 +125,9 @@ class SVN(Source):
         d = self._sourcedirIsUpdatable()
         def _cmd(updatable):
             if updatable:
-                command = ['update']
+                command = ['update', self.outputdir]
             else:
-                command = ['checkout', self.svnurl, '.']
+                command = ['checkout', self.svnurl, self.outputdir]
             if self.revision:
                 command.extend(['--revision', str(self.revision)])
             return command
@@ -135,7 +138,11 @@ class SVN(Source):
 
     @defer.deferredGenerator
     def clobber(self):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
+	if not self.outputdir or self.outputdir == '.':
+	        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
+                                                      'logEnviron': self.logEnviron,})
+	else:
+		cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir + '/' + self.outputdir,
                                                       'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         wfd = defer.waitForDeferred(
@@ -146,23 +153,27 @@ class SVN(Source):
             raise buildstep.BuildStepFailed()
 
         wfd = defer.waitForDeferred(
-                self._dovccmd(['checkout', self.svnurl, '.']))
+                self._dovccmd(['checkout', self.svnurl, self.outputdir]))
         yield wfd
         wfd.getResult()
 
     def fresh(self):
         d = self.purge(True)
-        d.addCallback(lambda _: self._dovccmd(['update']))
+        d.addCallback(lambda _: self._dovccmd(['update', self.outputdir]))
         return d
 
     def clean(self):
         d = self.purge(False)
-        d.addCallback(lambda _: self._dovccmd(['update']))
+        d.addCallback(lambda _: self._dovccmd(['update', self.outputdir]))
         return d
 
     @defer.deferredGenerator
     def copy(self):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
+	if not self.outputdir or self.outputdir == '.':
+	        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
+                                                      'logEnviron': self.logEnviron,})
+	else:
+		cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir + '/' + self.outputdir,
                                                       'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         wfd = defer.waitForDeferred(
@@ -264,7 +275,7 @@ class SVN(Source):
             return 'fresh'
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.workdir + '/.svn',
+        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.workdir + '/' + self.outputdir +'/.svn',
                                                      'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
@@ -276,7 +287,7 @@ class SVN(Source):
         return d
 
     def parseGotRevision(self, _):
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['svnversion'],
+        cmd = buildstep.RemoteShellCommand(self.workdir + '/' + self.outputdir, ['svnversion'],
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            collectStdout=True)
