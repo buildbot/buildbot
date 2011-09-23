@@ -248,6 +248,8 @@ class Status:
             self.announceNewBuilder(target, name, self.getBuilder(name))
     def unsubscribe(self, target):
         self.watchers.remove(target)
+        for name in self.botmaster.builderNames:
+            self.getBuilder(name).unsubscribe(target)
 
 
     # methods called by upstream objects
