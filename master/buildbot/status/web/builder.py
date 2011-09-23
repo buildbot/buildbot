@@ -143,9 +143,7 @@ class ForceBuildActionResource(ActionResource):
             return
 
         master = self.getBuildmaster(req)
-        owner = None
-        if self.getAuthz(req).authenticated(req):
-            owner = "%(fullName)s <%(email)s>"%(self.getAuthz(req).session(req).infos)
+        owner = self.getAuthz(req).currentUserFull(req)
         schedulername = req.args.get("forcescheduler", ["<unknown>"])[0]
         if schedulername == "<unknown>":
             yield path_to_builder(req, self.builder_status), "forcescheduler arg not found"

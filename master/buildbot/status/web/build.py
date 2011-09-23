@@ -53,7 +53,7 @@ class ForceBuildActionResource(ActionResource):
             b = self.build_status
             builder_name = self.builder.getName()
             log.msg("web rebuild of build %s:%s" % (builder_name, b.getNumber()))
-            name = req.args.get("username", ["<unknown>"])[0]
+	    name = self.getAuthz(req).currentUserFull(req)
             comments = req.args.get("comments", ["<no reason specified>"])[0]
             reason = ("The web-page 'rebuild' button was pressed by "
                       "'%s': %s\n" % (name, comments))
@@ -111,7 +111,8 @@ class StopBuildActionResource(ActionResource):
         b = self.build_status
         log.msg("web stopBuild of build %s:%s" % \
                     (b.getBuilder().getName(), b.getNumber()))
-        name = req.args.get("username", ["<unknown>"])[0]
+        name = self.getAuthz(req).currentUserFull(req)
+         
         comments = req.args.get("comments", ["<no reason specified>"])[0]
         # html-quote both the username and comments, just to be safe
         reason = ("The web-page 'stop build' button was pressed by "
@@ -269,7 +270,8 @@ class StatusResourceBuild(HtmlResource):
         b = self.build_status
         log.msg("web stopBuild of build %s:%s" % \
                 (b.getBuilder().getName(), b.getNumber()))
-        name = req.args.get("username", ["<unknown>"])[0]
+
+        name = self.getAuthz(req).currentUserFull(req)
         comments = req.args.get("comments", ["<no reason specified>"])[0]
         # html-quote both the username and comments, just to be safe
         reason = ("The web-page 'stop build' button was pressed by "
