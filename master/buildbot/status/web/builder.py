@@ -24,7 +24,7 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_slave, path_to_builder, path_to_change, \
     path_to_root, getAndCheckProperties, ICurrentBox, build_get_class, \
     map_branches, path_to_authzfail, ActionResource
-from buildbot.schedulers.forcesched import ForceSched
+from buildbot.schedulers.forcesched import ForceSched, InheritBuildParameter
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
 
@@ -172,10 +172,18 @@ def buildForceContext(cxt, req, master, buildername=None):
             force_schedulers[sch.name] = sch
             for p in sch.all_fields:
                 pname = "%s.%s"%(sch.name, p.name)
+                default = p.default
+                if isinstance(p, InheritBuildParameter):
+                    # yes, I know, its bad to overwrite the parameter attribute,
+                    # but I dont have any other simple way of doing this atm.
+                    p.choices = p.compatible_builds(master.status, buildername)
+                    if p.choices:
+                        default = p.choices[0]
+                default = req.args.get(pname, [default])[0]
                 if p.type=="bool":
-                    default_props[pname] = req.args.get(pname, [p.default])[0] and "checked" or ""
+                    default_props[pname] = default and "checked" or ""
                 else:
-                    default_props[pname] = req.args.get(pname, [p.default])[0]
+                    default_props[pname] = default
     cxt['force_schedulers'] = force_schedulers
     cxt['default_props'] = default_props
 

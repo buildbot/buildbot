@@ -141,12 +141,50 @@ class ChoiceStringParameter(BaseParameter):
             raise ValueError("'%s' does not belongs to list of available choices '%s'"%(s, self.choices))
         return s
 
+class InheritBuildParameter(ChoiceStringParameter):
+    """a special parameter for inheriting force builds parameters from another build.
+    """
+    compatible_builds = None
+    name = "inherit"
+    """ a function provided by config that will find compatible build in the build history
+    see documentation for example
+    @param status: master status
+    @param builder: the name of the builder (can be None in case of ForceAllBuild Form)
+    """
+    def parse_from_post(self, s):
+        """This parameter is a bit special, as it does not return any value
+        it needs special case in the parameter handling
+        """
+        raise Exception("should not be called")
+    def getInheritedProperties(self, master, req):
+        """get the inherited properties
+        @todo: some will probably also want to inherit branch,repository, etc
+        """
+        arg = req.args.get(self.name, [""])[0]
+        splitted_arg = arg.split(" ")[0].split("/")
+        if len(splitted_arg) != 2:
+            raise ValueError("bad build: %s"%(arg))
+        builder, num = splitted_arg
+        builder_status = master.status.getBuilder(builder)
+        if not builder_status:
+            raise ValueError("unknown builder: %s in %s"%(builder, arg))
+        b = builder_status.getBuild(int(num))
+        if not b:
+            raise ValueError("unknown build: %d in %s"%(num, arg))
+        props = {}
+        for name, value, source in b.getProperties().asList():
+            if source == "Force Build Form":
+                if name == "owner":
+                    name = "orig_owner"
+                props[name] = value
+        return props
+
 class AnyPropertyParameter(BaseParameter):
     """a property for setting arbitrary property in the build
     a bit atypical, as it will generate two fields in the html form
     """
     type = "anyproperty"
-    
+
 
 class ForceSched(base.BaseScheduler):
     
@@ -210,7 +248,9 @@ class ForceSched(base.BaseScheduler):
         for param in self.all_fields:
             if owner and param==self.username:
                 continue # dont enforce username if auth
-            if isinstance(param, AnyPropertyParameter):
+            if isinstance(param, InheritBuildParameter):
+                properties.update(param.getInheritedProperties(master, req))
+            elif isinstance(param, AnyPropertyParameter):
                 pname = req.args.get("%sname" % param.name, [""])[0]
                 pvalue = req.args.get("%svalue" % param.name, [""])[0]
                 if not pname:
