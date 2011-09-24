@@ -247,7 +247,7 @@ class BuildMaster(service.MultiService):
                           "logHorizon", "buildHorizon", "changeHorizon",
                           "logMaxSize", "logMaxTailSize", "logCompressionMethod",
                           "db_url", "multiMaster", "db_poll_interval",
-                          "metrics", "caches"
+                          "metrics", "caches", "validation"
                           )
             for k in config.keys():
                 if k not in known_keys:
