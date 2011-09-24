@@ -237,17 +237,17 @@ class BuildMaster(service.MultiService):
 
             # check for unknown keys
 
-            known_keys = ("slaves", "change_source",
-                          "schedulers", "builders", "mergeRequests",
-                          "slavePortnum", "debugPassword", "logCompressionLimit",
-                          "manhole", "status", "projectName", "projectURL",
-                          "title", "titleURL", "user_managers",
-                          "buildbotURL", "properties", "prioritizeBuilders",
-                          "eventHorizon", "buildCacheSize", "changeCacheSize",
-                          "logHorizon", "buildHorizon", "changeHorizon",
-                          "logMaxSize", "logMaxTailSize", "logCompressionMethod",
-                          "db_url", "multiMaster", "db_poll_interval",
-                          "metrics", "caches", "validation"
+            known_keys = ("buildbotURL", "buildCacheSize", "builders",
+                          "buildHorizon", "caches", "change_source",
+                          "changeCacheSize", "changeHorizon",
+                          "db_poll_interval", "db_url", "debugPassword",
+                          "eventHorizon", "logCompressionLimit",
+                          "logCompressionMethod", "logHorizon", "logMaxSize",
+                          "logMaxTailSize", "manhole", "mergeRequests",
+                          "metrics", "multiMaster", "prioritizeBuilders",
+                          "projectName", "projectURL", "properties",
+                          "schedulers", "slavePortnum", "slaves", "status",
+                          "title", "titleURL", "user_managers", "validation"
                           )
             for k in config.keys():
                 if k not in known_keys:
