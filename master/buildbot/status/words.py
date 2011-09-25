@@ -495,7 +495,7 @@ class Contact(base.StatusReceiver):
             self.send("sorry, bad revision '%s'" % revision)
             return
 
-        properties = None
+        properties = Properties()
         if props:
             # split props into name:value dict
             pdict = {}
@@ -505,7 +505,6 @@ class Contact(base.StatusReceiver):
                 pdict[splitproperty[0]] = splitproperty[1]
 
             # set properties
-            properties = Properties()
             for prop in pdict:
                 pname = prop
                 pvalue = pdict[prop]
