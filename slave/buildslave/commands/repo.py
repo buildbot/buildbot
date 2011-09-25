@@ -15,6 +15,7 @@
 
 import os
 import re
+import textwrap
 
 from twisted.internet import defer
 
@@ -32,7 +33,7 @@ class Repo(SourceBaseCommand):
                                     to retrieve. Default: "master".
     ['manifest_file'] (optional):   Which manifest file to use. Default: "default.xml".
     ['manifest_override_url'] (optional):   Which manifest file to use as an overide. Default: None.
-    			     This is usually set by forced build to build over a known working base
+                                    This is usually set by forced build to build over a known working base
     ['tarball'] (optional):         The tarball base to accelerate the fetch.
     ['repo_downloads'] (optional):  Repo downloads to do. Computer from GerritChangeSource
                                     and forced build properties.
@@ -147,23 +148,24 @@ class Repo(SourceBaseCommand):
     # doing them one by one just complicate the stuff
     # and messup the stdio log
     def _cleanupCommand(self):
-        command = """	set -v
-			if [ -d .repo/manifests ]
-			then
-				# repo just refuse to run if manifest is messed up
-				# so ensure we are in a known state
-			    	cd .repo/manifests
-				git fetch origin
-				git reset --hard remotes/origin/%(manifest_branch)s
-				git config branch.default.merge %(manifest_branch)s
-				cd ..
-				ln -sf manifests/%(manifest_file)s manifest.xml
-				cd ..
-			 fi
-			 find . -name .git/index.lock -exec rm -f {} \;
-		  	 repo forall -c git clean -f -d -x 2>/dev/null
-	  	 	 repo forall -c git reset --hard HEAD 2>/dev/null
-		     """%(self.__dict__)
+        command = textwrap.dedent("""\
+            set -v
+            if [ -d .repo/manifests ]
+            then
+                # repo just refuse to run if manifest is messed up
+                # so ensure we are in a known state
+                    cd .repo/manifests
+                git fetch origin
+                git reset --hard remotes/origin/%(manifest_branch)s
+                git config branch.default.merge %(manifest_branch)s
+                cd ..
+                ln -sf manifests/%(manifest_file)s manifest.xml
+                cd ..
+             fi
+             find . -name .git/index.lock -exec rm -f {} \;
+               repo forall -c git clean -f -d -x 2>/dev/null
+                repo forall -c git reset --hard HEAD 2>/dev/null
+             """) % self.__dict__
         return "\n".join([ s.strip() for s in command.splitlines()])
     
     def _doPreInitCleanUp(self, dummy):
