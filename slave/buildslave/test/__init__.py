@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import sys
+import os
 
 import twisted
 from twisted.trial import unittest
@@ -51,3 +52,12 @@ def add_debugging_monkeypatches():
 add_debugging_monkeypatches()
 
 __all__ = []
+
+# import mock so we bail out early if it's not installed
+try:
+    import mock
+    mock = mock
+except ImportError:
+    print >>sys.stderr, ("\nBuildbot tests require the 'mock' module; "
+                         "try 'pip install mock'")
+    os._exit(1)
