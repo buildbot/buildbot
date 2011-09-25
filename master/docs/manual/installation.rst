@@ -380,14 +380,14 @@ process does *not* edit your :file:`master.cfg` for you. So something like:
 .. code-block:: python
 
     # for using mysql:
-    c['db_url'] = 'mysql://bbuser:<password>@@localhost/buildbot'
+    c['db_url'] = 'mysql://bbuser:<password>@localhost/buildbot'
 
 Once the parameter has been added, invoke ``upgrade-master`` with the
 ``--db`` parameter, e.g.,
 
 .. code-block:: bash
 
-    buildbot upgrade-master --db=mysql://bbuser:<password>@@localhost/buildbot
+    buildbot upgrade-master --db=mysql://bbuser:<password>@localhost/buildbot
 
 The ``--db`` option must match the ``c['db_url']`` exactly.
 

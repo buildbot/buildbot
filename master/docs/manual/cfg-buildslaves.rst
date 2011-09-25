@@ -95,7 +95,7 @@ address, or a list of addresses::
 
     c['slaves'] = [
         BuildSlave('bot-solaris', 'solarispasswd',
-                    notify_on_missing="bob@@example.com"),
+                    notify_on_missing="bob@example.com"),
     ]
 
 By default, this will send email when the buildslave has been
@@ -109,8 +109,8 @@ provide a list of addresses instead of a single one::
 
     c['slaves'] = [
         BuildSlave('bot-solaris', 'solarispasswd',
-                    notify_on_missing=["bob@@example.com",
-                                        "alice@@example.org"],
+                    notify_on_missing=["bob@example.com",
+                                        "alice@example.org"],
                     missing_timeout=300, # notify after 5 minutes
         ),
     ]
@@ -127,14 +127,14 @@ emails but not for regular build emails, just create one with
 ``builders=[]``, as follows::
 
     from buildbot.status import mail
-    m = mail.MailNotifier(fromaddr="buildbot@@localhost", builders=[],
+    m = mail.MailNotifier(fromaddr="buildbot@localhost", builders=[],
                           relayhost="smtp.example.org")
     c['status'].append(m)
 
     from buildbot.buildslave import BuildSlave
     c['slaves'] = [
             BuildSlave('bot-solaris', 'solarispasswd',
-                        notify_on_missing="bob@@example.com"),
+                        notify_on_missing="bob@example.com"),
     ]
 
 .. index:: BuildSlaves; latent

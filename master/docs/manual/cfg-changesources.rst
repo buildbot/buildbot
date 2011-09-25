@@ -1014,7 +1014,7 @@ arguments:
 An configuration for the git poller might look like this::
 
     from buildbot.changes.gitpoller import GitPoller
-    c['change_source'] = GitPoller('git@@example.com:foobaz/myrepo.git',
+    c['change_source'] = GitPoller('git@example.com:foobaz/myrepo.git',
                                    branch='great_new_feature',
                                    workdir='/home/buildbot/gitpoller_workdir')
 

@@ -1104,7 +1104,7 @@ Find out what your python's standard include path is by asking it:
 
 .. code-block:: none
 
-    80:warner@@luther% python
+    80:warner@luther% python
     Python 2.4.4c0 (#2, Oct  2 2006, 00:57:46)
     [GCC 4.1.2 20060928 (prerelease) (Debian 4.1.1-15)] on linux2
     Type "help", "copyright", "credits" or "license" for more information.

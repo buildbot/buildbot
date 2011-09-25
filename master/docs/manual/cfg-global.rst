@@ -86,7 +86,7 @@ Postgres
 
 .. code-block:: python
 
-    c['db_url'] = "postgresql://username@@hostname/dbname"
+    c['db_url'] = "postgresql://username@hostname/dbname"
 
 No special configuration is required to use Postgres.
 

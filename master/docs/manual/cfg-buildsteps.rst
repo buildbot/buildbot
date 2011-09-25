@@ -558,7 +558,7 @@ This step takes the following arguments:
     probably on a remote machine. For example, if Buildbot was hosted in CVS
     then the cvsroot value you would use to get a copy of the Buildbot source
     code might be
-    ``:pserver:anonymous@@cvs.sourceforge.net:/cvsroot/buildbot``.
+    ``:pserver:anonymous@cvs.sourceforge.net:/cvsroot/buildbot``.
 
 ``cvsmodule``
     (required): specify the cvs ``module``, which is generally a
@@ -829,7 +829,7 @@ checkout or update. It takes the following arguments:
     (required): specify the CVSROOT value, which points to a CVS
     repository, probably on a remote machine. For example, the cvsroot
     value you would use to get a copy of the Buildbot source code is
-    ``:pserver:anonymous@@cvs.sourceforge.net:/cvsroot/buildbot``
+    ``:pserver:anonymous@cvs.sourceforge.net:/cvsroot/buildbot``
 
 ``cvsmodule``
     (required): specify the cvs @code{module}, which is generally a
