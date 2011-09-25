@@ -34,7 +34,7 @@ Open a new terminal, and first enter the same sandbox you created before (where 
   cd
   cd tmp/buildbot
   source sandbox/bin/activate
-  $EDITOR master/master.cfg
+  $EDITOR $VIRTUAL_ENV/master/master.cfg
 
 Now, look for the section marked *PROJECT IDENTITY* which reads::
 
