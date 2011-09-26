@@ -142,7 +142,7 @@ component, after unpacking the tarball, the process is:
     python setup.py install
 
 where the install step may need to be done as root. This will put the bulk of
-the code in somewhere like :file:`/usr/lib/python2.3/site-packages/buildbot`. It
+the code in somewhere like :file:`/usr/lib/pythonx.y/site-packages/buildbot`. It
 will also install the :command:`buildbot` command-line tool in
 :file:`/usr/bin/buildbot`.
 
