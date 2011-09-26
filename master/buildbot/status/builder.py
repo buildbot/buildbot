@@ -540,66 +540,6 @@ class BuilderStatus(styles.Versioned):
         self.prune() # conserve disk
 
 
-    # waterfall display (history)
-
-    # I want some kind of build event that holds everything about the build:
-    # why, what changes went into it, the results of the build, itemized
-    # test results, etc. But, I do kind of need something to be inserted in
-    # the event log first, because intermixing step events and the larger
-    # build event is fraught with peril. Maybe an Event-like-thing that
-    # doesn't have a file in it but does have links. Hmm, that's exactly
-    # what it does now. The only difference would be that this event isn't
-    # pushed to the clients.
-
-    # publish to clients
-    ## HTML display interface
-
-    def getEventNumbered(self, num):
-        # deal with dropped events, pruned events
-        first = self.events[0].number
-        if first + len(self.events)-1 != self.events[-1].number:
-            log.msg(self,
-                    "lost an event somewhere: [0] is %d, [%d] is %d" % \
-                    (self.events[0].number,
-                     len(self.events) - 1,
-                     self.events[-1].number))
-            for e in self.events:
-                log.msg("e[%d]: " % e.number, e)
-            return None
-        offset = num - first
-        log.msg(self, "offset", offset)
-        try:
-            return self.events[offset]
-        except IndexError:
-            return None
-
-    ## Persistence of Status
-    def loadYourOldEvents(self):
-        if hasattr(self, "allEvents"):
-            # first time, nothing to get from file. Note that this is only if
-            # the Application gets .run() . If it gets .save()'ed, then the
-            # .allEvents attribute goes away in the initial __getstate__ and
-            # we try to load a non-existent file.
-            return
-        self.allEvents = self.loadFile("events", [])
-        if self.allEvents:
-            self.nextEventNumber = self.allEvents[-1].number + 1
-        else:
-            self.nextEventNumber = 0
-    def saveYourOldEvents(self):
-        self.saveFile("events", self.allEvents)
-
-    ## clients
-
-    def addClient(self, client):
-        if client not in self.subscribers:
-            self.subscribers.append(client)
-            self.sendCurrentActivityBig(client)
-            client.newEvent(self.currentSmall)
-    def removeClient(self, client):
-        if client in self.subscribers:
-            self.subscribers.remove(client)
-
     def asDict(self):
         result = {}
         # Constant

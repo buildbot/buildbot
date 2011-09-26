@@ -340,12 +340,6 @@ class Status:
         # self.getChangeSources()
         return result
 
-    def buildreqs_retired(self, requests):
-        for r in requests:
-            #r.id: notify subscribers (none right now)
-            # r.bsid: check for completion, notify subscribers, unsubscribe
-            pass
-
     def build_started(self, brid, buildername, build_status):
         if brid in self._buildreq_observers:
             for o in self._buildreq_observers[brid]:
