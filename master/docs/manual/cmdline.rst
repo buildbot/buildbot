@@ -276,7 +276,7 @@ This can also be provided as ``try_vc`` in
 .. The order of this list comes from the end of scripts/tryclient.py
 
 The following names are recognized: ``bzr`` ``cvs`` ``darcs`` ``hg``
-``git`` `mtn`` ``p4`` ``svn``
+``git`` ``mtn`` ``p4`` ``svn``
 
 
 Finding the top of the tree
