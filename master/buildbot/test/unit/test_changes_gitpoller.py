@@ -13,12 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
+import os
 from twisted.trial import unittest
 from twisted.internet import defer
 from exceptions import Exception
 from buildbot.changes import gitpoller
 from buildbot.test.util import changesource, gpo
 from buildbot.util import epoch2datetime
+
+# Test that environment variables get propagated to subprocesses (See #2116)
+os.environ['TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'] = 'TRUE'
 
 class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
     """Test GitPoller methods for parsing git output"""
@@ -120,6 +124,11 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.assertSubstring("GitPoller", self.poller.describe())
 
     def test_poll(self):
+        # Test that environment variables get propagated to subprocesses (See #2116)
+        os.putenv('TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES', 'TRUE')
+        self.addGetProcessOutputExpectEnv({'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES': 'TRUE'})
+        self.addGetProcessOutputAndValueExpectEnv({'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES': 'TRUE'})
+
         # patch out getProcessOutput and getProcessOutputAndValue for the
         # benefit of the _get_changes method
         self.addGetProcessOutputResult(

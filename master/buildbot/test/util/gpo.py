@@ -39,6 +39,8 @@ class GetProcessOutputMixin:
         self._gpo_patched = False
         self._gpo_patterns = []
         self._gpoav_patterns = []
+        self._gpo_expect_env = {}
+        self._gpoav_expect_env = {}
 
     def tearDownGetProcessOutput(self):
         pass
@@ -54,10 +56,22 @@ class GetProcessOutputMixin:
 
     # these can be overridden if necessary
     def patched_getProcessOutput(self, bin, args, env=None, **kwargs):
+        for var, value in self._gpo_expect_env.items():
+            if env.get(var) != value:
+                self._flag_error('Expected environment to have %s = %r' % (var, value))
+
         return self._patched(self._gpo_patterns, bin, args, env=env, **kwargs)
 
     def patched_getProcessOutputAndValue(self, bin, args, env=None, **kwargs):
+        for var, value in self._gpoav_expect_env.items():
+            if env.get(var) != value:
+                self._flag_error('Expected environment to have %s = %r' % (var, value))
+
         return self._patched(self._gpoav_patterns, bin, args, env=env, **kwargs)
+
+    def _flag_error(self, msg):
+        # print msg
+        assert False, msg
 
     def _patch_gpo(self):
         if not self._gpo_patched:
@@ -66,6 +80,12 @@ class GetProcessOutputMixin:
             self.patch(utils, "getProcessOutputAndValue",
                             self.patched_getProcessOutputAndValue)
             self._gpo_patched = True
+
+    def addGetProcessOutputExpectEnv(self, d):
+        self._gpo_expect_env.update(d)
+
+    def addGetProcessOutputAndValueExpectEnv(self, d):
+        self._gpoav_expect_env.update(d)
 
     def addGetProcessOutputResult(self, pattern, result):
         self._patch_gpo()
