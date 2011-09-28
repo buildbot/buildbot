@@ -294,7 +294,7 @@ class GitPoller(base.PollingChangeSource):
             return
         log.msg('gitpoller: catching up tracking branch')
         args = ['reset', '--hard', 'origin/%s' % (self.branch,)]
-        d = utils.getProcessOutputAndValue(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']))
+        d = self.getProcessOutputAndValue(args, path=self.workdir)
         d.addCallback(self._convert_nonzero_to_failure)
         return d
 
