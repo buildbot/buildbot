@@ -15,21 +15,20 @@
     <form method="post" name="cancel" action="{{ cancel_url }}" class='command cancelbuild'
                {{ 'style="display:inline"' if short else '' }}>
       {% if not short %}
-        {% if on_all %}
+        {% if id == 'all' %}
           <p>To cancel all builds, fill out the following fields and
             push the 'Cancel' button</p>
+          <p>To cancel individual builds, click the 'Cancel' buttons above.</p>
         {% else %}
           <p>To cancel this build, fill out the following fields and
             push the 'Cancel' button</p>
         {% endif %}
       {% endif %}
-      
+
       {% if authz.needAuthForm('cancelPendingBuild') %}
         {{ auth() }}
-      {% elif not short %}
-        <p>To cancel individual builds, click the 'Cancel' buttons above.</p>
       {% endif %}
-      
+
       <input type="hidden" name="id" value="{{ id }}" />
       <input type="submit" value="Cancel" />
     </form>
