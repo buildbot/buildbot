@@ -297,7 +297,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         yield template.render(**cxt)
 
     def force(self, req, auth_ok=False):
-        name = req.args.get("username", ["<unknown>"])[0]
+        name = self.getAuthz(req).getUsername(req)
         reason = req.args.get("comments", ["<no reason specified>"])[0]
         branch = req.args.get("branch", [""])[0]
         revision = req.args.get("revision", [""])[0]

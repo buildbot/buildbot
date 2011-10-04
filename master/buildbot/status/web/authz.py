@@ -51,6 +51,12 @@ class Authz(object):
         if kwargs:
             raise ValueError("unknown authorization action(s) " + ", ".join(kwargs.keys()))
 
+    def getUsername(self, request):
+        return request.args.get("username", ["<unknown>"])[0]
+
+    def getPassword(self, request):
+        return request.args.get("passwd", ["<no-password>"])[0]
+
     def advertiseAction(self, action):
         """Should the web interface even show the form for ACTION?"""
         if action not in self.knownActions:
@@ -78,8 +84,8 @@ class Authz(object):
             if cfg == 'auth' or callable(cfg):
                 if not self.auth:
                     return defer.succeed(False)
-                user = request.args.get("username", ["<unknown>"])[0]
-                passwd = request.args.get("passwd", ["<no-password>"])[0]
+                user = self.getUsername(request)
+                passwd = self.getPassword(request)
                 if user == "<unknown>" or passwd == "<no-password>":
                     return defer.succeed(False)
 
