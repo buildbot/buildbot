@@ -65,7 +65,7 @@ class TextLog(Resource):
         if path == "text":
             self.asText = True
             return self
-        return HtmlResource.getChild(self, path, req)
+        return Resource.getChild(self, path, req)
 
     def content(self, entries):
         html_entries = []
