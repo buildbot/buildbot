@@ -40,17 +40,17 @@ from optparse import OptionParser
 
 master = "localhost:9989"
 
-# When sending the notification, send this category if
+# When sending the notification, send this category if (and only if)
 # it's set (via --category)
 
 category = None
 
-# When sending the notification, send this repository if
+# When sending the notification, send this repository if (and only if)
 # it's set (via --repository)
 
 repository = None
 
-# When sending the notification, send this project if
+# When sending the notification, send this project if (and only if)
 # it's set (via --project)
 
 project = None
