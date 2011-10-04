@@ -35,22 +35,22 @@ from twisted.internet import reactor, defer
 
 from optparse import OptionParser
 
-# Modify this to fit your setup, or pass in --master server:host on the
+# Modify this to fit your setup, or pass in --master server:port on the
 # command line
 
 master = "localhost:9989"
 
-# When sending the notification, send this category iff
+# When sending the notification, send this category if (and only if)
 # it's set (via --category)
 
 category = None
 
-# When sending the notification, send this repository iff
+# When sending the notification, send this repository if (and only if)
 # it's set (via --repository)
 
 repository = None
 
-# When sending the notification, send this project iff
+# When sending the notification, send this project if (and only if)
 # it's set (via --project)
 
 project = None
