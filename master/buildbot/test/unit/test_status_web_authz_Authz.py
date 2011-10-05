@@ -155,6 +155,14 @@ class TestAuthz(unittest.TestCase):
     def test_constructor_invalidAction(self):
         self.assertRaises(ValueError, Authz, someRandomAction=3)
 
+    def test_getUsername_request(self):
+        z = Authz()
+        assert z.getUsername(StubRequest('foo', 'bar')) == 'foo'
+
+    def test_getPassword_request(self):
+        z = Authz()
+        assert z.getPassword(StubRequest('foo', 'bar')) == 'bar'
+
     def test_advertiseAction_invalidAction(self):
         z = Authz()
         self.assertRaises(KeyError, z.advertiseAction, 'someRandomAction')
