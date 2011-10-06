@@ -25,6 +25,7 @@ from twisted.internet import protocol, reactor
 from twisted.words.protocols import irc
 from twisted.python import log, failure
 from twisted.application import internet
+from twisted.internet import task
 
 from buildbot import interfaces, util
 from buildbot import version
@@ -816,6 +817,14 @@ class IrcStatusBot(irc.IRCClient):
         self.noticeOnChannel = noticeOnChannel
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
+        self._keepAliveCall = task.LoopingCall(lambda: self.ping(self.nickname))
+    def connectionMade(self):
+        irc.IRCClient.connectionMade(self)
+        self._keepAliveCall.start(60)
+    def connectionLost(self, reason):
+        if self._keepAliveCall.running:
+            self._keepAliveCall.stop()
+        irc.IRCClient.connectionLost(self, reason)
 
     def msgOrNotice(self, dest, message):
         if self.noticeOnChannel and dest[0] == '#':
