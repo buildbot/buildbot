@@ -473,6 +473,7 @@ def upgradeMaster(config):
     # TODO: check Makefile
     # TODO: check TAC file
     # check web files: index.html, default.css, robots.txt
+    m.chdir()
     m.upgrade_public_html({
             'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
             'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
@@ -1146,6 +1147,7 @@ def doCheckConfig(config):
     configFileName = config.get('configFile')
 
     if os.path.isdir(configFileName):
+        os.chdir(configFileName)
         cl = ConfigLoader(basedir=configFileName)
     else:
         cl = ConfigLoader(configFileName=configFileName)
