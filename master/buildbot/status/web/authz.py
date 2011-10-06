@@ -37,10 +37,13 @@ class Authz(object):
     def __init__(self,
             default_action=False,
             auth=None,
+            useHttpHeader=False,
             **kwargs):
         self.auth = auth
         if auth:
             assert IAuth.providedBy(auth)
+
+        self.useHttpHeader = useHttpHeader
 
         self.config = dict( (a, default_action) for a in self.knownActions )
         for act in self.knownActions:
@@ -52,9 +55,13 @@ class Authz(object):
             raise ValueError("unknown authorization action(s) " + ", ".join(kwargs.keys()))
 
     def getUsername(self, request):
+        if self.useHttpHeader:
+            return request.getUser()
         return request.args.get("username", ["<unknown>"])[0]
 
     def getPassword(self, request):
+        if self.useHttpHeader:
+            return request.getPassword()
         return request.args.get("passwd", ["<no-password>"])[0]
 
     def advertiseAction(self, action):

@@ -28,6 +28,25 @@ class StubRequest(object):
             'passwd' : [ passwd ],
         }
 
+    def getUser(self):
+        return None
+
+    def getPassword(self):
+        return None
+
+class StubHttpAuthRequest(object):
+    # all we need from a request is username/password
+    def __init__(self, username, passwd):
+        self.args = {}
+        self.username = username
+        self.passwd = passwd
+
+    def getUser(self):
+        return self.username
+
+    def getPassword(self):
+        return self.passwd
+
 class StubAuth(object):
     implements(IAuth)
     def __init__(self, user):
@@ -154,6 +173,22 @@ class TestAuthz(unittest.TestCase):
 
     def test_constructor_invalidAction(self):
         self.assertRaises(ValueError, Authz, someRandomAction=3)
+
+    def test_getUsername_http(self):
+        z = Authz(useHttpHeader = True)
+        assert z.getUsername(StubHttpAuthRequest('foo', 'bar')) == 'foo'
+
+    def test_getPassword_http(self):
+        z = Authz(useHttpHeader = True)
+        assert z.getPassword(StubHttpAuthRequest('foo', 'bar')) == 'bar'
+
+    def test_getUsername_http_missing(self):
+        z = Authz(useHttpHeader = True)
+        assert z.getUsername(StubRequest('foo', 'bar')) == None
+
+    def test_getPassword_http_missing(self):
+        z = Authz(useHttpHeader = True)
+        assert z.getPassword(StubRequest('foo', 'bar')) == None
 
     def test_getUsername_request(self):
         z = Authz()

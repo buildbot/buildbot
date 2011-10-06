@@ -515,6 +515,28 @@ The ``forceBuild`` and ``pingBuilder`` actions both supply a
 object.  The ``cancelPendingBuild`` action supplies a :class:`BuildRequest`.  The
 remainder do not supply any extra arguments.
 
+HTTP-based authentication by frontend server
+############################################
+
+In case if WebStatus is served through reverse proxy that supports HTTP-based
+authentication (like apache, lighttpd), it's possible to to tell WebStatus to
+trust web server and get username from request headers. This allows displaying
+correct usernames in build reason, interrupt messages, etc.
+
+Just set ``useHttpHeader`` to ``True`` in :class:`Authz` constructor. ::
+
+    authz = Authz(useHttpHeader=True) # WebStatus secured by web frontend with HTTP auth
+
+Please note that WebStatus can decode password for HTTP Basic requests only (for
+Digest authentication it's just impossible). Custom :class:`status.web.auth.IAuth`
+subclasses may just ignore password at all since it's already validated by web server.
+
+Administrator must make sure that it's impossible to get access to WebStatus
+using other way than through frontend. Usually this means that WebStatus should
+listen for incoming connections only on localhost (or on some firewall-protected
+port). Frontend must require HTTP authentication to access WebStatus pages
+(using any source for credentials, such as htpasswd, PAM, LDAP).
+
 Logging configuration
 #####################
 
