@@ -171,6 +171,22 @@ class TestAuthz(unittest.TestCase):
         z = Authz(stopAllBuilds = lambda u : False)
         assert z.needAuthForm('stopAllBuilds')
 
+    def test_needUserForm_False(self):
+        z = Authz(forceBuild = False)
+        assert not z.needUserForm('forceBuild')
+
+    def test_needUserForm_Ture(self):
+        z = Authz(forceBuild = True)
+        assert z.needUserForm('forceBuild')
+
+    def test_needUserForm_http_False(self):
+        z = Authz(useHttpHeader = True, forceBuild = False)
+        assert not z.needUserForm('forceBuild')
+
+    def test_needUserForm_http_True(self):
+        z = Authz(useHttpHeader = True, forceBuild = True)
+        assert not z.needUserForm('forceBuild')
+
     def test_constructor_invalidAction(self):
         self.assertRaises(ValueError, Authz, someRandomAction=3)
 

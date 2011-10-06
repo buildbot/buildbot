@@ -82,6 +82,18 @@ class Authz(object):
             return True
         return False
 
+    def needUserForm(self, action):
+        """Does this action require an user form?"""
+        if action not in self.knownActions:
+            raise KeyError("unknown action")
+        if self.useHttpHeader:
+            # TODO: show the form when Authorization header is missing?
+            return False
+        cfg = self.config.get(action, False)
+        if cfg:
+            return True
+        return False
+
     def actionAllowed(self, action, request, *args):
         """Is this ACTION allowed, given this http REQUEST?"""
         if action not in self.knownActions:
