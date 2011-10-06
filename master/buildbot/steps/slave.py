@@ -135,7 +135,7 @@ class RemoveDirectory(buildstep.BuildStep):
             return
         self.finished(SUCCESS)
 
-class MakeDirectory(BuildStep):
+class MakeDirectory(buildstep.BuildStep):
     """
     Create a directory on the slave.
     """
@@ -149,7 +149,7 @@ class MakeDirectory(BuildStep):
     flunkOnFailure = True
 
     def __init__(self, dir, **kwargs):
-        BuildStep.__init__(self, **kwargs)
+        buildstep.BuildStep.__init__(self, **kwargs)
         self.addFactoryArguments(dir = dir)
         self.dir = dir
 
@@ -158,7 +158,7 @@ class MakeDirectory(BuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about mkdir")
-        cmd = LoggedRemoteCommand('mkdir', {'dir': self.dir })
+        cmd = buildstep.LoggedRemoteCommand('mkdir', {'dir': self.dir })
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
