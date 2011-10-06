@@ -134,3 +134,38 @@ class RemoveDirectory(buildstep.BuildStep):
             self.finished(FAILURE)
             return
         self.finished(SUCCESS)
+
+class MakeDirectory(BuildStep):
+    """
+    Create a directory on the slave.
+    """
+    name='MakeDirectory'
+    description='Creating'
+    desciprtionDone='Created'
+
+    renderables = [ 'dir' ]
+
+    haltOnFailure = True
+    flunkOnFailure = True
+
+    def __init__(self, dir, **kwargs):
+        BuildStep.__init__(self, **kwargs)
+        self.addFactoryArguments(dir = dir)
+        self.dir = dir
+
+    def start(self):
+        slavever = self.slaveVersion('mkdir')
+        if not slavever:
+            raise BuildSlaveTooOldError("slave is too old, does not know "
+                                        "about mkdir")
+        cmd = LoggedRemoteCommand('mkdir', {'dir': self.dir })
+        d = self.runCommand(cmd)
+        d.addCallback(lambda res: self.commandComplete(cmd))
+        d.addErrback(self.failed)
+
+    def commandComplete(self, cmd):
+        if cmd.rc != 0:
+            self.step_status.setText(["Create failed."])
+            self.finished(FAILURE)
+            return
+        self.finished(SUCCESS)
