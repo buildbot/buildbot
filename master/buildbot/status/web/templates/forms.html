@@ -4,12 +4,12 @@
       <span class="label">Your username:</span>
       <input type="text" name="username"/>
     </div>
-  
+
     <div class="row">
       <span class="label">Your password:</span>
       <input type="password" name="passwd"/>
     </div>
-  {% else %}
+  {% elif authz.needUserForm(action) %}
     <div class="row">
       <span class="label">Your name:</span>
       <input type="text" name="username"/>
