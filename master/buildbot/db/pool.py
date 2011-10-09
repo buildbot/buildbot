@@ -82,6 +82,10 @@ class DBThreadPool(threadpool.ThreadPool):
         if engine.dialect.name == 'sqlite':
             vers = self.get_sqlite_version()
             log.msg("Using SQLite Version %s" % (vers,))
+            if vers < (3,7):
+                log.msg("NOTE: this old version of SQLite does not support "
+                        "WAL journal mode; a busy master may encounter "
+                        "'Database is locked' errors.  Consider upgrading.")
             if vers < (3,3,17):
                 log.msg("NOTE: this old version of SQLite does not support "
                         "multiple simultaneous accesses to the database; "
