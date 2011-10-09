@@ -63,7 +63,7 @@ class Git(SourceBaseCommand):
     def sourcedirIsUpdateable(self):
         return os.path.isdir(os.path.join(self._fullSrcdir(), ".git"))
 
-    def _dovccmd(self, command, cb=None, **kwargs):
+    def _dovccmd(self, command, cb=None, stopOnFail=True, **kwargs):
         git = self.getCommand("git")
         c = runprocess.RunProcess(self.builder, [git] + command, self._fullSrcdir(),
                          sendRC=False, timeout=self.timeout,
@@ -72,7 +72,8 @@ class Git(SourceBaseCommand):
         self.command = c
         d = c.start()
         if cb:
-            d.addCallback(self._abandonOnFailure)
+            if stopOnFail:
+                d.addCallback(self._abandonOnFailure)
             d.addCallback(cb)
         return d
 
@@ -107,7 +108,7 @@ class Git(SourceBaseCommand):
         # Rename branch, so that the repo will have the expected branch name
         # For further information about this, see the commit message
         command = ['branch', '-M', self.branch]
-        return self._dovccmd(command, self._initSubmodules)
+        return self._dovccmd(command, self._initSubmodules, False)
         
     def _didFetch(self, res):
         if self.revision:
