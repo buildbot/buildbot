@@ -560,19 +560,24 @@ command line, like this
 
     buildslave create-slave --umask=022 ~/buildslave buildmaster.example.org:42012 {myslavename} {mypasswd}
 
-``--no-logrotate``
+.. program:: buildslave create-slave
+
+.. option:: --no-logrotate
+
     This disables internal buildslave log management mechanism. With this option
     buildslave does not override the default logfile name and its behaviour giving
     a possibility to control those with command-line options of twistd
     daemon.
 
-``--usepty``
+.. option:: --usepty
+
     This is a boolean flag that tells the buildslave whether to launch child
     processes in a PTY or with regular pipes (the default) when the master does not
     specify.  This option is deprecated, as this particular parameter is better
     specified on the master.
 
-``--umask``
+.. option:: --umask
+
     This is a string (generally an octal representation of an integer)
     which will cause the buildslave process' ``umask`` value to be set
     shortly after initialization. The ``twistd`` daemonization utility
@@ -584,7 +589,8 @@ command line, like this
     build products to be *writable* by other accounts too, use
     ``--umask=000``, but this is likely to be a security problem.
 
-``--keepalive``
+.. option:: --keepalive
+
     This is a number that indicates how frequently ``keepalive`` messages
     should be sent from the buildslave to the buildmaster, expressed in
     seconds. The default (600) causes a message to be sent to the
@@ -598,16 +604,19 @@ command line, like this
     disappeared, and builds will time out. Meanwhile the buildslave will
     not realize than anything is wrong.
 
-``--maxdelay``
+.. option:: --maxdelay
+
     This is a number that indicates the maximum amount of time the
     buildslave will wait between connection attempts, expressed in
     seconds. The default (300) causes the buildslave to wait at most 5
     minutes before trying to connect to the buildmaster again.
 
-``--log-size``
+.. option:: --log-size
+
     This is the size in bytes when to rotate the Twisted log files.
 
-``--log-count``
+.. option:: --log-count
+
     This is the number of log rotations to keep around. You can either
     specify a number or ``None`` to keep all :file:`twistd.log` files
     around. The default is 10.

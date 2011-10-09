@@ -2095,14 +2095,16 @@ project documentation. We want to move this file to the buildmaster,
 into a :file:`~/public_html` directory, so it can be visible to
 developers. This file will wind up in the slave-side working directory
 under the name :file:`docs/reference.html`. We want to put it into the
-master-side :file:`~/public_html/ref.html`. ::
+master-side :file:`~/public_html/ref.html`, and add a link to the HTML
+status to the uploaded file. ::
 
     from buildbot.steps.shell import ShellCommand
     from buildbot.steps.transfer import FileUpload
     
     f.addStep(ShellCommand(command=["make", "docs"]))
     f.addStep(FileUpload(slavesrc="docs/reference.html",
-                         masterdest="~/public_html/ref.html"))
+                         masterdest="~/public_html/ref.html",
+                         url="/~buildbot/ref.html"))
 
 The ``masterdest=`` argument will be passed to :meth:`os.path.expanduser`,
 so things like ``~`` will be expanded properly. Non-absolute paths
@@ -2110,6 +2112,9 @@ will be interpreted relative to the buildmaster's base directory.
 Likewise, the ``slavesrc=`` argument will be expanded and
 interpreted relative to the builder's working directory.
 
+.. note:: The copied file will have the same permissions on the master
+          as on the slave, look at the ``mode=`` parameter to set it
+          differently.
 
 To move a file from the master to the slave, use the
 :bb:step:`FileDownload` command. For example, let's assume that some step
@@ -2157,8 +2162,15 @@ creation time (:ref:`Buildslave-Options`).
 
 The ``keepstamp=`` argument is a boolean that, when ``True``, forces
 the modified and accessed time of the destination file to match the
-times of the source file.  When ``False`` (the default), the modified and accessed times
-of the destination file are set to the current time on the buildmaster.
+times of the source file.  When ``False`` (the default), the modified
+and accessed times of the destination file are set to the current time
+on the buildmaster.
+
+The ``url=`` argument allows you to specify an url that will be
+displayed in the HTML status. The title of the url will be the name of
+the item transfered (directory for :class:`DirectoryUpload` or file
+for :class:`FileUpload`). This allows the user to add a link to the
+uploaded item if that one is uploaded to an accessible place.
 
 .. bb:step:: DirectoryUpload
 
@@ -2173,7 +2185,8 @@ just for directories. However it does not support the ``maxsize``,
 ``blocksize`` and ``mode`` arguments. As an example, let's assume an
 generated project documentation, which consists of many files (like the output
 of :command:`doxygen` or :command:`epydoc`). We want to move the entire documentation to the
-buildmaster, into a :file:`~/public_html/docs` directory. On the slave-side
+buildmaster, into a :file:`~/public_html/docs` directory, and add a
+link to the uploaded documentation on the HTML status page. On the slave-side
 the directory can be found under :file:`docs`::
 
     from buildbot.steps.shell import ShellCommand
@@ -2181,7 +2194,8 @@ the directory can be found under :file:`docs`::
     
     f.addStep(ShellCommand(command=["make", "docs"]))
     f.addStep(DirectoryUpload(slavesrc="docs",
-                    masterdest="~/public_html/docs"))
+                              masterdest="~/public_html/docs",
+                              url="~buildbot/docs"))
 
 The :bb:step:`DirectoryUpload` step will create all necessary directories and
 transfers empty directories, too.
@@ -2193,6 +2207,10 @@ encoding used (currently tar).
 
 The optional ``compress`` argument can be given as ``'gz'`` or
 ``'bz2'`` to compress the datastream.
+
+.. note:: The permissions on the copied files will be the same on the
+          master as originately on the slave, see :option:`buildslave
+          create-slave --umask` to change the default one.
 
 .. bb:step:: StringDownload
 .. bb:step:: JSONStringDownload
