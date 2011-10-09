@@ -251,6 +251,32 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def testEnvironPythonPath(self):
+        b = FakeSlaveBuilder(False, self.basedir)
+        s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
+                            environ={"PYTHONPATH":'a'})
+
+        d = s.start()
+        def check(ign):
+            headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"] ])
+            self.failUnless(not re.match('\bPYTHONPATH=a%s' % (os.pathsep),headers),
+                            "got:\n" + headers)
+        d.addCallback(check)
+        return d
+
+    def testEnvironArray(self):
+        b = FakeSlaveBuilder(False, self.basedir)
+        s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
+                            environ={"FOO":['a', 'b']})
+
+        d = s.start()
+        def check(ign):
+            headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"] ])
+            self.failUnless(not re.match('\bFOO=a%sb\b' % (os.pathsep),headers),
+                            "got:\n" + headers)
+        d.addCallback(check)
+        return d
+
 class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
 
     if runtime.platformType != "posix":
