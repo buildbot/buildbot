@@ -281,17 +281,17 @@ class RunProcess:
         if not os.path.exists(workdir):
             os.makedirs(workdir)
         if environ:
-            if environ.has_key('PYTHONPATH'):
-                ppath = environ['PYTHONPATH']
-                # Need to do os.pathsep translation.  We could either do that
-                # by replacing all incoming ':'s with os.pathsep, or by
-                # accepting lists.  I like lists better.
-                if not isinstance(ppath, str):
+            for key in environ:
+                if isinstance(environ[key], list):
+                    # Need to do os.pathsep translation.  We could either do that
+                    # by replacing all incoming ':'s with os.pathsep, or by
+                    # accepting lists.  I like lists better.
                     # If it's not a string, treat it as a sequence to be
                     # turned in to a string.
-                    ppath = os.pathsep.join(ppath)
+                    environ[key] = os.pathsep.join(environ[key])
 
-                environ['PYTHONPATH'] = ppath + os.pathsep + "${PYTHONPATH}"
+            if environ.has_key('PYTHONPATH'):
+                environ['PYTHONPATH'] += os.pathsep + "${PYTHONPATH}"
 
             # do substitution on variable values matching patern: ${name}
             p = re.compile('\${([0-9a-zA-Z_]*)}')
