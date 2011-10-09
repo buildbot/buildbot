@@ -5,6 +5,12 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Version
 
+** Enhanced SVN usage
+
+The Buildbot SVN support now provides the ability to checkout into a subdirectory of the
+build-slave's working directory so that multiple checkouts may occur in parallel for
+projects that require disparate portions of the tree in order to build.
+
 * Buildbot 0.8.5
 
 ** Updated, sphinx-based documentation

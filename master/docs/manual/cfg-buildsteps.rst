@@ -531,6 +531,13 @@ should preferentially create the :bb:step:`SVN` step with the
       incremental. It performs all the incremental checkout behavior
       in ``source`` directory.
 
+``outputdir``
+   (optional): Specify the directory name within the buildbot slave
+   working directory where the SVN checkout will occur.
+
+   If not set or set to ``None`` then the SVN checkout will occur
+   directly in the buildbot slave working directory.
+
 If you are using branches, you must also make sure your
 ``ChangeSource`` will report the correct branch names.
 
