@@ -37,10 +37,13 @@ class Authz(object):
     def __init__(self,
             default_action=False,
             auth=None,
+            useHttpHeader=False,
             **kwargs):
         self.auth = auth
         if auth:
             assert IAuth.providedBy(auth)
+
+        self.useHttpHeader = useHttpHeader
 
         self.config = dict( (a, default_action) for a in self.knownActions )
         for act in self.knownActions:
@@ -52,9 +55,13 @@ class Authz(object):
             raise ValueError("unknown authorization action(s) " + ", ".join(kwargs.keys()))
 
     def getUsername(self, request):
+        if self.useHttpHeader:
+            return request.getUser()
         return request.args.get("username", ["<unknown>"])[0]
 
     def getPassword(self, request):
+        if self.useHttpHeader:
+            return request.getPassword()
         return request.args.get("passwd", ["<no-password>"])[0]
 
     def advertiseAction(self, action):
@@ -72,6 +79,18 @@ class Authz(object):
             raise KeyError("unknown action")
         cfg = self.config.get(action, False)
         if cfg == 'auth' or callable(cfg):
+            return True
+        return False
+
+    def needUserForm(self, action):
+        """Does this action require an user form?"""
+        if action not in self.knownActions:
+            raise KeyError("unknown action")
+        if self.useHttpHeader:
+            # TODO: show the form when Authorization header is missing?
+            return False
+        cfg = self.config.get(action, False)
+        if cfg:
             return True
         return False
 
