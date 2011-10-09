@@ -5,6 +5,9 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Version
 
+** Buildbot can now take advantage of authentication done by a front-end web server:
+   https://github.com/buildbot/buildbot/pull/266
+
 * Buildbot 0.8.5
 
 ** Updated, sphinx-based documentation
