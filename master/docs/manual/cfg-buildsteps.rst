@@ -1323,30 +1323,32 @@ The :bb:step:`ShellCommand` arguments are:
 
     These variable settings will override any existing ones in the
     buildslave's environment or the environment specified in the
-    :class:`Builder`. The exception is :envvar:`PYTHONPATH`, which is merged
-    with (actually prepended to) any existing :envvar:`PYTHONPATH` setting. The
-    value is treated as a list of directories to prepend, and a single
-    string is treated like a one-item list. For example, to prepend both
-    :file:`/usr/local/lib/python2.3` and :file:`/home/buildbot/lib/python`
-    to any existing :envvar:`PYTHONPATH` setting, you would do something like the
-    following::
-    
+    :class:`Builder`. The exception is :envvar:`PYTHONPATH`, which is
+    merged with (actually prepended to) any existing
+    :envvar:`PYTHONPATH` setting. the following example will prepend
+    :file:`/home/buildbot/lib/python` to any existing
+    :envvar:`PYTHONPATH`::
+
         from buildbot.steps.shell import ShellCommand
         f.addStep(ShellCommand(
                       command=["make", "test"],
-                      env={'PYTHONPATH': ["/usr/local/lib/python2.3",
-                                           "/home/buildbot/lib/python"] }))
+                      env={'PYTHONPATH': "/home/buildbot/lib/python"}))
+
+    To avoid the need of concatenating path together in the master
+    config file, if the value consist of an array, it will be joined
+    together using the right platform dependant separator.
     
     Those variables support expansion so that if you just want to prepend
     :file:`/home/buildbot/bin` to the :envvar:`PATH` environment variable, you can do
-    it by putting the value ``${PATH}`` at the end of the string like
+    it by putting the value ``${PATH}`` at the end of the value like
     in the example below. Variables that doesn't exists on the slave will be
     replaced by ``""``. ::
     
         from buildbot.steps.shell import ShellCommand
         f.addStep(ShellCommand(
                       command=["make", "test"],
-                      env={'PATH': "/home/buildbot/bin:${PATH}"}))
+                      env={'PATH': ["/home/buildbot/bin",
+                                    "${PATH}"]}))
 
 ``want_stdout``
     if ``False``, stdout from the child process is discarded rather than being
