@@ -26,7 +26,7 @@ class Git(Source):
     renderables = [ "repourl"]
 
     def __init__(self, repourl=None, branch='master', mode='incremental',
-                 method=None, submodule=False, shallow=False, progress=False,
+                 method=None, submodules=False, shallow=False, progress=False,
                  retryFetch=False, clobberOnFailure=False, **kwargs):
         """
         @type  repourl: string
@@ -64,7 +64,7 @@ class Git(Source):
         self.prog  = progress
         self.repourl   = repourl
         self.retryFetch = retryFetch
-        self.submodule = submodule
+        self.submodules = submodules
         self.shallow   = shallow
         self.fetchcount = 0
         self.clobberOnFailure = clobberOnFailure
@@ -75,7 +75,7 @@ class Git(Source):
                                  method=method,
                                  progress=progress,
                                  repourl=repourl,
-                                 submodule=submodule,
+                                 submodules=submodules,
                                  shallow=shallow,
                                  retryFetch=retryFetch,
                                  clobberOnFailure=
@@ -336,7 +336,7 @@ class Git(Source):
                                                   not self.clobberOnFailure))
         # init and update submodules, recurisively. If there's not recursion
         # it will not do it.
-        if self.submodule:
+        if self.submodules:
             d.addCallback(lambda _: self._dovccmd(['submodule', 'update',
                                                    '--init', '--recursive'],
                                                   not self.clobberOnFailure))
@@ -373,13 +373,13 @@ class Git(Source):
         return d
 
     def _updateSubmodule(self, _):
-        if self.submodule:
+        if self.submodules:
             return self._dovccmd(['submodule', 'update', '--recursive'])
         else:
             return defer.succeed(0)
 
     def _cleanSubmodule(self, _):
-        if self.submodule:
+        if self.submodules:
             command = ['submodule', 'foreach', 'git', 'clean', '-f', '-d']
             if self.mode == 'full' and self.method == 'fresh':
                 command.append('-x')

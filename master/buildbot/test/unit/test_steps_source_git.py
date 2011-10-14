@@ -229,7 +229,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_full_fresh_submodule(self):
         self.setupStep(
                 git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                                    mode='full', method='fresh', submodule=True))
+                                    mode='full', method='fresh', submodules=True))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -487,7 +487,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_full_clobber_submodule(self):
         self.setupStep(
                 git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                        mode='full', method='clobber', submodule=True))
+                        mode='full', method='clobber', submodules=True))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
