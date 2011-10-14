@@ -458,17 +458,20 @@ The :bb:chsrc:`PBChangeSource` is created with the following arguments.
     which port to listen on. If ``None`` (which is the default), it
     shares the port used for buildslave connections.
 
-`user` and `passwd`
-    The user/passwd account information that the client program must use
-    to connect. Defaults to ``change`` and ``changepw``.  Do not use
-    these defaults on a publicly exposed port!
+`user`
+    The user account that the client program must use to connect. Defaults to
+    ``change``
+
+`passwd`
+    The password for the connection - defaults to ``changepw``.  Do not use
+    this default on a publicly exposed port!
 
 `prefix`
     The prefix to be found and stripped from filenames delivered over the
-    connection, defaulting to ``None``. Any filenames which do not start with this prefix will be
-    removed. If all the filenames in a given Change are removed, the that
-    whole Change will be dropped. This string should probably end with a
-    directory separator.
+    connection, defaulting to ``None``. Any filenames which do not start with
+    this prefix will be removed. If all the filenames in a given Change are
+    removed, the that whole Change will be dropped. This string should probably
+    end with a directory separator.
 
     This is useful for changes coming from version control systems that
     represent branches as parent directories within the repository (like SVN
@@ -484,7 +487,7 @@ The :bb:chsrc:`PBChangeSource` is created with the following arguments.
 For example::
 
     from buildbot.changes import pb
-    c['changes'] = pb.PBChangeSource(port=9999, user='laura', password='fpga')
+    c['changes'] = pb.PBChangeSource(port=9999, user='laura', passwd='fpga')
 
 The following hooks are useful for sending changes to a :bb:chsrc:`PBChangeSource`\:
 
