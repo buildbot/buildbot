@@ -18,6 +18,7 @@ Buildbot.
     config
     utils
     database
+    mq
     results
     formats
     webstatus

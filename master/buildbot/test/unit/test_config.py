@@ -152,6 +152,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             db=dict(
                 db_url='sqlite:///state.sqlite',
                 db_poll_interval=None),
+            mq=dict(type='simple'),
             metrics = None,
             caches = dict(Changes=10, Builds=15),
             schedulers = {},
@@ -491,6 +492,26 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             dict(db=dict(db_url='abcd', db_poll_interval='ten')),
             self.errors)
         self.assertConfigError(self.errors, "must be an int")
+
+
+    def test_load_mq_defaults(self):
+        self.cfg.load_mq(self.filename, {}, self.errors)
+        self.assertResults(mq=dict(type='simple'))
+
+    def test_load_mq_explicit_type(self):
+        self.cfg.load_mq(self.filename,
+                dict(mq=dict(type='simple')), self.errors)
+        self.assertResults(mq=dict(type='simple'))
+
+    def test_load_mq_unk_type(self):
+        self.cfg.load_mq(self.filename, dict(mq=dict(type='foo')), self.errors)
+        self.assertConfigError(self.errors, "mq type 'foo' is not known")
+
+    def test_load_mq_unk_keys(self):
+        self.cfg.load_mq(self.filename,
+            dict(mq=dict(bar='bar')),
+            self.errors)
+        self.assertConfigError(self.errors, "unrecognized keys in")
 
 
     def test_load_metrics_defaults(self):

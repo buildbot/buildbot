@@ -20,7 +20,7 @@ from sphinx.util.compat import Directive
 from sphinx.util import ws_re
 from sphinx.util.nodes import make_refnode
 from sphinx import addnodes
-
+from sphinx.util.docfields import DocFieldTransformer, TypedField, Field
 
 class BBRefTargetDirective(Directive):
     """
@@ -31,10 +31,12 @@ class BBRefTargetDirective(Directive):
     """
 
     has_content = False
+    name_annotation = None
     required_arguments = 1
     optional_arguments = 0
     final_argument_whitespace = True
     option_spec = {}
+    domain = 'bb'
 
     def run(self):
         env = self.state.document.settings.env
@@ -69,6 +71,27 @@ class BBRefTargetDirective(Directive):
             inode = addnodes.index(entries=entries)
             ret.insert(0, inode)
 
+        # if the node has content, set up a signature and parse the content
+        if self.has_content:
+            descnode = addnodes.desc()
+            descnode['domain'] = 'bb'
+            descnode['objtype'] = self.ref_type
+            descnode['noindex'] = True
+            signode = addnodes.desc_signature(fullname, '')
+
+            if self.name_annotation:
+                annotation = "%s " % self.name_annotation
+                signode += addnodes.desc_annotation(annotation, annotation)
+            signode += addnodes.desc_name(fullname, fullname)
+            descnode += signode
+
+            contentnode = addnodes.desc_content()
+            self.state.nested_parse(self.content, 0, contentnode)
+            DocFieldTransformer(self).transform_all(contentnode)
+            descnode += contentnode
+
+            ret.append(descnode)
+
         return ret 
 
     @classmethod
@@ -89,13 +112,14 @@ class BBRefTargetDirective(Directive):
                             contnode, target)
 
 
-def make_ref_target_directive(ref_type, indextemplates=None):
+def make_ref_target_directive(ref_type, indextemplates=None, **kwargs):
     """
     Create and return a L{BBRefTargetDirective} subclass.
     """
+    class_vars = dict(ref_type=ref_type, indextemplates=indextemplates)
+    class_vars.update(kwargs)
     return type("BB%sRefTargetDirective" % (ref_type.capitalize(),),
-                (BBRefTargetDirective,),
-                dict(ref_type=ref_type, indextemplates=indextemplates))
+                (BBRefTargetDirective,), class_vars)
 
 
 class BBIndex(Index):
@@ -197,6 +221,7 @@ class BBDomain(Domain):
         'step' : ObjType('step', 'step'),
         'status' : ObjType('status', 'status'),
         'cmdline' : ObjType('cmdline', 'cmdline'),
+        'msg' : ObjType('msg', 'msg'),
     }
 
     directives = {
@@ -230,6 +255,17 @@ class BBDomain(Domain):
                     'single: Command Line Subcommands; %s',
                     'single: %s Command Line Subcommand',
                 ]),
+        'msg' : make_ref_target_directive('msg',
+                indextemplates=[
+                    'single: Message Schema; %s',
+                ],
+                has_content=True,
+                name_annotation = 'routing key:',
+                doc_field_types=[
+                    TypedField('key', label='Keys', names=('key',),
+                        typenames=('type',), can_collapse=True),
+                    Field('var', label='Variable', names=('var',)),
+                ]),
     }
 
     roles = {
@@ -239,7 +275,7 @@ class BBDomain(Domain):
         'step' : XRefRole(),
         'status' : XRefRole(),
         'cmdline' : XRefRole(),
-
+        'msg' : XRefRole(),
         'index' : XRefRole(),
 
         'bug' : BugRole(),
@@ -258,6 +294,7 @@ class BBDomain(Domain):
         make_index("step", "Build Step Index"),
         make_index("status", "Status Target Index"),
         make_index("cmdline", "Command Line Index"),
+        make_index("msg", "MQ Routing Key Index"),
     ]
 
     def resolve_xref(self, env, fromdocname, builder, typ, target, node,

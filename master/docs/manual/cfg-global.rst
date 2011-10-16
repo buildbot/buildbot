@@ -110,6 +110,44 @@ Postgres
 
 No special configuration is required to use Postgres.
 
+.. bb:cfg:: mq
+
+.. _MQ-Specification:
+
+MQ Specification
+~~~~~~~~~~~~~~~~
+
+Buildbot uses a message-queueing system to handle communication within the
+master.  Messages are used to indicate events within the master, and components
+that are interested in those events arrange to receive them.
+
+The message queueing implementation is configured as a dictionary in the ``mq``
+option.  The ``type`` key describes the type of MQ implemetation to be used.
+Note that the implementation type cannot be changed in a reconfig.
+
+The available implemenetation types are described in the following sections.
+
+Simple
+++++++
+
+.. code-block:: python
+
+    c['mq'] = {
+        'type' : 'simple',
+        'debug' : False,
+    }
+
+This is the default MQ implementation.  Similar to SQLite, it has no additional
+software dependencies, but does not support multi-master mode.
+
+Note that this implementation also does not support message persistence across
+a restart of the master.  For example, if a change is received, but the master
+shuts down before the schedulers can create build requests for it, then those
+schedulers will not be notified of the change when the master starts again.
+
+The ``debug`` key, which defaults to False, can be used to enable logging of
+every message produced on this master.
+
 .. bb:cfg:: multiMaster
 
 .. _Multi-master-mode:

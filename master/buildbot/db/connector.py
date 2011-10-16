@@ -18,12 +18,10 @@ from twisted.internet import defer
 from twisted.python import log
 from twisted.application import internet, service
 from buildbot import config
-from buildbot.db import enginestrategy
-from buildbot.db import pool, model, changes, schedulers, sourcestamps, sourcestampsets
-from buildbot.db import state, buildsets, buildrequests, builds, users
-
-class DatabaseNotReadyError(Exception):
-    pass
+from buildbot.db import enginestrategy, exceptions
+from buildbot.db import pool, model, changes, schedulers, sourcestamps
+from buildbot.db import sourcestampsets, state, buildsets, buildrequests
+from buildbot.db import builds, users
 
 upgrade_message = textwrap.dedent("""\
 
@@ -99,7 +97,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
                 if not res:
                     for l in upgrade_message.split('\n'):
                         log.msg(l)
-                    raise DatabaseNotReadyError()
+                    raise exceptions.DatabaseNotReadyError()
             d.addCallback(check_current)
         else:
             d = defer.succeed(None)

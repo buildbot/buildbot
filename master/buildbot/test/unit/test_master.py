@@ -22,9 +22,9 @@ from twisted.trial import unittest
 from twisted.python import log
 from buildbot import master, monkeypatches, config
 from buildbot.util import subscription
-from buildbot.db import connector
+from buildbot.db import exceptions
 from buildbot.test.util import dirs, compat, misc
-from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakedb, fakemq
 from buildbot.util import epoch2datetime
 from buildbot.changes import changes
 from buildbot.process.users import users
@@ -232,6 +232,7 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
 
             self.master = master.BuildMaster(self.basedir)
             self.db = self.master.db = fakedb.FakeDBConnector(self)
+            self.mq = self.master.mq = fakemq.FakeMQConnector(self)
 
         @d.addCallback
         def patch_log_msg(_):
@@ -281,7 +282,7 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
         reactor = self.make_reactor()
         def db_setup():
             log.msg("GOT HERE")
-            raise connector.DatabaseNotReadyError()
+            raise exceptions.DatabaseNotReadyError()
         self.db.setup = db_setup
 
         d = self.master.startService(_reactor=reactor)
