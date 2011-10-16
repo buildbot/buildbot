@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import os
 import sys
 import mock
 from twisted.python import runtime
@@ -25,9 +26,17 @@ from buildbot.steps import master
 class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
+        if runtime.platformType == 'win32':
+            self.comspec = os.environ.get('COMPSPEC')
+            os.environ['COMSPEC'] = r'C:\WINDOWS\system32\cmd.exe'
         return self.setUpBuildStep()
 
     def tearDown(self):
+        if runtime.platformType == 'win32':
+            if self.comspec:
+                os.environ['COMSPEC'] = self.comspec
+            else:
+                del os.environ['COMSPEC']
         return self.tearDownBuildStep()
 
     def patchSpawnProcess(self, exp_cmd, exp_argv, exp_path, exp_usePTY,
