@@ -139,7 +139,7 @@ buildrequests
             (e.g., SQLite), this method will not prevent claims for nonexistent
             build requests.  On database backends that do not support
             transactions (MySQL), this method will not properly roll back any
-            partial claims made before an :py:exc:`AlreadyClaimedError` was
+            partial claims made before an :py:exc:`AlreadyClaimedError` is
             generated.
 
     .. py:method:: reclaimBuildRequests(brids)
@@ -151,7 +151,7 @@ buildrequests
 
         Re-claim the given build requests, updating the timestamp, but checking
         that the requsts are owned by this master.  The resulting deferred will
-        fire normally on success, or fail with :py:exc:`AleadyClaimedError` if
+        fire normally on success, or fail with :py:exc:`AlreadyClaimedError` if
         *any* of the build requests are already claimed by another master
         instance, or don't exist.  In this case, none of the reclaims will take
         effect.
@@ -1079,6 +1079,8 @@ compatibility errors will be caught before a release.
 Index Length in MySQL
 ~~~~~~~~~~~~~~~~~~~~~
 
+.. index:: single: MySQL; limitations
+
 MySQL only supports about 330-character indexes.  The actual index length is
 1000 bytes, but MySQL uses 3-byte encoding for UTF8 strings.  This is a
 longstanding bug in MySQL - see `"Specified key was too long; max key
@@ -1092,6 +1094,8 @@ implementation requires a MyISAM storage engine.
 Transactions in MySQL
 ~~~~~~~~~~~~~~~~~~~~~
 
+.. index:: single: MySQL; limitations
+
 Unfortunately, use of the MyISAM storage engine precludes real transactions in
 MySQL.  ``transaction.commit()`` and ``transaction.rollback()`` are essentially
 no-ops: modifications to data in the database are visible to other users
@@ -1100,6 +1104,9 @@ immediately, and are not reverted in a rollback.
 Referential Integrity in SQLite and MySQL
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. index:: single: SQLite; limitations
+.. index:: single: MySQL; limitations
+
 Neither MySQL nor SQLite enforce referential integrity based on foreign keys.
 Postgres does enforce, however.  If possible, test your changes on Postgres
 before committing, to check that tables are added and removed in the proper
@@ -1107,6 +1114,8 @@ order.
 
 Subqueries in MySQL
 ~~~~~~~~~~~~~~~~~~~
+
+.. index:: single: MySQL; limitations
 
 MySQL's query planner is easily confused by subqueries.  For example, a DELETE
 query specifying id's that are IN a subquery will not work.  The workaround is
