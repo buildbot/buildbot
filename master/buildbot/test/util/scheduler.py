@@ -28,7 +28,7 @@ class FakeMaster(object):
         self.caches = mock.Mock(name="caches")
         self.caches.get_cache = self.get_cache
 
-    def addBuildset(self, **kwargs):
+    def addBuildset(self, scheduler, **kwargs):
         return self.db.buildsets.addBuildset(**kwargs)
 
     # subscriptions

@@ -17,9 +17,9 @@ import mock
 import random
 from twisted.trial import unittest
 from twisted.python import failure
-from twisted.internet import defer
+from twisted.internet import defer, task
 from buildbot import config
-from buildbot.test.fake import fakedb, fakemaster
+from buildbot.test.fake import fakedb, fakemaster, fakemq
 from buildbot.process import builder
 from buildbot.db import buildrequests
 from buildbot.util import epoch2datetime
@@ -46,6 +46,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         builder_config = config.BuilderConfig(**config_args)
         self.bldr = builder.Builder(builder_config.name)
         self.master.db = self.db = fakedb.FakeDBConnector(self)
+        self.master.mq = self.mq = fakemq.FakeMQConnector(self)
         self.bldr.master = self.master
         self.bldr.botmaster = self.master.botmaster
 
@@ -118,14 +119,22 @@ class TestBuilderBuildCreation(unittest.TestCase):
     # maybeStartBuild
 
     def do_test_maybeStartBuild(self, rows=[], exp_claims=[], exp_builds=[],
-                exp_fail=None):
+                exp_fail=None, exp_mq=None, now=None):
         d = self.db.insertTestData(rows)
-        d.addCallback(lambda _ :
-                self.bldr.maybeStartBuild())
+        if now:
+            clock = task.Clock()
+            clock.advance(now)
+            d.addCallback(lambda _ :
+                    self.bldr.maybeStartBuild(_reactor=clock))
+        else:
+            d.addCallback(lambda _ :
+                    self.bldr.maybeStartBuild())
         def check(_):
             self.failIf(exp_fail)
             self.db.buildrequests.assertMyClaims(exp_claims)
             self.assertBuildsStarted(exp_builds)
+            if exp_mq is not None:
+                self.assertEqual(self.mq.productions, exp_mq)
         d.addCallback(check)
         def eb(f):
             f.trap(exp_fail)
@@ -198,8 +207,49 @@ class TestBuilderBuildCreation(unittest.TestCase):
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
+        claim_11_msg = ( 'buildrequest.11.bldr.11.claimed', {
+            'bsid': 11,
+            'builderid': -1,
+            'brid': 11,
+            'buildername': 'bldr',
+            'claimed_at': 1234,
+            'masterid': fakedb.FakeBuildRequestsComponent.MASTER_ID,
+        })
         yield self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[11], exp_builds=[('test-slave2', [11])])
+                exp_claims=[11], exp_builds=[('test-slave2', [11])],
+                exp_mq=[claim_11_msg],
+                now=1234)
+
+    @defer.deferredGenerator
+    def test_maybeStartBuild_start_fails(self):
+        wfd = defer.waitForDeferred(
+            self.makeBuilder(mergeRequests=False))
+        yield wfd
+        wfd.getResult()
+
+        self.setSlaveBuilders({'test-slave1':1})
+        rows = self.base_rows + [
+            fakedb.BuildRequest(id=10, buildsetid=11, buildername="bldr",
+                submitted_at=130000),
+        ]
+
+        self.bldr._startBuildFor = lambda sb, brs : defer.succeed(False)
+        self.db.buildrequests.unclaimBuildRequests = db_unclaimBRs = mock.Mock(
+                                            return_value=defer.succeed(None))
+        self.bldr._msg_buildrequests_unclaimed = mock.Mock()
+
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[10], exp_builds=[]))
+        yield wfd
+        wfd.getResult()
+
+        # check that brid 10 was unclaimed after it was claimed, a message
+        # was sent, and the botmaster was informed
+        db_unclaimBRs.assert_called_with([10])
+        self.bldr._msg_buildrequests_unclaimed.assert_called()
+        self.bldr.botmaster.maybeStartBuildsForBuilder.\
+                assert_called_with('bldr')
 
     @defer.inlineCallbacks
     def test_maybeStartBuild_chooseSlave_None(self):
@@ -293,7 +343,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
         # fake a race condition on the buildrequests table
         old_claimBuildRequests = self.db.buildrequests.claimBuildRequests
-        def claimBuildRequests(brids):
+        def claimBuildRequests(brids, claimed_at=None):
             # first, ensure this only happens the first time
             self.db.buildrequests.claimBuildRequests = old_claimBuildRequests
             # claim brid 10 for some other master
@@ -686,6 +736,32 @@ class TestBuilderBuildCreation(unittest.TestCase):
         yield self.bldr.reclaimAllBuilds()
 
         self.assertEqual(claims, [ (set([10,11,12,15]),) ])
+
+    @defer.deferredGenerator
+    def test_msg_buildrequests_unclaimed(self):
+        br1 = mock.Mock(name='br1')
+        br1.bsid = 10
+        br1.id = 13
+        br1.buildername = 'bldr'
+
+        br2 = mock.Mock(name='br2')
+        br2.bsid = 10
+        br2.id = 14
+        br2.buildername = 'bldr'
+
+        wfd = defer.waitForDeferred(
+                self.makeBuilder('bldr'))
+        yield wfd
+        wfd.getResult()
+
+        self.bldr._msg_buildrequests_unclaimed([br1, br2])
+
+        self.assertEqual(sorted(self.master.mq.productions), [
+            ( 'buildrequest.10.bldr.13.unclaimed',
+                dict(brid=13, bsid=10, builderid=-1, buildername='bldr')),
+            ( 'buildrequest.10.bldr.14.unclaimed',
+                dict(brid=14, bsid=10, builderid=-1, buildername='bldr')),
+        ])
 
 class TestGetOldestRequestTime(unittest.TestCase):
 

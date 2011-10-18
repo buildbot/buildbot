@@ -25,7 +25,7 @@ from twisted.application import service
 
 import buildbot
 import buildbot.pbmanager
-from buildbot.util import subscription, epoch2datetime
+from buildbot.util import subscription, epoch2datetime, datetime2epoch
 from buildbot.status.master import Status
 from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
@@ -76,6 +76,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         assert os.path.isdir(self.basedir)
         self.configFileName = configFileName
 
+        # flag so we don't try to do fancy things before the master is ready
+        self._master_initialized = False
+
         # set up child services
         self.create_child_services()
 
@@ -105,6 +108,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # local cache for this master's object ID
         self._object_id = None
 
+        # figure out local hostname
+        try:
+            self.hostname = os.uname()[1] # only on unix
+        except AttributeError:
+            self.hostname = socket.getfqdn()
 
     def create_child_services(self):
         # note that these are order-dependent.  If you get the order wrong,
@@ -213,13 +221,19 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             log.err(f, 'while starting BuildMaster')
             _reactor.stop()
 
+        self._master_initialized = True
+
+        self.produce_master_msg('started')
         log.msg("BuildMaster is running")
 
 
     def stopService(self):
+        self.produce_master_msg('stopped')
         if self.db_loop:
             self.db_loop.stop()
             self.db_loop = None
+        log.msg("BuildMsater is stopped")
+        self._master_initialized = False
 
 
     def reconfig(self):
@@ -329,36 +343,10 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         """
         return self.status
 
-    def getObjectId(self):
-        """
-        Return the obejct id for this master, for associating state with the
-        master.
-
-        @returns: ID, via Deferred
-        """
-        # try to get the cached value
-        if self._object_id is not None:
-            return defer.succeed(self._object_id)
-
-        # failing that, get it from the DB; multiple calls to this function
-        # at the same time will not hurt
-        try:
-            hostname = os.uname()[1] # only on unix
-        except AttributeError:
-            hostname = socket.getfqdn()
-        master_name = "%s:%s" % (hostname, os.path.abspath(self.basedir))
-
-        d = self.db.state.getObjectId(master_name,
-                "buildbot.master.BuildMaster")
-        def keep(id):
-            self._object_id = id
-            return id
-        d.addCallback(keep)
-        return d
-
 
     ## triggering methods and subscriptions
 
+    @defer.deferredGenerator
     def addChange(self, who=None, files=None, comments=None, author=None,
             isdir=None, is_dir=None, revision=None, when=None,
             when_timestamp=None, branch=None, category=None, revlink='',
@@ -472,37 +460,52 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             else:
                 codebase = ''
             
-        d = defer.succeed(None)
         if src:
             # create user object, returning a corresponding uid
-            d.addCallback(lambda _ : users.createUserObject(self, author, src))
-         
+            wfd = defer.waitForDeferred(
+                users.createUserObject(self, author, src))
+            yield wfd
+            uid = wfd.getResult()
+        else:
+            uid = None
+
         # add the Change to the database
-        d.addCallback(lambda uid :
-                          self.db.changes.addChange(author=author, files=files,
-                                          comments=comments, is_dir=is_dir,
-                                          revision=revision,
-                                          when_timestamp=when_timestamp,
-                                          branch=branch, category=category,
-                                          revlink=revlink, properties=properties,
-                                          repository=repository, codebase=codebase,
-                                          project=project, uid=uid))
+        wfd = defer.waitForDeferred(
+            self.db.changes.addChange(author=author, files=files,
+                            comments=comments, is_dir=is_dir,
+                            revision=revision, when_timestamp=when_timestamp,
+                            branch=branch, category=category,
+                            revlink=revlink, properties=properties,
+                            repository=repository, project=project,
+                            codebase=codebase, uid=uid))
+        yield wfd
+        changeid = wfd.getResult()
 
         # convert the changeid to a Change instance
-        d.addCallback(lambda changeid :
-            self.db.changes.getChange(changeid))
-        d.addCallback(lambda chdict :
-            changes.Change.fromChdict(self, chdict))
+        wfd = defer.waitForDeferred(
+                self.db.changes.getChange(changeid))
+        yield wfd
+        chdict = wfd.getResult()
 
-        def notify(change):
-            msg = u"added change %s to database" % change
-            log.msg(msg.encode('utf-8', 'replace'))
-            # only deliver messages immediately if we're not polling
-            if not self.config.db['db_poll_interval']:
-                self._change_subs.deliver(change)
-            return change
-        d.addCallback(notify)
-        return d
+        wfd = defer.waitForDeferred(
+                changes.Change.fromChdict(self, chdict))
+        yield wfd
+        change = wfd.getResult()
+
+        # old-style notification
+        msg = u"added change %s to database" % change
+        log.msg(msg.encode('utf-8', 'replace'))
+        # only deliver messages immediately if we're not polling
+        if not self.config.db['db_poll_interval']:
+            self._change_subs.deliver(change)
+
+        # new-style notification
+        msg = dict()
+        msg.update(chdict)
+        msg['when_timestamp'] = datetime2epoch(msg['when_timestamp'])
+        self.mq.produce("change.%d.new" % changeid, msg)
+
+        yield change
 
     def subscribeToChanges(self, callback):
         """
@@ -513,27 +516,42 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         """
         return self._change_subs.subscribe(callback)
 
-    def addBuildset(self, **kwargs):
+    @defer.deferredGenerator
+    def addBuildset(self, scheduler, **kwargs):
         """
         Add a buildset to the buildmaster and act on it.  Interface is
         identical to
         L{buildbot.db.buildsets.BuildsetConnectorComponent.addBuildset},
         including returning a Deferred, but also potentially triggers the
-        resulting builds.
+        resulting builds.  This method also takes a 'scheduler' parameter
+        to name the initiating scheduler.
         """
-        d = self.db.buildsets.addBuildset(**kwargs)
-        def notify((bsid,brids)):
-            log.msg("added buildset %d to database" % bsid)
-            # note that buildset additions are only reported on this master
-            self._new_buildset_subs.deliver(bsid=bsid, **kwargs)
-            # only deliver messages immediately if we're not polling
-            if not self.config.db['db_poll_interval']:
-                for bn, brid in brids.iteritems():
-                    self.buildRequestAdded(bsid=bsid, brid=brid,
-                                           buildername=bn)
-            return (bsid,brids)
-        d.addCallback(notify)
-        return d
+        wfd = defer.waitForDeferred(
+            self.db.buildsets.addBuildset(**kwargs))
+        yield wfd
+        bsid, brids = wfd.getResult()
+
+        log.msg("added buildset %d to database" % bsid)
+
+        # note that buildset additions are only reported on this master
+        self._new_buildset_subs.deliver(bsid=bsid, **kwargs)
+        # only deliver messages immediately if we're not polling
+        if not self.config.db['db_poll_interval']:
+            for bn, brid in brids.iteritems():
+                self.buildRequestAdded(bsid=bsid, brid=brid,
+                                        buildername=bn)
+
+        msg = dict(
+            bsid=bsid,
+            external_idstring=kwargs.get('external_idstring', None),
+            reason=kwargs['reason'],
+            sourcestampsetid=kwargs['sourcestampsetid'],
+            brids=brids,
+            scheduler=scheduler,
+            properties=kwargs.get('properties', {}))
+        self.mq.produce("buildset.%d.new" % bsid, msg)
+
+        yield (bsid,brids) # return value
 
     def subscribeToBuildsets(self, callback):
         """
@@ -550,7 +568,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         return self._new_buildset_subs.subscribe(callback)
 
     @defer.inlineCallbacks
-    def maybeBuildsetComplete(self, bsid):
+    def maybeBuildsetComplete(self, bsid, _reactor=reactor):
         """
         Instructs the master to check whether the buildset is complete,
         and notify appropriately if it is.
@@ -574,13 +592,20 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 cumulative_results = FAILURE
 
         # mark it as completed in the database
-        yield self.db.buildsets.completeBuildset(bsid, cumulative_results)
+        complete_at_epoch = _reactor.seconds()
+        complete_at = epoch2datetime(complete_at_epoch)
+        yield self.db.buildsets.completeBuildset(bsid, cumulative_results,
+                complete_at=complete_at)
 
-        # and deliver to any listeners
-        self._buildsetComplete(bsid, cumulative_results)
+        # old-style notification
+        self._complete_buildset_subs.deliver(bsid, cumulative_results)
 
-    def _buildsetComplete(self, bsid, results):
-        self._complete_buildset_subs.deliver(bsid, results)
+        # new-style notification
+        msg = dict(
+            bsid=bsid,
+            complete_at=complete_at_epoch,
+            results=cumulative_results)
+        self.mq.produce('buildset.%d.complete' % bsid, msg)
 
     def subscribeToBuildsetCompletions(self, callback):
         """
@@ -603,6 +628,16 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         """
         self._new_buildrequest_subs.deliver(
                 dict(bsid=bsid, brid=brid, buildername=buildername))
+
+        msg = dict(
+            brid=brid,
+            bsid=bsid,
+            buildername=buildername,
+            builderid=-1) # TODO
+        self.mq.produce(
+                'buildrequest.%d.%s.%d.new' % (bsid, buildername, brid),
+                msg)
+
 
     def subscribeToBuildRequests(self, callback):
         """
@@ -742,6 +777,29 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     ## state maintenance (private)
 
+    def getObjectId(self):
+        """
+        Return the obejct id for this master, for associating state with the
+        master.
+
+        @returns: ID, via Deferred
+        """
+        # try to get the cached value
+        if self._object_id is not None:
+            return defer.succeed(self._object_id)
+
+        # failing that, get it from the DB; multiple calls to this function
+        # at the same time will not hurt
+        master_name = "%s:%s" % (self.hostname, os.path.abspath(self.basedir))
+
+        d = self.db.state.getObjectId(master_name,
+                "buildbot.master.BuildMaster")
+        def keep(id):
+            self._object_id = id
+            return id
+        d.addCallback(keep)
+        return d
+
     def _getState(self, name, default=None):
         "private wrapper around C{self.db.state.getState}"
         d = self.getObjectId()
@@ -757,6 +815,23 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             return self.db.state.setState(objectid, name, value)
         d.addCallback(set)
         return d
+
+    # master messages
+
+    def produce_master_msg(self, state):
+        if not self._master_initialized:
+            return
+
+        d = self.getObjectId()
+        @d.addCallback
+        def send(objectid):
+            key = 'master.%d.%s' % (objectid, state)
+            msg = dict(
+                masterid=objectid,
+                master_hostname=self.hostname,
+                master_basedir=os.path.abspath(self.basedir))
+            self.mq.produce(key, msg)
+        d.addErrback(log.msg, "while sending master message")
 
 class Control:
     implements(interfaces.IControl)

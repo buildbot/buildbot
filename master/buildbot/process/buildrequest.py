@@ -243,6 +243,16 @@ class BuildRequest(object):
             log.msg("build request already claimed; cannot cancel")
             return
 
+        # send a cancellation message
+        key = 'buildrequest.%d.%s.%d.cancelled' % (self.bsid,
+                                        self.buildername, self.id)
+        msg = dict(
+            brid=self.id,
+            bsid=self.bsid,
+            buildername=self.buildername,
+            builderid=-1) # TODO
+        self.master.mq.produce(key, msg)
+
         # then complete it with 'FAILURE'; this is the closest we can get to
         # cancelling a request without running into trouble with dangling
         # references.

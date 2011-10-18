@@ -26,10 +26,15 @@ from buildbot.db import exceptions
 from buildbot.test.util import dirs, compat, misc
 from buildbot.test.fake import fakedb, fakemq
 from buildbot.util import epoch2datetime
-from buildbot.changes import changes
 from buildbot.process.users import users
+from buildbot.status.results import SUCCESS
 
 class Subscriptions(dirs.DirsMixin, unittest.TestCase):
+
+    """These tests coerce the master into performing some action that should be
+    accompanied by some messages, and then verifies that the messages were sent
+    appropriately.  Like most tests in this file, this requires faking out a
+    *lot* of Buildbot."""
 
     def setUp(self):
         basedir = os.path.abspath('basedir')
@@ -37,61 +42,145 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         def set_master(_):
             self.master = master.BuildMaster(basedir)
             self.master.config.db['db_poll_interval'] = None
+            self.master.db = fakedb.FakeDBConnector(self)
+            self.master.mq = fakemq.FakeMQConnector(self)
         d.addCallback(set_master)
         return d
 
     def tearDown(self):
         return self.tearDownDirs()
-        
+
+    # master.$masterid.{started,stopped} are checked in
+    # StartupAndReconfig.test_startup_ok, below
+
     def test_change_subscription(self):
-        changeid = 918
-        chdict = {
-            'changeid': 14,
-            'author': u'warner',
-            'branch': u'warnerdb',
-            'category': u'devel',
-            'comments': u'fix whitespace',
-            'files': [u'master/buildbot/__init__.py'],
-            'is_dir': 0,
-            'project': u'Buildbot',
-            'properties': {},
-            'repository': u'git://warner',
-            'revision': u'0e92a098b',
-            'revlink': u'http://warner/0e92a098b',
-            'when_timestamp': epoch2datetime(266738404),
-        }
-        newchange = mock.Mock(name='newchange')
-
-        # patch out everything we're about to call
-        self.master.db = mock.Mock()
-        self.master.db.changes.addChange.return_value = \
-            defer.succeed(changeid)
-        self.master.db.changes.getChange.return_value = \
-            defer.succeed(chdict)
-        self.patch(changes.Change, 'fromChdict',
-                classmethod(lambda cls, master, chdict :
-                                defer.succeed(newchange)))
-
         cb = mock.Mock()
         sub = self.master.subscribeToChanges(cb)
         self.assertIsInstance(sub, subscription.Subscription)
 
-        d = self.master.addChange()
+        d = self.master.addChange(author='warner', branch='warnerdb',
+                category='devel', comments='fix whitespace',
+                files=[u'master/buildbot/__init__.py'],
+                project='Buildbot', properties={},
+                repository='git://warner', revision='0e92a098b',
+                revlink='http://warner/0e92a098b',
+                when_timestamp=epoch2datetime(256738404))
         def check(change):
-            # master called the right thing in the db component, including with
-            # appropriate default values
-            self.master.db.changes.addChange.assert_called_with(author=None,
-                    files=None, comments=None, is_dir=0,
-                    revision=None, when_timestamp=None, branch=None, codebase='',
-                    category=None, revlink='', properties={}, repository='', project='', uid=None)
+            # addChange (probably) returned the right value
+            self.assertEqual(change.who, 'warner')
 
-            self.master.db.changes.getChange.assert_called_with(changeid)
-            # addChange returned the right value
-            self.failUnless(change is newchange) # fromChdict's return value
             # and the notification sub was called correctly
-            cb.assert_called_with(newchange)
+            cb.assert_called_with(change)
+
+            # check the correct message was received
+            self.assertEqual(self.master.mq.productions, [
+                ( 'change.500.new', {
+                    'author': u'warner',
+                    'branch': u'warnerdb',
+                    'category': u'devel',
+                    'codebase': '',
+                    'comments': u'fix whitespace',
+                    'changeid' : change.number,
+                    'files': [u'master/buildbot/__init__.py'],
+                    'is_dir': 0,
+                    'project': u'Buildbot',
+                    'properties': {},
+                    'repository': u'git://warner',
+                    'revision': u'0e92a098b',
+                    'revlink': u'http://warner/0e92a098b',
+                    'when_timestamp': 256738404,
+                })
+            ])
         d.addCallback(check)
         return d
+
+    def test_buildset_subscription(self):
+        sourcestampsetid=111
+        cb = mock.Mock()
+        sub = self.master.subscribeToBuildsets(cb)
+        self.assertIsInstance(sub, subscription.Subscription)
+
+        d = self.master.addBuildset(scheduler='schname',
+                sourcestampsetid=sourcestampsetid,
+                reason='rsn', properties={},
+                builderNames=['a', 'b'], external_idstring='eid')
+        def check((bsid,brids)):
+            # addBuildset returned the expected values (these come from fakedb)
+            self.assertEqual((bsid,brids), (200, dict(a=1000,b=1001)))
+            # and the notification sub was called correctly
+            cb.assert_called_with(sourcestampsetid=sourcestampsetid, bsid=200,
+                    reason='rsn', properties={}, builderNames=['a', 'b'],
+                    external_idstring='eid')
+
+            # check that the proper message was produced
+            self.assertEqual(sorted(self.master.mq.productions), sorted([
+                ( 'buildset.200.new', {
+                    'bsid': bsid,
+                    'external_idstring': 'eid',
+                    'reason': 'rsn',
+                    'sourcestampsetid': sourcestampsetid,
+                    'brids': dict(a=1000, b=1001),
+                    'properties': {},
+                    'scheduler': 'schname',
+                }),
+                ( 'buildrequest.200.a.1000.new', {
+                    'brid': 1000,
+                    'bsid': 200,
+                    'buildername': 'a',
+                    'builderid': -1,
+                }),
+                ( 'buildrequest.200.b.1001.new', {
+                    'brid': 1001,
+                    'bsid': 200,
+                    'buildername': 'b',
+                    'builderid': -1,
+                }),
+            ]))
+        d.addCallback(check)
+        return d
+
+    def test_buildset_completion_subscription(self):
+        self.master.db.insertTestData([
+            fakedb.SourceStamp(id=999),
+            fakedb.BuildRequest(id=300, buildsetid=440, complete=True,
+                results=SUCCESS),
+            fakedb.BuildRequest(id=301, buildsetid=440, complete=True,
+                results=SUCCESS),
+            fakedb.Buildset(id=440, sourcestampsetid=999),
+        ])
+
+        cb = mock.Mock()
+        sub = self.master.subscribeToBuildsetCompletions(cb)
+        self.assertIsInstance(sub, subscription.Subscription)
+
+        clock = task.Clock()
+        clock.advance(1234)
+        self.master.maybeBuildsetComplete(440, _reactor=clock)
+
+        cb.assert_called_with(440, SUCCESS)
+        self.assertEqual(self.master.mq.productions, [
+            ( 'buildset.440.complete', {
+                'bsid': 440,
+                'complete_at': 1234,
+                'results': SUCCESS,
+            }),
+        ])
+
+
+class AddChange(dirs.DirsMixin, unittest.TestCase):
+
+    def setUp(self):
+        basedir = os.path.abspath('basedir')
+        d = self.setUpDirs(basedir)
+        def set_master(_):
+            self.master = master.BuildMaster(basedir)
+            self.master.config.db['db_poll_interval'] = None
+            self.master.mq = fakemq.FakeMQConnector(self)
+        d.addCallback(set_master)
+        return d
+
+    def tearDown(self):
+        return self.tearDownDirs()
 
     def do_test_addChange_args(self, args=(), kwargs={}, exp_db_kwargs={}):
         # add default arguments
@@ -180,37 +269,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         return self.do_test_createUserObjects_args(
                 kwargs=dict(who='me', src='git'),
                 exp_args=(self.master, 'me', 'git'))
-               
-    def test_buildset_subscription(self):
-        self.master.db = mock.Mock()
-        self.master.db.buildsets.addBuildset.return_value = \
-            defer.succeed((938593, dict(a=19,b=20)))
 
-        cb = mock.Mock()
-        sub = self.master.subscribeToBuildsets(cb)
-        self.assertIsInstance(sub, subscription.Subscription)
-
-        d = self.master.addBuildset(ssid=999)
-        def check((bsid,brids)):
-            # master called the right thing in the db component
-            self.master.db.buildsets.addBuildset.assert_called_with(ssid=999)
-            # addBuildset returned the right value
-            self.assertEqual((bsid,brids), (938593, dict(a=19,b=20)))
-            # and the notification sub was called correctly
-            cb.assert_called_with(bsid=938593, ssid=999)
-        d.addCallback(check)
-        return d
-
-    def test_buildset_completion_subscription(self):
-        self.master.db = mock.Mock()
-
-        cb = mock.Mock()
-        sub = self.master.subscribeToBuildsetCompletions(cb)
-        self.assertIsInstance(sub, subscription.Subscription)
-
-        self.master._buildsetComplete(938593, 999)
-        # assert the notification sub was called correctly
-        cb.assert_called_with(938593, 999)
 
 class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
 
@@ -320,6 +379,20 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
         def check(_):
             self.failIf(reactor.stop.called)
             self.assertLogged("BuildMaster is running")
+
+            # check started/stopped messages
+            self.assertEqual(self.master.mq.productions, [
+                ( 'master.100.started', {
+                    'master_basedir': self.basedir,
+                    'master_hostname': self.master.hostname,
+                    'masterid': 100,
+                }),
+                ( 'master.100.stopped', {
+                    'master_basedir': self.basedir,
+                    'master_hostname': self.master.hostname,
+                    'masterid': 100,
+                }),
+                ])
         return d
 
     def test_reconfig(self):
@@ -415,8 +488,9 @@ class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
             self.master = master.BuildMaster(basedir)
 
             self.db = self.master.db = fakedb.FakeDBConnector(self)
-
             self.master.config.db['db_poll_interval'] = 10
+
+            self.mq = self.master.mq = fakemq.FakeMQConnector(self)
 
             # overridesubscription callbacks
             self.master._change_subs = sub = mock.Mock()
