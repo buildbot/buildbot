@@ -448,7 +448,7 @@ class BuildMaster(service.MultiService):
                     # Skip checks for builders in multimaster mode
                     if not multiMaster:
                         assert b in buildernames, \
-                               "%s uses unknown builder %s" % (s, b)
+                               "%s (%s) uses unknown builder %s" % (s, s.name, b)
                     if b in unscheduled_buildernames:
                         unscheduled_buildernames.remove(b)
 
