@@ -444,13 +444,17 @@ class BuildMaster(service.MultiService):
             unscheduled_buildernames = buildernames[:]
             schedulernames = []
             for s in schedulers:
+                ub = []
                 for b in s.listBuilderNames():
                     # Skip checks for builders in multimaster mode
                     if not multiMaster:
-                        assert b in buildernames, \
-                               "%s uses unknown builder %s" % (s, b)
+                        if b not in buildernames:
+                            ub.append(b)
                     if b in unscheduled_buildernames:
                         unscheduled_buildernames.remove(b)
+                assert len(ub) is 0, \
+                    "%s (%s) uses unknown builders: %s" % (s, s.name, ', '.join(ub))
+
 
                 if s.name in schedulernames:
                     msg = ("Schedulers must have unique names, but "
