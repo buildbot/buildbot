@@ -68,6 +68,10 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         opts = self.parse('--property', 'x:y', '--property', 'a:b')
         self.assertEqual(opts['properties'], dict(x="y", a="b"))
 
+    def test_properties_with_colon(self):
+        opts = self.parse('--property', 'x:http://foo')
+        self.assertEquals(opts['properties'], dict(x='http://foo'))
+
     def test_config_file(self):
         self.options_file['master'] = 'MMM'
         self.options_file['who'] = 'WWW'

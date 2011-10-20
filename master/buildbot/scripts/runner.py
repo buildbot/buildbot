@@ -854,7 +854,7 @@ class SendChangeOptions(OptionsWithOptionsFile):
     def parseArgs(self, *args):
         self['files'] = args
     def opt_property(self, property):
-        name,value = property.split(':')
+        name,value = property.split(':', 1)
         self['properties'][name] = value
 
 
