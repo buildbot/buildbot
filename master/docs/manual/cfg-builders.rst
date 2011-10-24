@@ -118,7 +118,7 @@ Other optional keys may be set on each ``BuilderConfig``:
 .. index:: Properties; builder
 
 ``properties``
-    A builder may be given a dictionnary of :ref:`Build-Properties`
+    A builder may be given a dictionary of :ref:`Build-Properties`
     specific for this builder in this parameter. Those values can be used
     later on like other properties. :ref:`WithProperties`.
 

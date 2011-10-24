@@ -22,7 +22,7 @@
 . ~/.environment
 
 /path/to/svn_buildbot.py --repository "$REPOS" --revision "$REV" \
---bbserver localhost --bbport 9989
+--bbserver localhost --bbport 9989 --username myuser --auth passwd
 '''
 
 import commands
@@ -67,6 +67,10 @@ class Options(usage.Options):
          "The hostname of the server that buildbot is running on"],
         ['bbport', 'p', 8007,
          "The port that buildbot is listening on"],
+        ['username', 'u', 'change',
+         "Username used in PB connection auth"],
+        ['auth', 'a', 'changepw',
+         "Password used in PB connection auth"],
         ['include', 'f', None,
          '''\
 Search the list of changed files for this regular expression, and if there is
@@ -227,7 +231,8 @@ class ChangeSender:
     def sendChanges(self, opts, changes):
         pbcf = pb.PBClientFactory()
         reactor.connectTCP(opts['bbserver'], int(opts['bbport']), pbcf)
-        d = pbcf.login(credentials.UsernamePassword('change', 'changepw'))
+        creds = credentials.UsernamePassword(opts['username'], opts['auth'])
+        d = pbcf.login(creds)
         d.addCallback(self.sendAllChanges, changes)
         return d
 
