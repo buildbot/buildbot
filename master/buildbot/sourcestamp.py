@@ -169,6 +169,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             return False # the builds are completely unrelated
         if other.project != self.project:
             return False
+        if self.patch or other.patch:
+            return False # you can't merge patched builds with anything
 
         if self.changes and other.changes:
             return True
@@ -177,8 +179,6 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         elif not self.changes and other.changes:
             return False # they're using changes, we aren't
 
-        if self.patch or other.patch:
-            return False # you can't merge patched builds with anything
         if self.revision == other.revision:
             # both builds are using the same specific revision, so they can
             # be merged. It might be the case that revision==None, so they're
