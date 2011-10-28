@@ -51,7 +51,7 @@ class LibcloudLatentBuildSlave(AbstractLatentBuildSlave):
         if not self.instance:
             return defer.succeed(None)
 
-        if instance.state not in (NodeState.TERMINATED):
+        if instance.state not in (NodeState.TERMINATED,):
             return threads.deferToThread(self._thd_stop_instance,
                                          instance=instance, fast=fast)
 
