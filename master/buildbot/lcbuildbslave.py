@@ -10,7 +10,6 @@ from twisted.internet import defer, threads
 
 from libcloud.compute.providers import get_driver
 from libcloud.compute.types import NodeState
-from libcloud.compute.deployment import ScriptDeployment
 
 from buildbot.buildslave import AbstractLatentBuildSlave
 
@@ -46,17 +45,17 @@ class LibcloudLatentBuildSlave(AbstractLatentBuildSlave):
         if self.instance is not None:
             raise ValueError('instance already started')
 
-        return threads.deferToThread(self._deploy_instance)
+        return threads.deferToThread(self._thd_create_instance)
 
     def stop_instance(self, instance, fast=False):
         if not self.instance:
             return defer.succeed(None)
 
         if instance.state not in (NodeState.TERMINATED):
-            return threads.deferToThread(self._stop_instance,
+            return threads.deferToThread(self._thd_stop_instance,
                                          instance=instance, fast=fast)
 
-    def _create_instance(self):
+    def _thd_create_instance(self):
         log.msg('%s %s creating and starting instance: %s' %(
                 self.__class__.__name__, self.slavename, self.name))
 
@@ -68,18 +67,6 @@ class LibcloudLatentBuildSlave(AbstractLatentBuildSlave):
                                         timeout=200)
         log.msg('Instance %s is up and running' % (node.id))
 
-    def _start_instance(self):
-        log.msg('%s %s starting and deploying instance: %s' %(
-                self.__class__.__name__, self.slavename, self.name))
-
-        # deploy_node blocks and waits until node is running
-        node = self.driver.deploy_node(name=self.name, size=self.size,
-                                       image=self.image)
-
-        log.msg('Instance %s started and deployed' % (node.id))
-
-    def _stop_instance(self, instance, fast):
-        destroyed = instance.destroy()
-        assert destroyed is True
-
+    def _thd_stop_instance(self, instance, fast):
+        instance.destroy()
         self.log.msg('Instance %s stopped' % (self.instance.id))
