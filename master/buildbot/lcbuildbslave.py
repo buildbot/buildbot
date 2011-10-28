@@ -14,7 +14,7 @@ from libcloud.compute.deployment import ScriptDeployment
 
 from buildbot.buildslave import AbstractLatentBuildSlave
 
-class LibloudLatentBuildSlave(AbstractLatentBuildSlave):
+class LibcloudLatentBuildSlave(AbstractLatentBuildSlave):
 
     def __init__(self, name, password,
                  key, secret, provider, buildslave_installed=False,
