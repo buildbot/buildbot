@@ -868,7 +868,7 @@ given below::
                       sendToInterestedUsers=False,
                       mode='failing',
                       extraRecipients=['listaddr@example.org'],
-                      messageFormatter=message_formatter)
+                      messageFormatter=html_message_formatter)
 
 MailNotifier arguments
 ++++++++++++++++++++++
