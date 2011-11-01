@@ -780,7 +780,9 @@ containing the last 80 log lines of logs of the last build step is
 given below::
 
     from buildbot.status.builder import Results
-    
+
+    import cgi, datetime    
+
     def html_message_formatter(mode, name, build, results, master_status):
         """Provide a customized message to Buildbot's MailNotifier.
         
@@ -812,7 +814,6 @@ given below::
                 source += u" (plus patch)"
             if ss.patch_info: # add patch comment
                 source += u" (%s)" % ss.patch_info[1]
-                source +=
             text.append(u"<tr><td>Build Source Stamp:</td><td><b>%s</b></td></tr>" % source)
             text.append(u"<tr><td>Blamelist:</td><td>%s</td></tr>" % ",".join(build.getResponsibleUsers()))
             text.append(u'</table>')
@@ -868,7 +869,7 @@ given below::
                       sendToInterestedUsers=False,
                       mode='failing',
                       extraRecipients=['listaddr@example.org'],
-                      messageFormatter=message_formatter)
+                      messageFormatter=html_message_formatter)
 
 MailNotifier arguments
 ++++++++++++++++++++++
