@@ -163,7 +163,7 @@ The simplest form of annotation is to wrap the property name with
 :class:`Property`::
 
    from buildbot.steps.shell import ShellCommand
-   form buildbot.process.properties import Property
+   from buildbot.process.properties import Property
 
    f.addStep(ShellCommand(command=[ 'echo', 'buildername:', Property('buildername') ])
 
