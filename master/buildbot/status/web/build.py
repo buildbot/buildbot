@@ -22,8 +22,8 @@ import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, \
      css_classes, path_to_build, path_to_builder, path_to_slave, \
-     getAndCheckProperties, ActionResource, path_to_authfail
-
+     getAndCheckProperties, ActionResource, path_to_authzfail
+from buildbot.schedulers.forcesched import ForceSched, TextParameter
 from buildbot.status.web.step import StepsResource
 from buildbot.status.web.tests import TestsResource
 from buildbot import util, interfaces
@@ -45,7 +45,7 @@ class ForceBuildActionResource(ActionResource):
         res = wfd.getResult()
 
         if not res:
-            url = path_to_authfail(req)
+            url = path_to_authzfail(req)
         else:
             # get a control object
             c = interfaces.IControl(self.getBuildmaster(req))
@@ -54,7 +54,7 @@ class ForceBuildActionResource(ActionResource):
             b = self.build_status
             builder_name = self.builder.getName()
             log.msg("web rebuild of build %s:%s" % (builder_name, b.getNumber()))
-            name = authz.getUsername(req)
+	    name =authz.getUsernameFull(req)
             comments = req.args.get("comments", ["<no reason specified>"])[0]
             reason = ("The web-page 'rebuild' button was pressed by "
                       "'%s': %s\n" % (name, comments))
@@ -101,13 +101,13 @@ class StopBuildActionResource(ActionResource):
         res = wfd.getResult()
 
         if not res:
-            yield path_to_authfail(req)
+            yield path_to_authzfail(req)
             return
 
         b = self.build_status
         log.msg("web stopBuild of build %s:%s" % \
                     (b.getBuilder().getName(), b.getNumber()))
-        name = authz.getUsername(req)
+        name = authz.getUsernameFull(req)
         comments = req.args.get("comments", ["<no reason specified>"])[0]
         # html-quote both the username and comments, just to be safe
         reason = ("The web-page 'stop build' button was pressed by "
@@ -250,7 +250,8 @@ class StatusResourceBuild(HtmlResource):
         b = self.build_status
         log.msg("web stopBuild of build %s:%s" % \
                 (b.getBuilder().getName(), b.getNumber()))
-        name = self.getAuthz(req).getUsername(req)
+
+        name = self.getAuthz(req).getUsernameFull(req)
         comments = req.args.get("comments", ["<no reason specified>"])[0]
         # html-quote both the username and comments, just to be safe
         reason = ("The web-page 'stop build' button was pressed by "
