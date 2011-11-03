@@ -60,6 +60,10 @@ Buildbot's windows testing is limited to the most recent Twisted and Python
 versions. For best results, use the most recent available versions of these
 libraries on Windows.
 
+Pywin32: http://sourceforge.net/projects/pywin32/
+
+  Twisted requires PyWin32 in order to spawn processes on Windows.
+
 .. _Buildmaster-Requirements:
 
 Buildmaster Requirements
