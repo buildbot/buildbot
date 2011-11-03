@@ -17,6 +17,7 @@
 from twisted.python import log
 from twisted.internet import reactor, defer
 from buildbot import util
+from buildbot.util import subscription
 
 if False: # for debugging
     debuglog = log.msg
@@ -41,6 +42,10 @@ class BaseLock:
         self.waiting = []         # Current queue, tuples (LockAccess, deferred)
         self.owners = []          # Current owners, tuples (owner, LockAccess)
         self.maxCount = maxCount  # maximal number of counting owners
+
+        # subscriptions to this lock being released
+        self.release_subs = subscription.SubscriptionPoint("%r releases"
+                                                             % (self,))
 
     def __repr__(self):
         return self.description
@@ -85,6 +90,11 @@ class BaseLock:
         self.owners.append((owner, access))
         debuglog(" %s is claimed '%s'" % (self, access.mode))
 
+    def subscribeToReleases(self, callback):
+        """Schedule C{callback} to be invoked every time this lock is
+        released.  Returns a L{Subscription}."""
+        return self.release_subs.subscribe(callback)
+
     def release(self, owner, access):
         """ Release the lock """
         assert isinstance(access, LockAccess)
@@ -113,6 +123,9 @@ class BaseLock:
 
             del self.waiting[0]
             reactor.callLater(0, d.callback, self)
+
+        # notify any listeners
+        self.release_subs.deliver()
 
     def waitUntilMaybeAvailable(self, owner, access):
         """Fire when the lock *might* be available. The caller will need to
