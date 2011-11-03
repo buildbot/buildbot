@@ -20,7 +20,7 @@ import sys
 import shutil
 
 from zope.interface import implements
-from twisted.internet import reactor, defer
+from twisted.internet import reactor, threads, defer
 from twisted.python import log, failure, runtime
 
 from buildslave.interfaces import ISlaveCommand
@@ -495,10 +495,7 @@ class SourceBaseCommand(Command):
 ##                 pass
         d = os.path.join(self.builder.basedir, dirname)
         if runtime.platformType != "posix":
-            # if we're running on w32, use rmtree instead. It will block,
-            # but hopefully it won't take too long.
-            utils.rmdirRecursive(d)
-            return defer.succeed(0)
+			return threads.deferToThread(utils.rmdirRecursive, d)
         command = ["rm", "-rf", d]
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
@@ -546,12 +543,7 @@ class SourceBaseCommand(Command):
         fromdir = os.path.join(self.builder.basedir, self.srcdir)
         todir = os.path.join(self.builder.basedir, self.workdir)
         if runtime.platformType != "posix":
-            self.sendStatus({'header': "Since we're on a non-POSIX platform, "
-            "we're not going to try to execute cp in a subprocess, but instead "
-            "use shutil.copytree(), which will block until it is complete.  "
-            "fromdir: %s, todir: %s\n" % (fromdir, todir)})
-            shutil.copytree(fromdir, todir)
-            return defer.succeed(0)
+            return threads.deferToThread(shutil.copytree, fromdir, todir)
 
         if not os.path.exists(os.path.dirname(todir)):
             os.makedirs(os.path.dirname(todir))
