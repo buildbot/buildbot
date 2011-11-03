@@ -208,7 +208,12 @@ class ShellCommand(buildstep.LoggingBuildStep):
             if self.slaveVersionIsOlderThan("svn", "2.7"):
                 warnings.append("NOTE: slave does not allow master to override usePTY\n")
                 del kwargs['usePTY']
-
+        
+        # check for the interruptSignal flag
+        if kwargs.has_key('interruptSignal') and self.slaveVersionIsOlderThan("shell", "2.15"):
+            warnings.append("NOTE: slave does not allow master to specify interruptSignal\n")
+            del kwargs['interruptSignal']
+        
         return kwargs
 
     def start(self):

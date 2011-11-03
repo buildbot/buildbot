@@ -361,7 +361,11 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
 
     # tests
 
-    def test_simple(self):
+    def test_simple_interruptSignal(self):
+        return self.test_simple('TERM')
+
+    def test_simple(self, interruptSignal=None):
+
         # test a simple process that just sleeps waiting to die
         pidfile = self.newPidfile()
         self.pid = None
@@ -370,6 +374,8 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         s = runprocess.RunProcess(b,
                 scriptCommand('write_pidfile_and_sleep', pidfile),
                 self.basedir)
+        if interruptSignal is not None:
+            s.interruptSignal = interruptSignal
         runproc_d = s.start()
 
         pidfile_d = self.waitForPidfile(pidfile)

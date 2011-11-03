@@ -40,6 +40,8 @@ class SlaveShellCommand(base.Command):
                          usePTY=args.get('usePTY', "slave-config"),
                          logEnviron=args.get('logEnviron', True),
                          )
+        if args.get('interruptSignal'):
+            c.interruptSignal = args['interruptSignal']
         c._reactor = self._reactor
         self.command = c
         d = self.command.start()
