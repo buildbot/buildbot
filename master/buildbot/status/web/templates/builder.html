@@ -49,6 +49,11 @@
         ({{ b.num_changes }} changes)
     {% endif %}    
 
+      {% if 'owner' in b.properties %}
+        <b>Forced build</b>
+        by {{b.properties['owner'][0]}}
+        <small>{{b.properties['reason'][0]}}</small>
+      {% endif %}
     </li>
   {% endfor %}
   </ul>  
