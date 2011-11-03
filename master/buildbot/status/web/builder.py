@@ -19,12 +19,13 @@ from twisted.web.util import Redirect
 import urllib, time
 from twisted.python import log
 from twisted.internet import defer
+from twisted.python.failure import Failure
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_slave, path_to_builder, path_to_change, \
     path_to_root, getAndCheckProperties, ICurrentBox, build_get_class, \
     map_branches, path_to_authzfail, ActionResource
-
+from buildbot.schedulers.forcesched import ForceScheduler, InheritBuildParameter
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
 
@@ -55,9 +56,9 @@ class ForceAllBuildsActionResource(ActionResource):
 
         for bname in builders:
             builder_status = self.status.getBuilder(bname)
-            build = StatusResourceBuilder(builder_status)
-            build.force(req, auth_ok=True) # auth_ok because we already checked
-
+            ar = ForceBuildActionResource(builder_status)
+            d = ar.performAction(req)
+            d.addErrback(log.err, "(ignored) while trying to force build")
         # back to the welcome page
         yield path_to_root(req)
 
@@ -125,9 +126,8 @@ class PingBuilderActionResource(ActionResource):
 
 class ForceBuildActionResource(ActionResource):
 
-    def __init__(self, builder_status, req_args):
+    def __init__(self, builder_status):
         self.builder_status = builder_status
-        self.req_args = req_args
         self.action = "forceBuild"
 
     @defer.deferredGenerator
@@ -144,51 +144,50 @@ class ForceBuildActionResource(ActionResource):
             return
 
         master = self.getBuildmaster(req)
-
-        # keep weird stuff out of the branch revision, and property strings.
-        branch_validate = master.config.validation['branch']
-        revision_validate = master.config.validation['revision']
-        if not branch_validate.match(self.req_args['branch']):
-            log.msg("bad branch '%s'" % self.req_args['branch'])
-            yield path_to_builder(req, self.builder_status)
+        owner = self.getAuthz(req).getUsernameFull(req)
+        schedulername = req.args.get("forcescheduler", ["<unknown>"])[0]
+        if schedulername == "<unknown>":
+            yield path_to_builder(req, self.builder_status), "forcescheduler arg not found"
             return
-        if not revision_validate.match(self.req_args['revision']):
-            log.msg("bad revision '%s'" % self.req_args['revision'])
-            yield path_to_builder(req, self.builder_status)
-            return
-        properties = getAndCheckProperties(req)
-        if properties is None:
-            yield path_to_builder(req, self.builder_status)
-            return
-        if not self.req_args['branch']:
-            self.req_args['branch'] = None
-        if not self.req_args['revision']:
-            self.req_args['revision'] = None
-
-        d = master.db.sourcestamps.addSourceStamp(
-                                      branch=self.req_args['branch'],
-                                      revision=self.req_args['revision'],
-                                      project=self.req_args['project'],
-                                      repository=self.req_args['repository'])
+        for sch in master.allSchedulers():
+            if schedulername == sch.name:
+                try:
+                    d = sch.forceWithWebRequest(owner,self.builder_status.getName(),req)
+                    msg = ""
+                except Exception, e:
+                    msg = html.escape(e.message.encode('ascii','ignore'))
+                    break
         wfd = defer.waitForDeferred(d)
         yield wfd
-        ssid = wfd.getResult()
-
-        r = ("The web-page 'force build' button was pressed by '%s': %s\n"
-             % (html.escape(self.req_args['name']),
-                html.escape(self.req_args['reason'])))
-        d = master.addBuildset(builderNames=[self.builder_status.getName()],
-                               ssid=ssid, reason=r,
-                               properties=properties.asDict())
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        tup = wfd.getResult()
-        # check that (bsid, brids) were properly stored
-        if not isinstance(tup, (int, dict)):
-            log.err("(ignored) while trying to force build")
-
+        res = wfd.getResult()
         # send the user back to the builder page
-        yield path_to_builder(req, self.builder_status)
+        yield path_to_builder(req, self.builder_status), msg
+
+def buildForceContext(cxt, req, master, buildername=None):
+    force_schedulers = {}
+    default_props = {}
+    for sch in master.allSchedulers():
+        if isinstance(sch, ForceScheduler) and (buildername is None or(buildername in sch.builderNames)):
+            force_schedulers[sch.name] = sch
+            for p in sch.all_fields:
+                pname = "%s.%s"%(sch.name, p.name)
+                default = p.default
+                if isinstance(p, InheritBuildParameter):
+                    # yes, I know, its bad to overwrite the parameter attribute,
+                    # but I dont have any other simple way of doing this atm.
+                    p.choices = p.compatible_builds(master.status, buildername)
+                    if p.choices:
+                        default = p.choices[0]
+                default = req.args.get(pname, [default])[0]
+                if p.type=="bool":
+                    default_props[pname] = default and "checked" or ""
+                else:
+                    # filter out unicode chars, and html stuff
+                    if type(default)==unicode:
+                        default = html.escape(default.encode('ascii','ignore'))
+                    default_props[pname] = default
+    cxt['force_schedulers'] = force_schedulers
+    cxt['default_props'] = default_props
 
 # /builders/$builder
 class StatusResourceBuilder(HtmlResource, BuildLineMixin):
@@ -256,6 +255,15 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             yield wfd
             submitTime = wfd.getResult()
 
+            wfd = defer.waitForDeferred(
+                pb.master.db.buildrequests.getBuildRequests(bsid=pb._buildrequest.bsid))
+            yield wfd
+            builds = wfd.getResult()
+            wfd = defer.waitForDeferred(
+                pb.master.db.buildsets.getBuildsetProperties(pb._buildrequest.bsid))
+            yield wfd
+            properties = wfd.getResult()
+
             if source.changes:
                 for c in source.changes:
                     changes.append({ 'url' : path_to_change(req, c),
@@ -270,6 +278,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 'id': pb.brid,
                 'changes' : changes,
                 'num_changes' : len(changes),
+                'properties' : properties,
                 })
 
         numbuilds = int(req.args.get('numbuilds', ['5'])[0])
@@ -292,67 +301,16 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         cxt['authz'] = self.getAuthz(req)
         cxt['builder_url'] = path_to_builder(req, b)
-
+        buildForceContext(cxt, req, self.getBuildmaster(req), b.getName())
         template = req.site.buildbot_service.templates.get_template("builder.html")
         yield template.render(**cxt)
-
-    def force(self, req, auth_ok=False):
-        name = self.getAuthz(req).getUsername(req)
-        reason = req.args.get("comments", ["<no reason specified>"])[0]
-        branch = req.args.get("branch", [""])[0]
-        revision = req.args.get("revision", [""])[0]
-        repository = req.args.get("repository", [""])[0]
-        project = req.args.get("project", [""])[0]
-
-        log.msg("web forcebuild of builder '%s', branch='%s', revision='%s',"
-                " repository='%s', project='%s' by user '%s'" % (
-                self.builder_status.getName(), branch, revision, repository,
-                project, name))
-
-        if not auth_ok:
-            req_args = dict(name=name, reason=reason, branch=branch,
-                            revision=revision, repository=repository,
-                            project=project)
-            return ForceBuildActionResource(self.builder_status, req_args)
-
-        master = self.getBuildmaster(req)
-
-        # keep weird stuff out of the branch revision, and property strings.
-        branch_validate = master.config.validation['branch']
-        revision_validate = master.config.validation['revision']
-        if not branch_validate.match(branch):
-            log.msg("bad branch '%s'" % branch)
-            return Redirect(path_to_builder(req, self.builder_status))
-        if not revision_validate.match(revision):
-            log.msg("bad revision '%s'" % revision)
-            return Redirect(path_to_builder(req, self.builder_status))
-        properties = getAndCheckProperties(req)
-        if properties is None:
-            return Redirect(path_to_builder(req, self.builder_status))
-        if not branch:
-            branch = None
-        if not revision:
-            revision = None
-
-        d = master.db.sourcestamps.addSourceStamp(branch=branch,
-                revision=revision, project=project, repository=repository)
-        def make_buildset(ssid):
-            r = ("The web-page 'force build' button was pressed by '%s': %s\n"
-                 % (html.escape(name), html.escape(reason)))
-            return master.addBuildset(
-                    builderNames=[self.builder_status.getName()],
-                    ssid=ssid, reason=r, properties=properties.asDict())
-        d.addCallback(make_buildset)
-        d.addErrback(log.err, "(ignored) while trying to force build")
-        # send the user back to the builder page
-        return Redirect(path_to_builder(req, self.builder_status))
 
     def ping(self, req):
         return PingBuilderActionResource(self.builder_status)
 
     def getChild(self, path, req):
         if path == "force":
-            return self.force(req)
+            return ForceBuildActionResource(self.builder_status)
         if path == "ping":
             return self.ping(req)
         if path == "cancelbuild":
@@ -621,7 +579,7 @@ class BuildersResource(HtmlResource):
         cxt['authz'] = self.getAuthz(req)
         cxt['num_building'] = building
         cxt['num_online'] = online
-
+        buildForceContext(cxt, req, self.getBuildmaster(req))
         template = req.site.buildbot_service.templates.get_template("builders.html")
         yield template.render(**cxt)
 

@@ -137,17 +137,40 @@ Build #{{ b.getNumber() }}
 <tr><th>Name</th><th>Value</th><th>Source</th></tr>
 
 {% for p in properties %}
+{% if p.source != "Force Build Form" %}
   <tr class="{{ loop.cycle('alt', '') }}">
     <td class="left">{{ p.name|e }}</td>
-  {% if p.short_value %}
+    {% if p.short_value %}
     <td>{{ p.short_value|e }} .. [property value too long]</td>
-  {% else %}
+    {% else %}
     <td>{{ p.value|e }}</td>
-  {% endif %}
+    {% endif %}
     <td>{{ p.source|e }}</td>
   </tr>
+{% endif %}
 {% endfor %}
+</table>
+<h2>Forced Build Properties:</h2>
+<table class="info" width="100%">
+<tr><th>Name</th><th>Label</th><th>Value</th></tr>
 
+{% for p in properties %}
+    {% if p.source == "Force Build Form" %}
+  <tr class="{{ loop.cycle('alt', '') }}">
+    <td class="left">{{ p.name|e }}</td>
+    <td class="left">
+    {% if p.label %}
+    {{ p.label }}
+    {% endif %}    
+    </td>
+    {% if p.text %}
+    <td><textarea readonly cols="{{p.cols}}" rows="{{p.rows}}">{{ p.text|e }}</textarea></td>
+    {% else %}
+    <td>{{ p.value|e }}</td>
+    {% endif %}
+  </tr>
+  {% endif %}    
+{% endfor %}
 </table>
 
 <h2>Blamelist:</h2>

@@ -23,7 +23,7 @@ from twisted.python import log
 from buildbot.status.web.base import HtmlResource, \
      css_classes, path_to_build, path_to_builder, path_to_slave, \
      getAndCheckProperties, ActionResource, path_to_authzfail
-from buildbot.schedulers.forcesched import ForceSched, TextParameter
+from buildbot.schedulers.forcesched import ForceScheduler, TextParameter
 from buildbot.status.web.step import StepsResource
 from buildbot.status.web.tests import TestsResource
 from buildbot import util, interfaces
@@ -218,13 +218,27 @@ class StatusResourceBuild(HtmlResource):
                                             urllib.quote(logname, safe=''))), 
                                       'name': logname })
 
+        scheduler = b.getProperty("scheduler", None)
+        parameters = {}
+        master = self.getBuildmaster(req)
+        for sch in master.allSchedulers():
+            if isinstance(sch, ForceScheduler) and scheduler == sch.name:
+                for p in sch.all_fields:
+                    parameters[p.name] = p
+
         ps = cxt['properties'] = []
         for name, value, source in b.getProperties().asList():
-            value = unicode(value)
-            p = { 'name': name, 'value': value, 'source': source}            
-            if len(value) > 500:
-                p['short_value'] = value[:500]
-
+            uvalue = unicode(value)
+            p = { 'name': name, 'value': uvalue, 'source': source}            
+            if len(uvalue) > 500:
+                p['short_value'] = uvalue[:500]
+            if name in parameters:
+                param = parameters[name]
+                if isinstance(param, TextParameter):
+                    p['text'] = param.value_to_text(value)
+                    p['cols'] = param.cols
+                    p['rows'] = param.rows
+                p['label'] = param.label
             ps.append(p)
 
         
