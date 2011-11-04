@@ -228,7 +228,7 @@ class Nightly(Timed):
     compare_attrs = (Timed.compare_attrs
             + ('minute', 'hour', 'dayOfMonth', 'month',
                'dayOfWeek', 'onlyIfChanged', 'fileIsImportant',
-               'change_filter', 'onlyImportant',))
+               'change_filter', 'onlyImportant', 'branch'))
 
     class NoBranch: pass
     def __init__(self, name, builderNames, minute=0, hour='*',
