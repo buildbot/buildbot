@@ -20,7 +20,7 @@ import sys
 import shutil
 
 from zope.interface import implements
-from twisted.internet import reactor, defer
+from twisted.internet import reactor, threads, defer
 from twisted.python import log, failure, runtime
 
 from buildslave.interfaces import ISlaveCommand
@@ -475,30 +475,16 @@ class SourceBaseCommand(Command):
         return res
 
     def doClobber(self, dummy, dirname, chmodDone=False):
-        # TODO: remove the old tree in the background
-##         workdir = os.path.join(self.builder.basedir, self.workdir)
-##         deaddir = self.workdir + ".deleting"
-##         if os.path.isdir(workdir):
-##             try:
-##                 os.rename(workdir, deaddir)
-##                 # might fail if deaddir already exists: previous deletion
-##                 # hasn't finished yet
-##                 # start the deletion in the background
-##                 # TODO: there was a solaris/NetApp/NFS problem where a
-##                 # process that was still running out of the directory we're
-##                 # trying to delete could prevent the rm-rf from working. I
-##                 # think it stalled the rm, but maybe it just died with
-##                 # permission issues. Try to detect this.
-##                 os.commands("rm -rf %s &" % deaddir)
-##             except:
-##                 # fall back to sequential delete-then-checkout
-##                 pass
         d = os.path.join(self.builder.basedir, dirname)
         if runtime.platformType != "posix":
-            # if we're running on w32, use rmtree instead. It will block,
-            # but hopefully it won't take too long.
-            utils.rmdirRecursive(d)
-            return defer.succeed(0)
+            d = threads.deferToThread(utils.rmdirRecursive, d)
+            def cb(_):
+                return 0 # rc=0
+            def eb(f):
+                self.sendStatus({'header' : 'exception from rmdirRecursive\n' + f.getTraceback()})
+                return -1 # rc=-1
+            d.addCallbacks(cb, eb)
+            return d
         command = ["rm", "-rf", d]
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
@@ -546,12 +532,14 @@ class SourceBaseCommand(Command):
         fromdir = os.path.join(self.builder.basedir, self.srcdir)
         todir = os.path.join(self.builder.basedir, self.workdir)
         if runtime.platformType != "posix":
-            self.sendStatus({'header': "Since we're on a non-POSIX platform, "
-            "we're not going to try to execute cp in a subprocess, but instead "
-            "use shutil.copytree(), which will block until it is complete.  "
-            "fromdir: %s, todir: %s\n" % (fromdir, todir)})
-            shutil.copytree(fromdir, todir)
-            return defer.succeed(0)
+            d = threads.deferToThread(shutil.copytree, fromdir, todir)
+            def cb(_):
+                return 0 # rc=0
+            def eb(f):
+                self.sendStatus({'header' : 'exception from copytree\n' + f.getTraceback()})
+                return -1 # rc=-1
+            d.addCallbacks(cb, eb)
+            return d
 
         if not os.path.exists(os.path.dirname(todir)):
             os.makedirs(os.path.dirname(todir))

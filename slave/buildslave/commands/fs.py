@@ -17,7 +17,7 @@ import os
 import sys
 import shutil
 
-from twisted.internet import defer
+from twisted.internet import threads, defer
 from twisted.python import runtime, log
 
 from buildslave import runprocess
@@ -77,13 +77,15 @@ class RemoveDirectory(base.Command):
         self.sendStatus({'rc': self.rc})
 
     def removeSingleDir(self, dirname):
-        # TODO: remove the old tree in the background
         self.dir = os.path.join(self.builder.basedir, dirname)
         if runtime.platformType != "posix":
-            # if we're running on w32, use rmtree instead. It will block,
-            # but hopefully it won't take too long.
-            utils.rmdirRecursive(self.dir)
-            d = defer.succeed(0)
+            d = threads.deferToThread(utils.rmdirRecursive, self.dir)
+            def cb(_):
+                return 0 # rc=0
+            def eb(f):
+                self.sendStatus({'header' : 'exception from rmdirRecursive\n' + f.getTraceback()})
+                return -1 # rc=-1
+            d.addCallbacks(cb, eb)
         else:
             d = self._clobber(None)
 
@@ -150,12 +152,16 @@ class CopyDirectory(base.Command):
         self.maxTime = args.get('maxTime', None)
 
         if runtime.platformType != "posix":
-            self.sendStatus({'header': "Since we're on a non-POSIX platform, "
-            "we're not going to try to execute cp in a subprocess, but instead "
-            "use shutil.copytree(), which will block until it is complete.  "
-            "fromdir: %s, todir: %s\n" % (fromdir, todir)})
-            shutil.copytree(fromdir, todir)
-            d = defer.succeed(0)
+            d = threads.deferToThread(shutil.copytree, fromdir, todir)
+            def cb(_):
+                return 0 # rc=0
+            def eb(f):
+                self.sendStatus({'header' : 'exception from copytree\n' + f.getTraceback()})
+                return -1 # rc=-1
+            d.addCallbacks(cb, eb)
+            @d.addCallback
+            def send_rc(rc):
+                self.sendStatus({'rc' : rc})
         else:
             if not os.path.exists(os.path.dirname(todir)):
                 os.makedirs(os.path.dirname(todir))
@@ -171,8 +177,7 @@ class CopyDirectory(base.Command):
             d = c.start()
             d.addCallback(self._abandonOnFailure)
 
-        # always set the RC, regardless of platform
-        d.addCallbacks(self._sendRC, self._checkAbandoned)
+            d.addCallbacks(self._sendRC, self._checkAbandoned)
         return d
 
 class StatFile(base.Command):
