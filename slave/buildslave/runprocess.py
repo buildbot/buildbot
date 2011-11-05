@@ -209,7 +209,7 @@ class RunProcess:
 
     notreally = False
     BACKUP_TIMEOUT = 5
-    KILL = "KILL"
+    interruptSignal = "KILL"
     CHUNK_LIMIT = 128*1024
 
     # Don't send any data until at least BUFFER_SIZE bytes have been collected
@@ -737,10 +737,10 @@ class RunProcess:
 
         # try signalling the process group
         if not hit and self.useProcGroup and runtime.platformType == "posix":
-            sig = getattr(signal, "SIG"+ self.KILL, None)
+            sig = getattr(signal, "SIG"+ self.interruptSignal, None)
 
             if sig is None:
-                log.msg("signal module is missing SIG%s" % self.KILL)
+                log.msg("signal module is missing SIG%s" % self.interruptSignal)
             elif not hasattr(os, "kill"):
                 log.msg("os module is missing the 'kill' function")
             elif self.process.pgid is None:
@@ -761,8 +761,8 @@ class RunProcess:
                     pass
 
         elif runtime.platformType == "win32":
-            if self.KILL == None:
-                log.msg("self.KILL==None, only pretending to kill child")
+            if self.interruptSignal == None:
+                log.msg("self.interruptSignal==None, only pretending to kill child")
             else:
                 log.msg("using TASKKILL /F PID /T to kill pid %s" % self.process.pid)
                 subprocess.check_call("TASKKILL /F /PID %s /T" % self.process.pid)
@@ -772,9 +772,9 @@ class RunProcess:
         # try signalling the process itself (works on Windows too, sorta)
         if not hit:
             try:
-                log.msg("trying process.signalProcess('%s')" % (self.KILL,))
-                self.process.signalProcess(self.KILL)
-                log.msg(" signal %s sent successfully" % (self.KILL,))
+                log.msg("trying process.signalProcess('%s')" % (self.interruptSignal,))
+                self.process.signalProcess(self.interruptSignal)
+                log.msg(" signal %s sent successfully" % (self.interruptSignal,))
                 hit = 1
             except OSError:
                 log.err("from process.signalProcess:")

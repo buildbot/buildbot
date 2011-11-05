@@ -365,7 +365,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
                  want_stdout=1, want_stderr=1,
                  timeout=20*60, maxTime=None, logfiles={},
                  usePTY="slave-config", logEnviron=True,
-                 collectStdout=False):
+                 collectStdout=False, interruptSignal=None):
 
         self.command = command # stash .command, set it later
         if env is not None:
@@ -383,6 +383,8 @@ class RemoteShellCommand(LoggedRemoteCommand):
                 'usePTY': usePTY,
                 'logEnviron': logEnviron,
                 }
+        if interruptSignal is not None:
+            args['interruptSignal'] = interruptSignal
         LoggedRemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout)
 
     def _start(self):
