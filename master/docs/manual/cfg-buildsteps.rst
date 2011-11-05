@@ -1469,9 +1469,10 @@ The :bb:step:`ShellCommand` arguments are:
     relevant and is long, it may be easier to set ``logEnviron=False``.
 
 ``interruptSignal``
-    If the command should be interrupted (either by buildmaster or timeout etc.),
-    what signal should be sent to the process. By default this is "KILL" (9). Specify
-    "TERM" (15) to give the process a chance to cleanup.
+    If the command should be interrupted (either by buildmaster or timeout
+    etc.), what signal should be sent to the process, specified by name. By
+    default this is "KILL" (9). Specify "TERM" (15) to give the process a
+    chance to cleanup.  This functionality requires a 0.8.6 slave or newer.
 
 .. bb:step:: Configure
 
