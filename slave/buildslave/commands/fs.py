@@ -77,10 +77,15 @@ class RemoveDirectory(base.Command):
         self.sendStatus({'rc': self.rc})
 
     def removeSingleDir(self, dirname):
-        # TODO: remove the old tree in the background
         self.dir = os.path.join(self.builder.basedir, dirname)
         if runtime.platformType != "posix":
-			d = threads.deferToThread(utils.rmdirRecursive, self.dir)
+            d = threads.deferToThread(utils.rmdirRecursive, self.dir)
+            def cb(_):
+                return 0 # rc=0
+            def eb(f):
+                self.sendStatus({'header' : 'exception from rmdirRecursive\n' + f.getTraceback()})
+                return -1 # rc=-1
+            d.addCallbacks(cb, eb)
         else:
             d = self._clobber(None)
 
@@ -147,7 +152,16 @@ class CopyDirectory(base.Command):
         self.maxTime = args.get('maxTime', None)
 
         if runtime.platformType != "posix":
-            d = threads.deferToThread(shutil.copy, fromdir, todir)
+            d = threads.deferToThread(shutil.copytree, fromdir, todir)
+            def cb(_):
+                return 0 # rc=0
+            def eb(f):
+                self.sendStatus({'header' : 'exception from copytree\n' + f.getTraceback()})
+                return -1 # rc=-1
+            d.addCallbacks(cb, eb)
+            @d.addCallback
+            def send_rc(rc):
+                self.sendStatus({'rc' : rc})
         else:
             if not os.path.exists(os.path.dirname(todir)):
                 os.makedirs(os.path.dirname(todir))
@@ -163,8 +177,7 @@ class CopyDirectory(base.Command):
             d = c.start()
             d.addCallback(self._abandonOnFailure)
 
-        # always set the RC, regardless of platform
-        d.addCallbacks(self._sendRC, self._checkAbandoned)
+            d.addCallbacks(self._sendRC, self._checkAbandoned)
         return d
 
 class StatFile(base.Command):

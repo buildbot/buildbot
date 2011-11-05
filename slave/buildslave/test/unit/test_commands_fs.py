@@ -14,11 +14,13 @@
 # Copyright Buildbot Team Members
 
 import os
-
+import shutil
 from twisted.trial import unittest
 
 from buildslave.test.util.command import CommandTestMixin
 from buildslave.commands import fs
+from twisted.python import runtime
+from buildslave.commands import utils
 
 class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
 
@@ -42,6 +44,23 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def test_simple_exception(self):
+        if runtime.platformType == "posix":
+            return # we only use rmdirRecursive on windows
+        def fail(dir):
+            raise RuntimeError("oh noes")
+        self.patch(utils, 'rmdirRecursive', fail)
+        self.make_command(fs.RemoveDirectory, dict(
+            dir='workdir',
+        ), True)
+        d = self.run_command()
+
+        def check(_):
+            self.assertIn({'rc': -1}, self.get_updates(),
+                    self.builder.show())
+        d.addCallback(check)
+        return d
+
     def test_multiple_dirs(self):
         self.make_command(fs.RemoveDirectory, dict(
             dir=['workdir', 'sourcedir'],
@@ -51,9 +70,9 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
         def check(_):
             for dirname in ['workdir', 'sourcedir']:
                 self.assertFalse(os.path.exists(os.path.abspath(os.path.join(self.basedir, dirname))))
-                self.assertIn({'rc': 0},
-                              self.get_updates(),
-                              self.builder.show())
+            self.assertIn({'rc': 0},
+                            self.get_updates(),
+                            self.builder.show())
         d.addCallback(check)
         return d
 
@@ -75,6 +94,25 @@ class TestCopyDirectory(CommandTestMixin, unittest.TestCase):
         def check(_):
             self.assertTrue(os.path.exists(os.path.abspath(os.path.join(self.basedir,'copy'))))
             self.assertIn({'rc': 0}, # this may ignore a 'header' : '..', which is OK
+                    self.get_updates(),
+                    self.builder.show())
+        d.addCallback(check)
+        return d
+
+    def test_simple_exception(self):
+        if runtime.platformType == "posix":
+            return # we only use rmdirRecursive on windows
+        def fail(src, dest):
+            raise RuntimeError("oh noes")
+        self.patch(shutil, 'copytree', fail)
+        self.make_command(fs.CopyDirectory, dict(
+            fromdir='workdir',
+            todir='copy',
+        ), True)
+        d = self.run_command()
+
+        def check(_):
+            self.assertIn({'rc': -1},
                     self.get_updates(),
                     self.builder.show())
         d.addCallback(check)
