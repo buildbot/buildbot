@@ -129,17 +129,12 @@ class Repo(SourceBaseCommand):
         # on fresh init, this file may confuse repo.
         if os.path.exists(os.path.join(self._fullSrcdir(), ".repo/project.list")):
             os.unlink(os.path.join(self._fullSrcdir(), ".repo/project.list"))
-        # remove previous overriden manifest
-        if os.path.exists(os.path.join(self._fullSrcdir(), ".repo/manifests")):
-            os.system("cd %s/.repo; ln -sf manifests/%s manifest.xml"%(self._fullSrcdir(),self.manifest_file))
         return self._repoCmd(['init', '-u', self.manifest_url, '-b', self.manifest_branch, '-m', self.manifest_file], self._didInit)
 
     def _didInit(self, res):
         return self.doVCUpdate()
 
     def doVCUpdate(self):
-        # remove previous overriden manifest even on partial sync
-        os.system("cd %s/.repo; ln -sf manifests/%s manifest.xml"%(self._fullSrcdir(),self.manifest_file))
         if self.repo_downloads:
             self.sendStatus({'header': "will download:\n" + "repo download "+ "\nrepo download ".join(self.repo_downloads) + "\n"})
         return self._doPreSyncCleanUp(None)
@@ -207,7 +202,7 @@ class Repo(SourceBaseCommand):
 
     def _doDownload(self, dummy):
         if hasattr(self.command, 'stderr') and self.command.stderr:
-            if "Automatic cherry-pick failed" in self.command.stderr:
+            if "Automatic cherry-pick failed" in self.command.stderr or "Automatic revert failed" in self.command.stderr:
                 command = ['forall','-c' ,'git' ,'diff', 'HEAD']
                 self.cherry_pick_failed = True
                 return self._repoCmd(command, self._DownloadAbandon, abandonOnFailure = False, keepStderr=True) # call again
