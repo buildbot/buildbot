@@ -79,37 +79,17 @@ class Repo(SourceBaseCommand):
             d.addCallback(cb)
         return d
 
-    def _tarCmd(self, cmds, callback):
-        cmd = ["tar"] + cmds
-        c = runprocess.RunProcess(self.builder, cmd, self._fullSrcdir(),
+    def _Cmd(self, cmds, callback, abandonOnFailure=True):
+        c = runprocess.RunProcess(self.builder, cmds, self._fullSrcdir(),
                                   sendRC=False, timeout=self.timeout,
                                   maxTime=self.maxTime, usePTY=False,
                                   logEnviron=self.logEnviron)
         self.command = c
-        cmdexec = c.start()
-        cmdexec.addCallback(callback)
-        return cmdexec
-
-    def _wgetCmd(self, cmds, callback):
-        cmd = ["wget"] + cmds
-        c = runprocess.RunProcess(self.builder, cmd, self._fullSrcdir(),
-                                  sendRC=False, timeout=self.timeout,
-                                  maxTime=self.maxTime, usePTY=False)
-        self.command = c
-        cmdexec = c.start()
-        cmdexec.addCallback(callback)
-        return cmdexec
-
-    def _gitCmd(self, subdir, cmds, callback):
-        cmd = ["git"] + cmds
-        c = runprocess.RunProcess(self.builder, cmd, os.path.join(self._fullSrcdir(), subdir),
-                                  sendRC=False, timeout=self.timeout,
-                                  maxTime=self.maxTime, usePTY=False,
-                                  logEnviron=self.logEnviron)
-        self.command = c
-        cmdexec = c.start()
-        cmdexec.addCallback(callback)
-        return cmdexec
+        d = c.start()
+        if abandonOnFailure:
+            d.addCallback(self._abandonOnFailure)
+        d.addCallback(callback)
+        return d
 
     def sourcedataMatches(self):
         try:
@@ -121,7 +101,7 @@ class Repo(SourceBaseCommand):
     def doVCFull(self):
         os.makedirs(self._fullSrcdir())
         if self.tarball and os.path.exists(self.tarball):
-            return self._tarCmd(['-xvzf', self.tarball], self._doInit)
+            return self._Cmd(['tar', '-xvzf', self.tarball], self._doPreInitCleanUp)
         else:
             return self._doInit(None)
 
@@ -177,8 +157,8 @@ class Repo(SourceBaseCommand):
             if os.path.exists(os.path.join(self._fullSrcdir(), self.manifest_override_url)):
                 os.system("cd %s; cp -f %s manifest_override.xml"%(self._fullSrcdir(),self.manifest_override_url))
             else:
-                command = [self.manifest_override_url, '-O', 'manifest_override.xml']
-                return self._wgetCmd(command, self._doSync)
+                command = ["wget", self.manifest_override_url, '-O', 'manifest_override.xml']
+                return self._Cmd(command, self._doSync)
         return self._doSync(None)
 
     def _doSync(self, dummy):
@@ -191,7 +171,7 @@ class Repo(SourceBaseCommand):
 
     def _didSync(self, dummy):
         if self.tarball and not os.path.exists(self.tarball):
-            return self._tarCmd(['-cvzf', self.tarball, ".repo"], self._doManifest)
+            return self._Cmd(['tar', '-cvzf', self.tarball, ".repo"], self._doManifest)
         else:
             return self._doManifest(None)
 
