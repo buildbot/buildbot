@@ -1021,7 +1021,7 @@ class Repo(Source):
         # only master has access to properties, so we must implement this here.
         d = self.buildDownloadList()
         d.addCallback(self.continueStartVC, branch, revision, patch)
-        d.addErrback(self.failedStartVC)
+        d.addErrback(self.failed)
 
     def continueStartVC(self, ignored, branch, revision, patch):
         slavever = self.slaveVersion("repo")
@@ -1030,10 +1030,6 @@ class Repo(Source):
                                         "about repo")
         cmd = LoggedRemoteCommand("repo", self.args)
         self.startCommand(cmd)
-
-    def failedStartVC(self, failure):
-        self.interrupt("unable to build download list"+str(failure))
-        self.finished(FAILURE)
 
     def commandComplete(self, cmd):
         repo_downloaded = []
