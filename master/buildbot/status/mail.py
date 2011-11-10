@@ -555,7 +555,10 @@ class MailNotifier(base.StatusReceiverMultiService):
                                   log.getName())
                 if ( self._shouldAttachLog(log.getName()) or
                      self._shouldAttachLog(name) ):
-                    a = MIMEText(log.getText().encode(ENCODING), 
+                    text = log.getText()
+                    if not isinstance(text, unicode):
+                        text = text.decode('utf-8')
+                    a = MIMEText(text.encode(ENCODING),
                                  _charset=ENCODING)
                     a.add_header('Content-Disposition', "attachment",
                                  filename=name)
