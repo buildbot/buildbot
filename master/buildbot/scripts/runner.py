@@ -768,7 +768,6 @@ class SendChangeOptions(OptionsWithOptionsFile):
         ("master", "m", None,
          "Location of the buildmaster's PBListener (host:port)"),
         # deprecated in 0.8.3; remove in 0.8.5 (bug #1711)
-        ("username", "u", None, "deprecated name for --who"),
         ("auth", "a", None, "Authentication token - username:password, or prompt for password"),
         ("who", "W", None, "Author of the commit"),
         ("repository", "R", '', "Repository specifier"),
@@ -793,8 +792,6 @@ class SendChangeOptions(OptionsWithOptionsFile):
     buildbotOptions = [
         [ 'master', 'master' ],
         [ 'who', 'who' ],
-        # deprecated in 0.8.3; remove in 0.8.5 (bug #1711)
-        [ 'username', 'username' ],
         [ 'branch', 'branch' ],
         [ 'category', 'category' ],
         [ 'vc', 'vc' ],
@@ -816,9 +813,6 @@ def sendchange(config, runReactor=False):
 
     encoding = config.get('encoding', 'utf8')
     who = config.get('who')
-    if not who and config.get('username'):
-        print "NOTE: --username/-u is deprecated: use --who/-W'"
-        who = config.get('username')
     auth = config.get('auth')
     master = config.get('master')
     branch = config.get('branch')

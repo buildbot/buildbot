@@ -182,16 +182,6 @@ class TestSendChange(unittest.TestCase):
         d.addCallback(check)
         return d
 
-    def test_sendchange_deprecated_username(self):
-        d = runner.sendchange(dict(username='me', master='a:1'))
-        def check(_):
-            self.assertEqual((self.sender.master, self.sender.auth,
-                    self.sender.encoding, self.sender.send_kwargs['who']),
-                    ('a:1', ['change','changepw'], 'utf8', 'me'))
-            self.assertIn('is deprecated', self.stdout.getvalue())
-        d.addCallback(check)
-        return d
-
     def test_sendchange_revision_file(self):
         open('rf', 'w').write('abcd')
         d = runner.sendchange(dict(who='me', master='a:1', revision_file='rf'))

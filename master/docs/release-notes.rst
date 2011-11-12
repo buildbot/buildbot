@@ -17,6 +17,9 @@ Deprecations, Removals, and Non-Compatible Changes
 * ``buildbot start`` no longer invokes make if a ``Makefile.buildbot`` exists.
   If you are using this functionality, consider invoking make directly.
 
+* The ``buildbot sendchange`` option ``--username`` has been removed as
+  promised in bug #1711.
+
 Features
 ~~~~~~~~
 
