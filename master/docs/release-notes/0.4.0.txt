@@ -1,0 +1,103 @@
+Buildbot 0.4.0 was released 05 Dec 2003
+
+** newapp
+
+I've moved the codebase to Twisted's new 'application' framework, which
+drastically cleans up service startup/shutdown just like newcred did for
+authorization. This is mostly an internal change, but the interface to
+IChangeSources was modified, so in the off chance that someone has written a
+custom change source, it may have to be updated to the new scheme.
+
+The most user-visible consequence of this change is that now both
+buildmasters and buildslaves are generated with the standard Twisted 'mktap'
+utility. Basic documentation is in the README file.
+
+Both buildmaster and buildslave .tap files need to be re-generated to run
+under the new code. I have not figured out the styles.Versioned upgrade path
+well enough to avoid this yet. Sorry.
+
+This also means that both buildslaves and the buildmaster require
+Twisted-1.1.0 or later.
+
+** reloadable master.cfg
+
+Most aspects of a buildmaster is now controlled by a configuration file
+which can be re-read at runtime without losing build history. This feature
+makes the buildmaster *much* easier to maintain.
+
+In the previous release, you would create the buildmaster by writing a
+program to define the Builders and ChangeSources and such, then run it to
+create the .tap file. In the new release, you use 'mktap' to create the .tap
+file, and the only parameter you give it is the base directory to use. Each
+time the buildmaster starts, it will look for a file named 'master.cfg' in
+that directory and parse it as a python script. That script must define a
+dictionary named 'BuildmasterConfig' with various keys to define the
+builders, the known slaves, what port to use for the web server, what IRC
+channels to connect to, etc.
+
+This config file can be re-read at runtime, and the buildmaster will compute
+the differences and add/remove services as necessary. The re-reading is
+currently triggered through the debug port (contrib/debugclient.py is the
+debug port client), but future releases will add the ability to trigger the
+reconfiguration by IRC command, web page button, and probably a local UNIX
+socket (with a helper script to trigger a rebuild locally).
+
+docs/examples/twisted_master.cfg contains a sample configuration file, which
+also lists all the keys that can be set.
+
+There may be some bugs lurking, such as re-configuring the buildmaster while
+a build is running. It needs more testing.
+
+** MaxQ support
+
+Radix contributed some support scripts to run MaxQ test scripts. MaxQ
+(http://maxq.tigris.org/) is a web testing tool that allows you to record
+HTTP sessions and play them back.
+
+** Builders can now wait on multiple Interlocks
+
+The "Interlock" code has been enhanced to allow multiple builders to wait on
+each one. This was done to support the new config-file syntax for specifying
+Interlocks (in which each interlock is a tuple of A and [B], where A is the
+builder the Interlock depends upon, and [B] is a list of builders that
+depend upon the Interlock).
+
+"Interlock" is misnamed. In the next release it will be changed to
+"Dependency", because that's what it really expresses. A new class (probably
+called Interlock) will be created to express the notion that two builders
+should not run at the same time, useful when multiple builders are run on
+the same machine and thrashing results when several CPU- or disk- intensive
+compiles are done simultaneously.
+
+** FreshCVSSource can now handle newcred-enabled FreshCVS daemons
+
+There are now two FreshCVSSource classes: FreshCVSSourceNewcred talks to
+newcred daemons, and FreshCVSSourceOldcred talks to oldcred ones. Mind you,
+FreshCVS doesn't yet do newcred, but when it does, we'll be ready.
+
+'FreshCVSSource' maps to the oldcred form for now. That will probably change
+when the current release of CVSToys supports newcred by default.
+
+** usePTY=1 on posix buildslaves
+
+When a buildslave is running under POSIX (i.e. pretty much everything except
+windows), child processes are created with a pty instead of separate
+stdin/stdout/stderr pipes. This makes it more likely that a hanging build
+(when killed off by the timeout code) will have all its sub-childred cleaned
+up. Non-pty children would tend to leave subprocesses running because the
+buildslave was only able to kill off the top-level process (typically
+'make').
+
+Windows doesn't have any concept of ptys, so non-posix systems do not try to
+enable them.
+
+** mail parsers should actually work now
+
+The email parsing functions (FCMaildirSource and SyncmailMaildirSource) were
+broken because of my confused understanding of how python class methods
+work. These sources should be functional now.
+
+** more irc bot sillyness
+
+The IRC bot can now perform half of the famous AYBABTO scene.
+

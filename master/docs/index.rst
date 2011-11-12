@@ -19,6 +19,7 @@ Table Of Contents
    tutorial/index
    manual/index
    developer/index
+   release-notes
 
 Indices and Tables
 ==================

@@ -1,0 +1,38 @@
+Buildbot 0.3.2 was released 7 May 2003
+
+** packaging changes
+
+*** fix major packaging bug: none of the buildbot/* subdirectories were
+included in the 0.3.1 release. Sorry, I'm still figuring out distutils
+here..
+
+** internal changes
+
+*** use pb.Cacheable to update Events in remote status client. much cleaner.
+
+*** start to clean up BuildProcess->status.builder interface
+
+** bug fixes
+
+*** waterfall display was missing a <tr>, causing it to be misrendered in most
+browsers (except the one I was testing it with, of course)
+
+*** URL without trailing slash (when served in a twisted-web distributed
+server, with a url like "http://twistedmatrix.com/~warner.twistd") should do
+redirect to URL-with-trailing-slash, otherwise internal hrefs are broken.
+
+*** remote status clients: forget RemoteReferences at shutdown, removes
+warnings about "persisting Ephemerals"
+
+** Twisted buildprocess updates:
+
+*** match build process as of twisted-1.0.5
+**** use python2.2 everywhere now that twisted rejects python2.1
+**** look for test-result constants in multiple places
+*** move experimental 'trial --jelly' code to separate module
+*** add FreeBSD builder
+*** catch rc!=0 in HLint step
+*** remove RunUnitTestsRandomly, use randomly=1 parameter instead
+*** parameterize ['twisted.test'] default test case to make subclassing easier
+*** ignore internal distutils warnings in python2.3 builder
+

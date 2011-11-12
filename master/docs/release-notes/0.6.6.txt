@@ -1,0 +1,29 @@
+Buildbot 0.6.6 was released 23 May 2005
+
+** bugs fixed
+
+The 'sendchange', 'stop', and 'sighup' subcommands were broken, simple bugs
+that were not caught by the test suite. Sorry.
+
+The 'buildbot master' command now uses "raw" strings to create .tac files
+that will still function under windows (since we must put directory names
+that contain backslashes into that file).
+
+The keep-on-disk behavior added in 0.6.5 included the ability to upgrade old
+in-pickle LogFile instances. This upgrade function was not added to the
+HTMLLogFile class, so an exception would be raised when attempting to load or
+display any build with one of these logs (which are normally used only for
+showing build exceptions). This has been fixed.
+
+Several unnecessary imports were removed, so the Buildbot should function
+normally with just Twisted-2.0.0's "Core" module installed. (of course you
+will need TwistedWeb, TwistedWords, and/or TwistedMail if you use status
+targets that require them). The test suite should skip all tests that cannot
+be run because of missing Twisted modules.
+
+The master/slave's basedir is now prepended to sys.path before starting the
+daemon. This used to happen implicitly (as a result of twistd's setup
+preamble), but 0.6.5 internalized the invocation of twistd and did not copy
+this behavior. This change restores the ability to access "private.py"-style
+modules in the basedir from the master.cfg file with a simple "import
+private" statement. Thanks to Thomas Vander Stichele for the catch.

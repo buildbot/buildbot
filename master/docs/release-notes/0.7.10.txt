@@ -1,0 +1,176 @@
+Buildbot 0.7.10 was released 25 Feb 2009
+
+This release is mainly a collection of user-submitted patches since
+the last release.
+
+** New Features
+
+*** Environment variables in a builder (#100)
+
+It is useful to be able to pass environment variables to all steps in a
+builder.  This is now possible by adding { .. 'env': { 'var' : 'value' }, ... }
+to the builder specification.
+
+*** IRC status plugin improvements (#330, #357, #378, #280, #381, #411, #368)
+
+*** usePTY specified in master.cfg, defaults to False (#158, #255)
+
+Using a pty has some benefits in terms of supporting "Stop Build", but causes
+numerous problems with simpler jobs which can be killed by a SIGHUP when their
+standard input is closed.  With this change, PTYs are not used by default,
+although you can enable them either on slaves (with the --usepty option to
+create-slave) or on the master.
+
+*** More information about buildslaves via the web plugin (#110)
+
+A new page, rooted at /buildslave/$SLAVENAME, gives extensive information about
+the buildslave.
+
+*** More flexible merging of requests (#415)
+
+The optional c['mergeRequests'] configuration parameter takes a function
+which can decide whether two requests are mergeable.
+
+*** Steps can be made to run even if the build has halted (#414)
+
+Adding alwaysRun=True to a step will cause it to run even if some other step
+has failed and has haltOnFailure=True.
+
+*** Compress buildstep logfiles (#26)
+
+Logs for each buildstep, which can take a lot of space on a busy buildmaster,
+are automatically compressed after the step has finished.
+
+*** Support for "latent" buildslaves
+
+The buildslaves that are started on-demand are called "latent" buildslaves.
+Buildbot ships with an abstract base class for building latent buildslaves, and
+a concrete implementation for AWS EC2. 
+
+*** Customized MailNotifier messages (#175)
+
+MailNotifier now takes an optional function to build the notification message,
+allowing ultimate site-level control over the format of buildbot's notification
+emails.
+
+*** Nightly scheduler support for building only if changes have occurred
+
+With the addition of onlyIfChanged=True, the Nightly scheduler will not schedule
+a new build if no changes have been made since its last scheduled build.
+
+*** Add ATOM/RSS feeds to WebStatus (#372)
+
+Two new pages, /atom and /rss, provide feeds of build events to any feed
+reader.  These paths take the same "category" and "branch" arguments as the
+waterfall and grid.
+
+*** Add categories to Schedulers and Changes (#182)
+
+This allows a moderate amount of support for multiple projects built in a
+single buildmaster.
+
+*** Gracefully shut down a buildslave after its build is complete
+
+The /buildslaves/$SLAVENAME pages have a "Gracefully Shutdown" button which
+will cause the corresponding slave to shut itself down when it finishes its
+current build.  This is a good way to do work on a slave without causing a
+spurious build failure.
+
+*** SVN source steps can send usernames and passwords (#41)
+
+Adding username="foo" and/or password="bar" to an SVN step will cause
+--username and --password arguments to be passed to 'svn' on the slave side.
+Passwords are suitably obfuscated in logfiles.
+
+** New Steps
+
+*** DirectoryUpload (#393)
+
+This step uploads an entire directory to the master, and can be useful when a
+build creates several products (e.g., a client and server package).
+
+*** MasterShellCommand
+
+This step runs a shell command on the server, and can be useful for
+post-processing build products, or performing other maintenance tasks on the
+master.
+
+*** PyLint (#259)
+
+A PyLint step is available to complement the existing PyFlakes step.
+
+** Bugs Fixed
+
+*** Process output from new versions of Test::Harness (#346)
+
+*** Fixes to the try client and scheduler
+
+*** Remove redundant loop in MailNotifier (#315)
+
+*** Display correct $PWD in logfiles (#179)
+
+*** Do not assume a particular python version on Windows (#401)
+
+*** Sort files in changes (#402)
+
+*** Sort buildslaves lexically (#416)
+
+*** Send properties to all builds initiated by AnyBranchScheduler
+
+*** Dependent Schedulers are more robust to reconfiguration (#35)
+
+*** Fix properties handling in triggered buidls (#392)
+
+*** Use "call" on Windows to avoid errors (#417)
+
+*** Support setDefaultWorkdir in FileUpload and FileDownload (#209)
+
+*** Support WithProperties in FileUpload and FileDownload (#210)
+
+*** Fix a bug where changes could be lost on a master crash (#202)
+
+*** Remove color settings from non-presentation code (#251)
+
+*** Fix builders which stopped working after a PING (#349, #85)
+
+*** Isolate Python exceptions in status plugins (#388)
+
+*** Notify about slaves missing at master startup (#302)
+
+*** Fix tracebacks in web display after a reconfig (#176)
+
+** Version-Control Changes
+
+*** Many Mercurial fixes
+
+ - Inrepo branch support finalized (source step + changegroup hook + test case)
+   (#65 #185 #187)
+
+ - Reduced amount of full clones by separating clone with update into
+   clone/pull/update steps (#186, #227) (see #412 for future work here)
+
+ - Fixed mercurial changegroup hook to work with Mercurial 1.1 API (#181, #380)
+
+*** Many git fixes
+
+*** Add got_revision to Perforce support (#127)
+
+*** Use "git foo" everywhere instead of deprecated "git-foo"
+
+** Minor Changes
+
+*** factory.addSteps (#317)
+
+If you have a common list of steps that are included in multiple factories, you
+can use f.addSteps(steplist) to add them all at once.
+
+*** Twisted logfile rotation and cleanup (#108)
+
+By default, Buildbot now rotates and cleans up the (potentially voluminous)
+twistd.log files.
+
+*** Prioritize build requests based on the time they wre submitted (#334)
+
+Balancing of load is a bit more fair, although not true load balancing.
+
+

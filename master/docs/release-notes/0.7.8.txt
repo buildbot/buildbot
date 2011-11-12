@@ -1,0 +1,92 @@
+Buildbot 0.7.8 was released 24 Jul 2008
+
+** New features
+
+The IRC bot will respond to three new commands: 'notify' subscribes the
+channel (or the sender, if the command is sent as a private "/msg") to hear
+about build events. 'join' tells the bot to join some new IRC channel.
+'leave' tells it to leave a channel. See the "IRC Bot" section of the User's
+Manual for details. (#171)
+
+Build Steps now have "statistics", in addition to logfiles. These are used to
+count things like how many tests passed or failed. There are methods to sum
+these counters across all steps and display the results in the Build status.
+The Waterfall display now shows the count of failed tests on the top-most box
+in each column, using this mechanism.
+
+The new buildbot.steps.shell.PerlModuleTest step was added, to run Perl unit
+tests. This is a wrapper around the regular ShellCommand that parses the
+output of the standard perl unit test system and counts how many tests
+passed/failed/etc. The results are put into the step's summary text, and a
+count of tests passed/failed/skipped are tracked in the steps's statistics.
+The factory.CPAN build factory has been updated to use this, so configuring a
+Buildbot to test a perl module available from CPAN should be as easy as:
+
+ s = source.CVS(cvsroot, cvsmodule)
+ f = factory.CPAN(s)
+
+Build Properties have been generalized: they remain associated with a single
+Build, but the properties can be set from a variety of sources. In previous
+releases, the Build itself would set properties like 'buildername', 'branch',
+and 'revision' (the latter two indicating which version of the source code it
+was trying to get), and the source-checkout BuildSteps would set a property
+named 'got_revision' (to indicate what version of the soruce code it actually
+got). In this release, the 'scheduler' property is set to indicate which
+Scheduler caused the build to be started. In addition, the config file can
+specify properties to be set on all Builds, or on all Builds for a specific
+Builder. All these properties are available for interpolation into
+ShellCommands and environment variables by using the WithProperties() marker.
+
+It may be easier to implement simple build parameterization (e.g. to upload
+generated binaries to a specific directory, or to only perform long-running
+tests on a nightly build instead of upon every checkin) by using these Build
+Properties than to write custom BuildSteps.
+
+** Other improvements
+
+The /buildslaves web page shows which slaves are currently running builds.
+Offline slaves are displayed in bold.
+
+Buildbot's setup.py now provides metadata to setuptools (if installed): an
+entry_points script was added, and a dependency upon twisted-2.4.x or newer
+was declared. This makes it more likely that 'easy_install buildbot' will
+work.
+
+The MailNotifier class acquired a mode="passing" flag: in this mode, the
+buildbot will only send mail about passing builds (versus only on failing
+builds, or only on builds which failed when the previous build had passed).
+
+** Bugs fixed
+
+Don't display force/stop build buttons when build control is disabled (#246)
+
+When a build is waiting on a lock, don't claim that it has started (#107)
+
+Make SVN mode=copy tolerate symlinks on freebsd, "cp -rp" -> "cp -RPp" (#86)
+
+The svnpoller changesource now ignores branch deletion (#261)
+
+The Git unit tests should run even if the user has not told Git about their
+username/email.
+
+The WebStatus /xmlrpc server's getStatus() method was renamed to the
+more-accurate getLastBuildResults().
+
+The TinderboxMailNotifier status output acquired an useChangeTime= argument.
+
+The bonsaipoller changesource got some fixes.
+
+** Deprecation Schedule
+
+No features have been deprecated in this release, and no deprecated features
+have been removed. As a reminder, the following deprecated features are
+scheduled for removal in an upcoming release:
+
+c['sources'] (plural) was replaced by c['change_source'] (singular) in 0.7.6,
+and will be removed by 0.8.0.
+
+c['bots'] was replaced by c['buildslaves'] in 0.7.6, and will be removed by
+0.8.0 . c['bots'] only accepts BuildSlave instances, not name/passwd tuples.
+
+The html.Waterfall status target was replaced by html.WebStatus in 0.7.6, and
+will be removed by 0.8.0.

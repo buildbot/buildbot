@@ -1,0 +1,212 @@
+Buildbot 0.6.0 was released 30 Sep 2004
+
+** new features
+
+*** /usr/bin/buildbot control tool
+
+There is now an executable named 'buildbot'. For now, this just provides a
+convenient front-end to mktap/twistd/kill, but eventually it will provide
+access to other client functionality (like the 'try' builds, and a status
+client). Assuming you put your buildbots in /var/lib/buildbot/master/FOO,
+you can do 'buildbot create-master /var/lib/buildbot/master/FOO' and it will
+create the .tap file and set up a sample master.cfg for you. Later,
+'buildbot start /var/lib/buildbot/master/FOO' will start the daemon.
+
+
+*** build status now saved in external files, -shutdown.tap unnecessary
+
+The status rewrite included a change to save all build status in a set of
+external files. These files, one per build, are put in a subdirectory of the
+master's basedir (named according to the 'builddir' parameter of the Builder
+configuration dictionary). This helps keep the buildmaster's memory
+consumption small: the (potentially large) build logs are kept on disk
+instead of in RAM. There is a small cache (2 builds per builder) kept in
+memory, but everything else lives on disk.
+
+The big change is that the buildmaster now keeps *all* status in these
+files. It is no longer necessary to preserve the buildbot-shutdown.tap file
+to run a persistent buildmaster. The buildmaster may be launched with
+'twistd -f buildbot.tap' each time, in fact the '-n' option can be added to
+prevent twistd from automatically creating the -shutdown.tap file.
+
+There is still one lingering bug with this change: the Expectations object
+for each builder (which records how long the various steps took, to provide
+an ETA value for the next time) is not yet saved. The result is that the
+first build after a restart will not provide an ETA value.
+
+0.6.0 keeps status in a single file per build, as opposed to 0.5.0 which
+kept status in many subdirectories (one layer for builds, another for steps,
+and a third for logs). 0.6.0 will detect and delete these subdirectories as
+it overwrites them.
+
+The saved builds are optional. To prevent disk usage from growing without
+bounds, you may want to set up a cron job to run 'find' and delete any which
+are too old. The status displays will happily survive without those saved
+build objects.
+
+The set of recorded Changes is kept in a similar file named 'changes.pck'.
+
+
+*** source checkout now uses timestamp/revision
+
+Source checkouts are now performed with an appropriate -D TIMESTAMP (for
+CVS) or -r REVISION (for SVN) marker to obtain the exact sources that were
+specified by the most recent Change going into the current Build. This
+avoids a race condition in which a change might be committed after the build
+has started but before the source checkout has completed, resulting in a
+mismatched set of source files. Such changes are now ignored.
+
+This works by keeping track of repository-wide revision/transaction numbers
+(for version control systems that offer them, like SVN). The checkout or
+update is performed with the highest such revision number. For CVS (which
+does not have them), the timestamp of each commit message is used, and a -D
+argument is created to place the checkout squarely in the middle of the "tree
+stable timer"'s window.
+
+This also provides the infrastructure for the upcoming 'try' feature. All
+source-checkout commands can now obtain a base revision marker and a patch
+from the Build, allowing certain builds to be performed on something other
+than the most recent sources.
+
+See source.xhtml and steps.xhtml for details.
+
+
+*** Darcs and Arch support added
+
+There are now build steps which retrieve a source tree from Darcs and Arch
+repositories. See steps.xhtml for details.
+
+Preliminary P4 support has been added, thanks to code from Dave Peticolas.
+You must manually set up each build slave with an appropriate P4CLIENT: all
+buildbot does is run 'p4 sync' at the appropriate times.
+
+
+*** Status reporting rewritten
+
+Status reporting was completely revamped. The config file now accepts a
+BuildmasterConfig['status'] entry, with a list of objects that perform status
+delivery. The old config file entries which controlled the web status port
+and the IRC bot have been deprecated in favor of adding instances to
+['status']. The following status-delivery classes have been implemented, all
+in the 'buildbot.status' package:
+
+ client.PBListener(port, username, passwd)
+ html.Waterfall(http_port, distrib_port)
+ mail.MailNotifier(fromaddr, mode, extraRecipients..)
+ words.IRC(host, nick, channels)
+
+See the individual docstrings for details about how to use each one. You can
+create new status-delivery objects by following the interfaces found in the
+buildbot.interfaces module.
+
+
+*** BuildFactory configuration process changed
+
+The basic BuildFactory class is now defined in buildbot.process.factory
+rather than buildbot.process.base, so you will have to update your config
+files. factory.BuildFactory is the base class, which accepts a list of Steps
+to run. See docs/factories.xhtml for details.
+
+There are now easier-to-use BuildFactory classes for projects which use GNU
+Autoconf, perl's MakeMaker (CPAN), python's distutils (but no unit tests),
+and Twisted's Trial. Each one takes a separate 'source' Step to obtain the
+source tree, and then fills in the rest of the Steps for you.
+
+
+*** CVS/SVN VC steps unified, simplified
+
+The confusing collection of arguments for the CVS step ('clobber=',
+'copydir=', and 'export=') have been removed in favor of a single 'mode'
+argument. This argument describes how you want to use the sources: whether
+you want to update and compile everything in the same tree (mode='update'),
+or do a fresh checkout and full build each time (mode='clobber'), or
+something in between.
+
+The SVN (Subversion) step has been unified and accepts the same mode=
+parameter as CVS. New version control steps will obey the same interface.
+
+Most of the old configuration arguments have been removed. You will need to
+update your configuration files to use the new arguments. See
+docs/steps.xhtml for a description of all the new parameters.
+
+
+*** Preliminary Debian packaging added
+
+Thanks to the contributions of Kirill Lapshin, we can now produce .deb
+installer packages. These are still experimental, but they include init.d
+startup/shutdown scripts, which the the new /usr/bin/buildbot to invoke
+twistd. Create your buildmasters in /var/lib/buildbot/master/FOO, and your
+slaves in /var/lib/buildbot/slave/BAR, then put FOO and BAR in the
+appropriate places in /etc/default/buildbot . After that, the buildmasters
+and slaves will be started at every boot.
+
+Pre-built .debs are not yet distributed. Use 'debuild -uc -us' from the
+source directory to create them.
+
+
+** minor features
+
+
+*** Source Stamps
+
+Each build now has a "source stamp" which describes what sources it used. The
+idea is that the sources for this particular build can be completely
+regenerated from the stamp. The stamp is a tuple of (revision, patch), where
+the revision depends on the VC system being used (for CVS it is either a
+revision tag like "BUILDBOT-0_5_0" or a datestamp like "2004/07/23", for
+Subversion it is a revision number like 11455). This must be combined with
+information from the Builder that is constant across all builds (something to
+point at the repository, and possibly a branch indicator for CVS and other VC
+systems that don't fold this into the repository string).
+
+The patch is an optional unified diff file, ready to be applied by running
+'patch -p0 <PATCH' from inside the workdir. This provides support for the
+'try' feature that will eventually allow developers to run buildbot tests on
+their code before checking it in.
+
+
+*** SIGHUP causes the buildmaster's configuration file to be re-read
+
+*** IRC bot now has 'watch' command
+
+You can now tell the buildbot's IRC bot to 'watch <buildername>' on a builder
+which is currently performing a build. When that build is finished, the
+buildbot will make an announcement (including the results of the build).
+
+The IRC 'force build' command will also announce when the resulting build has
+completed.
+
+
+*** the 'force build' option on HTML and IRC status targets can be disabled
+
+The html.Waterfall display and the words.IRC bot may be constructed with an
+allowForce=False argument, which removes the ability to force a build through
+these interfaces. Future versions will be able to restrict this build-forcing
+capability to authenticated users. The per-builder HTML page no longer
+displays the 'Force Build' buttons if it does not have this ability. Thanks
+to Fred Drake for code and design suggestions.
+
+
+*** master now takes 'projectName' and 'projectURL' settings
+
+These strings allow the buildbot to describe what project it is working for.
+At the moment they are only displayed on the Waterfall page, but in the next
+release they will be retrieveable from the IRC bot as well.
+
+
+*** survive recent (SVN) Twisted versions
+
+The buildbot should run correctly (albeit with plenty of noisy deprecation
+warnings) under the upcoming Twisted-2.0 release.
+
+
+*** work-in-progress realtime Trial results acquisition
+
+Jonathan Simms (<slyphon>) has been working on 'retrial', a rewrite of
+Twisted's unit test framework that will most likely be available in
+Twisted-2.0 . Although it is not yet complete, the buildbot will be able to
+use retrial in such a way that build status is reported on a per-test basis,
+in real time. This will be the beginning of fine-grained test tracking and
+Problem management, described in docs/users.xhtml .
+
+

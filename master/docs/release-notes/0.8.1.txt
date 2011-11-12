@@ -1,0 +1,69 @@
+Buildbot 0.8.1 was released 16 June 2010
+
+** Slave Split into separate component
+
+Installing 'buildbot' will no longer allow you to run a slave - for that,
+you'll now need the 'buildslave' component, which is available by easy_install.
+This is merely a packaging change - the buildslave and buildbot components are
+completely inter-compatible, just as they always have been.
+
+** Features
+
+*** Add googlecode_atom.py to contrib (ticket #842)
+
+*** Implement clean master shutdown, available through WebStatus
+
+** Fixes
+
+*** Pass local environment variables along with getProcessOutput. Required for
+    ssh agent authentication.
+
+*** IRC doc fixes (ticket #852)
+
+*** Remove builder count from one_line_per_build (ticket #854)
+
+*** Set the 'revision' property more often (ticket #101)
+
+*** Change property priority ordering (ticket #809)
+
+*** Fixes to MaildirSource for CVS
+
+*** Use shutil.rmtree on POSIX systems
+
+*** Fix NameError in MailNotifier (ticket #758)
+
+*** Reduce verbosity of patches in twistd.log (ticket #803)
+
+*** Documentation updates to reflect UI customization via
+    templates (ticket #866)
+
+** Deprecations
+
+*** Arch, Bazaar, and Monotone to be removed in 0.8.2
+
+This decision isn't final, but support for these VC's will be removed in
+version 0.8.2 unless a maintainers steps forward to document, test, and update
+them.
+
+*** Support for starting buildmaster from Makefiles to be removed in 0.8.2
+
+In a little-used feature, 'buildbot start' would run 'make start' if a
+Makefile.buildbot existed in the master directory.  This functionality will be
+removed in Buildbot-0.8.2, and the create-master command will no longer create
+a Makefile.sample.  Of course, Buildbot still supports build processes on the
+slave using make!
+
+* Slave Changes
+
+** First release of buildslave as a separate package
+
+** Fixes
+
+*** Command-line options changed
+
+Added new `-n|--no-logrotate` flag to create-slave command which disables
+internal logging and log rotation mechanism in buildbot.tac (ticket #973)
+
+*** Delete srcdir before retrying git clone (ticket #884)
+
+*** Fix setup.py to install a launcher script properly in all cases.
