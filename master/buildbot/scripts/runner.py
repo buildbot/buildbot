@@ -177,36 +177,6 @@ class MakerBase(OptionsWithOptionsFile):
     def postOptions(self):
         self['basedir'] = os.path.abspath(self['basedir'])
 
-makefile_sample = """# -*- makefile -*-
-
-# This is a simple makefile which lives in a buildmaster
-# directory (next to the buildbot.tac file). It allows you to start/stop the
-# master by doing 'make start' or 'make stop'.
-
-# The 'reconfig' target will tell a buildmaster to reload its config file.
-
-start:
-	twistd --no_save -y buildbot.tac
-
-stop:
-	if [ -e twistd.pid ]; \\
-	then kill `cat twistd.pid`; \\
-	else echo "Nothing to stop."; \\
-	fi
-
-reconfig:
-	if [ -e twistd.pid ]; \\
-	then kill -HUP `cat twistd.pid`; \\
-	else echo "Nothing to reconfig."; \\
-	fi
-
-log:
-	if [ -e twistd.log ]; \\
-	then tail -f twistd.log; \\
-	else echo "Nothing to tail."; \\
-	fi
-"""
-
 class Maker:
     def __init__(self, config):
         self.config = config
@@ -243,23 +213,6 @@ class Maker:
         f.close()
         if secret:
             os.chmod(tacfile, 0600)
-
-    def makefile(self):
-        target = "Makefile.sample"
-        if os.path.exists(target):
-            oldcontents = open(target, "rt").read()
-            if oldcontents == makefile_sample:
-                if not self.quiet:
-                    print "Makefile.sample already exists and is correct"
-                return
-            if not self.quiet:
-                print "replacing Makefile.sample"
-        else:
-            if not self.quiet:
-                print "creating Makefile.sample"
-        f = open(target, "wt")
-        f.write(makefile_sample)
-        f.close()
 
     def sampleconfig(self, source):
         target = "master.cfg.sample"
@@ -470,7 +423,6 @@ def upgradeMaster(config):
 
     if not config['quiet']: print "upgrading basedir"
     basedir = os.path.expanduser(config['basedir'])
-    # TODO: check Makefile
     # TODO: check TAC file
     # check web files: index.html, default.css, robots.txt
     m.chdir()
@@ -623,7 +575,6 @@ def createMaster(config):
           'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
           'favicon.ico' : util.sibpath(__file__, "../status/web/files/favicon.ico"),
       })
-    m.makefile()
     d = m.create_db()
 
     def print_status(r):
