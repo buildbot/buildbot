@@ -176,9 +176,9 @@ ChangeSource variant for each parsing function.
 Once you've chosen a maildir location and a parsing function, create
 the change source and put it in ``change_source`` ::
 
-    from buildbot.changes.mail import SyncmailMaildirSource
-    c['change_source'] = SyncmailMaildirSource("~/maildir-buildbot",
-                                               prefix="/trunk/")
+    from buildbot.changes.mail import CVSMaildirSource
+    c['change_source'] = CVSMaildirSource("~/maildir-buildbot",
+                                            prefix="/trunk/")
 
 .. _Subscribing-the-Buildmaster:
 
