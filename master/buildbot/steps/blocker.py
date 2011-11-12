@@ -15,9 +15,9 @@
 
 from twisted.python import log, failure
 from twisted.internet import reactor
-
 from buildbot.process.buildstep import BuildStep
 from buildbot.status import builder, buildstep
+from buildbot import config
 
 class BadStepError(Exception):
     """Raised by Blocker when it is passed an upstream step that cannot
@@ -59,14 +59,16 @@ class Blocker(BuildStep):
     def __init__(self, **kwargs):
         BuildStep.__init__(self, **kwargs)
         if self.upstreamSteps is None:
-            raise ValueError("you must supply upstreamSteps")
+            raise config.ConfigErrors([
+                "you must supply upstreamSteps" ])
         if len(self.upstreamSteps) < 1:
-            raise ValueError("upstreamSteps must be a non-empty list")
+            raise config.ConfigErrors([
+                "upstreamSteps must be a non-empty list" ])
         if self.idlePolicy not in self.VALID_IDLE_POLICIES:
-            raise ValueError(
+            raise config.ConfigErrors([
                 "invalid value for idlePolicy: %r (must be one of %s)"
                 % (self.idlePolicy,
-                   ", ".join(map(repr, self.VALID_IDLE_POLICIES))))
+                   ", ".join(map(repr, self.VALID_IDLE_POLICIES)))])
 
         # list of build steps (as BuildStepStatus objects) that we're
         # currently waiting on

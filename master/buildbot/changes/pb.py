@@ -102,34 +102,49 @@ class PBChangeSource(base.ChangeSource):
         self.port = port
         self.prefix = prefix
         self.registration = None
+        self.registered_port = None
 
     def describe(self):
-        # TODO: when the dispatcher is fixed, report the specific port
-        if self.port is not None:
-            portname = self.port
-        else:
-            portname = "all-purpose slaveport"
+        portname = self.registered_port
         d = "PBChangeSource listener on " + str(portname)
         if self.prefix is not None:
             d += " (prefix '%s')" % self.prefix
         return d
 
-    def startService(self):
-        base.ChangeSource.startService(self)
+    def reconfigService(self, new_config):
+        # calculate the new port
         port = self.port
         if port is None:
-            port = self.master.slavePortnum
+            port = new_config.slavePortnum
+
+        # and, if it's changed, re-register
+        if port != self.registered_port:
+            d = self._unregister()
+            d.addCallback(lambda _ : self._register(port))
+            return d
+        else:
+            return defer.succeed(None)
+
+    def stopService(self):
+        d = defer.maybeDeferred(base.ChangeSource.stopService, self)
+        d.addCallback(lambda _ : self._unregister())
+        return d
+
+    def _register(self, port):
+        if not port:
+            log.msg("PBChangeSource has no port to listen on")
+            return
+        self.registered_port = port
         self.registration = self.master.pbmanager.register(
                 port, self.user, self.passwd,
                 self.getPerspective)
 
-    def stopService(self):
-        d = defer.maybeDeferred(base.ChangeSource.stopService, self)
-        def unreg(_):
-            if self.registration:
-                return self.registration.unregister()
-        d.addCallback(unreg)
-        return d
+    def _unregister(self):
+        self.registered_port = None
+        if self.registration:
+            return self.registration.unregister()
+        else:
+            return defer.succeed(None)
 
     def getPerspective(self, mind, username):
         assert username == self.user

@@ -18,19 +18,103 @@ from twisted.python import util
 from twisted.trial import unittest
 from buildbot.test.util import dirs
 from buildbot.scripts import runner
-from buildbot.master import BuildMaster
+from buildbot import config
 
-class SampleCfg(dirs.DirsMixin, unittest.TestCase):
+class RealConfigs(dirs.DirsMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpDirs('basedir')
+        self.basedir = os.path.abspath('basedir')
+        self.filename = os.path.abspath("test.cfg")
 
     def tearDown(self):
         self.tearDownDirs()
 
-    def test_config(self):
+    def test_sample_config(self):
         filename = util.sibpath(runner.__file__, 'sample.cfg')
-        basedir = os.path.abspath('basedir')
-        master = BuildMaster(basedir, filename)
-        return master.loadConfig(open(filename), checkOnly=True)
-    test_config.skip = "instantiating the master does too much" # TODO
+        config.MasterConfig.loadConfig(self.basedir, filename)
+
+    def test_0_7_12_config(self):
+        open(self.filename, "w").write(sample_0_7_12)
+        config.MasterConfig.loadConfig(self.basedir, self.filename)
+
+    def test_0_7_6_config(self):
+        open(self.filename, "w").write(sample_0_7_6)
+        config.MasterConfig.loadConfig(self.basedir, self.filename)
+
+
+# sample.cfg from various versions, with comments stripped.  Adjustments made
+# for compatibility are marked with comments
+
+sample_0_7_6 = """\
+c = BuildmasterConfig = {}
+from buildbot.buildslave import BuildSlave
+c['slaves'] = [BuildSlave("bot1name", "bot1passwd")]
+c['slavePortnum'] = 9989
+from buildbot.changes.pb import PBChangeSource
+c['change_source'] = PBChangeSource()
+from buildbot.scheduler import Scheduler
+c['schedulers'] = []
+c['schedulers'].append(Scheduler(name="all", branch=None,
+                                 treeStableTimer=2*60,
+                                 builderNames=["buildbot-full"]))
+cvsroot = ":pserver:anonymous@cvs.sourceforge.net:/cvsroot/buildbot"
+cvsmodule = "buildbot"
+from buildbot.process import factory
+from buildbot.steps.source import CVS
+from buildbot.steps.shell import Compile
+from buildbot.steps.python_twisted import Trial
+f1 = factory.BuildFactory()
+f1.addStep(CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, login="", mode="copy"))
+f1.addStep(Compile(command=["python", "./setup.py", "build"]))
+# original lacked testChanges=True; this failed at the time
+f1.addStep(Trial(testChanges=True, testpath="."))
+b1 = {'name': "buildbot-full",
+      'slavename': "bot1name",
+      'builddir': "full",
+      'factory': f1,
+      }
+c['builders'] = [b1]
+c['status'] = []
+from buildbot.status import html
+c['status'].append(html.WebStatus(http_port=8010))
+c['projectName'] = "Buildbot"
+c['projectURL'] = "http://buildbot.sourceforge.net/"
+c['buildbotURL'] = "http://localhost:8010/"
+"""
+
+sample_0_7_12 = """\
+c = BuildmasterConfig = {}
+from buildbot.buildslave import BuildSlave
+c['slaves'] = [BuildSlave("bot1name", "bot1passwd")]
+c['slavePortnum'] = 9989
+from buildbot.changes.pb import PBChangeSource
+c['change_source'] = PBChangeSource()
+from buildbot.scheduler import Scheduler
+c['schedulers'] = []
+c['schedulers'].append(Scheduler(name="all", branch=None,
+                                 treeStableTimer=2*60,
+                                 builderNames=["buildbot-full"]))
+cvsroot = ":pserver:anonymous@cvs.sourceforge.net:/cvsroot/buildbot"
+cvsmodule = "buildbot"
+from buildbot.process import factory
+from buildbot.steps.source import CVS
+from buildbot.steps.shell import Compile
+from buildbot.steps.python_twisted import Trial
+f1 = factory.BuildFactory()
+f1.addStep(CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, login="", mode="copy"))
+f1.addStep(Compile(command=["python", "./setup.py", "build"]))
+f1.addStep(Trial(testChanges=True, testpath="."))
+b1 = {'name': "buildbot-full",
+      'slavename': "bot1name",
+      'builddir': "full",
+      'factory': f1,
+      }
+c['builders'] = [b1]
+c['status'] = []
+from buildbot.status import html
+c['status'].append(html.WebStatus(http_port=8010))
+c['projectName'] = "Buildbot"
+c['projectURL'] = "http://buildbot.sourceforge.net/"
+c['buildbotURL'] = "http://localhost:8010/"
+"""

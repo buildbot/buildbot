@@ -15,51 +15,96 @@
 
 import os
 import mock
-from twisted.internet import defer, reactor
+from twisted.internet import defer
 from twisted.trial import unittest
 from buildbot.db import connector
+from buildbot import config
 from buildbot.test.util import db
+from buildbot.test.fake import fakemaster
 
 class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
     """
     Basic tests of the DBConnector class - all start with an empty DB
     """
 
+    @defer.deferredGenerator
     def setUp(self):
-        d = self.setUpRealDatabase(
-            table_names=['changes', 'change_properties', 'change_links',
+        wfd = defer.waitForDeferred(
+            self.setUpRealDatabase(table_names=[
+                    'changes', 'change_properties', 'change_links',
                     'change_files', 'patches', 'sourcestamps',
-                    'buildset_properties', 'buildsets' ])
-        def make_dbc(_):
-            self.dbc = connector.DBConnector(mock.Mock(), self.db_url,
-                                        os.path.abspath('basedir'))
-        d.addCallback(make_dbc)
-        return d
+                    'buildset_properties', 'buildsets' ]))
+        yield wfd
+        wfd.getResult()
 
+        self.master = fakemaster.make_master()
+        self.master.config = config.MasterConfig()
+        self.db = connector.DBConnector(self.master,
+                                os.path.abspath('basedir'))
+
+    @defer.deferredGenerator
     def tearDown(self):
-        return self.tearDownRealDatabase()
+        if self.db.running:
+            wfd = defer.waitForDeferred(
+                self.db.stopService())
+            yield wfd
+            wfd.getResult()
 
-    def test_doCleanup(self):
-        # patch out all of the cleanup tasks; note that we can't patch dbc.doCleanup
-        # directly, since it's already been incorporated into the TimerService
-        cleanups = set([])
-        def pruneChanges(*args):
-            cleanups.add('pruneChanges')
-            return defer.succeed(None)
-        self.dbc.changes.pruneChanges = pruneChanges
+        wfd = defer.waitForDeferred(
+            self.tearDownRealDatabase())
+        yield wfd
+        wfd.getResult()
 
-        self.dbc.startService()
+    @defer.deferredGenerator
+    def startService(self, check_version=False):
+        self.master.config.db['db_url'] = self.db_url
 
-        d = defer.Deferred()
+        wfd = defer.waitForDeferred(
+            self.db.setup(check_version=check_version))
+        yield wfd
+        wfd.getResult()
+
+        self.db.startService()
+
+        wfd = defer.waitForDeferred(
+            self.db.reconfigService(self.master.config))
+        yield wfd
+        wfd.getResult()
+
+
+    # tests
+
+    def test_doCleanup_service(self):
+        d = self.startService()
+        @d.addCallback
         def check(_):
-            self.assertEqual(cleanups, set(['pruneChanges']))
-        d.addCallback(check)
+            self.assertTrue(self.db.cleanup_timer.running)
 
-        # shut down the service lest we leave an unclean reactor
-        d.addCallback(lambda _ : self.dbc.stopService())
+    def test_doCleanup_unconfigured(self):
+        self.db.changes.pruneChanges = mock.Mock(
+                        return_value=defer.succeed(None))
+        self.db._doCleanup()
+        self.assertFalse(self.db.changes.pruneChanges.called)
 
-        # take advantage of the fact that TimerService runs immediately; otherwise, we'd need to find
-        # a way to inject task.Clock into it
-        reactor.callLater(0.001, d.callback, None)
-
+    def test_doCleanup_configured(self):
+        self.db.changes.pruneChanges = mock.Mock(
+                        return_value=defer.succeed(None))
+        d = self.startService()
+        @d.addCallback
+        def check(_):
+            self.db._doCleanup()
+            self.assertTrue(self.db.changes.pruneChanges.called)
         return d
+
+    def test_setup_check_version_bad(self):
+        d = self.startService(check_version=True)
+        def eb(f):
+            f.trap(connector.DatabaseNotReadyError)
+        def cb(_):
+            self.fail("startService unexpectedly succeeded")
+        d.addCallbacks(cb, eb)
+        return d
+
+    def test_setup_check_version_good(self):
+        self.db.model.is_current = lambda : defer.succeed(True)
+        return self.startService(check_version=True)

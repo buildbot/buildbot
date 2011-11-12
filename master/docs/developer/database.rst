@@ -1,5 +1,7 @@
-The Buildbot Database
-=====================
+.. _developer-database:
+
+Database
+========
 
 As of version 0.8.0, Buildbot has used a database as part of its storage
 backend.  This section describes the database connector classes, which allow

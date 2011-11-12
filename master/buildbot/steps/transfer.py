@@ -27,6 +27,7 @@ from buildbot.process.buildstep import RemoteCommand, BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE, SKIPPED
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.util import json
+from buildbot import config
 
 
 class _FileWriter(pb.Referenceable):
@@ -250,7 +251,9 @@ class FileUpload(_TransferBuildStep):
         self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
-        assert isinstance(mode, (int, type(None)))
+        if not isinstance(mode, (int, type(None))):
+            raise config.ConfigErrors([
+                'mode must be an integer or None' ])
         self.mode = mode
         self.keepstamp = keepstamp
         self.url = url
@@ -323,7 +326,9 @@ class DirectoryUpload(_TransferBuildStep):
         self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
-        assert compress in (None, 'gz', 'bz2')
+        if compress not in (None, 'gz', 'bz2'):
+            raise config.ConfigErrors([
+                "'compress' must be one of None, 'gz', or 'bz2'" ])
         self.compress = compress
         self.url = url
 
@@ -437,7 +442,9 @@ class FileDownload(_TransferBuildStep):
         self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
-        assert isinstance(mode, (int, type(None)))
+        if not isinstance(mode, (int, type(None))):
+            raise config.ConfigErrors([
+                'mode must be an integer or None' ])
         self.mode = mode
 
     def start(self):
@@ -506,7 +513,9 @@ class StringDownload(_TransferBuildStep):
         self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
-        assert isinstance(mode, (int, type(None)))
+        if not isinstance(mode, (int, type(None))):
+            raise config.ConfigErrors([
+                'mode must be an integer or None' ])
         self.mode = mode
 
     def start(self):

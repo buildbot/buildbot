@@ -20,6 +20,7 @@ from twisted.spread import pb
 from buildbot.process import buildstep
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot.status.logfile import STDOUT, STDERR
+from buildbot import config
 
 # for existing configurations that import WithProperties from here.  We like
 # to move this class around just to keep our readers guessing.
@@ -268,8 +269,9 @@ class SetProperty(ShellCommand):
         self.extract_fn = extract_fn
         self.strip = strip
 
-        assert (property is not None) ^ (extract_fn is not None), \
-                "Exactly one of property and extract_fn must be set"
+        if not ((property is not None) ^ (extract_fn is not None)):
+            raise config.ConfigErrors([
+                "Exactly one of property and extract_fn must be set" ])
 
         ShellCommand.__init__(self, **kwargs)
 

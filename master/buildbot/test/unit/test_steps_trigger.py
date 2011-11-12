@@ -16,6 +16,7 @@
 from twisted.trial import unittest
 from twisted.python import failure
 from twisted.internet import defer, reactor
+from buildbot import config
 from buildbot.process import properties
 from buildbot.schedulers import triggerable
 from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION
@@ -133,21 +134,21 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     # tests
 
     def test_no_schedulerNames(self):
-        self.assertRaises(ValueError, lambda :
+        self.assertRaises(config.ConfigErrors, lambda :
                 trigger.Trigger())
 
     def test_sourceStamp_and_updateSourceStamp(self):
-        self.assertRaises(ValueError, lambda :
+        self.assertRaises(config.ConfigErrors, lambda :
                 trigger.Trigger(schedulerNames=['c'],
                     sourceStamp=dict(x=1), updateSourceStamp=True))
 
     def test_updateSourceStamp_and_alwaysUseLatest(self):
-        self.assertRaises(ValueError, lambda :
+        self.assertRaises(config.ConfigErrors, lambda :
                 trigger.Trigger(schedulerNames=['c'],
                     updateSourceStamp=True, alwaysUseLatest=True))
 
     def test_sourceStamp_and_alwaysUseLatest(self):
-        self.assertRaises(ValueError, lambda :
+        self.assertRaises(config.ConfigErrors, lambda :
                 trigger.Trigger(schedulerNames=['c'],
                     sourceStamp=dict(x=1), alwaysUseLatest=True))
 

@@ -15,6 +15,7 @@
 
 from buildbot.steps.shell import ShellCommand
 from buildbot.status.results import SUCCESS, FAILURE
+from buildbot import config
 
 class MaxQ(ShellCommand):
     flunkOnFailure = True
@@ -22,7 +23,7 @@ class MaxQ(ShellCommand):
 
     def __init__(self, testdir=None, **kwargs):
         if not testdir:
-            raise TypeError("please pass testdir")
+            raise config.ConfigErrors(["please pass testdir"])
         kwargs['command'] = 'run_maxq.py %s' % (testdir,)
         ShellCommand.__init__(self, **kwargs)
         self.addFactoryArguments(testdir=testdir)

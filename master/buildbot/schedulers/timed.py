@@ -18,6 +18,7 @@ from buildbot import util
 from buildbot.schedulers import base
 from twisted.internet import defer, reactor
 from twisted.python import log
+from buildbot import config
 from buildbot.changes import filter
 
 class Timed(base.BaseScheduler):
@@ -210,7 +211,9 @@ class Periodic(Timed):
             branch=None, properties={}, onlyImportant=False):
         Timed.__init__(self, name=name, builderNames=builderNames,
                     properties=properties)
-        assert periodicBuildTimer > 0, "periodicBuildTimer must be positive"
+        if periodicBuildTimer <= 0:
+            raise config.ConfigErrors([
+                "periodicBuildTimer must be positive" ])
         self.periodicBuildTimer = periodicBuildTimer
         self.branch = branch
         self.reason = "The Periodic scheduler named '%s' triggered this build" % self.name
@@ -240,11 +243,12 @@ class Nightly(Timed):
         # If True, only important changes will be added to the buildset.
         self.onlyImportant = onlyImportant
 
-        if fileIsImportant:
-            assert callable(fileIsImportant), \
-                "fileIsImportant must be a callable"
-        assert branch is not Nightly.NoBranch, \
-                "Nightly parameter 'branch' is required"
+        if fileIsImportant and not callable(fileIsImportant):
+            raise config.ConfigErrors([
+                "fileIsImportant must be a callable" ])
+        if branch is Nightly.NoBranch:
+            raise config.ConfigErrors([
+                "Nightly parameter 'branch' is required" ])
 
         self.minute = minute
         self.hour = hour

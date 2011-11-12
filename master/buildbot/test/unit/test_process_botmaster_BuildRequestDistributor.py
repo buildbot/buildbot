@@ -29,8 +29,8 @@ class Test(unittest.TestCase):
         def prioritizeBuilders(master, builders):
             # simple sort-by-name by default
             return sorted(builders, lambda b1,b2 : cmp(b1.name, b2.name))
-        self.botmaster.prioritizeBuilders = prioritizeBuilders
         self.master = self.botmaster.master = mock.Mock(name='master')
+        self.master.config.prioritizeBuilders = prioritizeBuilders
         self.brd = botmaster.BuildRequestDistributor(self.botmaster)
         self.brd.startService()
 
@@ -94,7 +94,7 @@ class Test(unittest.TestCase):
                 return _
             d.addCallback(done)
             return d
-        self.brd.botmaster.prioritizeBuilders = slow_sorter
+        self.master.config.prioritizeBuilders = slow_sorter
 
         self.addBuilders(builders)
         for bldr in builders:
@@ -152,7 +152,7 @@ class Test(unittest.TestCase):
     def do_test_sortBuilders(self, prioritizeBuilders, oldestRequestTimes,
             expected, returnDeferred=False):
         self.addBuilders(oldestRequestTimes.keys())
-        self.botmaster.prioritizeBuilders = prioritizeBuilders
+        self.master.config.prioritizeBuilders = prioritizeBuilders
 
         def mklambda(t): # work around variable-binding issues
             if returnDeferred:
@@ -210,7 +210,7 @@ class Test(unittest.TestCase):
         self.addBuilders(['x', 'y'])
         def fail(m, b):
             raise RuntimeError("oh noes")
-        self.botmaster.prioritizeBuilders = fail
+        self.master.config.prioritizeBuilders = fail
 
         # expect to get the builders back in the same order in the event of an
         # exception

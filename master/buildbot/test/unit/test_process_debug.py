@@ -16,38 +16,152 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer
+from twisted.application import service
 from buildbot.process import debug
+from buildbot import config
 
-class TestRegisterDebugClient(unittest.TestCase):
+class FakeManhole(service.Service):
+    pass
 
-    def test_registerDebugClient(self):
-        pbmanager = mock.Mock()
-        pbmanager.register.return_value = mock.Mock()
-        master = mock.Mock()
-        slavePortnum = 9824
-        debugPassword = 'seeeekrt'
+class TestDebugServices(unittest.TestCase):
 
-        rv = debug.registerDebugClient(master, slavePortnum,
-                                       debugPassword, pbmanager)
+    def setUp(self):
+        self.master = mock.Mock(name='master')
+        self.config = config.MasterConfig()
 
-        # test return value and that the register method was called
-        self.assertIdentical(rv, pbmanager.register.return_value)
-        self.assertEqual(pbmanager.register.call_args[0][0], slavePortnum)
-        self.assertEqual(pbmanager.register.call_args[0][1], "debug")
-        self.assertEqual(pbmanager.register.call_args[0][2], debugPassword)
+    @defer.deferredGenerator
+    def test_reconfigService_debug(self):
+        # mock out PBManager
+        self.master.pbmanager = pbmanager = mock.Mock()
+        registration = mock.Mock(name='registration')
+        registration.unregister = mock.Mock(name='unregister',
+                    side_effect=lambda : defer.succeed(None))
+        pbmanager.register.return_value = registration
 
-        # test the lambda
-        mind = mock.Mock()
-        username = "hush"
-        dc = pbmanager.register.call_args[0][3](mind, username)
-        self.assertIsInstance(dc, debug.DebugPerspective)
+        ds = debug.DebugServices(self.master)
+        ds.startService()
+
+        # start off with no debug password
+        self.config.slavePortnum = '9824'
+        self.config.debugPassword = None
+        wfd = defer.waitForDeferred(
+            ds.reconfigService(self.config))
+        yield wfd
+        wfd.getResult()
+
+        self.assertFalse(pbmanager.register.called)
+
+        # set the password, and see it register
+        self.config.debugPassword = 'seeeekrit'
+        wfd = defer.waitForDeferred(
+            ds.reconfigService(self.config))
+        yield wfd
+        wfd.getResult()
+
+        self.assertTrue(pbmanager.register.called)
+        self.assertEqual(pbmanager.register.call_args[0][:3],
+                ('9824', 'debug', 'seeeekrit'))
+        factory = pbmanager.register.call_args[0][3]
+        self.assertIsInstance(factory(mock.Mock(), mock.Mock()),
+                debug.DebugPerspective)
+
+        # change the password, and see it re-register
+        self.config.debugPassword = 'lies'
+        pbmanager.register.reset_mock()
+        wfd = defer.waitForDeferred(
+            ds.reconfigService(self.config))
+        yield wfd
+        wfd.getResult()
+
+        self.assertTrue(registration.unregister.called)
+        self.assertTrue(pbmanager.register.called)
+        self.assertEqual(pbmanager.register.call_args[0][:3],
+                ('9824', 'debug', 'lies'))
+
+        # remove the password, and see it unregister
+        self.config.debugPassword = None
+        pbmanager.register.reset_mock()
+        registration.unregister.reset_mock()
+        wfd = defer.waitForDeferred(
+            ds.reconfigService(self.config))
+        yield wfd
+        wfd.getResult()
+
+        self.assertTrue(registration.unregister.called)
+        self.assertFalse(pbmanager.register.called)
+
+        # re-register to test stopService
+        self.config.debugPassword = 'confusion'
+        pbmanager.register.reset_mock()
+        wfd = defer.waitForDeferred(
+            ds.reconfigService(self.config))
+        yield wfd
+        wfd.getResult()
+
+        # stop the service, and see that it unregisters
+        pbmanager.register.reset_mock()
+        registration.unregister.reset_mock()
+        wfd = defer.waitForDeferred(
+            ds.stopService())
+        yield wfd
+        wfd.getResult()
+
+        self.assertTrue(registration.unregister.called)
+
+    @defer.deferredGenerator
+    def test_reconfigService_manhole(self):
+        master = mock.Mock(name='master')
+        ds = debug.DebugServices(master)
+        ds.startService()
+
+        # start off with no manhole
+        wfd = defer.waitForDeferred(
+            ds.reconfigService(self.config))
+        yield wfd
+        wfd.getResult()
+
+        # set a manhole, fire it up
+        self.config.manhole = manhole = FakeManhole()
+        wfd = defer.waitForDeferred(
+            ds.reconfigService(self.config))
+        yield wfd
+        wfd.getResult()
+
+        self.assertTrue(manhole.running)
+        self.assertIdentical(manhole.master, master)
+
+        # unset it, see it stop
+        self.config.manhole = None
+        wfd = defer.waitForDeferred(
+            ds.reconfigService(self.config))
+        yield wfd
+        wfd.getResult()
+
+        self.assertFalse(manhole.running)
+        self.assertIdentical(manhole.master, None)
+
+        # re-start to test stopService
+        self.config.manhole = manhole
+        wfd = defer.waitForDeferred(
+            ds.reconfigService(self.config))
+        yield wfd
+        wfd.getResult()
+
+        # stop the service, and see that it unregisters
+        wfd = defer.waitForDeferred(
+            ds.stopService())
+        yield wfd
+        wfd.getResult()
+
+        self.assertFalse(manhole.running)
+        self.assertIdentical(manhole.master, None)
+
 
 class TestDebugPerspective(unittest.TestCase):
 
     def setUp(self):
-        self.persp = debug.DebugPerspective()
-        self.master = self.persp.master = mock.Mock()
-        self.botmaster = self.persp.botmaster = mock.Mock()
+        self.master = mock.Mock()
+        self.persp = debug.DebugPerspective(self.master)
 
     def test_attached(self):
         self.assertIdentical(self.persp.attached(mock.Mock()), self.persp)
@@ -58,7 +172,7 @@ class TestDebugPerspective(unittest.TestCase):
     def test_perspective_reload(self):
         d = defer.maybeDeferred(lambda : self.persp.perspective_reload())
         def check(_):
-            self.master.loadTheConfigFile.assert_called_with()
+            self.master.reconfig.assert_called_with()
         d.addCallback(check)
         return d
 

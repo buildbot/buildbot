@@ -14,18 +14,113 @@
 # Copyright Buildbot Team Members
 
 from twisted.python import log
+from twisted.internet import defer
+from twisted.application import service
 from buildbot.pbutil import NewCredPerspective
-from buildbot import interfaces
+from buildbot.sourcestamp import SourceStamp
+from buildbot import interfaces, config
 from buildbot.process.properties import Properties
 
+class DebugServices(config.ReconfigurableServiceMixin, service.MultiService):
+
+    def __init__(self, master):
+        service.MultiService.__init__(self)
+        self.setName('debug_services')
+        self.master = master
+
+        self.debug_port = None
+        self.debug_password = None
+        self.debug_registration = None
+        self.manhole = None
+
+
+    @defer.deferredGenerator
+    def reconfigService(self, new_config):
+
+        # debug client
+        config_changed = (self.debug_port != new_config.slavePortnum or
+                          self.debug_password != new_config.debugPassword)
+
+        if not new_config.debugPassword or config_changed:
+            if self.debug_registration:
+                wfd = defer.waitForDeferred(
+                    self.debug_registration.unregister())
+                yield wfd
+                wfd.getResult()
+                self.debug_registration = None
+
+        if new_config.debugPassword and config_changed:
+            factory = lambda mind, user : DebugPerspective(self.master)
+            self.debug_registration = self.master.pbmanager.register(
+                    new_config.slavePortnum, "debug", new_config.debugPassword,
+                    factory)
+
+        self.debug_password = new_config.debugPassword
+        if self.debug_password:
+            self.debug_port = new_config.slavePortnum
+        else:
+            self.debug_port = None
+
+        # manhole
+        if new_config.manhole != self.manhole:
+            if self.manhole:
+                wfd = defer.waitForDeferred(
+                    defer.maybeDeferred(lambda :
+                        self.manhole.disownServiceParent()))
+                yield wfd
+                wfd.getResult()
+                self.manhole.master = None
+                self.manhole = None
+
+            if new_config.manhole:
+                self.manhole = new_config.manhole
+                self.manhole.master = self.master
+                self.manhole.setServiceParent(self)
+
+        # chain up
+        wfd = defer.waitForDeferred(
+            config.ReconfigurableServiceMixin.reconfigService(self,
+                                                    new_config))
+        yield wfd
+        wfd.getResult()
+
+
+    @defer.deferredGenerator
+    def stopService(self):
+        if self.debug_registration:
+            wfd = defer.waitForDeferred(
+                self.debug_registration.unregister())
+            yield wfd
+            wfd.getResult()
+            self.debug_registration = None
+
+        # manhole will get stopped as a sub-service
+
+        wfd = defer.waitForDeferred(
+            defer.maybeDeferred(lambda :
+                service.MultiService.stopService(self)))
+        yield wfd
+        wfd.getResult()
+
+        # clean up
+        if self.manhole:
+            self.manhole.master = None
+            self.manhole = None
+
+
 class DebugPerspective(NewCredPerspective):
+
+    def __init__(self, master):
+        self.master = master
+
     def attached(self, mind):
         return self
+
     def detached(self, mind):
         pass
 
-    def perspective_requestBuild(self, buildername, reason, branch, revision, properties={}):
-        from buildbot.sourcestamp import SourceStamp
+    def perspective_requestBuild(self, buildername, reason, branch,
+                            revision, properties={}):
         c = interfaces.IControl(self.master)
         bc = c.getBuilder(buildername)
         ss = SourceStamp(branch, revision)
@@ -39,8 +134,8 @@ class DebugPerspective(NewCredPerspective):
         bc.ping()
 
     def perspective_reload(self):
-        log.msg("doing reload of the config file")
-        self.master.loadTheConfigFile()
+        log.msg("debug client - triggering master reconfig")
+        self.master.reconfig()
 
     def perspective_pokeIRC(self):
         log.msg("saying something on IRC")
@@ -54,13 +149,3 @@ class DebugPerspective(NewCredPerspective):
 
     def perspective_print(self, msg):
         log.msg("debug %s" % msg)
-
-def registerDebugClient(master, slavePortnum, debugPassword, pbmanager):
-    def perspFactory(master, mind, username):
-        persp = DebugPerspective()
-        persp.master = master
-        persp.botmaster = master
-        return persp
-    return pbmanager.register(
-        slavePortnum, "debug", debugPassword,
-        lambda mind, username : perspFactory(master, mind, username))

@@ -21,8 +21,8 @@ from twisted.trial import unittest
 from twisted.python import log
 import buildbot
 from buildbot.test.util import compat
-from buildbot.process import botmaster
-from buildbot import pbmanager, buildslave
+from buildbot.process import botmaster, builder
+from buildbot import pbmanager, buildslave, config
 from buildbot.test.fake import fakemaster
 
 class FakeSlaveBuilder(pb.Referenceable):
@@ -67,12 +67,10 @@ class FakeSlaveBuildSlave(pb.Referenceable):
         return dict(zip(builder_names, slbuilders))
 
 
-class FakeBuilder(object):
+class FakeBuilder(builder.Builder):
 
-    def __init__(self):
-        self.name = 'bldr'
-        self.slavebuilddir = 'bldr'
-        self.slavenames = [ 'testslave' ]
+    def __init__(self, name):
+        builder.Builder.__init__(self, name)
         self.builder_status = mock.Mock()
 
     def attached(self, slave, remote, commands):
@@ -80,12 +78,6 @@ class FakeBuilder(object):
         return defer.succeed(None)
 
     def detached(self, slave):
-        pass
-
-    def setBotmaster(self, botmaster):
-        pass
-
-    def setServiceParent(self, botmaster):
         pass
 
     def getOldestRequestTime(self):
@@ -117,7 +109,6 @@ class TestSlaveComm(unittest.TestCase):
         self.master = fakemaster.make_master()
         # set the slave port to a loopback address with unspecified
         # port
-        self.master.slavePortnum = "tcp:0:interface=127.0.0.1"
         self.pbmanager = self.master.pbmanager = pbmanager.PBManager()
         self.pbmanager.startService()
 
@@ -138,6 +129,7 @@ class TestSlaveComm(unittest.TestCase):
             self.botmaster.stopService(),
         ])
 
+    @defer.deferredGenerator
     def addSlave(self, **kwargs):
         """
         Create a master-side slave instance and add it to the BotMaster
@@ -145,14 +137,25 @@ class TestSlaveComm(unittest.TestCase):
         @param **kwargs: arguments to pass to the L{BuildSlave} constructor.
         """
         self.buildslave = buildslave.BuildSlave("testslave", "pw", **kwargs)
-        self.botmaster.addSlave(self.buildslave)
 
-        # now that we've called the pbmanager's register method, we can get a
-        # port number
-        self.port = self.buildslave.pb_registration.getPort()
+        # patch in our FakeBuilder for the regular Builder class
+        self.patch(botmaster, 'Builder', FakeBuilder)
 
-        self.builder = FakeBuilder()
-        self.botmaster.setBuilders([self.builder])
+        # reconfig the master to get it set up
+        new_config = self.master.config
+        new_config.slavePortnum = "tcp:0:interface=127.0.0.1"
+        new_config.slaves = [ self.buildslave ]
+        new_config.builders = [ config.BuilderConfig(name='bldr',
+                slavename='testslave', factory=mock.Mock()) ]
+
+        wfd = defer.waitForDeferred(
+            self.botmaster.reconfigService(new_config))
+        yield wfd
+        wfd.getResult()
+
+        # as part of the reconfig, the slave registered with the pbmanager, so
+        # get the port it was assigned
+        self.port = self.buildslave.registration.getPort()
 
     def connectSlave(self, waitForBuilderList=True):
         """
@@ -197,7 +200,10 @@ class TestSlaveComm(unittest.TestCase):
     @defer.deferredGenerator
     def test_connect_disconnect(self):
         """Test a single slave connecting and disconnecting."""
-        self.addSlave()
+        wfd = defer.waitForDeferred(
+            self.addSlave())
+        yield wfd
+        wfd.getResult()
 
         # connect
         wfd = defer.waitForDeferred(
@@ -216,7 +222,10 @@ class TestSlaveComm(unittest.TestCase):
     @defer.deferredGenerator
     @compat.usesFlushLoggedErrors
     def test_duplicate_slave(self):
-        self.addSlave()
+        wfd = defer.waitForDeferred(
+            self.addSlave())
+        yield wfd
+        wfd.getResult()
 
         # connect first slave
         wfd = defer.waitForDeferred(
@@ -248,7 +257,10 @@ class TestSlaveComm(unittest.TestCase):
     @defer.deferredGenerator
     @compat.usesFlushLoggedErrors
     def test_duplicate_slave_old_dead(self):
-        self.addSlave()
+        wfd = defer.waitForDeferred(
+            self.addSlave())
+        yield wfd
+        wfd.getResult()
 
         # connect first slave
         wfd = defer.waitForDeferred(

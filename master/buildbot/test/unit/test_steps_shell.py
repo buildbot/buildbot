@@ -22,7 +22,7 @@ from buildbot.status.results import EXCEPTION
 from buildbot.test.util import steps, compat
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
-
+from buildbot import config
 
 class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
 
@@ -232,7 +232,7 @@ class SetProperty(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_constructor_conflict(self):
-        self.assertRaises(AssertionError, lambda :
+        self.assertRaises(config.ConfigErrors, lambda :
                 shell.SetProperty(property='foo', extract_fn=lambda : None))
 
     def test_run_property(self):

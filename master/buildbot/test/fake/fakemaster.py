@@ -16,6 +16,7 @@
 import weakref
 from twisted.internet import defer
 from buildbot.test.fake import fakedb
+from buildbot import config
 import mock
 
 class FakeCache(object):
@@ -50,5 +51,8 @@ def make_master(master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
 
     # and a getObjectId method
     fakemaster.getObjectId = (lambda : defer.succeed(master_id))
+
+    # and some config - this class's constructor is good enough to trust
+    fakemaster.config = config.MasterConfig()
 
     return fakemaster

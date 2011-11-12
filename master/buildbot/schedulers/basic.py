@@ -15,7 +15,7 @@
 
 from twisted.internet import defer, reactor
 from twisted.python import log
-from buildbot import util
+from buildbot import util, config
 from buildbot.util import bbcollections, NotABranch
 from buildbot.changes import filter, changes
 from buildbot.schedulers import base, dependent
@@ -39,10 +39,12 @@ class BaseBasicScheduler(base.BaseScheduler):
                 builderNames=None, branch=NotABranch, branches=NotABranch,
                 fileIsImportant=None, properties={}, categories=None,
                 change_filter=None, onlyImportant=False):
-        assert shouldntBeSet is self.NotSet, \
-                "pass arguments to schedulers using keyword arguments"
-        if fileIsImportant:
-            assert callable(fileIsImportant)
+        if shouldntBeSet is not self.NotSet:
+            raise config.ConfigErrors([
+                "pass arguments to schedulers using keyword arguments" ])
+        if fileIsImportant and not callable(fileIsImportant):
+            raise config.ConfigErrors([
+                "fileIsImportant must be a callable" ])
 
         # initialize parent classes
         base.BaseScheduler.__init__(self, name, builderNames, properties)
@@ -215,12 +217,16 @@ class BaseBasicScheduler(base.BaseScheduler):
 
 class SingleBranchScheduler(BaseBasicScheduler):
     def getChangeFilter(self, branch, branches, change_filter, categories):
-        assert branch is not NotABranch or change_filter, (
+        if branch is NotABranch and not change_filter:
+            raise config.ConfigErrors([
                 "the 'branch' argument to SingleBranchScheduler is " +
-                "mandatory unless change_filter is provided")
-        assert branches is NotABranch, (
+                "mandatory unless change_filter is provided"])
+        elif branches is not NotABranch:
+            raise config.ConfigErrors([
                 "the 'branches' argument is not allowed for " +
-                "SingleBranchScheduler")
+                "SingleBranchScheduler"])
+
+
         return filter.ChangeFilter.fromSchedulerConstructorArgs(
                 change_filter=change_filter, branch=branch,
                 categories=categories)

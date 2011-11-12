@@ -15,40 +15,37 @@
 
 from twisted.internet import defer
 from twisted.application import service
+from buildbot import config
 
-class UserManager(service.MultiService):
-    """
-    This is the master-side service that allows manual user management
-    via the commandline. More manual user tools, such as a web interface,
-    will be added in the future by appending them to manual_users in
-    initManualUsers.
+class UserManagerManager(config.ReconfigurableServiceMixin,
+                         service.MultiService):
+    # this class manages a fleet of user managers; hence the name..
 
-    An instance of this manager is at Botmaster.user_manager, which calls
-    setUpManualUsers to initial each user tool, right now just being the
-    commandline tool.
-    """
-
-    name = "user_manager"
-
-    def __init__(self):
+    def __init__(self, master):
         service.MultiService.__init__(self)
-        self.master = None
+        self.setName('user_manager_manager')
+        self.master = master
 
-    def startService(self):
-        service.MultiService.startService(self)
-        self.master = self.parent
+    @defer.deferredGenerator
+    def reconfigService(self, new_config):
+        # this is easy - kick out all of the old managers, and add the
+        # new ones.
 
-    def addManualComponent(self, comp):
-        """adds user manager component and sets the component's master"""
-        comp.master = self.master
-        comp.setServiceParent(self)
+        for mgr in self:
+            wfd = defer.waitForDeferred(
+                defer.maybeDeferred(lambda :
+                    mgr.disownServiceParent()))
+            yield wfd
+            wfd.getResult()
+            mgr.master = None
 
-    def removeManualComponent(self, comp):
-        """removes the users manager component, used in reconfig"""
-        assert comp in self
-        d = defer.maybeDeferred(comp.disownServiceParent)
-        def unset_master(x):
-            comp.master = None
-            return x
-        d.addBoth(unset_master)
-        return d
+        for mgr in new_config.user_managers:
+            mgr.master = self.master
+            mgr.setServiceParent(self)
+
+        # reconfig any newly-added change sources, as well as existing
+        wfd = defer.waitForDeferred(
+            config.ReconfigurableServiceMixin.reconfigService(self,
+                                                        new_config))
+        yield wfd
+        wfd.getResult()

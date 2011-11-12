@@ -20,6 +20,16 @@ Deprecations, Removals, and Non-Compatible Changes
 * The ``buildbot sendchange`` option ``--username`` has been removed as
   promised in :bb:bug:`1711`.
 
+* StatusReceivers' checkConfig method should now take an additional `errors`
+  parameter and call its :py:meth:`~buildbot.config.ConfigErrors.addError`
+  method to indicate errors.
+
+Changes for Developers
+~~~~~~~~~~~~~~~~~~~~~~
+
+* The interface for runtime access to the master's configuration has changed
+  considerably.  See :doc:`developer/config` for more details.
+
 Features
 ~~~~~~~~
 

@@ -16,7 +16,6 @@
 import os
 import cPickle
 import tarfile
-import mock
 import shutil
 import textwrap
 from twisted.python import util
@@ -81,7 +80,10 @@ class UpgradeTestMixin(object):
         assert len(prefixes) == 1, "tarball has multiple top-level dirs!"
         self.basedir = prefixes.pop()
 
-        self.db = connector.DBConnector(mock.Mock(), self.db_url, self.basedir)
+        master = fakemaster.make_master()
+        self.db = connector.DBConnector(master, self.basedir)
+        master.config.db['db_url'] = self.db_url
+        return self.db.setup(check_version=False)
 
     def tearDownUpgradeTest(self):
         if self.basedir:
@@ -90,7 +92,7 @@ class UpgradeTestMixin(object):
     # save subclasses the trouble of calling our setUp and tearDown methods
 
     def setUp(self):
-        self.setUpUpgradeTest()
+        return self.setUpUpgradeTest()
 
     def tearDown(self):
         self.tearDownUpgradeTest()
@@ -149,7 +151,10 @@ class UpgradeTestEmpty(dirs.DirsMixin,
         self.setUpDirs('basedir')
         d = self.setUpRealDatabase()
         def make_dbc(_):
-            self.db = connector.DBConnector(mock.Mock(), self.db_url, self.basedir)
+            master = fakemaster.make_master()
+            self.db = connector.DBConnector(master, self.basedir)
+            master.config.db['db_url'] = self.db_url
+            self.db.setup(check_version=False)
         d.addCallback(make_dbc)
         return d
 
@@ -416,7 +421,8 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
         d = self.setUpChangeImport()
         def make_dbc(_):
             master = fakemaster.make_master()
-            self.db = connector.DBConnector(master, self.db_url, self.basedir)
+            self.db = connector.DBConnector(master, self.basedir)
+            return self.db.setup(check_version=False)
         d.addCallback(make_dbc)
         # note the connector isn't started, as we're testing upgrades
         return d

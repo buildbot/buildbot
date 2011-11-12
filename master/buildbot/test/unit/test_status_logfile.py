@@ -20,6 +20,7 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.status import logfile
 from buildbot.test.util import dirs
+from buildbot import config
 
 class TestLogFileProducer(unittest.TestCase):
     def make_static_logfile(self, contents):
@@ -52,6 +53,8 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         self.basedir = step.build.builder.basedir = os.path.abspath('basedir')
         self.setUpDirs(self.basedir)
         self.logfile = logfile.LogFile(step, 'testlf', '123-stdio')
+        self.master = self.logfile.master = mock.Mock()
+        self.config = self.logfile.master.config = config.MasterConfig()
 
     def tearDown(self):
         if self.logfile.openfile:
@@ -66,6 +69,7 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         self.logfile = cPickle.loads(pkl)
         step = self.build_step_status
         self.logfile.step = step
+        self.logfile.master = self.master
         step.build.builder.basedir = self.basedir
 
     def delete_logfile(self):
@@ -155,7 +159,7 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         self.assertEqual(fp.read(), '13:0hello, world,')
 
         # ..and compressed
-        self.logfile.compressMethod = 'bz2'
+        self.config.logCompressionMethod = 'bz2'
         d = self.logfile.compressLog()
         def check(_):
             self.assertTrue(
@@ -197,27 +201,27 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
                                      '4:1\xe2\x98\x83,') # utf-8 encoded
 
     def test_addEntry_logMaxSize(self):
-        self.logfile.logMaxSize = 10 # not evenly divisible by chunk size
+        self.config.logMaxSize = 10 # not evenly divisible by chunk size
         return self.do_test_addEntry([(0, 'abcdef')] * 10 ,
             '11:0abcdefabcd,'
             '64:2\nOutput exceeded 10 bytes, remaining output has been '
             'truncated\n,')
 
     def test_addEntry_logMaxSize_ignores_header(self):
-        self.logfile.logMaxSize = 10
+        self.config.logMaxSize = 10
         return self.do_test_addEntry([(logfile.HEADER, 'abcdef')] * 10 ,
             '61:2' + 'abcdef'*10 + ',')
 
     def test_addEntry_logMaxSize_divisor(self):
-        self.logfile.logMaxSize = 12 # evenly divisible by chunk size
+        self.config.logMaxSize = 12 # evenly divisible by chunk size
         return self.do_test_addEntry([(0, 'abcdef')] * 10 ,
             '13:0abcdefabcdef,'
             '64:2\nOutput exceeded 12 bytes, remaining output has been '
             'truncated\n,')
 
     def test_addEntry_logMaxTailSize(self):
-        self.logfile.logMaxSize = 10
-        self.logfile.logMaxTailSize = 14
+        self.config.logMaxSize = 10
+        self.config.logMaxTailSize = 14
         return self.do_test_addEntry([(0, 'abcdef')] * 10 ,
             '11:0abcdefabcd,'
             '64:2\nOutput exceeded 10 bytes, remaining output has been '
@@ -228,8 +232,8 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
             '13:0abcdefabcdef,')
 
     def test_addEntry_logMaxTailSize_divisor(self):
-        self.logfile.logMaxSize = 10
-        self.logfile.logMaxTailSize = 12
+        self.config.logMaxSize = 10
+        self.config.logMaxTailSize = 12
         return self.do_test_addEntry([(0, 'abcdef')] * 10 ,
             '11:0abcdefabcd,'
             '64:2\nOutput exceeded 10 bytes, remaining output has been '
@@ -273,7 +277,7 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
     def test_addEntry_watchers_logMaxSize(self):
         watcher = mock.Mock(name='watcher')
         self.logfile.watchers.append(watcher)
-        self.logfile.logMaxSize = 10
+        self.config.logMaxSize = 10
         self.do_test_addEntry([(0, 'x')] * 15,
                 '11:0xxxxxxxxxx,'
                 '64:2\nOutput exceeded 10 bytes, remaining output has been '
@@ -314,14 +318,14 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         return d
 
     def test_compressLog_gz(self):
-        self.logfile.compressMethod = 'gz'
+        self.config.logCompressionMethod = 'gz'
         return self.do_test_compressLog('.gz')
 
     def test_compressLog_bz2(self):
-        self.logfile.compressMethod = 'bz2'
+        self.config.logCompressionMethod = 'bz2'
         return self.do_test_compressLog('.bz2')
 
     def test_compressLog_none(self):
-        self.logfile.compressMethod = None
+        self.config.logCompressionMethod = None
         return self.do_test_compressLog('', expect_comp=False)
 

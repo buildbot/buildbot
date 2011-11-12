@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 from twisted.trial import unittest
 from buildbot.process import cache
 
@@ -21,6 +22,11 @@ class CacheManager(unittest.TestCase):
     def setUp(self):
         self.caches = cache.CacheManager()
 
+    def make_config(self, **kwargs):
+        cfg = mock.Mock()
+        cfg.caches = kwargs
+        return cfg
+
     def test_get_cache_idempotency(self):
         foo_cache = self.caches.get_cache("foo", None)
         bar_cache = self.caches.get_cache("bar", None)
@@ -28,13 +34,16 @@ class CacheManager(unittest.TestCase):
         self.assertIdentical(foo_cache, foo_cache2)
         self.assertNotIdentical(foo_cache, bar_cache)
 
-    def test_load_config(self):
+    def test_reconfigService(self):
         # load config with one cache loaded and the other not
         foo_cache = self.caches.get_cache("foo", None)
-        self.caches.load_config({'foo' : 5, 'bar' : 6, 'bing' : 11})
-        bar_cache = self.caches.get_cache("bar", None)
-        self.assertEqual((foo_cache.max_size, bar_cache.max_size),
-                         (5, 6))
+        d = self.caches.reconfigService(
+                self.make_config(foo=5, bar=6, bing=11))
+        @d.addCallback
+        def check(_):
+            bar_cache = self.caches.get_cache("bar", None)
+            self.assertEqual((foo_cache.max_size, bar_cache.max_size),
+                            (5, 6))
 
     def test_get_metrics(self):
         self.caches.get_cache("foo", None)

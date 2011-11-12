@@ -467,8 +467,8 @@ class AllBuildsJsonResource(JsonResource):
     def asDict(self, request):
         results = {}
         # If max > buildCacheSize, it'll trash the cache...
-        max = int(RequestArg(request, 'max',
-                             self.builder_status.buildCacheSize))
+        cache_size = self.builder_status.master.config.caches['Builds']
+        max = int(RequestArg(request, 'max', cache_size))
         for i in range(0, max):
             child = self.getChildWithDefault(-i, request)
             if not isinstance(child, BuildJsonResource):
@@ -648,7 +648,8 @@ class SlaveJsonResource(JsonResource):
         for builderName in self.getBuilders():
             builds = []
             builder_status = self.status.getBuilder(builderName)
-            for i in range(1, builder_status.buildCacheSize - 1):
+            cache_size = builder_status.master.config.caches['Builds']
+            for i in range(1, cache_size - 1):
                 build_status = builder_status.getBuild(-i)
                 if not build_status or not build_status.isFinished():
                     # If not finished, it will appear in runningBuilds.

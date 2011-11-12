@@ -36,7 +36,7 @@ try:
 except ImportError:
     have_ssl = False
 
-from buildbot import interfaces, util
+from buildbot import interfaces, util, config
 from buildbot.process.users import users
 from buildbot.status import base
 from buildbot.status.results import FAILURE, SUCCESS, Results
@@ -279,17 +279,23 @@ class MailNotifier(base.StatusReceiverMultiService):
         @param smtpPort: The port that will be used when connecting to the
                          relayhost. Defaults to 25.
         """
-
         base.StatusReceiverMultiService.__init__(self)
-        assert isinstance(extraRecipients, (list, tuple))
-        for r in extraRecipients:
-            assert isinstance(r, str)
-            # require full email addresses, not User names
-            assert VALID_EMAIL.search(r), "%s is not a valid email" % r 
+
+        errors = []
+
+        if not isinstance(extraRecipients, (list, tuple)):
+            errors.append("extraRecipients must be a list or tuple")
+        else:
+            for r in extraRecipients:
+                if not isinstance(r, str) or not VALID_EMAIL.search(r):
+                    errors.append(
+                            "extra recipient %r is not a valid email" % (r,))
         self.extraRecipients = extraRecipients
         self.sendToInterestedUsers = sendToInterestedUsers
         self.fromaddr = fromaddr
-        assert mode in self.possible_modes
+        if mode not in self.possible_modes:
+            errors.append(
+                "mode %s is not one of %s" % (mode, self.possible_modes))
         self.mode = mode
         self.categories = categories
         self.builders = builders
@@ -304,7 +310,8 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.customMesg = customMesg
         self.messageFormatter = messageFormatter
         if extraHeaders:
-            assert isinstance(extraHeaders, dict)
+            if not isinstance(extraHeaders, dict):
+                errors.append("extraHeaders must be a dictionary")
         self.extraHeaders = extraHeaders
         self.addPatch = addPatch
         self.useTls = useTls
@@ -318,11 +325,16 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         # you should either limit on builders or categories, not both
         if self.builders != None and self.categories != None:
-            twlog.err("Please specify only builders or categories to include not both.")
-            raise interfaces.ParameterError("Please specify only builders or categories to include not both.")
+            errors.append(
+                "Please specify only builders or categories to include - " +
+                "not both.")
 
         if customMesg:
-            twlog.msg("customMesg is deprecated; please use messageFormatter instead")
+            errors.append(
+                "customMesg is deprecated; use messageFormatter instead")
+
+        if errors:
+            raise config.ConfigErrors(errors)
 
     def setServiceParent(self, parent):
         """

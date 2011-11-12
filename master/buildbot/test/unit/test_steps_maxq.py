@@ -18,6 +18,7 @@ from buildbot.test.util import steps
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.steps import maxq
+from buildbot import config
 
 class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
 
@@ -28,7 +29,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_testdir_required(self):
-        self.assertRaises(TypeError, lambda : maxq.MaxQ())
+        self.assertRaises(config.ConfigErrors, lambda : maxq.MaxQ())
 
     def test_success(self):
         self.setupStep(

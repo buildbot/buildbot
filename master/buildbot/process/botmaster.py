@@ -14,17 +14,17 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.python import log
+from twisted.python import log, reflect
 from twisted.python.failure import Failure
 from twisted.internet import defer, reactor
 from twisted.spread import pb
 from twisted.application import service
 
 from buildbot.process.builder import Builder
-from buildbot import interfaces, locks
+from buildbot import interfaces, locks, config, util
 from buildbot.process import metrics
 
-class BotMaster(service.MultiService):
+class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     """This is the master-side service which manages remote buildbot slaves.
     It provides them with BuildSlaves, and distributes build requests to
@@ -34,6 +34,7 @@ class BotMaster(service.MultiService):
 
     def __init__(self, master):
         service.MultiService.__init__(self)
+        self.setName("botmaster")
         self.master = master
 
         self.builders = {}
@@ -55,10 +56,6 @@ class BotMaster(service.MultiService):
         # self.mergeRequests is the callable override for merging build
         # requests
         self.mergeRequests = None
-
-        # self.prioritizeBuilders is the callable override for builder order
-        # traversal
-        self.prioritizeBuilders = None
 
         self.shuttingDown = False
 
@@ -124,169 +121,23 @@ class BotMaster(service.MultiService):
         log.msg("Cancelling clean shutdown")
         self.shuttingDown = False
 
-    def loadConfig_Slaves(self, new_slaves):
-        timer = metrics.Timer("BotMaster.loadConfig_Slaves()")
-        timer.start()
-        new_portnum = (self.lastSlavePortnum is not None
-                   and self.lastSlavePortnum != self.master.slavePortnum)
-        if new_portnum:
-            # it turns out this is pretty hard..
-            raise ValueError("changing slavePortnum in reconfig is not supported")
-        self.lastSlavePortnum = self.master.slavePortnum
-
-        old_slaves = [c for c in list(self)
-                      if interfaces.IBuildSlave.providedBy(c)]
-
-        # identify added/removed slaves. For each slave we construct a tuple
-        # of (name, password, class), and we consider the slave to be already
-        # present if the tuples match. (we include the class to make sure
-        # that BuildSlave(name,pw) is different than
-        # SubclassOfBuildSlave(name,pw) ). If the password or class has
-        # changed, we will remove the old version of the slave and replace it
-        # with a new one. If anything else has changed, we just update the
-        # old BuildSlave instance in place. If the name has changed, of
-        # course, it looks exactly the same as deleting one slave and adding
-        # an unrelated one.
-
-        old_t = {}
-        for s in old_slaves:
-            old_t[s.identity()] = s
-        new_t = {}
-        for s in new_slaves:
-            new_t[s.identity()] = s
-        removed = [old_t[t]
-                   for t in old_t
-                   if t not in new_t]
-        added = [new_t[t]
-                 for t in new_t
-                 if t not in old_t]
-        remaining_t = [t
-                       for t in new_t
-                       if t in old_t]
-
-        # removeSlave will hang up on the old bot
-        dl = []
-        for s in removed:
-            dl.append(self.removeSlave(s))
-        d = defer.DeferredList(dl, fireOnOneErrback=True)
-
-        def add_new(res):
-            for s in added:
-                self.addSlave(s)
-        d.addCallback(add_new)
-
-        def update_remaining(_):
-            for t in remaining_t:
-                old_t[t].update(new_t[t])
-
-        d.addCallback(update_remaining)
-
-        def stop(_):
-            metrics.MetricCountEvent.log("num_slaves",
-                len(self.slaves), absolute=True)
-            timer.stop()
-            return _
-        d.addBoth(stop)
-
-        return d
-
-    def addSlave(self, s):
-        s.setServiceParent(self)
-        s.setBotmaster(self)
-        self.slaves[s.slavename] = s
-        s.pb_registration = self.master.pbmanager.register(
-                self.master.slavePortnum, s.slavename,
-                s.password, self.getPerspective)
-        # do not call maybeStartBuildsForSlave here, as the slave has not
-        # necessarily attached yet
-
-    @metrics.countMethod('BotMaster.removeSlave()')
-    def removeSlave(self, s):
-        d = s.disownServiceParent()
-        d.addCallback(lambda _ : s.pb_registration.unregister())
-        d.addCallback(lambda _ : self.slaves[s.slavename].disconnect())
-        def delslave(_):
-            del self.slaves[s.slavename]
-        d.addCallback(delslave)
-        return d
-
     @metrics.countMethod('BotMaster.slaveLost()')
     def slaveLost(self, bot):
         metrics.MetricCountEvent.log("BotMaster.attached_slaves", -1)
         for name, b in self.builders.items():
-            if bot.slavename in b.slavenames:
+            if bot.slavename in b.config.slavenames:
                 b.detached(bot)
 
     @metrics.countMethod('BotMaster.getBuildersForSlave()')
     def getBuildersForSlave(self, slavename):
-        return [b
-                for b in self.builders.values()
-                if slavename in b.slavenames]
+        return [ b for b in self.builders.values()
+                 if slavename in b.config.slavenames ]
 
     def getBuildernames(self):
         return self.builderNames
 
     def getBuilders(self):
-        allBuilders = [self.builders[name] for name in self.builderNames]
-        return allBuilders
-
-    def setBuilders(self, builders):
-        # TODO: diff against previous list of builders instead of replacing
-        # wholesale?
-        self.builders = {}
-        self.builderNames = []
-        d = defer.DeferredList([b.disownServiceParent() for b in list(self)
-                                if isinstance(b, Builder)],
-                               fireOnOneErrback=True)
-        def _add(ign):
-            log.msg("setBuilders._add: %s %s" % (list(self), [b.name for b in builders]))
-            for b in builders:
-                for slavename in b.slavenames:
-                    # this is actually validated earlier
-                    assert slavename in self.slaves
-                self.builders[b.name] = b
-                self.builderNames.append(b.name)
-                b.setBotmaster(self)
-                b.setServiceParent(self)
-        d.addCallback(_add)
-        d.addCallback(lambda ign: self._updateAllSlaves())
-        # N.B. this takes care of starting all builders at master startup
-        d.addCallback(lambda _ :
-            self.maybeStartBuildsForAllBuilders())
-        return d
-
-    def _updateAllSlaves(self):
-        """Notify all buildslaves about changes in their Builders."""
-        timer = metrics.Timer("BotMaster._updateAllSlaves()")
-        timer.start()
-        dl = []
-        for s in self.slaves.values():
-            d = s.updateSlave()
-            d.addErrback(log.err)
-            dl.append(d)
-        d = defer.DeferredList(dl)
-        def stop(_):
-            timer.stop()
-            return _
-        d.addBoth(stop)
-        return d
-
-    def getPerspective(self, mind, slavename):
-        sl = self.slaves[slavename]
-        if not sl:
-            return None
-        metrics.MetricCountEvent.log("BotMaster.attached_slaves", 1)
-
-        # record when this connection attempt occurred
-        sl.recordConnectTime()
-
-        if sl.isConnected():
-            # duplicate slave - send it to arbitration
-            arb = DuplicateSlaveArbitrator(sl)
-            return arb.getPerspective(mind, slavename)
-        else:
-            log.msg("slave '%s' attaching from %s" % (slavename, mind.broker.transport.getPeer()))
-            return sl
+        return self.builders.values()
 
     def startService(self):
         def buildRequestAdded(notif):
@@ -294,6 +145,146 @@ class BotMaster(service.MultiService):
         self.buildrequest_sub = \
             self.master.subscribeToBuildRequests(buildRequestAdded)
         service.MultiService.startService(self)
+
+    @defer.deferredGenerator
+    def reconfigService(self, new_config):
+        timer = metrics.Timer("BotMaster.reconfigService")
+        timer.start()
+
+        # reconfigure slaves
+        wfd = defer.waitForDeferred(
+            self.reconfigServiceSlaves(new_config))
+        yield wfd
+        wfd.getResult()
+
+        # reconfigure builders
+        wfd = defer.waitForDeferred(
+            self.reconfigServiceBuilders(new_config))
+        yield wfd
+        wfd.getResult()
+
+        wfd = defer.waitForDeferred(
+            config.ReconfigurableServiceMixin.reconfigService(self,
+                                                    new_config))
+        yield wfd
+        wfd.getResult()
+
+        # try to start a build for every builder; this is necessary at master
+        # startup, and a good idea in any other case
+        self.maybeStartBuildsForAllBuilders()
+
+        timer.stop()
+
+
+    @defer.deferredGenerator
+    def reconfigServiceSlaves(self, new_config):
+
+        timer = metrics.Timer("BotMaster.reconfigServiceSlaves")
+        timer.start()
+
+        # arrange slaves by name
+        old_by_name = dict([ (s.slavename, s)
+                            for s in list(self)
+                            if interfaces.IBuildSlave.providedBy(s) ])
+        old_set = set(old_by_name.iterkeys())
+        new_by_name = dict([ (s.slavename, s)
+                            for s in new_config.slaves ])
+        new_set = set(new_by_name.iterkeys())
+
+        # calculate new slaves, by name, and removed slaves
+        removed_names, added_names = util.diffSets(old_set, new_set)
+
+        # find any slaves for which the fully qualified class name has
+        # changed, and treat those as an add and remove
+        for n in old_set & new_set:
+            old = old_by_name[n]
+            new = new_by_name[n]
+            # detect changed class name
+            if reflect.qual(old.__class__) != reflect.qual(new.__class__):
+                removed_names.add(n)
+                added_names.add(n)
+
+        if removed_names or added_names:
+            log.msg("adding %d new slaves, removing %d" %
+                    (len(added_names), len(removed_names)))
+
+            for n in removed_names:
+                slave = old_by_name[n]
+
+                del self.slaves[n]
+                slave.master = None
+                slave.botmaster = None
+
+                wfd = defer.waitForDeferred(
+                    defer.maybeDeferred(lambda :
+                        slave.disownServiceParent()))
+                yield wfd
+                wfd.getResult()
+
+            for n in added_names:
+                slave = new_by_name[n]
+                slave.setServiceParent(self)
+
+                slave.botmaster = self
+                slave.master = self.master
+                self.slaves[n] = slave
+
+        metrics.MetricCountEvent.log("num_slaves",
+                len(self.slaves), absolute=True)
+
+        timer.stop()
+
+
+    @defer.deferredGenerator
+    def reconfigServiceBuilders(self, new_config):
+
+        timer = metrics.Timer("BotMaster.reconfigServiceBuilders")
+        timer.start()
+
+        # arrange builders by name
+        old_by_name = dict([ (b.name, b)
+                            for b in list(self)
+                            if isinstance(b, Builder) ])
+        old_set = set(old_by_name.iterkeys())
+        new_by_name = dict([ (bc.name, bc)
+                            for bc in new_config.builders ])
+        new_set = set(new_by_name.iterkeys())
+
+        # calculate new builders, by name, and removed builders
+        removed_names, added_names = util.diffSets(old_set, new_set)
+
+        if removed_names or added_names:
+            log.msg("adding %d new builders, removing %d" %
+                    (len(added_names), len(removed_names)))
+
+            for n in removed_names:
+                builder = old_by_name[n]
+
+                del self.builders[n]
+                builder.master = None
+                builder.botmaster = None
+
+                wfd = defer.waitForDeferred(
+                    defer.maybeDeferred(lambda :
+                        builder.disownServiceParent()))
+                yield wfd
+                wfd.getResult()
+
+            for n in added_names:
+                builder = Builder(n)
+                self.builders[n] = builder
+
+                builder.botmaster = self
+                builder.master = self.master
+                builder.setServiceParent(self)
+
+        self.builderNames = self.builders.keys()
+
+        metrics.MetricCountEvent.log("num_builders",
+                len(self.builders), absolute=True)
+
+        timer.stop()
+
 
     def stopService(self):
         if self.buildrequest_sub:
@@ -465,7 +456,7 @@ class BuildRequestDistributor(service.Service):
                      if n in builders_dict ]
 
         # find a sorting function
-        sorter = self.botmaster.prioritizeBuilders
+        sorter = self.master.config.prioritizeBuilders
         if not sorter:
             sorter = self._defaultSorter
 

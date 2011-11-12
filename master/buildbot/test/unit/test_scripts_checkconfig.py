@@ -13,11 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+import re
 import sys
 import os
 import textwrap
+import cStringIO
 from twisted.trial import unittest
-from buildbot.test.util import dirs
+from buildbot.test.util import dirs, compat
 from buildbot.scripts import checkconfig
 
 class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
@@ -31,7 +33,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
     # tests
 
     def do_test_load(self, by_name=False, config='', other_files={},
-                           exp_failure=False):
+                           stdout_re=None, stderr_re=None):
         configFile = os.path.join('configdir', 'master.cfg')
         open(configFile, "w").write(config)
         for filename, contents in other_files.iteritems():
@@ -49,21 +51,25 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
         else:
             cl = checkconfig.ConfigLoader(basedir='configdir')
 
-        d = cl.load()
-        if exp_failure:
-            def cb(x):
-                self.fail("should not get here")
-            def eb(f):
-                if exp_failure is not True:
-                    f.trap(exp_failure)
-                return None
-            d.addCallbacks(cb, eb)
-        return d
+        old_stdout, old_stderr = sys.stdout, sys.stderr
+        stdout = sys.stdout = cStringIO.StringIO()
+        stderr = sys.stderr = cStringIO.StringIO()
+        try:
+            cl.load()
+        finally:
+            sys.stdout, sys.stderr = old_stdout, old_stderr
+        if stdout_re:
+            stdout = stdout.getvalue()
+            self.failUnless(stdout_re.search(stdout), stdout)
+        if stderr_re:
+            stderr = stderr.getvalue()
+            self.failUnless(stderr_re.search(stderr), stderr)
 
     def test_success(self):
         len_sys_path = len(sys.path)
         config = textwrap.dedent("""\
                 c = BuildmasterConfig = {}
+                c['multiMaster'] = True
                 c['schedulers'] = []
                 from buildbot.config import BuilderConfig
                 from buildbot.process.factory import BuildFactory
@@ -77,30 +83,30 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 ]
                 c['slavePortnum'] = 9989
                 """)
-        d = self.do_test_load(config=config)
-        def check(_):
-            # check that the builder directory was not created
-            self.assertFalse(os.path.exists(
-                os.path.join('configdir', 'testbuilder')))
-            # ..nor the state database
-            self.assertFalse(os.path.exists(
-                os.path.join('configdir', 'state.sqlite')))
-            self.assertEqual(len(sys.path), len_sys_path)
-        return d
+        self.do_test_load(config=config,
+                stdout_re=re.compile('Config file is good!'))
 
+        # (regression) check that sys.path hasn't changed
+        self.assertEqual(len(sys.path), len_sys_path)
+
+    @compat.usesFlushLoggedErrors
     def test_failure_ImportError(self):
         config = textwrap.dedent("""\
                 import test_scripts_checkconfig_does_not_exist
                 """)
-        d = self.do_test_load(config=config, exp_failure=ImportError)
-        return d
+        self.do_test_load(config=config,
+                stderr_re=re.compile(
+                    'No module named test_scripts_checkconfig_does_not_exist'))
+        self.flushLoggedErrors()
 
-    def test_failure_SyntaxError(self):
+    @compat.usesFlushLoggedErrors
+    def test_failure_no_slaves(self):
         config = textwrap.dedent("""\
-                "untermina
+                BuildmasterConfig={}
                 """)
-        d = self.do_test_load(config=config, exp_failure=SyntaxError)
-        return d
+        self.do_test_load(config=config,
+                stderr_re=re.compile('no slaves'))
+        self.flushLoggedErrors()
 
     def test_success_imports(self):
         config = textwrap.dedent("""\
@@ -112,8 +118,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 c['slavePortnum'] = port
                 """)
         other_files = { 'othermodule.py' : 'port = 9989' }
-        d = self.do_test_load(config=config, other_files=other_files)
-        return d
+        self.do_test_load(config=config, other_files=other_files)
 
     def test_success_import_package(self):
         config = textwrap.dedent("""\
@@ -128,6 +133,5 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
             ('otherpackage', '__init__.py') : '',
             ('otherpackage', 'othermodule.py') : 'port = 9989',
         }
-        d = self.do_test_load(config=config, other_files=other_files)
-        return d
+        self.do_test_load(config=config, other_files=other_files)
 

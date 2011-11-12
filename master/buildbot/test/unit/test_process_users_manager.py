@@ -15,27 +15,43 @@
 
 import mock
 from twisted.trial import unittest
+from twisted.internet import defer
 from buildbot.process.users import manager, manual
+from buildbot import config
+
+class FakeUserManager(manual.UsersBase):
+    pass
 
 class TestUserManager(unittest.TestCase):
     def setUp(self):
         self.master = mock.Mock()
-        self.um = manager.UserManager()
-        self.um.parent = self.master
-        self.um.startService()
+        self.umm = manager.UserManagerManager(self.master)
+        self.umm.startService()
+
+        self.config = config.MasterConfig()
 
     def tearDown(self):
-        self.um.stopService()
+        self.umm.stopService()
 
-    def test_addManualComponent_removeManualComponent(self):
-        class ManualUsers(manual.UsersBase):
-            pass
+    @defer.deferredGenerator
+    def test_reconfigService(self):
+        # add a user manager
+        um1 = FakeUserManager()
+        self.config.user_managers = [ um1 ]
 
-        mu = ManualUsers()
-        self.um.addManualComponent(mu)
-        assert mu.master is self.um.parent
+        wfd = defer.waitForDeferred(
+                self.umm.reconfigService(self.config))
+        yield wfd
+        wfd.getResult()
 
-        d = self.um.removeManualComponent(mu)
-        def check(_):
-            assert mu.master in None
-        return d
+        self.assertTrue(um1.running)
+        self.assertIdentical(um1.master, self.master)
+
+        # and back to nothing
+        self.config.user_managers = [ ]
+        wfd = defer.waitForDeferred(
+                self.umm.reconfigService(self.config))
+        yield wfd
+        wfd.getResult()
+
+        self.assertIdentical(um1.master, None)

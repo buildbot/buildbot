@@ -15,29 +15,44 @@
 
 import mock
 from twisted.trial import unittest
-from buildbot.changes import manager, base
+from twisted.application import service
+from buildbot.changes import manager
+
+class FakeChangeSource(service.Service):
+    pass
 
 class TestChangeManager(unittest.TestCase):
     def setUp(self):
-        self.cm = manager.ChangeManager()
-        self.cm.parent = mock.Mock()
-        self.cm.startService()
+        self.master = mock.Mock()
+        self.cm = manager.ChangeManager(self.master)
+        self.new_config = mock.Mock()
 
-    def tearDown(self):
-        return self.cm.stopService()
+    def make_sources(self, n):
+        for i in range(n):
+            src = FakeChangeSource()
+            src.setName('ChangeSource %d' % i)
+            yield src
 
-    def test_addSource_removeSource(self):
-        class MySource(base.ChangeSource):
-            pass
+    def test_reconfigService_add(self):
+        src1, src2 = self.make_sources(2)
+        src1.setServiceParent(self.cm)
+        self.new_config.change_sources = [ src1, src2 ]
 
-        src = MySource()
-        self.cm.addSource(src)
-
-        # addSource should set the source's 'master'
-        assert src.master is self.cm.parent
-
-        d = self.cm.removeSource(src)
+        d = self.cm.reconfigService(self.new_config)
+        @d.addCallback
         def check(_):
-            # and removeSource should rmeove it.
-            assert src.master is None
+            self.assertIdentical(src2.parent, self.cm)
+            self.assertIdentical(src2.master, self.master)
+        return d
+
+    def test_reconfigService_remove(self):
+        src1, = self.make_sources(1)
+        src1.setServiceParent(self.cm)
+        self.new_config.change_sources = [ ]
+
+        d = self.cm.reconfigService(self.new_config)
+        @d.addCallback
+        def check(_):
+            self.assertIdentical(src1.parent, None)
+            self.assertIdentical(src1.master, None)
         return d

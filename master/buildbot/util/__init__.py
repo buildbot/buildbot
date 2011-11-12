@@ -103,6 +103,13 @@ class ComparableMixin:
                      for name in self.compare_attrs]
         return cmp(self_list, them_list)
 
+def diffSets(old, new):
+    if not isinstance(old, set):
+        old = set(old)
+    if not isinstance(new, set):
+        new = set(new)
+    return old - new, new - old
+
 # Remove potentially harmful characters from builder name if it is to be
 # used as the build dir.
 badchars_map = string.maketrans("\t !#$%&'()*+,./:;<=>?@[\\]^{|}~",
@@ -171,4 +178,5 @@ def datetime2epoch(dt):
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'remove_userpassword', 'LRUCache', 'none_or_str',
-    'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC' ]
+    'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC',
+    'diffLists' ]

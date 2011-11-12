@@ -18,6 +18,7 @@ from buildbot.steps import python
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
 from twisted.trial import unittest
+from buildbot import config
 
 log_output_success = '''\
 Making output directory...
@@ -268,11 +269,11 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_builddir_required(self):
-        self.assertRaises(TypeError, lambda :
+        self.assertRaises(config.ConfigErrors, lambda :
                 python.Sphinx())
 
     def test_bad_mode(self):
-        self.assertRaises(TypeError, lambda: python.Sphinx(
+        self.assertRaises(config.ConfigErrors, lambda: python.Sphinx(
                 sphinx_builddir="_build", mode="don't care"))
 
     def test_success(self):

@@ -23,13 +23,18 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
         d = self.setUpChangeImport()
         def make_dbc(_):
             master = fakemaster.make_master()
-            self.db = DBConnector(master, self.db_url, self.basedir)
+            master.config.db['db_url'] = self.db_url
+            self.db = DBConnector(master, self.basedir)
+            return self.db.setup(check_version=False)
+
         d.addCallback(make_dbc)
         # note the connector isn't started, as we're testing upgrades
         return d
 
     def tearDown(self):
         return self.tearDownChangeImport()
+
+    # tests
 
     def testUnicodeChange(self):
         self.make_pickle(

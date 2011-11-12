@@ -61,7 +61,7 @@ class BuildStepStatus(styles.Versioned):
     statistics = {}
     step_number = None
 
-    def __init__(self, parent, step_number):
+    def __init__(self, parent, master, step_number):
         assert interfaces.IBuildStatus(parent)
         self.build = parent
         self.step_number = step_number
@@ -72,6 +72,8 @@ class BuildStepStatus(styles.Versioned):
         self.finishedWatchers = []
         self.statistics = {}
         self.skipped = False
+
+        self.master = master
 
         self.waitingForLocks = False
 
@@ -216,9 +218,6 @@ class BuildStepStatus(styles.Versioned):
         assert self.started # addLog before stepStarted won't notify watchers
         logfilename = self.build.generateLogfileName(self.name, name)
         log = LogFile(self, name, logfilename)
-        log.logMaxSize = self.build.builder.logMaxSize
-        log.logMaxTailSize = self.build.builder.logMaxTailSize
-        log.compressMethod = self.build.builder.logCompressionMethod
         self.logs.append(log)
         for w in self.watchers:
             receiver = w.logStarted(self.build, self, log)
@@ -267,7 +266,7 @@ class BuildStepStatus(styles.Versioned):
         self.finished = util.now()
         self.results = results
         cld = [] # deferreds for log compression
-        logCompressionLimit = self.build.builder.logCompressionLimit
+        logCompressionLimit = self.master.config.logCompressionLimit
         for loog in self.logs:
             if not loog.isFinished():
                 loog.finish()
@@ -312,6 +311,7 @@ class BuildStepStatus(styles.Versioned):
         del d['watchers']
         del d['finishedWatchers']
         del d['updates']
+        del d['master']
         return d
 
     def __setstate__(self, d):
@@ -319,11 +319,16 @@ class BuildStepStatus(styles.Versioned):
         # self.build must be filled in by our parent
 
         # point the logs to this object
-        for loog in self.logs:
-            loog.step = self
         self.watchers = []
         self.finishedWatchers = []
         self.updates = {}
+
+    def setProcessObjects(self, build, master):
+        self.build = build
+        self.master = master
+        for loog in self.logs:
+            loog.step = self
+            loog.master = master
 
     def upgradeToVersion1(self):
         if not hasattr(self, "urls"):

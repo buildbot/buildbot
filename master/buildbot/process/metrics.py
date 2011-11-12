@@ -37,8 +37,7 @@ from twisted.python import log
 from twisted.internet.task import LoopingCall
 from twisted.internet import reactor
 from twisted.application import service
-
-from buildbot import util
+from buildbot import util, config
 from buildbot.util.bbcollections import defaultdict
 
 import gc, os, sys
@@ -281,15 +280,17 @@ class PollerWatcher(object):
         for method in ('BuildMaster.pollDatabaseChanges()',
                 'BuildMaster.pollDatabaseBuildRequests()'):
             t = h.get(method)
-            db_poll_interval = self.metrics.parent.db_poll_interval
+            master = self.metrics.parent
+            db_poll_interval = master.config.db['db_poll_interval']
 
-            if t < 0.8 * db_poll_interval:
-                level = ALARM_OK
-            elif t < db_poll_interval:
-                level = ALARM_WARN
-            else:
-                level = ALARM_CRIT
-            MetricAlarmEvent.log(method, level=level)
+            if db_poll_interval:
+                if t < 0.8 * db_poll_interval:
+                    level = ALARM_OK
+                elif t < db_poll_interval:
+                    level = ALARM_WARN
+                else:
+                    level = ALARM_CRIT
+                MetricAlarmEvent.log(method, level=level)
 
 class AttachedSlavesWatcher(object):
     def __init__(self, metrics):
@@ -360,14 +361,18 @@ def periodicCheck(_reactor=reactor):
         MetricTimeEvent.log("reactorDelay", delay)
     _reactor.callLater(dt, cb)
 
-class MetricLogObserver(service.MultiService):
+class MetricLogObserver(config.ReconfigurableServiceMixin,
+                        service.MultiService):
     _reactor = reactor
-    def __init__(self, config):
+    def __init__(self):
         service.MultiService.__init__(self)
+        self.setName('metrics')
 
-        self.config = config
+        self.enabled = False
         self.periodic_task = None
+        self.periodic_interval = None
         self.log_task = None
+        self.log_interval = None
 
         # Mapping of metric type to handlers for that type
         self.handlers = {}
@@ -382,39 +387,55 @@ class MetricLogObserver(service.MultiService):
         self.getHandler(MetricCountEvent).addWatcher(
                 AttachedSlavesWatcher(self))
 
-    def reloadConfig(self, config):
-        self.config = config
-        log_interval = self.config.get('log_interval', 60)
-        if self.log_task:
-            self.log_task.stop()
-        if log_interval:
-            # Start up periodic logging
-            self.log_task = LoopingCall(self.report)
-            self.log_task.clock = self._reactor
-            self.log_task.start(log_interval)
+    def reconfigService(self, new_config):
+        # first, enable or disable
+        if new_config.metrics is None:
+            self.disable()
+            return
         else:
-            self.log_task = None
+            self.enable()
 
-        periodic_interval = self.config.get('periodic_interval', 10)
-        if self.periodic_task:
-            self.periodic_task.stop()
-        if periodic_interval:
-            self.periodic_task = LoopingCall(periodicCheck, self._reactor)
-            self.periodic_task.clock = self._reactor
-            self.periodic_task.start(periodic_interval)
-        else:
-            self.periodic_task = None
+        metrics_config = new_config.metrics
 
-    def startService(self):
-        log.msg("Starting %s" % self)
-        service.MultiService.startService(self)
-        log.addObserver(self.emit)
+        # Start up periodic logging
+        log_interval = metrics_config.get('log_interval', 60)
+        if log_interval != self.log_interval:
+            if self.log_task:
+                self.log_task.stop()
+                self.log_task = None
+            if log_interval:
+                self.log_task = LoopingCall(self.report)
+                self.log_task.clock = self._reactor
+                self.log_task.start(log_interval)
 
-        self.reloadConfig(self.config)
+        # same for the periodic task
+        periodic_interval = metrics_config.get('periodic_interval', 10)
+        if periodic_interval != self.periodic_interval:
+            if self.periodic_task:
+                self.periodic_task.stop()
+                self.periodic_task = None
+            if periodic_interval:
+                self.periodic_task = LoopingCall(periodicCheck, self._reactor)
+                self.periodic_task.clock = self._reactor
+                self.periodic_task.start(periodic_interval)
+
+        # upcall
+        return config.ReconfigurableServiceMixin.reconfigService(self,
+                                                        new_config)
 
     def stopService(self):
-        log.msg("Stopping %s" % self)
+        self.disable()
         service.MultiService.stopService(self)
+
+    def enable(self):
+        if self.enabled:
+            return
+        log.addObserver(self.emit)
+        self.enabled = True
+
+    def disable(self):
+        if not self.enabled:
+            return
 
         if self.periodic_task:
             self.periodic_task.stop()
@@ -425,6 +446,7 @@ class MetricLogObserver(service.MultiService):
             self.log_task = None
 
         log.removeObserver(self.emit)
+        self.enabled = False
 
     def registerHandler(self, interface, handler):
         old = self.getHandler(interface)

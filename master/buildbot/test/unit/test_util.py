@@ -127,3 +127,29 @@ class TimeFunctions(unittest.TestCase):
         self.assertEqual(util.datetime2epoch(dt), 0)
         dt = datetime.datetime(2011, 3, 13, 7, 6, 40, tzinfo=util.UTC)
         self.assertEqual(util.datetime2epoch(dt), 1300000000)
+
+class DiffSets(unittest.TestCase):
+
+    def test_empty(self):
+        removed, added = util.diffSets(set([]), set([]))
+        self.assertEqual((removed, added), (set([]), set([])))
+
+    def test_no_lists(self):
+        removed, added = util.diffSets([1, 2], [2, 3])
+        self.assertEqual((removed, added), (set([1]), set([3])))
+
+    def test_no_overlap(self):
+        removed, added = util.diffSets(set([1, 2]), set([3, 4]))
+        self.assertEqual((removed, added), (set([1, 2]), set([3, 4])))
+
+    def test_no_change(self):
+        removed, added = util.diffSets(set([1, 2]), set([1, 2]))
+        self.assertEqual((removed, added), (set([]), set([])))
+
+    def test_added(self):
+        removed, added = util.diffSets(set([1, 2]), set([1, 2, 3]))
+        self.assertEqual((removed, added), (set([]), set([3])))
+
+    def test_removed(self):
+        removed, added = util.diffSets(set([1, 2]), set([1]))
+        self.assertEqual((removed, added), (set([2]), set([])))

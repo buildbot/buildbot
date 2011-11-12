@@ -18,43 +18,81 @@ from cPickle import load
 from twisted.python import log
 from twisted.persisted import styles
 from twisted.internet import defer
+from twisted.application import service
 from zope.interface import implements
-from buildbot import interfaces
+from buildbot import interfaces, config
 from buildbot.util import bbcollections
 from buildbot.util.eventual import eventually
 from buildbot.changes import changes
 from buildbot.status import buildset, builder, buildrequest
 
-class Status:
-    """
-    I represent the status of the buildmaster.
-    """
+class Status(config.ReconfigurableServiceMixin, service.MultiService):
     implements(interfaces.IStatus)
 
     def __init__(self, master):
+        service.MultiService.__init__(self)
         self.master = master
         self.botmaster = master.botmaster
         self.db = None
         self.basedir = master.basedir
         self.watchers = []
-        # compress logs bigger than 4k, a good default on linux
-        self.logCompressionLimit = 4*1024
-        self.logCompressionMethod = "bz2"
         # No default limit to the log size
         self.logMaxSize = None
-        self.logMaxTailSize = None
-
-        # subscribe to the things we need to know about
-        self.master.subscribeToBuildsetCompletions(
-                self._buildsetCompletionCallback)
-        self.master.subscribeToBuildsets(
-                self._buildsetCallback)
-        self.master.subscribeToBuildRequests(
-                self._buildRequestCallback)
 
         self._builder_observers = bbcollections.KeyedSets()
         self._buildreq_observers = bbcollections.KeyedSets()
         self._buildset_finished_waiters = bbcollections.KeyedSets()
+
+    # service management
+
+    def startService(self):
+        # subscribe to the things we need to know about
+        self._buildset_completion_sub = \
+            self.master.subscribeToBuildsetCompletions(
+                self._buildsetCompletionCallback)
+        self._buildset_sub = \
+            self.master.subscribeToBuildsets(
+                self._buildsetCallback)
+        self._build_request_sub = \
+            self.master.subscribeToBuildRequests(
+                self._buildRequestCallback)
+        self._change_sub = \
+            self.master.subscribeToChanges(
+                self.changeAdded)
+
+        return service.MultiService.startService(self)
+
+    @defer.deferredGenerator
+    def reconfigService(self, new_config):
+        # remove the old listeners, then add the new
+        for sr in self:
+            wfd = defer.waitForDeferred(
+                defer.maybeDeferred(lambda :
+                    sr.disownServiceParent()))
+            yield wfd
+            wfd.getResult()
+            sr.master = None
+
+        for sr in new_config.status:
+            sr.master = self.master
+            sr.setServiceParent(self)
+
+        # reconfig any newly-added change sources, as well as existing
+        wfd = defer.waitForDeferred(
+            config.ReconfigurableServiceMixin.reconfigService(self,
+                                                        new_config))
+        yield wfd
+        wfd.getResult()
+
+    def stopService(self):
+        self._buildset_completion_sub.unsubscribe()
+        self._buildset_sub.unsubscribe()
+        self._build_request_sub.unsubscribe()
+        self._change_sub.unsubscribe()
+
+        return service.MultiService.stopService(self)
+
+    # clean shutdown
 
     @property
     def shuttingDown(self):
@@ -69,11 +107,11 @@ class Status:
     # methods called by our clients
 
     def getTitle(self):
-        return self.master.title
+        return self.master.config.title
     def getTitleURL(self):
-        return self.master.titleURL
+        return self.master.config.titleURL
     def getBuildbotURL(self):
-        return self.master.buildbotURL
+        return self.master.config.buildbotURL
 
     def getMetrics(self):
         return self.master.metrics
@@ -158,7 +196,7 @@ class Status:
         # respect addition order
         for name in self.botmaster.builderNames:
             bldr = self.botmaster.builders[name]
-            if bldr.builder_status.category in categories:
+            if bldr.config.category in categories:
                 l.append(name)
         return l
 
@@ -266,7 +304,8 @@ class Status:
         builder_status = None
         try:
             builder_status = load(open(filename, "rb"))
-            
+            builder_status.master = self.master
+
             # (bug #1068) if we need to upgrade, we probably need to rewrite
             # this pickle, too.  We determine this by looking at the list of
             # Versioned objects that have been unpickled, and (after doUpgrade)
@@ -285,12 +324,12 @@ class Status:
             log.msg("error follows:")
             log.err()
         if not builder_status:
-            builder_status = builder.BuilderStatus(name, category)
+            builder_status = builder.BuilderStatus(name, category, self.master)
             builder_status.addPointEvent(["builder", "created"])
         log.msg("added builder %s in category %s" % (name, category))
         # an unpickled object might not have category set from before,
         # so set it here to make sure
-        builder_status.category = category
+        builder_status.master = self.master
         builder_status.basedir = os.path.join(self.basedir, basedir)
         builder_status.name = name # it might have been updated
         builder_status.status = self
@@ -300,10 +339,6 @@ class Status:
         builder_status.determineNextBuildNumber()
 
         builder_status.setBigState("offline")
-        builder_status.setLogCompressionLimit(self.logCompressionLimit)
-        builder_status.setLogCompressionMethod(self.logCompressionMethod)
-        builder_status.setLogMaxSize(self.logMaxSize)
-        builder_status.setLogMaxTailSize(self.logMaxTailSize)
 
         for t in self.watchers:
             self.announceNewBuilder(t, name, builder_status)

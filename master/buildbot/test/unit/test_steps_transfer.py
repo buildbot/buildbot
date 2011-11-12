@@ -20,8 +20,9 @@ from mock import Mock
 
 from buildbot.process.properties import Properties
 from buildbot.util import json
-from buildbot.steps.transfer import StringDownload, JSONStringDownload, JSONPropertiesDownload, \
-    FileUpload
+from buildbot.steps.transfer import StringDownload, JSONStringDownload
+from buildbot.steps.transfer import JSONPropertiesDownload, FileUpload
+from buildbot import config
 
 class TestFileUpload(unittest.TestCase):
     def setUp(self):
@@ -30,7 +31,12 @@ class TestFileUpload(unittest.TestCase):
         os.unlink(self.destfile)
 
     def tearDown(self):
-        os.unlink(self.destfile)
+        if os.path.exists(self.destfile):
+            os.unlink(self.destfile)
+
+    def test_constructor_mode_type(self):
+        self.assertRaises(config.ConfigErrors, lambda :
+                FileUpload(slavesrc=__file__, masterdest='xyz', mode='g+rwx'))
 
     def testBasic(self):
         s = FileUpload(slavesrc=__file__, masterdest=self.destfile)
