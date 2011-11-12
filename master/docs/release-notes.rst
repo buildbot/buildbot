@@ -18,13 +18,13 @@ Deprecations, Removals, and Non-Compatible Changes
   If you are using this functionality, consider invoking make directly.
 
 * The ``buildbot sendchange`` option ``--username`` has been removed as
-  promised in bug #1711.
+  promised in :bb:bug:`1711`.
 
 Features
 ~~~~~~~~
 
 * Buildbot can now take advantage of authentication done by a front-end web
-  server: https://github.com/buildbot/buildbot/pull/266
+  server - see :bb:pull:`266`.
 
 Slave
 -----
@@ -47,5 +47,5 @@ Older Versions
 --------------
 
 Release notes for older versions of Buildbot are available in the
-``master/docs/release-notes/`` directory of the source tree, or in the archived
+:bb:src:`master/docs/release-notes/` directory of the source tree, or in the archived
 documentation for those versions at http://buildbot.net/buildbot/docs.
