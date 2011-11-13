@@ -691,8 +691,6 @@ class ReconfigurableServiceMixin:
 
         for svc in reconfigurable_services:
             d = svc.reconfigService(new_config)
-            if not isinstance(d, defer.Deferred):
-                log.msg("%r did not return a Deferred" % (svc.reconfigService))
             wfd = defer.waitForDeferred(d)
             yield wfd
             wfd.getResult()
