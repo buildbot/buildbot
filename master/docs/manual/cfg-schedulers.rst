@@ -349,11 +349,12 @@ The keyword arguments to this scheduler are:
 Example::
 
     from buildbot.schedulers import basic
-    tests = basic.SingleBranchScheduler("just-tests", None, 5*60,
-                                        ["full-linux", "full-netbsd", "full-OSX"])
+    tests = basic.SingleBranchScheduler(name="just-tests",
+                            treeStableTimer=5*60,
+                            builderNames=["full-linux", "full-netbsd", "full-OSX"])
     package = basic.Dependent(name="build-package",
-                              upstream=tests, # <- no quotes!
-                              builderNames=["make-tarball", "make-deb", "make-rpm"])
+                            upstream=tests, # <- no quotes!
+                            builderNames=["make-tarball", "make-deb", "make-rpm"])
     c['schedulers'] = [tests, package]
 
 .. bb:sched:: Periodic
