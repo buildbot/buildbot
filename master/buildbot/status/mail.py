@@ -26,8 +26,13 @@ import urllib
 
 from zope.interface import implements
 from twisted.internet import defer, reactor
-from twisted.mail.smtp import ESMTPSenderFactory
 from twisted.python import log as twlog
+
+try:
+    from twisted.mail.smtp import ESMTPSenderFactory
+    ESMTPSenderFactory = ESMTPSenderFactory # for pyflakes
+except ImportError:
+    ESMTPSenderFactory = None
 
 have_ssl = True
 try:
@@ -741,6 +746,9 @@ class MailNotifier(base.StatusReceiverMultiService):
         else:
             useAuth = False
         
+        if not ESMTPSenderFactory:
+            raise RuntimeError("twisted-mail is not installed - cannot "
+                               "send mail")
         sender_factory = ESMTPSenderFactory(
             self.smtpUser, self.smtpPassword,
             self.fromaddr, recipients, StringIO(s),
