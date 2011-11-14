@@ -13,33 +13,32 @@
 #
 # Copyright Buildbot Team Members
 
-import os
 import traceback
-
+import re
 from twisted.internet import defer
-from twisted.python import log
-from twisted.protocols import basic
-
 from zope.interface import Interface, Attribute, implements
 import email.utils
 
-from buildbot import pbutil
-from buildbot.util.maildir import MaildirService
-from buildbot.util import netstrings
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
-from buildbot.status.buildset import BuildSetStatus
-import re
 
 class IParameter(Interface):
     """Represent a forced build parameter"""
-    name = Attribute("name","name of the underlying property, and form field")
-    label = Attribute("label","label displayed in form. default will be name")
-    type = Attribute("type", "type of widget in form")
-    default = Attribute("default", "default string value, if nothing is provided in form will still fo through validation")
-    required = Attribute("required", "if True, buildbot will ensure a valid value in this field")
-    multiple = Attribute("multiple", "if True, this field is a list of value")
-    regex = Attribute("regex", "optional regular expression for validation")
+    name = Attribute("name",
+            "name of the underlying property, and form field")
+    label = Attribute("label",
+            "label displayed in the form; default will be name")
+    type = Attribute("type",
+            "type of widget in form")
+    default = Attribute("default",
+            """default string value; if nothing is provided in the form,
+            will still be checked through validation""")
+    required = Attribute("required",
+            "if True, buildbot will ensure a valid value is set in this field")
+    multiple = Attribute("multiple", 
+            """if True, this field is a list of value""")
+    regex = Attribute("regex", 
+                      """optional regular expression for validation""")
     def update_from_post(self, master, properties, changes, req):
         """update the properties dict and changeid set
         raise ValueError if passed arguments are no valid
@@ -95,6 +94,7 @@ class BaseParameter(object):
     def parse_from_first_arg(self, s):
         return s
 
+
 class FixedParameter(BaseParameter):
     """A forced build parameter, that always has a fixed value
        and does not show up in the web form, or is just shown as readonly
@@ -104,6 +104,7 @@ class FixedParameter(BaseParameter):
     default = ""
     def parse_from_args(self, l):
         return self.default
+
 class StringParameter(BaseParameter):
     """Represent a string forced build parameter
        regular expression validation is optionally done
@@ -113,6 +114,7 @@ class StringParameter(BaseParameter):
     def parse_from_first_arg(self, s):
         return s
 
+
 class TextParameter(StringParameter):
     """Represent a string forced build parameter
        regular expression validation is optionally done
@@ -121,7 +123,7 @@ class TextParameter(StringParameter):
 
        this can be subclassed in order to have more customization
        e.g. developer could send a list of git branch to pull from
-       	    developer could send a list of gerrit changes to cherry-pick, etc
+            developer could send a list of gerrit changes to cherry-pick, etc
             developer could send a shell script to amend the build.
        beware of security issues anyway.
     """
@@ -130,14 +132,16 @@ class TextParameter(StringParameter):
     """the number of columns textarea will have"""
     rows = 20
     """the number of rows textarea will have"""
+
     def value_to_text(self, value):
         """format value up to original text"""
         return str(value)
 
+
 class IntParameter(StringParameter):
     """Represent an integer forced build parameter"""
     type = "int"
-    parse_from_first_arg = int # will thrown exception if parse fail
+    parse_from_first_arg = int # will throw an exception if parse fail
 
 class BooleanParameter(BaseParameter):
     """Represent a boolean forced build parameter
@@ -148,21 +152,24 @@ class BooleanParameter(BaseParameter):
         # damn html's ungeneric checkbox implementation...
         checkbox = req.args.get("checkbox", [""])
         properties[self.name] = self.name in checkbox
-        
+
 class UserNameParameter(StringParameter):
     """Represent a username in the form "User <email@email.com>" """
     type = "text"
     default = ""
     size = 30
     need_email = True
+
     def __init__(self, name="username", label="Your name:", **kw):
         BaseParameter.__init__(self, name, label, **kw)
+
     def parse_from_first_arg(self, s):
         if self.need_email:
             e = email.utils.parseaddr(s)
             if e[0]=='' or e[1] == '':
                 raise ValueError("%s: please fill in email address in the form:User <email@email.com>"%(self.label))
         return s
+
 
 class ChoiceStringParameter(BaseParameter):
     """Represent build parameter with a list of choices"""
@@ -171,10 +178,12 @@ class ChoiceStringParameter(BaseParameter):
     """ the list of choices """
     strict = True
     """ the parameter is enforcing only values in choices list is passed"""
+
     def parse_from_first_arg(self, s):
         if self.strict and not s in self.choices:
             raise ValueError("'%s' does not belongs to list of available choices '%s'"%(s, self.choices))
         return s
+
 class InheritBuildParameter(ChoiceStringParameter):
     """a special parameter for inheriting force builds parameters from another build.
     """
@@ -183,6 +192,7 @@ class InheritBuildParameter(ChoiceStringParameter):
     """ a function provided by config that will find compatible build in the build history
     see documentation for example
     """
+
     def update_from_post(self, master, properties, changes, req):
         """get the inherited properties and change ids
         """
@@ -206,6 +216,7 @@ class InheritBuildParameter(ChoiceStringParameter):
         properties.update(props)
         changes.extend(b.changes)
 
+
 class AnyPropertyParameter(BaseParameter):
     """a property for setting arbitrary property in the build
     a bit atypical, as it will generate two fields in the html form
@@ -226,23 +237,30 @@ class AnyPropertyParameter(BaseParameter):
 
 class ForceScheduler(base.BaseScheduler):
     
-    compare_attrs = ( 'name', 'builderNames', 'branch', 'reason', 'revision','repository','project', 'properties' )
+    compare_attrs = ( 'name', 'builderNames', 'branch', 'reason',
+            'revision','repository','project', 'properties' )
 
-    def __init__(self, name, builderNames, branch=StringParameter(name="branch",default=""), 
-                       	     		   reason=StringParameter(name="reason", default="force build"),
-                 			   revision=StringParameter(name="revision",default=""),
-                 			   repository=StringParameter(name="repository",default=""),
-                 			   project=StringParameter(name="project",default=""),
-                 			   username=UserNameParameter(),
-                 			   properties=[AnyPropertyParameter("property1"),
-                                                       AnyPropertyParameter("property2"),
-                                                       AnyPropertyParameter("property3"),
-                                                       AnyPropertyParameter("property4")
-                                                       ]):
-        """This scheduler is a bit similar to the TrySched, for access via web interface
-           having a very clean and elegant interface make it difficult keep backward config compatibility, so we do a new Sched type.
-           """
-        base.BaseScheduler.__init__(self, name=name, builderNames=builderNames,properties={})
+    def __init__(self, name, builderNames,
+            branch=StringParameter(name="branch",default=""), 
+            reason=StringParameter(name="reason", default="force build"),
+            revision=StringParameter(name="revision",default=""),
+            repository=StringParameter(name="repository",default=""),
+            project=StringParameter(name="project",default=""),
+            username=UserNameParameter(),
+            properties=[
+                AnyPropertyParameter("property1"),
+                AnyPropertyParameter("property2"),
+                AnyPropertyParameter("property3"),
+                AnyPropertyParameter("property4"),
+            ]):
+
+        """This scheduler is a bit similar to the TrySched, for access via web
+        interface, and json interface (@todo) having a very clean and elegant
+        interface make it difficult keep backward config compatibility, so we
+        do a new Sched type.  """
+
+        base.BaseScheduler.__init__(self, name=name,
+                builderNames=builderNames,properties={})
         self.branch = branch
         self.reason = reason
         self.repository = repository
@@ -251,7 +269,8 @@ class ForceScheduler(base.BaseScheduler):
         self.username = username
         self.forcedProperties = properties
         # this is used to simplify the template
-        self.all_fields = [ branch, username, reason, repository,revision, project ]
+        self.all_fields = [ branch, username, reason, repository,
+                            revision, project ]
         self.all_fields.extend(properties)
 
     def startService(self):
@@ -273,8 +292,9 @@ class ForceScheduler(base.BaseScheduler):
         master = self.master
         properties = {}
         changeids = []
-        # probably need to clean that out later as the IProperty is already a validation
-        # mechanism
+        # probably need to clean that out later as the IProperty is already a
+        # validation mechanism
+
         validation = master.config.validation
         if self.branch.regex == None:
             self.branch.regex = validation['branch']

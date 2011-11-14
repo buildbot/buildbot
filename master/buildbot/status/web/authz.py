@@ -150,11 +150,12 @@ class Authz(object):
                 else:
                     return defer.succeed(False)
         return defer.succeed(cfg)
+
     def login(self, request):
         """Login one user, and return session cookie"""
         if self.authenticated(request):
             return defer.succeed(False)
-            
+
         user = request.args.get("username", ["<unknown>"])[0]
         passwd = request.args.get("passwd", ["<no-password>"])[0]
         if user == "<unknown>" or passwd == "<no-password>":
@@ -172,6 +173,7 @@ class Authz(object):
                 return False
         d.addBoth(check_authenticate)
         return d
+
     def logout(self, request):
         if COOKIE_KEY in request.received_cookies:
             cookie = request.received_cookies[COOKIE_KEY]

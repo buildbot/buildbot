@@ -13,18 +13,19 @@
 #
 # Copyright Buildbot Team Members
 #
-# inspirated, and some code from:
-#    :copyright: (c) 2011 by the Werkzeug Team, see Werkzeug's AUTHORS for more details.
+# Insipration, and some code, from:
+#    :copyright: (c) 2011 by the Werkzeug Team, see Werkzeug's AUTHORS for more
+#    details.
 
 try:
     from hashlib import sha1
+    sha1 = sha1 # make pyflakes happy
 except ImportError:
     from sha import new as sha1
 from time import time
-from datetime import *
 from random import random
+from datetime import datetime, timedelta
 import os
-from twisted.internet import defer
 def _urandom():
     if hasattr(os, 'urandom'):
         return os.urandom(30)
@@ -55,7 +56,8 @@ class Session():
         return datetime.now() > self.expiration
 
     def userInfosHTML(self):
-        return '%(fullName)s[<a href="mailto:%(email)s">%(email)s</a>]'%(self.infos)
+        return ('%(fullName)s [<a href="mailto:%(email)s">%(email)s</a>]' %
+                (self.infos))
 
     def getExpiration(self):
         delim = '-'
@@ -72,9 +74,14 @@ class SessionManager():
     """I'm the session manager. Holding the current sessions
     managing cookies, and their expiration
 
-    KISS version for the moment
-    The sessions are stored in RAM so that you have to relogin after buildbot reboot
-    old sessions are searched at every connection, which is not very good for scaling
+    KISS version for the moment:
+
+    The sessions are stored in RAM so that you have to relogin after buildbot
+    reboot
+
+    Old sessions are searched at every connection, which is not very good for
+    scaling
+
     """
 
     # borg pattern (similar to singleton) not too loose sessions with reconfig

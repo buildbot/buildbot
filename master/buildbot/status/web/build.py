@@ -54,7 +54,7 @@ class ForceBuildActionResource(ActionResource):
             b = self.build_status
             builder_name = self.builder.getName()
             log.msg("web rebuild of build %s:%s" % (builder_name, b.getNumber()))
-	    name =authz.getUsernameFull(req)
+            name =authz.getUsernameFull(req)
             comments = req.args.get("comments", ["<no reason specified>"])[0]
             reason = ("The web-page 'rebuild' button was pressed by "
                       "'%s': %s\n" % (name, comments))

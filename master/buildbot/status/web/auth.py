@@ -16,7 +16,8 @@
 
 import os
 from zope.interface import Interface, Attribute, implements
-from buildbot.status.web.base import HtmlResource, ActionResource, path_to_authfail
+from buildbot.status.web.base import HtmlResource, ActionResource
+from buildbot.status.web.base import path_to_authfail
 
 from buildbot.process.users import users
 
@@ -50,7 +51,7 @@ class AuthBase:
 
     def getUserInfo(self, user):
         """default dummy impl"""
-        return dict(userName=user, fullName=user, email=user+"@buildbot.net", groups=[ user ])
+        return dict(userName=user, fullName=user, email=user+"@localhost", groups=[ user ])
 
 class BasicAuth(AuthBase):
     implements(IAuth)
@@ -148,29 +149,39 @@ class AuthFailResource(HtmlResource):
     pageTitle = "Authentication Failed"
 
     def content(self, request, cxt):
-        template = request.site.buildbot_service.templates.get_template("authfail.html")
+        templates =request.site.buildbot_service.templates
+        template = templates.get_template("authfail.html") 
         return template.render(**cxt)
+
 class AuthzFailResource(HtmlResource):
     pageTitle = "Authorization Failed"
+
     def content(self, request, cxt):
-        template = request.site.buildbot_service.templates.get_template("authzfail.html")
+        templates =request.site.buildbot_service.templates
+        template = templates.get_template("authzfail.html") 
         return template.render(**cxt)
-    
+
 class LoginResource(ActionResource):
+
     def performAction(self, request):
         authz = self.getAuthz(request)
         d = authz.login(request)
         def on_login(res):
             if res:
-                root = request.site.buildbot_service.master.status.getBuildbotURL()
-                return request.requestHeaders.getRawHeaders('referer',[root])[0]
+                status = request.site.buildbot_service.master.status
+                root = status.getBuildbotURL()
+                return request.requestHeaders.getRawHeaders('referer',
+                                                            [root])[0]
             else:
                 return path_to_authfail(request)
         d.addBoth(on_login)
         return d
+
 class LogoutResource(ActionResource):
+
     def performAction(self, request):
         authz = self.getAuthz(request)
         authz.logout(request)
-        root = request.site.buildbot_service.master.status.getBuildbotURL()
+        status = request.site.buildbot_service.master.status
+        root = status.getBuildbotURL()
         return request.requestHeaders.getRawHeaders('referer',[root])[0]
