@@ -49,6 +49,7 @@ from buildbot.status.results import FAILURE, SUCCESS, Results
 VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
 
 ENCODING = 'utf8'
+LOG_ENCODING = 'utf-8'
 
 class Domain(util.ComparableMixin):
     implements(interfaces.IEmailLookup)
@@ -579,7 +580,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                      self._shouldAttachLog(name) ):
                     text = log.getText()
                     if not isinstance(text, unicode):
-                        text = text.decode('utf-8')
+                        text = text.decode(LOG_ENCODING)
                     a = MIMEText(text.encode(ENCODING),
                                  _charset=ENCODING)
                     a.add_header('Content-Disposition', "attachment",
