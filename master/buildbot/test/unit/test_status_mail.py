@@ -15,7 +15,8 @@
 
 from mock import Mock
 from twisted.python import components
-from buildbot.interfaces import ParameterError, IProperties
+from buildbot import config
+from buildbot.interfaces import IProperties
 from twisted.trial import unittest
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.status.mail import MailNotifier
@@ -121,7 +122,7 @@ class TestMailNotifier(unittest.TestCase):
         self.assertIn('application/octet-stream', txt)
 
     def test_init_enforces_categories_and_builders_are_mutually_exclusive(self):
-        self.assertRaises(ParameterError,
+        self.assertRaises(config.ConfigErrors,
                           MailNotifier, 'from@example.org',
                           categories=['fast','slow'], builders=['a','b'])
 

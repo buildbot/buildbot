@@ -27,7 +27,7 @@ from buildslave.test.util.misc import nl, BasedirMixin
 from buildslave.test.util import compat
 from buildslave.test.fake.slavebuilder import FakeSlaveBuilder
 from buildslave.exceptions import AbandonChain
-from buildslave import runprocess
+from buildslave import runprocess, util as bsutil
 
 def stdoutCommand(output):
     return [sys.executable, '-c', 'import sys; sys.stdout.write("%s\\n")' % output]
@@ -57,6 +57,26 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     def tearDown(self):
         self.tearDownBasedir()
+
+    def testCommandEncoding(self):
+        b = FakeSlaveBuilder(False, self.basedir)
+        s = runprocess.RunProcess(b, u'abcd', self.basedir)
+        self.assertIsInstance(s.command, str)
+        self.assertIsInstance(s.fake_command, str)
+
+    def testCommandEncodingList(self):
+        b = FakeSlaveBuilder(False, self.basedir)
+        s = runprocess.RunProcess(b, [ u'abcd', 'efg' ], self.basedir)
+        self.assertIsInstance(s.command[0], str)
+        self.assertIsInstance(s.fake_command[0], str)
+
+    def testCommandEncodingObfuscated(self):
+        b = FakeSlaveBuilder(False, self.basedir)
+        s = runprocess.RunProcess(b,
+                        [ bsutil.Obfuscated(u'abcd', u'ABCD') ],
+                        self.basedir)
+        self.assertIsInstance(s.command[0], str)
+        self.assertIsInstance(s.fake_command[0], str)
 
     def testStart(self):
         b = FakeSlaveBuilder(False, self.basedir)

@@ -31,6 +31,7 @@ class PBManager(service.MultiService):
     """
     def __init__(self):
         service.MultiService.__init__(self)
+        self.setName('pbmanager')
         self.dispatchers = {}
 
     def register(self, portstr, username, password, pfactory):

@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.trial import unittest
+from buildbot import config
 from buildbot.schedulers import dependent, base
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot.test.util import scheduler
@@ -30,12 +31,13 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownScheduler()
 
-    def makeScheduler(self, **kwargs):
+    def makeScheduler(self, upstream=None):
         # build a fake upstream scheduler
         class Upstream(base.BaseScheduler):
             def __init__(self, name):
                 self.name = name
-        upstream = Upstream(self.UPSTREAM_NAME)
+        if not upstream:
+            upstream = Upstream(self.UPSTREAM_NAME)
 
         sched = dependent.Dependent(name='n', builderNames=['b'],
                                     upstream=upstream)
@@ -48,6 +50,10 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
     # scheduler operations are synchronous, and thus do not return a Deferred.
     # The Deferred from trigger() is completely processed before this test
     # method returns.
+
+    def test_constructor_string_arg(self):
+        self.assertRaises(config.ConfigErrors,
+                lambda : self.makeScheduler(upstream='foo'))
 
     def test_startService(self):
         sched = self.makeScheduler()

@@ -1,0 +1,106 @@
+Buildbot 0.7.0 was released 24 Oct 2005
+
+** new features
+
+*** new c['schedulers'] config-file element (REQUIRED)
+
+The code which decides exactly *when* a build is performed has been massively
+refactored, enabling much more flexible build scheduling. YOU MUST UPDATE
+your master.cfg files to match: in general this will merely require you to
+add an appropriate c['schedulers'] entry. Any old ".treeStableTime" settings
+on the BuildFactory instances will now be ignored. The user's manual has
+complete details with examples of how the new Scheduler classes work.
+
+*** c['interlocks'] removed, Locks and Dependencies now separate items
+
+The c['interlocks'] config element has been removed, and its functionality
+replaced with two separate objects. Locks are used to tell the buildmaster
+that certain Steps or Builds should not run at the same time as other Steps
+or Builds (useful for test suites that require exclusive access to some
+external resource: of course the real fix is to fix the tests, because
+otherwise your developers will be suffering from the same limitations). The
+Lock object is created in the config file and then referenced by a Step
+specification tuple or by the 'locks' key of the Builder specification
+dictionary. Locks come in two flavors: MasterLocks are buildmaster-wide,
+while SlaveLocks are specific to a single buildslave.
+
+When you want to have one Build run or not run depending upon whether some
+other set of Builds have passed or failed, you use a special kind of
+Scheduler defined in the scheduler.Dependent class. This scheduler watches an
+upstream Scheduler for builds of a given source version to complete, and only
+fires off its own Builders when all of the upstream's Builders have built
+that version successfully.
+
+Both features are fully documented in the user's manual.
+
+*** 'buildbot try'
+
+The 'try' feature has finally been added. There is some configuration
+involved, both in the buildmaster config and on the developer's side, but
+once in place this allows the developer to type 'buildbot try' in their
+locally-modified tree and to be given a report of what would happen if their
+changes were to be committed. This works by computing a (base revision,
+patch) tuple that describes the developer's tree, sending that to the
+buildmaster, then running a build with that source on a given set of
+Builders. The 'buildbot try' tool then emits status messages until the builds
+have finished.
+
+'try' exists to allow developers to run cross-platform tests on their code
+before committing it, reducing the chances they will inconvenience other
+developers by breaking the build. The UI is still clunky, but expect it to
+change and improve over the next few releases.
+
+Instructions for developers who want to use 'try' (and the configuration
+changes necessary to enable its use) are in the user's manual.
+
+*** Build-On-Branch
+
+When suitably configured, the buildbot can be used to build trees from a
+variety of related branches. You can set up Schedulers to build a tree using
+whichever branch was last changed, or users can request builds of specific
+branches through IRC, the web page, or (eventually) the CLI 'buildbot force'
+subcommand.
+
+The IRC 'force' command now takes --branch and --revision arguments (not that
+they always make sense). Likewise the HTML 'force build' button now has an
+input field for branch and revision. Your build's source-checkout step must
+be suitably configured to support this: for SVN it involves giving both a
+base URL and a default branch. Other VC systems are configured differently.
+The ChangeSource must also provide branch information: the 'buildbot
+sendchange' command now takes a --branch argument to help hook script writers
+accomplish this.
+
+*** Multiple slaves per Builder
+
+You can now attach multiple buildslaves to each Builder. This can provide
+redundancy or primitive load-balancing among many machines equally capable of
+running the build. To use this, define a key in the Builder specification
+dictionary named 'slavenames' with a list of buildslave names (instead of the
+usual 'slavename' that contains just a single slavename).
+
+*** minor new features
+
+The IRC and email status-reporting facilities now provide more specific URLs
+for particular builds, in addition to the generic buildmaster home page. The
+HTML per-build page now has more information.
+
+The Twisted-specific test classes have been modified to match the argument
+syntax preferred by Trial as of Twisted-2.1.0 and newer. The generic trial
+steps are still suitable for the Trial that comes with older versions of
+Twisted, but may produce deprecation warnings or errors when used with the
+latest Trial.
+
+** bugs fixed
+
+DNotify, used by the maildir-watching ChangeSources, had problems on some
+64-bit systems relating to signed-vs-unsigned constants and the DN_MULTISHOT
+flag. A workaround was provided by Brad Hards.
+
+The web status page should now be valid XHTML, thanks to a patch by Brad
+Hards. The charset parameter is specified to be UTF-8, so VC comments,
+builder names, etc, should probably all be in UTF-8 to be displayed properly.
+
+** creeping version dependencies
+
+The IRC 'force build' command now requires python2.3 (for the shlex.split
+function).

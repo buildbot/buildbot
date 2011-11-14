@@ -17,6 +17,7 @@ from twisted.trial import unittest
 
 from buildbot.status import builder
 from buildbot.steps import blocker
+from buildbot import config
 
 class TestBlockerTrivial(unittest.TestCase):
     """
@@ -51,17 +52,18 @@ class TestBlockerTrivial(unittest.TestCase):
 
     def testConstructor(self):
         # upstreamSteps must be supplied...
-        self.assertRaises(ValueError("you must supply upstreamSteps"),
-                          blocker.Blocker)
+        self.assertRaises(config.ConfigErrors, lambda :
+                          blocker.Blocker())
         # ...and must be a non-empty list
-        self.assertRaises(ValueError("upstreamSteps must be a non-empty list"),
-                          blocker.Blocker, upstreamSteps=[])
+        self.assertRaises(config.ConfigErrors, lambda :
+                          blocker.Blocker(upstreamSteps=[]))
 
         # builder name and step name do not matter to constructor
         blocker.Blocker(upstreamSteps=[("b1", "s1"), ("b1", "s3")])
 
         # test validation of idlePolicy arg
-        self.assertRaises(ValueError, blocker.Blocker, idlePolicy="foo")
+        self.assertRaises(config.ConfigErrors, lambda :
+                blocker.Blocker(upstreamSteps=[('b', 's')], idlePolicy="foo"))
 
     def testFullnames(self):
         bstep = blocker.Blocker(upstreamSteps=[("b1", "s1")])
@@ -70,8 +72,8 @@ class TestBlockerTrivial(unittest.TestCase):
         bstep = blocker.Blocker(upstreamSteps=[("b1", "s1"), ("b1", "s3")])
         self.assertEqual(["(b1:s1,", "b1:s3)"], bstep._getFullnames())
 
-        bstep = blocker.Blocker(upstreamSteps=[("b1", "s1"), 
-                                               ("b1", "s3"), 
+        bstep = blocker.Blocker(upstreamSteps=[("b1", "s1"),
+                                               ("b1", "s3"),
                                                ("b2", "s1")])
         self.assertEqual(["(b1:s1,", "b1:s3,", "b2:s1)"], bstep._getFullnames())
 
@@ -109,4 +111,3 @@ class TestBlockerTrivial(unittest.TestCase):
                           "timed out",
                           "(1.5 sec)"],
                          bstep._getTimeoutStatusText())
-

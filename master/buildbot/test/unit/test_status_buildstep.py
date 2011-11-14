@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 
 import os
-from mock import Mock
 from twisted.trial import unittest
 from buildbot.status import builder, master
+from buildbot.test.fake import fakemaster
 
 class TestBuildStepStatus(unittest.TestCase):
 
@@ -24,7 +24,11 @@ class TestBuildStepStatus(unittest.TestCase):
     # that these classes are not well isolated!
 
     def setupBuilder(self, buildername, category=None):
-        b = builder.BuilderStatus(buildername=buildername, category=category)
+        self.master = fakemaster.make_master()
+        self.master.basedir = '/basedir'
+
+        b = builder.BuilderStatus(buildername, self.master, category)
+        b.master = self.master
         # Ackwardly, Status sets this member variable.
         b.basedir = os.path.abspath(self.mktemp())
         os.mkdir(b.basedir)
@@ -33,10 +37,7 @@ class TestBuildStepStatus(unittest.TestCase):
         return b
 
     def setupStatus(self, b):
-        m = Mock()
-        m.buildbotURL = 'http://buildbot:8010/'
-        m.basedir = '/basedir'
-        s = master.Status(m)
+        s = master.Status(self.master)
         b.status = s
         return s
 
@@ -59,5 +60,8 @@ class TestBuildStepStatus(unittest.TestCase):
         bss1 = bs.addStepWithName('step_1')
         bss1.stepStarted()
         bss1.addLog('log_1')
-        self.assertEquals([['log_1', ('http://buildbot:8010/builders/builder_1/'
-            'builds/0/steps/step_1/logs/log_1')]], bss1.asDict()['logs'])
+        self.assertEquals(
+            bss1.asDict()['logs'],
+            [['log_1', ('http://localhost:8080/builders/builder_1/'
+                        'builds/0/steps/step_1/logs/log_1')]]
+            )

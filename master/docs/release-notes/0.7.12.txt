@@ -1,0 +1,74 @@
+Buildbot 0.7.12 was released 21 Jan 2010
+
+** New 'console' display
+
+This is a new web status view combining the best of the (t)grid and waterfall
+views.
+
+** New 'extended' stylesheet
+
+Buildbot has a new, much nicer stylesheet available.  Copy the file
+buildbot/status/web/extended.css over your existing public_html/buildbot.css to
+se it.
+
+** Builders can be configured with an object
+
+Instead of a list of dictionaries, builders can now specified using a
+BuilderConfig object in the configuration file.  This will allow for better
+argument checking and default values, and also makes it easier for users to
+create subclasses to handle site-specific builder details.  The old,
+dictionary-based method of configuration is still supported.
+
+** Check for common mis-configuration in addStep
+
+When adding a new step to a factory, either of these are acceptable:
+
+  f.addStep(ShellCommand(command="echo hello, world", description="say hi"))
+  f.addStep(ShellCommand, command="echo hello, world", description="say hi")
+
+but trying to mix these syntaxes is a common misconfiguration:
+
+  f.addStep(ShellCommand(command="echo hello, world"), description="say hi")
+
+in which case the description argument was silently ignored.  This is now an
+error.
+
+** Support for log compression
+
+Log files can be compressed on the master side using either gzip or bzip2.
+
+** Builder.ping no longer accepts timeout argument (bug #664).
+
+The implementation was not robust enough and could cause the master to
+unexpectedly disconnect the slave.
+
+** MailNotifier's customMesg replaced by messageFormatter
+
+The customMesg mechanism had the unfortunate side effect of loading all data
+for a build into memory simultaneously, which for some builds could cause
+memory exhaustion.
+
+** Suppression of selected compiler warnings
+
+The WarningCountingShellCommand class has been extended with the ability to
+upload from the slave a file contain warnings to be ignored. See the
+documentation of the suppressionFile argument to the Compile build step.
+
+** New buildstep `MTR'
+
+A new class buildbot.process.mtrlogobserver.MTR was added. This buildstep is
+used to run test suites using mysql-test-run. It parses the stdio output for
+test failures and summarises them on the waterfall page. It also makes server
+error logs available for debugging failures, and optionally inserts
+information about test runs and test failures into an external database.
+
+** Python API Docs
+
+The docstrings for buildbot are now available in a web-friendly format:
+  http://buildbot.net/buildbot/docs/latest/reference
+
+** Many, many bugfixes
+
+
+
+

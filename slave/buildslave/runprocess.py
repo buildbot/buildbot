@@ -252,7 +252,6 @@ class RunProcess:
         """
 
         self.builder = builder
-        self.command = util.Obfuscated.get_real(command)
 
         # We need to take unicode commands and arguments and encode them using
         # the appropriate encoding for the slave.  This is mostly platform
@@ -264,14 +263,18 @@ class RunProcess:
         # spawnProcess which checks that arguments are regular strings or
         # unicode strings that can be encoded as ascii (which generates a
         # warning).
-        if isinstance(self.command, (tuple, list)):
-            for i, a in enumerate(self.command):
-                if isinstance(a, unicode):
-                    self.command[i] = a.encode(self.builder.unicode_encoding)
-        elif isinstance(self.command, unicode):
-            self.command = self.command.encode(self.builder.unicode_encoding)
+        def to_str(cmd):
+            if isinstance(cmd, (tuple, list)):
+                for i, a in enumerate(cmd):
+                    if isinstance(a, unicode):
+                        cmd[i] = a.encode(self.builder.unicode_encoding)
+            elif isinstance(cmd, unicode):
+                cmd = cmd.encode(self.builder.unicode_encoding)
+            return cmd
 
-        self.fake_command = util.Obfuscated.get_fake(command)
+        self.command = to_str(util.Obfuscated.get_real(command))
+        self.fake_command = to_str(util.Obfuscated.get_fake(command))
+
         self.sendStdout = sendStdout
         self.sendStderr = sendStderr
         self.sendRC = sendRC

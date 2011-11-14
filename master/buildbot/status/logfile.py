@@ -195,7 +195,6 @@ class LogFile:
     chunkSize = 10*1000
     runLength = 0
     # No max size by default
-    logMaxSize = None
     # Don't keep a tail buffer by default
     logMaxTailSize = None
     maxLengthExceeded = False
@@ -204,7 +203,6 @@ class LogFile:
     BUFFERSIZE = 2048
     filename = None # relative to the Builder's basedir
     openfile = None
-    compressMethod = "bz2"
 
     def __init__(self, parent, name, logfilename):
         """
@@ -216,6 +214,7 @@ class LogFile:
         @param logfilename: the Builder-relative pathname for the saved entries
         """
         self.step = parent
+        self.master = parent.build.builder.master
         self.name = name
         self.filename = logfilename
         fn = self.getFilename()
@@ -471,29 +470,31 @@ class LogFile:
 
         if channel != HEADER:
             # Truncate the log if it's more than logMaxSize bytes
-            if self.logMaxSize:
+            logMaxSize = self.master.config.logMaxSize
+            logMaxTailSize = self.master.config.logMaxTailSize
+            if logMaxSize:
                 self.nonHeaderLength += len(text)
-                if self.nonHeaderLength > self.logMaxSize:
+                if self.nonHeaderLength > logMaxSize:
                     # Add a message about what's going on and truncate this
                     # chunk if necessary
                     if not self.maxLengthExceeded:
                         if self.runEntries and channel != self.runEntries[0][0]:
                             self._merge()
-                        i = -(self.nonHeaderLength - self.logMaxSize)
+                        i = -(self.nonHeaderLength - logMaxSize)
                         trunc, text = text[:i], text[i:]
                         self.runEntries.append((channel, trunc))
                         self._merge()
                         msg = ("\nOutput exceeded %i bytes, remaining output "
-                            "has been truncated\n" % self.logMaxSize)
+                            "has been truncated\n" % logMaxSize)
                         self.runEntries.append((HEADER, msg))
                         self.maxLengthExceeded = True
 
                     # and track the tail of the text
-                    if self.logMaxTailSize and text:
+                    if logMaxTailSize and text:
                         # Update the tail buffer
                         self.tailBuffer.append((channel, text))
                         self.tailLength += len(text)
-                        while self.tailLength > self.logMaxTailSize:
+                        while self.tailLength > logMaxTailSize:
                             # Drop some stuff off the beginning of the buffer
                             c,t = self.tailBuffer.pop(0)
                             n = len(t)
@@ -568,19 +569,20 @@ class LogFile:
 
 
     def compressLog(self):
+        logCompressionMethod = self.master.config.logCompressionMethod
         # bail out if there's no compression support
-        if self.compressMethod == "bz2":
+        if logCompressionMethod == "bz2":
             compressed = self.getFilename() + ".bz2.tmp"
-        elif self.compressMethod == "gz":
+        elif logCompressionMethod == "gz":
             compressed = self.getFilename() + ".gz.tmp"
         else:
             return defer.succeed(None)
 
         def _compressLog():
             infile = self.getFile()
-            if self.compressMethod == "bz2":
+            if logCompressionMethod == "bz2":
                 cf = BZ2File(compressed, 'w')
-            elif self.compressMethod == "gz":
+            elif logCompressionMethod == "gz":
                 cf = GzipFile(compressed, 'w')
             bufsize = 1024*1024
             while True:
@@ -592,7 +594,7 @@ class LogFile:
         d = threads.deferToThread(_compressLog)
 
         def _renameCompressedLog(rv):
-            if self.compressMethod == "bz2":
+            if logCompressionMethod == "bz2":
                 filename = self.getFilename() + '.bz2'
             else:
                 filename = self.getFilename() + '.gz'
@@ -622,6 +624,7 @@ class LogFile:
         del d['step'] # filled in upon unpickling
         del d['watchers']
         del d['finishedWatchers']
+        del d['master']
         d['entries'] = [] # let 0.6.4 tolerate the saved log. TODO: really?
         if d.has_key('finished'):
             del d['finished']

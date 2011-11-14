@@ -16,6 +16,7 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer, task
+from buildbot import config
 from buildbot.test.fake import fakedb
 from buildbot.schedulers import basic
 from buildbot.test.util import scheduler
@@ -83,7 +84,7 @@ class BaseBasicScheduler(CommonStuffMixin,
     # tests
 
     def test_constructor_positional_exception(self):
-        self.assertRaises(AssertionError,
+        self.assertRaises(config.ConfigErrors,
                 lambda : self.Subclass("tsched", "master", 60))
 
     def test_startService_no_treeStableTimer(self):
@@ -262,7 +263,7 @@ class SingleBranchScheduler(CommonStuffMixin,
         self.tearDownScheduler()
 
     def test_constructor_branch_mandatory(self):
-        self.assertRaises(AssertionError,
+        self.assertRaises(config.ConfigErrors,
                 lambda : basic.SingleBranchScheduler(name="tsched", treeStableTimer=60))
 
     def test_constructor_no_branch_but_filter(self):
@@ -271,7 +272,7 @@ class SingleBranchScheduler(CommonStuffMixin,
                 builderNames=['a','b'], change_filter=mock.Mock())
 
     def test_constructor_branches_forbidden(self):
-        self.assertRaises(AssertionError,
+        self.assertRaises(config.ConfigErrors,
                 lambda : basic.SingleBranchScheduler(name="tsched", treeStableTimer=60, branches='x'))
 
     def test_gotChange_treeStableTimer_important(self):
@@ -303,7 +304,7 @@ class AnyBranchScheduler(CommonStuffMixin,
         self.tearDownScheduler()
 
     def test_constructor_branch_forbidden(self):
-        self.assertRaises(AssertionError,
+        self.assertRaises(config.ConfigErrors,
                 lambda : basic.SingleBranchScheduler(name="tsched", treeStableTimer=60, branch='x'))
 
     def test_gotChange_treeStableTimer_multiple_branches(self):

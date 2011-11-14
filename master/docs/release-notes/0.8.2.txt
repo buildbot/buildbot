@@ -1,0 +1,95 @@
+Buildbot 0.8.2 was released 29 Oct 2010
+
+** Upgrading
+
+Upgrading to from the previous version will require an 'upgrade-master' run.
+However, the schema changes are backward-compatible, so if a downgrade is
+required, it will not be difficult.
+
+** New Requirements
+
+The Buildmaster now requires Jinja-2.1 or higher.
+
+Both master and slave now require Twisted-8.0.0.  Although Twisted-2.5.0 may
+still work, it is not tested and not supported.
+
+** Command-line options changed
+
+To resolve conflicting command-line options (ticket #972) for sendchange
+command the following changes were done:
+
+ * `-m` option now means `--master`
+ * `-c` option now means `--comments`
+ * `-C` option now means `--category`
+
+Added new `-n|--no-logrotate` flag to create-master command which disables
+internal logging and log rotation mechanism in buildbot.tac (ticket #973)
+
+** MasterShellCommand semantics change
+
+The MasterShellCommand now provides the buildmaster's environment to the step
+by default; pass env={} to pass a clean environment, instead.
+
+** Log Rotation
+
+The default 'create-master' output now rotates ten twistd.log files, each of
+about 10MiB.  This is a change from older versions, which would rotate an
+unbounded number of 1MiB files.
+
+** New configuration key, 'changeCacheSize'
+
+This sets the number of changes that buildbot will keep in memory at once.
+Users of distributed version control systems should consider setting this to a
+high value (e.g. 10,000)
+
+** New libvirt-based Latent Buildslave Support
+
+This extends the support already included for EC2 buildslaves to include any
+virtualization platform supported by libvirt.
+
+** Canceling Pending Builds for a Change
+
+Change pages on the webstatus now have buttons to cancel any pending
+builds that include that change (across all builders). The corresponding
+authz privledge to control access to this feature is 'stopChange'.
+
+** New Change source
+
+*** CVSMaildirSource
+
+This parses mail sent by buildbot_cvs_mail.py in contrib directory.
+See docs for more info.
+
+** New Steps
+
+*** VC++ 9, VS2008, VCExpress9 - part of the vstudio suite of steps
+
+** Deprecations and Removals
+
+*** Removed sendchange's --revision_number argument (use --revision)
+
+*** Deprecating old CVS MairdirSources:
+    Please post to the list if you are using
+      FreshCVS   FCMaildirSource
+      Syncmail   SyncmailMaildirSource
+      Bonsai     BonsaiMaildirSource
+
+*** statusgui is deprecated in this version and will be removed in the next
+release.  Please file a bug at http://buildbot.net if you wish to reverse this
+decision.
+
+*** The Twisted-only steps BuildDebs and ProcessDocs have been removed.
+
+* Slave Changes
+
+** Log Rotation
+
+The default 'create-slave' output now rotates ten twistd.log files, each of
+about 10MiB.  This is a change from older versions, which would rotate an
+unbounded number of 1MiB files.
+
+** twistd.hostname
+
+On startup, the buildslave writes its hostname to twistd.hostname.  This is
+intended to contextualize twistd.pid, which does not specify the host on which
+the buildslave is running.

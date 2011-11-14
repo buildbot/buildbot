@@ -1,0 +1,82 @@
+Buildbot 0.7.3 was released 23 May 2006
+
+** compatibility
+
+This release is compatible with Twisted-1.3.0, but the next one will not be.
+Please upgrade to at least Twisted-2.0.x soon, as the next buildbot release
+will require it.
+
+** new features
+
+*** Mercurial support
+
+Support for Mercurial version control system (http://selenic.com/mercurial)
+has been added. This adds a buildbot.process.step.Mercurial BuildStep. A
+suitable hook script to deliver changes to the buildmaster is still missing.
+
+*** 'buildbot restart' command
+
+The 'buildbot restart BASEDIR' command will perform a 'buildbot stop' and
+'buildbot start', and will attempt to wait for the buildbot process to shut
+down in between. This is useful when you need to upgrade the code on your
+buildmaster or buildslave and want to take it down for a minimum amount of
+time.
+
+*** build properties
+
+Each build now has a set of named "Build Properties", which can be set by
+steps and interpolated into ShellCommands. The 'revision' and 'got_revision'
+properties are the most interesting ones available at this point, and can be
+used e.g. to get the VC revision number into the filename of a generated
+tarball. See the user's manual section entited "Build Properties" for more
+details.
+
+** minor features
+
+*** IRC now takes password= argument
+
+Useful for letting your bot claim a persistent identity.
+
+*** svn_buildbot.py is easier to modify to understand branches
+*** BuildFactory has a new .addStep method
+*** p4poller has new arguments
+*** new contrib scripts: viewcvspoll, svnpoller, svn_watcher
+
+These poll an external VC repository to watch for changes, as opposed to
+adding a hook script to the repository that pushes changes into the
+buildmaster. This means higher latency but may be easier to configure,
+especially if you do not have authority on the repository host.
+
+*** VC build property 'got_revision'
+
+The 'got_revision' property reports what revision a VC step actually
+acquired, which may be useful to know when building from HEAD.
+
+*** improved CSS in Waterfall
+
+The Waterfall display has a few new class= tags, which may make it easier to
+write custom CSS to make it look prettier.
+
+*** robots_txt= argument in Waterfall
+
+You can now pass a filename to the robots_txt= argument, which will be served
+as the "robots.txt" file. This can be used to discourage search engine
+spiders from crawling through the numerous build-status pages.
+
+** bugfixes
+
+*** tests more likely to pass on non-English systems
+
+The unit test suite now sets $LANG='C' to make subcommands emit error
+messages in english instead of whatever native language is in use on the
+host. This improves the chances that the unit tests will pass on such
+systems. This affects certain VC-related subcommands too.
+
+test_vc was assuming that the system time was expressed with a numeric
+timezone, which is not always the case, especially under windows. This
+probably works better now than it did before. This only affects the CVS
+tests.
+
+'buildbot try' (for CVS) now uses UTC instead of the local timezone. The
+'got_revision' property is also expressed in UTC. Both should help deal with
+buggy versions of CVS that don't parse numeric timezones properly.

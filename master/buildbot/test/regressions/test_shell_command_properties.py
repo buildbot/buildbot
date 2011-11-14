@@ -19,6 +19,7 @@ from buildbot.steps.shell import ShellCommand, SetProperty
 from buildbot.process.properties import WithProperties, Properties
 from buildbot.process.factory import BuildFactory
 from buildbot.sourcestamp import SourceStamp
+from buildbot import config
 
 class FakeSlaveBuilder:
     slave = None
@@ -107,7 +108,9 @@ class TestSetProperty(unittest.TestCase):
         b.setupBuild(None)
 
     def testErrorBothSet(self):
-        self.assertRaises(AssertionError, SetProperty, command=["echo", "value"], property="propname", extract_fn=lambda x:{"propname": "hello"})
+        self.assertRaises(config.ConfigErrors,
+                SetProperty, command=["echo", "value"], property="propname", extract_fn=lambda x:{"propname": "hello"})
 
     def testErrorNoneSet(self):
-        self.assertRaises(AssertionError, SetProperty, command=["echo", "value"])
+        self.assertRaises(config.ConfigErrors,
+                SetProperty, command=["echo", "value"])

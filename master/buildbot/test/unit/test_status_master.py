@@ -15,8 +15,12 @@
 
 import mock
 from twisted.trial import unittest
-from buildbot.status import master
+from twisted.internet import defer
+from buildbot.status import master, base
 from buildbot.test.fake import fakedb
+
+class FakeStatusReceiver(base.StatusReceiver):
+    pass
 
 class TestStatus(unittest.TestCase):
 
@@ -43,3 +47,32 @@ class TestStatus(unittest.TestCase):
             self.assertEqual([ bs.id for bs in bslist ], [ 91 ])
         d.addCallback(check)
         return d
+
+    @defer.deferredGenerator
+    def test_reconfigService(self):
+        m = mock.Mock(name='master')
+        status = master.Status(m)
+        status.startService()
+
+        config = mock.Mock()
+
+        # add a user manager
+        sr = FakeStatusReceiver()
+        config.status = [ sr ]
+
+        wfd = defer.waitForDeferred(
+                status.reconfigService(config))
+        yield wfd
+        wfd.getResult()
+
+        self.assertTrue(sr.running)
+        self.assertIdentical(sr.master, m)
+
+        # and back to nothing
+        config.status = [ ]
+        wfd = defer.waitForDeferred(
+                status.reconfigService(config))
+        yield wfd
+        wfd.getResult()
+
+        self.assertIdentical(sr.master, None)

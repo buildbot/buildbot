@@ -1,0 +1,92 @@
+Buildbot 0.6.1 was released 23 Nov 2004
+
+** win32 improvements/bugfixes
+
+Several changes have gone in to improve portability to non-unix systems. It
+should be possible to run a build slave under windows without major issues
+(although step-by-step documentation is still greatly desired: check the
+mailing list for suggestions from current win32 users).
+
+*** PBChangeSource: use configurable directory separator, not os.sep
+
+The PBChangeSource, which listens on a TCP socket for change notices
+delivered from tools like contrib/svn_buildbot.py, was splitting source
+filenames with os.sep . This is inappropriate, because those file names are
+coming from the VC repository, not the local filesystem, and the repository
+host may be running a different OS (with a different separator convention)
+than the buildmaster host. In particular, a win32 buildmaster using a CVS
+repository running on a unix box would be confused.
+
+PBChangeSource now takes a sep= argument to indicate the separator character
+to use.
+
+*** build saving should work better
+
+windows cannot do the atomic os.rename() trick that unix can, so under win32
+the buildmaster falls back to save/delete-old/rename, which carries a slight
+risk of losing a saved build log (if the system were to crash between the
+delete-old and the rename).
+
+** new features
+
+*** test-result tracking
+
+Work has begun on fine-grained test-result handling. The eventual goal is to
+be able to track individual tests over time, and create problem reports when
+a test starts failing (which then are resolved when the test starts passing
+again). The first step towards this is an ITestResult interface, and code in
+the TrialTestParser to create such results for all non-passing tests (the
+ones for which Trial emits exception tracebacks).
+
+These test results are currently displayed in a tree-like display in a page
+accessible from each Build's page (follow the numbered link in the yellow
+box at the start of each build to get there).
+
+This interface is still in flux, as it really wants to be able to accomodate
+things like compiler warnings and tests that are skipped because of missing
+libraries or unsupported architectures.
+
+** bug fixes
+
+*** VC updates should survive temporary failures
+
+Some VC systems (CVS and SVN in particular) get upset when files are turned
+into directories or vice versa, or when repository items are moved without
+the knowledge of the VC system. The usual symptom is that a 'cvs update'
+fails where a fresh checkout succeeds.
+
+To avoid having to manually intervene, the build slaves' VC commands have
+been refactored to respond to update failures by deleting the tree and
+attempting a full checkout. This may cause some unnecessary effort when,
+e.g., the CVS server falls off the net, but in the normal case it will only
+come into play when one of these can't-cope situations arises.
+
+*** forget about an existing build when the slave detaches
+
+If the slave was lost during a build, the master did not clear the
+.currentBuild reference, making that builder unavailable for later builds.
+This has been fixed, so that losing a slave should be handled better. This
+area still needs some work, I think it's still possible to get both the
+slave and the master wedged by breaking the connection at just the right
+time. Eventually I want to be able to resume interrupted builds (especially
+when the interruption is the result of a network failure and not because the
+slave or the master actually died).
+
+*** large logfiles now consume less memory
+
+Build logs are stored as lists of (type,text) chunks, so that
+stdout/stderr/headers can be displayed differently (if they were
+distinguishable when they were generated: stdout and stderr are merged when
+usePTY=1). For multi-megabyte logfiles, a large list with many short strings
+could incur a large overhead. The new behavior is to merge same-type string
+chunks together as they are received, aiming for a chunk size of about 10kb,
+which should bring the overhead down to a more reasonable level.
+
+There remains an issue with actually delivering large logfiles over, say,
+the HTML interface. The string chunks must be merged together into a single
+string before delivery, which causes a spike in the memory usage when the
+logfile is viewed. This can also break twisted.web.distrib -type servers,
+where the underlying PB protocol imposes a 640k limit on the size of
+strings. This will be fixed (with a proper Producer/Consumer scheme) in the
+next release.
+

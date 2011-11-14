@@ -20,6 +20,7 @@ from twisted.internet import defer
 from buildbot.pbutil import NewCredPerspective
 from buildbot.changes import base
 from buildbot.util import epoch2datetime
+from buildbot import config
 
 class ChangePerspective(NewCredPerspective):
 
@@ -89,9 +90,13 @@ class ChangePerspective(NewCredPerspective):
 
         if not files:
             log.msg("No files listed in change... bit strange, but not fatal.")
-        return self.master.addChange(**changedict)
+        d = self.master.addChange(**changedict)
+        # since this is a remote method, we can't return a Change instance, so
+        # this just sets the return value to None:
+        d.addCallback(lambda _ : None)
+        return d
 
-class PBChangeSource(base.ChangeSource):
+class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
     compare_attrs = ["user", "passwd", "port", "prefix", "port"]
 
     def __init__(self, user="change", passwd="changepw", port=None,
@@ -102,34 +107,56 @@ class PBChangeSource(base.ChangeSource):
         self.port = port
         self.prefix = prefix
         self.registration = None
+        self.registered_port = None
 
     def describe(self):
-        # TODO: when the dispatcher is fixed, report the specific port
-        if self.port is not None:
-            portname = self.port
-        else:
-            portname = "all-purpose slaveport"
+        portname = self.registered_port
         d = "PBChangeSource listener on " + str(portname)
         if self.prefix is not None:
             d += " (prefix '%s')" % self.prefix
         return d
 
-    def startService(self):
-        base.ChangeSource.startService(self)
+    @defer.deferredGenerator
+    def reconfigService(self, new_config):
+        # calculate the new port
         port = self.port
         if port is None:
-            port = self.master.slavePortnum
+            port = new_config.slavePortnum
+
+        # and, if it's changed, re-register
+        if port != self.registered_port:
+            wfd = defer.waitForDeferred(
+                self._unregister())
+            yield wfd
+            wfd.getResult()
+            self._register(port)
+
+        wfd = defer.waitForDeferred(
+            config.ReconfigurableServiceMixin.reconfigService(self,
+                                                    new_config))
+        yield wfd
+        wfd.getResult()
+
+    def stopService(self):
+        d = defer.maybeDeferred(base.ChangeSource.stopService, self)
+        d.addCallback(lambda _ : self._unregister())
+        return d
+
+    def _register(self, port):
+        if not port:
+            log.msg("PBChangeSource has no port to listen on")
+            return
+        self.registered_port = port
         self.registration = self.master.pbmanager.register(
                 port, self.user, self.passwd,
                 self.getPerspective)
 
-    def stopService(self):
-        d = defer.maybeDeferred(base.ChangeSource.stopService, self)
-        def unreg(_):
-            if self.registration:
-                return self.registration.unregister()
-        d.addCallback(unreg)
-        return d
+    def _unregister(self):
+        self.registered_port = None
+        if self.registration:
+            return self.registration.unregister()
+        else:
+            return defer.succeed(None)
 
     def getPerspective(self, mind, username):
         assert username == self.user

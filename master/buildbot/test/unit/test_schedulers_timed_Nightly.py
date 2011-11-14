@@ -21,6 +21,7 @@ from twisted.python import log
 from buildbot.schedulers import timed
 from buildbot.test.util import scheduler
 from buildbot.changes import filter
+from buildbot import config
 
 class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
@@ -80,7 +81,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         assert sched.change_filter
 
     def test_constructor_no_branch(self):
-        self.assertRaises(AssertionError,
+        self.assertRaises(config.ConfigErrors,
             lambda : self.makeScheduler(name='test', builderNames=['test'],
                 change_filter=filter.ChangeFilter(category_re="fo+o")))
 

@@ -253,10 +253,6 @@ takes care of logging and daemonization (running the program in the
 background). :file:`/usr/bin/buildbot` is a front end which runs `twistd`
 for you.)
 
-In addition to :file:`buildbot.tac`, a small :file:`Makefile.sample` is
-installed. This can be used as the basis for customized daemon startup,
-:ref:`Launching-the-daemons`.
-
 Using MySQL
 ~~~~~~~~~~~
 

@@ -17,8 +17,8 @@ from zope.interface import implements
 import mock
 from twisted.trial import unittest
 from buildbot.status import build
-
 from buildbot import interfaces
+from buildbot.test.fake import fakemaster
 
 class FakeBuilderStatus:
     implements(interfaces.IBuilderStatus)
@@ -34,7 +34,8 @@ class TestBuildProperties(unittest.TestCase):
 
     def setUp(self):
         self.builder_status = FakeBuilderStatus()
-        self.build_status = build.BuildStatus(self.builder_status,
+        self.master = fakemaster.make_master()
+        self.build_status = build.BuildStatus(self.builder_status, self.master,
                                               self.BUILD_NUMBER)
         self.build_status.properties = mock.Mock()
 

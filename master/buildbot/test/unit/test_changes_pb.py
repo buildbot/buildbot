@@ -33,35 +33,56 @@ class TestPBChangeSource(
     def setUp(self):
         self.setUpPBChangeSource()
         d = self.setUpChangeSource()
-
+        @d.addCallback
         def setup(_):
-            # fill in some extra details of the master
-            self.master.slavePortnum = '9999'
             self.master.pbmanager = self.pbmanager
-        d.addCallback(setup)
 
         return d
 
-    def test_registration_slaveport(self):
-        return self._test_registration(('9999', 'alice', 'sekrit'),
+    def test_registration_no_slaveport(self):
+        return self._test_registration(None,
                 user='alice', passwd='sekrit')
+
+    def test_registration_global_slaveport(self):
+        return self._test_registration(('9999', 'alice', 'sekrit'),
+                slavePort='9999', user='alice', passwd='sekrit')
 
     def test_registration_custom_port(self):
         return self._test_registration(('8888', 'alice', 'sekrit'),
                 user='alice', passwd='sekrit', port='8888')
 
     def test_registration_no_userpass(self):
-        return self._test_registration(('9999', 'change', 'changepw'))
+        return self._test_registration(('9939', 'change', 'changepw'),
+                slavePort='9939')
 
-    def _test_registration(self, exp_registration, **constr_kwargs):
+    def test_registration_no_userpass_no_global(self):
+        return self._test_registration(None)
+
+    @defer.deferredGenerator
+    def _test_registration(self, exp_registration, slavePort=None,
+                        **constr_kwargs):
+        config = mock.Mock()
+        config.slavePortnum = slavePort
         self.attachChangeSource(pb.PBChangeSource(**constr_kwargs))
+
         self.startChangeSource()
-        self.assertRegistered(*exp_registration)
-        d = self.stopChangeSource()
-        def check(_):
+        wfd = defer.waitForDeferred(
+                self.changesource.reconfigService(config))
+        yield wfd
+        wfd.getResult()
+
+        if exp_registration:
+            self.assertRegistered(*exp_registration)
+        else:
+            self.assertNotRegistered()
+
+        wfd = defer.waitForDeferred(
+                self.stopChangeSource())
+        yield wfd
+        wfd.getResult()
+
+        if exp_registration:
             self.assertUnregistered(*exp_registration)
-        d.addCallback(check)
-        return d
 
     def test_perspective(self):
         self.attachChangeSource(pb.PBChangeSource('alice', 'sekrit', port='8888'))
@@ -80,6 +101,58 @@ class TestPBChangeSource(
     def test_describe_int(self):
         cs = pb.PBChangeSource(port=9989)
         self.assertSubstring("PBChangeSource", cs.describe())
+
+    @defer.deferredGenerator
+    def test_reconfigService_no_change(self):
+        config = mock.Mock()
+        self.attachChangeSource(pb.PBChangeSource(port='9876'))
+
+        self.startChangeSource()
+        wfd = defer.waitForDeferred(
+                self.changesource.reconfigService(config))
+        yield wfd
+        wfd.getResult()
+
+        self.assertRegistered('9876', 'change', 'changepw')
+
+        wfd = defer.waitForDeferred(
+                self.stopChangeSource())
+        yield wfd
+        wfd.getResult()
+
+        self.assertUnregistered('9876', 'change', 'changepw')
+
+    @defer.deferredGenerator
+    def test_reconfigService_default_changed(self):
+        config = mock.Mock()
+        config.slavePortnum = '9876'
+        self.attachChangeSource(pb.PBChangeSource())
+
+        self.startChangeSource()
+        wfd = defer.waitForDeferred(
+                self.changesource.reconfigService(config))
+        yield wfd
+        wfd.getResult()
+
+        self.assertRegistered('9876', 'change', 'changepw')
+
+        config.slavePortnum = '1234'
+
+        wfd = defer.waitForDeferred(
+                self.changesource.reconfigService(config))
+        yield wfd
+        wfd.getResult()
+
+        self.assertUnregistered('9876', 'change', 'changepw')
+        self.assertRegistered('1234', 'change', 'changepw')
+
+        wfd = defer.waitForDeferred(
+                self.stopChangeSource())
+        yield wfd
+        wfd.getResult()
+
+        self.assertUnregistered('1234', 'change', 'changepw')
+
 
 class TestChangePerspective(unittest.TestCase):
     def setUp(self):

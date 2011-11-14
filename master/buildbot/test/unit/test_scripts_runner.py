@@ -182,16 +182,6 @@ class TestSendChange(unittest.TestCase):
         d.addCallback(check)
         return d
 
-    def test_sendchange_deprecated_username(self):
-        d = runner.sendchange(dict(username='me', master='a:1'))
-        def check(_):
-            self.assertEqual((self.sender.master, self.sender.auth,
-                    self.sender.encoding, self.sender.send_kwargs['who']),
-                    ('a:1', ['change','changepw'], 'utf8', 'me'))
-            self.assertIn('is deprecated', self.stdout.getvalue())
-        d.addCallback(check)
-        return d
-
     def test_sendchange_revision_file(self):
         open('rf', 'w').write('abcd')
         d = runner.sendchange(dict(who='me', master='a:1', revision_file='rf'))
@@ -320,73 +310,52 @@ class TestCheckConfig(unittest.TestCase):
         def __init__(self, **kwargs):
             self.testcase.ConfigLoader_kwargs = kwargs
 
-        def load(self):
+        def load(self, quiet=False):
             self.testcase.config_loaded = True
-            if self.testcase.load_exception:
-                return defer.fail(ValueError('I feel undervalued'))
-            else:
-                return defer.succeed(None)
+            self.testcase.load_quiet = quiet
+            return self.testcase.load_return_value
 
     def setUp(self):
-        # temporarily remove the @in_reactor decoration
-        self.patch(runner, 'doCheckConfig', runner.doCheckConfig._orig)
-
         self.patch(checkconfig, 'ConfigLoader',
                         self.FakeConfigLoader)
         self.FakeConfigLoader.testcase = self
-        self.load_exception = False
+        self.load_return_value = True
         self.config_loaded = False
+        self.load_quiet = False
         self.ConfigLoader_kwargs = None
 
-        self.stdout = cStringIO.StringIO()
-        self.patch(sys, 'stdout', self.stdout)
-
     def test_doCheckConfig(self):
-        d = runner.doCheckConfig(dict(configFile='master.cfg', quiet=False))
-        def check(res):
-            self.assertTrue(self.config_loaded)
-            self.assertTrue(res)
-            self.assertEqual(self.ConfigLoader_kwargs,
-                    dict(configFileName='master.cfg'))
-            self.assertEqual(self.stdout.getvalue().strip(),
-                             "Config file is good!")
-        d.addCallback(check)
-        return d
+        self.load_return_value = True
+        res = runner.doCheckConfig(dict(configFile='master.cfg', quiet=False))
+        self.assertTrue(res)
+        self.assertTrue(self.config_loaded)
+        self.assertFalse(self.load_quiet)
+        self.assertEqual(self.ConfigLoader_kwargs,
+                dict(configFileName='master.cfg'))
 
     def test_doCheckConfig_quiet(self):
-        d = runner.doCheckConfig(dict(configFile='master.cfg', quiet=True))
-        def check(res):
-            self.assertTrue(self.config_loaded)
-            self.assertTrue(res)
-            self.assertEqual(self.ConfigLoader_kwargs,
-                    dict(configFileName='master.cfg'))
-            self.assertEqual(self.stdout.getvalue().strip(), "")
-        d.addCallback(check)
-        return d
+        res = runner.doCheckConfig(dict(configFile='master.cfg', quiet=True))
+        self.assertTrue(res)
+        self.assertTrue(self.config_loaded)
+        self.assertTrue(self.load_quiet)
+        self.assertEqual(self.ConfigLoader_kwargs,
+                dict(configFileName='master.cfg'))
 
     def test_doCheckConfig_dir(self):
         os.mkdir('checkconfig_dir')
-        d = runner.doCheckConfig(dict(configFile='checkconfig_dir',
+        res = runner.doCheckConfig(dict(configFile='checkconfig_dir',
                                       quiet=False))
-        def check(res):
-            self.assertTrue(self.config_loaded)
-            self.assertTrue(res)
-            self.assertEqual(self.ConfigLoader_kwargs,
-                    dict(basedir='checkconfig_dir'))
-            self.assertEqual(self.stdout.getvalue().strip(),
-                             "Config file is good!")
-        d.addCallback(check)
-        return d
+        self.assertTrue(res)
+        self.assertTrue(self.config_loaded)
+        self.assertEqual(self.ConfigLoader_kwargs,
+                dict(basedir='checkconfig_dir'))
 
-    def test_doCheckConfig_exception(self):
-        self.load_exception = True
-        d = runner.doCheckConfig(dict(configFile='master.cfg', quiet=False))
-        def check(res):
-            self.assertTrue(self.config_loaded)
-            self.assertFalse(res)
-            # (exception gets logged..)
-        d.addCallback(check)
-        return d
+    def test_doCheckConfig_bad_file(self):
+        self.load_return_value = False
+        res = runner.doCheckConfig(dict(configFile='master.cfg', quiet=False))
+        self.assertFalse(res)
+        self.assertTrue(self.config_loaded)
+
 
 class TestTryOptions(OptionsMixin, unittest.TestCase):
 

@@ -1,5 +1,7 @@
-The Buildbot Database
-=====================
+.. _developer-database:
+
+Database
+========
 
 As of version 0.8.0, Buildbot has used a database as part of its storage
 backend.  This section describes the database connector classes, which allow
@@ -941,7 +943,7 @@ handled through the model.
     ``master.db.model.buildrequests``, and columns are available in its ``c``
     attribute.
 
-    The source file, ``master/buildbot/db/model.py``, contains comments
+    The source file, :bb:src:`master/buildbot/db/model.py`, contains comments
     describing each table; that information is not replicated in this
     documentation.
 
@@ -1041,15 +1043,15 @@ To make a change to the schema, first consider how to handle any existing data.
 When adding new columns, this may not be necessary, but table refactorings can
 be complex and require caution so as not to lose information.
 
-Create a new script in ``master/buildbot/db/migrate/versions``, following the
-numbering scheme already present.  The script should have an ``update`` method,
-which takes an engine as a parameter, and ugprades the database, both changing
-the schema and performing any required data migrations.  The engine passed to
-this parameter is "enhanced" by SQLAlchemy-Migrate, with methods to handle
-adding, altering, and dropping columns.  See the SQLAlchemy-Migrate
+Create a new script in :bb:src:`master/buildbot/db/migrate/versions`, following
+the numbering scheme already present.  The script should have an ``update``
+method, which takes an engine as a parameter, and ugprades the database, both
+changing the schema and performing any required data migrations.  The engine
+passed to this parameter is "enhanced" by SQLAlchemy-Migrate, with methods to
+handle adding, altering, and dropping columns.  See the SQLAlchemy-Migrate
 documentation for details.
 
-Finally, modify ``master/buildbot/db/model.py`` to represent the updated
+Finally, modify :bb:src:`master/buildbot/db/model.py` to represent the updated
 schema.  Buildbot's automated tests perform a rudimentary comparison of an
 upgraded database with the model, but it is important to check the details -
 key length, nullability, and so on can sometimes be missed by the checks.  If
@@ -1057,7 +1059,7 @@ the schema and the upgrade scripts get out of sync, bizarre behavior can
 result.
 
 Finally, adjust the fake database table definitions in
-``master/buildbot/test/fake/fakedb.py`` according to your changes.
+:bb:src:`master/buildbot/test/fake/fakedb.py` according to your changes.
 
 Database Compatibility Notes
 ----------------------------

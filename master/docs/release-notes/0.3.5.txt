@@ -1,0 +1,63 @@
+Buildbot-0.3.5 was released 19 Sep 2003
+
+** newcred
+
+Buildbot has moved to "newcred", a new authorization framework provided by
+Twisted, which is a good bit cleaner and easier to work with than the
+"oldcred" scheme in older versions. This causes both buildmaster and
+buildslaves to depend upon Twisted 1.0.7 or later. The interface to
+'makeApp' has changed somewhat (the multiple kinds of remote connections all
+use the same TCP port now).
+
+Old buildslaves will get "_PortalWrapper instance has no attribute
+'remote_username'" errors when they try to connect. They must be upgraded.
+
+The FreshCVSSource uses PB to connect to the CVSToys server. This has been
+upgraded to use newcred too. If you get errors (TODO: what do they look
+like?) in the log when the buildmaster tries to connect, you need to upgrade
+your FreshCVS service or use the 'useOldcred' argument when creating your
+FreshCVSSource. This is a temporary hack to allow the buildmaster to talk to
+oldcred CVSToys servers. Using it will trigger deprecation warnings. It will
+go away eventually.
+
+In conjunction with this change, makeApp() now accepts a password which can
+be applied to the debug service.
+
+** new features
+
+*** "copydir" for CVS checkouts
+
+The CVS build step can now accept a "copydir" parameter, which should be a
+directory name like "source" or "orig". If provided, the CVS checkout is
+done once into this directory, then copied into the actual working directory
+for compilation etc. Later updates are done in place in the copydir, then
+the workdir is replaced with a copy.
+
+This reduces CVS bandwidth (update instead of full checkout) at the expense
+of twice the disk space (two copies of the tree).
+
+*** Subversion (SVN) support
+
+Radix (Christopher Armstrong) contributed early support for building
+Subversion-based trees. The new 'SVN' buildstep behaves roughly like the
+'CVS' buildstep, and the contrib/svn_buildbot.py script can be used as a
+checkin trigger to feed changes to a running buildmaster.
+
+** notable bugfixes
+
+*** .tap file generation
+
+We no longer set the .tap filename, because the buildmaster/buildslave
+service might be added to an existing .tap file and we shouldn't presume to
+own the whole thing. You may want to manually rename the "buildbot.tap" file
+to something more meaningful (like "buildslave-bot1.tap").
+
+*** IRC reconnect
+
+If the IRC server goes away (it was restarted, or the network connection was
+lost), the buildmaster will now schedule a reconnect attempt.
+
+*** w32 buildslave fixes
+
+An "rm -rf" was turned into shutil.rmtree on non-posix systems.
+

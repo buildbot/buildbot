@@ -12,22 +12,23 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import gc, sys
-from mock import Mock
 
+import gc, sys
 from twisted.trial import unittest
 from twisted.internet import task
-
 from buildbot.process import metrics
+from buildbot.test.fake import fakemaster
 
 class TestMetricBase(unittest.TestCase):
     def setUp(self):
         self.clock = task.Clock()
-        self.observer = metrics.MetricLogObserver(dict(log_interval=0, periodic_interval=0))
-        self.observer.parent = Mock()
-        self.observer.parent.db_poll_interval = 60
+        self.observer = metrics.MetricLogObserver()
+        self.observer.parent = self.master = fakemaster.make_master()
+        self.master.config.db['db_poll_interval'] = 60
+        self.master.config.metrics = dict(log_interval=0, periodic_interval=0)
         self.observer._reactor = self.clock
         self.observer.startService()
+        self.observer.reconfigService(self.master.config)
 
     def tearDown(self):
         if self.observer.running:
@@ -160,29 +161,47 @@ class TestPeriodicChecks(TestMetricBase):
 class TestReconfig(TestMetricBase):
     def testReconfig(self):
         observer = self.observer
+        new_config = self.master.config
+
+        # starts up without running tasks
         self.assertEquals(observer.log_task, None)
         self.assertEquals(observer.periodic_task, None)
 
-        observer.reloadConfig(dict(log_interval=10, periodic_interval=0))
+        # enable log_interval
+        new_config.metrics = dict(log_interval=10, periodic_interval=0)
+        observer.reconfigService(new_config)
         self.assert_(observer.log_task)
         self.assertEquals(observer.periodic_task, None)
 
-        observer.reloadConfig(dict(log_interval=0, periodic_interval=10))
+        # disable that and enable periodic_interval
+        new_config.metrics = dict(periodic_interval=10, log_interval=0)
+        observer.reconfigService(new_config)
         self.assert_(observer.periodic_task)
         self.assertEquals(observer.log_task, None)
+
         # Make the periodic check run
         self.clock.pump([0.1])
 
-        observer.reloadConfig(dict(log_interval=0, periodic_interval=0))
+        # disable the whole listener
+        new_config.metrics = None
+        observer.reconfigService(new_config)
+        self.assertFalse(observer.enabled)
         self.assertEquals(observer.log_task, None)
         self.assertEquals(observer.periodic_task, None)
 
-        observer.reloadConfig(dict(log_interval=10, periodic_interval=10))
-        self.assert_(observer.log_task)
-        self.assert_(observer.periodic_task)
-        observer.stopService()
+        # disable both
+        new_config.metrics = dict(periodic_interval=0, log_interval=0)
+        observer.reconfigService(new_config)
         self.assertEquals(observer.log_task, None)
         self.assertEquals(observer.periodic_task, None)
+
+        # enable both
+        new_config.metrics = dict(periodic_interval=10, log_interval=10)
+        observer.reconfigService(new_config)
+        self.assert_(observer.log_task)
+        self.assert_(observer.periodic_task)
+
+        # (service will be stopped by tearDown)
 
 class _LogObserver:
     def __init__(self):

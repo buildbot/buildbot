@@ -1,0 +1,95 @@
+Buildbot 0.8.5 was released 3 Sept 2010
+
+** Updated, sphinx-based documentation
+
+The Buildbot documentation has been ported to Sphinx and significantly refactored and extended.
+
+** Better support for users in Buildbot (GSoC project)
+
+Buildbot now tracks user identity across version-control commits, IRC and web
+interactions, and Try submissions.
+
+** New and improved Source steps (GSoC project)
+
+Source steps have been rewritten to have a simpler, more consistent
+configuration, and to run on the master instead of the slave, allowing much
+more control over their behavior.
+
+** EC2 instances are now terminated instead of stopped.
+
+This is really only relevant for EBS-backed instances, as Buildbot will now
+free the instance and associated EBS storage when shutting down the slave.
+
+** SQLite databases use write-ahead logging
+
+WAL mode offers much greater concurrency (preventing the dreaded 'database is
+locked' errors) and is also more efficient and durable.
+
+** Deprecations, Removals, and Non-Compatible Changes
+
+*** Any custom IStatusListener providers which do not inherit from
+StatusListener should provide a checkConfig(all_statuses): method.
+This is to verify at startup that there are no conflicting status configurations.
+
+*** The db.buildrequests.claimBuildRequests method can no longer re-claim
+already-claimed requests; use reclaimBuildRequests instead.  The database no
+longer tracks master instances, so the unclaimOldIncarnationRequests method has
+been removed.  Note that several of the methods in this module now perform
+fewer consistency checks, for efficiency.
+
+*** Upgrades directly from versions older than 0.6.5 will no longer
+automatically migrate logfiles.
+
+*** Any custom change_hook_dialects should now return a (changes, src)
+tuple from its getChange method, instead of just the changes. The src
+is used for noting what VCS the changes came from, and is just a string
+such as 'git'.
+
+*** Scripts in the contrib directory that use addChange() to send Changes
+to the buildmaster now require an additional `src` argument when calling
+addChange(). This lets the buildmaster know which VCS the Change is coming
+from, such as 'git' or 'svn'. This means that you need to use the version
+of your contrib script that corresponds to your buildmaster.
+
+*** The un-documented P4Sync source step has been deprecated and will be
+removed in the next version.
+
+** Customizable validation regexps
+
+The global c['validation'] parameter can be used to adjust the regular
+expressions used to validate branches, revisions, and properties input by the
+user.
+
+** Logging for SVNPoller cleaned up
+
+All logging for SVNPoller now starts with "SVNPoller: ". Previously it was
+mixed case and not uniform.
+
+** Source steps have logEnviron parameter
+
+Similar to shell commands, a logEnviron parameter is now supported for Source
+steps.
+
+** Interested users for Try
+
+Try jobs can now include the name of an interested user, which will be kept
+with the patch and displayed in the web status.
+
+** 'buildbot checkconfig' improved
+
+This command no longer copies the configuration to a temporary directory.  This
+change allows more complex configurations to be tested with checkconfig.
+
+* Slave Changes
+
+** Retry on UnauthorizedLogin
+
+In previous versions, if a slave received UnauthorizedLogin from the master, it
+would stop retrying and exit.  This has proven to be less helpful than simply
+retrying, so as of this version the slave will continue to retry.
+
+** Deprecations, Removals, and Non-Compatible Changes
+
+*** The format of the data that determines whether a directory requires a new
+checkout has changed for Perforce.  The first build (only) after an upgrade may
+do an unnecessary full checkout.

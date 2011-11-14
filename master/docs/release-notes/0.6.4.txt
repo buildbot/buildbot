@@ -1,0 +1,59 @@
+Buildbot 0.6.4 was released 28 Apr 2005
+
+** major bugs fixed
+
+The 'buildbot' tool in 0.6.3, when used to create a new buildmaster, failed
+unless it found a 'changes.pck' file. As this file is created by a running
+buildmaster, this made 0.6.3 completely unusable for first-time
+installations. This has been fixed.
+
+** minor bugs fixed
+
+The IRC bot had a bug wherein asking it to watch a certain builder (the "I'll
+give a shout when the build finishes" message) would cause an exception, so
+it would not, in fact, shout. The HTML page had an exception in the "change
+sources" page (reached by following the "Changes" link at the top of the
+column that shows the names of commiters). Re-loading the config file while
+builders were already attached would result in a benign error message. The
+server side of the PBListener status client had an exception when providing
+information about a non-existent Build (e.g., when the client asks for the
+Build that is currently running, and the server says "None").
+
+These bugs have all been fixed.
+
+The unit tests now pass under python2.2; they were failing before because of
+some 2.3isms that crept in. More unit tests which failed under windows now
+pass, only one (test_webPathname_port) is still failing.
+
+** 'buildbot' tool looks for a .buildbot/options file
+
+The 'statusgui' and the 'debugclient' subcommands can both look for a
+.buildbot/ directory, and an 'options' file therein, to extract default
+values for the location of the buildmaster. This directory is searched in the
+current directory, its parent, etc, all the way up to the filesystem root
+(assuming you own the directories in question). It also look in ~/.buildbot/
+for this file. This feature allows you to put a .buildbot at the top of your
+working tree, telling any 'buildbot' invocations you perform therein how to
+get to the buildmaster associated with that tree's project.
+
+Windows users get something similar, using %APPDATA%/buildbot instead of
+~/.buildbot .
+
+** windows ShellCommands are launched with 'cmd.exe'
+
+The buildslave has been modified to run all list-based ShellCommands by
+prepending [os.environ['COMSPEC'], '/c'] to the argv list before execution.
+This should allow the buildslave's PATH to be searched for commands,
+improving the chances that it can run the same 'trial -o foo' commands as a
+unix buildslave. The potential downside is that spaces in argv elements might
+be re-parsed, or quotes might be re-interpreted. The consensus on the mailing
+list was that this is a useful thing to do, but please report any problems
+you encounter with it.
+
+** minor features
+
+The Waterfall display now shows the buildbot's home timezone at the top of
+the timestamp column. The default favicon.ico is now much nicer-looking (it
+is generated with Blender.. the icon.blend file is available in CVS in
+docs/images/ should you care to play with it).
+

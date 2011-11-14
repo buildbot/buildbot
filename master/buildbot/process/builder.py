@@ -21,7 +21,7 @@ from twisted.spread import pb
 from twisted.application import service, internet
 from twisted.internet import defer
 
-from buildbot import interfaces
+from buildbot import interfaces, config
 from buildbot.status.progress import Expectations
 from buildbot.status.builder import RETRY
 from buildbot.status.buildrequest import BuildRequestStatus
@@ -30,84 +30,16 @@ from buildbot.process import buildrequest, slavebuilder
 from buildbot.process.slavebuilder import BUILDING
 from buildbot.db import buildrequests
 
-class Builder(pb.Referenceable, service.MultiService):
-    """I manage all Builds of a given type.
+class Builder(config.ReconfigurableServiceMixin,
+              pb.Referenceable,
+              service.MultiService):
 
-    Each Builder is created by an entry in the config file (the c['builders']
-    list), with a number of parameters.
-
-    One of these parameters is the L{buildbot.process.factory.BuildFactory}
-    object that is associated with this Builder. The factory is responsible
-    for creating new L{Build<buildbot.process.build.Build>} objects. Each
-    Build object defines when and how the build is performed, so a new
-    Factory or Builder should be defined to control this behavior.
-
-    The Builder holds on to a number of L{BuildRequest} objects in a
-    list named C{.buildable}. Incoming BuildRequest objects will be added to
-    this list, or (if possible) merged into an existing request. When a slave
-    becomes available, I will use my C{BuildFactory} to turn the request into
-    a new C{Build} object. The C{BuildRequest} is forgotten, the C{Build}
-    goes into C{.building} while it runs. Once the build finishes, I will
-    discard it.
-
-    I maintain a list of available SlaveBuilders, one for each connected
-    slave that the C{slavenames} parameter says we can use. Some of these
-    will be idle, some of them will be busy running builds for me. If there
-    are multiple slaves, I can run multiple builds at once.
-
-    I also manage forced builds, progress expectation (ETA) management, and
-    some status delivery chores.
-
-    @type buildable: list of L{buildbot.process.buildrequest.BuildRequest}
-    @ivar buildable: BuildRequests that are ready to build, but which are
-                     waiting for a buildslave to be available.
-
-    @type building: list of L{buildbot.process.build.Build}
-    @ivar building: Builds that are actively running
-
-    @type slaves: list of L{buildbot.buildslave.BuildSlave} objects
-    @ivar slaves: the slaves currently available for building
-    """
-
-    expectations = None # this is created the first time we get a good build
-
-    def __init__(self, setup, builder_status):
-        """
-        @type  setup: dict
-        @param setup: builder setup data, as stored in
-                      BuildmasterConfig['builders'].  Contains name,
-                      slavename(s), builddir, slavebuilddir, factory, locks.
-        @type  builder_status: L{buildbot.status.builder.BuilderStatus}
-        """
+    def __init__(self, name):
         service.MultiService.__init__(self)
-        self.name = setup['name']
-        self.slavenames = []
-        if setup.has_key('slavename'):
-            self.slavenames.append(setup['slavename'])
-        if setup.has_key('slavenames'):
-            self.slavenames.extend(setup['slavenames'])
-        self.builddir = setup['builddir']
-        self.slavebuilddir = setup['slavebuilddir']
-        self.buildFactory = setup['factory']
-        self.nextSlave = setup.get('nextSlave')
-        if self.nextSlave is not None and not callable(self.nextSlave):
-            raise ValueError("nextSlave must be callable")
-        self.locks = setup.get("locks", [])
-        self.env = setup.get('env', {})
-        assert isinstance(self.env, dict)
-        if setup.has_key('periodicBuildTime'):
-            raise ValueError("periodicBuildTime can no longer be defined as"
-                             " part of the Builder: use scheduler.Periodic"
-                             " instead")
-        self.nextBuild = setup.get('nextBuild')
-        if self.nextBuild is not None and not callable(self.nextBuild):
-            raise ValueError("nextBuild must be callable")
-        self.buildHorizon = setup.get('buildHorizon')
-        self.logHorizon = setup.get('logHorizon')
-        self.eventHorizon = setup.get('eventHorizon')
-        self.mergeRequests = setup.get('mergeRequests', None)
-        self.properties = setup.get('properties', {})
-        self.category = setup.get('category', None)
+        self.name = name
+
+        # this is created the first time we get a good build
+        self.expectations = None
 
         # build/wannabuild slots: Build objects move along this sequence
         self.building = []
@@ -123,69 +55,44 @@ class Builder(pb.Referenceable, service.MultiService):
         # Build is about to start, to make sure that they're still alive.
         self.slaves = []
 
-        self.builder_status = builder_status
-        self.builder_status.setSlavenames(self.slavenames)
-        self.builder_status.buildHorizon = self.buildHorizon
-        self.builder_status.logHorizon = self.logHorizon
-        self.builder_status.eventHorizon = self.eventHorizon
+        self.config = None
+        self.builder_status = None
 
         self.reclaim_svc = internet.TimerService(10*60, self.reclaimAllBuilds)
         self.reclaim_svc.setServiceParent(self)
 
-        # for testing, to help synchronize tests
-        self.run_count = 0
+    def reconfigService(self, new_config):
+        # find this builder in the config
+        for builder_config in new_config.builders:
+            if builder_config.name == self.name:
+                break
+        else:
+            assert 0, "no config found for builder '%s'" % self.name
+
+        # set up a builder status object on the first reconfig
+        if not self.builder_status:
+            self.builder_status = self.master.status.builderAdded(
+                    builder_config.name,
+                    builder_config.builddir,
+                    builder_config.category)
+
+        self.config = builder_config
+
+        self.builder_status.setSlavenames(self.config.slavenames)
+
+        return defer.succeed(None)
 
     def stopService(self):
         d = defer.maybeDeferred(lambda :
                 service.MultiService.stopService(self))
         def flushMaybeStartBuilds(_):
-            # at this point, self.running = False, so another maybeStartBuilds
+            # at this point, self.running = False, so another maybeStartBuild
             # invocation won't hurt anything, but it also will not complete
-            # until any currently-running invocations are done.
+            # until any currently-running invocations are done, so we know that
+            # the builder is quiescent at that time.
             return self.maybeStartBuild()
         d.addCallback(flushMaybeStartBuilds)
         return d
-
-    def setBotmaster(self, botmaster):
-        self.botmaster = botmaster
-        self.master = botmaster.master
-        self.db = self.master.db
-
-    def compareToSetup(self, setup):
-        diffs = []
-        setup_slavenames = []
-        if setup.has_key('slavename'):
-            setup_slavenames.append(setup['slavename'])
-        setup_slavenames.extend(setup.get('slavenames', []))
-        if setup_slavenames != self.slavenames:
-            diffs.append('slavenames changed from %s to %s' \
-                         % (self.slavenames, setup_slavenames))
-        if setup['builddir'] != self.builddir:
-            diffs.append('builddir changed from %s to %s' \
-                         % (self.builddir, setup['builddir']))
-        if setup['slavebuilddir'] != self.slavebuilddir:
-            diffs.append('slavebuilddir changed from %s to %s' \
-                         % (self.slavebuilddir, setup['slavebuilddir']))
-        if setup['factory'] != self.buildFactory: # compare objects
-            diffs.append('factory changed')
-        if setup.get('locks', []) != self.locks:
-            diffs.append('locks changed from %s to %s' % (self.locks, setup.get('locks')))
-        if setup.get('env', {}) != self.env:
-            diffs.append('env changed from %s to %s' % (self.env, setup.get('env', {})))
-        if setup.get('nextSlave') != self.nextSlave:
-            diffs.append('nextSlave changed from %s to %s' % (self.nextSlave, setup.get('nextSlave')))
-        if setup.get('nextBuild') != self.nextBuild:
-            diffs.append('nextBuild changed from %s to %s' % (self.nextBuild, setup.get('nextBuild')))
-        if setup.get('buildHorizon', None) != self.buildHorizon:
-            diffs.append('buildHorizon changed from %s to %s' % (self.buildHorizon, setup['buildHorizon']))
-        if setup.get('logHorizon', None) != self.logHorizon:
-            diffs.append('logHorizon changed from %s to %s' % (self.logHorizon, setup['logHorizon']))
-        if setup.get('eventHorizon', None) != self.eventHorizon:
-            diffs.append('eventHorizon changed from %s to %s' % (self.eventHorizon, setup['eventHorizon']))
-        if setup.get('category', None) != self.category:
-            diffs.append('category changed from %r to %r' % (self.category, setup.get('category', None)))
-
-        return diffs
 
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
@@ -210,73 +117,6 @@ class Builder(pb.Referenceable, service.MultiService):
             yield unclaimed[0]
         else:
             yield None
-
-    def consumeTheSoulOfYourPredecessor(self, old):
-        """Suck the brain out of an old Builder.
-
-        This takes all the runtime state from an existing Builder and moves
-        it into ourselves. This is used when a Builder is changed in the
-        master.cfg file: the new Builder has a different factory, but we want
-        all the builds that were queued for the old one to get processed by
-        the new one. Any builds which are already running will keep running.
-        The new Builder will get as many of the old SlaveBuilder objects as
-        it wants."""
-
-        log.msg("consumeTheSoulOfYourPredecessor: %s feeding upon %s" %
-                (self, old))
-        # all pending builds are stored in the DB, so we don't have to do
-        # anything to claim them. The old builder will be stopService'd,
-        # which should make sure they don't start any new work
-
-        # this is kind of silly, but the builder status doesn't get updated
-        # when the config changes, yet it stores the category.  So:
-        self.builder_status.category = self.category
-
-        # old.building (i.e. builds which are still running) is not migrated
-        # directly: it keeps track of builds which were in progress in the
-        # old Builder. When those builds finish, the old Builder will be
-        # notified, not us. However, since the old SlaveBuilder will point to
-        # us, it is our maybeStartBuild() that will be triggered.
-        if old.building:
-            self.builder_status.setBigState("building")
-        # however, we do grab a weakref to the active builds, so that our
-        # BuilderControl can see them and stop them. We use a weakref because
-        # we aren't the one to get notified, so there isn't a convenient
-        # place to remove it from self.building .
-        for b in old.building:
-            self.old_building[b] = None
-        for b in old.old_building:
-            self.old_building[b] = None
-
-        # Our set of slavenames may be different. Steal any of the old
-        # buildslaves that we want to keep using.
-        for sb in old.slaves[:]:
-            if sb.slave.slavename in self.slavenames:
-                log.msg(" stealing buildslave %s" % sb)
-                self.slaves.append(sb)
-                old.slaves.remove(sb)
-                sb.setBuilder(self)
-
-        # old.attaching_slaves:
-        #  these SlaveBuilders are waiting on a sequence of calls:
-        #  remote.setMaster and remote.print . When these two complete,
-        #  old._attached will be fired, which will add a 'connect' event to
-        #  the builder_status and try to start a build. However, we've pulled
-        #  everything out of the old builder's queue, so it will have no work
-        #  to do. The outstanding remote.setMaster/print call will be holding
-        #  the last reference to the old builder, so it will disappear just
-        #  after that response comes back.
-        #
-        #  The BotMaster will ask the slave to re-set their list of Builders
-        #  shortly after this function returns, which will cause our
-        #  attached() method to be fired with a bunch of references to remote
-        #  SlaveBuilders, some of which we already have (by stealing them
-        #  from the old Builder), some of which will be new. The new ones
-        #  will be re-attached.
-
-        #  Therefore, we don't need to do anything about old.attaching_slaves
-
-        return # all done
 
     def reclaimAllBuilds(self):
         brids = set()
@@ -427,16 +267,16 @@ class Builder(pb.Referenceable, service.MultiService):
         # status based on any other cleanup
         cleanups.append(lambda : self.updateBigStatus())
 
-        build = self.buildFactory.newBuild(buildrequests)
+        build = self.config.factory.newBuild(buildrequests)
         build.setBuilder(self)
         log.msg("starting build %s using slave %s" % (build, slavebuilder))
 
         # set up locks
-        build.setLocks(self.locks)
+        build.setLocks(self.config.locks)
         cleanups.append(lambda : slavebuilder.slave.releaseLocks())
 
-        if len(self.env) > 0:
-            build.setSlaveEnvironment(self.env)
+        if len(self.config.env) > 0:
+            build.setSlaveEnvironment(self.config.env)
 
         # append the build to self.building
         self.building.append(build)
@@ -544,10 +384,11 @@ class Builder(pb.Referenceable, service.MultiService):
 
     def setupProperties(self, props):
         props.setProperty("buildername", self.name, "Builder")
-        if len(self.properties) > 0:
-            for propertyname in self.properties:
-                props.setProperty(propertyname, self.properties[propertyname],
-                                  "Builder")
+        if len(self.config.properties) > 0:
+            for propertyname in self.config.properties:
+                props.setProperty(propertyname,
+                        self.config.properties[propertyname],
+                        "Builder")
 
     def buildFinished(self, build, sb, bids):
         """This is called when the Build has finished (either success or
@@ -560,7 +401,7 @@ class Builder(pb.Referenceable, service.MultiService):
 
         # mark the builds as finished, although since nothing ever reads this
         # table, it's not too important that it complete successfully
-        d = self.db.builds.finishBuilds(bids)
+        d = self.master.db.builds.finishBuilds(bids)
         d.addErrback(log.err, 'while marking builds as finished (ignored)')
 
         results = build.build_status.getResults()
@@ -593,7 +434,7 @@ class Builder(pb.Referenceable, service.MultiService):
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]
-        return self.db.buildrequests.unclaimBuildRequests(brids)
+        return self.master.db.buildrequests.unclaimBuildRequests(brids)
 
     def setExpectations(self, progress):
         """Mark the build as successful and update expectations for the next
@@ -760,9 +601,9 @@ class Builder(pb.Referenceable, service.MultiService):
         @param available_slavebuilders: list of slavebuilders to choose from
         @returns: SlaveBuilder or None via Deferred
         """
-        if self.nextSlave:
+        if self.config.nextSlave:
             return defer.maybeDeferred(lambda :
-                    self.nextSlave(self, available_slavebuilders))
+                    self.config.nextSlave(self, available_slavebuilders))
         else:
             return defer.succeed(random.choice(available_slavebuilders))
 
@@ -775,13 +616,13 @@ class Builder(pb.Referenceable, service.MultiService):
         @param buildrequests: sorted list of build request dictionaries
         @returns: a build request dictionary or None via Deferred
         """
-        if self.nextBuild:
+        if self.config.nextBuild:
             # nextBuild expects BuildRequest objects, so instantiate them here
             # and cache them in the dictionaries
             d = defer.gatherResults([ self._brdictToBuildRequest(brdict)
                                       for brdict in buildrequests ])
             d.addCallback(lambda requestobjects :
-                    self.nextBuild(self, requestobjects))
+                    self.config.nextBuild(self, requestobjects))
             def to_brdict(brobj):
                 # get the brdict for this object back
                 return brobj.brdict
@@ -794,9 +635,9 @@ class Builder(pb.Referenceable, service.MultiService):
         """Helper function to determine which mergeRequests function to use
         from L{_mergeRequests}, or None for no merging"""
         # first, seek through builder, global, and the default
-        mergeRequests_fn = self.mergeRequests
+        mergeRequests_fn = self.config.mergeRequests
         if mergeRequests_fn is None:
-            mergeRequests_fn = self.botmaster.mergeRequests
+            mergeRequests_fn = self.master.config.mergeRequests
         if mergeRequests_fn is None:
             mergeRequests_fn = True
 

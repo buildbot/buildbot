@@ -13,16 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from zope.interface import implements
 from twisted.python import failure, log
 from twisted.application import service
 from twisted.internet import defer
 from buildbot.process.properties import Properties
 from buildbot.util import ComparableMixin
 from buildbot.changes import changes
-
-def isScheduler(sch):
-    "Check that an object is a scheduler; used for configuration checks."
-    return isinstance(sch, BaseScheduler)
+from buildbot import config, interfaces
 
 class BaseScheduler(service.MultiService, ComparableMixin):
     """
@@ -33,6 +31,8 @@ class BaseScheduler(service.MultiService, ComparableMixin):
     Subclasses should add any configuration-derived attributes to
     C{base.Scheduler.compare_attrs}.
     """
+
+    implements(interfaces.IScheduler)
 
     compare_attrs = ('name', 'builderNames', 'properties')
 
@@ -60,11 +60,18 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         self.name = name
         "name of this scheduler; used to identify replacements on reconfig"
 
-        errmsg = ("The builderNames argument to a scheduler must be a list "
-                  "of Builder names.")
-        assert isinstance(builderNames, (list, tuple)), errmsg
-        for b in builderNames:
-            assert isinstance(b, basestring), errmsg
+        ok = True
+        if not isinstance(builderNames, (list, tuple)):
+            ok = False
+        else:
+            for b in builderNames:
+                if not isinstance(b, basestring):
+                    ok = False
+        if not ok:
+            raise config.ConfigErrors([
+                "The builderNames argument to a scheduler must be a list "
+                  "of Builder names."])
+
         self.builderNames = builderNames
         "list of builder names to start in each buildset"
 
@@ -88,23 +95,16 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
     ## service handling
 
-    def _setUpScheduler(self, schedulerid, master, manager):
-        # this is called by SchedulerManager *before* startService
-        self.schedulerid = schedulerid
-        self.master = master
-
     def startService(self):
         service.MultiService.startService(self)
+
+    def findNewSchedulerInstance(self, new_config):
+        return new_config.schedulers[self.name] # should exist!
 
     def stopService(self):
         d = defer.maybeDeferred(self._stopConsumingChanges)
         d.addCallback(lambda _ : service.MultiService.stopService(self))
         return d
-
-    def _shutDownScheduler(self):
-        # called by SchedulerManager *after* stopService is complete
-        self.schedulerid = None
-        self.master = None
 
     ## state management
 

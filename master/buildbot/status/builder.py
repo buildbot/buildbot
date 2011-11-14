@@ -57,23 +57,14 @@ class BuilderStatus(styles.Versioned):
     persistenceVersion = 1
     persistenceForgets = ( 'wasUpgraded', )
 
-    # these limit the amount of memory we consume, as well as the size of the
-    # main Builder pickle. The Build and LogFile pickles on disk must be
-    # handled separately.
-    buildCacheSize = 15
-    eventHorizon = 50 # forget events beyond this
-
-    # these limit on-disk storage
-    logHorizon = 40 # forget logs in steps in builds beyond this
-    buildHorizon = 100 # forget builds beyond this
-
     category = None
     currentBigState = "offline" # or idle/waiting/interlocked/building
     basedir = None # filled in by our parent
 
-    def __init__(self, buildername, category=None):
+    def __init__(self, buildername, category, master):
         self.name = buildername
         self.category = category
+        self.master = master
 
         self.slavenames = []
         self.events = []
@@ -87,10 +78,6 @@ class BuilderStatus(styles.Versioned):
         self.watchers = []
         self.buildCache = weakref.WeakValueDictionary()
         self.buildCache_LRU = []
-        self.logCompressionLimit = False # default to no compression for tests
-        self.logCompressionMethod = "bz2"
-        self.logMaxSize = None # No default limit
-        self.logMaxTailSize = None # No tail buffering
 
     # persistence
 
@@ -112,6 +99,7 @@ class BuilderStatus(styles.Versioned):
         del d['basedir']
         del d['status']
         del d['nextBuildNumber']
+        del d['master']
         return d
 
     def __setstate__(self, d):
@@ -125,12 +113,7 @@ class BuilderStatus(styles.Versioned):
         self.slavenames = []
         # self.basedir must be filled in by our parent
         # self.status must be filled in by our parent
-
-    def reconfigFromBuildmaster(self, buildmaster):
-        # Note that we do not hang onto the buildmaster, since this object
-        # gets pickled and unpickled.
-        if buildmaster.buildCacheSize is not None:
-            self.buildCacheSize = buildmaster.buildCacheSize
+        # self.master must be filled in by our parent
 
     def upgradeToVersion1(self):
         if hasattr(self, 'slavename'):
@@ -153,19 +136,6 @@ class BuilderStatus(styles.Versioned):
             self.nextBuildNumber = max(existing_builds) + 1
         else:
             self.nextBuildNumber = 0
-
-    def setLogCompressionLimit(self, lowerLimit):
-        self.logCompressionLimit = lowerLimit
-
-    def setLogCompressionMethod(self, method):
-        assert method in ("bz2", "gz")
-        self.logCompressionMethod = method
-
-    def setLogMaxSize(self, upperLimit):
-        self.logMaxSize = upperLimit
-
-    def setLogMaxTailSize(self, tailSize):
-        self.logMaxTailSize = tailSize
 
     def saveYourself(self):
         for b in self.currentBuilds:
@@ -196,7 +166,8 @@ class BuilderStatus(styles.Versioned):
         self.buildCache[build.number] = build
         if build in self.buildCache_LRU:
             self.buildCache_LRU.remove(build)
-        self.buildCache_LRU = self.buildCache_LRU[-(self.buildCacheSize-1):] + [ build ]
+        cache_size = self.master.config.caches['Builds']
+        self.buildCache_LRU = self.buildCache_LRU[-(cache_size-1):] + [ build ]
         return build
 
     def getBuildByNumber(self, number):
@@ -217,7 +188,7 @@ class BuilderStatus(styles.Versioned):
             log.msg("Loading builder %s's build %d from on-disk pickle"
                 % (self.name, number))
             build = load(open(filename, "rb"))
-            build.builder = self
+            build.setProcessObjects(self, self.master)
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite
             # this pickle, too.  We determine this by looking at the list of
@@ -240,19 +211,22 @@ class BuilderStatus(styles.Versioned):
 
     def prune(self, events_only=False):
         # begin by pruning our own events
-        self.events = self.events[-self.eventHorizon:]
+        eventHorizon = self.master.config.eventHorizon
+        self.events = self.events[-eventHorizon:]
 
         if events_only:
             return
 
         # get the horizons straight
-        if self.buildHorizon is not None:
+        buildHorizon = self.master.config.buildHorizon
+        if buildHorizon is not None:
             earliest_build = self.nextBuildNumber - self.buildHorizon
         else:
             earliest_build = 0
 
-        if self.logHorizon is not None:
-            earliest_log = self.nextBuildNumber - self.logHorizon
+        logHorizon = self.master.config.logHorizon
+        if logHorizon is not None:
+            earliest_log = self.nextBuildNumber - logHorizon
         else:
             earliest_log = 0
 
@@ -492,7 +466,7 @@ class BuilderStatus(styles.Versioned):
         # build number we've just allocated. This is not quite as important
         # as it was before we switch to determineNextBuildNumber, but I think
         # it may still be useful to have the new build save itself.
-        s = BuildStatus(self, number)
+        s = BuildStatus(self, self.master, number)
         s.waitUntilFinished().addCallback(self._buildFinished)
         return s
 

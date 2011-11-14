@@ -1159,6 +1159,10 @@ class FakeDBConnector(object):
         self.users = comp = FakeUsersComponent(self, testcase)
         self._components.append(comp)
 
+    def setup(self):
+        self.is_setup = True
+        return defer.succeed(None)
+
     def insertTestData(self, rows):
         """Insert a list of Row instances into the database; this method can be
         called synchronously or asynchronously (it completes immediately) """

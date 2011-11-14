@@ -1,0 +1,87 @@
+Buildbot 0.5.0 was released 22 Jul 2004
+
+** new features
+
+*** web.distrib servers via TCP
+
+The 'webPathname' config option, which specifies a UNIX socket on which to
+publish the waterfall HTML page (for use by 'mktap web -u' or equivalent),
+now accepts a numeric port number. This publishes the same thing via TCP,
+allowing the parent web server to live on a separate machine.
+
+This config option could be named better, but it will go away altogether in
+a few releases, when status delivery is unified. It will be replaced with a
+WebStatusTarget object, and the config file will simply contain a list of
+various kinds of status targets.
+
+*** 'master.cfg' filename is configurable
+
+The buildmaster can use a config file named something other than
+"master.cfg". Use the --config=foo.cfg option to mktap to control this.
+
+*** FreshCVSSource now uses newcred (CVSToys >= 1.0.10)
+
+The FreshCVSSource class now defaults to speaking to freshcvs daemons from
+modern CVSToys releases. If you need to use the buildbot with a daemon from
+CVSToys-1.0.9 or earlier, use FreshCVSSourceOldcred instead. Note that the
+new form only requires host/port/username/passwd: the "serviceName"
+parameter is no longer meaningful.
+
+*** Builders are now configured with a dictionary, not a tuple
+
+The preferred way to set up a Builder in master.cfg is to provide a
+dictionary with various keys, rather than a (non-extensible) 4-tuple. See
+docs/config.xhtml for details. The old tuple-way is still supported for now,
+it will probably be deprecated in the next release and removed altogether in
+the following one.
+
+*** .periodicBuildTime is now exposed to the config file
+
+To set a builder to run at periodic intervals, simply add a
+'periodicBuildTime' key to its master.cfg dictionary. Again, see
+docs/config.xhtml for details.
+
+*** svn_buildbot.py adds --include, --exclude
+
+The commit trigger script now gives you more control over which files are
+sent to the buildmaster and which are not.
+
+*** usePTY is controllable at slave mktap time
+
+The buildslaves usually run their child processes in a pty, which creates a
+process group for all the children, which makes it much easier to kill them
+all at once (i.e. if a test hangs). However this causes problems on some
+systems. Rather than hacking slavecommand.py to disable the use of these
+ptys, you can now create the slave's .tap file with --usepty=0 at mktap
+time.
+
+** Twisted changes
+
+A summary of warnings (e.g. DeprecationWarnings) is provided as part of the
+test-case summarizer. The summarizer also counts Skips, expectedFailures,
+and unexpectedSuccesses, displaying the counts on the test step's event box.
+
+The RunUnitTests step now uses "trial -R twisted" instead of "trial
+twisted.test", which is a bit cleaner. All .pyc files are deleted before
+starting trial, to avoid getting tripped up by deleted .py files.
+
+** documentation
+
+docs/config.xhtml now describes the syntax and allowed contents of the
+'master.cfg' configuration file.
+
+** bugfixes
+
+Interlocks had a race condition that could cause the lock to get stuck
+forever.
+
+FreshCVSSource has a prefix= argument that was moderately broken (it used to
+only work if the prefix was a single directory component). It now works with
+subdirectories.
+
+The buildmaster used to complain when it saw the "info" directory in a
+slave's workspace. This directory is used to publish information about the
+slave host and its administrator, and is not a leftover build directory as
+the complaint suggested. This complain has been silenced.
+
+

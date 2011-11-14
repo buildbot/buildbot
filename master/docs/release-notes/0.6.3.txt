@@ -1,0 +1,123 @@
+Buildbot 0.6.3 was released 25 Apr 2005
+
+** 'buildbot' tool gets more uses
+
+The 'buildbot' executable has acquired three new subcommands. 'buildbot
+debugclient' brings up the small remote-control panel that connects to a
+buildmaster (via the slave port and the c['debugPassword']). This tool,
+formerly in contrib/debugclient.py, lets you reload the config file, force
+builds, and simulate inbound commit messages. It requires gtk2, glade, and
+the python bindings for both to be installed.
+
+'buildbot statusgui' brings up a live status client, formerly available by
+running buildbot/clients/gtkPanes.py as a program. This connects to the PB
+status port that you create with:
+
+  c['status'].append(client.PBListener(portnum))
+
+and shows two boxes per Builder, one for the last build, one for current
+activity. These boxes are updated in realtime. The effect is primitive, but
+is intended as an example of what's possible with the PB status interface.
+
+'buildbot statuslog' provides a text-based running log of buildmaster events.
+
+Note: command names are subject to change. These should get much more useful
+over time.
+
+** web page has a favicon
+
+When constructing the html.Waterfall instance, you can provide the filename
+of an image that will be provided when the "favicon.ico" resource is
+requested. Many web browsers display this as an icon next to the URL or
+bookmark. A goofy little default icon is included.
+
+** web page has CSS
+
+Thanks to Thomas Vander Stichele, the Waterfall page is now themable through
+CSS. The default CSS is located in buildbot/status/classic.css, and creates a
+page that is mostly identical to the old, non-CSS based table.
+
+You can specify a different CSS file to use by passing it as the css=
+argument to html.Waterfall(). See the docstring for Waterfall for some more
+details.
+
+** builder "categories"
+
+Thomas has added code which places each Builder in an optional "category".
+The various status targets (Waterfall, IRC, MailNotifier) can accept a list
+of categories, and they will ignore any activity in builders outside this
+list. This makes it easy to create some Builders which are "experimental" or
+otherwise not yet ready for the world to see, or indicate that certain
+builders should not harass developers when their tests fail, perhaps because
+the build slaves for them are not yet fully functional.
+
+** Deprecated features
+
+*** defining Builders with tuples is deprecated
+
+For a long time, the preferred way to define builders in the config file has
+been with a dictionary. The less-flexible old style of a 4-item tuple (name,
+slavename, builddir, factory) is now officially deprecated (i.e., it will
+emit a warning if you use it), and will be removed in the next release.
+Dictionaries are more flexible: additional keys like periodicBuildTime are
+simply unavailable to tuple-defined builders.
+
+Note: it is a good idea to watch the logfile (usually in twistd.log) when you
+first start the buildmaster, or whenever you reload the config file. Any
+warnings or errors in the config file will be found there.
+
+*** c['webPortnum'], c['webPathname'], c['irc'] are deprecated
+
+All status reporters should be defined in the c['status'] array, using
+buildbot.status.html.Waterfall or buildbot.status.words.IRC . These have been
+deprecated for a while, but this is fair warning that these keys will be
+removed in the next release.
+
+*** c['manholePort'] is deprecated
+
+Again, this has been deprecated for a while, in favor of:
+
+ c['manhole'] = master.Manhole(port, username, password)
+
+The preferred syntax will eventually let us use other, better kinds of debug
+shells, such as the experimental curses-based ones in the Twisted sandbox
+(which would offer command-line editing and history).
+
+** bug fixes
+
+The waterfall page has been improved a bit. A circular-reference bug in the
+web page's TextLog class was fixed, which caused a major memory leak in a
+long-running buildmaster with large logfiles that are viewed frequently.
+Modifying the config file in a way which only changed a builder's base
+directory now works correctly. The 'buildbot' command tries to create
+slightly more useful master/slave directories, adding a Makefile entry to
+re-create the .tap file, and removing global-read permissions from the files
+that may contain buildslave passwords.
+
+** twisted-2.0.0 compatibility
+
+Both buildmaster and buildslave should run properly under Twisted-2.0 . There
+are still some warnings about deprecated functions, some of which could be
+fixed, but there are others that would require removing compatibility with
+Twisted-1.3, and I don't expect to do that until 2.0 has been out and stable
+for at least several months. The unit tests should pass under 2.0, whereas
+the previous buildbot release had tests which could hang when run against the
+new "trial" framework in 2.0.
+
+The Twisted-specific steps (including Trial) have been updated to match 2.0
+functionality.
+
+** win32 compatibility
+
+Thankt to Nick Trout, more compatibility fixes have been incorporated,
+improving the chances that the unit tests will pass on windows systems. There
+are still some problems, and a step-by-step "running buildslaves on windows"
+document would be greatly appreciated.
+
+** API docs
+
+Thanks to Thomas Vander Stichele, most of the docstrings have been converted
+to epydoc format. There is a utility in docs/gen-reference to turn these into
+a tree of cross-referenced HTML pages. Eventually these docs will be
+auto-generated and somehow published on the buildbot web page.
+

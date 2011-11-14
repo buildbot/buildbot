@@ -79,10 +79,9 @@ stop it, fix the config file, and restart.
 
 def start(config):
     os.chdir(config['basedir'])
-    if (not os.path.exists("buildbot.tac") and
-        not os.path.exists("Makefile.buildbot")):
+    if not os.path.exists("buildbot.tac"):
         print "This doesn't look like a buildbot base directory:"
-        print "No buildbot.tac or Makefile.buildbot file."
+        print "No buildbot.tac file."
         print "Giving up!"
         sys.exit(1)
     if config['quiet']:
@@ -106,26 +105,19 @@ def start(config):
 
 def launch(config):
     sys.path.insert(0, os.path.abspath(os.getcwd()))
-    if os.path.exists("/usr/bin/make") and os.path.exists("Makefile.buildbot"):
-        # Preferring the Makefile lets slave admins do useful things like set
-        # up environment variables for the buildslave.
-        cmd = "make -f Makefile.buildbot start"
-        if not config['quiet']:
-            print cmd
-        os.system(cmd)
-    else:
-        # see if we can launch the application without actually having to
-        # spawn twistd, since spawning processes correctly is a real hassle
-        # on windows.
-        argv = ["twistd",
-                "--no_save",
-                "--logfile=twistd.log", # windows doesn't use the same default
-                "--python=buildbot.tac"]
-        sys.argv = argv
 
-        # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use
-        # _twistw.run . Twisted-2.5.0 and later use twistd.run, even for
-        # windows.
-        from twisted.scripts import twistd
-        twistd.run()
+    # see if we can launch the application without actually having to
+    # spawn twistd, since spawning processes correctly is a real hassle
+    # on windows.
+    argv = ["twistd",
+            "--no_save",
+            "--logfile=twistd.log", # windows doesn't use the same default
+            "--python=buildbot.tac"]
+    sys.argv = argv
+
+    # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use
+    # _twistw.run . Twisted-2.5.0 and later use twistd.run, even for
+    # windows.
+    from twisted.scripts import twistd
+    twistd.run()
 

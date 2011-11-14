@@ -16,6 +16,7 @@
 from twisted.trial import unittest
 from twisted.internet import task, defer
 from buildbot.schedulers import timed
+from buildbot import config
 
 class Periodic(unittest.TestCase):
 
@@ -57,7 +58,7 @@ class Periodic(unittest.TestCase):
     # tests
 
     def test_constructor_invalid(self):
-        self.assertRaises(AssertionError,
+        self.assertRaises(config.ConfigErrors,
                 lambda : timed.Periodic(name='test', builderNames=[ 'test' ],
                                         periodicBuildTimer=-2))
 

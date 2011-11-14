@@ -1,6 +1,8 @@
 Utilities
 =========
 
+.. py:class:: buildbo.util
+
 Several small utilities are available at the top-level :mod:`buildbot.util`
 package.  As always, see the API documentation for more information.
 
@@ -83,6 +85,18 @@ package.  As always, see the API documentation for more information.
     datetime objects in UTC::
 
         dt = datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC)
+
+.. py:function: diffSets(old, new)
+
+    :param old: old set
+    :type old: set or iterable
+    :param new: new set
+    :type new: set or iterable
+    :returns: a tuple, (removed, added)
+
+    This function compares two sets of objects, returning elements that were
+    added and elements that were removed.  This is largely a convenience
+    function for reconfiguring services.
 
 buildbot.util.bbcollections
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

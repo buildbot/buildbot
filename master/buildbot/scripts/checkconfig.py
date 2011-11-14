@@ -15,8 +15,7 @@
 
 import sys
 import os
-from twisted.internet import defer
-from buildbot import master
+from buildbot import config
 
 class ConfigLoader(object):
     def __init__(self, basedir=os.getcwd(), configFileName="master.cfg"):
@@ -24,23 +23,17 @@ class ConfigLoader(object):
         self.configFileName = os.path.abspath(
                                 os.path.join(basedir, configFileName))
 
-    def load(self):
-        d = defer.succeed(None)
+    def load(self, quiet=False):
+        try:
+            config.MasterConfig.loadConfig(
+                    self.basedir, self.configFileName)
+        except config.ConfigErrors, e:
+            if not quiet:
+                print >> sys.stderr, "Configuration Errors:"
+                for e in e.errors:
+                    print >> sys.stderr, "  " + e
+            return 1
 
-        old_sys_path = sys.path[:]
-
-        def loadcfg(_):
-            sys.path.append(self.basedir)
-
-            bmaster = master.BuildMaster(self.basedir, self.configFileName)
-            return bmaster.loadConfig(open(self.configFileName, "r"),
-                                      checkOnly=True)
-        d.addCallback(loadcfg)
-
-        # restore sys.path
-        def fixup(x):
-            sys.path[:] = old_sys_path
-            return x
-        d.addBoth(fixup)
-
-        return d
+        if not quiet:
+            print "Config file is good!"
+        return 0

@@ -20,7 +20,7 @@ from twisted.application import service
 from buildbot.interfaces import IStatusReceiver
 from buildbot import util, pbutil
 
-class StatusReceiver:
+class StatusReceiverBase:
     implements(IStatusReceiver)
 
     def requestSubmitted(self, request):
@@ -83,15 +83,20 @@ class StatusReceiver:
     def slaveDisconnected(self, slaveName):
         pass
 
-    def checkConfig(self, otherStatusReceivers):
+    def checkConfig(self, otherStatusReceivers, errors):
         pass
 
-class StatusReceiverMultiService(StatusReceiver, service.MultiService,
+class StatusReceiverMultiService(StatusReceiverBase, service.MultiService,
                                  util.ComparableMixin):
-    implements(IStatusReceiver)
 
     def __init__(self):
         service.MultiService.__init__(self)
+
+class StatusReceiverService(StatusReceiverBase, service.Service,
+                                 util.ComparableMixin):
+    pass
+
+StatusReceiver = StatusReceiverService
 
 
 class StatusReceiverPerspective(StatusReceiver, pbutil.NewCredPerspective):

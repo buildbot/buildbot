@@ -249,13 +249,12 @@ be used to access them.
     By adding one or more ``name=`` query arguments to the URL, the console view is
     restricted to only showing changes made by the given users.
     
-    NOTE: To use this page, your :file:`buildbot.css` file in :file:`public_html`
-    must be the one found in
-    :file:`master/buildbot/status/web/files/default.css`. This is the
-    default for new installs, but upgrades of very old installs of
-    Buildbot may need to manually fix the CSS file.
+    NOTE: To use this page, your :file:`buildbot.css` file in
+    :file:`public_html` must be the one found in
+    :bb:src:`master/buildbot/status/web/files/default.css`. This is the default
+    for new installs, but upgrades of very old installs of Buildbot may need to
+    manually fix the CSS file.
 
-    
     The console view is still in development. At this moment by
     default the view sorts revisions lexically, which can lead to odd
     behavior with non-integer revisions (e.g., git), or with integer
@@ -266,7 +265,6 @@ be used to access them.
     sorting revisions, although it depends on the date being set
     correctly in each commit::
 
-    
         w = html.WebStatus(http_port=8080, order_console_by_time=True)
 
 ``/rss``
@@ -636,7 +634,7 @@ Change Hooks
 
 The ``/change_hook`` url is a magic URL which will accept HTTP requests and translate
 them into changes for buildbot. Implementations (such as a trivial json-based endpoint
-and a GitHub implementation) can be found in :file:`master/buildbot/status/web/hooks`.
+and a GitHub implementation) can be found in :bb:src:`master/buildbot/status/web/hooks`.
 The format of the url is :samp:`/change_hook/{DIALECT}` where DIALECT is a package within the 
 hooks directory. Change_hook is disabled by default and each DIALECT has to be enabled
 separately, for security reasons

@@ -37,9 +37,6 @@ class LatentBuildSlaveFailedToSubstantiate(Exception):
 class BuildbotNotRunningError(Exception):
     pass
 
-class ParameterError(Exception):
-    pass
-
 class IChangeSource(Interface):
     """
     Service which feeds Change objects to the changemaster. When files or
@@ -986,12 +983,13 @@ class IStatusReceiver(Interface):
     def slaveDisconnected(slaveName):
         """The slave has disconnected."""
 
-    def checkConfig(otherStatusReceivers):
+    def checkConfig(otherStatusReceivers, errors):
         """Verify that there are no other status receivers which conflict with
         the current one.
 
         @type  otherStatusReceivers: A list of L{IStatusReceiver} objects which
         will contain self.
+        @type  errors: L{ConfigErrors} instance to which errors should be added
         """
 
 
@@ -1207,3 +1205,6 @@ class IProperties(Interface):
         @name value: value to render
         @returns: rendered value
         """
+
+class IScheduler(Interface):
+    pass

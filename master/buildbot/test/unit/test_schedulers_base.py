@@ -18,19 +18,11 @@ import mock
 import twisted
 from twisted.trial import unittest
 from twisted.internet import defer
+from buildbot import config
 from buildbot.schedulers import base
 from buildbot.process import properties
 from buildbot.test.util import scheduler
 from buildbot.test.fake import fakedb
-
-class IsScheduler(unittest.TestCase):
-    class Subclass(base.BaseScheduler):
-        def __init__(self):
-            pass
-
-    def test_isScheduler(self):
-        self.assertFalse(base.isScheduler(self))
-        self.assertTrue(base.isScheduler(self.Subclass()))
 
 class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
@@ -54,7 +46,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
     # tests
 
     def test_constructor_builderNames(self):
-        self.assertRaises(AssertionError,
+        self.assertRaises(config.ConfigErrors,
                 lambda : self.makeScheduler(builderNames='xxx'))
 
     def test_constructor_builderNames_unicode(self):
@@ -415,3 +407,11 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                          project='p'))
         d.addCallback(check)
         return d
+
+    def test_findNewSchedulerInstance(self):
+        sched = self.makeScheduler(name='n', builderNames=['k'])
+        new_sched = self.makeScheduler(name='n', builderNames=['l'])
+        distractor = self.makeScheduler(name='x', builderNames=['l'])
+        config = mock.Mock()
+        config.schedulers = dict(dist=distractor, n=new_sched)
+        self.assertIdentical(sched.findNewSchedulerInstance(config), new_sched)

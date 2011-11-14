@@ -14,12 +14,13 @@
 # Copyright Buildbot Team Members
 
 from zope.interface import implements
+from twisted.python import log
 from twisted.internet import defer
 from twisted.application import service
+from buildbot import interfaces, config, util
+from buildbot.process import metrics
 
-from buildbot import interfaces
-
-class ChangeManager(service.MultiService):
+class ChangeManager(config.ReconfigurableServiceMixin, service.MultiService):
     """
     This is the master-side service which receives file change notifications
     from version-control systems.
@@ -31,29 +32,47 @@ class ChangeManager(service.MultiService):
 
     implements(interfaces.IEventSource)
 
-    lastPruneChanges = None
     name = "changemanager"
 
-    def __init__(self):
+    def __init__(self, master):
         service.MultiService.__init__(self)
-        self.master = None
-        self.lastPruneChanges = 0
+        self.setName('change_manager')
+        self.master = master
 
-    def startService(self):
-        service.MultiService.startService(self)
-        self.master = self.parent
+    @defer.deferredGenerator
+    def reconfigService(self, new_config):
+        timer = metrics.Timer("ChangeManager.reconfigService")
+        timer.start()
 
-    def addSource(self, source):
-        assert interfaces.IChangeSource.providedBy(source)
-        assert service.IService.providedBy(source)
-        source.master = self.master
-        source.setServiceParent(self)
+        removed, added = util.diffSets(
+                set(self),
+                new_config.change_sources)
 
-    def removeSource(self, source):
-        assert source in self
-        d = defer.maybeDeferred(source.disownServiceParent)
-        def unset_master(x):
-            source.master = None
-            return x
-        d.addBoth(unset_master)
-        return d
+        if removed or added:
+            log.msg("adding %d new changesources, removing %d" %
+                    (len(added), len(removed)))
+
+            for src in removed:
+                wfd = defer.waitForDeferred(
+                    defer.maybeDeferred(
+                        src.disownServiceParent))
+                yield wfd
+                wfd.getResult()
+                src.master = None
+
+            for src in added:
+                src.master = self.master
+                src.setServiceParent(self)
+
+        num_sources = len(list(self))
+        assert num_sources == len(new_config.change_sources)
+        metrics.MetricCountEvent.log("num_sources", num_sources, absolute=True)
+
+        # reconfig any newly-added change sources, as well as existing
+        wfd = defer.waitForDeferred(
+            config.ReconfigurableServiceMixin.reconfigService(self,
+                                                        new_config))
+        yield wfd
+        wfd.getResult()
+
+        timer.stop()

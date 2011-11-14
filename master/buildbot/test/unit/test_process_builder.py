@@ -18,6 +18,7 @@ import random
 from twisted.trial import unittest
 from twisted.python import failure
 from twisted.internet import defer
+from buildbot import config
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import builder
 from buildbot.db import buildrequests
@@ -38,10 +39,11 @@ class TestBuilderBuildCreation(unittest.TestCase):
         self.factory = mock.Mock()
         self.master = fakemaster.make_master()
         # only include the necessary required config, plus user-requested
-        config = dict(name="bldr", slavename="slv", builddir="bdir",
+        config_args = dict(name="bldr", slavename="slv", builddir="bdir",
                      slavebuilddir="sbdir", factory=self.factory)
-        config.update(config_kwargs)
-        self.bldr = builder.Builder(config, self.bstatus)
+        config_args.update(config_kwargs)
+        builder_config = config.BuilderConfig(**config_args)
+        self.bldr = builder.Builder(builder_config.name)
         self.master.db = self.db = fakedb.FakeDBConnector(self)
         self.bldr.master = self.master
         self.bldr.botmaster = self.master.botmaster
@@ -64,6 +66,10 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
         self.bldr.startService()
 
+        mastercfg = config.MasterConfig()
+        mastercfg.builders = [ builder_config ]
+        return self.bldr.reconfigService(mastercfg)
+
     def assertBuildsStarted(self, exp):
         # munge builds_started into a list of (slave, [brids])
         builds_started = [
@@ -82,8 +88,12 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
     # services
 
+    @defer.deferredGenerator
     def test_stopService_flushes(self):
-        self.makeBuilder()
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
 
         # just check that stopService calls this and waits
         # for the deferred to fire
@@ -102,12 +112,12 @@ class TestBuilderBuildCreation(unittest.TestCase):
         # finish the maybeStartBuild invocation..
         long_d.callback(None)
 
-        # and then check that things happened in the right order
-        def check(_):
-            self.assertEqual(events, [ 'long_d', 'stop_d' ])
-        stop_d.addCallback(check)
+        wfd = defer.waitForDeferred(stop_d)
+        yield wfd
+        wfd.getResult()
 
-        return stop_d
+        # and then check that things happened in the right order
+        self.assertEqual(events, [ 'long_d', 'stop_d' ])
 
     # maybeStartBuild
 
@@ -126,21 +136,43 @@ class TestBuilderBuildCreation(unittest.TestCase):
         d.addErrback(eb)
         return d
 
+    @defer.deferredGenerator
     def test_maybeStartBuild_no_buildreqests(self):
-        self.makeBuilder()
-        self.setSlaveBuilders({'test-slave11':1})
-        return self.do_test_maybeStartBuild(exp_claims=[], exp_builds=[])
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
 
+        self.setSlaveBuilders({'test-slave11':1})
+
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(exp_claims=[], exp_builds=[]))
+        yield wfd
+        wfd.getResult()
+
+    @defer.deferredGenerator
     def test_maybeStartBuild_no_slavebuilders(self):
-        self.makeBuilder()
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
+
         rows = [
             fakedb.BuildRequest(id=11, buildsetid=10, buildername="bldr"),
         ]
-        return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[])
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[]))
+        yield wfd
+        wfd.getResult()
 
+    @defer.deferredGenerator
     def test_maybeStartBuild_limited_by_slaves(self):
-        self.makeBuilder(mergeRequests=False)
+        wfd = defer.waitForDeferred(
+            self.makeBuilder(mergeRequests=False))
+        yield wfd
+        wfd.getResult()
+
         self.setSlaveBuilders({'test-slave1':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, buildername="bldr",
@@ -148,11 +180,19 @@ class TestBuilderBuildCreation(unittest.TestCase):
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr",
                 submitted_at=135000),
         ]
-        return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[10], exp_builds=[('test-slave1', [10])])
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[10], exp_builds=[('test-slave1', [10])]))
+        yield wfd
+        wfd.getResult()
 
+    @defer.deferredGenerator
     def test_maybeStartBuild_limited_by_available_slaves(self):
-        self.makeBuilder(mergeRequests=False)
+        wfd = defer.waitForDeferred(
+            self.makeBuilder(mergeRequests=False))
+        yield wfd
+        wfd.getResult()
+
         self.setSlaveBuilders({'test-slave1':0, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, buildername="bldr",
@@ -160,11 +200,19 @@ class TestBuilderBuildCreation(unittest.TestCase):
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr",
                 submitted_at=135000),
         ]
-        return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[10], exp_builds=[('test-slave2', [10])])
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[10], exp_builds=[('test-slave2', [10])]))
+        yield wfd
+        wfd.getResult()
 
+    @defer.deferredGenerator
     def test_maybeStartBuild_unlimited(self):
-        self.makeBuilder(mergeRequests=False, patch_random=True)
+        wfd = defer.waitForDeferred(
+            self.makeBuilder(mergeRequests=False, patch_random=True))
+        yield wfd
+        wfd.getResult()
+
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, buildername="bldr",
@@ -172,81 +220,145 @@ class TestBuilderBuildCreation(unittest.TestCase):
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr",
                 submitted_at=135000),
         ]
-        return self.do_test_maybeStartBuild(rows=rows,
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(rows=rows,
                 exp_claims=[10, 11],
-                exp_builds=[('test-slave2', [10]), ('test-slave1', [11])])
+                exp_builds=[('test-slave2', [10]), ('test-slave1', [11])]))
+        yield wfd
+        wfd.getResult()
 
+    @defer.deferredGenerator
     def test_maybeStartBuild_limited_by_requests(self):
-        self.makeBuilder(mergeRequests=False, patch_random=True)
+        wfd = defer.waitForDeferred(
+            self.makeBuilder(mergeRequests=False, patch_random=True))
+        yield wfd
+        wfd.getResult()
+
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[11], exp_builds=[('test-slave2', [11])])
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[11], exp_builds=[('test-slave2', [11])]))
+        yield wfd
+        wfd.getResult()
 
+    @defer.deferredGenerator
     def test_maybeStartBuild_chooseSlave_None(self):
-        self.makeBuilder()
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
+
         self.bldr._chooseSlave = lambda avail : defer.succeed(None)
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[])
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[]))
+        yield wfd
+        wfd.getResult()
 
+    @defer.deferredGenerator
     def test_maybeStartBuild_chooseSlave_bogus(self):
-        self.makeBuilder()
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
+
         self.bldr._chooseSlave = lambda avail : defer.succeed(mock.Mock())
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[])
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[]))
+        yield wfd
+        wfd.getResult()
 
+    @defer.deferredGenerator
     def test_maybeStartBuild_chooseSlave_fails(self):
-        self.makeBuilder()
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
+
         self.bldr._chooseSlave = lambda avail : defer.fail(RuntimeError("xx"))
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[], exp_fail=RuntimeError)
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[], exp_fail=RuntimeError))
+        yield wfd
+        wfd.getResult()
 
+    @defer.deferredGenerator
     def test_maybeStartBuild_chooseBuild_None(self):
-        self.makeBuilder()
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
+
         self.bldr._chooseBuild = lambda reqs : defer.succeed(None)
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[])
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[]))
+        yield wfd
+        wfd.getResult()
 
+    @defer.deferredGenerator
     def test_maybeStartBuild_chooseBuild_bogus(self):
-        self.makeBuilder()
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
+
         self.bldr._chooseBuild = lambda reqs : defer.succeed(mock.Mock())
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[])
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[]))
+        yield wfd
+        wfd.getResult()
 
+    @defer.deferredGenerator
     def test_maybeStartBuild_chooseBuild_fails(self):
-        self.makeBuilder(patch_random=True)
+        wfd = defer.waitForDeferred(
+            self.makeBuilder(patch_random=True))
+        yield wfd
+        wfd.getResult()
+
         self.bldr._chooseBuild = lambda reqs : defer.fail(RuntimeError("xx"))
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[], exp_fail=RuntimeError)
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[], exp_fail=RuntimeError))
+        yield wfd
+        wfd.getResult()
 
+    @defer.deferredGenerator
     def test_maybeStartBuild_mergeRequests_fails(self):
-        self.makeBuilder(patch_random=True)
+        wfd = defer.waitForDeferred(
+            self.makeBuilder(patch_random=True))
+        yield wfd
+        wfd.getResult()
+
         def _mergeRequests(breq, unclaimed_requests, mergeRequests_fn):
             return defer.fail(RuntimeError("xx"))
         self.bldr._mergeRequests = _mergeRequests
@@ -254,11 +366,18 @@ class TestBuilderBuildCreation(unittest.TestCase):
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[], exp_fail=RuntimeError)
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[], exp_fail=RuntimeError))
+        yield wfd
+        wfd.getResult()
 
+    @defer.deferredGenerator
     def test_maybeStartBuild_claim_race(self):
-        self.makeBuilder(patch_random=True)
+        wfd = defer.waitForDeferred(
+            self.makeBuilder(patch_random=True))
+        yield wfd
+        wfd.getResult()
 
         # fake a race condition on the buildrequests table
         old_claimBuildRequests = self.db.buildrequests.claimBuildRequests
@@ -280,26 +399,40 @@ class TestBuilderBuildCreation(unittest.TestCase):
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr",
                 submitted_at=135000),
         ]
-        return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[11], exp_builds=[('test-slave2', [11])])
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[11], exp_builds=[('test-slave2', [11])]))
+        yield wfd
+        wfd.getResult()
 
+    @defer.deferredGenerator
     def test_maybeStartBuild_builder_stopped(self):
-        self.makeBuilder()
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
 
         # this will cause an exception if maybeStartBuild tries to start
         self.bldr.slaves = None
 
         # so we just hope this does not fail
-        d = self.bldr.stopService()
-        d.addCallback(lambda _ : self.bldr.maybeStartBuild())
-        return d
+        wfd = defer.waitForDeferred(
+            self.bldr.stopService())
+        yield wfd
+        wfd.getResult()
+
+        wfd = defer.waitForDeferred(
+            self.bldr.maybeStartBuild())
+        yield wfd
+        wfd.getResult()
 
     # _chooseSlave
 
     def do_test_chooseSlave(self, nextSlave, exp_choice=None, exp_fail=None):
-        self.makeBuilder(nextSlave=nextSlave)
         slavebuilders = [ mock.Mock(name='sb%d' % i) for i in range(4) ]
-        d = self.bldr._chooseSlave(slavebuilders)
+
+        d = self.makeBuilder(nextSlave=nextSlave)
+        d.addCallback(lambda _ : self.bldr._chooseSlave(slavebuilders))
         def check(sb):
             self.assertIdentical(sb, slavebuilders[exp_choice])
         def failed(f):
@@ -336,13 +469,15 @@ class TestBuilderBuildCreation(unittest.TestCase):
     # _chooseBuild
 
     def do_test_chooseBuild(self, nextBuild, exp_choice=None, exp_fail=None):
-        self.makeBuilder(nextBuild=nextBuild)
+
         def mkrq(n):
             brdict = dict(brobj=mock.Mock(name='br%d' % n))
             brdict['brobj'].brdict = brdict
             return brdict
         requests = [ mkrq(i) for i in range(4) ]
-        d = self.bldr._chooseBuild(requests)
+
+        d = self.makeBuilder(nextBuild=nextBuild)
+        d.addCallback(lambda _ : self.bldr._chooseBuild(requests))
         def check(sb):
             self.assertIdentical(sb, requests[exp_choice])
         def failed(f):
@@ -380,7 +515,11 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
     @defer.deferredGenerator
     def test_brdictToBuildRequest(self):
-        self.makeBuilder()
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
+
         # set up all of the data required for a BuildRequest object
         wfd = defer.waitForDeferred(
             self.db.insertTestData([
@@ -415,6 +554,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
     # _getMergeRequestsFn
 
+    @defer.deferredGenerator
     def do_test_getMergeRequestsFn(self, builder_param=None,
                     global_param=None, expected=0):
         cble = lambda : None
@@ -423,11 +563,17 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
         # omit the constructor parameter if None was given
         if builder_param is None:
-            self.makeBuilder()
+            wfd = defer.waitForDeferred(
+                self.makeBuilder())
+            yield wfd
+            wfd.getResult()
         else:
-            self.makeBuilder(mergeRequests=builder_param)
+            wfd = defer.waitForDeferred(
+                self.makeBuilder(mergeRequests=builder_param))
+            yield wfd
+            wfd.getResult()
 
-        self.master.botmaster.mergeRequests = global_param
+        self.master.config.mergeRequests = global_param
 
         fn = self.bldr._getMergeRequestsFn()
 
@@ -462,7 +608,11 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
     @defer.deferredGenerator
     def test_mergeRequests(self):
-        self.makeBuilder()
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
+
         # set up all of the data required for a BuildRequest object
         wfd = defer.waitForDeferred(
             self.db.insertTestData([
@@ -503,37 +653,61 @@ class TestBuilderBuildCreation(unittest.TestCase):
         yield wfd
         self.assertEqual(wfd.getResult(), [ brdicts[1] ])
 
+    @defer.deferredGenerator
     def test_mergeRequests_no_merging(self):
-        self.makeBuilder()
-        breq = dict(dummy=1)
-        d = self.bldr._mergeRequests(breq, [ breq, breq ], None)
-        def check(res):
-            self.assertEqual(res, [breq])
-        d.addCallback(check)
-        return d
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
 
+        breq = dict(dummy=1)
+        wfd = defer.waitForDeferred(
+            self.bldr._mergeRequests(breq, [ breq, breq ], None))
+        yield wfd
+        merged = wfd.getResult()
+
+        self.assertEqual(merged, [breq])
+
+    @defer.deferredGenerator
     def test_mergeRequests_singleton_list(self):
-        self.makeBuilder()
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
+
         breq = dict(dummy=1)
         def is_not_called(*args):
             self.fail("should not be called")
         self.bldr._brdictToBuildRequest = is_not_called
-        d = self.bldr._mergeRequests(breq, [ breq ], lambda x,y : None)
-        def check(res):
-            self.assertEqual(res, [breq])
-        d.addCallback(check)
-        return d
+
+        wfd = defer.waitForDeferred(
+            self.bldr._mergeRequests(breq, [ breq ], lambda x,y : None))
+        yield wfd
+        merged = wfd.getResult()
+
+        self.assertEqual(merged, [breq])
 
     # other methods
 
+    @defer.deferredGenerator
     def test_reclaimAllBuilds_empty(self):
-        # just to be sure this doesn't crash
-        self.makeBuilder()
-        d = self.bldr.reclaimAllBuilds()
-        return d
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
 
+        # just to be sure this doesn't crash
+        wfd = defer.waitForDeferred(
+            self.bldr.reclaimAllBuilds())
+        yield wfd
+        wfd.getResult()
+
+    @defer.deferredGenerator
     def test_reclaimAllBuilds(self):
-        self.makeBuilder()
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
 
         claims = []
         def fakeClaimBRs(*args):
@@ -555,11 +729,12 @@ class TestBuilderBuildCreation(unittest.TestCase):
         self.bldr.old_building[old] = None
         self.bldr.building.append(mkbld([10,11,12]))
 
-        d = self.bldr.reclaimAllBuilds()
-        def check(_):
-            self.assertEqual(claims, [ (set([10,11,12,15]),) ])
-        d.addCallback(check)
-        return d
+        wfd = defer.waitForDeferred(
+            self.bldr.reclaimAllBuilds())
+        yield wfd
+        wfd.getResult()
+
+        self.assertEqual(claims, [ (set([10,11,12,15]),) ])
 
 class TestGetOldestRequestTime(unittest.TestCase):
 
@@ -588,9 +763,10 @@ class TestGetOldestRequestTime(unittest.TestCase):
         self.factory = mock.Mock()
         self.master = fakemaster.make_master()
         # only include the necessary required config
-        config = dict(name=name, slavename="slv", builddir="bdir",
-                     slavebuilddir="sbdir", factory=self.factory)
-        self.bldr = builder.Builder(config, self.bstatus)
+        builder_config = config.BuilderConfig(
+                        name=name, slavename="slv", builddir="bdir",
+                        slavebuilddir="sbdir", factory=self.factory)
+        self.bldr = builder.Builder(builder_config.name)
         self.master.db = self.db = fakedb.FakeDBConnector(self)
         self.bldr.master = self.master
 
@@ -599,9 +775,13 @@ class TestGetOldestRequestTime(unittest.TestCase):
 
         self.bldr.startService()
 
+        mastercfg = config.MasterConfig()
+        mastercfg.builders = [ builder_config ]
+        return self.bldr.reconfigService(mastercfg)
+
     def test_gort_unclaimed(self):
-        self.makeBuilder(name='bldr1')
-        d = self.db.insertTestData(self.base_rows)
+        d = self.makeBuilder(name='bldr1')
+        d.addCallback(lambda _ : self.db.insertTestData(self.base_rows))
         d.addCallback(lambda _ : self.bldr.getOldestRequestTime())
         def check(rqtime):
             self.assertEqual(rqtime, epoch2datetime(1000))
@@ -609,8 +789,8 @@ class TestGetOldestRequestTime(unittest.TestCase):
         return d
 
     def test_gort_all_claimed(self):
-        self.makeBuilder(name='bldr2')
-        d = self.db.insertTestData(self.base_rows)
+        d = self.makeBuilder(name='bldr2')
+        d.addCallback(lambda _ : self.db.insertTestData(self.base_rows))
         d.addCallback(lambda _ : self.bldr.getOldestRequestTime())
         def check(rqtime):
             self.assertEqual(rqtime, None)

@@ -1,0 +1,155 @@
+Buildbot 0.7.5 was released 10 Dec 2006
+
+** Things You Need To Know
+
+*** The Great BuildStep Renaming
+
+All BuildSteps have moved! They used to be classes in buildbot.process.step,
+but now they all have separate modules in buildbot.steps.* . They have been
+split out into separate categories: for example, the source checkout steps
+are now buildbot.steps.source.CVS, buildbot.steps.source.Darcs, etc. The most
+commonly used one is probably buildbot.steps.shell.ShellCommand . The
+python-specific steps are in buildbot.steps.python, and the Twisted-specific
+steps are in buildbot.steps.python_twisted .
+
+You will need to update your master.cfg files to use the new names. The old
+names are deprecated and will be removed altogether in the next release.
+
+*** Compatibility
+
+Buildbot now requires python-2.3 or later. Buildbot now requires
+Twisted-2.0.0 or later. Support for earlier versions of both has finally been
+removed. If you discover it works with unsupported versions, please return
+your Buildbot to the factory for repairs :-).
+
+Buildbot has *not* yet been tested against the recent python-2.5 release. It
+has been tested against the latest SVN version of Twisted, but only in
+conjunction with python-2.4 .
+
+** new features
+
+*** reconfiguring a Builder no longer causes a disconnect/reconnect cycle
+
+This means that sending SIGHUP to the master or running 'buildbot reconfig
+MASTERDIR' command no longer interrupts any current builds, nor does it lose
+pending builds like it did before. This involved a fairly substantial
+refactoring of the various internal BotPerspective/BotMaster/Builder classes.
+Note that reconfiguring Schedulers still loses any Changes that were waiting
+for the tree to become stable: hopefully this will be fixed in the next
+release.
+
+*** 'buildbot start/restart/reconfig' now show logs until startup is complete
+
+These commands now have additional code to follow twistd.log and display all
+the lines that are emitted from the beginning of the start/reconfig action
+until it has completed. This gives you a chance to see any problems detected
+in the config file without needing to manually look in twistd.log or use
+another shell to 'tail -f' it. This also makes it clear which config file is
+being used. This functionality is not available under windows.
+
+In addition, if any problems are detected during 'start' or 'restart' (but
+not reconfig), the buildbot command will terminate with a non-zero exit
+status, making it easier to use in scripts. Closes SF#1517975.
+
+*** Locks now take maxCount=N to allow multiple simultaneous owners
+
+This allows Locks to be non-exclusive but still limit maximum concurrency.
+Thanks to James Knight for the patch. Closes SF#1434997.
+
+*** filetransfer steps
+
+buildbot.steps.transfer.FileUpload is a buildstep that will move files from
+the slave to the master. Likewise, FileDownload will move files from the
+master down to the buildslave. Many thanks to Albert Hofkamp for contributing
+these classes. Closes SF#1504631.
+
+*** pyflakes step
+
+buildbot.steps.python.PyFlakes will run the simple 'pyflakes' static analysis
+tool and parse the results to tell you about undefined names, unused imports,
+etc. You'll need to tell it how to run pyflakes, usually with something like
+command=["pyflakes", "src/packagedir"] or the like. The default command is
+"make pyflakes", which assumes that you have a suitable target in your
+top-level Makefile.
+
+*** Monotone support
+
+Nathaniel Smith has contributed initial support for the Monotone version
+control system. The code still needs docs and tests, but on the other hand it
+has been in use by the Monotone buildbot for a long time now, so it is
+probably fairly stable.
+
+*** Tinderbox support
+
+Ben Hearsum and the Mozilla crew have contributed some classes to allow
+Buildbot to work with Tinderbox clients. One piece is
+buildbot.changes.bonsaipoller.BonsaiPoller, which is a ChangeSource that
+polls a Bonsai server (which is a kind of web-vased viewcvs CGI script) to
+discover source code changes. The other piece is
+buildbot.status.tinderbox.TinderboxMailNotifier, which is a status plugin
+that sends email in the same format as Tinderbox does, which allows a number
+of Tinderbox tools to be driven by Buildbot instead.
+
+*** SVN Poller
+
+Niklaus Giger contributed a ChangeSource (buildbot.changes.svnpoller) which
+polls a remote SVN repository on a periodic basis. This is useful when, for
+whatever reason, you cannot add a post-commit hook script to the repository.
+This obsoletes the external contrib/svn_watcher.py script.
+
+** notes for plugin developers
+
+*** IStatusLog.readlines()
+
+This new method makes it easier for a status plugin (or a
+BuildStep.createSummary method) to walk through a StatusLog one line at a
+time. For example, if you wanted to create an extra logfile that just
+contained all the GCC warnings from the main log, you could use the
+following:
+
+    def createSummary(self, log):
+        warnings = []
+        for line in log.readlines():
+            if "warning:" in line:
+                warnings.append()
+        self.addCompleteLog('warnings', "".join(warnings))
+
+The "BuildStep LogFiles" section of the user's manual contains more
+information. This method is not particularly memory-efficient yet (it reads
+the whole logfile into memory first, then splits it into lines); this will be
+improved in a future release.
+
+** bug fixes
+
+*** Update source.SVN to work with the new SVN-1.4.0
+
+The latest subversion changed the behavior in an unusual situation which
+caused the unit tests to fail. This was unlikely to cause a problem in actual
+usage, but the tests have been updated to pass with the new version.
+
+*** update svn_buildbot.py to avoid mangling filenames
+
+Older versions of this script were stripping the wrong number of columns from
+the output of 'svnlook changed', and would sometimes mangle filenames. This
+has been fixed. Closes SF#1545146.
+
+*** logfiles= caused subsequent build failures under Windows
+
+Earlier versions of buildbot didn't explicitly close any logfiles= file
+handles when the build finished. On windows (where you cannot delete a file
+that someone else is reading), this could cause the next build to fail as the
+source checkout step was unable to delete the old working directory. This has
+been fixed. Closes SF#1568415.
+
+*** logfiles= didn't work on OS-X
+
+Macintosh OS-X has a different behavior when reading files that have reached
+EOF, the result was that logfiles= sometimes didn't work. Thanks to Mark Rowe
+for the patch.
+
+** other changes
+
+The 'buildbot sighup MASTERDIR' command has been replaced with 'buildbot
+reconfig MASTERDIR', since that seems to be a slightly more meaningful name.
+The 'sighup' form will remain as an alias.
+
