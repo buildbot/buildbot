@@ -20,6 +20,7 @@ from twisted.internet import defer
 from buildbot.pbutil import NewCredPerspective
 from buildbot.changes import base
 from buildbot.util import epoch2datetime
+from buildbot import config
 
 class ChangePerspective(NewCredPerspective):
 
@@ -91,7 +92,7 @@ class ChangePerspective(NewCredPerspective):
             log.msg("No files listed in change... bit strange, but not fatal.")
         return self.master.addChange(**changedict)
 
-class PBChangeSource(base.ChangeSource):
+class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
     compare_attrs = ["user", "passwd", "port", "prefix", "port"]
 
     def __init__(self, user="change", passwd="changepw", port=None,
@@ -111,6 +112,7 @@ class PBChangeSource(base.ChangeSource):
             d += " (prefix '%s')" % self.prefix
         return d
 
+    @defer.deferredGenerator
     def reconfigService(self, new_config):
         # calculate the new port
         port = self.port
@@ -119,11 +121,17 @@ class PBChangeSource(base.ChangeSource):
 
         # and, if it's changed, re-register
         if port != self.registered_port:
-            d = self._unregister()
-            d.addCallback(lambda _ : self._register(port))
-            return d
-        else:
-            return defer.succeed(None)
+            wfd = defer.waitForDeferred(
+                self._unregister())
+            yield wfd
+            wfd.getResult()
+            self._register(port)
+
+        wfd = defer.waitForDeferred(
+            config.ReconfigurableServiceMixin.reconfigService(self,
+                                                    new_config))
+        yield wfd
+        wfd.getResult()
 
     def stopService(self):
         d = defer.maybeDeferred(base.ChangeSource.stopService, self)
