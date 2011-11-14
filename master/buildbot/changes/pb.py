@@ -90,7 +90,11 @@ class ChangePerspective(NewCredPerspective):
 
         if not files:
             log.msg("No files listed in change... bit strange, but not fatal.")
-        return self.master.addChange(**changedict)
+        d = self.master.addChange(**changedict)
+        # since this is a remote method, we can't return a Change instance, so
+        # this just sets the return value to None:
+        d.addCallback(lambda _ : None)
+        return d
 
 class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
     compare_attrs = ["user", "passwd", "port", "prefix", "port"]
