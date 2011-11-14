@@ -301,6 +301,9 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.builders = builders
         self.addLogs = addLogs
         self.relayhost = relayhost
+        if '\n' in subject:
+            errors.append(
+                'Newlines are not allowed in email subjects')
         self.subject = subject
         if lookup is not None:
             if type(lookup) is str:
@@ -540,6 +543,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                                        'builder': builderName,
                                        }
 
+        assert '\n' not in subject, \
+            "Subject cannot contain newlines"
 
         assert type in ('plain', 'html'), \
             "'%s' message type must be 'plain' or 'html'." % type
