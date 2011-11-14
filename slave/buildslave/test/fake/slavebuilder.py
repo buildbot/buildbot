@@ -26,6 +26,7 @@ class FakeSlaveBuilder:
         self.updates = []
         self.basedir = basedir
         self.usePTY = usePTY
+        self.unicode_encoding = 'utf-8'
 
     def sendUpdate(self, data):
         if self.debug:
