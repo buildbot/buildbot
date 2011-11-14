@@ -98,7 +98,9 @@ class TestMailNotifier(unittest.TestCase):
         builds = [ FakeBuildStatus(name="build") ]
         msgdict = create_msgdict()
         patches = [ ['', u'\u00E5\u00E4\u00F6', ''] ]
-        logs = [ FakeLog(u'Unicode log with non-ascii (\u00E5\u00E4\u00F6).') ]
+        msg = u'Unicode log with non-ascii (\u00E5\u00E4\u00F6).'
+        # add msg twice: as unicode and already encoded
+        logs = [ FakeLog(msg), FakeLog(msg.encode('utf-8')) ]
         mn = MailNotifier('from@example.org', addLogs=True)
         m = mn.createEmail(msgdict, u'builder-n\u00E5me',
                            u'project-n\u00E5me', SUCCESS,
