@@ -622,6 +622,16 @@ well. Be sure to watch the :file:`twistd.log` file (:ref:`Logfiles`)
 as you start using the jobdir, to make sure the buildmaster is happy
 with it.
 
+.. note::
+
+    Patches in the jobdir are encoded using netstrings, which place an
+    arbitrary upper limit on patch size of 99999 bytes.  If your submitted try
+    jobs are rejected with `BadJobFile`, try increasing this limit with a
+    snippet like this in your `master.cfg`::
+
+        from twisted.protocols.basic import NetstringReceiver
+        NetstringReceiver.MAX_LENGTH = 1000000
+
 To use the username/password form of authentication, create a
 :class:`Try_Userpass` instance instead. It takes the same
 ``builderNames`` argument as the :class:`Try_Jobdir` form, but
