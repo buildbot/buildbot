@@ -21,7 +21,7 @@ from zope.interface import implements
 from twisted.trial import unittest
 from twisted.application import service
 from twisted.internet import defer
-from buildbot import config, buildslave, interfaces
+from buildbot import config, buildslave, interfaces, revlinks
 from buildbot.process import properties
 from buildbot.test.util import dirs, compat
 from buildbot.changes import base as changes_base
@@ -171,6 +171,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             change_sources = [],
             status = [],
             user_managers = [],
+            revlink = revlinks.default_revlink_matcher
             )
         expected.update(global_defaults)
         got = dict([
@@ -418,6 +419,14 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         mh = mock.Mock(name='manhole')
         self.do_test_load_global(dict(manhole=mh), manhole=mh)
 
+    def test_load_global_revlink_callable(self):
+        callable = lambda : None
+        self.do_test_load_global(dict(revlink=callable),
+                revlink=callable)
+
+    def test_load_global_revlink_invalid(self):
+        self.cfg.load_global(self.filename, dict(revlink=''), self.errors)
+        self.assertConfigError(self.errors, "must be a callable")
 
     def test_load_validation_defaults(self):
         self.cfg.load_validation(self.filename, {}, self.errors)
