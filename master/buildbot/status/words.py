@@ -782,7 +782,7 @@ class IrcStatusBot(irc.IRCClient):
     implements(IChannel)
     contactClass = IRCContact
 
-    def __init__(self, nickname, password, channels, status, categories,
+    def __init__(self, nickname, password, channels, nicks, status, categories,
                  notify_events, noticeOnChannel=False, useRevisions=False,
                  showBlameList=False):
         """
@@ -792,6 +792,8 @@ class IrcStatusBot(irc.IRCClient):
         @param password: the password to use for identifying with Nickserv
         @type  channels: list of dictionaries
         @param channels: the bot will maintain a presence in these channels
+        @type  nicks: list of strings
+        @param nicks: the bot will report to these users
         @type  status: L{buildbot.status.builder.Status}
         @param status: the build master's Status object, through which the
                        bot retrieves all status information
@@ -806,6 +808,7 @@ class IrcStatusBot(irc.IRCClient):
         """
         self.nickname = nickname
         self.channels = channels
+        self.nicks = nicks
         self.password = password
         self.status = status
         self.master = status.master
@@ -891,6 +894,8 @@ class IrcStatusBot(irc.IRCClient):
                 channel = c
                 password = None
             self.join(channel=channel, key=password)
+        for c in self.nicks:
+            self.getContact(c)
 
     def joined(self, channel):
         self.log("I have joined %s" % (channel,))
@@ -937,7 +942,7 @@ class IrcStatusFactory(ThrottledClientFactory):
     shuttingDown = False
     p = None
 
-    def __init__(self, nickname, password, channels, categories, notify_events,
+    def __init__(self, nickname, password, channels, nicks, categories, notify_events,
                  noticeOnChannel=False, useRevisions=False, showBlameList=False,
                  lostDelay=None, failedDelay=None):
         ThrottledClientFactory.__init__(self, lostDelay=lostDelay,
@@ -946,6 +951,7 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.nickname = nickname
         self.password = password
         self.channels = channels
+        self.nicks = nicks
         self.categories = categories
         self.notify_events = notify_events
         self.noticeOnChannel = noticeOnChannel
@@ -964,7 +970,7 @@ class IrcStatusFactory(ThrottledClientFactory):
 
     def buildProtocol(self, address):
         p = self.protocol(self.nickname, self.password,
-                          self.channels, self.status,
+                          self.channels, self.nicks, self.status,
                           self.categories, self.notify_events,
                           noticeOnChannel = self.noticeOnChannel,
                           useRevisions = self.useRevisions,
@@ -1000,11 +1006,11 @@ class IRC(base.StatusReceiverMultiService):
     in_test_harness = False
 
     compare_attrs = ["host", "port", "nick", "password",
-                     "channels", "allowForce", "useSSL",
+                     "channels", "nicks", "allowForce", "useSSL",
                      "useRevisions", "categories",
                      "lostDelay", "failedDelay"]
 
-    def __init__(self, host, nick, channels, port=6667, allowForce=False,
+    def __init__(self, host, nick, channels, nicks=[], port=6667, allowForce=False,
                  categories=None, password=None, notify_events={},
                  noticeOnChannel = False, showBlameList = True,
                  useRevisions=False, useSSL=False,
@@ -1018,6 +1024,7 @@ class IRC(base.StatusReceiverMultiService):
         self.port = port
         self.nick = nick
         self.channels = channels
+        self.nicks = nicks
         self.password = password
         self.allowForce = allowForce
         self.useRevisions = useRevisions
@@ -1025,7 +1032,8 @@ class IRC(base.StatusReceiverMultiService):
         self.notify_events = notify_events
         log.msg('Notify events %s' % notify_events)
         self.f = IrcStatusFactory(self.nick, self.password,
-                                  self.channels, self.categories, self.notify_events,
+                                  self.channels, self.nicks,
+                                  self.categories, self.notify_events,
                                   noticeOnChannel = noticeOnChannel,
                                   useRevisions = useRevisions,
                                   showBlameList = showBlameList,
