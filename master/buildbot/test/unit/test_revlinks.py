@@ -15,7 +15,7 @@
 
 import mock
 from twisted.trial import unittest
-from buildbot.status.revlinks import RevlinkMatch, GithubRevlink, SourceforgeGitRevlink
+from buildbot.revlinks import RevlinkMatch, GithubRevlink, SourceforgeGitRevlink
 
 class TestGithubRevlink(unittest.TestCase):
     revision = 'b6874701b54e0043a78882b020afc86033133f91'
