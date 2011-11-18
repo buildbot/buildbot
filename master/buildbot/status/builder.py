@@ -521,6 +521,7 @@ class BuilderStatus(styles.Versioned):
         result['basedir'] = os.path.basename(self.basedir)
         result['category'] = self.category
         result['slaves'] = self.slavenames
+        result['schedulers'] = [ s.name for s in self.status.master.allSchedulers() if self.builder_status.name in s.builderNames]
         #result['url'] = self.parent.getURLForThing(self)
         # TODO(maruel): Add cache settings? Do we care?
 
