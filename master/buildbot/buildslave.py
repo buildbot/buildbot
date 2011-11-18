@@ -217,9 +217,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
     def findNewSlaveInstance(self, new_config):
         # TODO: called multiple times per reconfig; use 1-element cache?
         for sl in new_config.slaves:
-            if sl.name == self.name:
+            if sl.slavename == self.slavename:
                 return sl
-        assert 0, "no new slave named '%s'" % self.name
+        assert 0, "no new slave named '%s'" % self.slavename
 
     def startMissingTimer(self):
         if self.notify_on_missing and self.missing_timeout and self.parent:
