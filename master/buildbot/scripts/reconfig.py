@@ -14,13 +14,19 @@
 # Copyright Buildbot Team Members
 
 
-import os, signal, platform
+import os
+import signal
+import platform
+import sys
 from twisted.internet import reactor
 
 from buildbot.scripts.logwatcher import LogWatcher, BuildmasterTimeoutError, \
      ReconfigError
 
 class Reconfigurator:
+
+    rc = 0
+
     def run(self, config):
         # Returns "Microsoft" for Vista and "Windows" for other versions
         if platform.system() in ("Windows", "Microsoft"):
@@ -49,6 +55,7 @@ class Reconfigurator:
         d.addCallbacks(self.success, self.failure)
         reactor.callLater(0.2, self.sighup)
         reactor.run()
+        sys.exit(self.rc)
 
     def sighup(self):
         if self.sent_signal:
@@ -64,6 +71,7 @@ Reconfiguration appears to have completed successfully.
         reactor.stop()
 
     def failure(self, why):
+        self.rc = 1
         if why.check(BuildmasterTimeoutError):
             print "Never saw reconfiguration finish."
         elif why.check(ReconfigError):
@@ -77,8 +85,4 @@ correct them, then try 'buildbot reconfig' again.
         else:
             print "Error while following twistd.log: %s" % why
         reactor.stop()
-
-def reconfig(config):
-    r = Reconfigurator()
-    r.run(config)
 
