@@ -28,44 +28,27 @@ class Follower:
         reactor.run()
         return self.rc
 
-    def _success(self, processtype):
+    def _success(self, _):
         from twisted.internet import reactor
-        print "The %s appears to have (re)started correctly." % processtype
+        print "The buildmaster appears to have (re)started correctly."
         self.rc = 0
         reactor.stop()
 
     def _failure(self, why):
         from twisted.internet import reactor
-        from buildbot.scripts.logwatcher import BuildmasterTimeoutError, \
-             ReconfigError, BuildslaveTimeoutError, BuildSlaveDetectedError
+        from buildbot.scripts.logwatcher import BuildmasterTimeoutError
+        from buildbot.scripts.logwatcher import ReconfigError
         if why.check(BuildmasterTimeoutError):
             print """
 The buildmaster took more than 10 seconds to start, so we were unable to
 confirm that it started correctly. Please 'tail twistd.log' and look for a
 line that says 'configuration update complete' to verify correct startup.
 """
-        elif why.check(BuildslaveTimeoutError):
-            print """
-The buildslave took more than 10 seconds to start and/or connect to the
-buildmaster, so we were unable to confirm that it started and connected
-correctly. Please 'tail twistd.log' and look for a line that says 'message
-from master: attached' to verify correct startup. If you see a bunch of
-messages like 'will retry in 6 seconds', your buildslave might not have the
-correct hostname or portnumber for the buildmaster, or the buildmaster might
-not be running. If you see messages like
-   'Failure: twisted.cred.error.UnauthorizedLogin'
-then your buildslave might be using the wrong botname or password. Please
-correct these problems and then restart the buildslave.
-"""
         elif why.check(ReconfigError):
             print """
 The buildmaster appears to have encountered an error in the master.cfg config
-file during startup. It is probably running with an empty configuration right
-now. Please inspect and fix master.cfg, then restart the buildmaster.
-"""
-        elif why.check(BuildSlaveDetectedError):
-            print """
-Buildslave is starting up, not following logfile.
+file during startup. Please inspect and fix master.cfg, then restart the
+buildmaster.
 """
         else:
             print """

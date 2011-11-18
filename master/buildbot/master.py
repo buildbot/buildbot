@@ -245,7 +245,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         @d.addBoth
         def cleanup(res):
-            log.msg("configuration update complete")
             timer.stop()
             self.reconfig_notifier.stop()
             self.reconfig_notifier = None
@@ -262,6 +261,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     @defer.deferredGenerator
     def doReconfig(self):
+        log.msg("beginning configuration update")
         changes_made = False
         failed = False
         try:
@@ -289,6 +289,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                         "may malfunction")
             else:
                 log.msg("reconfig aborted without making any changes")
+        else:
+            log.msg("configuration update complete")
 
 
     def reconfigService(self, new_config):
