@@ -87,6 +87,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.access = []
         if locks:
             self.access = locks
+        self.lock_subscriptions = []
 
         self.properties = Properties()
         self.properties.update(properties, "BuildSlave")
@@ -112,6 +113,12 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         return "<%s %r>" % (self.__class__.__name__, self.slavename)
 
     def updateLocks(self):
+        """Convert the L{LockAccess} objects in C{self.locks} into real lock
+        objects, while also maintaining the subscriptions to lock releases."""
+        # unsubscribe from any old locks
+        for s in self.lock_subscriptions:
+            s.unsubscribe()
+
         # convert locks into their real form
         locks = []
         for access in self.access:
@@ -120,6 +127,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             lock = self.botmaster.getLockByID(access.lockid)
             locks.append((lock, access))
         self.locks = [(l.getLock(self), la) for l, la in locks]
+        self.lock_subscriptions = [ l.subscribeToReleases(self._lockReleased)
+                                    for l, la in self.locks ]
 
     def locksAvailable(self):
         """
@@ -156,6 +165,13 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         log.msg("releaseLocks(%s): %s" % (self, self.locks))
         for lock, access in self.locks:
             lock.release(self, access)
+
+    def _lockReleased(self):
+        """One of the locks for this slave was released; try scheduling
+        builds."""
+        if not self.botmaster:
+            return # oh well..
+        self.botmaster.maybeStartBuildsForSlave(self.slavename)
 
     def startService(self):
         self.updateLocks()
