@@ -42,6 +42,9 @@ FLAGS = """\
     - By default, most children data is listed. You can do a random selection
       of data by using select=<sub-url> multiple times to coagulate data.
       "select=" includes the actual url otherwise it is skipped.
+  - numbuilds
+    - By default, only in memory cached builds are listed. You can as for more data
+      by using numbuilds=<number>.
   - filter
     - Filters out null, false, and empty string, list and dict. This reduce the
       amount of useless data sent.
@@ -649,7 +652,8 @@ class SlaveJsonResource(JsonResource):
             builds = []
             builder_status = self.status.getBuilder(builderName)
             cache_size = builder_status.master.config.caches['Builds']
-            for i in range(1, cache_size - 1):
+            numbuilds = int(request.args.get('numbuilds', [cache_size - 1])[0])
+            for i in range(1, numbuilds):
                 build_status = builder_status.getBuild(-i)
                 if not build_status or not build_status.isFinished():
                     # If not finished, it will appear in runningBuilds.
