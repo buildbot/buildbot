@@ -1048,7 +1048,7 @@ class IRC(base.StatusReceiverMultiService):
 
     def setServiceParent(self, parent):
         base.StatusReceiverMultiService.setServiceParent(self, parent)
-        self.f.status = parent.getStatus()
+        self.f.status = parent
         if self.allowForce:
             self.f.control = interfaces.IControl(parent)
 
