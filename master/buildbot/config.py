@@ -74,7 +74,7 @@ class MasterConfig(object):
             db_url='sqlite:///state.sqlite',
             db_poll_interval=None,
         )
-        self.metrics = {}
+        self.metrics = None
         self.caches = dict(
             Builds=15,
             Changes=10,

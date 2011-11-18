@@ -163,7 +163,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             db=dict(
                 db_url='sqlite:///state.sqlite',
                 db_poll_interval=None),
-            metrics = {},
+            metrics = None,
             caches = dict(Changes=10, Builds=15),
             schedulers = {},
             builders = [],
@@ -480,7 +480,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_metrics_defaults(self):
         self.cfg.load_metrics(self.filename, {}, self.errors)
-        self.assertResults(metrics={})
+        self.assertResults(metrics=None)
 
     def test_load_metrics_invalid(self):
         self.cfg.load_metrics(self.filename, dict(metrics=13), self.errors)

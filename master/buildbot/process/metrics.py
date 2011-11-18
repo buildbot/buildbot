@@ -391,33 +391,33 @@ class MetricLogObserver(config.ReconfigurableServiceMixin,
         # first, enable or disable
         if new_config.metrics is None:
             self.disable()
-            return
         else:
             self.enable()
 
-        metrics_config = new_config.metrics
+            metrics_config = new_config.metrics
 
-        # Start up periodic logging
-        log_interval = metrics_config.get('log_interval', 60)
-        if log_interval != self.log_interval:
-            if self.log_task:
-                self.log_task.stop()
-                self.log_task = None
-            if log_interval:
-                self.log_task = LoopingCall(self.report)
-                self.log_task.clock = self._reactor
-                self.log_task.start(log_interval)
+            # Start up periodic logging
+            log_interval = metrics_config.get('log_interval', 60)
+            if log_interval != self.log_interval:
+                if self.log_task:
+                    self.log_task.stop()
+                    self.log_task = None
+                if log_interval:
+                    self.log_task = LoopingCall(self.report)
+                    self.log_task.clock = self._reactor
+                    self.log_task.start(log_interval)
 
-        # same for the periodic task
-        periodic_interval = metrics_config.get('periodic_interval', 10)
-        if periodic_interval != self.periodic_interval:
-            if self.periodic_task:
-                self.periodic_task.stop()
-                self.periodic_task = None
-            if periodic_interval:
-                self.periodic_task = LoopingCall(periodicCheck, self._reactor)
-                self.periodic_task.clock = self._reactor
-                self.periodic_task.start(periodic_interval)
+            # same for the periodic task
+            periodic_interval = metrics_config.get('periodic_interval', 10)
+            if periodic_interval != self.periodic_interval:
+                if self.periodic_task:
+                    self.periodic_task.stop()
+                    self.periodic_task = None
+                if periodic_interval:
+                    self.periodic_task = LoopingCall(periodicCheck,
+                                                    self._reactor)
+                    self.periodic_task.clock = self._reactor
+                    self.periodic_task.start(periodic_interval)
 
         # upcall
         return config.ReconfigurableServiceMixin.reconfigService(self,
