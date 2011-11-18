@@ -102,6 +102,8 @@ class LogWatcher(LineOnlyReceiver):
             return self.finished("buildslave")
         if "reconfig aborted" in line or 'reconfig partially applied' in line:
             return self.finished(Failure(ReconfigError()))
+        if "Server Shut Down" in line:
+            return self.finished(Failure(ReconfigError()))
         if "configuration update complete" in line:
             return self.finished("buildmaster")
         if "BuildMaster is running" in line:
