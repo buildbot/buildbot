@@ -65,7 +65,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
     @defer.deferredGenerator
     def reconfigService(self, new_config):
         # remove the old listeners, then add the new
-        for sr in self:
+        for sr in list(self):
             wfd = defer.waitForDeferred(
                 defer.maybeDeferred(lambda :
                     sr.disownServiceParent()))

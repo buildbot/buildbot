@@ -31,7 +31,7 @@ class UserManagerManager(config.ReconfigurableServiceMixin,
         # this is easy - kick out all of the old managers, and add the
         # new ones.
 
-        for mgr in self:
+        for mgr in list(self):
             wfd = defer.waitForDeferred(
                 defer.maybeDeferred(lambda :
                     mgr.disownServiceParent()))

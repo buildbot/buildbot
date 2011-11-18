@@ -56,17 +56,44 @@ class TestStatus(unittest.TestCase):
 
         config = mock.Mock()
 
-        # add a user manager
-        sr = FakeStatusReceiver()
-        config.status = [ sr ]
+        # add a status reciever
+        sr0 = FakeStatusReceiver()
+        config.status = [ sr0 ]
 
         wfd = defer.waitForDeferred(
                 status.reconfigService(config))
         yield wfd
         wfd.getResult()
 
-        self.assertTrue(sr.running)
-        self.assertIdentical(sr.master, m)
+        self.assertTrue(sr0.running)
+        self.assertIdentical(sr0.master, m)
+
+        # add a status reciever
+        sr1 = FakeStatusReceiver()
+        sr2 = FakeStatusReceiver()
+        config.status = [ sr1, sr2 ]
+
+        wfd = defer.waitForDeferred(
+                status.reconfigService(config))
+        yield wfd
+        wfd.getResult()
+
+        self.assertFalse(sr0.running)
+        self.assertIdentical(sr0.master, None)
+        self.assertTrue(sr1.running)
+        self.assertIdentical(sr1.master, m)
+        self.assertTrue(sr2.running)
+        self.assertIdentical(sr2.master, m)
+
+        # reconfig with those two (a regression check)
+        sr1 = FakeStatusReceiver()
+        sr2 = FakeStatusReceiver()
+        config.status = [ sr1, sr2 ]
+
+        wfd = defer.waitForDeferred(
+                status.reconfigService(config))
+        yield wfd
+        wfd.getResult()
 
         # and back to nothing
         config.status = [ ]
@@ -75,4 +102,6 @@ class TestStatus(unittest.TestCase):
         yield wfd
         wfd.getResult()
 
-        self.assertIdentical(sr.master, None)
+        self.assertIdentical(sr0.master, None)
+        self.assertIdentical(sr1.master, None)
+        self.assertIdentical(sr2.master, None)
