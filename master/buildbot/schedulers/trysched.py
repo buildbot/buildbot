@@ -110,6 +110,8 @@ class Try_Jobdir(TryBase):
         #  builderNames...
         #  properties, dict of build properties
         p = netstrings.NetstringParser()
+        if f.len > basic.NetstringReceiver.MAX_LENGTH:
+            raise BadJobfile("The patch size is greater that NetStringReceiver.MAX_LENGTH. Please Set this higher in the master.cfg")
         try:
             p.feed(f.read())
         except basic.NetstringParseError:
