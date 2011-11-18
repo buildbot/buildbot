@@ -405,10 +405,40 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--no-auth-cache'])
             + 0,
             ExpectLogged('cpdir', {'fromdir': 'source',
-                                   'todir': 'build',
+                                   'todir': 'wkdir',
                                    'logEnviron': True})
             + 0,
-            ExpectShell(workdir='build',
+            ExpectShell(workdir='wkdir',
+                        command=['svnversion'])
+            + ExpectShell.log('stdio',
+                stdout='100')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_mode_export(self):
+        self.setupStep(
+                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                                    mode='full', method='export'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            ExpectLogged('rmdir', dict(dir='wkdir',
+                                       logEnviron=True))
+            + 0,
+            ExpectLogged('stat', dict(file='source/.svn',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='source',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache'])
+            + 0,
+            ExpectShell(workdir='',
+                        command=['svn', 'export', 'source', 'wkdir'])
+            + 0,
+            ExpectShell(workdir='wkdir',
                         command=['svnversion'])
             + ExpectShell.log('stdio',
                 stdout='100')
@@ -576,7 +606,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--no-auth-cache'])
             + 0,
             ExpectLogged('cpdir', {'fromdir': 'source',
-                                   'todir': 'build',
+                                   'todir': 'wkdir',
                                    'logEnviron': True})
             + 1,
         )

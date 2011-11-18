@@ -60,7 +60,7 @@ class SVN(Source):
                                  )
 
         assert self.mode in ['incremental', 'full']
-        assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
+        assert self.method in ['clean', 'fresh', 'clobber', 'copy', 'export', None]
 
         if svnurl and baseURL:
             raise ValueError("you must provide exactly one of svnurl and"
@@ -98,7 +98,7 @@ class SVN(Source):
             yield wfd
             wfd.getResult()
             return
-        elif self.method == 'copy':
+        elif self.method in ['copy', 'export']:
             wfd = defer.waitForDeferred(self.copy())
             yield wfd
             wfd.getResult()
@@ -173,21 +173,30 @@ class SVN(Source):
         if cmd.rc != 0:
             raise buildstep.BuildStepFailed()
 
+        # temporarily set workdir = 'source' and do an incremental checkout
         try:
+            old_workdir = self.workdir
             self.workdir = 'source'
             wfd = defer.waitForDeferred(
                     self.incremental(None))
             yield wfd
             wfd.getResult()
         except: # finally doesn't work in python-2.4
-            self.workdir = 'build'
+            self.workdir = old_workdir
             raise
-        self.workdir = 'build'
+        self.workdir = old_workdir
 
-        cmd = buildstep.LoggedRemoteCommand('cpdir', 
-                    { 'fromdir': 'source', 'todir':'build',
+        # if we're copying, copy; otherwise, export from source to build
+        if self.method == 'copy':
+            cmd = buildstep.LoggedRemoteCommand('cpdir', 
+                    { 'fromdir': 'source', 'todir':self.workdir,
                       'logEnviron': self.logEnviron })
+        else:
+            cmd = buildstep.RemoteShellCommand('',
+                    ['svn', 'export', 'source', self.workdir],
+                    env=self.env, logEnviron=self.logEnviron)
         cmd.useLog(self.stdio_log, False)
+
         wfd = defer.waitForDeferred(
                 self.runCommand(cmd))
         yield wfd

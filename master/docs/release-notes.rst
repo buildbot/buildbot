@@ -36,6 +36,9 @@ Features
 * Buildbot can now take advantage of authentication done by a front-end web
   server - see :bb:pull:`266`.
 
+* The master-side SVN step now has an `export` method which is similar to
+  `copy`, but the build directory does not contain Subversion metdata. (:bb:bug:`2078`)
+
 Slave
 -----
 

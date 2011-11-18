@@ -531,6 +531,11 @@ should preferentially create the :bb:step:`SVN` step with the
       incremental. It performs all the incremental checkout behavior
       in ``source`` directory.
 
+   ``export``
+      Similar to ``method='copy'``, except using ``svn export`` to create build
+      directory so that there are no ``.svn`` directories in the build
+      directory.
+
 If you are using branches, you must also make sure your
 ``ChangeSource`` will report the correct branch names.
 
