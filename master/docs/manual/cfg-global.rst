@@ -688,3 +688,19 @@ expressions against which the input will be matched.  The defaults for each
 type of input are those given in the example, above.
 
 .. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch
+
+revlink
+'''''''
+
+The ``revlink`` is used to create links from revision IDs in the web
+status to a web-view of your source control system. The parameter's
+value must be a callable.
+
+The callable takes the revision id and repository argument, and should return
+an URL to the revision.  Note that the revision id may not always be in the
+form you expect, so code defensively.  In particular, a revision of "??" may be
+supplied when no other information is available.
+
+Note that :class:`SourceStamp`\s that are not created from version-control changes (e.g.,
+those created by a Nightly or Periodic scheduler) will have an empty repository
+string, as the respository is not known.

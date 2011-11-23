@@ -560,10 +560,12 @@ in change comments.
 revlink
 '''''''
 
-The ``revlink`` is used to create links from revision IDs in the web
-status to a web-view of your source control system. The parameter's
-value must be a format string, a dict mapping a string (repository
-name) to format strings, or a callable.
+The ``revlink`` argument on :class:`WebStatus` is deprecated in favour of
+the global revlink option. Only use this if you need to generate different URLs
+for different web status instances. see {....} for details.
+
+In addition to a callable, this argument accepts a format string or a dict
+mapping a string (repository name) to format strings.
 
 The format string should use ``%s`` to insert the revision id in the url.  For
 example, for Buildbot on GitHub::
@@ -571,15 +573,6 @@ example, for Buildbot on GitHub::
     revlink='http://github.com/buildbot/buildbot/tree/%s'
 
 The revision ID will be URL encoded before inserted in the replacement string
-
-The callable takes the revision id and repository argument, and should return
-an URL to the revision.  Note that the revision id may not always be in the
-form you expect, so code defensively.  In particular, a revision of "??" may be
-supplied when no other information is available.
-
-Note that :class:`SourceStamp`\s that are not created from version-control changes (e.g.,
-those created by a Nightly or Periodic scheduler) will have an empty repository
-string, as the respository is not known.
 
 changecommentlink
 '''''''''''''''''
