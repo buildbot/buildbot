@@ -214,7 +214,7 @@ parameters are mostly to specify where exactly the sources are coming from.
         the ChangeSource step will be ignored.
 
     format string
-        If the parameter is a string containing @code{%s}, then the
+        If the parameter is a string containing ``%s``, then the
         repository attribute from the Change will be substituted in
         place of the ``%s``. This is usefull when the ChangeSource
         step knows where the repository resides locally, but doesn't
@@ -837,7 +837,7 @@ checkout or update. It takes the following arguments:
     ``:pserver:anonymous@cvs.sourceforge.net:/cvsroot/buildbot``
 
 ``cvsmodule``
-    (required): specify the cvs @code{module}, which is generally a
+    (required): specify the cvs ``module``, which is generally a
     subdirectory of the CVSROOT. The `cvsmodule` for the Buildbot source
     code is ``buildbot``.
 
@@ -917,7 +917,7 @@ should preferentially create the ``SVN`` step with the
     binary with a :option:`--username` option.
 
 ``password``
-    (optional): if specified, this will be passed to the @code{svn}
+    (optional): if specified, this will be passed to the ``svn``
     binary with a :option:`--password` option.  The password itself will be
     suitably obfuscated in the logs.
 
@@ -1157,8 +1157,8 @@ The ``Git`` step takes the following arguments:
     user/scheduler asks for a specific revision, this parameter is ignored.
 
 ``progress``
-    (optional): passes the (@code{--progress}) flag to (@code{git
-    fetch}). This solves issues of long fetches being killed due to
+    (optional): passes the (``--progress``) flag to (``git
+    fetch``). This solves issues of long fetches being killed due to
     lack of output, but requires Git 1.7.2 or later.
 
 This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will automatically use
