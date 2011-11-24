@@ -182,8 +182,9 @@ parameters are mostly to specify where exactly the sources are coming from.
     outside of the workdir (like creating the workdir itself).
 
 ``alwaysUseLatest``
-    if True, bypass the usual ``update to the last Change`` behavior, and
-    always update to the latest changes instead.
+    if True, bypass the usual behavior of checking out the revision in the
+    source stamp, and always update to the latest revision in the repository
+    instead.
 
 ``retry``
     If set, this specifies a tuple of ``(delay, repeats)`` which means
