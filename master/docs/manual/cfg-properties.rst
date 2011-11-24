@@ -180,6 +180,10 @@ parameter is not set::
    f.addStep(ShellCommand(command=[ 'echo', 'warnings:',
                     Property('warnings', default='none', defaultWhenFalse=False) ])
 
+The default value can reference other properties, e.g., ::
+
+    command=Property('command', default=Property('default-command'))
+
 .. Index:: single; Properties; WithProperties
 
 .. _WithProperties:

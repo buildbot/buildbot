@@ -39,6 +39,11 @@ Features
 * The master-side SVN step now has an `export` method which is similar to
   `copy`, but the build directory does not contain Subversion metdata. (:bb:bug:`2078`)
 
+* :py:class:`Property` instances will now render any properties in the
+  default value if necessary.  This makes possible constructs like ::
+
+    command=Property('command', default=Property('default-command'))
+
 Slave
 -----
 

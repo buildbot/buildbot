@@ -312,10 +312,14 @@ class Property(util.ComparableMixin):
 
     def getRenderingFor(self, props):
         if self.defaultWhenFalse:
-            return props.getProperty(self.key) or self.default
+            rv = props.getProperty(self.key)
+            if rv:
+                return rv
         else:
-            return props.getProperty(self.key, default=self.default)
+            if props.hasProperty(self.key):
+                return props.getProperty(self.key)
 
+        return props.render(self.default)
 
 class _DefaultRenderer:
     """

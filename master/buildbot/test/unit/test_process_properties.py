@@ -561,6 +561,14 @@ class TestProperty(unittest.TestCase):
         self.failUnlessEqual(self.build.render(value),
                 "Hello!")
 
+    def testDefaultValueNested(self):
+        self.props.setProperty("xxx", 'yyy', "scheduler")
+        value = Property("do-tests",
+                default=WithProperties("a-%(xxx)s-b"))
+
+        self.failUnlessEqual(self.build.render(value),
+                "a-yyy-b")
+
     def testIgnoreDefaultValue(self):
         self.props.setProperty("do-tests", "string", "scheduler")
         value = Property("do-tests", default="Hello!")
