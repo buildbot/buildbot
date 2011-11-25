@@ -263,11 +263,22 @@ Insert the following to enable debugging mode with manhole::
   ####### DEBUGGING
   from buildbot import manhole
   c['manhole'] = manhole.PasswordManhole("tcp:1234:interface=127.0.0.1","admin","passwd")
-  
-Now you can ssh into the master and get an interactive python shell::
+
+After restarting the master, you can ssh into the master and get an interactive python shell::
 
   ssh -p1234 admin@127.0.0.1
   # enter passwd at prompt
+
+.. note::
+    The pyasn1-0.1.1 release has a bug which results in an exception similar to
+    this on startup::
+
+        exceptions.TypeError: argument 2 must be long, not int
+
+    If you see this, the temporary solution is to install the previous version
+    of pyasn1::
+
+        pip instasll pyasn1-0.0.13b
 
 If you wanted to check which slaves are connected and what builders those slaves are assigned to you could do::
 
