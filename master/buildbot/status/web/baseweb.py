@@ -323,9 +323,10 @@ class WebStatus(service.MultiService):
         self.setupUsualPages(numbuilds=numbuilds, num_events=num_events,
                              num_events_max=num_events_max)
 
-        # Set up the jinja templating engine.
-        self.templates = createJinjaEnv(revlink, changecommentlink,
-                                        repositories, projects)
+        self.revlink = revlink
+        self.changecommentlink = changecommentlink
+        self.repositories = repositories
+        self.projects = projects
 
         # keep track of cached connections so we can break them when we shut
         # down. See ticket #102 for more details.
@@ -393,6 +394,14 @@ class WebStatus(service.MultiService):
         
         rotateLength = either(self.logRotateLength, self.master.log_rotation.rotateLength)
         maxRotatedFiles = either(self.maxRotatedFiles, self.master.log_rotation.maxRotatedFiles)
+
+        # Set up the jinja templating engine.
+        if self.revlink:
+            revlink = self.revlink
+        else:
+            revlink = self.master.config.revlink
+        self.templates = createJinjaEnv(revlink, self.changecommentlink,
+                                        self.repositories, self.projects)
 
         if not self.site:
             
