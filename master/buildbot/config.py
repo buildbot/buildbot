@@ -94,7 +94,7 @@ class MasterConfig(object):
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projectName", "projectURL",
         "properties", "schedulers", "slavePortnum", "slaves", "status",
-        "title", "titleURL", "user_managers", "validation"
+        "title", "titleURL", "user_managers", "validation", "db",
     ])
 
     @classmethod
