@@ -215,18 +215,12 @@ class Maker:
 
     def sampleconfig(self, source):
         target = "master.cfg.sample"
+        if not self.quiet:
+            print "creating %s" % target
         config_sample = open(source, "rt").read()
-        if os.path.exists(target):
-            oldcontents = open(target, "rt").read()
-            if oldcontents == config_sample:
-                if not self.quiet:
-                    print "master.cfg.sample already exists and is up-to-date"
-                return
-            if not self.quiet:
-                print "replacing master.cfg.sample"
-        else:
-            if not self.quiet:
-                print "creating master.cfg.sample"
+        if self.config['db']:
+            config_sample = config_sample.replace('sqlite:///state.sqlite',
+                                                  self.config['db'])
         f = open(target, "wt")
         f.write(config_sample)
         f.close()
@@ -251,10 +245,18 @@ class Maker:
     def create_db(self):
         from buildbot.db import connector
         from buildbot.master import BuildMaster
-        # create a db with the default configuration
-        db = connector.DBConnector(BuildMaster(self.basedir), self.basedir)
+        from buildbot import config as config_module
+
+        # create a master with the default configuration, but with db_url
+        # overridden
+        master_cfg = config_module.MasterConfig()
+        master_cfg.db['db_url'] = self.config['db']
+        master = BuildMaster(self.basedir)
+        master.config = master_cfg
+        db = connector.DBConnector(master, self.basedir)
         d = db.setup(check_version=False)
-        if not self.config['quiet']: print "creating database"
+        if not self.config['quiet']:
+            print "creating database (%s)" % (master_cfg.db['db_url'],)
         d = db.model.upgrade()
         return d
 
@@ -365,9 +367,9 @@ def upgradeMaster(config):
     basedir = os.path.expanduser(config['basedir'])
 
     if not config['quiet']: print "checking master.cfg"
-    master_cfg = config_module.MasterConfig()
     try:
-        master_cfg.loadConfig(basedir, 'master.cfg')
+        master_cfg = config_module.MasterConfig.loadConfig(
+                                            basedir, 'master.cfg')
     except config_module.ConfigErrors, e:
         print "Errors loading configuration:"
         for msg in e.errors:
@@ -401,7 +403,8 @@ def upgradeMaster(config):
     from buildbot.db import connector
     from buildbot.master import BuildMaster
 
-    if not config['quiet']: print "upgrading database"
+    if not config['quiet']:
+        print "upgrading database (%s)" % (master_cfg.db['db_url'])
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
     db = connector.DBConnector(master, basedir=config['basedir'])
