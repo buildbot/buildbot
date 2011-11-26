@@ -486,8 +486,16 @@ class BuildSlave(service.MultiService):
         "Record my hostname in twistd.hostname, for user convenience"
         log.msg("recording hostname in twistd.hostname")
         filename = os.path.join(basedir, "twistd.hostname")
+
         try:
-            open(filename, "w").write("%s\n" % socket.getfqdn())
+            hostname = os.uname()[1] # only on unix
+        except AttributeError:
+            # this tends to fail on non-connected hosts, e.g., laptops
+            # on planes
+            hostname = socket.getfqdn()
+
+        try:
+            open(filename, "w").write("%s\n" % hostname)
         except:
             log.msg("failed - ignoring")
 

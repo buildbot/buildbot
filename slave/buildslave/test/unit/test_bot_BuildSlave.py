@@ -73,10 +73,6 @@ class TestBuildSlave(unittest.TestCase):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
-        # the slave tries to call socket.getfqdn to write its hostname; this hangs
-        # without network, so fake it
-        self.patch(socket, "getfqdn", lambda : 'test-hostname.domain.com')
-
     def tearDown(self):
         d = defer.succeed(None)
         if self.realm:
@@ -133,7 +129,22 @@ class TestBuildSlave(unittest.TestCase):
         # and wait for the result of the print
         return d
 
-    def test_recordHostname(self):
+    def test_recordHostname_uname(self):
+        self.patch(os, "uname", lambda : [ 0, 'test-hostname.domain.com' ])
+
+        self.buildslave = bot.BuildSlave("127.0.0.1", 9999,
+                "testy", "westy", self.basedir,
+                keepalive=0, usePTY=False, umask=022)
+        self.buildslave.recordHostname(self.basedir)
+        self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
+                         'test-hostname.domain.com')
+
+    def test_recordHostname_getfqdn(self):
+        def missing():
+            raise AttributeError
+        self.patch(os, "uname", missing)
+        self.patch(socket, "getfqdn", lambda : 'test-hostname.domain.com')
+
         self.buildslave = bot.BuildSlave("127.0.0.1", 9999,
                 "testy", "westy", self.basedir,
                 keepalive=0, usePTY=False, umask=022)
