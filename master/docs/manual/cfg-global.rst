@@ -687,17 +687,17 @@ The keys describe the type of input validated; the values are compiled regular
 expressions against which the input will be matched.  The defaults for each
 type of input are those given in the example, above.
 
-.. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch
+.. bb:cfg:: revlink
 
-revlink
-'''''''
+Revision Links
+--------------
 
-The ``revlink`` is used to create links from revision IDs in the web
-status to a web-view of your source control system. The parameter's
+The :bb:cfg:`revlink` parameter is used to create links from revision IDs in
+the web status to a web-view of your source control system. The parameter's
 value must be a callable.
 
-By default, buildbot is configure to generate revlinks for a number of open source
-hosting platforms.
+By default, Buildbot is configured to generate revlinks for a number of open
+source hosting platforms.
 
 The callable takes the revision id and repository argument, and should return
 an URL to the revision.  Note that the revision id may not always be in the
@@ -707,3 +707,5 @@ supplied when no other information is available.
 Note that :class:`SourceStamp`\s that are not created from version-control changes (e.g.,
 those created by a Nightly or Periodic scheduler) will have an empty repository
 string, as the respository is not known.
+
+.. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch
