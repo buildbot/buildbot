@@ -88,7 +88,7 @@ class Bzr(Source):
                 command = ['checkout', self.repourl, '.']
 
             if self.revision:
-                command.append(['-r', self.revision])
+                command.extend(['-r', self.revision])
             return command
 
         d.addCallback(_cmd)
@@ -167,14 +167,14 @@ class Bzr(Source):
         d = self._dovccmd(['clean-tree', '--force'])
         command = ['update']
         if self.revision:
-            command.append(['-r', self.revision])
+            command.extend(['-r', self.revision])
         d.addCallback(lambda _: self._dovccmd(command))
         return d
 
     def _doFull(self):
         command = ['checkout', self.repourl, '.']
         if self.revision:
-            command.append(['-r', self.revision])
+            command.extend(['-r', self.revision])
         d = self._dovccmd(command)
         return d
 
