@@ -106,6 +106,33 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
+    def test_mode_full_clean_revision(self):
+        self.setupStep(
+            bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
+                    mode='full', method='clean'),
+            args=dict(revision='2345'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', '--version'])
+            + 0,
+            ExpectLogged('stat', dict(file='wkdir/.bzr',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'clean-tree', '--ignored', '--force'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'update', '-r', '2345'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'version-info', '--custom', "--template='{revno}"])
+            + ExpectShell.log('stdio',
+                stdout='100')
+            + 0,
+                    )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
     def test_mode_full_fresh(self):
         self.setupStep(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
