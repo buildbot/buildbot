@@ -35,37 +35,37 @@ def upgrade(migrate_engine):
     old_id = res.scalar()
 
     # if there's no such ID, there's nothing to change
-    if old_id is None:
-        return
+    if old_id is not None:
 
-    # get the new ID
-    q = sa.select([ objects_table.c.id ],
-        whereclause=objects_table.c.class_name == 'BuildMaster')
-    res = q.execute()
-    ids = res.fetchall()
+        # get the new ID
+        q = sa.select([ objects_table.c.id ],
+            whereclause=objects_table.c.class_name == 'BuildMaster')
+        res = q.execute()
+        ids = res.fetchall()
 
-    # if there is exactly one ID, update the existing object_states.  If there
-    # are zero or multiple object_states, then we do not know which master to
-    # assign last_processed_change to, so we just delete it.  This indicates to
-    # the master that it has processed all changes, which is probably accurate.
-    if len(ids) == 1:
-        new_id = ids[0][0]
+        # if there is exactly one ID, update the existing object_states.  If
+        # there are zero or multiple object_states, then we do not know which
+        # master to assign last_processed_change to, so we just delete it.
+        # This indicates to the master that it has processed all changes, which
+        # is probably accurate.
+        if len(ids) == 1:
+            new_id = ids[0][0]
 
-        # update rows with the old id to use the new id
-        q = object_state_table.update(
-                whereclause=(object_state_table.c.objectid == old_id))
-        q.execute(objectid=new_id)
-    else:
-        q = object_state_table.delete(
-                whereclause=(object_state_table.c.objectid == old_id))
+            # update rows with the old id to use the new id
+            q = object_state_table.update(
+                    whereclause=(object_state_table.c.objectid == old_id))
+            q.execute(objectid=new_id)
+        else:
+            q = object_state_table.delete(
+                    whereclause=(object_state_table.c.objectid == old_id))
+            q.execute()
+
+        # in either case, delete the old object row
+        q = objects_table.delete(
+                whereclause=(objects_table.c.id == old_id))
         q.execute()
 
-    # in either case, delete the old object row
-    q = objects_table.delete(
-            whereclause=(objects_table.c.id == old_id))
-    q.execute()
-
-    # .. and update the class name for the new row
+    # and update the class name for the new rows
     q = objects_table.update(
             whereclause=(objects_table.c.class_name == 'BuildMaster'))
     q.execute(class_name='buildbot.master.BuildMaster')

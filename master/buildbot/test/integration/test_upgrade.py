@@ -298,13 +298,13 @@ class UpgradeTestV082(UpgradeTestMixin, unittest.TestCase):
                       for brc in r.fetchall() ]
         objname = 'euclid:/home/dustin/code/buildbot/t/buildbot/sand27/master'
         self.assertEqual(buildreqs, [
-            (1, 1310337746, objname, 'BuildMaster'),
-            (2, 1310337757, objname, 'BuildMaster'),
-            (3, 1310337757, objname, 'BuildMaster'),
-            (4, 1310337757, objname, 'BuildMaster'),
-            (5, 1310337779, objname, 'BuildMaster'),
-            (6, 1310337779, objname, 'BuildMaster'),
-            (7, 1310337779, objname, 'BuildMaster'),
+            (1, 1310337746, objname, 'buildbot.master.BuildMaster'),
+            (2, 1310337757, objname, 'buildbot.master.BuildMaster'),
+            (3, 1310337757, objname, 'buildbot.master.BuildMaster'),
+            (4, 1310337757, objname, 'buildbot.master.BuildMaster'),
+            (5, 1310337779, objname, 'buildbot.master.BuildMaster'),
+            (6, 1310337779, objname, 'buildbot.master.BuildMaster'),
+            (7, 1310337779, objname, 'buildbot.master.BuildMaster'),
         ])
 
     def test_upgrade(self):
@@ -351,20 +351,20 @@ class UpgradeTestV083(UpgradeTestMixin, unittest.TestCase):
                       for brc in r.fetchall() ]
         objname = 'euclid:/home/dustin/code/buildbot/t/buildbot/sand27/master'
         self.assertEqual(buildreqs, [
-            (1, 1310326850, objname, 'BuildMaster'),
-            (2, 1310326862, objname, 'BuildMaster'),
-            (3, 1310326872, objname, 'BuildMaster'),
-            (4, 1310326872, objname, 'BuildMaster'),
-            (5, 1310326872, objname, 'BuildMaster'),
-            (6, 1310326872, objname, 'BuildMaster'),
-            (7, 1310326872, objname, 'BuildMaster'),
-            (8, 1310326872, objname, 'BuildMaster'),
-            (9, 1310326872, objname, 'BuildMaster'),
-            (10, 1310326872, objname, 'BuildMaster'),
-            (11, 1310326895, objname, 'BuildMaster'),
-            (12, 1310326900, objname, 'BuildMaster'),
-            (13, 1310326900, objname, 'BuildMaster'),
-            (14, 1310326900, objname, 'BuildMaster'),
+            (1, 1310326850, objname, 'buildbot.master.BuildMaster'),
+            (2, 1310326862, objname, 'buildbot.master.BuildMaster'),
+            (3, 1310326872, objname, 'buildbot.master.BuildMaster'),
+            (4, 1310326872, objname, 'buildbot.master.BuildMaster'),
+            (5, 1310326872, objname, 'buildbot.master.BuildMaster'),
+            (6, 1310326872, objname, 'buildbot.master.BuildMaster'),
+            (7, 1310326872, objname, 'buildbot.master.BuildMaster'),
+            (8, 1310326872, objname, 'buildbot.master.BuildMaster'),
+            (9, 1310326872, objname, 'buildbot.master.BuildMaster'),
+            (10, 1310326872, objname, 'buildbot.master.BuildMaster'),
+            (11, 1310326895, objname, 'buildbot.master.BuildMaster'),
+            (12, 1310326900, objname, 'buildbot.master.BuildMaster'),
+            (13, 1310326900, objname, 'buildbot.master.BuildMaster'),
+            (14, 1310326900, objname, 'buildbot.master.BuildMaster'),
         ])
 
     def test_upgrade(self):
@@ -404,11 +404,11 @@ class UpgradeTestV084(UpgradeTestMixin, unittest.TestCase):
                       for brc in r.fetchall() ]
         objname = 'euclid:/home/dustin/code/buildbot/t/buildbot/sand27/master'
         self.assertEqual(buildreqs, [
-            (1, 1310406744, objname, 'BuildMaster'),
-            (2, 1310406863, objname, 'BuildMaster'),
-            (3, 1310406863, objname, 'BuildMaster'),
-            (4, 1310406863, objname, 'BuildMaster'),
-            (5, 1310406863, objname, 'BuildMaster'),
+            (1, 1310406744, objname, 'buildbot.master.BuildMaster'),
+            (2, 1310406863, objname, 'buildbot.master.BuildMaster'),
+            (3, 1310406863, objname, 'buildbot.master.BuildMaster'),
+            (4, 1310406863, objname, 'buildbot.master.BuildMaster'),
+            (5, 1310406863, objname, 'buildbot.master.BuildMaster'),
             # 6, 7 aren't claimed yet
         ])
 

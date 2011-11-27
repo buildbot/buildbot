@@ -64,11 +64,19 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
     # tests
 
-    def test_empty(self):
+    def test_no_old_id(self):
         def setup_thd(conn):
             self.create_tables_thd(conn)
+            self.insert_new_objs(conn, 2)
+
         def verify_thd(conn):
-            self.assertObjectState_thd(conn, [], [])
+            self.assertObjectState_thd(conn, [
+                (50, 'some_hostname:/base/dir/50',
+                    'buildbot.master.BuildMaster'),
+                (51, 'some_hostname:/base/dir/51',
+                    'buildbot.master.BuildMaster'),
+            ], [])
+
         return self.do_test_migration(14, 15, setup_thd, verify_thd)
 
     def test_no_new_id(self):
