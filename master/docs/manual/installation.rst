@@ -31,7 +31,8 @@ buildslave:
 
 Python: http://www.python.org
 
-  Buildbot requires python-2.4 or later.
+  Buildbot requires python-2.4 or later.  Buildbot versions later than 0.8.6
+  will require Python-2.5, and Python-2.7 is recommended.
 
 Twisted: http://twistedmatrix.com
 
