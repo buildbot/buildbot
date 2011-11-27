@@ -154,7 +154,7 @@ If the environment variable ``$NO_INSTALL_REQS`` is set to ``1``, then
 :file:`setup.py` will not try to install Buildbot's requirements.  This is
 usually only useful when building a Buildbot package.
 
-To test this, shift to a different directory (like :file:`/tmp`), and run::
+To test this, shift to a different directory (like :file:`/tmp`), and run:
 
 .. code-block:: bash
 
@@ -186,7 +186,7 @@ Running Buildbot's Tests (optional)
 -----------------------------------
 
 If you wish, you can run the buildbot unit test suite.  First, ensure you have
-the `mock <http://pypi.python.org/pypi/mock,mock>`_ Python module installed from
+the `mock <http://pypi.python.org/pypi/mock>`_ Python module installed from
 PyPi.  This module is not required for ordinary Buildbot operation - only to
 run the tests.  Note that this is not the same as the Fedora ``mock``
 package!  You can check with
@@ -203,7 +203,7 @@ Then, run the tests:
     # or
     PYTHONPATH=. trial buildslave.test
 
-Nothing should fail, a few might be skipped.
+Nothing should fail, although a few might be skipped.
 
 If any of the tests fail for reasons other than a missing ``mock``, you
 should stop and investigate the cause before continuing the installation
