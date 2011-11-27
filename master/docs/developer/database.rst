@@ -1051,15 +1051,20 @@ passed to this parameter is "enhanced" by SQLAlchemy-Migrate, with methods to
 handle adding, altering, and dropping columns.  See the SQLAlchemy-Migrate
 documentation for details.
 
-Finally, modify :bb:src:`master/buildbot/db/model.py` to represent the updated
+Next, modify :bb:src:`master/buildbot/db/model.py` to represent the updated
 schema.  Buildbot's automated tests perform a rudimentary comparison of an
 upgraded database with the model, but it is important to check the details -
 key length, nullability, and so on can sometimes be missed by the checks.  If
 the schema and the upgrade scripts get out of sync, bizarre behavior can
 result.
 
-Finally, adjust the fake database table definitions in
+Also, adjust the fake database table definitions in
 :bb:src:`master/buildbot/test/fake/fakedb.py` according to your changes.
+
+Your upgrade script should have unit tests.  The classes in
+:bb:src:`master/buildbot/test/util/migration.py` make this straightforward.
+Unit test scripts should be named e.g.,
+:file:`test_db_migrate_versions_015_remove_bad_master_objectid.py`.
 
 Database Compatibility Notes
 ----------------------------

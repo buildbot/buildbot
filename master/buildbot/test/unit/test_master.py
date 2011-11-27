@@ -411,7 +411,13 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
         self.gotten_buildset_completions = []
         self.gotten_buildrequest_additions = []
 
+
         basedir = os.path.abspath('basedir')
+
+        # patch out os.uname so that we get a consistent hostname
+        self.patch(os, 'uname', lambda : [ 0, 'testhost.localdomain' ])
+        self.master_name = "testhost.localdomain:%s" % (basedir,)
+
         d = self.setUpDirs(basedir)
         def set_master(_):
             self.master = master.BuildMaster(basedir)
@@ -452,7 +458,7 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
 
     def test_pollDatabaseChanges_empty(self):
         self.db.insertTestData([
-            fakedb.Object(id=22, name='master',
+            fakedb.Object(id=22, name=self.master_name,
                           class_name='buildbot.master.BuildMaster'),
         ])
         d = self.master.pollDatabaseChanges()
@@ -468,7 +474,7 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
         # with no existing state, it should catch up to the most recent change,
         # but not process anything
         self.db.insertTestData([
-            fakedb.Object(id=22, name='master',
+            fakedb.Object(id=22, name=self.master_name,
                           class_name='buildbot.master.BuildMaster'),
             fakedb.Change(changeid=10),
             fakedb.Change(changeid=11),
@@ -484,7 +490,7 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
 
     def test_pollDatabaseChanges_multiple(self):
         self.db.insertTestData([
-            fakedb.Object(id=53, name='master',
+            fakedb.Object(id=53, name=self.master_name,
                           class_name='buildbot.master.BuildMaster'),
             fakedb.ObjectState(objectid=53, name='last_processed_change',
                                value_json='10'),

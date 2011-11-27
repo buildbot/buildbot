@@ -327,7 +327,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     def getObjectId(self):
         """
-        Return the obejct id for this master, for associating state with the master.
+        Return the obejct id for this master, for associating state with the
+        master.
 
         @returns: ID, via Deferred
         """
@@ -343,9 +344,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             hostname = socket.getfqdn()
         master_name = "%s:%s" % (hostname, os.path.abspath(self.basedir))
 
-        d = self.db.state.getObjectId(master_name, "BuildMaster")
+        d = self.db.state.getObjectId(master_name,
+                "buildbot.master.BuildMaster")
         def keep(id):
             self._object_id = id
+            return id
         d.addCallback(keep)
         return d
 
@@ -745,32 +748,19 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     ## state maintenance (private)
 
-    _master_objectid = None
-
-    def _getObjectId(self):
-        if self._master_objectid is None:
-            d = self.db.state.getObjectId('master',
-                                    'buildbot.master.BuildMaster')
-            def keep(objectid):
-                self._master_objectid = objectid
-                return objectid
-            d.addCallback(keep)
-            return d
-        return defer.succeed(self._master_objectid)
-
     def _getState(self, name, default=None):
         "private wrapper around C{self.db.state.getState}"
-        d = self._getObjectId()
+        d = self.getObjectId()
         def get(objectid):
-            return self.db.state.getState(self._master_objectid, name, default)
+            return self.db.state.getState(objectid, name, default)
         d.addCallback(get)
         return d
 
     def _setState(self, name, value):
         "private wrapper around C{self.db.state.setState}"
-        d = self._getObjectId()
+        d = self.getObjectId()
         def set(objectid):
-            return self.db.state.setState(self._master_objectid, name, value)
+            return self.db.state.setState(objectid, name, value)
         d.addCallback(set)
         return d
 

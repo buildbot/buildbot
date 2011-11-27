@@ -81,8 +81,8 @@ class UpgradeTestMixin(object):
         self.basedir = prefixes.pop()
 
         master = fakemaster.make_master()
-        self.db = connector.DBConnector(master, self.basedir)
         master.config.db['db_url'] = self.db_url
+        self.db = connector.DBConnector(master, self.basedir)
         return self.db.setup(check_version=False)
 
     def tearDownUpgradeTest(self):
