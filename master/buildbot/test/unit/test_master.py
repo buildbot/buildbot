@@ -23,7 +23,7 @@ from twisted.python import log
 from buildbot import master, monkeypatches, config
 from buildbot.util import subscription
 from buildbot.db import connector
-from buildbot.test.util import dirs, compat
+from buildbot.test.util import dirs, compat, misc
 from buildbot.test.fake import fakedb
 from buildbot.util import epoch2datetime
 from buildbot.changes import changes
@@ -403,7 +403,7 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
         return d
 
 
-class Polling(dirs.DirsMixin, unittest.TestCase):
+class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
 
     def setUp(self):
         self.gotten_changes = []
@@ -415,7 +415,7 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
         basedir = os.path.abspath('basedir')
 
         # patch out os.uname so that we get a consistent hostname
-        self.patch(os, 'uname', lambda : [ 0, 'testhost.localdomain' ])
+        self.patch_os_uname(lambda : [ 0, 'testhost.localdomain' ])
         self.master_name = "testhost.localdomain:%s" % (basedir,)
 
         d = self.setUpDirs(basedir)

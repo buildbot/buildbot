@@ -24,6 +24,7 @@ from twisted.cred import checkers, portal
 from zope.interface import implements
 
 from buildslave import bot
+from buildslave.test.util import misc
 
 from mock import Mock
 
@@ -61,7 +62,7 @@ class MasterRealm:
     def shutdown(self):
         return self.mind.broker.transport.loseConnection()
 
-class TestBuildSlave(unittest.TestCase):
+class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
 
     def setUp(self):
         self.realm = None
@@ -130,7 +131,7 @@ class TestBuildSlave(unittest.TestCase):
         return d
 
     def test_recordHostname_uname(self):
-        self.patch(os, "uname", lambda : [ 0, 'test-hostname.domain.com' ])
+        self.patch_os_uname(lambda : [ 0, 'test-hostname.domain.com' ])
 
         self.buildslave = bot.BuildSlave("127.0.0.1", 9999,
                 "testy", "westy", self.basedir,
@@ -142,7 +143,7 @@ class TestBuildSlave(unittest.TestCase):
     def test_recordHostname_getfqdn(self):
         def missing():
             raise AttributeError
-        self.patch(os, "uname", missing)
+        self.patch_os_uname(missing)
         self.patch(socket, "getfqdn", lambda : 'test-hostname.domain.com')
 
         self.buildslave = bot.BuildSlave("127.0.0.1", 9999,
