@@ -20,7 +20,7 @@ import sqlalchemy as sa
 import migrate
 import migrate.versioning.api
 from buildbot.db import connector
-from buildbot.test.util import db, dirs
+from buildbot.test.util import db, dirs, querylog
 from buildbot.test.fake import fakemaster
 
 
@@ -67,6 +67,7 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
         d.addCallback(lambda _ : self.db.pool.do(setup_thd))
 
         def upgrade_thd(engine):
+            querylog.log_from_engine(engine)
             schema = migrate.versioning.schema.ControlledSchema(engine,
                                                     self.db.model.repo_path)
             changeset = schema.changeset(target_version)
