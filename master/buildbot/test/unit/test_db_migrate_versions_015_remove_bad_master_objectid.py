@@ -15,6 +15,7 @@
 
 from twisted.trial import unittest
 from buildbot.test.util import migration
+import sqlalchemy as sa
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -25,22 +26,36 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         return self.tearDownMigrateTest()
 
     def create_tables_thd(self, conn):
-        self.db.model.objects.create(bind=conn)
-        self.db.model.object_state.create(bind=conn)
+        metadata = sa.MetaData()
+        self.objects = sa.Table("objects", metadata,
+            sa.Column("id", sa.Integer, primary_key=True),
+            sa.Column('name', sa.String(128), nullable=False),
+            sa.Column('class_name', sa.String(128), nullable=False),
+            sa.UniqueConstraint('name', 'class_name', name='object_identity'),
+        )
+        self.object_state = sa.Table("object_state", metadata,
+            sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
+                nullable=False),
+            sa.Column("name", sa.String(length=256), nullable=False),
+            sa.Column("value_json", sa.Text, nullable=False),
+            sa.UniqueConstraint('objectid', 'name', name='name_per_object'),
+        )
+        self.objects.create(bind=conn)
+        self.object_state.create(bind=conn)
 
     def insert_old_obj(self, conn):
-        conn.execute(self.db.model.objects.insert(),
+        conn.execute(self.objects.insert(),
                 id=21,
                 name='master',
                 class_name='buildbot.master.BuildMaster')
-        conn.execute(self.db.model.object_state.insert(),
+        conn.execute(self.object_state.insert(),
                 objectid=21,
                 name='last_processed_change',
                 value_json='938')
 
     def insert_new_objs(self, conn, count):
         for id in range(50, 50+count):
-            conn.execute(self.db.model.objects.insert(),
+            conn.execute(self.objects.insert(),
                     id=id,
                     name='some_hostname:/base/dir/%d' % id,
                     class_name='BuildMaster')
@@ -49,11 +64,11 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
     def assertObjectState_thd(self, conn, exp_objects=[],
                             exp_object_state=[]):
-        tbl = self.db.model.objects
+        tbl = self.objects
         res = conn.execute(tbl.select(order_by=tbl.c.id))
         got_objects = res.fetchall()
 
-        tbl = self.db.model.object_state
+        tbl = self.object_state
         res = conn.execute(tbl.select(
             order_by=[tbl.c.objectid, tbl.c.name]))
         got_object_state = res.fetchall()
