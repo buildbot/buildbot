@@ -83,7 +83,8 @@ class UpgradeTestMixin(object):
             assert len(prefixes) == 1, "tarball has multiple top-level dirs!"
             self.basedir = prefixes.pop()
         else:
-            os.makedirs("basedir")
+            if not os.path.exists("basedir"):
+                os.makedirs("basedir")
             self.basedir = os.path.abspath("basedir")
 
         master = fakemaster.make_master()
@@ -151,11 +152,14 @@ class UpgradeTestMixin(object):
                     got_info = dict( (idx['name'],idx) for idx in got )
                     exp_info = dict( (idx['name'],idx) for idx in exp )
                     for name in got_names & exp_names:
-                        if got_info[name] != exp_info[name]:
+                        gi = dict(name=name,
+                            unique=1 if got_info[name]['unique'] else 0,
+                            column_names=got_info[name]['column_names'])
+                        ei = exp_info[name]
+                        if gi != ei:
                             diff.append(
                                 "index %s on table %s differs: got %s; exp %s"
-                                % (name, tbl.name, got_info[name],
-                                    exp_info[name]))
+                                % (name, tbl.name, gi, ei))
             if diff:
                 return "\n".join(diff)
 
@@ -187,10 +191,21 @@ class UpgradeTestMixin(object):
         return d
 
 
-class UpgradeTestEmpty(dirs.DirsMixin,
-                       UpgradeTestMixin,
-                       db.RealDatabaseMixin,
-                       unittest.TestCase):
+class UpgradeTestEmptyReal(UpgradeTestMixin, db.RealDatabaseMixin,
+                            unittest.TestCase):
+
+    # uses the real DB via RealDatabaseMixin
+
+    def setUp(self):
+        d = self.setUpRealDatabase(sqlite_memory=False) # sets self.db_url
+        d.addCallback(lambda _ : self.setUpUpgradeTest())
+        return d
+
+    def tearDown(self):
+        d = self.tearDownRealDatabase()
+        @d.addCallback
+        def tear(_):
+            self.tearDownUpgradeTest()
 
     def test_emptydb_modelmatches(self):
         d = self.db.model.upgrade()
