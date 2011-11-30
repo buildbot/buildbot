@@ -301,8 +301,6 @@ class Model(base.DBConnectorComponent):
         # object's class name, basically representing a "type" for the state
         sa.Column('class_name', sa.String(128), nullable=False),
 
-        # prohibit multiple id's for the same object
-        sa.UniqueConstraint('name', 'class_name', name='object_identity'),
     )
 
     # This table stores key/value pairs for objects, where the key is a string
@@ -315,9 +313,6 @@ class Model(base.DBConnectorComponent):
         sa.Column("name", sa.String(length=256), nullable=False),
         # value, as a JSON string
         sa.Column("value_json", sa.Text, nullable=False),
-
-        # prohibit multiple values for the same object and name
-        sa.UniqueConstraint('objectid', 'name', name='name_per_object'),
     )
 
     # This table identifies individual users, and contains buildbot-specific
@@ -386,6 +381,9 @@ class Model(base.DBConnectorComponent):
             users_info.c.attr_data, unique=True)
     sa.Index('change_users_changeid', change_users.c.changeid)
     sa.Index('users_bb_user', users.c.bb_username, unique=True)
+    sa.Index('object_identity', objects.c.name, objects.c.class_name,
+            unique=True)
+    sa.Index('name_per_object', object_state.c.name, unique=True)
 
     #
     # migration support

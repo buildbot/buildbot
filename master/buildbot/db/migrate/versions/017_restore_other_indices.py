@@ -27,24 +27,33 @@ def upgrade(migrate_engine):
     # them.  The indices, however, are important, so they are re-added here,
     # but only for the sqlite dialect.
 
-    if migrate_engine.dialect.name != 'sqlite':
-        return
+    if migrate_engine.dialect.name == 'sqlite':
+        schedulers = sa.Table('schedulers', metadata, autoload=True)
 
-    schedulers = sa.Table('schedulers', metadata, autoload=True)
+        sa.Index('name_and_class',
+                schedulers.c.name, schedulers.c.class_name).create()
 
-    sa.Index('name_and_class',
-            schedulers.c.name, schedulers.c.class_name).create()
+        changes = sa.Table('changes', metadata, autoload=True)
 
-    changes = sa.Table('changes', metadata, autoload=True)
+        sa.Index('changes_branch', changes.c.branch).create()
+        sa.Index('changes_revision', changes.c.revision).create()
+        sa.Index('changes_author', changes.c.author).create()
+        sa.Index('changes_category', changes.c.category).create()
+        sa.Index('changes_when_timestamp', changes.c.when_timestamp).create()
 
-    sa.Index('changes_branch', changes.c.branch).create()
-    sa.Index('changes_revision', changes.c.revision).create()
-    sa.Index('changes_author', changes.c.author).create()
-    sa.Index('changes_category', changes.c.category).create()
-    sa.Index('changes_when_timestamp', changes.c.when_timestamp).create()
+        # These were implemented as UniqueConstraint objects, which are
+        # recognized as indexes on non-sqlite DB's.  So add them as explicit
+        # indexes on sqlite.
+
+        objects = sa.Table('objects', metadata, autoload=True)
+        sa.Index('object_identity', objects.c.name, objects.c.class_name,
+                unique=True).create()
+
+        object_state = sa.Table('object_state', metadata, autoload=True)
+        sa.Index('name_per_object', object_state.c.name, unique=True).create()
 
     # Due to a coding bug in version 012, the users_identifier index is not
-    # unique
+    # unique (on any DB)
 
     users = sa.Table('users', metadata, autoload=True)
     migrate_engine.execute("DROP INDEX users_identifier")
