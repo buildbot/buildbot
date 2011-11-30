@@ -161,7 +161,7 @@ class UpgradeTestMixin(object):
                                 % (name, tbl.name))
                     for name in got_names & exp_names:
                         gi = dict(name=name,
-                            unique=idx['unique'] and 1 or 0,
+                            unique=got_info[name]['unique'] and 1 or 0,
                             column_names=got_info[name]['column_names'])
                         ei = exp_info[name]
                         if gi != ei:
