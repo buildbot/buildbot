@@ -22,11 +22,12 @@ from twisted.python import util
 from twisted.internet import defer
 from twisted.trial import unittest
 import sqlalchemy as sa
+from sqlalchemy.engine import reflection
 import migrate
 import migrate.versioning.api
 from migrate.versioning import schemadiff
 from buildbot.db import connector
-from buildbot.test.util import change_import, db, dirs
+from buildbot.test.util import change_import, db, querylog
 from buildbot.test.fake import fakemaster
 
 # monkey-patch for "compare_model_to_db gets confused by sqlite_sequence",
@@ -64,26 +65,36 @@ class UpgradeTestMixin(object):
     def setUpUpgradeTest(self):
         self.basedir = None
 
-        tarball = util.sibpath(__file__, self.source_tarball)
-        if not os.path.exists(tarball):
-            raise unittest.SkipTest(
-                "'%s' not found (normal when not building from Git)" % tarball)
+        if self.source_tarball:
+            tarball = util.sibpath(__file__, self.source_tarball)
+            if not os.path.exists(tarball):
+                raise unittest.SkipTest(
+                    "'%s' not found (normal when not building from Git)"
+                    % tarball)
 
-        tf = tarfile.open(tarball)
-        prefixes = set()
-        for inf in tf:
-            tf.extract(inf)
-            prefixes.add(inf.name.split('/', 1)[0])
-        # (note that tf.extractall isn't available in py2.4)
+            tf = tarfile.open(tarball)
+            prefixes = set()
+            for inf in tf:
+                tf.extract(inf)
+                prefixes.add(inf.name.split('/', 1)[0])
+            # (note that tf.extractall isn't available in py2.4)
 
-        # get the top-level dir from the tarball
-        assert len(prefixes) == 1, "tarball has multiple top-level dirs!"
-        self.basedir = prefixes.pop()
+            # get the top-level dir from the tarball
+            assert len(prefixes) == 1, "tarball has multiple top-level dirs!"
+            self.basedir = prefixes.pop()
+        else:
+            if not os.path.exists("basedir"):
+                os.makedirs("basedir")
+            self.basedir = os.path.abspath("basedir")
 
         master = fakemaster.make_master()
         master.config.db['db_url'] = self.db_url
         self.db = connector.DBConnector(master, self.basedir)
-        return self.db.setup(check_version=False)
+        d = self.db.setup(check_version=False)
+        @d.addCallback
+        def setup_logging(_):
+            querylog.log_from_engine(self.db.pool.engine)
+        return d
 
     def tearDownUpgradeTest(self):
         if self.basedir:
@@ -109,11 +120,57 @@ class UpgradeTestMixin(object):
         self.patch(schemadiff, 'getDiffOfModelAgainstDatabase',
                                 getDiffMonkeyPatch)
         def comp(engine):
-            # get a fresh model/metadata
-            return migrate.versioning.api.compare_model_to_db(
+            # use compare_model_to_db, which gets everything but foreign
+            # keys and indexes
+            diff = migrate.versioning.api.compare_model_to_db(
                 engine,
                 self.db.model.repo_path,
                 self.db.model.metadata)
+            if diff:
+                return diff
+
+            # check indexes manually
+            insp = reflection.Inspector.from_engine(engine)
+            # unique, name, column_names
+            diff = []
+            for tbl in self.db.model.metadata.sorted_tables:
+                exp = sorted([
+                    dict(name=idx.name,
+                         unique=1 if idx.unique else 0,
+                         column_names=[ c.name for c in idx.columns ])
+                    for idx in tbl.indexes ])
+
+                # include implied indexes on postgres and mysql
+                if engine.dialect.name != 'sqlite':
+                    implied = [ idx for (tname, idx)
+                                in self.db.model.implied_indexes
+                                if tname == tbl.name ]
+                    exp = sorted(exp + implied)
+
+                got = sorted(insp.get_indexes(tbl.name))
+                if exp != got:
+                    got_names = set([ idx['name'] for idx in got ])
+                    exp_names = set([ idx['name'] for idx in exp ])
+                    got_info = dict( (idx['name'],idx) for idx in got )
+                    exp_info = dict( (idx['name'],idx) for idx in exp )
+                    for name in got_names - exp_names:
+                        diff.append("got unexpected index %s on table %s: %r"
+                                % (name, tbl.name, got_info[name]))
+                    for name in exp_names - got_names:
+                        diff.append("missing index %s on table %s"
+                                % (name, tbl.name))
+                    for name in got_names & exp_names:
+                        gi = dict(name=name,
+                            unique=1 if got_info[name]['unique'] else 0,
+                            column_names=got_info[name]['column_names'])
+                        ei = exp_info[name]
+                        if gi != ei:
+                            diff.append(
+                                "index %s on table %s differs: got %s; exp %s"
+                                % (name, tbl.name, gi, ei))
+            if diff:
+                return "\n".join(diff)
+
         d = self.db.pool.do_with_engine(comp)
 
         # older sqlites cause failures in reflection, which manifest as a
@@ -125,6 +182,7 @@ class UpgradeTestMixin(object):
             raise unittest.SkipTest("model comparison skipped: bugs in schema "
                                     "reflection on this sqlite version")
         d.addErrback(catch_TypeError)
+
         def check(diff):
             if diff:
                 self.fail(str(diff))
@@ -141,26 +199,21 @@ class UpgradeTestMixin(object):
         return d
 
 
-class UpgradeTestEmpty(dirs.DirsMixin,
-                       UpgradeTestMixin,
-                       db.RealDatabaseMixin,
-                       unittest.TestCase):
+class UpgradeTestEmptyReal(UpgradeTestMixin, db.RealDatabaseMixin,
+                            unittest.TestCase):
+
+    # uses the real DB via RealDatabaseMixin
 
     def setUp(self):
-        self.basedir = os.path.abspath("basedir")
-        self.setUpDirs('basedir')
-        d = self.setUpRealDatabase()
-        def make_dbc(_):
-            master = fakemaster.make_master()
-            self.db = connector.DBConnector(master, self.basedir)
-            master.config.db['db_url'] = self.db_url
-            self.db.setup(check_version=False)
-        d.addCallback(make_dbc)
+        d = self.setUpRealDatabase(sqlite_memory=False) # sets self.db_url
+        d.addCallback(lambda _ : self.setUpUpgradeTest())
         return d
 
     def tearDown(self):
-        self.tearDownDirs()
-        return self.tearDownRealDatabase()
+        d = self.tearDownRealDatabase()
+        @d.addCallback
+        def tear(_):
+            self.tearDownUpgradeTest()
 
     def test_emptydb_modelmatches(self):
         d = self.db.model.upgrade()

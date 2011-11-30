@@ -19,7 +19,7 @@ def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    # the column drops script in 011_add_buildrequest_claims.py unfortunately
+    # the column drops in 011_add_buildrequest_claims.py unfortunately
     # also drop a great deal of other stuff on sqlite.  In particular, all
     # indexes and foreign keys.
     #

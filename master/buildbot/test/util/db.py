@@ -75,7 +75,7 @@ class RealDatabaseMixin(object):
             tbl.create(bind=conn, checkfirst=True)
 
     def setUpRealDatabase(self, table_names=[], basedir='basedir',
-                          want_pool=True):
+                          want_pool=True, sqlite_memory=True):
         """
 
         Set up a database.  Ordinarily sets up an engine and a pool and takes
@@ -86,17 +86,21 @@ class RealDatabaseMixin(object):
         @param table_names: list of names of tables to instantiate
         @param basedir: (optional) basedir for the engine
         @param want_pool: (optional) false to not create C{self.db_pool}
+        @param sqlite_memory: (optional) False to avoid using an in-memory db
         @returns: Deferred
         """
         self.__want_pool = want_pool
 
-        memory = 'sqlite://'
-        self.db_url = os.environ.get('BUILDBOT_TEST_DB_URL', memory)
-        self.__using_memory_db = (self.db_url == memory)
+        default = 'sqlite://'
+        if not sqlite_memory:
+            default = "sqlite:///tmp.sqlite"
+            if not os.path.exists(basedir):
+                os.makedirs(basedir)
+
+        self.db_url = os.environ.get('BUILDBOT_TEST_DB_URL', default)
 
         self.db_engine = enginestrategy.create_engine(self.db_url,
                                                     basedir=basedir)
-
         # if the caller does not want a pool, we're done.
         if not want_pool:
             return defer.succeed(None)
