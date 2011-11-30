@@ -62,6 +62,21 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         )
         self.users.create(bind=conn)
 
+        self.objects = sa.Table("objects", metadata,
+            sa.Column("id", sa.Integer, primary_key=True),
+            sa.Column('name', sa.String(128), nullable=False),
+            sa.Column('class_name', sa.String(128), nullable=False),
+        )
+        self.objects.create()
+
+        self.object_state = sa.Table("object_state", metadata,
+            sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
+                nullable=False),
+            sa.Column("name", sa.String(length=256), nullable=False),
+            sa.Column("value_json", sa.Text, nullable=False),
+        )
+        self.object_state.create()
+
         # these indices should already exist everywhere but on sqlite
         if conn.dialect.name != 'sqlite':
             sa.Index('name_and_class', self.schedulers.c.name,

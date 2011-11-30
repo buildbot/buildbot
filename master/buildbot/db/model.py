@@ -383,7 +383,24 @@ class Model(base.DBConnectorComponent):
     sa.Index('users_bb_user', users.c.bb_username, unique=True)
     sa.Index('object_identity', objects.c.name, objects.c.class_name,
             unique=True)
-    sa.Index('name_per_object', object_state.c.name, unique=True)
+    sa.Index('name_per_object', object_state.c.objectid, object_state.c.name,
+            unique=True)
+
+    # MySQl and Postgres create indexes for foreign keys, and these appear in
+    # the reflection.  This is a list of (table, index) names that should be
+    # expected on these platforms
+
+    implied_indexes = [
+        ('change_users', 
+            dict(unique=False, column_names=['uid'], name='uid')),
+        ('sourcestamps',
+            dict(unique=False, column_names=['patchid'], name='patchid')),
+        ('sourcestamp_changes',
+            dict(unique=False, column_names=['changeid'], name='changeid')),
+        ('buildsets',
+            dict(unique=False, column_names=['sourcestampid'],
+                               name='sourcestampid')),
+    ]
 
     #
     # migration support

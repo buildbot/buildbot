@@ -50,11 +50,19 @@ def upgrade(migrate_engine):
                 unique=True).create()
 
         object_state = sa.Table('object_state', metadata, autoload=True)
-        sa.Index('name_per_object', object_state.c.name, unique=True).create()
+        sa.Index('name_per_object', object_state.c.objectid,
+                object_state.c.name, unique=True).create()
 
     # Due to a coding bug in version 012, the users_identifier index is not
-    # unique (on any DB)
+    # unique (on any DB).  SQLAlchemy-migrate does not provide an interface to
+    # drop columns, so we fake it here.
 
     users = sa.Table('users', metadata, autoload=True)
-    migrate_engine.execute("DROP INDEX users_identifier")
+
+    dialect = migrate_engine.dialect.name
+    if dialect in ('sqlite', 'postgresql'):
+        migrate_engine.execute("DROP INDEX users_identifier")
+    elif dialect == 'mysql':
+        migrate_engine.execute("DROP INDEX users_identifier ON users")
+
     sa.Index('users_identifier', users.c.identifier, unique=True).create()

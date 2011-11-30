@@ -139,18 +139,26 @@ class UpgradeTestMixin(object):
                          unique=1 if idx.unique else 0,
                          column_names=[ c.name for c in idx.columns ])
                     for idx in tbl.indexes ])
+
+                # include implied indexes on postgres and mysql
+                if engine.dialect.name != 'sqlite':
+                    implied = [ idx for (tname, idx)
+                                in self.db.model.implied_indexes
+                                if tname == tbl.name ]
+                    exp = sorted(exp + implied)
+
                 got = sorted(insp.get_indexes(tbl.name))
                 if exp != got:
                     got_names = set([ idx['name'] for idx in got ])
                     exp_names = set([ idx['name'] for idx in exp ])
+                    got_info = dict( (idx['name'],idx) for idx in got )
+                    exp_info = dict( (idx['name'],idx) for idx in exp )
                     for name in got_names - exp_names:
-                        diff.append("got unexpected index %s on table %s"
-                                % (name, tbl.name))
+                        diff.append("got unexpected index %s on table %s: %r"
+                                % (name, tbl.name, got_info[name]))
                     for name in exp_names - got_names:
                         diff.append("missing index %s on table %s"
                                 % (name, tbl.name))
-                    got_info = dict( (idx['name'],idx) for idx in got )
-                    exp_info = dict( (idx['name'],idx) for idx in exp )
                     for name in got_names & exp_names:
                         gi = dict(name=name,
                             unique=1 if got_info[name]['unique'] else 0,
