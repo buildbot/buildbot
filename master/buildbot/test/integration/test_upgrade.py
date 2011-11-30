@@ -136,7 +136,7 @@ class UpgradeTestMixin(object):
             for tbl in self.db.model.metadata.sorted_tables:
                 exp = sorted([
                     dict(name=idx.name,
-                         unique=1 if idx.unique else 0,
+                         unique=idx.unique and 1 or 0,
                          column_names=[ c.name for c in idx.columns ])
                     for idx in tbl.indexes ])
 
@@ -161,7 +161,7 @@ class UpgradeTestMixin(object):
                                 % (name, tbl.name))
                     for name in got_names & exp_names:
                         gi = dict(name=name,
-                            unique=1 if got_info[name]['unique'] else 0,
+                            unique=idx.unique and 1 or 0,
                             column_names=got_info[name]['column_names'])
                         ei = exp_info[name]
                         if gi != ei:
