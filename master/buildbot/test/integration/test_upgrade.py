@@ -141,7 +141,7 @@ class UpgradeTestMixin(object):
                     for idx in tbl.indexes ])
 
                 # include implied indexes on postgres and mysql
-                if engine.dialect.name != 'sqlite':
+                if engine.dialect.name == 'mysql':
                     implied = [ idx for (tname, idx)
                                 in self.db.model.implied_indexes
                                 if tname == tbl.name ]
@@ -161,7 +161,7 @@ class UpgradeTestMixin(object):
                                 % (name, tbl.name))
                     for name in got_names & exp_names:
                         gi = dict(name=name,
-                            unique=idx.unique and 1 or 0,
+                            unique=idx['unique'] and 1 or 0,
                             column_names=got_info[name]['column_names'])
                         ei = exp_info[name]
                         if gi != ei:

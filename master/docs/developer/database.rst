@@ -1068,8 +1068,9 @@ Unit test scripts should be named e.g.,
 
 The :file:`master/buildbot/test/integration/test_upgrade.py` also tests
 upgrades, and will confirm that the resulting database matches the model.  If
-you encounter implicit indexes on MySQL or Postgres, that do not appear on
-SQLite, add them to ``implied_indexes`` in :file:`master/buidlbot/db/model.py`.
+you encounter implicit indexes on MySQL, that do not appear on SQLite or
+Postgres, add them to ``implied_indexes`` in
+:file:`master/buidlbot/db/model.py`.
 
 Database Compatibility Notes
 ----------------------------

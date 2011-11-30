@@ -386,9 +386,9 @@ class Model(base.DBConnectorComponent):
     sa.Index('name_per_object', object_state.c.objectid, object_state.c.name,
             unique=True)
 
-    # MySQl and Postgres create indexes for foreign keys, and these appear in
-    # the reflection.  This is a list of (table, index) names that should be
-    # expected on these platforms
+    # MySQl creates indexes for foreign keys, and these appear in the
+    # reflection.  This is a list of (table, index) names that should be
+    # expected on this platform
 
     implied_indexes = [
         ('change_users', 
