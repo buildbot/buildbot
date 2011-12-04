@@ -34,7 +34,7 @@ Open a new terminal, and first enter the same sandbox you created before (where 
   cd
   cd tmp/buildbot
   source sandbox/bin/activate
-  $EDITOR $VIRTUAL_ENV/master/master.cfg
+  $EDITOR master/master.cfg
 
 Now, look for the section marked *PROJECT IDENTITY* which reads::
 
@@ -54,21 +54,24 @@ After making a change go into the terminal and type::
 
 You will see a handful of lines of output from the master log, much like this::
 
-  2009-08-01 13:38:21+0200 [-] loading configuration from /home/thomas/dev/ext/buildbot/sandbox/master/master.cfg
-  2009-08-01 13:38:21+0200 [-] builder buildbot-full is unchanged
-  2009-08-01 13:38:21+0200 [-] removing IStatusReceiver <WebStatus on port tcp:8010 at 0x11a5290>
-  2009-08-01 13:38:21+0200 [-] configuration update started
-  2009-08-01 13:38:21+0200 [-] (Port 8010 Closed)
-  2009-08-01 13:38:21+0200 [-] Stopping factory <twisted.web.server.Site instance at 0x11a5518>
-  2009-08-01 13:38:21+0200 [-] adding IStatusReceiver <WebStatus on port tcp:8010 at 0x14f9050>
-  2009-08-01 13:38:21+0200 [-] twisted.web.server.Site starting on 8010
-  2009-08-01 13:38:21+0200 [-] Starting factory <twisted.web.server.Site instance at 0x14f90e0>
-  2009-08-01 13:38:21+0200 [-] WebStatus using (/home/thomas/dev/ext/buildbot/sandbox/master/public_html)
-  2009-08-01 13:38:21+0200 [-] adding 0 new schedulers, removed 0
-  2009-08-01 13:38:21+0200 [-] adding 0 new changesources, removing 0
-  2009-08-01 13:38:21+0200 [-] configuration update complete
+    2011-12-04 10:11:09-0600 [-] loading configuration from /home/dustin/tmp/buildbot/master/master.cfg
+    2011-12-04 10:11:09-0600 [-] configuration update started
+    2011-12-04 10:11:09-0600 [-] builder runtests is unchanged
+    2011-12-04 10:11:09-0600 [-] removing IStatusReceiver <WebStatus on port tcp:8010 at 0x2aee368>
+    2011-12-04 10:11:09-0600 [-] (TCP Port 8010 Closed)
+    2011-12-04 10:11:09-0600 [-] Stopping factory <buildbot.status.web.baseweb.RotateLogSite instance at 0x2e36638>
+    2011-12-04 10:11:09-0600 [-] adding IStatusReceiver <WebStatus on port tcp:8010 at 0x2c2d950>
+    2011-12-04 10:11:09-0600 [-] RotateLogSite starting on 8010
+    2011-12-04 10:11:09-0600 [-] Starting factory <buildbot.status.web.baseweb.RotateLogSite instance at 0x2e36e18>
+    2011-12-04 10:11:09-0600 [-] Setting up http.log rotating 10 files of 10000000 bytes each
+    2011-12-04 10:11:09-0600 [-] WebStatus using (/home/dustin/tmp/buildbot/master/public_html)
+    2011-12-04 10:11:09-0600 [-] removing 0 old schedulers, updating 0, and adding 0
+    2011-12-04 10:11:09-0600 [-] adding 1 new changesources, removing 1
+    2011-12-04 10:11:09-0600 [-] gitpoller: using workdir '/home/dustin/tmp/buildbot/master/gitpoller-workdir'
+    2011-12-04 10:11:09-0600 [-] GitPoller repository already exists
+    2011-12-04 10:11:09-0600 [-] configuration update complete
 
-  Reconfiguration appears to have completed successfully.
+    Reconfiguration appears to have completed successfully.
 
 The important lines are the ones telling you that it is loading the new
 configuration at the top, and the one at the bottom saying that the update
@@ -98,31 +101,27 @@ This creates a Python SyntaxError.  Now go ahead and reconfig the buildmaster::
 
 This time, the output looks like::
 
-  2009-08-01 13:52:23+0200 [-] loading configuration from /home/thomas/dev/ext/buildbot/sandbox/master/master.cfg
-  2009-08-01 13:52:23+0200 [-] error while parsing config file
-  2009-08-01 13:52:23+0200 [-] error during loadConfig
-  2009-08-01 13:52:23+0200 [-] Unhandled Error
-        Traceback (most recent call last):
-          File "/home/thomas/dev/ext/buildbot/sandbox/lib/python2.6/site-packages/Twisted-8.2.0-py2.6-linux-x86_64.egg/twisted/application/app.py", line 348, in runReactorWithLogging
-            reactor.run()
-          File "/home/thomas/dev/ext/buildbot/sandbox/lib/python2.6/site-packages/Twisted-8.2.0-py2.6-linux-x86_64.egg/twisted/internet/base.py", line 1128, in run
-            self.mainLoop()
-          File "/home/thomas/dev/ext/buildbot/sandbox/lib/python2.6/site-packages/Twisted-8.2.0-py2.6-linux-x86_64.egg/twisted/internet/base.py", line 1137, in mainLoop
-            self.runUntilCurrent()
-          File "/home/thomas/dev/ext/buildbot/sandbox/lib/python2.6/site-packages/Twisted-8.2.0-py2.6-linux-x86_64.egg/twisted/internet/base.py", line 757, in runUntilCurrent
-              call.func(*call.args, **call.kw)
-          --- <exception caught here> ---
-            File "/home/thomas/dev/ext/buildbot/src/buildbot/master.py", line 511, in loadTheConfigFile
-              self.loadConfig(f)
-            File "/home/thomas/dev/ext/buildbot/src/buildbot/master.py", line 529, in loadConfig
-              exec f in localDict
-          exceptions.SyntaxError: EOL while scanning string literal (master.cfg, line 191)
-        
-  2009-08-01 13:52:23+0200 [-] The new config file is unusable, so I'll ignore it.
-  2009-08-01 13:52:23+0200 [-] I will keep using the previous config file instead.
+    2011-12-04 10:12:28-0600 [-] loading configuration from /home/dustin/tmp/buildbot/master/master.cfg
+    2011-12-04 10:12:28-0600 [-] configuration update started
+    2011-12-04 10:12:28-0600 [-] error while parsing config file
+    2011-12-04 10:12:28-0600 [-] Unhandled Error
+            Traceback (most recent call last):
+            File "/home/dustin/tmp/buildbot/sandbox/lib/python2.7/site-packages/buildbot-0.8.5-py2.7.egg/buildbot/master.py", line 197, in loadTheConfigFile
+                d = self.loadConfig(f)
+            File "/home/dustin/tmp/buildbot/sandbox/lib/python2.7/site-packages/buildbot-0.8.5-py2.7.egg/buildbot/master.py", line 579, in loadConfig
+                d.addCallback(do_load)
+            File "/home/dustin/tmp/buildbot/sandbox/lib/python2.7/site-packages/Twisted-11.1.0-py2.7-linux-x86_64.egg/twisted/internet/defer.py", line 298, in addCallback
+                callbackKeywords=kw)
+            File "/home/dustin/tmp/buildbot/sandbox/lib/python2.7/site-packages/Twisted-11.1.0-py2.7-linux-x86_64.egg/twisted/internet/defer.py", line 287, in addCallbacks
+                self._runCallbacks()
+            --- <exception caught here> ---
+            File "/home/dustin/tmp/buildbot/sandbox/lib/python2.7/site-packages/Twisted-11.1.0-py2.7-linux-x86_64.egg/twisted/internet/defer.py", line 545, in _runCallbacks
+                current.result = callback(current.result, *args, **kw)
+            File "/home/dustin/tmp/buildbot/sandbox/lib/python2.7/site-packages/buildbot-0.8.5-py2.7.egg/buildbot/master.py", line 226, in do_load
+                exec f in localDict
+            exceptions.SyntaxError: EOL while scanning string literal (master.cfg, line 17)
 
-  Reconfiguration failed. Please inspect the master.cfg file for errors,
-  correct them, then try 'buildbot reconfig' again.
+    Never saw reconfiguration finish.
 
 This time, it's clear that there was a mistake. in the configuration.
 Luckily, the buildbot master will ignore the wrong configuration and keep
@@ -137,8 +136,9 @@ Your First Build
 By now you're probably thinking: "All this time spent and still not done a
 single build ? What was the name of this project again ?"
 
-On the `waterfall <http://localhost:8010/waterfall>`_. page, click on the runtests link, and scroll down.  You will see
-some new options that allow you to force a build:
+On the `waterfall <http://localhost:8010/waterfall>`_. page, click on the
+runtests link, and scroll down.  You will see some new options that allow you
+to force a build:
 
 .. image:: _images/force-build.png
    :alt: force a build.
@@ -162,10 +162,8 @@ First, start an IRC client of your choice, connect to irc.freenode.org and
 join an empty channel.  In this example we will use #buildbot-test, so go
 join that channel. (*Note: please do not join the main buildbot channel!*)
 
-Edit the config and look for the *STATUS TARGETS* section that you changed
-before to be able to force the build.
-
-Enter these lines below the WebStatus line in master.cfg::
+Edit the config and look for the *STATUS TARGETS* section.  Enter these lines
+below the WebStatus line in master.cfg::
 
   c['status'].append(html.WebStatus(http_port=8010, authz=authz_cfg))
 
@@ -182,13 +180,13 @@ The log output should contain a line like this::
   2009-08-01 15:35:20+0200 [-] adding IStatusReceiver <buildbot.status.words.IRC instance at 0x300d290>
 
 You should see the bot now joining in your IRC client.
-Type::
+In your IRC channel, type::
 
   bbtest: commands
 
 to get a list of the commands the bot supports.
 
-Let's tell the bot to notify certain events, to learn which EVENTS we can notify on do::
+Let's tell the bot to notify certain events, to learn which EVENTS we can notify on::
 
   bbtest: help notify
 
@@ -200,12 +198,12 @@ Now let's set some event notifications::
 
 The bot should have responded to each of the commands::
 
-<@lsblakk> bbtest: notify on started
-<bbtest> The following events are being notified: ['started']
-<@lsblakk> bbtest: notify on finished
-<bbtest> The following events are being notified: ['started', 'finished']
-<@lsblakk> bbtest: notify on failure
-<bbtest> The following events are being notified: ['started', 'failure', 'finished']
+    <@lsblakk> bbtest: notify on started
+    <bbtest> The following events are being notified: ['started']
+    <@lsblakk> bbtest: notify on finished
+    <bbtest> The following events are being notified: ['started', 'finished']
+    <@lsblakk> bbtest: notify on failure
+    <bbtest> The following events are being notified: ['started', 'failure', 'finished']
 
 Now, go back to the web interface and force another build.
 
@@ -250,14 +248,16 @@ guessable password.
 
 To use this you will need to install an additional package or two to your virtualenv::
 
-  # make sure your sandbox is activated so this is installed in your virtualenv
-  pip install pycrypto
-  pip install pyasn1
+  cd
+  cd tmp/buildbot
+  source sandbox/bin/activate
+  easy_install pycrypto
+  easy_install pyasn1
 
 In your master.cfg find::
 
   c = BuildmasterConfig = {}
-  
+
 Insert the following to enable debugging mode with manhole::
 
   ####### DEBUGGING
@@ -290,10 +290,10 @@ Objects can be explored in more depth using `dir(x)` or the helper function
 
 Adding a 'try' scheduler
 ------------------------
-Buildbot includes a way for developers to submit patches for testing
-without committing them to the source code control system.  
-(This is really handy for projects that support several operating systems
-or architectures.)
+
+Buildbot includes a way for developers to submit patches for testing without
+committing them to the source code control system.  (This is really handy for
+projects that support several operating systems or architectures.)
 
 To set this up, add the following lines to master.cfg::
 

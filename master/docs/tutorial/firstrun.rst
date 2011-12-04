@@ -59,23 +59,27 @@ Creating a master
 
 At the terminal, type::
 
-  cd sandbox
   buildbot create-master master
   mv master/master.cfg.sample master/master.cfg
 
 Now start it::
 
-  buildbot start $VIRTUAL_ENV/master
-  tail -f $VIRTUAL_ENV/master/twistd.log
+  buildbot start master
+  tail -f master/twistd.log
 
 You will now see all of the log information from the master in this terminal.
 You should see lines like this::
 
-  2009-07-29 21:01:46+0200 [-] twisted.spread.pb.PBServerFactory starting on 9989
-  2009-07-29 21:01:46+0200 [-] Starting factory <twisted.spread.pb.PBServerFactory instance at 0x1fc8ab8>
-  2009-07-29 21:01:46+0200 [-] BuildMaster listening on port tcp:9989
-  2009-07-29 21:01:46+0200 [-] configuration update started
-  2009-07-29 21:01:46+0200 [-] configuration update complete
+    2011-12-04 10:04:40-0600 [-] Starting factory <buildbot.status.web.baseweb.RotateLogSite instance at 0x2e36638>
+    2011-12-04 10:04:40-0600 [-] Setting up http.log rotating 10 files of 10000000 bytes each
+    2011-12-04 10:04:40-0600 [-] WebStatus using (/home/dustin/tmp/buildbot/master/public_html)
+    2011-12-04 10:04:40-0600 [-] removing 0 old schedulers, updating 0, and adding 1
+    2011-12-04 10:04:40-0600 [-] adding 1 new changesources, removing 0
+    2011-12-04 10:04:40-0600 [-] gitpoller: using workdir '/home/dustin/tmp/buildbot/master/gitpoller-workdir'
+    2011-12-04 10:04:40-0600 [-] gitpoller: initializing working dir from git://github.com/buildbot/pyflakes.git
+    2011-12-04 10:04:40-0600 [-] configuration update complete
+    2011-12-04 10:04:41-0600 [-] gitpoller: checking out master
+    2011-12-04 10:04:41-0600 [-] gitpoller: finished initializing working dir from git://github.com/buildbot/pyflakes.git at rev 1a4af6ec1dbb724b884ea14f439b272f30439e4d
 
 Creating a slave
 ----------------
@@ -87,26 +91,26 @@ Open a new terminal, and first enter the same sandbox you created before::
   source sandbox/bin/activate
 
 Install buildslave command::
- 
+
    easy_install buildbot-slave
 
 Now, create the slave::
 
-  cd sandbox
   buildslave create-slave slave localhost:9989 example-slave pass
 
 The user:host pair, username, and password should be the same as the ones in
-master.cfg; please verify this is the case by looking at the section for c['slaves']::
+master.cfg; verify this is the case by looking at the section for `c['slaves']`
+and `c['slavePortnum']`::
 
-  cat $VIRTUAL_ENV/master/master.cfg
+  cat master/master.cfg
 
 Now, start the slave::
 
-  buildslave start $VIRTUAL_ENV/slave
-  
+  buildslave start slave
+
 Check the slave's log::
 
-  tail -f $VIRTUAL_ENV/slave/twistd.log
+  tail -f slave/twistd.log
 
 You should see lines like the following at the end of the worker log::
 
@@ -114,9 +118,7 @@ You should see lines like the following at the end of the worker log::
   2009-07-29 20:59:18+0200 [Broker,client] SlaveBuilder.remote_print(buildbot-full): message from master: attached
   2009-07-29 20:59:18+0200 [Broker,client] sending application-level keepalives every 600 seconds
 
-Meanwhile, in the master log, if you tail the log you should see lines like this::
-
-  tail -f $VIRTUAL_ENV/master/twistd.log
+Meanwhile, in the other terminal, in the master log, if you tail the log you should see lines like this::
 
   2011-03-13 18:46:58-0700 [Broker,1,127.0.0.1] slave 'example-slave' attaching from IPv4Address(TCP, '127.0.0.1', 41306)
   2011-03-13 18:46:58-0700 [Broker,1,127.0.0.1] Got slaveinfo from 'example-slave'
@@ -136,10 +138,10 @@ and you get this:
 .. image:: _images/waterfall-empty.png
    :alt: empty waterfall.
 
-That's the end of the first tutorial.  A bit underwhelming, you say ? Well,
-that was the point! We just wanted to get you to dip your toes in the water.
-It's easy to take your first steps, but this is about as far as we can go
-without touching the configuration.
+That's the end of the first tutorial.  A bit underwhelming, you say? Well, that
+was the point! We just wanted to get you to dip your toes in the water.  It's
+easy to take your first steps, but this is about as far as we can go without
+touching the configuration.
 
 You've got a taste now, but you're probably curious for more.  Let's step it
 up a little in the second tutorial by changing the configuration and doing
