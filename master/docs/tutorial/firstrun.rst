@@ -45,6 +45,11 @@ Preferably, use your package installer to install these.
 You will also need a working Internet connection, as virtualenv and
 easy_install will need to download other projects from the Internet.
 
+.. note::
+
+    Buildbot does not require root access.  Run the commands in this tutorial
+    as a normal, unpriviledged user.
+
 Let's dive in by typing at the terminal::
 
   cd
