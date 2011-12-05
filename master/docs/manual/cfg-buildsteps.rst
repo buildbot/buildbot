@@ -1952,7 +1952,7 @@ Generator. It uses `RestructuredText <http://docutils.sourceforge.net/rst.html>`
 as input format.
 
 The :bb:step:`Sphinx` step will run
-:program:`sphinx-build` or any other program spcified in its
+:program:`sphinx-build` or any other program specified in its
 ``sphinx`` argument and count the various warnings and error it
 detects. ::
 

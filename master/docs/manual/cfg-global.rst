@@ -35,7 +35,7 @@ The optional ``db_poll_interval`` specifies the interval, in seconds, between
 checks for pending tasks in the database.  This parameter is generally only
 usful in multi-master mode - see :ref:`Multi-master-mode`.
 
-These parameters can be spcified directly in the configuration dictionary, as
+These parameters can be specified directly in the configuration dictionary, as
 ``c['db_url']`` and ``c['db_poll_interval']``, although this method is
 deprecated.
 

@@ -524,7 +524,7 @@ BuildRequest
 ------------
 
 A :class:`BuildRequest` is a request to build a specific set of source
-code (spcified by a source stamp) on a single :class:`Builder`. Each :class:`Builder` runs the
+code (specified by a source stamp) on a single :class:`Builder`. Each :class:`Builder` runs the
 :class:`BuildRequest` as soon as it can (i.e. when an associated
 buildslave becomes free). :class:`BuildRequest`\s are prioritized from
 oldest to newest, so when a buildslave becomes free, the
