@@ -90,6 +90,7 @@ class BitBucketBuildBot(resource.Resource):
                 'who': commit['author'],
                 'files': files,
                 'links': [revlink],
+                'repository': repo_url,
                 'properties': dict(repository=repo_url),
                 }
             changes.append(change)
