@@ -29,7 +29,7 @@ class BsDict(dict):
 class BuildsetsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
-    def addBuildset(self, ssid, reason, properties, builderNames,
+    def addBuildset(self, sourcestampsetid, reason, properties, builderNames,
                    external_idstring=None, _reactor=reactor):
         def thd(conn):
             submitted_at = _reactor.seconds()
@@ -38,7 +38,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
             # insert the buildset itself
             r = conn.execute(self.db.model.buildsets.insert(), dict(
-                sourcestampid=ssid, submitted_at=submitted_at,
+                sourcestampsetid=sourcestampsetid, submitted_at=submitted_at,
                 reason=reason, complete=0, complete_at=None, results=-1,
                 external_idstring=external_idstring))
             bsid = r.inserted_primary_key[0]
@@ -199,14 +199,14 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             bs_tbl = self.db.model.buildsets
             upstreams_tbl = self.db.model.scheduler_upstream_buildsets
             q = sa.select(
-                [bs_tbl.c.id, bs_tbl.c.sourcestampid,
+                [bs_tbl.c.id, bs_tbl.c.sourcestampsetid,
                  bs_tbl.c.results, bs_tbl.c.complete],
                 whereclause=(
                     (upstreams_tbl.c.schedulerid == schedulerid) &
                     (upstreams_tbl.c.buildsetid == bs_tbl.c.id) &
                     (upstreams_tbl.c.active != 0)),
                 distinct=True)
-            return [ (row.id, row.sourcestampid, row.complete, row.results)
+            return [ (row.id, row.sourcestampsetid, row.complete, row.results)
                      for row in conn.execute(q).fetchall() ]
         return self.db.pool.do(thd)
 
@@ -215,7 +215,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             if epoch:
                 return epoch2datetime(epoch)
         return BsDict(external_idstring=row.external_idstring,
-                reason=row.reason, sourcestampid=row.sourcestampid,
+                reason=row.reason, sourcestampsetid=row.sourcestampsetid,
                 submitted_at=mkdt(row.submitted_at),
                 complete=bool(row.complete),
                 complete_at=mkdt(row.complete_at), results=row.results,

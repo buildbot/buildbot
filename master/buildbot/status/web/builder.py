@@ -165,7 +165,13 @@ class ForceBuildActionResource(ActionResource):
         if not self.req_args['revision']:
             self.req_args['revision'] = None
 
+        d = master.db.sourcestampsets.addSourcestampSet()
+        wfd = defer.waitForDeferred(d)
+        yield wfd
+        setid = wfd.getResult()
+
         d = master.db.sourcestamps.addSourceStamp(
+                                      sourcestampsetid = setid,
                                       branch=self.req_args['branch'],
                                       revision=self.req_args['revision'],
                                       project=self.req_args['project'],
@@ -178,7 +184,7 @@ class ForceBuildActionResource(ActionResource):
              % (html.escape(self.req_args['name']),
                 html.escape(self.req_args['reason'])))
         d = master.addBuildset(builderNames=[self.builder_status.getName()],
-                               ssid=ssid, reason=r,
+                               sourcestampsetid=setid, reason=r,
                                properties=properties.asDict())
         wfd = defer.waitForDeferred(d)
         yield wfd
@@ -334,14 +340,20 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         if not revision:
             revision = None
 
-        d = master.db.sourcestamps.addSourceStamp(branch=branch,
-                revision=revision, project=project, repository=repository)
-        def make_buildset(ssid):
+        d = master.db.sourcestampsets.addSourcestampSet()
+
+        def make_ss(sourcestampsetid):
+            master.db.sourcestamps.addSourceStamp(branch=branch,
+                revision=revision, project=project, repository=repository,
+                setid = sourcestampsetid)
+            return sourcestampsetid
+        d.addCallback(make_ss)
+        def make_buildset(sourcestampsetid):
             r = ("The web-page 'force build' button was pressed by '%s': %s\n"
                  % (html.escape(name), html.escape(reason)))
             return master.addBuildset(
                     builderNames=[self.builder_status.getName()],
-                    ssid=ssid, reason=r, properties=properties.asDict())
+                    sourcestampsetid=sourcestampsetid, reason=r, properties=properties.asDict())
         d.addCallback(make_buildset)
         d.addErrback(log.err, "(ignored) while trying to force build")
         # send the user back to the builder page

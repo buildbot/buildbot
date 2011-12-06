@@ -49,7 +49,7 @@ class TestBuildsetsConnectorComponent(
         d = self.setUpConnectorComponent(
             table_names=[ 'patches', 'changes', 'sourcestamp_changes',
                 'buildsets', 'buildset_properties', 'buildrequests',
-                'objects', 'buildrequest_claims', 'sourcestamps' ])
+                'objects', 'buildrequest_claims', 'sourcestamps', 'sourcestampsets' ])
 
         def finish_setup(_):
             self.db.buildrequests = \
@@ -60,12 +60,13 @@ class TestBuildsetsConnectorComponent(
         # set up a sourcestamp and buildset for use below
         d.addCallback(lambda _ :
             self.insertTestData([
-                fakedb.SourceStamp(id=234),
+                fakedb.SourceStampSet(id=234),
+                fakedb.SourceStamp(id=234, sourcestampsetid=234),
                 fakedb.Object(id=self.MASTER_ID, name="fake master",
                                          class_name="BuildMaster"),
                 fakedb.Object(id=self.OTHER_MASTER_ID, name="other master",
                                          class_name="BuildMaster"),
-                fakedb.Buildset(id=self.BSID, sourcestampid=234),
+                fakedb.Buildset(id=self.BSID, sourcestampsetid=234),
             ]))
 
         return d
@@ -227,7 +228,7 @@ class TestBuildsetsConnectorComponent(
     def test_getBuildRequests_bsid_arg(self):
         d = self.insertTestData([
             # the buildset that we are *not* looking for
-            fakedb.Buildset(id=self.BSID+1, sourcestampid=234),
+            fakedb.Buildset(id=self.BSID+1, sourcestampsetid=234),
 
             fakedb.BuildRequest(id=70, buildsetid=self.BSID,
                 complete=0, complete_at=None),
@@ -280,7 +281,7 @@ class TestBuildsetsConnectorComponent(
                     claimed_at=self.CLAIMED_AT_EPOCH),
 
             # 49: different bsid
-            fakedb.Buildset(id=self.BSID+1, sourcestampid=234),
+            fakedb.Buildset(id=self.BSID+1, sourcestampsetid=234),
             fakedb.BuildRequest(id=49, buildsetid=self.BSID+1,
                 buildername="bbb", complete=1, results=92,
                 complete_at=self.COMPLETE_AT_EPOCH),

@@ -70,6 +70,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     changes = ()
     project = ''
     repository = ''
+    sourcestampsetid = None
     ssid = None
 
     compare_attrs = ('branch', 'revision', 'patch', 'patch_info', 'changes', 'project', 'repository')
@@ -100,6 +101,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         sourcestamp.revision = ssdict['revision']
         sourcestamp.project = ssdict['project']
         sourcestamp.repository = ssdict['repository']
+        sourcestamp.sourcestampsetid = ssdict['sourcestampsetid']
 
         sourcestamp.patch = None
         if ssdict['patch_body']:
@@ -129,7 +131,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     def __init__(self, branch=None, revision=None, patch=None,
                  patch_info=None, changes=None, project='', repository='',
                  _fromSsdict=False, _ignoreChanges=False):
-        self._getSourceStampId_lock = defer.DeferredLock();
+        self._getSourceStampSetId_lock = defer.DeferredLock();
 
         # skip all this madness if we're being built from the database
         if _fromSsdict:
@@ -244,7 +246,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     def __setstate__(self, d):
         styles.Versioned.__setstate__(self, d)
-        self._getSourceStampId_lock = defer.DeferredLock();
+        self._getSourceStampSetId_lock = defer.DeferredLock();
 
     def upgradeToVersion1(self):
         # version 0 was untyped; in version 1 and later, types matter.
@@ -262,8 +264,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.repository = ''
         self.wasUpgraded = True
 
-    @util.deferredLocked('_getSourceStampId_lock')
-    def getSourceStampId(self, master):
+    @util.deferredLocked('_getSourceStampSetId_lock')
+    def getSourceStampSetId(self, master):
         "temporary; do not use widely!"
         if self.ssid:
             return defer.succeed(self.ssid)
@@ -281,16 +283,35 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         patch_comment = None
         if self.patch_info:
             patch_author, patch_comment = self.patch_info
+
+        def get_setid():
+            if self.sourcestampsetid != None:
+                return defer.succeed( self.sourcestampsetid )
+            else:
+                return master.db.sourcestampsets.addSourcestampSet()
+            return d
             
-        d = master.db.sourcestamps.addSourceStamp(
+        def set_setid(setid):
+            self.sourcestampsetid = setid
+            return setid
+
+        def add_sourcestamp(setid):
+            return master.db.sourcestamps.addSourceStamp(
+                sourcestampsetid=setid,
                 branch=self.branch, revision=self.revision,
                 repository=self.repository, project=self.project,
                 patch_body=patch_body, patch_level=patch_level,
                 patch_author=patch_author, patch_comment=patch_comment,
                 patch_subdir=patch_subdir,
                 changeids=[c.number for c in self.changes])
+
         def set_ssid(ssid):
             self.ssid = ssid
             return ssid
+
+        d = get_setid()
+        d.addCallback(set_setid)
+        d.addCallback(add_sourcestamp)
         d.addCallback(set_ssid)
+        d.addCallback(lambda _ : self.sourcestampsetid)
         return d

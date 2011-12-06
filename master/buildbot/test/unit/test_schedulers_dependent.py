@@ -79,9 +79,9 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         # pretend we saw a buildset with a matching name
         self.db.insertTestData([
-            fakedb.SourceStamp(id=93, revision='555', branch='master',
-                                project='proj', repository='repo'),
-            fakedb.Buildset(id=44, sourcestampid=93),
+            fakedb.SourceStamp(id=93, sourcestampsetid=1093, revision='555',
+                            branch='master', project='proj', repository='repo'),
+            fakedb.Buildset(id=44, sourcestampsetid=1093),
             ])
         callbacks['buildsets'](bsid=44,
                 properties=dict(scheduler=(scheduler_name, 'Scheduler')))
@@ -104,9 +104,9 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
             self.db.buildsets.assertBuildset(bsids[0],
                     dict(external_idstring=None,
                          properties=[('scheduler', ('n', 'Scheduler'))],
-                         reason='downstream'),
+                         reason='downstream', sourcestampsetid = 1093),
                     dict(revision='555', branch='master', project='proj',
-                         repository='repo'))
+                         repository='repo', sourcestampsetid = 1093))
         else:
             self.db.buildsets.assertBuildsets(1) # only the one we added above
 

@@ -243,6 +243,10 @@ class Source(LoggingBuildStep):
         self.checkoutDelay value."""
         return None
 
+    def getRepoId(self):
+        """ Identify the unique repository for this step """
+        return None
+
     def start(self):
         if self.notReally:
             log.msg("faking %s checkout/update" % self.name)
@@ -256,7 +260,9 @@ class Source(LoggingBuildStep):
         self.args['workdir'] = self.workdir
 
         # what source stamp would this build like to use?
-        s = self.build.getSourceStamp()
+        id = self.getRepoId()
+        s = self.build.getSourceStamp(id)
+
         # if branch is None, then use the Step's "default" branch
         branch = s.branch or self.branch
         # if revision is None, use the latest sources (-rHEAD)

@@ -335,13 +335,15 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             self.db.buildsets.assertBuildset('?',
                     dict(reason="'try' job by user who",
                         external_idstring='extid',
-                        properties=[('scheduler', ('tsched', 'Scheduler'))]),
+                        properties=[('scheduler', ('tsched', 'Scheduler'))],
+                        sourcestampsetid=100),
                     dict(branch='trunk', repository='repo',
                         project='proj', revision='1234',
                         patch_body='this is my diff, -- ++, etc.',
                         patch_level=1, patch_subdir='',
                         patch_author='who',
-                        patch_comment='comment'))
+                        patch_comment='comment',
+                        sourcestampsetid=100))
         d.addCallback(check)
         return d
 
@@ -373,13 +375,15 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             self.db.buildsets.assertBuildset('?',
                     dict(reason="'try' job by user who",
                         external_idstring='extid',
-                        properties=[('scheduler', ('tsched', 'Scheduler'))]),
+                        properties=[('scheduler', ('tsched', 'Scheduler'))],
+                        sourcestampsetid=100),
                     dict(branch='trunk', repository='repo',
                         project='proj', revision='1234',
                         patch_body='this is my diff, -- ++, etc.',
                         patch_level=1, patch_subdir='',
                         patch_author='who',
-                        patch_comment='comment'))
+                        patch_comment='comment',
+                        sourcestampsetid=100))
         d.addCallback(check)
         return d
 
@@ -423,9 +427,12 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                             ('frm', ('schd', 'Scheduler')),
                             ('pr', ('op', 'try build')),
                             ('scheduler', ('tsched', 'Scheduler')),
-                        ]),
+                        ],
+                        sourcestampsetid = 100,
+                        ),
                     dict(branch='default', repository='repo',
                         project='proj', revision='abcdef',
+                        sourcestampsetid = 100,
                         patch_body='-- ++', patch_level=1, patch_subdir='',
                         patch_author="", patch_comment=""))
         d.addCallback(check)
@@ -442,9 +449,12 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                             ('frm', ('schd', 'Scheduler')),
                             ('pr', ('op', 'try build')),
                             ('scheduler', ('tsched', 'Scheduler')),
-                        ]),
+                        ],
+                        sourcestampsetid = 100,
+                        ),
                     dict(branch='default', repository='repo',
                         project='proj', revision='abcdef',
+                        sourcestampsetid = 100,
                         patch_body='-- ++', patch_level=1, patch_subdir='',
                         patch_author='who', patch_comment="comment"))
         d.addCallback(check)

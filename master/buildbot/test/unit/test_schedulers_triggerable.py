@@ -47,7 +47,8 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
     def test_trigger(self):
         sched = self.makeScheduler()
         self.db.insertTestData([
-            fakedb.SourceStamp(id=91, revision='myrev', branch='br',
+            fakedb.SourceStampSet(id=1091),
+            fakedb.SourceStamp(id=91, sourcestampsetid=1091, revision='myrev', branch='br',
                 project='p', repository='r'),
         ])
 
@@ -73,9 +74,10 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                          ('pr', ('op', 'test')),
                          ('scheduler', ('n', 'Scheduler')),
                      ],
-                     reason='Triggerable(n)'),
+                     reason='Triggerable(n)',
+                     sourcestampsetid=1091),
                 dict(branch='br', project='p', repository='r',
-                     revision='myrev'))
+                     revision='myrev', sourcestampsetid=1091))
 
         # check that the scheduler has subscribed to buildset changes, but
         # not fired yet
@@ -102,10 +104,12 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
     def test_trigger_overlapping(self):
         sched = self.makeScheduler()
         self.db.insertTestData([
-            fakedb.SourceStamp(id=91, revision='myrev1', branch='br',
-                project='p', repository='r'),
-            fakedb.SourceStamp(id=92, revision='myrev2', branch='br',
-                project='p', repository='r'),
+            fakedb.SourceStampSet(id=1091),
+            fakedb.SourceStampSet(id=1092),
+            fakedb.SourceStamp(id=91, sourcestampsetid=1091, revision='myrev1',
+                branch='br', project='p', repository='r'),
+            fakedb.SourceStamp(id=92, sourcestampsetid=1092, revision='myrev2',
+                branch='br', project='p', repository='r'),
         ])
 
         # no subscription should be in place yet
@@ -118,9 +122,11 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         bsid1 = self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
-                     reason='Triggerable(n)'),
+                     reason='Triggerable(n)',
+                     sourcestampsetid=1091,
+                     ),
                 dict(branch='br', project='p', repository='r',
-                     revision='myrev1'))
+                     revision='myrev1', sourcestampsetid=1091))
 
         # and the second time
         d = sched.trigger(92)
@@ -128,9 +134,11 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         bsid2 = self.db.buildsets.assertBuildset(bsid1+1, # assumes bsid's are sequential
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
-                     reason='Triggerable(n)'),
+                     reason='Triggerable(n)',
+                     sourcestampsetid=1092,
+                     ),
                 dict(branch='br', project='p', repository='r',
-                     revision='myrev2'))
+                     revision='myrev2', sourcestampsetid=1092))
 
         # check that the scheduler has subscribed to buildset changes
         callbacks = self.master.getSubscriptionCallbacks()
