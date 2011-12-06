@@ -504,5 +504,5 @@ try:
     import migrate.versioning.exceptions as ex1
     import migrate.changeset.exceptions as ex2
     ex1.MigrateDeprecationWarning = ex2.MigrateDeprecationWarning
-except ImportError:
+except (ImportError,AttributeError):
     pass
