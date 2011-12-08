@@ -16,34 +16,12 @@
 import traceback
 import re
 from twisted.internet import defer
-from zope.interface import Interface, Attribute, implements
 import email.utils
 
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
 
-class IParameter(Interface):
-    """Represent a forced build parameter"""
-    name = Attribute("name",
-            "name of the underlying property, and form field")
-    label = Attribute("label",
-            "label displayed in the form; default will be name")
-    type = Attribute("type",
-            "type of widget in form")
-    default = Attribute("default",
-            """default string value; if nothing is provided in the form,
-            will still be checked through validation""")
-    required = Attribute("required",
-            "if True, buildbot will ensure a valid value is set in this field")
-    multiple = Attribute("multiple", 
-            """if True, this field is a list of value""")
-    regex = Attribute("regex", 
-                      """optional regular expression for validation""")
-    def update_from_post(master, properties, changes, req):
-        pass
-
 class BaseParameter(object):
-    implements(IParameter)
     name = ""
     label = ""
     type = ""
@@ -91,11 +69,11 @@ class BaseParameter(object):
 
     def parse_from_args(self, l):
         if self.multiple:
-            return map(self.parse_from_first_arg, l)
+            return map(self.parse_from_arg, l)
         else:
-            return self.parse_from_first_arg(l[0])
+            return self.parse_from_arg(l[0])
 
-    def parse_from_first_arg(self, s):
+    def parse_from_arg(self, s):
         return s
 
 
@@ -112,7 +90,7 @@ class StringParameter(BaseParameter):
     type = "text"
     size = 10
 
-    def parse_from_first_arg(self, s):
+    def parse_from_arg(self, s):
         return s
 
 
@@ -128,7 +106,7 @@ class TextParameter(StringParameter):
 class IntParameter(StringParameter):
     type = "int"
 
-    parse_from_first_arg = int # will throw an exception if parse fail
+    parse_from_arg = int # will throw an exception if parse fail
 
 
 class BooleanParameter(BaseParameter):
@@ -149,7 +127,7 @@ class UserNameParameter(StringParameter):
     def __init__(self, name="username", label="Your name:", **kw):
         BaseParameter.__init__(self, name, label, **kw)
 
-    def parse_from_first_arg(self, s):
+    def parse_from_arg(self, s):
         if self.need_email:
             e = email.utils.parseaddr(s)
             if e[0]=='' or e[1] == '':
@@ -163,7 +141,7 @@ class ChoiceStringParameter(BaseParameter):
     choices = []
     strict = True
 
-    def parse_from_first_arg(self, s):
+    def parse_from_arg(self, s):
         if self.strict and not s in self.choices:
             raise ValueError("'%s' does not belongs to list of available choices '%s'"%(s, self.choices))
         return s
