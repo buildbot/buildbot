@@ -1,24 +1,6 @@
-{% macro authFormIfNeeded(authz, action) %}
-  {% if authz.needAuthForm(action) %}
-    <div class="row">
-      <span class="label">Your username:</span>
-      <input type="text" name="username"/>
-    </div>
-
-    <div class="row">
-      <span class="label">Your password:</span>
-      <input type="password" name="passwd"/>
-    </div>
-  {% elif authz.needUserForm(action) %}
-    <div class="row">
-      <span class="label">Your name:</span>
-      <input type="text" name="username"/>
-    </div>
-  {% endif %}
-{% endmacro %}
 
 {% macro cancel_pending_build(cancel_url, authz, short=False, id='all') %}
-  {% if not short or not authz.needAuthForm('cancelPendingBuild') %}
+  {% if not short  %}
     <form method="post" name="cancel" action="{{ cancel_url }}" class='command cancelbuild'
                {{ 'style="display:inline"' if short else '' }}>
       {% if not short %}
@@ -31,9 +13,6 @@
             push the 'Cancel' button</p>
         {% endif %}
       {% endif %}
-
-      {{ authFormIfNeeded(authz, 'cancelPendingBuild') }}
-
       <input type="hidden" name="id" value="{{ id }}" />
       <input type="submit" value="Cancel" />
     </form>
@@ -41,7 +20,7 @@
 {% endmacro %}
 
 {% macro stop_change_builds(stopchange_url, changenum, authz) %}
-  {% if not changenum or not authz.needAuthForm('stopChange') %}
+  {% if not changenum  %}
     <form method="post" action="{{ stopchange_url }}" class='command stopchange'>
       {% if changenum %}
         <p>To cancel all builds for this change, push the 'Cancel' button</p>
@@ -49,8 +28,6 @@
         <p>To cancel builds for this builder for a given change, fill out all
           fields and push the 'Cancel' button</p>
       {% endif %}
-
-      {{ authFormIfNeeded(authz, 'cancelPendingBuild') }}
 
       {% if changenum %}
         <input type="hidden" name="change" value="{{ changenum }}" />
@@ -66,7 +43,7 @@
 {% endmacro %}
 
 {% macro stop_build(stop_url, authz, on_all=False, on_selected=False, builders=[], short=False, label="Build") %}
-  {% if not short or not authz.needAuthForm('stopBuild') %}
+  {% if not short %}
     <form method="post" name="stop_build" action="{{ stop_url }}" class='command stopbuild'
                {{ 'style="display:inline"' if short else '' }}>
       {% if not short %}
@@ -91,8 +68,6 @@
         {% endif %}
       {% endif %}
       
-      {{ authFormIfNeeded(authz, 'stopBuild') }}
-      
       {% if not short %}
         <div class="row">
           <span class="label">Reason:</span>
@@ -105,9 +80,9 @@
   {% endif %}
 {% endmacro %}
 
-{% macro force_build(force_url, authz, on_all=False, on_selected=False, builders=[]) %}
+{% macro force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props) %}
  <form method="post" name="force_build" action="{{ force_url }}" class="command forcebuild">
-
+   
   {% if on_all %}
      <p>To force a build on <strong>all Builders</strong>, fill out the following fields
           and push the 'Force Build' button</p>
@@ -118,10 +93,12 @@
 
      <table>
      {% for b in builders %}
+     {% if b.name in sch.builderNames %}
        <tr>
          <td align="center"><input type="checkbox" name="selected" value="{{ b.name }}"></td>
          <td class="box"><a href="{{ b.link }}">{{ b.name|e }}</a></td>
        </tr>
+       {% endif %}
      {% endfor %}
      </table>
 
@@ -129,41 +106,54 @@
      <p>To force a build, fill out the following fields and
         push the 'Force Build' button</p>
   {% endif %}
-
-  {{ authFormIfNeeded(authz, 'forceBuild') }}
-  
-  <div class="row">
-     <span class="label">Reason for build:</span>
-     <input type='text' name='comments' />
-  </div>
-  <div class="row">
-     <span class="label">Branch to build:</span>
-     <input type='text' name='branch' />
-  </div>
-  <div class="row">
-     <span class="label">Revision to build:</span>
-     <input type='text' name='revision' />
-  </div>
-  <div class="row">
-     <span class="label">Repository to build:</span>
-     <input type='text' name='repository' />
-  </div>
-  <div class="row">
-     <span class="label">Project to build:</span>
-     <input type='text' name='project' />
-  </div>
-  {% for i in range(1,4) %}
-  <div class="row">
-     Property {{ i }}
-     <span class="label">Name:</span>
-     <span class="field"><input type="text" name="property{{ i }}name" /></span>
-     <span class="label">Value:</span>
-     <span class="field"><input type="text" name="property{{ i }}value" /></span>
-  </div>
+  <input type='hidden' name='forcescheduler' value='{{sch.name}}' />
+  {% for f in sch.all_fields %}
+    {% if f.name != "username" or not authz.authenticated(request) %}
+    {% if f.type == "text" or f.type == "int"%}
+    <div class="row">
+       <span class="label">{{f.label}}</span>
+       <input type='text' size='{{f.size}}' name='{{f.name}}' value='{{default_props[sch.name+"."+f.name]}}' />
+    </div>
+    {% elif f.type == "bool"%}
+    <div class="row">
+       <input type='checkbox' name='checkbox' value='{{f.name}}' {{default_props[sch.name+"."+f.name]}} />
+       <span class="label">{{f.label}}</span>
+    </div>
+    {% elif f.type == "textarea" %}
+      <div class="row">
+       <span class="label">{{f.label}}</span><br>
+       <textarea name='{{f.name}}' rows={{f.rows}} cols={{f.cols}}>{{default_props[sch.name+"."+f.name]}}</textarea>
+    </div>
+    {% elif f.type == "anyproperty" %}
+    <div class="row">
+      {{ f.label }}
+       <span class="label">Name:</span>
+       <span class="field"><input type="text" name="{{ f.name }}name" /></span>
+       <span class="label">Value:</span>
+       <span class="field"><input type="text" name="{{ f.name }}value" /></span>
+    </div>
+    {% elif f.type == "list" %}
+    <div class="row">
+       <span class="label">{{f.label}}</span><br>
+       <span class="select">
+       <select name='{{f.name}}' {{ f.multiple and "multiple" or ""}}>
+	 {% for c in f.choices %}
+	 <option {{(c in default_props[sch.name+"."+f.name]) and "selected" or ""}}>{{c}}</option>
+	 {% endfor %}
+       </select> <br>
+       </span>
+    {% endif %}
+    {% endif %}
   {% endfor %}
   
   <input type="submit" value="Force Build" /> 
  </form>
+{% endmacro %}
+{% macro force_build(force_url, authz, request, on_all=False, on_selected=False, builders=[], force_schedulers={},default_props={}) %}
+ {% for name, sch in force_schedulers.items() %}
+    {{ force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch,default_props=default_props) }}
+  {% endfor %}
+ 
 {% endmacro %}
 
 {% macro graceful_shutdown(shutdown_url, authz) %}
@@ -171,9 +161,6 @@
   
   <p>To cause this slave to shut down gracefully when it is idle,
     push the 'Graceful Shutdown' button</p>
-
-  {{ authFormIfNeeded(authz, 'gracefulShutdown') }}
-  
   <input type="submit" value="Graceful Shutdown" /> 
  </form>
 {% endmacro %}
@@ -184,8 +171,6 @@
   <p>No other builds will be started on this master, and the master will
   stop once all current builds are finished.</p>
 
-  {{ authFormIfNeeded(authz, 'gracefulShutdown') }}
-
   <input type="submit" value="Clean Shutdown" />
  </form>
 {% endmacro %}
@@ -194,8 +179,6 @@
   <form method="post" action="{{ cancel_shutdown_url }}" class='command cancel_clean_shutdown'>
   <p>To cancel a previously initiated shutdown, push the 'Cancel Shutdown' button.</p>
 
-  {{ authFormIfNeeded(authz, 'gracefulShutdown') }}
-
   <input type="submit" value="Cancel Shutdown" />
  </form>
 {% endmacro %}
@@ -203,9 +186,6 @@
 {% macro ping_builder(ping_url, authz) %}
   <form method="post" action="{{ ping_url }}" class='command ping_builder'>
     <p>To ping the buildslave(s), push the 'Ping' button</p>
-
-    {{ authFormIfNeeded(authz, 'gracefulShutdown') }}
-
     <input type="submit" value="Ping Builder" />
   </form>
 {% endmacro %}
@@ -235,9 +215,6 @@
      <p>To force a build, fill out the following fields and
         push the 'Force Build' button</p>
   {% endif %}
-
-  {{ authFormIfNeeded(authz, 'cancelPendingBuild') }}
-
    <div class="row">
      <span class="label">Reason for re-running build:</span>
      <input type='text' name='comments' />
@@ -249,8 +226,6 @@
 {% macro show_users(users_url, authz) %}
   <form method="post" action="{{ users_url }}" class='command show_users'>
     <p>To show users, press the 'Show Users' button</p>
-
-    {{ authFormIfNeeded(authz, 'showUsersPage') }}
 
     <input type="submit" value="Show Users" />
   </form>

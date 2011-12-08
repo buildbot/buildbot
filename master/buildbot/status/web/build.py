@@ -22,8 +22,8 @@ import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, \
      css_classes, path_to_build, path_to_builder, path_to_slave, \
-     getAndCheckProperties, ActionResource, path_to_authfail
-
+     getAndCheckProperties, ActionResource, path_to_authzfail
+from buildbot.schedulers.forcesched import ForceScheduler, TextParameter
 from buildbot.status.web.step import StepsResource
 from buildbot.status.web.tests import TestsResource
 from buildbot import util, interfaces
@@ -45,7 +45,7 @@ class ForceBuildActionResource(ActionResource):
         res = wfd.getResult()
 
         if not res:
-            url = path_to_authfail(req)
+            url = path_to_authzfail(req)
         else:
             # get a control object
             c = interfaces.IControl(self.getBuildmaster(req))
@@ -54,23 +54,28 @@ class ForceBuildActionResource(ActionResource):
             b = self.build_status
             builder_name = self.builder.getName()
             log.msg("web rebuild of build %s:%s" % (builder_name, b.getNumber()))
-            name = authz.getUsername(req)
+            name =authz.getUsernameFull(req)
             comments = req.args.get("comments", ["<no reason specified>"])[0]
             reason = ("The web-page 'rebuild' button was pressed by "
                       "'%s': %s\n" % (name, comments))
+            msg = ""
             extraProperties = getAndCheckProperties(req)
             if not bc or not b.isFinished() or extraProperties is None:
-                log.msg("could not rebuild: bc=%s, isFinished=%s"
-                        % (bc, b.isFinished()))
-                # TODO: indicate an error
+                msg = "could not rebuild: "
+                if b.isFinished():
+                    msg += "build still not finished "
+                if bc:
+                    msg += "could not get builder control"
             else:
                 d = bc.rebuildBuild(b, reason, extraProperties)
                 wfd = defer.waitForDeferred(d)
                 yield wfd
                 tup = wfd.getResult()
                 # check that (bsid, brids) were properly stored
-                if not isinstance(tup, (int, dict)):
-                    log.err("while rebuilding a build")
+                if not (isinstance(tup, tuple) and 
+                        isinstance(tup[0], int) and
+                        isinstance(tup[1], dict)):
+                    msg = "rebuilding a build failed "+ str(tup)
             # we're at
             # http://localhost:8080/builders/NAME/builds/5/rebuild?[args]
             # Where should we send them?
@@ -82,7 +87,7 @@ class ForceBuildActionResource(ActionResource):
             # evidence of their build starting (or to see the reason that it
             # didn't start). This should be the Builder page.
 
-            url = path_to_builder(req, self.builder)
+            url = path_to_builder(req, self.builder), msg
         yield url
 
 
@@ -101,13 +106,13 @@ class StopBuildActionResource(ActionResource):
         res = wfd.getResult()
 
         if not res:
-            yield path_to_authfail(req)
+            yield path_to_authzfail(req)
             return
 
         b = self.build_status
         log.msg("web stopBuild of build %s:%s" % \
                     (b.getBuilder().getName(), b.getNumber()))
-        name = authz.getUsername(req)
+        name = authz.getUsernameFull(req)
         comments = req.args.get("comments", ["<no reason specified>"])[0]
         # html-quote both the username and comments, just to be safe
         reason = ("The web-page 'stop build' button was pressed by "
@@ -213,13 +218,27 @@ class StatusResourceBuild(HtmlResource):
                                             urllib.quote(logname, safe=''))), 
                                       'name': logname })
 
+        scheduler = b.getProperty("scheduler", None)
+        parameters = {}
+        master = self.getBuildmaster(req)
+        for sch in master.allSchedulers():
+            if isinstance(sch, ForceScheduler) and scheduler == sch.name:
+                for p in sch.all_fields:
+                    parameters[p.name] = p
+
         ps = cxt['properties'] = []
         for name, value, source in b.getProperties().asList():
-            value = unicode(value)
-            p = { 'name': name, 'value': value, 'source': source}            
-            if len(value) > 500:
-                p['short_value'] = value[:500]
-
+            uvalue = unicode(value)
+            p = { 'name': name, 'value': uvalue, 'source': source}            
+            if len(uvalue) > 500:
+                p['short_value'] = uvalue[:500]
+            if name in parameters:
+                param = parameters[name]
+                if isinstance(param, TextParameter):
+                    p['text'] = param.value_to_text(value)
+                    p['cols'] = param.cols
+                    p['rows'] = param.rows
+                p['label'] = param.label
             ps.append(p)
 
         
@@ -250,7 +269,8 @@ class StatusResourceBuild(HtmlResource):
         b = self.build_status
         log.msg("web stopBuild of build %s:%s" % \
                 (b.getBuilder().getName(), b.getNumber()))
-        name = self.getAuthz(req).getUsername(req)
+
+        name = self.getAuthz(req).getUsernameFull(req)
         comments = req.args.get("comments", ["<no reason specified>"])[0]
         # html-quote both the username and comments, just to be safe
         reason = ("The web-page 'stop build' button was pressed by "
