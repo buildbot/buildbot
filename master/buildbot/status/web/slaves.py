@@ -21,7 +21,7 @@ from twisted.web.error import NoResource
 from twisted.internet import defer
 
 from buildbot.status.web.base import HtmlResource, abbreviate_age, \
-    BuildLineMixin, ActionResource, path_to_slave, path_to_authfail
+    BuildLineMixin, ActionResource, path_to_slave, path_to_authzfail
 from buildbot import util
 
 class ShutdownActionResource(ActionResource):
@@ -44,7 +44,7 @@ class ShutdownActionResource(ActionResource):
             self.slave.setGraceful(True)
             url = path_to_slave(request, self.slave)
         else:
-            url = path_to_authfail(request)
+            url = path_to_authzfail(request)
         yield url
 
 # /buildslaves/$slavename

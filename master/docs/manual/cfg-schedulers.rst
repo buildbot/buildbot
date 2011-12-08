@@ -726,3 +726,275 @@ Here is a fully-worked example::
     nightly_factory.addStep(trigger.Trigger(schedulerNames=['package-all-platforms'],
                                          waitForFinish=True))
 
+
+.. bb:sched:: ForceScheduler
+
+.. index:: ForceScheduler
+
+.. _ForceSched-Scheduler:
+
+ForceSched Scheduler
+~~~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: buildbot.schedulers.forcesched.ForceScheduler
+
+The :class:`ForceScheduler` scheduler is the way you can configure a
+force build form in the web UI.
+
+In the builder/<builder-name> web page, you will see one form per ForceScheduler
+scheduler that was configured for this builder.
+
+This allows you to customize exactly how you build form look like, which builder do
+have a force build form (it might not make sense to force build every builders),
+and who is allowed to run which force build.
+
+an example is better than long explaination, what you need in your config file is something like::
+
+    from buildbot.schedulers.forcesched import *
+
+    s=ForceScheduler(name="force",
+                 builderNames="my-builder",
+                 # will generate a combo box
+                 branch=ChoiceStringParameter(name="branch",choices=["main","devel"],
+						default="main"),
+                 # will generate a text input
+                 reason=StringParameter(name="reason",label="reason:<br>", required=True, size=80),
+                 # will generate nothing, but revision, repository, and project are needed by
+                 # buildbot scheduling system so we need to pass a value ("")
+                 revision=FixedParameter(name="revision",default=""),
+                 repository=FixedParameter(name="repository",default=""),
+                 project=FixedParameter(name="repository",default=""),
+                 # in case you dont require authentication this will display input for user to type
+		 # his name
+                 username=UserNameParameter(label="your name:<br>",size=80),
+                 # a completly customized property list (this is not a dictionary, as this need
+		 # to be ordered for best presentation)
+                 # The name of the property is the name of the parameter
+                 properties=[
+            # this needs a step to take this property in account, and do make clean before build
+            BooleanParameter(name="force_build_clean",label="force a make clean", default=False),
+            # this needs a step to take this property in account, and pull this url before build
+            StringParameter(name="pull_url",label="optionally give a public git pull url:<br>",
+                            default="", size=80)
+            ]
+                 )
+    c['schedulers'] = [s]
+
+Please see following list of classes for latest information on what parameters you can use with
+this system, and how to make you own custom parameters
+
+forcesched uses authz for determining which user has the right to force which build.
+Here is an example of code on how you can define which user has which right::
+
+    user_mapping = { re.compile("project1-builder"): ["project1-maintainer", "john"] ,
+                       re.compile("project2-builder"): ["project2-maintainer", "jack"],
+                       re.compile(".*"): ["root"]
+                       }
+    def force_auth(user,  status):
+        global user_mapping
+        for r,users in user_mapping.items():
+            if r.match(status.name):
+                if user in users:
+                        return True
+        return False
+
+    authz_cfg=authz.Authz(
+        auth=my_auth,
+        forceBuild = force_auth,
+    )
+
+ForceSched Parameters
+~~~~~~~~~~~~~~~~~~~~~
+
+Different types of parameters are available. All parameters have common attributes. 
+
+``name`` (required)
+           The name of the parameter. Will correspond to the name of the property
+   	   that your parameter will set.
+	   This name is also used internally as identifier for http POST arguments
+
+``label`` (optional: default is same as name)
+
+           The label of the parameter. ie what is displayed to the user
+           you can pass html
+
+``default`` (optional: default: "")
+           The default value, that is used if there is no user input
+
+``required`` (optional: default: False)
+           if this bool is set, an error will be shown to user if
+	   there is no input in this field
+
+.. py:class:: FixedParameter(name, label, default)
+
+   This parameter will not be shown on the web form, and always generate a 
+   property with its default value
+
+.. py:class:: StringParameter(name, label, default, regex, size=10)
+
+   This parameter will show a textentry.
+
+   ``regex``
+           a string that will be compiled as a regex, and used to validate 
+	   the input of this parameter
+
+   ``size``
+           The width of the input field (in chars)
+       
+.. py:class:: TextParameter(name, label, default, regex, cols=80, rows=20)
+
+   Represent a string forced build parameter
+   regular expression validation is optionally done
+   it is represented by a textarea
+   extra parameter cols, and rows are available to the template system
+   
+   this can be subclassed in order to have more customization
+   e.g. 
+
+   	* developer could send a list of git branch to pull from
+
+	* developer could send a list of gerrit changes to cherry-pick, 
+
+	* developer could send a shell script to amend the build.
+
+   beware of security issues anyway.
+
+   ``cols``
+
+         the number of columns textarea will have
+
+   ``rows``
+
+      the number of rows textarea will have
+
+   .. py:method:: value_to_text(self, value)
+
+      format value up to original text
+
+.. py:class:: IntParameter(name, label, default)
+
+   a simple conversion from string to integer for a integer parameter
+
+.. py:class:: BooleanParameter(name, label, default)
+
+   Represent a boolean forced build parameter
+   will be presented as a checkbox
+
+.. py:class:: UserNameParameter(name, label, default, size=30, need_email=True)
+
+   Represent a username in the form "User <email@email.com>" 
+   By default, this ensure that the user provided an email
+
+   ``need_email``
+
+      change to False if we just want to accept arbitrary username
+
+.. py:class:: ChoiceStringParameter(name, label, default, choices=[], strict=True, multiple=False)
+
+   Let the user choose between several choices (e.g the list of branch
+   you are supporting, or the test campaign to run)
+
+   ``choices``
+
+      The list of available choices
+
+   ``strict``
+
+      verify that the user input is from the list. 
+      NB: User cannot choose option out of the choice list in the webui, 
+      but could craft an http post request.
+
+   ``multiple``
+
+      will chance the html form to allow the user to select several options
+
+Example::
+
+            schedulers.append(ForceSched(name="force",
+                                         builderNames=["builder1","builder2"]),
+                                         branch=FixedParameter(name="branch",default=""),
+                                         reason=StringParameter(name="reason",label="reason:<br>",
+								required=True, size=80),
+                                         revision=FixedParameter(name="revision",default=""),
+                                         repository=FixedParameter(name="repository",default=""),
+                                         project=FixedParameter(name="repository",default=""),
+                                         username=UserNameParameter(label="your name:<br>",size=80),
+                                         properties=[
+                                                    BooleanParameter(name="force_build_clean",
+						       label="force a complete build", default=False),
+                                                    ChoiceStringParameter(name="forced_tests", 
+						       label = "smoke test campaign to run",
+                                                       default = default_tests,
+                                                       multiple=True, 
+						       strict = True,
+						       choices = ["test_builder1",
+						       	          "test_builder2",
+								  "test_builder3"])
+                                                    ])
+            #...
+	    # if the "force_build_clean" property is set we do a make clean before make
+            builder1.factory.addStep(Compile(name="make",
+			           command=WithProperty("make %(force_build_clean:~clean && make)s")))
+	    # triggers the tests depending on the property forced_test
+            builder1.factory.addStep(Trigger(name="Trigger tests",
+                          		schedulerNames=Property("forced_tests")))
+
+.. py:class:: InheritBuildParameter(name, label, compatible_builds)
+
+      a special parameter for inheriting force builds parameters from 
+      another build.
+
+   ``compatible_builds``
+
+   a function provided by config that will find compatible build in
+   the build history
+
+   .. py:method:: compatible_builds(masterstatus, buildername)
+
+      .. py:attribute:: masterstatus
+
+      	 The master status, where you can get the list of previous builds
+
+      .. py:attribute:: buildername
+
+         the name of the builder (can be None in case of ForceAllBuild Form)
+
+Example::
+
+            def get_compatible_builds(status, builder):
+                if builder == None: # this is the case for force_build_all
+                    return ["cannot generate build list here"]
+                # find all successful builds in builder1 and builder2
+                for builder in ["builder1","builder2"]:
+                    builder_status = status.getBuilder(builder)
+                    for num in xrange(1,40): # 40 last builds
+                        b = builder_status.getBuild(-num)
+                        if not b:
+                            continue
+                        if b.getResults() == FAILURE:
+                            continue
+                        builds.append(builder+"/"+str(b.getNumber()))
+                return builds
+            c['schedulers'].append(ForceSched(name="inherit",
+                                         builderNames=["mergebuilder"],
+                                         branch=FixedParameter(name="branch",default=""),
+                                         reason=FixedParameter(name="reason",label="reason:<br>",
+								default="inherit"),
+                                         revision=FixedParameter(name="revision",default=""),
+                                         repository=FixedParameter(name="repository",default=""),
+                                         project=FixedParameter(name="repository",default=""),
+                                         properties=[InheritBuildParameter(name="inherit",
+								label="promote a build for merge",
+                                                                compatible_builds=get_compatible_builds,
+                                                                required = True
+                                                                )
+						    ])
+                              )
+
+
+.. py:class:: AnyPropertyParameter(name, label)
+
+   a parameter for setting arbitrary property in the build
+   a bit atypical, as it will generate two fields in the html form
+   This Parameter is here to reimplement old buildbot behavior, and should
+   be avoided. Stricter parameter name and type shoud be preferred.
