@@ -3,185 +3,96 @@
 
 ForceScheduler
 --------------
-This is the developer oriented version of the ForceScheduler documentation
+
+The force scheduler has a symbiotic relationship with the web status, so it
+deserves some further description.
+
+Parameters
+~~~~~~~~~~
+
+The force scheduler comes with a fleet of parameter classes.  This section
+contains information to help users or developers who are interested in adding
+new parameter types or hacking the existing types.
 
 .. py:module:: buildbot.schedulers.forceshed
 
 .. py:class:: IParameter(name, label, type, default, required, multiple, regex)
 
-    The interface that all parameter classes must implement.
+    This is the interface that all parameter classes must implement.
 
     .. py:attribute:: name
 
-           The name of the parameter. Will correspond to the name of the property
-   	   that your parameter will set.
-	   This name is also used internally as identifier for http POST arguments
+           The name of the parameter. This will correspond to the name of the
+           property that your parameter will set.  This name is also used
+           internally as identifier for http POST arguments
+
     .. py:attribute:: label
 
-           The label of the parameter. ie what is displayed to the user
-           you can pass html
+           The label of the parameter, as displayed to the user.  This value
+           can contain raw HTML.
 
     .. py:attribute:: type
-	 
+
            The type of the parameter is used by the jinja template to create
-	   appropriate html form widget
+           appropriate html form widget.  The available values are visible in
+           :bb:src:`master/buildbot/status/web/template/forms.html` in the
+           ``force_build_one_scheduler`` macro.
 
     .. py:attribute:: default
 
-           The default value, that is used if there is no user input
+           The default value, used if there is no user input.  This is also
+           used to fill in the form presented to the user.
 
     .. py:attribute:: required
 
-           if this bool is set, an error will be shown to user if
-	   there is no input in this field
+           If true, an error will be shown to user if there is no input in this
+           field
 
     .. py:attribute:: multiple
 
-           if true, this field is a list of value (e.g. list of tests to run)
+           If true, this parameter will return a list of values (e.g. list of
+           tests to run)
 
     .. py:attribute:: regex
 
-           a string that will be compiled as a regex, and used to validate 
-	   the input of this parameter
+           A string that will be compiled as a regex and used to validate the
+           string value of this parameter.  If None, then no validation will
+           take place.
 
-    .. py:method:: update_from_post(self, master, properties, changes, req):
+    .. py:method:: update_from_post(master, properties, changes, req)
 
-        .. py:attribute:: master
+        :param master: the :py:class:`~buildbot.master.BuidlMaster` instance
+        :param properties: a dictionary of properties
+        :param changes: a list of changeids that will be used to build the
+            SourceStamp for the forced builds
+        :param req: the Twisted Web request object
 
-    	       the master object
+        Update ``properties`` and/or ``changes`` according to the request.
 
-        .. py:attribute:: properties
 
-    	       a dictionnary of properties that can be updated depending on
-	       if the parameter is in the POST arguments list
-
-        .. py:attribute:: changes
-
-    	       a parameter can also modify the sourcestamp by adding changids
-	       to this list of changes
-
-        .. py:attribute:: req
-
-    	       the http request where the parameter can look for its values.
-	      
-.. py:class:: BaseParameter(name, label, type, default, required, multiple, regex)
+.. py:class:: BaseParameter(name, label, regex, **kwargs)
 
    This is the base implementation for most parameters, it will check validity,
-   ensure the arg is present if required flag is set, and implement the default
-   value. It will finally call a translation method that converts the string(s)
-   from POST to a python object.
+   ensure the arg is present if the :py:attr:`~IParameter.required` attribute
+   is set, and implement the default value.  It will finally call
+   :py:meth:`~IParameter.update_from_post` to process the string(s) from the
+   HTTP POST.
 
-    .. py:method:: parse_from_args(self, l)
+   This class implements :py:class:`IParameter`, and subclasses are expected to
+   adhere to that interface.
+
+   The :py:class:`BaseParameter` constructor converts any keyword arguments
+   into instance attributes, so it is generally not necessary for subclasses to
+   implement a constructor.
+
+    .. py:method:: parse_from_args(l)
 
        return the list of object corresponding to the list or string passed
-       default function will just call :py:func:`parse_from_first_arg` with the 
+       default function will just call :py:func:`parse_from_first_arg` with the
        first argument
 
-    .. py:method:: parse_from_first_arg(self, s)
+    .. py:method:: parse_from_first_arg(s)
 
        return the  object corresponding to the string passed
        default function will just return the unmodified string
 
-.. py:class:: FixedParameter(name, label, default)
-
-   This parameter will not be shown on the web form, and always generate a 
-   property with its default value
-
-.. py:class:: StringParameter(name, label, default, regex, size=10)
-
-   This parameter will show a textentry.
-   The size of the input field can be customized
-       
-.. py:class:: TextParameter(name, label, default, regex, cols=80, rows=20)
-
-   Represent a string forced build parameter
-   regular expression validation is optionally done
-   it is represented by a textarea
-   extra parameter cols, and rows are available to the template system
-   
-   this can be subclassed in order to have more customization
-   e.g. 
-
-   	* developer could send a list of git branch to pull from
-
-	* developer could send a list of gerrit changes to cherry-pick, 
-
-	* developer could send a shell script to amend the build.
-
-   beware of security issues anyway.
-
-   .. py:attribute:: cols
-
-      the number of columns textarea will have
-
-   .. py:attribute:: rows
-
-      the number of rows textarea will have
-
-   .. py:method:: value_to_text(self, value)
-
-      format value up to original text
-
-.. py:class:: IntParameter(name, label, default)
-
-   a simple conversion from string to integer for a integer parameter
-
-.. py:class:: BooleanParameter(name, label, default)
-
-   Represent a boolean forced build parameter
-   will be presented as a checkbox
-
-.. py:class:: UserNameParameter(name, label, default, size=30, need_email=True)
-
-   Represent a username in the form "User <email@email.com>" 
-   By default, this ensure that the user provided an email
-
-   .. py:attribute:: need_email
-
-      change to False if we just want to accept arbitrary username
-
-.. py:class:: ChoiceStringParameter(name, label, default, choices=[], strict=True, multiple=False)
-
-   Let the user choose between several choices (e.g the list of branch
-   you are supporting, or the test campaign to run)
-
-   .. py:attribute:: choices
-
-      The list of available choices
-
-   .. py:attribute:: strict
-
-      verify that the user input is from the list. 
-      NB: User cannot choose option out of the choice list in the webui, 
-      but could craft an http post request.
-
-   .. py:attribute:: multiple
-
-      will chance the html form to allow the user to select several options
-
-.. py:class:: InheritBuildParameter(name, label, compatible_builds)
-
-      a special parameter for inheriting force builds parameters from 
-      another build.
-
-   .. py:attribute:: compatible_builds
-
-      a function provided by config that will find compatible build in
-       the build history
-
-   .. py:method:: compatible_builds(masterstatus, buildername)
-
-      .. py:attribute:: masterstatus
-
-      	 The master status, where you can get the list of previous builds
-
-      .. py:attribute:: buildername
-
-	 the name of the builder (can be None in case of ForceAllBuild Form)
-
-.. py:class:: AnyPropertyParameter(name, label)
-
-   a parameter for setting arbitrary property in the build
-   a bit atypical, as it will generate two fields in the html form
-   This Parameter is here to reimplement old buildbot behavior, and should
-   be avoided. Stricter parameter name and type shoud be preferred.
