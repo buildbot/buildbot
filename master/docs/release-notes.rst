@@ -14,6 +14,18 @@ Master
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* Forced builds now require that a :bb:sched:`ForceScheduler` be defined in the
+  Buildbot configuration.  For compatible behavior, this should look like::
+
+    from buildbot.schedulers.forcesched import ForceScheduler
+    c['schedulers'].append(ForceScheduler(
+                            name="force",
+                            builderNames=["b1", "b2", ... ]))
+
+  Where all of the builder names in the configuration are listed.  See the
+  documentation for the *much* more flexiblie configuration options now
+  available.
+
 * ``buildbot start`` no longer invokes make if a ``Makefile.buildbot`` exists.
   If you are using this functionality, consider invoking make directly.
 
@@ -38,6 +50,10 @@ Features
 
 * Buildbot can now take advantage of authentication done by a front-end web
   server - see :bb:pull:`266`.
+
+* Buildbot supports a simple cookie-based login system, so users no longer need
+  to enter a username and password for every request.  See the earlier commits
+  in :bb:pull:`278`.
 
 * The master-side SVN step now has an `export` method which is similar to
   `copy`, but the build directory does not contain Subversion metdata. (:bb:bug:`2078`)
