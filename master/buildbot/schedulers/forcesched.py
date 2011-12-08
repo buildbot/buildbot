@@ -16,7 +16,12 @@
 import traceback
 import re
 from twisted.internet import defer
-import email.utils
+try:
+    import email.utils as email_utils
+    email_utils = email_utils
+except ImportError:
+    # Python-2.4 capitalization
+    import email.Utils as email_utils
 
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
@@ -129,7 +134,7 @@ class UserNameParameter(StringParameter):
 
     def parse_from_arg(self, s):
         if self.need_email:
-            e = email.utils.parseaddr(s)
+            e = email_utils.parseaddr(s)
             if e[0]=='' or e[1] == '':
                 raise ValueError("%s: please fill in email address in the "
                         " form User <email@email.com>" % (self.label,))
