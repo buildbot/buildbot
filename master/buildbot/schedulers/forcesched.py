@@ -74,7 +74,8 @@ class BaseParameter(object):
         if self.regex:
             for arg in args:
                 if not self.regex.match(arg):
-                    raise ValueError("%s:'%s' does not match pattern '%s'"%(self.label, s, self.regex.pattern))
+                    raise ValueError("%s:'%s' does not match pattern '%s'"
+                            % (self.label, arg, self.regex.pattern))
         try:
             arg = self.parse_from_args(args)
         except Exception, e:
@@ -84,7 +85,8 @@ class BaseParameter(object):
                 traceback.print_exc()
             raise e
         if arg == None:
-            raise ValueError("need %s: no default provided by config"%(param.name))
+            raise ValueError("need %s: no default provided by config"
+                    % (self.name,))
         properties[self.name] = arg
     def parse_from_args(self, l):
         if self.multiple:

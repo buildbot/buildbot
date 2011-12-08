@@ -165,8 +165,10 @@ class TestAuthz(unittest.TestCase):
         z = Authz(auth=StubAuth('uu'), stopAllBuilds = lambda u : False)
         r = StubRequest('uu','aa')
         d = z.login(r)
+        @d.addCallback
         def check(c):
             assert z.advertiseAction('stopAllBuilds',r)
+        return d
 
     def test_authenticated_False(self):
         z = Authz(forceBuild = False)
@@ -176,8 +178,10 @@ class TestAuthz(unittest.TestCase):
         z = Authz(auth=StubAuth('uu'), forceBuild = True)
         r = StubRequest('uu','aa')
         d = z.login(r)
+        @d.addCallback
         def check(c):
             assert z.authenticated(r)
+        return d
 
     def test_authenticated_http_False(self):
         z = Authz(useHttpHeader = True)

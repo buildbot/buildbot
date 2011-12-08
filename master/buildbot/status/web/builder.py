@@ -15,15 +15,13 @@
 
 
 from twisted.web import html
-from twisted.web.util import Redirect
 import urllib, time
 from twisted.python import log
 from twisted.internet import defer
-from twisted.python.failure import Failure
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_slave, path_to_builder, path_to_change, \
-    path_to_root, getAndCheckProperties, ICurrentBox, build_get_class, \
+    path_to_root, ICurrentBox, build_get_class, \
     map_branches, path_to_authzfail, ActionResource
 from buildbot.schedulers.forcesched import ForceScheduler, InheritBuildParameter
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
@@ -255,10 +253,6 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             yield wfd
             submitTime = wfd.getResult()
 
-            wfd = defer.waitForDeferred(
-                pb.master.db.buildrequests.getBuildRequests(bsid=pb._buildrequest.bsid))
-            yield wfd
-            builds = wfd.getResult()
             wfd = defer.waitForDeferred(
                 pb.master.db.buildsets.getBuildsetProperties(pb._buildrequest.bsid))
             yield wfd
