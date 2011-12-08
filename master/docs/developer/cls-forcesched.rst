@@ -5,8 +5,6 @@ ForceScheduler
 --------------
 This is the developer oriented version of the ForceScheduler documentation
 
-.. py:class:: buildbot.schedulers.forcesched.ForceScheduler
-
 .. py:module:: buildbot.schedulers.forceshed
 
 .. py:class:: IParameter(name, label, type, default, required, multiple, regex)
