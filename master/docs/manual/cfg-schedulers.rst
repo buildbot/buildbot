@@ -89,8 +89,6 @@ taken by each one.
 Change Filters
 ~~~~~~~~~~~~~~
 
-.. py:class:: buidbot.changes.filter.ChangeFilter
-
 Several schedulers perform filtering on an incoming set of changes.  The filter
 can most generically be specified as a :class:`ChangeFilter`.  Set up a
 :class:`ChangeFilter` like this::
@@ -172,9 +170,6 @@ to any other restrictions the scheduler enforces).
 SingleBranchScheduler
 ~~~~~~~~~~~~~~~~~~~~~
 
-
-.. py:class:: buildbot.schedulers.basic.SingleBranchScheduler
-
 This is the original and still most popular scheduler class. It follows
 exactly one branch, and starts a configurable tree-stable-timer after
 each change on that branch. When the timer expires, it starts a build
@@ -249,9 +244,6 @@ discover and fix the problem before the full builds are started. Both
 Schedulers only pay attention to the default branch: any changes
 on other branches are ignored by these schedulers. Each scheduler
 triggers a different set of Builders, referenced by name.
-
-.. py:class:: buildbot.schedulers.basic.Scheduler
-.. py:class:: buildbot.scheduler.Scheduler
 
 The old names for this scheduler, ``buildbot.scheduler.Scheduler`` and
 ``buildbot.schedulers.basic.Scheduler``, are deprecated in favor of the more
@@ -363,8 +355,6 @@ Example::
     
 Periodic Scheduler
 ~~~~~~~~~~~~~~~~~~
-
-.. py:class:: buildbot.schedulers.timed.Periodic
 
 This simple scheduler just triggers a build every *N* seconds.
 
@@ -515,9 +505,6 @@ Finally, this example will run only on December 24th::
 Try Schedulers
 ~~~~~~~~~~~~~~
 
-.. py:class:: buildbot.schedulers.trysched.Try_Jobdir
-.. py:class:: buildbot.schedulers.trysched.Try_Userpass
-
 This scheduler allows developers to use the :command:`buildbot try`
 command to trigger builds of code they have not yet committed. See
 :bb:cmdline:`try` for complete details.
@@ -660,8 +647,6 @@ details.
 Triggerable Scheduler
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. py:class:: buildbot.schedulers.triggerable.Triggerable
-
 The :class:`Triggerable` scheduler waits to be triggered by a Trigger
 step (see :ref:`Triggering-Schedulers`) in another build. That step
 can optionally wait for the scheduler's builds to complete. This
@@ -726,3 +711,332 @@ Here is a fully-worked example::
     nightly_factory.addStep(trigger.Trigger(schedulerNames=['package-all-platforms'],
                                          waitForFinish=True))
 
+
+.. bb:sched:: ForceScheduler
+
+.. index:: Forced Builds
+
+ForceScheduler Scheduler
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :class:`ForceScheduler` scheduler is the way you can configure a
+force build form in the web UI.
+
+In the ``builder/<builder-name>`` web page, you will see one form for each
+ForceScheduler scheduler that was configured for this builder.
+
+This allows you to customize exactly how the build form looks, which builders
+have a force build form (it might not make sense to force build every builder),
+and who is allowed to force builds on which builders.
+
+The scheduler takes the following parameters:
+
+``name``
+
+``builderNames``
+
+    See :ref:`Configuring-Schedulers`.
+
+``branch``
+
+    A :ref:`parameter <ForceScheduler-Parameters>` specifying the branch to
+    build.  The default value is a string parameter.
+
+``reason``
+
+    A :ref:`parameter <ForceScheduler-Parameters>` specifying the reason for
+    the build.  The default value is a string parameter with value "force build".
+
+``revision``
+
+    A :ref:`parameter <ForceScheduler-Parameters>` specifying the revision to
+    build.  The default value is a string parameter.
+
+``repository``
+
+    A :ref:`parameter <ForceScheduler-Parameters>` specifying the repository
+    for the build.  The default value is a string parameter.
+
+``project``
+
+    A :ref:`parameter <ForceScheduler-Parameters>` specifying the project for
+    the build.  The default value is a string parameter.
+
+``username``
+
+    A :ref:`parameter <ForceScheduler-Parameters>` specifying the project for
+    the build.  The default value is a username parameter,
+
+``properties``
+
+    A list of :ref:`parameters <ForceScheduler-Parameters>`, one for each
+    property.  These can be arbitrary parameters, where the parameter's name is
+    taken as the property name, or ``AnyPropertyParameter``, which allows the
+    web user to specify the property name.
+
+An example may be better than long explanation.  What you need in your config
+file is something like::
+
+    from buildbot.schedulers.forcesched import *
+
+    sch = ForceScheduler(name="force",
+                 builderNames=["my-builder"],
+
+                 # will generate a combo box
+                 branch=ChoiceStringParameter(name="branch",
+                                        choices=["main","devel"], default="main"),
+
+                 # will generate a text input
+                 reason=StringParameter(name="reason",label="reason:<br>",
+                                        required=True, size=80),
+
+                 # will generate nothing in the form, but revision, repository,
+                 # and project are needed by buildbot scheduling system so we
+                 # need to pass a value ("")
+                 revision=FixedParameter(name="revision", default=""),
+                 repository=FixedParameter(name="repository", default=""),
+                 project=FixedParameter(name="repository", default=""),
+
+                 # in case you dont require authentication this will display
+                 # input for user to type his name
+                 username=UserNameParameter(label="your name:<br>", size=80),
+
+                 # A completly customized property list.  The name of the
+                 property is the name of the parameter
+                 properties=[
+
+                    BooleanParameter(name="force_build_clean",
+                                label="force a make clean", default=False),
+
+                    StringParameter(name="pull_url",
+                        label="optionally give a public git pull url:<br>",
+                        default="", size=80)
+                 ]
+                 )
+    c['schedulers'].append(sch)
+
+
+Authorization
+.............
+
+The force scheduler uses the web status's :ref:`authorization <Authorization>`
+framework to determine which user has the right to force which build.  Here is
+an example of code on how you can define which user has which right::
+
+    user_mapping = {
+        re.compile("project1-builder"): ["project1-maintainer", "john"] ,
+        re.compile("project2-builder"): ["project2-maintainer", "jack"],
+        re.compile(".*"): ["root"]
+    }
+    def force_auth(user,  status):
+        global user_mapping
+        for r,users in user_mapping.items():
+            if r.match(status.name):
+                if user in users:
+                        return True
+        return False
+
+    # use authz_cfg in your WebStatus setup
+    authz_cfg=authz.Authz(
+        auth=my_auth,
+        forceBuild = force_auth,
+    )
+
+.. _ForceScheduler-Parameters:
+
+ForceSched Parameters
+.....................
+
+Most of the arguments to ``ForceScheduler`` are "parameters".  Several classes
+of parameters are available, each describing a different kind of input from a
+force-build form.
+
+All parameter types have a few common arguments:
+
+``name`` (required)
+
+    The name of the parameter. For properties, this will correspond to the name
+    of the property that your parameter will set.  THe name is also used
+    internally as the identifier for in the HTML form.
+
+``label`` (optional; default is same as name)
+
+    The label of the parameter. This is what is displayed to the user.  HTML is
+    permitted here.
+
+``default`` (optional; default: "")
+
+    The default value for the parameter, that is used if there is no user
+    input.
+
+``required`` (optional; default: False)
+
+    If this is true, then an error will be shown to user if
+    there is no input in this field
+
+The parameter types are:
+
+FixedParameter
+##############
+
+This parameter type will not be shown on the web form, and always generate a
+property with its default value.  Example::
+
+    branch = FixedParameter(default="trunk")
+
+StringParameter
+###############
+
+This parameter type will show a single-line text-entry box, and allow the user
+to enter an arbitrary string.  It adds the following arguments:
+
+``regex`` (optional)
+
+    a string that will be compiled as a regex, and used to validate the input
+    of this parameter
+
+``size`` (optional; default: 10)
+
+    The width of the input field (in characteres)
+
+TextParameter
+#############
+
+This parameter type is similar to StringParameter, except that it is
+represented in the HTML form as a textarea, allowing multi-line input.  It adds
+the StringParameter arguments, this type allows:
+
+``cols`` (optional; default: 80)
+
+    The number of columns textarea will have
+
+``rows`` (optional; defauflt: 20)
+
+    The number of rows textarea will have
+
+This class could be subclassed in order to have more customization e.g.
+
+    * developer could send a list of git branches to pull from
+
+    * developer could send a list of gerrit changes to cherry-pick,
+
+    * developer could send a shell script to amend the build.
+
+beware of security issues anyway.
+
+IntParameter
+############
+
+This parameter type accepts an integer value using a text-entry box.
+
+BooleanParameter
+################
+
+This type represents a boolean value. It will be presented as a checkbox.
+
+UserNameParameter
+#################
+
+This parameter type accepts a username.  If authentication is active, it will
+use the authenticated user instead of displaying a text-entry box.
+
+``size`` (optional; default: 10)
+    The width of the input field (in characteres)
+
+``need_email`` (optional; default True)
+    If true, require a full email address rather than arbitrary text.
+
+ChoiceStringParameter
+#####################
+
+name, label, default, choices=[], strict=True, multiple=False)
+
+This parameter type lets the user choose between several choices (e.g the list
+of branches you are supporting, or the test campaign to run).  If ``multiple``
+is false, then its result is a string - one of the choices.  If ``multiple`` is
+true, then the result is a list of strings from the choices.  Its arguments, in
+addition to the common optoins, are:
+
+``choices``
+
+    The list of available choices.
+
+``strict`` (optional; default: True)
+
+    If true, verify that the user's input is from the list.  Note that this
+    only affects the validation of the form request; even if this argument is
+    False, there is no HTML form component available to enter an arbitrary
+    value.
+
+``multiple``
+
+    If true, then the user may select multiple choices.
+
+Example::
+
+        ChoiceStringParameter(name="forced_tests", 
+            label = "smoke test campaign to run",
+            default = default_tests,
+            multiple = True, 
+            strict = True,
+            choices = [ "test_builder1",
+                        "test_builder2",
+                        "test_builder3" ])
+        ])
+
+        # .. and later base the schedulers to trigger off this property:
+
+        # triggers the tests depending on the property forced_test
+        builder1.factory.addStep(Trigger(name="Trigger tests",
+                                        schedulerNames=Property("forced_tests")))
+
+InheritBuildParameter
+#####################
+
+This is a special parameter for inheriting force build properties from another
+build.  The user is presented with a list of compatible builds from which to
+choose, and all forced-build parameters from the selected build are copied into
+the new build.  The new parameter is:
+
+``compatible_builds``
+
+   A function to find compatible builds in the build history.  This function is
+   given the master :py:class:`~buildbot.status.master.Status` instance as
+   first argument, and the current builder name as second argument, or None
+   when forcing all builds.
+
+Example::
+
+    def get_compatible_builds(status, builder):
+        if builder == None: # this is the case for force_build_all
+            return ["cannot generate build list here"]
+        # find all successful builds in builder1 and builder2
+        for builder in ["builder1","builder2"]:
+            builder_status = status.getBuilder(builder)
+            for num in xrange(1,40): # 40 last builds
+                b = builder_status.getBuild(-num)
+                if not b:
+                    continue
+                if b.getResults() == FAILURE:
+                    continue
+                builds.append(builder+"/"+str(b.getNumber()))
+        return builds
+
+        # ...
+
+            properties=[
+                InheritBuildParameter(
+                    name="inherit",
+                    label="promote a build for merge",
+                    compatible_builds=get_compatible_builds,
+                    required = True),
+                    ])
+
+AnyPropertyParameter
+####################
+
+This parameter type can only be used in ``properties``, and allows the user to
+specify both the property name and value in the HTML form.
+
+This Parameter is here to reimplement old Buildbot behavior, and should be
+avoided. Stricter parameter name and type should be preferred.
