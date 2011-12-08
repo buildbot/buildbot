@@ -67,14 +67,14 @@
           push the <i>Stop {{ label }}</i> button</p>
         {% endif %}
       {% endif %}
-      
+
       {% if not short %}
         <div class="row">
           <span class="label">Reason:</span>
           <input type="text" name="comments"/>
         </div>
       {% endif %}
-  
+
       <input type="submit" value="Stop {{ label }}" />
     </form>
   {% endif %}
@@ -82,7 +82,7 @@
 
 {% macro force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props) %}
  <form method="post" name="force_build" action="{{ force_url }}" class="command forcebuild">
-   
+
   {% if on_all %}
      <p>To force a build on <strong>all Builders</strong>, fill out the following fields
           and push the 'Force Build' button</p>
@@ -145,23 +145,23 @@
     {% endif %}
     {% endif %}
   {% endfor %}
-  
-  <input type="submit" value="Force Build" /> 
+
+  <input type="submit" value="Force Build" />
  </form>
 {% endmacro %}
 {% macro force_build(force_url, authz, request, on_all=False, on_selected=False, builders=[], force_schedulers={},default_props={}) %}
  {% for name, sch in force_schedulers.items() %}
     {{ force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch,default_props=default_props) }}
   {% endfor %}
- 
+
 {% endmacro %}
 
 {% macro graceful_shutdown(shutdown_url, authz) %}
   <form method="post" action="{{ shutdown_url }}" class='command graceful_shutdown'>
-  
+
   <p>To cause this slave to shut down gracefully when it is idle,
     push the 'Graceful Shutdown' button</p>
-  <input type="submit" value="Graceful Shutdown" /> 
+  <input type="submit" value="Graceful Shutdown" />
  </form>
 {% endmacro %}
 
@@ -191,8 +191,8 @@
 {% endmacro %}
 
 {% macro rebuild_build(rebuild_url, authz, exactly, ss) %}
- <form method="post" action="{{ rebuild_url }}" class="command rebuild">  
-  
+ <form method="post" action="{{ rebuild_url }}" class="command rebuild">
+
     {% if exactly %}
       <p>This tree was built from a specific set of
           source files, and can be rebuilt exactly</p>
@@ -200,10 +200,10 @@
       <p>This tree was built from the most recent revision
       {% if ss.branch %}
         (along branch {{ ss.branch }})
-      {% endif %}            
+      {% endif %}
       and thus it might not be possible to rebuild it
-      exactly. <br/>Any changes that have been committed 
-      after this build was started <b>will</b> be 
+      exactly. <br/>Any changes that have been committed
+      after this build was started <b>will</b> be
       included in a rebuild.</p>
     {% endif %}
 
@@ -218,7 +218,7 @@
    <div class="row">
      <span class="label">Reason for re-running build:</span>
      <input type='text' name='comments' />
-   </div>       
+   </div>
    <input type="submit" value="Rebuild" />
  </form>
 {% endmacro %}
