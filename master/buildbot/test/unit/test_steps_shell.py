@@ -127,6 +127,20 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["'echo", "hello'"])
         return self.runStep()
 
+    def test_run_list(self):
+        self.setupStep(
+                shell.ShellCommand(workdir='build',
+                    command=['trial', '-b', '-B', 'buildbot.test']))
+        self.expectCommands(
+            ExpectShell(workdir='build',
+                        command=['trial', '-b', '-B', 'buildbot.test'],
+                        usePTY="slave-config")
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["'trial", "-b", "...'"])
+        return self.runStep()
+
     def test_run_env(self):
         self.setupStep(
                 shell.ShellCommand(workdir='build', command="echo hello"),
