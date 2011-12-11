@@ -427,7 +427,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
 
         # Put these into a dictionary, otherwise we cannot assign them
         # from nested function definitions.
-        d = { 'files': [], 'comments': "" }
+        d = { 'files': [], 'comments': u"" }
         gobbler = None
         rev = None
         who = None
@@ -450,7 +450,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         lines = list(body_line_iterator(m, True))
         rev = None
         while lines:
-            line = lines.pop(0)
+            line = unicode(lines.pop(0), "utf-8", errors="ignore")
 
             # revno: 101
             match = re.search(r"^revno: ([0-9.]+)", line)
