@@ -95,10 +95,9 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         try:
             d = sched.forceWithWebRequest(owner, 'a', req)
         except Exception,e:
-            if type(e)!=expect:
-                raise e
-            assert type(e)==expect
-            return
+            if not isinstance(e, expect):
+                raise
+            return # success
         def check(res):
             bsid,brids = res
             self.db.buildsets.assertBuildset\
