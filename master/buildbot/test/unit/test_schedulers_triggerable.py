@@ -60,13 +60,6 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         set_props.setProperty('pr', 'op', 'test')
         d = sched.trigger(91, set_props=set_props)
 
-        # set up a boolean so that we can know when the deferred fires
-        self.fired = False
-        def fired(result):
-            self.assertEqual(result, 13) # 13 comes from the result below
-            self.fired = True
-        d.addCallback(fired)
-
         bsid = self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[
@@ -76,6 +69,14 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                      reason='Triggerable(n)'),
                 dict(branch='br', project='p', repository='r',
                      revision='myrev'))
+
+        # set up a boolean so that we can know when the deferred fires
+        self.fired = False
+        def fired((result, brids)):
+            self.assertEqual(result, 13) # 13 comes from the result below
+            self.assertEqual(brids, self.db.buildsets.allBuildRequests(bsid))
+            self.fired = True
+        d.addCallback(fired)
 
         # check that the scheduler has subscribed to buildset changes, but
         # not fired yet
@@ -114,23 +115,25 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         # trigger the scheduler the first time
         d = sched.trigger(91)
-        d.addCallback(lambda res : self.assertEqual(res, 11))
         bsid1 = self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
                      reason='Triggerable(n)'),
                 dict(branch='br', project='p', repository='r',
                      revision='myrev1'))
+        d.addCallback(lambda (res, brids) : self.assertEqual(res, 11) 
+                                        and self.assertEqual(brids, self.db.buildsets.allBuildRequests(bsid1)))
 
         # and the second time
         d = sched.trigger(92)
-        d.addCallback(lambda res : self.assertEqual(res, 22))
         bsid2 = self.db.buildsets.assertBuildset(bsid1+1, # assumes bsid's are sequential
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
                      reason='Triggerable(n)'),
                 dict(branch='br', project='p', repository='r',
                      revision='myrev2'))
+        d.addCallback(lambda (res, brids) : self.assertEqual(res, 22) 
+                                        and self.assertEqual(brids, self.db.buildsets.allBuildRequests(bsid2)))
 
         # check that the scheduler has subscribed to buildset changes
         callbacks = self.master.getSubscriptionCallbacks()

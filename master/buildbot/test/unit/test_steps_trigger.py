@@ -19,15 +19,17 @@ from twisted.internet import defer, reactor
 from buildbot import config
 from buildbot.process import properties
 from buildbot.schedulers import triggerable
+from buildbot.status import master
 from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION
 from buildbot.steps import trigger
 from buildbot.test.util import steps, compat
-from buildbot.test.fake import fakemaster
+from buildbot.test.fake import fakemaster, fakedb
 
 class FakeTriggerable(triggerable.Triggerable):
 
     triggered_with = None
     result = SUCCESS
+    brids = {}
     exception = False
 
     def trigger(self, ssid, set_props=None):
@@ -36,7 +38,7 @@ class FakeTriggerable(triggerable.Triggerable):
         if self.exception:
             reactor.callLater(0, d.errback, RuntimeError('oh noes'))
         else:
-            reactor.callLater(0, d.callback, self.result)
+            reactor.callLater(0, d.callback, (self.result, self.brids))
         return d
 
 
@@ -52,13 +54,17 @@ class FakeSourceStamp(object):
     def getSourceStampId(self, master):
         return defer.succeed(self._ssid)
 
+# Magic numbers that relate brid to other build settings
+BRID_TO_BSID = lambda brid: brid+2000
+BRID_TO_BID  = lambda brid: brid+3000
+BRID_TO_BUILD_NUMBER = lambda brid: brid+4000
 
 class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
     THIS_SSID = 6
     ABS_SSID = THIS_SSID + 1000
     NEW_SSID = 987
-
+    
     def setUp(self):
         return self.setUpBuildStep()
 
@@ -73,11 +79,32 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
         # set up a buildmaster that knows about two fake schedulers, a and b
         self.build.builder.botmaster.parent = m = fakemaster.make_master()
+        m.db = fakedb.FakeDBConnector(self)
+        m.status = master.Status(m)
+        m.config.buildbotURL = "baseurl/"
+
         self.scheduler_a = a = FakeTriggerable(name='a', builderNames=['A'])
         self.scheduler_b = b = FakeTriggerable(name='b', builderNames=['B'])
         def allSchedulers():
             return [ a, b ]
         m.allSchedulers = allSchedulers
+
+        a.brids = {'A': 11}
+        b.brids = {'B': 22}
+
+        make_fake_br = lambda brid, name: fakedb.BuildRequest(id=brid,
+                                                              buildsetid=BRID_TO_BSID(brid),
+                                                              buildername=name)
+        make_fake_build = lambda brid: fakedb.Build(brid=brid,
+                                                    id=BRID_TO_BID(brid),
+                                                    number=BRID_TO_BUILD_NUMBER(brid))
+        
+        m.db.insertTestData([
+               make_fake_br(11, "A"),
+               make_fake_br(22, "B"),
+               make_fake_build(11),
+               make_fake_build(22),
+        ])
 
         # the build has a getSourceStamp method
         def getSourceStamp():
@@ -93,6 +120,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.exp_add_sourcestamp = None
         self.exp_a_trigger = None
         self.exp_b_trigger = None
+        self.exp_added_urls = []
+        self.exp_triggered_builds = []
 
     def runStep(self, expect_waitForFinish=False):
         d = steps.BuildStepMixin.runStep(self)
@@ -110,6 +139,13 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                              self.exp_a_trigger)
             self.assertEqual(self.scheduler_b.triggered_with,
                              self.exp_b_trigger)
+            self.assertEqual(self.step_status.addURL.call_args_list,
+                             self.exp_added_urls)
+
+            # some keys are "dont care"... so order of equality matters here....
+            self.assertEqual(self.exp_triggered_builds,
+                             self.step_status.getStatistic('triggered_builds',[]))
+
             if self.exp_add_sourcestamp:
                 self.assertEqual(self.addSourceStamp_kwargs,
                                 self.exp_add_sourcestamp)
@@ -130,6 +166,39 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
     def expectAddedSourceStamp(self, **kwargs):
         self.exp_add_sourcestamp = kwargs
+
+    def expectTriggeredLinks(self, *args):
+        def get_args(sch, name):
+            label = lambda name, num: "%s #%d" % (name, num)
+            url = lambda name, num: "baseurl/builders/%s/builds/%d" % (name, num ) 
+
+            num = BRID_TO_BUILD_NUMBER(sch.brids[name])
+
+            #returns the *args and **kwargs that will be called on addURL... 
+            #   which is just addURL('label', 'url')
+            return ( (label(name,num), url(name,num)) , {} )
+
+        def get_build(sch, name):
+            brid = sch.brids[name]
+            class dont_care:
+                def __eq__(self, other):
+                    return True
+            return {
+                'brid': brid,
+                'buildername': name,
+                'bid': BRID_TO_BID(brid),
+                'number': BRID_TO_BUILD_NUMBER(brid),
+                'start_time': dont_care(),
+                'finish_time': dont_care(),
+            }
+
+        if 'a' in args:
+            self.exp_added_urls.append(get_args(self.scheduler_a, 'A'))
+            self.exp_triggered_builds.append(get_build(self.scheduler_a,'A'))
+        if 'b' in args:
+            self.exp_added_urls.append(get_args(self.scheduler_b, 'B'))
+            self.exp_triggered_builds.append(get_build(self.scheduler_b,'B'))
+
 
     # tests
 
@@ -251,6 +320,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.expectTriggeredWith(
             a=(self.THIS_SSID, {}),
             b=(self.THIS_SSID, {}))
+        self.expectTriggeredLinks('a','b')
         return self.runStep(expect_waitForFinish=True)
 
     def test_waitForFinish_failure(self):
@@ -259,6 +329,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.scheduler_a.result = FAILURE
         self.expectOutcome(result=FAILURE, status_text=['triggered', 'a'])
         self.expectTriggeredWith(a=(self.THIS_SSID, {}))
+        self.expectTriggeredLinks('a')
         return self.runStep(expect_waitForFinish=True)
 
     @compat.usesFlushLoggedErrors
@@ -271,6 +342,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.expectTriggeredWith(
             a=(self.THIS_SSID, {}),
             b=(self.THIS_SSID, {}))
+        self.expectTriggeredLinks('a') # b doesnt return a brid
         d = self.runStep(expect_waitForFinish=True)
         def flush(_):
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
