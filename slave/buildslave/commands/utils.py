@@ -49,7 +49,7 @@ if runtime.platformType  == 'win32':
         if not os.path.exists(dir):
             return
 
-        if os.path.islink(dir):
+        if os.path.islink(dir) or os.path.isfile(dir):
             os.remove(dir)
             return
 
