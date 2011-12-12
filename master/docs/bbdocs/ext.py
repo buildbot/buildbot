@@ -167,7 +167,7 @@ class SrcRole(object):
         node = nodes.reference('', '')
         node['refuri'] = (
             'https://github.com/buildbot/buildbot/blob/master/%s' % text )
-        node['reftitle'] = title = 'pull request %s' % text
+        node['reftitle'] = title = '%s' % text
         node.append(nodes.literal(title, title))
         return [ node ], []
 

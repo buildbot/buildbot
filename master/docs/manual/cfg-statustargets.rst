@@ -408,6 +408,8 @@ supplies.  This is most often used to supply CSS files (:file:`/buildbot.css`)
 and a top-level navigational file (:file:`/index.html`), but can also serve any
 other files required - even build results!
 
+.. _Authorization:
+
 Authorization
 #############
 
@@ -449,7 +451,8 @@ authentication.  The actions are:
 
 For each of these actions, you can configure buildbot to never allow the
 action, always allow the action, allow the action to any authenticated user, or
-check with a function of your creation to determine whether the action is OK.
+check with a function of your creation to determine whether the action is OK
+(see below).
 
 This is all configured with the :class:`Authz` class::
 
@@ -460,8 +463,12 @@ This is all configured with the :class:`Authz` class::
         stopBuild=True)
     c['status'].append(WebStatus(http_port=8080, authz=authz))
 
-Each of the actions listed above is an option to :class:`Authz`.  You can specify
-``False`` (the default) to prohibit that action or ``True`` to enable it.
+Each of the actions listed above is an option to :class:`Authz`.  You can
+specify ``False`` (the default) to prohibit that action or ``True`` to enable
+it.  Or you can specify a callable.  Each such callable will take a username as
+its first argument.  The remaining arguments vary depending on the type of
+authorization request.  For ``forceBuild``, the second argument is the builder
+stsatus.
 
 Authentication
 ##############

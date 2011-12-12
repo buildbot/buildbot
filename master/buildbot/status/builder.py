@@ -177,10 +177,13 @@ class BuilderStatus(styles.Versioned):
                 return self.touchBuildCache(b)
 
         # then in the buildCache
-        if number in self.buildCache:
+        try:
+            b = self.buildCache[number]
+        except KeyError:
+            metrics.MetricCountEvent.log("buildCache.misses", 1)
+        else:
             metrics.MetricCountEvent.log("buildCache.hits", 1)
-            return self.touchBuildCache(self.buildCache[number])
-        metrics.MetricCountEvent.log("buildCache.misses", 1)
+            return self.touchBuildCache(b)
 
         # then fall back to loading it from disk
         filename = self.makeBuildFilename(number)

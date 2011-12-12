@@ -10,7 +10,7 @@
 
 {{ change(c) }}
 
-{% if authz.advertiseAction('stopChange') %}
+{% if authz.advertiseAction('stopChange', request) %}
   <h3>Cancel Builds For Change:</h3>
   {{ forms.stop_change_builds("/builders/_all/stopchangeall", c.number, authz) }}
 {% endif %}

@@ -18,21 +18,24 @@ from twisted.trial import unittest
 from twisted.internet import defer
 
 from buildbot.status.web.authz import Authz
-from buildbot.status.web.auth import IAuth
+from buildbot.status.web.auth import IAuth, AuthBase
 
 class StubRequest(object):
     # all we need from a request is username/password
-    def __init__(self, username, passwd):
+    def __init__(self, username=None, passwd=None):
         self.args = {
             'username' : [ username ],
             'passwd' : [ passwd ],
         }
-
+        self.received_cookies = {}
+        self.send_cookies = []
     def getUser(self):
         return None
 
     def getPassword(self):
         return None
+    def addCookie(self, key, cookie, expiration, path):
+        self.send_cookies.append((key, cookie, expiration, path))
 
 class StubHttpAuthRequest(object):
     # all we need from a request is username/password
@@ -47,14 +50,13 @@ class StubHttpAuthRequest(object):
     def getPassword(self):
         return self.passwd
 
-class StubAuth(object):
+class StubAuth(AuthBase):
     implements(IAuth)
     def __init__(self, user):
         self.user = user
 
     def authenticate(self, user, pw):
         return user == self.user
-
 class TestAuthz(unittest.TestCase):
 
     def test_actionAllowed_Defaults(self):
@@ -141,51 +143,53 @@ class TestAuthz(unittest.TestCase):
 
     def test_advertiseAction_False(self):
         z = Authz(forceBuild = False)
-        assert not z.advertiseAction('forceBuild')
+        assert not z.advertiseAction('forceBuild',StubRequest())
 
     def test_advertiseAction_True(self):
         z = Authz(forceAllBuilds = True)
-        assert z.advertiseAction('forceAllBuilds')
+        assert z.advertiseAction('forceAllBuilds',StubRequest())
 
     def test_advertiseAction_auth(self):
         z = Authz(stopBuild = 'auth')
-        assert z.advertiseAction('stopBuild')
+        assert not z.advertiseAction('stopBuild',StubRequest())
+
+    def test_advertiseAction_auth_authenticated(self):
+        z = Authz(auth=StubAuth('uu'),stopBuild = 'auth')
+        r = StubRequest('uu','aa')
+        d = z.login(r)
+        def check(c):
+            assert z.advertiseAction('stopBuild',r)
+        d.addCallback(check)
 
     def test_advertiseAction_callable(self):
-        z = Authz(stopAllBuilds = lambda u : False)
-        assert z.advertiseAction('stopAllBuilds')
+        z = Authz(auth=StubAuth('uu'), stopAllBuilds = lambda u : False)
+        r = StubRequest('uu','aa')
+        d = z.login(r)
+        @d.addCallback
+        def check(c):
+            assert z.advertiseAction('stopAllBuilds',r)
+        return d
 
-    def test_needAuthForm_False(self):
+    def test_authenticated_False(self):
         z = Authz(forceBuild = False)
-        assert not z.needAuthForm('forceBuild')
+        assert not z.authenticated(StubRequest())
 
-    def test_needAuthForm_True(self):
-        z = Authz(forceAllBuilds = True)
-        assert not z.needAuthForm('forceAllBuilds')
+    def test_authenticated_True(self):
+        z = Authz(auth=StubAuth('uu'), forceBuild = True)
+        r = StubRequest('uu','aa')
+        d = z.login(r)
+        @d.addCallback
+        def check(c):
+            assert z.authenticated(r)
+        return d
 
-    def test_needAuthForm_auth(self):
-        z = Authz(stopBuild = 'auth')
-        assert z.needAuthForm('stopBuild')
+    def test_authenticated_http_False(self):
+        z = Authz(useHttpHeader = True)
+        assert not z.authenticated(StubRequest())
 
-    def test_needAuthForm_callable(self):
-        z = Authz(stopAllBuilds = lambda u : False)
-        assert z.needAuthForm('stopAllBuilds')
-
-    def test_needUserForm_False(self):
-        z = Authz(forceBuild = False)
-        assert not z.needUserForm('forceBuild')
-
-    def test_needUserForm_Ture(self):
-        z = Authz(forceBuild = True)
-        assert z.needUserForm('forceBuild')
-
-    def test_needUserForm_http_False(self):
-        z = Authz(useHttpHeader = True, forceBuild = False)
-        assert not z.needUserForm('forceBuild')
-
-    def test_needUserForm_http_True(self):
-        z = Authz(useHttpHeader = True, forceBuild = True)
-        assert not z.needUserForm('forceBuild')
+    def test_authenticated_http_True(self):
+        z = Authz(useHttpHeader = True)
+        assert z.authenticated(StubHttpAuthRequest('foo', 'bar'))
 
     def test_constructor_invalidAction(self):
         self.assertRaises(ValueError, Authz, someRandomAction=3)
@@ -216,11 +220,7 @@ class TestAuthz(unittest.TestCase):
 
     def test_advertiseAction_invalidAction(self):
         z = Authz()
-        self.assertRaises(KeyError, z.advertiseAction, 'someRandomAction')
-
-    def test_needAuthForm_invalidAction(self):
-        z = Authz()
-        self.assertRaises(KeyError, z.needAuthForm, 'someRandomAction')
+        self.assertRaises(KeyError, z.advertiseAction, 'someRandomAction', StubRequest('snow', 'foo'))
 
     def test_actionAllowed_invalidAction(self):
         z = Authz()
