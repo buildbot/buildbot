@@ -576,13 +576,19 @@ class WaterfallStatusResource(HtmlResource):
             try:
                 while True:
                     e = g.next()
-                    # e might be builder.BuildStepStatus,
+                    # e might be buildstep.BuildStepStatus,
                     # builder.BuildStatus, builder.Event,
                     # waterfall.Spacer(builder.Event), or changes.Change .
                     # The showEvents=False flag means we should hide
                     # builder.Event .
                     if not showEvents and isinstance(e, builder.Event):
                         continue
+
+                    if isinstance(e, buildstep.BuildStepStatus):
+                        # unfinished steps are always shown
+                        if e.isFinished() and e.isHiddenInWaterfall():
+                            continue
+
                     break
                 event = interfaces.IStatusEvent(e)
                 if debug:
