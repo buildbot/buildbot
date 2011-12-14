@@ -129,6 +129,16 @@ some of the classes have a bewildering array of options.
     <http://trac.buildbot.net/newticket>`_. The older Slave-side described source
     steps are :ref:`Source-Checkout-Slave-Side`.
 
+    The old source steps are imported like this::
+
+        from buildbot.steps.source import Git
+
+    while new source steps are in separate source-packages for each
+    version-control system::
+
+        from buildbot.steps.source.git import Git
+
+
 New users should, where possible, use the new implementations.  The old
 implementations will be deprecated in a later release.  Old users should take
 this opportunity to switch to the new implementations while both are supported
