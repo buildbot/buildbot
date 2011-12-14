@@ -18,7 +18,7 @@ from twisted.python import components
 from buildbot.process import properties
 from buildbot import interfaces
 
-class FakeBuildStatus(mock.Mock, properties.PropertiesMixin):
+class FakeBuildStatus(properties.PropertiesMixin, mock.Mock):
 
     # work around http://code.google.com/p/mock/issues/detail?id=105
     def _get_child_mock(self, **kw):

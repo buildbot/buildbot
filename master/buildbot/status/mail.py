@@ -591,18 +591,17 @@ class MailNotifier(base.StatusReceiverMultiService):
         # Add any extra headers that were requested, doing WithProperties
         # interpolation if only one build was given
         if self.extraHeaders:
-            for k,v in self.extraHeaders.items():
-                if len(builds) == 1:
-                    k = interfaces.IProperties(builds[0]).render(k)
+            if len(builds) == 1:
+                extraHeaders = builds[0].render(self.extraHeaders)
+            else:
+                extraHeaders = self.extraHeaders
+            for k,v in extraHeaders.items():
                 if k in m:
                     twlog.msg("Warning: Got header " + k +
                       " in self.extraHeaders "
                       "but it already exists in the Message - "
                       "not adding it.")
-                if len(builds) == 1:
-                    m[k] = interfaces.IProperties(builds[0]).render(v)
-                else:
-                    m[k] = v
+                m[k] = v
     
         return m
     

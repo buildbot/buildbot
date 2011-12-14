@@ -22,6 +22,8 @@ from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.status.mail import MailNotifier
 from twisted.internet import defer
 from buildbot.test.fake import fakedb
+from buildbot.test.fake.fakebuild import FakeBuildStatus
+from buildbot.process import properties
 
 class FakeLog(object):
     def __init__(self, text):
@@ -40,27 +42,6 @@ class FakeLog(object):
         return self.text
 
 
-class FakeBuildStatus(Mock):
-
-    def __init__(self, *args, **kwargs):
-        Mock.__init__(self, *args, **kwargs)
-        self.builder = None
-        self.properites = {}
-
-    def getBuilder(self):
-        return self.builder
-
-class FakeBuildStatusProperties(components.Adapter):
-
-    def getProperty(self, name, default):
-        return self.original.properties.get(name, default)
-
-    def render(self, value):
-        return "rndr(%s)" % (value,)
-
-components.registerAdapter(FakeBuildStatusProperties, FakeBuildStatus,
-                IProperties)
-
 class TestMailNotifier(unittest.TestCase):
     def test_createEmail_message_without_patch_and_log_contains_unicode(self):
         builds = [ FakeBuildStatus(name="build") ]
@@ -75,13 +56,15 @@ class TestMailNotifier(unittest.TestCase):
 
     def test_createEmail_extraHeaders_one_build(self):
         builds = [ FakeBuildStatus(name="build") ]
+        builds[0].properties = properties.Properties()
+        builds[0].setProperty('hhh','vvv')
         msgdict = create_msgdict()
         mn = MailNotifier('from@example.org', extraHeaders=dict(hhh='vvv'))
         # add some Unicode to detect encoding problems
         m = mn.createEmail(msgdict, u'builder-n\u00E5me', u'project-n\u00E5me',
                            SUCCESS, builds)
         txt = m.as_string()
-        self.assertIn('rndr(hhh): rndr(vvv)', txt)
+        self.assertIn('hhh: vvv', txt)
 
     def test_createEmail_extraHeaders_two_builds(self):
         builds = [ FakeBuildStatus(name="build1"),
@@ -184,8 +167,7 @@ class TestMailNotifier(unittest.TestCase):
         build.result = FAILURE
         build.finished = True
         build.reason = "testReason"
-        build.builder = builder
-       
+        build.getBuilder.return_value = builder
        
         self.db = fakedb.FakeDBConnector(self)
         self.db.insertTestData([fakedb.Buildset(id=99, sourcestampid=127,
