@@ -17,16 +17,18 @@ from twisted.internet import reactor
 
 from buildbot.changes import base
 from buildbot.util import json
+from buildbot.util.gerrit import GerritConnectionFactory
 from buildbot import util
 from twisted.python import log
 from twisted.internet import defer
 from twisted.internet.protocol import ProcessProtocol
 
+
 class GerritChangeSource(base.ChangeSource):
     """This source will maintain a connection to gerrit ssh server
     that will provide us gerrit events in json format."""
 
-    compare_attrs = ["gerritserver", "gerritport"]
+    compare_attrs = ["connectionFactory"]
 
     STREAM_GOOD_CONNECTION_TIME = 120
     "(seconds) connections longer than this are considered good, and reset the backoff timer"
@@ -40,29 +42,17 @@ class GerritChangeSource(base.ChangeSource):
     STREAM_BACKOFF_MAX = 60
     "(seconds) maximum time to wait before retrying a failed connection"
 
-    def __init__(self, gerritserver, username, gerritport=29418, identity_file=None):
-        """
-        @type  gerritserver: string
-        @param gerritserver: the dns or ip that host the gerrit ssh server,
-
-        @type  gerritport: int
-        @param gerritport: the port of the gerrit ssh server,
-
-        @type  username: string
-        @param username: the username to use to connect to gerrit,
-
-        @type  identity_file: string
-        @param identity_file: identity file to for authentication (optional).
-
-        """
-        # TODO: delete API comment when documented
-
-        self.gerritserver = gerritserver
-        self.gerritport = gerritport
-        self.username = username
-        self.identity_file = identity_file
+    def __init__(self, gerritserver, username, gerritport=29418, identity_file=None,
+                ConnectionFactoryClass=GerritConnectionFactory):
         self.process = None
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
+
+        gerrit_args = {'gerrit_server': gerritserver,
+                       'gerrit_username': username,
+                       'gerrit_port': gerritport,
+                       'identity_file': identity_file,
+                       'process_protocol': self.LocalPP(self)}
+        self.connectionFactory = ConnectionFactoryClass(**gerrit_args)
 
     class LocalPP(ProcessProtocol):
         def __init__(self, change_source):
@@ -74,7 +64,7 @@ class GerritChangeSource(base.ChangeSource):
             """Do line buffering."""
             self.data += data
             lines = self.data.split("\n")
-            self.data = lines.pop(-1) # last line is either empty or incomplete
+            self.data = lines.pop(-1)  # last line is either empty or incomplete
             for line in lines:
                 log.msg("gerrit: %s" % (line,))
                 d = self.change_source.lineReceived(line)
@@ -98,7 +88,7 @@ class GerritChangeSource(base.ChangeSource):
         if not(type(event) == type({}) and "type" in event):
             log.msg("no type in event %s" % (line,))
             return defer.succeed(None)
-        func = getattr(self, "eventReceived_"+event["type"].replace("-","_"), None)
+        func = getattr(self, "eventReceived_" + event["type"].replace("-", "_"), None)
         if func == None:
             log.msg("unsupported event %s" % (event["type"],))
             return defer.succeed(None)
@@ -108,35 +98,38 @@ class GerritChangeSource(base.ChangeSource):
             for k, v in d.items():
                 if type(v) == dict:
                     flatten(event, base + "." + k, v)
-                else: # already there
+                else:  # already there
                     event[base + "." + k] = v
 
         properties = {}
         flatten(properties, "event", event)
-        return func(properties,event)
+        return func(properties, event)
+
     def addChange(self, chdict):
         d = self.master.addChange(**chdict)
         # eat failures..
         d.addErrback(log.err, 'error adding change from GerritChangeSource')
         return d
+
     def eventReceived_patchset_created(self, properties, event):
         change = event["change"]
         return self.addChange(dict(
                 author="%s <%s>" % (change["owner"]["name"], change["owner"]["email"]),
                 project=change["project"],
-                branch=change["branch"]+"/"+change["number"],
+                branch=change["branch"] + "/" + change["number"],
                 revision=event["patchSet"]["revision"],
                 revlink=change["url"],
                 comments=change["subject"],
                 files=["unknown"],
                 category=event["type"],
                 properties=properties))
+
     def eventReceived_ref_updated(self, properties, event):
         ref = event["refUpdate"]
         author = "gerrit"
 
         if "submitter" in event:
-            author="%s <%s>" % (event["submitter"]["name"], event["submitter"]["email"])
+            author = "%s <%s>" % (event["submitter"]["name"], event["submitter"]["email"])
 
         return self.addChange(dict(
                 author=author,
@@ -174,18 +167,15 @@ class GerritChangeSource(base.ChangeSource):
     def startStreamProcess(self):
         log.msg("starting 'gerrit stream-events'")
         self.lastStreamProcessStart = util.now()
-        args = [ self.username+"@"+self.gerritserver,"-p", str(self.gerritport)]
-        if self.identity_file is not None:
-          args = args + [ '-i', self.identity_file ]
-        self.process = reactor.spawnProcess(self.LocalPP(self), "ssh",
-          [ "ssh" ] + args + [ "gerrit", "stream-events" ])
+        self.process = self.connectionFactory.connect(['gerrit', 'stream-events']);
 
     def startService(self):
         self.startStreamProcess()
 
     def stopService(self):
         if self.process:
-            self.process.signalProcess("KILL")
+            self.process.sendSignal("KILL")
+
         # TODO: if this occurs while the process is restarting, some exceptions may
         # be logged, although things will settle down normally
         return base.ChangeSource.stopService(self)
@@ -195,6 +185,6 @@ class GerritChangeSource(base.ChangeSource):
         if not self.process:
             status = "[NOT CONNECTED - check log]"
         str = ('GerritChangeSource watching the remote Gerrit repository %s@%s %s' %
-                            (self.username, self.gerritserver, status))
+                            (self.connectionFactory.gerrit_username,
+                             self.connectionFactory.gerrit_server, status))
         return str
-
