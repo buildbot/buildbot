@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.trial import unittest
-from buildbot.revlinks import RevlinkMatch, GithubRevlink, SourceforgeGitRevlink
+from buildbot.revlinks import RevlinkMatch, GithubRevlink, SourceforgeGitRevlink, GitwebMatch
 
 class TestGithubRevlink(unittest.TestCase):
     revision = 'b6874701b54e0043a78882b020afc86033133f91'
@@ -50,3 +50,33 @@ class TestSourceforgeGitRevlink(unittest.TestCase):
     def testSSHuri(self):
         self.assertEqual(SourceforgeGitRevlink(self.revision, 'ssh://somebody@gemrb.git.sourceforge.net/gitroot/gemrb/gemrb'),
                 self.url)
+
+class TestRevlinkMatch(unittest.TestCase):
+    def testNotmuch(self):
+        revision = 'f717d2ece1836c863f9cc02abd1ff2539307cd1d'
+        matcher = RevlinkMatch(['git://notmuchmail.org/git/(.*)'],
+                r'http://git.notmuchmail.org/git/\1/commit/%s')
+        self.assertEquals(matcher(revision, 'git://notmuchmail.org/git/notmuch'),
+                'http://git.notmuchmail.org/git/notmuch/commit/f717d2ece1836c863f9cc02abd1ff2539307cd1d')
+
+    def testSingleString(self):
+        revision = 'rev'
+        matcher = RevlinkMatch('test', 'out%s')
+        self.assertEquals(matcher(revision, 'test'), 'outrev')
+
+    def testSingleUnicode(self):
+        revision = 'rev'
+        matcher = RevlinkMatch(u'test', 'out%s')
+        self.assertEquals(matcher(revision, 'test'), 'outrev')
+
+    def testTwoCaptureGroups(self):
+        revision = 'rev'
+        matcher = RevlinkMatch('([A-Z]*)Z([0-9]*)', r'\2-\1-%s')
+        self.assertEquals(matcher(revision, 'ABCZ43'), '43-ABC-rev')
+
+class TestGitwebMatch(unittest.TestCase):
+    def testOrgmode(self):
+        revision = '490d6ace10e0cfe74bab21c59e4b7bd6aa3c59b8'
+        matcher = GitwebMatch('git://orgmode.org/(?P<repo>.*)', 'http://orgmode.org/w/')
+        self.assertEquals(matcher(revision, 'git://orgmode.org/org-mode.git'),
+                'http://orgmode.org/w/?p=org-mode.git;a=commit;h=490d6ace10e0cfe74bab21c59e4b7bd6aa3c59b8')

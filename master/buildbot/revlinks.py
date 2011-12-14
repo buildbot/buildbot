@@ -17,6 +17,8 @@ import re
 
 class RevlinkMatch(object):
     def __init__(self, repo_urls, revlink):
+        if isinstance(repo_urls, str) or isinstance(repo_urls, unicode):
+            repo_urls = [ repo_urls ]
         self.repo_urls = map(re.compile, repo_urls)
         self.revlink = revlink
     def __call__(self, rev, repo):
@@ -26,19 +28,23 @@ class RevlinkMatch(object):
                 return m.expand(self.revlink) % rev
 
 GithubRevlink = RevlinkMatch(
-        repo_urls = [ 'https://github.com/([^/]*)/([^/]*?)(?:\.git)?$',
-            'git://github.com/([^/]*)/([^/]*?)(?:\.git)?$',
-            'git@github.com:([^/]*)/([^/]*?)(?:\.git)?$',
-            'ssh://git@github.com/([^/]*)/([^/]*?)(?:\.git)?$'
+        repo_urls = [ r'https://github.com/([^/]*)/([^/]*?)(?:\.git)?$',
+            r'git://github.com/([^/]*)/([^/]*?)(?:\.git)?$',
+            r'git@github.com:([^/]*)/([^/]*?)(?:\.git)?$',
+            r'ssh://git@github.com/([^/]*)/([^/]*?)(?:\.git)?$'
             ],
-        revlink = 'https://github.com/\\1/\\2/commit/%s')
+        revlink = r'https://github.com/\1/\2/commit/%s')
 
-SourceforgeGitRevlink = RevlinkMatch(
-        repo_urls = [ '^git://([^.]*).git.sourceforge.net/gitroot/(.*)$',
-            '[^@]*@([^.]*).git.sourceforge.net:gitroot/(.*)$',
-            'ssh://(?:[^@]*@)?([^.]*).git.sourceforge.net/gitroot/(.*)$',
+class GitwebMatch(RevlinkMatch):
+    def __init__(self, repo_urls, revlink):
+        RevlinkMatch.__init__(self, repo_urls = repo_urls, revlink = revlink + r'?p=\g<repo>;a=commit;h=%s')
+
+SourceforgeGitRevlink = GitwebMatch(
+        repo_urls = [ r'^git://([^.]*).git.sourceforge.net/gitroot/(?P<repo>.*)$',
+            r'[^@]*@([^.]*).git.sourceforge.net:gitroot/(?P<repo>.*)$',
+            r'ssh://(?:[^@]*@)?([^.]*).git.sourceforge.net/gitroot/(?P<repo>.*)$',
             ],
-        revlink = 'http://\\1.git.sourceforge.net/git/gitweb.cgi?p=\\2;a=commit;h=%s')
+        revlink = r'http://\1.git.sourceforge.net/git/gitweb.cgi')
 
 class RevlinkMultiplexer(object):
     def __init__(self, *revlinks):
