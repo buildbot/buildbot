@@ -28,9 +28,10 @@ class GoogleCodeAuthFailed(Exception):
     pass
 
 class Payload(object):
-    def __init__(self, headers, body):
+    def __init__(self, headers, body, branch):
         self._auth_code = headers['Google-Code-Project-Hosting-Hook-Hmac']
         self._body = body # we need to save it if we want to authenticate it
+        self._branch = branch
 
         payload = json.loads(body)
         self.project = payload['project_name']
@@ -57,7 +58,8 @@ class Payload(object):
                 links=[r['url']],
                 revision=r['revision'],
                 when=r['timestamp'],
-                branch='default', # missing in the body
+                # Let's hope Google add the branch one day:
+                branch=r.get('branch', self._branch),
                 revlink=r['url'],
                 repository=self.repository,
                 project=self.project
@@ -70,7 +72,12 @@ def getChanges(request, options=None):
         headers = request.received_headers
         body = request.content.getvalue()
         #logging.error('headers = {0}, body = {1}'.format(headers, body))
-        payload = Payload(headers, body)
+
+        # Instantiate a Payload object: this will parse the body, get the
+        # authentication code from the headers and remember the branch picked up
+        # by the user (Google Code doesn't send on which branch the changes were
+        # made)
+        payload = Payload(headers, body, options.get('branch', 'default'))
 
         if 'secret_key' in options:
             if not payload.authenticate(options['secret_key']):

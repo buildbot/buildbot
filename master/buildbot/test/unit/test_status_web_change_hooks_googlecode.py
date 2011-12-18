@@ -59,7 +59,12 @@ class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
             'Content-Type': 'application/json; charset=UTF-8'
         }
 
-        self.changeHook = change_hook.ChangeHookResource(dialects={'googlecode' : {'secret_key': 'FSP3p-Ghdn4T0oqX'}})
+        self.changeHook = change_hook.ChangeHookResource(dialects={
+                'googlecode': {
+                    'secret_key': 'FSP3p-Ghdn4T0oqX',
+                    'branch': 'test'
+                }
+        })
 
     # Test 'base' hook with attributes. We should get a json string representing
     # a Change object as a dictionary. All values show be set.
@@ -78,7 +83,7 @@ class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
             self.assertEquals(change["who"], "Louis Opter <louis@lse.epitech.net>")
             self.assertEquals(change["revision"], '68e5df283a8e751cdbf95516b20357b2c46f93d4')
             self.assertEquals(change["comments"], "Print a message")
-            self.assertEquals(change["branch"], "default")
+            self.assertEquals(change["branch"], "test")
             self.assertEquals(change["revlink"], "http://webhook-test.googlecode.com/hg-history/68e5df283a8e751cdbf95516b20357b2c46f93d4/")
 
         d.addCallback(check_changes)
