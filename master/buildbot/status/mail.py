@@ -591,18 +591,17 @@ class MailNotifier(base.StatusReceiverMultiService):
         # Add any extra headers that were requested, doing WithProperties
         # interpolation if only one build was given
         if self.extraHeaders:
-            for k,v in self.extraHeaders.items():
-                if len(builds) == 1:
-                    k = interfaces.IProperties(builds[0]).render(k)
+            if len(builds) == 1:
+                extraHeaders = builds[0].render(self.extraHeaders)
+            else:
+                extraHeaders = self.extraHeaders
+            for k,v in extraHeaders.items():
                 if k in m:
                     twlog.msg("Warning: Got header " + k +
                       " in self.extraHeaders "
                       "but it already exists in the Message - "
                       "not adding it.")
-                if len(builds) == 1:
-                    m[k] = interfaces.IProperties(builds[0]).render(v)
-                else:
-                    m[k] = v
+                m[k] = v
     
         return m
     
@@ -644,71 +643,76 @@ class MailNotifier(base.StatusReceiverMultiService):
                              results, builds, patches, logs)
 
         # now, who is this message going to?
-        self.dl = []
-        self.recipients = []
         if self.sendToInterestedUsers:
+            dl = []
             for build in builds:
-                d = defer.succeed(build)
                 if self.lookup:
-                    d.addCallback(self.useLookup)
+                    d = self.useLookup(build)
                 else:
-                    d.addCallback(self.useUsers)
+                    d = self.useUsers(build)
+                dl.append(d)
+            d = defer.gatherResults(dl)
         else:
-            d = defer.DeferredList(self.dl)
-        d.addCallback(self._gotRecipients, self.recipients, m)
+            d = defer.succeed([])
+        d.addCallback(self._gotRecipients, m)
         return d
 
     def useLookup(self, build):
+        dl = []
         for u in build.getInterestedUsers():
             d = defer.maybeDeferred(self.lookup.getAddress, u)
-            d.addCallback(self.recipients.append)
-            self.dl.append(d)
-        return defer.DeferredList(self.dl)
+            dl.append(d)
+        return defer.gatherResults(dl)
 
     def useUsers(self, build):
-        self.contacts = []
+        dl = []
         ss = build.getSourceStamp()
         for change in ss.changes:
             d = self.parent.db.changes.getChangeUids(change.number)
             def getContacts(uids):
                 def uidContactPair(contact, uid):
                     return (contact, uid)
-                d = defer.succeed(None)
+                contacts = []
                 for uid in uids:
-                    d.addCallback(lambda _ :
-                                     users.getUserContact(self.parent,
-                                                          contact_type='email',
-                                                          uid=uid))
+                    d = users.getUserContact(self.parent,
+                            contact_type='email',
+                            uid=uid)
                     d.addCallback(lambda contact: uidContactPair(contact, uid))
-                    d.addCallback(self.contacts.append)
-                return d
+                    contacts.append(d)
+                return defer.gatherResults(contacts)
             d.addCallback(getContacts)
-            def logNoMatch(_):
-                for pair in self.contacts:
+            def logNoMatch(contacts):
+                for pair in contacts:
                     contact, uid = pair
                     if contact is None:
                         twlog.msg("Unable to find email for uid: %r" % uid)
-                return [pair[0] for pair in self.contacts]
+                return [pair[0] for pair in contacts]
             d.addCallback(logNoMatch)
-            d.addCallback(self.recipients.extend)
-            def addOwners(_):
+            def addOwners(recipients):
                 owners = [e for e in build.getInterestedUsers()
                           if e not in build.getResponsibleUsers()]
-                self.recipients.extend(owners)
+                recipients.extend(owners)
+                return recipients
             d.addCallback(addOwners)
-            self.dl.append(d)
-        return defer.DeferredList(self.dl)
+            dl.append(d)
+        d = defer.gatherResults(dl)
+        @d.addCallback
+        def gatherRecipients(res):
+            recipients = []
+            map(recipients.extend, res)
+            return recipients
+        return d
 
     def _shouldAttachLog(self, logname):
         if type(self.addLogs) is bool:
             return self.addLogs
         return logname in self.addLogs
 
-    def _gotRecipients(self, res, rlist, m):
+    def _gotRecipients(self, rlist, m):
         to_recipients = set()
         cc_recipients = set()
 
-        for r in rlist:
+        for r in reduce(list.__add__, rlist, []):
             if r is None: # getAddress didn't like this address
                 continue
 
