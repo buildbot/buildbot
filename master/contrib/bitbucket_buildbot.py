@@ -91,7 +91,7 @@ class BitBucketBuildBot(resource.Resource):
                 'files': files,
                 'links': [revlink],
                 'repository': repo_url,
-                'properties': dict(repository=repo_url),
+                'properties': dict(),
                 }
             changes.append(change)
         # Submit the changes, if any

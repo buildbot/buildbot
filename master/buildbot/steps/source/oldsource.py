@@ -22,7 +22,6 @@ from zope.interface import implements
 from buildbot.process.buildstep import LoggingBuildStep, LoggedRemoteCommand
 from buildbot.interfaces import BuildSlaveTooOldError, IRenderable
 from buildbot.status.builder import SKIPPED
-from buildbot.status.results import FAILURE
 
 class _ComputeRepositoryURL(object):
     implements(IRenderable)
@@ -1027,7 +1026,7 @@ class Repo(Source):
         # only master has access to properties, so we must implement this here.
         d = self.buildDownloadList()
         d.addCallback(self.continueStartVC, branch, revision, patch)
-        d.addErrback(self.failedStartVC)
+        d.addErrback(self.failed)
 
     def continueStartVC(self, ignored, branch, revision, patch):
         slavever = self.slaveVersion("repo")
@@ -1037,15 +1036,17 @@ class Repo(Source):
         cmd = LoggedRemoteCommand("repo", self.args)
         self.startCommand(cmd)
 
-    def failedStartVC(self, failure):
-        self.interrupt("unable to build download list"+str(failure))
-        self.finished(FAILURE)
-
     def commandComplete(self, cmd):
+        repo_downloaded = []
         if cmd.updates.has_key("repo_downloaded"):
             repo_downloaded = cmd.updates["repo_downloaded"][-1]
             if repo_downloaded:
                 self.setProperty("repo_downloaded", str(repo_downloaded), "Source")
+            else:
+                repo_downloaded = []
+        orig_downloads = self.getProperty("repo_downloads") or []
+        if len(orig_downloads) != len(repo_downloaded):
+            self.step_status.setText(["repo download issues"])
 
 
 class Bzr(Source):

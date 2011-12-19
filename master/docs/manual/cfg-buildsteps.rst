@@ -129,6 +129,16 @@ some of the classes have a bewildering array of options.
     <http://trac.buildbot.net/newticket>`_. The older Slave-side described source
     steps are :ref:`Source-Checkout-Slave-Side`.
 
+    The old source steps are imported like this::
+
+        from buildbot.steps.source import Git
+
+    while new source steps are in separate source-packages for each
+    version-control system::
+
+        from buildbot.steps.source.git import Git
+
+
 New users should, where possible, use the new implementations.  The old
 implementations will be deprecated in a later release.  Old users should take
 this opportunity to switch to the new implementations while both are supported
@@ -198,38 +208,13 @@ parameters are mostly to specify where exactly the sources are coming from.
     The name of this parameter might vary depending on the Source step you
     are running. The concept explained here is common to all steps and
     applies to ``repourl`` as well as for ``baseURL`` (when
-    applicable). Buildbot, now being aware of the repository name via the
-    change source, might in some cases not need the repository URL. There
-    are multiple way to pass it through to this step, corresponding to
-    the type of the parameter given to this step:
+    applicable).
 
-    ``None``
-        In the case where no parameter is specified, the repository URL will
-        be taken directly from the Change attribute. This value should be used
-        if your ChangeSource step has all the information about how to reach
-        the Change.
-
-    string
-        The parameter might be a string. In this case, this string
-        will be used as the full repository URL. The value coming from
-        the ChangeSource step will be ignored.
-
-    format string
-        If the parameter is a string containing ``%s``, then the
-        repository attribute from the Change will be substituted in
-        place of the ``%s``. This is usefull when the ChangeSource
-        step knows where the repository resides locally, but doesn't
-        know the scheme used to access it. For instance,
-        ``ssh://server/%s`` makes sense if the repository attribute is
-        the local path of the repository.
-
-    dict
-        In this case, the repository URL will be the value indexed by the
-        repository attribute in the dict given as parameter.
-
-    callable
-        The callable given as parameter will take the repository attribute from
-        the Change and its return value will be used as repository URL.
+    A common idiom is to pass ``Property('repository', 'url://default/repo/path')``
+    as repository. This grabs the repository from the source stamp of the
+    build. This can be a security issue, if you allow force builds from the
+    web, or have the :class:`WebStatus` change hooks enabled; as the buildslave
+    will download code from an arbitrary repository.
 
 ``timeout``
     Specifies the timeout for slave-side operations, in seconds.  If
