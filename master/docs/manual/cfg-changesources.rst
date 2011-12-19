@@ -615,6 +615,9 @@ the hook.  Likewise, the ``project`` parameter sets the project.  Changes'
 ``repository`` attributes are formed from the Mercurial repo path by
 stripping ``strip`` slashes.
 
+The ``property`` parameter contains a property ``is_merge``. This property is
+set to true when the change was caused by a merge.
+
 .. _Bzr-Hook:
 
 Bzr Hook
