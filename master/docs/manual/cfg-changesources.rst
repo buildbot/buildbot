@@ -1125,8 +1125,8 @@ Change Hooks (HTTP Notifications)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Buildbot already provides a web frontend, and that frontend can easily be used
-to receive HTTP push notifications of commits from services like GitHub.  See
-:ref:`Change-Hooks` for more information.
+to receive HTTP push notifications of commits from services like GitHub or
+GoogleCode. See :ref:`Change-Hooks` for more information.
 
 .. bb:chsrc:: GoogleCodeAtomPoller
 

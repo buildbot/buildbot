@@ -682,6 +682,33 @@ Note that there is a standalone HTTP server available for receiving GitHub
 notifications, as well: :file:`contrib/github_buildbot.py`.  This script may be
 useful in cases where you cannot expose the WebStatus for public consumption.
 
+Google Code hook
+################
+
+The Google Code hook is quite similar to the GitHub Hook. It has one option
+for the "Post-Commit Authentication Key" used to check if the request is
+legitimate::
+
+    c['status'].append(html.WebStatus(
+        …,
+        change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX'}}
+    ))
+
+This will add a "Post-Commit URL" for the project in the Google Code
+administrative interface, pointing to ``/change_hook/googlecode`` relative to
+the root of the web status.
+
+Alternatively, you can use the :ref:`GoogleCodeAtomPoller` :class:`ChangeSource`
+that periodically poll the Google Code commit feed for changes.
+
+.. note::
+
+   Google Code doesn't send the branch on which the changes were made. So, the
+   hook always returns ``'default'`` as the branch, you can override it with the
+   ``'branch'`` option::
+
+      change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX', 'branch': 'master'}}
+
 .. bb:status:: MailNotifier
 
 .. index:: single: email; MailNotifier
