@@ -16,12 +16,8 @@
 # Quite inspired from the github hook.
 
 import hmac
-import logging
-import sys
-import traceback
-
 from twisted.python import log
-
+from twisted.python import failure
 from buildbot.util import json
 
 class GoogleCodeAuthFailed(Exception):
@@ -50,7 +46,9 @@ class Payload(object):
 
         for r in self.revisions:
             files = set()
-            files.update(r['added'], r['modified'], r['removed'])
+            files.update(r['added'])
+            files.update(r['modified'])
+            files.update(r['removed'])
             changes.append(dict(
                 who=r['author'],
                 files=list(files),
@@ -71,26 +69,25 @@ def getChanges(request, options=None):
     try:
         headers = request.received_headers
         body = request.content.getvalue()
-        #logging.error('headers = {0}, body = {1}'.format(headers, body))
 
         # Instantiate a Payload object: this will parse the body, get the
-        # authentication code from the headers and remember the branch picked up
-        # by the user (Google Code doesn't send on which branch the changes were
-        # made)
+        # authentication code from the headers and remember the branch picked
+        # up by the user (Google Code doesn't send on which branch the changes
+        # were made)
         payload = Payload(headers, body, options.get('branch', 'default'))
 
         if 'secret_key' in options:
             if not payload.authenticate(options['secret_key']):
                 raise GoogleCodeAuthFailed()
         else:
-            log.msg('Missing secret_key in the Google Code WebHook options: cannot authenticate the request!')
+            log.msg("Missing secret_key in the Google Code WebHook options: "
+                    "cannot authenticate the request!")
 
-        log.msg('Received {0} changes from Google Code'.format(payload.revision_count))
+        log.msg('Received %d changes from Google Code' %
+                (payload.revision_count,))
         changes = payload.changes()
-    except:
-        logging.error("Can't parse the Google Code WebHook:")
-        for msg in traceback.format_exception(*sys.exc_info()):
-            logging.error(msg.strip())
+    except Exception:
+        log.err(failure.Failure(), "Can't parse the Google Code WebHook:")
         # return something valid even if everything goes wrong:
         changes = []
 
