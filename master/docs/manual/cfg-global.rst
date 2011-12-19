@@ -376,7 +376,7 @@ Merging Build Requests
 
 ::
 
-    c['mergeRequests'] = False
+    c['mergeRequests'] = True
 
 This is a global default value for builders' :bb:cfg:`mergeRequests` parameter,
 and controls the merging of build requests.  This parameter can be overridden
