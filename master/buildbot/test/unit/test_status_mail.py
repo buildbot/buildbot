@@ -14,9 +14,7 @@
 # Copyright Buildbot Team Members
 
 from mock import Mock
-from twisted.python import components
 from buildbot import config
-from buildbot.interfaces import IProperties
 from twisted.trial import unittest
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.status.mail import MailNotifier
@@ -421,8 +419,6 @@ class TestMailNotifier(unittest.TestCase):
         mn = MailNotifier(fromaddr="from@example.org", lookup=None)
         mn.sendMessage = Mock()
 
-        def fakeGetBuild(number):
-            return build
         def fakeGetBuilder(buildername):
             if buildername == builder.name:
                 return builder
@@ -431,7 +427,6 @@ class TestMailNotifier(unittest.TestCase):
             return defer.succeed([{"buildername":"Builder", "brid":1}])
 
         builder = Mock()
-        builder.getBuild = fakeGetBuild
         builder.name = "Builder"
 
         build1 = FakeBuildStatus(name="build")
