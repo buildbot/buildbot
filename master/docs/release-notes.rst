@@ -67,6 +67,9 @@ Features
 
     command=Property('command', default=Property('default-command'))
 
+* Buildbot has a new web hook to handle push notifications from Google Code -
+  see :bb:pull:`278`.
+
 Slave
 -----
 
