@@ -341,7 +341,8 @@ class TestMailNotifier(unittest.TestCase):
         mn.createEmail = fakeCreateEmail
 
         self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.Buildset(id=99, sourcestampsetid=127,
+        self.db.insertTestData([fakedb.SourceStampSet(id=1099),
+                                fakedb.Buildset(id=99, sourcestampsetid=1099,
                                                 results=SUCCESS,
                                                 reason="testReason"),
                                 fakedb.BuildRequest(id=11, buildsetid=99,
@@ -450,7 +451,8 @@ class TestMailNotifier(unittest.TestCase):
         mn.createEmail = fakeCreateEmail
 
         self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.Buildset(id=99, sourcestampid=127,
+        self.db.insertTestData([fakedb.SourceStampSet(id=1099),
+                                fakedb.Buildset(id=99, sourcestampsetid=1099,
                                                 results=SUCCESS,
                                                 reason="testReason"),
                                 fakedb.BuildRequest(id=11, buildsetid=99,
