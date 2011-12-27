@@ -1058,7 +1058,7 @@ class IRC(base.StatusReceiverMultiService):
         base.StatusReceiverMultiService.setServiceParent(self, parent)
         self.f.status = parent
         if self.allowForce:
-            self.f.control = interfaces.IControl(parent)
+            self.f.control = interfaces.IControl(self.master)
 
     def stopService(self):
         # make sure the factory will stop reconnecting
