@@ -687,4 +687,44 @@ The keys describe the type of input validated; the values are compiled regular
 expressions against which the input will be matched.  The defaults for each
 type of input are those given in the example, above.
 
+.. bb:cfg:: revlink
+
+Revision Links
+~~~~~~~~~~~~~~
+
+The :bb:cfg:`revlink` parameter is used to create links from revision IDs in
+the web status to a web-view of your source control system. The parameter's
+value must be a callable.
+
+By default, Buildbot is configured to generate revlinks for a number of open
+source hosting platforms.
+
+The callable takes the revision id and repository argument, and should return
+an URL to the revision.  Note that the revision id may not always be in the
+form you expect, so code defensively.  In particular, a revision of "??" may be
+supplied when no other information is available.
+
+Note that :class:`SourceStamp`\s that are not created from version-control changes (e.g.,
+those created by a Nightly or Periodic scheduler) will have an empty repository
+string, as the respository is not known.
+
+Revision Link Helpers
++++++++++++++++++++++
+
+Buildbot provides two helpers for generating revision links.
+:class:`buildbot.revlinks.RevlinkMatcher` takes a list of regular expressions,
+and replacement text. The regular expressions should all have the same number
+of capture groups. The replacement text should have sed-style references to
+that capture groups (i.e. '\1' for the first capture group), and a single '%s'
+reference, for the revision ID. The repository given is tried against each
+regular expression in turn. The results are the substituted into the
+replacement text, along with the revision ID to obtain the revision link. ::
+
+        from buildbot import revlinks
+        c['revlink'] = revlinks.RevlinkMatch([r'git://notmuchmail.org/git/\(.*\)']
+                                                r'http://git.notmuchmail.org/git/\1/commit/%s')
+
+:class:`buildbot.revlinks.RevlinkMultiplexer` takes a list of revision link
+callables, and tries each in turn, returning the first successful match.
+
 .. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch

@@ -20,6 +20,7 @@ from buildbot.util import safeTranslate
 from buildbot.process import properties
 from buildbot import interfaces
 from buildbot import locks
+from buildbot.revlinks import default_revlink_matcher
 from twisted.python import log, failure
 from twisted.internet import defer
 from twisted.application import service
@@ -85,16 +86,17 @@ class MasterConfig(object):
         self.change_sources = []
         self.status = []
         self.user_managers = []
+        self.revlink = default_revlink_matcher
 
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
         "change_source", "changeCacheSize", "changeHorizon",
-        "db_poll_interval", "db_url", "debugPassword", "eventHorizon",
+        'db', "db_poll_interval", "db_url", "debugPassword", "eventHorizon",
         "logCompressionLimit", "logCompressionMethod", "logHorizon",
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projectName", "projectURL",
-        "properties", "schedulers", "slavePortnum", "slaves", "status",
-        "title", "titleURL", "user_managers", "validation", "db",
+        "properties", "revlink", "schedulers", "slavePortnum", "slaves",
+        "status", "title", "titleURL", "user_managers", "validation"
     ])
 
     @classmethod
@@ -273,6 +275,12 @@ class MasterConfig(object):
             # that will fail if pycrypto isn't installed
             self.manhole = config_dict['manhole']
 
+        if 'revlink' in config_dict:
+            revlink = config_dict['revlink']
+            if not callable(revlink):
+                errors.addError("revlink must be a callable")
+            else:
+                self.revlink = revlink
 
     def load_validation(self, filename, config_dict, errors):
         validation = config_dict.get("validation", {})
