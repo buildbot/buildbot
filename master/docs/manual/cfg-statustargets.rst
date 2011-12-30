@@ -567,12 +567,12 @@ in change comments.
 revlink
 '''''''
 
-The ``revlink`` argument on :class:`WebStatus` is deprecated in favour of
-the global revlink option. Only use this if you need to generate different URLs
-for different web status instances. see {....} for details.
+The ``revlink`` argument on :class:`WebStatus` is deprecated in favour of the
+global :bb:cfg:`revlink` option. Only use this if you need to generate
+different URLs for different web status instances.
 
-In addition to a callable, this argument accepts a format string or a dict
-mapping a string (repository name) to format strings.
+In addition to a callable like :bb:cfg:`revlink`, this argument accepts a
+format string or a dict mapping a string (repository name) to format strings.
 
 The format string should use ``%s`` to insert the revision id in the url.  For
 example, for Buildbot on GitHub::

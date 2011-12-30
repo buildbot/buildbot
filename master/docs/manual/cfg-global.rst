@@ -711,15 +711,20 @@ string, as the respository is not known.
 Revision Link Helpers
 +++++++++++++++++++++
 
-Buildbot provides two helpers for generating revision links. :class:`RevlinkMatcher` takes a list of regular expressions, and replacement text. The regular expressions should all have the same number of capture groups. The replacement text should have sed-style references to that capture groups (i.e. '\1' for the first capture group), and a single '%s' reference, for the revision ID. The repository given is tried against each regular expression in turn. The results are the substituted into the replacement text, along with the revision ID to obtain the revision link.
+Buildbot provides two helpers for generating revision links.
+:class:`buildbot.revlinks.RevlinkMatcher` takes a list of regular expressions,
+and replacement text. The regular expressions should all have the same number
+of capture groups. The replacement text should have sed-style references to
+that capture groups (i.e. '\1' for the first capture group), and a single '%s'
+reference, for the revision ID. The repository given is tried against each
+regular expression in turn. The results are the substituted into the
+replacement text, along with the revision ID to obtain the revision link. ::
 
-::
         from buildbot import revlinks
         c['revlink'] = revlinks.RevlinkMatch([r'git://notmuchmail.org/git/\(.*\)']
                                                 r'http://git.notmuchmail.org/git/\1/commit/%s')
 
-
-
-:class:`RevlinkMultiplexer` takes a list of revision link callables, and tries each in turn, returning the first successful match.
+:class:`buildbot.revlinks.RevlinkMultiplexer` takes a list of revision link
+callables, and tries each in turn, returning the first successful match.
 
 .. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch
