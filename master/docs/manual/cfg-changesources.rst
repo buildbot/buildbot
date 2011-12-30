@@ -867,6 +867,7 @@ multiple branches.
     sufficient.
 
 ``revlinktmpl``
+    This parameter is deprecated in favour of specifying a global revlink option.
     This parameter allows a link to be provided for each revision (for example,
     to websvn or viewvc).  These links appear anywhere changes are shown, such
     as on build or change pages.  The proper form for this parameter is an URL
