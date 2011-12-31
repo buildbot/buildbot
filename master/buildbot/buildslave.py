@@ -49,6 +49,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
     keepalive_timer = None
     keepalive_interval = None
 
+    # reconfig slaves after builders
+    reconfig_priority = 64
+
     def __init__(self, name, password, max_builds=None,
                  notify_on_missing=[], missing_timeout=3600,
                  properties={}, locks=None, keepalive_interval=3600):
@@ -216,7 +219,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
 
         self.updateLocks()
 
-        # update the attached slave's notion of which builders are attached
+        # update the attached slave's notion of which builders are attached.
+        # This assumes that the relevant builders have already been configured,
+        # which is why the reconfig_priority is set low in this class.
         d = self.updateSlave()
 
         # and chain up
