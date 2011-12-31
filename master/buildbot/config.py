@@ -687,6 +687,8 @@ class BuilderConfig:
 
 class ReconfigurableServiceMixin:
 
+    reconfig_priority = 128
+
     @defer.deferredGenerator
     def reconfigService(self, new_config):
         if not service.IServiceCollection.providedBy(self):
@@ -696,6 +698,9 @@ class ReconfigurableServiceMixin:
         reconfigurable_services = [ svc
                 for svc in self
                 if isinstance(svc, ReconfigurableServiceMixin) ]
+
+        # sort by priority
+        reconfigurable_services.sort(key=lambda svc : svc.reconfig_priority)
 
         for svc in reconfigurable_services:
             d = svc.reconfigService(new_config)

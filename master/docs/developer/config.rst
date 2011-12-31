@@ -336,6 +336,12 @@ implemented as Twisted services, and mix in the
         sequentially, such that the Deferred from one service must fire before
         the next service is reconfigured.
 
+    .. py:attribute:: priority
+
+        Child services are reconfigured in order of decreasing priority.  The
+        default priority is 128, so a service that must be reconfigured before
+        others should be given a higher priority.
+
 
 Change Sources
 --------------

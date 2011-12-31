@@ -993,9 +993,11 @@ class FakeService(config.ReconfigurableServiceMixin,
                     service.Service):
 
     succeed = True
+    call_index = 1
 
     def reconfigService(self, new_config):
-        self.called = True
+        self.called = FakeService.call_index
+        FakeService.call_index += 1
         d = config.ReconfigurableServiceMixin.reconfigService(self, new_config)
         if not self.succeed:
             @d.addCallback
@@ -1054,6 +1056,27 @@ class ReconfigurableServiceMixin(unittest.TestCase):
             self.assertTrue(ch1.called)
             self.assertTrue(ch2.called)
             self.assertTrue(ch3.called)
+        return d
+
+    def test_multiservice_priority(self):
+        parent = FakeMultiService()
+        svc128 = FakeService()
+        svc128.setServiceParent(parent)
+
+        services = [ svc128 ]
+        for i in range(20, 1, -1):
+            svc = FakeService()
+            svc.reconfig_priority = i
+            svc.setServiceParent(parent)
+            services.append(svc)
+
+        d = parent.reconfigService(mock.Mock())
+        @d.addCallback
+        def check(_):
+            prio_order = [ svc.called for svc in services ]
+            prio_order.reverse()
+            called_order = sorted(prio_order)
+            self.assertEqual(prio_order, called_order)
         return d
 
     @compat.usesFlushLoggedErrors
