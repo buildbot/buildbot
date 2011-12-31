@@ -350,13 +350,9 @@ class MailNotifier(base.StatusReceiverMultiService):
         @type  parent: L{buildbot.master.BuildMaster}
         """
         base.StatusReceiverMultiService.setServiceParent(self, parent)
-        self.setup()
-
-    def setup(self):
-        self.master_status = self.parent.getStatus()
+        self.master_status = self.parent
         self.master_status.subscribe(self)
-        
-            
+
     def startService(self):
         if self.buildSetSummary:
             self.buildSetSubscription = \
@@ -374,6 +370,7 @@ class MailNotifier(base.StatusReceiverMultiService):
 
     def disownServiceParent(self):
         self.master_status.unsubscribe(self)
+        self.master_status = None
         for w in self.watched:
             w.unsubscribe(self)
         return base.StatusReceiverMultiService.disownServiceParent(self)
