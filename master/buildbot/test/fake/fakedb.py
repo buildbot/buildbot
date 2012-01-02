@@ -656,10 +656,11 @@ class FakeBuildsetsComponent(FakeDBComponent):
         return defer.succeed((bsid,
             dict([ (br.buildername, br.id) for br in br_rows ])))
 
-    def completeBuildset(self, bsid, results, _reactor=reactor):
+    def completeBuildset(self, bsid, results, complete_at=None,
+            _reactor=reactor):
         self.buildsets[bsid]['results'] = results
         self.buildsets[bsid]['complete'] = 1
-        self.buildsets[bsid]['complete_at'] = _reactor.seconds
+        self.buildsets[bsid]['complete_at'] = complete_at or _reactor.seconds()
         return defer.succeed(None)
 
     def subscribeToBuildset(self, schedulerid, buildsetid):

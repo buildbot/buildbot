@@ -169,18 +169,20 @@ buildrequests
         not fail in this case.  The method does not check whether a request is
         completed.
 
-    .. py:method:: completeBuildRequests(brids, results)
+    .. py:method:: completeBuildRequests(brids, results[, complete_at=XX])
 
         :param brids: build request IDs to complete
         :type brids: integer
         :param results: integer result code
         :type results: integer
+        :param datetime complete_at: time at which the buildset was completed
         :returns: Deferred
         :raises: :py:exc:`NotClaimedError`
 
         Complete a set of build requests, all of which are owned by this master
         instance.  This will fail with :py:exc:`NotClaimedError` if the build
-        request is already completed or does not exist.
+        request is already completed or does not exist.  If ``complete_at`` is
+        not given, the current time will be used.
 
     .. py:method:: unclaimExpiredRequests(old)
 

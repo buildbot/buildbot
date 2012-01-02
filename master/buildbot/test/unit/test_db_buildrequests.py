@@ -485,14 +485,16 @@ class TestBuildsetsConnectorComponent(
         return d
 
     def do_test_completeBuildRequests(self, rows, now, expected=None,
-                                     expfailure=None, brids=[44]):
+                                     expfailure=None, brids=[44],
+                                     complete_at=None):
         clock = task.Clock()
         clock.advance(now)
 
         d = self.insertTestData(rows)
         d.addCallback(lambda _ :
             self.db.buildrequests.completeBuildRequests(brids=brids,
-                                            results=7, _reactor=clock))
+                                            results=7, complete_at=complete_at,
+                                            _reactor=clock))
         def check(brlist):
             self.assertNotEqual(expected, None,
                     "unexpected success from completeBuildRequests")
@@ -518,6 +520,15 @@ class TestBuildsetsConnectorComponent(
                     claimed_at=1300103810),
             ], 1300305712,
             [ (44, 1, 7, 1300305712) ])
+
+    def test_completeBuildRequests_explicit_time(self):
+        return self.do_test_completeBuildRequests([
+            fakedb.BuildRequest(id=44, buildsetid=self.BSID),
+            fakedb.BuildRequestClaim(brid=44, objectid=self.MASTER_ID,
+                    claimed_at=1300103810),
+            ], 1300305712,
+            [ (44, 1, 7, 999999) ],
+            complete_at=999999)
 
     def test_completeBuildRequests_multiple(self):
         return self.do_test_completeBuildRequests([

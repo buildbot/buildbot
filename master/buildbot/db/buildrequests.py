@@ -175,8 +175,10 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def completeBuildRequests(self, brids, results, _reactor=reactor,
-                                _master_objectid=None):
+    def completeBuildRequests(self, brids, results, complete_at=None,
+                            _reactor=reactor, _master_objectid=None):
+        if not complete_at:
+            complete_at = _reactor.seconds()
         def thd(conn):
             transaction = conn.begin()
 
@@ -186,7 +188,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             # subquery, so for efficiency that is not checed.
 
             reqs_tbl = self.db.model.buildrequests
-            complete_at = _reactor.seconds()
 
             # we'll need to batch the brids into groups of 100, so that the
             # parameter lists supported by the DBAPI aren't exhausted
