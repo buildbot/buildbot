@@ -27,7 +27,7 @@ def upgrade(migrate_engine):
     buildsets_table = sa.Table('buildsets', metadata, autoload=True)
 
     # Create the sourcestampset table
-    # what defines a sourcestampset
+    # that defines a sourcestampset
     sourcestampsets_table = sa.Table("sourcestampsets", metadata,
         sa.Column("id", sa.Integer, primary_key=True),
     )
@@ -39,30 +39,14 @@ def upgrade(migrate_engine):
     # this doesn't seem to work without str() -- verified in sqla 0.6.0 - 0.7.1
     migrate_engine.execute(str(sautils.InsertFromSelect(sourcestampsets_table, sourcestampsetids)))
 
-    # Alter buildsets.sourcestampid into sourcestampsetid
-    # Drop dependent constraint
-    # Now drop column
-
-    # This table represents Buildsets - sets of BuildRequests that share the
-    # same original cause and source information.
     tmp_buildsets = sa.Table('tmp_buildsets', metadata,
         sa.Column('id', sa.Integer,  primary_key=True),
-
-        # a simple external identifier to track down this buildset later, e.g.,
-        # for try requests
         sa.Column('external_idstring', sa.String(256)),
-
-        # a short string giving the reason the buildset was created
         sa.Column('reason', sa.String(256)), # TODO: sa.Text
         sa.Column('sourcestampid', sa.Integer, nullable=False),
         sa.Column('submitted_at', sa.Integer, nullable=False), # TODO: redundant
-
-        # if this is zero, then the build set is still pending
         sa.Column('complete', sa.SmallInteger, nullable=False, server_default=sa.DefaultClause("0")), # TODO: redundant
         sa.Column('complete_at', sa.Integer), # TODO: redundant
-
-        # results is only valid when complete == 1; 0 = SUCCESS, 1 = WARNINGS,
-        # etc - see master/buildbot/status/builder.py
         sa.Column('results', sa.SmallInteger), # TODO: synthesize from buildrequests
     )
     tmp_buildsets.create()
@@ -84,22 +68,12 @@ def upgrade(migrate_engine):
     # Create the new one
     new_buildsets = sa.Table('buildsets', metadata,
         sa.Column('id', sa.Integer,  primary_key=True),
-
-        # a simple external identifier to track down this buildset later, e.g.,
-        # for try requests
         sa.Column('external_idstring', sa.String(256)),
-
-        # a short string giving the reason the buildset was created
         sa.Column('reason', sa.String(256)), # TODO: sa.Text
         sa.Column('sourcestampsetid', sa.Integer, sa.ForeignKey('sourcestampsets.id'), nullable=False),
         sa.Column('submitted_at', sa.Integer, nullable=False), # TODO: redundant
-
-        # if this is zero, then the build set is still pending
         sa.Column('complete', sa.SmallInteger, nullable=False, server_default=sa.DefaultClause("0")), # TODO: redundant
         sa.Column('complete_at', sa.Integer), # TODO: redundant
-
-        # results is only valid when complete == 1; 0 = SUCCESS, 1 = WARNINGS,
-        # etc - see master/buildbot/status/builder.py
         sa.Column('results', sa.SmallInteger),
     )
     new_buildsets.create()
