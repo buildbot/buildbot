@@ -384,6 +384,7 @@ class Model(base.DBConnectorComponent):
     sa.Index('scheduler_upstream_buildsets_schedulerid', scheduler_upstream_buildsets.c.schedulerid)
     sa.Index('scheduler_upstream_buildsets_active', scheduler_upstream_buildsets.c.active)
     sa.Index('sourcestamp_changes_sourcestampid', sourcestamp_changes.c.sourcestampid)
+    sa.Index('sourcestamps_sourcestampsetid', sourcestamps.c.sourcestampsetid, unique=False)
     sa.Index('users_identifier', users.c.identifier, unique=True)
     sa.Index('users_info_uid', users_info.c.uid)
     sa.Index('users_info_uid_attr_type', users_info.c.uid,
