@@ -20,11 +20,10 @@ the real connector components.
 """
 
 import base64
-from buildbot.util import json, epoch2datetime
+from buildbot.util import json, epoch2datetime, datetime2epoch
 from twisted.python import failure
 from twisted.internet import defer, reactor
 from buildbot.db import buildrequests
-from buildbot.process import properties
 
 # Fake DB Rows
 
@@ -50,6 +49,8 @@ class Row(object):
 
     id_column = ()
     required_columns = ()
+    lists = ()
+    dicts = ()
 
     def __init__(self, **kwargs):
         self.values = self.defaults.copy()
@@ -59,6 +60,10 @@ class Row(object):
                 self.values[self.id_column] = self.nextId()
         for col in self.required_columns:
             assert col in kwargs, "%s not specified" % col
+        for col in self.lists:
+            setattr(self, col, [])
+        for col in self.dicts:
+            setattr(self, col, {})
         for col in kwargs.keys():
             assert col in self.defaults, "%s is not a valid column" % col
         # make the values appear as attributes
@@ -119,6 +124,8 @@ class Change(Row):
         project = 'proj',
     )
 
+    lists = ('files', 'links',)
+    dicts = ('properties',)
     id_column = 'changeid'
 
 
@@ -349,21 +356,10 @@ class FakeChangesComponent(FakeDBComponent):
     def setUp(self):
         self.changes = {}
 
-    class ChangeInstance(object): pass
     def insertTestData(self, rows):
         for row in rows:
             if isinstance(row, Change):
-                ch = self.ChangeInstance()
-                ch.__dict__.update(dict(
-                    # TODO: this renaming sucks.
-                    number=row.changeid, who=row.author, files=[],
-                    comments=row.comments, isdir=row.is_dir, links=[],
-                    revision=row.revision, when=row.when_timestamp,
-                    branch=row.branch, category=row.category,
-                    revlink=row.revlink, properties=properties.Properties(),
-                    repository=row.repository, project=row.project,
-                    uid=None))
-                self.changes[row.changeid] = ch
+                self.changes[row.changeid] = row
 
             elif isinstance(row, ChangeFile):
                 ch = self.changes[row.changeid]
@@ -385,6 +381,33 @@ class FakeChangesComponent(FakeDBComponent):
 
     # component methods
 
+    def addChange(self, author=None, files=None, comments=None, is_dir=0,
+            links=None, revision=None, when_timestamp=None, branch=None,
+            category=None, revlink='', properties={}, repository='',
+            project='', uid=None):
+        if self.changes:
+            changeid = max(self.changes.iterkeys()) + 1
+        else:
+            changeid = 500
+
+        self.changes[changeid] = ch = Change(
+            changeid=changeid,
+            author=author,
+            comments=comments,
+            is_dir=is_dir,
+            revision=revision,
+            when_timestamp=datetime2epoch(when_timestamp),
+            branch=branch,
+            category=category,
+            revlink=revlink,
+            repository=repository,
+            project=project)
+        ch.files = files
+        ch.links = links
+        ch.properties = properties
+
+        return defer.succeed(changeid)
+
     def getLatestChangeid(self):
         if self.changes:
             return defer.succeed(max(self.changes.iterkeys()))
@@ -392,10 +415,27 @@ class FakeChangesComponent(FakeDBComponent):
 
     def getChange(self, changeid):
         try:
-            ch = self.changes[changeid]
+            row = self.changes[changeid]
         except KeyError:
-            ch = None
-        return defer.succeed(self._ch2chdict(ch))
+            return defer.succeed(None)
+
+        chdict = dict(
+                changeid=row.changeid,
+                author=row.author,
+                files=row.files,
+                comments=row.comments,
+                is_dir=row.is_dir,
+                links=row.links,
+                revision=row.revision,
+                when_timestamp=epoch2datetime(row.when_timestamp),
+                branch=row.branch,
+                category=row.category,
+                revlink=row.revlink,
+                properties=row.properties,
+                repository=row.repository,
+                project=row.project)
+
+        return defer.succeed(chdict)
 
     def getChangeUids(self, changeid):
         try:
@@ -404,39 +444,36 @@ class FakeChangesComponent(FakeDBComponent):
             ch_uids = []
         return defer.succeed(ch_uids)
 
-    # TODO: addChange
     # TODO: getRecentChanges
 
-    # utilities
-
-    def _ch2chdict(self, ch):
-        if not ch:
-            return None
-        return dict(
-            changeid=ch.number,
-            author=ch.who,
-            comments=ch.comments,
-            is_dir=ch.isdir,
-            links=ch.links,
-            revision=ch.revision,
-            branch=ch.branch,
-            category=ch.category,
-            revlink=ch.revlink,
-            repository=ch.repository,
-            project=ch.project,
-            files=ch.files,
-            when_timestamp=epoch2datetime(ch.when),
-            properties=dict([ (k,(v,s))
-                for k,v,s in ch.properties.asDict() ]),
-        )
     # fake methods
 
-    def fakeAddChange(self, change):
+    def fakeAddChangeInstance(self, change):
         if not hasattr(change, 'number') or not change.number:
             if self.changes:
-                change.number = max(self.changes.iterkeys()) + 1
-            change.number = 500
-        self.changes[change.number] = change
+                changeid = max(self.changes.iterkeys()) + 1
+            else:
+                changeid = 500
+        else:
+            changeid = change.number
+
+        # make a row from the change
+        row = dict(
+            changeid=changeid,
+            author=change.who,
+            files=change.files,
+            comments=change.comments,
+            is_dir=change.isdir,
+            links=change.links,
+            revision=change.revision,
+            when_timestamp=change.when,
+            branch=change.branch,
+            category=change.category,
+            revlink=change.revlink,
+            properties=change.properties,
+            repository=change.repository,
+            project=change.project)
+        self.changes[changeid] = row
 
 
 class FakeSchedulersComponent(FakeDBComponent):
@@ -475,7 +512,7 @@ class FakeSchedulersComponent(FakeDBComponent):
         if branch is not -1:
             # filter out the classifications for the requested branch
             change_branches = dict(
-                    (id, getattr(c, 'branch', None))
+                    (id, c['branch'])
                     for id, c in self.db.changes.changes.iteritems() )
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()

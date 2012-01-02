@@ -316,7 +316,7 @@ class AnyBranchScheduler(CommonStuffMixin,
 
         def mkch(**kwargs):
             ch = self.makeFakeChange(**kwargs)
-            self.db.changes.fakeAddChange(ch)
+            self.db.changes.fakeAddChangeInstance(ch)
             return ch
 
         d = defer.succeed(None)
