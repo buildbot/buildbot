@@ -288,7 +288,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             if self.sourcestampsetid != None:
                 return defer.succeed( self.sourcestampsetid )
             else:
-                return master.db.sourcestampsets.addSourcestampSet()
+                return master.db.sourcestampsets.addSourceStampSet()
             return d
             
         def set_setid(setid):

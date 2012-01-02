@@ -82,8 +82,10 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                                    ('scheduler', ('testsched', 'Scheduler')),
                                    ],
                       sourcestampsetid=100),
-                 dict(branch='a', revision='c', repository='d',
-                      project='p', sourcestampsetid=100))
+                 {'d':
+                  dict(branch='a', revision='c', repository='d',
+                      project='p', sourcestampsetid=100)
+                 })
         d.addCallback(check)
         return d
 
@@ -114,8 +116,10 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                                    ('scheduler', ('testsched', 'Scheduler')),
                                    ],
                       sourcestampsetid=100),
-                 dict(branch="", revision="", repository="",
-                      project="", sourcestampsetid=100))
+                 {"":
+                  dict(branch="", revision="", repository="",
+                      project="", sourcestampsetid=100)
+                 })
         d.addCallback(check)
         return d
 

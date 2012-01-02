@@ -105,8 +105,10 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
                     dict(external_idstring=None,
                          properties=[('scheduler', ('n', 'Scheduler'))],
                          reason='downstream', sourcestampsetid = 1093),
-                    dict(revision='555', branch='master', project='proj',
-                         repository='repo', sourcestampsetid = 1093))
+                    {'repo':
+                     dict(revision='555', branch='master', project='proj',
+                         repository='repo', sourcestampsetid = 1093)
+                    })
         else:
             self.db.buildsets.assertBuildsets(1) # only the one we added above
 

@@ -337,13 +337,15 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring='extid',
                         properties=[('scheduler', ('tsched', 'Scheduler'))],
                         sourcestampsetid=100),
-                    dict(branch='trunk', repository='repo',
+                    {'repo':
+                     dict(branch='trunk', repository='repo',
                         project='proj', revision='1234',
                         patch_body='this is my diff, -- ++, etc.',
                         patch_level=1, patch_subdir='',
                         patch_author='who',
                         patch_comment='comment',
-                        sourcestampsetid=100))
+                        sourcestampsetid=100)
+                    })
         d.addCallback(check)
         return d
 
@@ -377,13 +379,15 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring='extid',
                         properties=[('scheduler', ('tsched', 'Scheduler'))],
                         sourcestampsetid=100),
-                    dict(branch='trunk', repository='repo',
+                    {'repo':
+                     dict(branch='trunk', repository='repo',
                         project='proj', revision='1234',
                         patch_body='this is my diff, -- ++, etc.',
                         patch_level=1, patch_subdir='',
                         patch_author='who',
                         patch_comment='comment',
-                        sourcestampsetid=100))
+                        sourcestampsetid=100)
+                    })
         d.addCallback(check)
         return d
 
@@ -430,11 +434,13 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                         ],
                         sourcestampsetid = 100,
                         ),
-                    dict(branch='default', repository='repo',
+                    {'repo':
+                     dict(branch='default', repository='repo',
                         project='proj', revision='abcdef',
                         sourcestampsetid = 100,
                         patch_body='-- ++', patch_level=1, patch_subdir='',
-                        patch_author="", patch_comment=""))
+                        patch_author="", patch_comment="")
+                    })
         d.addCallback(check)
         return d
 
@@ -452,11 +458,13 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                         ],
                         sourcestampsetid = 100,
                         ),
-                    dict(branch='default', repository='repo',
+                    {'repo':
+                     dict(branch='default', repository='repo',
                         project='proj', revision='abcdef',
                         sourcestampsetid = 100,
                         patch_body='-- ++', patch_level=1, patch_subdir='',
-                        patch_author='who', patch_comment="comment"))
+                        patch_author='who', patch_comment="comment")
+                    })
         d.addCallback(check)
         return d
 

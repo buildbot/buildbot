@@ -242,7 +242,7 @@ class Source(LoggingBuildStep):
         self.checkoutDelay value."""
         return None
 
-    def getRepoId(self):
+    def getRepository(self):
         """ Identify the unique repository for this step """
         return None
 
@@ -259,7 +259,7 @@ class Source(LoggingBuildStep):
         self.args['workdir'] = self.workdir
 
         # what source stamp would this build like to use?
-        id = self.getRepoId()
+        id = self.getRepository()
         s = self.build.getSourceStamp(id)
 
         # if branch is None, then use the Step's "default" branch

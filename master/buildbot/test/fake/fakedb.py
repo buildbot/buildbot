@@ -511,7 +511,7 @@ class FakeSourceStampSetsComponent(FakeDBComponent):
             if isinstance(row, SourceStampSet):
                 self.sourcestampsets[row.id] = dict()
 
-    def addSourcestampSet(self):
+    def addSourceStampSet(self):
         id = len(self.sourcestampsets) + 100
         while id in self.sourcestampsets:
             id += 1
@@ -733,7 +733,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.t.assertEqual(len(self.buildsets), count,
                     "buildsets are %r" % (self.buildsets,))
 
-    def assertBuildset(self, bsid, expected_buildset, expected_sourcestamp):
+    def assertBuildset(self, bsid, expected_buildset, expected_sourcestamps):
         """Assert that the buildset and its attached sourcestamp look as
         expected; the ssid parameter of the buildset is omitted.  Properties
         are converted with asList and sorted.  Sourcestamp patches are inlined
@@ -748,13 +748,12 @@ class FakeBuildsetsComponent(FakeDBComponent):
 
         buildset = self.buildsets[bsid].copy()
 
-        #TODO: if buildbot supports more sourcestamps in a set
-        #      then ss becomes dictOfssDict and the break must be removed
-        ss= {}
+        dictOfssDict= {}
         for sourcestamp in self.db.sourcestamps.sourcestamps.itervalues():
             if sourcestamp['sourcestampsetid'] == buildset['sourcestampsetid']:
-                ss = sourcestamp.copy()
-                break
+                ssdict = sourcestamp.copy()
+                ss_repository = ssdict['repository']
+                dictOfssDict[ss_repository] = ssdict
 
         if 'id' in buildset:
             del buildset['id']
@@ -773,20 +772,21 @@ class FakeBuildsetsComponent(FakeDBComponent):
                       for br in self.db.buildrequests.reqs.values()
                       if br.buildsetid == bsid ])
             buildset['brids'] = brids
+           
+        for ss in dictOfssDict.itervalues():   
+            if 'id' in ss:
+                del ss['id']
+            if not ss['changeids']:
+                del ss['changeids']
 
-        if 'id' in ss:
-            del ss['id']
-        if not ss['changeids']:
-            del ss['changeids']
-
-        # incorporate patch info if we have it
-        if 'patchid' in ss and ss['patchid']:
-            ss.update(self.db.sourcestamps.patches[ss['patchid']])
-        del ss['patchid']
+            # incorporate patch info if we have it
+            if 'patchid' in ss and ss['patchid']:
+                ss.update(self.db.sourcestamps.patches[ss['patchid']])
+            del ss['patchid']
 
         self.t.assertEqual(
-            dict(buildset=buildset, sourcestamp=ss),
-            dict(buildset=expected_buildset, sourcestamp=expected_sourcestamp))
+            dict(buildset=buildset, sourcestamps=dictOfssDict),
+            dict(buildset=expected_buildset, sourcestamps=expected_sourcestamps))
         return bsid
 
     def allBuildsetIds(self):

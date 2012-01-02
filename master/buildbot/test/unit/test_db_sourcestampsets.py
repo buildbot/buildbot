@@ -42,7 +42,7 @@ class TestSourceStampSetsConnectorComponent(
         d = defer.succeed(None)
 
         d.addCallback(lambda _ :
-            self.db.sourcestampsets.addSourcestampSet())
+            self.db.sourcestampsets.addSourceStampSet())
 
         def check(sourcestampsetid):
             def thd(conn):

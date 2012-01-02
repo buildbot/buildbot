@@ -284,7 +284,7 @@ class ForceScheduler(base.BaseScheduler):
         r = ("The web-page 'force build' button was pressed by '%s': %s\n"
              % (owner, reason)) 
 
-        d = master.db.sourcestampsets.addSourcestampSet()
+        d = master.db.sourcestampsets.addSourceStampSet()
         def add_master_with_setid(sourcestampsetid):
             master.db.sourcestamps.addSourceStamp(
                                     sourcestampsetid = sourcestampsetid,

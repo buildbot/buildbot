@@ -121,8 +121,10 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         properties=[ ('a', ('b', 'Scheduler')),
                                      ('scheduler', ('testy', 'Scheduler')), ],
                         sourcestampsetid=100),
-                    dict(branch=None, revision=None, repository='',
-                         project='', sourcestampsetid=100))
+                    {'':
+                     dict(branch=None, revision=None, repository='',
+                         project='', sourcestampsetid=100)
+                    })
         d.addCallback(check)
         return d
 
@@ -228,8 +230,10 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring='try_1234',
                         properties=[('scheduler', ('xyz', 'Scheduler'))],
                         sourcestampsetid=100),
-                    dict(branch='default', revision=None, repository='hgmo',
-                         project='myp', sourcestampsetid=100))
+                    {'hgmo':
+                     dict(branch='default', revision=None, repository='hgmo',
+                         project='myp', sourcestampsetid=100)
+                    })
         d.addCallback(check)
         return d
 
@@ -248,8 +252,10 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                             ('xxx', ('yyy', 'TEST')),
                         ],
                         sourcestampsetid=100),
-                    dict(branch='default', revision=None, repository='hgmo',
-                         project='myp', sourcestampsetid=100))
+                    {'hgmo':
+                     dict(branch='default', revision=None, repository='hgmo',
+                         project='myp', sourcestampsetid=100)
+                    })
         d.addCallback(check)
         return d
 
@@ -263,8 +269,10 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[('scheduler', ('xyz', 'Scheduler'))],
                         sourcestampsetid=100),
-                    dict(branch='default', revision=None, repository='',
-                         project='', sourcestampsetid=100))
+                    {'':
+                     dict(branch='default', revision=None, repository='',
+                         project='', sourcestampsetid=100)
+                    })
         d.addCallback(check)
         return d
 
@@ -281,9 +289,11 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))],
                         sourcestampsetid=100),
-                    dict(branch='trunk', repository='svn://...',
+                    {'svn://...':
+                     dict(branch='trunk', repository='svn://...',
                         changeids=set([13]), project='world-domination',
-                        revision='9283', sourcestampsetid=100))
+                        revision='9283', sourcestampsetid=100)
+                    })
         d.addCallback(check)
         return d
 
@@ -305,8 +315,10 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                             ('xxx', ('yyy', 'TEST')),
                         ],
                         sourcestampsetid=100),
-                    dict(branch='default', revision='123:abc', repository='',
-                         project='', changeids=set([14]), sourcestampsetid=100))
+                    {'':
+                     dict(branch='default', revision='123:abc', repository='',
+                         project='', changeids=set([14]), sourcestampsetid=100)
+                    })
         d.addCallback(check)
         return d
 
@@ -324,9 +336,11 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))],
                         sourcestampsetid=100),
-                    dict(branch='trunk', repository='svn://...',
+                    {'svn://...':
+                     dict(branch='trunk', repository='svn://...',
                          changeids=set([13]), project='world-domination',
-                         revision='9283', sourcestampsetid=100))
+                         revision='9283', sourcestampsetid=100)
+                    })
         d.addCallback(check)
         return d
 
@@ -350,9 +364,11 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))],
                         sourcestampsetid=100),
-                    dict(branch='trunk', repository='svn://...',
+                    {'svn://...':
+                     dict(branch='trunk', repository='svn://...',
                         changeids=set([13,14,15]), project='world-domination',
-                        revision='9285', sourcestampsetid=100))
+                        revision='9285', sourcestampsetid=100)
+                    })
         d.addCallback(check)
         return d
 
@@ -371,8 +387,10 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))],
                         sourcestampsetid=1091),
-                    dict(branch='fixins', revision='abc', repository='r',
-                         project='p', sourcestampsetid=1091))
+                    {'r':
+                     dict(branch='fixins', revision='abc', repository='r',
+                         project='p', sourcestampsetid=1091)
+                    })
         d.addCallback(check)
         return d
 
@@ -396,8 +414,10 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                             ('xxx', ('yyy', 'TEST')),
                         ],
                         sourcestampsetid=1091),
-                    dict(branch='fixins', revision='abc', repository='r',
-                         project='p', sourcestampsetid=1091))
+                    {'r':
+                     dict(branch='fixins', revision='abc', repository='r',
+                         project='p', sourcestampsetid=1091)
+                    })
         d.addCallback(check)
         return d
 
@@ -417,8 +437,10 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))],
                         sourcestampsetid=1091),
-                    dict(branch='fixins', revision='abc', repository='r',
-                         project='p', sourcestampsetid=1091))
+                    {'r':
+                     dict(branch='fixins', revision='abc', repository='r',
+                         project='p', sourcestampsetid=1091)
+                    })
         d.addCallback(check)
         return d
 

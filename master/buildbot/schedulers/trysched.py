@@ -178,7 +178,7 @@ class Try_Jobdir(TryBase):
         if parsed_job['comment']:
             comment = parsed_job['comment']
 
-        d = self.master.db.sourcestampsets.addSourcestampSet()
+        d = self.master.db.sourcestampsets.addSourceStampSet()
 
         def addsourcestamp(setid):
             self.master.db.sourcestamps.addSourceStamp(
@@ -231,7 +231,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         if comment:
             reason += " (%s)" % comment
 
-        wfd = defer.waitForDeferred(db.sourcestampsets.addSourcestampSet())
+        wfd = defer.waitForDeferred(db.sourcestampsets.addSourceStampSet())
         yield wfd
         sourcestampsetid = wfd.getResult()
 

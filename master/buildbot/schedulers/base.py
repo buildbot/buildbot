@@ -285,7 +285,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         @returns: (buildset ID, buildrequest IDs) via Deferred
         """
         # Define setid for this set of changed repositories
-        wfd = defer.waitForDeferred(self.master.db.sourcestampsets.addSourcestampSet())
+        wfd = defer.waitForDeferred(self.master.db.sourcestampsets.addSourceStampSet())
         yield wfd
         setid = wfd.getResult()
 
@@ -341,7 +341,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
             change = wfd.getResult()
 
         # Define setid for this set of changed repositories
-        wfd = defer.waitForDeferred(self.master.db.sourcestampsets.addSourcestampSet())
+        wfd = defer.waitForDeferred(self.master.db.sourcestampsets.addSourceStampSet())
         yield wfd
         setid = wfd.getResult()
 
@@ -423,7 +423,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                 d.addCallBack(groupChange)
 
         # Define setid for this set of changed repositories
-        wfd = defer.waitForDeferred(self.master.db.sourcestampsets.addSourcestampSet)
+        wfd = defer.waitForDeferred(self.master.db.sourcestampsets.addSourceStampSet)
         yield wfd
         setid = wfd.getResult()
 

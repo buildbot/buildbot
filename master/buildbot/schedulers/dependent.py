@@ -88,7 +88,6 @@ class Dependent(base.BaseScheduler):
             # build a dependent build if the status is appropriate
             if sub_results in (SUCCESS, WARNINGS):
                 wfd = defer.waitForDeferred(
-                    # TODO: ssid is not needed anymore as setid defines the sourcestamp(s)
                     self.addBuildsetForSourceStamp(setid=sub_sssetid,
                                                reason='downstream'))
                 yield wfd

@@ -76,8 +76,10 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                      ],
                      reason='Triggerable(n)',
                      sourcestampsetid=1091),
-                dict(branch='br', project='p', repository='r',
-                     revision='myrev', sourcestampsetid=1091))
+                {'r':
+                 dict(branch='br', project='p', repository='r',
+                     revision='myrev', sourcestampsetid=1091)
+                })
 
         # check that the scheduler has subscribed to buildset changes, but
         # not fired yet
@@ -125,8 +127,10 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                      reason='Triggerable(n)',
                      sourcestampsetid=1091,
                      ),
-                dict(branch='br', project='p', repository='r',
-                     revision='myrev1', sourcestampsetid=1091))
+                {'r':
+                 dict(branch='br', project='p', repository='r',
+                     revision='myrev1', sourcestampsetid=1091)
+                })
 
         # and the second time
         d = sched.trigger(92)
@@ -137,8 +141,10 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                      reason='Triggerable(n)',
                      sourcestampsetid=1092,
                      ),
-                dict(branch='br', project='p', repository='r',
-                     revision='myrev2', sourcestampsetid=1092))
+                {'r':
+                 dict(branch='br', project='p', repository='r',
+                     revision='myrev2', sourcestampsetid=1092)
+                })
 
         # check that the scheduler has subscribed to buildset changes
         callbacks = self.master.getSubscriptionCallbacks()

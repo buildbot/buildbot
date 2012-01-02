@@ -20,9 +20,11 @@ from buildbot.db import base
 class SourceStampSetsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
-    def addSourcestampSet(self):
+    def addSourceStampSet(self):
         def thd(conn):
-            # insert the buildset itself
+            # insert the sourcestampset
+            # sourcestampset has no attributes, but inserting a new row results in 
+            # a new setid
             r = conn.execute(self.db.model.sourcestampsets.insert(), dict())
             sourcestampsetid = r.inserted_primary_key[0]
 
