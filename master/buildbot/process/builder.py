@@ -34,6 +34,9 @@ class Builder(config.ReconfigurableServiceMixin,
               pb.Referenceable,
               service.MultiService):
 
+    # reconfigure builders before slaves
+    reconfig_priority = 196
+
     def __init__(self, name):
         service.MultiService.__init__(self)
         self.name = name

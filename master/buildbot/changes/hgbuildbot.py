@@ -133,7 +133,8 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
             ui.status("rev %s sent\n" % c['revision'])
         return s.send(c['branch'], c['revision'], c['comments'],
                       c['files'], c['username'], category=category,
-                      repository=repository, project=project, vc='hg')
+                      repository=repository, project=project, vc='hg',
+                      properties=c['properties'])
 
     try:    # first try Mercurial 1.1+ api
         start = repo[node].rev()
@@ -151,9 +152,11 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         parents = filter(lambda p: not p == nullid, repo.changelog.parents(node))
         if branchtype == 'inrepo':
             branch = extra['branch']
+        is_merge = len(parents) > 1
         # merges don't always contain files, but at least one file is required by buildbot
-        if len(parents) > 1 and not files:
+        if is_merge and not files:
             files = ["merge"]
+        properties = {'is_merge': is_merge}
         if branch:
             branch = fromlocal(branch)
         change = {
@@ -162,7 +165,8 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
             'revision': hex(node),
             'comments': fromlocal(desc),
             'files': files,
-            'branch': branch
+            'branch': branch,
+            'properties':properties
         }
         d.addCallback(_send, change)
 

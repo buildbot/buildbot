@@ -615,6 +615,9 @@ the hook.  Likewise, the ``project`` parameter sets the project.  Changes'
 ``repository`` attributes are formed from the Mercurial repo path by
 stripping ``strip`` slashes.
 
+Changes' attribute ``properties`` has an entry ``is_merge`` which is set to 
+true when the change was caused by a merge.
+
 .. _Bzr-Hook:
 
 Bzr Hook
@@ -864,6 +867,7 @@ multiple branches.
     sufficient.
 
 ``revlinktmpl``
+    This parameter is deprecated in favour of specifying a global revlink option.
     This parameter allows a link to be provided for each revision (for example,
     to websvn or viewvc).  These links appear anywhere changes are shown, such
     as on build or change pages.  The proper form for this parameter is an URL
