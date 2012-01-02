@@ -194,10 +194,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         change_files_tbl = self.db.model.change_files
         change_properties_tbl = self.db.model.change_properties
 
-        def mkdt(epoch):
-            if epoch:
-                return epoch2datetime(epoch)
-
         chdict = ChDict(
                 changeid=ch_row.changeid,
                 author=ch_row.author,
@@ -206,7 +202,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 is_dir=ch_row.is_dir,
                 links=[], # see below
                 revision=ch_row.revision,
-                when_timestamp=mkdt(ch_row.when_timestamp),
+                when_timestamp=epoch2datetime(ch_row.when_timestamp),
                 branch=ch_row.branch,
                 category=ch_row.category,
                 revlink=ch_row.revlink,

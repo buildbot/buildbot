@@ -169,11 +169,13 @@ UTC = UTC()
 
 def epoch2datetime(epoch):
     """Convert a UNIX epoch time to a datetime object, in the UTC timezone"""
-    return datetime.datetime.fromtimestamp(epoch, tz=UTC)
+    if epoch is not None:
+        return datetime.datetime.fromtimestamp(epoch, tz=UTC)
 
 def datetime2epoch(dt):
     """Convert a non-naive datetime object to a UNIX epoch timestamp"""
-    return calendar.timegm(dt.utctimetuple())
+    if dt is not None:
+        return calendar.timegm(dt.utctimetuple())
 
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',

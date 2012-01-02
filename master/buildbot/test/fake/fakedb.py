@@ -959,11 +959,8 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             claimed_at = claim_row.claimed_at
             mine = claim_row.objectid == self.MASTER_ID
 
-        def mkdt(epoch):
-            if epoch:
-                return epoch2datetime(epoch)
-        submitted_at = mkdt(row.submitted_at)
-        complete_at = mkdt(row.complete_at)
+        submitted_at = epoch2datetime(row.submitted_at)
+        complete_at = epoch2datetime(row.complete_at)
 
         return dict(brid=row.id, buildsetid=row.buildsetid,
                 buildername=row.buildername, priority=row.priority,
@@ -1014,29 +1011,23 @@ class FakeBuildsComponent(FakeDBComponent):
         if not row:
             return defer.succeed(None)
 
-        def mkdt(epoch):
-            if epoch:
-                return epoch2datetime(epoch)
         return defer.succeed(dict(
             bid=row.id,
             brid=row.brid,
             number=row.number,
-            start_time=mkdt(row.start_time),
-            finish_time=mkdt(row.finish_time)))
+            start_time=epoch2datetime(row.start_time),
+            finish_time=epoch2datetime(row.finish_time)))
     
     def getBuildsForRequest(self, brid):
         ret = []
-        def mkdt(epoch):
-            if epoch:
-                return epoch2datetime(epoch)
  
         for (id, row) in self.builds.items():
             if row.brid == brid:
                 ret.append(dict(bid = row.id,
                                 brid=row.brid,
                                 number=row.number,
-                                start_time=mkdt(row.start_time),
-                                finish_time=mkdt(row.finish_time)))
+                                start_time=epoch2datetime(row.start_time),
+                                finish_time=epoch2datetime(row.finish_time)))
                
         return defer.succeed(ret)            
 
