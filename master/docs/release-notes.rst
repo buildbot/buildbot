@@ -49,8 +49,9 @@ Changes for Developers
 * The interface for runtime access to the master's configuration has changed
   considerably.  See :doc:`developer/config` for more details.
 
-* The DB connector method ``completeBuildset`` now takes an optional
-  ``complete_at`` parameter to specify the completion time explicitly.
+* The DB connector methods ``completeBuildset``, ``completeBuildRequest``, and
+  ``claimBuildRequest`` now take an optional ``complete_at`` parameter to
+  specify the completion time explicitly.
 
 Features
 ~~~~~~~~

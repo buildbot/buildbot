@@ -17,7 +17,7 @@ import datetime
 from twisted.trial import unittest
 from twisted.internet import defer, task
 from buildbot.db import buildsets
-from buildbot.util import json, UTC
+from buildbot.util import json, UTC, epoch2datetime
 from buildbot.test.util import connector_component
 from buildbot.test.fake import fakedb
 
@@ -409,6 +409,24 @@ class TestBuildsetsConnectorComponent(
                          for row in r.fetchall() ]
                 self.assertEqual(sorted(rows), sorted([
                     ( 91, 1, self.now, 6),
+                    ( 92, 1, 298297876, 7) ]))
+            return self.db.pool.do(thd)
+        d.addCallback(check)
+        return d
+
+    def test_completeBuildset_explicit_complete_at(self):
+        d = self.insert_test_getBuildsets_data()
+        d.addCallback(lambda _ :
+                self.db.buildsets.completeBuildset(bsid=91, results=6,
+                                    complete_at=epoch2datetime(72759)))
+        def check(_):
+            def thd(conn):
+                # should see one buildset row
+                r = conn.execute(self.db.model.buildsets.select())
+                rows = [ (row.id, row.complete, row.complete_at, row.results)
+                         for row in r.fetchall() ]
+                self.assertEqual(sorted(rows), sorted([
+                    ( 91, 1, 72759, 6),
                     ( 92, 1, 298297876, 7) ]))
             return self.db.pool.do(thd)
         d.addCallback(check)

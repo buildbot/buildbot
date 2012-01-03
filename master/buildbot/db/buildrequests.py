@@ -18,7 +18,7 @@ import sqlalchemy as sa
 from twisted.internet import reactor
 from twisted.python import log
 from buildbot.db import base
-from buildbot.util import epoch2datetime
+from buildbot.util import epoch2datetime, datetime2epoch
 
 class AlreadyClaimedError(Exception):
     pass
@@ -97,15 +97,19 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def claimBuildRequests(self, brids, _reactor=reactor,
+    def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor,
                             _master_objectid=None):
+        if claimed_at is not None:
+            claimed_at = datetime2epoch(claimed_at)
+        else:
+            claimed_at = _reactor.seconds()
+
         def thd(conn):
             transaction = conn.begin()
             tbl = self.db.model.buildrequest_claims
 
             try:
                 q = tbl.insert()
-                claimed_at = _reactor.seconds()
                 conn.execute(q, [ dict(brid=id, objectid=_master_objectid,
                                     claimed_at=claimed_at)
                                   for id in brids ])
@@ -177,8 +181,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     @with_master_objectid
     def completeBuildRequests(self, brids, results, complete_at=None,
                             _reactor=reactor, _master_objectid=None):
-        if not complete_at:
+        if complete_at is not None:
+            complete_at = datetime2epoch(complete_at)
+        else:
             complete_at = _reactor.seconds()
+
         def thd(conn):
             transaction = conn.begin()
 

@@ -21,7 +21,7 @@ import sqlalchemy as sa
 from twisted.internet import reactor
 from buildbot.util import json
 from buildbot.db import base
-from buildbot.util import epoch2datetime
+from buildbot.util import epoch2datetime, datetime2epoch
 
 class BsDict(dict):
     pass
@@ -70,7 +70,13 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             return (bsid, brids)
         return self.db.pool.do(thd)
 
-    def completeBuildset(self, bsid, results, _reactor=reactor):
+    def completeBuildset(self, bsid, results, complete_at=None,
+                                _reactor=reactor):
+        if complete_at is not None:
+            complete_at = datetime2epoch(complete_at)
+        else:
+            complete_at = _reactor.seconds()
+
         def thd(conn):
             tbl = self.db.model.buildsets
 
@@ -80,7 +86,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q,
                 complete=1,
                 results=results,
-                complete_at=_reactor.seconds())
+                complete_at=complete_at)
 
             if res.rowcount != 1:
                 raise KeyError

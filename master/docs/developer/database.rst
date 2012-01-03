@@ -116,10 +116,11 @@ buildrequests
         A build is considered completed if its ``complete`` column is 1; the
         ``complete_at`` column is not consulted.
 
-    .. py:method:: claimBuildRequests(brids)
+    .. py:method:: claimBuildRequests(brids[, claimed_at=XX])
 
         :param brids: ids of buildrequests to claim
         :type brids: list
+        :param datetime claimed_at: time at which the builds are claimed
         :returns: Deferred
         :raises: :py:exc:`AlreadyClaimedError`
 
@@ -128,6 +129,8 @@ buildrequests
         fail with :py:exc:`AlreadyClaimedError` if *any* of the build
         requests are already claimed by another master instance.  In this case,
         none of the claims will take effect.
+
+        If ``claimed_at`` is not given, then the current time will be used.
 
         As of 0.8.5, this method can no longer be used to re-claim build
         requests.  All given ID's must be unclaimed.  Use
@@ -312,17 +315,20 @@ buildsets
         inserted buildset ID and ``brids`` is a dictionary mapping buildernames
         to build request IDs.
 
-    .. py:method:: completeBuildset(bsid, results)
+    .. py:method:: completeBuildset(bsid, results[, complete_at=XX])
 
         :param bsid: buildset ID to complete
         :type bsid: integer
         :param results: integer result code
         :type results: integer
+        :param datetime complete_at: time the buildset was completed
         :returns: Deferred
-        :raises: :py:exc:`KeyError` if the buildset does not exist or is already complete
+        :raises: :py:exc:`KeyError` if the buildset does not exist or is
+            already complete
 
         Complete a buildset, marking it with the given ``results`` and setting
-        its ``completed_at`` to the current time.
+        its ``completed_at`` to the current time, if the ``complete_at``
+        argument is omitted.
 
     .. py:method:: getBuildset(bsid)
 
