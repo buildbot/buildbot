@@ -77,6 +77,9 @@ def upgrade(migrate_engine):
         sa.Column('results', sa.SmallInteger),
     )
     new_buildsets.create()
+    # Recreate the indexes
+    sa.Index('buildsets_complete', new_buildsets.c.complete).create()
+    sa.Index('buildsets_submitted_at', new_buildsets.c.submitted_at).create()
     newsets=sa.select([tmp_buildsets.c.id,
                     tmp_buildsets.c.external_idstring,
                     tmp_buildsets.c.reason,
@@ -94,7 +97,7 @@ def upgrade(migrate_engine):
     # Add sourcestampsetid including index to sourcestamps table
     ss_sourcestampsetid = sa.Column('sourcestampsetid', sa.Integer)
     ss_sourcestampsetid.create(sourcestamps_table)
-
+    
     # Update the setid to the same value as sourcestampid
     migrate_engine.execute(str(sourcestamps_table.update().values(sourcestampsetid=sourcestamps_table.c.id)))
     ss_sourcestampsetid.alter(nullable=False)
