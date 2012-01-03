@@ -126,7 +126,7 @@ class BuildRequest(object):
             master.db.sourcestamps.getSourceStamps(buildset['sourcestampsetid']))
         yield wfd
         sslist = wfd.getResult()
-        assert len(sslist) > 0, "db schema should enforce this anyway"
+        assert len(sslist) > 0, "Empty sourcestampset: db schema enforces set to exist but cannot enforce a non empty set"
 
         # and turn it into a SourceStamp
         buildrequest.sources = []

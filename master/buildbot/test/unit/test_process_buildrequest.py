@@ -83,6 +83,23 @@ class TestBuildRequest(unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def test_fromBrdict_no_sourcestamps(self):
+        master = fakemaster.make_master()
+        master.db = fakedb.FakeDBConnector(self)
+        master.db.insertTestData([
+            fakedb.SourceStampSet(id=234),
+            # Sourcestampset has no sourcestamps
+            fakedb.Buildset(id=539, reason='triggered', sourcestampsetid=234),
+            fakedb.BuildRequest(id=288, buildsetid=539, buildername='not important',
+                        priority=0, submitted_at=None),
+        ])
+        # use getBuildRequest to minimize the risk from changes to the format
+        # of the brdict
+        d = master.db.buildrequests.getBuildRequest(288)
+        d.addCallback(lambda brdict:
+            buildrequest.BuildRequest.fromBrdict(master, brdict))
+        return self.assertFailure(d, AssertionError)
+        
     def test_fromBrdict_multiple_sourcestamps(self):
         master = fakemaster.make_master()
         master.db = fakedb.FakeDBConnector(self)
