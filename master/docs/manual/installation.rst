@@ -254,17 +254,36 @@ takes care of logging and daemonization (running the program in the
 background). :file:`/usr/bin/buildbot` is a front end which runs `twistd`
 for you.)
 
-Using MySQL
-~~~~~~~~~~~
+Using A Database Server
+~~~~~~~~~~~~~~~~~~~~~~~
 
-If you want to use MySQL as the database backend for your Buildbot, add the
-``--db`` option to the ``create-master`` invocation to specify the
-connection string for the :ref:`MySQL database <Database-Specification>`, and
-make sure that the same URL appears in the ``c['db_url']`` parameter in your
-configuration file.
+If you want to use a database server (e.g., MySQL or Postgres) as the database
+backend for your Buildbot, add the ``--db`` option to the ``create-master``
+invocation to specify the :ref:`connection string <Database-Specification>` for
+the database, and make sure that the same URL appears in the ``db_url`` of the
+:bb:cfg:`db` parameter in your configuration file.
+
+Additional Requirements
+'''''''''''''''''''''''
+
+Depending on the selected database, further Python packages will be required.
+Consult the SQLAlchemy dialect list for a full description.  The most common
+choice for MySQL is
+
+MySQL-python: http://mysql-python.sourceforge.net/
+
+  To communicate with MySQL, SQLAlchemy requires MySQL-python.  Any reasonably
+  recent version of MySQL-python should suffice.
+
+The most common choice for Postgres is
+
+Psycopg: http://initd.org/psycopg/
+
+    SQLAlchemy uses Psycopg to communicate with Postgres.  Any reasonably
+    recent version should suffice.
 
 Buildmaster Options
-'''''''''''''''''''
+~~~~~~~~~~~~~~~~~~~
 
 This section lists options to the ``create-master`` command.
 You can also type ``buildbot create-master --help`` for an up-to-the-moment summary.
