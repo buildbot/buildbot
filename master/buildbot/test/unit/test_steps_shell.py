@@ -102,6 +102,26 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (["'this", "is", "...'"],)*2)
 
+    def test_describe_from_nested_command_list(self):
+        step = shell.ShellCommand(command=["this", ["is", "a"], "nested"])
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (["'this", "is", "...'"],)*2)
+
+    def test_describe_from_nested_command_tuples(self):
+        step = shell.ShellCommand(command=["this", ("is", "a"), "nested"])
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (["'this", "is", "...'"],)*2)
+
+    def test_describe_from_nested_command_list_empty(self):
+        step = shell.ShellCommand(command=["this", [], ["is", "a"], "nested"])
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (["'this", "is", "...'"],)*2)
+
+    def test_describe_from_nested_command_list_deep(self):
+        step = shell.ShellCommand(command=[["this", [[["is", ["a"]]]]]])
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (["'this", "is", "...'"],)*2)
+
     def test_describe_custom(self):
         step = shell.ShellCommand(command="echo hello",
                         description=["echoing"], descriptionDone=["echoed"])
@@ -139,6 +159,48 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                 status_text=["'trial", "-b", "...'"])
+        return self.runStep()
+
+    def test_run_nested_command(self):
+        self.setupStep(
+                shell.ShellCommand(workdir='build',
+                         command=['trial', ['-b', '-B'], 'buildbot.test']))
+        self.expectCommands(
+            ExpectShell(workdir='build',
+                         command=['trial', '-b', '-B', 'buildbot.test'],
+                         usePTY="slave-config")
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, 
+           status_text=["'trial", "-b", "...'"])
+        return self.runStep()
+
+    def test_run_nested_deeply_command(self):
+        self.setupStep(
+                shell.ShellCommand(workdir='build',
+                         command=[['trial', ['-b', ['-B']]], 'buildbot.test']))
+        self.expectCommands(
+            ExpectShell(workdir='build',
+                         command=['trial', '-b', '-B', 'buildbot.test'],
+                         usePTY="slave-config")
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, 
+           status_text=["'trial", "-b", "...'"])
+        return self.runStep()
+
+    def test_run_nested_empty_command(self):
+        self.setupStep(
+                shell.ShellCommand(workdir='build',
+                         command=['trial', [], '-b', [], 'buildbot.test']))
+        self.expectCommands(
+            ExpectShell(workdir='build',
+                         command=['trial', '-b', 'buildbot.test'],
+                         usePTY="slave-config")
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, 
+           status_text=["'trial", "-b", "...'"])
         return self.runStep()
 
     def test_run_env(self):
