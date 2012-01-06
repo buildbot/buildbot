@@ -1287,6 +1287,9 @@ The :bb:step:`ShellCommand` arguments are:
     difficult questions about how to escape or interpret shell
     metacharacters.
 
+    If ``command`` contains nested lists (for example, from a properties
+    substitution), then that list will be flattened before it is executed.
+
 ``workdir``
     All ShellCommands are run by default in the ``workdir``, which
     defaults to the :file:`build` subdirectory of the slave builder's
