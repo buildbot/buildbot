@@ -142,15 +142,55 @@ class Trigger(LoggingBuildStep):
         d.addCallback(start_builds)
 
         def cb(rclist):
-            result = SUCCESS
+            was_exception = was_failure = False
+            brids = {}
             for was_cb, results in rclist:
-                # TODO: make this algo more configurable
+                if isinstance(results, tuple):
+                    results, some_brids = results
+                    brids.update(some_brids)
+
                 if not was_cb:
-                    result = EXCEPTION
+                    was_exception = True
                     log.err(results)
-                    break
-                if results == FAILURE:
-                    result = FAILURE
+                    continue
+
+                if results==FAILURE:
+                    was_failure = True
+
+            if was_exception:
+                result = EXCEPTION
+            elif was_failure:
+                result = FAILURE
+            else:
+                result = SUCCESS
+
+            if brids:
+                def add_links(res):
+                    # reverse the dictionary lookup for brid to builder name
+                    brid_to_bn = dict((_brid,_bn) for _bn,_brid in brids.iteritems())
+
+                    triggered_builds = self.step_status.getStatistic('triggered_builds',[])
+                    for was_cb, builddicts in res:
+                        if was_cb:
+                            for build in builddicts:
+                                bn = brid_to_bn[build['brid']]
+                                num = build['number']
+                                
+                                # the buildername is useful for lookup later (eg, by mail formatters)
+                                build['buildername'] = bn
+                                
+                                url = master.status.getURLForBuild(bn, num)
+                                self.step_status.addURL("%s #%d" % (bn,num), url)
+                                
+                            triggered_builds.extend(builddicts)
+                    self.step_status.setStatistic('triggered_builds', triggered_builds)
+                    return self.end(result)
+
+                builddicts = [master.db.builds.getBuildsForRequest(br) for br in brids.values()]
+                dl = defer.DeferredList(builddicts, consumeErrors=1)
+                dl.addCallback(add_links)
+                return dl
+
             return self.end(result)
         def eb(why):
             return self.end(FAILURE)

@@ -2425,6 +2425,14 @@ sophisticated ``set_properties``, which takes a dictionary mapping property
 names to values.  You may use :ref:`WithProperties` here to dynamically
 construct new property values.
 
+When ``waitForFinish`` is ``True``, the triggered builds are set in the Trigger
+step's :class:`BuildStepStatus`. Hyperlinks are added to the waterfall and
+the build details web pages for each triggered build. Also, details about each build
+are added into the ``triggered_builds`` statistic in the step status. This statistic
+is a list of dictionaries, one for each build; included in the dictionary keys are
+the standard build information, such as ``buildername`` and ``number``. 
+
+
 Miscellaneous BuildSteps
 ------------------------
 
