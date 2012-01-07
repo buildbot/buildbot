@@ -55,6 +55,6 @@ class SourceStepMixin(steps.BuildStepMixin):
         ss.patch_info = None
         ss.changes = []
 
-        self.build.getSourceStamp = lambda : ss
+        self.build.getSourceStamp = lambda x=None: ss
         return step
 

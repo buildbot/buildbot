@@ -65,7 +65,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
                         patch_base64='LS0gKys=',
                         patch_author='Professor Chaos',
                         patch_comment='comment'),
-            fakedb.SourceStamp(id=234, branch='trunk', revision='9284',
+            fakedb.SourceStamp(id=234, sourcestampsetid=234, branch='trunk', revision='9284',
                         repository='svn://...', project='world-domination',
                         patchid=99),
         ])
@@ -90,7 +90,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         master = fakemaster.make_master()
         master.db = fakedb.FakeDBConnector(self)
         master.db.insertTestData([
-            fakedb.SourceStamp(id=234, branch='trunk', revision='9284',
+            fakedb.SourceStamp(id=234, sourcestampsetid=234, branch='trunk', revision='9284',
                         repository='svn://...', project='world-domination'),
         ])
         # use getSourceStamp to minimize the risk from changes to the format of

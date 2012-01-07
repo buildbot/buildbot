@@ -29,8 +29,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
     def setUp(self):
         # a collection of rows that would otherwise clutter up every test
         self.base_rows = [
-            fakedb.SourceStamp(id=21),
-            fakedb.Buildset(id=11, reason='because', sourcestampid=21),
+            fakedb.SourceStampSet(id=21),
+            fakedb.SourceStamp(id=21, sourcestampsetid=21),
+            fakedb.Buildset(id=11, reason='because', sourcestampsetid=21),
         ]
 
     def makeBuilder(self, patch_random=False, **config_kwargs):
@@ -523,8 +524,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
         # set up all of the data required for a BuildRequest object
         wfd = defer.waitForDeferred(
             self.db.insertTestData([
-                fakedb.SourceStamp(id=234),
-                fakedb.Buildset(id=30, sourcestampid=234, reason='foo',
+                fakedb.SourceStampSet(id=234),
+                fakedb.SourceStamp(id=234,sourcestampsetid=234),
+                fakedb.Buildset(id=30, sourcestampsetid=234, reason='foo',
                     submitted_at=1300305712, results=-1),
                 fakedb.BuildRequest(id=19, buildsetid=30, buildername='bldr',
                     priority=13, submitted_at=1300305712, results=-1),
@@ -616,8 +618,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
         # set up all of the data required for a BuildRequest object
         wfd = defer.waitForDeferred(
             self.db.insertTestData([
-                fakedb.SourceStamp(id=234),
-                fakedb.Buildset(id=30, sourcestampid=234, reason='foo',
+                fakedb.SourceStampSet(id=234),
+                fakedb.SourceStamp(id=234, sourcestampsetid=234),
+                fakedb.Buildset(id=30, sourcestampsetid=234, reason='foo',
                     submitted_at=1300305712, results=-1),
                 fakedb.BuildRequest(id=19, buildsetid=30, buildername='bldr',
                     priority=13, submitted_at=1300305712, results=-1),
@@ -742,8 +745,9 @@ class TestGetOldestRequestTime(unittest.TestCase):
         # a collection of rows that would otherwise clutter up every test
         master_id = fakedb.FakeBuildRequestsComponent.MASTER_ID
         self.base_rows = [
-            fakedb.SourceStamp(id=21),
-            fakedb.Buildset(id=11, reason='because', sourcestampid=21),
+            fakedb.SourceStampSet(id=21),
+            fakedb.SourceStamp(id=21, sourcestampsetid=21),
+            fakedb.Buildset(id=11, reason='because', sourcestampsetid=21),
             fakedb.BuildRequest(id=111, submitted_at=1000,
                         buildername='bldr1', buildsetid=11),
             fakedb.BuildRequest(id=222, submitted_at=2000,
