@@ -14,16 +14,21 @@
 # Copyright Buildbot Team Members
 
 import base64
+import sqlalchemy as sa
+from twisted.internet import defer
 from twisted.python import log
 from buildbot.db import base
 
 class SsDict(dict):
     pass
 
+class SsList(list):
+    pass
+
 class SourceStampsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
-    def addSourceStamp(self, branch, revision, repository, project,
+    def addSourceStamp(self, branch, revision, repository, project, sourcestampsetid,
                           patch_body=None, patch_level=0, patch_author="",
                           patch_comment="", patch_subdir=None, changeids=[]):
         def thd(conn):
@@ -46,7 +51,8 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 revision=revision,
                 patchid=patchid,
                 repository=repository,
-                project=project))
+                project=project,
+                sourcestampsetid=sourcestampsetid))
             ssid = r.inserted_primary_key[0]
 
             # handle inserting change ids
@@ -60,6 +66,28 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             return ssid
         return self.db.pool.do(thd)
 
+    @base.cached("sssetdicts")
+    @defer.deferredGenerator
+    def getSourceStamps(self,sourcestampsetid):
+        def getSourceStampIds(sourcestampsetid):
+            def thd(conn):
+                tbl = self.db.model.sourcestamps
+                q = sa.select([tbl.c.id],
+                       whereclause=(tbl.c.sourcestampsetid == sourcestampsetid))
+                res = conn.execute(q)
+                return [ row.id for row in res.fetchall() ]
+            return self.db.pool.do(thd)
+        wfd = defer.waitForDeferred(getSourceStampIds(sourcestampsetid))
+        yield wfd
+        ssids = wfd.getResult()
+        sslist=SsList()
+        for ssid in ssids:
+            wfd = defer.waitForDeferred(self.getSourceStamp(ssid))
+            yield wfd
+            sourcestamp = wfd.getResult()
+            sslist.append(sourcestamp)
+        yield sslist
+
     @base.cached("ssdicts")
     def getSourceStamp(self, ssid):
         def thd(conn):
@@ -69,7 +97,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             row = res.fetchone()
             if not row:
                 return None
-            ssdict = SsDict(ssid=ssid, branch=row.branch,
+            ssdict = SsDict(ssid=ssid, branch=row.branch, sourcestampsetid=row.sourcestampsetid,
                     revision=row.revision, patch_body=None, patch_level=None,
                     patch_author=None, patch_comment=None, patch_subdir=None,
                     repository=row.repository, project=row.project,

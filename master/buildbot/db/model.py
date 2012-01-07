@@ -118,7 +118,6 @@ class Model(base.DBConnectorComponent):
 
         # a short string giving the reason the buildset was created
         sa.Column('reason', sa.String(256)), # TODO: sa.Text
-        sa.Column('sourcestampid', sa.Integer, sa.ForeignKey('sourcestamps.id'), nullable=False),
         sa.Column('submitted_at', sa.Integer, nullable=False), # TODO: redundant
 
         # if this is zero, then the build set is still pending
@@ -128,6 +127,9 @@ class Model(base.DBConnectorComponent):
         # results is only valid when complete == 1; 0 = SUCCESS, 1 = WARNINGS,
         # etc - see master/buildbot/status/builder.py
         sa.Column('results', sa.SmallInteger), # TODO: synthesize from buildrequests
+
+        # buildset belongs to all sourcestamps with setid
+        sa.Column('sourcestampsetid', sa.Integer, sa.ForeignKey('sourcestampsets.id')),
     )
 
     # changes
@@ -230,6 +232,12 @@ class Model(base.DBConnectorComponent):
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
     )
 
+    # A sourcestampset identifies a set of sourcestamps
+    # A sourcestamp belongs to a particular set if the sourcestamp has the same setid
+    sourcestampsets = sa.Table('sourcestampsets', metadata,
+        sa.Column('id', sa.Integer,  primary_key=True),
+    )
+
     # A sourcestamp identifies a particular instance of the source code.
     # Ideally, this would always be absolute, but in practice source stamps can
     # also mean "latest" (when revision is NULL), which is of course a
@@ -252,6 +260,9 @@ class Model(base.DBConnectorComponent):
 
         # the project this source code represents
         sa.Column('project', sa.String(length=512), nullable=False, server_default=''),
+
+        # each sourcestamp belongs to a set of sourcestamps
+        sa.Column('sourcestampsetid', sa.Integer, sa.ForeignKey('sourcestampsets.id')),
     )
 
     # schedulers
@@ -373,6 +384,7 @@ class Model(base.DBConnectorComponent):
     sa.Index('scheduler_upstream_buildsets_schedulerid', scheduler_upstream_buildsets.c.schedulerid)
     sa.Index('scheduler_upstream_buildsets_active', scheduler_upstream_buildsets.c.active)
     sa.Index('sourcestamp_changes_sourcestampid', sourcestamp_changes.c.sourcestampid)
+    sa.Index('sourcestamps_sourcestampsetid', sourcestamps.c.sourcestampsetid, unique=False)
     sa.Index('users_identifier', users.c.identifier, unique=True)
     sa.Index('users_info_uid', users_info.c.uid)
     sa.Index('users_info_uid_attr_type', users_info.c.uid,

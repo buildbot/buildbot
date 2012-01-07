@@ -79,7 +79,7 @@ class Dependent(base.BaseScheduler):
         yield wfd
         subs = wfd.getResult()
 
-        for (sub_bsid, sub_ssid, sub_complete, sub_results) in subs:
+        for (sub_bsid, sub_sssetid, sub_complete, sub_results) in subs:
             # skip incomplete builds, handling the case where the 'complete'
             # column has not been updated yet
             if not sub_complete and sub_bsid != bsid:
@@ -88,7 +88,7 @@ class Dependent(base.BaseScheduler):
             # build a dependent build if the status is appropriate
             if sub_results in (SUCCESS, WARNINGS):
                 wfd = defer.waitForDeferred(
-                    self.addBuildsetForSourceStamp(ssid=sub_ssid,
+                    self.addBuildsetForSourceStamp(setid=sub_sssetid,
                                                reason='downstream'))
                 yield wfd
                 wfd.getResult()

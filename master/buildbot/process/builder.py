@@ -729,11 +729,11 @@ class BuilderControl:
         self.master = master
 
     def submitBuildRequest(self, ss, reason, props=None):
-        d = ss.getSourceStampId(self.master.master)
-        def add_buildset(ssid):
+        d = ss.getSourceStampSetId(self.master.master)
+        def add_buildset(sourcestampsetid):
             return self.master.master.addBuildset(
                     builderNames=[self.original.name],
-                    ssid=ssid, reason=reason, properties=props)
+                    sourcestampsetid=sourcestampsetid, reason=reason, properties=props)
         d.addCallback(add_buildset)
         def get_brs((bsid,brids)):
             brs = BuildRequestStatus(self.original.name,
@@ -756,11 +756,11 @@ class BuilderControl:
 
         properties_dict = dict((k,(v,s)) for (k,v,s) in properties.asList())
         ss = bs.getSourceStamp(absolute=True)
-        d = ss.getSourceStampId(self.master.master)
-        def add_buildset(ssid):
+        d = ss.getSourceStampSetId(self.master.master)
+        def add_buildset(sourcestampsetid):
             return self.master.master.addBuildset(
                     builderNames=[self.original.name],
-                    ssid=ssid, reason=reason, properties=properties_dict)
+                    sourcestampsetid=sourcestampsetid, reason=reason, properties=properties_dict)
         d.addCallback(add_buildset)
         return d
 
