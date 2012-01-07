@@ -35,6 +35,13 @@ def patch_bug5079():
         from buildbot.monkeypatches import bug5079
         bug5079.patch()
 
+def patch_sqlalchemy2364():
+    # tracking SQLAlchemy bug 2364 - so far thought to affect all released
+    # versions (and the patch won't hurt on new versions)
+    from buildbot.monkeypatches import sqlalchemy2364
+    sqlalchemy2364.patch()
+
 def patch_all():
     patch_bug4881()
     patch_bug5079()
+    patch_sqlalchemy2364()
