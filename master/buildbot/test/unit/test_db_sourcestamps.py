@@ -14,8 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.trial import unittest
-from twisted.internet import defer
-from buildbot.db import sourcestamps, sourcestampsets
+from buildbot.db import sourcestamps
 from buildbot.test.util import connector_component
 from buildbot.test.fake import fakedb
 

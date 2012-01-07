@@ -242,7 +242,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
                     patch_comment=comment or '', sourcestampsetid = sourcestampsetid))
                     # note: no way to specify patch subdir - #1769
         yield wfd
-        ssid = wfd.getResult()
+        wfd.getResult()
 
         requested_props = Properties()
         requested_props.update(properties, "try build")

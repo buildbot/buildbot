@@ -293,7 +293,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                 branch=branch, revision=None, repository=repository,
                 project=project, sourcestampsetid=setid))
         yield wfd
-        ssid = wfd.getResult()
+        wfd.getResult()
 
         wfd = defer.waitForDeferred(self.addBuildsetForSourceStamp(
                                 setid=setid, reason=reason,
@@ -353,7 +353,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                     changeids=changeids,
                     sourcestampsetid=setid))
         yield wfd
-        ssid = wfd.getResult()
+        wfd.getResult()
 
         wfd = defer.waitForDeferred(self.addBuildsetForSourceStamp(
                                 setid=setid, reason=reason,

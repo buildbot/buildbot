@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import base64
-from twisted.python import log
 from buildbot.db import base
 
 class SourceStampSetsConnectorComponent(base.DBConnectorComponent):
@@ -22,9 +20,8 @@ class SourceStampSetsConnectorComponent(base.DBConnectorComponent):
 
     def addSourceStampSet(self):
         def thd(conn):
-            # insert the sourcestampset
-            # sourcestampset has no attributes, but inserting a new row results in 
-            # a new setid
+            # insert the sourcestampset.  sourcestampset has no attributes, but
+            # inserting a new row results in a new setid
             r = conn.execute(self.db.model.sourcestampsets.insert(), dict())
             sourcestampsetid = r.inserted_primary_key[0]
 

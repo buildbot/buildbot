@@ -15,9 +15,8 @@
 
 from twisted.trial import unittest
 from twisted.internet import defer
-from buildbot.db import sourcestamps, sourcestampsets
+from buildbot.db import sourcestampsets
 from buildbot.test.util import connector_component
-from buildbot.test.fake import fakedb
 
 class TestSourceStampSetsConnectorComponent(
             connector_component.ConnectorComponentMixin,

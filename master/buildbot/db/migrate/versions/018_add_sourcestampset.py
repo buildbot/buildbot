@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-import migrate
 from migrate.changeset import constraint
 from buildbot.util import sautils
 
@@ -42,12 +41,12 @@ def upgrade(migrate_engine):
     tmp_buildsets = sa.Table('tmp_buildsets', metadata,
         sa.Column('id', sa.Integer,  primary_key=True),
         sa.Column('external_idstring', sa.String(256)),
-        sa.Column('reason', sa.String(256)), # TODO: sa.Text
+        sa.Column('reason', sa.String(256)),
         sa.Column('sourcestampid', sa.Integer, nullable=False),
-        sa.Column('submitted_at', sa.Integer, nullable=False), # TODO: redundant
-        sa.Column('complete', sa.SmallInteger, nullable=False, server_default=sa.DefaultClause("0")), # TODO: redundant
-        sa.Column('complete_at', sa.Integer), # TODO: redundant
-        sa.Column('results', sa.SmallInteger), # TODO: synthesize from buildrequests
+        sa.Column('submitted_at', sa.Integer, nullable=False),
+        sa.Column('complete', sa.SmallInteger, nullable=False, server_default=sa.DefaultClause("0")),
+        sa.Column('complete_at', sa.Integer),
+        sa.Column('results', sa.SmallInteger),
     )
     tmp_buildsets.create()
 
@@ -69,11 +68,11 @@ def upgrade(migrate_engine):
     new_buildsets = sa.Table('buildsets', metadata,
         sa.Column('id', sa.Integer,  primary_key=True),
         sa.Column('external_idstring', sa.String(256)),
-        sa.Column('reason', sa.String(256)), # TODO: sa.Text
+        sa.Column('reason', sa.String(256)),
         sa.Column('sourcestampsetid', sa.Integer, sa.ForeignKey('sourcestampsets.id'), nullable=False),
-        sa.Column('submitted_at', sa.Integer, nullable=False), # TODO: redundant
-        sa.Column('complete', sa.SmallInteger, nullable=False, server_default=sa.DefaultClause("0")), # TODO: redundant
-        sa.Column('complete_at', sa.Integer), # TODO: redundant
+        sa.Column('submitted_at', sa.Integer, nullable=False),
+        sa.Column('complete', sa.SmallInteger, nullable=False, server_default=sa.DefaultClause("0")),
+        sa.Column('complete_at', sa.Integer),
         sa.Column('results', sa.SmallInteger),
     )
     new_buildsets.create()
