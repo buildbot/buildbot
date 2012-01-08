@@ -284,11 +284,19 @@ class ForceScheduler(base.BaseScheduler):
         r = ("The web-page 'force build' button was pressed by '%s': %s\n"
              % (owner, reason)) 
 
-        d = master.db.sourcestamps.addSourceStamp(branch=branch,
-                revision=revision, project=project, repository=repository,changeids=changeids)
-        def got_ssid(ssid):
+        d = master.db.sourcestampsets.addSourceStampSet()
+        def add_master_with_setid(sourcestampsetid):
+            master.db.sourcestamps.addSourceStamp(
+                                    sourcestampsetid = sourcestampsetid,
+                                    branch=branch,
+                                    revision=revision, project=project, 
+                                    repository=repository,changeids=changeids)
+            return sourcestampsetid
+            
+        d.addCallback(add_master_with_setid)
+        def got_setid(sourcestampsetid):
             return self.addBuildsetForSourceStamp(builderNames=[builder_name],
-                                      ssid=ssid, reason=r,
-                                      properties=real_properties)
-        d.addCallback(got_ssid)
+                                    setid=sourcestampsetid, reason=r,
+                                    properties=real_properties)
+        d.addCallback(got_setid)
         return d

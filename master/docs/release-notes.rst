@@ -53,6 +53,10 @@ Changes for Developers
   ``claimBuildRequest`` now take an optional ``complete_at`` parameter to
   specify the completion time explicitly.
 
+* Buildbot now sports sourcestamp sets, which collect multiple sourcestamps
+  used to generate a single build, thanks to Harry Borkhuis.  See
+  :bb:pull:`287`.
+
 Features
 ~~~~~~~~
 

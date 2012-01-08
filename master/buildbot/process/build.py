@@ -92,8 +92,11 @@ class Build(properties.PropertiesMixin):
     def setSlaveEnvironment(self, env):
         self.slaveEnvironment = env
 
-    def getSourceStamp(self):
-        return self.source
+    def getSourceStamp(self, repository=None):
+        if repository is None:
+            return self.source
+        assert (repository in self.sources)
+        return self.sources[repository]
 
     def allChanges(self):
         return self.source.changes

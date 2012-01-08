@@ -80,9 +80,12 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                                    ('p4', ('h', 'Force Build Form')),
                                    ('reason', ('because', 'Force Build Form')),
                                    ('scheduler', ('testsched', 'Scheduler')),
-                                   ]),
-                 dict(branch='a', revision='c', repository='d',
-                      project='p'))
+                                   ],
+                      sourcestampsetid=100),
+                 {'d':
+                  dict(branch='a', revision='c', repository='d',
+                      project='p', sourcestampsetid=100)
+                 })
         d.addCallback(check)
         return d
 
@@ -111,9 +114,12 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                                    ('p1', (expect, 'Force Build Form')),
                                    ('reason', ('because', 'Force Build Form')),
                                    ('scheduler', ('testsched', 'Scheduler')),
-                                   ]),
-                 dict(branch="", revision="", repository="",
-                      project=""))
+                                   ],
+                      sourcestampsetid=100),
+                 {"":
+                  dict(branch="", revision="", repository="",
+                      project="", sourcestampsetid=100)
+                 })
         d.addCallback(check)
         return d
 

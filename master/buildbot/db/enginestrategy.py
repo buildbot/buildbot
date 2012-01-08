@@ -28,6 +28,7 @@ import sqlalchemy as sa
 from twisted.python import log
 from sqlalchemy.engine import strategies, url
 from sqlalchemy.pool import NullPool, Pool
+from buildbot.util import sautils
 
 # from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html
 class ReconnectingListener(object):
@@ -131,7 +132,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
 
         # older versions of sqlalchemy require the listener to be specified
         # in the kwargs, in a class instance
-        if hasattr(sa, '__version__') and sa.__version__.startswith('0.6'):
+        if sautils.sa_version() < (0,7,0):
             class ReconnectingListener(object):
                 pass
             rcl = ReconnectingListener()

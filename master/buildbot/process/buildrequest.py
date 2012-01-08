@@ -69,6 +69,7 @@ class BuildRequest(object):
     """
 
     source = None
+    sources = None
     submittedAt = None
 
     @classmethod
@@ -122,16 +123,23 @@ class BuildRequest(object):
 
         # fetch the sourcestamp dictionary
         wfd = defer.waitForDeferred(
-            master.db.sourcestamps.getSourceStamp(buildset['sourcestampid']))
+            master.db.sourcestamps.getSourceStamps(buildset['sourcestampsetid']))
         yield wfd
-        ssdict = wfd.getResult()
-        assert ssdict # db schema should enforce this anyway
+        sslist = wfd.getResult()
+        assert len(sslist) > 0, "Empty sourcestampset: db schema enforces set to exist but cannot enforce a non empty set"
 
         # and turn it into a SourceStamp
-        wfd = defer.waitForDeferred(
-            sourcestamp.SourceStamp.fromSsdict(master, ssdict))
-        yield wfd
-        buildrequest.source = wfd.getResult()
+        buildrequest.sources = []
+        for ssdict in sslist:
+            wfd = defer.waitForDeferred(
+                sourcestamp.SourceStamp.fromSsdict(master, ssdict))
+            yield wfd
+            buildrequest.sources.append(wfd.getResult())
+
+        # support old interface where only one source could exist
+        # TODO: remove and change all client objects that use this property
+        if len(buildrequest.sources) > 0:
+            buildrequest.source = buildrequest.sources[0]
 
         yield buildrequest # return value
 

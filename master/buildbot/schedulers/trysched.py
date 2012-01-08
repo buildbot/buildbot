@@ -178,7 +178,11 @@ class Try_Jobdir(TryBase):
         if parsed_job['comment']:
             comment = parsed_job['comment']
 
-        d = self.master.db.sourcestamps.addSourceStamp(
+        d = self.master.db.sourcestampsets.addSourceStampSet()
+
+        def addsourcestamp(setid):
+            self.master.db.sourcestamps.addSourceStamp(
+                sourcestampsetid=setid,
                 branch=parsed_job['branch'],
                 revision=parsed_job['baserev'],
                 patch_body=parsed_job['patch_body'],
@@ -188,11 +192,14 @@ class Try_Jobdir(TryBase):
                 patch_subdir='', # TODO: can't set this remotely - #1769
                 project=parsed_job['project'],
                 repository=parsed_job['repository'])
-        def create_buildset(ssid):
+            return setid
+
+        d.addCallback(addsourcestamp)
+        def create_buildset(setid):
             reason = "'try' job"
             if parsed_job['who']:
                 reason += " by user %s" % parsed_job['who']
-            return self.addBuildsetForSourceStamp(ssid=ssid,
+            return self.addBuildsetForSourceStamp(ssid=None, setid=setid,
                     reason=reason, external_idstring=parsed_job['jobid'],
                     builderNames=builderNames)
         d.addCallback(create_buildset)
@@ -224,19 +231,23 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         if comment:
             reason += " (%s)" % comment
 
+        wfd = defer.waitForDeferred(db.sourcestampsets.addSourceStampSet())
+        yield wfd
+        sourcestampsetid = wfd.getResult()
+
         wfd = defer.waitForDeferred(
                 db.sourcestamps.addSourceStamp(branch=branch, revision=revision,
                     repository=repository, project=project, patch_level=patch[0],
                     patch_body=patch[1], patch_subdir='', patch_author=who or '',
-                    patch_comment=comment or ''))
+                    patch_comment=comment or '', sourcestampsetid = sourcestampsetid))
                     # note: no way to specify patch subdir - #1769
         yield wfd
-        ssid = wfd.getResult()
+        wfd.getResult()
 
         requested_props = Properties()
         requested_props.update(properties, "try build")
         wfd = defer.waitForDeferred(
-                self.scheduler.addBuildsetForSourceStamp(ssid=ssid,
+                self.scheduler.addBuildsetForSourceStamp(setid=sourcestampsetid,
                         reason=reason, properties=requested_props,
                         builderNames=builderNames))
         yield wfd

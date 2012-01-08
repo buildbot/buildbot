@@ -154,7 +154,7 @@ class ForceBuildActionResource(ActionResource):
                     msg = ""
                 except Exception, e:
                     msg = html.escape(e.message.encode('ascii','ignore'))
-                    break
+                break
         wfd = defer.waitForDeferred(d)
         yield wfd
         res = wfd.getResult()
