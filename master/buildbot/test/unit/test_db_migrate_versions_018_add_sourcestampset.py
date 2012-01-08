@@ -110,6 +110,25 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
     # tests
 
+    def thd_assertForeignKeys(self, conn, exp, with_constrained_columns=[]):
+        insp = reflection.Inspector.from_engine(conn)
+        fks = insp.get_foreign_keys('buildsets')
+
+        # filter out constraints including all of the given columns
+        with_constrained_columns = set(with_constrained_columns)
+        fks = sorted([ fk
+            for fk in fks
+            if not with_constrained_columns - set(fk['constrained_columns'])
+        ])
+
+        # clean up
+        for fk in fks:
+            del fk['name'] # schema dependent
+            del fk['referred_schema'] # idem
+
+        # finally, assert
+        self.assertEqual(fks, exp)
+
     def test_1_buildsets(self):
         buildsetdata = [(10, 100),(20, 200),(30, 300)]
         def setup_thd(conn):
@@ -121,13 +140,13 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata.bind = conn
             tbl = sa.Table('buildsets', metadata, autoload=True)
             self.assertTrue(hasattr(tbl.c, 'sourcestampsetid'))
-            insp = reflection.Inspector.from_engine(conn)
-            fk = insp.get_foreign_keys('buildsets')[0]
-            del fk['name'] # schema dependent
-            del fk['referred_schema'] # idem
-            self.assertEqual(fk,{'constrained_columns':['sourcestampsetid'],
-                              'referred_table':'sourcestampsets',
-                              'referred_columns':['id']})
+
+            self.thd_assertForeignKeys(conn, [ {
+                'constrained_columns':['sourcestampsetid'],
+                'referred_table':'sourcestampsets',
+                'referred_columns':['id']},
+            ], with_constrained_columns=['sourcestampsetid'])
+
             res = conn.execute(sa.select([tbl.c.id, tbl.c.sourcestampsetid], order_by=tbl.c.id))
             got_buildsets = res.fetchall()
             self.assertEqual(got_buildsets, buildsetdata)
@@ -146,13 +165,13 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata.bind = conn
             tbl = sa.Table('sourcestamps', metadata, autoload=True)
             self.assertTrue(hasattr(tbl.c, 'sourcestampsetid'))
-            insp = reflection.Inspector.from_engine(conn)
-            fk = insp.get_foreign_keys('sourcestamps')[0]
-            del fk['name'] # schema dependent
-            del fk['referred_schema'] # idem
-            self.assertEqual(fk,{'constrained_columns':['sourcestampsetid'],
-                              'referred_table':'sourcestampsets',
-                              'referred_columns':['id']})
+
+            self.thd_assertForeignKeys(conn, [ {
+                'constrained_columns':['sourcestampsetid'],
+                'referred_table':'sourcestampsets',
+                'referred_columns':['id']},
+            ], with_constrained_columns=['sourcestampsetid'])
+
             res = conn.execute(sa.select([tbl.c.id, tbl.c.sourcestampsetid],
                                           order_by=[tbl.c.sourcestampsetid, tbl.c.id]))
             got_sourcestamps = res.fetchall()
