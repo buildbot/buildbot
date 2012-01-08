@@ -179,6 +179,6 @@ def datetime2epoch(dt):
 
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
-    'safeTranslate', 'remove_userpassword', 'LRUCache', 'none_or_str',
+    'safeTranslate', 'LRUCache', 'none_or_str',
     'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC',
     'diffLists' ]
