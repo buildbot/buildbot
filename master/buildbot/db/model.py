@@ -291,8 +291,6 @@ class Model(base.DBConnectorComponent):
     )
 
     # This table defines the schedulerid for each scheduler
-    # least, the last change that was analyzed, but is stored in an opaque JSON
-    # object.  Note that schedulers are never deleted.
     schedulers = sa.Table("schedulers", metadata,
         # unique ID for scheduler
         sa.Column('schedulerid', sa.Integer, primary_key=True), # TODO: rename to id
@@ -301,6 +299,8 @@ class Model(base.DBConnectorComponent):
         # scheduler's class name, basically representing a "type" for the state
         sa.Column('class_name', sa.String(128), nullable=False),
     )
+
+    # objects
 
     # This table uniquely identifies objects that need to maintain state across
     # invocations.
@@ -325,6 +325,8 @@ class Model(base.DBConnectorComponent):
         # value, as a JSON string
         sa.Column("value_json", sa.Text, nullable=False),
     )
+
+    #users
 
     # This table identifies individual users, and contains buildbot-specific
     # information about those users.
