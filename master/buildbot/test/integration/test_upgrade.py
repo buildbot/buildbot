@@ -137,7 +137,7 @@ class UpgradeTestMixin(object):
                 exp = sorted([
                     dict(name=idx.name,
                          unique=idx.unique and 1 or 0,
-                         column_names=[ c.name for c in idx.columns ])
+                         column_names=sorted([ c.name for c in idx.columns ]))
                     for idx in tbl.indexes ])
 
                 # include implied indexes on postgres and mysql
@@ -162,7 +162,7 @@ class UpgradeTestMixin(object):
                     for name in got_names & exp_names:
                         gi = dict(name=name,
                             unique=got_info[name]['unique'] and 1 or 0,
-                            column_names=got_info[name]['column_names'])
+                            column_names=sorted(got_info[name]['column_names']))
                         ei = exp_info[name]
                         if gi != ei:
                             diff.append(

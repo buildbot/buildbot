@@ -411,7 +411,7 @@ class Model(base.DBConnectorComponent):
             dict(unique=False, column_names=['changeid'], name='changeid')),
         ('buildsets',
             dict(unique=False, column_names=['sourcestampsetid'],
-                               name='sourcestampsetid')),
+                               name='buildsets_sourcestampsetid_fkey')),
     ]
 
     #

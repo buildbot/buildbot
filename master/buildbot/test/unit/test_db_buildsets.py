@@ -132,12 +132,15 @@ class TestBuildsetsConnectorComponent(
             conn.execute(self.db.model.schedulers.insert(), [
                     dict(schedulerid=13, name='other', state='', class_name='sch'),
                 ])
+            conn.execute(self.db.model.sourcestampsets.insert(), [
+                    dict(id=220),
+                ])
             conn.execute(self.db.model.sourcestamps.insert(), [
-                    dict(id=120, sourcestampsetid=120,branch='b', revision='120',
+                    dict(id=120, sourcestampsetid=220,branch='b', revision='120',
                          repository='', project=''),
                 ])
             conn.execute(self.db.model.buildsets.insert(), [
-                    dict(id=14, sourcestampsetid=120, complete=0,
+                    dict(id=14, sourcestampsetid=220, complete=0,
                          results=-1, submitted_at=0),
                 ])
         d = self.db.pool.do(add_data_thd)
@@ -156,14 +159,17 @@ class TestBuildsetsConnectorComponent(
     def test_unsubscribeFromBuildset(self):
         tbl = self.db.model.scheduler_upstream_buildsets
         def add_data_thd(conn):
+            conn.execute(self.db.model.sourcestampsets.insert(), [
+                    dict(id=220),
+                ])
             conn.execute(self.db.model.sourcestamps.insert(), [
-                    dict(id=120, sourcestampsetid=120, branch='b', revision='120',
+                    dict(id=120, sourcestampsetid=220, branch='b', revision='120',
                          repository='', project=''),
                 ])
             conn.execute(self.db.model.buildsets.insert(), [
-                    dict(id=13, sourcestampsetid=120, complete=0,
+                    dict(id=13, sourcestampsetid=220, complete=0,
                          results=-1, submitted_at=0),
-                    dict(id=14, sourcestampsetid=120, complete=0,
+                    dict(id=14, sourcestampsetid=220, complete=0,
                          results=-1, submitted_at=0),
                 ])
             conn.execute(self.db.model.schedulers.insert(), [
@@ -194,22 +200,27 @@ class TestBuildsetsConnectorComponent(
                     dict(schedulerid=92, name='sc', state='', class_name='sch'),
                     dict(schedulerid=93, name='other', state='', class_name='sch'),
                 ])
+            conn.execute(self.db.model.sourcestampsets.insert(), [
+                    dict(id=220),
+                    dict(id=230),
+                    dict(id=240),
+                ]),
             conn.execute(self.db.model.sourcestamps.insert(), [
-                    dict(id=120, sourcestampsetid=120, branch='b', revision='120',
-                         repository='', project=''),
-                    dict(id=130, sourcestampsetid=130, branch='b', revision='130',
-                         repository='', project=''),
-                    dict(id=140, sourcestampsetid=140, branch='b', revision='140',
-                         repository='', project=''),
+                    dict(id=120, sourcestampsetid=220, branch='b',
+                        revision='120', repository='', project=''),
+                    dict(id=130, sourcestampsetid=230, branch='b',
+                        revision='130', repository='', project=''),
+                    dict(id=140, sourcestampsetid=240, branch='b',
+                        revision='140', repository='', project=''),
                 ])
             conn.execute(self.db.model.buildsets.insert(), [
-                    dict(id=12, sourcestampsetid=120, complete=0,
+                    dict(id=12, sourcestampsetid=220, complete=0,
                          results=-1, submitted_at=0),
-                    dict(id=13, sourcestampsetid=130, complete=0,
+                    dict(id=13, sourcestampsetid=230, complete=0,
                          results=-1, submitted_at=0),
-                    dict(id=14, sourcestampsetid=140, complete=1,
+                    dict(id=14, sourcestampsetid=240, complete=1,
                          results=5, submitted_at=0),
-                    dict(id=15, sourcestampsetid=120, complete=0,
+                    dict(id=15, sourcestampsetid=220, complete=0,
                          results=-1, submitted_at=0),
                 ])
             conn.execute(tbl.insert(), [
@@ -228,9 +239,9 @@ class TestBuildsetsConnectorComponent(
                 self.db.buildsets.getSubscribedBuildsets(92))
         def check(res):
             self.assertEqual(sorted(res), sorted([
-                    (12, 120, 0, -1),
-                    (13, 130, 0, -1),
-                    (14, 140, 1, 5),
+                    (12, 220, 0, -1),
+                    (13, 230, 0, -1),
+                    (14, 240, 1, 5),
                 ]))
         d.addCallback(check)
         return d
