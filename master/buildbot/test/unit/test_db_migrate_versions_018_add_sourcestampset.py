@@ -13,10 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from buildbot.test.util import migration
 import sqlalchemy as sa
 from sqlalchemy.engine import reflection
+from twisted.python import log
+from twisted.trial import unittest
+from buildbot.test.util import migration
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -109,8 +110,12 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
     # tests
 
     def thd_assertForeignKeys(self, conn, exp, with_constrained_columns=[]):
+        # MySQL does not reflect or use foreign keys, so we can't check..
+        if conn.dialect.name == 'mysql':
+            return
+
         insp = reflection.Inspector.from_engine(conn)
-        fks = insp.get_foreign_keys('buildsets')
+        fks = orig_fks = insp.get_foreign_keys('buildsets')
 
         # filter out constraints including all of the given columns
         with_constrained_columns = set(with_constrained_columns)
@@ -125,6 +130,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             del fk['referred_schema'] # idem
 
         # finally, assert
+        if fks != exp:
+            log.msg("got: %r" % (orig_fks,))
         self.assertEqual(fks, exp)
 
     def test_1_buildsets(self):
