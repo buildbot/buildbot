@@ -43,6 +43,9 @@ Deprecations, Removals, and Non-Compatible Changes
 * This is the last release of Buildbot that will be compatible with Python 2.4.
   The next version will minimally require Python-2.5.
 
+* SQLAlchemy-Migrate version 0.6.0 is no longer supported.  See
+  :ref:`Buildmaster-Requirements`.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
