@@ -13,12 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-import datetime
 from twisted.trial import unittest
 from buildbot.test.util import migration
 import sqlalchemy as sa
 from sqlalchemy.engine import reflection
-from buildbot.util import UTC
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -79,9 +77,9 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 externalid_string='',
                 reason = 'just',
                 sourcestampid=sourcestampid,
-                submitted_at = datetime.datetime(1969, 4, 16, 12, 00, 00, tzinfo=UTC),
+                submitted_at=22417200,
                 complete = 0,
-                complete_at = datetime.datetime(1969, 4, 16, 13, 00, 00, tzinfo=UTC),
+                complete_at=22417200,
                 results=0)
         conn.execute(self.sourcestamps.insert(),
                 id=sourcestampid,
