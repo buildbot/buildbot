@@ -32,8 +32,8 @@ class TestChangesConnectorComponent(
         d = self.setUpConnectorComponent(
             table_names=['changes', 'change_links', 'change_files',
                 'change_properties', 'scheduler_changes', 'schedulers',
-                'sourcestamps', 'sourcestamp_changes', 'patches',
-                'change_users', 'users'])
+                'sourcestampsets', 'sourcestamps', 'sourcestamp_changes',
+                'patches', 'change_users', 'users'])
 
         def finish_setup(_):
             self.db.changes = changes.ChangesConnectorComponent(self.db)
