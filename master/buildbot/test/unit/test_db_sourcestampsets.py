@@ -24,7 +24,8 @@ class TestSourceStampSetsConnectorComponent(
 
     def setUp(self):
         d = self.setUpConnectorComponent(
-            table_names=['buildsets', 'sourcestamps', 'sourcestampsets' ])
+            table_names=[ 'patches', 'buildsets', 'sourcestamps',
+                'sourcestampsets' ])
 
         def finish_setup(_):
             self.db.sourcestampsets = \

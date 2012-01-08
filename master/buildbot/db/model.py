@@ -410,8 +410,8 @@ class Model(base.DBConnectorComponent):
         ('sourcestamp_changes',
             dict(unique=False, column_names=['changeid'], name='changeid')),
         ('buildsets',
-            dict(unique=False, column_names=['sourcestampid'],
-                               name='sourcestampid')),
+            dict(unique=False, column_names=['sourcestampsetid'],
+                               name='sourcestampsetid')),
     ]
 
     #
