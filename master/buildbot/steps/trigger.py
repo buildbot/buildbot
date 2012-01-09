@@ -169,21 +169,15 @@ class Trigger(LoggingBuildStep):
                     # reverse the dictionary lookup for brid to builder name
                     brid_to_bn = dict((_brid,_bn) for _bn,_brid in brids.iteritems())
 
-                    triggered_builds = self.step_status.getStatistic('triggered_builds',[])
                     for was_cb, builddicts in res:
                         if was_cb:
                             for build in builddicts:
                                 bn = brid_to_bn[build['brid']]
                                 num = build['number']
                                 
-                                # the buildername is useful for lookup later (eg, by mail formatters)
-                                build['buildername'] = bn
-                                
                                 url = master.status.getURLForBuild(bn, num)
                                 self.step_status.addURL("%s #%d" % (bn,num), url)
                                 
-                            triggered_builds.extend(builddicts)
-                    self.step_status.setStatistic('triggered_builds', triggered_builds)
                     return self.end(result)
 
                 builddicts = [master.db.builds.getBuildsForRequest(br) for br in brids.values()]

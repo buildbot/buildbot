@@ -83,8 +83,7 @@ Features
 
 * :py:class:`Trigger` steps with ``waitForFinish=True`` now receive a URL to
   all the triggered builds. This URL is displayed in the waterfall and build
-  details. Also, the statistic ``triggered_builds`` is set in the ``StepStatus``
-  to a list of build dictionaries. See :bb:bug:`2170`.
+  details. See :bb:bug:`2170`.
 
 Slave
 -----

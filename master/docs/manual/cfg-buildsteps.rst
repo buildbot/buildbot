@@ -2395,9 +2395,10 @@ continually triggers itself, because the schedulers are specified
 by name.
 
 If ``waitForFinish`` is ``True``, then the step will not finish until
-all of the builds from the triggered schedulers have finished. If this
-argument is ``False`` (the default) or not given, then the buildstep
-succeeds immediately after triggering the schedulers.
+all of the builds from the triggered schedulers have finished. Hyperlinks
+are added to the waterfall and the build detail web pages for each
+triggered build. If this argument is ``False`` (the default) or not given,
+then the buildstep succeeds immediately after triggering the schedulers.
 
 The SourceStamp to use for the triggered build is controlled by the arguments
 ``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp``.  If
@@ -2424,14 +2425,6 @@ scheduler.  To simply copy properties verbatim, list them in the
 sophisticated ``set_properties``, which takes a dictionary mapping property
 names to values.  You may use :ref:`WithProperties` here to dynamically
 construct new property values.
-
-When ``waitForFinish`` is ``True``, the triggered builds are set in the Trigger
-step's :class:`BuildStepStatus`. Hyperlinks are added to the waterfall and
-the build details web pages for each triggered build. Also, details about each build
-are added into the ``triggered_builds`` statistic in the step status. This statistic
-is a list of dictionaries, one for each build; included in the dictionary keys are
-the standard build information, such as ``buildername`` and ``number``. 
-
 
 Miscellaneous BuildSteps
 ------------------------

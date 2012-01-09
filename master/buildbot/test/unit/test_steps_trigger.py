@@ -121,7 +121,6 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.exp_a_trigger = None
         self.exp_b_trigger = None
         self.exp_added_urls = []
-        self.exp_triggered_builds = []
 
     def runStep(self, expect_waitForFinish=False):
         d = steps.BuildStepMixin.runStep(self)
@@ -178,26 +177,10 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
             #   which is just addURL('label', 'url')
             return ( (label(name,num), url(name,num)) , {} )
 
-        def get_build(sch, name):
-            brid = sch.brids[name]
-            class dont_care:
-                def __eq__(self, other):
-                    return True
-            return {
-                'brid': brid,
-                'buildername': name,
-                'bid': BRID_TO_BID(brid),
-                'number': BRID_TO_BUILD_NUMBER(brid),
-                'start_time': dont_care(),
-                'finish_time': dont_care(),
-            }
-
         if 'a' in args:
             self.exp_added_urls.append(get_args(self.scheduler_a, 'A'))
-            self.exp_triggered_builds.append(get_build(self.scheduler_a,'A'))
         if 'b' in args:
             self.exp_added_urls.append(get_args(self.scheduler_b, 'B'))
-            self.exp_triggered_builds.append(get_build(self.scheduler_b,'B'))
 
 
     # tests
