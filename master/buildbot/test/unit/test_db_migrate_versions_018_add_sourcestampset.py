@@ -44,8 +44,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('results', sa.SmallInteger),
         )
         self.buildsets.create(bind=conn)
-        sa.Index('buildsets_complete', self.buildsets.c.complete)
-        sa.Index('buildsets_submitted_at', self.buildsets.c.submitted_at)
+        sa.Index('buildsets_complete', self.buildsets.c.complete).create()
+        sa.Index('buildsets_submitted_at', self.buildsets.c.submitted_at).create()
 
         self.patches = sa.Table('patches', metadata,
             sa.Column('id', sa.Integer,  primary_key=True),
