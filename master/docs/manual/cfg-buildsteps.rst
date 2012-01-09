@@ -102,6 +102,18 @@ Arguments common to all :class:`BuildStep` subclasses:
     normally.  If you set ``doStepIf`` to a function, that function should
     accept one parameter, which will be the :class:`Step` object itself.
 
+.. index:: Buildstep Parameter; hideInWaterfallIf
+
+``hideInWaterfallIf``
+    A step can be optionally hidden from the waterfall view.  To do this, set
+    the step's ``hideInWaterfallIf`` to a boolean value, or to a function that takes one
+    parameter, the :class:`BuildStepStatus` and returns a boolean value.  Steps are always
+    shown in the waterfall while executing, however after the step as finished, this parameter
+    is evaluated (if a function) and if the value is True, the step is not shown in the waterfall.
+    For example, in order to hide the step if the step has been skipped, ::
+
+        factory.addStep(Foo(..., hideInWaterfallIf=lambda ss: ss.getResults()[0]==SKIPPED))
+
 .. index:: Buildstep Parameter; locks
 
 ``locks``

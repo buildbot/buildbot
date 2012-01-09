@@ -80,6 +80,9 @@ Features
 * Shell command steps will now "flatten" nested lists in the ``command``
   argument.  This allows substitution of multiple command-line arguments using
   properties.  See :bb:bug:`2150`.
+  
+* Steps now take an optional ``hideInWaterfallIf`` parameter to suppress the step
+  from the waterfall view. (:bb:bug:`1743`)
 
 Slave
 -----
