@@ -141,10 +141,6 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
             self.assertEqual(self.step_status.addURL.call_args_list,
                              self.exp_added_urls)
 
-            # some keys are "dont care"... so order of equality matters here....
-            self.assertEqual(self.exp_triggered_builds,
-                             self.step_status.getStatistic('triggered_builds',[]))
-
             if self.exp_add_sourcestamp:
                 self.assertEqual(self.addSourceStamp_kwargs,
                                 self.exp_add_sourcestamp)
