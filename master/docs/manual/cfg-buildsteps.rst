@@ -2395,9 +2395,10 @@ continually triggers itself, because the schedulers are specified
 by name.
 
 If ``waitForFinish`` is ``True``, then the step will not finish until
-all of the builds from the triggered schedulers have finished. If this
-argument is ``False`` (the default) or not given, then the buildstep
-succeeds immediately after triggering the schedulers.
+all of the builds from the triggered schedulers have finished. Hyperlinks
+are added to the waterfall and the build detail web pages for each
+triggered build. If this argument is ``False`` (the default) or not given,
+then the buildstep succeeds immediately after triggering the schedulers.
 
 The SourceStamp to use for the triggered build is controlled by the arguments
 ``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp``.  If

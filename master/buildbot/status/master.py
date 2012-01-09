@@ -116,6 +116,12 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
     def getMetrics(self):
         return self.master.metrics
 
+    def getURLForBuild(self, builder_name, build_number):
+        prefix = self.getBuildbotURL()
+        return prefix + "builders/%s/builds/%d" % (
+            urllib.quote(builder_name, safe=''),
+            build_number)
+
     def getURLForThing(self, thing):
         prefix = self.getBuildbotURL()
         if not prefix:
@@ -132,9 +138,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         if interfaces.IBuildStatus.providedBy(thing):
             build = thing
             bldr = build.getBuilder()
-            return prefix + "builders/%s/builds/%d" % (
-                urllib.quote(bldr.getName(), safe=''),
-                build.getNumber())
+            return self.getURLForBuild(bldr.getName(), build.getNumber())
+            
         if interfaces.IBuildStepStatus.providedBy(thing):
             step = thing
             build = step.getBuild()

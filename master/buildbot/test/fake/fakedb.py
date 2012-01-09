@@ -806,12 +806,9 @@ class FakeBuildsetsComponent(FakeDBComponent):
 
         # only add brids if we're expecting them (sometimes they're unknown)
         if 'brids' in expected_buildset:
-            brids = dict([ (br.buildername, br.id)
-                      for br in self.db.buildrequests.reqs.values()
-                      if br.buildsetid == bsid ])
-            buildset['brids'] = brids
-           
-        for ss in dictOfssDict.itervalues():   
+            buildset['brids'] = self.allBuildRequests(bsid)
+
+        for ss in dictOfssDict.itervalues():
             if 'id' in ss:
                 del ss['id']
             if not ss['changeids']:
@@ -834,6 +831,15 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.t.assertEqual(sorted(subscriptions),
                          sorted(self.buildset_subs))
 
+    def allBuildRequests(self, bsid=None):
+        if bsid is not None:
+            is_same_bsid = lambda br: br.buildsetid==bsid
+        else:
+            is_same_bsid = lambda br: True
+        return dict([ (br.buildername, br.id)
+              for br in self.db.buildrequests.reqs.values()
+              if is_same_bsid(br) ])
+        
 
 class FakeStateComponent(FakeDBComponent):
 

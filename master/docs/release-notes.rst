@@ -88,6 +88,10 @@ Features
   argument.  This allows substitution of multiple command-line arguments using
   properties.  See :bb:bug:`2150`.
 
+* :py:class:`Trigger` steps with ``waitForFinish=True`` now receive a URL to
+  all the triggered builds. This URL is displayed in the waterfall and build
+  details. See :bb:bug:`2170`.
+
 Slave
 -----
 
