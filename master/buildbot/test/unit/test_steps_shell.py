@@ -254,31 +254,32 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["'echo", "hello'"])
         return self.runStep()
     
-    def _setupWaterfallTest(self, hideInWaterfallIf, expect):
+    def _setupWaterfallTest(self, hideStepIf, expect):
         self.setupStep(
                 shell.ShellCommand(workdir='build', command="echo hello",
-                                   hideInWaterfallIf=hideInWaterfallIf))
+                                   hideStepIf=hideStepIf))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello',
                          usePTY="slave-config")
             + 0
         )
         self.expectOutcome(result=SUCCESS, status_text=["'echo", "hello'"])
-        self.expectHiddenInWaterfall(expect)
+        self.expectHidden(expect)
         
-    def test_hideInWaterfallIf_False(self):
+    def test_hideStepIf_False(self):
         self._setupWaterfallTest(False, False)
         return self.runStep()
         
-    def test_hideInWaterfallIf_True(self):
+    def test_hideStepIf_True(self):
         self._setupWaterfallTest(True, True)
         return self.runStep()
         
-    def test_hideInWaterfallIf_Callable_False(self):
+    def test_hideStepIf_Callable_False(self):
         called = [False]
-        def shouldHide(ss):
+        def shouldHide(result, step):
             called[0] = True
-            self.assertTrue(ss is self.step_status)
+            self.assertTrue(step is self.step)
+            self.assertEquals(result, SUCCESS)
             return False
         
         self._setupWaterfallTest(shouldHide, False)
@@ -287,11 +288,12 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         d.addCallback(lambda _ : self.assertTrue(called[0]))
         return d
         
-    def test_hideInWaterfallIf_Callable_True(self):
+    def test_hideStepIf_Callable_True(self):
         called = [False]
-        def shouldHide(ss):
+        def shouldHide(result, step):
             called[0] = True
-            self.assertTrue(ss is self.step_status)
+            self.assertTrue(step is self.step)
+            self.assertEquals(result, SUCCESS)
             return True
         
         self._setupWaterfallTest(shouldHide, True)
@@ -301,11 +303,12 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         return d
         
     @compat.usesFlushLoggedErrors
-    def test_hideInWaterfallIf_Callable_Exception(self):
+    def test_hideStepIf_Callable_Exception(self):
         called = [False]
-        def shouldHide(ss):
+        def shouldHide(result, step):
             called[0] = True
-            self.assertTrue(ss is self.step_status)
+            self.assertTrue(step is self.step)
+            self.assertEquals(result, EXCEPTION)
             return True
         
         def createException(*args, **kwargs):
@@ -313,10 +316,10 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         
         self.setupStep(
                 shell.ShellCommand(workdir='build', command="echo hello",
-                                   hideInWaterfallIf=shouldHide,
+                                   hideStepIf=shouldHide,
                                    doStepIf=createException))
         self.expectOutcome(result=EXCEPTION, status_text=['shell', 'exception'])
-        self.expectHiddenInWaterfall(True)
+        self.expectHidden(True)
 
         d = self.runStep()
         d.addCallback(lambda _ :

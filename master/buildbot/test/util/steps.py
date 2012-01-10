@@ -160,7 +160,7 @@ class BuildStepMixin(object):
         self.exp_properties = {}
         self.exp_missing_properties = []
         self.exp_logfiles = {}
-        self.exp_hiddenInWaterfall = False
+        self.exp_hidden = False
 
         return step
 
@@ -196,8 +196,8 @@ class BuildStepMixin(object):
         """
         self.exp_logfiles[logfile] = contents
     
-    def expectHiddenInWaterfall(self, hidden):
-        self.exp_hiddenInWaterfall = hidden
+    def expectHidden(self, hidden):
+        self.exp_hidden = hidden
 
     def runStep(self):
         """
@@ -224,7 +224,7 @@ class BuildStepMixin(object):
                 self.failIf(self.properties.hasProperty(pn))
             for log, contents in self.exp_logfiles.iteritems():
                 self.assertEqual(self.step_status.logs[log].stdout, contents)
-            self.step_status.setHiddenInWaterfall.assert_called_once_with(self.exp_hiddenInWaterfall)
+            self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
         d.addCallback(check)
         return d
 

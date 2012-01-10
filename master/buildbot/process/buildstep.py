@@ -411,7 +411,7 @@ class BuildStep(properties.PropertiesMixin):
     warnOnFailure = False
     alwaysRun = False
     doStepIf = True
-    hideInWaterfallIf = False
+    hideStepIf = False
 
     # properties set on a build step are, by nature, always runtime properties
     set_runtime_properties = True
@@ -433,7 +433,7 @@ class BuildStep(properties.PropertiesMixin):
              'progressMetrics',
              'useProgress',
              'doStepIf',
-             'hideInWaterfallIf',
+             'hideStepIf',
              ]
 
     name = "generic"
@@ -624,8 +624,8 @@ class BuildStep(properties.PropertiesMixin):
             self.progress.finish()
         self.step_status.stepFinished(results)
         
-        hidden = self._maybeEvaluate(self.hideInWaterfallIf, self.step_status)
-        self.step_status.setHiddenInWaterfall(hidden)
+        hidden = self._maybeEvaluate(self.hideStepIf, results, self)
+        self.step_status.setHidden(hidden)
         
         self.releaseLocks()
         self.deferred.callback(results)
@@ -649,8 +649,8 @@ class BuildStep(properties.PropertiesMixin):
             self.step_status.setText2([self.name])
             self.step_status.stepFinished(EXCEPTION)
 
-            hidden = self._maybeEvaluate(self.hideInWaterfallIf, self.step_status)
-            self.step_status.setHiddenInWaterfall(hidden)       
+            hidden = self._maybeEvaluate(self.hideStepIf, EXCEPTION, self)
+            self.step_status.setHidden(hidden)
         except:
             log.msg("exception during failure processing")
             log.err()

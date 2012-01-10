@@ -81,8 +81,8 @@ Features
   argument.  This allows substitution of multiple command-line arguments using
   properties.  See :bb:bug:`2150`.
   
-* Steps now take an optional ``hideInWaterfallIf`` parameter to suppress the step
-  from the waterfall view. (:bb:bug:`1743`)
+* Steps now take an optional ``hideStepIf`` parameter to suppress the step
+  from the waterfall and build details in the web. (:bb:bug:`1743`)
 
 Slave
 -----

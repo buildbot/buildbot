@@ -60,13 +60,13 @@ class BuildStepStatus(styles.Versioned):
     finishedWatchers = []
     statistics = {}
     step_number = None
-    hiddenInWaterfall = False
+    hidden = False
 
     def __init__(self, parent, master, step_number):
         assert interfaces.IBuildStatus(parent)
         self.build = parent
         self.step_number = step_number
-        self.hiddenInWaterfall = False
+        self.hidden = False
         self.logs = []
         self.urls = {}
         self.watchers = []
@@ -117,8 +117,8 @@ class BuildStepStatus(styles.Versioned):
     def isFinished(self):
         return (self.finished is not None)
 
-    def isHiddenInWaterfall(self):
-        return self.hiddenInWaterfall
+    def isHidden(self):
+        return self.hidden
 
     def waitUntilFinished(self):
         if self.finished:
@@ -214,8 +214,8 @@ class BuildStepStatus(styles.Versioned):
     def setProgress(self, stepprogress):
         self.progress = stepprogress
 
-    def setHiddenInWaterfall(self, hidden):
-        self.hiddenInWaterfall = hidden
+    def setHidden(self, hidden):
+        self.hidden = hidden
 
     def stepStarted(self):
         self.started = util.now()
@@ -354,8 +354,8 @@ class BuildStepStatus(styles.Versioned):
         self.wasUpgraded = True
 
     def upgradeToVersion4(self):
-        if not hasattr(self, "hiddenInWaterfall"):
-            self.hiddenInWaterfall = False
+        if not hasattr(self, "hidden"):
+            self.hidden = False
         self.wasUpgraded = True
 
     def asDict(self):
@@ -374,7 +374,7 @@ class BuildStepStatus(styles.Versioned):
         result['eta'] = self.getETA()
         result['urls'] = self.getURLs()
         result['step_number'] = self.step_number
-        result['hiddenInWaterfall'] = self.hiddenInWaterfall
+        result['hidden'] = self.hidden
         result['logs'] = [[l.getName(),
             self.build.builder.status.getURLForThing(l)]
                 for l in self.getLogs()]

@@ -586,7 +586,7 @@ class WaterfallStatusResource(HtmlResource):
 
                     if isinstance(e, buildstep.BuildStepStatus):
                         # unfinished steps are always shown
-                        if e.isFinished() and e.isHiddenInWaterfall():
+                        if e.isFinished() and e.isHidden():
                             continue
 
                     break
