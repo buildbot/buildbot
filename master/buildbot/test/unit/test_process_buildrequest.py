@@ -16,6 +16,7 @@
 from twisted.trial import unittest
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import buildrequest
+from buildbot.process.build import Build
 
 class TestBuildRequest(unittest.TestCase):
 
@@ -140,11 +141,11 @@ class TestBuildRequest(unittest.TestCase):
             self.assertEqual(br.source.ssid, 234)
 
             # Test the multiple sourcestamp interface
-            self.assertEqual(br.sources[0].ssid, 234)
-            self.assertEqual(br.sources[1].ssid, 235)
-
-            self.assertEqual([ ch.number for ch in br.sources[0].changes], [13])
-            self.assertEqual([ ch.number for ch in br.sources[1].changes], [14])
+            self.assertEqual(br.sources['svn://a..'].ssid, 234)
+            self.assertEqual(br.sources['svn://b..'].ssid, 235)
+            
+            self.assertEqual([ ch.number for ch in br.sources['svn://a..'].changes], [13])
+            self.assertEqual([ ch.number for ch in br.sources['svn://b..'].changes], [14])
 
             self.assertEqual(br.reason, 'triggered')
 
@@ -155,6 +156,166 @@ class TestBuildRequest(unittest.TestCase):
             self.assertEqual(br.priority, 13)
             self.assertEqual(br.id, 288)
             self.assertEqual(br.bsid, 539)
+        d.addCallback(check)
+        return d
+
+    def test_fromBrdict_common_repositories_with_merge(self):
+        """ This testcase has two buildrequests
+            Request Change Repository Revision Comment
+            ----------------------------------------------------------------------
+            288     13     svn://a    9283
+            289     15     svn://a    9284
+            288     14     svn://b    9200
+            289     16     svn://b    9201
+            -------------------------------- 
+            After merged in Build:
+            Source1 has rev 9284 and contains changes 13 and 15 from repository svn://a
+            Source2 has rev 9201 and contains changes 14 and 16 from repository svn://b
+        """
+        brs=[] # list of buildrequests
+        master = fakemaster.make_master()
+        master.db = fakedb.FakeDBConnector(self)
+        master.db.insertTestData([
+            fakedb.SourceStampSet(id=2340),
+
+            fakedb.Change(changeid=13, branch='trunk', revision='9283',
+                        repository='svn://a..', project='world-domination'),
+            fakedb.SourceStamp(id=234, sourcestampsetid=2340, branch='trunk',
+                        revision='9283', repository='svn://a..',
+                        project='world-domination'),
+            fakedb.SourceStampChange(sourcestampid=234, changeid=13),
+
+            fakedb.Change(changeid=14, branch='trunk', revision='9200',
+                        repository='svn://b..', project='world-domination'),
+            fakedb.SourceStamp(id=235, sourcestampsetid=2340, branch='trunk',
+                        revision='9200', repository='svn://b..',
+                        project='world-domination'),
+            fakedb.SourceStampChange(sourcestampid=235, changeid=14),
+
+            fakedb.SourceStampSet(id=2360),
+
+            fakedb.Change(changeid=15, branch='trunk', revision='9284',
+                        repository='svn://a..', project='world-domination'),
+            fakedb.SourceStamp(id=236, sourcestampsetid=2360, branch='trunk',
+                        revision='9284', repository='svn://a..',
+                        project='world-domination'),
+            fakedb.SourceStampChange(sourcestampid=236, changeid=15),
+
+            fakedb.Change(changeid=16, branch='trunk', revision='9201',
+                        repository='svn://b..', project='world-domination'),
+            fakedb.SourceStamp(id=237, sourcestampsetid=2360, branch='trunk',
+                        revision='9201', repository='svn://b..',
+                        project='world-domination'),
+            fakedb.SourceStampChange(sourcestampid=237, changeid=16),
+      
+            fakedb.Buildset(id=539, reason='triggered', sourcestampsetid=2340),
+            fakedb.BuildRequest(id=288, buildsetid=539, buildername='bldr'),
+
+            fakedb.Buildset(id=540, reason='triggered', sourcestampsetid=2360),
+            fakedb.BuildRequest(id=289, buildsetid=540, buildername='bldr'),
+        ])
+        # use getBuildRequest to minimize the risk from changes to the format
+        # of the brdict
+        d = master.db.buildrequests.getBuildRequest(288)
+        d.addCallback(lambda brdict :
+                    buildrequest.BuildRequest.fromBrdict(master, brdict))
+        d.addCallback(lambda br : brs.append(br))
+        d.addCallback(lambda _ : 
+                    master.db.buildrequests.getBuildRequest(289))
+        d.addCallback(lambda brdict :
+                    buildrequest.BuildRequest.fromBrdict(master, brdict))
+        d.addCallback(lambda br : brs.append(br))
+        def check(_):
+            sources = brs[0].mergeSourceStampsWith(brs[1:])
+            
+            source1 = source2 = None
+            for source in sources:
+                if source.repository == 'svn://a..':
+                    source1 = source
+                if source.repository == 'svn://b..':
+                    source2 = source
+
+            self.assertFalse(source1 == None)
+            self.assertEqual(source1.revision,'9284')
+            
+            self.assertFalse(source2 == None)
+            self.assertEqual(source2.revision,'9201')
+                      
+            self.assertEqual([c.number for c in source1.changes], [13,15])
+            self.assertEqual([c.number for c in source2.changes], [14,16])
+            
+        d.addCallback(check)
+        return d
+
+    def test_fromBrdict_different_repositories_with_merge(self):
+        """ This testcase has two buildrequests
+            Request Change Repository Revision Comment
+            ----------------------------------------------------------------------
+            288     17     svn://c    1800     request 1 has repo not in request 2
+            289     18     svn://d    2100     request 2 has repo not in request 1
+            -------------------------------- 
+            After merged in Build:
+            Source1 has rev 1800 and contains change 17 from repository svn://c
+            Source2 has rev 2100 and contains change 18 from repository svn://d
+        """
+        brs=[] # list of buildrequests
+        master = fakemaster.make_master()
+        master.db = fakedb.FakeDBConnector(self)
+        master.db.insertTestData([
+            fakedb.SourceStampSet(id=2340),
+
+            fakedb.Change(changeid=17, branch='trunk', revision='1800',
+                        repository='svn://c..', project='world-domination'),
+            fakedb.SourceStamp(id=238, sourcestampsetid=2340, branch='trunk',
+                        revision='1800', repository='svn://c..',
+                        project='world-domination'),
+            fakedb.SourceStampChange(sourcestampid=238, changeid=17),
+
+            fakedb.SourceStampSet(id=2360),
+
+            fakedb.Change(changeid=18, branch='trunk', revision='2100',
+                        repository='svn://d..', project='world-domination'),
+            fakedb.SourceStamp(id=239, sourcestampsetid=2360, branch='trunk',
+                        revision='2100', repository='svn://d..',
+                        project='world-domination'),
+            fakedb.SourceStampChange(sourcestampid=239, changeid=18),
+            
+            fakedb.Buildset(id=539, reason='triggered', sourcestampsetid=2340),
+            fakedb.BuildRequest(id=288, buildsetid=539, buildername='bldr'),
+
+            fakedb.Buildset(id=540, reason='triggered', sourcestampsetid=2360),
+            fakedb.BuildRequest(id=289, buildsetid=540, buildername='bldr'),
+        ])
+        # use getBuildRequest to minimize the risk from changes to the format
+        # of the brdict
+        d = master.db.buildrequests.getBuildRequest(288)
+        d.addCallback(lambda brdict :
+                    buildrequest.BuildRequest.fromBrdict(master, brdict))
+        d.addCallback(lambda br : brs.append(br))
+        d.addCallback(lambda _ : 
+                    master.db.buildrequests.getBuildRequest(289))
+        d.addCallback(lambda brdict :
+                    buildrequest.BuildRequest.fromBrdict(master, brdict))
+        d.addCallback(lambda br : brs.append(br))
+        def check(_):
+            sources = brs[0].mergeSourceStampsWith(brs[1:])
+            
+            source1 = source2 = None
+            for source in sources:
+                if source.repository == 'svn://c..':
+                    source1 = source
+                if source.repository == 'svn://d..':
+                    source2 = source
+
+            self.assertFalse(source1 == None)
+            self.assertEqual(source1.revision,'1800')
+            
+            self.assertFalse(source2 == None)
+            self.assertEqual(source2.revision,'2100')
+            
+            self.assertEqual([c.number for c in source1.changes], [17])
+            self.assertEqual([c.number for c in source2.changes], [18])
+
         d.addCallback(check)
         return d
 

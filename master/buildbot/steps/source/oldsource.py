@@ -194,6 +194,8 @@ class Source(LoggingBuildStep):
         # This will get added to args later, after properties are rendered
         self.workdir = workdir
 
+        self.sourcestamp = None
+        
         self.alwaysUseLatest = alwaysUseLatest
 
         self.logEnviron = logEnviron
@@ -261,6 +263,7 @@ class Source(LoggingBuildStep):
         # what source stamp would this build like to use?
         id = self.getRepository()
         s = self.build.getSourceStamp(id)
+        self.sourcestamp = s
 
         # if branch is None, then use the Step's "default" branch
         branch = s.branch or self.branch

@@ -26,25 +26,32 @@ from buildbot.process.buildstep import LoggingBuildStep
 from mock import Mock
 
 class FakeChange:
+    def __init__(self, number = None):
+        self.number = number
+        
     properties = Properties()
     who = "me"
 
 class FakeSource:
-    changes = [FakeChange()]
+
+    def getRepository(self):
+        return self.repository
+        
+    changes = []
     branch = None
-    revision = "12345"
+    revision = None
     repository = None
     project = None
     patch_info = (None, None)
     patch = None
 
 class FakeRequest:
-    source = FakeSource()
+    sources = []
     reason = "Because"
     properties = Properties()
 
-    def mergeWith(self, others):
-        return self.source
+    def mergeSourceStampsWith(self, others):
+        return self.sources
 
     def mergeReasons(self, others):
         return self.reason
@@ -76,6 +83,10 @@ class TestBuild(unittest.TestCase):
 
     def setUp(self):
         r = FakeRequest()
+        r.sources = [FakeSource()]
+        r.sources[0].changes = [FakeChange()]
+        r.sources[0].revision = "12345"
+        
         self.build = Build([r])
         self.builder = Mock()
         self.builder.botmaster = FakeMaster()
@@ -434,7 +445,59 @@ class TestBuild(unittest.TestCase):
         self.assertEqual(terminate, True)
         self.assertEqual(b.result, RETRY)
 
+class TestMultipleSourceStamps(unittest.TestCase):
 
+    def setUp(self):
+        r = FakeRequest()
+        s1 = FakeSource()
+        s1.repository = "repoA"
+        s1.changes = [FakeChange(10), FakeChange(11)]
+        s1.revision = "12345"
+        s2 = FakeSource()
+        s2.repository = "repoB"
+        s2.changes = [FakeChange(12),FakeChange(13)]
+        s2.revision = "67890"
+        r.sources.extend([s1,s2])
+        
+        self.build = Build([r])
+
+    def test_buildReturnSourceStamp(self):
+        """
+        Test that a build returns the correct sourcestamp
+        """
+        source1 = self.build.getSourceStamp("repoA")
+        source2 = self.build.getSourceStamp("repoB")
+
+        self.assertEqual( [source1.repository, source1.revision], ["repoA", "12345"])
+        self.assertEqual( [source2.repository, source2.revision], ["repoB", "67890"])
+
+    def test_buildReturnSourceStamp_noArgs(self):
+        """
+        Test that a build returns the first sourcestamp if no arg is passed
+        """
+        source1 = self.build.getSourceStamp()
+        self.assertEqual( [source1.repository, source1.revision], ["repoA", "12345"])
+
+        
+class TestSingleSourceStamps(unittest.TestCase):
+
+    def setUp(self):
+        r = FakeRequest()
+        s1 = FakeSource()
+        s1.repository = "repoA"
+        s1.changes = [FakeChange(10), FakeChange(11)]
+        s1.revision = "12345"
+
+        r.sources.extend([s1])
+        self.build = Build([r])
+
+    def test_buildReturnSourceStamp_noArgs(self):
+        """
+        Test that a build returns the one and only sourcestamp
+        """
+        source1 = self.build.getSourceStamp()
+        self.assertEqual( [source1.repository, source1.revision], ["repoA", "12345"])
+        
 class TestBuildProperties(unittest.TestCase):
     """
     Test that a Build has the necessary L{IProperties} methods, and that they
@@ -444,6 +507,9 @@ class TestBuildProperties(unittest.TestCase):
 
     def setUp(self):
         r = FakeRequest()
+        r.sources = [FakeSource()]
+        r.sources[0].changes = [FakeChange()]
+        r.sources[0].revision = "12345"
         self.build = Build([r])
         self.build.setStepFactories([])
         self.builder = Mock()
