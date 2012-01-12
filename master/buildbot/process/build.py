@@ -93,7 +93,10 @@ class Build(properties.PropertiesMixin):
 
     def getSourceStamp(self, repository=None):
         if repository is None:
-            return self.sources[0]
+            if len(self.sources) >=1:
+                return self.sources[0]
+            else:
+                return None
         for source in self.sources:
             if source.repository == repository:
                 return source
