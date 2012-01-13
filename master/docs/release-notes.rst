@@ -92,6 +92,10 @@ Features
   all the triggered builds. This URL is displayed in the waterfall and build
   details. See :bb:bug:`2170`.
 
+* The bb:src:`master/contrib/fakemaster.py`` script allows you to run arbitrary
+  commands on a slave by emulating a master.  See the file itself for
+  documentation.
+
 Slave
 -----
 
