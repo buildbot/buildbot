@@ -253,6 +253,82 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS, status_text=["'echo", "hello'"])
         return self.runStep()
+    
+    def _setupWaterfallTest(self, hideStepIf, expect):
+        self.setupStep(
+                shell.ShellCommand(workdir='build', command="echo hello",
+                                   hideStepIf=hideStepIf))
+        self.expectCommands(
+            ExpectShell(workdir='build', command='echo hello',
+                         usePTY="slave-config")
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["'echo", "hello'"])
+        self.expectHidden(expect)
+        
+    def test_hideStepIf_False(self):
+        self._setupWaterfallTest(False, False)
+        return self.runStep()
+        
+    def test_hideStepIf_True(self):
+        self._setupWaterfallTest(True, True)
+        return self.runStep()
+        
+    def test_hideStepIf_Callable_False(self):
+        called = [False]
+        def shouldHide(result, step):
+            called[0] = True
+            self.assertTrue(step is self.step)
+            self.assertEquals(result, SUCCESS)
+            return False
+        
+        self._setupWaterfallTest(shouldHide, False)
+
+        d = self.runStep()
+        d.addCallback(lambda _ : self.assertTrue(called[0]))
+        return d
+        
+    def test_hideStepIf_Callable_True(self):
+        called = [False]
+        def shouldHide(result, step):
+            called[0] = True
+            self.assertTrue(step is self.step)
+            self.assertEquals(result, SUCCESS)
+            return True
+        
+        self._setupWaterfallTest(shouldHide, True)
+
+        d = self.runStep()
+        d.addCallback(lambda _ : self.assertTrue(called[0]))
+        return d
+        
+    @compat.usesFlushLoggedErrors
+    def test_hideStepIf_Callable_Exception(self):
+        called = [False]
+        def shouldHide(result, step):
+            called[0] = True
+            self.assertTrue(step is self.step)
+            self.assertEquals(result, EXCEPTION)
+            return True
+        
+        def createException(*args, **kwargs):
+            raise RuntimeError()
+        
+        self.setupStep(
+                shell.ShellCommand(workdir='build', command="echo hello",
+                                   hideStepIf=shouldHide,
+                                   doStepIf=createException))
+        self.expectOutcome(result=EXCEPTION, status_text=['shell', 'exception'])
+        self.expectHidden(True)
+
+        d = self.runStep()
+        d.addCallback(lambda _ :
+            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
+        d.addCallback(lambda _ : self.assertTrue(called[0]))
+        return d
+
+
+
 
 class TreeSize(steps.BuildStepMixin, unittest.TestCase):
 
