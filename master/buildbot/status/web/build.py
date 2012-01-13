@@ -188,9 +188,11 @@ class StatusResourceBuild(HtmlResource):
 
         for s in b.getSteps():
             step = {'name': s.getName() }
-            cxt['steps'].append(step)
 
             if s.isFinished():
+                if s.isHidden():
+                    continue
+
                 step['css_class'] = css_classes[s.getResults()[0]]
                 (start, end) = s.getTimes()
                 step['time_to_run'] = util.formatInterval(end - start)
@@ -204,6 +206,8 @@ class StatusResourceBuild(HtmlResource):
             else:
                 step['css_class'] = "not_started"
                 step['time_to_run'] = ""
+
+            cxt['steps'].append(step)
 
             step['link'] = req.childLink("steps/%s" % 
                                     urllib.quote(s.getName(), safe=''))

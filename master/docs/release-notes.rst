@@ -91,6 +91,9 @@ Features
 * Shell command steps will now "flatten" nested lists in the ``command``
   argument.  This allows substitution of multiple command-line arguments using
   properties.  See :bb:bug:`2150`.
+  
+* Steps now take an optional ``hideStepIf`` parameter to suppress the step
+  from the waterfall and build details in the web. (:bb:bug:`1743`)
 
 * :py:class:`Trigger` steps with ``waitForFinish=True`` now receive a URL to
   all the triggered builds. This URL is displayed in the waterfall and build
