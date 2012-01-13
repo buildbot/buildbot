@@ -72,9 +72,10 @@ Buildmaster Requirements
 
 sqlite3: http://www.sqlite.org
 
-  Buildbot requires SQLite to store its state.  Version 3.3.8 or higher is
-  recommended, as earlier versions had trouble with contention for database
-  tables.
+  Buildbot requires SQLite to store its state.  Version 3.7.0 or higher is
+  recommended, although Buildbot will run against earlier versions -- at the
+  risk of "Database is locked" errors.  The minimum version is 3.4.0, below
+  which parallel database queries and schema introspection fail.
 
 pysqlite: http://pypi.python.org/pypi/pysqlite
 

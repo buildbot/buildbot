@@ -46,6 +46,10 @@ Deprecations, Removals, and Non-Compatible Changes
 * SQLAlchemy-Migrate version 0.6.0 is no longer supported.  See
   :ref:`Buildmaster-Requirements`.
 
+* Older versions of SQLite which could limp along for previous versions of
+  Buildbot are no longer supported.  The minimum version is 3.4.0, and 3.7.0 or
+  higher is recommended.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
