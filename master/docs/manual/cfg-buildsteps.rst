@@ -2117,8 +2117,8 @@ status to the uploaded file. ::
     
     f.addStep(ShellCommand(command=["make", "docs"]))
     f.addStep(FileUpload(slavesrc="docs/reference.html",
-                         masterdest="~/public_html/ref.html",
-                         url="/~buildbot/ref.html"))
+                         masterdest="/home/bb/public_html/ref.html",
+                         url="http://somesite/~buildbot/ref.html"))
 
 The ``masterdest=`` argument will be passed to :meth:`os.path.expanduser`,
 so things like ``~`` will be expanded properly. Non-absolute paths
