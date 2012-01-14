@@ -64,6 +64,17 @@ Changes for Developers
   used to generate a single build, thanks to Harry Borkhuis.  See
   :bb:pull:`287`.
 
+* Schedulers no longer have a ``schedulerid``, but rather an ``objectid``.  In
+  a related change, the ``schedulers`` table has been removed, along with the
+  :py:meth:`buildbot.db.schedulers.SchedulersConnectorComponent.getSchedulerId`
+  method.
+
+* The Dependent scheduler tracks its upstream buildsets using
+  :py:class:`buildbot.db.schedulers.StateConnectorComponent`, so the
+  ``scheduler_upstream_buildsets`` table has been removed, along with
+  corresponding (undocumented)
+  :py:class:`buildbot.db.buildsets.BuildsetsConnector` methods.
+
 Features
 ~~~~~~~~
 

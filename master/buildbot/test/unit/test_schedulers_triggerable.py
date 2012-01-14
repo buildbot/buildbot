@@ -21,7 +21,7 @@ from buildbot.test.fake import fakedb
 
 class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
-    SCHEDULERID = 33
+    OBJECTID = 33
 
     def setUp(self):
         self.setUpScheduler()
@@ -33,7 +33,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
     def makeScheduler(self, **kwargs):
         sched = self.attachScheduler(
                 triggerable.Triggerable(name='n', builderNames=['b']),
-                self.SCHEDULERID)
+                self.OBJECTID)
 
         return sched
 

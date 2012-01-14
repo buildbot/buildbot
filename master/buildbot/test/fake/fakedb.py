@@ -220,29 +220,16 @@ class SourceStamp(Row):
     id_column = 'id'
 
 
-class Scheduler(Row):
-    table = "schedulers"
-
-    defaults = dict(
-        schedulerid = None,
-        name = 'testsched',
-        state = '{}',
-        class_name = 'TestScheduler',
-    )
-
-    id_column = 'schedulerid'
-
-
 class SchedulerChange(Row):
     table = "scheduler_changes"
 
     defaults = dict(
-        schedulerid = None,
+        objectid = None,
         changeid = None,
         important = 1,
     )
 
-    required_columns = ( 'schedulerid', 'changeid' )
+    required_columns = ( 'objectid', 'changeid' )
 
 
 class Buildset(Row):
@@ -273,18 +260,6 @@ class BuildsetProperty(Row):
     )
 
     required_columns = ( 'buildsetid', )
-
-
-class SchedulerUpstreamBuildset(Row):
-    table = "scheduler_upstream_buildsets"
-
-    defaults = dict(
-        buildsetid = None,
-        schedulerid = None,
-        active = 0,
-    )
-
-    required_columns = ( 'buildsetid', 'schedulerid' )
 
 
 class Object(Row):
@@ -491,31 +466,28 @@ class FakeSchedulersComponent(FakeDBComponent):
 
     def insertTestData(self, rows):
         for row in rows:
-            if isinstance(row, Scheduler):
-                self.states[row.schedulerid] = json.loads(row.state)
-
-            elif isinstance(row, SchedulerChange):
-                cls = self.classifications.setdefault(row.schedulerid, {})
+            if isinstance(row, SchedulerChange):
+                cls = self.classifications.setdefault(row.objectid, {})
                 cls[row.changeid] = row.important
 
     # component methods
 
-    def classifyChanges(self, schedulerid, classifications):
-        self.classifications.setdefault(schedulerid, {}).update(classifications)
+    def classifyChanges(self, objectid, classifications):
+        self.classifications.setdefault(objectid, {}).update(classifications)
         return defer.succeed(None)
 
-    def flushChangeClassifications(self, schedulerid, less_than=None):
+    def flushChangeClassifications(self, objectid, less_than=None):
         if less_than is not None:
-            classifications = self.classifications.setdefault(schedulerid, {})
+            classifications = self.classifications.setdefault(objectid, {})
             for changeid in classifications.keys():
                 if changeid < less_than:
                     del classifications[changeid]
         else:
-            self.classifications[schedulerid] = {}
+            self.classifications[objectid] = {}
         return defer.succeed(None)
 
-    def getChangeClassifications(self, schedulerid, branch=-1):
-        classifications = self.classifications.setdefault(schedulerid, {})
+    def getChangeClassifications(self, objectid, branch=-1):
+        classifications = self.classifications.setdefault(objectid, {})
         if branch is not -1:
             # filter out the classifications for the requested branch
             change_branches = dict(
@@ -528,16 +500,17 @@ class FakeSchedulersComponent(FakeDBComponent):
 
     # fake methods
 
-    def fakeClassifications(self, schedulerid, classifications):
+    def fakeClassifications(self, objectid, classifications):
         """Set the set of classifications for a scheduler"""
-        self.classifications[schedulerid] = classifications
+        self.classifications[objectid] = classifications
 
     # assertions
 
-    def assertClassifications(self, schedulerid, classifications):
+    def assertClassifications(self, objectid, classifications):
         self.t.assertEqual(
-                self.classifications.get(schedulerid, {}),
+                self.classifications.get(objectid, {}),
                 classifications)
+
 
 class FakeSourceStampSetsComponent(FakeDBComponent):
     def setUp(self):
@@ -653,8 +626,6 @@ class FakeBuildsetsComponent(FakeDBComponent):
             if isinstance(row, Buildset):
                 bs = self.buildsets[row.id] = row.values.copy()
                 bs['properties'] = {}
-            if isinstance(row, SchedulerUpstreamBuildset):
-                self.buildset_subs.append((row.schedulerid, row.buildsetid))
 
         for row in rows:
             if isinstance(row, BuildsetProperty):
@@ -694,23 +665,6 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.buildsets[bsid]['complete'] = 1
         self.buildsets[bsid]['complete_at'] = complete_at or _reactor.seconds()
         return defer.succeed(None)
-
-    def subscribeToBuildset(self, schedulerid, buildsetid):
-        self.buildset_subs.append((schedulerid, buildsetid))
-        return defer.succeed(None)
-
-    def unsubscribeFromBuildset(self, schedulerid, buildsetid):
-        self.buildset_subs.remove((schedulerid, buildsetid))
-        return defer.succeed(None)
-
-    def getSubscribedBuildsets(self, schedulerid):
-        bsids = [ b for (s, b) in self.buildset_subs if s == schedulerid ]
-        rv = [ (bsid,
-                self.buildsets[bsid]['sourcestampsetid'],
-                bsid in self.completed_bsids,
-                self.buildsets[bsid].get('results', -1))
-                for bsid in bsids ]
-        return defer.succeed(rv)
 
     def getBuildset(self, bsid):
         if bsid not in self.buildsets:
@@ -827,10 +781,6 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def allBuildsetIds(self):
         return self.buildsets.keys()
 
-    def assertBuildsetSubscriptions(self, *subscriptions):
-        self.t.assertEqual(sorted(subscriptions),
-                         sorted(self.buildset_subs))
-
     def allBuildRequests(self, bsid=None):
         if bsid is not None:
             is_same_bsid = lambda br: br.buildsetid==bsid
@@ -839,7 +789,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         return dict([ (br.buildername, br.id)
               for br in self.db.buildrequests.reqs.values()
               if is_same_bsid(br) ])
-        
+
 
 class FakeStateComponent(FakeDBComponent):
 
@@ -899,8 +849,10 @@ class FakeStateComponent(FakeDBComponent):
 
     # assertions
 
-    def assertState(self, objectid, **kwargs):
+    def assertState(self, objectid, missing_keys=[], **kwargs):
         state = self.states[objectid]
+        for k in missing_keys:
+            self.t.assertFalse(k in state, "%s in %s" % (k, state))
         for k,v in kwargs.iteritems():
             self.t.assertIn(k, state)
             self.t.assertEqual(json.loads(state[k]), v,

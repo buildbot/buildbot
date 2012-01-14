@@ -26,7 +26,7 @@ from buildbot.test.fake import fakedb
 
 class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
-    SCHEDULERID = 19
+    OBJECTID = 19
 
     def setUp(self):
         self.setUpScheduler()
@@ -39,7 +39,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.attachScheduler(
                 base.BaseScheduler(name=name, builderNames=builderNames,
                                    properties=properties),
-                self.SCHEDULERID)
+                self.OBJECTID)
 
         return sched
 

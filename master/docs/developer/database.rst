@@ -499,14 +499,14 @@ schedulers
 
     An instance of this class is available at ``master.db.changes``.
 
-    .. index:: schedulerid
+    .. index:: objectid
 
-    Schedulers are identified by a *schedulerid*, which can be determined from
-    the scheduler name and class by :py:meth:`getSchedulerId`.
+    Schedulers are identified by a their objectid - see
+    :py:class:`StateConnectorComponent`.
 
-    .. py:method:: classifyChanges(schedulerid, classifications)
+    .. py:method:: classifyChanges(objectid, classifications)
 
-        :param schedulerid: scheduler classifying the changes
+        :param objectid: scheduler classifying the changes
         :param classifications: mapping of changeid to boolean, where the boolean
             is true if the change is important, and false if it is unimportant
         :type classifications: dictionary
@@ -519,19 +519,19 @@ schedulers
         classifications once they are no longer needed, using
         :py:meth:`flushChangeClassifications`.
 
-    .. py:method: flushChangeClassifications(schedulerid, less_than=None)
+    .. py:method: flushChangeClassifications(objectid, less_than=None)
 
-        :param schedulerid: scheduler owning the flushed changes
+        :param objectid: scheduler owning the flushed changes
         :param less_than: (optional) lowest changeid that should *not* be flushed
         :returns: Deferred
 
         Flush all scheduler_changes for the given scheduler, limiting to those
         with changeid less than ``less_than`` if the parameter is supplied.
 
-    .. py:method:: getChangeClassifications(schedulerid[, branch])
+    .. py:method:: getChangeClassifications(objectid[, branch])
 
-        :param schedulerid: scheduler to look up changes for
-        :type schedulerid: integer
+        :param objectid: scheduler to look up changes for
+        :type objectid: integer
         :param branch: (optional) limit to changes with this branch
         :type branch: string or None (for default branch)
         :returns: dictionary via Deferred
@@ -544,19 +544,6 @@ schedulers
         given.  Note that specifying ``branch=None`` requests changes for the
         default branch, and is not the same as omitting the ``branch`` argument
         altogether.
-
-    .. py:method:: getSchedulerId(sched_name, sched_class)
-
-        :param sched_name: the scheduler's configured name
-        :param sched_class: the class name of this scheduler
-        :returns: schedulerid, via a Deferred
-
-        Get the schedulerid for the given scheduler, creating a new id if no
-        matching record is found.
-
-        Note that this makes no attempt to "claim" the schedulerid: schedulers
-        with the same name and class, but running in different masters, will be
-        assigned the same schedulerid - with disastrous results.
 
 sourcestamps
 ~~~~~~~~~~~~

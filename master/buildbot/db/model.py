@@ -273,31 +273,10 @@ class Model(base.DBConnectorComponent):
     # Rows are deleted from this table as soon as the scheduler is done with
     # the change.
     scheduler_changes = sa.Table('scheduler_changes', metadata,
-        sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.schedulerid')),
+        sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id')),
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid')),
         # true if this change is important to this scheduler
-        sa.Column('important', sa.SmallInteger), # TODO: Boolean
-    )
-
-    # This table references buildsets in which a particular scheduler is
-    # interested.  On every run, a scheduler checks its upstream buildsets for
-    # completion and reacts accordingly.  Records are never deleted from this
-    # table, but active is set to 0 when the record is no longer necessary."""
-    scheduler_upstream_buildsets = sa.Table('scheduler_upstream_buildsets', metadata,
-        sa.Column('buildsetid', sa.Integer, sa.ForeignKey('buildsets.id')),
-        sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.schedulerid')),
-        # true if this buildset is still active
-        sa.Column('active', sa.SmallInteger), # TODO: redundant
-    )
-
-    # This table defines the schedulerid for each scheduler
-    schedulers = sa.Table("schedulers", metadata,
-        # unique ID for scheduler
-        sa.Column('schedulerid', sa.Integer, primary_key=True), # TODO: rename to id
-        # scheduler's name in master.cfg
-        sa.Column('name', sa.String(128), nullable=False),
-        # scheduler's class name, basically representing a "type" for the state
-        sa.Column('class_name', sa.String(128), nullable=False),
+        sa.Column('important', sa.Boolean),
     )
 
     # objects
@@ -311,7 +290,6 @@ class Model(base.DBConnectorComponent):
         sa.Column('name', sa.String(128), nullable=False),
         # object's class name, basically representing a "type" for the state
         sa.Column('class_name', sa.String(128), nullable=False),
-
     )
 
     # This table stores key/value pairs for objects, where the key is a string
@@ -361,7 +339,6 @@ class Model(base.DBConnectorComponent):
 
     # indexes
 
-    sa.Index('name_and_class', schedulers.c.name, schedulers.c.class_name)
     sa.Index('buildrequests_buildsetid', buildrequests.c.buildsetid)
     sa.Index('buildrequests_buildername', buildrequests.c.buildername)
     sa.Index('buildrequests_complete', buildrequests.c.complete)
@@ -378,13 +355,10 @@ class Model(base.DBConnectorComponent):
     sa.Index('change_files_changeid', change_files.c.changeid)
     sa.Index('change_links_changeid', change_links.c.changeid)
     sa.Index('change_properties_changeid', change_properties.c.changeid)
-    sa.Index('scheduler_changes_schedulerid', scheduler_changes.c.schedulerid)
+    sa.Index('scheduler_changes_objectid', scheduler_changes.c.objectid)
     sa.Index('scheduler_changes_changeid', scheduler_changes.c.changeid)
-    sa.Index('scheduler_changes_unique', scheduler_changes.c.schedulerid,
+    sa.Index('scheduler_changes_unique', scheduler_changes.c.objectid,
                     scheduler_changes.c.changeid, unique=True)
-    sa.Index('scheduler_upstream_buildsets_buildsetid', scheduler_upstream_buildsets.c.buildsetid)
-    sa.Index('scheduler_upstream_buildsets_schedulerid', scheduler_upstream_buildsets.c.schedulerid)
-    sa.Index('scheduler_upstream_buildsets_active', scheduler_upstream_buildsets.c.active)
     sa.Index('sourcestamp_changes_sourcestampid', sourcestamp_changes.c.sourcestampid)
     sa.Index('sourcestamps_sourcestampsetid', sourcestamps.c.sourcestampsetid, unique=False)
     sa.Index('users_identifier', users.c.identifier, unique=True)
