@@ -56,7 +56,7 @@ def upgrade(migrate_engine):
             sa.ForeignKey('objects.id')),
         sa.Column('changeid', sa.Integer,
             sa.ForeignKey('changes.changeid')),
-        sa.Column('important', sa.Boolean),
+        sa.Column('important', sa.Integer),
     )
     scheduler_changes_tbl.create()
 

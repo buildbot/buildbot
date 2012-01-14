@@ -42,6 +42,9 @@ class Model(base.DBConnectorComponent):
     #   tables.
     #
     # * dates are stored as unix timestamps (UTC-ish epoch time)
+    #
+    # * sqlalchemy does not handle sa.Boolean very well on MySQL or Postgres;
+    #   use sa.Integer instead
 
     # build requests
 
@@ -275,8 +278,8 @@ class Model(base.DBConnectorComponent):
     scheduler_changes = sa.Table('scheduler_changes', metadata,
         sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id')),
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid')),
-        # true if this change is important to this scheduler
-        sa.Column('important', sa.Boolean),
+        # true (nonzero) if this change is important to this scheduler
+        sa.Column('important', sa.Integer),
     )
 
     # objects
