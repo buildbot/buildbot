@@ -83,7 +83,6 @@ class MasterConfig(object):
         )
         self.db = dict(
             db_url='sqlite:///state.sqlite',
-            db_poll_interval=None,
         )
         self.mq = dict(
             type='simple',
@@ -335,15 +334,13 @@ class MasterConfig(object):
         if 'db_poll_interval' in config_dict:
             self.db['db_poll_interval'] = config_dict["db_poll_interval"]
 
-        # we don't attempt to parse db URLs here - the engine strategy will do so
+        # we don't attempt to parse db URLs here - the engine strategy will do
+        # so.
 
-        # check the db_poll_interval
-        db_poll_interval = self.db['db_poll_interval']
-        if db_poll_interval is not None and \
-                    not isinstance(db_poll_interval, int):
-            errors.addError("c['db_poll_interval'] must be an int")
-        else:
-            self.db['db_poll_interval'] = db_poll_interval
+        # db_poll_interval is deprecated
+        if 'db_poll_interval' in self.db:
+            log.msg("NOTE: db_poll_interval is deprecated and will be ignored")
+            del self.db['db_poll_interval']
 
 
     def load_mq(self, filename, config_dict, errors):

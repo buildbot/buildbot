@@ -23,7 +23,7 @@ from twisted.python import log
 from buildbot import master, monkeypatches, config
 from buildbot.util import subscription
 from buildbot.db import exceptions
-from buildbot.test.util import dirs, compat, misc
+from buildbot.test.util import dirs, compat
 from buildbot.test.fake import fakedb, fakemq
 from buildbot.util import epoch2datetime
 from buildbot.process.users import users
@@ -41,7 +41,6 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
         d = self.setUpDirs(basedir)
         def set_master(_):
             self.master = master.BuildMaster(basedir)
-            self.master.config.db['db_poll_interval'] = None
             self.master.db = fakedb.FakeDBConnector(self)
             self.master.mq = fakemq.FakeMQConnector(self)
         d.addCallback(set_master)
@@ -164,7 +163,6 @@ class AddChange(dirs.DirsMixin, unittest.TestCase):
         d = self.setUpDirs(basedir)
         def set_master(_):
             self.master = master.BuildMaster(basedir)
-            self.master.config.db['db_poll_interval'] = None
             self.master.mq = fakemq.FakeMQConnector(self)
         d.addCallback(set_master)
         return d
@@ -427,149 +425,3 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
 
         self.assertRaises(config.ConfigErrors, lambda :
             self.master.reconfigService(new))
-
-    def test_reconfigService_start_polling(self):
-        loopingcall = mock.Mock()
-        self.patch(task, 'LoopingCall', lambda fn : loopingcall)
-
-        self.master.config = config.MasterConfig()
-        new = config.MasterConfig()
-        new.db['db_poll_interval'] = 120
-
-        d = self.master.reconfigService(new)
-        @d.addCallback
-        def check(_):
-            loopingcall.start.assert_called_with(120, now=False)
-        return d
-
-    def test_reconfigService_stop_polling(self):
-        db_loop = self.master.db_loop = mock.Mock()
-
-        old = self.master.config = config.MasterConfig()
-        old.db['db_poll_interval'] = 120
-        new = config.MasterConfig()
-        new.db['db_poll_interval'] = None
-
-        d = self.master.reconfigService(new)
-        @d.addCallback
-        def check(_):
-            db_loop.stop.assert_called()
-            self.assertEqual(self.master.db_loop, None)
-        return d
-
-
-class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
-
-    def setUp(self):
-        self.gotten_changes = []
-        self.gotten_buildset_additions = []
-        self.gotten_buildset_completions = []
-        self.gotten_buildrequest_additions = []
-
-
-        basedir = os.path.abspath('basedir')
-
-        # patch out os.uname so that we get a consistent hostname
-        self.patch_os_uname(lambda : [ 0, 'testhost.localdomain' ])
-        self.master_name = "testhost.localdomain:%s" % (basedir,)
-
-        d = self.setUpDirs(basedir)
-        def set_master(_):
-            self.master = master.BuildMaster(basedir)
-
-            self.db = self.master.db = fakedb.FakeDBConnector(self)
-            self.master.config.db['db_poll_interval'] = 10
-
-            self.mq = self.master.mq = fakemq.FakeMQConnector(self)
-
-            # overridesubscription callbacks
-            self.master._change_subs = sub = mock.Mock()
-            sub.deliver = self.deliverChange
-            self.master._new_buildset_subs = sub = mock.Mock()
-            sub.deliver = self.deliverBuildsetAddition
-            self.master._complete_buildset_subs = sub = mock.Mock()
-            sub.deliver = self.deliverBuildsetCompletion
-            self.master._new_buildrequest_subs = sub = mock.Mock()
-            sub.deliver = self.deliverBuildRequestAddition
-
-        d.addCallback(set_master)
-        return d
-
-    def tearDown(self):
-        return self.tearDownDirs()
-
-    def deliverChange(self, change):
-        self.gotten_changes.append(change)
-
-    def deliverBuildsetAddition(self, **kwargs):
-        self.gotten_buildset_additions.append(kwargs)
-
-    def deliverBuildsetCompletion(self, bsid, result):
-        self.gotten_buildset_completions.append((bsid, result))
-
-    def deliverBuildRequestAddition(self, notif):
-        self.gotten_buildrequest_additions.append(notif)
-
-    # tests
-
-    def test_pollDatabaseBuildRequests_empty(self):
-        d = self.master.pollDatabaseBuildRequests()
-        def check(_):
-            self.assertEqual(self.gotten_buildrequest_additions, [])
-        d.addCallback(check)
-        return d
-
-    def test_pollDatabaseBuildRequests_new(self):
-        self.db.insertTestData([
-            fakedb.SourceStampSet(id=127),
-            fakedb.SourceStamp(id=127, sourcestampsetid=127),
-            fakedb.Buildset(id=99, sourcestampsetid=127),
-            fakedb.BuildRequest(id=19, buildsetid=99, buildername='9teen'),
-            fakedb.BuildRequest(id=20, buildsetid=99, buildername='twenty')
-        ])
-        d = self.master.pollDatabaseBuildRequests()
-        def check(_):
-            self.assertEqual(sorted(self.gotten_buildrequest_additions),
-                    sorted([dict(bsid=99, brid=19, buildername='9teen'),
-                            dict(bsid=99, brid=20, buildername='twenty')]))
-        d.addCallback(check)
-        return d
-
-    def test_pollDatabaseBuildRequests_incremental(self):
-        d = defer.succeed(None)
-        def insert1(_):
-            self.db.insertTestData([
-            fakedb.SourceStampSet(id=127),
-            fakedb.SourceStamp(id=127, sourcestampsetid=127),
-            fakedb.Buildset(id=99, sourcestampsetid=127),
-            fakedb.BuildRequest(id=11, buildsetid=9, buildername='eleventy'),
-            ])
-        d.addCallback(insert1)
-        d.addCallback(lambda _ : self.master.pollDatabaseBuildRequests())
-        def insert2_and_claim(_):
-            self.gotten_buildrequest_additions.append('MARK')
-            self.db.insertTestData([
-                fakedb.BuildRequest(id=20, buildsetid=9,
-                                        buildername='twenty'),
-            ])
-            self.db.buildrequests.fakeClaimBuildRequest(11)
-        d.addCallback(insert2_and_claim)
-        d.addCallback(lambda _ : self.master.pollDatabaseBuildRequests())
-        def unclaim(_):
-            self.gotten_buildrequest_additions.append('MARK')
-            self.db.buildrequests.fakeUnclaimBuildRequest(11)
-            # note that at this point brid 20 is still unclaimed, but we do
-            # not get a new notification about it
-        d.addCallback(unclaim)
-        d.addCallback(lambda _ : self.master.pollDatabaseBuildRequests())
-        def check(_):
-            self.assertEqual(self.gotten_buildrequest_additions, [
-                dict(bsid=9, brid=11, buildername='eleventy'),
-                'MARK',
-                dict(bsid=9, brid=20, buildername='twenty'),
-                'MARK',
-                dict(bsid=9, brid=11, buildername='eleventy'),
-            ])
-        d.addCallback(check)
-        return d
-

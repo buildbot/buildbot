@@ -5,7 +5,6 @@ The keys in this section affect the operations of the buildmaster globally.
 
 .. bb:cfg:: db
 .. bb:cfg:: db_url
-.. bb:cfg:: db_poll_interval
 
 .. _Database-Specification:
 
@@ -22,7 +21,6 @@ keys are optional::
 
     c['db'] = {
         'db_url' : 'sqlite:///state.sqlite',
-        'db_poll_interval' : 30,
     }
 
 The ``db_url`` key indicates the database engine to use.  The format of this
@@ -31,13 +29,8 @@ but is generally of the form ::
 
     driver://[username:password@]host:port/database[?args]
 
-The optional ``db_poll_interval`` specifies the interval, in seconds, between
-checks for pending tasks in the database.  This parameter is generally only
-usful in multi-master mode - see :ref:`Multi-master-mode`.
-
-These parameters can be specified directly in the configuration dictionary, as
-``c['db_url']`` and ``c['db_poll_interval']``, although this method is
-deprecated.
+This parameter can be specified directly in the configuration dictionary, as
+``c['db_url']``, although this method is deprecated.
 
 The following sections give additional information for particular database backends:
 
@@ -196,8 +189,7 @@ the builders.
 
 To enable multi-master mode in this configuration, you will need to set the
 :bb:cfg:`multiMaster` option so that buildbot doesn't warn about missing schedulers
-or builders. You will also need to set :bb:cfg:`db_poll_interval` to specify
-the interval (in seconds) at which masters should poll the database for tasks.
+or builders.
 
 ::
 
@@ -207,7 +199,6 @@ the interval (in seconds) at which masters should poll the database for tasks.
     # Check for new build requests every 60 seconds
     c['db'] = {
         'db_url' : 'mysql://...',
-        'db_poll_interval' : 30,
     }
 
 .. bb:cfg:: buildbotURL
@@ -627,7 +618,6 @@ A manhole session might look like::
                         change_svc : <type 'instance'>
                     configFileName : master.cfg
                                 db : <class 'buildbot.db.connector.DBConnector'>
-                  db_poll_interval : None
                             db_url : sqlite:///state.sqlite
                                   ...
     >>> show(master.botmaster.builders['win32'])

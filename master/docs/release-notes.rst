@@ -66,6 +66,9 @@ Deprecations, Removals, and Non-Compatible Changes
     from buildbot.steps.source.svn import SVN
     factory.append(SVN(repourl=Interpolate("svn://svn.example.org/svn/%(src::branch:-branches/test)s")))
 
+* Buildbot no longer polls the database for jobs.  The
+  :bb:cfg:`db_poll_interval` configuration parameter and the :bb:cfg:`db` key
+  of the same name are deprecated and will be ignored.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

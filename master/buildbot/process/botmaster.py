@@ -62,7 +62,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.lastSlavePortnum = None
 
         # subscription to new build requests
-        self.buildrequest_sub = None
+        self.buildrequest_consumer = None
 
         # a distributor for incoming build requests; see below
         self.brd = BuildRequestDistributor(self)
@@ -140,10 +140,13 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         return self.builders.values()
 
     def startService(self):
-        def buildRequestAdded(notif):
-            self.maybeStartBuildsForBuilder(notif['buildername'])
-        self.buildrequest_sub = \
-            self.master.subscribeToBuildRequests(buildRequestAdded)
+        def buildRequestAdded(key, msg):
+            self.maybeStartBuildsForBuilder(msg['buildername'])
+        # consume both 'new' and 'unclaimed' build requests
+        self.buildreqest_consumer = self.master.mq.startConsuming(
+                buildRequestAdded,
+                'buildrequest.*.*.*.new',
+                'buildrequest.*.*.*.unclaimed')
         service.MultiService.startService(self)
 
     @defer.inlineCallbacks
@@ -270,9 +273,9 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
 
     def stopService(self):
-        if self.buildrequest_sub:
-            self.buildrequest_sub.unsubscribe()
-            self.buildrequest_sub = None
+        if self.buildrequest_consumer:
+            self.buildrequest_consumer.stopConsuming()
+            self.buildrequest_consumer = None
         for b in self.builders.values():
             b.builder_status.addPointEvent(["master", "shutdown"])
             b.builder_status.saveYourself()

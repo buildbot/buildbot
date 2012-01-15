@@ -54,9 +54,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         self._buildset_sub = \
             self.master.subscribeToBuildsets(
                 self._buildsetCallback)
-        self._build_request_sub = \
-            self.master.subscribeToBuildRequests(
-                self._buildRequestCallback)
+        self._br_consumer = self.master.mq.startConsuming(
+                self.br_consumer_cb, 'buildrequest.*.*.*.new')
         self._change_consumer = self.master.mq.startConsuming(
                 self.change_consumer_cb, 'change.*.new')
 
@@ -373,6 +372,15 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             if hasattr(t, 'slaveDisconnected'):
                 t.slaveDisconnected(name)
 
+    def br_consumer_cb(self, key, msg):
+        buildername = msg['buildername']
+        if buildername in self._builder_observers:
+            brs = buildrequest.BuildRequestStatus(buildername,
+                                                msg['brid'], self)
+            for observer in self._builder_observers[buildername]:
+                if hasattr(observer, 'requestSubmitted'):
+                    eventually(observer.requestSubmitted, brs)
+
     @defer.deferredGenerator
     def change_consumer_cb(self, key, msg):
         # get a list of watchers - no sense querying the change
@@ -457,11 +465,3 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
     def _buildsetCompletionCallback(self, bsid, result):
         self._maybeBuildsetFinished(bsid)
 
-    def _buildRequestCallback(self, notif):
-        buildername = notif['buildername']
-        if buildername in self._builder_observers:
-            brs = buildrequest.BuildRequestStatus(buildername,
-                                                notif['brid'], self)
-            for observer in self._builder_observers[buildername]:
-                if hasattr(observer, 'requestSubmitted'):
-                    eventually(observer.requestSubmitted, brs)

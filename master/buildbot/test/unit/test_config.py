@@ -150,8 +150,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         expected = dict(
             #validation,
             db=dict(
-                db_url='sqlite:///state.sqlite',
-                db_poll_interval=None),
+                db_url='sqlite:///state.sqlite'),
             mq=dict(type='simple'),
             metrics = None,
             caches = dict(Changes=10, Builds=15),
@@ -464,34 +463,30 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_db_defaults(self):
         self.cfg.load_db(self.filename, {}, self.errors)
         self.assertResults(
-            db=dict(db_url='sqlite:///state.sqlite', db_poll_interval=None))
+            db=dict(db_url='sqlite:///state.sqlite'))
 
     def test_load_db_db_url(self):
         self.cfg.load_db(self.filename, dict(db_url='abcd'), self.errors)
-        self.assertResults(db=dict(db_url='abcd', db_poll_interval=None))
+        self.assertResults(db=dict(db_url='abcd'))
 
     def test_load_db_db_poll_interval(self):
+        # value is ignored, but no error
         self.cfg.load_db(self.filename, dict(db_poll_interval=2), self.errors)
         self.assertResults(
-            db=dict(db_url='sqlite:///state.sqlite', db_poll_interval=2))
+            db=dict(db_url='sqlite:///state.sqlite'))
 
     def test_load_db_dict(self):
+        # db_poll_interval value is ignored, but no error
         self.cfg.load_db(self.filename,
             dict(db=dict(db_url='abcd', db_poll_interval=10)),
             self.errors)
-        self.assertResults(db=dict(db_url='abcd', db_poll_interval=10))
+        self.assertResults(db=dict(db_url='abcd'))
 
     def test_load_db_unk_keys(self):
         self.cfg.load_db(self.filename,
             dict(db=dict(db_url='abcd', db_poll_interval=10, bar='bar')),
             self.errors)
         self.assertConfigError(self.errors, "unrecognized keys in")
-
-    def test_load_db_not_int(self):
-        self.cfg.load_db(self.filename,
-            dict(db=dict(db_url='abcd', db_poll_interval='ten')),
-            self.errors)
-        self.assertConfigError(self.errors, "must be an int")
 
 
     def test_load_mq_defaults(self):

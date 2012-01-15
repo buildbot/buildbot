@@ -129,9 +129,8 @@ described in :ref:`developer-Reconfiguration`.
 
     .. py:attribute:: db
 
-        Database specification, a dictionary with keys :bb:cfg:`db_url` and
-        :bb:cfg:`db_poll_interval`.  It is safe to assume that both keys are
-        present.
+        Database specification, a dictionary with key :bb:cfg:`db_url`.  It is
+        safe to assume that this key is present.
 
     .. py:attribute:: metrics
 

@@ -61,11 +61,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     # unclaimed; this should be at least 2 to avoid false positives
     UNCLAIMED_BUILD_FACTOR = 6
 
-    # if this quantity of unclaimed build requests are present in the table,
-    # then something is probably wrong!  The master will log a WARNING on every
-    # database poll operation.
-    WARNING_UNCLAIMED_COUNT = 10000
-
     def __init__(self, basedir, configFileName="master.cfg", umask=None):
         service.MultiService.__init__(self)
         self.setName("buildmaster")
@@ -82,9 +77,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # set up child services
         self.create_child_services()
 
-        # loop for polling the db
-        self.db_loop = None
-
         # configuration / reconfiguration handling
         self.config = config.MasterConfig()
         self.reconfig_active = False
@@ -96,8 +88,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.log_rotation = LogRotation()
 
         # subscription points
-        self._new_buildrequest_subs = \
-                subscription.SubscriptionPoint("buildrequest_additions")
         self._new_buildset_subs = \
                 subscription.SubscriptionPoint("buildset_additions")
         self._complete_buildset_subs = \
@@ -227,9 +217,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     def stopService(self):
         self.produce_master_msg('stopped')
-        if self.db_loop:
-            self.db_loop.stop()
-            self.db_loop = None
         log.msg("BuildMsater is stopped")
         self._master_initialized = False
 
@@ -314,17 +301,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             raise config.ConfigErrors([
                 "Cannot change c['mq']['type'] after the master has started",
             ])
-
-        # adjust the db poller
-        if (self.config.db['db_poll_interval']
-                != new_config.db['db_poll_interval']):
-            if self.db_loop:
-                self.db_loop.stop()
-                self.db_loop = None
-            poll_interval = new_config.db['db_poll_interval']
-            if poll_interval:
-                self.db_loop = task.LoopingCall(self.pollDatabase)
-                self.db_loop.start(poll_interval, now=False)
 
         return config.ReconfigurableServiceMixin.reconfigService(self,
                                             new_config)
@@ -521,12 +497,19 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # note that buildset additions are only reported on this master
         self._new_buildset_subs.deliver(bsid=bsid, **kwargs)
-        # only deliver messages immediately if we're not polling
-        if not self.config.db['db_poll_interval']:
-            for bn, brid in brids.iteritems():
-                self.buildRequestAdded(bsid=bsid, brid=brid,
-                                        buildername=bn)
 
+        # notify about the component build requests
+        for bn, brid in brids.iteritems():
+            msg = dict(
+                brid=brid,
+                bsid=bsid,
+                buildername=bn,
+                builderid=-1) # TODO
+            self.mq.produce(
+                    'buildrequest.%d.%s.%d.new' % (bsid, bn, brid),
+                    msg)
+
+        # and the buildset itself
         msg = dict(
             bsid=bsid,
             external_idstring=kwargs.get('external_idstring', None),
@@ -602,104 +585,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         """
         return self._complete_buildset_subs.subscribe(callback)
 
-    def buildRequestAdded(self, bsid, brid, buildername):
-        """
-        Notifies the master that a build request is available to be claimed;
-        this may be a brand new build request, or a build request that was
-        previously claimed and unclaimed through a timeout or other calamity.
-
-        @param bsid: containing buildset id
-        @param brid: buildrequest ID
-        @param buildername: builder named by the build request
-        """
-        self._new_buildrequest_subs.deliver(
-                dict(bsid=bsid, brid=brid, buildername=buildername))
-
-        msg = dict(
-            brid=brid,
-            bsid=bsid,
-            buildername=buildername,
-            builderid=-1) # TODO
-        self.mq.produce(
-                'buildrequest.%d.%s.%d.new' % (bsid, buildername, brid),
-                msg)
-
-
-    def subscribeToBuildRequests(self, callback):
-        """
-        Request that C{callback} be invoked with a dictionary with keys C{brid}
-        (the build request id), C{bsid} (buildset id) and C{buildername}
-        whenever a new build request is added to the database.  Note that, due
-        to the delayed nature of subscriptions, the build request may already
-        be claimed by the time C{callback} is invoked.
-
-        Note: this method will go away in 0.9.x
-        """
-        return self._new_buildrequest_subs.subscribe(callback)
-
-
-    ## database polling
-
-    def pollDatabase(self):
-        # poll each of the tables that can indicate new, actionable stuff for
-        # this buildmaster to do.  This is used in a TimerService, so returning
-        # a Deferred means that we won't run two polling operations
-        # simultaneously.  Each particular poll method handles errors itself,
-        # although catastrophic errors are handled here
-        d = defer.gatherResults([
-            self.pollDatabaseBuildRequests(),
-            # also unclaim
-        ])
-        d.addErrback(log.err, 'while polling database')
-        return d
-
-    _last_unclaimed_brids_set = None
-    _last_claim_cleanup = 0
-    @defer.inlineCallbacks
-    def pollDatabaseBuildRequests(self):
-        # deal with cleaning up unclaimed requests, and (if necessary)
-        # requests from a previous instance of this master
-        timer = metrics.Timer("BuildMaster.pollDatabaseBuildRequests()")
-        timer.start()
-
-        # cleanup unclaimed builds
-        since_last_cleanup = reactor.seconds() - self._last_claim_cleanup 
-        if since_last_cleanup < self.RECLAIM_BUILD_INTERVAL:
-            unclaimed_age = (self.RECLAIM_BUILD_INTERVAL
-                           * self.UNCLAIMED_BUILD_FACTOR)
-            yield self.db.buildrequests.unclaimExpiredRequests(unclaimed_age)
-
-            self._last_claim_cleanup = reactor.seconds()
-
-        # _last_unclaimed_brids_set tracks the state of unclaimed build
-        # requests; whenever it sees a build request which was not claimed on
-        # the last poll, it notifies the subscribers.  It only tracks that
-        # state within the master instance, though; on startup, it notifies for
-        # all unclaimed requests in the database.
-
-        last_unclaimed = self._last_unclaimed_brids_set or set()
-        if len(last_unclaimed) > self.WARNING_UNCLAIMED_COUNT:
-            log.msg("WARNING: %d unclaimed buildrequests - is a scheduler "
-                    "producing builds for which no builder is running?"
-                    % len(last_unclaimed))
-
-        # get the current set of unclaimed buildrequests
-        now_unclaimed_brdicts = \
-            yield self.db.buildrequests.getBuildRequests(claimed=False)
-        now_unclaimed = set([ brd['brid'] for brd in now_unclaimed_brdicts ])
-
-        # and store that for next time
-        self._last_unclaimed_brids_set = now_unclaimed
-
-        # see what's new, and notify if anything is
-        new_unclaimed = now_unclaimed - last_unclaimed
-        if new_unclaimed:
-            brdicts = dict((brd['brid'], brd) for brd in now_unclaimed_brdicts)
-            for brid in new_unclaimed:
-                brd = brdicts[brid]
-                self.buildRequestAdded(brd['buildsetid'], brd['brid'],
-                                       brd['buildername'])
-        timer.stop()
 
     ## state maintenance (private)
 
