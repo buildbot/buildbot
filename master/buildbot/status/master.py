@@ -57,9 +57,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         self._build_request_sub = \
             self.master.subscribeToBuildRequests(
                 self._buildRequestCallback)
-        self._change_sub = \
-            self.master.subscribeToChanges(
-                self.changeAdded)
+        self._change_consumer = self.master.mq.startConsuming(
+                self.change_consumer_cb, 'change.*.new')
 
         return service.MultiService.startService(self)
 
@@ -81,9 +80,16 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
     def stopService(self):
         self._buildset_completion_sub.unsubscribe()
+        self._buildset_completion_sub = None
+
         self._buildset_sub.unsubscribe()
+        self._buildset_sub = None
+
         self._build_request_sub.unsubscribe()
-        self._change_sub.unsubscribe()
+        self._build_request_sub = None
+
+        self._change_consumer.stopConsuming()
+        self._change_consumer = None
 
         return service.MultiService.stopService(self)
 
@@ -367,10 +373,27 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             if hasattr(t, 'slaveDisconnected'):
                 t.slaveDisconnected(name)
 
-    def changeAdded(self, change):
-        for t in self.watchers:
-            if hasattr(t, 'changeAdded'):
-                t.changeAdded(change)
+    @defer.deferredGenerator
+    def change_consumer_cb(self, key, msg):
+        # get a list of watchers - no sense querying the change
+        # if nobody's listening
+        interested = [ t for t in self.watchers
+                       if hasattr(t, 'changeAdded') ]
+        if not interested:
+            return
+
+        wfd = defer.waitForDeferred(
+            self.master.db.changes.getChange(msg['changeid']))
+        yield wfd
+        chdict = wfd.getResult()
+
+        wfd = defer.waitForDeferred(
+            changes.Change.fromChdict(self.master, chdict))
+        yield wfd
+        change = wfd.getResult()
+
+        for t in interested:
+            t.changeAdded(change)
 
     def asDict(self):
         result = {}

@@ -18,6 +18,7 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.status import master, base
 from buildbot.test.fake import fakedb
+from buildbot.changes import changes
 
 class FakeStatusReceiver(base.StatusReceiver):
     pass
@@ -28,6 +29,7 @@ class TestStatus(unittest.TestCase):
         m = mock.Mock(name='master')
         self.db = m.db = fakedb.FakeDBConnector(self)
         m.basedir = r'C:\BASEDIR'
+        m.botmaster.builderNames = []
         s = master.Status(m)
         return s
 
@@ -93,3 +95,48 @@ class TestStatus(unittest.TestCase):
         self.assertIdentical(sr0.master, None)
         self.assertIdentical(sr1.master, None)
         self.assertIdentical(sr2.master, None)
+
+    @defer.deferredGenerator
+    def test_change_consumer_cb_nobody_interested(self):
+        m = mock.Mock(name='master')
+        status = master.Status(m)
+
+        wfd = defer.waitForDeferred(
+            status.change_consumer_cb('change.13.new',
+                    dict(changeid=13)))
+        yield wfd
+        wfd.getResult()
+
+        self.assertFalse(m.db.changes.getChange.called)
+
+    @defer.deferredGenerator
+    def test_change_consumer_cb(self):
+        status = self.makeStatus()
+
+        # insert the change that will be announced in the database
+        self.db.insertTestData([
+            fakedb.Change(changeid=13),
+        ])
+
+        # patch out fromChdict
+        self.patch(changes.Change, 'fromChdict',
+            classmethod(lambda cls, mstr, chd :
+                defer.succeed(dict(m=mstr, c=chd))))
+
+        # set up a watcher
+        class W(object):
+            pass
+        watcher = W()
+        watcher.changeAdded = mock.Mock(name='changeAdded')
+        status.subscribe(watcher)
+
+        wfd = defer.waitForDeferred(
+            status.change_consumer_cb('change.13.new',
+                    dict(changeid=13)))
+        yield wfd
+        wfd.getResult()
+
+        self.assertTrue(watcher.changeAdded.called)
+        args, kwargs = watcher.changeAdded.call_args
+        self.assertEqual(args[0]['m'], status.master)
+        self.assertEqual(args[0]['c']['changeid'], 13)

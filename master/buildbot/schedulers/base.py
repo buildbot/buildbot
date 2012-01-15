@@ -85,7 +85,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         self.master = None
 
         # internal variables
-        self._change_subscription = None
+        self._change_consumer = None
         self._change_consumption_lock = defer.DeferredLock()
         self._objectid = None
 
@@ -191,37 +191,56 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         assert fileIsImportant is None or callable(fileIsImportant)
 
         # register for changes with master
-        assert not self._change_subscription
-        def changeCallback(change):
-            # ignore changes delivered while we're not running
-            if not self._change_subscription:
-                return
-
-            if change_filter and not change_filter.filter_change(change):
-                return
-            if fileIsImportant:
-                try:
-                    important = fileIsImportant(change)
-                    if not important and onlyImportant:
-                        return
-                except:
-                    log.err(failure.Failure(),
-                            'in fileIsImportant check for %s' % change)
-                    return
-            else:
-                important = True
-
-            # use change_consumption_lock to ensure the service does not stop
-            # while this change is being processed
-            d = self._change_consumption_lock.acquire()
-            d.addCallback(lambda _ : self.gotChange(change, important))
-            def release(x):
-                self._change_consumption_lock.release()
-            d.addBoth(release)
-            d.addErrback(log.err, 'while processing change')
-        self._change_subscription = self.master.subscribeToChanges(changeCallback)
+        assert not self._change_consumer
+        self._change_consumer = self.master.mq.startConsuming(
+                lambda k,m : self._changeCallback(k, m, fileIsImportant,
+                                            change_filter, onlyImportant),
+                'change.*.new')
 
         return defer.succeed(None)
+
+    @defer.deferredGenerator
+    def _changeCallback(self, key, msg, fileIsImportant, change_filter,
+                                onlyImportant):
+
+        # ignore changes delivered while we're not running
+        if not self._change_consumer:
+            return
+
+        # get a change object, since the API requires it
+        wfd = defer.waitForDeferred(
+            self.master.db.changes.getChange(msg['changeid']))
+        yield wfd
+        chdict = wfd.getResult()
+
+        wfd = defer.waitForDeferred(
+            changes.Change.fromChdict(self.master, chdict))
+        yield wfd
+        change = wfd.getResult()
+
+        # filter it
+        if change_filter and not change_filter.filter_change(change):
+            return
+        if fileIsImportant:
+            try:
+                important = fileIsImportant(change)
+                if not important and onlyImportant:
+                    return
+            except:
+                log.err(failure.Failure(),
+                        'in fileIsImportant check for %s' % change)
+                return
+        else:
+            important = True
+
+        # use change_consumption_lock to ensure the service does not stop
+        # while this change is being processed
+        d = self._change_consumption_lock.acquire()
+        d.addCallback(lambda _ : self.gotChange(change, important))
+        def release(x):
+            self._change_consumption_lock.release()
+        d.addBoth(release)
+        d.addErrback(log.err, 'while processing change')
 
     def _stopConsumingChanges(self):
         # (note: called automatically in stopService)
@@ -230,9 +249,9 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         # consumption is complete before we are done stopping consumption
         d = self._change_consumption_lock.acquire()
         def stop(x):
-            if self._change_subscription:
-                self._change_subscription.unsubscribe()
-                self._change_subscription = None
+            if self._change_consumer:
+                self._change_consumer.stopConsuming()
+                self._change_consumer = None
             self._change_consumption_lock.release()
         d.addBoth(stop)
         return d

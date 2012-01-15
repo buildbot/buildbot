@@ -96,8 +96,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.log_rotation = LogRotation()
 
         # subscription points
-        self._change_subs = \
-                subscription.SubscriptionPoint("changes")
         self._new_buildrequest_subs = \
                 subscription.SubscriptionPoint("buildrequest_additions")
         self._new_buildset_subs = \
@@ -492,12 +490,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         yield wfd
         change = wfd.getResult()
 
-        # old-style notification
+        # log, being careful to handle funny characters
         msg = u"added change %s to database" % change
         log.msg(msg.encode('utf-8', 'replace'))
-        # only deliver messages immediately if we're not polling
-        if not self.config.db['db_poll_interval']:
-            self._change_subs.deliver(change)
 
         # new-style notification
         msg = dict()
@@ -506,15 +501,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.mq.produce("change.%d.new" % changeid, msg)
 
         yield change
-
-    def subscribeToChanges(self, callback):
-        """
-        Request that C{callback} be called with each Change object added to the
-        cluster.
-
-        Note: this method will go away in 0.9.x
-        """
-        return self._change_subs.subscribe(callback)
 
     @defer.deferredGenerator
     def addBuildset(self, scheduler, **kwargs):
@@ -661,71 +647,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # simultaneously.  Each particular poll method handles errors itself,
         # although catastrophic errors are handled here
         d = defer.gatherResults([
-            self.pollDatabaseChanges(),
             self.pollDatabaseBuildRequests(),
             # also unclaim
         ])
         d.addErrback(log.err, 'while polling database')
         return d
-
-    _last_processed_change = None
-    @defer.inlineCallbacks
-    def pollDatabaseChanges(self):
-        # Older versions of Buildbot had each scheduler polling the database
-        # independently, and storing a "last_processed" state indicating the
-        # last change it had processed.  This had the advantage of allowing
-        # schedulers to pick up changes that arrived in the database while
-        # the scheduler was not running, but was horribly inefficient.
-
-        # This version polls the database on behalf of the schedulers, using a
-        # similar state at the master level.
-
-        timer = metrics.Timer("BuildMaster.pollDatabaseChanges()")
-        timer.start()
-
-        need_setState = False
-
-        # get the last processed change id
-        if self._last_processed_change is None:
-            self._last_processed_change = \
-                    yield self._getState('last_processed_change')
-
-        # if it's still None, assume we've processed up to the latest changeid
-        if self._last_processed_change is None:
-            lpc = yield self.db.changes.getLatestChangeid()
-            # if there *are* no changes, count the last as '0' so that we don't
-            # skip the first change
-            if lpc is None:
-                lpc = 0
-            self._last_processed_change = lpc
-
-            need_setState = True
-
-        if self._last_processed_change is None:
-            timer.stop()
-            return
-
-        while True:
-            changeid = self._last_processed_change + 1
-            chdict = yield self.db.changes.getChange(changeid)
-
-            # if there's no such change, we've reached the end and can
-            # stop polling
-            if not chdict:
-                break
-
-            change = yield changes.Change.fromChdict(self, chdict)
-
-            self._change_subs.deliver(change)
-
-            self._last_processed_change = changeid
-            need_setState = True
-
-        # write back the updated state, if it's changed
-        if need_setState:
-            yield self._setState('last_processed_change',
-                            self._last_processed_change)
-        timer.stop()
 
     _last_unclaimed_brids_set = None
     _last_claim_cleanup = 0

@@ -29,7 +29,7 @@ from buildbot.util import epoch2datetime
 from buildbot.process.users import users
 from buildbot.status.results import SUCCESS
 
-class Subscriptions(dirs.DirsMixin, unittest.TestCase):
+class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
 
     """These tests coerce the master into performing some action that should be
     accompanied by some messages, and then verifies that the messages were sent
@@ -53,11 +53,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
     # master.$masterid.{started,stopped} are checked in
     # StartupAndReconfig.test_startup_ok, below
 
-    def test_change_subscription(self):
-        cb = mock.Mock()
-        sub = self.master.subscribeToChanges(cb)
-        self.assertIsInstance(sub, subscription.Subscription)
-
+    def test_change_message(self):
         d = self.master.addChange(author='warner', branch='warnerdb',
                 category='devel', comments='fix whitespace',
                 files=[u'master/buildbot/__init__.py'],
@@ -66,12 +62,6 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
                 revlink='http://warner/0e92a098b',
                 when_timestamp=epoch2datetime(256738404))
         def check(change):
-            # addChange (probably) returned the right value
-            self.assertEqual(change.who, 'warner')
-
-            # and the notification sub was called correctly
-            cb.assert_called_with(change)
-
             # check the correct message was received
             self.assertEqual(self.master.mq.productions, [
                 ( 'change.500.new', {
@@ -521,75 +511,6 @@ class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
         self.gotten_buildrequest_additions.append(notif)
 
     # tests
-
-    def test_pollDatabaseChanges_empty(self):
-        self.db.insertTestData([
-            fakedb.Object(id=22, name=self.master_name,
-                          class_name='buildbot.master.BuildMaster'),
-        ])
-        d = self.master.pollDatabaseChanges()
-        def check(_):
-            self.assertEqual(self.gotten_changes, [])
-            self.assertEqual(self.gotten_buildset_additions, [])
-            self.assertEqual(self.gotten_buildset_completions, [])
-            self.db.state.assertState(22, last_processed_change=0)
-        d.addCallback(check)
-        return d
-
-    def test_pollDatabaseChanges_catchup(self):
-        # with no existing state, it should catch up to the most recent change,
-        # but not process anything
-        self.db.insertTestData([
-            fakedb.Object(id=22, name=self.master_name,
-                          class_name='buildbot.master.BuildMaster'),
-            fakedb.Change(changeid=10),
-            fakedb.Change(changeid=11),
-        ])
-        d = self.master.pollDatabaseChanges()
-        def check(_):
-            self.assertEqual(self.gotten_changes, [])
-            self.assertEqual(self.gotten_buildset_additions, [])
-            self.assertEqual(self.gotten_buildset_completions, [])
-            self.db.state.assertState(22, last_processed_change=11)
-        d.addCallback(check)
-        return d
-
-    def test_pollDatabaseChanges_multiple(self):
-        self.db.insertTestData([
-            fakedb.Object(id=53, name=self.master_name,
-                          class_name='buildbot.master.BuildMaster'),
-            fakedb.ObjectState(objectid=53, name='last_processed_change',
-                               value_json='10'),
-            fakedb.Change(changeid=10),
-            fakedb.Change(changeid=11),
-            fakedb.Change(changeid=12),
-        ])
-        d = self.master.pollDatabaseChanges()
-        def check(_):
-            self.assertEqual([ ch.number for ch in self.gotten_changes],
-                             [ 11, 12 ]) # note 10 was already seen
-            self.assertEqual(self.gotten_buildset_additions, [])
-            self.assertEqual(self.gotten_buildset_completions, [])
-            self.db.state.assertState(53, last_processed_change=12)
-        d.addCallback(check)
-        return d
-
-    def test_pollDatabaseChanges_nothing_new(self):
-        self.db.insertTestData([
-            fakedb.Object(id=53, name='master',
-                          class_name='buildbot.master.BuildMaster'),
-            fakedb.ObjectState(objectid=53, name='last_processed_change',
-                               value_json='10'),
-            fakedb.Change(changeid=10),
-        ])
-        d = self.master.pollDatabaseChanges()
-        def check(_):
-            self.assertEqual(self.gotten_changes, [])
-            self.assertEqual(self.gotten_buildset_additions, [])
-            self.assertEqual(self.gotten_buildset_completions, [])
-            self.db.state.assertState(53, last_processed_change=10)
-        d.addCallback(check)
-        return d
 
     def test_pollDatabaseBuildRequests_empty(self):
         d = self.master.pollDatabaseBuildRequests()

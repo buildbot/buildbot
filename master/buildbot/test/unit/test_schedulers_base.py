@@ -20,6 +20,7 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot import config
 from buildbot.schedulers import base
+from buildbot.changes import changes
 from buildbot.process import properties
 from buildbot.test.util import scheduler
 from buildbot.test.fake import fakedb
@@ -133,15 +134,33 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertRaises(AssertionError,
                 lambda : sched.startConsumingChanges(fileIsImportant="maybe"))
 
-    def do_test_change_consumption(self, kwargs, change, expected_result):
+    def do_test_change_consumption(self, kwargs, expected_result):
         # (expected_result should be True (important), False (unimportant), or
         # None (ignore the change))
         sched = self.makeScheduler()
         sched.startService()
 
+        # set up a change message, a changedict, a change, and convince
+        # getChange and fromChdict to convert one to the other
+        msg = dict(changeid=12934)
+
+        chdict = dict(changeid=12934, is_chdict=True)
+        def getChange(changeid):
+            assert changeid == 12934
+            return defer.succeed(chdict)
+        self.db.changes.getChange = getChange
+
+        change = self.makeFakeChange()
+        change.number = 12934
+        def fromChdict(cls, master, chdict):
+            assert chdict['changeid'] == 12934 and chdict['is_chdict']
+            return defer.succeed(change)
+        self.patch(changes.Change, 'fromChdict', classmethod(fromChdict))
+
         change_received = [ None ]
         def gotChange(got_change, got_important):
-            self.assertEqual(got_change, change)
+            # check that we got the expected change object
+            self.assertIdentical(got_change, change)
             change_received[0] = got_important
             return defer.succeed(None)
         sched.gotChange = gotChange
@@ -149,11 +168,12 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         d = sched.startConsumingChanges(**kwargs)
         def test(_):
             # check that it registered a callback
-            callbacks = self.master.getSubscriptionCallbacks()
-            self.assertNotEqual(callbacks['changes'], None)
+            self.assertEqual(len(self.mq.qrefs), 1)
+            qref = self.mq.qrefs[0]
+            self.assertEqual(qref.topics, ('change.*.new',))
 
             # invoke the callback with the change, and check the result
-            callbacks['changes'](change)
+            qref.callback('change.12934.new', msg)
             self.assertEqual(change_received[0], expected_result)
         d.addCallback(test)
         d.addCallback(lambda _ : sched.stopService())
@@ -163,25 +183,21 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         # all changes are important by default
         return self.do_test_change_consumption(
                 dict(),
-                self.makeFakeChange(),
                 True)
 
     def test_change_consumption_fileIsImportant_True(self):
         return self.do_test_change_consumption(
                 dict(fileIsImportant=lambda c : True),
-                self.makeFakeChange(),
                 True)
 
     def test_change_consumption_fileIsImportant_False(self):
         return self.do_test_change_consumption(
                 dict(fileIsImportant=lambda c : False),
-                self.makeFakeChange(),
                 False)
 
     def test_change_consumption_fileIsImportant_exception(self):
         d = self.do_test_change_consumption(
                 dict(fileIsImportant=lambda c : 1/0),
-                self.makeFakeChange(),
                 None)
         def check_err(_):
             self.assertEqual(1, len(self.flushLoggedErrors(ZeroDivisionError)))
@@ -196,7 +212,6 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         cf.filter_change = lambda c : True
         return self.do_test_change_consumption(
                 dict(change_filter=cf),
-                self.makeFakeChange(),
                 True)
 
     def test_change_consumption_change_filter_False(self):
@@ -204,19 +219,16 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         cf.filter_change = lambda c : False
         return self.do_test_change_consumption(
                 dict(change_filter=cf),
-                self.makeFakeChange(),
                 None)
 
     def test_change_consumption_fileIsImportant_False_onlyImportant(self):
         return self.do_test_change_consumption(
                 dict(fileIsImportant=lambda c : False, onlyImportant=True),
-                self.makeFakeChange(),
                 None)
 
     def test_change_consumption_fileIsImportant_True_onlyImportant(self):
         return self.do_test_change_consumption(
                 dict(fileIsImportant=lambda c : True, onlyImportant=True),
-                self.makeFakeChange(),
                 True)
 
     def test_addBuilsetForLatest_args(self):
