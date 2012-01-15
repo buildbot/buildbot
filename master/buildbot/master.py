@@ -25,7 +25,7 @@ from twisted.application import service
 
 import buildbot
 import buildbot.pbmanager
-from buildbot.util import subscription, epoch2datetime, datetime2epoch
+from buildbot.util import epoch2datetime, datetime2epoch
 from buildbot.status.master import Status
 from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
@@ -86,12 +86,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # this stores parameters used in the tac file, and is accessed by the
         # WebStatus to duplicate those values.
         self.log_rotation = LogRotation()
-
-        # subscription points
-        self._new_buildset_subs = \
-                subscription.SubscriptionPoint("buildset_additions")
-        self._complete_buildset_subs = \
-                subscription.SubscriptionPoint("buildset_completion")
 
         # local cache for this master's object ID
         self._object_id = None
@@ -318,7 +312,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         return self.status
 
 
-    ## triggering methods and subscriptions
+    ## triggering methods
 
     @defer.deferredGenerator
     def addChange(self, who=None, files=None, comments=None, author=None,
@@ -495,9 +489,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         log.msg("added buildset %d to database" % bsid)
 
-        # note that buildset additions are only reported on this master
-        self._new_buildset_subs.deliver(bsid=bsid, **kwargs)
-
         # notify about the component build requests
         for bn, brid in brids.iteritems():
             msg = dict(
@@ -521,20 +512,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.mq.produce("buildset.%d.new" % bsid, msg)
 
         yield (bsid,brids) # return value
-
-    def subscribeToBuildsets(self, callback):
-        """
-        Request that C{callback(bsid=bsid, ssid=ssid, reason=reason,
-        properties=properties, builderNames=builderNames,
-        external_idstring=external_idstring)} be called whenever a buildset is
-        added.  Properties is a dictionary as expected for
-        L{BuildsetsConnectorComponent.addBuildset}.
-
-        Note that this only works for buildsets added on this master.
-
-        Note: this method will go away in 0.9.x
-        """
-        return self._new_buildset_subs.subscribe(callback)
 
     @defer.inlineCallbacks
     def maybeBuildsetComplete(self, bsid, _reactor=reactor):
@@ -566,24 +543,12 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         yield self.db.buildsets.completeBuildset(bsid, cumulative_results,
                 complete_at=complete_at)
 
-        # old-style notification
-        self._complete_buildset_subs.deliver(bsid, cumulative_results)
-
         # new-style notification
         msg = dict(
             bsid=bsid,
             complete_at=complete_at_epoch,
             results=cumulative_results)
         self.mq.produce('buildset.%d.complete' % bsid, msg)
-
-    def subscribeToBuildsetCompletions(self, callback):
-        """
-        Request that C{callback(bsid, result)} be called whenever a
-        buildset is complete.
-
-        Note: this method will go away in 0.9.x
-        """
-        return self._complete_buildset_subs.subscribe(callback)
 
 
     ## state maintenance (private)

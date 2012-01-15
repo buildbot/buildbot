@@ -64,15 +64,13 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler()
         sched.startService()
 
-        callbacks = self.master.getSubscriptionCallbacks()
-        self.assertNotEqual(callbacks['buildsets'], None)
-        self.assertNotEqual(callbacks['buildset_completion'], None)
+        self.assertEqual(
+            sorted([ q.topics for q in sched.master.mq.qrefs ]),
+            [('buildset.*.complete',), ('buildset.*.new',)])
 
         d = sched.stopService()
         def check(_):
-            callbacks = self.master.getSubscriptionCallbacks()
-            self.assertEqual(callbacks['buildsets'], None)
-            self.assertEqual(callbacks['buildset_completion'], None)
+            self.assertEqual([ q.topics for q in sched.master.mq.qrefs ], [])
         d.addCallback(check)
         return d
 
@@ -80,7 +78,6 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
             result, expect_buildset):
         sched = self.makeScheduler()
         sched.startService()
-        callbacks = self.master.getSubscriptionCallbacks()
 
         # pretend we saw a buildset with a matching name
         self.db.insertTestData([
@@ -89,8 +86,8 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
                             codebase = 'cb'),
             fakedb.Buildset(id=44, sourcestampsetid=1093),
             ])
-        callbacks['buildsets'](bsid=44,
-                properties=dict(scheduler=(scheduler_name, 'Scheduler')))
+        sched.master.mq.call_consumer('buildset.*.new', 'buildset.44.new',
+                dict(bsid=44, scheduler=scheduler_name))
 
         # check whether scheduler is subscribed to that buildset
         if expect_subscription:
@@ -100,7 +97,8 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         # pretend that the buildset is finished
         self.db.buildsets.fakeBuildsetCompletion(bsid=44, result=result)
-        callbacks['buildset_completion'](44, result)
+        sched.master.mq.call_consumer('buildset.*.complete',
+                'buildset.44.complete', dict(bsid=44, result=result))
 
         # and check whether a buildset was added in response
         if expect_buildset:

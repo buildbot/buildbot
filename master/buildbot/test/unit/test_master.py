@@ -21,7 +21,6 @@ from twisted.internet import defer, reactor, task
 from twisted.trial import unittest
 from twisted.python import log
 from buildbot import master, monkeypatches, config
-from buildbot.util import subscription
 from buildbot.db import exceptions
 from buildbot.test.util import dirs, compat
 from buildbot.test.fake import fakedb, fakemq
@@ -83,11 +82,8 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
-    def test_buildset_subscription(self):
+    def test_buildset_messages(self):
         sourcestampsetid=111
-        cb = mock.Mock()
-        sub = self.master.subscribeToBuildsets(cb)
-        self.assertIsInstance(sub, subscription.Subscription)
 
         d = self.master.addBuildset(scheduler='schname',
                 sourcestampsetid=sourcestampsetid,
@@ -96,10 +92,6 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
         def check((bsid,brids)):
             # addBuildset returned the expected values (these come from fakedb)
             self.assertEqual((bsid,brids), (200, dict(a=1000,b=1001)))
-            # and the notification sub was called correctly
-            cb.assert_called_with(sourcestampsetid=sourcestampsetid, bsid=200,
-                    reason='rsn', properties={}, builderNames=['a', 'b'],
-                    external_idstring='eid')
 
             # check that the proper message was produced
             self.assertEqual(sorted(self.master.mq.productions), sorted([
@@ -128,7 +120,7 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
-    def test_buildset_completion_subscription(self):
+    def test_buildset_completion_messages(self):
         self.master.db.insertTestData([
             fakedb.SourceStamp(id=999),
             fakedb.BuildRequest(id=300, buildsetid=440, complete=True,
@@ -138,15 +130,10 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
             fakedb.Buildset(id=440, sourcestampsetid=999),
         ])
 
-        cb = mock.Mock()
-        sub = self.master.subscribeToBuildsetCompletions(cb)
-        self.assertIsInstance(sub, subscription.Subscription)
-
         clock = task.Clock()
         clock.advance(1234)
         self.master.maybeBuildsetComplete(440, _reactor=clock)
 
-        cb.assert_called_with(440, SUCCESS)
         self.assertEqual(self.master.mq.productions, [
             ( 'buildset.440.complete', {
                 'bsid': 440,

@@ -29,8 +29,8 @@ class Dependent(base.BaseScheduler):
             config.error(
                 "upstream must be another Scheduler instance")
         self.upstream_name = upstream.name
-        self._buildset_addition_subscr = None
-        self._buildset_completion_subscr = None
+        self._buildset_new_consumer = None
+        self._buildset_complete_consumer = None
         self._cached_upstream_bsids = None
 
         # the subscription lock makes sure that we're done inserting a
@@ -39,42 +39,40 @@ class Dependent(base.BaseScheduler):
         self._subscription_lock = defer.DeferredLock()
 
     def startService(self):
-        self._buildset_addition_subscr = \
-                self.master.subscribeToBuildsets(self._buildsetAdded)
-        self._buildset_completion_subscr = \
-                self.master.subscribeToBuildsetCompletions(self._buildsetCompleted)
+        self._buildset_new_consumer = self.master.mq.startConsuming(
+                    self._buildset_new_cb,
+                    'buildset.*.new')
+        self._buildset_complete_consumer = self.master.mq.startConsuming(
+                    self._buildset_complete_cb,
+                    'buildset.*.complete')
 
         # check for any buildsets completed before we started
-        d = self._checkCompletedBuildsets(None, None)
+        d = self._checkCompletedBuildsets(None, )
         d.addErrback(log.err, 'while checking for completed buildsets in start')
 
     def stopService(self):
-        if self._buildset_addition_subscr:
-            self._buildset_addition_subscr.unsubscribe()
-        if self._buildset_completion_subscr:
-            self._buildset_completion_subscr.unsubscribe()
+        if self._buildset_new_consumer:
+            self._buildset_new_consumer.stopConsuming()
+        if self._buildset_complete_consumer:
+            self._buildset_complete_consumer.stopConsuming()
         self._cached_upstream_bsids = None
         return defer.succeed(None)
 
     @util.deferredLocked('_subscription_lock')
-    def _buildsetAdded(self, bsid=None, properties=None, **kwargs):
-        # check if this was submitetted by our upstream by checking the
-        # scheduler property
-        submitter = properties.get('scheduler', (None, None))[0]
-        if submitter != self.upstream_name:
+    def _buildset_new_cb(self, key, msg):
+        # check if this was submitetted by our upstream
+        if msg['scheduler'] != self.upstream_name:
             return
 
         # record our interest in this buildset
-        d = self._addUpstreamBuildset(bsid)
-        d.addErrback(log.err, 'while subscribing to buildset %d' % bsid)
+        return self._addUpstreamBuildset(msg['bsid'])
 
-    def _buildsetCompleted(self, bsid, result):
-        d = self._checkCompletedBuildsets(bsid, result)
-        d.addErrback(log.err, 'while checking for completed buildsets')
+    def _buildset_complete_cb(self, key, msg):
+        return self._checkCompletedBuildsets(msg['bsid'])
 
     @util.deferredLocked('_subscription_lock')
     @defer.inlineCallbacks
-    def _checkCompletedBuildsets(self, bsid, result):
+    def _checkCompletedBuildsets(self, bsid):
         subs = yield self._getUpstreamBuildsets()
 
         sub_bsids = []

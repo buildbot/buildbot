@@ -53,8 +53,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         ])
 
         # no subscription should be in place yet
-        callbacks = self.master.getSubscriptionCallbacks()
-        self.assertEqual(callbacks['buildset_completion'], None)
+        self.assertEqual(sched.master.mq.qrefs, [])
 
         # trigger the scheduler, exercising properties while we're at it
         set_props = properties.Properties()
@@ -84,24 +83,29 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         # check that the scheduler has subscribed to buildset changes, but
         # not fired yet
-        callbacks = self.master.getSubscriptionCallbacks()
-        self.assertNotEqual(callbacks['buildset_completion'], None)
+        self.assertEqual(
+            [ q.topics for q in sched.master.mq.qrefs ],
+            [('buildset.*.complete',)])
         self.assertFalse(self.fired)
 
         # pretend a non-matching buildset is complete
-        callbacks['buildset_completion'](bsid+27, 3)
+        sched.master.mq.call_consumer('buildset.*.complete',
+                'buildset.%d.complete' % (bsid+27),
+                dict(bsid=bsid+27, result=3))
 
         # scheduler should not have reacted
-        callbacks = self.master.getSubscriptionCallbacks()
-        self.assertNotEqual(callbacks['buildset_completion'], None)
+        self.assertEqual(
+            [ q.topics for q in sched.master.mq.qrefs ],
+            [('buildset.*.complete',)])
         self.assertFalse(self.fired)
 
         # pretend the matching buildset is complete
-        callbacks['buildset_completion'](bsid, 13)
+        sched.master.mq.call_consumer('buildset.*.complete',
+                'buildset.%d.complete' % bsid,
+                dict(bsid=bsid, result=13))
 
         # scheduler should have reacted
-        callbacks = self.master.getSubscriptionCallbacks()
-        self.assertEqual(callbacks['buildset_completion'], None)
+        self.assertEqual(sched.master.mq.qrefs, [])
         self.assertTrue(self.fired)
 
     def test_trigger_overlapping(self):
@@ -116,8 +120,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         ])
 
         # no subscription should be in place yet
-        callbacks = self.master.getSubscriptionCallbacks()
-        self.assertEqual(callbacks['buildset_completion'], None)
+        self.assertEqual(sched.master.mq.qrefs, [])
 
         # trigger the scheduler the first time
         d = sched.trigger(1091)
@@ -145,16 +148,24 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                                         and self.assertEqual(brids, self.db.buildsets.allBuildRequests(bsid2)))
 
         # check that the scheduler has subscribed to buildset changes
-        callbacks = self.master.getSubscriptionCallbacks()
-        self.assertNotEqual(callbacks['buildset_completion'], None)
+        self.assertEqual(
+            [ q.topics for q in sched.master.mq.qrefs ],
+            [('buildset.*.complete',)])
 
         # let a few buildsets complete
-        callbacks['buildset_completion'](bsid2+27, 3)
-        callbacks['buildset_completion'](bsid2, 22)
-        callbacks['buildset_completion'](bsid2+7, 3)
-        callbacks['buildset_completion'](bsid1, 11)
+        sched.master.mq.call_consumer('buildset.*.complete',
+                'buildset.%d.complete' % (bsid2+27,),
+                dict(bsid=bsid2+27, result=3))
+        sched.master.mq.call_consumer('buildset.*.complete',
+                'buildset.%d.complete' % (bsid2,),
+                dict(bsid=bsid2, result=22))
+        sched.master.mq.call_consumer('buildset.*.complete',
+                'buildset.%d.complete' % (bsid2+7,),
+                dict(bsid=bsid2+7, result=3))
+        sched.master.mq.call_consumer('buildset.*.complete',
+                'buildset.%d.complete' % (bsid1,),
+                dict(bsid=bsid1, result=11))
 
         # both should have triggered with appropriate results, and the
         # subscription should be cancelled
-        callbacks = self.master.getSubscriptionCallbacks()
-        self.assertEqual(callbacks['buildset_completion'], None)
+        self.assertEqual(sched.master.mq.qrefs, [])

@@ -22,39 +22,11 @@ class FakeMaster(object):
     def __init__(self, basedir, db):
         self.basedir = basedir
         self.db = db
-        self.changes_subscr_cb = None
-        self.bset_subscr_cb = None
-        self.bset_completion_subscr_cb = None
         self.caches = mock.Mock(name="caches")
         self.caches.get_cache = self.get_cache
 
     def addBuildset(self, scheduler, **kwargs):
         return self.db.buildsets.addBuildset(**kwargs)
-
-    # subscriptions
-    # note that only one subscription of each type is supported
-
-    def _makeSubscription(self, attr_to_clear):
-        sub = mock.Mock()
-        def unsub():
-            setattr(self, attr_to_clear, None)
-        sub.unsubscribe = unsub
-        return sub
-
-    def subscribeToChanges(self, callback):
-        assert not self.changes_subscr_cb
-        self.changes_subscr_cb = callback
-        return self._makeSubscription('changes_subscr_cb')
-
-    def subscribeToBuildsets(self, callback):
-        assert not self.bset_subscr_cb
-        self.bset_subscr_cb = callback
-        return self._makeSubscription('bset_subscr_cb')
-
-    def subscribeToBuildsetCompletions(self, callback):
-        assert not self.bset_completion_subscr_cb
-        self.bset_completion_subscr_cb = callback
-        return self._makeSubscription('bset_completion_subscr_cb')
 
     # caches
 
@@ -64,13 +36,6 @@ class FakeMaster(object):
         return c
 
     # useful assertions
-
-    def getSubscriptionCallbacks(self):
-        """get the subscription callbacks set on the master, in a dictionary
-        with keys @{buildsets}, @{buildset_completion}, and C{changes}."""
-        return dict(buildsets=self.bset_subscr_cb,
-                    buildset_completion=self.bset_completion_subscr_cb,
-                    changes=self.changes_subscr_cb)
 
 
 class SchedulerMixin(object):
