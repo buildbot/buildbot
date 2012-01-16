@@ -103,6 +103,7 @@ class BitBucketBuildBot(resource.Resource):
         factory = pb.PBClientFactory()
         deferred = factory.login(credentials.UsernamePassword("change",
                                                               "changepw"))
+        logging.debug('Trying to connect to: %s:%d'%(host,port))
         reactor.connectTCP(host, port, factory)
         deferred.addErrback(self.connectFailed)
         deferred.addCallback(self.connected, changes)
@@ -154,8 +155,8 @@ def main():
         " [default: %default]", default=4000, type=int, dest="port")
     parser.add_option(
         "-m", "--buildmaster",
-        help="Buildbot Master host and port. ie: localhost:9989 [default:"
-        + " %default]", default="localhost:9989", dest="buildmaster")
+        help="Buildbot Master host and port. ie: localhost:9999 [default:"
+        + " %default]", default="localhost:9999", dest="buildmaster")
     parser.add_option(
         "-l", "--log",
         help="The absolute path, including filename, to save the log to"
