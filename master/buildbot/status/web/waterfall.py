@@ -110,7 +110,7 @@ class CurrentBox(components.Adapter):
         brcount = brcounts[builderName]
         if brcount:
             text.append("%d pending" % brcount)
-        for t in upcoming:
+        for t in sorted(upcoming):
             if t is not None:
                 eta = t - util.now()
                 text.extend(self.formatETA("next in", eta))
