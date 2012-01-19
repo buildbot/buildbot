@@ -318,19 +318,13 @@ class Contact(base.StatusReceiver):
             self.send(r)
     command_WATCH.usage = "watch <which> - announce the completion of an active build"
 
-    def buildsetSubmitted(self, buildset):
-        log.msg('[Contact] Buildset %s added' % (buildset))
-
     def builderAdded(self, builderName, builder):
+        if (self.channel.categories != None and
+            builder.category not in self.channel.categories):
+            return
+
         log.msg('[Contact] Builder %s added' % (builder))
         builder.subscribe(self)
-
-    def builderChangedState(self, builderName, state):
-        log.msg('[Contact] Builder %s changed state to %s' % (builderName, state))
-
-    def requestSubmitted(self, brstatus):
-        log.msg('[Contact] BuildRequest %d for %s submitted' %
-            (brstatus.brid, brstatus.getBuilderName()))
 
     def builderRemoved(self, builderName):
         log.msg('[Contact] Builder %s removed' % (builderName))
@@ -347,7 +341,6 @@ class Contact(base.StatusReceiver):
             return
 
         if not self.notify_for('started'):
-            log.msg('Not notifying for a build when started-notification disabled')
             return
 
         if self.useRevisions:
@@ -372,9 +365,6 @@ class Contact(base.StatusReceiver):
 
     def buildFinished(self, builderName, build, results):
         builder = build.getBuilder()
-
-        # only notify about builders we are interested in
-        log.msg('[Contact] builder %r in category %s finished' % (builder, builder.category))
 
         if (self.channel.categories != None and
             builder.category not in self.channel.categories):
@@ -435,13 +425,11 @@ class Contact(base.StatusReceiver):
 
         # only notify about builders we are interested in
         builder = b.getBuilder()
-        log.msg('builder %r in category %s finished' % (builder,
-                                                        builder.category))
         if (self.channel.categories != None and
             builder.category not in self.channel.categories):
             return
 
-        builder_name = b.getBuilder().getName()
+        builder_name = builder.getName()
         buildnum = b.getNumber()
         buildrevs = b.getRevisions()
 
@@ -876,7 +864,6 @@ class IrcStatusBot(irc.IRCClient):
         # to track users comings and goings, add code here
 
     def action(self, user, channel, data):
-        #log.msg("action: %s,%s,%s" % (user, channel, data))
         user = user.split('!', 1)[0] # rest is ~user@hostname
         # somebody did an action (/me actions) in the broadcast channel
         contact = self.getContact(channel)
