@@ -169,6 +169,10 @@ class Git(Source):
                     self._dovccmd(['reset', '--hard', self.revision]))
             yield wfd
             wfd.getResult()
+
+            if self.branch != 'HEAD':
+                wfd = defer.waitForDeferred(
+                    self._dovccmd(['branch', '-M', self.branch]))
         else:
             wfd = defer.waitForDeferred(
                     self._doFetch(None))
@@ -294,6 +298,16 @@ class Git(Source):
             abandonOnFailure = not self.retryFetch and not self.clobberOnFailure
             return self._dovccmd(command, abandonOnFailure)
         d.addCallback(checkout)
+        def renameBranch(res):
+            if res != 0:
+                return res
+            d = self._dovccmd(['branch', '-M', self.branch])
+            # Ignore errors
+            d.addCallback(lambda _: res)
+            return d
+
+        if self.branch != 'HEAD':
+            d.addCallback(renameBranch)
         return d
 
     @defer.deferredGenerator
