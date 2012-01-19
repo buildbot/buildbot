@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import log, failure
+from twisted.python import log
 from twisted.internet import defer
 
 from buildbot.process import buildstep
@@ -349,7 +349,7 @@ class Git(Source):
                 if self.clobberOnFailure:
                     return self.clobber()
                 else:
-                    raise failure.Failure(res)
+                    raise buildstep.BuildStepFailed()
             else:
                 return res
         d.addCallback(clobber)
