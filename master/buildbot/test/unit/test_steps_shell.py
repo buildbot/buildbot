@@ -23,6 +23,7 @@ from buildbot.test.util import steps, compat
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot import config
+from buildbot.process import properties
 
 class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
 
@@ -107,6 +108,11 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
                         description=["echoing"], descriptionDone=["echoed"])
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['echoing'], ['echoed']))
+
+    def test_describe_unrendered_WithProperties(self):
+        step = shell.ShellCommand(command=properties.WithProperties(''))
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (['???'],)*2)
 
     @compat.usesFlushLoggedErrors
     def test_describe_fail(self):
