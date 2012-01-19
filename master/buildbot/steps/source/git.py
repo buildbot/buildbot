@@ -104,6 +104,8 @@ class Git(Source):
             d.addCallback(lambda _: self.incremental())
         elif self.mode == 'full':
             d.addCallback(lambda _: self.full())
+        if patch:
+            d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
@@ -260,11 +262,12 @@ class Git(Source):
         d.addCallback(setrev)
         return d
 
-    def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False):
+    def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, extra_args={}):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['git'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
-                                           collectStdout=collectStdout)
+                                           collectStdout=collectStdout,
+                                           **extra_args)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting git command : git %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
@@ -308,6 +311,10 @@ class Git(Source):
 
         if self.branch != 'HEAD':
             d.addCallback(renameBranch)
+        return d
+
+    def patch(self, _, patch):
+        d = self._dovccmd(['apply', '--index'], extra_args={'initial_stdin': patch})
         return d
 
     @defer.deferredGenerator
