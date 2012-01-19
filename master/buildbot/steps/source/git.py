@@ -25,7 +25,7 @@ class Git(Source):
     name='git'
     renderables = [ "repourl"]
 
-    def __init__(self, repourl=None, branch='master', mode='incremental',
+    def __init__(self, repourl=None, branch='HEAD', mode='incremental',
                  method=None, submodules=False, shallow=False, progress=False,
                  retryFetch=False, clobberOnFailure=False, **kwargs):
         """
@@ -88,7 +88,7 @@ class Git(Source):
             assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
 
     def startVC(self, branch, revision, patch):
-        self.branch = branch or 'master'
+        self.branch = branch or 'HEAD'
         self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = self.addLog("stdio")
@@ -321,9 +321,9 @@ class Git(Source):
 
     def _full(self):
         if self.shallow:
-            command = ['clone', '--depth', '1', self.repourl, '.']
+            command = ['clone', '--depth', '1', '--branch', self.branch, self.repourl, '.']
         else:
-            command = ['clone', self.repourl, '.']
+            command = ['clone', '--branch', self.branch, self.repourl, '.']
         #Fix references
         if self.prog:
             command.append('--progress')

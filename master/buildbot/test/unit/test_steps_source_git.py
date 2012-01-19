@@ -44,7 +44,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'master'])
+                                 'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD'])
@@ -75,7 +75,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'master'])
+                                 'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD'])
@@ -101,6 +101,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
+                                 '--branch', 'HEAD',
                                  'http://github.com/buildbot/buildbot.git', '.'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -126,6 +127,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
+                                 '--branch', 'HEAD',
                                  'http://github.com/buildbot/buildbot.git',
                                  '.', '--progress'])
             + 0,
@@ -152,7 +154,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'master'])
+                                 'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD'])
@@ -184,7 +186,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'master'])
+                                 'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD'])
@@ -243,7 +245,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'master'])
+                                 'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD'])
@@ -278,6 +280,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone', '--depth', '1',
+                                 '--branch', 'HEAD',
                                  'http://github.com/buildbot/buildbot.git',
                                  '.'])
             + 0,
@@ -305,7 +308,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'master'])
+                                 'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD'])
@@ -313,7 +316,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'master'])
+                                 'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD'])
@@ -342,7 +345,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'master'])
+                                 'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD'])
@@ -352,6 +355,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
+                                 '--branch', 'HEAD',
                                  'http://github.com/buildbot/buildbot.git',
                                  '.'])
             + 0,
@@ -381,7 +385,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='source',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'master'])
+                                 'HEAD'])
             + 0,
             ExpectShell(workdir='source',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD'])
@@ -412,6 +416,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
+                                 '--branch', 'HEAD',
                                  'http://github.com/buildbot/buildbot.git', '.'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -439,6 +444,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
+                                 '--branch', 'HEAD',
                                  'http://github.com/buildbot/buildbot.git',
                                  '.', '--progress'])
             + 0,
@@ -469,6 +475,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
+                                 '--branch', 'HEAD',
                                  'http://github.com/buildbot/buildbot.git',
                                  '.', '--progress'])
             + 0,
@@ -498,6 +505,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
+                                 '--branch', 'HEAD',
                                  'http://github.com/buildbot/buildbot.git', '.'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -532,6 +540,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
+                                 '--branch', 'HEAD',
                                  'http://github.com/buildbot/buildbot.git',
                                  '.', '--progress'])
             + 0,
@@ -561,6 +570,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
+                                 '--branch', 'HEAD',
                                  'http://github.com/buildbot/buildbot.git', '.'])
             + 1,
             ExpectLogged('rmdir', dict(dir='wkdir',
@@ -568,6 +578,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone', 
+                                 '--branch', 'HEAD',
                                  'http://github.com/buildbot/buildbot.git',
                                  '.'])
             + 0,
@@ -597,7 +608,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'master'])
+                                 'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD'])
@@ -630,7 +641,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'master'],
+                                 'HEAD'],
                         env={'abc': '123'})
             + 0,
             ExpectShell(workdir='wkdir',
@@ -666,7 +677,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
                                  'http://github.com/buildbot/buildbot.git',
-                                 'master'],
+                                 'HEAD'],
                         logEnviron=False)
             + 0,
             ExpectShell(workdir='wkdir',
