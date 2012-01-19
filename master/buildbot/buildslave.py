@@ -460,6 +460,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         log.msg("BuildSlave.detached(%s)" % self.slavename)
         self.botmaster.master.status.slaveDisconnected(self.slavename)
         self.stopKeepaliveTimer()
+        self.release()
 
         # notify watchers, but do so in the next reactor iteration so that
         # any further detached() action by subclasses happens first
