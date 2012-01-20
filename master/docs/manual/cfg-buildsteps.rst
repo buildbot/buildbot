@@ -1866,6 +1866,18 @@ This command recursively deletes a directory on the slave. ::
 
 This step requires slave version 0.8.4 or later.
 
+.. bb:step:: MakeDirectory
+
+MakeDirectory
++++++++++++++++
+
+This command creates a directory on the slave. ::
+
+    from buildbot.steps.slave import MakeDirectory
+    f.addStep(MakeDirectory(dir="build/build"))
+
+This step requires slave version 0.8.5 or later.
+
 .. _Python-BuildSteps:
 
 Python BuildSteps

@@ -162,3 +162,42 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS,
                 status_text=["RemoveDirectory"])
         return self.runStep()
+
+class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_success(self):
+        self.setupStep(slave.MakeDirectory(dir="d"))
+        self.expectCommands(
+            ExpectLogged('mkdir', { 'dir' : 'd' })
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["MakeDirectory"])
+        return self.runStep()
+
+    def test_failure(self):
+        self.setupStep(slave.MakeDirectory(dir="d"))
+        self.expectCommands(
+            ExpectLogged('mkdir', { 'dir' : 'd' })
+            + 1
+        )
+        self.expectOutcome(result=FAILURE,
+                status_text=["Create failed."])
+        return self.runStep()
+
+    def test_render(self):
+        self.setupStep(slave.MakeDirectory(dir=properties.Property("x")))
+        self.properties.setProperty('x', 'XXX', 'here')
+        self.expectCommands(
+            ExpectLogged('mkdir', { 'dir' : 'XXX' })
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["MakeDirectory"])
+        return self.runStep()
