@@ -50,6 +50,10 @@ Deprecations, Removals, and Non-Compatible Changes
   Buildbot are no longer supported.  The minimum version is 3.4.0, and 3.7.0 or
   higher is recommended.
 
+* The master-side Git step now checks out 'HEAD' by default, rather than
+  master, which translates to the default branch on the upstream repository.  See
+  :bb:pull:`301`.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
