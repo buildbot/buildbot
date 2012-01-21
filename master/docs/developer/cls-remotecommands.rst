@@ -13,21 +13,27 @@ detail in :ref:`master-slave-updates`.
 RemoteCommand
 ~~~~~~~~~~~~~
 
-.. py:class:: RemoteCommand(remote_command, args, ignore_updates=False)
+.. py:class:: RemoteCommand(remote_command, args, collectStdout=False, ignore_updates=False)
 
     :param remote_command: command to run on the slave
     :type remote_command: string
     :param args: arguments to pass to the command
     :type args: dictionary
+    :param collectStdout: if True, collect the command's stdout
     :param ignore_updates: true to ignore remote updates
 
-    This class handles running "raw" commands, consisting of a command name and
+    This class handles running commands, consisting of a command name and
     a dictionary of arguments.  If true, ``ignore_updates`` will suppress any
     updates sent from the slave.
 
-    There is seldom a need to use this class directly - in most cases, either
-    :class:`LoggedRemoteCommand` or :class:`RemoteShellCommand` is the
-    appropriate choice.
+    This class handles updates for ``stdout``, ``stderr``, and ``header`` by
+    appending them to a ``stdio`` logfile, if one is in use.  It handles
+    updates for ``rc`` by recording the value in its ``rc`` attribute.
+
+    Most slave-side commands, even those which do not spawn a new process on
+    the slave, generate logs and an ``rc``, requiring this class or one of its
+    subclasses.  See :ref:`master-slave-updates` for the updates that each
+    command may send.
 
     .. py:attribute:: active
 
@@ -94,29 +100,6 @@ RemoteCommand
         Handle command completion, performing any necessary cleanup.
         Subclasses should override this method.  If ``failure`` is not None, it
         should be returned to ensure proper processing.
-
-LoggedRemoteCommand
-~~~~~~~~~~~~~~~~~~~
-
-.. py:class:: LoggedRemoteCommand(remote_command, args, collectStdout=False, ignore_updates=False)
-
-    :param remote_command: command to run on the slave
-    :type remote_command: string
-    :param args: arguments to pass to the command
-    :type args: dictionary
-    :param collectStdout: if True, collect the command's stdout
-    :param ignore_updates: true to ignore remote updates
-
-    This is a subclass of :class:`RemoteCommand` which can handle log data from
-    the slave-side command.  This class handles updates for ``stdout``,
-    ``stderr``, and ``header`` by appending them to a ``stdio`` logfile, if one
-    is in use.  It handles updates for ``rc`` by recording the value in its
-    ``rc`` attribute.
-
-    Most slave-side commands, even those which do not spawn a new process on
-    the slave, generate logs and an ``rc``, requiring this class or one of its
-    subclasses.  See :ref:`master-slave-updates` for the updates that each
-    command may send.
 
     .. py:attribute:: logs
 

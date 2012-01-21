@@ -82,7 +82,7 @@ class FileExists(buildstep.BuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about stat")
-        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.file })
+        cmd = buildstep.RemoteCommand('stat', {'file': self.file })
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
@@ -123,7 +123,7 @@ class RemoveDirectory(buildstep.BuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about rmdir")
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.dir })
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.dir })
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
@@ -158,7 +158,7 @@ class MakeDirectory(buildstep.BuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about mkdir")
-        cmd = buildstep.LoggedRemoteCommand('mkdir', {'dir': self.dir })
+        cmd = buildstep.RemoteCommand('mkdir', {'dir': self.dir })
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)

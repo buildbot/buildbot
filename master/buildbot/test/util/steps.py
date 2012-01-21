@@ -44,8 +44,6 @@ class BuildStepMixin(object):
         remotecommand.FakeRemoteCommand.testcase = self
         self.patch(buildstep, 'RemoteCommand',
                 remotecommand.FakeRemoteCommand)
-        self.patch(buildstep, 'LoggedRemoteCommand',
-                remotecommand.FakeLoggedRemoteCommand)
         self.patch(buildstep, 'RemoteShellCommand',
                 remotecommand.FakeRemoteShellCommand)
         self.expected_remote_commands = []
