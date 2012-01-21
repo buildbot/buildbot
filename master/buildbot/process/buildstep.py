@@ -209,7 +209,7 @@ class LoggedRemoteCommand(RemoteCommand):
 
     def _start(self):
         log.msg("LoggedRemoteCommand._start")
-        if 'stdio' not in self.logs:
+        if 'stdio' not in self.logs or 'stdio' not in self.delayedLogs:
             log.msg("LoggedRemoteCommand (%s) is running a command, but "
                     "it isn't being logged to anything. This seems unusual."
                     % self)
