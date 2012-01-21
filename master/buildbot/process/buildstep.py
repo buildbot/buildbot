@@ -39,11 +39,24 @@ class RemoteCommand(pb.Referenceable):
     _commandCounter = 0
 
     active = False
+    rc = None
+    debug = False
 
-    def __init__(self, remote_command, args, ignore_updates=False):
+    def __init__(self, remote_command, args, ignore_updates=False, collectStdout=False):
+        self.logs = {}
+        self.delayedLogs = {}
+        self._closeWhenFinished = {}
+        self.collectStdout = collectStdout
+        self.stdout = ''
+
+        self._startTime = None
+        self._remoteElapsed = None
         self.remote_command = remote_command
         self.args = args
         self.ignore_updates = ignore_updates
+
+    def __repr__(self):
+        return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
 
     def run(self, step, remote):
         self.active = True
@@ -72,7 +85,28 @@ class RemoteCommand(pb.Referenceable):
         # when our parent Step calls our .lostRemote() method.
         return self.deferred
 
+    def useLog(self, loog, closeWhenFinished=False, logfileName=None):
+        assert interfaces.ILogFile.providedBy(loog)
+        if not logfileName:
+            logfileName = loog.getName()
+        assert logfileName not in self.logs
+        assert logfileName not in self.delayedLogs
+        self.logs[logfileName] = loog
+        self._closeWhenFinished[logfileName] = closeWhenFinished
+
+    def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
+        assert logfileName not in self.logs
+        assert logfileName not in self.delayedLogs
+        self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
+
     def _start(self):
+        if 'stdio' not in self.logs or 'stdio' not in self.delayedLogs:
+            log.msg("RemoteCommand (%s) is running a command, but "
+                    "it isn't being logged to anything. This seems unusual."
+                    % self)
+        self.updates = {}
+        self._startTime = util.now()
+
         # This method only initiates the remote command.
         # We will receive remote_update messages as the command runs.
         # We will get a single remote_complete when it finishes.
@@ -149,9 +183,6 @@ class RemoteCommand(pb.Referenceable):
                 max_updatenum = num
         return max_updatenum
 
-    def remoteUpdate(self, update):
-        raise NotImplementedError("You must implement this in a subclass")
-
     def remote_complete(self, failure=None):
         """
         Called by the slave's L{buildbot.slave.bot.SlaveBuilder} to
@@ -167,52 +198,6 @@ class RemoteCommand(pb.Referenceable):
         if self.active:
             reactor.callLater(0, self._finished, failure)
         return None
-
-    def remoteComplete(self, maybeFailure):
-        return maybeFailure
-
-class LoggedRemoteCommand(RemoteCommand):
-
-    rc = None
-    debug = False
-
-    def __init__(self, remote_command, args, collectStdout=False, **kwargs):
-        self.logs = {}
-        self.delayedLogs = {}
-        self._closeWhenFinished = {}
-        self.collectStdout = collectStdout
-        self.stdout = ''
-        RemoteCommand.__init__(self, remote_command, args, **kwargs)
-
-        self._startTime = None
-        self._remoteElapsed = None
-
-    def __repr__(self):
-        return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
-
-    def useLog(self, loog, closeWhenFinished=False, logfileName=None):
-        assert interfaces.ILogFile.providedBy(loog)
-        if not logfileName:
-            logfileName = loog.getName()
-        assert logfileName not in self.logs
-        assert logfileName not in self.delayedLogs
-        self.logs[logfileName] = loog
-        self._closeWhenFinished[logfileName] = closeWhenFinished
-
-    def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
-        assert logfileName not in self.logs
-        assert logfileName not in self.delayedLogs
-        self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
-
-    def _start(self):
-        log.msg("LoggedRemoteCommand._start")
-        if 'stdio' not in self.logs or 'stdio' not in self.delayedLogs:
-            log.msg("LoggedRemoteCommand (%s) is running a command, but "
-                    "it isn't being logged to anything. This seems unusual."
-                    % self)
-        self.updates = {}
-        self._startTime = util.now()
-        return RemoteCommand._start(self)
 
     def addStdout(self, data):
         if 'stdio' in self.logs:
@@ -242,7 +227,7 @@ class LoggedRemoteCommand(RemoteCommand):
         else:
             log.msg("%s.addToLog: no such log %s" % (self, logname))
 
-    @metrics.countMethod('LoggedRemoteCommand.remoteUpdate()')
+    @metrics.countMethod('RemoteCommand.remoteUpdate()')
     def remoteUpdate(self, update):
         if self.debug:
             for k,v in update.items():
@@ -277,7 +262,7 @@ class LoggedRemoteCommand(RemoteCommand):
     def remoteComplete(self, maybeFailure):
         if self._startTime and self._remoteElapsed:
             delta = (util.now() - self._startTime) - self._remoteElapsed
-            metrics.MetricTimeEvent.log("LoggedRemoteCommand.overhead", delta)
+            metrics.MetricTimeEvent.log("RemoteCommand.overhead", delta)
 
         for name,loog in self.logs.items():
             if self._closeWhenFinished[name]:
@@ -287,6 +272,7 @@ class LoggedRemoteCommand(RemoteCommand):
                     log.msg("closing log %s" % loog)
                 loog.finish()
         return maybeFailure
+LoggedRemoteCommand = RemoteCommand
 
 
 class LogObserver:
@@ -357,7 +343,7 @@ class LogLineObserver(LogObserver):
         pass
 
 
-class RemoteShellCommand(LoggedRemoteCommand):
+class RemoteShellCommand(RemoteCommand):
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=20*60, maxTime=None, logfiles={},
@@ -382,7 +368,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
                 }
         if interruptSignal is not None:
             args['interruptSignal'] = interruptSignal
-        LoggedRemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout)
+        RemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout)
 
     def _start(self):
         self.args['command'] = self.command
@@ -394,7 +380,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
         what = "command '%s' in dir '%s'" % (self.args['command'],
                                              self.args['workdir'])
         log.msg(what)
-        return LoggedRemoteCommand._start(self)
+        return RemoteCommand._start(self)
 
     def __repr__(self):
         return "<RemoteShellCommand '%s'>" % repr(self.command)
@@ -814,7 +800,7 @@ class LoggingBuildStep(BuildStep):
     def setupLogfiles(self, cmd, logfiles):
         for logname,remotefilename in logfiles.items():
             if self.lazylogfiles:
-                # Ask LoggedRemoteCommand to watch a logfile, but only add
+                # Ask RemoteCommand to watch a logfile, but only add
                 # it when/if we see any data.
                 #
                 # The dummy default argument local_logname is a work-around for
@@ -825,7 +811,7 @@ class LoggingBuildStep(BuildStep):
             else:
                 # tell the BuildStepStatus to add a LogFile
                 newlog = self.addLog(logname)
-                # and tell the LoggedRemoteCommand to feed it
+                # and tell the RemoteCommand to feed it
                 cmd.useLog(newlog, True)
 
     def interrupt(self, reason):

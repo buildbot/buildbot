@@ -119,8 +119,8 @@ class CVS(Source):
         yield wfd.getResult()
 
     def clobber(self):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
-                                                      'logEnviron': self.logEnviron})
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
+                                                'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def checkRemoval(res):
@@ -142,17 +142,17 @@ class CVS(Source):
         return d
 
     def copy(self):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
-                                                      'logEnviron': self.logEnviron})
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
+                                                'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)        
         self.workdir = 'source'
         d.addCallback(lambda _: self.incremental())
         def copy(_):
-            cmd = buildstep.LoggedRemoteCommand('cpdir',
-                                                {'fromdir': 'source',
-                                                 'todir':'build',
-                                                 'logEnviron': self.logEnviron,})
+            cmd = buildstep.RemoteCommand('cpdir',
+                                          {'fromdir': 'source',
+                                           'todir':'build',
+                                           'logEnviron': self.logEnviron,})
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
@@ -241,8 +241,8 @@ class CVS(Source):
         return d
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.workdir + '/CVS',
-                                                     'logEnviron': self.logEnviron})
+        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/CVS',
+                                               'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _fail(tmp):

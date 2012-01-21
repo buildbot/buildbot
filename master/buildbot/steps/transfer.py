@@ -23,7 +23,7 @@ except ImportError:
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.python import log
-from buildbot.process.buildstep import LoggedRemoteCommand, BuildStep
+from buildbot.process.buildstep import RemoteCommand, BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE, SKIPPED
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.util import json
@@ -168,9 +168,9 @@ class _DirectoryWriter(_FileWriter):
         os.remove(self.tarname)
 
 
-class StatusRemoteCommand(LoggedRemoteCommand):
+class StatusRemoteCommand(RemoteCommand):
     def __init__(self, step, remote_command, args):
-        LoggedRemoteCommand.__init__(self, remote_command, args)
+        RemoteCommand.__init__(self, remote_command, args)
         callback = lambda arg: step.step_status.addLog('stdio')
         self.useLogDelayed('stdio', callback, True)
 

@@ -192,7 +192,7 @@ BuildStep
         an exception.  A common idiom is to add :meth:`failed` as an errback on
         a Deferred::
 
-            cmd = LoggedRemoteCommand(args)
+            cmd = RemoteCommand(args)
             d = self.runCommand(cmd)
             def suceed(_):
                 self.finished(results.SUCCESS)

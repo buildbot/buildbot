@@ -189,8 +189,8 @@ class Git(Source):
         return d
 
     def clobber(self):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
-                                                      'logEnviron': self.logEnviron,})
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
+                                                'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def checkRemoval(res):
@@ -210,18 +210,18 @@ class Git(Source):
         return d
 
     def copy(self):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
-                                                      'logEnviron': self.logEnviron,})
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
+                                                'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
         self.workdir = 'source'
         d.addCallback(lambda _: self.incremental())
         def copy(_):
-            cmd = buildstep.LoggedRemoteCommand('cpdir',
-                                                {'fromdir': 'source',
-                                                 'todir':'build',
-                                                 'logEnviron': self.logEnviron,})
+            cmd = buildstep.RemoteCommand('cpdir',
+                                          {'fromdir': 'source',
+                                           'todir':'build',
+                                           'logEnviron': self.logEnviron,})
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
@@ -361,8 +361,8 @@ class Git(Source):
         return changes[-1].revision
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.workdir + '/.git',
-                                                     'logEnviron': self.logEnviron,})
+        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.git',
+                                               'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _fail(tmp):
