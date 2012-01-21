@@ -24,7 +24,7 @@ from twisted.python.failure import Failure
 from twisted.web.util import formatFailure
 from twisted.python.reflect import accumulateClassList
 
-from buildbot import interfaces, locks, util
+from buildbot import interfaces, locks, util, config
 from buildbot.status import progress
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION, RETRY, worst_status
@@ -758,16 +758,18 @@ class LoggingBuildStep(BuildStep):
                                  lazylogfiles=lazylogfiles,
                                  log_eval_func=log_eval_func)
 
-        if logfiles:
-            assert type(logfiles) is type({}), \
-                "the ShellCommand 'logfiles' parameter must be a dictionary"
+        if logfiles and not isinstance(logfiles, dict):
+            raise config.ConfigErrors([
+                "the ShellCommand 'logfiles' parameter must be a dictionary" ])
 
         # merge a class-level 'logfiles' attribute with one passed in as an
         # argument
         self.logfiles = self.logfiles.copy()
         self.logfiles.update(logfiles)
         self.lazylogfiles = lazylogfiles
-        assert not log_eval_func or callable(log_eval_func)
+        if log_eval_func and not callable(log_eval_func):
+            raise config.ConfigErrors([
+                "the 'log_eval_func' paramater must be a callable" ])
         self.log_eval_func = log_eval_func
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
