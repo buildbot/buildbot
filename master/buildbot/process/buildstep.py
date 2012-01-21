@@ -73,15 +73,12 @@ class RemoteCommand(pb.Referenceable):
         return self.deferred
 
     def _start(self):
-        # Allow use of WithProperties in logfile path names.
-        cmd_args = self.args
-
         # This method only initiates the remote command.
         # We will receive remote_update messages as the command runs.
         # We will get a single remote_complete when it finishes.
         # We should fire self.deferred when the command is done.
         d = self.remote.callRemote("startCommand", self, self.commandID,
-                                   self.remote_command, cmd_args)
+                                   self.remote_command, self.args)
         return d
 
     def _finished(self, failure=None):
