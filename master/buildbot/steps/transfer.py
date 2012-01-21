@@ -81,7 +81,7 @@ class _FileWriter(pb.Referenceable):
         if self.mode is not None:
             os.chmod(self.destfile, self.mode)
 
-    def __del__(self):
+    def cancel(self):
         # unclean shutdown, the file is probably truncated, so delete it
         # altogether rather than deliver a corrupted file
         fp = getattr(self, "fp", None)
@@ -289,6 +289,10 @@ class FileUpload(_TransferBuildStep):
 
         self.cmd = StatusRemoteCommand(self, 'uploadFile', args)
         d = self.runCommand(self.cmd)
+        @d.addErrback
+        def cancel(res):
+            fileWriter.cancel()
+            return res
         d.addCallback(self.finished).addErrback(self.failed)
 
 
@@ -358,6 +362,10 @@ class DirectoryUpload(_TransferBuildStep):
 
         self.cmd = StatusRemoteCommand(self, 'uploadDirectory', args)
         d = self.runCommand(self.cmd)
+        @d.addErrback
+        def cancel(res):
+            dirWriter.cancel()
+            return res
         d.addCallback(self.finished).addErrback(self.failed)
 
     def finished(self, result):
