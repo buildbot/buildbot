@@ -356,7 +356,7 @@ class MailNotifier(base.StatusReceiverMultiService):
     def startService(self):
         if self.buildSetSummary:
             self.buildSetSubscription = \
-            self.parent.subscribeToBuildsetCompletions(self.buildsetFinished)
+            self.master.subscribeToBuildsetCompletions(self.buildsetFinished)
  
         base.StatusReceiverMultiService.startService(self)
         
