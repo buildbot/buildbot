@@ -15,6 +15,7 @@
 
 import time
 import traceback
+import inspect
 import shutil
 import os
 import sqlalchemy as sa
@@ -28,19 +29,44 @@ from twisted.python import threadpool, failure, versions, log
 #     from buildbot.db import pool
 #     pool.debug = True
 debug = False
+_debug_id = 1
 
 def timed_do_fn(f):
     """Decorate a do function to log before, after, and elapsed time,
     with the name of the calling function.  This is not speedy!"""
-    def wrap(*args, **kwargs):
+    def wrap(callable, *args, **kwargs):
+        global _debug_id
+
         # get a description of the function that called us
         st = traceback.extract_stack(limit=2)
         file, line, name, _ = st[0]
-        descr = "%s ('%s' line %d)" % (name, file, line)
+
+        # and its locals
+        frame = inspect.currentframe(1)
+        locals = frame.f_locals
+
+        # invent a unique ID for the description
+        id, _debug_id = _debug_id, _debug_id+1
+
+        descr = "%s-%08x" % (name, id)
 
         start_time = time.time()
-        log.msg("%s - before" % (descr,))
-        d = f(*args, **kwargs)
+        log.msg("%s - before ('%s' line %d)" % (descr, file, line))
+        for name in locals:
+            if name in ('self', 'thd'):
+                continue
+            log.msg("%s -   %s = %r" % (descr, name, locals[name]))
+
+        # wrap the callable to log the begin and end of the actual thread
+        # function
+        def callable_wrap(*args, **kargs):
+            log.msg("%s - thd start" % (descr,))
+            try:
+                return callable(*args, **kwargs)
+            finally:
+                log.msg("%s - thd end" % (descr,))
+        d = f(callable_wrap, *args, **kwargs)
+
         def after(x):
             end_time = time.time()
             elapsed = (end_time - start_time) * 1000
