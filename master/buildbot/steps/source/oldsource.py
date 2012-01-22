@@ -258,31 +258,32 @@ class Source(LoggingBuildStep):
         # Allow workdir to be WithProperties
         self.args['workdir'] = self.workdir
 
-        # what source stamp would this build like to use?
-        id = self.getRepository()
-        s = self.build.getSourceStamp(id)
+        if not self.alwaysUseLatest:
+            # what source stamp would this build like to use?
+            id = self.getRepository()
+            s = self.build.getSourceStamp(id)
 
-        # if branch is None, then use the Step's "default" branch
-        branch = s.branch or self.branch
-        # if revision is None, use the latest sources (-rHEAD)
-        revision = s.revision
-        if not revision and not self.alwaysUseLatest:
-            revision = self.computeSourceRevision(s.changes)
-            # the revision property is currently None, so set it to something
-            # more interesting
-            if revision is not None:
-                self.setProperty('revision', str(revision), "Source")
+            # if branch is None, then use the Step's "default" branch
+            branch = s.branch or self.branch
+            # if revision is None, use the latest sources (-rHEAD)
+            revision = s.revision
+            if not revision:
+                revision = self.computeSourceRevision(s.changes)
+                # the revision property is currently None, so set it to something
+                # more interesting
+                if revision is not None:
+                    self.setProperty('revision', str(revision), "Source")
 
-        # if patch is None, then do not patch the tree after checkout
+            # if patch is None, then do not patch the tree after checkout
 
-        # 'patch' is None or a tuple of (patchlevel, diff, root)
-        # root is optional.
-        patch = s.patch
-        if patch:
-            self.addCompleteLog("patch", patch[1])
-
-        if self.alwaysUseLatest:
+            # 'patch' is None or a tuple of (patchlevel, diff, root)
+            # root is optional.
+            patch = s.patch
+            if patch:
+                self.addCompleteLog("patch", patch[1])
+        else:
             revision = None
+            branch = self.branch
 
         self.args['logEnviron'] = self.logEnviron
         self.args['env'] = self.env
