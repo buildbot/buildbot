@@ -534,8 +534,9 @@ class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
 
     def test_pollDatabaseBuildRequests_new(self):
         self.db.insertTestData([
-            fakedb.SourceStamp(id=127),
-            fakedb.Buildset(id=99, sourcestampid=127),
+            fakedb.SourceStampSet(id=127),
+            fakedb.SourceStamp(id=127, sourcestampsetid=127),
+            fakedb.Buildset(id=99, sourcestampsetid=127),
             fakedb.BuildRequest(id=19, buildsetid=99, buildername='9teen'),
             fakedb.BuildRequest(id=20, buildsetid=99, buildername='twenty')
         ])
@@ -551,10 +552,10 @@ class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
         d = defer.succeed(None)
         def insert1(_):
             self.db.insertTestData([
-                fakedb.SourceStamp(id=127),
-                fakedb.Buildset(id=99, sourcestampid=127),
-                fakedb.BuildRequest(id=11, buildsetid=9,
-                                        buildername='eleventy'),
+            fakedb.SourceStampSet(id=127),
+            fakedb.SourceStamp(id=127, sourcestampsetid=127),
+            fakedb.Buildset(id=99, sourcestampsetid=127),
+            fakedb.BuildRequest(id=11, buildsetid=9, buildername='eleventy'),
             ])
         d.addCallback(insert1)
         d.addCallback(lambda _ : self.master.pollDatabaseBuildRequests())

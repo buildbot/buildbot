@@ -113,8 +113,20 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
     def getBuildbotURL(self):
         return self.master.config.buildbotURL
 
+    def getStatus(self):
+        # some listeners expect their .parent to be a BuildMaster object, and
+        # use this method to get the Status object.  This is documented, so for
+        # now keep it working.
+        return self
+
     def getMetrics(self):
         return self.master.metrics
+
+    def getURLForBuild(self, builder_name, build_number):
+        prefix = self.getBuildbotURL()
+        return prefix + "builders/%s/builds/%d" % (
+            urllib.quote(builder_name, safe=''),
+            build_number)
 
     def getURLForThing(self, thing):
         prefix = self.getBuildbotURL()
@@ -132,9 +144,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         if interfaces.IBuildStatus.providedBy(thing):
             build = thing
             bldr = build.getBuilder()
-            return prefix + "builders/%s/builds/%d" % (
-                urllib.quote(bldr.getName(), safe=''),
-                build.getNumber())
+            return self.getURLForBuild(bldr.getName(), build.getNumber())
+            
         if interfaces.IBuildStepStatus.providedBy(thing):
             step = thing
             build = step.getBuild()

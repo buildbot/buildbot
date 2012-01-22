@@ -12,3 +12,18 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from buildbot.db import base
+
+class SourceStampSetsConnectorComponent(base.DBConnectorComponent):
+    # Documentation is in developer/database.rst
+
+    def addSourceStampSet(self):
+        def thd(conn):
+            # insert the sourcestampset.  sourcestampset has no attributes, but
+            # inserting a new row results in a new setid
+            r = conn.execute(self.db.model.sourcestampsets.insert(), dict())
+            sourcestampsetid = r.inserted_primary_key[0]
+
+            return sourcestampsetid
+        return self.db.pool.do(thd)

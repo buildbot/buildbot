@@ -197,6 +197,12 @@ class SourceStampChange(Row):
 
     required_columns = ('sourcestampid', 'changeid')
 
+class SourceStampSet(Row):
+    table = "sourcestampsets"
+    defaults = dict(
+        id = None,
+    )
+    id_column = 'id'
 
 class SourceStamp(Row):
     table = "sourcestamps"
@@ -208,34 +214,22 @@ class SourceStamp(Row):
         patchid = None,
         repository = 'repo',
         project = 'proj',
+        sourcestampsetid = None,
     )
 
     id_column = 'id'
-
-
-class Scheduler(Row):
-    table = "schedulers"
-
-    defaults = dict(
-        schedulerid = None,
-        name = 'testsched',
-        state = '{}',
-        class_name = 'TestScheduler',
-    )
-
-    id_column = 'schedulerid'
 
 
 class SchedulerChange(Row):
     table = "scheduler_changes"
 
     defaults = dict(
-        schedulerid = None,
+        objectid = None,
         changeid = None,
         important = 1,
     )
 
-    required_columns = ( 'schedulerid', 'changeid' )
+    required_columns = ( 'objectid', 'changeid' )
 
 
 class Buildset(Row):
@@ -245,7 +239,7 @@ class Buildset(Row):
         id = None,
         external_idstring = 'extid',
         reason = 'because',
-        sourcestampid = None,
+        sourcestampsetid = None,
         submitted_at = 12345678,
         complete = 0,
         complete_at = None,
@@ -253,7 +247,7 @@ class Buildset(Row):
     )
 
     id_column = 'id'
-    required_columns = ( 'sourcestampid', )
+    required_columns = ( 'sourcestampsetid', )
 
 
 class BuildsetProperty(Row):
@@ -266,18 +260,6 @@ class BuildsetProperty(Row):
     )
 
     required_columns = ( 'buildsetid', )
-
-
-class SchedulerUpstreamBuildset(Row):
-    table = "scheduler_upstream_buildsets"
-
-    defaults = dict(
-        buildsetid = None,
-        schedulerid = None,
-        active = 0,
-    )
-
-    required_columns = ( 'buildsetid', 'schedulerid' )
 
 
 class Object(Row):
@@ -484,31 +466,28 @@ class FakeSchedulersComponent(FakeDBComponent):
 
     def insertTestData(self, rows):
         for row in rows:
-            if isinstance(row, Scheduler):
-                self.states[row.schedulerid] = json.loads(row.state)
-
-            elif isinstance(row, SchedulerChange):
-                cls = self.classifications.setdefault(row.schedulerid, {})
+            if isinstance(row, SchedulerChange):
+                cls = self.classifications.setdefault(row.objectid, {})
                 cls[row.changeid] = row.important
 
     # component methods
 
-    def classifyChanges(self, schedulerid, classifications):
-        self.classifications.setdefault(schedulerid, {}).update(classifications)
+    def classifyChanges(self, objectid, classifications):
+        self.classifications.setdefault(objectid, {}).update(classifications)
         return defer.succeed(None)
 
-    def flushChangeClassifications(self, schedulerid, less_than=None):
+    def flushChangeClassifications(self, objectid, less_than=None):
         if less_than is not None:
-            classifications = self.classifications.setdefault(schedulerid, {})
+            classifications = self.classifications.setdefault(objectid, {})
             for changeid in classifications.keys():
                 if changeid < less_than:
                     del classifications[changeid]
         else:
-            self.classifications[schedulerid] = {}
+            self.classifications[objectid] = {}
         return defer.succeed(None)
 
-    def getChangeClassifications(self, schedulerid, branch=-1):
-        classifications = self.classifications.setdefault(schedulerid, {})
+    def getChangeClassifications(self, objectid, branch=-1):
+        classifications = self.classifications.setdefault(objectid, {})
         if branch is not -1:
             # filter out the classifications for the requested branch
             change_branches = dict(
@@ -521,17 +500,33 @@ class FakeSchedulersComponent(FakeDBComponent):
 
     # fake methods
 
-    def fakeClassifications(self, schedulerid, classifications):
+    def fakeClassifications(self, objectid, classifications):
         """Set the set of classifications for a scheduler"""
-        self.classifications[schedulerid] = classifications
+        self.classifications[objectid] = classifications
 
     # assertions
 
-    def assertClassifications(self, schedulerid, classifications):
+    def assertClassifications(self, objectid, classifications):
         self.t.assertEqual(
-                self.classifications.get(schedulerid, {}),
+                self.classifications.get(objectid, {}),
                 classifications)
 
+
+class FakeSourceStampSetsComponent(FakeDBComponent):
+    def setUp(self):
+        self.sourcestampsets = {}
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, SourceStampSet):
+                self.sourcestampsets[row.id] = dict()
+
+    def addSourceStampSet(self):
+        id = len(self.sourcestampsets) + 100
+        while id in self.sourcestampsets:
+            id += 1
+        self.sourcestampsets[id] = dict()
+        return defer.succeed(id)
 
 class FakeSourceStampsComponent(FakeDBComponent):
 
@@ -561,7 +556,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
 
     # component methods
 
-    def addSourceStamp(self, branch, revision, repository, project,
+    def addSourceStamp(self, branch, revision, repository, project, sourcestampsetid,
                           patch_body=None, patch_level=0, patch_author=None,
                           patch_comment=None, patch_subdir=None, changeids=[]):
         id = len(self.sourcestamps) + 100
@@ -584,12 +579,15 @@ class FakeSourceStampsComponent(FakeDBComponent):
         else:
             patchid = None
 
-        self.sourcestamps[id] = dict(id=id, branch=branch, revision=revision,
+        self.sourcestamps[id] = dict(id=id, sourcestampsetid=sourcestampsetid, branch=branch, revision=revision,
                 patchid=patchid, repository=repository, project=project,
                 changeids=changeids)
         return defer.succeed(id)
 
     def getSourceStamp(self, ssid):
+        return defer.succeed(self._getSourceStamp(ssid))
+
+    def _getSourceStamp(self, ssid):
         if ssid in self.sourcestamps:
             ssdict = self.sourcestamps[ssid].copy()
             del ssdict['id']
@@ -604,10 +602,17 @@ class FakeSourceStampsComponent(FakeDBComponent):
                 ssdict['patch_author'] = None
                 ssdict['patch_comment'] = None
             del ssdict['patchid']
-            return defer.succeed(ssdict)
+            return ssdict
         else:
-            return defer.succeed(None)
+            return None
 
+    def getSourceStamps(self, sourcestampsetid):
+        sslist = []
+        for ssdict in self.sourcestamps.itervalues():
+            if ssdict['sourcestampsetid'] == sourcestampsetid:
+                ssdictcpy = self._getSourceStamp(ssdict['id'])
+                sslist.append(ssdictcpy)
+        return defer.succeed(sslist)
 
 class FakeBuildsetsComponent(FakeDBComponent):
 
@@ -621,8 +626,6 @@ class FakeBuildsetsComponent(FakeDBComponent):
             if isinstance(row, Buildset):
                 bs = self.buildsets[row.id] = row.values.copy()
                 bs['properties'] = {}
-            if isinstance(row, SchedulerUpstreamBuildset):
-                self.buildset_subs.append((row.schedulerid, row.buildsetid))
 
         for row in rows:
             if isinstance(row, BuildsetProperty):
@@ -639,7 +642,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
             bsid += 1
         return bsid
 
-    def addBuildset(self, ssid, reason, properties, builderNames,
+    def addBuildset(self, sourcestampsetid, reason, properties, builderNames,
                    external_idstring=None, _reactor=reactor):
         bsid = self._newBsid()
         br_rows = []
@@ -649,7 +652,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.db.buildrequests.insertTestData(br_rows)
 
         # make up a row and keep its dictionary, with the properties tacked on
-        bsrow = Buildset(sourcestampid=ssid, reason=reason, external_idstring=external_idstring)
+        bsrow = Buildset(sourcestampsetid=sourcestampsetid, reason=reason, external_idstring=external_idstring)
         self.buildsets[bsid] = bsrow.values.copy()
         self.buildsets[bsid]['properties'] = properties
 
@@ -662,23 +665,6 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.buildsets[bsid]['complete'] = 1
         self.buildsets[bsid]['complete_at'] = complete_at or _reactor.seconds()
         return defer.succeed(None)
-
-    def subscribeToBuildset(self, schedulerid, buildsetid):
-        self.buildset_subs.append((schedulerid, buildsetid))
-        return defer.succeed(None)
-
-    def unsubscribeFromBuildset(self, schedulerid, buildsetid):
-        self.buildset_subs.remove((schedulerid, buildsetid))
-        return defer.succeed(None)
-
-    def getSubscribedBuildsets(self, schedulerid):
-        bsids = [ b for (s, b) in self.buildset_subs if s == schedulerid ]
-        rv = [ (bsid,
-                self.buildsets[bsid]['sourcestampid'],
-                bsid in self.completed_bsids,
-                self.buildsets[bsid].get('results', -1))
-                for bsid in bsids ]
-        return defer.succeed(rv)
 
     def getBuildset(self, bsid):
         if bsid not in self.buildsets:
@@ -739,7 +725,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.t.assertEqual(len(self.buildsets), count,
                     "buildsets are %r" % (self.buildsets,))
 
-    def assertBuildset(self, bsid, expected_buildset, expected_sourcestamp):
+    def assertBuildset(self, bsid, expected_buildset, expected_sourcestamps):
         """Assert that the buildset and its attached sourcestamp look as
         expected; the ssid parameter of the buildset is omitted.  Properties
         are converted with asList and sorted.  Sourcestamp patches are inlined
@@ -753,8 +739,13 @@ class FakeBuildsetsComponent(FakeDBComponent):
             self.t.assertIn(bsid, self.buildsets)
 
         buildset = self.buildsets[bsid].copy()
-        ss = self.db.sourcestamps.sourcestamps[buildset['sourcestampid']].copy()
-        del buildset['sourcestampid']
+
+        dictOfssDict= {}
+        for sourcestamp in self.db.sourcestamps.sourcestamps.itervalues():
+            if sourcestamp['sourcestampsetid'] == buildset['sourcestampsetid']:
+                ssdict = sourcestamp.copy()
+                ss_repository = ssdict['repository']
+                dictOfssDict[ss_repository] = ssdict
 
         if 'id' in buildset:
             del buildset['id']
@@ -769,32 +760,35 @@ class FakeBuildsetsComponent(FakeDBComponent):
 
         # only add brids if we're expecting them (sometimes they're unknown)
         if 'brids' in expected_buildset:
-            brids = dict([ (br.buildername, br.id)
-                      for br in self.db.buildrequests.reqs.values()
-                      if br.buildsetid == bsid ])
-            buildset['brids'] = brids
+            buildset['brids'] = self.allBuildRequests(bsid)
 
-        if 'id' in ss:
-            del ss['id']
-        if not ss['changeids']:
-            del ss['changeids']
+        for ss in dictOfssDict.itervalues():
+            if 'id' in ss:
+                del ss['id']
+            if not ss['changeids']:
+                del ss['changeids']
 
-        # incorporate patch info if we have it
-        if 'patchid' in ss and ss['patchid']:
-            ss.update(self.db.sourcestamps.patches[ss['patchid']])
-        del ss['patchid']
+            # incorporate patch info if we have it
+            if 'patchid' in ss and ss['patchid']:
+                ss.update(self.db.sourcestamps.patches[ss['patchid']])
+            del ss['patchid']
 
         self.t.assertEqual(
-            dict(buildset=buildset, sourcestamp=ss),
-            dict(buildset=expected_buildset, sourcestamp=expected_sourcestamp))
+            dict(buildset=buildset, sourcestamps=dictOfssDict),
+            dict(buildset=expected_buildset, sourcestamps=expected_sourcestamps))
         return bsid
 
     def allBuildsetIds(self):
         return self.buildsets.keys()
 
-    def assertBuildsetSubscriptions(self, *subscriptions):
-        self.t.assertEqual(sorted(subscriptions),
-                         sorted(self.buildset_subs))
+    def allBuildRequests(self, bsid=None):
+        if bsid is not None:
+            is_same_bsid = lambda br: br.buildsetid==bsid
+        else:
+            is_same_bsid = lambda br: True
+        return dict([ (br.buildername, br.id)
+              for br in self.db.buildrequests.reqs.values()
+              if is_same_bsid(br) ])
 
 
 class FakeStateComponent(FakeDBComponent):
@@ -855,8 +849,10 @@ class FakeStateComponent(FakeDBComponent):
 
     # assertions
 
-    def assertState(self, objectid, **kwargs):
+    def assertState(self, objectid, missing_keys=[], **kwargs):
         state = self.states[objectid]
+        for k in missing_keys:
+            self.t.assertFalse(k in state, "%s in %s" % (k, state))
         for k,v in kwargs.iteritems():
             self.t.assertIn(k, state)
             self.t.assertEqual(json.loads(state[k]), v,
@@ -1179,6 +1175,8 @@ class FakeDBConnector(object):
         self.changes = comp = FakeChangesComponent(self, testcase)
         self._components.append(comp)
         self.schedulers = comp = FakeSchedulersComponent(self, testcase)
+        self._components.append(comp)
+        self.sourcestampsets = comp = FakeSourceStampSetsComponent(self,testcase)
         self._components.append(comp)
         self.sourcestamps = comp = FakeSourceStampsComponent(self, testcase)
         self._components.append(comp)

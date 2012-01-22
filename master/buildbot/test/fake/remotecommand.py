@@ -50,9 +50,11 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=DEFAULT_TIMEOUT, maxTime=DEFAULT_MAXTIME, logfiles={},
+                 initial_stdin=None,
                  usePTY=DEFAULT_USEPTY, logEnviron=True, collectStdout=False):
         args = dict(workdir=workdir, command=command, env=env or {},
                 want_stdout=want_stdout, want_stderr=want_stderr,
+                initial_stdin=initial_stdin,
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
         FakeRemoteCommand.__init__(self, "shell", args,
@@ -229,11 +231,12 @@ class ExpectShell(Expect):
     non-default arguments must be specified explicitly (e.g., usePTY).
     """
     def __init__(self, workdir, command, env={},
-                 want_stdout=1, want_stderr=1,
+                 want_stdout=1, want_stderr=1, initial_stdin=None,
                  timeout=DEFAULT_TIMEOUT, maxTime=DEFAULT_MAXTIME, logfiles={},
                  usePTY=DEFAULT_USEPTY, logEnviron=True):
         args = dict(workdir=workdir, command=command, env=env,
                 want_stdout=want_stdout, want_stderr=want_stderr,
+                initial_stdin=initial_stdin,
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
         Expect.__init__(self, "shell", args)

@@ -42,6 +42,9 @@ class Model(base.DBConnectorComponent):
     #   tables.
     #
     # * dates are stored as unix timestamps (UTC-ish epoch time)
+    #
+    # * sqlalchemy does not handle sa.Boolean very well on MySQL or Postgres;
+    #   use sa.Integer instead
 
     # build requests
 
@@ -118,7 +121,6 @@ class Model(base.DBConnectorComponent):
 
         # a short string giving the reason the buildset was created
         sa.Column('reason', sa.String(256)), # TODO: sa.Text
-        sa.Column('sourcestampid', sa.Integer, sa.ForeignKey('sourcestamps.id'), nullable=False),
         sa.Column('submitted_at', sa.Integer, nullable=False), # TODO: redundant
 
         # if this is zero, then the build set is still pending
@@ -128,6 +130,9 @@ class Model(base.DBConnectorComponent):
         # results is only valid when complete == 1; 0 = SUCCESS, 1 = WARNINGS,
         # etc - see master/buildbot/status/builder.py
         sa.Column('results', sa.SmallInteger), # TODO: synthesize from buildrequests
+
+        # buildset belongs to all sourcestamps with setid
+        sa.Column('sourcestampsetid', sa.Integer, sa.ForeignKey('sourcestampsets.id')),
     )
 
     # changes
@@ -230,6 +235,12 @@ class Model(base.DBConnectorComponent):
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
     )
 
+    # A sourcestampset identifies a set of sourcestamps
+    # A sourcestamp belongs to a particular set if the sourcestamp has the same setid
+    sourcestampsets = sa.Table('sourcestampsets', metadata,
+        sa.Column('id', sa.Integer,  primary_key=True),
+    )
+
     # A sourcestamp identifies a particular instance of the source code.
     # Ideally, this would always be absolute, but in practice source stamps can
     # also mean "latest" (when revision is NULL), which is of course a
@@ -252,6 +263,9 @@ class Model(base.DBConnectorComponent):
 
         # the project this source code represents
         sa.Column('project', sa.String(length=512), nullable=False, server_default=''),
+
+        # each sourcestamp belongs to a set of sourcestamps
+        sa.Column('sourcestampsetid', sa.Integer, sa.ForeignKey('sourcestampsets.id')),
     )
 
     # schedulers
@@ -262,34 +276,13 @@ class Model(base.DBConnectorComponent):
     # Rows are deleted from this table as soon as the scheduler is done with
     # the change.
     scheduler_changes = sa.Table('scheduler_changes', metadata,
-        sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.schedulerid')),
+        sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id')),
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid')),
-        # true if this change is important to this scheduler
-        sa.Column('important', sa.SmallInteger), # TODO: Boolean
+        # true (nonzero) if this change is important to this scheduler
+        sa.Column('important', sa.Integer),
     )
 
-    # This table references buildsets in which a particular scheduler is
-    # interested.  On every run, a scheduler checks its upstream buildsets for
-    # completion and reacts accordingly.  Records are never deleted from this
-    # table, but active is set to 0 when the record is no longer necessary."""
-    scheduler_upstream_buildsets = sa.Table('scheduler_upstream_buildsets', metadata,
-        sa.Column('buildsetid', sa.Integer, sa.ForeignKey('buildsets.id')),
-        sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.schedulerid')),
-        # true if this buildset is still active
-        sa.Column('active', sa.SmallInteger), # TODO: redundant
-    )
-
-    # This table defines the schedulerid for each scheduler
-    # least, the last change that was analyzed, but is stored in an opaque JSON
-    # object.  Note that schedulers are never deleted.
-    schedulers = sa.Table("schedulers", metadata,
-        # unique ID for scheduler
-        sa.Column('schedulerid', sa.Integer, primary_key=True), # TODO: rename to id
-        # scheduler's name in master.cfg
-        sa.Column('name', sa.String(128), nullable=False),
-        # scheduler's class name, basically representing a "type" for the state
-        sa.Column('class_name', sa.String(128), nullable=False),
-    )
+    # objects
 
     # This table uniquely identifies objects that need to maintain state across
     # invocations.
@@ -300,7 +293,6 @@ class Model(base.DBConnectorComponent):
         sa.Column('name', sa.String(128), nullable=False),
         # object's class name, basically representing a "type" for the state
         sa.Column('class_name', sa.String(128), nullable=False),
-
     )
 
     # This table stores key/value pairs for objects, where the key is a string
@@ -314,6 +306,8 @@ class Model(base.DBConnectorComponent):
         # value, as a JSON string
         sa.Column("value_json", sa.Text, nullable=False),
     )
+
+    #users
 
     # This table identifies individual users, and contains buildbot-specific
     # information about those users.
@@ -348,7 +342,6 @@ class Model(base.DBConnectorComponent):
 
     # indexes
 
-    sa.Index('name_and_class', schedulers.c.name, schedulers.c.class_name)
     sa.Index('buildrequests_buildsetid', buildrequests.c.buildsetid)
     sa.Index('buildrequests_buildername', buildrequests.c.buildername)
     sa.Index('buildrequests_complete', buildrequests.c.complete)
@@ -365,14 +358,12 @@ class Model(base.DBConnectorComponent):
     sa.Index('change_files_changeid', change_files.c.changeid)
     sa.Index('change_links_changeid', change_links.c.changeid)
     sa.Index('change_properties_changeid', change_properties.c.changeid)
-    sa.Index('scheduler_changes_schedulerid', scheduler_changes.c.schedulerid)
+    sa.Index('scheduler_changes_objectid', scheduler_changes.c.objectid)
     sa.Index('scheduler_changes_changeid', scheduler_changes.c.changeid)
-    sa.Index('scheduler_changes_unique', scheduler_changes.c.schedulerid,
+    sa.Index('scheduler_changes_unique', scheduler_changes.c.objectid,
                     scheduler_changes.c.changeid, unique=True)
-    sa.Index('scheduler_upstream_buildsets_buildsetid', scheduler_upstream_buildsets.c.buildsetid)
-    sa.Index('scheduler_upstream_buildsets_schedulerid', scheduler_upstream_buildsets.c.schedulerid)
-    sa.Index('scheduler_upstream_buildsets_active', scheduler_upstream_buildsets.c.active)
     sa.Index('sourcestamp_changes_sourcestampid', sourcestamp_changes.c.sourcestampid)
+    sa.Index('sourcestamps_sourcestampsetid', sourcestamps.c.sourcestampsetid, unique=False)
     sa.Index('users_identifier', users.c.identifier, unique=True)
     sa.Index('users_info_uid', users_info.c.uid)
     sa.Index('users_info_uid_attr_type', users_info.c.uid,
@@ -398,8 +389,8 @@ class Model(base.DBConnectorComponent):
         ('sourcestamp_changes',
             dict(unique=False, column_names=['changeid'], name='changeid')),
         ('buildsets',
-            dict(unique=False, column_names=['sourcestampid'],
-                               name='sourcestampid')),
+            dict(unique=False, column_names=['sourcestampsetid'],
+                               name='buildsets_sourcestampsetid_fkey')),
     ]
 
     #

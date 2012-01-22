@@ -394,6 +394,7 @@ class BuildStep(properties.PropertiesMixin):
     warnOnFailure = False
     alwaysRun = False
     doStepIf = True
+    hideStepIf = False
 
     # properties set on a build step are, by nature, always runtime properties
     set_runtime_properties = True
@@ -415,6 +416,7 @@ class BuildStep(properties.PropertiesMixin):
              'progressMetrics',
              'useProgress',
              'doStepIf',
+             'hideStepIf',
              ]
 
     name = "generic"
@@ -604,12 +606,16 @@ class BuildStep(properties.PropertiesMixin):
         if self.progress:
             self.progress.finish()
         self.step_status.stepFinished(results)
+        
+        hidden = self._maybeEvaluate(self.hideStepIf, results, self)
+        self.step_status.setHidden(hidden)
+        
         self.releaseLocks()
         self.deferred.callback(results)
 
     def failed(self, why):
         # This can either be a BuildStepFailed exception/failure, meaning we
-        # should call self.finish, or it can be a real exception, which should
+        # should call self.finished, or it can be a real exception, which should
         # be recorded as such.
         if why.check(BuildStepFailed):
             self.finished(FAILURE)
@@ -625,6 +631,9 @@ class BuildStep(properties.PropertiesMixin):
             self.step_status.setText([self.name, "exception"])
             self.step_status.setText2([self.name])
             self.step_status.stepFinished(EXCEPTION)
+
+            hidden = self._maybeEvaluate(self.hideStepIf, EXCEPTION, self)
+            self.step_status.setHidden(hidden)
         except:
             log.msg("exception during failure processing")
             log.err()
@@ -707,7 +716,12 @@ class BuildStep(properties.PropertiesMixin):
         c.buildslave = self.buildslave
         d = c.run(self, self.remote)
         return d
-
+    
+    @staticmethod
+    def _maybeEvaluate(value, *args, **kwargs):
+        if callable(value):
+            value = value(*args, **kwargs)
+        return value
 
 components.registerAdapter(
         lambda step : interfaces.IProperties(step.build),

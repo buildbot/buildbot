@@ -247,6 +247,9 @@ class Maker:
         from buildbot.master import BuildMaster
         from buildbot import config as config_module
 
+        from buildbot import monkeypatches
+        monkeypatches.patch_all()
+
         # create a master with the default configuration, but with db_url
         # overridden
         master_cfg = config_module.MasterConfig()
@@ -361,7 +364,10 @@ class UpgradeMasterOptions(MakerBase):
 @defer.deferredGenerator
 def upgradeMaster(config):
     from buildbot import config as config_module
+    from buildbot import monkeypatches
     import traceback
+
+    monkeypatches.patch_all()
 
     m = Maker(config)
     basedir = os.path.expanduser(config['basedir'])

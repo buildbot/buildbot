@@ -74,7 +74,7 @@ class JobdirService(dirs.DirsMixin, unittest.TestCase):
 
 class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
 
-    SCHEDULERID = 23
+    OBJECTID = 23
 
     def setUp(self):
         self.setUpScheduler()
@@ -97,7 +97,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
 
         # build scheduler
         kwargs = dict(name="tsched", builderNames=['a'], jobdir=self.jobdir)
-        sched = self.attachScheduler(trysched.Try_Jobdir(**kwargs), self.SCHEDULERID)
+        sched = self.attachScheduler(trysched.Try_Jobdir(**kwargs), self.OBJECTID)
 
         # start it
         sched.startService()
@@ -311,7 +311,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.attachScheduler(
             trysched.Try_Jobdir(name='tsched', builderNames=['buildera','builderb'],
                                 jobdir='foo'),
-            self.SCHEDULERID)
+            self.OBJECTID)
 
         fakefile = mock.Mock()
         def parseJob_(f):
@@ -335,13 +335,17 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             self.db.buildsets.assertBuildset('?',
                     dict(reason="'try' job by user who",
                         external_idstring='extid',
-                        properties=[('scheduler', ('tsched', 'Scheduler'))]),
-                    dict(branch='trunk', repository='repo',
+                        properties=[('scheduler', ('tsched', 'Scheduler'))],
+                        sourcestampsetid=100),
+                    {'repo':
+                     dict(branch='trunk', repository='repo',
                         project='proj', revision='1234',
                         patch_body='this is my diff, -- ++, etc.',
                         patch_level=1, patch_subdir='',
                         patch_author='who',
-                        patch_comment='comment'))
+                        patch_comment='comment',
+                        sourcestampsetid=100)
+                    })
         d.addCallback(check)
         return d
 
@@ -373,20 +377,24 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             self.db.buildsets.assertBuildset('?',
                     dict(reason="'try' job by user who",
                         external_idstring='extid',
-                        properties=[('scheduler', ('tsched', 'Scheduler'))]),
-                    dict(branch='trunk', repository='repo',
+                        properties=[('scheduler', ('tsched', 'Scheduler'))],
+                        sourcestampsetid=100),
+                    {'repo':
+                     dict(branch='trunk', repository='repo',
                         project='proj', revision='1234',
                         patch_body='this is my diff, -- ++, etc.',
                         patch_level=1, patch_subdir='',
                         patch_author='who',
-                        patch_comment='comment'))
+                        patch_comment='comment',
+                        sourcestampsetid=100)
+                    })
         d.addCallback(check)
         return d
 
 
 class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
 
-    SCHEDULERID = 26
+    OBJECTID = 26
 
     def setUp(self):
         self.setUpScheduler()
@@ -396,7 +404,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
 
     def makeScheduler(self, **kwargs):
         sched = self.attachScheduler(trysched.Try_Userpass(**kwargs),
-                self.SCHEDULERID)
+                self.OBJECTID)
 
         # Try will return a remote version of master.status, so give it
         # something to return
@@ -423,11 +431,16 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                             ('frm', ('schd', 'Scheduler')),
                             ('pr', ('op', 'try build')),
                             ('scheduler', ('tsched', 'Scheduler')),
-                        ]),
-                    dict(branch='default', repository='repo',
+                        ],
+                        sourcestampsetid = 100,
+                        ),
+                    {'repo':
+                     dict(branch='default', repository='repo',
                         project='proj', revision='abcdef',
+                        sourcestampsetid = 100,
                         patch_body='-- ++', patch_level=1, patch_subdir='',
-                        patch_author="", patch_comment=""))
+                        patch_author="", patch_comment="")
+                    })
         d.addCallback(check)
         return d
 
@@ -442,11 +455,16 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                             ('frm', ('schd', 'Scheduler')),
                             ('pr', ('op', 'try build')),
                             ('scheduler', ('tsched', 'Scheduler')),
-                        ]),
-                    dict(branch='default', repository='repo',
+                        ],
+                        sourcestampsetid = 100,
+                        ),
+                    {'repo':
+                     dict(branch='default', repository='repo',
                         project='proj', revision='abcdef',
+                        sourcestampsetid = 100,
                         patch_body='-- ++', patch_level=1, patch_subdir='',
-                        patch_author='who', patch_comment="comment"))
+                        patch_author='who', patch_comment="comment")
+                    })
         d.addCallback(check)
         return d
 
@@ -471,7 +489,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
 
 class Try_Userpass(scheduler.SchedulerMixin, unittest.TestCase):
 
-    SCHEDULERID = 25
+    OBJECTID = 25
 
     def setUp(self):
         self.setUpScheduler()
@@ -481,7 +499,7 @@ class Try_Userpass(scheduler.SchedulerMixin, unittest.TestCase):
 
     def makeScheduler(self, **kwargs):
         sched = self.attachScheduler(trysched.Try_Userpass(**kwargs),
-                self.SCHEDULERID)
+                self.OBJECTID)
         return sched
 
     # tests

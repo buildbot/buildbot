@@ -10,7 +10,7 @@ described in :doc:`../manual/cfg-buildsteps`.
 BuildStep
 ---------
 
-.. py:class:: BuildStep(name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf)
+.. py:class:: BuildStep(name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
 
     All constructor arguments must be given as keyword arguments.  Each
     constructor parameter is copied to the corresponding attribute.
@@ -36,8 +36,13 @@ BuildStep
 
     .. py:attribute:: doStepIf
 
-        A callable to determine whether this step should be executed.  See
-        :ref:`Buildstep-Common-Parameters` for details.
+        A callable or bool to determine whether this step should be executed.
+        See :ref:`Buildstep-Common-Parameters` for details.
+
+    .. py:attribute:: hideStepIf
+
+        A callable or bool to determine whether this step should be shown in the
+        waterfall and build details pages. See :ref:`Buildstep-Common-Parameters` for details.
 
     The following attributes affect the behavior of the containing build:
 
@@ -394,7 +399,7 @@ BuildStep
 LoggingBuildStep
 ----------------
 
-.. py:class:: LoggingBuildStep(logfiles, lazylogfiles, log_eval_func, name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf)
+.. py:class:: LoggingBuildStep(logfiles, lazylogfiles, log_eval_func, name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
 
     :param logfiles: see :bb:step:`ShellCommand`
     :param lazylogfiles: see :bb:step:`ShellCommand`

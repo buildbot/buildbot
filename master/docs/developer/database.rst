@@ -287,16 +287,16 @@ buildsets
     * ``bsid``
     * ``external_idstring`` (arbitrary string for mapping builds externally)
     * ``reason`` (string; reason these builds were triggered)
-    * ``sourcestampid`` (source stamp for this buildset)
+    * ``sourcestampsetid`` (source stamp set for this buildset)
     * ``submitted_at`` (datetime object; time this buildset was created)
     * ``complete`` (boolean; true if all of the builds for this buildset are complete)
     * ``complete_at`` (datetime object; time this buildset was completed)
     * ``results`` (aggregate result of this buildset; see :ref:`Build-Result-Codes`)
 
-    .. py:method:: addBuildset(ssid, reason, properties, builderNames, external_idstring=None)
+    .. py:method:: addBuildset(sourcestampsetid, reason, properties, builderNames, external_idstring=None)
 
-        :param ssid: id of the SourceStamp for this buildset
-        :type ssid: integer
+        :param sourcestampsetid: id of the SourceStampSet for this buildset
+        :type sourcestampsetid: integer
         :param reason: reason for this buildset
         :type reason: short unicode string
         :param properties: properties for this buildset
@@ -499,14 +499,14 @@ schedulers
 
     An instance of this class is available at ``master.db.changes``.
 
-    .. index:: schedulerid
+    .. index:: objectid
 
-    Schedulers are identified by a *schedulerid*, which can be determined from
-    the scheduler name and class by :py:meth:`getSchedulerId`.
+    Schedulers are identified by a their objectid - see
+    :py:class:`StateConnectorComponent`.
 
-    .. py:method:: classifyChanges(schedulerid, classifications)
+    .. py:method:: classifyChanges(objectid, classifications)
 
-        :param schedulerid: scheduler classifying the changes
+        :param objectid: scheduler classifying the changes
         :param classifications: mapping of changeid to boolean, where the boolean
             is true if the change is important, and false if it is unimportant
         :type classifications: dictionary
@@ -519,19 +519,19 @@ schedulers
         classifications once they are no longer needed, using
         :py:meth:`flushChangeClassifications`.
 
-    .. py:method: flushChangeClassifications(schedulerid, less_than=None)
+    .. py:method: flushChangeClassifications(objectid, less_than=None)
 
-        :param schedulerid: scheduler owning the flushed changes
+        :param objectid: scheduler owning the flushed changes
         :param less_than: (optional) lowest changeid that should *not* be flushed
         :returns: Deferred
 
         Flush all scheduler_changes for the given scheduler, limiting to those
         with changeid less than ``less_than`` if the parameter is supplied.
 
-    .. py:method:: getChangeClassifications(schedulerid[, branch])
+    .. py:method:: getChangeClassifications(objectid[, branch])
 
-        :param schedulerid: scheduler to look up changes for
-        :type schedulerid: integer
+        :param objectid: scheduler to look up changes for
+        :type objectid: integer
         :param branch: (optional) limit to changes with this branch
         :type branch: string or None (for default branch)
         :returns: dictionary via Deferred
@@ -545,19 +545,6 @@ schedulers
         default branch, and is not the same as omitting the ``branch`` argument
         altogether.
 
-    .. py:method:: getSchedulerId(sched_name, sched_class)
-
-        :param sched_name: the scheduler's configured name
-        :param sched_class: the class name of this scheduler
-        :returns: schedulerid, via a Deferred
-
-        Get the schedulerid for the given scheduler, creating a new id if no
-        matching record is found.
-
-        Note that this makes no attempt to "claim" the schedulerid: schedulers
-        with the same name and class, but running in different masters, will be
-        assigned the same schedulerid - with disastrous results.
-
 sourcestamps
 ~~~~~~~~~~~~
 
@@ -567,17 +554,19 @@ sourcestamps
 
 .. py:class:: SourceStampsConnectorComponent
 
-    This class manages source stamps, as stored in the database.  Source stamps
-    are linked to changes, and build sets link to source stamps, via their
-    id's.
+    This class manages source stamps, as stored in the database. Source stamps
+    are linked to changes. Source stamps with the same sourcestampsetid belong 
+    to the same sourcestampset. Buildsets link to one or more source stamps via 
+    a sourcestampset id.
 
     An instance of this class is available at ``master.db.sourcestamps``.
 
     .. index:: ssid, ssdict
 
-    Source stamps are identified by a *ssid*, and represented internally as an *ssdict*, with keys
+    Source stamps are identified by a *ssid*, and represented internally as a *ssdict*, with keys
 
     * ``ssid``
+    * ``sourcestampsetid`` (set to which the sourcestamp belongs)
     * ``branch`` (branch, or ``None`` for default branch)
     * ``revision`` (revision, or ``None`` to indicate the latest revision, in
       which case this is a relative source stamp)
@@ -633,6 +622,40 @@ sourcestamps
         Get an ssdict representing the given source stamp, or ``None`` if no
         such source stamp exists.
 
+    .. py:method:: getSourceStamps(sourcestampsetid)
+    
+        :param sourcestampsetid: identification of the set, all returned sourcestamps belong to this set
+        :type sourcestampsetid: integer
+        :returns: sslist of ssdict
+        
+        Get a set of sourcestamps identified by a set id. The set is returned as
+        a sslist that contains one or more sourcestamps (represented as ssdicts). 
+        The list is empty if the set does not exist or no sourcestamps belong to the set.
+    
+sourcestampset
+~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.db.sourcestampsets
+
+.. index:: double: SourceStampSets; DB Connector Component
+
+.. py:class:: SourceStampSetsConnectorComponent
+
+    This class is responsible for adding new sourcestampsets to the database.
+    Build sets link to sourcestamp sets, via their (set) id's.
+    
+    An instance of this class is available at ``master.db.sourcestampsets``.
+    
+    Sourcestamp sets are identified by a sourcestampsetid.
+
+    .. py:method:: addSourceStampSet()
+    
+        :returns: new sourcestampsetid as integer, via Deferred
+        
+        Add a new (empty) sourcestampset to the database. The unique identification
+        of the set is returned as integer. The new id can be used to add
+        new sourcestamps to the database and as reference in a buildset.
+    
 state
 ~~~~~
 

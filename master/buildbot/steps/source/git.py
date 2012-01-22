@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import log, failure
+from twisted.python import log
 from twisted.internet import defer
 
 from buildbot.process import buildstep
@@ -25,7 +25,7 @@ class Git(Source):
     name='git'
     renderables = [ "repourl"]
 
-    def __init__(self, repourl=None, branch='master', mode='incremental',
+    def __init__(self, repourl=None, branch='HEAD', mode='incremental',
                  method=None, submodules=False, shallow=False, progress=False,
                  retryFetch=False, clobberOnFailure=False, **kwargs):
         """
@@ -88,7 +88,7 @@ class Git(Source):
             assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
 
     def startVC(self, branch, revision, patch):
-        self.branch = branch or 'master'
+        self.branch = branch or 'HEAD'
         self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = self.addLog("stdio")
@@ -104,6 +104,8 @@ class Git(Source):
             d.addCallback(lambda _: self.incremental())
         elif self.mode == 'full':
             d.addCallback(lambda _: self.full())
+        if patch:
+            d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
@@ -169,6 +171,12 @@ class Git(Source):
                     self._dovccmd(['reset', '--hard', self.revision]))
             yield wfd
             wfd.getResult()
+
+            if self.branch != 'HEAD':
+                wfd = defer.waitForDeferred(
+                    self._dovccmd(['branch', '-M', self.branch], abandonOnFailure=False))
+                yield wfd
+                wfd.getResult()
         else:
             wfd = defer.waitForDeferred(
                     self._doFetch(None))
@@ -256,11 +264,12 @@ class Git(Source):
         d.addCallback(setrev)
         return d
 
-    def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False):
+    def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, extra_args={}):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['git'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
-                                           collectStdout=collectStdout)
+                                           collectStdout=collectStdout,
+                                           **extra_args)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting git command : git %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
@@ -294,6 +303,20 @@ class Git(Source):
             abandonOnFailure = not self.retryFetch and not self.clobberOnFailure
             return self._dovccmd(command, abandonOnFailure)
         d.addCallback(checkout)
+        def renameBranch(res):
+            if res != 0:
+                return res
+            d = self._dovccmd(['branch', '-M', self.branch], abandonOnFailure=False)
+            # Ignore errors
+            d.addCallback(lambda _: res)
+            return d
+
+        if self.branch != 'HEAD':
+            d.addCallback(renameBranch)
+        return d
+
+    def patch(self, _, patch):
+        d = self._dovccmd(['apply', '--index'], extra_args={'initial_stdin': patch})
         return d
 
     @defer.deferredGenerator
@@ -321,9 +344,9 @@ class Git(Source):
 
     def _full(self):
         if self.shallow:
-            command = ['clone', '--depth', '1', self.repourl, '.']
+            command = ['clone', '--depth', '1', '--branch', self.branch, self.repourl, '.']
         else:
-            command = ['clone', self.repourl, '.']
+            command = ['clone', '--branch', self.branch, self.repourl, '.']
         #Fix references
         if self.prog:
             command.append('--progress')
@@ -349,7 +372,7 @@ class Git(Source):
                 if self.clobberOnFailure:
                     return self.clobber()
                 else:
-                    raise failure.Failure(res)
+                    raise buildstep.BuildStepFailed()
             else:
                 return res
         d.addCallback(clobber)

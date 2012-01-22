@@ -102,6 +102,18 @@ Arguments common to all :class:`BuildStep` subclasses:
     normally.  If you set ``doStepIf`` to a function, that function should
     accept one parameter, which will be the :class:`Step` object itself.
 
+.. index:: Buildstep Parameter; hideStepIf
+
+``hideStepIf``
+    A step can be optionally hidden from the waterfall and build details web pages.  To do
+    this, set the step's ``hideStepIf`` to a boolean value, or to a function that takes one
+    parameter, the :class:`BuildStepStatus` and returns a boolean value.  Steps are always
+    shown while they execute, however after the step as finished, this parameter
+    is evaluated (if a function) and if the value is True, the step is hidden.
+    For example, in order to hide the step if the step has been skipped, ::
+
+        factory.addStep(Foo(..., hideStepIf=lambda s, result: result==SKIPPED))
+
 .. index:: Buildstep Parameter; locks
 
 ``locks``
@@ -1287,6 +1299,9 @@ The :bb:step:`ShellCommand` arguments are:
     difficult questions about how to escape or interpret shell
     metacharacters.
 
+    If ``command`` contains nested lists (for example, from a properties
+    substitution), then that list will be flattened before it is executed.
+
 ``workdir``
     All ShellCommands are run by default in the ``workdir``, which
     defaults to the :file:`build` subdirectory of the slave builder's
@@ -1851,6 +1866,18 @@ This command recursively deletes a directory on the slave. ::
 
 This step requires slave version 0.8.4 or later.
 
+.. bb:step:: MakeDirectory
+
+MakeDirectory
++++++++++++++++
+
+This command creates a directory on the slave. ::
+
+    from buildbot.steps.slave import MakeDirectory
+    f.addStep(MakeDirectory(dir="build/build"))
+
+This step requires slave version 0.8.5 or later.
+
 .. _Python-BuildSteps:
 
 Python BuildSteps
@@ -2102,8 +2129,8 @@ status to the uploaded file. ::
     
     f.addStep(ShellCommand(command=["make", "docs"]))
     f.addStep(FileUpload(slavesrc="docs/reference.html",
-                         masterdest="~/public_html/ref.html",
-                         url="/~buildbot/ref.html"))
+                         masterdest="/home/bb/public_html/ref.html",
+                         url="http://somesite/~buildbot/ref.html"))
 
 The ``masterdest=`` argument will be passed to :meth:`os.path.expanduser`,
 so things like ``~`` will be expanded properly. Non-absolute paths
@@ -2392,9 +2419,10 @@ continually triggers itself, because the schedulers are specified
 by name.
 
 If ``waitForFinish`` is ``True``, then the step will not finish until
-all of the builds from the triggered schedulers have finished. If this
-argument is ``False`` (the default) or not given, then the buildstep
-succeeds immediately after triggering the schedulers.
+all of the builds from the triggered schedulers have finished. Hyperlinks
+are added to the waterfall and the build detail web pages for each
+triggered build. If this argument is ``False`` (the default) or not given,
+then the buildstep succeeds immediately after triggering the schedulers.
 
 The SourceStamp to use for the triggered build is controlled by the arguments
 ``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp``.  If

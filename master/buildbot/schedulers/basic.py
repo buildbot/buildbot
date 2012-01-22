@@ -77,7 +77,7 @@ class BaseBasicScheduler(base.BaseScheduler):
         if not self.treeStableTimer:
             d.addCallback(lambda _ :
                 self.master.db.schedulers.flushChangeClassifications(
-                                                        self.schedulerid))
+                                                        self.objectid))
 
         # otherwise, if there are classified changes out there, start their
         # treeStableTimers again
@@ -125,7 +125,7 @@ class BaseBasicScheduler(base.BaseScheduler):
         # - for an important change, start the timer
         # - for an unimportant change, reset the timer if it is running
         d = self.master.db.schedulers.classifyChanges(
-                self.schedulerid, { change.number : important })
+                self.objectid, { change.number : important })
         def fix_timer(_):
             if not important and not self._stable_timers[timer_name]:
                 return
@@ -149,7 +149,7 @@ class BaseBasicScheduler(base.BaseScheduler):
         # the scheduler starts up.  In practice, this doesn't hurt anything.
         wfd = defer.waitForDeferred(
             self.master.db.schedulers.getChangeClassifications(
-                                                        self.schedulerid))
+                                                        self.objectid))
         yield wfd
         classifications = wfd.getResult()
 
@@ -176,7 +176,7 @@ class BaseBasicScheduler(base.BaseScheduler):
     def getTimerNameForChange(self, change):
         raise NotImplementedError # see subclasses
 
-    def getChangeClassificationsForTimer(self, schedulerid, timer_name):
+    def getChangeClassificationsForTimer(self, objectid, timer_name):
         """similar to db.schedulers.getChangeClassifications, but given timer
         name"""
         raise NotImplementedError # see subclasses
@@ -192,7 +192,7 @@ class BaseBasicScheduler(base.BaseScheduler):
         del self._stable_timers[timer_name]
 
         wfd = defer.waitForDeferred(
-                self.getChangeClassificationsForTimer(self.schedulerid,
+                self.getChangeClassificationsForTimer(self.objectid,
                                                       timer_name))
         yield wfd
         classifications = wfd.getResult()
@@ -211,7 +211,7 @@ class BaseBasicScheduler(base.BaseScheduler):
         max_changeid = changeids[-1] # (changeids are sorted)
         wfd = defer.waitForDeferred(
                 self.master.db.schedulers.flushChangeClassifications(
-                            self.schedulerid, less_than=max_changeid+1))
+                            self.objectid, less_than=max_changeid+1))
         yield wfd
         wfd.getResult()
 
@@ -234,9 +234,9 @@ class SingleBranchScheduler(BaseBasicScheduler):
     def getTimerNameForChange(self, change):
         return "only" # this class only uses one timer
 
-    def getChangeClassificationsForTimer(self, schedulerid, timer_name):
+    def getChangeClassificationsForTimer(self, objectid, timer_name):
         return self.master.db.schedulers.getChangeClassifications(
-                                                        self.schedulerid)
+                                                        self.objectid)
 
 
 class Scheduler(SingleBranchScheduler):
@@ -259,10 +259,10 @@ class AnyBranchScheduler(BaseBasicScheduler):
     def getTimerNameForChange(self, change):
         return change.branch
 
-    def getChangeClassificationsForTimer(self, schedulerid, timer_name):
+    def getChangeClassificationsForTimer(self, objectid, timer_name):
         branch = timer_name # set in getTimerNameForChange
         return self.master.db.schedulers.getChangeClassifications(
-                self.schedulerid, branch=branch)
+                self.objectid, branch=branch)
 
 # now at buildbot.schedulers.dependent, but keep the old name alive
 Dependent = dependent.Dependent
