@@ -174,7 +174,7 @@ class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
     def test_success(self):
         self.setupStep(slave.MakeDirectory(dir="d"))
         self.expectCommands(
-            ExpectLogged('mkdir', { 'dir' : 'd' })
+            Expect('mkdir', { 'dir' : 'd' })
             + 0
         )
         self.expectOutcome(result=SUCCESS,
@@ -184,7 +184,7 @@ class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
     def test_failure(self):
         self.setupStep(slave.MakeDirectory(dir="d"))
         self.expectCommands(
-            ExpectLogged('mkdir', { 'dir' : 'd' })
+            Expect('mkdir', { 'dir' : 'd' })
             + 1
         )
         self.expectOutcome(result=FAILURE,
@@ -195,7 +195,7 @@ class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(slave.MakeDirectory(dir=properties.Property("x")))
         self.properties.setProperty('x', 'XXX', 'here')
         self.expectCommands(
-            ExpectLogged('mkdir', { 'dir' : 'XXX' })
+            Expect('mkdir', { 'dir' : 'XXX' })
             + 0
         )
         self.expectOutcome(result=SUCCESS,
