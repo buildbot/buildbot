@@ -93,21 +93,23 @@ class Build(properties.PropertiesMixin):
 
     def getSourceStamp(self, repository=None):
         if repository is None:
-            if len(self.sources) >=1:
+            if self.sources:
                 return self.sources[0]
             else:
                 return None
         for source in self.sources:
-            if source.repository == repository:
+            # The passed repository may also contains the location of the repository
+            # like https://github.com/buildbot/buildbot
+            # There is a hit if the source.repository is equal to the lastpart of the 
+            # passed repository
+            if repository.endswith(source.repository):
                 return source
         return None
 
     def allChanges(self):
-        all_changes = []
         for s in self.sources:
-            all_changes.extend(s.changes)
-        return all_changes
-            
+            for c in s.changes:
+                yield c
 
     def allFiles(self):
         # return a list of all source files that were changed

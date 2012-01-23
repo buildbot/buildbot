@@ -262,7 +262,13 @@ class Source(LoggingBuildStep):
 
         # what source stamp would this build like to use?
         id = self.getRepository()
-        s = self.build.getSourceStamp(id)
+        try:
+            s = self.build.getSourceStamp(id)
+        except KeyError:
+            log.msg("The source step cannot get the sourcestamp for repository '%s'" % id)
+            self.step_status.setText(["Cannot get sourcestamp for repository '%s'" % id])
+            self.addCompleteLog("log","Step failed in getting the correct sourcestamp for repository '%s' from build" % id)
+            return FAILURE
         self.sourcestamp = s
 
         # if branch is None, then use the Step's "default" branch

@@ -307,10 +307,10 @@ class TestBuildRequest(unittest.TestCase):
                 if source.repository == 'svn://d..':
                     source2 = source
 
-            self.assertFalse(source1 == None)
+            self.assertTrue(source1 != None)
             self.assertEqual(source1.revision,'1800')
             
-            self.assertFalse(source2 == None)
+            self.assertTrue(source2 != None)
             self.assertEqual(source2.revision,'2100')
             
             self.assertEqual([c.number for c in source1.changes], [17])

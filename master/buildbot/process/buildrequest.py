@@ -128,32 +128,38 @@ class BuildRequest(object):
         sslist = wfd.getResult()
         assert len(sslist) > 0, "Empty sourcestampset: db schema enforces set to exist but cannot enforce a non empty set"
 
-        # and turn it into a SourceStamp
+        # and turn it into a SourceStamps
         buildrequest.sources = {}
-        for ssdict in sslist:
-            wfd = defer.waitForDeferred(
-                sourcestamp.SourceStamp.fromSsdict(master, ssdict))
-            yield wfd
-            source = wfd.getResult()
+        def store_source(source):
             buildrequest.sources[source.repository] = source
-            if buildrequest.source == None:
-                buildrequest.source = source
+
+        dlist = []
+        for ssdict in sslist:
+            d = sourcestamp.SourceStamp.fromSsdict(master, ssdict)
+            d.addCallback(store_source)
+            dlist.append(d)
+
+        dl = defer.gatherResults(dlist)
+        wfd = defer.waitForDeferred(dl)
+        yield wfd
+        wfd.getResult()
+  
+        if buildrequest.sources:
+            buildrequest.source = buildrequest.sources.values()[0]
 
         yield buildrequest # return value
 
     @staticmethod
-    def collect_repositories(repositories, sources):
+    def _collect_repositories(repositories, sources):
         for s in sources.itervalues():
             if s.repository not in repositories:
                 repositories.append(s.repository)
 
     def canBeMergedWith(self, other):
-        can_be_merged_with = True
-        
         # get all repositories from both requests
         all_repositories = []
-        BuildRequest.collect_repositories(all_repositories, self.sources)
-        BuildRequest.collect_repositories(all_repositories, other.sources)
+        BuildRequest._collect_repositories(all_repositories, self.sources)
+        BuildRequest._collect_repositories(all_repositories, other.sources)
 
         # walk along the repositories
         for repository in all_repositories:
@@ -164,20 +170,17 @@ class BuildRequest(object):
                 other_source = other.sources[repository]
             # do both requests have sourcestamp for this repository?
             if self_source is not None and other_source is not None:
-                can_be_merged_with = can_be_merged_with and \
-                                     self_source.canBeMergedWith(other_source)
-            if not can_be_merged_with:
-                break
- 
-        return can_be_merged_with
+                if not self_source.canBeMergedWith(other_source):
+                    return False
+        return True
 
     def mergeSourceStampsWith(self, others):
         """ Returns one merged sourcestamp for every repository """
         # get all repositories from both requests
         all_repositories = []
-        BuildRequest.collect_repositories(all_repositories, self.sources)
+        BuildRequest._collect_repositories(all_repositories, self.sources)
         for other in others:
-            BuildRequest.collect_repositories(all_repositories, other.sources)
+            BuildRequest._collect_repositories(all_repositories, other.sources)
 
         all_merged_sources = {}
         # walk along the repositories
@@ -188,7 +191,7 @@ class BuildRequest(object):
             for other in others:
                 if repository in other.sources:
                     all_sources.append(other.sources[repository])
-            assert(len(all_sources)>0, "each repository should have atleast one sourcestamp")
+            assert len(all_sources)>0, "each repository should have atleast one sourcestamp"
             all_merged_sources[repository] = all_sources[0].mergeWith(all_sources[1:])
 
         return [source for source in all_merged_sources.itervalues()]
