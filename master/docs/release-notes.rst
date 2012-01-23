@@ -26,6 +26,13 @@ Deprecations, Removals, and Non-Compatible Changes
   documentation for the *much* more flexiblie configuration options now
   available.
 
+* This is the last release of Buildbot that will be compatible with Python 2.4.
+  The next version will minimally require Python-2.5.
+
+* This is the last release of Buildbot that will be compatible with
+  Twisted-8.x.y.  The next version will minimally require Twisted-9.0.0.  See
+  :bb:bug:`2182`.
+
 * ``buildbot start`` no longer invokes make if a ``Makefile.buildbot`` exists.
   If you are using this functionality, consider invoking make directly.
 
@@ -39,9 +46,6 @@ Deprecations, Removals, and Non-Compatible Changes
 * The gerrit status callback now gets an additional parameter (the master
   status).  If you use this callback, you will need to adjust its
   implementation.
-
-* This is the last release of Buildbot that will be compatible with Python 2.4.
-  The next version will minimally require Python-2.5.
 
 * SQLAlchemy-Migrate version 0.6.0 is no longer supported.  See
   :ref:`Buildmaster-Requirements`.
