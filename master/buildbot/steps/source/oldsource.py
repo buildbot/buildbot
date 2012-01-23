@@ -284,6 +284,7 @@ class Source(LoggingBuildStep):
         else:
             revision = None
             branch = self.branch
+            patch = None
 
         self.args['logEnviron'] = self.logEnviron
         self.args['env'] = self.env
