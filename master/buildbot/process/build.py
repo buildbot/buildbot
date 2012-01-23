@@ -105,7 +105,7 @@ class Build(properties.PropertiesMixin):
     def allChanges(self):
         for s in self.sources:
             for c in s.changes:
-                yield c            
+                yield c
 
     def allFiles(self):
         # return a list of all source files that were changed

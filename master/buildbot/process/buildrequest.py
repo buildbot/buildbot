@@ -131,7 +131,7 @@ class BuildRequest(object):
         # and turn it into a SourceStamps
         buildrequest.sources = {}
         def store_source(source):
-             buildrequest.sources[source.repository] = source
+            buildrequest.sources[source.repository] = source
 
         dlist = []
         for ssdict in sslist:
