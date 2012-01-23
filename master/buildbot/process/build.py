@@ -93,7 +93,7 @@ class Build(properties.PropertiesMixin):
 
     def getSourceStamp(self, repository=None):
         if repository is None:
-            if len(self.sources) >=1:
+            if self.sources:
                 return self.sources[0]
             else:
                 return None
@@ -103,11 +103,9 @@ class Build(properties.PropertiesMixin):
         return None
 
     def allChanges(self):
-        all_changes = []
         for s in self.sources:
-            all_changes.extend(s.changes)
-        return all_changes
-            
+            for c in s.changes:
+                yield c            
 
     def allFiles(self):
         # return a list of all source files that were changed
