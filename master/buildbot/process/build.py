@@ -173,15 +173,28 @@ class Build(properties.PropertiesMixin):
         # now set some properties of our own, corresponding to the
         # build itself
         props.setProperty("buildnumber", self.build_status.number, "Build")
+        repositories = []
+        branches = {}
+        revisions = {}
+        projects = {}
         for source in self.sources:
-            repo = ""
-            if len(self.sources)>1:
-                repo = source.repository +"-"
-            props.setProperty("%sbranch"%repo, source.branch, "Build")
-            props.setProperty("%srevision"%repo, source.revision, "Build")
-            if repo == "":
-                props.setProperty("repository", source.repository, "Build")
-            props.setProperty("%sproject"%repo, source.project, "Build")
+            repositories.append(source.repository)
+            branches[source.repository] = source.branch
+            revisions[source.repository] = source.revision
+            projects[source.repository] = source.project
+        props.setProperty("repositories", repositories, "Build")
+        props.setProperty("branches", branches, "Build")
+        props.setProperty("revisions", revisions, "Build")
+        props.setProperty("projects", projects, "Build")
+        
+        if self.sources:
+            # old interface for backwards compatibility
+            source = self.sources[0]
+            props.setProperty("branch", source.branch, "Build")
+            props.setProperty("revision", source.revision, "Build")
+            props.setProperty("repository", source.repository, "Build")
+            props.setProperty("project", source.project, "Build")
+
         self.builder.setupProperties(props)
 
     def setupSlaveBuilder(self, slavebuilder):
