@@ -74,8 +74,8 @@ class FakeMaster:
         return self.locks[lockid]
 
 class FakeBuildStatus(Mock):
-    implements(interfaces.IProperties)
-
+    implements(interfaces.IProperties)   
+        
 class FakeBuilderStatus:
     implements(interfaces.IBuilderStatus)
 
@@ -497,6 +497,61 @@ class TestSingleSourceStamps(unittest.TestCase):
         """
         source1 = self.build.getSourceStamp()
         self.assertEqual( [source1.repository, source1.revision], ["repoA", "12345"])
+
+class TestSetupProperties(unittest.TestCase):
+    """
+    Test that the property values, based on the available requests, are 
+    initialized properly
+    """
+    def setUp(self):
+        self.props = None
+        r = FakeRequest()
+        r.sources = []
+        r.sources.append(FakeSource())
+        r.sources[0].changes = [FakeChange()]
+        r.sources[0].repository = "http://svn-repo-A"
+        r.sources[0].branch = "develop"
+        r.sources[0].revision = "12345"
+        r.sources.append(FakeSource())
+        r.sources[1].changes = [FakeChange()]
+        r.sources[1].repository = "http://svn-repo-B"
+        r.sources[1].revision = "34567"
+        self.build = Build([r])
+        self.build.setStepFactories([])
+        self.builder = Mock()
+        self.build.setBuilder(self.builder)
+        self.build.build_status = FakeBuildStatus()
+        # record properties that will be set
+        self.build.build_status.setProperty = self.setProperty
+
+    def setProperty(self, n,v,s, runtime = False):
+        if not self.props:
+            self.props = {}
+        if s not in self.props:
+            self.props[s] = {}
+        if not self.props[s]:
+            self.props[s] = {}
+        self.props[s][n] = v
+        
+    def test_repositoryDependentProperties_repositories(self):
+        self.build.setupProperties()
+        repositories = self.props["Build"]["repositories"]
+        self.assertEqual(repositories, ["http://svn-repo-A", "http://svn-repo-B"])
+        
+    def test_repositoryDependentProperties_revisions(self):
+        self.build.setupProperties()
+        revisions = self.props["Build"]["revisions"]
+        self.assertEqual(revisions, {"http://svn-repo-A":"12345", "http://svn-repo-B":"34567"})
+        
+    def test_repositoryDependentProperties_branches(self):
+        self.build.setupProperties()
+        branches = self.props["Build"]["branches"]
+        self.assertEqual(branches, {"http://svn-repo-A":"develop", "http://svn-repo-B":None})
+
+    def test_repositoryDependentProperties_projects(self):
+        self.build.setupProperties()
+        projects = self.props["Build"]["projects"]
+        self.assertEqual(projects, {"http://svn-repo-A":None, "http://svn-repo-B":None})
         
 class TestBuildProperties(unittest.TestCase):
     """
