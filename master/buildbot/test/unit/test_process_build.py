@@ -504,7 +504,7 @@ class TestSetupProperties(unittest.TestCase):
     initialized properly
     """
     def setUp(self):
-        self.props = None
+        self.props = {}
         r = FakeRequest()
         r.sources = []
         r.sources.append(FakeSource())
@@ -525,8 +525,6 @@ class TestSetupProperties(unittest.TestCase):
         self.build.build_status.setProperty = self.setProperty
 
     def setProperty(self, n,v,s, runtime = False):
-        if not self.props:
-            self.props = {}
         if s not in self.props:
             self.props[s] = {}
         if not self.props[s]:
