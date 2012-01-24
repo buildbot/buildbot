@@ -173,32 +173,33 @@ class DBThreadPool(threadpool.ThreadPool):
             if self.__broken_sqlite: # see bug #1810
                 arg.execute("select * from sqlite_master")
             try:
-                rv = callable(arg, *args, **kwargs)
-                assert not isinstance(rv, sa.engine.ResultProxy), \
-                        "do not return ResultProxy objects!"
-            except sa.exc.OperationalError, e:
-                text = e.orig.args[0]
-                if "Lost connection" in text \
-                    or "database is locked" in text:
+                try:
+                    rv = callable(arg, *args, **kwargs)
+                    assert not isinstance(rv, sa.engine.ResultProxy), \
+                            "do not return ResultProxy objects!"
+                except sa.exc.OperationalError, e:
+                    text = e.orig.args[0]
+                    if "Lost connection" in text \
+                        or "database is locked" in text:
 
-                    # see if we've retried too much
-                    elapsed = time.time() - start
-                    if elapsed > self.MAX_OPERATIONALERROR_TIME:
+                        # see if we've retried too much
+                        elapsed = time.time() - start
+                        if elapsed > self.MAX_OPERATIONALERROR_TIME:
+                            raise
+
+                        metrics.MetricCountEvent.log(
+                                "DBThreadPool.retry-on-OperationalError")
+                        log.msg("automatically retrying query after "
+                                "OperationalError (%ss sleep)" % backoff)
+
+                        # sleep (remember, we're in a thread..)
+                        time.sleep(backoff)
+                        backoff *= self.BACKOFF_MULT
+
+                        # and re-try
+                        continue
+                    else:
                         raise
-
-                    metrics.MetricCountEvent.log(
-                            "DBThreadPool.retry-on-OperationalError")
-                    log.msg("automatically retrying query after "
-                            "OperationalError (%ss sleep)" % backoff)
-
-                    # sleep (remember, we're in a thread..)
-                    time.sleep(backoff)
-                    backoff *= self.BACKOFF_MULT
-
-                    # and re-try
-                    continue
-                else:
-                    raise
             finally:
                 if not with_engine:
                     arg.close()
