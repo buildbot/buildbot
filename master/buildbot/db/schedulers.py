@@ -22,6 +22,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
     def classifyChanges(self, objectid, classifications):
         def thd(conn):
+            transaction = conn.begin()
             tbl = self.db.model.scheduler_changes
             ins_q = tbl.insert()
             upd_q = tbl.update(
@@ -43,6 +44,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                             wc_changeid=changeid,
                             important=imp_int)
 
+            transaction.commit()
         return self.db.pool.do(thd)
 
     def flushChangeClassifications(self, objectid, less_than=None):

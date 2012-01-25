@@ -146,6 +146,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                    bb_password=None, attr_type=None, attr_data=None,
                    _race_hook=None):
         def thd(conn):
+            transaction = conn.begin()
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
             update_dict = {}
@@ -175,22 +176,22 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                         whereclause=(tbl_info.c.uid == uid)
                                     & (tbl_info.c.attr_type == attr_type))
                 res = conn.execute(q, attr_data=attr_data)
-                if res.rowcount > 0:
-                    return
+                if res.rowcount == 0:
+                    _race_hook and _race_hook(conn)
 
-                _race_hook and _race_hook(conn)
+                    # the update hit 0 rows, so try inserting a new one
+                    try:
+                        q = tbl_info.insert()
+                        res = conn.execute(q,
+                                uid=uid,
+                                attr_type=attr_type,
+                                attr_data=attr_data)
+                    except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                        # someone else beat us to the punch inserting this row;
+                        # let them win.
+                        pass
 
-                # the update hit 0 rows, so try inserting a new one
-                try:
-                    q = tbl_info.insert()
-                    res = conn.execute(q,
-                            uid=uid,
-                            attr_type=attr_type,
-                            attr_data=attr_data)
-                except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-                    # someone else beat us to the punch inserting this row; let
-                    # them win.
-                    pass
+            transaction.commit()
         d = self.db.pool.do(thd)
         return d
 
