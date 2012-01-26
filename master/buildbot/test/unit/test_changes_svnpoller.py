@@ -16,6 +16,7 @@
 import os
 import xml.dom.minidom
 from twisted.internet import defer
+from twisted.python import failure
 from twisted.trial import unittest
 from buildbot.test.util import changesource, gpo, compat
 from buildbot.changes import svnpoller
@@ -439,6 +440,35 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
             self.failUnlessEqual(s.last_change, 4)
         d.addCallback(check_fourth)
 
+        return d
+
+    @compat.usesFlushLoggedErrors
+    def test_poll_get_prefix_exception(self):
+        s = self.attachSVNPoller(sample_base, split_file=split_file,
+                svnuser='dustin', svnpasswd='bbrocks')
+
+        self.add_svn_command_result('info', lambda *args, **kwargs:
+                defer.fail(failure.Failure(RuntimeError())))
+        d = s.poll()
+        @d.addCallback
+        def check(_):
+            # should have logged the RuntimeError, but not errback'd from poll
+            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+        return d
+
+    @compat.usesFlushLoggedErrors
+    def test_poll_get_logs_exception(self):
+        s = self.attachSVNPoller(sample_base, split_file=split_file,
+                svnuser='dustin', svnpasswd='bbrocks')
+        s._prefix = "abc" # skip the get_prefix stuff
+
+        self.add_svn_command_result('log', lambda *args, **kwargs :
+                defer.fail(failure.Failure(RuntimeError())))
+        d = s.poll()
+        @d.addCallback
+        def check(_):
+            # should have logged the RuntimeError, but not errback'd from poll
+            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
         return d
 
     def test_cachepath_empty(self):
