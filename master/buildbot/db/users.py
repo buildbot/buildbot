@@ -30,10 +30,11 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             tbl_info = self.db.model.users_info
 
             # try to find the user
-            q = sa.select([ tbl.c.uid ],
+            q = sa.select([ tbl_info.c.uid ],
                         whereclause=and_(tbl_info.c.attr_type == attr_type,
                                 tbl_info.c.attr_data == attr_data))
             rows = conn.execute(q).fetchall()
+
             if rows:
                 return rows[0].uid
 
