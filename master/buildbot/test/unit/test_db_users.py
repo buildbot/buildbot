@@ -188,9 +188,9 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         # Find user by attr was return all uids and 'soap' happened to be uid 1
         # Find a better user
         d.addCallback(lambda _ : self.db.users.findUserByAttr(
-                                  identifier='lye',
-                                  attr_type='git',
-                                  attr_data='Tyler Durden <tyler@mayhem.net'))
+                                  identifier='soap',
+                                  attr_type='telepathIO(tm)',
+                                  attr_data='hmm,lye'))
         def cb(_):
             self.fail("shouldn't get here")
         def eb(f):
