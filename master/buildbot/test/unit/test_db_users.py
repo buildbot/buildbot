@@ -123,6 +123,33 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         d.addCallback(check_user)
         return d
 
+    def test_findUser_existing(self):
+        d = self.insertTestData(self.user1_rows)
+        d = self.insertTestData(self.user2_rows)
+        d = self.insertTestData(self.user3_rows)
+        d.addCallback(lambda _ : self.db.users.findUserByAttr(
+                                  identifier='lye',
+                                  attr_type='git',
+                                  attr_data='Tyler Durden <tyler@mayhem.net>'))
+        def check_user(uid):
+            self.assertEqual(uid, 2)
+            def thd(conn):
+                users_tbl = self.db.model.users
+                users_info_tbl = self.db.model.users_info
+                users = conn.execute(users_tbl.select()).fetchall()
+                infos = conn.execute(users_info_tbl.select()).fetchall()
+                self.assertEqual(len(users), 3)
+                self.assertEqual(users[1].uid, uid)
+                self.assertEqual(users[1].identifier, 'lye') # not changed!
+                self.assertEqual(len(infos), 3)
+                self.assertEqual(infos[1].uid, uid)
+                self.assertEqual(infos[1].attr_type, 'git')
+                self.assertEqual(infos[1].attr_data,
+                                 'Tyler Durden <tyler@mayhem.net>')
+            return self.db.pool.do(thd)
+        d.addCallback(check_user)
+        return d
+
     def test_addUser_race(self):
         def race_thd(conn):
             # note that this assumes that both inserts can happen "at once".
