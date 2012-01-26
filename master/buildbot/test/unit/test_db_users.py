@@ -185,8 +185,6 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
 
     def test_addUser_existing_identifier(self):
         d = self.insertTestData(self.user1_rows)
-        # Find user by attr was return all uids and 'soap' happened to be uid 1
-        # Find a better user
         d.addCallback(lambda _ : self.db.users.findUserByAttr(
                                   identifier='soap',
                                   attr_type='telepathIO(tm)',
