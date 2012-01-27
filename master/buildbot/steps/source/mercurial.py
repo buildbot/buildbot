@@ -86,6 +86,9 @@ class Mercurial(Source):
 
         assert self.mode in ['incremental', 'full']
 
+        if self.branchType not in ['dirname','inrepo']:
+            raise ValueError("Invalid branch type '%s'" %self.branchType)
+        
         if repourl and baseURL:
             raise ValueError("you must provide exactly one of repourl and"
                              " baseURL")
@@ -112,8 +115,6 @@ class Mercurial(Source):
         elif self.branchType == 'inrepo':
             assert self.baseURL is None
             self.update_branch = (branch or 'default')
-        else:
-            raise ValueError("Invalid branch type")
 
         if self.mode == 'full':
             d.addCallback(lambda _: self.full())
@@ -275,15 +276,6 @@ class Mercurial(Source):
                     "the most recent" % len(changes))
         return changes[-1].revision
 
-    def getRepository(self):
-        """ Identify the unique repository for this step """
-        if self.branchType == 'dirname':
-            return self.baseURL
-        elif self.branchType == 'inrepo':
-            return self.repourl
-        else:
-            raise ValueError("Invalid branch type")
-        
     def _getCurrentBranch(self):
         if self.branchType == 'dirname':
             return defer.succeed(self.branch)

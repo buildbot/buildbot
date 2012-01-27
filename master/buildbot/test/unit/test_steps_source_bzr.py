@@ -356,4 +356,3 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             )
         self.expectOutcome(result=FAILURE, status_text=["updating"])
         return self.runStep()
-

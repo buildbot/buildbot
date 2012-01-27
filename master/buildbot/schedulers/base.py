@@ -36,7 +36,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
     compare_attrs = ('name', 'builderNames', 'properties')
 
-    def __init__(self, name, builderNames, properties):
+    def __init__(self, name, builderNames, properties, repositories = None):
         """
         Initialize a Scheduler.
 
@@ -50,6 +50,9 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         scheduler
         @type properties: dictionary
 
+        @param repositories: repositories that are necessary to process the changes
+        @type repositories: list of unicode
+        
         @param consumeChanges: true if this scheduler wishes to be informed
         about the addition of new changes.  Defaults to False.  This should
         be passed explicitly from subclasses to indicate their interest in
@@ -88,6 +91,10 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         """BuildMaster instance; set just before the scheduler starts, and set
         to None after stopService is complete."""
 
+        # Set the other repositories that are necessary to process the changes
+        # These repositories will always result in a sourcestamp with or without changes
+        self.repositories = repositories
+        
         # internal variables
         self._change_subscription = None
         self._change_consumption_lock = defer.DeferredLock()

@@ -36,6 +36,10 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.assertRaises(ValueError, lambda :
                 mercurial.Mercurial(mode="full"))
 
+    def test_invalid_branchType(self):
+        self.assertRaises(ValueError, lambda:
+                mercurial.Mercurial(repourl='x', branchType='invalid'))
+
     def test_mode_full_clean(self):
         self.setupStep(
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',
@@ -547,4 +551,3 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])
         return self.runStep()
-

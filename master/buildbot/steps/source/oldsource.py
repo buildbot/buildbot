@@ -271,31 +271,36 @@ class Source(LoggingBuildStep):
             return FAILURE
         self.sourcestamp = s
 
-        # if branch is None, then use the Step's "default" branch
-        branch = s.branch or self.branch
-        # if revision is None, use the latest sources (-rHEAD)
-        revision = s.revision
-        if not revision and not self.alwaysUseLatest:
-            revision = self.computeSourceRevision(s.changes)
-            # the revision property is currently None, so set it to something
-            # more interesting
-            if revision is not None:
-                self.setProperty('revision', str(revision), "Source")
+        if s is not None:
+            # if branch is None, then use the Step's "default" branch
+            branch = s.branch or self.branch
+            # if revision is None, use the latest sources (-rHEAD)
+            revision = s.revision
+            if not revision and not self.alwaysUseLatest:
+                revision = self.computeSourceRevision(s.changes)
+                # the revision property is currently None, so set it to something
+                # more interesting
+                if revision is not None:
+                    self.setProperty('revision', str(revision), "Source")
 
-        # if patch is None, then do not patch the tree after checkout
+            # if patch is None, then do not patch the tree after checkout
 
-        # 'patch' is None or a tuple of (patchlevel, diff, root)
-        # root is optional.
-        patch = s.patch
-        if patch:
-            self.addCompleteLog("patch", patch[1])
+            # 'patch' is None or a tuple of (patchlevel, diff, root)
+            # root is optional.
+            patch = s.patch
+            if patch:
+                self.addCompleteLog("patch", patch[1])
 
-        if self.alwaysUseLatest:
-            revision = None
+            if self.alwaysUseLatest:
+                revision = None
 
-        self.args['logEnviron'] = self.logEnviron
-        self.args['env'] = self.env
-        self.startVC(branch, revision, patch)
+            self.args['logEnviron'] = self.logEnviron
+            self.args['env'] = self.env
+            self.startVC(branch, revision, patch)
+        else:
+            self.step_status.setText(["No sourcestamp for repository '%s'" % id])
+            self.addCompleteLog("log","No sourcestamp for repository '%s'" % id)
+            return FAILURE
 
     def commandComplete(self, cmd):
         if cmd.updates.has_key("got_revision"):
