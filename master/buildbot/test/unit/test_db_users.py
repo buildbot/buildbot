@@ -138,14 +138,19 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
                 users_info_tbl = self.db.model.users_info
                 users = conn.execute(users_tbl.select()).fetchall()
                 infos = conn.execute(users_info_tbl.select()).fetchall()
-                self.assertEqual(len(users), 3)
-                self.assertEqual(users[1].uid, uid)
-                self.assertEqual(users[1].identifier, 'lye') # not changed!
-                self.assertEqual(len(infos), 3)
-                self.assertEqual(infos[1].uid, uid)
-                self.assertEqual(infos[1].attr_type, 'git')
-                self.assertEqual(infos[1].attr_data,
-                                 'Tyler Durden <tyler@mayhem.net>')
+                self.assertEqual((
+                    sorted([ tuple(u) for u in users]),
+                    sorted([ tuple(i) for i in infos])
+                ), (
+                    [
+                        (1L, u'soap', None, None),
+                        (2L, u'lye', None, None),
+                        (3L, u'marla', u'marla', u'cancer'),
+                    ], [
+                        (1L, u'IPv9', u'0578cc6.8db024'),
+                        (2L, u'git', u'Tyler Durden <tyler@mayhem.net>'),
+                        (2L, u'irc', u'durden')
+                    ]))
             return self.db.pool.do(thd)
         d.addCallback(check_user)
         return d
