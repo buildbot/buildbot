@@ -55,8 +55,7 @@ Git VC
     U: http://trac.buildbot.net/wiki/git
 
 BitKeeper VC
-    S: Patched
-    M: Amar Takhar <verm@snickers.org> - Hacker
+    S: Last-Rites
     U: http://trac.buildbot.net/wiki/bk
 
 Darcs VC

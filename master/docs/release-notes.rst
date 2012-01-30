@@ -128,6 +128,9 @@ Slave
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* BitKeeper support is in the "Last-Rites" state, and will be removed in the
+  next version unless a maintainer steps forward.
+
 Features
 ~~~~~~~~
 
