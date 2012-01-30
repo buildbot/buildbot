@@ -50,6 +50,7 @@ global_defaults = dict(
     multiMaster=False,
     debugPassword=None,
     manhole=None,
+    www=dict(port=None, url='http://localhost:8080/', public_html=None),
 )
 
 
@@ -706,6 +707,38 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 dict(user_managers=[um]),
                 self.errors)
         self.assertResults(user_managers=[um])
+
+
+    def test_load_www_default(self):
+        self.cfg.load_www(self.filename, {}, self.errors)
+        self.assertResults(www=dict(port=None, url='http://localhost:8080/',
+                            public_html=None))
+
+    def test_load_www_port(self):
+        self.cfg.load_www(self.filename,
+                dict(www=dict(port=8010)), self.errors)
+        self.assertResults(www=dict(port=8010, url='http://localhost:8010/',
+                            public_html=None))
+
+    def test_load_www_url_no_slash(self):
+        self.cfg.load_www(self.filename,
+                dict(www=dict(url='http://foo', port=20)), self.errors)
+        self.assertResults(www=dict(port=20, url='http://foo/',
+                            public_html=None))
+
+    def test_load_www_public_html(self):
+        pwd = os.getcwd()
+        self.cfg.load_www(self.filename,
+                dict(www=dict(public_html=pwd)), self.errors)
+        self.assertResults(www=dict(port=None, url='http://localhost:8080/',
+                           public_html=pwd))
+
+    def test_load_www_public_html_does_not_exist(self):
+        self.cfg.load_www(self.filename,
+                dict(www=dict(public_html=r'/does/not\exist/no')),
+                self.errors)
+        self.assertConfigError(self.errors, 'public_html directory')
+
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 

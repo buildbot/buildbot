@@ -35,6 +35,7 @@ from buildbot.process.builder import BuilderControl
 from buildbot.db import connector as dbconnector, exceptions
 from buildbot.mq import connector as mqconnector
 from buildbot.data import connector as dataconnector
+from buildbot.www import service as wwwservice
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.process.botmaster import BotMaster
 from buildbot.process import debug
@@ -131,6 +132,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         self.data = dataconnector.DataConnector(self)
         self.data.setServiceParent(self)
+
+        self.www = wwwservice.WWWService(self)
+        self.www.setServiceParent(self)
 
         self.debug = debug.DebugServices(self)
         self.debug.setServiceParent(self)
