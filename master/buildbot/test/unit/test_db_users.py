@@ -372,10 +372,16 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         return d
 
     def test_updateUser_race(self):
+        # called from the db thread, this opens a *new* connection (to avoid
+        # the existing transaction) and executes a conflicting insert in that
+        # connection.  This will cause the insert in the db method to fail, and
+        # the data in this insert (8.8.8.8) will appear below.
         def race_thd(conn):
+            conn = self.db.pool.engine.connect()
             conn.execute(self.db.model.users_info.insert(),
                     uid=1, attr_type='IPv4',
                     attr_data='8.8.8.8')
+
         d = self.insertTestData(self.user1_rows)
         def update1(_):
             return self.db.users.updateUser(

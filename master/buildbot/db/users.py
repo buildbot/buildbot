@@ -190,7 +190,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                     except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                         # someone else beat us to the punch inserting this row;
                         # let them win.
-                        pass
+                        transaction.rollback()
+                        return
 
             transaction.commit()
         d = self.db.pool.do(thd)
