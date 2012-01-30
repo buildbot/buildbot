@@ -43,6 +43,31 @@ try:
 except ImportError:
     have_ssl = False
 
+def maybeColorize(text, color, useColors):
+    irc_colors = [
+        'WHITE',
+        'BLACK',
+        'NAVY_BLUE',
+        'GREEN',
+        'RED',
+        'BROWN',
+        'PURPLE',
+        'OLIVE',
+        'YELLOW',
+        'LIME_GREEN',
+        'TEAL',
+        'AQUA_LIGHT',
+        'ROYAL_BLUE',
+        'HOT_PINK',
+        'DARK_GRAY',
+        'LIGHT_GRAY'
+    ]
+
+    if useColors:
+        return "%c%d%s%c" % (3, irc_colors.index(color), text, 3)
+    else:
+        return text
+
 class UsageError(ValueError):
     def __init__(self, string = "Invalid usage", *more):
         ValueError.__init__(self, string, *more)
@@ -51,9 +76,10 @@ class IrcBuildRequest:
     hasStarted = False
     timer = None
 
-    def __init__(self, parent, useRevisions=False):
+    def __init__(self, parent, useRevisions=False, useColors=True):
         self.parent = parent
         self.useRevisions = useRevisions
+        self.useColors = useColors
         self.timer = reactor.callLater(5, self.soon)
 
     def soon(self):
@@ -100,6 +126,7 @@ class Contact(base.StatusReceiver):
         self.subscribed = 0
         self.muted = False
         self.useRevisions = channel.useRevisions
+        self.useColors = channel.useColors
         self.reported_builds = [] # tuples (when, buildername, buildnum)
         self.add_notification_events(channel.notify_events)
 
@@ -356,12 +383,15 @@ class Contact(base.StatusReceiver):
         self.send(r)
 
     results_descriptions = {
-        SUCCESS: "Success",
-        WARNINGS: "Warnings",
-        FAILURE: "Failure",
-        EXCEPTION: "Exception",
-        RETRY: "Retry",
+        SUCCESS:   ("Success",   'GREEN'),
+        WARNINGS:  ("Warnings",  'YELLOW'),
+        FAILURE:   ("Failure",   'RED'),
+        EXCEPTION: ("Exception", 'PURPLE'),
+        RETRY:     ("Retry",     'AQUA_LIGHT'),
         }
+
+    def getResultsDescriptionAndColor(self, results):
+        return self.results_descriptions.get(results, ("??",'RED'))
 
     def buildFinished(self, builderName, build, results):
         builder = build.getBuilder()
@@ -377,18 +407,16 @@ class Contact(base.StatusReceiver):
         buildnum = build.getNumber()
         buildrevs = build.getRevisions()
 
+        results = self.getResultsDescriptionAndColor(build.getResults())
         if self.reportBuild(builder_name, buildnum):
             if self.useRevisions:
                 r = "build containing revision(s) [%s] on %s is complete: %s" % \
-                    (buildrevs,
-                     builder_name,
-                     self.results_descriptions.get(build.getResults(), "??"))
+                    (buildrevs, builder_name, results[0])
             else:
                 r = "build #%d of %s is complete: %s" % \
-                    (buildnum,
-                     builder_name,
-                     self.results_descriptions.get(build.getResults(), "??"))
-            r += " [%s]" % " ".join(build.getText())
+                    (buildnum, builder_name, results[0])
+
+            r += ' [%s]' % maybeColorize(" ".join(build.getText()), results[1], self.useColors)
             buildurl = self.channel.status.getURLForThing(build)
             if buildurl:
                 r += "  Build details are at %s" % buildurl
@@ -404,16 +432,16 @@ class Contact(base.StatusReceiver):
         if self.notify_for('finished'):
             return True
 
-        if self.notify_for(lower(self.results_descriptions.get(results))):
+        if self.notify_for(lower(self.results_descriptions.get(results)[0])):
             return True
 
         prevBuild = build.getPreviousBuild()
         if prevBuild:
             prevResult = prevBuild.getResults()
 
-            required_notification_control_string = join((lower(self.results_descriptions.get(prevResult)), \
+            required_notification_control_string = join((lower(self.results_descriptions.get(prevResult)[0]), \
                                                              'To', \
-                                                             capitalize(self.results_descriptions.get(results))), \
+                                                             capitalize(self.results_descriptions.get(results)[0])), \
                                                             '')
 
             if (self.notify_for(required_notification_control_string)):
@@ -433,18 +461,16 @@ class Contact(base.StatusReceiver):
         buildnum = b.getNumber()
         buildrevs = b.getRevisions()
 
+        results = self.getResultsDescriptionAndColor(b.getResults())
         if self.reportBuild(builder_name, buildnum):
             if self.useRevisions:
                 r = "Hey! build %s containing revision(s) [%s] is complete: %s" % \
-                    (builder_name, 
-                     buildrevs,
-                     self.results_descriptions.get(b.getResults(), "??"))
+                    (builder_name, buildrevs, results[0])
             else:
                 r = "Hey! build %s #%d is complete: %s" % \
-                    (builder_name, 
-                     buildnum,
-                     self.results_descriptions.get(b.getResults(), "??"))
-            r += " [%s]" % " ".join(b.getText())
+                    (builder_name, buildnum, results[0])
+
+            r += ' [%s]' % maybeColorize(" ".join(b.getText()), results[1], self.useColors)
             self.send(r)
             buildurl = self.channel.status.getURLForThing(b)
             if buildurl:
@@ -772,7 +798,7 @@ class IrcStatusBot(irc.IRCClient):
 
     def __init__(self, nickname, password, channels, pm_to_nicks, status, categories,
                  notify_events, noticeOnChannel=False, useRevisions=False,
-                 showBlameList=False):
+                 showBlameList=False, useColors=True):
         """
         @type  nickname: string
         @param nickname: the nickname by which this bot should be known
@@ -793,6 +819,8 @@ class IrcStatusBot(irc.IRCClient):
         @param useRevisions: if True, messages from the bot will use the
                              revisions from the Changes in the build and not
                              the build number.
+        @type  useColors: boolean
+        @param useColors: if True, some messages from the bot will use IRC colors.
         """
         self.nickname = nickname
         self.channels = channels
@@ -806,6 +834,7 @@ class IrcStatusBot(irc.IRCClient):
         self.hasQuit = 0
         self.contacts = {}
         self.noticeOnChannel = noticeOnChannel
+        self.useColors = useColors
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
         self._keepAliveCall = task.LoopingCall(lambda: self.ping(self.nickname))
@@ -931,7 +960,7 @@ class IrcStatusFactory(ThrottledClientFactory):
 
     def __init__(self, nickname, password, channels, pm_to_nicks, categories, notify_events,
                  noticeOnChannel=False, useRevisions=False, showBlameList=False,
-                 lostDelay=None, failedDelay=None):
+                 lostDelay=None, failedDelay=None, useColors=True):
         ThrottledClientFactory.__init__(self, lostDelay=lostDelay,
                                         failedDelay=failedDelay)
         self.status = None
@@ -944,6 +973,7 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.noticeOnChannel = noticeOnChannel
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
+        self.useColors = useColors
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -960,6 +990,7 @@ class IrcStatusFactory(ThrottledClientFactory):
                           self.channels, self.pm_to_nicks, self.status,
                           self.categories, self.notify_events,
                           noticeOnChannel = self.noticeOnChannel,
+                          useColors = self.useColors,
                           useRevisions = self.useRevisions,
                           showBlameList = self.showBlameList)
         p.factory = self
@@ -994,14 +1025,14 @@ class IRC(base.StatusReceiverMultiService):
 
     compare_attrs = ["host", "port", "nick", "password",
                      "channels", "pm_to_nicks", "allowForce", "useSSL",
-                     "useRevisions", "categories",
+                     "useRevisions", "categories", "useColors",
                      "lostDelay", "failedDelay"]
 
     def __init__(self, host, nick, channels, pm_to_nicks=[], port=6667, allowForce=False,
                  categories=None, password=None, notify_events={},
                  noticeOnChannel = False, showBlameList = True,
                  useRevisions=False, useSSL=False,
-                 lostDelay=None, failedDelay=None):
+                 lostDelay=None, failedDelay=None, useColors=True):
         base.StatusReceiverMultiService.__init__(self)
 
         assert allowForce in (True, False) # TODO: implement others
@@ -1024,7 +1055,9 @@ class IRC(base.StatusReceiverMultiService):
                                   noticeOnChannel = noticeOnChannel,
                                   useRevisions = useRevisions,
                                   showBlameList = showBlameList,
-                                  lostDelay = lostDelay, failedDelay = failedDelay)
+                                  lostDelay = lostDelay,
+                                  failedDelay = failedDelay,
+                                  useColors = useColors)
 
         # don't set up an actual ClientContextFactory if we're running tests.
         if self.in_test_harness:
