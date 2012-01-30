@@ -86,6 +86,9 @@ Changes for Developers
 Features
 ~~~~~~~~
 
+* The IRC status bot now display build status in colors by default.
+  It is controllable and may be disabled with useColors=False in constructor.
+
 * Buildbot can now take advantage of authentication done by a front-end web
   server - see :bb:pull:`266`.
 
