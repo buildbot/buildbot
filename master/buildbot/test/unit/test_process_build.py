@@ -40,8 +40,8 @@ class FakeSource:
     changes = []
     branch = None
     revision = None
-    repository = None
-    project = None
+    repository = ''
+    project = ''
     patch_info = (None, None)
     patch = None
 
@@ -549,7 +549,7 @@ class TestSetupProperties(unittest.TestCase):
     def test_repositoryDependentProperties_projects(self):
         self.build.setupProperties()
         projects = self.props["Build"]["projects"]
-        self.assertEqual(projects, {"http://svn-repo-A":None, "http://svn-repo-B":None})
+        self.assertEqual(projects, {"http://svn-repo-A": '', "http://svn-repo-B": ''})
         
 class TestBuildProperties(unittest.TestCase):
     """
