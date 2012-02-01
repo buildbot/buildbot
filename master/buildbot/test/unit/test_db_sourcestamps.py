@@ -45,18 +45,18 @@ class TestSourceStampsConnectorComponent(
               fakedb.SourceStampSet(id=1),
         ])
         d.addCallback(lambda _ :
-            self.db.sourcestamps.addSourceStamp('production', 'abdef',
-            'test://repo', 'stamper', 1))
+            self.db.sourcestamps.addSourceStamp(branch = 'production', revision='abdef',
+            repository='test://repo', codebase='cb', project='stamper', sourcestampsetid=1))
         def check(ssid):
             def thd(conn):
                 # should see one sourcestamp row
                 ss_tbl = self.db.model.sourcestamps
                 r = conn.execute(ss_tbl.select())
                 rows = [ (row.id, row.branch, row.revision,
-                          row.patchid, row.repository, row.project, row.sourcestampsetid)
+                          row.patchid, row.repository, row.codebase, row.project, row.sourcestampsetid)
                          for row in r.fetchall() ]
                 self.assertEqual(rows,
-                    [ ( ssid, 'production', 'abdef', None, 'test://repo', 'stamper', 1) ])
+                    [ ( ssid, 'production', 'abdef', None, 'test://repo', 'cb', 'stamper', 1) ])
 
                 # .. and no sourcestamp_changes
                 ssc_tbl = self.db.model.sourcestamp_changes
@@ -76,8 +76,8 @@ class TestSourceStampsConnectorComponent(
             ])
 
         d.addCallback(lambda _ :
-            self.db.sourcestamps.addSourceStamp('production', 'abdef',
-            'test://repo', 'stamper', 1, changeids=[3,4]))
+            self.db.sourcestamps.addSourceStamp(branch = 'production', revision='abdef',
+            repository='test://repo', codebase='cb', project='stamper', sourcestampsetid=1, changeids=[3,4]))
 
         def check(ssid):
             def thd(conn):
@@ -85,10 +85,10 @@ class TestSourceStampsConnectorComponent(
                 ss_tbl = self.db.model.sourcestamps
                 r = conn.execute(ss_tbl.select())
                 rows = [ (row.id, row.branch, row.revision,
-                          row.patchid, row.repository, row.project, row.sourcestampsetid)
+                          row.patchid, row.repository, row.codebase, row.project, row.sourcestampsetid)
                          for row in r.fetchall() ]
                 self.assertEqual(rows,
-                    [ ( ssid, 'production', 'abdef', None, 'test://repo', 'stamper', 1) ])
+                    [ ( ssid, 'production', 'abdef', None, 'test://repo', 'cb', 'stamper', 1) ])
 
                 # .. and two sourcestamp_changes
                 ssc_tbl = self.db.model.sourcestamp_changes
@@ -105,8 +105,8 @@ class TestSourceStampsConnectorComponent(
               fakedb.SourceStampSet(id=1),
         ])
         d.addCallback(lambda _ :
-            self.db.sourcestamps.addSourceStamp('production', 'abdef',
-            'test://repo', 'stamper', 1, patch_body='my patch', patch_level=3,
+            self.db.sourcestamps.addSourceStamp(branch = 'production', revision='abdef',
+            repository='test://repo', codebase='cb', project='stamper', sourcestampsetid=1, patch_body='my patch', patch_level=3,
             patch_subdir='master/', patch_author='me',
             patch_comment="comment"))
         def check(ssid):
@@ -115,12 +115,12 @@ class TestSourceStampsConnectorComponent(
                 ss_tbl = self.db.model.sourcestamps
                 r = conn.execute(ss_tbl.select())
                 rows = [ (row.id, row.branch, row.revision,
-                          row.patchid, row.repository, row.project, row.sourcestampsetid)
+                          row.patchid, row.repository, row.codebase, row.project, row.sourcestampsetid)
                          for row in r.fetchall() ]
                 patchid = row.patchid
                 self.assertNotEqual(patchid, None)
                 self.assertEqual(rows,
-                    [ ( ssid, 'production', 'abdef', patchid, 'test://repo',
+                    [ ( ssid, 'production', 'abdef', patchid, 'test://repo', 'cb',
                         'stamper', 1) ])
 
                 # .. and a single patch
@@ -138,14 +138,14 @@ class TestSourceStampsConnectorComponent(
     def test_getSourceStamp_simple(self):
         d = self.insertTestData([
             fakedb.SourceStampSet(id=234),
-            fakedb.SourceStamp(id=234, sourcestampsetid=234, branch='br', revision='rv',
-                repository='rep', project='prj'),
+            fakedb.SourceStamp(id=234, sourcestampsetid=234, branch='br', revision='rv', repository='rep', codebase='cb', project='prj'),
         ])
         d.addCallback(lambda _ :
                 self.db.sourcestamps.getSourceStamp(234))
         def check(ssdict):
-            self.assertEqual(ssdict, dict(ssid=234, branch='br', revision='rv', sourcestampsetid=234,
-                repository='rep', project='prj', patch_body=None,
+            self.assertEqual(ssdict, dict(ssid=234, branch='br', revision='rv',
+            sourcestampsetid=234, repository='rep', codebase = 'cb',
+                project='prj', patch_body=None,
                 patch_level=None, patch_subdir=None, 
                 patch_author=None, patch_comment=None, changeids=set([])))
         d.addCallback(check)
@@ -156,7 +156,7 @@ class TestSourceStampsConnectorComponent(
         d = self.insertTestData([
             fakedb.SourceStampSet(id=234),
             fakedb.SourceStamp(id=234, sourcestampsetid=234, branch=None, revision=None,
-                repository='rep', project='prj'),
+                repository='rep', codebase='cb', project='prj'),
         ])
         d.addCallback(lambda _ :
                 self.db.sourcestamps.getSourceStamp(234))

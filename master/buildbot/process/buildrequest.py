@@ -131,7 +131,7 @@ class BuildRequest(object):
         # and turn it into a SourceStamps
         buildrequest.sources = {}
         def store_source(source):
-            buildrequest.sources[source.repository] = source
+            buildrequest.sources[source.codebase] = source
 
         dlist = []
         for ssdict in sslist:
@@ -150,49 +150,49 @@ class BuildRequest(object):
         yield buildrequest # return value
 
     @staticmethod
-    def _collect_repositories(repositories, sources):
+    def _collect_codebases(codebases, sources):
         for s in sources.itervalues():
-            if s.repository not in repositories:
-                repositories.append(s.repository)
+            if s.codebase not in codebases:
+                codebases.append(s.codebase)
 
     def canBeMergedWith(self, other):
-        # get all repositories from both requests
-        all_repositories = []
-        BuildRequest._collect_repositories(all_repositories, self.sources)
-        BuildRequest._collect_repositories(all_repositories, other.sources)
+        # get all codebases from both requests
+        all_codebases = []
+        BuildRequest._collect_codebases(all_codebases, self.sources)
+        BuildRequest._collect_codebases(all_codebases, other.sources)
 
-        # walk along the repositories
-        for repository in all_repositories:
+        # walk along the codebases
+        for codebase in all_codebases:
             self_source = other_source = None
-            if repository in self.sources:
-                self_source = self.sources[repository]
-            if repository in other.sources:
-                other_source = other.sources[repository]
-            # do both requests have sourcestamp for this repository?
+            if codebase in self.sources:
+                self_source = self.sources[codebase]
+            if codebase in other.sources:
+                other_source = other.sources[codebase]
+            # do both requests have sourcestamp for this codebase?
             if self_source is not None and other_source is not None:
                 if not self_source.canBeMergedWith(other_source):
                     return False
         return True
 
     def mergeSourceStampsWith(self, others):
-        """ Returns one merged sourcestamp for every repository """
-        # get all repositories from both requests
-        all_repositories = []
-        BuildRequest._collect_repositories(all_repositories, self.sources)
+        """ Returns one merged sourcestamp for every codebase """
+        # get all codebases from both requests
+        all_codebases = []
+        BuildRequest._collect_codebases(all_codebases, self.sources)
         for other in others:
-            BuildRequest._collect_repositories(all_repositories, other.sources)
+            BuildRequest._collect_codebases(all_codebases, other.sources)
 
         all_merged_sources = {}
-        # walk along the repositories
-        for repository in all_repositories:
+        # walk along the codebases
+        for codebase in all_codebases:
             all_sources = []
-            if repository in self.sources:
-                all_sources.append(self.sources[repository])
+            if codebase in self.sources:
+                all_sources.append(self.sources[codebase])
             for other in others:
-                if repository in other.sources:
-                    all_sources.append(other.sources[repository])
-            assert len(all_sources)>0, "each repository should have atleast one sourcestamp"
-            all_merged_sources[repository] = all_sources[0].mergeWith(all_sources[1:])
+                if codebase in other.sources:
+                    all_sources.append(other.sources[codebase])
+            assert len(all_sources)>0, "each codebase should have atleast one sourcestamp"
+            all_merged_sources[codebase] = all_sources[0].mergeWith(all_sources[1:])
 
         return [source for source in all_merged_sources.itervalues()]
 

@@ -121,6 +121,7 @@ class Change(Row):
         when_timestamp = 1200000,
         category = 'cat',
         repository = 'repo',
+        codebase =  'cb',
         project = 'proj',
     )
 
@@ -213,6 +214,7 @@ class SourceStamp(Row):
         revision = 'abcd',
         patchid = None,
         repository = 'repo',
+        codebase = '',
         project = 'proj',
         sourcestampsetid = None,
     )
@@ -440,6 +442,7 @@ class FakeChangesComponent(FakeDBComponent):
                 revlink=row.revlink,
                 properties=row.properties,
                 repository=row.repository,
+                codebase=row.codebase,
                 project=row.project)
 
         return defer.succeed(chdict)
@@ -482,6 +485,12 @@ class FakeChangesComponent(FakeDBComponent):
             project=change.project)
         self.changes[changeid] = row
 
+    def setCodebase(self, changeid, codebase):
+        try:
+            self.changes[changeid].codebase = codebase
+        except KeyError:
+            pass
+        return defer.succeed(ch_uids)
 
 class FakeSchedulersComponent(FakeDBComponent):
 
@@ -584,7 +593,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
     # component methods
 
     def addSourceStamp(self, branch, revision, repository, project, sourcestampsetid,
-                          patch_body=None, patch_level=0, patch_author=None,
+                          codebase = '', patch_body=None, patch_level=0, patch_author=None,
                           patch_comment=None, patch_subdir=None, changeids=[]):
         id = len(self.sourcestamps) + 100
         while id in self.sourcestamps:
@@ -606,7 +615,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
         else:
             patchid = None
 
-        self.sourcestamps[id] = dict(id=id, sourcestampsetid=sourcestampsetid, branch=branch, revision=revision,
+        self.sourcestamps[id] = dict(id=id, sourcestampsetid=sourcestampsetid, branch=branch, revision=revision, codebase=codebase,
                 patchid=patchid, repository=repository, project=project,
                 changeids=changeids)
         return defer.succeed(id)
@@ -790,7 +799,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         for sourcestamp in self.db.sourcestamps.sourcestamps.itervalues():
             if sourcestamp['sourcestampsetid'] == buildset['sourcestampsetid']:
                 ssdict = sourcestamp.copy()
-                ss_repository = ssdict['repository']
+                ss_repository = ssdict['codebase']
                 dictOfssDict[ss_repository] = ssdict
 
         if 'id' in buildset:

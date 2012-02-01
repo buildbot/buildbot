@@ -50,7 +50,7 @@ class TestChangesConnectorComponent(
         fakedb.Change(changeid=13, author="dustin", comments="fix spelling",
             is_dir=0, branch="master", revision="deadbeef",
             when_timestamp=266738400, revlink=None, category=None,
-            repository='', project=''),
+            repository='', codebase='', project=''),
 
         fakedb.ChangeLink(changeid=13, link='http://buildbot.net'),
         fakedb.ChangeLink(changeid=13, link='http://sf.net/projects/buildbot'),
@@ -66,7 +66,8 @@ class TestChangesConnectorComponent(
         fakedb.Change(changeid=14, author="warner", comments="fix whitespace",
             is_dir=0, branch="warnerdb", revision="0e92a098b",
             when_timestamp=266738404, revlink='http://warner/0e92a098b',
-            category='devel', repository='git://warner', project='Buildbot'),
+            category='devel', repository='git://warner', codebase='mainapp', 
+            project='Buildbot'),
 
         fakedb.ChangeFile(changeid=14, filename='master/buildbot/__init__.py'),
     ]
@@ -83,6 +84,7 @@ class TestChangesConnectorComponent(
         'project': u'Buildbot',
         'properties': {},
         'repository': u'git://warner',
+        'codebase': u'mainapp',
         'revision': u'0e92a098b',
         'revlink': u'http://warner/0e92a098b',
         'when_timestamp': epoch2datetime(266738404),
@@ -93,6 +95,7 @@ class TestChangesConnectorComponent(
          category='devel',
          isdir=0,
          repository=u'git://warner',
+         codebase=u'mainapp',
          links=[],
          who=u'warner',
          when=266738404,
@@ -123,6 +126,7 @@ class TestChangesConnectorComponent(
         ok = ok and ca.revlink == cb.revlink
         ok = ok and ca.properties == cb.properties
         ok = ok and ca.repository == cb.repository
+        ok = ok and ca.codebase == cb.codebase
         ok = ok and ca.project == cb.project
         if not ok:
             def printable(c):
@@ -194,6 +198,7 @@ class TestChangesConnectorComponent(
                  revlink=None,
                  properties={u'platform': (u'linux', 'Change')},
                  repository=u'',
+                 codebase=u'',
                  project=u'')
         # check all of the columns of the four relevant tables
         def check_change(changeid):
@@ -211,6 +216,7 @@ class TestChangesConnectorComponent(
                 self.assertEqual(r[0].when_timestamp, 266738400)
                 self.assertEqual(r[0].category, None)
                 self.assertEqual(r[0].repository, '')
+                self.assertEqual(r[0].codebase, '')
                 self.assertEqual(r[0].project, '')
             return self.db.pool.do(thd)
         d.addCallback(check_change)
@@ -276,6 +282,7 @@ class TestChangesConnectorComponent(
                  revlink=None,
                  properties={},
                  repository=u'',
+                 codebase=u'',
                  project=u'',
                  _reactor=clock)
         # check all of the columns of the four relevant tables
@@ -340,6 +347,7 @@ class TestChangesConnectorComponent(
                  revlink=None,
                  properties={},
                  repository=u'',
+                 codebase=u'',
                  project=u'',
                  uid=1))
         # check all of the columns of the five relevant tables
@@ -526,3 +534,17 @@ class TestChangesConnectorComponent(
                         { 'notest' : ('no', 'Change') })
         d.addCallback(check)
         return d
+
+    def test_setCodebase(self):
+        d = self.insertTestData(self.change14_rows)
+        def update14(_):
+            return self.db.changes.setCodebase(14, 'codebase14')
+        def get14(_):
+            return self.db.changes.getChange(14)
+        d.addCallback(update14)
+        d.addCallback(get14)
+        def check14(chdict):
+            self.assertEqual(chdict['codebase'], 'codebase14')
+        d.addCallback(check14)
+        return d
+

@@ -42,7 +42,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
 
     def tearDown(self):
         return self.tearDownDirs()
-
+        
     def test_change_subscription(self):
         changeid = 918
         chdict = {
@@ -84,8 +84,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
             self.master.db.changes.addChange.assert_called_with(author=None,
                     files=None, comments=None, is_dir=0, links=None,
                     revision=None, when_timestamp=None, branch=None,
-                    category=None, revlink='', properties={}, repository='',
-                    project='', uid=None)
+                    category=None, revlink='', properties={}, repository='', project='', uid=None)
 
             self.master.db.changes.getChange.assert_called_with(changeid)
             # addChange returned the right value
@@ -160,6 +159,40 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
                 args=('me', ['a'], 'com'),
                 exp_db_kwargs=dict(author='me', files=['a'], comments='com'))
 
+    def test_addChange_callCodebaseGenerator(self):
+        chdict = {
+            'changeid': 14,
+            'author': u'warner',
+            'branch': u'warnerdb',
+            'category': u'devel',
+            'comments': u'fix whitespace',
+            'files': [u'master/buildbot/__init__.py'],
+            'is_dir': 0,
+            'links': [],
+            'project': u'Buildbot',
+            'properties': {},
+            'repository': u'git://warner',
+            'revision': u'0e92a098b',
+            'revlink': u'http://warner/0e92a098b',
+            'when_timestamp': epoch2datetime(266738404),
+        }
+        
+        self.master.config.codebaseGenerator = lambda _ : "mycodebase"
+        self.master.db = mock.Mock()
+        self.master.db.changes.addChange.return_value = \
+            defer.succeed(14)
+        self.master.db.changes.getChange.return_value = \
+            defer.succeed(chdict)
+            
+        d = self.master.addChange()
+        def check(change):
+            # master called the right thing in the db component
+            self.master.db.changes.setCodebase.assert_called_with(changeid=14, codebase="mycodebase")
+            # addBuildset returned the right value
+            self.assertEqual(change.codebase, 'mycodebase')
+        d.addCallback(check)
+        return d
+                
     def do_test_createUserObjects_args(self, args=(), kwargs={}, exp_args=()):
         got = []
         def fake_createUserObject(*args, **kwargs):
@@ -182,7 +215,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         return self.do_test_createUserObjects_args(
                 kwargs=dict(who='me', src='git'),
                 exp_args=(self.master, 'me', 'git'))
-
+               
     def test_buildset_subscription(self):
         self.master.db = mock.Mock()
         self.master.db.buildsets.addBuildset.return_value = \

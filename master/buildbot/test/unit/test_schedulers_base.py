@@ -122,7 +122,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                                      ('scheduler', ('testy', 'Scheduler')), ],
                         sourcestampsetid=100),
                     {'':
-                     dict(branch=None, revision=None, repository='',
+                     dict(branch=None, revision=None, repository='', codebase='',
                          project='', sourcestampsetid=100)
                     })
         d.addCallback(check)
@@ -230,9 +230,9 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring='try_1234',
                         properties=[('scheduler', ('xyz', 'Scheduler'))],
                         sourcestampsetid=100),
-                    {'hgmo':
+                    {'':
                      dict(branch='default', revision=None, repository='hgmo',
-                         project='myp', sourcestampsetid=100)
+                          codebase='', project='myp', sourcestampsetid=100)
                     })
         d.addCallback(check)
         return d
@@ -252,9 +252,9 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                             ('xxx', ('yyy', 'TEST')),
                         ],
                         sourcestampsetid=100),
-                    {'hgmo':
+                    {'':
                      dict(branch='default', revision=None, repository='hgmo',
-                         project='myp', sourcestampsetid=100)
+                          codebase='', project='myp', sourcestampsetid=100)
                     })
         d.addCallback(check)
         return d
@@ -271,7 +271,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         sourcestampsetid=100),
                     {'':
                      dict(branch='default', revision=None, repository='',
-                         project='', sourcestampsetid=100)
+                          codebase='', project='', sourcestampsetid=100)
                     })
         d.addCallback(check)
         return d
@@ -280,7 +280,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='n', builderNames=['b'])
         self.db.insertTestData([
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                            repository='svn://...', project='world-domination'),
+                            repository='svn://...', codebase='cbsvn',
+                            project='world-domination'),
         ])
         d = sched.addBuildsetForChanges(reason='power', changeids=[13])
         def check((bsid,brids)):
@@ -289,8 +290,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))],
                         sourcestampsetid=100),
-                    {'svn://...':
-                     dict(branch='trunk', repository='svn://...',
+                    {'cbsvn':
+                     dict(branch='trunk', repository='svn://...', codebase='cbsvn',
                         changeids=set([13]), project='world-domination',
                         revision='9283', sourcestampsetid=100)
                     })
@@ -302,7 +303,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='n', builderNames=['c'])
         self.db.insertTestData([
             fakedb.Change(changeid=14, branch='default', revision='123:abc',
-                            repository='', project=''),
+                            repository='', project='', codebase='svn'),
         ])
         d = sched.addBuildsetForChanges(reason='downstream', changeids=[14],
                             properties=props)
@@ -315,9 +316,10 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                             ('xxx', ('yyy', 'TEST')),
                         ],
                         sourcestampsetid=100),
-                    {'':
+                    {'svn':
                      dict(branch='default', revision='123:abc', repository='',
-                         project='', changeids=set([14]), sourcestampsetid=100)
+                         project='', changeids=set([14]), sourcestampsetid=100,
+                         codebase='svn')
                     })
         d.addCallback(check)
         return d
@@ -326,7 +328,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='n', builderNames=['b'])
         self.db.insertTestData([
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                            repository='svn://...', project='world-domination'),
+                          codebase='cbsvn', repository='svn://...', 
+                          project='world-domination'),
         ])
         d = sched.addBuildsetForChanges(reason='power', changeids=[13],
                             builderNames=['p'])
@@ -336,8 +339,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))],
                         sourcestampsetid=100),
-                    {'svn://...':
-                     dict(branch='trunk', repository='svn://...',
+                    {'cbsvn':
+                     dict(branch='trunk', repository='svn://...', codebase='cbsvn',
                          changeids=set([13]), project='world-domination',
                          revision='9283', sourcestampsetid=100)
                     })
@@ -348,11 +351,14 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='n', builderNames=['b', 'c'])
         self.db.insertTestData([
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                            repository='svn://...', project='knitting'),
+                            repository='svn://...', project='knitting',
+                            codebase='cbsvn'),
             fakedb.Change(changeid=14, branch='devel', revision='9284',
-                            repository='svn://...', project='making-tea'),
+                            repository='svn://...', project='making-tea',
+                            codebase='cbsvn'),
             fakedb.Change(changeid=15, branch='trunk', revision='9285',
-                            repository='svn://...', project='world-domination'),
+                            repository='svn://...', project='world-domination',
+                            codebase='cbsvn'),
         ])
 
         # note that the changeids are given out of order here; it should still
@@ -364,8 +370,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))],
                         sourcestampsetid=100),
-                    {'svn://...':
-                     dict(branch='trunk', repository='svn://...',
+                    {'cbsvn':
+                     dict(branch='trunk', repository='svn://...', codebase='cbsvn',
                         changeids=set([13,14,15]), project='world-domination',
                         revision='9285', sourcestampsetid=100)
                     })
@@ -377,7 +383,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         d = self.db.insertTestData([
             fakedb.SourceStampSet(id=1091),
             fakedb.SourceStamp(id=91, sourcestampsetid=1091, branch='fixins',
-                revision='abc', patchid=None, repository='r', project='p'),
+                revision='abc', patchid=None, repository='r',
+                project='p'),
         ])
         d.addCallback(lambda _ :
                 sched.addBuildsetForSourceStamp(reason='whynot', setid=1091))
@@ -387,9 +394,9 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))],
                         sourcestampsetid=1091),
-                    {'r':
+                    {'':
                      dict(branch='fixins', revision='abc', repository='r',
-                         project='p', sourcestampsetid=1091)
+                         project='p', codebase='', sourcestampsetid=1091)
                     })
         d.addCallback(check)
         return d
@@ -400,7 +407,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         d = self.db.insertTestData([
             fakedb.SourceStampSet(id=1091),
             fakedb.SourceStamp(id=91, sourcestampsetid=1091, branch='fixins',
-                revision='abc', patchid=None, repository='r', project='p'),
+                revision='abc', patchid=None, repository='r', codebase='cb',
+                project='p'),
         ])
         d.addCallback(lambda _ :
             sched.addBuildsetForSourceStamp(reason='whynot', setid=1091,
@@ -414,9 +422,9 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                             ('xxx', ('yyy', 'TEST')),
                         ],
                         sourcestampsetid=1091),
-                    {'r':
+                    {'cb':
                      dict(branch='fixins', revision='abc', repository='r',
-                         project='p', sourcestampsetid=1091)
+                          codebase='cb', project='p', sourcestampsetid=1091)
                     })
         d.addCallback(check)
         return d
@@ -426,7 +434,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         d = self.db.insertTestData([
             fakedb.SourceStampSet(id=1091),
             fakedb.SourceStamp(id=91, sourcestampsetid=1091, branch='fixins',
-                revision='abc', patchid=None, repository='r', project='p'),
+                revision='abc', patchid=None, repository='r', codebase='cb',
+                project='p'),
         ])
         d.addCallback(lambda _ :
             sched.addBuildsetForSourceStamp(reason='whynot', setid = 1091,
@@ -437,9 +446,9 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))],
                         sourcestampsetid=1091),
-                    {'r':
+                    {'cb':
                      dict(branch='fixins', revision='abc', repository='r',
-                         project='p', sourcestampsetid=1091)
+                         codebase='cb', project='p', sourcestampsetid=1091)
                     })
         d.addCallback(check)
         return d

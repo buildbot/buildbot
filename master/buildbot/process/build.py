@@ -91,14 +91,14 @@ class Build(properties.PropertiesMixin):
     def setSlaveEnvironment(self, env):
         self.slaveEnvironment = env
 
-    def getSourceStamp(self, repository=None):
-        if repository is None:
+    def getSourceStamp(self, codebase=None):
+        if codebase is None:
             if self.sources:
                 return self.sources[0]
             else:
                 return None
         for source in self.sources:
-            if source.repository == repository:
+            if source.codebase == codebase:
                 return source
         return None
 
@@ -173,19 +173,6 @@ class Build(properties.PropertiesMixin):
         # now set some properties of our own, corresponding to the
         # build itself
         props.setProperty("buildnumber", self.build_status.number, "Build")
-        repositories = []
-        branches = {}
-        revisions = {}
-        projects = {}
-        for source in self.sources:
-            repositories.append(source.repository)
-            branches[source.repository] = source.branch
-            revisions[source.repository] = source.revision
-            projects[source.repository] = source.project
-        props.setProperty("repositories", repositories, "Build")
-        props.setProperty("branches", branches, "Build")
-        props.setProperty("revisions", revisions, "Build")
-        props.setProperty("projects", projects, "Build")
         
         if self.sources:
             # old interface for backwards compatibility
@@ -193,6 +180,7 @@ class Build(properties.PropertiesMixin):
             props.setProperty("branch", source.branch, "Build")
             props.setProperty("revision", source.revision, "Build")
             props.setProperty("repository", source.repository, "Build")
+            props.setProperty("codebase", source.codebase, "Build")
             props.setProperty("project", source.project, "Build")
 
         self.builder.setupProperties(props)

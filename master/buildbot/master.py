@@ -456,6 +456,17 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             # create user object, returning a corresponding uid
             d.addCallback(lambda _ : users.createUserObject(self, author, src))
 
+
+        def determine_and_store_codebase(chdict):
+            codebase = ''
+            if self.config.codebaseGenerator is not None:
+                codebase = self.config.codebaseGenerator(chdict)
+            else:
+                codebase = chdict['repository']
+            chdict['codebase'] = codebase
+            self.db.changes.setCodebase(changeid=chdict['changeid'], codebase=chdict['codebase'])
+            return chdict
+         
         # add the Change to the database
         d.addCallback(lambda uid :
                           self.db.changes.addChange(author=author, files=files,
@@ -464,14 +475,15 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                                           when_timestamp=when_timestamp,
                                           branch=branch, category=category,
                                           revlink=revlink, properties=properties,
-                                          repository=repository, project=project,
-                                          uid=uid))
+                                          repository=repository,
+                                          project=project, uid=uid))
 
         # convert the changeid to a Change instance
         d.addCallback(lambda changeid :
-                self.db.changes.getChange(changeid))
+            self.db.changes.getChange(changeid))
+        d.addCallback(determine_and_store_codebase)
         d.addCallback(lambda chdict :
-                changes.Change.fromChdict(self, chdict))
+            changes.Change.fromChdict(self, chdict))
 
         def notify(change):
             msg = u"added change %s to database" % change
@@ -667,7 +679,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             wfd = defer.waitForDeferred(
                 self.db.changes.getChange(changeid))
             yield wfd
-            chdict = wfd.getResult()
+            chdict = wfd.getResult();
 
             # if there's no such change, we've reached the end and can
             # stop polling

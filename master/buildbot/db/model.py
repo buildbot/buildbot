@@ -199,6 +199,9 @@ class Model(base.DBConnectorComponent):
         # source tree in which this change was detected.
         sa.Column('repository', sa.String(length=512), nullable=False, server_default=''),
 
+        # codebase is a logical name to specify what is in the repository
+        sa.Column('codebase', sa.String(256)),
+        
         # project names the project this source code represents.  It is used
         # later to filter changes
         sa.Column('project', sa.String(length=512), nullable=False, server_default=''),
@@ -258,6 +261,9 @@ class Model(base.DBConnectorComponent):
         # the repository from which this source should be checked out
         sa.Column('repository', sa.String(length=512), nullable=False, server_default=''),
 
+        # codebase is a logical name to specify what is in the repository
+        sa.Column('codebase', sa.String(256)),
+        
         # the project this source code represents
         sa.Column('project', sa.String(length=512), nullable=False, server_default=''),
 

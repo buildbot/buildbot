@@ -31,7 +31,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
             links=None, revision=None, when_timestamp=None, branch=None,
-            category=None, revlink='', properties={}, repository='',
+            category=None, revlink='', properties={}, repository='', codebase='',
             project='', uid=None, _reactor=reactor):
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
@@ -64,6 +64,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 when_timestamp=datetime2epoch(when_timestamp),
                 category=category,
                 repository=repository,
+                codebase=codebase,
                 project=project))
             changeid = r.inserted_primary_key[0]
             if links:
@@ -154,6 +155,16 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         d = self.db.pool.do(thd)
         return d
 
+    def setCodebase(self, changeid, codebase):
+        def thd(conn):
+            tbl = self.db.model.changes
+            q = tbl.update(whereclause=(tbl.c.changeid==changeid))
+            res = conn.execute(q, codebase=codebase)
+            if res.rowcount != 1:
+                raise KeyError
+        d = self.db.pool.do(thd)
+        return d
+        
     # utility methods
 
     def pruneChanges(self, changeHorizon):
@@ -208,6 +219,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 revlink=ch_row.revlink,
                 properties={}, # see below
                 repository=ch_row.repository,
+                codebase=ch_row.codebase,
                 project=ch_row.project)
 
         query = change_links_tbl.select(
