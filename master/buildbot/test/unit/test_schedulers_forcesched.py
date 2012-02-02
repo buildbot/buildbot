@@ -24,7 +24,7 @@ from buildbot.test.util import scheduler
 
 class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
-    SCHEDULERID = 19
+    OBJECTID = 19
 
     def setUp(self):
         self.setUpScheduler()
@@ -36,7 +36,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                             **kw):
         sched = self.attachScheduler(
                 ForceScheduler(name=name, builderNames=builderNames,**kw),
-                self.SCHEDULERID)
+                self.OBJECTID)
         sched.master.config = config.MasterConfig()
         return sched
 

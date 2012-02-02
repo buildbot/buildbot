@@ -179,6 +179,12 @@ class ShellCommand(buildstep.LoggingBuildStep):
             if isinstance(words, (str, unicode)):
                 words = words.split()
 
+            try:
+                len(words)
+            except AttributeError:
+                # WithProperties and Property don't have __len__
+                return ["???"]
+
             tmp = []
             for x in words:
                 if isinstance(x, (str, unicode)):

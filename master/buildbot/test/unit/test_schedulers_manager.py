@@ -22,19 +22,19 @@ from buildbot import config
 class SchedulerManager(unittest.TestCase):
 
     def setUp(self):
-        self.next_schedulerid = 13
-        self.schedulerids = {}
+        self.next_objectid = 13
+        self.objectids = {}
 
         self.master = mock.Mock()
-        def getSchedulerId(sched_name, class_name):
+        def getObjectId(sched_name, class_name):
             k = (sched_name, class_name)
             try:
-                rv = self.schedulerids[k]
+                rv = self.objectids[k]
             except:
-                rv = self.schedulerids[k] = self.next_schedulerid
-                self.next_schedulerid += 1
+                rv = self.objectids[k] = self.next_objectid
+                self.next_objectid += 1
             return defer.succeed(rv)
-        self.master.db.schedulers.getSchedulerId = getSchedulerId
+        self.master.db.state.getObjectId = getObjectId
 
         self.new_config = mock.Mock()
 
@@ -55,7 +55,7 @@ class SchedulerManager(unittest.TestCase):
         def startService(self):
             assert not self.already_started
             assert self.master is not None
-            assert self.schedulerid is not None
+            assert self.objectid is not None
             self.already_started = True
             base.BaseScheduler.startService(self)
 
@@ -63,7 +63,7 @@ class SchedulerManager(unittest.TestCase):
             d = base.BaseScheduler.stopService(self)
             def still_set(_):
                 assert self.master is not None
-                assert self.schedulerid is not None
+                assert self.objectid is not None
             d.addCallback(still_set)
             return d
 

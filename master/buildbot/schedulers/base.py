@@ -80,13 +80,9 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         self.properties.update(properties, "Scheduler")
         self.properties.setProperty("scheduler", name, "Scheduler")
 
-        self.schedulerid = None
-        """ID of this scheduler; set just before the scheduler starts, and set
-        to None after stopService is complete."""
+        self.objectid = None
 
         self.master = None
-        """BuildMaster instance; set just before the scheduler starts, and set
-        to None after stopService is complete."""
 
         # internal variables
         self._change_subscription = None

@@ -148,8 +148,9 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.project = project or ''
         self.repository = repository or ''
         self.codebase = codebase or ''
-        if changes and not _ignoreChanges:
+        if changes:
             self.changes = tuple(changes)
+        if changes and not _ignoreChanges:
             # set branch and revision to most recent change
             self.branch = changes[-1].branch
             revision = changes[-1].revision

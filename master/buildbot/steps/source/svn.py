@@ -135,8 +135,8 @@ class SVN(Source):
 
     @defer.deferredGenerator
     def clobber(self):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
-                                                      'logEnviron': self.logEnviron,})
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
+                                                'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         wfd = defer.waitForDeferred(
                 self.runCommand(cmd))
@@ -162,8 +162,8 @@ class SVN(Source):
 
     @defer.deferredGenerator
     def copy(self):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
-                                                      'logEnviron': self.logEnviron,})
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
+                                                'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         wfd = defer.waitForDeferred(
                 self.runCommand(cmd))
@@ -188,7 +188,7 @@ class SVN(Source):
 
         # if we're copying, copy; otherwise, export from source to build
         if self.method == 'copy':
-            cmd = buildstep.LoggedRemoteCommand('cpdir', 
+            cmd = buildstep.RemoteCommand('cpdir',
                     { 'fromdir': 'source', 'todir':self.workdir,
                       'logEnviron': self.logEnviron })
         else:
@@ -273,8 +273,8 @@ class SVN(Source):
             return 'fresh'
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.workdir + '/.svn',
-                                                     'logEnviron': self.logEnviron,})
+        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.svn',
+                                               'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _fail(tmp):
@@ -326,9 +326,9 @@ class SVN(Source):
                 if not self.slaveVersionIsOlderThan('rmdir', '2.14'):
                     d = self.removeFiles(files)
                 else:
-                    cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': files,
-                                                                  'logEnviron':
-                                                                  self.logEnviron,})
+                    cmd = buildstep.RemoteCommand('rmdir', {'dir': files,
+                                                            'logEnviron':
+                                                            self.logEnviron,})
                     cmd.useLog(self.stdio_log, False)
                     d = self.runCommand(cmd)
                     d.addCallback(lambda _: cmd.rc)
@@ -364,8 +364,8 @@ class SVN(Source):
     @defer.deferredGenerator
     def removeFiles(self, files):
         for filename in files:
-            cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': filename,
-                                                          'logEnviron': self.logEnviron,})
+            cmd = buildstep.RemoteCommand('rmdir', {'dir': filename,
+                                                    'logEnviron': self.logEnviron,})
             cmd.useLog(self.stdio_log, False)
             wfd = defer.waitForDeferred(self.runCommand(cmd))
             yield wfd

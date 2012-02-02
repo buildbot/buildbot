@@ -33,6 +33,8 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                           patch_body=None, patch_level=0, patch_author="",
                           patch_comment="", patch_subdir=None, changeids=[]):
         def thd(conn):
+            transaction = conn.begin()
+
             # handle inserting a patch
             patchid = None
             if patch_body is not None:
@@ -63,6 +65,8 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 conn.execute(ins, [
                     dict(sourcestampid=ssid, changeid=changeid)
                     for changeid in changeids ])
+
+            transaction.commit()
 
             # and return the new ssid
             return ssid

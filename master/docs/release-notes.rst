@@ -26,6 +26,13 @@ Deprecations, Removals, and Non-Compatible Changes
   documentation for the *much* more flexiblie configuration options now
   available.
 
+* This is the last release of Buildbot that will be compatible with Python 2.4.
+  The next version will minimally require Python-2.5.
+
+* This is the last release of Buildbot that will be compatible with
+  Twisted-8.x.y.  The next version will minimally require Twisted-9.0.0.  See
+  :bb:bug:`2182`.
+
 * ``buildbot start`` no longer invokes make if a ``Makefile.buildbot`` exists.
   If you are using this functionality, consider invoking make directly.
 
@@ -40,11 +47,16 @@ Deprecations, Removals, and Non-Compatible Changes
   status).  If you use this callback, you will need to adjust its
   implementation.
 
-* This is the last release of Buildbot that will be compatible with Python 2.4.
-  The next version will minimally require Python-2.5.
-
 * SQLAlchemy-Migrate version 0.6.0 is no longer supported.  See
   :ref:`Buildmaster-Requirements`.
+
+* Older versions of SQLite which could limp along for previous versions of
+  Buildbot are no longer supported.  The minimum version is 3.4.0, and 3.7.0 or
+  higher is recommended.
+
+* The master-side Git step now checks out 'HEAD' by default, rather than
+  master, which translates to the default branch on the upstream repository.  See
+  :bb:pull:`301`.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -60,8 +72,22 @@ Changes for Developers
   used to generate a single build, thanks to Harry Borkhuis.  See
   :bb:pull:`287`.
 
+* Schedulers no longer have a ``schedulerid``, but rather an ``objectid``.  In
+  a related change, the ``schedulers`` table has been removed, along with the
+  :py:meth:`buildbot.db.schedulers.SchedulersConnectorComponent.getSchedulerId`
+  method.
+
+* The Dependent scheduler tracks its upstream buildsets using
+  :py:class:`buildbot.db.schedulers.StateConnectorComponent`, so the
+  ``scheduler_upstream_buildsets`` table has been removed, along with
+  corresponding (undocumented)
+  :py:class:`buildbot.db.buildsets.BuildsetsConnector` methods.
+
 Features
 ~~~~~~~~
+
+* The IRC status bot now display build status in colors by default.
+  It is controllable and may be disabled with useColors=False in constructor.
 
 * Buildbot can now take advantage of authentication done by a front-end web
   server - see :bb:pull:`266`.
@@ -87,16 +113,26 @@ Features
 * Shell command steps will now "flatten" nested lists in the ``command``
   argument.  This allows substitution of multiple command-line arguments using
   properties.  See :bb:bug:`2150`.
+  
+* Steps now take an optional ``hideStepIf`` parameter to suppress the step
+  from the waterfall and build details in the web. (:bb:bug:`1743`)
 
 * :py:class:`Trigger` steps with ``waitForFinish=True`` now receive a URL to
   all the triggered builds. This URL is displayed in the waterfall and build
   details. See :bb:bug:`2170`.
+
+* The bb:src:`master/contrib/fakemaster.py`` script allows you to run arbitrary
+  commands on a slave by emulating a master.  See the file itself for
+  documentation.
 
 Slave
 -----
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* BitKeeper support is in the "Last-Rites" state, and will be removed in the
+  next version unless a maintainer steps forward.
 
 Features
 ~~~~~~~~

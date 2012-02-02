@@ -113,6 +113,12 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
     def getBuildbotURL(self):
         return self.master.config.buildbotURL
 
+    def getStatus(self):
+        # some listeners expect their .parent to be a BuildMaster object, and
+        # use this method to get the Status object.  This is documented, so for
+        # now keep it working.
+        return self
+
     def getMetrics(self):
         return self.master.metrics
 

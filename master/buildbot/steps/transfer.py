@@ -81,7 +81,7 @@ class _FileWriter(pb.Referenceable):
         if self.mode is not None:
             os.chmod(self.destfile, self.mode)
 
-    def __del__(self):
+    def cancel(self):
         # unclean shutdown, the file is probably truncated, so delete it
         # altogether rather than deliver a corrupted file
         fp = getattr(self, "fp", None)
@@ -169,18 +169,10 @@ class _DirectoryWriter(_FileWriter):
 
 
 class StatusRemoteCommand(RemoteCommand):
-    def __init__(self, remote_command, args):
+    def __init__(self, step, remote_command, args):
         RemoteCommand.__init__(self, remote_command, args)
-
-        self.rc = None
-        self.stderr = ''
-
-    def remoteUpdate(self, update):
-        #log.msg('StatusRemoteCommand: update=%r' % update)
-        if 'rc' in update:
-            self.rc = update['rc']
-        if 'stderr' in update:
-            self.stderr = self.stderr + update['stderr'] + '\n'
+        callback = lambda arg: step.step_status.addLog('stdio')
+        self.useLogDelayed('stdio', callback, True)
 
 class _TransferBuildStep(BuildStep):
     """
@@ -217,8 +209,6 @@ class _TransferBuildStep(BuildStep):
         # the rest
         if result == SKIPPED:
             return BuildStep.finished(self, SKIPPED)
-        if self.cmd.stderr != '':
-            self.addCompleteLog('stderr', self.cmd.stderr)
 
         if self.cmd.rc is None or self.cmd.rc == 0:
             return BuildStep.finished(self, SUCCESS)
@@ -297,8 +287,12 @@ class FileUpload(_TransferBuildStep):
             'keepstamp': self.keepstamp,
             }
 
-        self.cmd = StatusRemoteCommand('uploadFile', args)
+        self.cmd = StatusRemoteCommand(self, 'uploadFile', args)
         d = self.runCommand(self.cmd)
+        @d.addErrback
+        def cancel(res):
+            fileWriter.cancel()
+            return res
         d.addCallback(self.finished).addErrback(self.failed)
 
 
@@ -306,7 +300,7 @@ class DirectoryUpload(_TransferBuildStep):
 
     name = 'upload'
 
-    renderables = [ 'slavesrc', 'masterdest' ]
+    renderables = [ 'slavesrc', 'masterdest', 'url' ]
 
     def __init__(self, slavesrc, masterdest,
                  workdir=None, maxsize=None, blocksize=16*1024,
@@ -366,8 +360,12 @@ class DirectoryUpload(_TransferBuildStep):
             'compress': self.compress
             }
 
-        self.cmd = StatusRemoteCommand('uploadDirectory', args)
+        self.cmd = StatusRemoteCommand(self, 'uploadDirectory', args)
         d = self.runCommand(self.cmd)
+        @d.addErrback
+        def cancel(res):
+            dirWriter.cancel()
+            return res
         d.addCallback(self.finished).addErrback(self.failed)
 
     def finished(self, result):
@@ -486,7 +484,7 @@ class FileDownload(_TransferBuildStep):
             'mode': self.mode,
             }
 
-        self.cmd = StatusRemoteCommand('downloadFile', args)
+        self.cmd = StatusRemoteCommand(self, 'downloadFile', args)
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 
@@ -546,7 +544,7 @@ class StringDownload(_TransferBuildStep):
             'mode': self.mode,
             }
 
-        self.cmd = StatusRemoteCommand('downloadFile', args)
+        self.cmd = StatusRemoteCommand(self, 'downloadFile', args)
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 

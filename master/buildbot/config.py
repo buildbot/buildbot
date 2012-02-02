@@ -708,7 +708,7 @@ class ReconfigurableServiceMixin:
                 if isinstance(svc, ReconfigurableServiceMixin) ]
 
         # sort by priority
-        reconfigurable_services.sort(key=lambda svc : svc.reconfig_priority)
+        reconfigurable_services.sort(key=lambda svc : -svc.reconfig_priority)
 
         for svc in reconfigurable_services:
             d = svc.reconfigService(new_config)

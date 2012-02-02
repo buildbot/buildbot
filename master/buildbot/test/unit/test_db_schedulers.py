@@ -24,7 +24,7 @@ class TestSchedulersConnectorComponent(
 
     def setUp(self):
         d = self.setUpConnectorComponent(
-            table_names=['changes', 'schedulers', 'scheduler_changes' ])
+            table_names=['changes', 'objects', 'scheduler_changes' ])
 
         def finish_setup(_):
             self.db.schedulers = \
@@ -36,13 +36,13 @@ class TestSchedulersConnectorComponent(
     def tearDown(self):
         return self.tearDownConnectorComponent()
 
-    def checkScheduler(self, schedulerid, name, class_name):
+    def checkScheduler(self, objectid, name, class_name):
         def thd(conn):
             q = self.db.model.schedulers.select(
-                whereclause=(self.db.model.schedulers.c.schedulerid == schedulerid))
+                whereclause=(self.db.model.schedulers.c.objectid == objectid))
             for row in conn.execute(q):
-                self.assertEqual([ row.schedulerid, row.name, row.class_name],
-                                 [ schedulerid, name, class_name])
+                self.assertEqual([ row.objectid, row.name, row.class_name],
+                                 [ objectid, name, class_name])
         return self.db.pool.do(thd)
 
     # test data
@@ -52,13 +52,13 @@ class TestSchedulersConnectorComponent(
     change5 = fakedb.Change(changeid=5)
     change6 = fakedb.Change(changeid=6, branch='sql')
 
-    scheduler24 = fakedb.Scheduler(schedulerid=24)
+    scheduler24 = fakedb.Object(id=24)
 
-    def addClassifications(self, _, schedulerid, *classifications):
+    def addClassifications(self, _, objectid, *classifications):
         def thd(conn):
             q = self.db.model.scheduler_changes.insert()
             conn.execute(q, [
-                dict(changeid=c[0], schedulerid=schedulerid, important=c[1])
+                dict(changeid=c[0], objectid=objectid, important=c[1])
                 for c in classifications ])
         return self.db.pool.do(thd)
 
@@ -74,7 +74,7 @@ class TestSchedulersConnectorComponent(
                 sch_chgs_tbl = self.db.model.scheduler_changes
                 q = sch_chgs_tbl.select(order_by=sch_chgs_tbl.c.changeid)
                 r = conn.execute(q)
-                rows = [ (row.schedulerid, row.changeid, row.important)
+                rows = [ (row.objectid, row.changeid, row.important)
                          for row in r.fetchall() ]
                 self.assertEqual(rows, [ (24, 3, 0), (24, 4, 1) ])
             return self.db.pool.do(thd)
@@ -87,7 +87,7 @@ class TestSchedulersConnectorComponent(
         d = self.insertTestData([
             self.change3,
             self.scheduler24,
-            fakedb.SchedulerChange(schedulerid=24, changeid=3, important=0),
+            fakedb.SchedulerChange(objectid=24, changeid=3, important=0),
         ])
         d.addCallback(lambda _ :
                 self.db.schedulers.classifyChanges(24, { 3 : True }))
@@ -96,7 +96,7 @@ class TestSchedulersConnectorComponent(
                 sch_chgs_tbl = self.db.model.scheduler_changes
                 q = sch_chgs_tbl.select(order_by=sch_chgs_tbl.c.changeid)
                 r = conn.execute(q)
-                rows = [ (row.schedulerid, row.changeid, row.important)
+                rows = [ (row.objectid, row.changeid, row.important)
                          for row in r.fetchall() ]
                 self.assertEqual(rows, [ (24, 3, 1) ])
             return self.db.pool.do(thd)
@@ -157,42 +157,5 @@ class TestSchedulersConnectorComponent(
             self.db.schedulers.getChangeClassifications(24, branch='sql'))
         def check(cls):
             self.assertEqual(cls, { 6 : True })
-        d.addCallback(check)
-        return d
-
-    def test_getSchedulerId_first_time(self):
-        d = self.insertTestData([
-            fakedb.Scheduler(name='distractor', class_name='Weekly',
-                schedulerid=992)
-        ])
-        d.addCallback(lambda _ :
-                self.db.schedulers.getSchedulerId('mysched', 'Nightly'))
-        d.addCallback(lambda schid :
-                self.checkScheduler(schid, 'mysched', 'Nightly'))
-        return d
-
-    def test_getSchedulerId_existing(self):
-        d = self.insertTestData([
-            fakedb.Scheduler(name='mysched', class_name='Nightly',
-                schedulerid=992)
-        ])
-        d.addCallback(lambda _ :
-                self.db.schedulers.getSchedulerId('mysched', 'Nightly'))
-        def check(schid):
-            self.assertEqual(schid, 992)
-            return self.checkScheduler(992, 'mysched', 'Nightly')
-        d.addCallback(check)
-        return d
-
-    def test_getSchedulerId_upgrade(self):
-        d = self.insertTestData([
-            fakedb.Scheduler(name='mysched', class_name='', schedulerid=992)
-        ])
-        d.addCallback(lambda _ :
-                self.db.schedulers.getSchedulerId('mysched', 'Hourly'))
-        def check(schid):
-            self.assertEqual(schid, 992)
-            # class has been filled in
-            return self.checkScheduler(992, 'mysched', 'Hourly')
         d.addCallback(check)
         return d

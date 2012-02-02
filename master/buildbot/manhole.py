@@ -138,8 +138,7 @@ class _BaseManhole(service.MultiService):
         self.checker = checker # to maybe compare later
 
         def makeNamespace():
-            # close over 'self' so we can get access to .parent later
-            master = self.parent
+            master = self.master
             namespace = {
                 'master': master,
                 'status': master.getStatus(),

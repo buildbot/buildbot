@@ -62,3 +62,7 @@ class BuildSetStatus:
     def waitUntilFinished(self):
         return self.status._buildset_waitUntilFinished(self.id)
 
+    def asDict(self):
+        d = dict(self.bsdict)
+        d["submitted_at"] = str(self.bsdict["submitted_at"])
+        return d

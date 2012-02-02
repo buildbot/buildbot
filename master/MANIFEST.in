@@ -4,7 +4,6 @@ include docs/examples/*.cfg
 include docs/conf.py
 include docs/Makefile
 include docs/buildbot.1
-include docs/*.png
 include docs/*.rst
 include docs/_images/*
 include docs/_static/*

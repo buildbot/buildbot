@@ -31,7 +31,7 @@ class TestChangesConnectorComponent(
     def setUp(self):
         d = self.setUpConnectorComponent(
             table_names=['changes', 'change_links', 'change_files',
-                'change_properties', 'scheduler_changes', 'schedulers',
+                'change_properties', 'scheduler_changes', 'objects',
                 'sourcestampsets', 'sourcestamps', 'sourcestamp_changes',
                 'patches', 'change_users', 'users'])
 
@@ -431,22 +431,22 @@ class TestChangesConnectorComponent(
 
     def test_pruneChanges(self):
         d = self.insertTestData([
-            fakedb.Scheduler(schedulerid=29),
+            fakedb.Object(id=29),
             fakedb.SourceStamp(id=234),
 
             fakedb.Change(changeid=11),
 
             fakedb.Change(changeid=12),
-            fakedb.SchedulerChange(schedulerid=29, changeid=12),
+            fakedb.SchedulerChange(objectid=29, changeid=12),
             fakedb.SourceStampChange(sourcestampid=234, changeid=12),
             ] +
 
             self.change13_rows + [
-            fakedb.SchedulerChange(schedulerid=29, changeid=13),
+            fakedb.SchedulerChange(objectid=29, changeid=13),
             ] +
 
             self.change14_rows + [
-            fakedb.SchedulerChange(schedulerid=29, changeid=14),
+            fakedb.SchedulerChange(objectid=29, changeid=14),
 
             fakedb.Change(changeid=15),
             fakedb.SourceStampChange(sourcestampid=234, changeid=15),

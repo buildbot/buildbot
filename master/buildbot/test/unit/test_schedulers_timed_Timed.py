@@ -20,7 +20,7 @@ from buildbot.test.util import scheduler
 
 class Timed(scheduler.SchedulerMixin, unittest.TestCase):
 
-    SCHEDULERID = 928754
+    OBJECTID = 928754
 
     def setUp(self):
         self.setUpScheduler()
@@ -37,7 +37,7 @@ class Timed(scheduler.SchedulerMixin, unittest.TestCase):
             return defer.succeed(None)
 
     def makeScheduler(self, firstBuildDuration=0, **kwargs):
-        sched = self.attachScheduler(self.Subclass(**kwargs), self.SCHEDULERID)
+        sched = self.attachScheduler(self.Subclass(**kwargs), self.OBJECTID)
         self.clock = sched._reactor = task.Clock()
         return sched
 

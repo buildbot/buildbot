@@ -20,12 +20,13 @@ from buildbot.db import base
 class SchedulersConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
-    def classifyChanges(self, schedulerid, classifications):
+    def classifyChanges(self, objectid, classifications):
         def thd(conn):
+            transaction = conn.begin()
             tbl = self.db.model.scheduler_changes
             ins_q = tbl.insert()
             upd_q = tbl.update(
-                    ((tbl.c.schedulerid == schedulerid)
+                    ((tbl.c.objectid == objectid)
                     & (tbl.c.changeid == sa.bindparam('wc_changeid'))))
             for changeid, important in classifications.items():
                 # convert the 'important' value into an integer, since that
@@ -33,7 +34,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 imp_int = important and 1 or 0
                 try:
                     conn.execute(ins_q,
-                            schedulerid=schedulerid,
+                            objectid=objectid,
                             changeid=changeid,
                             important=imp_int)
                 except (sqlalchemy.exc.ProgrammingError,
@@ -43,66 +44,33 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                             wc_changeid=changeid,
                             important=imp_int)
 
+            transaction.commit()
         return self.db.pool.do(thd)
 
-    def flushChangeClassifications(self, schedulerid, less_than=None):
+    def flushChangeClassifications(self, objectid, less_than=None):
         def thd(conn):
-            scheduler_changes_tbl = self.db.model.scheduler_changes
-            wc = (scheduler_changes_tbl.c.schedulerid == schedulerid)
+            sch_ch_tbl = self.db.model.scheduler_changes
+            wc = (sch_ch_tbl.c.objectid == objectid)
             if less_than is not None:
-                wc = wc & (scheduler_changes_tbl.c.changeid < less_than)
-            q = scheduler_changes_tbl.delete(whereclause=wc)
+                wc = wc & (sch_ch_tbl.c.changeid < less_than)
+            q = sch_ch_tbl.delete(whereclause=wc)
             conn.execute(q)
         return self.db.pool.do(thd)
 
     class Thunk: pass
-    def getChangeClassifications(self, schedulerid, branch=Thunk):
+    def getChangeClassifications(self, objectid, branch=Thunk):
         def thd(conn):
-            scheduler_changes_tbl = self.db.model.scheduler_changes
-            changes_tbl = self.db.model.changes
+            sch_ch_tbl = self.db.model.scheduler_changes
+            ch_tbl = self.db.model.changes
 
-            wc = (scheduler_changes_tbl.c.schedulerid == schedulerid)
+            wc = (sch_ch_tbl.c.objectid == objectid)
             if branch is not self.Thunk:
                 wc = wc & (
-                    (scheduler_changes_tbl.c.changeid == changes_tbl.c.changeid) &
-                    (changes_tbl.c.branch == branch))
+                    (sch_ch_tbl.c.changeid == ch_tbl.c.changeid) &
+                    (ch_tbl.c.branch == branch))
             q = sa.select(
-                [ scheduler_changes_tbl.c.changeid, scheduler_changes_tbl.c.important ],
+                [ sch_ch_tbl.c.changeid, sch_ch_tbl.c.important ],
                 whereclause=wc)
-            return dict([ (r.changeid, [False,True][r.important]) for r in conn.execute(q) ])
-        return self.db.pool.do(thd)
-
-    def getSchedulerId(self, sched_name, sched_class):
-        def thd(conn):
-            # get a matching row, *or* one without a class_name (from 0.8.0)
-            schedulers_tbl = self.db.model.schedulers
-            q = schedulers_tbl.select(
-                    whereclause=(
-                        (schedulers_tbl.c.name == sched_name) &
-                        ((schedulers_tbl.c.class_name == sched_class) |
-                         (schedulers_tbl.c.class_name == ''))))
-            res = conn.execute(q)
-            row = res.fetchone()
-            res.close()
-
-            # if no existing row, then insert a new one and return it.  There
-            # is no protection against races here, but that's OK - the worst
-            # that happens is two sourcestamps with identical content; before
-            # 0.8.4 this was always the case.
-            if not row:
-                q = schedulers_tbl.insert()
-                res = conn.execute(q,
-                        name=sched_name,
-                        class_name=sched_class,
-                        state='{}')
-                return res.inserted_primary_key[0]
-
-            # upgrade the row with the class name, if necessary
-            if row.class_name == '':
-                q = schedulers_tbl.update(
-                    whereclause=(
-                        (schedulers_tbl.c.name == sched_name) &
-                        (schedulers_tbl.c.class_name == '')))
-                conn.execute(q, class_name=sched_class)
-            return row.schedulerid
+            return dict([ (r.changeid, [False,True][r.important])
+                          for r in conn.execute(q) ])
         return self.db.pool.do(thd)

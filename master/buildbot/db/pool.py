@@ -15,11 +15,13 @@
 
 import time
 import traceback
+import inspect
 import shutil
 import os
 import sqlalchemy as sa
 import twisted
 import tempfile
+from buildbot.process import metrics
 from twisted.internet import reactor, threads, defer
 from twisted.python import threadpool, failure, versions, log
 
@@ -28,19 +30,44 @@ from twisted.python import threadpool, failure, versions, log
 #     from buildbot.db import pool
 #     pool.debug = True
 debug = False
+_debug_id = 1
 
 def timed_do_fn(f):
     """Decorate a do function to log before, after, and elapsed time,
     with the name of the calling function.  This is not speedy!"""
-    def wrap(*args, **kwargs):
+    def wrap(callable, *args, **kwargs):
+        global _debug_id
+
         # get a description of the function that called us
         st = traceback.extract_stack(limit=2)
         file, line, name, _ = st[0]
-        descr = "%s ('%s' line %d)" % (name, file, line)
+
+        # and its locals
+        frame = inspect.currentframe(1)
+        locals = frame.f_locals
+
+        # invent a unique ID for the description
+        id, _debug_id = _debug_id, _debug_id+1
+
+        descr = "%s-%08x" % (name, id)
 
         start_time = time.time()
-        log.msg("%s - before" % (descr,))
-        d = f(*args, **kwargs)
+        log.msg("%s - before ('%s' line %d)" % (descr, file, line))
+        for name in locals:
+            if name in ('self', 'thd'):
+                continue
+            log.msg("%s -   %s = %r" % (descr, name, locals[name]))
+
+        # wrap the callable to log the begin and end of the actual thread
+        # function
+        def callable_wrap(*args, **kargs):
+            log.msg("%s - thd start" % (descr,))
+            try:
+                return callable(*args, **kwargs)
+            finally:
+                log.msg("%s - thd end" % (descr,))
+        d = f(callable_wrap, *args, **kwargs)
+
         def after(x):
             end_time = time.time()
             elapsed = (end_time - start_time) * 1000
@@ -86,10 +113,11 @@ class DBThreadPool(threadpool.ThreadPool):
                 log.msg("NOTE: this old version of SQLite does not support "
                         "WAL journal mode; a busy master may encounter "
                         "'Database is locked' errors.  Consider upgrading.")
-            if vers < (3,3,17):
-                log.msg("NOTE: this old version of SQLite does not support "
-                        "multiple simultaneous accesses to the database; "
-                        "add the 'pool_size=1' argument to your db url")
+            if vers < (3,4):
+                log.msg("NOTE: this old version of SQLite is not supported. "
+                        "It fails for multiple simultaneous accesses to the "
+                        "database: try adding the 'pool_size=1' argument to "
+                        "your db url. ")
             brkn = self.__broken_sqlite = self.detect_bug1810()
             if brkn:
                 log.msg("Applying SQLite workaround from Buildbot bug #1810")
@@ -123,71 +151,93 @@ class DBThreadPool(threadpool.ThreadPool):
         reactor.removeSystemEventTrigger(self._stop_evt)
         self._stop()
 
-    def do(self, callable, *args, **kwargs):
-        def thd():
-            conn = self.engine.contextual_connect()
+    # Try about 170 times over the space of a day, with the last few tries
+    # being about an hour apart.  This is designed to span a reasonable amount
+    # of time for repairing a broken database server, while still failing
+    # actual problematic queries eventually
+    BACKOFF_START = 1.0
+    BACKOFF_MULT = 1.05
+    MAX_OPERATIONALERROR_TIME = 3600*24 # one day
+    def __thd(self, with_engine, callable, args, kwargs):
+        # try to call callable(arg, *args, **kwargs) repeatedly until no
+        # OperationalErrors occur, where arg is either the engine (with_engine)
+        # or a connection (not with_engine)
+        backoff = self.BACKOFF_START
+        start = time.time()
+        while True:
+            if with_engine:
+                arg = self.engine
+            else:
+                arg = self.engine.contextual_connect()
+
             if self.__broken_sqlite: # see bug #1810
-                conn.execute("select * from sqlite_master")
+                arg.execute("select * from sqlite_master")
             try:
-                rv = callable(conn, *args, **kwargs)
-                assert not isinstance(rv, sa.engine.ResultProxy), \
-                        "do not return ResultProxy objects!"
+                try:
+                    rv = callable(arg, *args, **kwargs)
+                    assert not isinstance(rv, sa.engine.ResultProxy), \
+                            "do not return ResultProxy objects!"
+                except sa.exc.OperationalError, e:
+                    text = e.orig.args[0]
+                    if "Lost connection" in text \
+                        or "database is locked" in text:
+
+                        # see if we've retried too much
+                        elapsed = time.time() - start
+                        if elapsed > self.MAX_OPERATIONALERROR_TIME:
+                            raise
+
+                        metrics.MetricCountEvent.log(
+                                "DBThreadPool.retry-on-OperationalError")
+                        log.msg("automatically retrying query after "
+                                "OperationalError (%ss sleep)" % backoff)
+
+                        # sleep (remember, we're in a thread..)
+                        time.sleep(backoff)
+                        backoff *= self.BACKOFF_MULT
+
+                        # and re-try
+                        continue
+                    else:
+                        raise
             finally:
-                conn.close()
-            return rv
-        return threads.deferToThreadPool(reactor, self, thd)
+                if not with_engine:
+                    arg.close()
+            break
+        return rv
+
+    def do(self, callable, *args, **kwargs):
+        return threads.deferToThreadPool(reactor, self,
+                self.__thd, False, callable, args, kwargs)
 
     def do_with_engine(self, callable, *args, **kwargs):
-        def thd():
-            if self.__broken_sqlite: # see bug #1810
-                self.engine.execute("select * from sqlite_master")
-            rv = callable(self.engine, *args, **kwargs)
-            assert not isinstance(rv, sa.engine.ResultProxy), \
-                    "do not return ResultProxy objects!"
-            return rv
-        return threads.deferToThreadPool(reactor, self, thd)
+        return threads.deferToThreadPool(reactor, self,
+                self.__thd, True, callable, args, kwargs)
 
     # older implementations for twisted < 0.8.2, which does not have
     # deferToThreadPool; this basically re-implements it, although it gets some
     # of the synchronization wrong - the thread may still be "in use" when the
     # deferred fires in the parent, which can lead to database accesses hopping
     # between threads.  In practice, this should not cause any difficulty.
-    def do_081(self, callable, *args, **kwargs): # pragma: no cover
-        d = defer.Deferred()
-        def thd():
-            try:
-                conn = self.engine.contextual_connect()
-                if self.__broken_sqlite: # see bug #1810
-                    conn.execute("select * from sqlite_master")
-                try:
-                    rv = callable(conn, *args, **kwargs)
-                    assert not isinstance(rv, sa.engine.ResultProxy), \
-                            "do not return ResultProxy objects!"
-                finally:
-                    conn.close()
-                reactor.callFromThread(d.callback, rv)
-            except:
-                reactor.callFromThread(d.errback, failure.Failure())
-        self.callInThread(thd)
-        return d
-    def do_with_engine_081(self, callable, *args, **kwargs): # pragma: no cover
-        d = defer.Deferred()
-        def thd():
-            try:
-                conn = self.engine
-                if self.__broken_sqlite: # see bug #1810
-                    conn.execute("select * from sqlite_master")
-                rv = callable(conn, *args, **kwargs)
-                assert not isinstance(rv, sa.engine.ResultProxy), \
-                        "do not return ResultProxy objects!"
-                reactor.callFromThread(d.callback, rv)
-            except:
-                reactor.callFromThread(d.errback, failure.Failure())
-        self.callInThread(thd)
-        return d
-
-    # use the 0.8.1 versions on old Twisteds
     if twisted.version < versions.Version('twisted', 8, 2, 0):
+        def __081_wrap(self, with_engine, callable, args, kwargs): # pragma: no cover
+            d = defer.Deferred()
+            def thd():
+                try:
+                    reactor.callFromThread(d.callback,
+                            self.__thd(with_engine, callable, args, kwargs))
+                except:
+                    reactor.callFromThread(d.errback,
+                            failure.Failure())
+            self.callInThread(thd)
+            return d
+
+        def do_081(self, callable, *args, **kwargs): # pragma: no cover
+            return self.__081_wrap(False, callable, args, kwargs)
+
+        def do_with_engine_081(self, callable, *args, **kwargs): # pragma: no cover
+            return self.__081_wrap(True, callable, args, kwargs)
+
         do = do_081
         do_with_engine = do_with_engine_081
 

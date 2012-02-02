@@ -200,21 +200,26 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         test_stdin_closed.skip = "not a POSIX platform"
 
     @compat.usesFlushLoggedErrors
-    def testBadCommand(self):
+    def test_startCommand_exception(self):
         b = FakeSlaveBuilder(False, self.basedir)
-        s = runprocess.RunProcess(b, ['command_that_doesnt_exist.exe'], self.basedir)
-        s.workdir = 1 # cause an exception
+        s = runprocess.RunProcess(b, ['whatever'], self.basedir)
+
+        # set up to cause an exception in _startCommand
+        def _startCommand(*args, **kwargs):
+            raise RuntimeError()
+        s._startCommand = _startCommand
+
         d = s.start()
         def check(err):
             err.trap(AbandonChain)
             stderr = []
             # Here we're checking that the exception starting up the command
-            # actually gets propogated back to the master.
+            # actually gets propogated back to the master in stderr.
             for u in b.updates:
                 if 'stderr' in u:
                     stderr.append(u['stderr'])
             stderr = "".join(stderr)
-            self.failUnless("TypeError" in stderr, stderr)
+            self.failUnless("RuntimeError" in stderr, stderr)
         d.addBoth(check)
         d.addBoth(lambda _ : self.flushLoggedErrors())
         return d

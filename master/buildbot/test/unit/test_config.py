@@ -1074,7 +1074,6 @@ class ReconfigurableServiceMixin(unittest.TestCase):
         @d.addCallback
         def check(_):
             prio_order = [ svc.called for svc in services ]
-            prio_order.reverse()
             called_order = sorted(prio_order)
             self.assertEqual(prio_order, called_order)
         return d

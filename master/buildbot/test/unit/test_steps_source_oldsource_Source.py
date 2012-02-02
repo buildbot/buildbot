@@ -13,12 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 from twisted.trial import unittest
 
 from buildbot.interfaces import IRenderable
 from buildbot.process.properties import Properties, WithProperties
 from buildbot.steps.source import _ComputeRepositoryURL, Source
-from buildbot.test.util import steps
+from buildbot.test.util import steps, sourcesteps
 
 
 class SourceStamp(object):
@@ -94,3 +95,50 @@ class TestSourceDescription(steps.BuildStepMixin, unittest.TestCase):
                       descriptionDone=['svn', 'update'])
         self.assertEqual(step.description, ['svn', 'update', '(running)'])
         self.assertEqual(step.descriptionDone, ['svn', 'update'])
+
+class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_start_alwaysUseLatest_True(self):
+        step = self.setupStep(Source(alwaysUseLatest=True),
+                {
+                    'branch': 'other-branch',
+                    'revision': 'revision',
+                },
+                patch = 'patch'
+                )
+        step.branch = 'branch'
+        step.startVC = mock.Mock()
+
+        step.startStep(mock.Mock())
+
+        self.assertEqual(step.startVC.call_args, (('branch', None, None), {}))
+
+    def test_start_alwaysUseLatest_False(self):
+        step = self.setupStep(Source(),
+                {
+                    'branch': 'other-branch',
+                    'revision': 'revision',
+                },
+                patch = 'patch'
+                )
+        step.branch = 'branch'
+        step.startVC = mock.Mock()
+
+        step.startStep(mock.Mock())
+
+        self.assertEqual(step.startVC.call_args, (('other-branch', 'revision', 'patch'), {}))
+
+    def test_start_alwaysUseLatest_False_no_branch(self):
+        step = self.setupStep(Source())
+        step.branch = 'branch'
+        step.startVC = mock.Mock()
+
+        step.startStep(mock.Mock())
+
+        self.assertEqual(step.startVC.call_args, (('branch', None, None), {}))

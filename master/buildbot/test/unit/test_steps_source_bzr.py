@@ -17,7 +17,7 @@ from twisted.trial import unittest
 from buildbot.steps.source import bzr
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import sourcesteps
-from buildbot.test.fake.remotecommand import ExpectShell, ExpectLogged
+from buildbot.test.fake.remotecommand import ExpectShell, Expect
 
 class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
 
@@ -35,8 +35,8 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.bzr',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/.bzr',
+                                logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'clean-tree', '--force'])
@@ -62,8 +62,8 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.bzr',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/.bzr',
+                                logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'clean-tree', '--force'])
@@ -88,8 +88,8 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.bzr',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/.bzr',
+                                logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'clean-tree', '--ignored', '--force'])
@@ -115,8 +115,8 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.bzr',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/.bzr',
+                                logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'clean-tree', '--ignored', '--force'])
@@ -141,8 +141,8 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.bzr',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/.bzr',
+                                logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'clean-tree', '--force'])
@@ -167,8 +167,8 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             + 0,
-            ExpectLogged('rmdir', dict(dir='wkdir',
-                                       logEnviron=True))
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
@@ -193,8 +193,8 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             + 0,
-            ExpectLogged('rmdir', dict(dir='wkdir',
-                                       logEnviron=True))
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
@@ -219,18 +219,18 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             + 0,
-            ExpectLogged('rmdir', dict(dir='build',
-                                       logEnviron=True))
+            Expect('rmdir', dict(dir='build',
+                                 logEnviron=True))
             + 0,
-            ExpectLogged('stat', dict(file='source/.bzr',
-                                      logEnviron=True))
+            Expect('stat', dict(file='source/.bzr',
+                                logEnviron=True))
             + 0,
             ExpectShell(workdir='source',
                         command=['bzr', 'update'])
             + 0,
-            ExpectLogged('cpdir', {'fromdir': 'source',
-                                   'logEnviron': True,
-                                   'todir': 'build'})
+            Expect('cpdir', {'fromdir': 'source',
+                             'logEnviron': True,
+                             'todir': 'build'})
             + 0,
             ExpectShell(workdir='source',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
@@ -249,8 +249,8 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.bzr',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/.bzr',
+                                logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'update'])
@@ -273,8 +273,8 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.bzr',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/.bzr',
+                                logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'update', '-r', '9384'])
@@ -296,8 +296,8 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.bzr',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/.bzr',
+                                logEnviron=True))
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
@@ -320,8 +320,8 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.bzr',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/.bzr',
+                                logEnviron=True))
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
@@ -344,8 +344,8 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/.bzr',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/.bzr',
+                                logEnviron=True))
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
