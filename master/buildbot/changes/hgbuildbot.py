@@ -21,9 +21,6 @@
 #
 # to use, configure hgbuildbot in .hg/hgrc like this:
 #
-#   [web]
-#   baseurl = ... # Base URL to use when publishing URLs in other locations like buildbot
-#                 
 #   [hooks]
 #   changegroup = python:buildbot.changes.hgbuildbot.hook
 #
@@ -83,7 +80,6 @@ except ImportError:
 
 def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     # read config parameters
-    baseurl = ui.config('web', 'baseurl', '')
     master = ui.config('hgbuildbot', 'master')
     if master:
         branchtype = ui.config('hgbuildbot', 'branchtype')
@@ -148,8 +144,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         end = repo.changelog.count()
 
     repository = strip(repo.root, stripcount)
-    repository = baseurl + repository
-    
+
     for rev in xrange(start, end):
         # send changeset
         node = repo.changelog.node(rev)
