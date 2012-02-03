@@ -55,10 +55,6 @@
 #   auth = user:passwd                   # How to authenticate, defaults to
 #                                        # change:changepw, which is also
 #                                        # the default of PBChangeSource.
-#
-#   include_baseurl = True|False         # Add the baseurl value of the [web]
-#                                        # section to the repository specifier.
-
 
 import os
 
@@ -87,11 +83,7 @@ except ImportError:
 
 def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     # read config parameters
-    include_baseurl = ui.configbool('hgbuildbot', 'include_baseurl', False)
-    if include_baseurl:
-        baseurl = ui.config('web', 'baseurl', '')
-    else:
-        baseurl = ''
+    baseurl = ui.config('web', 'baseurl', '')
     master = ui.config('hgbuildbot', 'master')
     if master:
         branchtype = ui.config('hgbuildbot', 'branchtype')
