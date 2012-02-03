@@ -83,6 +83,10 @@ Changes for Developers
   corresponding (undocumented)
   :py:class:`buildbot.db.buildsets.BuildsetsConnector` methods.
 
+* The Mercurial hook hgbuilbot.py now includes the complete URL in the 
+  repository attribute of a change. The URL is composed of the baseURL of the
+  repository and the repository identification inside Mercurial.
+  
 Features
 ~~~~~~~~
 
