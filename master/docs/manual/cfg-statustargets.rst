@@ -675,6 +675,13 @@ Note that there is a standalone HTTP server available for receiving GitHub
 notifications, as well: :file:`contrib/github_buildbot.py`.  This script may be
 useful in cases where you cannot expose the WebStatus for public consumption.
 
+.. warning::
+
+    The incoming HTTP requests for this hook are not authenticated in
+    any way.  Anyone who can access the web status can "fake" a request from
+    GitHub, potentially causing the buildmaster to run arbitrary code.  See
+    :bb:bug:`2186` for work to fix this problem.
+
 Google Code hook
 ################
 

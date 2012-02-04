@@ -11,6 +11,10 @@ The following are the release notes for Buildbot |version|.
 Master
 ------
 
+* If you are using the github hook, carefully consider the security
+  implications of allowing un-authenticated change requests, which can
+  potentially build arbitrary code.  See :bb:bug:`2186`.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
