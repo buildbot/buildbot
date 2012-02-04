@@ -13,6 +13,7 @@ Buildbot.
 
     style
     master-overview
+    definitions
     config
     utils
     database
