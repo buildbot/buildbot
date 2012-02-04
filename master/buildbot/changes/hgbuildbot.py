@@ -17,44 +17,7 @@
 # hook extension to send change notifications to buildbot when a changeset is
 # brought into the repository from elsewhere.
 #
-# default mode is to use mercurial branch
-#
-# to use, configure hgbuildbot in .hg/hgrc like this:
-#
-#   [web]
-#   baseurl = ... # Base URL to use when publishing URLs in other locations like buildbot
-#                 
-#   [hooks]
-#   changegroup = python:buildbot.changes.hgbuildbot.hook
-#
-#   [hgbuildbot]
-#   # config items go in here
-#
-# config items:
-#
-# REQUIRED:
-#   master = host:port                   # host to send buildbot changes
-#
-# OPTIONAL:
-#   branchtype = inrepo|dirname          # dirname: branch = name of directory
-#                                        #          containing the repository
-#                                        #
-#                                        # inrepo:  branch = mercurial branch
-#
-#   branch = branchname                  # if set, branch is always branchname
-#
-#   fork = True|False                    # if mercurial should fork before 
-#                                        # notifying the master
-#
-#   strip = 3                            # number of path to strip for local 
-#                                        # repo path to form 'repository'
-#
-#   category = None                      # category property
-#   project = ''                         # project this repository belong to
-#
-#   auth = user:passwd                   # How to authenticate, defaults to
-#                                        # change:changepw, which is also
-#                                        # the default of PBChangeSource.
+# See the Buildbot manual for configuration instructions.
 
 import os
 
@@ -83,7 +46,7 @@ except ImportError:
 
 def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     # read config parameters
-    baseurl = ui.config('web', 'baseurl', '')
+    baseurl = ui.config('hgbuildbot', 'baseurl', '')
     master = ui.config('hgbuildbot', 'master')
     if master:
         branchtype = ui.config('hgbuildbot', 'branchtype')
