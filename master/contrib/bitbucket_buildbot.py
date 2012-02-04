@@ -89,7 +89,6 @@ class BitBucketBuildBot(resource.Resource):
                 'comments': commit['message'],
                 'who': commit['author'],
                 'files': files,
-                'links': [revlink],
                 'repository': repo_url,
                 'properties': dict(),
                 }

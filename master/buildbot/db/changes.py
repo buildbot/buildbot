@@ -30,7 +30,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
-            links=None, revision=None, when_timestamp=None, branch=None,
+            revision=None, when_timestamp=None, branch=None,
             category=None, revlink='', properties={}, repository='',
             project='', uid=None, _reactor=reactor):
         assert project is not None, "project must be a string, not None"
@@ -47,7 +47,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             # note that in a read-uncommitted database like SQLite this
             # transaction does not buy atomicitiy - other database users may
-            # still come across a change without its links, files, properties,
+            # still come across a change without its files, properties,
             # etc.  That's OK, since we don't announce the change until it's
             # all in the database, but beware.
 
@@ -66,12 +66,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 repository=repository,
                 project=project))
             changeid = r.inserted_primary_key[0]
-            if links:
-                ins = self.db.model.change_links.insert()
-                conn.execute(ins, [
-                    dict(changeid=changeid, link=l)
-                        for l in links
-                    ])
             if files:
                 ins = self.db.model.change_files.insert()
                 conn.execute(ins, [
@@ -107,7 +101,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             row = rp.fetchone()
             if not row:
                 return None
-            # and fetch the ancillary data (links, files, properties)
+            # and fetch the ancillary data (files, properties)
             return self._chdict_from_change_row_thd(conn, row)
         d = self.db.pool.do(thd)
         return d
@@ -180,8 +174,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
             # and delete from all relevant tables, in dependency order
             for table_name in ('scheduler_changes', 'sourcestamp_changes',
-                               'change_files', 'change_links',
-                               'change_properties', 'changes', 'change_users'):
+                               'change_files', 'change_properties', 'changes',
+                               'change_users'):
                 table = self.db.model.metadata.tables[table_name]
                 conn.execute(
                     table.delete(table.c.changeid.in_(ids_to_delete)))
@@ -190,7 +184,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def _chdict_from_change_row_thd(self, conn, ch_row):
         # This method must be run in a db.pool thread, and returns a chdict
         # given a row from the 'changes' table
-        change_links_tbl = self.db.model.change_links
         change_files_tbl = self.db.model.change_files
         change_properties_tbl = self.db.model.change_properties
 
@@ -200,7 +193,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 files=[], # see below
                 comments=ch_row.comments,
                 is_dir=ch_row.is_dir,
-                links=[], # see below
                 revision=ch_row.revision,
                 when_timestamp=epoch2datetime(ch_row.when_timestamp),
                 branch=ch_row.branch,
@@ -209,12 +201,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 properties={}, # see below
                 repository=ch_row.repository,
                 project=ch_row.project)
-
-        query = change_links_tbl.select(
-                whereclause=(change_links_tbl.c.changeid == ch_row.changeid))
-        rows = conn.execute(query)
-        for r in rows:
-            chdict['links'].append(r.link)
 
         query = change_files_tbl.select(
                 whereclause=(change_files_tbl.c.changeid == ch_row.changeid))

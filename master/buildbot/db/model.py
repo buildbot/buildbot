@@ -143,12 +143,6 @@ class Model(base.DBConnectorComponent):
         sa.Column('filename', sa.String(1024), nullable=False), # TODO: sa.Text
     )
 
-    # Links (URLs) for changes
-    change_links = sa.Table('change_links', metadata,
-        sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
-        sa.Column('link', sa.String(1024), nullable=False), # TODO: sa.Text
-    )
-
     # Properties for changes
     change_properties = sa.Table('change_properties', metadata,
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
@@ -356,7 +350,6 @@ class Model(base.DBConnectorComponent):
     sa.Index('changes_category', changes.c.category)
     sa.Index('changes_when_timestamp', changes.c.when_timestamp)
     sa.Index('change_files_changeid', change_files.c.changeid)
-    sa.Index('change_links_changeid', change_links.c.changeid)
     sa.Index('change_properties_changeid', change_properties.c.changeid)
     sa.Index('scheduler_changes_objectid', scheduler_changes.c.objectid)
     sa.Index('scheduler_changes_changeid', scheduler_changes.c.changeid)

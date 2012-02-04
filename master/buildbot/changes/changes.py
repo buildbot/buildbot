@@ -36,6 +36,7 @@ class Change:
     branch = None
     category = None
     revision = None # used to create a source-stamp
+    links = [] # links are gone, but upgrade code expects this attribute
 
     @classmethod
     def fromChdict(cls, master, chdict):
@@ -57,7 +58,6 @@ class Change:
         change.who = chdict['author']
         change.comments = chdict['comments']
         change.isdir = chdict['is_dir']
-        change.links = chdict['links']
         change.revision = chdict['revision']
         change.branch = chdict['branch']
         change.category = chdict['category']
@@ -80,7 +80,7 @@ class Change:
 
         return defer.succeed(change)
 
-    def __init__(self, who, files, comments, isdir=0, links=None,
+    def __init__(self, who, files, comments, isdir=0,
                  revision=None, when=None, branch=None, category=None,
                  revlink='', properties={}, repository='', project='',
                  _fromChdict=False):
@@ -91,9 +91,6 @@ class Change:
         self.who = who
         self.comments = comments
         self.isdir = isdir
-        if links is None:
-            links = []
-        self.links = links
 
         def none_or_unicode(x):
             if x is None: return x
@@ -153,16 +150,8 @@ class Change:
         '''returns a dictonary with suitable info for html/mail rendering'''
         result = {}
 
-        files = []
-        for file in self.files:
-            link = filter(lambda s: s.find(file) != -1, self.links)
-            if len(link) == 1:
-                url = link[0]
-            else:
-                url = None
-            files.append(dict(url=url, name=file))
-
-        files = sorted(files, cmp=lambda a, b: a['name'] < b['name'])
+        files = [ dict(name=f) for f in self.files ]
+        files.sort(cmp=lambda a, b: a['name'] < b['name'])
 
         # Constant
         result['number'] = self.number

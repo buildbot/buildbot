@@ -24,7 +24,7 @@ class TestSourceStampsConnectorComponent(
 
     def setUp(self):
         d = self.setUpConnectorComponent(
-            table_names=['changes', 'change_links', 'change_files', 'patches',
+            table_names=['changes', 'change_files', 'patches',
                 'sourcestamp_changes', 'sourcestamps', 'sourcestampsets' ])
 
         def finish_setup(_):
