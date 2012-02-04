@@ -325,17 +325,8 @@ The script sends an email containing all the files submitted in
 one directory. It is invoked by using the :file:`CVSROOT/loginfo` facility.
 
 The Buildbot's :bb:chsrc:`CVSMaildirSource` knows how to parse these messages
-and turn them into Change objects. It takes two parameters, the directory name
-of the maildir root.  The function takes three parameters::
-
-    file   - file name
-    oldRev - old revision of the file
-    newRev - new revision of the file
-
-It must return, a url for the file in question. For example::
-
-    def fileToUrl( file, oldRev, newRev ):
-        return 'http://example.com/cgi-bin/cvsweb.cgi/' + file + '?rev=' + newRev
+and turn them into Change objects. It takes the directory name of the maildir
+root.  For example::
 
     from buildbot.changes.mail import CVSMaildirSource
     c['change_source'] = CVSMaildirSource("/home/buildbot/Mail")
