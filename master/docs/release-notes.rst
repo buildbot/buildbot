@@ -31,7 +31,7 @@ Deprecations, Removals, and Non-Compatible Changes
   available.
 
 * This is the last release of Buildbot that will be compatible with Python 2.4.
-  The next version will minimally require Python-2.5.
+  The next version will minimally require Python-2.5.  See :bb:bug:`2157`.
 
 * This is the last release of Buildbot that will be compatible with
   Twisted-8.x.y.  The next version will minimally require Twisted-9.0.0.  See
