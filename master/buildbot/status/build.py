@@ -134,7 +134,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
     def getInterestedUsers(self):
         # TODO: the Builder should add others: sheriffs, domain-owners
-        return self.blamelist + self.properties.getProperty('owners', [])
+        return self.properties.getProperty('owners', [])
 
     def getSteps(self):
         """Return a list of IBuildStepStatus objects. For invariant builds

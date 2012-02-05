@@ -481,10 +481,8 @@ class IBuildStatus(Interface):
 
     def getInterestedUsers():
         """Return a list of Users who will want to know about the results of
-        this build. This is a superset of getResponsibleUsers(): it adds
-        people who are interested in this build but who did not actually
-        make the Changes that went into it (build sheriffs, code-domain
-        owners)."""
+        this build but who did not actually make the Changes that went into it
+        (build sheriffs, code-domain owners)."""
 
     def getNumber():
         """Within each builder, each Build has a number. Return it."""
