@@ -60,6 +60,10 @@ def createUserObject(master, author, src=None):
             attr_type=usdict['attr_type'],
             attr_data=usdict['attr_data'])
 
+def findUserByAttr(master, attr_type, data):
+    return master.db.users.findUserByAttr(identifier=None,
+                                attr_type=attr_type,
+                                attr_data=data)
 
 def _extractContact(usdict, contact_types, uid):
     if usdict:
