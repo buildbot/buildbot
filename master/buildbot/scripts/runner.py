@@ -563,7 +563,7 @@ class UserOptions(base.SubcommandOptions):
 
     def _checkValidTypes(self, info):
         from buildbot.process.users import users
-        valid = set(['identifier', 'email'] + users.srcs)
+        valid = set(['identifier', 'email', 'irc'] + users.srcs)
 
         for user in info:
             for attr_type in user:
