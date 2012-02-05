@@ -30,6 +30,7 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.status import base
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, RETRY
 from buildbot.process.properties import Properties
+from buildbot.process.users import users
 
 # twisted.internet.ssl requires PyOpenSSL, so be resilient if it's missing
 try:
@@ -438,9 +439,17 @@ class IRCContact(base.StatusReceiver):
                 r += "  Build details are at %s" % buildurl
 
             if self.bot.showBlameList and build.getResults() != SUCCESS and len(build.changes) != 0:
-                r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
+                if self.bot.useUsers:
+                    d = users.getBuildContacts(self.master, build, ['irc', 'identifier'])
+                else:
+                    d = defer.succeed(set([c.who for c in build.changes]))
+                @d.addCallback
+                def addBlamelist(contacts):
+                    return r + '  blamelist: ' + ', '.join(list(set(contacts)))
+            else:
+                d = defer.succeed(r)
 
-            self.send(r)
+            d.addCallback(lambda r: self.send(r))
 
     def notify_for_finished(self, build):
         results = build.getResults()
@@ -839,7 +848,8 @@ class IrcStatusBot(irc.IRCClient):
 
     def __init__(self, nickname, password, channels, pm_to_nicks, status,
             categories, notify_events, noticeOnChannel=False,
-            useRevisions=False, showBlameList=False, useColors=True):
+            useRevisions=False, showBlameList=False, useColors=True,
+            useUsers=False):
         self.nickname = nickname
         self.channels = channels
         self.pm_to_nicks = pm_to_nicks
@@ -854,6 +864,7 @@ class IrcStatusBot(irc.IRCClient):
         self.useColors = useColors
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
+        self.useUsers = useUsers
         self._keepAliveCall = task.LoopingCall(lambda: self.ping(self.nickname))
 
     def connectionMade(self):
@@ -961,7 +972,7 @@ class IrcStatusFactory(ThrottledClientFactory):
     p = None
 
     def __init__(self, nickname, password, channels, pm_to_nicks, categories, notify_events,
-                 noticeOnChannel=False, useRevisions=False, showBlameList=False,
+                 noticeOnChannel=False, useRevisions=False, showBlameList=False, useUsers=False,
                  lostDelay=None, failedDelay=None, useColors=True, allowShutdown=False):
         ThrottledClientFactory.__init__(self, lostDelay=lostDelay,
                                         failedDelay=failedDelay)
@@ -975,6 +986,7 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.noticeOnChannel = noticeOnChannel
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
+        self.useUsers = useUsers
         self.useColors = useColors
         self.allowShutdown = allowShutdown
 
@@ -995,7 +1007,8 @@ class IrcStatusFactory(ThrottledClientFactory):
                           noticeOnChannel = self.noticeOnChannel,
                           useColors = self.useColors,
                           useRevisions = self.useRevisions,
-                          showBlameList = self.showBlameList)
+                          showBlameList = self.showBlameList,
+                          useUsers = self.useUsers)
         p.factory = self
         p.status = self.status
         p.control = self.control
@@ -1032,7 +1045,7 @@ class IRC(base.StatusReceiverMultiService):
             allowForce=False, categories=None, password=None, notify_events={},
             noticeOnChannel = False, showBlameList = True, useRevisions=False,
             useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
-            allowShutdown=False):
+            allowShutdown=False, useUsers=False):
         base.StatusReceiverMultiService.__init__(self)
 
         assert allowForce in (True, False) # TODO: implement others
@@ -1047,6 +1060,7 @@ class IRC(base.StatusReceiverMultiService):
         self.password = password
         self.allowForce = allowForce
         self.useRevisions = useRevisions
+        self.useUsers = useUsers
         self.categories = categories
         self.notify_events = notify_events
         self.allowShutdown = allowShutdown
@@ -1057,6 +1071,7 @@ class IRC(base.StatusReceiverMultiService):
                                   noticeOnChannel = noticeOnChannel,
                                   useRevisions = useRevisions,
                                   showBlameList = showBlameList,
+                                  useUsers = useUsers,
                                   lostDelay = lostDelay,
                                   failedDelay = failedDelay,
                                   useColors = useColors,
