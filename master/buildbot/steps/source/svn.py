@@ -13,7 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-import xml
+import xml.dom.minidom
+import xml.parsers.expat
 
 from twisted.python import log
 from twisted.internet import defer
