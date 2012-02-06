@@ -62,6 +62,12 @@ Deprecations, Removals, and Non-Compatible Changes
   master, which translates to the default branch on the upstream repository.  See
   :bb:pull:`301`.
 
+* The format of the repository strings created by ``hgbuildbot`` has changed to
+  contain the entire repository URL, based on the ``web.baseurl`` value in
+  ``hgrc``.  To continue the old (incorrect) behavior, set
+  ``hgbuildbot.baseurl`` to an empty string as suggested in :ref:`the Buildbot
+  manual <Mercurial-Hook>`.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -86,11 +92,6 @@ Changes for Developers
   ``scheduler_upstream_buildsets`` table has been removed, along with
   corresponding (undocumented)
   :py:class:`buildbot.db.buildsets.BuildsetsConnector` methods.
-
-* The Mercurial hook (hgbuilbot) can now include the complete URL in the 
-  repository attribute of a change. The URL is composed of the base URL of the
-  repository and the repository identification inside Mercurial.  See
-  :ref:`Mercurial-Hook`.
 
 Features
 ~~~~~~~~

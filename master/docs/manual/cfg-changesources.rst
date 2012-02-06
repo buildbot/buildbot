@@ -634,9 +634,17 @@ Then a repopath of ``/var/repos/myproject/release`` would have its left 3
 slashes stripped, leaving ``myproject/release``, after which the base URL would
 be prepended, to create ``http://hg.myorg.com/repos/myproject/release``.
 
+The ``hgbuildbot`` ``baseurl`` value defaults to the value of the same
+parameter in the ``web`` section of the configuration.
+
 .. note:: older versions of Buildbot created repository strings that did not
-    contain an entire URL.  To continue this pattern, omit the ``baseurl``
-    parameter.
+    contain an entire URL.  To continue this pattern, set the ``hgbuildbot``
+    ``baseurl`` parameter to an empty string:
+
+    .. code-block:: ini
+
+        [hgbuildbot]
+        baseurl = http://hg.myorg.com/repos/
 
 .. _Bzr-Hook:
 

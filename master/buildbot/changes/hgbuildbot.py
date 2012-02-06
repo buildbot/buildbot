@@ -46,7 +46,8 @@ except ImportError:
 
 def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     # read config parameters
-    baseurl = ui.config('hgbuildbot', 'baseurl', '')
+    baseurl = ui.config('hgbuildbot', 'baseurl',
+                            ui.config('web', 'baseurl', ''))
     master = ui.config('hgbuildbot', 'master')
     if master:
         branchtype = ui.config('hgbuildbot', 'branchtype')
