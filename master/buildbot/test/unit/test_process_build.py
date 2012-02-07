@@ -535,7 +535,67 @@ class TestSingleSourceStamps(unittest.TestCase):
         source1 = self.build.getSourceStamp(codebase)
         self.assertTrue(source1 is not None)
         self.assertEqual( [source1.repository, source1.revision], ["repoA", "12345"])
-       
+
+class TestSetupProperties(unittest.TestCase):
+    """
+    Test that the property values, based on the available requests, are 
+    initialized properly
+    """
+    def setUp(self):
+        self.props = {}
+        r = FakeRequest()
+        r.sources = []
+        r.sources.append(FakeSource())
+        r.sources[0].changes = [FakeChange()]
+        r.sources[0].repository = "http://svn-repo-A"
+        r.sources[0].codebase = "A"
+        r.sources[0].branch = "develop"
+        r.sources[0].revision = "12345"
+        r.sources.append(FakeSource())
+        r.sources[1].changes = [FakeChange()]
+        r.sources[1].repository = "http://svn-repo-B"
+        r.sources[1].codebase = "B"
+        r.sources[1].revision = "34567"
+        self.build = Build([r])
+        self.build.setStepFactories([])
+        self.builder = Mock()
+        self.build.setBuilder(self.builder)
+        self.build.build_status = FakeBuildStatus()
+        # record properties that will be set
+        self.build.build_status.setProperty = self.setProperty
+
+    def setProperty(self, n,v,s, runtime = False):
+        if s not in self.props:
+            self.props[s] = {}
+        if not self.props[s]:
+            self.props[s] = {}
+        self.props[s][n] = v
+        
+    def test_repositoryDependentProperties_codebases(self):
+        self.build.setupProperties()
+        codebase = self.props["Build"]["codebase"]
+        self.assertEqual(codebase, "A")
+        
+    def test_repositoryDependentProperties_repositories(self):
+        self.build.setupProperties()
+        repository = self.props["Build"]["repository"]
+        self.assertEqual(repository, "http://svn-repo-A")
+        
+    def test_repositoryDependentProperties_revisions(self):
+        self.build.setupProperties()
+        revision = self.props["Build"]["revision"]
+        self.assertEqual(revision, "12345")
+        
+    def test_repositoryDependentProperties_branches(self):
+        self.build.setupProperties()
+        branch = self.props["Build"]["branch"]
+        self.assertEqual(branch, "develop")
+
+    def test_repositoryDependentProperties_projects(self):
+        self.build.setupProperties()
+        project = self.props["Build"]["project"]
+        self.assertEqual(project, '')
+        
 class TestBuildProperties(unittest.TestCase):
     """
     Test that a Build has the necessary L{IProperties} methods, and that they
