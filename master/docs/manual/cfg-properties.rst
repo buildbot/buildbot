@@ -165,12 +165,12 @@ The simplest form of annotation is to wrap the property name with
    from buildbot.steps.shell import ShellCommand
    from buildbot.process.properties import Property
 
-   f.addStep(ShellCommand(command=[ 'echo', 'buildername:', Property('buildername') ])
+   f.addStep(ShellCommand(command=[ 'echo', 'buildername:', Property('buildername') ]))
 
 You can specify a default value by passing a ``default`` keyword argument::
 
    f.addStep(ShellCommand(command=[ 'echo', 'warnings:',
-                                    Property('warnings', default='none') ])
+                                    Property('warnings', default='none') ]))
 
 The default value is used when the property doesn't exist, or when the value is
 something Python regards as ``False``. The ``defaultWhenFalse`` argument can be
@@ -178,11 +178,12 @@ set to ``False`` to force buildbot to use the default argument only if the
 parameter is not set::
 
    f.addStep(ShellCommand(command=[ 'echo', 'warnings:',
-                    Property('warnings', default='none', defaultWhenFalse=False) ])
+                    Property('warnings', default='none', defaultWhenFalse=False) ]))
 
 The default value can reference other properties, e.g., ::
 
     command=Property('command', default=Property('default-command'))
+
 
 .. Index:: single; Properties; WithProperties
 
@@ -222,10 +223,12 @@ character"). ::
    from buildbot.steps.shell import ShellCommand
    from buildbot.process.properties import WithProperties
    f.addStep(ShellCommand(command=[ 'make', WithProperties('REVISION=%(got_revision)s'),
-                                    'dist' ])
+                                    'dist' ]))
 
 This example will result in a ``make`` command with an argument like
 ``REVISION=12098``.
+
+.. _WithProperties-DictStyle:
 
 The dictionary-style interpolation supports a number of more advanced
 syntaxes in the parentheses.
@@ -253,3 +256,47 @@ Note: like python, you can use either positional interpolation *or*
 dictionary-style interpolation, not both. Thus you cannot use a string like
 ``WithProperties("foo-%(revision)s-%s", "branch")``.
 
+.. Index:: single; Properties; WithSources
+
+.. _WithSources:
+
+WithSources
++++++++++++
+
+A build may contain more than one sourcestamp. Buildsteps may need information 
+from a sourcestamp like repository or branch to be able to perform their task.
+The class :class:`WithSources` interpolates the atrributes from a single sourcestamp
+into a string that can be used by a buildstep. 
+
+The simplest use of this class is with positional string interpolation.  Here,
+``%s`` is used as a placeholder, and attribute names are given as subsequent
+arguments::
+
+    from buildbot.steps.shell import ShellCommand
+    from buildbot.process.properties import WithSources
+    f.addStep(ShellCommand(
+              command=["tar", "czf",
+                       WithSources("mailexe","mailer-%s-%s.tar.gz", "branch", "revision"),
+                       "source"]))
+    
+In this example 'mailexe' is the codebase for the mail application. Branch and revision
+are the attibute names inside the sourcestamp that belongs to the application.
+
+.. index:: unsupported format character
+
+The more common pattern is to use python dictionary-style string interpolation
+by using the ``%(propname)s`` syntax. In this form, the property name goes in
+the parentheses, as above.  A common mistake is to omit the trailing "s",
+leading to a rather obscure error from Python ("ValueError: unsupported format
+character")::
+
+   from buildbot.steps.shell import ShellCommand
+   from buildbot.process.properties import WithSources
+   f.addStep(ShellCommand(command=[ 'make', WithSources('mailexe','REVISION=%(revision)s'),
+                                    'dist' ]))
+
+This example will result in a ``make`` command with an argument like
+``REVISION=12098``.
+
+The :ref:`dictionary style<WithProperties-DictStyle>` interpolation supports a number of more advanced
+syntaxes in the parentheses.
