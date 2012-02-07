@@ -41,9 +41,6 @@ def buildURL( options ):
         # A comment is required by the buildbot DB
         urlDict['comments'] = 'post_build_request submission'
 
-    if options.links:
-        urlDict['links'] = json.dumps(options.links)
-
     if options.revision:
         urlDict['revision'] = options.revision
 
@@ -119,11 +116,6 @@ parser.add_option("-f", "--file", dest='files', action="append", metavar="FILE",
 parser.add_option("-c", "--comments", dest='comments', metavar="COMMENTS",
             help=textwrap.dedent("""\
             Comments for the change. This becomes the Change.comments attribute
-            """))
-parser.add_option("-l", "--link", dest='links', action="append", metavar="LINKS",
-            help=textwrap.dedent("""\
-            These are links for the source. 
-            This becomes the Change.links attribute.
             """))
 parser.add_option("-R", "--revision", dest='revision', metavar="REVISION",
             help=textwrap.dedent("""\

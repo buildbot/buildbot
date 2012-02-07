@@ -128,7 +128,7 @@ class LogFileWatcher:
 
 if runtime.platformType == 'posix':
     class ProcGroupProcess(Process):
-        """Sumple subclass of Process to also make the spawned process a process
+        """Simple subclass of Process to also make the spawned process a process
         group leader, so we can kill all members of the process group."""
 
         def _setupChild(self, *args, **kwargs):

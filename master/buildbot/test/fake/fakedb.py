@@ -125,7 +125,7 @@ class Change(Row):
         project = 'proj',
     )
 
-    lists = ('files', 'links',)
+    lists = ('files',)
     dicts = ('properties',)
     id_column = 'changeid'
 
@@ -136,17 +136,6 @@ class ChangeFile(Row):
     defaults = dict(
         changeid = None,
         filename = None,
-    )
-
-    required_columns = ('changeid',)
-
-
-class ChangeLink(Row):
-    table = "change_links"
-
-    defaults = dict(
-        changeid = None,
-        link = None,
     )
 
     required_columns = ('changeid',)
@@ -349,10 +338,6 @@ class FakeChangesComponent(FakeDBComponent):
                 ch = self.changes[row.changeid]
                 ch.files.append(row.filename)
 
-            elif isinstance(row, ChangeLink):
-                ch = self.changes[row.changeid]
-                ch.links.append(row.link)
-
             elif isinstance(row, ChangeProperty):
                 ch = self.changes[row.changeid]
                 n, vs = row.property_name, row.property_value
@@ -366,7 +351,7 @@ class FakeChangesComponent(FakeDBComponent):
     # component methods
 
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
-            links=None, revision=None, when_timestamp=None, branch=None,
+            revision=None, when_timestamp=None, branch=None,
             category=None, revlink='', properties={}, repository='',
             project='', uid=None):
         if self.changes:
@@ -387,7 +372,6 @@ class FakeChangesComponent(FakeDBComponent):
             repository=repository,
             project=project)
         ch.files = files
-        ch.links = links
         ch.properties = properties
 
         return defer.succeed(changeid)
@@ -409,7 +393,6 @@ class FakeChangesComponent(FakeDBComponent):
                 files=row.files,
                 comments=row.comments,
                 is_dir=row.is_dir,
-                links=row.links,
                 revision=row.revision,
                 when_timestamp=epoch2datetime(row.when_timestamp),
                 branch=row.branch,
@@ -449,7 +432,6 @@ class FakeChangesComponent(FakeDBComponent):
             files=change.files,
             comments=change.comments,
             is_dir=change.isdir,
-            links=change.links,
             revision=change.revision,
             when_timestamp=change.when,
             branch=change.branch,

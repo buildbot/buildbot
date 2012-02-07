@@ -372,6 +372,14 @@ def upgradeMaster(config):
     m = Maker(config)
     basedir = os.path.expanduser(config['basedir'])
 
+    if runtime.platformType != 'win32': # no pids on win32
+        if not config['quiet']: print "checking for running master"
+        pidfile = os.path.join(basedir, 'twistd.pid')
+        if os.path.exists(pidfile):
+            print "'%s' exists - is this master still running?" % (pidfile,)
+            yield 1
+            return
+
     if not config['quiet']: print "checking master.cfg"
     try:
         master_cfg = config_module.MasterConfig.loadConfig(

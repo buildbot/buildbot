@@ -11,6 +11,10 @@ The following are the release notes for Buildbot |version|.
 Master
 ------
 
+* If you are using the github hook, carefully consider the security
+  implications of allowing un-authenticated change requests, which can
+  potentially build arbitrary code.  See :bb:bug:`2186`.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -27,7 +31,7 @@ Deprecations, Removals, and Non-Compatible Changes
   available.
 
 * This is the last release of Buildbot that will be compatible with Python 2.4.
-  The next version will minimally require Python-2.5.
+  The next version will minimally require Python-2.5.  See :bb:bug:`2157`.
 
 * This is the last release of Buildbot that will be compatible with
   Twisted-8.x.y.  The next version will minimally require Twisted-9.0.0.  See
@@ -57,6 +61,12 @@ Deprecations, Removals, and Non-Compatible Changes
 * The master-side Git step now checks out 'HEAD' by default, rather than
   master, which translates to the default branch on the upstream repository.  See
   :bb:pull:`301`.
+
+* The format of the repository strings created by ``hgbuildbot`` has changed to
+  contain the entire repository URL, based on the ``web.baseurl`` value in
+  ``hgrc``.  To continue the old (incorrect) behavior, set
+  ``hgbuildbot.baseurl`` to an empty string as suggested in :ref:`the Buildbot
+  manual <Mercurial-Hook>`.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -121,7 +131,7 @@ Features
   all the triggered builds. This URL is displayed in the waterfall and build
   details. See :bb:bug:`2170`.
 
-* The bb:src:`master/contrib/fakemaster.py`` script allows you to run arbitrary
+* The :bb:src:`master/contrib/fakemaster.py`` script allows you to run arbitrary
   commands on a slave by emulating a master.  See the file itself for
   documentation.
 

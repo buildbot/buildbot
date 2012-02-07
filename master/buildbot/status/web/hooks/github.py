@@ -117,7 +117,7 @@ def process_change(payload, user, repo, repo_url, project):
         changes = []
         newrev = payload['after']
         refname = payload['ref']
-        log.msg( "in process_change" )
+
         # We only care about regular heads, i.e. branches
         match = re.match(r"^refs\/heads\/(.+)$", refname)
         if not match:

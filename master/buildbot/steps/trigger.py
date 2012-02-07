@@ -122,7 +122,7 @@ class Trigger(LoggingBuildStep):
                 got = properties.getProperty('got_revision')
                 if got:
                     ss = ss.getAbsoluteSourceStamp(got)
-            d = ss.getSourceStampId(master)
+            d = ss.getSourceStampSetId(master)
         def start_builds(ssid):
             dl = []
             for scheduler in triggered_schedulers:

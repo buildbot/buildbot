@@ -228,7 +228,7 @@ class CommandlineUserManager(UsersBase):
         self.passwd = passwd
 
         assert port, "A port must be specified for a PB connection"
-        self.port = int(port)
+        self.port = port
         self.registration = None
 
     def startService(self):

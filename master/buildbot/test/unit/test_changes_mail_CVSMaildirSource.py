@@ -70,13 +70,10 @@ Log Message:
 Changes for changes sake
 """
 
-def fileToUrl( file, oldRev, newRev ):
-    return 'http://example.com/cgi-bin/cvsweb.cgi/' + file + '?rev=' + newRev
-
 class TestCVSMaildirSource(unittest.TestCase):
     def test_CVSMaildirSource_create_change_from_cvs1_11msg(self):
         m = message_from_string(cvs1_11_msg)
-        src = CVSMaildirSource('/dev/null', urlmaker=fileToUrl)
+        src = CVSMaildirSource('/dev/null')
         try:
             src, chdict = src.parse( m )
         except:
@@ -87,7 +84,6 @@ class TestCVSMaildirSource(unittest.TestCase):
         self.assert_(chdict['files'][0] == 'base/module/src/make/GNUmakefile')
         self.assert_(chdict['comments'] == 'Commented out some stuff.\n')
         self.assert_(chdict['isdir'] == False)
-        self.assert_(len(chdict['links']) == 1)
         self.assert_(chdict['revision'] == '2010-08-07 11:11:49')
         dateTuple = parsedate_tz('Sat, 07 Aug 2010 11:11:49 +0000')
         self.assert_(chdict['when'] == mktime_tz(dateTuple))
@@ -99,7 +95,7 @@ class TestCVSMaildirSource(unittest.TestCase):
 
     def test_CVSMaildirSource_create_change_from_cvs1_12msg(self):
         m = message_from_string(cvs1_12_msg)
-        src = CVSMaildirSource('/dev/null', urlmaker=fileToUrl)
+        src = CVSMaildirSource('/dev/null')
         try:
             src, chdict = src.parse( m )
         except:
@@ -111,7 +107,6 @@ class TestCVSMaildirSource(unittest.TestCase):
         self.assert_(chdict['files'][1] == 'base/module/src/file2.cpp')
         self.assert_(chdict['comments'] == 'Changes for changes sake\n')
         self.assert_(chdict['isdir'] == False)
-        self.assert_(len(chdict['links']) == 2)
         self.assert_(chdict['revision'] == '2010-08-11 04:56:44')
         dateTuple = parsedate_tz('Wed, 11 Aug 2010 04:56:44 +0000')
         self.assert_(chdict['when'] == mktime_tz(dateTuple))
@@ -211,7 +206,7 @@ class TestCVSMaildirSource(unittest.TestCase):
     def test_CVSMaildirSource_create_change_with_property(self):
         m = message_from_string(cvs1_11_msg)
         propDict = { 'foo' : 'bar' }
-        src = CVSMaildirSource('/dev/null', urlmaker=fileToUrl, properties=propDict)
+        src = CVSMaildirSource('/dev/null', properties=propDict)
         try:
             chdict = src.parse( m )[1]
         except:

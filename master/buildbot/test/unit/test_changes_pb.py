@@ -221,13 +221,11 @@ class TestChangePerspective(unittest.TestCase):
         cp = pb.ChangePerspective(self.master, None)
         d = cp.perspective_addChange(dict(author=u"\N{SNOWMAN}",
                     comments=u"\N{SNOWMAN}",
-                    links=[u'\N{HEAVY BLACK HEART}'],
                     files=[u'\N{VERY MUCH GREATER-THAN}']))
         def check(_):
             self.assertEqual(self.added_changes,
                     [ dict(author=u"\N{SNOWMAN}",
                       comments=u"\N{SNOWMAN}",
-                      links=[u'\N{HEAVY BLACK HEART}'],
                       files=[u'\N{VERY MUCH GREATER-THAN}']) ])
         d.addCallback(check)
         return d
@@ -236,13 +234,11 @@ class TestChangePerspective(unittest.TestCase):
         cp = pb.ChangePerspective(self.master, None)
         d = cp.perspective_addChange(dict(author=u"\N{SNOWMAN}".encode('utf8'),
                     comments=u"\N{SNOWMAN}".encode('utf8'),
-                    links=[u'\N{HEAVY BLACK HEART}'.encode('utf8')],
                     files=[u'\N{VERY MUCH GREATER-THAN}'.encode('utf8')]))
         def check(_):
             self.assertEqual(self.added_changes,
                     [ dict(author=u"\N{SNOWMAN}",
                       comments=u"\N{SNOWMAN}",
-                      links=[u'\N{HEAVY BLACK HEART}'],
                       files=[u'\N{VERY MUCH GREATER-THAN}']) ])
         d.addCallback(check)
         return d

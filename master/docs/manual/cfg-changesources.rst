@@ -324,22 +324,12 @@ contrib directory.
 The script sends an email containing all the files submitted in
 one directory. It is invoked by using the :file:`CVSROOT/loginfo` facility.
 
-The Buildbot's :bb:chsrc:`CVSMaildirSource` knows how to parse 
-these messages and turn them into Change objects. It takes two parameters, 
-the directory name of the maildir root, and an optional function to create
-a URL for each file. The function takes three parameters::
-
-    file   - file name
-    oldRev - old revision of the file
-    newRev - new revision of the file
-
-It must return, a url for the file in question. For example::
-
-    def fileToUrl( file, oldRev, newRev ):
-        return 'http://example.com/cgi-bin/cvsweb.cgi/' + file + '?rev=' + newRev
+The Buildbot's :bb:chsrc:`CVSMaildirSource` knows how to parse these messages
+and turn them into Change objects. It takes the directory name of the maildir
+root.  For example::
 
     from buildbot.changes.mail import CVSMaildirSource
-    c['change_source'] = CVSMaildirSource("/home/buildbot/Mail", urlmaker=fileToUrl)
+    c['change_source'] = CVSMaildirSource("/home/buildbot/Mail")
 
 Configuration of CVS and buildbot_cvs_mail.py
 #############################################
@@ -519,6 +509,7 @@ hostname/portnumber as appropriate for your buildbot:
     
     [hgbuildbot]
     master = buildmaster.example.org:9987
+    # .. other hgbuildbot parameters ..
 
 .. note:: Mercurial lets you define multiple ``changegroup`` hooks by
    giving them distinct names, like ``changegroup.foo`` and
@@ -536,6 +527,12 @@ whereas the ``incoming`` hook is run with just one revision at a
 time. The ``hgbuildbot.hook`` function will only work with the
 ``changegroup`` hook.
 
+Changes' attribute ``properties`` has an entry ``is_merge`` which is set to
+true when the change was caused by a merge.
+
+Authentication
+##############
+
 If the buildmaster :bb:chsrc:`PBChangeSource` is configured to require
 sendchange credentials then you can set these with the ``auth``
 parameter. When this parameter is not set it defaults to
@@ -546,8 +543,8 @@ authentication.
 .. code-block:: ini
 
     [hgbuildbot]
-    master = buildmaster.example.org:9987
     auth = clientname:supersecret
+    # ...
 
 You can set this parameter in either the global :file:`/etc/mercurial/hgrc`,
 your personal :file:`~/.hgrc` file or the repository local :file:`.hg/hgrc`
@@ -555,12 +552,15 @@ file. But since this value is stored in plain text, you must make sure that
 it can only be read by those users that need to know the authentication
 credentials.
 
+Branch Type
+###########
+
 The ``[hgbuildbot]`` section has two other parameters that you
 might specify, both of which control the name of the branch that is
 attached to the changes coming from this hook.
 
-One common branch naming policy for Mercurial repositories is to use
-it just like Darcs: each branch goes into a separate repository, and
+One common branch naming policy for Mercurial repositories is for
+each branch to go into a separate repository, and
 all the branches for a single project share a common parent directory.
 For example, you might have :file:`/var/repos/{PROJECT}/trunk/` and
 :file:`/var/repos/{PROJECT}/release`. To use this style, use the
@@ -570,8 +570,8 @@ component of the repository's enclosing directory as the branch name:
 .. code-block:: ini
 
     [hgbuildbot]
-    master = buildmaster.example.org:9987
     branchtype = dirname
+    # ...
 
 Another approach is to use Mercurial's built-in branches (the kind
 created with :command:`hg branch` and listed with :command:`hg
@@ -584,8 +584,8 @@ with the Change object, use ``branchtype = inrepo``:
 .. code-block:: ini
 
     [hgbuildbot]
-    master = buildmaster.example.org:9987
     branchtype = inrepo
+    # ...
 
 Finally, if you want to simply specify the branchname directly, for
 all changes, use ``branch = BRANCHNAME``. This overrides
@@ -594,29 +594,57 @@ all changes, use ``branch = BRANCHNAME``. This overrides
 .. code-block:: ini
 
     [hgbuildbot]
-    master = buildmaster.example.org:9987
     branch = trunk
+    # ...
 
 If you use ``branch=`` like this, you'll need to put a separate
 :file:`.hgrc` in each repository. If you use ``branchtype=``, you may be
 able to use the same :file:`.hgrc` for all your repositories, stored in
 :file:`~/.hgrc` or :file:`/etc/mercurial/hgrc`.
 
-As twisted needs to hook some Signals, and that some web server are
-strictly forbiding that, the parameter ``fork`` in the
+Compatibility
+#############
+
+As twisted needs to hook some signals, and some web servers 
+strictly forbid that, the parameter ``fork`` in the
 ``[hgbuildbot]`` section will instruct mercurial to fork before
 sending the change request. Then as the created process will be of short
 life, it is considered as safe to disable the signal restriction in
 the Apache setting like that ``WSGIRestrictSignal Off``. Refer to the
 documentation of your web server for other way to do the same.
 
-The ``category`` parameter sets the category for any changes generated from
-the hook.  Likewise, the ``project`` parameter sets the project.  Changes'
-``repository`` attributes are formed from the Mercurial repo path by
-stripping ``strip`` slashes.
+Resulting Changes
+#################
 
-Changes' attribute ``properties`` has an entry ``is_merge`` which is set to 
-true when the change was caused by a merge.
+The ``category`` parameter sets the category for any changes generated from
+the hook.  Likewise, the ``project`` parameter sets the project.
+
+Changes' ``repository`` attributes are formed from the Mercurial repo path by
+stripping ``strip`` slashes on the left, then prepending the ``baseurl``.  For
+example, assume the following parameters:
+
+.. code-block:: ini
+
+    [hgbuildbot]
+    baseurl = http://hg.myorg.com/repos/
+    strip = 3
+    # ...
+
+Then a repopath of ``/var/repos/myproject/release`` would have its left 3
+slashes stripped, leaving ``myproject/release``, after which the base URL would
+be prepended, to create ``http://hg.myorg.com/repos/myproject/release``.
+
+The ``hgbuildbot`` ``baseurl`` value defaults to the value of the same
+parameter in the ``web`` section of the configuration.
+
+.. note:: older versions of Buildbot created repository strings that did not
+    contain an entire URL.  To continue this pattern, set the ``hgbuildbot``
+    ``baseurl`` parameter to an empty string:
+
+    .. code-block:: ini
+
+        [hgbuildbot]
+        baseurl = http://hg.myorg.com/repos/
 
 .. _Bzr-Hook:
 
