@@ -573,28 +573,28 @@ class TestSetupProperties(unittest.TestCase):
         
     def test_repositoryDependentProperties_codebases(self):
         self.build.setupProperties()
-        codebases = self.props["Build"]["sources.codebases"]
-        self.assertEqual(codebases, ["A", "B"])
+        codebase = self.props["Build"]["codebase"]
+        self.assertEqual(codebase, "A")
         
     def test_repositoryDependentProperties_repositories(self):
         self.build.setupProperties()
-        repositories = self.props["Build"]["sources.repositories"]
-        self.assertEqual(repositories, {"A":"http://svn-repo-A", "B":"http://svn-repo-B"})
+        repository = self.props["Build"]["repository"]
+        self.assertEqual(repository, "http://svn-repo-A")
         
     def test_repositoryDependentProperties_revisions(self):
         self.build.setupProperties()
-        revisions = self.props["Build"]["sources.revisions"]
-        self.assertEqual(revisions, {"A":"12345", "B":"34567"})
+        revision = self.props["Build"]["revision"]
+        self.assertEqual(revision, "12345")
         
     def test_repositoryDependentProperties_branches(self):
         self.build.setupProperties()
-        branches = self.props["Build"]["sources.branches"]
-        self.assertEqual(branches, {"A":"develop", "B":None})
+        branch = self.props["Build"]["branch"]
+        self.assertEqual(branch, "develop")
 
     def test_repositoryDependentProperties_projects(self):
         self.build.setupProperties()
-        projects = self.props["Build"]["sources.projects"]
-        self.assertEqual(projects, {"A":'', "B":''})
+        project = self.props["Build"]["project"]
+        self.assertEqual(project, '')
         
 class TestBuildProperties(unittest.TestCase):
     """
