@@ -477,7 +477,7 @@ The :bb:chsrc:`PBChangeSource` is created with the following arguments.
 For example::
 
     from buildbot.changes import pb
-    c['changes'] = pb.PBChangeSource(port=9999, user='laura', passwd='fpga')
+    c['change_source'] = pb.PBChangeSource(port=9999, user='laura', passwd='fpga')
 
 The following hooks are useful for sending changes to a :bb:chsrc:`PBChangeSource`\:
 
