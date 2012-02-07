@@ -53,7 +53,6 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
             'comments': u'fix whitespace',
             'files': [u'master/buildbot/__init__.py'],
             'is_dir': 0,
-            'links': [],
             'project': u'Buildbot',
             'properties': {},
             'repository': u'git://warner',
@@ -82,7 +81,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
             # master called the right thing in the db component, including with
             # appropriate default values
             self.master.db.changes.addChange.assert_called_with(author=None,
-                    files=None, comments=None, is_dir=0, links=None,
+                    files=None, comments=None, is_dir=0,
                     revision=None, when_timestamp=None, branch=None,
                     category=None, revlink='', properties={}, repository='', project='', uid=None)
 
@@ -97,7 +96,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
     def do_test_addChange_args(self, args=(), kwargs={}, exp_db_kwargs={}):
         # add default arguments
         default_db_kwargs = dict(files=None, comments=None, author=None,
-                is_dir=0, links=None, revision=None, when_timestamp=None,
+                is_dir=0, revision=None, when_timestamp=None,
                 branch=None, category=None, revlink='', properties={},
                 repository='', project='', uid=None)
         k = default_db_kwargs

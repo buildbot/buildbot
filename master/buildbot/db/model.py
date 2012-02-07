@@ -143,12 +143,6 @@ class Model(base.DBConnectorComponent):
         sa.Column('filename', sa.String(1024), nullable=False), # TODO: sa.Text
     )
 
-    # Links (URLs) for changes
-    change_links = sa.Table('change_links', metadata,
-        sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
-        sa.Column('link', sa.String(1024), nullable=False), # TODO: sa.Text
-    )
-
     # Properties for changes
     change_properties = sa.Table('change_properties', metadata,
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
@@ -362,7 +356,6 @@ class Model(base.DBConnectorComponent):
     sa.Index('changes_category', changes.c.category)
     sa.Index('changes_when_timestamp', changes.c.when_timestamp)
     sa.Index('change_files_changeid', change_files.c.changeid)
-    sa.Index('change_links_changeid', change_links.c.changeid)
     sa.Index('change_properties_changeid', change_properties.c.changeid)
     sa.Index('scheduler_changes_objectid', scheduler_changes.c.objectid)
     sa.Index('scheduler_changes_changeid', scheduler_changes.c.changeid)
@@ -454,6 +447,26 @@ class Model(base.DBConnectorComponent):
                         % (version, version + 1))
                 schema.runchange(version, change, 1)
 
+        def check_sqlalchemy_migrate_version():
+            # sqlalchemy-migrate started including a version number in 0.7; we
+            # support back to 0.6.1, but not 0.6.  We'll use some discovered
+            # differences between 0.6.1 and 0.6 to get that resolution.
+            version = getattr(migrate, '__version__', 'old')
+            if version == 'old':
+                try:
+                    from migrate.versioning import schemadiff
+                    if hasattr(schemadiff, 'ColDiff'):
+                        version = "0.6.1"
+                    else:
+                        version = "0.6"
+                except:
+                    version = "0.0"
+            version_tup = tuple(map(int, version.split('.')))
+            log.msg("using SQLAlchemy-Migrate version %s" % (version,))
+            if version_tup < (0,6,1):
+                raise RuntimeError("You are using SQLAlchemy-Migrate %s. "
+                    "The minimum version is 0.6.1." % (version,))
+
         def version_control(engine, version=None):
             migrate.versioning.schema.ControlledSchema.create(engine, self.repo_path, version)
 
@@ -492,6 +505,8 @@ class Model(base.DBConnectorComponent):
             else:
                 version_control(engine)
                 upgrade(engine)
+
+        check_sqlalchemy_migrate_version()
         return self.db.pool.do_with_engine(thd)
 
 # migrate has a bug in one of its warnings; this is fixed in version control

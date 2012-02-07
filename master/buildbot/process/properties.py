@@ -350,13 +350,13 @@ class WithSource(util.ComparableMixin):
         elif lambda_subs:
             raise ValueError('WithSource takes either positional or keyword substitutions, not both.')
 
-    def getRenderingFor(self, build):
+    def getRenderingFor(self, props):
+        build = props.getBuild()
         source = build.getSourceStamp(self.codebase)
         if not source:
             raise ValueError("Sourcestamp for codebase %s not found in build" % self.codebase)
         
         sourceDict = source.asDict()
-        import pdb; pdb.set_trace()
         if self.args:
             strings = []
             for name in self.args:

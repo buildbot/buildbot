@@ -61,7 +61,15 @@ class FakeBuild:
             if source.codebase == codebase:
                 return source
         return None
-            
+
+class FakeProperties:
+    def __init__(self, build):
+        self.build = build
+        
+    def getBuild(self):
+        return self.build
+        
+        
 class TestWithSource(unittest.TestCase):
 
     def setUp(self):
@@ -76,37 +84,38 @@ class TestWithSource(unittest.TestCase):
         r.sources[1].repository = "telnet://repoB"
         r.sources[1].codebase = "codebaseB"
         
-        self.build = FakeBuild([r])
+        build = FakeBuild([r])
+        self.properties = FakeProperties(build)
 
     def test_codebase_with_args(self):
         ws = WithSource("codebaseB", "repository = %s", "repository")
-        rendering = ws.getRenderingFor(self.build)
+        rendering = ws.getRenderingFor(self.properties)
         self.assertEqual(rendering, "repository = telnet://repoB")
 
     def test_codebase_not_found_with_args(self):
         ws = WithSource("codebaseC", "repository = %s", "repository")
         d = defer.succeed(None)
-        d.addCallback(lambda _: ws.getRenderingFor(self.build))
+        d.addCallback(lambda _: ws.getRenderingFor(self.properties))
         return self.assertFailure(d, ValueError)
 
     def test_codebase_with_args_notfound(self):
         ws = WithSource("codebaseB", "repo = %s", "repo")
         d = defer.succeed(None)
-        d.addCallback(lambda _: ws.getRenderingFor(self.build))
+        d.addCallback(lambda _: ws.getRenderingFor(self.properties))
         return self.assertFailure(d, ValueError)
 
     def test_codebase_with_dictionary_style(self):
         ws = WithSource("codebaseB", "repository = %(repository)s")
-        rendering = ws.getRenderingFor(self.build)
+        rendering = ws.getRenderingFor(self.properties)
         self.assertEqual(rendering, "repository = telnet://repoB")
         
     def test_codebase_with_lambda(self):
         ws = WithSource("codebaseB", "scheme = %(scheme)s", scheme = lambda ss: ss.repository[:ss.repository.find(':')])
-        rendering = ws.getRenderingFor(self.build)
+        rendering = ws.getRenderingFor(self.properties)
         self.assertEqual(rendering, "scheme = telnet")
 
     def test_codebase_with_dictionary_style_notfound(self):
         ws = WithSource("codebaseB", "repository = %(repositorie)s")
         d = defer.succeed(None)
-        d.addCallback(lambda _: ws.getRenderingFor(self.build))
+        d.addCallback(lambda _: ws.getRenderingFor(self.properties))
         return self.assertFailure(d, ValueError)

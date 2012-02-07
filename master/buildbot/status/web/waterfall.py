@@ -173,7 +173,7 @@ class StepBox(components.Adapter):
         text = text[:]
         logs = self.original.getLogs()
         
-        cxt = dict(text=text, logs=[], urls=[])
+        cxt = dict(text=text, logs=[], urls=[], stepinfo=self)
 
         for num in range(len(logs)):
             name = logs[num].getName()

@@ -256,16 +256,16 @@ Note: like python, you can use either positional interpolation *or*
 dictionary-style interpolation, not both. Thus you cannot use a string like
 ``WithProperties("foo-%(revision)s-%s", "branch")``.
 
-.. Index:: single; Properties; WithSources
+.. Index:: single; Properties; WithSource
 
-.. _WithSources:
+.. _WithSource:
 
-WithSources
-+++++++++++
+WithSource
+++++++++++
 
 A build may contain more than one sourcestamp. Buildsteps may need information 
 from a sourcestamp like repository or branch to be able to perform their task.
-The class :class:`WithSources` interpolates the atrributes from a single sourcestamp
+The class :class:`WithSource` interpolates the atrributes from a single sourcestamp
 into a string that can be used by a buildstep. 
 
 The simplest use of this class is with positional string interpolation.  Here,
@@ -273,10 +273,10 @@ The simplest use of this class is with positional string interpolation.  Here,
 arguments::
 
     from buildbot.steps.shell import ShellCommand
-    from buildbot.process.properties import WithSources
+    from buildbot.process.properties import WithSource
     f.addStep(ShellCommand(
               command=["tar", "czf",
-                       WithSources("mailexe","mailer-%s-%s.tar.gz", "branch", "revision"),
+                       WithSource("mailexe","mailer-%s-%s.tar.gz", "branch", "revision"),
                        "source"]))
     
 In this example 'mailexe' is the codebase for the mail application. Branch and revision
@@ -291,8 +291,8 @@ leading to a rather obscure error from Python ("ValueError: unsupported format
 character")::
 
    from buildbot.steps.shell import ShellCommand
-   from buildbot.process.properties import WithSources
-   f.addStep(ShellCommand(command=[ 'make', WithSources('mailexe','REVISION=%(revision)s'),
+   from buildbot.process.properties import WithSource
+   f.addStep(ShellCommand(command=[ 'make', WithSource('mailexe','REVISION=%(revision)s'),
                                     'dist' ]))
 
 This example will result in a ``make`` command with an argument like

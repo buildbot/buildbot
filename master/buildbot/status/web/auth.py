@@ -63,7 +63,7 @@ class BasicAuth(AuthBase):
     def __init__(self, userpass):
         """C{userpass} is a list of (user, passwd)."""
         for item in userpass:
-            assert isinstance(item, tuple)
+            assert isinstance(item, tuple) or isinstance(item, list)
             u, p = item
             assert isinstance(u, str)
             assert isinstance(p, str)

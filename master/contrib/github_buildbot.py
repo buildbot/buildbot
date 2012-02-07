@@ -96,7 +96,6 @@ class GitHubBuildBot(resource.Resource):
                      'who': commit['author']['name'] 
                             + " <" + commit['author']['email'] + ">",
                      'files': files,
-                     'links': [commit['url']],
                      'repository': repo_url,
                      'project': project,
                 }
