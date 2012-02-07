@@ -166,7 +166,6 @@ class Source(LoggingBuildStep):
                            variables on the slave. In situations where the
                            environment is not relevant and is long, it may
                            be easier to set logEnviron=False.
-
         """
 
         LoggingBuildStep.__init__(self, **kwargs)
@@ -194,6 +193,8 @@ class Source(LoggingBuildStep):
         # This will get added to args later, after properties are rendered
         self.workdir = workdir
 
+        self.sourcestamp = None
+        
         self.alwaysUseLatest = alwaysUseLatest
 
         self.logEnviron = logEnviron
@@ -242,7 +243,7 @@ class Source(LoggingBuildStep):
         self.checkoutDelay value."""
         return None
 
-    def getRepository(self):
+    def getCodebase(self):
         """ Identify the unique repository for this step """
         return None
 
@@ -260,8 +261,9 @@ class Source(LoggingBuildStep):
 
         if not self.alwaysUseLatest:
             # what source stamp would this build like to use?
-            id = self.getRepository()
-            s = self.build.getSourceStamp(id)
+            codebase = self.getCodebase()
+            s = self.build.getSourceStamp(codebase)
+            self.sourcestamp = s
 
             # if branch is None, then use the Step's "default" branch
             branch = s.branch or self.branch

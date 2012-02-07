@@ -63,6 +63,7 @@ class Change:
         change.category = chdict['category']
         change.revlink = chdict['revlink']
         change.repository = chdict['repository']
+        change.codebase = chdict['codebase']
         change.project = chdict['project']
         change.number = chdict['changeid']
 
@@ -82,8 +83,8 @@ class Change:
 
     def __init__(self, who, files, comments, isdir=0,
                  revision=None, when=None, branch=None, category=None,
-                 revlink='', properties={}, repository='', project='',
-                 _fromChdict=False):
+                 revlink='', properties={}, repository='', codebase='', 
+                 project='', _fromChdict=False):
         # skip all this madness if we're being built from the database
         if _fromChdict:
             return
@@ -113,6 +114,7 @@ class Change:
         self.properties = Properties()
         self.properties.update(properties, "Change")
         self.repository = repository
+        self.codebase = codebase
         self.project = project
 
         # keep a sorted list of the files, for easier display
@@ -129,9 +131,11 @@ class Change:
 
     def __str__(self):
         return (u"Change(revision=%r, who=%r, branch=%r, comments=%r, " +
-                u"when=%r, category=%r, project=%r, repository=%r)") % (
+                u"when=%r, category=%r, project=%r, repository=%r, " +
+                u"codebase=%r)") % (
                 self.revision, self.who, self.branch, self.comments,
-                self.when, self.category, self.project, self.repository)
+                self.when, self.category, self.project, self.repository,
+                self.codebase)
 
     def asText(self):
         data = ""
@@ -167,6 +171,7 @@ class Change:
         result['revlink'] = getattr(self, 'revlink', None)
         result['properties'] = self.properties.asList()
         result['repository'] = getattr(self, 'repository', None)
+        result['codebase'] = getattr(self, 'codebase', None)
         result['project'] = getattr(self, 'project', None)
         return result
 

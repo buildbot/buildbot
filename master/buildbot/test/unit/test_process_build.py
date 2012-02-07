@@ -27,48 +27,59 @@ from mock import Mock
 
 class FakeChange:
     properties = Properties()
-    who = "me"
-
+    def __init__(self, number = None):
+        self.number = number
+        self.who = "me"
+        
 class FakeSource:
-    changes = [FakeChange()]
-    branch = None
-    revision = "12345"
-    repository = None
-    project = None
-    patch_info = (None, None)
-    patch = None
+    def __init__(self):
+        self.changes = []
+        self.branch = None
+        self.revision = None
+        self.repository = ''
+        self.codebase = ''
+        self.project = ''
+        self.patch_info = (None, None)
+        self.patch = None
+
+    def getRepository(self):
+        return self.repository
 
 class FakeRequest:
-    source = FakeSource()
-    reason = "Because"
-    properties = Properties()
+    def __init__(self):
+        self.sources = []
+        self.reason = "Because"
+        self.properties = Properties()
 
-    def mergeWith(self, others):
-        return self.source
+    def mergeSourceStampsWith(self, others):
+        return self.sources
 
     def mergeReasons(self, others):
         return self.reason
 
 class FakeBuildStep:
-    haltOnFailure = False
-    flunkOnWarnings = False
-    flunkOnFailure = True
-    warnOnWarnings = True
-    warnOnFailure = False
-    alwaysRun = False
-    name = 'fake'
+    def __init__(self):
+        self.haltOnFailure = False
+        self.flunkOnWarnings = False
+        self.flunkOnFailure = True
+        self.warnOnWarnings = True
+        self.warnOnFailure = False
+        self.alwaysRun = False
+        self.name = 'fake'
 
 class FakeMaster:
-    locks = {}
-    parent = Mock()
+    def __init__(self):
+        self.locks = {}
+        self.parent = Mock()
+        
     def getLockByID(self, lockid):
         if not lockid in self.locks:
             self.locks[lockid] = lockid.lockClass(lockid)
         return self.locks[lockid]
 
 class FakeBuildStatus(Mock):
-    implements(interfaces.IProperties)
-
+    implements(interfaces.IProperties)   
+        
 class FakeBuilderStatus:
     implements(interfaces.IBuilderStatus)
 
@@ -76,6 +87,10 @@ class TestBuild(unittest.TestCase):
 
     def setUp(self):
         r = FakeRequest()
+        r.sources = [FakeSource()]
+        r.sources[0].changes = [FakeChange()]
+        r.sources[0].revision = "12345"
+        
         self.build = Build([r])
         self.builder = Mock()
         self.builder.botmaster = FakeMaster()
@@ -434,7 +449,153 @@ class TestBuild(unittest.TestCase):
         self.assertEqual(terminate, True)
         self.assertEqual(b.result, RETRY)
 
+class TestMultipleSourceStamps(unittest.TestCase):
 
+    def setUp(self):
+        r = FakeRequest()
+        s1 = FakeSource()
+        s1.repository = "repoA"
+        s1.codebase = "A"
+        s1.changes = [FakeChange(10), FakeChange(11)]
+        s1.revision = "12345"
+        s2 = FakeSource()
+        s2.repository = "repoB"
+        s2.codebase = "B"
+        s2.changes = [FakeChange(12),FakeChange(13)]
+        s2.revision = "67890"
+        s3 = FakeSource()
+        s3.repository = "repoC"
+        # no codebase defined
+        s3.changes = [FakeChange(14),FakeChange(15)]
+        s3.revision = "111213"
+        r.sources.extend([s1,s2,s3])
+        
+        self.build = Build([r])
+
+    def test_buildReturnSourceStamp(self):
+        """
+        Test that a build returns the correct sourcestamp
+        """
+        source1 = self.build.getSourceStamp("A")
+        source2 = self.build.getSourceStamp("B")
+
+        self.assertEqual( [source1.repository, source1.revision], ["repoA", "12345"])
+        self.assertEqual( [source2.repository, source2.revision], ["repoB", "67890"])
+
+    def test_buildReturnSourceStamp_noArgs(self):
+        """
+        Test that a build returns the first sourcestamp if no arg is passed
+        """
+        source1 = self.build.getSourceStamp()
+        self.assertEqual( [source1.repository, source1.revision], ["repoA", "12345"])
+
+    def test_buildReturnSourceStamp_codebase(self):
+        """
+        Test that a build returns the correct sourcestamp that belongs to the codebase
+        """
+        codebase = 'B'
+        source2 = self.build.getSourceStamp(codebase)
+        self.assertTrue(source2 is not None)
+        self.assertEqual( [source2.repository, source2.revision], ["repoB", "67890"])
+        
+    def test_buildReturnSourceStamp_empty_codebase(self):
+        """
+        Test that a build returns the correct sourcestamp if codebase is empty
+        """
+        codebase = ''
+        source3 = self.build.getSourceStamp(codebase)
+        self.assertTrue(source3 is not None)
+        self.assertEqual( [source3.repository, source3.revision], ["repoC", "111213"])
+        
+class TestSingleSourceStamps(unittest.TestCase):
+
+    def setUp(self):
+        r = FakeRequest()
+        s1 = FakeSource()
+        s1.repository = "repoA"
+        s1.changes = [FakeChange(10), FakeChange(11)]
+        s1.revision = "12345"
+
+        r.sources.extend([s1])
+        self.build = Build([r])
+
+    def test_buildReturnSourceStamp_noArgs(self):
+        """
+        Test that a build returns the one and only sourcestamp
+        """
+        source1 = self.build.getSourceStamp()
+        self.assertTrue(source1 is not None)
+        self.assertEqual( [source1.repository, source1.revision], ["repoA", "12345"])
+
+    def test_buildReturnSourceStamp_no_codebase(self):
+        """
+        Test that a build returns the one and only sourcestamp
+        """
+        codebase = ''
+        source1 = self.build.getSourceStamp(codebase)
+        self.assertTrue(source1 is not None)
+        self.assertEqual( [source1.repository, source1.revision], ["repoA", "12345"])
+
+class TestSetupProperties(unittest.TestCase):
+    """
+    Test that the property values, based on the available requests, are 
+    initialized properly
+    """
+    def setUp(self):
+        self.props = {}
+        r = FakeRequest()
+        r.sources = []
+        r.sources.append(FakeSource())
+        r.sources[0].changes = [FakeChange()]
+        r.sources[0].repository = "http://svn-repo-A"
+        r.sources[0].codebase = "A"
+        r.sources[0].branch = "develop"
+        r.sources[0].revision = "12345"
+        r.sources.append(FakeSource())
+        r.sources[1].changes = [FakeChange()]
+        r.sources[1].repository = "http://svn-repo-B"
+        r.sources[1].codebase = "B"
+        r.sources[1].revision = "34567"
+        self.build = Build([r])
+        self.build.setStepFactories([])
+        self.builder = Mock()
+        self.build.setBuilder(self.builder)
+        self.build.build_status = FakeBuildStatus()
+        # record properties that will be set
+        self.build.build_status.setProperty = self.setProperty
+
+    def setProperty(self, n,v,s, runtime = False):
+        if s not in self.props:
+            self.props[s] = {}
+        if not self.props[s]:
+            self.props[s] = {}
+        self.props[s][n] = v
+        
+    def test_repositoryDependentProperties_codebases(self):
+        self.build.setupProperties()
+        codebase = self.props["Build"]["codebase"]
+        self.assertEqual(codebase, "A")
+        
+    def test_repositoryDependentProperties_repositories(self):
+        self.build.setupProperties()
+        repository = self.props["Build"]["repository"]
+        self.assertEqual(repository, "http://svn-repo-A")
+        
+    def test_repositoryDependentProperties_revisions(self):
+        self.build.setupProperties()
+        revision = self.props["Build"]["revision"]
+        self.assertEqual(revision, "12345")
+        
+    def test_repositoryDependentProperties_branches(self):
+        self.build.setupProperties()
+        branch = self.props["Build"]["branch"]
+        self.assertEqual(branch, "develop")
+
+    def test_repositoryDependentProperties_projects(self):
+        self.build.setupProperties()
+        project = self.props["Build"]["project"]
+        self.assertEqual(project, '')
+        
 class TestBuildProperties(unittest.TestCase):
     """
     Test that a Build has the necessary L{IProperties} methods, and that they
@@ -444,6 +605,9 @@ class TestBuildProperties(unittest.TestCase):
 
     def setUp(self):
         r = FakeRequest()
+        r.sources = [FakeSource()]
+        r.sources[0].changes = [FakeChange()]
+        r.sources[0].revision = "12345"
         self.build = Build([r])
         self.build.setStepFactories([])
         self.builder = Mock()

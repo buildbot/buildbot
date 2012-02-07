@@ -323,7 +323,6 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         @returns: (buildset ID, buildrequest IDs) via Deferred
         """
         assert changeids is not []
-
         # attributes for this sourcestamp will be based on the most recent
         # change, so fetch the change with the highest id
         wfd = defer.waitForDeferred(self.master.db.changes.getChange(max(changeids)))
@@ -345,6 +344,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                     branch=change.branch,
                     revision=change.revision,
                     repository=change.repository,
+                    codebase=change.codebase,
                     project=change.project,
                     changeids=changeids,
                     sourcestampsetid=setid))
@@ -357,7 +357,6 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                                 builderNames=builderNames,
                                 properties=properties))
         yield wfd
-
         yield wfd.getResult()
 
     @defer.deferredGenerator

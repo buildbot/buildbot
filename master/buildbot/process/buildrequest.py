@@ -128,26 +128,73 @@ class BuildRequest(object):
         sslist = wfd.getResult()
         assert len(sslist) > 0, "Empty sourcestampset: db schema enforces set to exist but cannot enforce a non empty set"
 
-        # and turn it into a SourceStamp
-        buildrequest.sources = []
-        for ssdict in sslist:
-            wfd = defer.waitForDeferred(
-                sourcestamp.SourceStamp.fromSsdict(master, ssdict))
-            yield wfd
-            buildrequest.sources.append(wfd.getResult())
+        # and turn it into a SourceStamps
+        buildrequest.sources = {}
+        def store_source(source):
+            buildrequest.sources[source.codebase] = source
 
-        # support old interface where only one source could exist
-        # TODO: remove and change all client objects that use this property
-        if len(buildrequest.sources) > 0:
-            buildrequest.source = buildrequest.sources[0]
+        dlist = []
+        for ssdict in sslist:
+            d = sourcestamp.SourceStamp.fromSsdict(master, ssdict)
+            d.addCallback(store_source)
+            dlist.append(d)
+
+        dl = defer.gatherResults(dlist)
+        wfd = defer.waitForDeferred(dl)
+        yield wfd
+        wfd.getResult()
+  
+        if buildrequest.sources:
+            buildrequest.source = buildrequest.sources.values()[0]
 
         yield buildrequest # return value
 
-    def canBeMergedWith(self, other):
-        return self.source.canBeMergedWith(other.source)
+    @staticmethod
+    def _collect_codebases(codebases, sources):
+        for s in sources.itervalues():
+            if s.codebase not in codebases:
+                codebases.append(s.codebase)
 
-    def mergeWith(self, others):
-        return self.source.mergeWith([o.source for o in others])
+    def canBeMergedWith(self, other):
+        # get all codebases from both requests
+        all_codebases = []
+        BuildRequest._collect_codebases(all_codebases, self.sources)
+        BuildRequest._collect_codebases(all_codebases, other.sources)
+
+        # walk along the codebases
+        for codebase in all_codebases:
+            self_source = other_source = None
+            if codebase in self.sources:
+                self_source = self.sources[codebase]
+            if codebase in other.sources:
+                other_source = other.sources[codebase]
+            # do both requests have sourcestamp for this codebase?
+            if self_source is not None and other_source is not None:
+                if not self_source.canBeMergedWith(other_source):
+                    return False
+        return True
+
+    def mergeSourceStampsWith(self, others):
+        """ Returns one merged sourcestamp for every codebase """
+        # get all codebases from both requests
+        all_codebases = []
+        BuildRequest._collect_codebases(all_codebases, self.sources)
+        for other in others:
+            BuildRequest._collect_codebases(all_codebases, other.sources)
+
+        all_merged_sources = {}
+        # walk along the codebases
+        for codebase in all_codebases:
+            all_sources = []
+            if codebase in self.sources:
+                all_sources.append(self.sources[codebase])
+            for other in others:
+                if codebase in other.sources:
+                    all_sources.append(other.sources[codebase])
+            assert len(all_sources)>0, "each codebase should have atleast one sourcestamp"
+            all_merged_sources[codebase] = all_sources[0].mergeWith(all_sources[1:])
+
+        return [source for source in all_merged_sources.itervalues()]
 
     def mergeReasons(self, others):
         """Return a reason for the merged build request."""
