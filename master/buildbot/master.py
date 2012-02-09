@@ -39,6 +39,7 @@ from buildbot.process import metrics
 from buildbot.process import cache
 from buildbot.process.users import users
 from buildbot.process.users.manager import UserManagerManager
+from buildbot.util import datetime2epoch
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import monkeypatches
 from buildbot import config
@@ -675,7 +676,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             wfd = defer.waitForDeferred(
                 self.db.changes.getChange(changeid))
             yield wfd
-            chdict = wfd.getResult();
+            chdict = wfd.getResult()
 
             # if there's no such change, we've reached the end and can
             # stop polling
