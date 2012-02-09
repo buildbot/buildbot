@@ -149,38 +149,22 @@ class BuildRequest(object):
 
         yield buildrequest # return value
 
-    @staticmethod
-    def _collect_codebases(codebases, sources):
-        for s in sources.itervalues():
-            if s.codebase not in codebases:
-                codebases.append(s.codebase)
-
     def canBeMergedWith(self, other):
-        # get all codebases from both requests
-        all_codebases = []
-        BuildRequest._collect_codebases(all_codebases, self.sources)
-        BuildRequest._collect_codebases(all_codebases, other.sources)
+        #get all codebases from both requests
+        all_codebases = set(s.codebase for s in self.sources.itervalues())
+        all_codebases |= set(s.codebase for s in other.sources.itervalues())
 
-        # walk along the codebases
-        for codebase in all_codebases:
-            self_source = other_source = None
-            if codebase in self.sources:
-                self_source = self.sources[codebase]
-            if codebase in other.sources:
-                other_source = other.sources[codebase]
-            # do both requests have sourcestamp for this codebase?
-            if self_source is not None and other_source is not None:
-                if not self_source.canBeMergedWith(other_source):
-                    return False
+        for c in all_codebases:
+            if not self.sources[c].canBeMergedWith(other.sources[c]):
+                return False
         return True
 
     def mergeSourceStampsWith(self, others):
         """ Returns one merged sourcestamp for every codebase """
-        # get all codebases from both requests
-        all_codebases = []
-        BuildRequest._collect_codebases(all_codebases, self.sources)
+        #get all codebases from all requests
+        all_codebases = set(s.codebase for s in self.sources.itervalues())
         for other in others:
-            BuildRequest._collect_codebases(all_codebases, other.sources)
+            all_codebases |= set(s.codebase for s in other.sources.itervalues())
 
         all_merged_sources = {}
         # walk along the codebases
