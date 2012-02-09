@@ -1180,7 +1180,10 @@ are not understood (yet). It accepts the following arguments:
 As an example, to poll the Ostinato project's commit feed every 3 hours, the
 configuration would look like this::
 
-    from contrib.googlecode_atom import GoogleCodeAtomPoller
+    from googlecode_atom import GoogleCodeAtomPoller
     c['change_source'] = GoogleCodeAtomPoller(
         feedurl="http://code.google.com/feeds/p/ostinato/hgchanges/basic",
         pollinterval=10800) 
+
+(note that you will need to download ``googlecode_atom.py`` from the Buildbot
+source and install it somewhere on your PYTHONPATH first)
