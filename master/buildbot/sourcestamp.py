@@ -269,10 +269,14 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.wasUpgraded = True
 
     def upgradeToVersion2(self):
-        # version 1 did not have project, repository or codebase; just set them to a default ''
+        # version 1 did not have project or repository; just set them to a default ''
         self.project = ''
         self.repository = ''
         self.wasUpgraded = True
+
+    def upgradeToVersion3(self):
+        #version 2 did not have codebase; set to ''
+        self.codebase = ''
 
     @util.deferredLocked('_getSourceStampSetId_lock')
     def getSourceStampSetId(self, master):
