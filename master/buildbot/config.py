@@ -16,7 +16,6 @@
 import re
 import os
 import sys
-import inspect
 from buildbot.util import safeTranslate
 from buildbot.process import properties
 from buildbot import interfaces
