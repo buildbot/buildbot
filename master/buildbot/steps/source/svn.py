@@ -145,9 +145,13 @@ class SVN(Source):
         wfd.getResult()
         if cmd.rc != 0:
             raise buildstep.BuildStepFailed()
+        
+        checkout_cmd = ['checkout', self.svnurl, '.']
+        if self.revision:
+            checkout_cmd.extend(["--revision", str(self.revision)])
 
         wfd = defer.waitForDeferred(
-                self._dovccmd(['checkout', self.svnurl, '.']))
+                self._dovccmd(checkout_cmd))
         yield wfd
         wfd.getResult()
 
