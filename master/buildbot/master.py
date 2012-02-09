@@ -448,21 +448,25 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         for n in properties:
             properties[n] = (properties[n], 'Change')
 
+        newchange = changes.Change(who=author, files=files,
+                    comments=comments, isdir=is_dir,
+                    revision=revision,
+                    when=datetime2epoch(when_timestamp),
+                    branch=branch, category=category,
+                    revlink=revlink, properties=properties,
+                    repository=repository,
+                    project=project)
+
+        codebase = ''
+        if self.config.codebaseGenerator is not None:
+            codebase = self.config.codebaseGenerator(newchange.asDict())
+        else:
+            codebase = repository
+            
         d = defer.succeed(None)
         if src:
             # create user object, returning a corresponding uid
             d.addCallback(lambda _ : users.createUserObject(self, author, src))
-
-
-        def determine_and_store_codebase(chdict):
-            codebase = ''
-            if self.config.codebaseGenerator is not None:
-                codebase = self.config.codebaseGenerator(chdict)
-            else:
-                codebase = chdict['repository']
-            chdict['codebase'] = codebase
-            self.db.changes.setCodebase(changeid=chdict['changeid'], codebase=chdict['codebase'])
-            return chdict
          
         # add the Change to the database
         d.addCallback(lambda uid :
@@ -472,13 +476,12 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                                           when_timestamp=when_timestamp,
                                           branch=branch, category=category,
                                           revlink=revlink, properties=properties,
-                                          repository=repository,
+                                          repository=repository, codebase=codebase,
                                           project=project, uid=uid))
 
         # convert the changeid to a Change instance
         d.addCallback(lambda changeid :
             self.db.changes.getChange(changeid))
-        d.addCallback(determine_and_store_codebase)
         d.addCallback(lambda chdict :
             changes.Change.fromChdict(self, chdict))
 
