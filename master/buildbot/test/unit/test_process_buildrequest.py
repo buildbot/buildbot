@@ -108,17 +108,19 @@ class TestBuildRequest(unittest.TestCase):
             fakedb.SourceStampSet(id=234),
 
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                        repository='svn://a..', project='world-domination'),
+                        repository='svn://a..',  codebase='A',
+                        project='world-domination'),
             fakedb.SourceStamp(id=234, sourcestampsetid=234, branch='trunk',
                         revision='9283', repository='svn://a..',
-                        project='world-domination'),
+                         codebase='A', project='world-domination'),
             fakedb.SourceStampChange(sourcestampid=234, changeid=13),
 
             fakedb.Change(changeid=14, branch='trunk', revision='9284',
-                        repository='svn://b..', project='world-domination'),
+                        repository='svn://b..',  codebase='B',
+                        project='world-domination'),
             fakedb.SourceStamp(id=235, sourcestampsetid=234, branch='trunk',
                         revision='9284', repository='svn://b..',
-                        project='world-domination'),
+                         codebase='B', project='world-domination'),
             fakedb.SourceStampChange(sourcestampid=235, changeid=14),
 
             fakedb.Buildset(id=539, reason='triggered', sourcestampsetid=234),
@@ -141,11 +143,11 @@ class TestBuildRequest(unittest.TestCase):
             self.assertEqual(br.source.ssid, 234)
 
             # Test the multiple sourcestamp interface
-            self.assertEqual(br.sources['svn://a..'].ssid, 234)
-            self.assertEqual(br.sources['svn://b..'].ssid, 235)
+            self.assertEqual(br.sources['A'].ssid, 234)
+            self.assertEqual(br.sources['B'].ssid, 235)
             
-            self.assertEqual([ ch.number for ch in br.sources['svn://a..'].changes], [13])
-            self.assertEqual([ ch.number for ch in br.sources['svn://b..'].changes], [14])
+            self.assertEqual([ ch.number for ch in br.sources['A'].changes], [13])
+            self.assertEqual([ ch.number for ch in br.sources['B'].changes], [14])
 
             self.assertEqual(br.reason, 'triggered')
 
@@ -179,32 +181,36 @@ class TestBuildRequest(unittest.TestCase):
             fakedb.SourceStampSet(id=2340),
 
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                        repository='svn://a..', project='world-domination'),
+                        repository='svn://a..',  codebase='A',
+                        project='world-domination'),
             fakedb.SourceStamp(id=234, sourcestampsetid=2340, branch='trunk',
-                        revision='9283', repository='svn://a..',
+                        revision='9283', repository='svn://a..', codebase='A',
                         project='world-domination'),
             fakedb.SourceStampChange(sourcestampid=234, changeid=13),
 
             fakedb.Change(changeid=14, branch='trunk', revision='9200',
-                        repository='svn://b..', project='world-domination'),
+                        repository='svn://b..',  codebase='A',
+                        project='world-domination'),
             fakedb.SourceStamp(id=235, sourcestampsetid=2340, branch='trunk',
-                        revision='9200', repository='svn://b..',
+                        revision='9200', repository='svn://b..', codebase='B',
                         project='world-domination'),
             fakedb.SourceStampChange(sourcestampid=235, changeid=14),
 
             fakedb.SourceStampSet(id=2360),
 
             fakedb.Change(changeid=15, branch='trunk', revision='9284',
-                        repository='svn://a..', project='world-domination'),
+                        repository='svn://a..',  codebase='A',
+                        project='world-domination'),
             fakedb.SourceStamp(id=236, sourcestampsetid=2360, branch='trunk',
-                        revision='9284', repository='svn://a..',
+                        revision='9284', repository='svn://a..', codebase='A',
                         project='world-domination'),
             fakedb.SourceStampChange(sourcestampid=236, changeid=15),
 
             fakedb.Change(changeid=16, branch='trunk', revision='9201',
-                        repository='svn://b..', project='world-domination'),
+                        repository='svn://b..',  codebase='B',
+                        project='world-domination'),
             fakedb.SourceStamp(id=237, sourcestampsetid=2360, branch='trunk',
-                        revision='9201', repository='svn://b..',
+                        revision='9201', repository='svn://b..', codebase='B',
                         project='world-domination'),
             fakedb.SourceStampChange(sourcestampid=237, changeid=16),
       
@@ -230,9 +236,9 @@ class TestBuildRequest(unittest.TestCase):
             
             source1 = source2 = None
             for source in sources:
-                if source.repository == 'svn://a..':
+                if source.codebase == 'A':
                     source1 = source
-                if source.repository == 'svn://b..':
+                if source.codebase == 'B':
                     source2 = source
 
             self.assertFalse(source1 == None)
@@ -265,19 +271,21 @@ class TestBuildRequest(unittest.TestCase):
             fakedb.SourceStampSet(id=2340),
 
             fakedb.Change(changeid=17, branch='trunk', revision='1800',
-                        repository='svn://c..', project='world-domination'),
+                        repository='svn://c..',  codebase='C',
+                        project='world-domination'),
             fakedb.SourceStamp(id=238, sourcestampsetid=2340, branch='trunk',
                         revision='1800', repository='svn://c..',
-                        project='world-domination'),
+                         codebase='C', project='world-domination'),
             fakedb.SourceStampChange(sourcestampid=238, changeid=17),
 
             fakedb.SourceStampSet(id=2360),
 
             fakedb.Change(changeid=18, branch='trunk', revision='2100',
-                        repository='svn://d..', project='world-domination'),
+                        repository='svn://d..',  codebase='D',
+                        project='world-domination'),
             fakedb.SourceStamp(id=239, sourcestampsetid=2360, branch='trunk',
                         revision='2100', repository='svn://d..',
-                        project='world-domination'),
+                         codebase='D', project='world-domination'),
             fakedb.SourceStampChange(sourcestampid=239, changeid=18),
             
             fakedb.Buildset(id=539, reason='triggered', sourcestampsetid=2340),
@@ -302,9 +310,9 @@ class TestBuildRequest(unittest.TestCase):
             
             source1 = source2 = None
             for source in sources:
-                if source.repository == 'svn://c..':
+                if source.codebase == 'C':
                     source1 = source
-                if source.repository == 'svn://d..':
+                if source.codebase == 'D':
                     source2 = source
 
             self.assertTrue(source1 != None)

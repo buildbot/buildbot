@@ -530,25 +530,6 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
-    def testUpgradeChangeLinks(self):
-        # test importing complex properties
-        self.make_pickle(
-                self.make_change(
-                    who=u'author',
-                    comments='simple',
-                    files=['foo.c'],
-                    links=['http://buildbot.net', 'http://twistedmatrix.com'],
-                    revision='12345'))
-
-        d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.changes.getChange(1))
-        def check(c):
-            self.failIf(c is None)
-            self.assertEquals(sorted(c['links']),
-                    sorted(['http://buildbot.net', 'http://twistedmatrix.com']))
-        d.addCallback(check)
-        return d
-
     def testUpgradeChangeNoRevision(self):
         # test a change with no revision (which shouldn't be imported)
         self.make_pickle(

@@ -1,11 +1,31 @@
 Buildbot Coding Style
 =====================
 
+Symbol Names
+------------
+
+Buildbot follows `PEP8 <http://www.python.org/dev/peps/pep-0008/>` regarding
+the formatting of symbol names.
+
+The single exception in naming of functions and methods. Because Buildbot uses
+Twisted so heavily, and Twisted uses interCaps, Buildbot methods should do the
+same. That is, methods and functions should be spelled with the first character
+in lower-case, and the first letter of subsequent words capitalized, e.g.,
+``compareToOther`` or ``getChangesGreaterThan``. This point is not applied very
+consistently in Buildbot, but let's try to be consistent in new code. 
+
 Twisted Idioms
 --------------
 
 Programming with Twisted Python can be daunting.  But sticking to a few
 well-defined patterns can help avoid surprises.
+
+Prefer to Return Deferreds
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you're writing a method that doesn't currently block, but could conceivably
+block sometime in the future, return a Deferred and document that it does so.
+Just about anything might block - even getters and setters!
 
 Helpful Twisted Classes
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -22,8 +42,71 @@ for the full details.
     automatically start and stop the function calls when the service is started and
     stopped.
 
+Sequences of Operations
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Especially in Buildbot, we're often faced with executing a sequence of
+operations, many of which may block.
+
+In all cases where this occurs, there is a danger of pre-emption, so exercise
+the same caution you would if writing a threaded application.
+
+For simple cases, you can use nested callback functions. For more complex cases, deferredGenerator is appropriate.
+
+Nested Callbacks
+................
+
+First, an admonition: do not create extra class methods that represent the continuations of the first::
+
+    def myMethod(self):
+        d = ...
+        d.addCallback(self._myMethod_2) # BAD!
+    def _myMethod_2(self, res):         # BAD!
+        # ...
+
+Invariably, this extra method gets separated from its parent as the code
+evolves, and the result is completely unreadable. Instead, include all of the
+code for a particular function or method within the same indented block, using
+nested functions::
+
+    def getRevInfo(revname):
+        results = {}
+        d = defer.succeed(None)
+        def rev_parse(_): # note use of '_' to quietly indicate an ignored parameter
+            return utils.getProcessOutput(git, [ 'rev-parse', revname ])
+        d.addCallback(rev_parse)
+        def parse_rev_parse(res):
+            results['rev'] = res.strip()
+            return utils.getProcessOutput(git, [ 'log', '-1', '--format=%s%n%b', results['rev'] ])
+        d.addCallback(parse_rev_parse)
+        def parse_log(res):
+            results['comments'] = res.strip()
+        d.addCallback(parse_log)
+        def set_results(_):
+            return results
+        d.addCallback(set_results)
+        return d
+
+it is usually best to make the first operation occur within a callback, as the
+deferred machinery will then handle any exceptions as a failure in the outer
+Deferred.  As a shortcut, ``d.addCallback`` works as a decorator::
+
+    d = defer.succeed(None)
+    @d.addCallback
+    def rev_parse(_): # note use of '_' to quietly indicate an ignored parameter
+        return utils.getProcessOutput(git, [ 'rev-parse', revname ])
+
+Be careful with local variables. For example, if ``parse_rev_parse``, above,
+merely assigned ``rev = res.strip()``, then that variable would be local to
+``parse_rev_parse`` and not available in ``set_results``. Mutable variables
+(dicts and lists) at the outer function level are appropriate for this purpose.
+
+.. note:: do not try to build a loop in this style by chaining multiple
+    Deferreds!  Unbounded chaining can result in stack overflows, at least on older
+    versions of Twisted. Use ``deferredGenerator`` instead. 
+
 deferredGenerator
-~~~~~~~~~~~~~~~~~
+.................
 
 :class:`twisted.internet.defer.deferredGenerator` is a great help to writing
 code that makes a lot of asynchronous calls.  Refer to the Twisted
@@ -52,8 +135,50 @@ The key points to notice here:
 * When ``yield`` is used to return a value, add a comment to that effect, since
   this can often be missed.
 
-As a reminder, Builtbot is compatible with Python-2.4, which does not support
-try/finally blocks in generators.
+The great advantage of ``deferredGenerator`` is that it allows you to use all
+of the usual Pythonic control structures in their natural form. In particular,
+it is easy to represent a loop, or even nested loops, in this style without
+losing any readability. The downside, of course, is the rather verbose style
+and the requirement that ``getResult`` be called even when no result is needed
+- this is easy to forget!  Twisted's ``inlineCallbacks`` fixes many of these
+shortcomings, but is not usable in Buildbot, because Buildbot is still
+compatible with Python-2.4.  This will change after Buildbot-0.8.6
+(:bb:bug:`2157`).
+
+As a reminder, Python-2.4 also does not support try/finally blocks in
+generators.
+
+Joining Sequences
+~~~~~~~~~~~~~~~~~
+
+It's often the case that you'll want to perform multiple operations in
+parallel, and re-join the results at the end. For this purpose, you'll want to
+use a `DeferredList
+<http://twistedmatrix.com/documents/current/api/twisted.internet.defer.DeferredList.html>`::
+
+    def getRevInfo(revname):
+        results = {}
+        finished = dict(rev_parse=False, log=False)
+
+        rev_parse_d = utils.getProcessOutput(git, [ 'rev-parse', revname ])
+        def parse_rev_parse(res):
+            return res.strip()
+        rev_parse_d.addCallback(parse_rev_parse)
+
+        log_d = utils.getProcessOutput(git, [ 'log', '-1', '--format=%s%n%b', results['rev'] ]))
+        def parse_log(res):
+            return res.strip()
+        log_d.addCallback(parse_log)
+
+        d = defer.DeferredList([rev_parse_d, log_d], consumeErrors=1, fireOnFirstErrback=1)
+        def handle_results(results):
+            return dict(rev=results[0][1], log=results[1][1])
+        d.addCallback(handle_results)
+        return d
+
+Here the deferred list will wait for both ``rev_parse_d`` and ``log_d`` to
+fire, or for one of them to fail.  Callbacks and errbacks can be attached to a
+``DeferredList`` just as for a deferred.
 
 Writing Buildbot Tests
 ----------------------

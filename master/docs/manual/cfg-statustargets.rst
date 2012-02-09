@@ -675,6 +675,13 @@ Note that there is a standalone HTTP server available for receiving GitHub
 notifications, as well: :file:`contrib/github_buildbot.py`.  This script may be
 useful in cases where you cannot expose the WebStatus for public consumption.
 
+.. warning::
+
+    The incoming HTTP requests for this hook are not authenticated in
+    any way.  Anyone who can access the web status can "fake" a request from
+    GitHub, potentially causing the buildmaster to run arbitrary code.  See
+    :bb:bug:`2186` for work to fix this problem.
+
 Google Code hook
 ################
 
@@ -1124,6 +1131,7 @@ told to shut up. ::
 
     from buildbot.status import words
     irc = words.IRC("irc.example.org", "botnickname",
+                    useColors=False,
                     channels=[{"channel": "#example1"},
                               {"channel": "#example2",
                                "password": "somesecretpassword"}],
@@ -1145,6 +1153,9 @@ a different ``port`` number. Default value is 6667.
 To use the service, you address messages at the buildbot, either
 normally (``botnickname: status``) or with private messages
 (``/msg botnickname status``). The buildbot will respond in kind.
+
+The bot will add color to some of its messages. This is enabled by default,
+you might turn it off with ``useColors=False`` argument to words.IRC().
 
 If you issue a command that is currently not available, the buildbot
 will respond with an error message. If the ``noticeOnChannel=True``

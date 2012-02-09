@@ -39,6 +39,7 @@ from buildbot.process import metrics
 from buildbot.process import cache
 from buildbot.process.users import users
 from buildbot.process.users.manager import UserManagerManager
+from buildbot.util import datetime2epoch
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import monkeypatches
 from buildbot import config
@@ -356,7 +357,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     ## triggering methods and subscriptions
 
     def addChange(self, who=None, files=None, comments=None, author=None,
-            isdir=None, is_dir=None, links=None, revision=None, when=None,
+            isdir=None, is_dir=None, revision=None, when=None,
             when_timestamp=None, branch=None, category=None, revlink='',
             properties={}, repository='', project='', src=None):
         """
@@ -383,10 +384,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         @param is_dir: deprecated
 
         @param isdir: deprecated name for C{is_dir}
-
-        @param links: a list of links related to this change, e.g., to web
-        viewers or review pages
-        @type links: list of unicode strings
 
         @param revision: the revision identifier for this change
         @type revision: unicode string
@@ -456,22 +453,34 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             # create user object, returning a corresponding uid
             d.addCallback(lambda _ : users.createUserObject(self, author, src))
 
+
+        def determine_and_store_codebase(chdict):
+            codebase = ''
+            if self.config.codebaseGenerator is not None:
+                codebase = self.config.codebaseGenerator(chdict)
+            else:
+                codebase = chdict['repository']
+            chdict['codebase'] = codebase
+            self.db.changes.setCodebase(changeid=chdict['changeid'], codebase=chdict['codebase'])
+            return chdict
+         
         # add the Change to the database
         d.addCallback(lambda uid :
                           self.db.changes.addChange(author=author, files=files,
                                           comments=comments, is_dir=is_dir,
-                                          links=links, revision=revision,
+                                          revision=revision,
                                           when_timestamp=when_timestamp,
                                           branch=branch, category=category,
                                           revlink=revlink, properties=properties,
-                                          repository=repository, project=project,
-                                          uid=uid))
+                                          repository=repository,
+                                          project=project, uid=uid))
 
         # convert the changeid to a Change instance
         d.addCallback(lambda changeid :
-                self.db.changes.getChange(changeid))
+            self.db.changes.getChange(changeid))
+        d.addCallback(determine_and_store_codebase)
         d.addCallback(lambda chdict :
-                changes.Change.fromChdict(self, chdict))
+            changes.Change.fromChdict(self, chdict))
 
         def notify(change):
             msg = u"added change %s to database" % change

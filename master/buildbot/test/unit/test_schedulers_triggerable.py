@@ -21,7 +21,7 @@ from buildbot.test.fake import fakedb
 
 class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
-    SCHEDULERID = 33
+    OBJECTID = 33
 
     def setUp(self):
         self.setUpScheduler()
@@ -33,7 +33,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
     def makeScheduler(self, **kwargs):
         sched = self.attachScheduler(
                 triggerable.Triggerable(name='n', builderNames=['b']),
-                self.SCHEDULERID)
+                self.OBJECTID)
 
         return sched
 
@@ -49,7 +49,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.SourceStampSet(id=1091),
             fakedb.SourceStamp(id=91, sourcestampsetid=1091, revision='myrev', branch='br',
-                project='p', repository='r'),
+                project='p', repository='r', codebase='cb'),
         ])
 
         # no subscription should be in place yet
@@ -69,9 +69,9 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                      ],
                      reason='Triggerable(n)',
                      sourcestampsetid=1091),
-                {'r':
+                {'cb':
                  dict(branch='br', project='p', repository='r',
-                     revision='myrev', sourcestampsetid=1091)
+                     codebase='cb', revision='myrev', sourcestampsetid=1091)
                 })
 
         # set up a boolean so that we can know when the deferred fires
@@ -110,9 +110,9 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
             fakedb.SourceStampSet(id=1091),
             fakedb.SourceStampSet(id=1092),
             fakedb.SourceStamp(id=91, sourcestampsetid=1091, revision='myrev1',
-                branch='br', project='p', repository='r'),
+                branch='br', project='p', repository='r', codebase='cb'),
             fakedb.SourceStamp(id=92, sourcestampsetid=1092, revision='myrev2',
-                branch='br', project='p', repository='r'),
+                branch='br', project='p', repository='r', codebase='cb'),
         ])
 
         # no subscription should be in place yet
@@ -126,8 +126,8 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                      properties=[('scheduler', ('n', 'Scheduler'))],
                      reason='Triggerable(n)',
                      sourcestampsetid=1091),
-                {'r':
-                dict(branch='br', project='p', repository='r',
+                {'cb':
+                dict(branch='br', project='p', repository='r', codebase='cb',
                      revision='myrev1', sourcestampsetid=1091)})
         d.addCallback(lambda (res, brids) : self.assertEqual(res, 11) 
                                         and self.assertEqual(brids, self.db.buildsets.allBuildRequests(bsid1)))
@@ -138,8 +138,8 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
                      reason='Triggerable(n)', sourcestampsetid=1092),
-                {'r':
-                dict(branch='br', project='p', repository='r',
+                {'cb':
+                dict(branch='br', project='p', repository='r', codebase='cb',
                      revision='myrev2', sourcestampsetid=1092)})
         d.addCallback(lambda (res, brids) : self.assertEqual(res, 22) 
                                         and self.assertEqual(brids, self.db.buildsets.allBuildRequests(bsid2)))

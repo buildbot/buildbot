@@ -24,7 +24,7 @@ from buildbot.test.util import scheduler
 
 class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
-    SCHEDULERID = 19
+    OBJECTID = 19
 
     def setUp(self):
         self.setUpScheduler()
@@ -36,7 +36,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                             **kw):
         sched = self.attachScheduler(
                 ForceScheduler(name=name, builderNames=builderNames,**kw),
-                self.SCHEDULERID)
+                self.OBJECTID)
         sched.master.config = config.MasterConfig()
         return sched
 
@@ -82,8 +82,8 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                                    ('scheduler', ('testsched', 'Scheduler')),
                                    ],
                       sourcestampsetid=100),
-                 {'d':
-                  dict(branch='a', revision='c', repository='d',
+                 {'':
+                  dict(branch='a', revision='c', repository='d', codebase='',
                       project='p', sourcestampsetid=100)
                  })
         d.addCallback(check)
@@ -117,7 +117,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                                    ],
                       sourcestampsetid=100),
                  {"":
-                  dict(branch="", revision="", repository="",
+                  dict(branch="", revision="", repository="", codebase='',
                       project="", sourcestampsetid=100)
                  })
         d.addCallback(check)

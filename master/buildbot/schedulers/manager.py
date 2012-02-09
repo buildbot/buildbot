@@ -71,34 +71,21 @@ class SchedulerManager(config.ReconfigurableServiceMixin,
 
         # .. then additions
 
-        # account for some renamed classes in buildbot - classes that have
-        # changed their module import path, but should still access the same
-        # state
-        new_class_names = {
-            # new : old
-            'buildbot.schedulers.dependent.Dependent' :
-                            'buildbot.schedulers.basic.Dependent',
-            'buildbot.schedulers.basic.SingleBranchScheduler' :
-                            'buildbot.schedulers.basic.Scheduler',
-        }
         for sch_name in added_names:
             log.msg("adding scheduler '%s'" % (sch_name,))
             sch = new_by_name[sch_name]
 
-            # get the translated class name
+            # get the scheduler's objectid
             class_name = '%s.%s' % (sch.__class__.__module__,
                                     sch.__class__.__name__)
-            class_name = new_class_names.get(class_name, class_name)
-
-            # get the schedulerid
             wfd = defer.waitForDeferred(
-                self.master.db.schedulers.getSchedulerId(
+                self.master.db.state.getObjectId(
                     sch.name, class_name))
             yield wfd
-            schedulerid = wfd.getResult()
+            objectid = wfd.getResult()
 
             # set up the scheduler
-            sch.schedulerid = schedulerid
+            sch.objectid = objectid
             sch.master = self.master
 
             # *then* attacah and start it

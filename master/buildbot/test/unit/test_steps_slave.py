@@ -18,7 +18,7 @@ from twisted.trial import unittest
 from buildbot.steps import slave
 from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION
 from buildbot.process import properties
-from buildbot.test.fake.remotecommand import ExpectLogged
+from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.util import steps, compat
 from buildbot.interfaces import BuildSlaveTooOldError
 
@@ -70,8 +70,8 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
     def test_found(self):
         self.setupStep(slave.FileExists(file="x"))
         self.expectCommands(
-            ExpectLogged('stat', { 'file' : 'x' })
-            + ExpectLogged.update('stat', [stat.S_IFREG, 99, 99])
+            Expect('stat', { 'file' : 'x' })
+            + Expect.update('stat', [stat.S_IFREG, 99, 99])
             + 0
         )
         self.expectOutcome(result=SUCCESS,
@@ -81,8 +81,8 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
     def test_not_found(self):
         self.setupStep(slave.FileExists(file="x"))
         self.expectCommands(
-            ExpectLogged('stat', { 'file' : 'x' })
-            + ExpectLogged.update('stat', [0, 99, 99])
+            Expect('stat', { 'file' : 'x' })
+            + Expect.update('stat', [0, 99, 99])
             + 0
         )
         self.expectOutcome(result=FAILURE,
@@ -92,7 +92,7 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
     def test_failure(self):
         self.setupStep(slave.FileExists(file="x"))
         self.expectCommands(
-            ExpectLogged('stat', { 'file' : 'x' })
+            Expect('stat', { 'file' : 'x' })
             + 1
         )
         self.expectOutcome(result=FAILURE,
@@ -103,7 +103,7 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(slave.FileExists(file=properties.Property("x")))
         self.properties.setProperty('x', 'XXX', 'here')
         self.expectCommands(
-            ExpectLogged('stat', { 'file' : 'XXX' })
+            Expect('stat', { 'file' : 'XXX' })
             + 1
         )
         self.expectOutcome(result=FAILURE,
@@ -135,7 +135,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
     def test_success(self):
         self.setupStep(slave.RemoveDirectory(dir="d"))
         self.expectCommands(
-            ExpectLogged('rmdir', { 'dir' : 'd' })
+            Expect('rmdir', { 'dir' : 'd' })
             + 0
         )
         self.expectOutcome(result=SUCCESS,
@@ -145,7 +145,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
     def test_failure(self):
         self.setupStep(slave.RemoveDirectory(dir="d"))
         self.expectCommands(
-            ExpectLogged('rmdir', { 'dir' : 'd' })
+            Expect('rmdir', { 'dir' : 'd' })
             + 1
         )
         self.expectOutcome(result=FAILURE,
@@ -156,9 +156,48 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(slave.RemoveDirectory(dir=properties.Property("x")))
         self.properties.setProperty('x', 'XXX', 'here')
         self.expectCommands(
-            ExpectLogged('rmdir', { 'dir' : 'XXX' })
+            Expect('rmdir', { 'dir' : 'XXX' })
             + 0
         )
         self.expectOutcome(result=SUCCESS,
                 status_text=["RemoveDirectory"])
+        return self.runStep()
+
+class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_success(self):
+        self.setupStep(slave.MakeDirectory(dir="d"))
+        self.expectCommands(
+            Expect('mkdir', { 'dir' : 'd' })
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["MakeDirectory"])
+        return self.runStep()
+
+    def test_failure(self):
+        self.setupStep(slave.MakeDirectory(dir="d"))
+        self.expectCommands(
+            Expect('mkdir', { 'dir' : 'd' })
+            + 1
+        )
+        self.expectOutcome(result=FAILURE,
+                status_text=["Create failed."])
+        return self.runStep()
+
+    def test_render(self):
+        self.setupStep(slave.MakeDirectory(dir=properties.Property("x")))
+        self.properties.setProperty('x', 'XXX', 'here')
+        self.expectCommands(
+            Expect('mkdir', { 'dir' : 'XXX' })
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["MakeDirectory"])
         return self.runStep()

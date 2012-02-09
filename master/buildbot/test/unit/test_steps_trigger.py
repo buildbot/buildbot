@@ -44,15 +44,15 @@ class FakeTriggerable(triggerable.Triggerable):
 
 class FakeSourceStamp(object):
 
-    def __init__(self, _ssid, **kwargs):
-        self._ssid = _ssid
+    def __init__(self, _setid, **kwargs):
+        self._setid = _setid
         self.__dict__.update(kwargs)
 
     def getAbsoluteSourceStamp(self, rev):
-        return FakeSourceStamp(self._ssid + 1000, revision=rev)
+        return FakeSourceStamp(self._setid + 1000, revision=rev)
 
-    def getSourceStampId(self, master):
-        return defer.succeed(self._ssid)
+    def getSourceStampSetId(self, master):
+        return defer.succeed(self._setid)
 
 # Magic numbers that relate brid to other build settings
 BRID_TO_BSID = lambda brid: brid+2000

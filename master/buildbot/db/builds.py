@@ -52,6 +52,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
     def finishBuilds(self, bids, _reactor=reactor):
         def thd(conn):
+            transaction = conn.begin()
             tbl = self.db.model.builds
             now = _reactor.seconds()
 
@@ -62,6 +63,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 batch, remaining = remaining[:100], remaining[100:]
                 q = tbl.update(whereclause=(tbl.c.id.in_(batch)))
                 conn.execute(q, finish_time=now)
+
+            transaction.commit()
         return self.db.pool.do(thd)
 
     def _bdictFromRow(self, row):

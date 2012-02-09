@@ -636,7 +636,7 @@ To spawn a command in the buildslave, create a
 ``start`` method and run it with
 :meth:`~buildbot.process.buildstep.BuildStep.runCommand`::
 
-    cmd = LoggedRemoteCommand(args)
+    cmd = RemoteCommand(args)
     d = self.runCommand(cmd)
 
 To add a LogFile, use :meth:`~buildbot.process.buildstep.BuildStep.addLog`.

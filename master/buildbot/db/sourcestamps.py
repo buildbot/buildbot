@@ -28,10 +28,13 @@ class SsList(list):
 class SourceStampsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
-    def addSourceStamp(self, branch, revision, repository, project, sourcestampsetid,
+    def addSourceStamp(self, branch, revision, repository,
+                          project, sourcestampsetid, codebase='',
                           patch_body=None, patch_level=0, patch_author="",
                           patch_comment="", patch_subdir=None, changeids=[]):
         def thd(conn):
+            transaction = conn.begin()
+
             # handle inserting a patch
             patchid = None
             if patch_body is not None:
@@ -51,6 +54,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 revision=revision,
                 patchid=patchid,
                 repository=repository,
+                codebase=codebase,
                 project=project,
                 sourcestampsetid=sourcestampsetid))
             ssid = r.inserted_primary_key[0]
@@ -61,6 +65,8 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 conn.execute(ins, [
                     dict(sourcestampid=ssid, changeid=changeid)
                     for changeid in changeids ])
+
+            transaction.commit()
 
             # and return the new ssid
             return ssid
@@ -100,7 +106,8 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             ssdict = SsDict(ssid=ssid, branch=row.branch, sourcestampsetid=row.sourcestampsetid,
                     revision=row.revision, patch_body=None, patch_level=None,
                     patch_author=None, patch_comment=None, patch_subdir=None,
-                    repository=row.repository, project=row.project,
+                    repository=row.repository, codebase=row.codebase,
+                    project=row.project,
                     changeids=set([]))
             patchid = row.patchid
             res.close()

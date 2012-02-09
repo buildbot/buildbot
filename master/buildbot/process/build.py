@@ -91,18 +91,14 @@ class Build(properties.PropertiesMixin):
     def setSlaveEnvironment(self, env):
         self.slaveEnvironment = env
 
-    def getSourceStamp(self, repository=None):
-        if repository is None:
+    def getSourceStamp(self, codebase=None):
+        if codebase is None:
             if self.sources:
                 return self.sources[0]
             else:
                 return None
         for source in self.sources:
-            # The passed repository may also contains the location of the repository
-            # like https://github.com/buildbot/buildbot
-            # There is a hit if the source.repository is equal to the lastpart of the 
-            # passed repository
-            if repository.endswith(source.repository):
+            if source.codebase == codebase:
                 return source
         return None
 
@@ -127,8 +123,9 @@ class Build(properties.PropertiesMixin):
         for c in self.allChanges():
             if c.who not in blamelist:
                 blamelist.append(c.who)
-        if self.sources[0].patch_info: #Add first patch author to blamelist
-            blamelist.append(self.sources[0].patch_info[0])
+        for source in self.sources:
+            if source.patch_info: #Add patch author to blamelist
+                blamelist.append(source.patch_info[0])
         blamelist.sort()
         return blamelist
 
@@ -177,26 +174,14 @@ class Build(properties.PropertiesMixin):
         # now set some properties of our own, corresponding to the
         # build itself
         props.setProperty("buildnumber", self.build_status.number, "Build")
-        repositories = []
-        branches = {}
-        revisions = {}
-        projects = {}
-        for source in self.sources:
-            repositories.append(source.repository)
-            branches[source.repository] = source.branch
-            revisions[source.repository] = source.revision
-            projects[source.repository] = source.project
-        props.setProperty("repositories", repositories, "Build")
-        props.setProperty("branches", branches, "Build")
-        props.setProperty("revisions", revisions, "Build")
-        props.setProperty("projects", projects, "Build")
         
-        if self.sources:
+        if self.sources and len(self.sources) == 1:
             # old interface for backwards compatibility
             source = self.sources[0]
             props.setProperty("branch", source.branch, "Build")
             props.setProperty("revision", source.revision, "Build")
             props.setProperty("repository", source.repository, "Build")
+            props.setProperty("codebase", source.codebase, "Build")
             props.setProperty("project", source.project, "Build")
 
         self.builder.setupProperties(props)

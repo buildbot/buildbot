@@ -83,13 +83,9 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         self.properties.update(properties, "Scheduler")
         self.properties.setProperty("scheduler", name, "Scheduler")
 
-        self.schedulerid = None
-        """ID of this scheduler; set just before the scheduler starts, and set
-        to None after stopService is complete."""
+        self.objectid = None
 
         self.master = None
-        """BuildMaster instance; set just before the scheduler starts, and set
-        to None after stopService is complete."""
 
         # Set the other repositories that are necessary to process the changes
         # These repositories will always result in a sourcestamp with or without changes
@@ -334,7 +330,6 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         @returns: (buildset ID, buildrequest IDs) via Deferred
         """
         assert changeids is not []
-
         # attributes for this sourcestamp will be based on the most recent
         # change, so fetch the change with the highest id
         wfd = defer.waitForDeferred(self.master.db.changes.getChange(max(changeids)))
@@ -356,6 +351,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                     branch=change.branch,
                     revision=change.revision,
                     repository=change.repository,
+                    codebase=change.codebase,
                     project=change.project,
                     changeids=changeids,
                     sourcestampsetid=setid))
@@ -368,7 +364,6 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                                 builderNames=builderNames,
                                 properties=properties))
         yield wfd
-
         yield wfd.getResult()
 
     @defer.deferredGenerator

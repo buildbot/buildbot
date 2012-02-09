@@ -172,8 +172,8 @@ class Mercurial(Source):
         return d
 
     def clobber(self, _):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
-                                                      'logEnviron':self.logEnviron})
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
+                                                'logEnviron':self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         d.addCallback(lambda _: self._dovccmd(['clone', '--noupdate'
@@ -295,8 +295,8 @@ class Mercurial(Source):
             return 'fresh'
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.workdir + '/.hg',
-                                                     'logEnviron': self.logEnviron})
+        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg',
+                                               'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _fail(tmp):

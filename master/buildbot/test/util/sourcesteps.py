@@ -38,7 +38,7 @@ class SourceStepMixin(steps.BuildStepMixin):
 
     # utilities
 
-    def setupStep(self, step, args={}, **kwargs):
+    def setupStep(self, step, args={}, patch=None, **kwargs):
         """
         Set up C{step} for testing.  This calls L{BuildStepMixin}'s C{setupStep}
         and then does setup specific to a Source step.
@@ -51,7 +51,7 @@ class SourceStepMixin(steps.BuildStepMixin):
         ss.revision = args.get('revision', None)
         ss.project = ''
         ss.repository = ''
-        ss.patch = None
+        ss.patch = patch
         ss.patch_info = None
         ss.changes = []
 

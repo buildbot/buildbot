@@ -319,6 +319,14 @@ takes the form of a URL.
 :class:`Change`\s can be filtered on repository, but more often this field is used as a
 hint for the build steps to figure out which code to check out.
 
+.. _Attr-Codebase:
+
+Codebase
+++++++++
+
+The codebase is derived from a change. A complete software product may be composed of more than one repository. Each repository has its own unique position inside the product design (i.e. main module, shared library, resources, documentation). To be able to start builds from different CVS's and still distinquish the different repositories `codebase`'s are used. By default the codebase is equal to the repository of a change. The `master.cfg` may contain a callable that determines the codebase from an incomming change and replaces the default value(see. :bb:cfg:`Codebase Generator<codebase>`).
+
+
 .. _Attr-Revision:
 
 Revision
@@ -353,7 +361,7 @@ consumed by the :meth:`computeSourceRevision` method in the appropriate
 
 
 Branches
-########
+++++++++
 
 The Change might also have a :attr:`branch` attribute. This indicates
 that all of the Change's files are in the same named branch. The
@@ -388,14 +396,14 @@ same as Darcs.
     branch='warner-newfeature', files=['src/foo.c']
 
 Build Properties
-################
+++++++++++++++++
 
 A Change may have one or more properties attached to it, usually specified
 through the Force Build form or :bb:cmdline:`sendchange`. Properties are discussed
 in detail in the :ref:`Build-Properties` section.
 
 Links
-#####
++++++
 
 .. TODO: who is using 'links'? how is it being used?
 
@@ -479,7 +487,7 @@ the ``firstFailure`` type (which fires as soon as we know the
 the :class:`BuildSet` has completely finished, regardless of whether the
 overall set passed or failed).
 
-A :class:`BuildSet` is created with a *source stamp* tuple of
+A :class:`BuildSet` is created with set of one or more *source stamp* tuples of
 ``(branch, revision, changes, patch)``, some of which may be ``None``, and a
 list of :class:`Builder`\s on which it is to be run. They are then given to the
 BuildMaster, which is responsible for creating a separate
@@ -524,13 +532,13 @@ BuildRequest
 ------------
 
 A :class:`BuildRequest` is a request to build a specific set of source
-code (specified by a source stamp) on a single :class:`Builder`. Each :class:`Builder` runs the
-:class:`BuildRequest` as soon as it can (i.e. when an associated
-buildslave becomes free). :class:`BuildRequest`\s are prioritized from
-oldest to newest, so when a buildslave becomes free, the
+code (specified by one ore more source stamps) on a single :class:`Builder`. 
+Each :class:`Builder` runs the :class:`BuildRequest` as soon as it can (i.e. 
+when an associated buildslave becomes free). :class:`BuildRequest`\s are 
+prioritized from oldest to newest, so when a buildslave becomes free, the
 :class:`Builder` with the oldest :class:`BuildRequest` is run.
 
-The :class:`BuildRequest` contains the :class:`SourceStamp` specification.
+The :class:`BuildRequest` contains one :class:`SourceStamp` specification per codebase.
 The actual process of running the build (the series of :class:`Step`\s that will
 be executed) is implemented by the :class:`Build` object. In this future
 this might be changed, to have the :class:`Build` define *what*
@@ -539,9 +547,9 @@ Builder) to define *how* it gets built.
 
 The :class:`BuildRequest` may be mergeable with other compatible
 :class:`BuildRequest`\s. Builds that are triggered by incoming :class:`Change`\s
-will generally be mergeable. Builds that are triggered by user
-requests are generally not, unless they are multiple requests to build
-the *latest sources* of the same branch.
+will generally be mergeable. Builds that are triggered by user requests are generally not, 
+unless they are multiple requests to build the *latest sources* of the same branch. 
+A merge of buildrequests is performed per codebase, thus on changes having the same codebase.
 
 .. _Builder:
 
@@ -837,6 +845,9 @@ Most Source steps record the revision that they checked out in
 the ``got_revision`` property.  A later step could use this
 property to specify the name of a fully-built tarball, dropped in an
 easily-acessible directory for later testing.
+
+.. attention:: 
+    In builds with more than one sourcestamp its value is unpredictable!
 
 Some projects want to perform nightly builds as well as bulding in response to
 committed changes.  Such a project would run two schedulers, both pointing to

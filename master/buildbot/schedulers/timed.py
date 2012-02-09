@@ -268,7 +268,7 @@ class Nightly(Timed):
                                               change_filter=self.change_filter,
                                               onlyImportant=self.onlyImportant)
         else:
-            return self.master.db.schedulers.flushChangeClassifications(self.schedulerid)
+            return self.master.db.schedulers.flushChangeClassifications(self.objectid)
 
     def gotChange(self, change, important):
         # both important and unimportant changes on our branch are recorded, as
@@ -278,7 +278,7 @@ class Nightly(Timed):
         if change.branch != self.branch:
             return defer.succeed(None) # don't care about this change
         return self.master.db.schedulers.classifyChanges(
-                self.schedulerid, { change.number : important })
+                self.objectid, { change.number : important })
 
     def getNextBuildTime(self, lastActuated):
         def addTime(timetuple, secs):
@@ -336,7 +336,7 @@ class Nightly(Timed):
         # if onlyIfChanged is True, then we will skip this build if no
         # important changes have occurred since the last invocation
         if self.onlyIfChanged:
-            wfd = defer.waitForDeferred(scheds.getChangeClassifications(self.schedulerid))
+            wfd = defer.waitForDeferred(scheds.getChangeClassifications(self.objectid))
             yield wfd
             classifications = wfd.getResult()
 
@@ -357,7 +357,7 @@ class Nightly(Timed):
 
             max_changeid = changeids[-1] # (changeids are sorted)
             wfd = defer.waitForDeferred(
-                    scheds.flushChangeClassifications(self.schedulerid,
+                    scheds.flushChangeClassifications(self.objectid,
                                                       less_than=max_changeid+1))
             yield wfd
             wfd.getResult()
