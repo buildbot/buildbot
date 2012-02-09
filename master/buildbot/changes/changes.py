@@ -118,7 +118,7 @@ class Change:
         self.project = project
 
         # keep a sorted list of the files, for easier display
-        self.files = files[:]
+        self.files = (files or [])[:]
         self.files.sort()
 
     def __setstate__(self, dict):
