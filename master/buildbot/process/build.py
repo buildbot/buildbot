@@ -123,8 +123,9 @@ class Build(properties.PropertiesMixin):
         for c in self.allChanges():
             if c.who not in blamelist:
                 blamelist.append(c.who)
-        if self.sources[0].patch_info: #Add first patch author to blamelist
-            blamelist.append(self.sources[0].patch_info[0])
+        for source in self.sources:
+            if source.patch_info: #Add patch author to blamelist
+                blamelist.append(source.patch_info[0])
         blamelist.sort()
         return blamelist
 
@@ -174,7 +175,7 @@ class Build(properties.PropertiesMixin):
         # build itself
         props.setProperty("buildnumber", self.build_status.number, "Build")
         
-        if self.sources:
+        if self.sources and len(self.sources) == 1:
             # old interface for backwards compatibility
             source = self.sources[0]
             props.setProperty("branch", source.branch, "Build")
