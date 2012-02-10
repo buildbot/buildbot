@@ -493,17 +493,3 @@ class TestChangesConnectorComponent(
                         { 'notest' : ('no', 'Change') })
         d.addCallback(check)
         return d
-
-    def test_setCodebase(self):
-        d = self.insertTestData(self.change14_rows)
-        def update14(_):
-            return self.db.changes.setCodebase(14, 'codebase14')
-        def get14(_):
-            return self.db.changes.getChange(14)
-        d.addCallback(update14)
-        d.addCallback(get14)
-        def check14(chdict):
-            self.assertEqual(chdict['codebase'], 'codebase14')
-        d.addCallback(check14)
-        return d
-

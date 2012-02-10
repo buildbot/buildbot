@@ -82,7 +82,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
             # appropriate default values
             self.master.db.changes.addChange.assert_called_with(author=None,
                     files=None, comments=None, is_dir=0,
-                    revision=None, when_timestamp=None, branch=None,
+                    revision=None, when_timestamp=None, branch=None, codebase='',
                     category=None, revlink='', properties={}, repository='', project='', uid=None)
 
             self.master.db.changes.getChange.assert_called_with(changeid)
@@ -98,7 +98,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         default_db_kwargs = dict(files=None, comments=None, author=None,
                 is_dir=0, revision=None, when_timestamp=None,
                 branch=None, category=None, revlink='', properties={},
-                repository='', project='', uid=None)
+                repository='', codebase='', project='', uid=None)
         k = default_db_kwargs
         k.update(exp_db_kwargs)
         exp_db_kwargs = k
@@ -157,40 +157,6 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         return self.do_test_addChange_args(
                 args=('me', ['a'], 'com'),
                 exp_db_kwargs=dict(author='me', files=['a'], comments='com'))
-
-    def test_addChange_callCodebaseGenerator(self):
-        chdict = {
-            'changeid': 14,
-            'author': u'warner',
-            'branch': u'warnerdb',
-            'category': u'devel',
-            'comments': u'fix whitespace',
-            'files': [u'master/buildbot/__init__.py'],
-            'is_dir': 0,
-            'links': [],
-            'project': u'Buildbot',
-            'properties': {},
-            'repository': u'git://warner',
-            'revision': u'0e92a098b',
-            'revlink': u'http://warner/0e92a098b',
-            'when_timestamp': epoch2datetime(266738404),
-        }
-        
-        self.master.config.codebaseGenerator = lambda _ : "mycodebase"
-        self.master.db = mock.Mock()
-        self.master.db.changes.addChange.return_value = \
-            defer.succeed(14)
-        self.master.db.changes.getChange.return_value = \
-            defer.succeed(chdict)
-            
-        d = self.master.addChange()
-        def check(change):
-            # master called the right thing in the db component
-            self.master.db.changes.setCodebase.assert_called_with(changeid=14, codebase="mycodebase")
-            # addBuildset returned the right value
-            self.assertEqual(change.codebase, 'mycodebase')
-        d.addCallback(check)
-        return d
                 
     def do_test_createUserObjects_args(self, args=(), kwargs={}, exp_args=()):
         got = []
