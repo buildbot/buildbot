@@ -210,7 +210,7 @@ class SVN(Source):
             export_cmd = ['svn', 'export']
             if self.revision:
                 export_cmd.extend(["--revision", str(self.revision)])
-            export_cmd.extend(['export', 'source', self.workdir])
+            export_cmd.extend(['source', self.workdir])
 
             cmd = buildstep.RemoteShellCommand('', export_cmd,
                     env=self.env, logEnviron=self.logEnviron)
