@@ -47,12 +47,6 @@ def getChanges(request, options=None):
             files = json.loads( args.get('files')[0] )
         else:
             files = []
-                
-        links = None
-        if args.get('links'):
-            links = json.loads( args.get('links')[0] )
-        else:
-            links = []
 
         properties = None
         if args.get('properties'):
@@ -72,7 +66,7 @@ def getChanges(request, options=None):
         project = firstOrNothing(args.get('project'))
               
         chdict = dict(who=who, files=files, comments=comments,
-                isdir=isdir, links=links, revision=revision, when=when,
+                isdir=isdir, revision=revision, when=when,
                 branch=branch, category=category, revlink=revlink,
                 properties=properties, repository=repository,
                 project=project)
