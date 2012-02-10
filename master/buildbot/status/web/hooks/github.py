@@ -143,7 +143,6 @@ def process_change(payload, user, repo, repo_url, project):
                                 + " <" + commit['author']['email'] + ">",
                     files    = files,
                     comments = commit['message'], 
-                    links    = [commit['url']],
                     revision = commit['id'],
                     when     = when,
                     branch   = branch,
