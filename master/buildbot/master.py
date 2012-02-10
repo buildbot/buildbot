@@ -448,17 +448,15 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         for n in properties:
             properties[n] = (properties[n], 'Change')
 
-        newchange = changes.Change(who=author, files=files,
-                    comments=comments, isdir=is_dir,
-                    revision=revision,
-                    when=datetime2epoch(when_timestamp),
-                    branch=branch, category=category,
-                    revlink=revlink, properties=properties,
-                    repository=repository,
-                    project=project)
-
-        codebase = ''
         if self.config.codebaseGenerator is not None:
+            newchange = changes.Change(who=author, files=files,
+                        comments=comments, isdir=is_dir,
+                        revision=revision,
+                        when=datetime2epoch(when_timestamp),
+                        branch=branch, category=category,
+                        revlink=revlink, properties=properties,
+                        repository=repository,
+                        project=project)
             codebase = self.config.codebaseGenerator(newchange.asDict())
         else:
             codebase = repository

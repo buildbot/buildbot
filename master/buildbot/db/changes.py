@@ -149,16 +149,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         d = self.db.pool.do(thd)
         return d
 
-    def setCodebase(self, changeid, codebase):
-        def thd(conn):
-            tbl = self.db.model.changes
-            q = tbl.update(whereclause=(tbl.c.changeid==changeid))
-            res = conn.execute(q, codebase=codebase)
-            if res.rowcount != 1:
-                raise KeyError
-        d = self.db.pool.do(thd)
-        return d
-        
     # utility methods
 
     def pruneChanges(self, changeHorizon):
