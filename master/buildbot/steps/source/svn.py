@@ -113,7 +113,7 @@ class SVN(Source):
             if self.revision:
                 checkout_cmd.extend(["--revision", str(self.revision)])
 
-            d = self._dovccmd(['checkout', self.svnurl, '.'])
+            d = self._dovccmd(checkout_cmd)
         elif self.method == 'clean':
             d = self.clean()
         elif self.method == 'fresh':
