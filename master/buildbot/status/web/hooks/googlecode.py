@@ -53,7 +53,6 @@ class Payload(object):
                 who=r['author'],
                 files=list(files),
                 comments=r['message'],
-                links=[r['url']],
                 revision=r['revision'],
                 when=r['timestamp'],
                 # Let's hope Google add the branch one day:
