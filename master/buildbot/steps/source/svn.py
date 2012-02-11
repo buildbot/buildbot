@@ -63,7 +63,7 @@ class SVN(Source):
                                  )
         errors = []
         if self.mode not in self.possible_modes:
-            errors.append("mode %s is not one of %" % (self.mode, self.possible_modes))
+            errors.append("mode %s is not one of %s" % (self.mode, self.possible_modes))
         if self.method not in self.possible_methods:
             errors.append("method %s is not one of %s" % (self.method, self.possible_methods))
 
