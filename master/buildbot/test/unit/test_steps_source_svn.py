@@ -620,7 +620,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--non-interactive', '--no-auth-cache'])
             + 0,
             ExpectShell(workdir='',
-                        command=['svn', 'export', 'source', 'wkdir'])
+                        command=['svn', 'export', '--revision', '100',
+                                 'source', 'wkdir'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svnversion'])
