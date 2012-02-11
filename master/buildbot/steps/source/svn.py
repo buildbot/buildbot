@@ -109,7 +109,11 @@ class SVN(Source):
         yield wfd
         updatable = wfd.getResult()
         if not updatable:
-            d = self._dovccmd(['checkout', self.svnurl, '.'])
+            checkout_cmd = ['checkout', self.svnurl, '.']
+            if self.revision:
+                checkout_cmd.extend(["--revision", str(self.revision)])
+
+            d = self._dovccmd(checkout_cmd)
         elif self.method == 'clean':
             d = self.clean()
         elif self.method == 'fresh':
@@ -145,20 +149,30 @@ class SVN(Source):
         wfd.getResult()
         if cmd.rc != 0:
             raise buildstep.BuildStepFailed()
+        
+        checkout_cmd = ['checkout', self.svnurl, '.']
+        if self.revision:
+            checkout_cmd.extend(["--revision", str(self.revision)])
 
         wfd = defer.waitForDeferred(
-                self._dovccmd(['checkout', self.svnurl, '.']))
+                self._dovccmd(checkout_cmd))
         yield wfd
         wfd.getResult()
 
     def fresh(self):
         d = self.purge(True)
-        d.addCallback(lambda _: self._dovccmd(['update']))
+        cmd = ['update']
+        if self.revision:
+            cmd.extend(['--revision', str(self.revision)])
+        d.addCallback(lambda _: self._dovccmd(cmd))
         return d
 
     def clean(self):
         d = self.purge(False)
-        d.addCallback(lambda _: self._dovccmd(['update']))
+        cmd = ['update']
+        if self.revision:
+            cmd.extend(['--revision', str(self.revision)])
+        d.addCallback(lambda _: self._dovccmd(cmd))
         return d
 
     @defer.deferredGenerator
@@ -193,8 +207,12 @@ class SVN(Source):
                     { 'fromdir': 'source', 'todir':self.workdir,
                       'logEnviron': self.logEnviron })
         else:
-            cmd = buildstep.RemoteShellCommand('',
-                    ['svn', 'export', 'source', self.workdir],
+            export_cmd = ['svn', 'export']
+            if self.revision:
+                export_cmd.extend(["--revision", str(self.revision)])
+            export_cmd.extend(['source', self.workdir])
+
+            cmd = buildstep.RemoteShellCommand('', export_cmd,
                     env=self.env, logEnviron=self.logEnviron)
         cmd.useLog(self.stdio_log, False)
 

@@ -507,7 +507,7 @@ should preferentially create the :bb:step:`SVN` step with the
    SVN's incremental mode does not require a method.  The full mode
    has four methods defined:
 
-  ``clobber``
+   ``clobber``
       It removes the working directory for each build then makes full checkout.
 
    ``fresh``

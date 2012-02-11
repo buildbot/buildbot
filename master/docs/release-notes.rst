@@ -68,6 +68,10 @@ Deprecations, Removals, and Non-Compatible Changes
   ``hgbuildbot.baseurl`` to an empty string as suggested in :ref:`the Buildbot
   manual <Mercurial-Hook>`.
 
+* Master Side :bb:step:`SVN` Step has been corrected to properly use
+  ``--revision`` when ``alwaysUseLatest`` is set to ``False`` when in the
+  ``full`` mode. See :bb:bug:`2194`
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
