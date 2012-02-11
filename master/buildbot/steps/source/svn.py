@@ -22,7 +22,7 @@ from twisted.internet import defer
 from buildbot.process import buildstep
 from buildbot.steps.source import Source
 from buildbot.interfaces import BuildSlaveTooOldError
-
+from buildbot.config import ConfigErrors
 
 class SVN(Source):
     """I perform Subversion checkout/update operations."""
@@ -31,6 +31,8 @@ class SVN(Source):
     branch_placeholder = '%%BRANCH%%'
 
     renderables = [ 'svnurl', 'baseURL' ]
+    possible_modes = ('incremental', 'full')
+    possible_methods = ('clean', 'fresh', 'clobber', 'copy', 'export', None)
 
     def __init__(self, svnurl=None, baseURL=None, mode='incremental',
                  method=None, defaultBranch=None, username=None,
@@ -59,17 +61,19 @@ class SVN(Source):
                                  keep_on_purge=keep_on_purge,
                                  depth=depth,
                                  )
-
-        assert self.mode in ['incremental', 'full']
-        assert self.method in ['clean', 'fresh', 'clobber', 'copy', 'export', None]
+        errors = []
+        if self.mode not in self.possible_modes:
+            errors.append("mode %s is not one of %" % (self.mode, self.possible_modes))
+        if self.method not in self.possible_methods:
+            errors.append("method %s is not one of %s" % (self.method, self.possible_methods))
 
         if svnurl and baseURL:
-            raise ValueError("you must provide exactly one of svnurl and"
-                             " baseURL")
+            errors.append("you must provide exactly one of svnurl and baseURL")
 
         if svnurl is None and baseURL is None:
-            raise ValueError("you must privide at least one of svnurl and"
-                             " baseURL")
+            errors.append("you must privide at least one of svnurl and baseURL")
+        if errors:
+            raise ConfigErrors(errors)
 
     def startVC(self, branch, revision, patch):
         self.revision = revision

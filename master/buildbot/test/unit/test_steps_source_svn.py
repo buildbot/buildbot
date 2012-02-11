@@ -19,6 +19,7 @@ from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import sourcesteps
 from buildbot.process import buildstep
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
+from buildbot import config
 
 class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
@@ -55,13 +56,23 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         svn.SVN.slaveVersionIsOlderThan = lambda x, y, z: result
 
     def test_repourl_and_baseURL(self):
-        self.assertRaises(ValueError, lambda :
+        self.assertRaises(config.ConfigErrors, lambda :
                 svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
                         baseURL='http://svn.local/app/trunk@HEAD'))
 
     def test_no_repourl_and_baseURL(self):
-        self.assertRaises(ValueError, lambda :
+        self.assertRaises(config.ConfigErrors, lambda :
                 svn.SVN())
+
+    def test_incorrect_mode(self):
+        self.assertRaises(config.ConfigErrors, lambda :
+                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                        mode='invalid'))
+
+    def test_incorrect_method(self):
+        self.assertRaises(config.ConfigErrors, lambda :
+                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                        method='invalid'))
 
     def test_mode_incremental(self):
         self.setupStep(
