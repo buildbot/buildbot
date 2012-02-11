@@ -96,9 +96,6 @@ Changes for Developers
 Features
 ~~~~~~~~
 
-* Buildbot is compatible with PyPy, when using versios of Twisted that are also
-  copmatible.  Thanks to Tom Prince for adding test support.
-
 * The IRC status bot now display build status in colors by default.
   It is controllable and may be disabled with useColors=False in constructor.
 
@@ -126,7 +123,7 @@ Features
 * Shell command steps will now "flatten" nested lists in the ``command``
   argument.  This allows substitution of multiple command-line arguments using
   properties.  See :bb:bug:`2150`.
-
+  
 * Steps now take an optional ``hideStepIf`` parameter to suppress the step
   from the waterfall and build details in the web. (:bb:bug:`1743`)
 
