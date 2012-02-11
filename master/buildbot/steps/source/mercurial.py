@@ -85,6 +85,8 @@ class Mercurial(Source):
                                  )
 
         assert self.mode in ['incremental', 'full']
+        assert self.method in [None, 'clean', 'fresh', 'clobber']
+        assert self.branchType in ['inrepo', 'dirname']
 
         if repourl and baseURL:
             raise ValueError("you must provide exactly one of repourl and"
@@ -112,8 +114,6 @@ class Mercurial(Source):
         elif self.branchType == 'inrepo':
             assert self.baseURL is None
             self.update_branch = (branch or 'default')
-        else:
-            raise ValueError("Invalid branch type")
 
         if self.mode == 'full':
             d.addCallback(lambda _: self.full())
@@ -141,8 +141,6 @@ class Mercurial(Source):
             d = self.clean(None)
         elif self.method == 'fresh':
             d = self.fresh(None)
-        else:
-            raise ValueError("Unknow method, check your configuration")
         wfd = defer.waitForDeferred(d)
         yield wfd
         wfd.getResult()
