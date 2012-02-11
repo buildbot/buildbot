@@ -21,12 +21,16 @@ from twisted.internet import defer
 from buildbot.process import buildstep
 from buildbot.steps.source import Source
 from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.config import ConfigErrors
 
 class Mercurial(Source):
     """ Class for Mercurial with all the smarts """
     name = "hg"
 
     renderables = [ "repourl", "baseURL" ]
+    possible_modes = ('incremental', 'full')
+    possible_methods = (None, 'clean', 'fresh', 'clobber')
+    possible_branchTypes = ('inrepo', 'dirname')
 
     def __init__(self, repourl=None, baseURL=None, mode='incremental',
                  method=None, defaultBranch=None, branchType='dirname',
@@ -84,15 +88,25 @@ class Mercurial(Source):
                                  clobberOnBranchChange,
                                  )
 
-        assert self.mode in ['incremental', 'full']
+        errors = []
+        if self.mode not in self.possible_modes:
+            errors.append("mode %s is not one of %" %
+                            (self.mode, self.possible_modes))
+        if self.method not in self.possible_methods:
+            errors.append("method %s is not one of %s" %
+                            (self.method, self.possible_methods))
+        if self.branchType not in self.possible_branchTypes:
+            errors.append("branchType %s is not one of %s" %
+                            (self.branchType, self.possible_branchTypes))
 
         if repourl and baseURL:
-            raise ValueError("you must provide exactly one of repourl and"
-                             " baseURL")
+            errors.append("you must provide exactly one of repourl and baseURL")
 
         if repourl is None and baseURL is None:
-            raise ValueError("you must privide at least one of repourl and"
-                             " baseURL")
+            errors.append("you must privide at least one of repourl and baseURL")
+        
+        if errors:
+            raise ConfigErrors(errors)
 
     def startVC(self, branch, revision, patch):
         self.revision = revision
@@ -112,8 +126,6 @@ class Mercurial(Source):
         elif self.branchType == 'inrepo':
             assert self.baseURL is None
             self.update_branch = (branch or 'default')
-        else:
-            raise ValueError("Invalid branch type")
 
         if self.mode == 'full':
             d.addCallback(lambda _: self.full())
@@ -141,8 +153,6 @@ class Mercurial(Source):
             d = self.clean(None)
         elif self.method == 'fresh':
             d = self.fresh(None)
-        else:
-            raise ValueError("Unknow method, check your configuration")
         wfd = defer.waitForDeferred(d)
         yield wfd
         wfd.getResult()
