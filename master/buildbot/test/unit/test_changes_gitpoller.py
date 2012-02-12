@@ -82,7 +82,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
         d.addCallback(cb_desired)
         
     def test_get_commit_author(self):
-        authorStr = 'Sammy Jankis'
+        authorStr = 'Sammy Jankis <email@example.com>'
         return self._perform_git_output_test(self.poller._get_commit_author,
                 authorStr, authorStr)
         
