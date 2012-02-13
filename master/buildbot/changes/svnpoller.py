@@ -333,7 +333,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                     log.msg("Ignoring deletion of branch '%s'" % branch)
                 else:
                     chdict = dict(
-                            who=author,
+                            author=author,
                             files=files,
                             comments=comments,
                             revision=revision,

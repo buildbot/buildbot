@@ -79,7 +79,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         except:
             self.fail('Failed to get change from email message.')
         self.assert_(chdict != None)
-        self.assert_(chdict['who'] == 'andy')
+        self.assert_(chdict['author'] == 'andy')
         self.assert_(len(chdict['files']) == 1)
         self.assert_(chdict['files'][0] == 'base/module/src/make/GNUmakefile')
         self.assert_(chdict['comments'] == 'Commented out some stuff.\n')
@@ -101,7 +101,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         except:
             self.fail('Failed to get change from email message.')
         self.assert_(chdict != None)
-        self.assert_(chdict['who'] == 'andy')
+        self.assert_(chdict['author'] == 'andy')
         self.assert_(len(chdict['files']) == 2)
         self.assert_(chdict['files'][0] == 'base/module/src/file1.cpp')
         self.assert_(chdict['files'][1] == 'base/module/src/file2.cpp')

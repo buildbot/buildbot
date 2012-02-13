@@ -50,7 +50,7 @@ class Payload(object):
             files.update(r['modified'])
             files.update(r['removed'])
             changes.append(dict(
-                who=r['author'],
+                author=r['author'],
                 files=list(files),
                 comments=r['message'],
                 revision=r['revision'],

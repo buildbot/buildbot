@@ -80,7 +80,7 @@ class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
             self.assertEquals(change['files'], ['/CMakeLists.txt'])
             self.assertEquals(change["repository"], "https://code.google.com/p/webhook-test/")
             self.assertEquals(change["when"], 1324082130)
-            self.assertEquals(change["who"], "Louis Opter <louis@lse.epitech.net>")
+            self.assertEquals(change["author"], "Louis Opter <louis@lse.epitech.net>")
             self.assertEquals(change["revision"], '68e5df283a8e751cdbf95516b20357b2c46f93d4')
             self.assertEquals(change["comments"], "Print a message")
             self.assertEquals(change["branch"], "test")

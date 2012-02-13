@@ -74,7 +74,7 @@ class TestChangeHookConfigured(unittest.TestCase):
             self.assertEquals(len(change["files"]), 0)
             self.assertEquals(change["repository"], None)
             self.assertEquals(change["when"], None)
-            self.assertEquals(change["who"], None)
+            self.assertEquals(change["author"], None)
             self.assertEquals(change["revision"], None)
             self.assertEquals(change["comments"], None)
             self.assertEquals(change["project"], None)
@@ -93,7 +93,7 @@ class TestChangeHookConfigured(unittest.TestCase):
                        "files" : [json.dumps(['file1', 'file2'])],
                        "repository" : ["myrepo"],
                        "when" : [1234],
-                       "who" : ["Santa Claus"],
+                       "author" : ["Santa Claus"],
                        "number" : [2],
                        "comments" : ["a comment"],
                        "project" : ["a project"],
@@ -109,7 +109,7 @@ class TestChangeHookConfigured(unittest.TestCase):
             self.assertEquals(change["category"], "mycat")
             self.assertEquals(change["repository"], "myrepo")
             self.assertEquals(change["when"], 1234)
-            self.assertEquals(change["who"], "Santa Claus")
+            self.assertEquals(change["author"], "Santa Claus")
             self.assertEquals(change["src"], None)
             self.assertEquals(change["revision"], 99)
             self.assertEquals(change["comments"], "a comment")
