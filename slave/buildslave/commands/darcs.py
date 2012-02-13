@@ -58,7 +58,7 @@ class Darcs(SourceBaseCommand):
         darcs = self.getCommand('darcs')
         # checkout or export
         d = self.builder.basedir
-        command = [darcs, 'get', '--verbose', '--partial',
+        command = [darcs, 'get', '--verbose', '--lazy',
                    '--repo-name', self.srcdir]
         if self.revision:
             # write the context to a file
