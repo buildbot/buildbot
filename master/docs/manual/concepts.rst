@@ -390,16 +390,6 @@ A Change may have one or more properties attached to it, usually specified
 through the Force Build form or :bb:cmdline:`sendchange`. Properties are discussed
 in detail in the :ref:`Build-Properties` section.
 
-Links
-#####
-
-.. TODO: who is using 'links'? how is it being used?
-
-Finally, the Change might have a :attr:`links` list, which is intended
-to provide a list of URLs to a *viewcvs*-style web page that
-provides more detail for this Change, perhaps including the full file
-diffs.
-
 .. _Scheduling-Builds:
 
 Scheduling Builds
