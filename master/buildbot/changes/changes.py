@@ -171,7 +171,7 @@ class Change:
         result['revlink'] = getattr(self, 'revlink', None)
         result['properties'] = self.properties.asList()
         result['repository'] = getattr(self, 'repository', None)
-        result['codebase'] = getattr(self, 'codebase', None)
+        result['codebase'] = getattr(self, 'codebase', '')
         result['project'] = getattr(self, 'project', None)
         return result
 

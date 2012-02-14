@@ -482,22 +482,6 @@ class TestMultipleSourceStamps(unittest.TestCase):
         self.assertEqual( [source1.repository, source1.revision], ["repoA", "12345"])
         self.assertEqual( [source2.repository, source2.revision], ["repoB", "67890"])
 
-    def test_buildReturnSourceStamp_noArgs(self):
-        """
-        Test that a build returns the first sourcestamp if no arg is passed
-        """
-        source1 = self.build.getSourceStamp()
-        self.assertEqual( [source1.repository, source1.revision], ["repoA", "12345"])
-
-    def test_buildReturnSourceStamp_codebase(self):
-        """
-        Test that a build returns the correct sourcestamp that belongs to the codebase
-        """
-        codebase = 'B'
-        source2 = self.build.getSourceStamp(codebase)
-        self.assertTrue(source2 is not None)
-        self.assertEqual( [source2.repository, source2.revision], ["repoB", "67890"])
-        
     def test_buildReturnSourceStamp_empty_codebase(self):
         """
         Test that a build returns the correct sourcestamp if codebase is empty
@@ -507,34 +491,6 @@ class TestMultipleSourceStamps(unittest.TestCase):
         self.assertTrue(source3 is not None)
         self.assertEqual( [source3.repository, source3.revision], ["repoC", "111213"])
         
-class TestSingleSourceStamps(unittest.TestCase):
-
-    def setUp(self):
-        r = FakeRequest()
-        s1 = FakeSource()
-        s1.repository = "repoA"
-        s1.changes = [FakeChange(10), FakeChange(11)]
-        s1.revision = "12345"
-
-        r.sources.extend([s1])
-        self.build = Build([r])
-
-    def test_buildReturnSourceStamp_noArgs(self):
-        """
-        Test that a build returns the one and only sourcestamp
-        """
-        source1 = self.build.getSourceStamp()
-        self.assertTrue(source1 is not None)
-        self.assertEqual( [source1.repository, source1.revision], ["repoA", "12345"])
-
-    def test_buildReturnSourceStamp_no_codebase(self):
-        """
-        Test that a build returns the one and only sourcestamp
-        """
-        codebase = ''
-        source1 = self.build.getSourceStamp(codebase)
-        self.assertTrue(source1 is not None)
-        self.assertEqual( [source1.repository, source1.revision], ["repoA", "12345"])
 
 class TestBuildBlameList(unittest.TestCase):
 

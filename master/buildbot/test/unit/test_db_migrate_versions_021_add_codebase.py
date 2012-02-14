@@ -19,7 +19,7 @@ from sqlalchemy.engine import reflection
 from twisted.python import log
 from twisted.trial import unittest
 from buildbot.test.util import migration
-from buildbot.util import UTC
+from buildbot.util import UTC, datetime2epoch
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -81,6 +81,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 project='',
                 codebase=codebase)
 
+        dt_when = datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC)
         conn.execute(self.changes.insert(),
                 changeid = changeid,
                 author = 'develop',
@@ -89,7 +90,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 branch = 'default',
                 revision = 'FD56A89',
                 revling = None,
-                when_timestamp = datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC),
+                when_timestamp = datetime2epoch(dt_when),
                 category = None,
                 repository = repository,
                 codebase = codebase,
