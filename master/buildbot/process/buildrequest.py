@@ -151,8 +151,8 @@ class BuildRequest(object):
 
     def canBeMergedWith(self, other):
         #get all codebases from both requests
-        all_codebases = set(s.codebase for s in self.sources.itervalues())
-        all_codebases |= set(s.codebase for s in other.sources.itervalues())
+        all_codebases = set(self.sources.iterkeys())
+        all_codebases &= set(other.sources.iterkeys())
 
         for c in all_codebases:
             if not self.sources[c].canBeMergedWith(other.sources[c]):
@@ -162,9 +162,9 @@ class BuildRequest(object):
     def mergeSourceStampsWith(self, others):
         """ Returns one merged sourcestamp for every codebase """
         #get all codebases from all requests
-        all_codebases = set(s.codebase for s in self.sources.itervalues())
+        all_codebases = set(self.sources.iterkeys())
         for other in others:
-            all_codebases |= set(s.codebase for s in other.sources.itervalues())
+            all_codebases |= set(other.sources.iterkeys())
 
         all_merged_sources = {}
         # walk along the codebases
