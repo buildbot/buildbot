@@ -98,7 +98,7 @@ described in :ref:`developer-Reconfiguration`.
     
         A callable, or None, used to determine the codebase from an incomming 
         :py:class:`~buildbot.changes.changes.Change`,
-        from :bb:cfg:`codebaseGenerator<codebase>`
+        from :bb:cfg:`codebaseGenerator`
         
     .. py:attribute:: slavePortnum
 

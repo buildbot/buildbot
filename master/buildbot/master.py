@@ -449,17 +449,22 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             properties[n] = (properties[n], 'Change')
 
         if self.config.codebaseGenerator is not None:
-            newchange = changes.Change(who=author, files=files,
-                        comments=comments, isdir=is_dir,
-                        revision=revision,
-                        when=datetime2epoch(when_timestamp),
-                        branch=branch, category=category,
-                        revlink=revlink, properties=properties,
-                        repository=repository,
-                        project=project)
-            codebase = self.config.codebaseGenerator(newchange.asDict())
+            chdict = {}
+            chdict['who']=author
+            chdict['files']=files
+            chdict['comments']=comments
+            chdict['isdir']=is_dir
+            chdict['revision']=revision
+            chdict['when']=when_timestamp
+            chdict['branch']=branch
+            chdict['category']=category
+            chdict['revlink']=revlink
+            chdict['properties']=properties
+            chdict['repository']=repository
+            chdict['project']=project
+            codebase = self.config.codebaseGenerator(chdict)
         else:
-            codebase = repository
+            codebase = ''
             
         d = defer.succeed(None)
         if src:

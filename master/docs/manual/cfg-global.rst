@@ -730,14 +730,14 @@ callables, and tries each in turn, returning the first successful match.
 .. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch
 
 
-.. bb:cfg:: codebase
+.. bb:cfg:: codebaseGenerator
 
 Codebase Generator
 ~~~~~~~~~~~~~~~~~~
 
 ::
 
-    def codebaseGenerator(change):
+    def codebaseGenerator(chdict):
         all_repositories = {
             r'https://hg/hg/mailsuite/mailclient': 'mailexe',
             r'https://hg/hg/mailsuite/mapilib': 'mapilib',
@@ -746,11 +746,24 @@ Codebase Generator
             r'https://github.com/mailinc/mailsuite/mapilib': 'mapilib',
             r'https://github.com/mailinc/mailsuite/imaplib': 'imaplib',
         }
-        if change['repository'] in all_repositories:
-            return all_repositories[change['repository']]
+        if chdict['repository'] in all_repositories:
+            return all_repositories[chdict['repository']]
         else:
-            return change['repository']
+            return ''
             
     c['codebaseGenerator'] = codebaseGenerator
 
-For any incomming change a :ref:`codebase<Attr-Codebase>` is set based on the repository of the change. This codebase value is sufficient if all changes come from one VCS. If changes come from more than one VCS, extra processing will be needed to determine the codebase for the incomming change. This codebase will then be a logical name for the combination of repository and or branch etc.
+For any incomming change a :ref:`codebase<Attr-Codebase>` is set to ''. This codebase value is sufficient if all changes come from the same repository (or clones). If changes come from different repositories, extra processing will be needed to determine the codebase for the incomming change. This codebase will then be a logical name for the combination of repository and or branch etc. The codebaseGenerator accepts a dictionary containing the following change attributes:
+
+    * who
+    * files
+    * comments
+    * isdir
+    * revision
+    * when
+    * branch
+    * category
+    * revlink
+    * properties
+    * repository
+    * project
