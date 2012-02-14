@@ -21,7 +21,7 @@ from twisted.internet import defer
 from zope.interface import implements
 from buildbot.process.buildstep import LoggingBuildStep, RemoteCommand
 from buildbot.interfaces import BuildSlaveTooOldError, IRenderable
-from buildbot.status.builder import SKIPPED
+from buildbot.status.builder import SKIPPED, FAILURE
 
 class _ComputeRepositoryURL(object):
     implements(IRenderable)
@@ -194,6 +194,8 @@ class Source(LoggingBuildStep):
         self.workdir = workdir
 
         self.sourcestamp = None
+        # Codebase cannot be set yet
+        self.codebase = ''
         
         self.alwaysUseLatest = alwaysUseLatest
 
@@ -243,10 +245,6 @@ class Source(LoggingBuildStep):
         self.checkoutDelay value."""
         return None
 
-    def getCodebase(self):
-        """ Identify the unique repository for this step """
-        return None
-
     def start(self):
         if self.notReally:
             log.msg("faking %s checkout/update" % self.name)
@@ -260,29 +258,38 @@ class Source(LoggingBuildStep):
         self.args['workdir'] = self.workdir
 
         if not self.alwaysUseLatest:
-            # what source stamp would this build like to use?
-            codebase = self.getCodebase()
-            s = self.build.getSourceStamp(codebase)
+            # what source stamp would this step like to use?
+            s = self.build.getSourceStamp(self.codebase)
             self.sourcestamp = s
 
-            # if branch is None, then use the Step's "default" branch
-            branch = s.branch or self.branch
-            # if revision is None, use the latest sources (-rHEAD)
-            revision = s.revision
-            if not revision:
-                revision = self.computeSourceRevision(s.changes)
-                # the revision property is currently None, so set it to something
-                # more interesting
-                if revision is not None:
-                    self.setProperty('revision', str(revision), "Source")
+            if self.sourcestamp:
+                # if branch is None, then use the Step's "default" branch
+                branch = s.branch or self.branch
+                # if revision is None, use the latest sources (-rHEAD)
+                revision = s.revision
+                if not revision:
+                    revision = self.computeSourceRevision(s.changes)
+                    # the revision property is currently None, so set it to something
+                    # more interesting
+                    if revision is not None:
+                        self.setProperty('revision', str(revision), "Source")
 
-            # if patch is None, then do not patch the tree after checkout
+                # if patch is None, then do not patch the tree after checkout
 
-            # 'patch' is None or a tuple of (patchlevel, diff, root)
-            # root is optional.
-            patch = s.patch
-            if patch:
-                self.addCompleteLog("patch", patch[1])
+                # 'patch' is None or a tuple of (patchlevel, diff, root)
+                # root is optional.
+                patch = s.patch
+                if patch:
+                    self.addCompleteLog("patch", patch[1])
+            else:
+                log.msg("No sourcestamp found in build for codebase '%s'" % self.codebase)
+                self.step_status.setText("Codebase '%s' not in build" % self.codebase)
+                self.addCompleteLog("log",
+                                    "No sourcestamp found in build for codebase '%s'" \
+                                    % self.codebase)
+                self.finished(FAILURE)                                    
+                return FAILURE
+            
         else:
             revision = None
             branch = self.branch
