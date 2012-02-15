@@ -142,3 +142,23 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
         step.startStep(mock.Mock())
 
         self.assertEqual(step.startVC.call_args, (('branch', None, None), {}))
+
+    def test_start_no_codebase(self):
+        step = self.setupStep(Source())
+        step.branch = 'branch'
+        step.startVC = mock.Mock()
+        step.build.getSourceStamp = mock.Mock()
+        step.build.getSourceStamp.return_value = None
+
+        step.startStep(mock.Mock())
+        self.assertEqual(step.build.getSourceStamp.call_args[0], ('',))
+        
+    def test_start_with_codebase(self):
+        step = self.setupStep(Source(codebase='codebase'))
+        step.branch = 'branch'
+        step.startVC = mock.Mock()
+        step.build.getSourceStamp = mock.Mock()
+        step.build.getSourceStamp.return_value = None
+
+        step.startStep(mock.Mock())
+        self.assertEqual(step.build.getSourceStamp.call_args[0], ('codebase',))        

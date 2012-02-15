@@ -78,7 +78,8 @@ class Source(LoggingBuildStep):
 
     def __init__(self, workdir=None, mode='update', alwaysUseLatest=False,
                  timeout=20*60, retry=None, env=None, logEnviron=True,
-                 description=None, descriptionDone=None, **kwargs):
+                 description=None, descriptionDone=None, codebase='',
+                 **kwargs):
         """
         @type  workdir: string
         @param workdir: local directory (relative to the Builder's root)
@@ -166,6 +167,13 @@ class Source(LoggingBuildStep):
                            variables on the slave. In situations where the
                            environment is not relevant and is long, it may
                            be easier to set logEnviron=False.
+
+        @type codebase: string
+        @param codebase: Specifies which changes in a build are processed by
+        the step. The default codebase value is ''. The codebase must correspond
+        to a codebase assigned by the codebaseGenerator. If no codebaseGenerator
+        is defined in the master then codebase doesn't need to be set, the
+        default value will then match all changes.
         """
 
         LoggingBuildStep.__init__(self, **kwargs)
@@ -177,7 +185,8 @@ class Source(LoggingBuildStep):
                                  logEnviron=logEnviron,
                                  env=env,
                                  description=description,
-                                 descriptionDone=descriptionDone
+                                 descriptionDone=descriptionDone,
+                                 codebase=codebase,
                                  )
 
         assert mode in ("update", "copy", "clobber", "export")
@@ -195,7 +204,7 @@ class Source(LoggingBuildStep):
 
         self.sourcestamp = None
         # Codebase cannot be set yet
-        self.codebase = ''
+        self.codebase = codebase
         
         self.alwaysUseLatest = alwaysUseLatest
 
