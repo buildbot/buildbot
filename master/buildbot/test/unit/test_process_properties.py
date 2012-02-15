@@ -349,6 +349,11 @@ class TestInterpolateSrc(unittest.TestCase):
         command = Interpolate("echo %(src[cbB]:repository)s")
         self.failUnlessEqual(self.build.render(command),
                              "echo cvs://B..")
+
+    def test_src_src(self):
+        command = Interpolate("echo %(src[cbB]:repository)s %(src[cbB]:project)s")
+        self.failUnlessEqual(self.build.render(command),
+                             "echo cvs://B.. Project")
                              
     def test_src_complex_codebase(self):
         command = Interpolate("echo %(src[[cbD]:]:repository)s")
@@ -385,6 +390,11 @@ class TestInterpolateSrc(unittest.TestCase):
         self.failUnlessEqual(self.build.render(command),
                              "echo 'noproject'")
                              
+    def test_src_colon_tilde_false_src_as_replacement(self):
+        command = Interpolate("echo '%(src[cbC]:project:~%(src[cbA]:project)s)s'")
+        self.failUnlessEqual(self.build.render(command),
+                             "echo 'Project'")
+
     def test_src_colon_tilde_codebase_notfound(self):
         command = Interpolate("echo '%(src[unknown_codebase]:project:~noproject)s'")
         self.failUnlessEqual(self.build.render(command),
@@ -396,14 +406,24 @@ class TestInterpolateKwargs(unittest.TestCase):
         self.props = Properties()
         self.build = FakeBuild(self.props)
         sa = FakeSource()
-        sb = FakeSource()
-        sc = FakeSource()
+
+        sa.repository = 'cvs://A..'
+        sa.codebase = 'cbA'
+        sa.project = None
+        sa.branch = "default"
+        self.build.sources['cbA'] = sa
 
     def test_kwarg(self):
         command = Interpolate("echo %(kw:repository)s", repository = "cvs://A..")
         self.failUnlessEqual(self.build.render(command),
                              "echo cvs://A..")
                              
+    def test_kwarg_kwarg(self):
+        command = Interpolate("echo %(kw:repository)s %(kw:branch)s",
+                              repository = "cvs://A..", branch = "default")
+        self.failUnlessEqual(self.build.render(command),
+                             "echo cvs://A.. default")
+
     def test_kwarg_not_mapped(self):
         command = Interpolate("echo %(kw:repository)s", project = "projectA")
         self.failUnlessEqual(self.build.render(command),
@@ -444,8 +464,11 @@ class TestInterpolateKwargs(unittest.TestCase):
         self.failUnlessEqual(self.build.render(command),
                              "echo cvs://B..")
                              
-#build-%(prop:buildername)s-%(src:cb:branch)s-%(src:cb:revision)s.tar.gz                
-                
+    def test_kwargs_colon_minus_false_src_as_replacement(self):
+        command = Interpolate("echo '%(kw:text:-%(src[cbA]:branch)s)s'", notext='ddd')
+        self.failUnlessEqual(self.build.render(command),
+                             "echo 'default'")
+
 class TestWithProperties(unittest.TestCase):
 
     def setUp(self):
