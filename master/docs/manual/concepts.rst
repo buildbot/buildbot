@@ -324,8 +324,7 @@ hint for the build steps to figure out which code to check out.
 Codebase
 ++++++++
 
-The codebase is derived from a change. A complete software product may be composed of more than one repository. Each repository has its own unique position inside the product design (i.e. main module, shared library, resources, documentation). To be able to start builds from different CVS's and still distinquish the different repositories `codebase`'s are used. By default the codebase is equal to the repository of a change. The `master.cfg` may contain a callable that determines the codebase from an incomming change and replaces the default value(see. :bb:cfg:`Codebase Generator<codebase>`).
-
+The codebase is derived from a change. A complete software product may be composed of more than one repository. Each repository has its own unique position inside the product design (i.e. main module, shared library, resources, documentation). To be able to start builds from different VCS's and still distinquish the different repositories `codebase`'s are used. By default the codebase is ''. The `master.cfg` may contain a callable that determines the codebase from an incomming change and replaces the default value(see. :bb:cfg:`codebaseGenerator`). A codebase is not allowed to contain ':'.
 
 .. _Attr-Revision:
 

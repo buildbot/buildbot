@@ -25,8 +25,10 @@ def upgrade(migrate_engine):
 
     
     # Add codebase to tables
-    ss_codebase = sa.Column('codebase', sa.String(length=256))
+    ss_codebase = sa.Column('codebase', sa.String(length=256), nullable=False, 
+        server_default=sa.DefaultClause(""))
     ss_codebase.create(sourcestamps_table)
 
-    c_codebase = sa.Column('codebase', sa.String(length=256))
+    c_codebase = sa.Column('codebase', sa.String(length=256), nullable=False,
+        server_default=sa.DefaultClause(""))
     c_codebase.create(changes_table)

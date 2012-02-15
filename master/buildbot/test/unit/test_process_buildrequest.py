@@ -18,6 +18,14 @@ from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import buildrequest
 from buildbot.process.build import Build
 
+class FakeSource:
+    def __init__(self, mergeable = True):
+        self.codebase = ''
+        self.mergeable = mergeable
+
+    def canBeMergedWith(self, other):
+        return self.mergeable
+
 class TestBuildRequest(unittest.TestCase):
 
     def test_fromBrdict(self):
@@ -327,3 +335,28 @@ class TestBuildRequest(unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def test_build_can_be_merged_with_mergables_same_codebases(self):
+        r1 = buildrequest.BuildRequest()
+        r1.sources = {"A": FakeSource()}
+        r2 = buildrequest.BuildRequest()
+        r2.sources = {"A": FakeSource()}
+        mergeable = r1.canBeMergedWith(r2)
+        self.assertTrue(mergeable, "Both request should be able to merge")
+    
+    def test_build_can_be_merged_with_non_mergable_same_codebases(self):
+        r1 = buildrequest.BuildRequest()
+        r1.sources = {"A": FakeSource(mergeable = False)}
+        r2 = buildrequest.BuildRequest()
+        r2.sources = {"A": FakeSource(mergeable = False)}
+        mergeable = r1.canBeMergedWith(r2)
+        self.assertFalse(mergeable, "Both request should not be able to merge")
+
+    def test_build_can_be_merged_with_non_mergables_different_codebases(self):
+        r1 = buildrequest.BuildRequest()
+        r1.sources = {"A": FakeSource(mergeable = False)}
+        r2 = buildrequest.BuildRequest()
+        r2.sources = {"B": FakeSource(mergeable = False)}
+        mergeable = r1.canBeMergedWith(r2)
+        self.assertTrue(mergeable, "Request containing different codebases " +
+                                    "should always be able to merge")
+        

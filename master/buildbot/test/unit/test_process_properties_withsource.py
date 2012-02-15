@@ -56,7 +56,7 @@ class FakeBuild:
             for source in request.sources:
                 self.sources.append(source)
         
-    def getSourceStamp(self, codebase=None):
+    def getSourceStamp(self, codebase):
         for source in self.sources:
             if source.codebase == codebase:
                 return source

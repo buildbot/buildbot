@@ -21,7 +21,7 @@ from twisted.internet import defer
 from zope.interface import implements
 from buildbot.process.buildstep import LoggingBuildStep, RemoteCommand
 from buildbot.interfaces import BuildSlaveTooOldError, IRenderable
-from buildbot.status.builder import SKIPPED
+from buildbot.status.builder import SKIPPED, FAILURE
 
 class _ComputeRepositoryURL(object):
     implements(IRenderable)
@@ -194,6 +194,8 @@ class Source(LoggingBuildStep):
         self.workdir = workdir
 
         self.sourcestamp = None
+        # Codebase cannot be set yet
+        self.codebase = ''
         
         self.alwaysUseLatest = alwaysUseLatest
 
@@ -243,10 +245,6 @@ class Source(LoggingBuildStep):
         self.checkoutDelay value."""
         return None
 
-    def getCodebase(self):
-        """ Identify the unique repository for this step """
-        return None
-
     def start(self):
         if self.notReally:
             log.msg("faking %s checkout/update" % self.name)
@@ -260,17 +258,11 @@ class Source(LoggingBuildStep):
         self.args['workdir'] = self.workdir
 
         if not self.alwaysUseLatest:
-            # what source stamp would this build like to use?
-            codebase = self.getCodebase()
-            try:
-                s = self.build.getSourceStamp(codebase)
-            except KeyError:
-                log.msg("The source step cannot get the sourcestamp for codebase '%s'" % codebase)
-                self.step_status.setText(["Cannot get sourcestamp for codebase '%s'" % codebase])
-                self.addCompleteLog("log","Step failed in getting the correct sourcestamp for codebase '%s' from build" % codebase)
-                return FAILURE
+            # what source stamp would this step like to use?
+            s = self.build.getSourceStamp(self.codebase)
             self.sourcestamp = s
-            if s is not None:
+
+            if self.sourcestamp:
                 # if branch is None, then use the Step's "default" branch
                 branch = s.branch or self.branch
                 # if revision is None, use the latest sources (-rHEAD)
@@ -290,8 +282,12 @@ class Source(LoggingBuildStep):
                 if patch:
                     self.addCompleteLog("patch", patch[1])
             else:
-                self.step_status.setText(["No sourcestamp for repository '%s'" % id])
-                self.addCompleteLog("log","No sourcestamp for repository '%s'" % id)
+                log.msg("No sourcestamp found in build for codebase '%s'" % self.codebase)
+                self.step_status.setText("Codebase '%s' not in build" % self.codebase)
+                self.addCompleteLog("log",
+                                    "No sourcestamp found in build for codebase '%s'" \
+                                    % self.codebase)
+                self.finished(FAILURE)                                    
                 return FAILURE
         else:
             revision = None

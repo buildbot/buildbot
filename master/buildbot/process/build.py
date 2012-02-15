@@ -91,12 +91,7 @@ class Build(properties.PropertiesMixin):
     def setSlaveEnvironment(self, env):
         self.slaveEnvironment = env
 
-    def getSourceStamp(self, codebase=None):
-        if codebase is None:
-            if self.sources:
-                return self.sources[0]
-            else:
-                return None
+    def getSourceStamp(self, codebase):
         for source in self.sources:
             if source.codebase == codebase:
                 return source
@@ -314,11 +309,7 @@ class Build(properties.PropertiesMixin):
             step.setBuild(self)
             step.setBuildSlave(self.slavebuilder.slave)
             if callable (self.workdir):
-                if len(self.sources) == 1:
-                    sources = self.sources[0]
-                else:
-                    sources = self.sources
-                step.setDefaultWorkdir (self.workdir (sources))
+                step.setDefaultWorkdir (self.workdir (self.sources))
             else:
                 step.setDefaultWorkdir (self.workdir)
             name = step.name
@@ -359,6 +350,9 @@ class Build(properties.PropertiesMixin):
                 self.progress.setExpectationsFrom(expectations)
 
         # we are now ready to set up our BuildStatus.
+        # at the moment that schedulers start to deliver sourcestamps per codebase
+        # buildstatus should support multiple sourcestamps.
+        # until now schedulers deliver exactly one sourcestamp
         self.build_status.setSourceStamp(self.sources[0])
         self.build_status.setReason(self.reason)
         self.build_status.setBlamelist(self.blamelist())

@@ -197,7 +197,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('repository', sa.String(length=512), nullable=False, server_default=''),
 
         # codebase is a logical name to specify what is in the repository
-        sa.Column('codebase', sa.String(256)),
+        sa.Column('codebase', sa.String(256), nullable=False,
+            server_default=sa.DefaultClause("")),
         
         # project names the project this source code represents.  It is used
         # later to filter changes
@@ -259,7 +260,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('repository', sa.String(length=512), nullable=False, server_default=''),
 
         # codebase is a logical name to specify what is in the repository
-        sa.Column('codebase', sa.String(256)),
+        sa.Column('codebase', sa.String(256), nullable=False,
+            server_default=sa.DefaultClause("")),
         
         # the project this source code represents
         sa.Column('project', sa.String(length=512), nullable=False, server_default=''),

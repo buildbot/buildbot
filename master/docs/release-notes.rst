@@ -68,6 +68,10 @@ Deprecations, Removals, and Non-Compatible Changes
   ``hgbuildbot.baseurl`` to an empty string as suggested in :ref:`the Buildbot
   manual <Mercurial-Hook>`.
 
+* The configurable callable build.workdir has changed his parameterlist. Instead
+  of a single sourcestamp a list of sourcestamps is passed. Each sourcestamp in 
+  the list has a different :ref:`codebase<Attr-Codebase>`
+  
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 

@@ -288,6 +288,145 @@ class WithProperties(util.ComparableMixin):
             pmap.clear_temporary_values()
         return s
 
+class InterpolateMap(object): 
+    colon_minus_re = re.compile(r"(.*):-(.*)") 
+    colon_tilde_re = re.compile(r"(.*):~(.*)") 
+    colon_plus_re = re.compile(r"(.*):\+(.*)") 
+    def __init__(self, properties, kwargs): 
+        self.properties = properties 
+        self.kwargs = kwargs 
+ 
+    def __getitem__(self, item): 
+        properties = self.properties 
+        key = ''
+        arg = ''
+        res = re.search('(?P<key>[^:\[]+)(?P<index>:|\[.*\])(?P<arg>.*)', item)
+        if res:
+            key = res.group('key')
+            index = res.group('index')
+            if index != ':':
+                #add src indirection to arg
+                arg = index + res.group('arg')
+            else:
+                arg = res.group('arg')
+ 
+        def prop_fn(arg): 
+            try: 
+                prop, repl = arg.split(":", 1) 
+            except ValueError: 
+                prop, repl = arg, None 
+            return properties, prop, repl 
+ 
+        def src_fn(arg): 
+            ## TODO: Handle changes 
+            codebase = attr = repl = None
+            
+            res = re.search('\[(?P<codebase>.*)\]:(?P<attr>[^\]\]:]+):(?P<repl>.*)',
+                          arg)
+            if res:
+                codebase = res.group('codebase')
+                attr = res.group('attr')
+                repl = res.group('repl')
+            else:
+                res = re.search('\[(?P<codebase>.*)\]:(?P<attr>.*)', arg)
+                if res:
+                    codebase = res.group('codebase')
+                    attr = res.group('attr')
+                    repl = None
+            ss = self.properties.getBuild().getSourceStamp(codebase)
+            if ss:
+                return ss.asDict(), attr, repl 
+            else:
+                return {}, attr, repl
+ 
+        def kw_fn(arg): 
+            try: 
+                kw, repl = arg.split(":", 1) 
+            except ValueError: 
+                kw, repl = arg, None 
+            return self.kwargs, kw, repl 
+ 
+        for (keys, fn) in [ 
+            (("p", "prop"), prop_fn), 
+            (("s", "src"), src_fn), 
+            (("kw", "kw"), kw_fn), 
+            ]: 
+            if key in keys: 
+                d, kw, repl = fn(arg) 
+                break;
+ 
+        def colon_minus(d, kw, repl): 
+            # %(prop:-repl)s 
+            # if prop exists, use it; otherwise, use repl 
+            if d.has_key(kw): 
+                return d[kw] 
+            else: 
+                return repl % self 
+ 
+        def colon_tilde(d, kw, repl): 
+            # %(prop:~repl)s 
+            # if prop exists and is true (nonempty), use it; otherwise, use repl 
+            if d.has_key(kw) and d[kw]: 
+                return d[kw] 
+            else: 
+                return repl % self 
+ 
+        def colon_plus(d, kw, repl): 
+            # %(prop:+repl)s 
+            # if prop exists, use repl; otherwise, an empty string 
+            if d.has_key(kw): 
+                return repl % self 
+            else: 
+                return '' 
+ 
+        if repl is not None: 
+            good_colon = False 
+            for char, fn in [ 
+                ( "-", colon_minus ), 
+                ( "~", colon_tilde ), 
+                ( "+", colon_plus ), 
+                ]: 
+                if repl[0] == char: 
+                    rv = fn(d, kw, repl[1:]) 
+                    good_colon = True 
+                    break 
+            if not good_colon: 
+                raise ValueError 
+        else: 
+            if d.has_key(kw): 
+                rv = d[kw] 
+            else: 
+                rv = None 
+ 
+        # translate 'None' to an empty string 
+        if rv is None: rv = '' 
+        return rv 
+ 
+class Interpolate(util.ComparableMixin): 
+    """ 
+    This is a marker class, used fairly widely to indicate that we 
+    want to interpolate build properties. 
+    """ 
+ 
+    implements(IRenderable) 
+    compare_attrs = ('fmtstring', 'args', 'kwargs') 
+ 
+    def __init__(self, fmtstring, *args, **kwargs): 
+        self.fmtstring = fmtstring 
+        self.args = args 
+        self.kwargs = kwargs 
+        if self.args and self.kwargs: 
+            raise ValueError('Interpolate takes either positional or keyword substitutions, not both.') 
+ 
+    def getRenderingFor(self, props): 
+        props = props.getProperties() 
+        if self.args: 
+            args = props.render(self.args) 
+            return self.fmtstring % tuple(args) 
+        else: 
+            kwargs = props.render(self.kwargs) 
+            return self.fmtstring % InterpolateMap(props, kwargs) 
+        return s 
 
 class Property(util.ComparableMixin):
     """
@@ -363,7 +502,7 @@ class WithSource(util.ComparableMixin):
                 if name in sourceDict:
                     strings.append(sourceDict[name])
                 else:
-                    raise ValueError('Sourcestamp does not know "%s"' % name)
+                    raise ValueError('Sourcestamp does not known "%s"' % name)
             s = self.fmtstring % tuple(strings)
         else:
             for k,v in self.lambda_subs.iteritems():

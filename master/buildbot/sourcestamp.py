@@ -169,7 +169,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         # this algorithm implements the "compatible" mergeRequests defined in
         # detail in cfg-buidlers.texinfo; change that documentation if the
         # algorithm changes!
-        if self.codebase != self.codebase:
+        if other.codebase != self.codebase:
             return False
         if other.repository != self.repository:
             return False
