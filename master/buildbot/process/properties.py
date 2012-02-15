@@ -323,7 +323,6 @@ class InterpolateMap(object):
             
             res = re.search('\[(?P<codebase>.*)\]:(?P<attr>[^\]\]:]+):(?P<repl>.*)',
                           arg)
-            #import pdb; pdb.set_trace()            
             if res:
                 codebase = res.group('codebase')
                 attr = res.group('attr')
