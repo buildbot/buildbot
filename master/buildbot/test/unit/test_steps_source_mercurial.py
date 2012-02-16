@@ -28,12 +28,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownSourceStep()
 
-    def test_repourl_and_baseURL(self):
-        self.assertRaises(config.ConfigErrors, lambda :
-                mercurial.Mercurial(repourl='http://hg.mozilla.org',
-                                    baseURL="http://hg.mozilla.org"))
-
-    def test_neither_repourl_nor_baseURL(self):
+    def test_no_repourl(self):
         self.assertRaises(config.ConfigErrors, lambda :
                 mercurial.Mercurial(mode="full"))
 
@@ -213,7 +208,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_no_existing_repo_dirname(self):
         self.setupStep(
-                mercurial.Mercurial(baseURL='http://hg.mozilla.org',
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                     mode='incremental', branchType='dirname'),
             )
         self.expectCommands(
@@ -244,7 +239,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_branch_change_dirname(self):
         self.setupStep(
-                mercurial.Mercurial(baseURL='http://hg.mozilla.org/',
+                mercurial.Mercurial(repourl='http://hg.mozilla.org/',
                                     mode='incremental', branchType='dirname', defaultBranch='devel'),
             dict(branch='stable')
             )

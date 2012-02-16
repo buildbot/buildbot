@@ -75,6 +75,10 @@ Deprecations, Removals, and Non-Compatible Changes
 * Master Side :bb:step:`SVN` Step paramater svnurl has been renamed repourl, to
   be consistent with other master-side source steps.
 
+* Master Side :bb:step:`Mercurial` step parameter ``baseURL`` has been merged
+  with ``repourl`` parameter. The behavior of the step is already controled by
+  ``branchType`` parameter, so just use a single argument to specify the repository.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 

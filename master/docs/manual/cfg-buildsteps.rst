@@ -268,23 +268,16 @@ have that installed. ::
 The Mercurial step takes the following arguments:
 
 ``repourl``
-   (required unless ``baseURL`` is provided): the URL at which the
-   Mercurial source repository is available.
-
-``baseURL``
-   (required unless ``repourl`` is provided): the base repository URL,
-   to which a branch name will be appended. It should probably end in a
-   slash.
+   where the Mercurial source repository is available.
 
 ``defaultBranch``
-   (allowed if and only if ``baseURL`` is provided): this specifies
-   the name of the branch to use when a Build does not provide one of
-   its own. This will be appended to ``baseURL`` to create the
+   this specifies the name of the branch to use when a Build does not provide
+   one of its own. This will be appended to ``re`` to create the
    string that will be passed to the ``hg clone`` command.
 
 ``branchType``
    either 'dirname' (default) or 'inrepo' depending on whether the
-   branch name should be appended to the ``baseURL`` or the branch
+   branch name should be appended to the ``repourl`` or the branch
    is a mercurial named branch and can be found within the ``repourl``.
 
 ``clobberOnBranchChange``
