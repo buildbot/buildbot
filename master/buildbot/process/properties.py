@@ -288,6 +288,7 @@ class WithProperties(util.ComparableMixin):
             pmap.clear_temporary_values()
         return s
 
+#this class was originally written by Tom Prince <tom.prince@ualberta.net>       
 class InterpolateMap(object): 
     colon_minus_re = re.compile(r"(.*):-(.*)") 
     colon_tilde_re = re.compile(r"(.*):~(.*)") 
@@ -298,18 +299,9 @@ class InterpolateMap(object):
  
     def __getitem__(self, item): 
         properties = self.properties 
-        key = ''
-        arg = ''
-        res = re.search('(?P<key>[^:\[]+)(?P<index>:|\[.*\])(?P<arg>.*)', item)
-        if res:
-            key = res.group('key')
-            index = res.group('index')
-            if index != ':':
-                #add src indirection to arg
-                arg = index + res.group('arg')
-            else:
-                arg = res.group('arg')
- 
+
+        key, arg = item.split(":", 1) 
+
         def prop_fn(arg): 
             try: 
                 prop, repl = arg.split(":", 1) 
@@ -319,23 +311,14 @@ class InterpolateMap(object):
  
         def src_fn(arg): 
             ## TODO: Handle changes 
-            codebase = attr = repl = None
-            
-            res = re.search('\[(?P<codebase>.*)\]:(?P<attr>[^\]\]:]+):(?P<repl>.*)',
-                          arg)
-            if res:
-                codebase = res.group('codebase')
-                attr = res.group('attr')
-                repl = res.group('repl')
-            else:
-                res = re.search('\[(?P<codebase>.*)\]:(?P<attr>.*)', arg)
-                if res:
-                    codebase = res.group('codebase')
-                    attr = res.group('attr')
-                    repl = None
+            try:
+                codebase, attr, repl = arg.split(":", 2)
+            except ValueError:
+                codebase, attr = arg.split(":",1)
+                repl = None
             ss = self.properties.getBuild().getSourceStamp(codebase)
             if ss:
-                return ss.asDict(), attr, repl 
+                return ss.asDict(), attr, repl
             else:
                 return {}, attr, repl
  
@@ -402,6 +385,7 @@ class InterpolateMap(object):
         if rv is None: rv = '' 
         return rv 
  
+#this class was originally written by Tom Prince <tom.prince@ualberta.net>       
 class Interpolate(util.ComparableMixin): 
     """ 
     This is a marker class, used fairly widely to indicate that we 
