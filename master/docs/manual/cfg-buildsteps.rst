@@ -417,9 +417,9 @@ basic ways of setting up the checkout step, depending upon whether you
 are using multiple branches or not.
 
 The most versatile way to create the :bb:step:`SVN` step is with the
-``svnurl`` argument:
+``repourl`` argument:
 
-``svnurl``
+``repourl``
    (required): this specifies the ``URL`` argument that will be
    given to the :command:`svn checkout` command. It dictates both where
    the repository is located and which sub-tree should be
@@ -428,16 +428,16 @@ The most versatile way to create the :bb:step:`SVN` step is with the
    are using a remote Subversion repository which is accessible
    through HTTP at a URL of ``http://svn.example.com/repos``, and
    you wanted to check out the ``trunk/calc`` sub-tree, you would
-   use ``svnurl="http://svn.example.com/repos/trunk/calc"`` as an
+   use ``repourl="http://svn.example.com/repos/trunk/calc"`` as an
    argument to your :bb:step:`SVN` step.
 
-The ``svnurl`` argument can be considered as a universal means to
+The ``repourl`` argument can be considered as a universal means to
 create the :bb:step:`SVN` step as it ignores the branch information in the
 :class:`SourceStamp`. ::
 
    from buildbot.steps.source.svn import SVN
    factory.append(SVN(mode='full',
-                  svnurl='svn://svn.example.org/svn/myproject/trunk'))
+                  repourl='svn://svn.example.org/svn/myproject/trunk'))
 
 Alternatively, if you are building from multiple branches, then you
 should preferentially create the :bb:step:`SVN` step with the
@@ -467,7 +467,7 @@ should preferentially create the :bb:step:`SVN` step with the
    must come with a valid (not None) ``branch``.
 
    It is possible to mix to have a mix of :bb:step:`SVN` steps that use
-   either the ``svnurl` or ``baseURL`` arguments but not both at
+   either the ``repourl` or ``baseURL`` arguments but not both at
    the same time.
 
 ``username``
