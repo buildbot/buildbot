@@ -200,6 +200,7 @@ Metabuildbot Slave Donors
     M: Mozilla Release Engineering <release@mozilla.com>
     M: Marc-Antoine Ruel <maruel@chromium.org>
     M: Dustin Sallings <dustin@spy.net>
+    M: Tom Prince <tom.prince@ualberta.net>
     U: http://buildbot.buildbot.net
 
 Committers
@@ -211,3 +212,4 @@ Committers
     M: Chris AtLee <catlee@mozilla.com>
     M: Marc-Antoine Ruel <maruel@chromium.org>
     M: Marcus Lindblom <macke@yar.nu>
+    M: Tom Prince <tom.prince@ualberta.net>
