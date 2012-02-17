@@ -1343,8 +1343,12 @@ GerritStatusPush
 ::
 
     from buildbot.status.status_gerrit import GerritStatusPush
+    from buildbot.status.builder import Results, SUCCESS, RETRY
 
     def gerritReviewCB(builderName, build, result, status, arg):
+        if result == RETRY:
+            return None, 0, 0
+
         message =  "Buildbot finished compiling your patchset\n"
         message += "on configuration: %s\n" % builderName
         message += "The result is: %s\n" % Results[result].upper()
@@ -1354,7 +1358,7 @@ GerritStatusPush
             message += status.getURLForThing(build) + "\n"
 
         # message, verified, reviewed
-        return message, (result == 0 or -1), 0
+        return message, (result == SUCCESS or -1), 0
 
     c['buildbotURL'] = 'http://buildbot.example.com/'
     c['status'].append(GerritStatusPush('127.0.0.1', 'buildbot',
@@ -1362,6 +1366,8 @@ GerritStatusPush
                                         reviewArg=c['buildbotURL']))
 
 GerritStatusPush sends review of the :class:`Change` back to the Gerrit server.
+``reviewCB`` should return a tuple of message, verified, reviewed. If message
+is ``None``, no review will be sent.
 
 .. [#] Apparently this is the same way http://buildd.debian.org displays build status
 
