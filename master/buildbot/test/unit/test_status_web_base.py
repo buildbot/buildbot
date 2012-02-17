@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 from buildbot.status.web import base
 from twisted.internet import defer
 from twisted.trial import unittest

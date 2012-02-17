@@ -74,7 +74,7 @@ class ChangeHookResource(resource.Resource):
             request.setResponseCode(202)
             request.finish()
         def err(_):
-            requeset.setResponseCode(500)
+            request.setResponseCode(500)
             request.finish()
         d.addCallbacks(ok, err)
         return server.NOT_DONE_YET

@@ -21,7 +21,6 @@ import buildbot.status.web.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
 
 from twisted.trial import unittest
-from twisted.internet import defer
 
 # Sample Google Code commit payload extracted from a Google Code test project
 # {
