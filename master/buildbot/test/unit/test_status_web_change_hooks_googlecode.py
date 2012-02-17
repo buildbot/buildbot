@@ -18,7 +18,7 @@
 import StringIO
 
 import buildbot.status.web.change_hook as change_hook
-from buildbot.test.fake.web import MockRequest
+from buildbot.test.fake.web import FakeRequest
 
 from twisted.trial import unittest
 from twisted.internet import defer
@@ -47,7 +47,7 @@ googleCodeJsonBody = '{"repository_path":"https://code.google.com/p/webhook-test
 
 class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
     def setUp(self):
-        self.request = MockRequest()
+        self.request = FakeRequest()
         # Google Code simply transmit the payload as an UTF-8 JSON body
         self.request.content = StringIO.StringIO(googleCodeJsonBody)
         self.request.received_headers = {
@@ -70,7 +70,8 @@ class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
     # a Change object as a dictionary. All values show be set.
     def testGoogleCodeWithHgChange(self):
         self.request.uri = "/change_hook/googlecode"
-        d = defer.maybeDeferred(lambda : self.changeHook.render_GET(self.request))
+        self.request.method = "GET"
+        d = self.request.test_render(self.changeHook)
         def check_changes(r):
             # Only one changeset has been submitted.
             self.assertEquals(len(self.request.addedChanges), 1)

@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 import buildbot.status.web.change_hook as change_hook
-from buildbot.test.fake.web import MockRequest
+from buildbot.test.fake.web import FakeRequest
 
 from twisted.trial import unittest
 from twisted.internet import defer
@@ -69,14 +69,15 @@ gitJsonPayload = """
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def setUp(self):
         changeDict={"payload" : [gitJsonPayload]}
-        self.request = MockRequest(changeDict)
+        self.request = FakeRequest(changeDict)
         self.changeHook = change_hook.ChangeHookResource(dialects={'github' : True})
 
     # Test 'base' hook with attributes. We should get a json string representing
     # a Change object as a dictionary. All values show be set.
     def testGitWithChange(self):
         self.request.uri = "/change_hook/github"
-        d = defer.maybeDeferred(lambda : self.changeHook.render_GET(self.request))
+        self.request.method = "GET"
+        d = self.request.test_render(self.changeHook)
         def check_changes(r):
             self.assertEquals(len(self.request.addedChanges), 2)
             change = self.request.addedChanges[0]
