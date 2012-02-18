@@ -81,7 +81,7 @@ buildrequests
     * ``complete`` (boolean, true if the request is complete)
     * ``complete_at`` (datetime object, time this request was completed)
 
-    .. py:method:: BuildRequestsConnectorComponent.getBuildRequest(brid)
+    .. py:method:: getBuildRequest(brid)
 
         :param brid: build request id to look up
         :returns: brdict or ``None``, via Deferred
