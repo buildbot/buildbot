@@ -72,6 +72,13 @@ Deprecations, Removals, and Non-Compatible Changes
   ``--revision`` when ``alwaysUseLatest`` is set to ``False`` when in the
   ``full`` mode. See :bb:bug:`2194`
 
+* Master Side :bb:step:`SVN` Step paramater svnurl has been renamed repourl, to
+  be consistent with other master-side source steps.
+
+* Master Side :bb:step:`Mercurial` step parameter ``baseURL`` has been merged
+  with ``repourl`` parameter. The behavior of the step is already controled by
+  ``branchType`` parameter, so just use a single argument to specify the repository.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
