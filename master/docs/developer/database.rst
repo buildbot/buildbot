@@ -33,9 +33,16 @@ database-independent operation.  Note that the SQLAlchemy ORM is not used in
 Buildbot.  Database queries are carried out in threads, and report their
 results back to the main thread via Twisted Deferreds.
 
+Schema
+------
+
 The database schema is maintained with `SQLAlchemy-Migrate
 <http://code.google.com/p/sqlalchemy-migrate/>`_.  This package handles the
 details of upgrading users between different schema versions.
+
+The schema itself is considered an implementation detail, and may change
+significantly from version to version.  Users should rely on the API (below),
+rather than performing queries against the database itself.
 
 API
 ---
