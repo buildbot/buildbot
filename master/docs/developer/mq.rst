@@ -363,9 +363,9 @@ Buildsets
 Build Requests
 ~~~~~~~~~~~~~~
 
-Due to the very complex request-claiming semantics Buildbot supports, build
-requests are claimed in the database, and the subsequent messages are
-considered advisory in nature.  The
+Due to the very complex request-claiming semantics Buildbot supportsa (see
+:ref:`Claiming-Build-Requests`), build requests are claimed in the database,
+and the subsequent messages are considered advisory in nature.  The
 :bb:msg:`buildrequest.$bsid.$builderid.$brid.new` and
 :bb:msg:`buildrequest.$bsid.$builderid.$brid.unclaimed`, messages indicate that
 masters supporting the given builder should, if resources are available,

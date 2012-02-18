@@ -23,6 +23,7 @@ Buildbot.
     formats
     webstatus
     master-slave
+    br-claiming
     encodings
     metrics
     classes
