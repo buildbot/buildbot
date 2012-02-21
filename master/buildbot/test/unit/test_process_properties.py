@@ -327,7 +327,6 @@ class TestInterpolateSrc(unittest.TestCase):
         self.build = FakeBuild(self.props)
         sa = FakeSource()
         sb = FakeSource()
-        sc = FakeSource()
         sd = FakeSource()
         
         sa.repository = 'cvs://A..'

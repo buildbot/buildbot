@@ -39,7 +39,6 @@ from buildbot.process import metrics
 from buildbot.process import cache
 from buildbot.process.users import users
 from buildbot.process.users.manager import UserManagerManager
-from buildbot.util import datetime2epoch
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import monkeypatches
 from buildbot import config
