@@ -302,6 +302,13 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def testEnvironInt(self):
+        b = FakeSlaveBuilder(False, self.basedir)
+        self.assertRaises(RuntimeError, lambda :
+            runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
+                            environ={"BUILD_NUMBER":13}))
+
+
 class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
 
     if runtime.platformType != "posix":

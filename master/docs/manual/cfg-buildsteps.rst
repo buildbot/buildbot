@@ -1324,7 +1324,7 @@ The :bb:step:`ShellCommand` arguments are:
     buildslave's environment or the environment specified in the
     :class:`Builder`. The exception is :envvar:`PYTHONPATH`, which is
     merged with (actually prepended to) any existing
-    :envvar:`PYTHONPATH` setting. the following example will prepend
+    :envvar:`PYTHONPATH` setting. The following example will prepend
     :file:`/home/buildbot/lib/python` to any existing
     :envvar:`PYTHONPATH`::
 
@@ -1333,9 +1333,9 @@ The :bb:step:`ShellCommand` arguments are:
                       command=["make", "test"],
                       env={'PYTHONPATH': "/home/buildbot/lib/python"}))
 
-    To avoid the need of concatenating path together in the master
-    config file, if the value consist of an array, it will be joined
-    together using the right platform dependant separator.
+    To avoid the need of concatenating path together in the master config file,
+    if the value is a list, it will be joined together using the right platform
+    dependant separator.
     
     Those variables support expansion so that if you just want to prepend
     :file:`/home/buildbot/bin` to the :envvar:`PATH` environment variable, you can do
@@ -1348,6 +1348,10 @@ The :bb:step:`ShellCommand` arguments are:
                       command=["make", "test"],
                       env={'PATH': ["/home/buildbot/bin",
                                     "${PATH}"]}))
+
+    Note that environment values must be strings (or lists that are turned into
+    strings).  In particular, numeric properties such as ``buildnumber`` must
+    be substituted using :ref:`WithProperties`.
 
 ``want_stdout``
     if ``False``, stdout from the child process is discarded rather than being
