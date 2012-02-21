@@ -146,6 +146,9 @@ Features
   commands on a slave by emulating a master.  See the file itself for
   documentation.
 
+* MailNotifier allows multiple notification modes in the same instance.  See
+  :bb:bug:`2205`.
+
 Slave
 -----
 
