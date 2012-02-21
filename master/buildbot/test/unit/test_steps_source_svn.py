@@ -601,7 +601,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='',
                         command=['svn', 'export', 'source', 'wkdir'])
             + 0,
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir='source',
                         command=['svnversion'])
             + ExpectShell.log('stdio',
                 stdout='100')
@@ -634,7 +634,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['svn', 'export', '--revision', '100',
                                  'source', 'wkdir'])
             + 0,
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir='source',
                         command=['svnversion'])
             + ExpectShell.log('stdio',
                 stdout='100')
