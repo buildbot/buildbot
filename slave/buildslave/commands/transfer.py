@@ -22,6 +22,8 @@ from buildslave.commands.base import Command
 
 class TransferCommand(Command):
 
+    debug = False
+
     def finished(self, res):
         if self.debug:
             log.msg('finished: stderr=%r, rc=%r' % (self.stderr, self.rc))
@@ -57,7 +59,6 @@ class SlaveFileUploadCommand(TransferCommand):
         - ['blocksize']: max size for each data block
         - ['keepstamp']: whether to preserve file modified and accessed times
     """
-    debug = False
 
     def setup(self, args):
         self.workdir = args['workdir']
@@ -170,7 +171,6 @@ class SlaveFileUploadCommand(TransferCommand):
 
 
 class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
-    debug = False
 
     def setup(self, args):
         self.workdir = args['workdir']
@@ -243,7 +243,6 @@ class SlaveFileDownloadCommand(TransferCommand):
         - ['blocksize']: max size for each data block
         - ['mode']:      access mode for the new file
     """
-    debug = False
 
     def setup(self, args):
         self.workdir = args['workdir']
@@ -354,3 +353,82 @@ class SlaveFileDownloadCommand(TransferCommand):
             self.fp.close()
 
         return TransferCommand.finished(self, res)
+
+class WriteFileCommand(TransferCommand):
+    """
+    Write a short bit of data to a file on the slave; this is useful for "flag"
+    files, but not for anything with an unbounded size -- use one of the
+    download steps for that.
+
+        - ['workdir']:   base directory to use
+        - ['slavedest']: name of the slave-side file to be created
+        - ['data']:      data to write to the file
+        - ['mode']:      access mode for the new file
+    """
+
+    def setup(self, args):
+        self.workdir = args['workdir']
+        self.filename = args['slavedest']
+        self.data = args['data']
+        self.mode = args['mode']
+        self.stderr = None
+        self.rc = 0
+
+    def start(self):
+        # Open file
+        path = os.path.join(self.builder.basedir,
+                                 self.workdir,
+                                 os.path.expanduser(self.filename))
+
+        dirname = os.path.dirname(path)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+        try:
+            fp = open(path, 'wb')
+            if self.mode is not None:
+                os.chmod(path, self.mode)
+        except IOError:
+            self.stderr = "Cannot open file '%s' for writing" % path
+            self.rc = 1
+            return self.finished(None)
+
+        fp.write(self.data)
+        fp.close()
+        return self.finished(None)
+
+class ReadFileCommand(TransferCommand):
+    """
+    Read the contents of a file from the slave.  This is intended for querying
+    short "flag" files, e.g., sourcedata, and should not be used on files that
+    may be too long for transmission in a single PB transaction.
+
+        - ['workdir']:   base directory to use
+        - ['slavesrc']: name of the slave-side file to read
+    """
+    def setup(self, args):
+        self.workdir = args['workdir']
+        self.filename = args['slavesrc']
+        self.stderr = None
+        self.rc = 0
+
+    def start(self):
+        path = os.path.join(self.builder.basedir,
+                                 self.workdir,
+                                 os.path.expanduser(self.filename))
+
+        dirname = os.path.dirname(path)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+        try:
+            fp = open(path, 'rb')
+        except IOError:
+            self.stderr = "Cannot open file '%s' for reading" % path
+            self.rc = 1
+            return self.finished(None)
+
+        self.builder.sendUpdate({'data' : fp.read()})
+        fp.close()
+        return self.finished(None)
+

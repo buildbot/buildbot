@@ -534,3 +534,96 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         dl.addCallback(check)
         return dl
 
+
+class TestReadWrite(CommandTestMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpCommand()
+
+        if os.path.exists(self.basedir):
+            shutil.rmtree(self.basedir)
+        os.makedirs(self.basedir)
+
+    def tearDown(self):
+        self.tearDownCommand()
+
+        if os.path.exists(self.basedir):
+            shutil.rmtree(self.basedir)
+
+    def test_WriteFileCommand(self):
+        self.make_command(transfer.WriteFileCommand, dict(
+            workdir='.',
+            slavedest='data',
+            data='data in the file',
+            mode=0777,
+        ))
+
+        d = self.run_command()
+
+        def check(_):
+            self.assertUpdates([ {'rc': 0} ])
+            datafile = os.path.join(self.basedir, 'data')
+            self.assertTrue(os.path.exists(datafile))
+            self.assertEqual(open(datafile).read(), 'data in the file')
+        d.addCallback(check)
+        return d
+
+    def test_WriteFileCommand_IOError(self):
+        self.make_command(transfer.WriteFileCommand, dict(
+            workdir='.',
+            slavedest='.', # can't open a directory for writing..
+            data='data in the file',
+            mode=0777,
+        ))
+
+        d = self.run_command()
+
+        def check(_):
+            datafile = os.path.join(self.basedir, '.', '.')
+            self.assertUpdates([
+                { 'rc': 1,
+                  'stderr': "Cannot open file '%s' for writing" % datafile }
+            ])
+        d.addCallback(check)
+        return d
+
+    def test_ReadFileCommand(self):
+        # put some data on the slave
+        datafile = os.path.join(self.basedir, 'somefile')
+        f = open(datafile, 'wb')
+        f.write('this is my data')
+        f.close()
+
+        self.make_command(transfer.ReadFileCommand, dict(
+            workdir='.',
+            slavesrc='somefile',
+            data='data in the file',
+            mode=0777,
+        ))
+
+        d = self.run_command()
+
+        def check(_):
+            self.assertUpdates([ {'data' : 'this is my data'}, {'rc': 0} ])
+        d.addCallback(check)
+        return d
+
+    def test_ReadFileCommand_IOError(self):
+        self.make_command(transfer.ReadFileCommand, dict(
+            workdir='.',
+            slavesrc='missing-file',
+            data='data in the file',
+            mode=0777,
+        ))
+
+        d = self.run_command()
+
+        def check(_):
+            datafile = os.path.join(self.basedir, '.', 'missing-file')
+            self.assertUpdates([
+                { 'rc': 1,
+                  'stderr': "Cannot open file '%s' for reading" % datafile }
+            ])
+        d.addCallback(check)
+        return d
+
