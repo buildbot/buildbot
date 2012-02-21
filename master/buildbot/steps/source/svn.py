@@ -30,16 +30,16 @@ class SVN(Source):
     name = 'svn'
     branch_placeholder = '%%BRANCH%%'
 
-    renderables = [ 'svnurl', 'baseURL' ]
+    renderables = [ 'repourl', 'baseURL' ]
     possible_modes = ('incremental', 'full')
     possible_methods = ('clean', 'fresh', 'clobber', 'copy', 'export', None)
 
-    def __init__(self, svnurl=None, baseURL=None, mode='incremental',
+    def __init__(self, repourl=None, baseURL=None, mode='incremental',
                  method=None, defaultBranch=None, username=None,
                  password=None, extra_args=None, keep_on_purge=None,
                  depth=None, **kwargs):
 
-        self.svnurl = svnurl
+        self.repourl = repourl
         self.baseURL = baseURL
         self.branch = defaultBranch
         self.username = username
@@ -50,7 +50,7 @@ class SVN(Source):
         self.method=method
         self.mode = mode
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(svnurl=svnurl,
+        self.addFactoryArguments(repourl=repourl,
                                  baseURL=baseURL,
                                  mode=mode,
                                  method=method,
@@ -67,18 +67,18 @@ class SVN(Source):
         if self.method not in self.possible_methods:
             errors.append("method %s is not one of %s" % (self.method, self.possible_methods))
 
-        if svnurl and baseURL:
-            errors.append("you must provide exactly one of svnurl and baseURL")
+        if repourl and baseURL:
+            errors.append("you must provide exactly one of repourl and baseURL")
 
-        if svnurl is None and baseURL is None:
-            errors.append("you must privide at least one of svnurl and baseURL")
+        if repourl is None and baseURL is None:
+            errors.append("you must privide at least one of repourl and baseURL")
         if errors:
             raise ConfigErrors(errors)
 
     def startVC(self, branch, revision, patch):
         self.revision = revision
         self.method = self._getMethod()
-        self.svnurl = self.getSvnUrl(branch)
+        self.repourl = self.getRepoUrl(branch)
         self.stdio_log = self.addLog("stdio")
 
         d = self.checkSvn()
@@ -113,7 +113,7 @@ class SVN(Source):
         yield wfd
         updatable = wfd.getResult()
         if not updatable:
-            checkout_cmd = ['checkout', self.svnurl, '.']
+            checkout_cmd = ['checkout', self.repourl, '.']
             if self.revision:
                 checkout_cmd.extend(["--revision", str(self.revision)])
 
@@ -133,7 +133,7 @@ class SVN(Source):
             if updatable:
                 command = ['update']
             else:
-                command = ['checkout', self.svnurl, '.']
+                command = ['checkout', self.repourl, '.']
             if self.revision:
                 command.extend(['--revision', str(self.revision)])
             return command
@@ -154,7 +154,7 @@ class SVN(Source):
         if cmd.rc != 0:
             raise buildstep.BuildStepFailed()
         
-        checkout_cmd = ['checkout', self.svnurl, '.']
+        checkout_cmd = ['checkout', self.repourl, '.']
         if self.revision:
             checkout_cmd.extend(["--revision", str(self.revision)])
 
@@ -268,10 +268,10 @@ class SVN(Source):
         d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
-    def getSvnUrl(self, branch):
+    def getRepoUrl(self, branch):
         ''' Compute the svn url that will be passed to the svn remote command '''
-        if self.svnurl:
-            return self.svnurl
+        if self.repourl:
+            return self.repourl
         else:
             if branch is None:
                 m = ("The SVN source step belonging to builder '%s' does not know "

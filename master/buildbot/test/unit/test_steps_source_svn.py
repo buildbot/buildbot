@@ -57,7 +57,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_repourl_and_baseURL(self):
         self.assertRaises(config.ConfigErrors, lambda :
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                         baseURL='http://svn.local/app/trunk@HEAD'))
 
     def test_no_repourl_and_baseURL(self):
@@ -66,17 +66,17 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_incorrect_mode(self):
         self.assertRaises(config.ConfigErrors, lambda :
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                         mode='invalid'))
 
     def test_incorrect_method(self):
         self.assertRaises(config.ConfigErrors, lambda :
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                         method='invalid'))
 
     def test_mode_incremental(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                         mode='incremental',username='user',
                         password='pass', extra_args=['--random']))
         self.expectCommands(
@@ -150,7 +150,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_given_revision(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                                     mode='incremental'), dict(
                 revision='100',
                 ))
@@ -176,7 +176,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_clobber(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                                     mode='full', method='clobber'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -201,7 +201,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_clobber_given_revision(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                                     mode='full', method='clobber'),dict(
                 revision='100',
                 ))
@@ -229,7 +229,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_fresh(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                                     mode='full', method='fresh', depth='infinite'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -261,7 +261,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_fresh_given_revision(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                         mode='full', method='fresh', depth='infinite'),dict(
                 revision='100',
                 ))
@@ -295,7 +295,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_fresh_keep_on_purge(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                         mode='full',
                         keep_on_purge=['svn_external_path/unversioned_file1']))
 
@@ -331,7 +331,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_clean(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                                     mode='full', method='clean'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -361,7 +361,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_clean_given_revision(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                         mode='full', method='clean'),dict(
                 revision='100',
                 ))
@@ -393,7 +393,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_not_updatable(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                                     mode='full', method='clean'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -416,7 +416,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_not_updatable_given_revision(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                                     mode='full', method='clean'),dict(
                 revision='100',
                 ))
@@ -442,7 +442,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_clean_old_rmdir(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                                     mode='full', method='clean'))
         self.patch_slaveVersionIsOlderThan(False)
         self.expectCommands(
@@ -481,7 +481,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_clean_new_rmdir(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                                     mode='full', method='clean'))
 
         self.patch_slaveVersionIsOlderThan(True)
@@ -518,7 +518,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_copy(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                                     mode='full', method='copy'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -549,7 +549,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_copy_given_revision(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                         mode='full', method='copy'),dict(
                 revision='100',
                 ))
@@ -582,7 +582,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_export(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                                     mode='full', method='export'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -612,7 +612,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_export_given_revision(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                         mode='full', method='export'),dict(
                 revision='100',
                 ))
@@ -645,7 +645,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_with_env(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                         mode='incremental',username='user',
                         password='pass', extra_args=['--random'],
                         env={'abc': '123'}))
@@ -675,7 +675,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
     
     def test_mode_incremental_logEnviron(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                         mode='incremental',username='user',
                         password='pass', extra_args=['--random'],
                         logEnviron=False))
@@ -705,7 +705,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_command_fails(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                         mode='incremental',username='user',
                         password='pass', extra_args=['--random'],
                         logEnviron=False))
@@ -729,7 +729,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_bogus_svnversion(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                         mode='incremental',username='user',
                         password='pass', extra_args=['--random']))
         self.expectCommands(
@@ -755,7 +755,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_rmdir_fails_clobber(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                                     mode='full', method='clobber'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -770,7 +770,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_rmdir_fails_copy(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                                     mode='full', method='copy'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -785,7 +785,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_cpdir_fails_copy(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                                     mode='full', method='copy'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -811,7 +811,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_rmdir_fails_purge(self):
         self.setupStep(
-                svn.SVN(svnurl='http://svn.local/app/trunk@HEAD',
+                svn.SVN(repourl='http://svn.local/app/trunk@HEAD',
                         mode='full',
                         keep_on_purge=['svn_external_path/unversioned_file1']))
 
