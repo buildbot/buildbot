@@ -803,7 +803,7 @@ For example, if only short emails are desired (e.g., for delivery to phones) ::
     
     mn = MailNotifier(fromaddr="buildbot@example.org",
                       sendToInterestedUsers=False,
-                      mode='problem',
+                      mode=('problem',),
                       extraRecipients=['listaddr@example.org'],
                       messageFormatter=messageFormatter)
 
@@ -899,7 +899,7 @@ given below::
     
     mn = MailNotifier(fromaddr="buildbot@example.org",
                       sendToInterestedUsers=False,
-                      mode='failing',
+                      mode=('failing',),
                       extraRecipients=['listaddr@example.org'],
                       messageFormatter=html_message_formatter)
 
@@ -926,27 +926,24 @@ MailNotifier arguments
     provoked the message.
 
 ``mode``
-    (string). Default to ``all``. One of:
+    (list of strings). A combination of:
 
-    ``all``
-        Send mail about all builds, both passing and failing
-        
     ``change``
-        Only send mail about builds which change status
+        Send mail about builds which change status.
     
     ``failing``
-        Only send mail about builds which fail
-
-    ``warnings``
-        Only send mail about builds which fail or generate warnings
+        Send mail about builds which fail.
 
     ``passing``
-        Only send mail about builds which succeed
+        Send mail about builds which succeed.
         
     ``problem``
-        Only send mail about a build which failed when the previous build has passed.
-        If your builds usually pass, then this will only send mail when a problem
-        occurs.
+        Send mail about a build which failed when the previous build has passed.
+
+    ``warnings``
+        Send mail about builds which generate warnings.
+
+    Defaults to (``failing``, ``passing``, ``warnings``).
 
 ``builders``
     (list of strings). A list of builder names for which mail should be
@@ -1038,7 +1035,7 @@ Name of the project
     :meth:`master_status.getProjectName()`
 
 MailNotifier mode
-    ``mode`` (one of ``all``, ``failing``, ``problem``, ``change``, ``passing``)
+    ``mode`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``)
 
 Builder result as a string ::
     

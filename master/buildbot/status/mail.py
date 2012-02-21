@@ -44,7 +44,7 @@ except ImportError:
 from buildbot import interfaces, util, config
 from buildbot.process.users import users
 from buildbot.status import base
-from buildbot.status.results import FAILURE, SUCCESS, Results
+from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, Results
 
 VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
 
@@ -69,27 +69,30 @@ class Domain(util.ComparableMixin):
 def defaultMessage(mode, name, build, results, master_status):
     """Generate a buildbot mail message and return a tuple of message text
         and type."""
-    result = Results[results]
     ss = build.getSourceStamp()
+    prev = build.getPreviousBuild()
 
     text = ""
-    if mode == "all":
-        text += "The Buildbot has finished a build"
-    elif mode == "failing":
-        text += "The Buildbot has detected a failed build"
-    elif mode == "warnings":
+    if results == FAILURE:
+        if "change" in mode and prev and prev.getResults() != results or \
+               "problem" in mode and prev and prev.getResults() != FAILURE:
+            text += "The Buildbot has detected a new failure"
+        else:
+            text += "The Buildbot has detected a failed build"
+    elif results == WARNINGS:
         text += "The Buildbot has detected a problem in the build"
-    elif mode == "passing":
-        text += "The Buildbot has detected a passing build"
-    elif mode == "change" and result == 'success':
-        text += "The Buildbot has detected a restored build"
-    else:    
-        text += "The Buildbot has detected a new failure"
+    elif results == SUCCESS:
+        if "change" in mode and prev and prev.getResults() != results:
+            text += "The Buildbot has detected a restored build"
+        else:
+            text += "The Buildbot has detected a passing build"
+
     if ss and ss.project:
         project = ss.project
     else:
         project = master_status.getTitle()
     text += " on builder %s while building %s.\n" % (name, project)
+
     if master_status.getURLForThing(build):
         text += "Full details are available at:\n %s\n" % master_status.getURLForThing(build)
     text += "\n"
@@ -122,9 +125,9 @@ def defaultMessage(mode, name, build, results, master_status):
     else:
         t = ""
 
-    if result == 'success':
+    if results == SUCCESS:
         text += "Build succeeded!\n"
-    elif result == 'warnings':
+    elif results == WARNINGS:
         text += "Build Had Warnings%s\n" % t
     else:
         text += "BUILD FAILED%s\n" % t
@@ -161,10 +164,11 @@ class MailNotifier(base.StatusReceiverMultiService):
                      "subject", "sendToInterestedUsers", "customMesg",
                      "messageFormatter", "extraHeaders"]
 
-    possible_modes = ('all', 'failing', 'problem', 'change', 'passing', 'warnings')
+    possible_modes = ("change", "failing", "passing", "problem", "warnings")
 
-    def __init__(self, fromaddr, mode="all", categories=None, builders=None,
-                 addLogs=False, relayhost="localhost", buildSetSummary=False,
+    def __init__(self, fromaddr, mode=("failing", "passing", "warnings"),
+                 categories=None, builders=None, addLogs=False,
+                 relayhost="localhost", buildSetSummary=False,
                  subject="buildbot %(result)s in %(title)s on %(builder)s",
                  lookup=None, extraRecipients=[],
                  sendToInterestedUsers=True, customMesg=None,
@@ -179,7 +183,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                                       of the Interested Users. If False, only
                                       send mail to the extraRecipients list.
 
-        @type  extraRecipients: tuple of string
+        @type  extraRecipients: tuple of strings
         @param extraRecipients: a list of email addresses to which messages
                                 should be sent (in addition to the
                                 InterestedUsers list, which includes any
@@ -195,15 +199,15 @@ class MailNotifier(base.StatusReceiverMultiService):
                         %(builder)s will be replaced with the name of the
                         builder which provoked the message.
 
-        @type  mode: string (defaults to all)
-        @param mode: one of MailNotifer.possible_modes:
-                     - 'all': send mail about all builds, passing and failing
-                     - 'failing': only send mail about builds which fail
-                     - 'warnings': send mail if builds contain warnings or fail 
-                     - 'passing': only send mail about builds which succeed
-                     - 'problem': only send mail about a build which failed
-                     when the previous build passed
-                     - 'change': only send mail about builds who change status
+        @type  mode: list of strings
+        @param mode: a list of MailNotifer.possible_modes:
+                     - "change":  send mail about builds which change status
+                     - "failing": send mail about builds which fail
+                     - "passing": send mail about builds which succeed
+                     - "problem": send mail about a build which failed
+                                  when the previous build passed
+                     - "warnings": send mail if a build contain warnings
+                     Defaults to ("failing", "passing", "warnings").
 
         @type  builders: list of strings
         @param builders: a list of builder names for which mail should be
@@ -299,9 +303,17 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.extraRecipients = extraRecipients
         self.sendToInterestedUsers = sendToInterestedUsers
         self.fromaddr = fromaddr
-        if mode not in self.possible_modes:
-            errors.append(
-                "mode %s is not one of %s" % (mode, self.possible_modes))
+        if isinstance(mode, basestring):
+            if mode == "all":
+                mode = ("failing", "passing", "warnings")
+            elif mode == "warnings":
+                mode = ("failing", "warnings")
+            else:
+                mode = (mode,)
+        for m in mode:
+            if m not in self.possible_modes:
+                errors.append(
+                    "mode %s is not a valid mode" % (m,))
         self.mode = mode
         self.categories = categories
         self.builders = builders
@@ -359,8 +371,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             self.master.subscribeToBuildsetCompletions(self.buildsetFinished)
  
         base.StatusReceiverMultiService.startService(self)
-        
-   
+
     def stopService(self):
         if self.buildSetSubscription is not None:
             self.buildSetSubscription.unsubscribe()
@@ -388,8 +399,10 @@ class MailNotifier(base.StatusReceiverMultiService):
 
     def builderChangedState(self, name, state):
         pass
+
     def buildStarted(self, name, build):
         pass
+
     def isMailNeeded(self, build, results):
         # here is where we actually do something.
         builder = build.getBuilder()
@@ -399,24 +412,21 @@ class MailNotifier(base.StatusReceiverMultiService):
                builder.category not in self.categories:
             return False # ignore this build
 
-        if self.mode == "warnings" and results == SUCCESS:
-            return False
-        if self.mode == "failing" and results != FAILURE:
-            return False
-        if self.mode == "passing" and results != SUCCESS:
-            return False
-        if self.mode == "problem":
-            if results != FAILURE:
-                return False
-            prev = build.getPreviousBuild()
-            if prev and prev.getResults() == FAILURE:
-                return False
-        if self.mode == "change":
-            prev = build.getPreviousBuild()
-            if not prev or prev.getResults() == results:
-                return False
-        
-        return True
+        prev = build.getPreviousBuild()
+        if "change" in self.mode:
+            if prev and prev.getResults() != results:
+                return True
+        if "failing" in self.mode and results == FAILURE:
+            return True
+        if "passing" in self.mode and results == SUCCESS:
+            return True
+        if "problem" in self.mode and results == FAILURE:
+            if prev and prev.getResults() != FAILURE:
+                return True
+        if "warnings" in self.mode and results == WARNINGS:
+            return True
+
+        return False
 
     def buildFinished(self, name, build, results):
         if ( not self.buildSetSummary and
