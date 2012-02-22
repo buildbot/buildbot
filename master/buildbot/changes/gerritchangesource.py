@@ -125,6 +125,8 @@ class GerritChangeSource(base.ChangeSource):
         return self.addChange(dict(
                 author="%s <%s>" % (change["owner"]["name"], change["owner"]["email"]),
                 project=change["project"],
+                repository="ssh://%s@%s:%s/%s" % (
+                    self.username, self.gerritserver, self.gerritport, change["project"]),
                 branch=change["branch"]+"/"+change["number"],
                 revision=event["patchSet"]["revision"],
                 revlink=change["url"],
@@ -142,6 +144,8 @@ class GerritChangeSource(base.ChangeSource):
         return self.addChange(dict(
                 author=author,
                 project=ref["project"],
+                repository="ssh://%s@%s:%s/%s" % (
+                    self.username, self.gerritserver, self.gerritport, ref["project"]),
                 branch=ref["refName"],
                 revision=ref["newRev"],
                 comments="Gerrit: patchset(s) merged.",
