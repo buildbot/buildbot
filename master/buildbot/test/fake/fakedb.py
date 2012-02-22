@@ -442,13 +442,6 @@ class FakeChangesComponent(FakeDBComponent):
             project=change.project)
         self.changes[changeid] = row
 
-    def setCodebase(self, changeid, codebase):
-        try:
-            self.changes[changeid].codebase = codebase
-        except KeyError:
-            pass
-        return defer.succeed(ch_uids)
-
 class FakeSchedulersComponent(FakeDBComponent):
 
     def setUp(self):

@@ -401,16 +401,15 @@ class Interpolate(util.ComparableMixin):
         self.kwargs = kwargs 
         if self.args and self.kwargs: 
             raise ValueError('Interpolate takes either positional or keyword substitutions, not both.') 
- 
+
     def getRenderingFor(self, props): 
         props = props.getProperties() 
-        if self.args: 
+        if self.args:
             args = props.render(self.args) 
             return self.fmtstring % tuple(args) 
-        else: 
+        else:
             kwargs = props.render(self.kwargs) 
             return self.fmtstring % InterpolateMap(props, kwargs) 
-        return s 
 
 class Property(util.ComparableMixin):
     """

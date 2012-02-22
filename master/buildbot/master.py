@@ -39,7 +39,6 @@ from buildbot.process import metrics
 from buildbot.process import cache
 from buildbot.process.users import users
 from buildbot.process.users.manager import UserManagerManager
-from buildbot.util import datetime2epoch
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import monkeypatches
 from buildbot import config
@@ -450,12 +449,13 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         if self.config.codebaseGenerator is not None:
             chdict = {}
-            chdict['who']=author
+            chdict['changeid']=None
+            chdict['author']=author
             chdict['files']=files
             chdict['comments']=comments
-            chdict['isdir']=is_dir
+            chdict['is_dir']=is_dir
             chdict['revision']=revision
-            chdict['when']=when_timestamp
+            chdict['when_timestamp']=when_timestamp
             chdict['branch']=branch
             chdict['category']=category
             chdict['revlink']=revlink

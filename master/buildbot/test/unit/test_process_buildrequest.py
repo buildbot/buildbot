@@ -16,7 +16,6 @@
 from twisted.trial import unittest
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import buildrequest
-from buildbot.process.build import Build
 
 class FakeSource:
     def __init__(self, mergeable = True):
@@ -359,4 +358,4 @@ class TestBuildRequest(unittest.TestCase):
         mergeable = r1.canBeMergedWith(r2)
         self.assertTrue(mergeable, "Request containing different codebases " +
                                     "should always be able to merge")
-        
+

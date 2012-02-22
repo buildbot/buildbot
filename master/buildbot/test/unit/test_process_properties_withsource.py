@@ -13,14 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-import exceptions
-from zope.interface import implements
 from twisted.trial import unittest
 from twisted.internet import defer
-from buildbot.process.build import Build
 from buildbot.process.properties import WithSource
-
-from mock import Mock
 
 class FakeChange:
     def __init__(self, number = None):
