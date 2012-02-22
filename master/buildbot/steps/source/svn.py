@@ -238,8 +238,7 @@ class SVN(Source):
         return d
 
     def _dovccmd(self, command, collectStdout=False):
-        if not command:
-            raise ValueError("No command specified")
+        assert command, "No command specified"
         command.extend(['--non-interactive', '--no-auth-cache'])
         if self.username:
             command.extend(['--username', self.username])
@@ -295,17 +294,29 @@ class SVN(Source):
         elif self.method is None and self.mode == 'full':
             return 'fresh'
 
+    @defer.deferredGenerator
     def _sourcedirIsUpdatable(self):
+        # first, perform a stat to ensure that this is really an svn directory
         cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.svn',
                                                'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def _fail(tmp):
-            if cmd.rc != 0:
-                return False
-            return True
-        d.addCallback(_fail)
-        return d
+        wfd = defer.waitForDeferred(
+            self.runCommand(cmd))
+        yield wfd
+        wfd.getResult()
+
+        if cmd.rc != 0:
+            yield False
+            return
+
+        # then run 'svn info' to check that the URL matches our repourl
+        wfd = defer.waitForDeferred(
+            self._dovccmd(['info'], collectStdout=True))
+        yield wfd
+        stdout = wfd.getResult()
+        stdout = [ s.strip() for s in stdout.split('\n') ]
+        yield 'URL: %s' % self.repourl in stdout
+        return
 
     def parseGotRevision(self, _):
         # if this was a full/export, then we need to check svnversion in the
