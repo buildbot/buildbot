@@ -608,7 +608,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
-    def test_mod_full_copy(self):
+    def test_mode_full_copy(self):
         self.setupStep(
                 svn.SVN(repourl='http://svn.local/app/trunk',
                                     mode='full', method='copy'))
@@ -645,7 +645,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
-    def test_mod_full_copy_given_revision(self):
+    def test_mode_full_copy_given_revision(self):
         self.setupStep(
                 svn.SVN(repourl='http://svn.local/app/trunk',
                         mode='full', method='copy'),dict(
