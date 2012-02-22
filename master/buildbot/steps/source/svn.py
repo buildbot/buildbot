@@ -308,7 +308,13 @@ class SVN(Source):
         return d
 
     def parseGotRevision(self, _):
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['svnversion'],
+        # if this was a full/export, then we need to check svnversion in the
+        # *source* directory, not the build directory
+        svnversion_dir = self.workdir
+        if self.mode == 'full' and self.method == 'export':
+            svnversion_dir = 'source'
+
+        cmd = buildstep.RemoteShellCommand(svnversion_dir, ['svnversion'],
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            collectStdout=True)
