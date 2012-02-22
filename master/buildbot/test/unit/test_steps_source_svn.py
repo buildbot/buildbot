@@ -944,8 +944,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--non-interactive',
                                  '--no-auth-cache' ])
-            + ExpectShell.log('stdio',
-                stdout="URL: http://svn.local/app/trunk")
+            + ExpectShell.log('stdio', # note \r\n here, for variety
+                stdout="URL: http://svn.local/app/trunk\r\nTrailing: ..")
             + 0,
             ExpectShell(workdir='source',
                         command=['svn', 'update', '--non-interactive',

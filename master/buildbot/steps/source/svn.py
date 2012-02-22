@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import re
 import xml.dom.minidom
 import xml.parsers.expat
 
@@ -314,8 +315,11 @@ class SVN(Source):
             self._dovccmd(['info'], collectStdout=True))
         yield wfd
         stdout = wfd.getResult()
-        stdout = [ s.strip() for s in stdout.split('\n') ]
-        yield 'URL: %s' % self.repourl in stdout
+
+        # extract the URL, handling whitespace carefully so that \r\n works
+        # is a line terminator
+        mo = re.search('^URL:\s*(.*?)\s*$', stdout, re.M)
+        yield mo and mo.group(1) == self.repourl
         return
 
     def parseGotRevision(self, _):
