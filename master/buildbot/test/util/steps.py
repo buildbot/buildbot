@@ -73,8 +73,8 @@ class BuildStepMixin(object):
         """
         # yes, Virginia, "factory" refers both to the tuple and its first
         # element TODO: fix that up
-        factory, args = step.getStepFactory()
-        step = self.step = factory(**args)
+        factory, args, kwargs = step.getStepFactory()
+        step = self.step = factory(*args, **kwargs)
 
         # step.build
 

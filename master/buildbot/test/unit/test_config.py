@@ -706,7 +706,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             b = mock.Mock()
             b.name = name
             b.locks = []
-            b.factory.steps = [ ('cls', dict(locks=[])) ]
+            b.factory.steps = [ ('cls', (), dict(locks=[])) ]
             return b
 
         def lock(name):
@@ -721,7 +721,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             if dup_builder_lock:
                 b2.locks.append(lock(builder_lock))
         if step_lock:
-            s1, s2 = b1.factory.steps[0][1], b2.factory.steps[0][1]
+            s1, s2 = b1.factory.steps[0][2], b2.factory.steps[0][2]
             s1['locks'].append(lock(step_lock))
             if dup_step_lock:
                 s2['locks'].append(lock(step_lock))

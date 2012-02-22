@@ -552,7 +552,7 @@ class MasterConfig(object):
             if not hasattr(b.factory, 'steps'):
                 continue
             for s in b.factory.steps:
-                for l in s[1].get('locks', []):
+                for l in s[2].get('locks', []):
                     check_lock(l)
 
 

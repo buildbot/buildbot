@@ -381,7 +381,7 @@ class RemoteShellCommand(RemoteCommand):
     def __repr__(self):
         return "<RemoteShellCommand '%s'>" % repr(self.command)
 
-class BuildStep(properties.PropertiesMixin):
+class BuildStep(object, properties.PropertiesMixin):
 
     haltOnFailure = False
     flunkOnWarnings = False
@@ -424,7 +424,6 @@ class BuildStep(properties.PropertiesMixin):
     progress = None
 
     def __init__(self, **kwargs):
-        self.factory = (self.__class__, dict(kwargs))
         for p in self.__class__.parms:
             if kwargs.has_key(p):
                 setattr(self, p, kwargs[p])
@@ -437,6 +436,12 @@ class BuildStep(properties.PropertiesMixin):
 
         self._acquiringLock = None
         self.stopped = False
+
+    def __new__(klass, *args, **kwargs):
+        self = object.__new__(klass)
+        klass.__init__(self, *args, **kwargs)
+        self.factory = (klass, args, kwargs)
+        return self
 
     def describe(self, done=False):
         return [self.name]
@@ -451,7 +456,8 @@ class BuildStep(properties.PropertiesMixin):
         pass
 
     def addFactoryArguments(self, **kwargs):
-        self.factory[1].update(kwargs)
+        # this is here for backwards compatability
+        pass
 
     def getStepFactory(self):
         return self.factory

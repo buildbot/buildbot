@@ -297,13 +297,14 @@ class Build(properties.PropertiesMixin):
         stepnames = {}
         sps = []
 
-        for factory, args in self.stepFactories:
-            args = args.copy()
+        for factory, args, kwargs in self.stepFactories:
+            args = tuple(args)
+            kwargs = kwargs.copy()
             try:
-                step = factory(**args)
+                step = factory(*args, **kwargs)
             except:
-                log.msg("error while creating step, factory=%s, args=%s"
-                        % (factory, args))
+                log.msg("error while creating step, factory=%s, args=%s, kwargs=%s"
+                        % (factory, args, kwargs))
                 raise
            
             step.setBuild(self)
