@@ -547,15 +547,6 @@ class MasterConfig(object):
                 for l in b.locks:
                     check_lock(l)
 
-            # factories don't necessarily need to implement a .steps attribute
-            # but in practice most do, so we'll check that if it exists
-            if not hasattr(b.factory, 'steps'):
-                continue
-            for s in b.factory.steps:
-                for l in s[2].get('locks', []):
-                    check_lock(l)
-
-
     def check_builders(self, errors):
         # look both for duplicate builder names, and for builders pointing
         # to unknown slaves
