@@ -331,67 +331,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         yield wfd
         yield wfd.getResult()
 
-    @defer.deferredGenerator
-    def addBuildsetForChanges_old(self, reason='', external_idstring=None,
-            changeids=[], builderNames=None, properties=None):
-        """
-        Add a buildset for the combination of the given changesets, creating
-        a sourcestamp based on those changes.  The sourcestamp for the buildset
-        will reference all of the indicated changes.
 
-        This method will add any properties provided to the scheduler
-        constructor to the buildset, and will call the master's addBuildset
-        method with the appropriate parameters.
-
-        @param reason: reason for this buildset
-        @type reason: unicode string
-        @param external_idstring: external identifier for this buildset, or None
-        @param changeids: nonempty list of changes to include in this buildset
-        @param builderNames: builders to name in the buildset (defaults to
-            C{self.builderNames})
-        @param properties: a properties object containing initial properties for
-            the buildset
-        @type properties: L{buildbot.process.properties.Properties}
-        @returns: (buildset ID, buildrequest IDs) via Deferred
-        """
-        assert changeids is not []
-        # attributes for this sourcestamp will be based on the most recent
-        # change, so fetch the change with the highest id
-        wfd = defer.waitForDeferred(self.master.db.changes.getChange(max(changeids)))
-        yield wfd
-        chdict = wfd.getResult()
-
-        change = None
-        if chdict:
-            wfd = defer.waitForDeferred(changes.Change.fromChdict(self.master, chdict))
-            yield wfd
-            change = wfd.getResult()
-
-        # Define setid for this set of changed repositories
-        wfd = defer.waitForDeferred(self.master.db.sourcestampsets.addSourceStampSet())
-        yield wfd
-        setid = wfd.getResult()
-
-        wfd = defer.waitForDeferred(self.master.db.sourcestamps.addSourceStamp(
-                    branch=change.branch,
-                    revision=change.revision,
-                    repository=change.repository,
-                    codebase=change.codebase,
-                    project=change.project,
-                    changeids=changeids,
-                    sourcestampsetid=setid))
-        yield wfd
-        wfd.getResult()
-
-        wfd = defer.waitForDeferred(self.addBuildsetForSourceStamp(
-                                setid=setid, reason=reason,
-                                external_idstring=external_idstring,
-                                builderNames=builderNames,
-                                properties=properties))
-        yield wfd
-        yield wfd.getResult()
-
-    @defer.deferredGenerator
     def addBuildsetForChanges(self, reason='', external_idstring=None,
             changeids=[], builderNames=None, properties=None):
         assert changeids is not []

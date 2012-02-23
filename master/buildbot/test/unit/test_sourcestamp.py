@@ -156,3 +156,19 @@ class TestBuilderBuildCreation(unittest.TestCase):
         self.assertEqual(abs_ss.project, 'p')
         self.assertEqual(abs_ss.repository, 'r')
         self.assertEqual(abs_ss.codebase, 'cb')
+
+    def test_canBeMergedWith_where_sourcestamp_do_not_both_have_changes(self):
+        c1 = mock.Mock()
+        c1.codebase = 'cb'
+        ss1 = sourcestamp.SourceStamp(branch='dev', revision='xyz',
+                project='p', repository='r', codebase='cb', changes=[c1])
+        ss2 = sourcestamp.SourceStamp(branch='dev', revision='xyz',
+                project='p', repository='r', codebase='cb', changes=[])
+        self.assertFalse(ss1.canBeMergedWith(ss2))
+        
+    def test_canBeMergedWith_where_sourcestamp_have_different_codebases(self):
+        ss1 = sourcestamp.SourceStamp(branch='dev', revision='xyz',
+                project='p', repository='r', codebase='cbA', changes=[])
+        ss2 = sourcestamp.SourceStamp(branch='dev', revision='xyz',
+                project='p', repository='r', codebase='cbB', changes=[])
+        self.assertFalse(ss1.canBeMergedWith(ss2))        

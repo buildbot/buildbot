@@ -358,7 +358,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     def addChange(self, who=None, files=None, comments=None, author=None,
             isdir=None, is_dir=None, revision=None, when=None,
             when_timestamp=None, branch=None, category=None, revlink='',
-            properties={}, repository='', project='', src=None):
+            properties={}, repository='', codebase=None, project='', src=None):
         """
         Add a change to the buildmaster and act on it.
 
@@ -447,24 +447,26 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         for n in properties:
             properties[n] = (properties[n], 'Change')
 
-        if self.config.codebaseGenerator is not None:
-            chdict = {}
-            chdict['changeid']=None
-            chdict['author']=author
-            chdict['files']=files
-            chdict['comments']=comments
-            chdict['is_dir']=is_dir
-            chdict['revision']=revision
-            chdict['when_timestamp']=when_timestamp
-            chdict['branch']=branch
-            chdict['category']=category
-            chdict['revlink']=revlink
-            chdict['properties']=properties
-            chdict['repository']=repository
-            chdict['project']=project
-            codebase = self.config.codebaseGenerator(chdict)
-        else:
-            codebase = ''
+        if codebase is None:
+            if self.config.codebaseGenerator is not None:
+                chdict = {
+                    'changeid': None,
+                    'author': author,
+                    'files': files,
+                    'comments': comments,
+                    'is_dir': is_dir,
+                    'revision': revision,
+                    'when_timestamp': when_timestamp,
+                    'branch': branch,
+                    'category': category,
+                    'revlink': revlink,
+                    'properties': properties,
+                    'repository': repository,
+                    'project': project,
+                }
+                codebase = self.config.codebaseGenerator(chdict)
+            else:
+                codebase = ''
             
         d = defer.succeed(None)
         if src:
