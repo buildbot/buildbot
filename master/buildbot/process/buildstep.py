@@ -440,7 +440,14 @@ class BuildStep(object, properties.PropertiesMixin):
     def __new__(klass, *args, **kwargs):
         self = object.__new__(klass)
         klass.__init__(self, *args, **kwargs)
-        self.factory = (klass, args, kwargs)
+        def factory():
+            try:
+                return klass(*args, **kwargs)
+            except:
+                log.msg("error while creating step, factory=%s, args=%s, kwargs=%s"
+                        % (klass, args, kwargs))
+                raise
+        self.factory = factory
         return self
 
     def describe(self, done=False):
