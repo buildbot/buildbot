@@ -298,8 +298,6 @@ class Build(properties.PropertiesMixin):
         sps = []
 
         for factory, args, kwargs in self.stepFactories:
-            args = tuple(args)
-            kwargs = kwargs.copy()
             try:
                 step = factory(*args, **kwargs)
             except:
