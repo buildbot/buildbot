@@ -168,14 +168,14 @@ class TestBuildRequest(unittest.TestCase):
         d.addCallback(check)
         return d
 
-    def test_fromBrdict_common_repositories_with_merge(self):
+    def test_mergeSourceStampsWith_common_codebases(self):
         """ This testcase has two buildrequests
-            Request Change Repository Revision Comment
+            Request Change Codebase Revision Comment
             ----------------------------------------------------------------------
-            288     13     svn://a    9283
-            289     15     svn://a    9284
-            288     14     svn://b    9200
-            289     16     svn://b    9201
+            288     13     A        9283
+            289     15     A        9284
+            288     14     B        9200
+            289     16     B        9201
             -------------------------------- 
             After merged in Build:
             Source1 has rev 9284 and contains changes 13 and 15 from repository svn://a
@@ -260,16 +260,15 @@ class TestBuildRequest(unittest.TestCase):
         d.addCallback(check)
         return d
 
-    def test_fromBrdict_different_repositories_with_merge(self):
+    def test_mergeSourceStampsWith_different_codebases_raises_error(self):
         """ This testcase has two buildrequests
-            Request Change Repository Revision Comment
+            Request Change Codebase   Revision Comment
             ----------------------------------------------------------------------
-            288     17     svn://c    1800     request 1 has repo not in request 2
-            289     18     svn://d    2100     request 2 has repo not in request 1
+            288     17     C          1800     request 1 has repo not in request 2
+            289     18     D          2100     request 2 has repo not in request 1
             -------------------------------- 
-            After merged in Build:
-            Source1 has rev 1800 and contains change 17 from repository svn://c
-            Source2 has rev 2100 and contains change 18 from repository svn://d
+            Merge cannot be performd and raises error:
+              Merging requests requires both requests to have the same codebases
         """
         brs=[] # list of buildrequests
         master = fakemaster.make_master()
@@ -313,23 +312,8 @@ class TestBuildRequest(unittest.TestCase):
                     buildrequest.BuildRequest.fromBrdict(master, brdict))
         d.addCallback(lambda br : brs.append(br))
         def check(_):
-            sources = brs[0].mergeSourceStampsWith(brs[1:])
-            
-            source1 = source2 = None
-            for source in sources:
-                if source.codebase == 'C':
-                    source1 = source
-                if source.codebase == 'D':
-                    source2 = source
-
-            self.assertTrue(source1 != None)
-            self.assertEqual(source1.revision,'1800')
-            
-            self.assertTrue(source2 != None)
-            self.assertEqual(source2.revision,'2100')
-            
-            self.assertEqual([c.number for c in source1.changes], [17])
-            self.assertEqual([c.number for c in source2.changes], [18])
+            self.assertRaises(ValueError,
+                lambda : brs[0].mergeSourceStampsWith(brs[1:]))
 
         d.addCallback(check)
         return d
@@ -356,6 +340,6 @@ class TestBuildRequest(unittest.TestCase):
         r2 = buildrequest.BuildRequest()
         r2.sources = {"B": FakeSource(mergeable = False)}
         mergeable = r1.canBeMergedWith(r2)
-        self.assertTrue(mergeable, "Request containing different codebases " +
+        self.assertFalse(mergeable, "Request containing different codebases " +
                                     "should always be able to merge")
 

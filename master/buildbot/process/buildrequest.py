@@ -149,36 +149,74 @@ class BuildRequest(object):
 
         yield buildrequest # return value
 
-    def canBeMergedWith(self, other):
-        #get all codebases from both requests
-        all_codebases = set(self.sources.iterkeys())
-        all_codebases &= set(other.sources.iterkeys())
+    def requestsHaveSameCodebases(self, other):
+        self_codebases = set(self.sources.iterkeys())
+        other_codebases = set(other.sources.iterkeys())      
+        return self_codebases == other_codebases
 
-        for c in all_codebases:
+    def requestsHaveChangesForSameCodebases(self, other):
+        # Merge can only be done if both requests have sourcestampsets containing
+        # comparable sourcestamps, that means sourcestamps with the same codebase.
+        # This means that both requests must have exact the same set of codebases
+        # If not then merge cannot be performed.
+        # The second requirement is that both request have the changes in the 
+        # same codebases.
+        #
+        # Normaly a scheduler always delivers the same set of codebases: 
+        #   sourcestamps with and without changes
+        # For the case a scheduler is not configured with a set of codebases
+        # it delivers only a set with sourcestamps that have changes. 
+        self_codebases = set(self.sources.iterkeys())
+        other_codebases = set(other.sources.iterkeys())      
+        if self_codebases != other_codebases:
+            return False
+            
+        for c in self_codebases:
+            if len(self.sources[c].changes) != len(other.sources[c].changes):
+                return False
+        # all codebases tested, no differences found
+        return True
+        
+    def canBeMergedWith(self, other):
+        """
+        Returns if both requests can be merged
+        Method assumes that both requests have same codebases
+        """
+
+        #get codebases from myself, they are equal to other
+        self_codebases = set(self.sources.iterkeys())
+
+        for c in self_codebases:
+            # check to prevent exception
+            if c not in other.sources:
+                return False
             if not self.sources[c].canBeMergedWith(other.sources[c]):
                 return False
         return True
 
     def mergeSourceStampsWith(self, others):
-        """ Returns one merged sourcestamp for every codebase """
+        """
+        Returns one merged sourcestamp for every codebase in self
+        Method assumes that all requests have same codebases
+        """
+        
         #get all codebases from all requests
-        all_codebases = set(self.sources.iterkeys())
-        for other in others:
-            all_codebases |= set(other.sources.iterkeys())
+        self_codebases = set(self.sources.iterkeys())
 
-        all_merged_sources = {}
+        merged_sources = {}
         # walk along the codebases
-        for codebase in all_codebases:
+        for codebase in self_codebases:
             all_sources = []
-            if codebase in self.sources:
-                all_sources.append(self.sources[codebase])
+            all_sources.append(self.sources[codebase])
             for other in others:
-                if codebase in other.sources:
-                    all_sources.append(other.sources[codebase])
+                if codebase not in other.sources:
+                    raise ValueError("merging requests requires both requests " + 
+                                      "to have the same codebases")
+                all_sources.append(other.sources[codebase])
             assert len(all_sources)>0, "each codebase should have atleast one sourcestamp"
-            all_merged_sources[codebase] = all_sources[0].mergeWith(all_sources[1:])
+            merged_sources[codebase] = all_sources[0].mergeWith(all_sources[1:])
 
-        return [source for source in all_merged_sources.itervalues()]
+        return [source for source in merged_sources.itervalues()]
 
     def mergeReasons(self, others):
         """Return a reason for the merged build request."""
