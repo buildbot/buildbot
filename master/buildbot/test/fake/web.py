@@ -31,6 +31,8 @@ class FakeRequest(Mock):
     failure = None
 
     def __init__(self, args={}):
+        Mock.__init__(self)
+
         self.args = args
         self.site = Mock()
         self.site.buildbot_service = Mock()
@@ -43,8 +45,6 @@ class FakeRequest(Mock):
         master.addChange = addChange
 
         self.deferred = defer.Deferred()
-
-        Mock.__init__(self)
 
     def write(self, data):
         self.written = self.written + data
