@@ -203,7 +203,7 @@ class Source(LoggingBuildStep):
         self.workdir = workdir
 
         self.sourcestamp = None
-        # Codebase cannot be set yet
+
         self.codebase = codebase
         
         self.alwaysUseLatest = alwaysUseLatest

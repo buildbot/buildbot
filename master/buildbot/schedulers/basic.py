@@ -39,7 +39,7 @@ class BaseBasicScheduler(base.BaseScheduler):
                 builderNames=None, branch=NotABranch, branches=NotABranch,
                 fileIsImportant=None, properties={}, categories=None,
                 change_filter=None, onlyImportant=False,
-                repositories = None):
+                codebases = None):
         if shouldntBeSet is not self.NotSet:
             raise config.ConfigErrors([
                 "pass arguments to schedulers using keyword arguments" ])
@@ -49,7 +49,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         # initialize parent classes
         base.BaseScheduler.__init__(self, name, builderNames, properties, 
-                                    repositories=repositories)
+                                    codebases=codebases)
 
         self.treeStableTimer = treeStableTimer
         self.fileIsImportant = fileIsImportant

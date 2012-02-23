@@ -19,7 +19,6 @@ from twisted.persisted import styles
 from twisted.internet import defer
 from buildbot.changes.changes import Change
 from buildbot import util, interfaces
-
 # TODO: kill this class, or at least make it less significant
 class SourceStamp(util.ComparableMixin, styles.Versioned):
     """This is a tuple of (branch, revision, patchspec, changes, project, repository).
@@ -59,7 +58,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     @ivar repository: repository URL
     """
 
-    persistenceVersion = 2
+    persistenceVersion = 3
     persistenceForgets = ( 'wasUpgraded', )
 
     # all seven of these are publicly visible attributes
@@ -130,7 +129,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         d.addCallback(got_changes)
         return d
 
-    def __init__(self, branch=None, revision=None, patch=None,
+    def __init__(self, branch=None, revision=None, patch=None, sourcestampsetid=None,
                  patch_info=None, changes=None, project='', repository='',
                  codebase = '', _fromSsdict=False, _ignoreChanges=False):
         self._getSourceStampSetId_lock = defer.DeferredLock();
@@ -142,6 +141,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         if patch is not None:
             assert 2 <= len(patch) <= 3
             assert int(patch[0]) != -1
+        self.sourcestampsetid = sourcestampsetid
         self.branch = branch
         self.patch = patch
         self.patch_info = patch_info
@@ -206,7 +206,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         changes.extend(self.changes)
         for ss in others:
             changes.extend(ss.changes)
-        newsource = SourceStamp(branch=self.branch,
+        newsource = SourceStamp(sourcestampsetid=self.sourcestampsetid,
+                                branch=self.branch,
                                 revision=self.revision,
                                 patch=self.patch,
                                 patch_info=self.patch_info,
@@ -221,6 +222,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
                            patch=self.patch, repository=self.repository,
                            codebase=self.codebase, patch_info=self.patch_info,
                            project=self.project, changes=self.changes,
+                           sourcestampsetid=self.sourcestampsetid, 
                            _ignoreChanges=True)
 
     def getText(self):
@@ -275,8 +277,10 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.wasUpgraded = True
 
     def upgradeToVersion3(self):
+        self.sourcestampsetid = self.ssid
         #version 2 did not have codebase; set to ''
         self.codebase = ''
+        self.wasUpgraded = True
 
     @util.deferredLocked('_getSourceStampSetId_lock')
     def getSourceStampSetId(self, master):

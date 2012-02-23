@@ -756,12 +756,10 @@ class BuilderControl:
 
         properties_dict = dict((k,(v,s)) for (k,v,s) in properties.asList())
         ss = bs.getSourceStamp(absolute=True)
-        d = ss.getSourceStampSetId(self.master.master)
-        def add_buildset(sourcestampsetid):
-            return self.master.master.addBuildset(
-                    builderNames=[self.original.name],
-                    sourcestampsetid=sourcestampsetid, reason=reason, properties=properties_dict)
-        d.addCallback(add_buildset)
+        # The sourcestamp has an setid 
+        d = self.master.master.addBuildset(
+                        builderNames=[self.original.name],
+                        sourcestampsetid=ss.sourcestampsetid, reason=reason, properties=properties_dict)
         return d
 
     @defer.deferredGenerator

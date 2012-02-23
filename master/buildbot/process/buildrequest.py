@@ -143,18 +143,35 @@ class BuildRequest(object):
         wfd = defer.waitForDeferred(dl)
         yield wfd
         wfd.getResult()
-  
+
         if buildrequest.sources:
             buildrequest.source = buildrequest.sources.values()[0]
 
         yield buildrequest # return value
 
-    def canBeMergedWith(self, other):
-        #get all codebases from both requests
-        all_codebases = set(self.sources.iterkeys())
-        all_codebases &= set(other.sources.iterkeys())
+    def requestsShareSameCodebases(self, other):
+        self_codebases = set(self.sources.iterkeys())
+        other_codebases = set(other.sources.iterkeys())
 
-        for c in all_codebases:
+        # Merge can only be done if both requests have sourcestampsets containing
+        # comparable sourcestamps
+        # This means that both requests have exact the same set of codebases
+        # If not then merge cannot be performed.
+        # Normaly a scheduler always delivers the same set of codebases:
+        #   sourcestamps with and without changes
+        # For the case a scheduler is not configured with a set of codebases
+        # it delivers only a set with sourcestamps that have changes. In this
+        # case two request may have different codebases, they cannot be merged.
+        if self_codebases != other_codebases:
+            return False
+
+        return True
+
+    def canBeMergedWith(self, other):
+        if not self.requestsShareSameCodebases(other):
+            return False
+        self_codebases = set(self.sources.iterkeys())
+        for c in self_codebases:
             if not self.sources[c].canBeMergedWith(other.sources[c]):
                 return False
         return True

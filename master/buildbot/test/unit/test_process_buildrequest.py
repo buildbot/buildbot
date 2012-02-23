@@ -356,6 +356,6 @@ class TestBuildRequest(unittest.TestCase):
         r2 = buildrequest.BuildRequest()
         r2.sources = {"B": FakeSource(mergeable = False)}
         mergeable = r1.canBeMergedWith(r2)
-        self.assertTrue(mergeable, "Request containing different codebases " +
-                                    "should always be able to merge")
+        self.assertFalse(mergeable, "Request containing different codebases " +
+                                    "should never be able to merge")
 

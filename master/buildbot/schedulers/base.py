@@ -34,9 +34,10 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
     implements(interfaces.IScheduler)
 
-    compare_attrs = ('name', 'builderNames', 'properties')
+    compare_attrs = ('name', 'builderNames', 'properties', 'codebases')
+    allowed_codebase_attrs = set(['repository', 'branch', 'revision'])
 
-    def __init__(self, name, builderNames, properties, repositories = None):
+    def __init__(self, name, builderNames, properties, codebases = None):
         """
         Initialize a Scheduler.
 
@@ -50,9 +51,10 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         scheduler
         @type properties: dictionary
 
-        @param repositories: repositories that are necessary to process the changes
-        @type repositories: list of unicode
-        
+        @param codebases: codebases that are necessary to process the changes
+        @type codebases: dict with following struct:
+            {'codebase':{'repository':'', 'branch':'', 'revision:''}
+
         @param consumeChanges: true if this scheduler wishes to be informed
         about the addition of new changes.  Defaults to False.  This should
         be passed explicitly from subclasses to indicate their interest in
@@ -87,9 +89,18 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
         self.master = None
 
-        # Set the other repositories that are necessary to process the changes
-        # These repositories will always result in a sourcestamp with or without changes
-        self.repositories = repositories
+        # Set the other codebases that are necessary to process the changes
+        # These codebases will always result in a sourcestamp with or without changes
+        if codebases:
+            try:
+                for codebase, values in codebases.iteritems():
+                    codebase_attrs = set(values.keys())
+                    # (A,B,D) & (A,B,C) = (A,B) != (A,B,C)
+                    if not codebase_attrs.issubset(self.allowed_codebase_attrs):
+                        raise ValueError, "codebase %s has invalid values %s" % (codebase,codebase_attrs)
+            except Exception as ex:
+                raise ValueError, "Codebases does not have the correct dictionary struct: %s" % ex
+        self.codebases = codebases
         
         # internal variables
         self._change_subscription = None
@@ -172,6 +183,20 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         "Returns a list of the next times that builds are scheduled, if known."
         return []
 
+    ## codebase related methods
+    ## to have the code less dependent from input structure
+    def getRepository(self, codebase):
+        return self.codebases[codebase]['repository']
+
+    def getBranch(self, codebase):
+        if 'branch' in self.codebases[codebase]:
+            return self.codebases[codebase]['branch']
+        else:
+            return None
+
+    def getRevision(self, codebase):
+        return self.codebases[codebase]['revision']
+    
     ## change handling
 
     def startConsumingChanges(self, fileIsImportant=None, change_filter=None,
@@ -307,7 +332,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         yield wfd.getResult()
 
     @defer.deferredGenerator
-    def addBuildsetForChanges(self, reason='', external_idstring=None,
+    def addBuildsetForChanges_old(self, reason='', external_idstring=None,
             changeids=[], builderNames=None, properties=None):
         """
         Add a buildset for the combination of the given changesets, creating
@@ -367,10 +392,10 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         yield wfd.getResult()
 
     @defer.deferredGenerator
-    def addBuildsetForChangesMultiRepo(self, reason='', external_idstring=None,
+    def addBuildsetForChanges(self, reason='', external_idstring=None,
             changeids=[], builderNames=None, properties=None):
         assert changeids is not []
-        chDicts = {}
+        chDict = {}
 
         def getChange(changeid = None):
             d = self.master.db.changes.getChange(changeid)
@@ -379,77 +404,97 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                     return None
                 return changes.Change.fromChdict(self.master, chdict)
             d.addCallback(chdict2change)
-
-        def groupChange(change):
-            if change.repository not in chDicts:
-                chDicts[change.repository] = []
-            chDicts[change.repository].append(change)
-
-        def get_changeids_from_repo(repository):
-            changeids = []
-            for change in chDicts[repository]:
-                changeids.append(change.number)
-            return changeids
-
-        def create_sourcestamp(changeids, change = None, setid = None):
-            def add_sourcestamp(setid, changeids = None):
-                return self.master.db.sourcestamps.addSourceStamp(
-                        branch=change.branch,
-                        revision=change.revision,
-                        repository=change.repository,
-                        project=change.project,
-                        changeids=changeids,
-                        setid=setid)
-            d.addCallback(add_sourcestamp, setid = setid, changeids = changeids)
             return d
 
-        def create_sourcestamp_without_changes(setid, repository):
+        def groupChange(change):
+            if change.codebase not in chDict:
+                chDict[change.codebase] = []
+            chDict[change.codebase].append(change)
+
+        def get_changeids_from_codebase(codebase):
+            return [c.number for c in chDict[codebase]]
+
+        def get_last_change_for_codebase(codebase):
+            lastChange = None
+            maxNr = -1
+            for c in chDict[codebase]:
+                if c.number > maxNr:
+                    lastChange = c
+                    maxNr = c.number
+            return lastChange
+
+        def create_sourcestamp(changeids, change, setid = None):
             return self.master.db.sourcestamps.addSourceStamp(
-                    branch=self.default_branch,
-                    revision=None,
-                    repository=repository,
-                    project=self.default_project,
+                    codebase=change.codebase,
+                    repository=change.repository,
+                    branch=change.branch,
+                    revision=change.revision,
+                    project=change.project,
                     changeids=changeids,
                     sourcestampsetid=setid)
 
-        d = defer.Deferred()
-        if self.repositories is None:
-            # attributes for this sourcestamp will be based on the most recent
-            # change, so fetch the change with the highest id (= old single
-            # sourcestamp functionality)
-            d.addCallBack(getChange,changeid=max(changeids))
-            d.addCallBack(groupChange)
-        else:
-            for changeid in changeids:
-                d.addCallBack(getChange,changeid = changeid)
-                d.addCallBack(groupChange)
+        def create_sourcestamp_without_changes(setid, codebase):
+            repository = self.getRepository(codebase)
+            branch = self.getBranch(codebase)
+            revision = self.getRevision(codebase)
+            return self.master.db.sourcestamps.addSourceStamp(
+                    codebase=codebase,
+                    repository=repository,
+                    branch=branch,
+                    revision=revision,
+                    project='no project', #HBX
+                    changeids=set(),
+                    sourcestampsetid=setid)
 
         # Define setid for this set of changed repositories
-        wfd = defer.waitForDeferred(self.master.db.sourcestampsets.addSourceStampSet)
+        wfd = defer.waitForDeferred(self.master.db.sourcestampsets.addSourceStampSet())
         yield wfd
         setid = wfd.getResult()
 
-        #process all unchanged repositories
-        if self.repositories is not None:
-            for repo in self.repositories:
-                if repo not in chDicts:
-                    # repository was not changed
-                    # call create_sourcestamp
-                    d.addCallback(create_sourcestamp_without_changes, setid, repo)
+        # Changes are retrieved from database and grouped by their codebase
+        dl = []
+        for changeid in changeids:
+            dcall = getChange(changeid = changeid)
+            dcall.addCallback(groupChange)
+            dl.append(dcall)
+        d = defer.gatherResults(dl)
+        wfd = defer.waitForDeferred(d)
+        yield wfd
 
-        # process all changed
-        for repo in chDicts:
-            d.addCallback(get_changeids_from_repo, repository = repo)
-            d.addCallback(create_sourcestamp, setid = setid, change=chDicts[repo][-1])
+        #process all unchanged codebases
+        if self.codebases is not None:
+            dl = []
+            for codebase in self.codebases.iterkeys():
+                if codebase not in chDict:
+                    # codebase has no changes
+                    # create a sourcestamp that has no changes
+                    dcall = create_sourcestamp_without_changes(setid, codebase)
+                    dl.append(dcall)
+            d = defer.gatherResults(dl)
+            wfd = defer.waitForDeferred(d)
+            yield wfd                 
+                 
+        # process all changed codebases
+        dl = []
+        for codebase in chDict:
+            # collect the changeids
+            ids = get_changeids_from_codebase(codebase)
+            lastChange = get_last_change_for_codebase(codebase)
+            # pass the last change to fill the sourcestamp 
+            dcall = create_sourcestamp( changeids = ids, change=lastChange, 
+                                    setid = setid)
+            dl.append(dcall)
+        d = defer.gatherResults(dl)
+        wfd = defer.waitForDeferred(d)
+        yield wfd                 
 
         # add one buildset, this buildset is connected to the sourcestamps by the setid
-        d.addCallback(self.addBuildsetForSourceStamp, setid=setid, reason=reason,
-                            external_idstring=external_idstring,
-                            builderNames=builderNames,
-                            properties=properties)
+        wfd = defer.waitForDeferred(self.addBuildsetForSourceStamp( setid=setid, 
+                            reason=reason, external_idstring=external_idstring,
+                            builderNames=builderNames, properties=properties))
 
-        yield d
-
+        yield wfd
+        yield wfd.getResult()
 
     @defer.deferredGenerator
     def addBuildsetForSourceStamp(self, ssid=None, setid=None, reason='', external_idstring=None,
