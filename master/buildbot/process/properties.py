@@ -443,59 +443,6 @@ class Property(util.ComparableMixin):
 
         return props.render(self.default)
 
-class WithSource(util.ComparableMixin):
-    """ This is a class to access the SourceStamps attributes of a build.
-        The attributes will be rendered into a string (following the specification
-        in the fmtstring.
-    """ 
-    implements(IRenderable)
-    compare_attrs = ('codebase', 'fmtstring', 'args')
-
-    def __init__(self, codebase, fmtstring, *args, **lambda_subs):
-        """
-        @param codebase: Logical name for the origin of the source, identifies 
-                         the sourcestamp inside a build.
-        @param fmtstring: Specification of the resulting string 
-        @param args:      Attribute names of the selected sourcestamp to be used in 
-                          the fields of fmtstring.
-        @param lambda_subs: lambda expressions that take a single sourcestamp as
-                            input.
-        """
-        self.codebase = codebase
-        self.fmtstring = fmtstring
-        self.args = args
-        if not self.args:
-            self.lambda_subs = lambda_subs
-            for key, val in self.lambda_subs.iteritems():
-                if not callable(val):
-                    raise ValueError('Value for lambda substitution "%s" must be callable.' % key)
-        elif lambda_subs:
-            raise ValueError('WithSource takes either positional or keyword substitutions, not both.')
-
-    def getRenderingFor(self, props):
-        build = props.getBuild()
-        source = build.getSourceStamp(self.codebase)
-        if not source:
-            raise ValueError("Sourcestamp for codebase %s not found in build" % self.codebase)
-        
-        sourceDict = source.asDict()
-        if self.args:
-            strings = []
-            for name in self.args:
-                if name in sourceDict:
-                    strings.append(sourceDict[name])
-                else:
-                    raise ValueError('Sourcestamp does not known "%s"' % name)
-            s = self.fmtstring % tuple(strings)
-        else:
-            for k,v in self.lambda_subs.iteritems():
-                sourceDict[k] = v(source)
-            try:
-                s = self.fmtstring % sourceDict
-            except KeyError:
-                raise ValueError('Unknown attribute for sourcestamp')
-        return s        
-        
 class _DefaultRenderer(object):
     """
     Default IRenderable adaptor. Calls .getRenderingFor if availble, otherwise
