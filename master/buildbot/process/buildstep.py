@@ -439,7 +439,6 @@ class BuildStep(object, properties.PropertiesMixin):
 
     def __new__(klass, *args, **kwargs):
         self = object.__new__(klass)
-        klass.__init__(self, *args, **kwargs)
         def factory():
             try:
                 return klass(*args, **kwargs)
