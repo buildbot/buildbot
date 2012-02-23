@@ -149,6 +149,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
             + 1,
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
                                  '.', '--non-interactive', '--no-auth-cache'])
@@ -178,6 +180,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--no-auth-cache'])
             + ExpectShell.log('stdio', # expecting ../trunk/app
                 stdout="URL: http://svn.local/branch/foo/app")
+            + 0,
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
@@ -482,6 +486,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
             + 1,
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--non-interactive', '--no-auth-cache'])
@@ -507,6 +513,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
             + 1,
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--revision', '100',

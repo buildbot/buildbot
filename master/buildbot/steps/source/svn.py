@@ -114,34 +114,57 @@ class SVN(Source):
         yield wfd
         updatable = wfd.getResult()
         if not updatable:
+            # blow away the old (un-updatable) directory
+            wfd = defer.waitForDeferred(
+                self._rmdir(self.workdir))
+            yield wfd
+            wfd.getResult()
+
+            # then do a checkout
             checkout_cmd = ['checkout', self.repourl, '.']
             if self.revision:
                 checkout_cmd.extend(["--revision", str(self.revision)])
-
-            d = self._dovccmd(checkout_cmd)
+            wfd = defer.waitForDeferred(
+                self._dovccmd(checkout_cmd))
+            yield wfd
+            wfd.getResult()
         elif self.method == 'clean':
-            d = self.clean()
+            wfd = defer.waitForDeferred(
+                self.clean())
+            yield wfd
+            wfd.getResult()
         elif self.method == 'fresh':
-            d = self.fresh()
+            wfd = defer.waitForDeferred(
+                self.fresh())
+            yield wfd
+            wfd.getResult()
 
-        wfd = defer.waitForDeferred(d)
+    @defer.deferredGenerator
+    def incremental(self, _):
+        wfd = defer.waitForDeferred(
+            self._sourcedirIsUpdatable())
+        yield wfd
+        updatable = wfd.getResult()
+
+        if not updatable:
+            # blow away the old (un-updatable) directory
+            wfd = defer.waitForDeferred(
+                self._rmdir(self.workdir))
+            yield wfd
+            wfd.getResult()
+
+            # and plan to do a checkout
+            command = ['checkout', self.repourl, '.']
+        else:
+            # otherwise, do an update
+            command = ['update']
+        if self.revision:
+            command.extend(['--revision', str(self.revision)])
+
+        wfd = defer.waitForDeferred(
+            self._dovccmd(command))
         yield wfd
         wfd.getResult()
-
-    def incremental(self, _):
-        d = self._sourcedirIsUpdatable()
-        def _cmd(updatable):
-            if updatable:
-                command = ['update']
-            else:
-                command = ['checkout', self.repourl, '.']
-            if self.revision:
-                command.extend(['--revision', str(self.revision)])
-            return command
-
-        d.addCallback(_cmd)
-        d.addCallback(self._dovccmd)
-        return d
 
     @defer.deferredGenerator
     def clobber(self):
@@ -237,6 +260,18 @@ class SVN(Source):
         d.addCallback(_gotResults)
         d.addCallbacks(self.finished, self.checkDisconnect)
         return d
+
+    @defer.deferredGenerator
+    def _rmdir(self, dir):
+        cmd = buildstep.RemoteCommand('rmdir',
+                {'dir': dir, 'logEnviron': self.logEnviron })
+        cmd.useLog(self.stdio_log, False)
+        wfd = defer.waitForDeferred(
+                self.runCommand(cmd))
+        yield wfd
+        wfd.getResult()
+        if cmd.rc != 0:
+            raise buildstep.BuildStepFailed()
 
     def _dovccmd(self, command, collectStdout=False):
         assert command, "No command specified"
