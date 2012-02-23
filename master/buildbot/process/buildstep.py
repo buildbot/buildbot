@@ -761,9 +761,6 @@ class LoggingBuildStep(BuildStep):
     def __init__(self, logfiles={}, lazylogfiles=False, log_eval_func=None,
                  *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
-        self.addFactoryArguments(logfiles=logfiles,
-                                 lazylogfiles=lazylogfiles,
-                                 log_eval_func=log_eval_func)
 
         if logfiles and not isinstance(logfiles, dict):
             config.error(

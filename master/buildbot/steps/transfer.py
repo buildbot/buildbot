@@ -229,15 +229,6 @@ class FileUpload(_TransferBuildStep):
                  keepstamp=False, url=None,
                  **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
-        self.addFactoryArguments(slavesrc=slavesrc,
-                                 masterdest=masterdest,
-                                 workdir=workdir,
-                                 maxsize=maxsize,
-                                 blocksize=blocksize,
-                                 mode=mode,
-                                 keepstamp=keepstamp,
-                                 url=url,
-                                 )
 
         self.slavesrc = slavesrc
         self.masterdest = masterdest
@@ -309,14 +300,6 @@ class DirectoryUpload(_TransferBuildStep):
                  workdir=None, maxsize=None, blocksize=16*1024,
                  compress=None, url=None, **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
-        self.addFactoryArguments(slavesrc=slavesrc,
-                                 masterdest=masterdest,
-                                 workdir=workdir,
-                                 maxsize=maxsize,
-                                 blocksize=blocksize,
-                                 compress=compress,
-                                 url=url,
-                                 )
 
         self.slavesrc = slavesrc
         self.masterdest = masterdest
@@ -428,13 +411,6 @@ class FileDownload(_TransferBuildStep):
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
-        self.addFactoryArguments(mastersrc=mastersrc,
-                                 slavedest=slavedest,
-                                 workdir=workdir,
-                                 maxsize=maxsize,
-                                 blocksize=blocksize,
-                                 mode=mode,
-                                 )
 
         self.mastersrc = mastersrc
         self.slavedest = slavedest
@@ -499,13 +475,6 @@ class StringDownload(_TransferBuildStep):
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
-        self.addFactoryArguments(s=s,
-                                 slavedest=slavedest,
-                                 workdir=workdir,
-                                 maxsize=maxsize,
-                                 blocksize=blocksize,
-                                 mode=mode,
-                                 )
 
         self.s = s
         self.slavedest = slavedest
@@ -558,7 +527,6 @@ class JSONStringDownload(StringDownload):
             del buildstep_kwargs['s']
         s = json.dumps(o)
         StringDownload.__init__(self, s=s, slavedest=slavedest, **buildstep_kwargs)
-        self.addFactoryArguments(o=o)
 
 class JSONPropertiesDownload(StringDownload):
 

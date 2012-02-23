@@ -296,15 +296,6 @@ class MTR(Test):
         self.mtr_subdir = mtr_subdir
         self.progressMetrics += ('tests',)
 
-        self.addFactoryArguments(dbpool=self.dbpool,
-                                 test_type=self.test_type,
-                                 test_info=self.test_info,
-                                 autoCreateTables=self.autoCreateTables,
-                                 textLimit=self.textLimit,
-                                 testNameLimit=self.testNameLimit,
-                                 parallel=self.parallel,
-                                 mtr_subdir=self.mtr_subdir)
-
     def start(self):
         # Add mysql server logfiles.
         for mtr in range(0, self.parallel+1):

@@ -260,17 +260,6 @@ class Sphinx(ShellCommand):
         command.extend([sphinx_sourcedir, sphinx_builddir])
         self.setCommand(command)
 
-        self.addFactoryArguments(
-            sphinx = sphinx,
-            sphinx_sourcedir = sphinx_sourcedir,
-            sphinx_builddir = sphinx_builddir,
-            sphinx_builder = sphinx_builder,
-            tags = tags,
-            defines = defines,
-            mode = mode,
-        )
-
-
     def createSummary(self, log):
 
         msgs = ['WARNING', 'ERROR', 'SEVERE']
