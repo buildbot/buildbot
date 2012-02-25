@@ -59,16 +59,16 @@ class Blocker(BuildStep):
     def __init__(self, **kwargs):
         BuildStep.__init__(self, **kwargs)
         if self.upstreamSteps is None:
-            raise config.ConfigErrors([
-                "you must supply upstreamSteps" ])
+            config.error(
+                "you must supply upstreamSteps")
         if len(self.upstreamSteps) < 1:
-            raise config.ConfigErrors([
-                "upstreamSteps must be a non-empty list" ])
+            config.error(
+                "upstreamSteps must be a non-empty list")
         if self.idlePolicy not in self.VALID_IDLE_POLICIES:
-            raise config.ConfigErrors([
+            config.error(
                 "invalid value for idlePolicy: %r (must be one of %s)"
                 % (self.idlePolicy,
-                   ", ".join(map(repr, self.VALID_IDLE_POLICIES)))])
+                   ", ".join(map(repr, self.VALID_IDLE_POLICIES))))
 
         # list of build steps (as BuildStepStatus objects) that we're
         # currently waiting on

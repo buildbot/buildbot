@@ -212,8 +212,8 @@ class Periodic(Timed):
         Timed.__init__(self, name=name, builderNames=builderNames,
                     properties=properties)
         if periodicBuildTimer <= 0:
-            raise config.ConfigErrors([
-                "periodicBuildTimer must be positive" ])
+            config.error(
+                "periodicBuildTimer must be positive")
         self.periodicBuildTimer = periodicBuildTimer
         self.branch = branch
         self.reason = "The Periodic scheduler named '%s' triggered this build" % self.name
@@ -244,11 +244,11 @@ class Nightly(Timed):
         self.onlyImportant = onlyImportant
 
         if fileIsImportant and not callable(fileIsImportant):
-            raise config.ConfigErrors([
-                "fileIsImportant must be a callable" ])
+            config.error(
+                "fileIsImportant must be a callable")
         if branch is Nightly.NoBranch:
-            raise config.ConfigErrors([
-                "Nightly parameter 'branch' is required" ])
+            config.error(
+                "Nightly parameter 'branch' is required")
 
         self.minute = minute
         self.hour = hour

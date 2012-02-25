@@ -112,6 +112,16 @@ class ConfigErrors(unittest.TestCase):
         self.failUnless(not empty)
         self.failIf(not full)
 
+    def test_error_raises(self):
+        e = self.assertRaises(config.ConfigErrors, config.error, "message")
+        self.assertEqual(e.errors, ["message"])
+
+    def test_error_no_raise(self):
+        e = config.ConfigErrors()
+        self.patch(config, "_errors", e)
+        config.error("message")
+        self.assertEqual(e.errors, ["message"])
+
 
 class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
@@ -208,13 +218,23 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 self.basedir, self.filename))
         self.assertEqual(len(self.flushLoggedErrors(SyntaxError)), 1)
 
-    def test_loadConfig_eval_ConfigErrors(self):
+    def test_loadConfig_eval_ConfigError(self):
         self.install_config_file("""\
                 from buildbot import config
-                raise config.ConfigErrors(['oh noes!'])""")
+                config.error('oh noes!')""")
         self.assertRaisesConfigError("oh noes",
             lambda : config.MasterConfig.loadConfig(
                 self.basedir, self.filename))
+
+    def test_loadConfig_eval_ConfigErrors(self):
+        self.install_config_file("""\
+                from buildbot import config
+                config.error('oh noes!')
+                config.error('noes too!')""")
+        e = self.assertRaises(config.ConfigErrors,
+            lambda : config.MasterConfig.loadConfig(
+                self.basedir, self.filename))
+        self.assertEqual(e.errors, ['oh noes!', 'noes too!'])
 
     def test_loadConfig_no_BuildmasterConfig(self):
         self.install_config_file('x=10')

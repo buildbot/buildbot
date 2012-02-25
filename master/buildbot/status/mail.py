@@ -291,14 +291,12 @@ class MailNotifier(base.StatusReceiverMultiService):
         """
         base.StatusReceiverMultiService.__init__(self)
 
-        errors = []
-
         if not isinstance(extraRecipients, (list, tuple)):
-            errors.append("extraRecipients must be a list or tuple")
+            config.error("extraRecipients must be a list or tuple")
         else:
             for r in extraRecipients:
                 if not isinstance(r, str) or not VALID_EMAIL.search(r):
-                    errors.append(
+                    config.error(
                             "extra recipient %r is not a valid email" % (r,))
         self.extraRecipients = extraRecipients
         self.sendToInterestedUsers = sendToInterestedUsers
@@ -312,7 +310,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                 mode = (mode,)
         for m in mode:
             if m not in self.possible_modes:
-                errors.append(
+                config.error(
                     "mode %s is not a valid mode" % (m,))
         self.mode = mode
         self.categories = categories
@@ -320,7 +318,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.addLogs = addLogs
         self.relayhost = relayhost
         if '\n' in subject:
-            errors.append(
+            config.error(
                 'Newlines are not allowed in email subjects')
         self.subject = subject
         if lookup is not None:
@@ -332,7 +330,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.messageFormatter = messageFormatter
         if extraHeaders:
             if not isinstance(extraHeaders, dict):
-                errors.append("extraHeaders must be a dictionary")
+                config.error("extraHeaders must be a dictionary")
         self.extraHeaders = extraHeaders
         self.addPatch = addPatch
         self.useTls = useTls
@@ -346,16 +344,13 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         # you should either limit on builders or categories, not both
         if self.builders != None and self.categories != None:
-            errors.append(
+            config.error(
                 "Please specify only builders or categories to include - " +
                 "not both.")
 
         if customMesg:
-            errors.append(
+            config.error(
                 "customMesg is deprecated; use messageFormatter instead")
-
-        if errors:
-            raise config.ConfigErrors(errors)
 
     def setServiceParent(self, parent):
         """
