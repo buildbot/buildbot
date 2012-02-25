@@ -79,6 +79,10 @@ Deprecations, Removals, and Non-Compatible Changes
   with ``repourl`` parameter. The behavior of the step is already controled by
   ``branchType`` parameter, so just use a single argument to specify the repository.
 
+* Passing a :py:class:`buildbot.process.buildstep.BuildStep` subclass (rather than
+  instance) to :py:meth:`buildbot.process.factory.BuildFactory.addStep` has long been
+  deprecated, and will be removed in version 0.8.7.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
