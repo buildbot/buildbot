@@ -65,29 +65,24 @@ class Payload(object):
         return changes
 
 def getChanges(request, options=None):
-    try:
-        headers = request.received_headers
-        body = request.content.getvalue()
+    headers = request.received_headers
+    body = request.content.getvalue()
 
-        # Instantiate a Payload object: this will parse the body, get the
-        # authentication code from the headers and remember the branch picked
-        # up by the user (Google Code doesn't send on which branch the changes
-        # were made)
-        payload = Payload(headers, body, options.get('branch', 'default'))
+    # Instantiate a Payload object: this will parse the body, get the
+    # authentication code from the headers and remember the branch picked
+    # up by the user (Google Code doesn't send on which branch the changes
+    # were made)
+    payload = Payload(headers, body, options.get('branch', 'default'))
 
-        if 'secret_key' in options:
-            if not payload.authenticate(options['secret_key']):
-                raise GoogleCodeAuthFailed()
-        else:
-            log.msg("Missing secret_key in the Google Code WebHook options: "
-                    "cannot authenticate the request!")
+    if 'secret_key' in options:
+        if not payload.authenticate(options['secret_key']):
+            raise GoogleCodeAuthFailed()
+    else:
+        log.msg("Missing secret_key in the Google Code WebHook options: "
+                "cannot authenticate the request!")
 
-        log.msg('Received %d changes from Google Code' %
-                (payload.revision_count,))
-        changes = payload.changes()
-    except Exception:
-        log.err(failure.Failure(), "Can't parse the Google Code WebHook:")
-        # return something valid even if everything goes wrong:
-        changes = []
+    log.msg('Received %d changes from Google Code' %
+            (payload.revision_count,))
+    changes = payload.changes()
 
     return changes, 'Google Code'
