@@ -225,16 +225,13 @@ class Sphinx(ShellCommand):
                  sphinx_builder=None, sphinx = 'sphinx-build', tags = [],
                  defines = {}, mode='incremental', **kwargs):
 
-        errors = []
         if sphinx_builddir is None:
             # Who the heck is not interested in the built doc ?
-            errors.append("Sphinx argument sphinx_builddir is required")
+            config.error("Sphinx argument sphinx_builddir is required")
 
         if mode not in ('incremental', 'full'):
-            errors.append("Sphinx argument mode has to be 'incremental' or" +
+            config.error("Sphinx argument mode has to be 'incremental' or" +
                           "'full' is required")
-        if errors:
-            raise config.ConfigErrors(errors)
 
         self.warnings = 0
         self.success = False
