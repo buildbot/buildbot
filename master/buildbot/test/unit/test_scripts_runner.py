@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os
 import sys
 import cStringIO
@@ -183,7 +185,8 @@ class TestSendChange(unittest.TestCase):
         return d
 
     def test_sendchange_revision_file(self):
-        open('rf', 'w').write('abcd')
+        with open('rf', 'w') as f:
+            f.write('abcd')
         d = runner.sendchange(dict(who='me', master='a:1', revision_file='rf'))
         def check(_):
             self.assertEqual((self.sender.master, self.sender.auth,
@@ -198,7 +201,8 @@ class TestSendChange(unittest.TestCase):
         return d
 
     def test_sendchange_logfile(self):
-        open('lf', 'w').write('hello')
+        with open('lf', 'w') as f:
+            f.write('hello')
         d = runner.sendchange(dict(who='me', master='a:1', logfile='lf'))
         def check(_):
             self.assertEqual((self.sender.master, self.sender.auth,

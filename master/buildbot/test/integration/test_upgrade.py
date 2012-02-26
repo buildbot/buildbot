@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os
 import cPickle
 import tarfile
@@ -72,12 +74,12 @@ class UpgradeTestMixin(object):
                     "'%s' not found (normal when not building from Git)"
                     % tarball)
 
-            tf = tarfile.open(tarball)
-            prefixes = set()
-            for inf in tf:
-                tf.extract(inf)
-                prefixes.add(inf.name.split('/', 1)[0])
-            # (note that tf.extractall isn't available in py2.4)
+            with tarfile.open(tarball) as tf:
+                prefixes = set()
+                for inf in tf:
+                    tf.extract(inf)
+                    prefixes.add(inf.name.split('/', 1)[0])
+                # (note that tf.extractall isn't available in py2.4)
 
             # get the top-level dir from the tarball
             assert len(prefixes) == 1, "tarball has multiple top-level dirs!"
@@ -260,11 +262,11 @@ class UpgradeTest075(UpgradeTestMixin,
     def fix_pickle_encoding(self, old_encoding):
         """Do the equivalent of master/contrib/fix_pickle_encoding.py"""
         changes_file = os.path.join(self.basedir, "changes.pck")
-        fp = open(changes_file)
-        changemgr = cPickle.load(fp)
-        fp.close()
+        with open(changes_file) as fp:
+            changemgr = cPickle.load(fp)
         changemgr.recode_changes(old_encoding, quiet=True)
-        cPickle.dump(changemgr, open(changes_file, "w"))
+        with open(changes_file, "w") as fp:
+            cPickle.dump(changemgr, fp)
 
     def test_upgrade(self):
         # this tarball contains some unicode changes, encoded as utf8, so it
