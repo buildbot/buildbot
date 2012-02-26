@@ -33,8 +33,8 @@ class TestChangeHookUnconfigured(unittest.TestCase):
         d = self.request.test_render(self.changeHook)
         def check(ret):
             expected = "URI doesn't match change_hook regex: /garbage/garbage"
-            self.request.mockCheckCall(self, 0, "write", expected )
-            self.request.mockCheckCall(self, 0, "setResponseCode", 400, expected)
+            self.assertEqual(self.request.written, expected)
+            self.request.setResponseCode.assert_called_with(400, expected)
         d.addCallback(check)
         return d
 
@@ -44,8 +44,8 @@ class TestChangeHookUnconfigured(unittest.TestCase):
         d = self.request.test_render(self.changeHook)
         def check(ret):
             expected = "The dialect specified, 'garbage', wasn't whitelisted in change_hook"
-            self.request.mockCheckCall(self, 0, "write", expected )
-            self.request.mockCheckCall(self, 0, "setResponseCode", 400, expected)
+            self.assertEqual(self.request.written, expected)
+            self.request.setResponseCode.assert_called_with(400, expected)
         d.addCallback(check)
         return d
 
@@ -55,8 +55,8 @@ class TestChangeHookUnconfigured(unittest.TestCase):
         d = self.request.test_render(self.changeHook)
         def check(ret):
             expected = "The dialect specified, 'base', wasn't whitelisted in change_hook"
-            self.request.mockCheckCall(self, 0, "write", expected )
-            self.request.mockCheckCall(self, 0, "setResponseCode", 400, expected)
+            self.assertEqual(self.request.written, expected)
+            self.request.setResponseCode.assert_called_with(400, expected)
         d.addCallback(check)
         return d
 
