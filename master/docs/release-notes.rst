@@ -109,7 +109,7 @@ Changes for Developers
   :py:class:`buildbot.db.buildsets.BuildsetsConnector` methods.
 
 * Errors during configuration (in particular in :py:class:`BuildStep` constructors),
-  should be reported by calling :py:function:`buildbot.config.error`.
+  should be reported by calling :py:func:`buildbot.config.error`.
 
 Features
 ~~~~~~~~
