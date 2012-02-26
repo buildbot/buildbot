@@ -114,6 +114,7 @@ def process_change(payload, user, repo, repo_url, project):
         match = re.match(r"^refs\/heads\/(.+)$", refname)
         if not match:
             log.msg("Ignoring refname `%s': Not a branch" % refname)
+            return []
 
         branch = match.group(1)
         if re.match(r"^0*$", newrev):

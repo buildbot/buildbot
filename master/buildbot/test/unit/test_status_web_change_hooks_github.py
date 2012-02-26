@@ -67,6 +67,39 @@ gitJsonPayload = """
 }
 """
 
+gitJsonPayloadNonBranch = """
+{
+  "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
+  "repository": {
+    "url": "http://github.com/defunkt/github",
+    "name": "github",
+    "description": "You're lookin' at it.",
+    "watchers": 5,
+    "forks": 2,
+    "private": 1,
+    "owner": {
+      "email": "fred@flinstone.org",
+      "name": "defunkt"
+    }
+  },
+  "commits": [
+    {
+      "id": "41a212ee83ca127e3c8cf465891ab7216a705f59",
+      "url": "http://github.com/defunkt/github/commit/41a212ee83ca127e3c8cf465891ab7216a705f59",
+      "author": {
+        "email": "fred@flinstone.org",
+        "name": "Fred Flinstone"
+      },
+      "message": "okay i give in",
+      "timestamp": "2008-02-15T14:57:17-08:00",
+      "added": ["filepath.rb"]
+    }
+  ],
+  "after": "de8251ff97ee194a289832576287d6f8ad74e3d0",
+  "ref": "refs/garbage/master"
+}
+"""
+
 gitJsonPayloadEmpty = """
 {
   "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
@@ -145,6 +178,20 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
     def testGitWithNoChanges(self):
         changeDict={"payload" : [gitJsonPayloadEmpty]}
+        self.request = FakeRequest(changeDict)
+        self.request.uri = "/change_hook/github"
+        self.request.method = "GET"
+        d = self.request.test_render(self.changeHook)
+        def check_changes(r):
+            expected = "no changes found"
+            self.assertEquals(len(self.request.addedChanges), 0)
+            self.assertEqual(self.request.written, expected)
+
+        d.addCallback(check_changes)
+        return d
+
+    def testGitWithNonBranchChanges(self):
+        changeDict={"payload" : [gitJsonPayloadNonBranch]}
         self.request = FakeRequest(changeDict)
         self.request.uri = "/change_hook/github"
         self.request.method = "GET"
