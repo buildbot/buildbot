@@ -63,6 +63,11 @@ class ChangeHookResource(resource.Resource):
         except ValueError, err:
             request.setResponseCode(400, err.args[0])
             return err.args[0]
+        except Exception:
+            log.err(None, "Exception processing web hook.")
+            msg = "Error processing changes."
+            request.setResponseCode(500, msg)
+            return msg
 
         log.msg("Payload: " + str(request.args))
         

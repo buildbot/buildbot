@@ -85,25 +85,20 @@ def getChanges(request, options = None):
             request
                 the http request object
         """
-        try:
-            payload = json.loads(request.args['payload'][0])
-            user = payload['repository']['owner']['name']
-            repo = payload['repository']['name']
-            repo_url = payload['repository']['url']
-            project = request.args.get('project', None)
-            if project:
-                project = project[0]
-            elif project is None:
-                project = ''
-            # This field is unused:
-            #private = payload['repository']['private']
-            changes = process_change(payload, user, repo, repo_url, project)
-            log.msg("Received %s changes from github" % len(changes))
-            return (changes, 'git')
-        except Exception:
-            logging.error("Encountered an exception:")
-            for msg in traceback.format_exception(*sys.exc_info()):
-                logging.error(msg.strip())
+        payload = json.loads(request.args['payload'][0])
+        user = payload['repository']['owner']['name']
+        repo = payload['repository']['name']
+        repo_url = payload['repository']['url']
+        project = request.args.get('project', None)
+        if project:
+            project = project[0]
+        elif project is None:
+            project = ''
+        # This field is unused:
+        #private = payload['repository']['private']
+        changes = process_change(payload, user, repo, repo_url, project)
+        log.msg("Received %s changes from github" % len(changes))
+        return (changes, 'git')
 
 def process_change(payload, user, repo, repo_url, project):
         """
