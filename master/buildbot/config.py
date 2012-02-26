@@ -39,6 +39,12 @@ class ConfigErrors(Exception):
     def __nonzero__(self):
         return len(self.errors)
 
+_errors = None
+def error(error):
+    if _errors is not None:
+        _errors.addError(error)
+    else:
+        raise ConfigErrors([error])
 
 class MasterConfig(object):
 
@@ -126,33 +132,41 @@ class MasterConfig(object):
             '__file__': os.path.abspath(filename),
         }
 
+        # from here on out we can batch errors together for the user's
+        # convenience
+        global _errors
+        _errors = errors = ConfigErrors()
+
         old_sys_path = sys.path[:]
         sys.path.append(basedir)
         try:
             try:
                 exec f in localDict
-            except ConfigErrors:
-                raise
+                if errors:
+                    raise ConfigErrors(_errors)
+            except ConfigErrors, e:
+                for error in e.errors:
+                    errors.addError(error)
+                raise errors
             except:
                 log.err(failure.Failure())
-                raise ConfigErrors([
+                errors.addError(
                     "error while parsing config file: %s (traceback in logfile)" %
                         (sys.exc_info()[1],),
-                ])
+                )
+                raise errors
         finally:
             sys.path[:] = old_sys_path
+            _errors = None
 
         if 'BuildmasterConfig' not in localDict:
-            raise ConfigErrors([
+            errors.addError(
                 "Configuration file %r does not define 'BuildmasterConfig'"
                     % (filename,),
-            ])
+            )
+            raise errors
 
         config_dict = localDict['BuildmasterConfig']
-
-        # from here on out we can batch errors together for the user's
-        # convenience
-        errors = ConfigErrors()
 
         # check for unknown keys
         unknown_keys = set(config_dict.keys()) - cls._known_config_keys

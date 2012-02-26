@@ -26,8 +26,8 @@ class Dependent(base.BaseScheduler):
     def __init__(self, name, upstream, builderNames, properties={}):
         base.BaseScheduler.__init__(self, name, builderNames, properties)
         if not interfaces.IScheduler.providedBy(upstream):
-            raise config.ConfigErrors([
-                "upstream must be another Scheduler instance" ])
+            config.error(
+                "upstream must be another Scheduler instance")
         self.upstream_name = upstream.name
         self._buildset_addition_subscr = None
         self._buildset_completion_subscr = None

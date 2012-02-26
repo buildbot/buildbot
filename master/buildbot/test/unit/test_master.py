@@ -259,7 +259,7 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
     def patch_loadConfig_fail(self):
         @classmethod
         def loadConfig(cls, b, f):
-            raise config.ConfigErrors(['oh noes'])
+            config.error('oh noes')
         self.patch(config.MasterConfig, 'loadConfig', loadConfig)
 
 

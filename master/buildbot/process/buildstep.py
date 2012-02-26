@@ -756,8 +756,8 @@ class LoggingBuildStep(BuildStep):
                                  log_eval_func=log_eval_func)
 
         if logfiles and not isinstance(logfiles, dict):
-            raise config.ConfigErrors([
-                "the ShellCommand 'logfiles' parameter must be a dictionary" ])
+            config.error(
+                "the ShellCommand 'logfiles' parameter must be a dictionary")
 
         # merge a class-level 'logfiles' attribute with one passed in as an
         # argument
@@ -765,8 +765,8 @@ class LoggingBuildStep(BuildStep):
         self.logfiles.update(logfiles)
         self.lazylogfiles = lazylogfiles
         if log_eval_func and not callable(log_eval_func):
-            raise config.ConfigErrors([
-                "the 'log_eval_func' paramater must be a callable" ])
+            config.error(
+                "the 'log_eval_func' paramater must be a callable")
         self.log_eval_func = log_eval_func
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 

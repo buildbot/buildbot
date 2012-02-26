@@ -295,9 +295,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     def reconfigService(self, new_config):
         if self.config.db['db_url'] != new_config.db['db_url']:
-            raise config.ConfigErrors([
+            config.error(
                 "Cannot change c['db']['db_url'] after the master has started",
-            ])
+            )
 
         # adjust the db poller
         if (self.config.db['db_poll_interval']
