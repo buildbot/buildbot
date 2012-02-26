@@ -53,16 +53,31 @@ def getDiffMonkeyPatch(metadata, engine, excludeTables=None):
                       labelB='database',
                       excludeTables=excludeTables)
 
-class UpgradeTestMixin(object):
+class UpgradeTestMixin(db.RealDatabaseMixin):
     """Supporting code to test upgrading from older versions by untarring a
     basedir tarball and then checking that the results are as expected."""
 
     # class variables to set in subclasses
 
-    source_tarball = None # filename of the tarball (sibling to this file)
-    db_url = "sqlite:///state.sqlite" # db URL to use (usually default is OK)
+    # filename of the tarball (sibling to this file)
+    source_tarball = None
 
+    # set to true in subclasses to set up and use a real DB
+    use_real_db = False
+
+    # db URL to use, if not using a real db
+    db_url = "sqlite:///state.sqlite"
+
+    @defer.deferredGenerator
     def setUpUpgradeTest(self):
+        # set up the "real" db if desired
+        if self.use_real_db:
+            # note this changes self.db_url
+            wfd = defer.waitForDeferred(
+                self.setUpRealDatabase(sqlite_memory=False))
+            yield wfd
+            wfd.getResult()
+
         self.basedir = None
 
         if self.source_tarball:
@@ -90,13 +105,21 @@ class UpgradeTestMixin(object):
         master = fakemaster.make_master()
         master.config.db['db_url'] = self.db_url
         self.db = connector.DBConnector(master, self.basedir)
-        d = self.db.setup(check_version=False)
-        @d.addCallback
-        def setup_logging(_):
-            querylog.log_from_engine(self.db.pool.engine)
-        return d
+        wfd = defer.waitForDeferred(
+            self.db.setup(check_version=False))
+        yield wfd
+        wfd.getResult()
 
+        querylog.log_from_engine(self.db.pool.engine)
+
+    @defer.deferredGenerator # note tearDown doesn't handle Deferreds anyway
     def tearDownUpgradeTest(self):
+        if self.use_real_db:
+            wfd = defer.waitForDeferred(
+                self.tearDownRealDatabase())
+            yield wfd
+            wfd.getResult()
+
         if self.basedir:
             shutil.rmtree(self.basedir)
 
@@ -199,29 +222,16 @@ class UpgradeTestMixin(object):
         return d
 
 
-class UpgradeTestEmptyReal(UpgradeTestMixin, db.RealDatabaseMixin,
-                            unittest.TestCase):
+class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
 
-    # uses the real DB via RealDatabaseMixin
-
-    def setUp(self):
-        d = self.setUpRealDatabase(sqlite_memory=False) # sets self.db_url
-        d.addCallback(lambda _ : self.setUpUpgradeTest())
-        return d
-
-    def tearDown(self):
-        d = self.tearDownRealDatabase()
-        @d.addCallback
-        def tear(_):
-            self.tearDownUpgradeTest()
+    use_real_db = True
 
     def test_emptydb_modelmatches(self):
         d = self.db.model.upgrade()
         d.addCallback(lambda r : self.assertModelMatches())
         return d
 
-
-class UpgradeTest075(UpgradeTestMixin,
+class UpgradeTestV075(UpgradeTestMixin,
                      unittest.TestCase):
 
     source_tarball = "master-0-7-5.tgz"
