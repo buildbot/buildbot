@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 from twisted.trial import unittest
-from twisted.python import versions
-import twisted
 from mock import Mock
 
 from buildbot.process.factory import BuildFactory, ArgumentsInTheWrongPlace, s
@@ -31,8 +29,6 @@ class TestBuildFactory(unittest.TestCase):
     def test_init_deprecated(self):
         factory = BuildFactory([s(BuildStep)])
         self.assertEqual(factory.steps, [(BuildStep, {})])
-        if twisted.version >= versions.Version('twisted', 8, 2, 0):
-            self.assertEqual(len(self.flushWarnings([BuildFactory.__init__])), 1)
 
     def test_addStep(self):
         step = BuildStep()
@@ -44,8 +40,6 @@ class TestBuildFactory(unittest.TestCase):
         factory = BuildFactory()
         factory.addStep(BuildStep)
         self.assertEqual(factory.steps, [(BuildStep, {})])
-        if twisted.version >= versions.Version('twisted', 8, 2, 0):
-            self.assertEqual(len(self.flushWarnings([BuildFactory.addStep])), 1)
 
     def test_addStep_notAStep(self):
         factory = BuildFactory()

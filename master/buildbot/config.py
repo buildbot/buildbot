@@ -142,8 +142,6 @@ class MasterConfig(object):
         try:
             try:
                 exec f in localDict
-                if errors:
-                    raise ConfigErrors(_errors)
             except ConfigErrors, e:
                 for error in e.errors:
                     errors.addError(error)

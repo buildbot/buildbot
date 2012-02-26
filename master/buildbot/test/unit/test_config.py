@@ -221,20 +221,27 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
     def test_loadConfig_eval_ConfigError(self):
         self.install_config_file("""\
                 from buildbot import config
+                BuildmasterConfig = { 'multiMaster': True }
                 config.error('oh noes!')""")
         self.assertRaisesConfigError("oh noes",
             lambda : config.MasterConfig.loadConfig(
                 self.basedir, self.filename))
 
     def test_loadConfig_eval_ConfigErrors(self):
+        # We test a config that has embedded errors, as well
+        # as semantic errors that get added later. If an exception is raised
+        # prematurely, then the semantic errors wouldn't get reported.
         self.install_config_file("""\
                 from buildbot import config
+                BuildmasterConfig = {}
                 config.error('oh noes!')
                 config.error('noes too!')""")
         e = self.assertRaises(config.ConfigErrors,
             lambda : config.MasterConfig.loadConfig(
                 self.basedir, self.filename))
-        self.assertEqual(e.errors, ['oh noes!', 'noes too!'])
+        self.assertEqual(e.errors, ['oh noes!', 'noes too!',
+                'no slaves are configured',
+                'no builders are configured'])
 
     def test_loadConfig_no_BuildmasterConfig(self):
         self.install_config_file('x=10')
