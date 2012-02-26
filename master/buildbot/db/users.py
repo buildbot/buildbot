@@ -29,6 +29,10 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
+            self.check_length(tbl.c.identifier, identifier)
+            self.check_length(tbl_info.c.attr_type, attr_type)
+            self.check_length(tbl_info.c.attr_data, attr_data)
+
             # try to find the user
             q = sa.select([ tbl_info.c.uid ],
                         whereclause=and_(tbl_info.c.attr_type == attr_type,
@@ -154,11 +158,14 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
             # first, add the identifier is it exists
             if identifier is not None:
+                self.check_length(tbl.c.identifier, identifier)
                 update_dict['identifier'] = identifier
 
             # then, add the creds if they exist
             if bb_username is not None:
                 assert bb_password is not None
+                self.check_length(tbl.c.bb_username, bb_username)
+                self.check_length(tbl.c.bb_password, bb_password)
                 update_dict['bb_username'] = bb_username
                 update_dict['bb_password'] = bb_password
 
@@ -171,6 +178,9 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             # update-or-insert race condition.
             if attr_type is not None:
                 assert attr_data is not None
+
+                self.check_length(tbl_info.c.attr_type, attr_type)
+                self.check_length(tbl_info.c.attr_data, attr_data)
 
                 # first update, then insert
                 q = tbl_info.update(
