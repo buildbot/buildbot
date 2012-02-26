@@ -17,7 +17,6 @@
 
 import hmac
 from twisted.python import log
-from twisted.python import failure
 from buildbot.util import json
 
 class GoogleCodeAuthFailed(Exception):

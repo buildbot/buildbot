@@ -26,8 +26,6 @@ repository for the user who initiated the build on the buildslave.
 
 import logging
 import re
-import sys
-import traceback
 import datetime
 from twisted.python import log
 import calendar
