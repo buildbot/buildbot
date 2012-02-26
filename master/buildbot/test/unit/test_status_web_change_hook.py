@@ -15,6 +15,7 @@
 
 from buildbot.status.web import change_hook
 from buildbot.util import json
+from buildbot.test.util import compat
 from buildbot.test.fake.web import FakeRequest
 
 from twisted.trial import unittest
@@ -122,4 +123,46 @@ class TestChangeHookConfigured(unittest.TestCase):
             self.assertEquals(change['properties'], dict(prop1='val1', prop2='val2'))
             self.assertEquals(change['files'], ['file1', 'file2'])
         d.addCallback(check_changes)
+        return d
+
+    @compat.usesFlushLoggedErrors
+    def testDefaultWithNoChange(self):
+        self.request = FakeRequest()
+        self.request.uri = "/change_hook/"
+        self.request.method = "GET"
+        def namedModuleMock(name):
+            if name == 'buildbot.status.web.hooks.base':
+                class mock_hook_module(object):
+                    def getChanges(self, request, options):
+                        raise AssertionError
+                return mock_hook_module()
+        self.patch(change_hook, "namedModule", namedModuleMock)
+
+        d = self.request.test_render(self.changeHook)
+        def check_changes(r):
+            expected = "Error processing changes."
+            self.assertEquals(len(self.request.addedChanges), 0)
+            self.assertEqual(self.request.written, expected)
+            self.request.setResponseCode.assert_called_with(500, expected)
+            self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
+
+        d.addCallback(check_changes)
+        return d
+
+class TestChangeHookConfiguredBogus(unittest.TestCase):
+    def setUp(self):
+        self.request = FakeRequest()
+        self.changeHook = change_hook.ChangeHookResource(dialects={'garbage' : True})
+
+    @compat.usesFlushLoggedErrors
+    def testBogusDialect(self):
+        self.request.uri = "/change_hook/garbage"
+        self.request.method = "GET"
+        d = self.request.test_render(self.changeHook)
+        def check(ret):
+            expected = "Error processing changes."
+            self.assertEqual(self.request.written, expected)
+            self.request.setResponseCode.assert_called_with(500, expected)
+            self.assertEqual(len(self.flushLoggedErrors()), 1)
+        d.addCallback(check)
         return d
