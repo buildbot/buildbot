@@ -247,7 +247,7 @@ Builder Configuration
 Error Handling
 ==============
 
-If any errors are encountered while loading the configuration :py:exec:`buildbot.config.error`
+If any errors are encountered while loading the configuration :py:function:`buildbot.config.error`
 should be called. This can occur both in the configuration-loading code,
 and in the constructors of any objects that are instantiated in the
 configuration - change sources, slaves, schedulers, build steps, and so on.
