@@ -24,7 +24,6 @@ repository for the user who initiated the build on the buildslave.
 
 """
 
-import logging
 import re
 import datetime
 from twisted.python import log
@@ -114,7 +113,7 @@ def process_change(payload, user, repo, repo_url, project):
         # We only care about regular heads, i.e. branches
         match = re.match(r"^refs\/heads\/(.+)$", refname)
         if not match:
-            logging.info("Ignoring refname `%s': Not a branch" % refname)
+            log.msg("Ignoring refname `%s': Not a branch" % refname)
 
         branch = match.group(1)
         if re.match(r"^0*$", newrev):

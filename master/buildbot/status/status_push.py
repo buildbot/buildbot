@@ -19,7 +19,6 @@
 Implements the HTTP receiver."""
 
 import datetime
-import logging
 import os
 import urllib
 import urlparse
@@ -179,7 +178,7 @@ class StatusPush(StatusReceiverMultiService):
             # delay should never be 0.  That can cause Buildbot to spin tightly
             # trying to push events that may not be received well by a status
             # listener.
-            logging.exception('Did not expect delay to be 0, but it is.')
+            log.err('Did not expect delay to be 0, but it is.')
             return
 
     def stopService(self):
