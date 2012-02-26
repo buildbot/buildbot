@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os, time
 from cPickle import dump
 
@@ -223,7 +225,8 @@ class ChangeMaster: # pragma: no cover
         filename = os.path.join(self.basedir, "changes.pck")
         tmpfilename = filename + ".tmp"
         try:
-            dump(self, open(tmpfilename, "wb"))
+            with open(tmpfilename, "wb") as f:
+                dump(self, f)
             if runtime.platformType  == 'win32':
                 # windows cannot rename a file on top of an existing one
                 if os.path.exists(filename):

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 # strategy:
 #
 # if there is a VERSION file, use its contents. otherwise, call git to
@@ -24,7 +26,8 @@ version = "latest"
 
 try:
     fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'VERSION')
-    version = open(fn).read().strip()
+    with open(fn) as f:
+        version = f.read().strip()
 
 except IOError:
     from subprocess import Popen, PIPE, STDOUT

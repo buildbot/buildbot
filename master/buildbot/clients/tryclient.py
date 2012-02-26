@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 
 import sys, os, re, time, random
 from twisted.internet import utils, protocol, defer, reactor, task
@@ -476,7 +478,8 @@ class Try(pb.Referenceable):
             if difffile == "-":
                 diff = sys.stdin.read()
             else:
-                diff = open(difffile,"r").read()
+                with open(difffile,"r") as f:
+                    diff = f.read()
             if not diff:
                 diff = None
             patch = (self.config['patchlevel'], diff)
