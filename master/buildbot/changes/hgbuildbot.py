@@ -22,7 +22,6 @@
 import os
 
 from mercurial.node import bin, hex, nullid #@UnresolvedImport
-from mercurial.context import workingctx #@UnresolvedImport
 
 # mercurial's on-demand-importing hacks interfere with the:
 #from zope.interface import Interface
