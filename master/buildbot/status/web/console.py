@@ -163,11 +163,13 @@ class ConsoleStatusResource(HtmlResource):
         return allChanges                
 
     @defer.deferredGenerator
-    def getAllChanges(self, request, status, debugInfo):
+    def getAllChanges(self, request, status, debugInfo, branch):
         master = request.site.buildbot_service.master
 
+        if branch == ANYBRANCH:
+            branch = None
         wfd = defer.waitForDeferred(
-                master.db.changes.getRecentChanges(25))
+                master.db.changes.getRecentChanges(25, branch=branch))
         yield wfd
         chdicts = wfd.getResult()
 
@@ -637,13 +639,11 @@ class ConsoleStatusResource(HtmlResource):
 
         # Get all changes we can find.  This is a DB operation, so it must use
         # a deferred.
-        d = self.getAllChanges(request, status, debugInfo)
+        d = self.getAllChanges(request, status, debugInfo, branch)
         def got_changes(allChanges):
             debugInfo["source_all"] = len(allChanges)
 
             revFilter = {}
-            if branch != ANYBRANCH:
-                revFilter['branch'] = branch
             if devName:
                 revFilter['who'] = devName
             if repository:
