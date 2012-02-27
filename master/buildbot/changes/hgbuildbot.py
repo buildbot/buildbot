@@ -50,7 +50,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
                             ui.config('web', 'baseurl', ''))
     master = ui.config('hgbuildbot', 'master')
     if master:
-        branchtype = ui.config('hgbuildbot', 'branchtype')
+        branchtype = ui.config('hgbuildbot', 'branchtype', 'inrepo')
         branch = ui.config('hgbuildbot', 'branch')
         fork = ui.configbool('hgbuildbot', 'fork', False)
         # notify also has this setting
@@ -82,11 +82,8 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     from twisted.internet import defer, reactor
 
     if branch is None:
-        if branchtype is not None:
-            if branchtype == 'dirname':
-                branch = os.path.basename(repo.root)
-            if branchtype == 'inrepo':
-                branch = workingctx(repo).branch()
+        if branchtype == 'dirname':
+            branch = os.path.basename(repo.root)
 
     if not auth:
         auth = 'change:changepw'
