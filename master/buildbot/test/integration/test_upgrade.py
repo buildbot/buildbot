@@ -89,12 +89,13 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
                     "'%s' not found (normal when not building from Git)"
                     % tarball)
 
-            with tarfile.open(tarball) as tf:
-                prefixes = set()
-                for inf in tf:
-                    tf.extract(inf)
-                    prefixes.add(inf.name.split('/', 1)[0])
-                # (note that tf.extractall isn't available in py2.4)
+            tf = tarfile.open(tarball)
+            prefixes = set()
+            for inf in tf:
+                tf.extract(inf)
+                prefixes.add(inf.name.split('/', 1)[0])
+            tf.close()
+            # (note that tf.extractall isn't available in py2.4)
 
             # get the top-level dir from the tarball
             assert len(prefixes) == 1, "tarball has multiple top-level dirs!"
