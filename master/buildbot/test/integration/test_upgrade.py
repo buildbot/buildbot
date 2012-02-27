@@ -33,8 +33,6 @@ from buildbot.db import connector
 from buildbot.test.util import change_import, db, querylog
 from buildbot.test.fake import fakemaster
 
-from buildbot.sourcestamp import SourceStamp
-
 # monkey-patch for "compare_model_to_db gets confused by sqlite_sequence",
 # http://code.google.com/p/sqlalchemy-migrate/issues/detail?id=124
 def getDiffMonkeyPatch(metadata, engine, excludeTables=None):
@@ -628,4 +626,3 @@ class TestPickles(unittest.TestCase):
         styles.doUpgrade()
         self.assertEqual(ss.sourcestampsetid,10)
         self.assertEqual(ss.codebase, '')
-        
