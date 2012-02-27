@@ -31,20 +31,21 @@ buildslave:
 
 Python: http://www.python.org
 
-  Buildbot requires python-2.4 or later.  Buildbot versions later than 0.8.6
-  will require Python-2.5, and Python-2.7 is recommended.
+  Buildbot requires python-2.5 or later on the master, although Python-2.7 is
+  recommended.  The slave run on Python-2.4.
 
 Twisted: http://twistedmatrix.com
 
-  Both the buildmaster and the buildslaves require Twisted-8.0.x or
-  later. As always, the most recent version is recommended.
+  Buildbot requires Twisted-9.0.0 or later on the master, and Twisted-8.1.0 on
+  the slave. As always, the most recent version is recommended.
 
-  Twisted is delivered as a collection of subpackages. You'll need at
-  least "Twisted" (the core package), and you'll also want `TwistedMail`_,
-  `TwistedWeb`_, and `TwistedWords`_ (for sending email, serving a web status
-  page, and delivering build status via IRC, respectively). You might
-  also want `TwistedConch`_ (for the encrypted Manhole debug port). Note
-  that Twisted requires ZopeInterface to be installed as well.
+  In some cases, Twisted is delivered as a collection of subpackages. You'll
+  need at least "Twisted" (the core package), and you'll also want
+  `TwistedMail`_, `TwistedWeb`_, and `TwistedWords`_ (for sending email,
+  serving a web status page, and delivering build status via IRC,
+  respectively). You might also want `TwistedConch`_ (for the encrypted Manhole
+  debug port). Note that Twisted requires ZopeInterface to be installed as
+  well.
 
 Of course, your project's build process will impose additional
 requirements on the buildslaves. These hosts must have all the tools
@@ -93,7 +94,6 @@ Jinja2: http://jinja.pocoo.org/
 
   Jinja2 is a general purpose templating language and is used by Buildbot
   to generate the HTML output.
-
 
 SQLAlchemy: http://www.sqlalchemy.org/
 
