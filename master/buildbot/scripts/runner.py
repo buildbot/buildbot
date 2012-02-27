@@ -241,8 +241,9 @@ class Maker:
             print "populating public_html/"
         for target, source in files.iteritems():
             target = os.path.join(webdir, target)
-            with open(target, "wt") as f, open(source, "rt") as i:
-                f.write(i.read())
+            with open(target, "wt") as f:
+                with open(source, "rt") as i:
+                    f.write(i.read())
 
     def create_db(self):
         from buildbot.db import connector

@@ -67,8 +67,9 @@ class TestFileUpload(unittest.TestCase):
         else:
             self.assert_(False, "No uploadFile command found")
 
-        with open(self.destfile, "rb") as dest, open(__file__, "rb") as expect:
-            self.assertEquals(dest.read(), expect.read())
+        with open(self.destfile, "rb") as dest:
+            with open(__file__, "rb") as expect:
+                self.assertEquals(dest.read(), expect.read())
 
     def testTimestamp(self):
         s = FileUpload(slavesrc=__file__, masterdest=self.destfile, keepstamp=True)
