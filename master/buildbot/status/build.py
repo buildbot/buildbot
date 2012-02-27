@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os, shutil, re
 from cPickle import dump
 from zope.interface import implements
@@ -405,7 +407,8 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             shutil.rmtree(filename, ignore_errors=True)
         tmpfilename = filename + ".tmp"
         try:
-            dump(self, open(tmpfilename, "wb"), -1)
+            with open(tmpfilename, "wb") as f:
+                dump(self, f, -1)
             if runtime.platformType  == 'win32':
                 # windows cannot rename a file on top of an existing one, so
                 # fall back to delete-first. There are ways this can fail and

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 
 import os.path, tarfile, tempfile
 try:
@@ -162,9 +164,8 @@ class _DirectoryWriter(_FileWriter):
             tarfile.TarFile.extractall = _extractall
 
         # Unpack archive and clean up after self
-        archive = tarfile.open(name=self.tarname, mode=mode)
-        archive.extractall(path=self.destroot)
-        archive.close()
+        with tarfile.open(name=self.tarname, mode=mode) as archive:
+            archive.extractall(path=self.destroot)
         os.remove(self.tarname)
 
 

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 
 """Push events to an abstract receiver.
 
@@ -102,7 +104,8 @@ class StatusPush(StatusReceiverMultiService):
         if self.path and os.path.isdir(self.path):
             state_path = os.path.join(self.path, 'state')
             if os.path.isfile(state_path):
-                self.state.update(json.load(open(state_path, 'r')))
+                with open(state_path, 'r') as f:
+                    self.state.update(json.load(f))
 
         if self.queue.nbItems():
             # Last shutdown was not clean, don't wait to send events.
@@ -199,7 +202,8 @@ class StatusPush(StatusReceiverMultiService):
         self.queue.save()
         if self.path and os.path.isdir(self.path):
             state_path = os.path.join(self.path, 'state')
-            json.dump(self.state, open(state_path, 'w'), sort_keys=True,
+            with open(state_path, 'w') as f:
+                json.dump(self.state, f, sort_keys=True,
                       indent=2)
         # Make sure all Deferreds are called on time and in a sane order.
         defers = filter(None, [d, StatusReceiverMultiService.stopService(self)])

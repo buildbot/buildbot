@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Portions Copyright Buildbot Team Members
+
+from __future__ import with_statement
 # Portions Copyright Dan Radez <dradez+buildbot@redhat.com>
 # Portions Copyright Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
 """
@@ -98,15 +100,13 @@ class RpmBuild(ShellCommand):
             relfile = '%s.release' % (
                 self.os.path.basename(self.specfile).split('.')[0])
             try:
-                rfile = open(relfile, 'r')
-                rel = int(rfile.readline().strip())
-                rfile.close()
+                with open(relfile, 'r') as rfile:
+                    rel = int(rfile.readline().strip())
             except:
                 rel = 0
             self.rpmbuild = self.rpmbuild + ' --define "_release %s"' % rel
-            rfile = open(relfile, 'w')
-            rfile.write(str(rel+1))
-            rfile.close()
+            with open(relfile, 'w') as rfile:
+                rfile.write(str(rel+1))
 
         if self.vcsRevision:
             self.rpmbuild = self.rpmbuild + ' --define "_revision %s"' % \

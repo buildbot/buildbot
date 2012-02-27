@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import re
 import os
 import sys
@@ -154,6 +156,7 @@ class MasterConfig(object):
                 )
                 raise errors
         finally:
+            f.close()
             sys.path[:] = old_sys_path
             _errors = None
 

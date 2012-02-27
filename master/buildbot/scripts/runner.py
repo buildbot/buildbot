@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
@@ -55,7 +57,8 @@ def isBuildmasterDir(dir):
         print "no buildbot.tac"
         return False
 
-    contents = open(buildbot_tac, "r").read()
+    with open(buildbot_tac, "r") as f:
+        contents = f.read()
     return "Application('buildmaster')" in contents
 
 # the create/start/stop commands should all be run as the same user,
@@ -139,8 +142,8 @@ def loadOptionsFile():
             optfile = os.path.join(d, "options")
             if os.path.exists(optfile):
                 try:
-                    f = open(optfile, "r")
-                    options = f.read()
+                    with open(optfile, "r") as f:
+                        options = f.read()
                     exec options in localDict
                 except:
                     print "error while reading %s" % optfile
@@ -198,7 +201,8 @@ class Maker:
     def makeTAC(self, contents, secret=False):
         tacfile = "buildbot.tac"
         if os.path.exists(tacfile):
-            oldcontents = open(tacfile, "rt").read()
+            with open(tacfile, "rt") as f:
+                oldcontents = f.read()
             if oldcontents == contents:
                 if not self.quiet:
                     print "buildbot.tac already exists and is correct"
@@ -207,9 +211,8 @@ class Maker:
                 print "not touching existing buildbot.tac"
                 print "creating buildbot.tac.new instead"
             tacfile = "buildbot.tac.new"
-        f = open(tacfile, "wt")
-        f.write(contents)
-        f.close()
+        with open(tacfile, "wt") as f:
+            f.write(contents)
         if secret:
             os.chmod(tacfile, 0600)
 
@@ -217,13 +220,13 @@ class Maker:
         target = "master.cfg.sample"
         if not self.quiet:
             print "creating %s" % target
-        config_sample = open(source, "rt").read()
+        with open(source, "rt") as f:
+            config_sample = f.read()
         if self.config['db']:
             config_sample = config_sample.replace('sqlite:///state.sqlite',
                                                   self.config['db'])
-        f = open(target, "wt")
-        f.write(config_sample)
-        f.close()
+        with open(target, "wt") as f:
+            f.write(config_sample)
         os.chmod(target, 0600)
 
     def public_html(self, files):
@@ -238,9 +241,8 @@ class Maker:
             print "populating public_html/"
         for target, source in files.iteritems():
             target = os.path.join(webdir, target)
-            f = open(target, "wt")
-            f.write(open(source, "rt").read())
-            f.close()
+            with open(target, "wt") as f, open(source, "rt") as i:
+                f.write(i.read())
 
     def create_db(self):
         from buildbot.db import connector
@@ -264,25 +266,30 @@ class Maker:
         return d
 
     def populate_if_missing(self, target, source, overwrite=False):
-        new_contents = open(source, "rt").read()
+        with open(source, "rt") as f:
+            new_contents = f.read()
         if os.path.exists(target):
-            old_contents = open(target, "rt").read()
+            with open(target, "rt") as f:
+                old_contents = f.read()
             if old_contents != new_contents:
                 if overwrite:
                     if not self.quiet:
                         print "%s has old/modified contents" % target
                         print " overwriting it with new contents"
-                    open(target, "wt").write(new_contents)
+                    with open(target, "wt") as f:
+                        f.write(new_contents)
                 else:
                     if not self.quiet:
                         print "%s has old/modified contents" % target
                         print " writing new contents to %s.new" % target
-                    open(target + ".new", "wt").write(new_contents)
+                    with open(target + ".new", "wt") as f:
+                        f.write(new_contents)
             # otherwise, it's up to date
         else:
             if not self.quiet:
                 print "populating %s" % target
-            open(target, "wt").write(new_contents)
+            with open(target, "wt") as f:
+                f.write(new_contents)
 
     def move_if_present(self, source, dest):
         if os.path.exists(source):
@@ -566,10 +573,10 @@ def stop(config, signame="TERM", wait=False):
 
     os.chdir(basedir)
     try:
-        f = open("twistd.pid", "rt")
+        with open("twistd.pid", "rt") as f:
+            pid = int(f.read().strip())
     except:
         raise BuildbotNotRunningError
-    pid = int(f.read().strip())
     signum = getattr(signal, "SIG"+signame)
     timer = 0
     try:
@@ -800,15 +807,16 @@ def sendchange(config, runReactor=False):
     else:
         when = None
     if config.get("revision_file"):
-        revision = open(config["revision_file"],"r").read()
+        with open(config["revision_file"],"r") as f:
+            revision = f.read()
 
     comments = config.get('comments')
     if not comments and config.get('logfile'):
         if config['logfile'] == "-":
-            f = sys.stdin
+            comments = sys.stdin.read()
         else:
-            f = open(config['logfile'], "rt")
-        comments = f.read()
+            with open(config['logfile'], "rt") as f:
+                comments = f.read()
     if comments is None:
         comments = ""
 
@@ -1035,9 +1043,8 @@ def doTryServer(config):
     fn = "%s-%s" % (timestring, jobhash)
     tmpfile = os.path.join(jobdir, "tmp", fn)
     newfile = os.path.join(jobdir, "new", fn)
-    f = open(tmpfile, "w")
-    f.write(job)
-    f.close()
+    with open(tmpfile, "w") as f:
+        f.write(job)
     os.rename(tmpfile, newfile)
 
 

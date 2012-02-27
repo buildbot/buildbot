@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import re
 import os
 import textwrap
@@ -159,9 +161,11 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def install_config_file(self, config_file, other_files={}):
         config_file = textwrap.dedent(config_file)
-        open(os.path.join(self.basedir, self.filename), "w").write(config_file)
+        with open(os.path.join(self.basedir, self.filename), "w") as f:
+            f.write(config_file)
         for file, contents in other_files.items():
-            open(file, "w").write(contents)
+            with open(file, "w") as f:
+                f.write(contents)
 
 
     # tests
