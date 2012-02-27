@@ -711,7 +711,7 @@ class ReconfigurableServiceMixin:
 
     reconfig_priority = 128
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         if not service.IServiceCollection.providedBy(self):
             return
@@ -725,7 +725,4 @@ class ReconfigurableServiceMixin:
         reconfigurable_services.sort(key=lambda svc : -svc.reconfig_priority)
 
         for svc in reconfigurable_services:
-            d = svc.reconfigService(new_config)
-            wfd = defer.waitForDeferred(d)
-            yield wfd
-            wfd.getResult()
+            yield svc.reconfigService(new_config)

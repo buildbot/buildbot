@@ -131,7 +131,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
     def test_unrelated_buildset(self):
         return self.do_test('unrelated', False, SUCCESS, False)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_getUpstreamBuildsets_missing(self):
         sched = self.makeScheduler()
 
@@ -146,10 +146,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         ])
 
         # check return value (missing 12)
-        wfd = defer.waitForDeferred(
-            sched._getUpstreamBuildsets())
-        yield wfd
-        self.assertEqual(wfd.getResult(),
+        self.assertEqual((yield sched._getUpstreamBuildsets()),
                 [(11, 99, False, -1), (13, 99, False, -1)])
 
         # and check that it wrote the correct value back to the state

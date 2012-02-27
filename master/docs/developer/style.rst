@@ -105,48 +105,48 @@ merely assigned ``rev = res.strip()``, then that variable would be local to
     Deferreds!  Unbounded chaining can result in stack overflows, at least on older
     versions of Twisted. Use ``deferredGenerator`` instead. 
 
-deferredGenerator
-.................
+inlineCallbacks
+...............
 
-:class:`twisted.internet.defer.deferredGenerator` is a great help to writing
-code that makes a lot of asynchronous calls.  Refer to the Twisted
-documentation for the details, but the style within Buildbot is as follows::
+:class:`twisted.internet.defer.inlineCallbacks` is a great help to writing code
+that makes a lot of asynchronous calls, particularly if those calls are made in
+loop or conditionals.  Refer to the Twisted documentation for the details, but
+the style within Buildbot is as follows::
 
     from twisted.internet import defer
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def mymethod(self, x, y):
-        wfd = defer.waitForDeferred(
-                getSomething(x))
-        yield wfd
-        xval = wfd.getResult()
+        xval = yield getSomething(x)
 
-        yield xval + y # return value
+        for z in (yield getZValues()):
+            y += z
+
+        if xval > 10:
+            yield defer.returnValue(xval + y)
+            return
+
+        self.someOtherMethod()
 
 The key points to notice here:
 
 * Always import ``defer`` as a module, not the names within it.
-* Use the decorator form of ``deferredGenerator``
-* For each ``waitForDeferred`` call, use the variable ``wfd``, and assign to it
-  on one line, with the operation returning the Deferred on the next.
-* While ``wfd.getResult()`` can be used in an expression, if that expression is
-  complex, pull it out into a simple assignment.  This helps reviewers scanning
-  the code for missing ``getResult`` calls.
-* When ``yield`` is used to return a value, add a comment to that effect, since
-  this can often be missed.
+* Use the decorator form of ``inlineCallbacks``
+* In most cases, the result of a ``yield`` expression should be assigned to a
+  variable.  It can be used in a larger expression, but remember that Python
+  requires that it be enclosed in its own set of parentheses.
+* Python does not permit returning a value from a generator, so statements like
+  ``return xval + y`` are invalid.  Instead, yield the result of
+  ``defer.returnValue``.  Remember that this expression does *not* alter
+  control flow, so in many cases this statement will be followed by a bare
+  ``return``, as in the example.
 
-The great advantage of ``deferredGenerator`` is that it allows you to use all
+The great advantage of ``inlineCallbacks`` is that it allows you to use all
 of the usual Pythonic control structures in their natural form. In particular,
 it is easy to represent a loop, or even nested loops, in this style without
-losing any readability. The downside, of course, is the rather verbose style
-and the requirement that ``getResult`` be called even when no result is needed
-- this is easy to forget!  Twisted's ``inlineCallbacks`` fixes many of these
-shortcomings, but is not usable in Buildbot, because Buildbot is still
-compatible with Python-2.4.  This will change after Buildbot-0.8.6
-(:bb:bug:`2157`).
+losing any readability.
 
-As a reminder, Python-2.4 also does not support try/finally blocks in
-generators.
+Note that code using ``deferredGenerator`` is no longer acceptable in Buildbot.
 
 Joining Sequences
 ~~~~~~~~~~~~~~~~~

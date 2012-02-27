@@ -184,7 +184,7 @@ class BaseBasicScheduler(CommonStuffMixin,
 
         d.addCallback(lambda _ : sched.stopService())
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_gotChange_treeStableTimer_sequence(self):
         sched = self.makeScheduler(self.Subclass, treeStableTimer=9, branch='master')
         self.master.db.insertTestData([
@@ -203,11 +203,9 @@ class BaseBasicScheduler(CommonStuffMixin,
 
         # this important change arrives at 2220, so the stable timer will last
         # until 2229
-        wfd = defer.waitForDeferred(
-            sched.gotChange(self.makeFakeChange(branch='master', number=1, when=2220),
-                            True))
-        yield wfd
-        wfd.getResult()
+        yield sched.gotChange(
+                self.makeFakeChange(branch='master', number=1, when=2220),
+                True)
         self.assertEqual(self.events, [])
         self.db.schedulers.assertClassifications(self.OBJECTID, { 1 : True })
 
@@ -215,11 +213,9 @@ class BaseBasicScheduler(CommonStuffMixin,
         self.clock.advance(6) # to 2226
         self.assertEqual(self.events, [])
 
-        wfd = defer.waitForDeferred(
-            sched.gotChange(self.makeFakeChange(branch='master', number=2, when=2226),
-                            False))
-        yield wfd
-        wfd.getResult()
+        yield sched.gotChange(
+                self.makeFakeChange(branch='master', number=2, when=2226),
+                False)
         self.assertEqual(self.events, [])
         self.db.schedulers.assertClassifications(self.OBJECTID, { 1 : True, 2 : False })
 
@@ -230,11 +226,9 @@ class BaseBasicScheduler(CommonStuffMixin,
         self.assertEqual(self.events, [])
 
         # another important change arrives at 2232
-        wfd = defer.waitForDeferred(
-            sched.gotChange(self.makeFakeChange(branch='master', number=3, when=2232),
-                            True))
-        yield wfd
-        wfd.getResult()
+        yield sched.gotChange(
+                self.makeFakeChange(branch='master', number=3, when=2232),
+                True)
         self.assertEqual(self.events, [])
         self.db.schedulers.assertClassifications(self.OBJECTID, { 1 : True, 2 : False, 3 : True })
 
@@ -246,9 +240,7 @@ class BaseBasicScheduler(CommonStuffMixin,
         self.assertEqual(self.events, [ 'B[1,2,3]@2241' ])
         self.db.schedulers.assertClassifications(self.OBJECTID, { })
 
-        wfd = defer.waitForDeferred(sched.stopService())
-        yield wfd
-        wfd.getResult()
+        yield sched.stopService()
 
 
 class SingleBranchScheduler(CommonStuffMixin,

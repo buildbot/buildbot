@@ -211,7 +211,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         self.scheduler = scheduler
         self.username = username
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def perspective_try(self, branch, revision, patch, repository, project,
                         builderNames, who="", comment="", properties={} ):
         db = self.scheduler.master.db
@@ -231,38 +231,26 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         if comment:
             reason += " (%s)" % comment
 
-        wfd = defer.waitForDeferred(db.sourcestampsets.addSourceStampSet())
-        yield wfd
-        sourcestampsetid = wfd.getResult()
+        sourcestampsetid = yield db.sourcestampsets.addSourceStampSet()
 
-        wfd = defer.waitForDeferred(
-                db.sourcestamps.addSourceStamp(branch=branch, revision=revision,
+        yield db.sourcestamps.addSourceStamp(branch=branch, revision=revision,
                     repository=repository, project=project, patch_level=patch[0],
                     patch_body=patch[1], patch_subdir='', patch_author=who or '',
-                    patch_comment=comment or '', sourcestampsetid = sourcestampsetid))
+                    patch_comment=comment or '', sourcestampsetid = sourcestampsetid)
                     # note: no way to specify patch subdir - #1769
-        yield wfd
-        wfd.getResult()
 
         requested_props = Properties()
         requested_props.update(properties, "try build")
-        wfd = defer.waitForDeferred(
-                self.scheduler.addBuildsetForSourceStamp(setid=sourcestampsetid,
-                        reason=reason, properties=requested_props,
-                        builderNames=builderNames))
-        yield wfd
-        (bsid,brids) = wfd.getResult()
+        (bsid, brids) = yield self.scheduler.addBuildsetForSourceStamp(
+                setid=sourcestampsetid, reason=reason,
+                properties=requested_props, builderNames=builderNames)
 
         # return a remotely-usable BuildSetStatus object
-        wfd = defer.waitForDeferred(
-                db.buildsets.getBuildset(bsid))
-        yield wfd
-        bsdict = wfd.getResult()
+        bsdict = yield db.buildsets.getBuildset(bsid)
 
         bss = BuildSetStatus(bsdict, self.scheduler.master.status)
         from buildbot.status.client import makeRemote
-        r = makeRemote(bss)
-        yield r # return value
+        defer.returnValue(makeRemote(bss))
 
     def perspective_getAvailableBuilderNames(self):
         # Return a list of builder names that are configured

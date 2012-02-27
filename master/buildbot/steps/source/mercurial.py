@@ -122,27 +122,21 @@ class Mercurial(Source):
         d.addCallback(self.finish)
         d.addErrback(self.failed)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def full(self):
         if self.method == 'clobber':
-            d = self.clobber(None)
-            wfd = defer.waitForDeferred(d)
-            yield wfd
-            wfd.getResult()
+            yield self.clobber(None)
             return
 
-        wfd = defer.waitForDeferred(self._sourcedirIsUpdatable())
-        yield wfd
-        updatable = wfd.getResult()
+        updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
-            d = self._dovccmd(['clone', self.repourl, '.'])
+            yield self._dovccmd(['clone', self.repourl, '.'])
         elif self.method == 'clean':
-            d = self.clean(None)
+            yield self.clean(None)
         elif self.method == 'fresh':
-            d = self.fresh(None)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        wfd.getResult()
+            yield self.fresh(None)
+        else:
+            raise ValueError("Unknown method, check your configuration")
 
     def incremental(self):
         if self.method is not None:
@@ -204,31 +198,24 @@ class Mercurial(Source):
         d.addCallback(_setrev)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _checkBranchChange(self, _):
-        d = self._getCurrentBranch()
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        current_branch = wfd.getResult()
+        current_branch = yield self._getCurrentBranch()
         msg = "Working dir is on in-repo branch '%s' and build needs '%s'." % \
               (current_branch, self.update_branch)
         if current_branch != self.update_branch:
             if self.clobberOnBranchChange:
                 msg += ' Clobbering.'
                 log.msg(msg)
-                d = self.clobber(None)
+                yield self.clobber(None)
             else:
                 msg += ' Updating.'
                 log.msg(msg)
-                d = self._update(None)
+                yield self._update(None)
         else:
             msg += ' Updating.'
             log.msg(msg)
-            d = self._update(None)
-
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        wfd.getResult()
+            yield self._update(None)
 
     def _pullUpdate(self, res):
         command = ['pull' , self.repourl]

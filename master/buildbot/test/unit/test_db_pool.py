@@ -121,7 +121,7 @@ class Stress(unittest.TestCase):
         self.pool.shutdown()
         os.unlink("test.sqlite")
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_inserts(self):
         def write(conn):
             trans = conn.begin()
@@ -139,10 +139,7 @@ class Stress(unittest.TestCase):
             self.pool.do(write2))
         reactor.callLater(0.1, d2.callback, None)
 
-        wfd = defer.waitForDeferred(
-            defer.DeferredList([ d1, d2 ]))
-        yield wfd
-        wfd.getResult()
+        yield defer.DeferredList([ d1, d2 ])
 
     # don't run this test, since it takes 30s
     del test_inserts

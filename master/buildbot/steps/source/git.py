@@ -111,82 +111,54 @@ class Git(Source):
         d.addErrback(self.failed)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def full(self):
         if self.method == 'clobber':
-            wfd = defer.waitForDeferred(self.clobber())
-            yield wfd
-            wfd.getResult()
+            yield self.clobber()
             return
         elif self.method == 'copy':
-            wfd = defer.waitForDeferred(self.copy())
-            yield wfd
-            wfd.getResult()
+            yield self.copy()
             return
 
-        wfd = defer.waitForDeferred(self._sourcedirIsUpdatable())
-        yield wfd
-        updatable = wfd.getResult()
+        updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
             log.msg("No git repo present, making full clone")
-            d = self._doFull()
+            yield self._doFull()
         elif self.method == 'clean':
-            d = self.clean()
+            yield self.clean()
         elif self.method == 'fresh':
-            d = self.fresh()
+            yield self.fresh()
         else:
             raise ValueError("Unknown method, check your configuration")
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        wfd.getResult()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def incremental(self):
-        wfd = defer.waitForDeferred(
-            self._sourcedirIsUpdatable())
-        yield wfd
-        updatable = wfd.getResult()
+        updatable = yield self._sourcedirIsUpdatable()
 
         # if not updateable, do a full checkout
         if not updatable:
-            wfd = defer.waitForDeferred(
-                    self._doFull())
-            yield wfd
-            yield wfd.getResult() # return value
+            yield self._doFull()
             return
 
         # test for existence of the revision; rc=1 indicates it does not exist
         if self.revision:
-            wfd = defer.waitForDeferred(
-                self._dovccmd(['cat-file', '-e', self.revision], False))
-            yield wfd
-            rc = wfd.getResult()
+            rc = yield self._dovccmd(['cat-file', '-e', self.revision],
+                    abandonOnFailure=False)
         else:
             rc = 1
 
         # if revision exists checkout to that revision
         # else fetch and update
         if rc == 0:
-            wfd = defer.waitForDeferred(
-                    self._dovccmd(['reset', '--hard', self.revision]))
-            yield wfd
-            wfd.getResult()
+            yield self._dovccmd(['reset', '--hard', self.revision])
 
             if self.branch != 'HEAD':
-                wfd = defer.waitForDeferred(
-                    self._dovccmd(['branch', '-M', self.branch], abandonOnFailure=False))
-                yield wfd
-                wfd.getResult()
+                yield self._dovccmd(['branch', '-M', self.branch],
+                        abandonOnFailure=False)
         else:
-            wfd = defer.waitForDeferred(
-                    self._doFetch(None))
-            yield wfd
-            wfd.getResult()
+            yield self._doFetch(None)
 
-        wfd = defer.waitForDeferred(
-                self._updateSubmodule(None))
-        yield wfd
-        wfd.getResult()
+        yield self._updateSubmodule(None)
 
     def clean(self):
         command = ['clean', '-f', '-d']
@@ -319,28 +291,22 @@ class Git(Source):
         d = self._dovccmd(['apply', '--index'], extra_args={'initial_stdin': patch})
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _doFetch(self, _):
         """
         Handles fallbacks for failure of fetch,
         wrapper for self._fetch
         """
-        wfd = defer.waitForDeferred(self._fetch(None))
-        yield wfd
-        res = wfd.getResult()
+        res = yield self._fetch(None)
         if res == 0:
-            yield res
+            yield defer.returnValue(res)
             return
         elif self.retryFetch:
-            d = self._fetch(None)
+            yield self._fetch(None)
         elif self.clobberOnFailure:
-            d = self.clobber()
+            yield self.clobber()
         else:
             raise buildstep.BuildStepFailed()
-
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        res = wfd.getResult()
 
     def _full(self):
         if self.shallow:

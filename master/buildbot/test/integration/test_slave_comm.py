@@ -129,7 +129,7 @@ class TestSlaveComm(unittest.TestCase):
             self.botmaster.stopService(),
         ])
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def addSlave(self, **kwargs):
         """
         Create a master-side slave instance and add it to the BotMaster
@@ -148,10 +148,7 @@ class TestSlaveComm(unittest.TestCase):
         new_config.builders = [ config.BuilderConfig(name='bldr',
                 slavename='testslave', factory=mock.Mock()) ]
 
-        wfd = defer.waitForDeferred(
-            self.botmaster.reconfigService(new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.botmaster.reconfigService(new_config)
 
         # as part of the reconfig, the slave registered with the pbmanager, so
         # get the port it was assigned
@@ -197,48 +194,31 @@ class TestSlaveComm(unittest.TestCase):
         """Disconnect from the slave side"""
         slave.master_persp.broker.transport.loseConnection()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_connect_disconnect(self):
         """Test a single slave connecting and disconnecting."""
-        wfd = defer.waitForDeferred(
-            self.addSlave())
-        yield wfd
-        wfd.getResult()
+        yield self.addSlave()
 
         # connect
-        wfd = defer.waitForDeferred(
-            self.connectSlave())
-        yield wfd
-        slave = wfd.getResult()
+        slave = yield self.connectSlave()
 
         # disconnect
         self.slaveSideDisconnect(slave)
 
         # wait for the resulting detach
-        wfd = defer.waitForDeferred(self.detach_d)
-        yield wfd
-        wfd.getResult()
+        yield self.detach_d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     @compat.usesFlushLoggedErrors
     def test_duplicate_slave(self):
-        wfd = defer.waitForDeferred(
-            self.addSlave())
-        yield wfd
-        wfd.getResult()
+        yield self.addSlave()
 
         # connect first slave
-        wfd = defer.waitForDeferred(
-            self.connectSlave())
-        yield wfd
-        slave1 = wfd.getResult()
+        slave1 = yield self.connectSlave()
 
         # connect second slave; this should fail
         try:
-            wfd = defer.waitForDeferred(
-                self.connectSlave(waitForBuilderList=False))
-            yield wfd
-            wfd.getResult()
+            yield self.connectSlave(waitForBuilderList=False)
             connect_failed = False
         except:
             connect_failed = True
@@ -247,26 +227,18 @@ class TestSlaveComm(unittest.TestCase):
         # disconnect both and wait for that to percolate
         self.slaveSideDisconnect(slave1)
 
-        wfd = defer.waitForDeferred(self.detach_d)
-        yield wfd
-        wfd.getResult()
+        yield self.detach_d
 
         # flush the exception logged for this on the master
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     @compat.usesFlushLoggedErrors
     def test_duplicate_slave_old_dead(self):
-        wfd = defer.waitForDeferred(
-            self.addSlave())
-        yield wfd
-        wfd.getResult()
+        yield self.addSlave()
 
         # connect first slave
-        wfd = defer.waitForDeferred(
-            self.connectSlave())
-        yield wfd
-        slave1 = wfd.getResult()
+        slave1 = yield self.connectSlave()
 
         # monkeypatch that slave to fail with PBConnectionLost when its
         # remote_print method is called
@@ -276,17 +248,12 @@ class TestSlaveComm(unittest.TestCase):
 
         # connect second slave; this should succeed, and the old slave
         # should be disconnected.
-        wfd = defer.waitForDeferred(
-            self.connectSlave())
-        yield wfd
-        slave2 = wfd.getResult()
+        slave2 = yield self.connectSlave()
 
         # disconnect both and wait for that to percolate
         self.slaveSideDisconnect(slave2)
 
-        wfd = defer.waitForDeferred(self.detach_d)
-        yield wfd
-        wfd.getResult()
+        yield self.detach_d
 
         # flush the exception logged for this on the slave
         self.assertEqual(len(self.flushLoggedErrors(pb.PBConnectionLost)), 1)
