@@ -138,12 +138,21 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         d = self.db.pool.do(thd)
         return d
 
-    def getRecentChanges(self, count):
+    def getRecentChanges(self, count, branch=None):
         def thd(conn):
             # get the changeids from the 'changes' table
             changes_tbl = self.db.model.changes
+            if branch != None:
+                if branch == '':
+                    where_opt = (changes_tbl.c.branch == None)
+                else:
+                    where_opt = (changes_tbl.c.branch == branch)
+            else:
+                where_opt = None
+
             q = sa.select([changes_tbl.c.changeid],
                     order_by=[sa.desc(changes_tbl.c.changeid)],
+                    whereclause=where_opt,
                     limit=count)
             rp = conn.execute(q)
             changeids = [ row.changeid for row in rp ]
