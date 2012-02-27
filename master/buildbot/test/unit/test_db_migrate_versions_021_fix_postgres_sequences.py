@@ -62,7 +62,6 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             # try inserting *without* an ID, and verify that the resulting ID
             # is as expected
             for i, col in enumerate(self.cols):
-                print i, col
                 tbl_name, col_name = col.split('.')
                 tbl = sa.Table(tbl_name, metadata,
                         sa.Column(col_name, sa.Integer, primary_key=True))
