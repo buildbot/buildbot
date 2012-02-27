@@ -112,7 +112,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
 
         querylog.log_from_engine(self.db.pool.engine)
 
-    @defer.deferredGenerator # note tearDown doesn't handle Deferreds anyway
+    @defer.deferredGenerator
     def tearDownUpgradeTest(self):
         if self.use_real_db:
             wfd = defer.waitForDeferred(
@@ -129,7 +129,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
         return self.setUpUpgradeTest()
 
     def tearDown(self):
-        self.tearDownUpgradeTest()
+        return self.tearDownUpgradeTest()
 
     def assertModelMatches(self):
         # this patch only applies to sqlalchemy-migrate-0.7.x.  We prefer to
@@ -236,6 +236,10 @@ class UpgradeTestV075(UpgradeTestMixin,
 
     source_tarball = "master-0-7-5.tgz"
 
+    # this test can use a real DB because 0.7.5 was pre-DB, so there's no
+    # expectation that the MySQL or Postgres DB will have anything in it.
+    use_real_db = True
+
     def verify_thd(self, conn):
         "verify the contents of the db - run in a thread"
         # note that this will all change if we re-create the tarball!
@@ -266,6 +270,14 @@ class UpgradeTestV075(UpgradeTestMixin,
             u'\N{BLACK STAR}/funny_chars/in/a/path',
         ])
         self.failUnlessEqual(filenames, expected)
+
+        # check that the change table's primary-key sequence is correct by
+        # trying to insert a new row.  This assumes that other sequences are
+        # handled correctly, if this one is.
+        r = conn.execute(model.changes.insert(),
+                dict(author='foo', comments='foo', is_dir=0,
+                    when_timestamp=123, repository='', project=''))
+        self.assertEqual(r.inserted_primary_key[0], 3)
 
     def fix_pickle_encoding(self, old_encoding):
         """Do the equivalent of master/contrib/fix_pickle_encoding.py"""
