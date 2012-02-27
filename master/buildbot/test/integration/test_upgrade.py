@@ -21,6 +21,7 @@ import tarfile
 import shutil
 import textwrap
 from twisted.python import util
+from twisted.persisted import styles
 from twisted.internet import defer
 from twisted.trial import unittest
 import sqlalchemy as sa
@@ -31,6 +32,8 @@ from migrate.versioning import schemadiff
 from buildbot.db import connector
 from buildbot.test.util import change_import, db, querylog
 from buildbot.test.fake import fakemaster
+
+from buildbot.sourcestamp import SourceStamp
 
 # monkey-patch for "compare_model_to_db gets confused by sqlite_sequence",
 # http://code.google.com/p/sqlalchemy-migrate/issues/detail?id=124
@@ -598,3 +601,31 @@ class TestPickles(unittest.TestCase):
         ss = cPickle.loads(pkl)
         self.assertTrue(ss.revision is None)
         self.assertTrue(hasattr(ss, '_getSourceStampSetId_lock'))
+
+    def test_sourcestamp_version3(self):
+        pkl = textwrap.dedent("""\
+            (ibuildbot.sourcestamp
+            SourceStamp
+            p1
+            (dp2
+            S'project'
+            p3
+            S''
+            sS'ssid'
+            p4
+            I10
+            sS'repository'
+            p5
+            S''
+            sS'patch_info'
+            p6
+            NsS'buildbot.sourcestamp.SourceStamp.persistenceVersion'
+            p7
+            I2
+            sS'patch'
+            Nsb.""")
+        ss = cPickle.loads(pkl)
+        styles.doUpgrade()
+        self.assertEqual(ss.sourcestampsetid,10)
+        self.assertEqual(ss.codebase, '')
+        
