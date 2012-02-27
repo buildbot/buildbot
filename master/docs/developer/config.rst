@@ -94,6 +94,12 @@ described in :ref:`developer-Reconfiguration`.
         A callable, or None, used to prioritize builders; from
         :bb:cfg:`prioritizeBuilders`.
 
+    .. py:attribute:: codebaseGenerator
+    
+        A callable, or None, used to determine the codebase from an incomming 
+        :py:class:`~buildbot.changes.changes.Change`,
+        from :bb:cfg:`codebaseGenerator`
+        
     .. py:attribute:: slavePortnum
 
         The strports specification for the slave (integer inputs are normalized

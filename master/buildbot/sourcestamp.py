@@ -70,10 +70,11 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     changes = ()
     project = ''
     repository = ''
+    codebase = ''
     sourcestampsetid = None
     ssid = None
 
-    compare_attrs = ('branch', 'revision', 'patch', 'patch_info', 'changes', 'project', 'repository')
+    compare_attrs = ('branch', 'revision', 'patch', 'patch_info', 'changes', 'project', 'repository', 'codebase')
 
     implements(interfaces.ISourceStamp)
 
@@ -101,6 +102,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         sourcestamp.revision = ssdict['revision']
         sourcestamp.project = ssdict['project']
         sourcestamp.repository = ssdict['repository']
+        sourcestamp.codebase = ssdict['codebase']
         sourcestamp.sourcestampsetid = ssdict['sourcestampsetid']
 
         sourcestamp.patch = None
@@ -130,7 +132,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     def __init__(self, branch=None, revision=None, patch=None,
                  patch_info=None, changes=None, project='', repository='',
-                 _fromSsdict=False, _ignoreChanges=False):
+                 codebase = '', _fromSsdict=False, _ignoreChanges=False):
         self._getSourceStampSetId_lock = defer.DeferredLock();
 
         # skip all this madness if we're being built from the database
@@ -145,6 +147,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.patch_info = patch_info
         self.project = project or ''
         self.repository = repository or ''
+        self.codebase = codebase or ''
         if changes:
             self.changes = tuple(changes)
         if changes and not _ignoreChanges:
@@ -166,6 +169,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         # this algorithm implements the "compatible" mergeRequests defined in
         # detail in cfg-buidlers.texinfo; change that documentation if the
         # algorithm changes!
+        if other.codebase != self.codebase:
+            return False
         if other.repository != self.repository:
             return False
         if other.branch != self.branch:
@@ -207,13 +212,14 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
                                 patch_info=self.patch_info,
                                 project=self.project,
                                 repository=self.repository,
+                                codebase=self.codebase,
                                 changes=changes)
         return newsource
 
     def getAbsoluteSourceStamp(self, got_revision):
         return SourceStamp(branch=self.branch, revision=got_revision,
                            patch=self.patch, repository=self.repository,
-                           patch_info=self.patch_info,
+                           codebase=self.codebase, patch_info=self.patch_info,
                            project=self.project, changes=self.changes,
                            _ignoreChanges=True)
 
@@ -224,6 +230,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             text.append("for %s" % self.project)
         if self.repository:
             text.append("in %s" % self.repository)
+            if self.codebase:
+                text.append("(%s)" % self.codebase)
         if self.revision is None:
             return text + [ "latest" ]
         text.append(str(self.revision))
@@ -243,6 +251,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         result['changes'] = [c.asDict() for c in getattr(self, 'changes', [])]
         result['project'] = self.project
         result['repository'] = self.repository
+        result['codebase'] = self.codebase
         return result
 
     def __setstate__(self, d):
@@ -264,6 +273,10 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.project = ''
         self.repository = ''
         self.wasUpgraded = True
+
+    def upgradeToVersion3(self):
+        #version 2 did not have codebase; set to ''
+        self.codebase = ''
 
     @util.deferredLocked('_getSourceStampSetId_lock')
     def getSourceStampSetId(self, master):
@@ -300,7 +313,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             return master.db.sourcestamps.addSourceStamp(
                 sourcestampsetid=setid,
                 branch=self.branch, revision=self.revision,
-                repository=self.repository, project=self.project,
+                repository=self.repository, codebase=self.codebase,
+                project=self.project,
                 patch_body=patch_body, patch_level=patch_level,
                 patch_author=patch_author, patch_comment=patch_comment,
                 patch_subdir=patch_subdir,

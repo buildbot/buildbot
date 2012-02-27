@@ -67,6 +67,7 @@ class MasterConfig(object):
         self.logMaxSize = None
         self.properties = properties.Properties()
         self.mergeRequests = None
+        self.codebaseGenerator = None
         self.prioritizeBuilders = None
         self.slavePortnum = None
         self.multiMaster = False
@@ -98,7 +99,7 @@ class MasterConfig(object):
 
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
-        "change_source", "changeCacheSize", "changeHorizon",
+        "change_source", "codebaseGenerator", "changeCacheSize", "changeHorizon",
         'db', "db_poll_interval", "db_url", "debugPassword", "eventHorizon",
         "logCompressionLimit", "logCompressionMethod", "logHorizon",
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
@@ -267,6 +268,13 @@ class MasterConfig(object):
         else:
             self.mergeRequests = mergeRequests
 
+        codebaseGenerator = config_dict.get('codebaseGenerator')
+        if (codebaseGenerator is not None and
+            not callable(codebaseGenerator)):
+            errors.addError("codebaseGenerator must be a callable accepting a dict and returning a str")
+        else:
+            self.codebaseGenerator = codebaseGenerator
+            
         prioritizeBuilders = config_dict.get('prioritizeBuilders')
         if prioritizeBuilders is not None and not callable(prioritizeBuilders):
             errors.addError("prioritizeBuilders must be a callable")
@@ -454,7 +462,6 @@ class MasterConfig(object):
                 return
 
         self.change_sources = change_sources
-
 
     def load_status(self, filename, config_dict, errors):
         if 'status' not in config_dict:

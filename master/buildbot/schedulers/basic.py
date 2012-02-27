@@ -113,7 +113,6 @@ class BaseBasicScheduler(base.BaseScheduler):
             # unimportant changes
             if not important:
                 return defer.succeed(None)
-
             # otherwise, we'll build it right away
             return self.addBuildsetForChanges(reason='scheduler',
                             changeids=[ change.number ])
