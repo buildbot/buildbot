@@ -83,6 +83,11 @@ Deprecations, Removals, and Non-Compatible Changes
   instance) to :py:meth:`buildbot.process.factory.BuildFactory.addStep` has long been
   deprecated, and will be removed in version 0.8.7.
 
+* The `hgbuildbot` tool now defaults to the 'inrepo' branch type.  Users who do
+  not explicitly set a branch type would previously have seen empty branch strings,
+  and will now see a branch string based on the branch in the repository (e.g.,
+  `default`).
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
