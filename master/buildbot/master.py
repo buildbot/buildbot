@@ -358,7 +358,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     def addChange(self, who=None, files=None, comments=None, author=None,
             isdir=None, is_dir=None, revision=None, when=None,
             when_timestamp=None, branch=None, category=None, revlink='',
-            properties={}, repository='', project='', src=None):
+            properties={}, repository='', codebase=None, project='', src=None):
         """
         Add a change to the buildmaster and act on it.
 
@@ -447,11 +447,32 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         for n in properties:
             properties[n] = (properties[n], 'Change')
 
+        if codebase is None:
+            if self.config.codebaseGenerator is not None:
+                chdict = {
+                    'changeid': None,
+                    'author': author,
+                    'files': files,
+                    'comments': comments,
+                    'is_dir': is_dir,
+                    'revision': revision,
+                    'when_timestamp': when_timestamp,
+                    'branch': branch,
+                    'category': category,
+                    'revlink': revlink,
+                    'properties': properties,
+                    'repository': repository,
+                    'project': project,
+                }
+                codebase = self.config.codebaseGenerator(chdict)
+            else:
+                codebase = ''
+            
         d = defer.succeed(None)
         if src:
             # create user object, returning a corresponding uid
             d.addCallback(lambda _ : users.createUserObject(self, author, src))
-
+         
         # add the Change to the database
         d.addCallback(lambda uid :
                           self.db.changes.addChange(author=author, files=files,
@@ -460,14 +481,14 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                                           when_timestamp=when_timestamp,
                                           branch=branch, category=category,
                                           revlink=revlink, properties=properties,
-                                          repository=repository, project=project,
-                                          uid=uid))
+                                          repository=repository, codebase=codebase,
+                                          project=project, uid=uid))
 
         # convert the changeid to a Change instance
         d.addCallback(lambda changeid :
-                self.db.changes.getChange(changeid))
+            self.db.changes.getChange(changeid))
         d.addCallback(lambda chdict :
-                changes.Change.fromChdict(self, chdict))
+            changes.Change.fromChdict(self, chdict))
 
         def notify(change):
             msg = u"added change %s to database" % change

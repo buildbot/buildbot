@@ -42,7 +42,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
 
     def tearDown(self):
         return self.tearDownDirs()
-
+        
     def test_change_subscription(self):
         changeid = 918
         chdict = {
@@ -82,9 +82,8 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
             # appropriate default values
             self.master.db.changes.addChange.assert_called_with(author=None,
                     files=None, comments=None, is_dir=0,
-                    revision=None, when_timestamp=None, branch=None,
-                    category=None, revlink='', properties={}, repository='',
-                    project='', uid=None)
+                    revision=None, when_timestamp=None, branch=None, codebase='',
+                    category=None, revlink='', properties={}, repository='', project='', uid=None)
 
             self.master.db.changes.getChange.assert_called_with(changeid)
             # addChange returned the right value
@@ -99,7 +98,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         default_db_kwargs = dict(files=None, comments=None, author=None,
                 is_dir=0, revision=None, when_timestamp=None,
                 branch=None, category=None, revlink='', properties={},
-                repository='', project='', uid=None)
+                repository='', codebase='', project='', uid=None)
         k = default_db_kwargs
         k.update(exp_db_kwargs)
         exp_db_kwargs = k
@@ -158,7 +157,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         return self.do_test_addChange_args(
                 args=('me', ['a'], 'com'),
                 exp_db_kwargs=dict(author='me', files=['a'], comments='com'))
-
+                
     def do_test_createUserObjects_args(self, args=(), kwargs={}, exp_args=()):
         got = []
         def fake_createUserObject(*args, **kwargs):
@@ -181,7 +180,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         return self.do_test_createUserObjects_args(
                 kwargs=dict(who='me', src='git'),
                 exp_args=(self.master, 'me', 'git'))
-
+               
     def test_buildset_subscription(self):
         self.master.db = mock.Mock()
         self.master.db.buildsets.addBuildset.return_value = \
