@@ -332,6 +332,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         yield wfd.getResult()
 
 
+    @defer.deferredGenerator
     def addBuildsetForChanges(self, reason='', external_idstring=None,
             changeids=[], builderNames=None, properties=None):
         assert changeids is not []
