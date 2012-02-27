@@ -1,5 +1,5 @@
-Release Notes
-=============
+Release Notes for Buildbot |version|
+====================================
 
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
@@ -177,9 +177,9 @@ Details
 -------
 
 For a more detailed description of the changes made in this version, see the
-git log itself::
+git log itself:
 
-   https://github.com/buildbot/buildbot/compare/buildbot-0.8.4...buildbot-0.8.5
+   git log buildbot-0.8.5..buildbot-0.8.6
 
 Older Versions
 --------------
