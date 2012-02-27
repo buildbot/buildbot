@@ -29,11 +29,16 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
+            self.check_length(tbl.c.identifier, identifier)
+            self.check_length(tbl_info.c.attr_type, attr_type)
+            self.check_length(tbl_info.c.attr_data, attr_data)
+
             # try to find the user
-            q = sa.select([ tbl.c.uid ],
+            q = sa.select([ tbl_info.c.uid ],
                         whereclause=and_(tbl_info.c.attr_type == attr_type,
                                 tbl_info.c.attr_data == attr_data))
             rows = conn.execute(q).fetchall()
+
             if rows:
                 return rows[0].uid
 
@@ -146,17 +151,21 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                    bb_password=None, attr_type=None, attr_data=None,
                    _race_hook=None):
         def thd(conn):
+            transaction = conn.begin()
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
             update_dict = {}
 
             # first, add the identifier is it exists
             if identifier is not None:
+                self.check_length(tbl.c.identifier, identifier)
                 update_dict['identifier'] = identifier
 
             # then, add the creds if they exist
             if bb_username is not None:
                 assert bb_password is not None
+                self.check_length(tbl.c.bb_username, bb_username)
+                self.check_length(tbl.c.bb_password, bb_password)
                 update_dict['bb_username'] = bb_username
                 update_dict['bb_password'] = bb_password
 
@@ -170,27 +179,31 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             if attr_type is not None:
                 assert attr_data is not None
 
+                self.check_length(tbl_info.c.attr_type, attr_type)
+                self.check_length(tbl_info.c.attr_data, attr_data)
+
                 # first update, then insert
                 q = tbl_info.update(
                         whereclause=(tbl_info.c.uid == uid)
                                     & (tbl_info.c.attr_type == attr_type))
                 res = conn.execute(q, attr_data=attr_data)
-                if res.rowcount > 0:
-                    return
+                if res.rowcount == 0:
+                    _race_hook and _race_hook(conn)
 
-                _race_hook and _race_hook(conn)
+                    # the update hit 0 rows, so try inserting a new one
+                    try:
+                        q = tbl_info.insert()
+                        res = conn.execute(q,
+                                uid=uid,
+                                attr_type=attr_type,
+                                attr_data=attr_data)
+                    except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                        # someone else beat us to the punch inserting this row;
+                        # let them win.
+                        transaction.rollback()
+                        return
 
-                # the update hit 0 rows, so try inserting a new one
-                try:
-                    q = tbl_info.insert()
-                    res = conn.execute(q,
-                            uid=uid,
-                            attr_type=attr_type,
-                            attr_data=attr_data)
-                except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-                    # someone else beat us to the punch inserting this row; let
-                    # them win.
-                    pass
+            transaction.commit()
         d = self.db.pool.do(thd)
         return d
 

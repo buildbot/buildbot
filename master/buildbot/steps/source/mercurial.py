@@ -21,42 +21,40 @@ from twisted.internet import defer
 from buildbot.process import buildstep
 from buildbot.steps.source import Source
 from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.config import ConfigErrors
 
 class Mercurial(Source):
     """ Class for Mercurial with all the smarts """
     name = "hg"
 
-    renderables = [ "repourl", "baseURL" ]
+    renderables = [ "repourl" ]
+    possible_modes = ('incremental', 'full')
+    possible_methods = (None, 'clean', 'fresh', 'clobber')
+    possible_branchTypes = ('inrepo', 'dirname')
 
-    def __init__(self, repourl=None, baseURL=None, mode='incremental',
+    def __init__(self, repourl=None, mode='incremental',
                  method=None, defaultBranch=None, branchType='dirname',
                  clobberOnBranchChange=True, **kwargs):
 
         """
         @type  repourl: string
         @param repourl: the URL which points at the Mercurial repository.
-                        This uses the 'default' branch unless defaultBranch is
-                        specified below and the C{branchType} is set to
-                        'inrepo'.  It is an error to specify a branch without
-                        setting the C{branchType} to 'inrepo'.
-
-        @param baseURL: if 'dirname' branches are enabled, this is the base URL
+                        if 'dirname' branches are enabled, this is the base URL
                         to which a branch name will be appended. It should
-                        probably end in a slash.  Use exactly one of C{repourl}
-                        and C{baseURL}.
+                        probably end in a slash.
 
         @param defaultBranch: if branches are enabled, this is the branch
                               to use if the Build does not specify one
                               explicitly.
                               For 'dirname' branches, It will simply be
-                              appended to C{baseURL} and the result handed to
+                              appended to C{repourl} and the result handed to
                               the 'hg update' command.
                               For 'inrepo' branches, this specifies the named
                               revision to which the tree will update after a
                               clone.
 
         @param branchType: either 'dirname' or 'inrepo' depending on whether
-                           the branch name should be appended to the C{baseURL}
+                           the branch name should be appended to the C{repourl}
                            or the branch is a mercurial named branch and can be
                            found within the C{repourl}
 
@@ -67,7 +65,6 @@ class Mercurial(Source):
         """
         
         self.repourl = repourl
-        self.baseURL = baseURL
         self.defaultBranch = self.branch = defaultBranch
         self.branchType = branchType
         self.method = method
@@ -75,7 +72,6 @@ class Mercurial(Source):
         self.mode = mode
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(repourl=repourl,
-                                 baseURL=baseURL,
                                  mode=mode,
                                  method=method,
                                  defaultBranch=defaultBranch,
@@ -84,15 +80,22 @@ class Mercurial(Source):
                                  clobberOnBranchChange,
                                  )
 
-        assert self.mode in ['incremental', 'full']
+        errors = []
+        if self.mode not in self.possible_modes:
+            errors.append("mode %s is not one of %s" %
+                            (self.mode, self.possible_modes))
+        if self.method not in self.possible_methods:
+            errors.append("method %s is not one of %s" %
+                            (self.method, self.possible_methods))
+        if self.branchType not in self.possible_branchTypes:
+            errors.append("branchType %s is not one of %s" %
+                            (self.branchType, self.possible_branchTypes))
 
-        if repourl and baseURL:
-            raise ValueError("you must provide exactly one of repourl and"
-                             " baseURL")
-
-        if repourl is None and baseURL is None:
-            raise ValueError("you must privide at least one of repourl and"
-                             " baseURL")
+        if repourl is None:
+            errors.append("you must privide a repourl")
+        
+        if errors:
+            raise ConfigErrors(errors)
 
     def startVC(self, branch, revision, patch):
         self.revision = revision
@@ -105,15 +108,11 @@ class Mercurial(Source):
             return 0
 
         if self.branchType == 'dirname':
-            assert self.repourl is None
-            self.repourl = self.baseURL + (branch or '')
+            self.repourl = self.repourl + (branch or '')
             self.branch = self.defaultBranch
             self.update_branch = branch
         elif self.branchType == 'inrepo':
-            assert self.baseURL is None
             self.update_branch = (branch or 'default')
-        else:
-            raise ValueError("Invalid branch type")
 
         if self.mode == 'full':
             d.addCallback(lambda _: self.full())
@@ -141,8 +140,6 @@ class Mercurial(Source):
             d = self.clean(None)
         elif self.method == 'fresh':
             d = self.fresh(None)
-        else:
-            raise ValueError("Unknow method, check your configuration")
         wfd = defer.waitForDeferred(d)
         yield wfd
         wfd.getResult()
@@ -171,8 +168,8 @@ class Mercurial(Source):
         return d
 
     def clobber(self, _):
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.workdir,
-                                                      'logEnviron':self.logEnviron})
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
+                                                'logEnviron':self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         d.addCallback(lambda _: self._dovccmd(['clone', '--noupdate'
@@ -294,8 +291,8 @@ class Mercurial(Source):
             return 'fresh'
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.workdir + '/.hg',
-                                                     'logEnviron': self.logEnviron})
+        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg',
+                                               'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _fail(tmp):

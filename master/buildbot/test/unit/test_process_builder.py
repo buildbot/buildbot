@@ -29,8 +29,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
     def setUp(self):
         # a collection of rows that would otherwise clutter up every test
         self.base_rows = [
-            fakedb.SourceStamp(id=21),
-            fakedb.Buildset(id=11, reason='because', sourcestampid=21),
+            fakedb.SourceStampSet(id=21),
+            fakedb.SourceStamp(id=21, sourcestampsetid=21),
+            fakedb.Buildset(id=11, reason='because', sourcestampsetid=21),
         ]
 
     def makeBuilder(self, patch_random=False, **config_kwargs):
@@ -523,8 +524,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
         # set up all of the data required for a BuildRequest object
         wfd = defer.waitForDeferred(
             self.db.insertTestData([
-                fakedb.SourceStamp(id=234),
-                fakedb.Buildset(id=30, sourcestampid=234, reason='foo',
+                fakedb.SourceStampSet(id=234),
+                fakedb.SourceStamp(id=234,sourcestampsetid=234),
+                fakedb.Buildset(id=30, sourcestampsetid=234, reason='foo',
                     submitted_at=1300305712, results=-1),
                 fakedb.BuildRequest(id=19, buildsetid=30, buildername='bldr',
                     priority=13, submitted_at=1300305712, results=-1),
@@ -616,8 +618,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
         # set up all of the data required for a BuildRequest object
         wfd = defer.waitForDeferred(
             self.db.insertTestData([
-                fakedb.SourceStamp(id=234),
-                fakedb.Buildset(id=30, sourcestampid=234, reason='foo',
+                fakedb.SourceStampSet(id=234),
+                fakedb.SourceStamp(id=234, sourcestampsetid=234),
+                fakedb.Buildset(id=30, sourcestampsetid=234, reason='foo',
                     submitted_at=1300305712, results=-1),
                 fakedb.BuildRequest(id=19, buildsetid=30, buildername='bldr',
                     priority=13, submitted_at=1300305712, results=-1),
@@ -653,6 +656,154 @@ class TestBuilderBuildCreation(unittest.TestCase):
         yield wfd
         self.assertEqual(wfd.getResult(), [ brdicts[1] ])
 
+    @defer.deferredGenerator
+    def test_mergeRequest_no_other_request(self):
+        """ Test if builder test for codebases in requests """
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
+
+        # set up all of the data required for a BuildRequest object
+        wfd = defer.waitForDeferred(
+            self.db.insertTestData([
+                fakedb.SourceStampSet(id=234),
+                fakedb.SourceStamp(id=234, sourcestampsetid=234, codebase='A'),
+                fakedb.Change(changeid=14, codebase='A'),
+                fakedb.SourceStampChange(sourcestampid=234, changeid=14),
+                fakedb.Buildset(id=30, sourcestampsetid=234, reason='foo',
+                    submitted_at=1300305712, results=-1),
+                fakedb.BuildRequest(id=19, buildsetid=30, buildername='bldr',
+                    priority=13, submitted_at=1300305712, results=-1),
+            ]))
+        yield wfd
+        wfd.getResult()
+
+        wfd = defer.waitForDeferred(
+            defer.gatherResults([
+                self.db.buildrequests.getBuildRequest(19)
+            ]))
+        yield wfd
+        brdicts = wfd.getResult()
+
+        def mergeRequests_fn(builder, breq, other):
+            # Allow all requests
+            return True
+
+        # check if the request remains the same
+        wfd = defer.waitForDeferred(
+            self.bldr._mergeRequests(brdicts[0], brdicts, mergeRequests_fn))
+        yield wfd
+        self.assertEqual(wfd.getResult(), [ brdicts[0] ])
+        
+    @defer.deferredGenerator
+    def test_mergeRequests_codebases_equal(self):
+        """ Test if builder test for codebases in requests """
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
+
+        # set up all of the data required for a BuildRequest object
+        wfd = defer.waitForDeferred(
+            self.db.insertTestData([
+                fakedb.SourceStampSet(id=234),
+                fakedb.SourceStamp(id=234, sourcestampsetid=234, codebase='A'),
+                fakedb.Buildset(id=30, sourcestampsetid=234, reason='foo',
+                    submitted_at=1300305712, results=-1),
+                fakedb.SourceStampSet(id=235),
+                fakedb.SourceStamp(id=235, sourcestampsetid=235, codebase='A'),
+                fakedb.Buildset(id=31, sourcestampsetid=235, reason='foo',
+                    submitted_at=1300305712, results=-1),
+                fakedb.SourceStampSet(id=236),
+                fakedb.SourceStamp(id=236, sourcestampsetid=236, codebase='A'),
+                fakedb.Buildset(id=32, sourcestampsetid=236, reason='foo',
+                    submitted_at=1300305712, results=-1),
+                fakedb.BuildRequest(id=19, buildsetid=30, buildername='bldr',
+                    priority=13, submitted_at=1300305712, results=-1),
+                fakedb.BuildRequest(id=20, buildsetid=31, buildername='bldr',
+                    priority=13, submitted_at=1300305712, results=-1),
+                fakedb.BuildRequest(id=21, buildsetid=32, buildername='bldr',
+                    priority=13, submitted_at=1300305712, results=-1),
+            ]))
+        yield wfd
+        wfd.getResult()
+
+        wfd = defer.waitForDeferred(
+            defer.gatherResults([
+                self.db.buildrequests.getBuildRequest(id)
+                for id in (19, 20, 21)
+            ]))
+        yield wfd
+        brdicts = wfd.getResult()
+
+        def mergeRequests_fn(builder, breq, other):
+            # Allow all requests to test builder functionality
+            return True
+
+        # check if all are merged
+        wfd = defer.waitForDeferred(
+            self.bldr._mergeRequests(brdicts[0], brdicts, mergeRequests_fn))
+        yield wfd
+        self.assertEqual(wfd.getResult(), [ brdicts[0], brdicts[1], brdicts[2] ])
+        
+    def test_mergeRequests_codebases_not_equal(self):
+        """ Test if builder test for codebases in requests """
+        wfd = defer.waitForDeferred(
+            self.makeBuilder())
+        yield wfd
+        wfd.getResult()
+
+        # set up all of the data required for a BuildRequest object
+        wfd = defer.waitForDeferred(
+            self.db.insertTestData([
+                fakedb.SourceStampSet(id=234),
+                fakedb.SourceStamp(id=234, sourcestampsetid=234, codebase='A'),
+                fakedb.Buildset(id=30, sourcestampsetid=234, reason='foo',
+                    submitted_at=1300305712, results=-1),
+                fakedb.SourceStampSet(id=235),
+                fakedb.SourceStamp(id=235, sourcestampsetid=235, codebase='B'),
+                fakedb.Buildset(id=31, sourcestampsetid=235, reason='foo',
+                    submitted_at=1300305712, results=-1),
+                fakedb.SourceStampSet(id=236),
+                fakedb.SourceStamp(id=236, sourcestampsetid=236, codebase='A'),
+                fakedb.Buildset(id=32, sourcestampsetid=236, reason='foo',
+                    submitted_at=1300305712, results=-1),
+                fakedb.BuildRequest(id=19, buildsetid=30, buildername='bldr',
+                    priority=13, submitted_at=1300305712, results=-1),
+                fakedb.BuildRequest(id=20, buildsetid=31, buildername='bldr',
+                    priority=13, submitted_at=1300305712, results=-1),
+                fakedb.BuildRequest(id=21, buildsetid=32, buildername='bldr',
+                    priority=13, submitted_at=1300305712, results=-1),
+            ]))
+        yield wfd
+        wfd.getResult()
+
+        wfd = defer.waitForDeferred(
+            defer.gatherResults([
+                self.db.buildrequests.getBuildRequest(id)
+                for id in (19, 20, 21)
+            ]))
+        yield wfd
+        brdicts = wfd.getResult()
+
+        def mergeRequests_fn(builder, breq, other):
+            # Allow all requests
+            return True
+
+        # check if 19, and 21 are merged
+        wfd = defer.waitForDeferred(
+            self.bldr._mergeRequests(brdicts[0], brdicts, mergeRequests_fn))
+        yield wfd
+        self.assertEqual(wfd.getResult(), [ brdicts[0], brdicts[2] ])
+
+        # check if 20 is not merged
+        wfd = defer.waitForDeferred(
+            self.bldr._mergeRequests(brdicts[1], brdicts, mergeRequests_fn))
+        yield wfd
+        self.assertEqual(wfd.getResult(), [ brdicts[1]])
+
+        
     @defer.deferredGenerator
     def test_mergeRequests_no_merging(self):
         wfd = defer.waitForDeferred(
@@ -742,8 +893,9 @@ class TestGetOldestRequestTime(unittest.TestCase):
         # a collection of rows that would otherwise clutter up every test
         master_id = fakedb.FakeBuildRequestsComponent.MASTER_ID
         self.base_rows = [
-            fakedb.SourceStamp(id=21),
-            fakedb.Buildset(id=11, reason='because', sourcestampid=21),
+            fakedb.SourceStampSet(id=21),
+            fakedb.SourceStamp(id=21, sourcestampsetid=21),
+            fakedb.Buildset(id=11, reason='because', sourcestampsetid=21),
             fakedb.BuildRequest(id=111, submitted_at=1000,
                         buildername='bldr1', buildsetid=11),
             fakedb.BuildRequest(id=222, submitted_at=2000,

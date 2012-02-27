@@ -140,6 +140,13 @@ class ShellCommand(buildstep.LoggingBuildStep):
     def setCommand(self, command):
         self.command = command
 
+    def _flattenList(self, mainlist, commands):
+        for x in commands:
+          if isinstance(x, (str, unicode)):
+             mainlist.append(x)
+          elif x != []:
+             self._flattenList(mainlist, x)
+
     def describe(self, done=False):
         """Return a list of short strings to describe this step, for the
         status display. This uses the first few words of the shell command.
@@ -171,13 +178,28 @@ class ShellCommand(buildstep.LoggingBuildStep):
             words = self.command
             if isinstance(words, (str, unicode)):
                 words = words.split()
-            if len(words) < 1:
+
+            try:
+                len(words)
+            except AttributeError:
+                # WithProperties and Property don't have __len__
                 return ["???"]
-            if len(words) == 1:
-                return ["'%s'" % words[0]]
-            if len(words) == 2:
-                return ["'%s" % words[0], "%s'" % words[1]]
-            return ["'%s" % words[0], "%s" % words[1], "...'"]
+
+            tmp = []
+            for x in words:
+                if isinstance(x, (str, unicode)):
+                   tmp.append(x)
+                else:
+                   self._flattenList(tmp, x)
+
+            if len(tmp) < 1:
+                return ["???"]
+            if len(tmp) == 1:
+                return ["'%s'" % tmp[0]]
+            if len(tmp) == 2:
+                return ["'%s" % tmp[0], "%s'" % tmp[1]]
+            return ["'%s" % tmp[0], "%s" % tmp[1], "...'"]
+
         except:
             log.err(failure.Failure(), "Error describing step")
             return ["???"]
@@ -202,7 +224,13 @@ class ShellCommand(buildstep.LoggingBuildStep):
     def buildCommandKwargs(self, warnings):
         kwargs = buildstep.LoggingBuildStep.buildCommandKwargs(self)
         kwargs.update(self.remote_kwargs)
-        kwargs['command'] = self.command
+        tmp = []
+        if isinstance(self.command, list):
+           self._flattenList(tmp, self.command) 
+        else:
+           tmp = self.command
+
+        kwargs['command'] = tmp 
 
         # check for the usePTY flag
         if kwargs.has_key('usePTY') and kwargs['usePTY'] != 'slave-config':
@@ -270,8 +298,8 @@ class SetProperty(ShellCommand):
         self.strip = strip
 
         if not ((property is not None) ^ (extract_fn is not None)):
-            raise config.ConfigErrors([
-                "Exactly one of property and extract_fn must be set" ])
+            config.error(
+                "Exactly one of property and extract_fn must be set")
 
         ShellCommand.__init__(self, **kwargs)
 

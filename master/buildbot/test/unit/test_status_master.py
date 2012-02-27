@@ -34,10 +34,10 @@ class TestStatus(unittest.TestCase):
     def test_getBuildSets(self):
         s = self.makeStatus()
         self.db.insertTestData([
-            fakedb.Buildset(id=91, sourcestampid=234, complete=0,
+            fakedb.Buildset(id=91, sourcestampsetid=234, complete=0,
                     complete_at=298297875, results=-1, submitted_at=266761875,
                     external_idstring='extid', reason='rsn1'),
-            fakedb.Buildset(id=92, sourcestampid=234, complete=1,
+            fakedb.Buildset(id=92, sourcestampsetid=234, complete=1,
                     complete_at=298297876, results=7, submitted_at=266761876,
                     external_idstring='extid', reason='rsn2'),
         ])

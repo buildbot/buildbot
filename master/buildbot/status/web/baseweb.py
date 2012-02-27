@@ -281,20 +281,20 @@ class WebStatus(service.MultiService):
         self.num_events = num_events
         if num_events_max:
             if num_events_max < num_events:
-                raise config.ConfigErrors([
-                    "num_events_max must be greater than num_events" ])
+                config.error(
+                    "num_events_max must be greater than num_events")
             self.num_events_max = num_events_max
         self.public_html = public_html
 
         # make up an authz if allowForce was given
         if authz:
             if allowForce is not None:
-                raise config.ConfigErrors([
-                    "cannot use both allowForce and authz parameters" ])
+                config.error(
+                    "cannot use both allowForce and authz parameters")
             if auth:
-                raise config.ConfigErrors([
+                config.error(
                     "cannot use both auth and authz parameters (pass " +
-                    "auth as an Authz parameter)" ])
+                    "auth as an Authz parameter)")
         else:
             # invent an authz
             if allowForce and auth:
@@ -323,9 +323,10 @@ class WebStatus(service.MultiService):
         self.setupUsualPages(numbuilds=numbuilds, num_events=num_events,
                              num_events_max=num_events_max)
 
-        # Set up the jinja templating engine.
-        self.templates = createJinjaEnv(revlink, changecommentlink,
-                                        repositories, projects)
+        self.revlink = revlink
+        self.changecommentlink = changecommentlink
+        self.repositories = repositories
+        self.projects = projects
 
         # keep track of cached connections so we can break them when we shut
         # down. See ticket #102 for more details.
@@ -396,6 +397,14 @@ class WebStatus(service.MultiService):
         
         rotateLength = either(self.logRotateLength, self.master.log_rotation.rotateLength)
         maxRotatedFiles = either(self.maxRotatedFiles, self.master.log_rotation.maxRotatedFiles)
+
+        # Set up the jinja templating engine.
+        if self.revlink:
+            revlink = self.revlink
+        else:
+            revlink = self.master.config.revlink
+        self.templates = createJinjaEnv(revlink, self.changecommentlink,
+                                        self.repositories, self.projects)
 
         if not self.site:
             

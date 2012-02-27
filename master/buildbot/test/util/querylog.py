@@ -27,6 +27,8 @@ class PythonToTwistedHandler(logging.Handler):
 
 def log_from_engine(engine):
     # add the handler *before* enabling logging, so that no "default" logger
-    # is added automatically
-    engine.logger.addHandler(PythonToTwistedHandler())
+    # is added automatically, but only do so once.  This is important since
+    # logging's loggers are singletons
+    if not engine.logger.handlers:
+        engine.logger.addHandler(PythonToTwistedHandler())
     engine.echo = True

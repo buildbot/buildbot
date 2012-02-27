@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.trial import unittest
+from twisted.internet import defer
 from buildbot import config
 from buildbot.schedulers import dependent, base
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
@@ -22,7 +23,7 @@ from buildbot.test.fake import fakedb
 
 class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
-    SCHEDULERID = 33
+    OBJECTID = 33
     UPSTREAM_NAME = 'uppy'
 
     def setUp(self):
@@ -41,8 +42,12 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         sched = dependent.Dependent(name='n', builderNames=['b'],
                                     upstream=upstream)
-        self.attachScheduler(sched, self.SCHEDULERID)
+        self.attachScheduler(sched, self.OBJECTID)
         return sched
+
+    def assertBuildsetSubscriptions(self, bsids=None):
+        self.db.state.assertState(self.OBJECTID,
+                upstream_bsids=bsids)
 
     # tests
 
@@ -79,18 +84,19 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         # pretend we saw a buildset with a matching name
         self.db.insertTestData([
-            fakedb.SourceStamp(id=93, revision='555', branch='master',
-                                project='proj', repository='repo'),
-            fakedb.Buildset(id=44, sourcestampid=93),
+            fakedb.SourceStamp(id=93, sourcestampsetid=1093, revision='555',
+                            branch='master', project='proj', repository='repo',
+                            codebase = 'cb'),
+            fakedb.Buildset(id=44, sourcestampsetid=1093),
             ])
         callbacks['buildsets'](bsid=44,
                 properties=dict(scheduler=(scheduler_name, 'Scheduler')))
 
         # check whether scheduler is subscribed to that buildset
         if expect_subscription:
-            self.db.buildsets.assertBuildsetSubscriptions((self.SCHEDULERID, 44))
+            self.assertBuildsetSubscriptions([44])
         else:
-            self.db.buildsets.assertBuildsetSubscriptions()
+            self.assertBuildsetSubscriptions([])
 
         # pretend that the buildset is finished
         self.db.buildsets.fakeBuildsetCompletion(bsid=44, result=result)
@@ -104,9 +110,12 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
             self.db.buildsets.assertBuildset(bsids[0],
                     dict(external_idstring=None,
                          properties=[('scheduler', ('n', 'Scheduler'))],
-                         reason='downstream'),
-                    dict(revision='555', branch='master', project='proj',
-                         repository='repo'))
+                         reason='downstream', sourcestampsetid = 1093),
+                    {'cb':
+                     dict(revision='555', branch='master', project='proj',
+                         repository='repo', codebase='cb',
+                         sourcestampsetid = 1093)
+                    })
         else:
             self.db.buildsets.assertBuildsets(1) # only the one we added above
 
@@ -121,3 +130,27 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_unrelated_buildset(self):
         return self.do_test('unrelated', False, SUCCESS, False)
+
+    @defer.deferredGenerator
+    def test_getUpstreamBuildsets_missing(self):
+        sched = self.makeScheduler()
+
+        # insert some state, with more bsids than exist
+        self.db.insertTestData([
+            fakedb.SourceStampSet(id=99),
+            fakedb.Buildset(id=11, sourcestampsetid=99),
+            fakedb.Buildset(id=13, sourcestampsetid=99),
+            fakedb.Object(id=self.OBJECTID),
+            fakedb.ObjectState(objectid=self.OBJECTID,
+                name='upstream_bsids', value_json='[11,12,13]'),
+        ])
+
+        # check return value (missing 12)
+        wfd = defer.waitForDeferred(
+            sched._getUpstreamBuildsets())
+        yield wfd
+        self.assertEqual(wfd.getResult(),
+                [(11, 99, False, -1), (13, 99, False, -1)])
+
+        # and check that it wrote the correct value back to the state
+        self.db.state.assertState(self.OBJECTID, upstream_bsids=[11, 13])

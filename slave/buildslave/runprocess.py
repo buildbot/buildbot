@@ -128,7 +128,7 @@ class LogFileWatcher:
 
 if runtime.platformType == 'posix':
     class ProcGroupProcess(Process):
-        """Sumple subclass of Process to also make the spawned process a process
+        """Simple subclass of Process to also make the spawned process a process
         group leader, so we can kill all members of the process group."""
 
         def _setupChild(self, *args, **kwargs):
@@ -284,8 +284,8 @@ class RunProcess:
         if not os.path.exists(workdir):
             os.makedirs(workdir)
         if environ:
-            for key in environ:
-                if isinstance(environ[key], list):
+            for key, v in environ.iteritems():
+                if isinstance(v, list):
                     # Need to do os.pathsep translation.  We could either do that
                     # by replacing all incoming ':'s with os.pathsep, or by
                     # accepting lists.  I like lists better.
@@ -305,9 +305,12 @@ class RunProcess:
                 # setting a key to None will delete it from the slave environment
                 if key not in environ or environ[key] is not None:
                     newenv[key] = os.environ[key]
-            for key in environ.keys():
-                if environ[key] is not None:
-                    newenv[key] = p.sub(subst, environ[key])
+            for key, v in environ.iteritems():
+                if v is not None:
+                    if not isinstance(v, basestring):
+                        raise RuntimeError("'env' values must be strings or "
+                                "lists; key '%s' is incorrect" % (key,))
+                    newenv[key] = p.sub(subst, v)
 
             self.environ = newenv
         else: # not environ

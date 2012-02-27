@@ -13,12 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os
 import cPickle
 import tarfile
 import shutil
 import textwrap
 from twisted.python import util
+from twisted.persisted import styles
 from twisted.internet import defer
 from twisted.trial import unittest
 import sqlalchemy as sa
@@ -53,16 +56,31 @@ def getDiffMonkeyPatch(metadata, engine, excludeTables=None):
                       labelB='database',
                       excludeTables=excludeTables)
 
-class UpgradeTestMixin(object):
+class UpgradeTestMixin(db.RealDatabaseMixin):
     """Supporting code to test upgrading from older versions by untarring a
     basedir tarball and then checking that the results are as expected."""
 
     # class variables to set in subclasses
 
-    source_tarball = None # filename of the tarball (sibling to this file)
-    db_url = "sqlite:///state.sqlite" # db URL to use (usually default is OK)
+    # filename of the tarball (sibling to this file)
+    source_tarball = None
 
+    # set to true in subclasses to set up and use a real DB
+    use_real_db = False
+
+    # db URL to use, if not using a real db
+    db_url = "sqlite:///state.sqlite"
+
+    @defer.deferredGenerator
     def setUpUpgradeTest(self):
+        # set up the "real" db if desired
+        if self.use_real_db:
+            # note this changes self.db_url
+            wfd = defer.waitForDeferred(
+                self.setUpRealDatabase(sqlite_memory=False))
+            yield wfd
+            wfd.getResult()
+
         self.basedir = None
 
         if self.source_tarball:
@@ -77,6 +95,7 @@ class UpgradeTestMixin(object):
             for inf in tf:
                 tf.extract(inf)
                 prefixes.add(inf.name.split('/', 1)[0])
+            tf.close()
             # (note that tf.extractall isn't available in py2.4)
 
             # get the top-level dir from the tarball
@@ -90,13 +109,21 @@ class UpgradeTestMixin(object):
         master = fakemaster.make_master()
         master.config.db['db_url'] = self.db_url
         self.db = connector.DBConnector(master, self.basedir)
-        d = self.db.setup(check_version=False)
-        @d.addCallback
-        def setup_logging(_):
-            querylog.log_from_engine(self.db.pool.engine)
-        return d
+        wfd = defer.waitForDeferred(
+            self.db.setup(check_version=False))
+        yield wfd
+        wfd.getResult()
 
+        querylog.log_from_engine(self.db.pool.engine)
+
+    @defer.deferredGenerator
     def tearDownUpgradeTest(self):
+        if self.use_real_db:
+            wfd = defer.waitForDeferred(
+                self.tearDownRealDatabase())
+            yield wfd
+            wfd.getResult()
+
         if self.basedir:
             shutil.rmtree(self.basedir)
 
@@ -106,7 +133,7 @@ class UpgradeTestMixin(object):
         return self.setUpUpgradeTest()
 
     def tearDown(self):
-        self.tearDownUpgradeTest()
+        return self.tearDownUpgradeTest()
 
     def assertModelMatches(self):
         # this patch only applies to sqlalchemy-migrate-0.7.x.  We prefer to
@@ -137,7 +164,7 @@ class UpgradeTestMixin(object):
                 exp = sorted([
                     dict(name=idx.name,
                          unique=idx.unique and 1 or 0,
-                         column_names=[ c.name for c in idx.columns ])
+                         column_names=sorted([ c.name for c in idx.columns ]))
                     for idx in tbl.indexes ])
 
                 # include implied indexes on postgres and mysql
@@ -162,7 +189,7 @@ class UpgradeTestMixin(object):
                     for name in got_names & exp_names:
                         gi = dict(name=name,
                             unique=got_info[name]['unique'] and 1 or 0,
-                            column_names=got_info[name]['column_names'])
+                            column_names=sorted(got_info[name]['column_names']))
                         ei = exp_info[name]
                         if gi != ei:
                             diff.append(
@@ -199,32 +226,23 @@ class UpgradeTestMixin(object):
         return d
 
 
-class UpgradeTestEmptyReal(UpgradeTestMixin, db.RealDatabaseMixin,
-                            unittest.TestCase):
+class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
 
-    # uses the real DB via RealDatabaseMixin
-
-    def setUp(self):
-        d = self.setUpRealDatabase(sqlite_memory=False) # sets self.db_url
-        d.addCallback(lambda _ : self.setUpUpgradeTest())
-        return d
-
-    def tearDown(self):
-        d = self.tearDownRealDatabase()
-        @d.addCallback
-        def tear(_):
-            self.tearDownUpgradeTest()
+    use_real_db = True
 
     def test_emptydb_modelmatches(self):
         d = self.db.model.upgrade()
         d.addCallback(lambda r : self.assertModelMatches())
         return d
 
-
-class UpgradeTest075(UpgradeTestMixin,
+class UpgradeTestV075(UpgradeTestMixin,
                      unittest.TestCase):
 
     source_tarball = "master-0-7-5.tgz"
+
+    # this test can use a real DB because 0.7.5 was pre-DB, so there's no
+    # expectation that the MySQL or Postgres DB will have anything in it.
+    use_real_db = True
 
     def verify_thd(self, conn):
         "verify the contents of the db - run in a thread"
@@ -257,14 +275,22 @@ class UpgradeTest075(UpgradeTestMixin,
         ])
         self.failUnlessEqual(filenames, expected)
 
+        # check that the change table's primary-key sequence is correct by
+        # trying to insert a new row.  This assumes that other sequences are
+        # handled correctly, if this one is.
+        r = conn.execute(model.changes.insert(),
+                dict(author='foo', comments='foo', is_dir=0,
+                    when_timestamp=123, repository='', project=''))
+        self.assertEqual(r.inserted_primary_key[0], 3)
+
     def fix_pickle_encoding(self, old_encoding):
         """Do the equivalent of master/contrib/fix_pickle_encoding.py"""
         changes_file = os.path.join(self.basedir, "changes.pck")
-        fp = open(changes_file)
-        changemgr = cPickle.load(fp)
-        fp.close()
+        with open(changes_file) as fp:
+            changemgr = cPickle.load(fp)
         changemgr.recode_changes(old_encoding, quiet=True)
-        cPickle.dump(changemgr, open(changes_file, "w"))
+        with open(changes_file, "w") as fp:
+            cPickle.dump(changemgr, fp)
 
     def test_upgrade(self):
         # this tarball contains some unicode changes, encoded as utf8, so it
@@ -530,25 +556,6 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
-    def testUpgradeChangeLinks(self):
-        # test importing complex properties
-        self.make_pickle(
-                self.make_change(
-                    who=u'author',
-                    comments='simple',
-                    files=['foo.c'],
-                    links=['http://buildbot.net', 'http://twistedmatrix.com'],
-                    revision='12345'))
-
-        d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.changes.getChange(1))
-        def check(c):
-            self.failIf(c is None)
-            self.assertEquals(sorted(c['links']),
-                    sorted(['http://buildbot.net', 'http://twistedmatrix.com']))
-        d.addCallback(check)
-        return d
-
     def testUpgradeChangeNoRevision(self):
         # test a change with no revision (which shouldn't be imported)
         self.make_pickle(
@@ -591,4 +598,31 @@ class TestPickles(unittest.TestCase):
                 Nsb.""")
         ss = cPickle.loads(pkl)
         self.assertTrue(ss.revision is None)
-        self.assertTrue(hasattr(ss, '_getSourceStampId_lock'))
+        self.assertTrue(hasattr(ss, '_getSourceStampSetId_lock'))
+
+    def test_sourcestamp_version3(self):
+        pkl = textwrap.dedent("""\
+            (ibuildbot.sourcestamp
+            SourceStamp
+            p1
+            (dp2
+            S'project'
+            p3
+            S''
+            sS'ssid'
+            p4
+            I10
+            sS'repository'
+            p5
+            S''
+            sS'patch_info'
+            p6
+            NsS'buildbot.sourcestamp.SourceStamp.persistenceVersion'
+            p7
+            I2
+            sS'patch'
+            Nsb.""")
+        ss = cPickle.loads(pkl)
+        styles.doUpgrade()
+        self.assertEqual(ss.sourcestampsetid,10)
+        self.assertEqual(ss.codebase, '')

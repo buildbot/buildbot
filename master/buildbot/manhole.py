@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 
 import os
 import types
@@ -82,16 +84,16 @@ class AuthorizedKeysChecker(conchc.SSHPublicKeyDatabase):
         self.authorized_keys_file = os.path.expanduser(authorized_keys_file)
 
     def checkKey(self, credentials):
-        f = open(self.authorized_keys_file)
-        for l in f.readlines():
-            l2 = l.split()
-            if len(l2) < 2:
-                continue
-            try:
-                if base64.decodestring(l2[1]) == credentials.blob:
-                    return 1
-            except binascii.Error:
-                continue
+        with open(self.authorized_keys_file) as f:
+            for l in f.readlines():
+                l2 = l.split()
+                if len(l2) < 2:
+                    continue
+                try:
+                    if base64.decodestring(l2[1]) == credentials.blob:
+                        return 1
+                except binascii.Error:
+                    continue
         return 0
 
 
@@ -138,8 +140,7 @@ class _BaseManhole(service.MultiService):
         self.checker = checker # to maybe compare later
 
         def makeNamespace():
-            # close over 'self' so we can get access to .parent later
-            master = self.parent
+            master = self.master
             namespace = {
                 'master': master,
                 'status': master.getStatus(),

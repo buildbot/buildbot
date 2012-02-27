@@ -7,7 +7,7 @@ VERSION=$(shell if [ -n "$$VERSION" ]; then echo $$VERSION; else PYTHONPATH=..:$
 TAR_TRANSFORM = $(shell if [[ `tar --version` =~ "bsdtar" ]]; then echo "-s '/^html/$(VERSION)/'"; else echo "--transform 's/^html/$(VERSION)/'"; fi)
 
 docs.tgz: clean html singlehtml images-png
-	cp _build/singlehtml/index.html _build/html/full.html
+	sed -e 's!href="index.html#!href="#!g' < _build/singlehtml/index.html > _build/html/full.html
 	tar -C _build $(TAR_TRANSFORM) -zcf $@ html
 
 images:

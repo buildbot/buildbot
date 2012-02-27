@@ -42,7 +42,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
 
     def tearDown(self):
         return self.tearDownDirs()
-
+        
     def test_change_subscription(self):
         changeid = 918
         chdict = {
@@ -53,7 +53,6 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
             'comments': u'fix whitespace',
             'files': [u'master/buildbot/__init__.py'],
             'is_dir': 0,
-            'links': [],
             'project': u'Buildbot',
             'properties': {},
             'repository': u'git://warner',
@@ -82,10 +81,9 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
             # master called the right thing in the db component, including with
             # appropriate default values
             self.master.db.changes.addChange.assert_called_with(author=None,
-                    files=None, comments=None, is_dir=0, links=None,
-                    revision=None, when_timestamp=None, branch=None,
-                    category=None, revlink='', properties={}, repository='',
-                    project='', uid=None)
+                    files=None, comments=None, is_dir=0,
+                    revision=None, when_timestamp=None, branch=None, codebase='',
+                    category=None, revlink='', properties={}, repository='', project='', uid=None)
 
             self.master.db.changes.getChange.assert_called_with(changeid)
             # addChange returned the right value
@@ -98,9 +96,9 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
     def do_test_addChange_args(self, args=(), kwargs={}, exp_db_kwargs={}):
         # add default arguments
         default_db_kwargs = dict(files=None, comments=None, author=None,
-                is_dir=0, links=None, revision=None, when_timestamp=None,
+                is_dir=0, revision=None, when_timestamp=None,
                 branch=None, category=None, revlink='', properties={},
-                repository='', project='', uid=None)
+                repository='', codebase='', project='', uid=None)
         k = default_db_kwargs
         k.update(exp_db_kwargs)
         exp_db_kwargs = k
@@ -159,7 +157,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         return self.do_test_addChange_args(
                 args=('me', ['a'], 'com'),
                 exp_db_kwargs=dict(author='me', files=['a'], comments='com'))
-
+                
     def do_test_createUserObjects_args(self, args=(), kwargs={}, exp_args=()):
         got = []
         def fake_createUserObject(*args, **kwargs):
@@ -182,7 +180,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         return self.do_test_createUserObjects_args(
                 kwargs=dict(who='me', src='git'),
                 exp_args=(self.master, 'me', 'git'))
-
+               
     def test_buildset_subscription(self):
         self.master.db = mock.Mock()
         self.master.db.buildsets.addBuildset.return_value = \
@@ -260,7 +258,7 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
     def patch_loadConfig_fail(self):
         @classmethod
         def loadConfig(cls, b, f):
-            raise config.ConfigErrors(['oh noes'])
+            config.error('oh noes')
         self.patch(config.MasterConfig, 'loadConfig', loadConfig)
 
 
@@ -534,8 +532,9 @@ class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
 
     def test_pollDatabaseBuildRequests_new(self):
         self.db.insertTestData([
-            fakedb.SourceStamp(id=127),
-            fakedb.Buildset(id=99, sourcestampid=127),
+            fakedb.SourceStampSet(id=127),
+            fakedb.SourceStamp(id=127, sourcestampsetid=127),
+            fakedb.Buildset(id=99, sourcestampsetid=127),
             fakedb.BuildRequest(id=19, buildsetid=99, buildername='9teen'),
             fakedb.BuildRequest(id=20, buildsetid=99, buildername='twenty')
         ])
@@ -551,10 +550,10 @@ class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
         d = defer.succeed(None)
         def insert1(_):
             self.db.insertTestData([
-                fakedb.SourceStamp(id=127),
-                fakedb.Buildset(id=99, sourcestampid=127),
-                fakedb.BuildRequest(id=11, buildsetid=9,
-                                        buildername='eleventy'),
+            fakedb.SourceStampSet(id=127),
+            fakedb.SourceStamp(id=127, sourcestampsetid=127),
+            fakedb.Buildset(id=99, sourcestampsetid=127),
+            fakedb.BuildRequest(id=11, buildsetid=9, buildername='eleventy'),
             ])
         d.addCallback(insert1)
         d.addCallback(lambda _ : self.master.pollDatabaseBuildRequests())

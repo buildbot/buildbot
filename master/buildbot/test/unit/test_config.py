@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import re
 import os
 import textwrap
@@ -21,7 +23,7 @@ from zope.interface import implements
 from twisted.trial import unittest
 from twisted.application import service
 from twisted.internet import defer
-from buildbot import config, buildslave, interfaces
+from buildbot import config, buildslave, interfaces, revlinks
 from buildbot.process import properties
 from buildbot.test.util import dirs, compat
 from buildbot.changes import base as changes_base
@@ -112,6 +114,16 @@ class ConfigErrors(unittest.TestCase):
         self.failUnless(not empty)
         self.failIf(not full)
 
+    def test_error_raises(self):
+        e = self.assertRaises(config.ConfigErrors, config.error, "message")
+        self.assertEqual(e.errors, ["message"])
+
+    def test_error_no_raise(self):
+        e = config.ConfigErrors()
+        self.patch(config, "_errors", e)
+        config.error("message")
+        self.assertEqual(e.errors, ["message"])
+
 
 class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
@@ -149,9 +161,11 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def install_config_file(self, config_file, other_files={}):
         config_file = textwrap.dedent(config_file)
-        open(os.path.join(self.basedir, self.filename), "w").write(config_file)
+        with open(os.path.join(self.basedir, self.filename), "w") as f:
+            f.write(config_file)
         for file, contents in other_files.items():
-            open(file, "w").write(contents)
+            with open(file, "w") as f:
+                f.write(contents)
 
 
     # tests
@@ -171,6 +185,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             change_sources = [],
             status = [],
             user_managers = [],
+            revlink = revlinks.default_revlink_matcher
             )
         expected.update(global_defaults)
         got = dict([
@@ -207,13 +222,30 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 self.basedir, self.filename))
         self.assertEqual(len(self.flushLoggedErrors(SyntaxError)), 1)
 
-    def test_loadConfig_eval_ConfigErrors(self):
+    def test_loadConfig_eval_ConfigError(self):
         self.install_config_file("""\
                 from buildbot import config
-                raise config.ConfigErrors(['oh noes!'])""")
+                BuildmasterConfig = { 'multiMaster': True }
+                config.error('oh noes!')""")
         self.assertRaisesConfigError("oh noes",
             lambda : config.MasterConfig.loadConfig(
                 self.basedir, self.filename))
+
+    def test_loadConfig_eval_ConfigErrors(self):
+        # We test a config that has embedded errors, as well
+        # as semantic errors that get added later. If an exception is raised
+        # prematurely, then the semantic errors wouldn't get reported.
+        self.install_config_file("""\
+                from buildbot import config
+                BuildmasterConfig = {}
+                config.error('oh noes!')
+                config.error('noes too!')""")
+        e = self.assertRaises(config.ConfigErrors,
+            lambda : config.MasterConfig.loadConfig(
+                self.basedir, self.filename))
+        self.assertEqual(e.errors, ['oh noes!', 'noes too!',
+                'no slaves are configured',
+                'no builders are configured'])
 
     def test_loadConfig_no_BuildmasterConfig(self):
         self.install_config_file('x=10')
@@ -418,6 +450,14 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         mh = mock.Mock(name='manhole')
         self.do_test_load_global(dict(manhole=mh), manhole=mh)
 
+    def test_load_global_revlink_callable(self):
+        callable = lambda : None
+        self.do_test_load_global(dict(revlink=callable),
+                revlink=callable)
+
+    def test_load_global_revlink_invalid(self):
+        self.cfg.load_global(self.filename, dict(revlink=''), self.errors)
+        self.assertConfigError(self.errors, "must be a callable")
 
     def test_load_validation_defaults(self):
         self.cfg.load_validation(self.filename, {}, self.errors)
@@ -984,9 +1024,11 @@ class FakeService(config.ReconfigurableServiceMixin,
                     service.Service):
 
     succeed = True
+    call_index = 1
 
     def reconfigService(self, new_config):
-        self.called = True
+        self.called = FakeService.call_index
+        FakeService.call_index += 1
         d = config.ReconfigurableServiceMixin.reconfigService(self, new_config)
         if not self.succeed:
             @d.addCallback
@@ -1045,6 +1087,26 @@ class ReconfigurableServiceMixin(unittest.TestCase):
             self.assertTrue(ch1.called)
             self.assertTrue(ch2.called)
             self.assertTrue(ch3.called)
+        return d
+
+    def test_multiservice_priority(self):
+        parent = FakeMultiService()
+        svc128 = FakeService()
+        svc128.setServiceParent(parent)
+
+        services = [ svc128 ]
+        for i in range(20, 1, -1):
+            svc = FakeService()
+            svc.reconfig_priority = i
+            svc.setServiceParent(parent)
+            services.append(svc)
+
+        d = parent.reconfigService(mock.Mock())
+        @d.addCallback
+        def check(_):
+            prio_order = [ svc.called for svc in services ]
+            called_order = sorted(prio_order)
+            self.assertEqual(prio_order, called_order)
         return d
 
     @compat.usesFlushLoggedErrors

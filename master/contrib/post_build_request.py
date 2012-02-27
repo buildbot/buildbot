@@ -25,12 +25,12 @@ except AttributeError:
 # Make a dictionary with options from command line
 def buildURL( options ):
     urlDict = {}
-    if options.who:
-        who = options.who
+    if options.author:
+        author = options.author
     else:
-        who = getpass.getuser()
+        author = getpass.getuser()
  
-    urlDict['who'] = who
+    urlDict['author'] = author
     
     if options.files:
         urlDict['files'] = json.dumps(options.files)
@@ -40,9 +40,6 @@ def buildURL( options ):
     else:
         # A comment is required by the buildbot DB
         urlDict['comments'] = 'post_build_request submission'
-
-    if options.links:
-        urlDict['links'] = json.dumps(options.links)
 
     if options.revision:
         urlDict['revision'] = options.revision
@@ -104,10 +101,10 @@ parser = optparse.OptionParser(description=description,
                                add_help_option=True,
                                version=__version__)
 
-parser.add_option("-w", "--who", dest='who', metavar="WHO",
+parser.add_option("-w", "--who", dest='author', metavar="AUTHOR",
             help=textwrap.dedent("""\
             Who is submitting this request.
-            This becomes the Change.who attribute.
+            This becomes the Change.author attribute.
             This defaults to the name of the user running this script
             """))
 parser.add_option("-f", "--file", dest='files', action="append", metavar="FILE",
@@ -119,11 +116,6 @@ parser.add_option("-f", "--file", dest='files', action="append", metavar="FILE",
 parser.add_option("-c", "--comments", dest='comments', metavar="COMMENTS",
             help=textwrap.dedent("""\
             Comments for the change. This becomes the Change.comments attribute
-            """))
-parser.add_option("-l", "--link", dest='links', action="append", metavar="LINKS",
-            help=textwrap.dedent("""\
-            These are links for the source. 
-            This becomes the Change.links attribute.
             """))
 parser.add_option("-R", "--revision", dest='revision', metavar="REVISION",
             help=textwrap.dedent("""\

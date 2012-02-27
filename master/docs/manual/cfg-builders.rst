@@ -134,6 +134,9 @@ When more than one build request is available for a builder, Buildbot can
 requests arrive more quickly than the available slaves can satisfy them, but
 has the drawback that separate results for each build are not available.
 
+Requests are only candidated for a merge if both requests have exactly the same
+:ref:`codebases<Attr-Codebase>`.
+
 This behavior can be controlled globally, using the :bb:cfg:`mergeRequests`
 parameter, and on a per-:class:`Builder` basis, using the ``mergeRequests`` argument
 to the :class:`Builder` configuration.  If ``mergeRequests`` is given, it completely
@@ -143,7 +146,7 @@ For either configuration parameter, a value of ``True`` (the default) causes
 buildbot to merge BuildRequests that have "compatible" source stamps.  Source
 stamps are compatible if:
 
-* their branch, project, and repository attributes match exactly;
+* their codebase, branch, project, and repository attributes match exactly;
 * neither source stamp has a patch (e.g., from a try scheduler); and
 * either both source stamps are associated with changes, or neither ar
   associated with changes but they have matching revisions.

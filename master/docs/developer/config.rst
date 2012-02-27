@@ -94,6 +94,12 @@ described in :ref:`developer-Reconfiguration`.
         A callable, or None, used to prioritize builders; from
         :bb:cfg:`prioritizeBuilders`.
 
+    .. py:attribute:: codebaseGenerator
+    
+        A callable, or None, used to determine the codebase from an incomming 
+        :py:class:`~buildbot.changes.changes.Change`,
+        from :bb:cfg:`codebaseGenerator`
+        
     .. py:attribute:: slavePortnum
 
         The strports specification for the slave (integer inputs are normalized
@@ -247,10 +253,20 @@ Builder Configuration
 Error Handling
 ==============
 
-Any errors encountered while loading the configuration should be raised as
-:py:exc:`ConfigErrors`.  This can occur both in the configuration-loading code,
+If any errors are encountered while loading the configuration :py:func:`buildbot.config.error`
+should be called. This can occur both in the configuration-loading code,
 and in the constructors of any objects that are instantiated in the
 configuration - change sources, slaves, schedulers, build steps, and so on.
+
+.. py:function:: error(error)
+
+    :param error: error to report
+    :raises: :py:exc:`ConfigErrors` if called at build-time
+
+    This function reports a configuration error. If a config file is being loaded,
+    then the function merely records ther error, and allows he rest of the configuration
+    to be loaded. At any other time, it raises :py:exc:`ConfigErrors`.  This is done
+    so all config erros can be reported, rather than just the first.
 
 .. py:exception:: ConfigErrors([errors])
 
@@ -335,6 +351,12 @@ implemented as Twisted services, and mix in the
         :py:meth:`reconfigService` methods, as appropriate.  This will be done
         sequentially, such that the Deferred from one service must fire before
         the next service is reconfigured.
+
+    .. py:attribute:: priority
+
+        Child services are reconfigured in order of decreasing priority.  The
+        default priority is 128, so a service that must be reconfigured before
+        others should be given a higher priority.
 
 
 Change Sources

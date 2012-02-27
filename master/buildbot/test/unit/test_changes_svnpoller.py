@@ -13,9 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os
 import xml.dom.minidom
 from twisted.internet import defer
+from twisted.python import failure
 from twisted.trial import unittest
 from buildbot.test.util import changesource, gpo, compat
 from buildbot.changes import svnpoller
@@ -441,6 +444,35 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
 
         return d
 
+    @compat.usesFlushLoggedErrors
+    def test_poll_get_prefix_exception(self):
+        s = self.attachSVNPoller(sample_base, split_file=split_file,
+                svnuser='dustin', svnpasswd='bbrocks')
+
+        self.add_svn_command_result('info', lambda *args, **kwargs:
+                defer.fail(failure.Failure(RuntimeError())))
+        d = s.poll()
+        @d.addCallback
+        def check(_):
+            # should have logged the RuntimeError, but not errback'd from poll
+            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+        return d
+
+    @compat.usesFlushLoggedErrors
+    def test_poll_get_logs_exception(self):
+        s = self.attachSVNPoller(sample_base, split_file=split_file,
+                svnuser='dustin', svnpasswd='bbrocks')
+        s._prefix = "abc" # skip the get_prefix stuff
+
+        self.add_svn_command_result('log', lambda *args, **kwargs :
+                defer.fail(failure.Failure(RuntimeError())))
+        d = s.poll()
+        @d.addCallback
+        def check(_):
+            # should have logged the RuntimeError, but not errback'd from poll
+            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+        return d
+
     def test_cachepath_empty(self):
         cachepath = os.path.abspath('revcache')
         if os.path.exists(cachepath):
@@ -450,18 +482,21 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
 
     def test_cachepath_full(self):
         cachepath = os.path.abspath('revcache')
-        open(cachepath, "w").write('33')
+        with open(cachepath, "w") as f:
+            f.write('33')
         s = self.attachSVNPoller(sample_base, cachepath=cachepath)
         self.assertEqual(s.last_change, 33)
 
         s.last_change = 44
         s.finished_ok(None)
-        self.assertEqual(open(cachepath).read().strip(), '44')
+        with open(cachepath) as f:
+            self.assertEqual(f.read().strip(), '44')
 
     @compat.usesFlushLoggedErrors
     def test_cachepath_bogus(self):
         cachepath = os.path.abspath('revcache')
-        open(cachepath, "w").write('nine')
+        with open(cachepath, "w") as f:
+            f.write('nine')
         s = self.attachSVNPoller(sample_base, cachepath=cachepath)
         self.assertEqual(s.last_change, None)
         self.assertEqual(s.cachepath, None)

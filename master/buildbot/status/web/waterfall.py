@@ -110,7 +110,7 @@ class CurrentBox(components.Adapter):
         brcount = brcounts[builderName]
         if brcount:
             text.append("%d pending" % brcount)
-        for t in upcoming:
+        for t in sorted(upcoming):
             if t is not None:
                 eta = t - util.now()
                 text.extend(self.formatETA("next in", eta))
@@ -173,7 +173,7 @@ class StepBox(components.Adapter):
         text = text[:]
         logs = self.original.getLogs()
         
-        cxt = dict(text=text, logs=[], urls=[])
+        cxt = dict(text=text, logs=[], urls=[], stepinfo=self)
 
         for num in range(len(logs)):
             name = logs[num].getName()
@@ -576,13 +576,19 @@ class WaterfallStatusResource(HtmlResource):
             try:
                 while True:
                     e = g.next()
-                    # e might be builder.BuildStepStatus,
+                    # e might be buildstep.BuildStepStatus,
                     # builder.BuildStatus, builder.Event,
                     # waterfall.Spacer(builder.Event), or changes.Change .
                     # The showEvents=False flag means we should hide
                     # builder.Event .
                     if not showEvents and isinstance(e, builder.Event):
                         continue
+
+                    if isinstance(e, buildstep.BuildStepStatus):
+                        # unfinished steps are always shown
+                        if e.isFinished() and e.isHidden():
+                            continue
+
                     break
                 event = interfaces.IStatusEvent(e)
                 if debug:

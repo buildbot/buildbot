@@ -68,9 +68,9 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                 if not isinstance(b, basestring):
                     ok = False
         if not ok:
-            raise config.ConfigErrors([
+            config.error(
                 "The builderNames argument to a scheduler must be a list "
-                  "of Builder names."])
+                  "of Builder names.")
 
         self.builderNames = builderNames
         "list of builder names to start in each buildset"
@@ -80,13 +80,9 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         self.properties.update(properties, "Scheduler")
         self.properties.setProperty("scheduler", name, "Scheduler")
 
-        self.schedulerid = None
-        """ID of this scheduler; set just before the scheduler starts, and set
-        to None after stopService is complete."""
+        self.objectid = None
 
         self.master = None
-        """BuildMaster instance; set just before the scheduler starts, and set
-        to None after stopService is complete."""
 
         # internal variables
         self._change_subscription = None
@@ -258,6 +254,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
     ## starting bulids
 
+    @defer.deferredGenerator
     def addBuildsetForLatest(self, reason='', external_idstring=None,
                         branch=None, repository='', project='',
                         builderNames=None, properties=None):
@@ -283,15 +280,26 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         @type properties: L{buildbot.process.properties.Properties}
         @returns: (buildset ID, buildrequest IDs) via Deferred
         """
-        d = self.master.db.sourcestamps.addSourceStamp(
+        # Define setid for this set of changed repositories
+        wfd = defer.waitForDeferred(self.master.db.sourcestampsets.addSourceStampSet())
+        yield wfd
+        setid = wfd.getResult()
+
+        wfd = defer.waitForDeferred(self.master.db.sourcestamps.addSourceStamp(
                 branch=branch, revision=None, repository=repository,
-                project=project)
-        d.addCallback(self.addBuildsetForSourceStamp, reason=reason,
+                project=project, sourcestampsetid=setid))
+        yield wfd
+        wfd.getResult()
+
+        wfd = defer.waitForDeferred(self.addBuildsetForSourceStamp(
+                                setid=setid, reason=reason,
                                 external_idstring=external_idstring,
                                 builderNames=builderNames,
-                                properties=properties)
-        return d
+                                properties=properties))
+        yield wfd
+        yield wfd.getResult()
 
+    @defer.deferredGenerator
     def addBuildsetForChanges(self, reason='', external_idstring=None,
             changeids=[], builderNames=None, properties=None):
         """
@@ -315,30 +323,44 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         @returns: (buildset ID, buildrequest IDs) via Deferred
         """
         assert changeids is not []
-
         # attributes for this sourcestamp will be based on the most recent
         # change, so fetch the change with the highest id
-        d = self.master.db.changes.getChange(max(changeids))
-        def chdict2change(chdict):
-            if not chdict:
-                return None
-            return changes.Change.fromChdict(self.master, chdict)
-        d.addCallback(chdict2change)
-        def create_sourcestamp(change):
-            return self.master.db.sourcestamps.addSourceStamp(
+        wfd = defer.waitForDeferred(self.master.db.changes.getChange(max(changeids)))
+        yield wfd
+        chdict = wfd.getResult()
+
+        change = None
+        if chdict:
+            wfd = defer.waitForDeferred(changes.Change.fromChdict(self.master, chdict))
+            yield wfd
+            change = wfd.getResult()
+
+        # Define setid for this set of changed repositories
+        wfd = defer.waitForDeferred(self.master.db.sourcestampsets.addSourceStampSet())
+        yield wfd
+        setid = wfd.getResult()
+
+        wfd = defer.waitForDeferred(self.master.db.sourcestamps.addSourceStamp(
                     branch=change.branch,
                     revision=change.revision,
                     repository=change.repository,
+                    codebase=change.codebase,
                     project=change.project,
-                    changeids=changeids)
-        d.addCallback(create_sourcestamp)
-        d.addCallback(self.addBuildsetForSourceStamp, reason=reason,
+                    changeids=changeids,
+                    sourcestampsetid=setid))
+        yield wfd
+        wfd.getResult()
+
+        wfd = defer.waitForDeferred(self.addBuildsetForSourceStamp(
+                                setid=setid, reason=reason,
                                 external_idstring=external_idstring,
                                 builderNames=builderNames,
-                                properties=properties)
-        return d
+                                properties=properties))
+        yield wfd
+        yield wfd.getResult()
 
-    def addBuildsetForSourceStamp(self, ssid, reason='', external_idstring=None,
+    @defer.deferredGenerator
+    def addBuildsetForSourceStamp(self, ssid=None, setid=None, reason='', external_idstring=None,
             properties=None, builderNames=None):
         """
         Add a buildset for the given, already-existing sourcestamp.
@@ -356,8 +378,12 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         @type properties: L{buildbot.process.properties.Properties}
         @param builderNames: builders to name in the buildset (defaults to
             C{self.builderNames})
+        @param setid: idenitification of a set of sourcestamps
         @returns: (buildset ID, buildrequest IDs) via Deferred
         """
+        assert (ssid is None and setid is not None) \
+            or (ssid is not None and setid is None), "pass a single sourcestamp OR set not both"
+
         # combine properties
         if properties:
             properties.updateFromProperties(self.properties)
@@ -372,7 +398,20 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         # addBuildset method
         properties_dict = properties.asDict()
 
-        # add the buildset
-        return self.master.addBuildset(
-                ssid=ssid, reason=reason, properties=properties_dict,
-                builderNames=builderNames, external_idstring=external_idstring)
+        if setid == None:
+            if ssid != None:
+                wfd = defer.waitForDeferred(self.master.db.sourcestamps.getSourceStamp(ssid))
+                yield wfd
+                ssdict = wfd.getResult()
+                setid = ssdict['sourcestampsetid']
+            else:
+                # no sourcestamp and no sets
+                yield None
+
+        wfd = defer.waitForDeferred(self.master.addBuildset(
+                                        sourcestampsetid=setid, reason=reason,
+                                        properties=properties_dict,
+                                        builderNames=builderNames,
+                                        external_idstring=external_idstring))
+        yield wfd
+        yield wfd.getResult()

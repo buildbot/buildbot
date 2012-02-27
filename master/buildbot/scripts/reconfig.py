@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 
 import os
 import signal
@@ -38,8 +40,8 @@ class Reconfigurator:
         basedir = config['basedir']
         quiet = config['quiet']
         os.chdir(basedir)
-        f = open("twistd.pid", "rt")
-        self.pid = int(f.read().strip())
+        with open("twistd.pid", "rt") as f:
+            self.pid = int(f.read().strip())
         if quiet:
             os.kill(self.pid, signal.SIGHUP)
             return

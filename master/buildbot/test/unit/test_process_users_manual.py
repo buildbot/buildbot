@@ -303,7 +303,7 @@ class TestCommandlineUserManager(unittest.TestCase, ManualUsersMixin):
         self.master.pbmanager = mock.Mock()
         def register(portstr, user, passwd, factory):
             self.assertEqual([portstr, user, passwd],
-                             [9990, 'user', 'userpw'])
+                             ['9990', 'user', 'userpw'])
             self.got_factory = factory
             return registration
         self.master.pbmanager.register = register

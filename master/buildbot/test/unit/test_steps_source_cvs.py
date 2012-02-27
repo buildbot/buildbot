@@ -17,7 +17,7 @@ from twisted.trial import unittest
 from buildbot.steps.source import cvs
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import sourcesteps
-from buildbot.test.fake.remotecommand import ExpectShell, ExpectLogged
+from buildbot.test.fake.remotecommand import ExpectShell, Expect
 
 class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
 
@@ -36,8 +36,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/CVS',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/CVS',
+                                logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard'])
@@ -59,8 +59,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/CVS',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/CVS',
+                                logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard', '--ignore'])
@@ -82,8 +82,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             + 0,
-            ExpectLogged('rmdir', dict(dir='wkdir',
-                                       logEnviron=True))
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -105,17 +105,17 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             + 0,
-            ExpectLogged('rmdir', dict(dir='wkdir',
-                                       logEnviron=True))
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
             + 0,
-            ExpectLogged('stat', dict(file='source/CVS',
-                                      logEnviron=True))
+            Expect('stat', dict(file='source/CVS',
+                                logEnviron=True))
             + 0,            
             ExpectShell(workdir='source',
                         command=['cvs', '-z3', 'update', '-dP'])
             + 0,
-            ExpectLogged('cpdir', {'fromdir': 'source', 'todir': 'build',
-                                   'logEnviron': True})
+            Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
+                             'logEnviron': True})
             + 0,
             )
 
@@ -131,8 +131,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/CVS',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/CVS',
+                                logEnviron=True))
             + 0,            
             ExpectShell(workdir='wkdir',
                         command=['cvs', '-z3', 'update', '-dP'])
@@ -156,8 +156,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
                                  'login'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/CVS',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/CVS',
+                                logEnviron=True))
             + 0,            
             ExpectShell(workdir='wkdir',
                         command=['cvs', '-z3', 'update', '-dP'])
@@ -177,8 +177,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/CVS',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/CVS',
+                                logEnviron=True))
             + 1,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -200,8 +200,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/CVS',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/CVS',
+                                logEnviron=True))
             + 1,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -222,8 +222,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/CVS',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/CVS',
+                                logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard', '--ignore'])
@@ -245,8 +245,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/CVS',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/CVS',
+                                logEnviron=True))
             + 1,
             ExpectShell(workdir='',
                         command=['cvs', '-q', '-d',
@@ -268,8 +268,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                         env={'abc': '123'},
                         logEnviron=False)
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/CVS',
-                                      logEnviron=False))
+            Expect('stat', dict(file='wkdir/CVS',
+                                logEnviron=False))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '-z3', 'update', '-dP'],
@@ -304,8 +304,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             + 0,
-            ExpectLogged('stat', dict(file='wkdir/CVS',
-                                      logEnviron=True))
+            Expect('stat', dict(file='wkdir/CVS',
+                                logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard', '--ignore'])

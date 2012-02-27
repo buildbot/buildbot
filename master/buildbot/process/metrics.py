@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import with_statement
 """
 Buildbot metrics module
 
@@ -323,7 +325,8 @@ class AttachedSlavesWatcher(object):
 def _get_rss():
     if sys.platform == 'linux2':
         try:
-            return int(open("/proc/%i/statm" % os.getpid()).read().split()[1])
+            with open("/proc/%i/statm" % os.getpid()) as f:
+                return int(f.read().split()[1])
         except:
             return 0
     return 0

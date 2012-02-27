@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import re
 import os
 import sys
@@ -20,6 +22,7 @@ from buildbot.util import safeTranslate
 from buildbot.process import properties
 from buildbot import interfaces
 from buildbot import locks
+from buildbot.revlinks import default_revlink_matcher
 from twisted.python import log, failure
 from twisted.internet import defer
 from twisted.application import service
@@ -38,6 +41,12 @@ class ConfigErrors(Exception):
     def __nonzero__(self):
         return len(self.errors)
 
+_errors = None
+def error(error):
+    if _errors is not None:
+        _errors.addError(error)
+    else:
+        raise ConfigErrors([error])
 
 class MasterConfig(object):
 
@@ -58,6 +67,7 @@ class MasterConfig(object):
         self.logMaxSize = None
         self.properties = properties.Properties()
         self.mergeRequests = None
+        self.codebaseGenerator = None
         self.prioritizeBuilders = None
         self.slavePortnum = None
         self.multiMaster = False
@@ -85,16 +95,17 @@ class MasterConfig(object):
         self.change_sources = []
         self.status = []
         self.user_managers = []
+        self.revlink = default_revlink_matcher
 
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
-        "change_source", "changeCacheSize", "changeHorizon",
-        "db_poll_interval", "db_url", "debugPassword", "eventHorizon",
+        "change_source", "codebaseGenerator", "changeCacheSize", "changeHorizon",
+        'db', "db_poll_interval", "db_url", "debugPassword", "eventHorizon",
         "logCompressionLimit", "logCompressionMethod", "logHorizon",
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projectName", "projectURL",
-        "properties", "schedulers", "slavePortnum", "slaves", "status",
-        "title", "titleURL", "user_managers", "validation", "db",
+        "properties", "revlink", "schedulers", "slavePortnum", "slaves",
+        "status", "title", "titleURL", "user_managers", "validation"
     ])
 
     @classmethod
@@ -124,33 +135,40 @@ class MasterConfig(object):
             '__file__': os.path.abspath(filename),
         }
 
+        # from here on out we can batch errors together for the user's
+        # convenience
+        global _errors
+        _errors = errors = ConfigErrors()
+
         old_sys_path = sys.path[:]
         sys.path.append(basedir)
         try:
             try:
                 exec f in localDict
-            except ConfigErrors:
-                raise
+            except ConfigErrors, e:
+                for error in e.errors:
+                    errors.addError(error)
+                raise errors
             except:
                 log.err(failure.Failure())
-                raise ConfigErrors([
+                errors.addError(
                     "error while parsing config file: %s (traceback in logfile)" %
                         (sys.exc_info()[1],),
-                ])
+                )
+                raise errors
         finally:
+            f.close()
             sys.path[:] = old_sys_path
+            _errors = None
 
         if 'BuildmasterConfig' not in localDict:
-            raise ConfigErrors([
+            errors.addError(
                 "Configuration file %r does not define 'BuildmasterConfig'"
                     % (filename,),
-            ])
+            )
+            raise errors
 
         config_dict = localDict['BuildmasterConfig']
-
-        # from here on out we can batch errors together for the user's
-        # convenience
-        errors = ConfigErrors()
 
         # check for unknown keys
         unknown_keys = set(config_dict.keys()) - cls._known_config_keys
@@ -250,6 +268,13 @@ class MasterConfig(object):
         else:
             self.mergeRequests = mergeRequests
 
+        codebaseGenerator = config_dict.get('codebaseGenerator')
+        if (codebaseGenerator is not None and
+            not callable(codebaseGenerator)):
+            errors.addError("codebaseGenerator must be a callable accepting a dict and returning a str")
+        else:
+            self.codebaseGenerator = codebaseGenerator
+            
         prioritizeBuilders = config_dict.get('prioritizeBuilders')
         if prioritizeBuilders is not None and not callable(prioritizeBuilders):
             errors.addError("prioritizeBuilders must be a callable")
@@ -273,6 +298,12 @@ class MasterConfig(object):
             # that will fail if pycrypto isn't installed
             self.manhole = config_dict['manhole']
 
+        if 'revlink' in config_dict:
+            revlink = config_dict['revlink']
+            if not callable(revlink):
+                errors.addError("revlink must be a callable")
+            else:
+                self.revlink = revlink
 
     def load_validation(self, filename, config_dict, errors):
         validation = config_dict.get("validation", {})
@@ -431,7 +462,6 @@ class MasterConfig(object):
                 return
 
         self.change_sources = change_sources
-
 
     def load_status(self, filename, config_dict, errors):
         if 'status' not in config_dict:
@@ -679,6 +709,8 @@ class BuilderConfig:
 
 class ReconfigurableServiceMixin:
 
+    reconfig_priority = 128
+
     @defer.deferredGenerator
     def reconfigService(self, new_config):
         if not service.IServiceCollection.providedBy(self):
@@ -688,6 +720,9 @@ class ReconfigurableServiceMixin:
         reconfigurable_services = [ svc
                 for svc in self
                 if isinstance(svc, ReconfigurableServiceMixin) ]
+
+        # sort by priority
+        reconfigurable_services.sort(key=lambda svc : -svc.reconfig_priority)
 
         for svc in reconfigurable_services:
             d = svc.reconfigService(new_config)

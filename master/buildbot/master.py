@@ -295,9 +295,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     def reconfigService(self, new_config):
         if self.config.db['db_url'] != new_config.db['db_url']:
-            raise config.ConfigErrors([
+            config.error(
                 "Cannot change c['db']['db_url'] after the master has started",
-            ])
+            )
 
         # adjust the db poller
         if (self.config.db['db_poll_interval']
@@ -356,9 +356,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     ## triggering methods and subscriptions
 
     def addChange(self, who=None, files=None, comments=None, author=None,
-            isdir=None, is_dir=None, links=None, revision=None, when=None,
+            isdir=None, is_dir=None, revision=None, when=None,
             when_timestamp=None, branch=None, category=None, revlink='',
-            properties={}, repository='', project='', src=None):
+            properties={}, repository='', codebase=None, project='', src=None):
         """
         Add a change to the buildmaster and act on it.
 
@@ -383,10 +383,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         @param is_dir: deprecated
 
         @param isdir: deprecated name for C{is_dir}
-
-        @param links: a list of links related to this change, e.g., to web
-        viewers or review pages
-        @type links: list of unicode strings
 
         @param revision: the revision identifier for this change
         @type revision: unicode string
@@ -451,27 +447,48 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         for n in properties:
             properties[n] = (properties[n], 'Change')
 
+        if codebase is None:
+            if self.config.codebaseGenerator is not None:
+                chdict = {
+                    'changeid': None,
+                    'author': author,
+                    'files': files,
+                    'comments': comments,
+                    'is_dir': is_dir,
+                    'revision': revision,
+                    'when_timestamp': when_timestamp,
+                    'branch': branch,
+                    'category': category,
+                    'revlink': revlink,
+                    'properties': properties,
+                    'repository': repository,
+                    'project': project,
+                }
+                codebase = self.config.codebaseGenerator(chdict)
+            else:
+                codebase = ''
+            
         d = defer.succeed(None)
         if src:
             # create user object, returning a corresponding uid
             d.addCallback(lambda _ : users.createUserObject(self, author, src))
-
+         
         # add the Change to the database
         d.addCallback(lambda uid :
                           self.db.changes.addChange(author=author, files=files,
                                           comments=comments, is_dir=is_dir,
-                                          links=links, revision=revision,
+                                          revision=revision,
                                           when_timestamp=when_timestamp,
                                           branch=branch, category=category,
                                           revlink=revlink, properties=properties,
-                                          repository=repository, project=project,
-                                          uid=uid))
+                                          repository=repository, codebase=codebase,
+                                          project=project, uid=uid))
 
         # convert the changeid to a Change instance
         d.addCallback(lambda changeid :
-                self.db.changes.getChange(changeid))
+            self.db.changes.getChange(changeid))
         d.addCallback(lambda chdict :
-                changes.Change.fromChdict(self, chdict))
+            changes.Change.fromChdict(self, chdict))
 
         def notify(change):
             msg = u"added change %s to database" % change

@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import os
+import sqlalchemy as sa
 from sqlalchemy.schema import MetaData
 from twisted.python import log
 from twisted.trial import unittest
@@ -58,8 +59,11 @@ class RealDatabaseMixin(object):
     #  - cooperates better at runtime with thread-sensitive DBAPI's
 
     def __thd_clean_database(self, conn):
-        # drop the known tables
-        model.Model.metadata.drop_all(bind=conn, checkfirst=True)
+        # drop the known tables, although sometimes this misses dependencies
+        try:
+            model.Model.metadata.drop_all(bind=conn, checkfirst=True)
+        except sa.exc.ProgrammingError:
+            pass
 
         # see if we can find any other tables to drop
         meta = MetaData(bind=conn)

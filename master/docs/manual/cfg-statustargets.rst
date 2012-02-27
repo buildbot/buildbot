@@ -567,10 +567,12 @@ in change comments.
 revlink
 '''''''
 
-The ``revlink`` is used to create links from revision IDs in the web
-status to a web-view of your source control system. The parameter's
-value must be a format string, a dict mapping a string (repository
-name) to format strings, or a callable.
+The ``revlink`` argument on :class:`WebStatus` is deprecated in favour of the
+global :bb:cfg:`revlink` option. Only use this if you need to generate
+different URLs for different web status instances.
+
+In addition to a callable like :bb:cfg:`revlink`, this argument accepts a
+format string or a dict mapping a string (repository name) to format strings.
 
 The format string should use ``%s`` to insert the revision id in the url.  For
 example, for Buildbot on GitHub::
@@ -578,15 +580,6 @@ example, for Buildbot on GitHub::
     revlink='http://github.com/buildbot/buildbot/tree/%s'
 
 The revision ID will be URL encoded before inserted in the replacement string
-
-The callable takes the revision id and repository argument, and should return
-an URL to the revision.  Note that the revision id may not always be in the
-form you expect, so code defensively.  In particular, a revision of "??" may be
-supplied when no other information is available.
-
-Note that :class:`SourceStamp`\s that are not created from version-control changes (e.g.,
-those created by a Nightly or Periodic scheduler) will have an empty repository
-string, as the respository is not known.
 
 changecommentlink
 '''''''''''''''''
@@ -682,6 +675,40 @@ Note that there is a standalone HTTP server available for receiving GitHub
 notifications, as well: :file:`contrib/github_buildbot.py`.  This script may be
 useful in cases where you cannot expose the WebStatus for public consumption.
 
+.. warning::
+
+    The incoming HTTP requests for this hook are not authenticated in
+    any way.  Anyone who can access the web status can "fake" a request from
+    GitHub, potentially causing the buildmaster to run arbitrary code.  See
+    :bb:bug:`2186` for work to fix this problem.
+
+Google Code hook
+################
+
+The Google Code hook is quite similar to the GitHub Hook. It has one option
+for the "Post-Commit Authentication Key" used to check if the request is
+legitimate::
+
+    c['status'].append(html.WebStatus(
+        …,
+        change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX'}}
+    ))
+
+This will add a "Post-Commit URL" for the project in the Google Code
+administrative interface, pointing to ``/change_hook/googlecode`` relative to
+the root of the web status.
+
+Alternatively, you can use the :ref:`GoogleCodeAtomPoller` :class:`ChangeSource`
+that periodically poll the Google Code commit feed for changes.
+
+.. note::
+
+   Google Code doesn't send the branch on which the changes were made. So, the
+   hook always returns ``'default'`` as the branch, you can override it with the
+   ``'branch'`` option::
+
+      change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX', 'branch': 'master'}}
+
 .. bb:status:: MailNotifier
 
 .. index:: single: email; MailNotifier
@@ -705,11 +732,17 @@ from success to failure. It can also be configured to include various
 build logs in each message.
 
 
-By default, the message will be sent to the Interested Users list
-(:ref:`Doing-Things-With-Users`), which includes all developers who made changes in the
-build. You can add additional recipients with the extraRecipients argument.
-You can also add interested users by setting the  ``owners`` build property
-to a list of users in the scheduler constructor (:ref:`Configuring-Schedulers`).
+If a proper lookup function is configured, the message will be sent to the
+"interested users" list (:ref:`Doing-Things-With-Users`), which includes all
+developers who made changes in the build.  By default, however, Buildbot does
+not know how to construct an email addressed based on the information from the
+version control system.  See the ``lookup`` argument, below, for more
+information.
+
+You can add additional, statically-configured, recipients with the
+``extraRecipients`` argument.  You can also add interested users by setting the
+``owners`` build property to a list of users in the scheduler constructor
+(:ref:`Configuring-Schedulers`).
 
 Each :class:`MailNotifier` sends mail to a single set of recipients. To send
 different kinds of mail to different recipients, use multiple
@@ -776,7 +809,7 @@ For example, if only short emails are desired (e.g., for delivery to phones) ::
     
     mn = MailNotifier(fromaddr="buildbot@example.org",
                       sendToInterestedUsers=False,
-                      mode='problem',
+                      mode=('problem',),
                       extraRecipients=['listaddr@example.org'],
                       messageFormatter=messageFormatter)
 
@@ -872,7 +905,7 @@ given below::
     
     mn = MailNotifier(fromaddr="buildbot@example.org",
                       sendToInterestedUsers=False,
-                      mode='failing',
+                      mode=('failing',),
                       extraRecipients=['listaddr@example.org'],
                       messageFormatter=html_message_formatter)
 
@@ -899,27 +932,24 @@ MailNotifier arguments
     provoked the message.
 
 ``mode``
-    (string). Default to ``all``. One of:
+    (list of strings). A combination of:
 
-    ``all``
-        Send mail about all builds, both passing and failing
-        
     ``change``
-        Only send mail about builds which change status
+        Send mail about builds which change status.
     
     ``failing``
-        Only send mail about builds which fail
-
-    ``warnings``
-        Only send mail about builds which fail or generate warnings
+        Send mail about builds which fail.
 
     ``passing``
-        Only send mail about builds which succeed
+        Send mail about builds which succeed.
         
     ``problem``
-        Only send mail about a build which failed when the previous build has passed.
-        If your builds usually pass, then this will only send mail when a problem
-        occurs.
+        Send mail about a build which failed when the previous build has passed.
+
+    ``warnings``
+        Send mail about builds which generate warnings.
+
+    Defaults to (``failing``, ``passing``, ``warnings``).
 
 ``builders``
     (list of strings). A list of builder names for which mail should be
@@ -971,21 +1001,28 @@ MailNotifier arguments
 ``lookup``
     (implementor of :class:`IEmailLookup`). Object which provides
     :class:`IEmailLookup`, which is responsible for mapping User names (which come
-    from the VC system) into valid email addresses. If not provided, the
-    ``MailNotifier`` will attempt to build the ``sendToInterestedUsers``
-    from the authors of the Changes that led to the Build via :ref:`User-Objects`.
-    If the author of one of the Build's Changes has an email address stored,
-    it will added to the recipients list. With this method, ``owners`` are still
-    added to the recipients.
+    from the VC system) into valid email addresses.
 
-    In either case, ``MailNotifier`` will also send mail to addresses in
-    the extraRecipients list. Most of the time you can use a simple Domain
-    instance. As a shortcut, you can pass as string: this will be treated
-    as if you had provided ``Domain(str)``. For example,
-    ``lookup='twistedmatrix.com'`` will allow mail to be sent to all
-    developers whose SVN usernames match their twistedmatrix.com account
-    names. See :file:`buildbot/status/mail.py` for more details.
+    If the argument is not provided, the ``MailNotifier`` will attempt to build
+    the ``sendToInterestedUsers`` from the authors of the Changes that led to
+    the Build via :ref:`User-Objects`.  If the author of one of the Build's
+    Changes has an email address stored, it will added to the recipients list.
+    With this method, ``owners`` are still added to the recipients.  Note that,
+    in the current implementation of user objects, email addresses are not
+    stored; as a result, unless you have specifically added email addresses to
+    the user database, this functionality is unlikely to actually send any
+    emails.
 
+    Most of the time you can use a simple Domain instance. As a shortcut, you
+    can pass as string: this will be treated as if you had provided
+    ``Domain(str)``. For example, ``lookup='twistedmatrix.com'`` will allow
+    mail to be sent to all developers whose SVN usernames match their
+    twistedmatrix.com account names. See :file:`buildbot/status/mail.py` for
+    more details.
+
+    Regardless of the setting of ``lookup``, ``MailNotifier`` will also send
+    mail to addresses in the ``extraRecipients`` list.
+    
 ``messageFormatter``
     This is a optional function that can be used to generate a custom mail message.
     A :func:`messageFormatter` function takes the mail mode (``mode``), builder
@@ -1011,7 +1048,7 @@ Name of the project
     :meth:`master_status.getProjectName()`
 
 MailNotifier mode
-    ``mode`` (one of ``all``, ``failing``, ``problem``, ``change``, ``passing``)
+    ``mode`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``)
 
 Builder result as a string ::
     
@@ -1104,6 +1141,7 @@ told to shut up. ::
 
     from buildbot.status import words
     irc = words.IRC("irc.example.org", "botnickname",
+                    useColors=False,
                     channels=[{"channel": "#example1"},
                               {"channel": "#example2",
                                "password": "somesecretpassword"}],
@@ -1125,6 +1163,9 @@ a different ``port`` number. Default value is 6667.
 To use the service, you address messages at the buildbot, either
 normally (``botnickname: status``) or with private messages
 (``/msg botnickname status``). The buildbot will respond in kind.
+
+The bot will add color to some of its messages. This is enabled by default,
+you might turn it off with ``useColors=False`` argument to words.IRC().
 
 If you issue a command that is currently not available, the buildbot
 will respond with an error message. If the ``noticeOnChannel=True``
@@ -1312,18 +1353,22 @@ GerritStatusPush
 ::
 
     from buildbot.status.status_gerrit import GerritStatusPush
+    from buildbot.status.builder import Results, SUCCESS, RETRY
 
-    def gerritReviewCB(builderName, build, result, arg):
+    def gerritReviewCB(builderName, build, result, status, arg):
+        if result == RETRY:
+            return None, 0, 0
+
         message =  "Buildbot finished compiling your patchset\n"
         message += "on configuration: %s\n" % builderName
         message += "The result is: %s\n" % Results[result].upper()
 
         if arg:
             message += "\nFor more details visit:\n"
-            message += "%sbuilders/%s/builds/%d\n" % (arg, builderName, build.getNumber())
+            message += status.getURLForThing(build) + "\n"
 
         # message, verified, reviewed
-        return message, (result == 0 or -1), 0
+        return message, (result == SUCCESS or -1), 0
 
     c['buildbotURL'] = 'http://buildbot.example.com/'
     c['status'].append(GerritStatusPush('127.0.0.1', 'buildbot',
@@ -1331,6 +1376,8 @@ GerritStatusPush
                                         reviewArg=c['buildbotURL']))
 
 GerritStatusPush sends review of the :class:`Change` back to the Gerrit server.
+``reviewCB`` should return a tuple of message, verified, reviewed. If message
+is ``None``, no review will be sent.
 
 .. [#] Apparently this is the same way http://buildd.debian.org displays build status
 

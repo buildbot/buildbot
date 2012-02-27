@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os
 import cStringIO, cPickle
 import mock
@@ -95,18 +97,21 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
 
     def test_hasContents_gz(self):
         self.delete_logfile()
-        open(os.path.join(self.basedir, '123-stdio.gz'), "w").write("hi")
+        with open(os.path.join(self.basedir, '123-stdio.gz'), "w") as f:
+            f.write("hi")
         self.assertTrue(self.logfile.hasContents())
 
     def test_hasContents_gz_pickled(self):
         self.delete_logfile()
-        open(os.path.join(self.basedir, '123-stdio.gz'), "w").write("hi")
+        with open(os.path.join(self.basedir, '123-stdio.gz'), "w") as f:
+            f.write("hi")
         self.pickle_and_restore()
         self.assertTrue(self.logfile.hasContents())
 
     def test_hasContents_bz2(self):
         self.delete_logfile()
-        open(os.path.join(self.basedir, '123-stdio.bz2'), "w").write("hi")
+        with open(os.path.join(self.basedir, '123-stdio.bz2'), "w") as f:
+            f.write("hi")
         self.assertTrue(self.logfile.hasContents())
 
     def test_getName(self):

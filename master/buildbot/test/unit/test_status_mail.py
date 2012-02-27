@@ -14,9 +14,7 @@
 # Copyright Buildbot Team Members
 
 from mock import Mock
-from twisted.python import components
 from buildbot import config
-from buildbot.interfaces import IProperties
 from twisted.trial import unittest
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.status.mail import MailNotifier
@@ -158,7 +156,7 @@ class TestMailNotifier(unittest.TestCase):
         fakeBuildMessage = Mock()
         mn = MailNotifier('from@example.org', 
                           buildSetSummary=True, 
-                          mode="all",
+                          mode=("failing", "passing", "warnings"),
                           builders=["Builder"])
         
         mn.buildMessage = fakeBuildMessage
@@ -179,13 +177,14 @@ class TestMailNotifier(unittest.TestCase):
         builder.name = "Builder"
         
         build = FakeBuildStatus()
-        build.result = FAILURE
+        build.results = FAILURE
         build.finished = True
         build.reason = "testReason"
         build.getBuilder.return_value = builder
        
         self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.Buildset(id=99, sourcestampid=127,
+        self.db.insertTestData([fakedb.SourceStampSet(id=127),
+                                fakedb.Buildset(id=99, sourcestampsetid=127,
                                                 results=SUCCESS,
                                                 reason="testReason"),
                                 fakedb.BuildRequest(id=11, buildsetid=99,
@@ -219,7 +218,7 @@ class TestMailNotifier(unittest.TestCase):
     def test_buildFinished_mode_all_always_sends_email(self):
         mock_method = Mock()
         self.patch(MailNotifier, "buildMessage", mock_method)
-        mn = MailNotifier('from@example.org', mode="all")
+        mn = MailNotifier('from@example.org', mode=("failing", "passing", "warnings"))
 
         build = FakeBuildStatus(name="build")
         mn.buildFinished('dummyBuilder', build, FAILURE)
@@ -227,28 +226,28 @@ class TestMailNotifier(unittest.TestCase):
         mock_method.assert_called_with('dummyBuilder', [build], FAILURE)
 
     def test_buildFinished_mode_failing_ignores_successful_build(self):
-        mn = MailNotifier('from@example.org', mode="failing")
+        mn = MailNotifier('from@example.org', mode=("failing",))
 
         build = FakeBuildStatus(name="build")
 
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
 
     def test_buildFinished_mode_passing_ignores_failed_build(self):
-        mn = MailNotifier('from@example.org', mode="passing")
+        mn = MailNotifier('from@example.org', mode=("passing",))
 
         build = FakeBuildStatus(name="build")
 
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, FAILURE))
 
     def test_buildFinished_mode_problem_ignores_successful_build(self):
-        mn = MailNotifier('from@example.org', mode="problem")
+        mn = MailNotifier('from@example.org', mode=("problem",))
 
         build = FakeBuildStatus(name="build")
 
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
 
     def test_buildFinished_mode_problem_ignores_two_failed_builds_in_sequence(self):
-        mn = MailNotifier('from@example.org', mode="problem")
+        mn = MailNotifier('from@example.org', mode=("problem",))
 
         build = FakeBuildStatus(name="build")
         old_build = FakeBuildStatus(name="old_build")
@@ -258,7 +257,7 @@ class TestMailNotifier(unittest.TestCase):
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, FAILURE))
 
     def test_buildFinished_mode_change_ignores_first_build(self):
-        mn = MailNotifier('from@example.org', mode="change")
+        mn = MailNotifier('from@example.org', mode=("change",))
 
         build = FakeBuildStatus(name="build")
         build.getPreviousBuild.return_value = None
@@ -268,7 +267,7 @@ class TestMailNotifier(unittest.TestCase):
 
 
     def test_buildFinished_mode_change_ignores_same_result_in_sequence(self):
-        mn = MailNotifier('from@example.org', mode="change")
+        mn = MailNotifier('from@example.org', mode=("change",))
 
         build = FakeBuildStatus(name="build")
         old_build = FakeBuildStatus(name="old_build")
@@ -284,7 +283,7 @@ class TestMailNotifier(unittest.TestCase):
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build2, SUCCESS))
 
     def test_buildMessage_addLogs(self):
-        mn = MailNotifier('from@example.org', mode="change", addLogs=True)
+        mn = MailNotifier('from@example.org', mode=("change",), addLogs=True)
 
         mn.buildMessageDict = Mock()
         mn.buildMessageDict.return_value = {"body":"body", "type":"text",
@@ -357,7 +356,8 @@ class TestMailNotifier(unittest.TestCase):
         mn.createEmail = fakeCreateEmail
 
         self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.Buildset(id=99, sourcestampid=127,
+        self.db.insertTestData([fakedb.SourceStampSet(id=1099),
+                                fakedb.Buildset(id=99, sourcestampsetid=1099,
                                                 results=SUCCESS,
                                                 reason="testReason"),
                                 fakedb.BuildRequest(id=11, buildsetid=99,
@@ -436,8 +436,6 @@ class TestMailNotifier(unittest.TestCase):
         mn = MailNotifier(fromaddr="from@example.org", lookup=None)
         mn.sendMessage = Mock()
 
-        def fakeGetBuild(number):
-            return build
         def fakeGetBuilder(buildername):
             if buildername == builder.name:
                 return builder
@@ -446,7 +444,6 @@ class TestMailNotifier(unittest.TestCase):
             return defer.succeed([{"buildername":"Builder", "brid":1}])
 
         builder = Mock()
-        builder.getBuild = fakeGetBuild
         builder.name = "Builder"
 
         build1 = FakeBuildStatus(name="build")
@@ -469,7 +466,8 @@ class TestMailNotifier(unittest.TestCase):
         mn.createEmail = fakeCreateEmail
 
         self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.Buildset(id=99, sourcestampid=127,
+        self.db.insertTestData([fakedb.SourceStampSet(id=1099),
+                                fakedb.Buildset(id=99, sourcestampsetid=1099,
                                                 results=SUCCESS,
                                                 reason="testReason"),
                                 fakedb.BuildRequest(id=11, buildsetid=99,

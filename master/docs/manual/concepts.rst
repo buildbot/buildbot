@@ -295,29 +295,32 @@ containing any checkin comments.
 Project
 +++++++
 
-A change's :attr:`project`, by default the empty string, describes the source code
-that changed.  It is a free-form string which the buildbot administrator can
-use to flexibly discriminate among changes.
-
-Generally, a project is an independently-buildable unit of source.  This field
-can be used to apply different build steps to different projects.  For example,
-an open-source application might build its Windows client from a separate
-codebase than its POSIX server.  In this case, the change sources should be
-configured to attach an appropriate project string (say, "win-client" and
-"server") to changes from each codebase.  Schedulers would then examine these
-strings and trigger the appropriate builders for each project.
+The :attr:`project` attribute of a change or source stamp describes the project
+to which it corresponds, as a short human-readable string.  This is useful in
+cases where multiple independent projects are built on the same buildmaster.
+In such cases, it can be used to control which builds are scheduled for a given
+commit, and to limit status displays to only one project.
 
 .. _Attr-Repository:
 
 Repository
 ++++++++++
 
-A change occurs within the context of a specific repository.  This is generally
-specified with a string, and for most version-control systems, this string
-takes the form of a URL.
+A change occurs within the context of a specific repository.  This is a string,
+and for most version-control systems, it takes the form of a URL.  It uniquely
+identifies the repository in which the change occurred.  This is particularly
+helpful for DVCS's, where a change may occur in a repository other than the
+"main" repository for the project.
 
 :class:`Change`\s can be filtered on repository, but more often this field is used as a
 hint for the build steps to figure out which code to check out.
+
+.. _Attr-Codebase:
+
+Codebase
+++++++++
+
+The codebase is derived from a change. A complete software product may be composed of more than one repository. Each repository has its own unique position inside the product design (i.e. main module, shared library, resources, documentation). To be able to start builds from different VCS's and still distinquish the different repositories `codebase`'s are used. By default the codebase is ''. The `master.cfg` may contain a callable that determines the codebase from an incomming change and replaces the default value(see. :bb:cfg:`codebaseGenerator`). A codebase is not allowed to contain ':'.
 
 .. _Attr-Revision:
 
@@ -328,15 +331,15 @@ Each Change can have a :attr:`revision` attribute, which describes how
 to get a tree with a specific state: a tree which includes this Change
 (and all that came before it) but none that come after it. If this
 information is unavailable, the :attr:`revision` attribute will be
-``None``. These revisions are provided by the :class:`ChangeSource`, and
-consumed by the :meth:`computeSourceRevision` method in the appropriate
-:class:`source.Source` class.
+``None``. These revisions are provided by the :class:`ChangeSource`.
+
+Revisions are always strings.
 
 `CVS`
-    :attr:`revision` is an int, seconds since the epoch
+    :attr:`revision` is the seconds since the epoch as an integer.
    
 `SVN`
-    :attr:`revision` is an int, the changeset number (r%d)
+    :attr:`revision` is the revision number
     
 `Darcs`
     :attr:`revision` is a large string, the output of :command:`darcs changes --context`
@@ -345,7 +348,7 @@ consumed by the :meth:`computeSourceRevision` method in the appropriate
     :attr:`revision` is a short string (a hash ID), the output of :command:`hg identify`
 
 `P4`
-    :attr:`revision` is an int, the transaction number
+    :attr:`revision` is the transaction number
     
 `Git`
     :attr:`revision` is a short string (a SHA1 hash), the output of e.g.
@@ -353,7 +356,7 @@ consumed by the :meth:`computeSourceRevision` method in the appropriate
 
 
 Branches
-########
+++++++++
 
 The Change might also have a :attr:`branch` attribute. This indicates
 that all of the Change's files are in the same named branch. The
@@ -388,21 +391,11 @@ same as Darcs.
     branch='warner-newfeature', files=['src/foo.c']
 
 Build Properties
-################
+++++++++++++++++
 
 A Change may have one or more properties attached to it, usually specified
 through the Force Build form or :bb:cmdline:`sendchange`. Properties are discussed
 in detail in the :ref:`Build-Properties` section.
-
-Links
-#####
-
-.. TODO: who is using 'links'? how is it being used?
-
-Finally, the Change might have a :attr:`links` list, which is intended
-to provide a list of URLs to a *viewcvs*-style web page that
-provides more detail for this Change, perhaps including the full file
-diffs.
 
 .. _Scheduling-Builds:
 
@@ -479,7 +472,7 @@ the ``firstFailure`` type (which fires as soon as we know the
 the :class:`BuildSet` has completely finished, regardless of whether the
 overall set passed or failed).
 
-A :class:`BuildSet` is created with a *source stamp* tuple of
+A :class:`BuildSet` is created with set of one or more *source stamp* tuples of
 ``(branch, revision, changes, patch)``, some of which may be ``None``, and a
 list of :class:`Builder`\s on which it is to be run. They are then given to the
 BuildMaster, which is responsible for creating a separate
@@ -524,13 +517,13 @@ BuildRequest
 ------------
 
 A :class:`BuildRequest` is a request to build a specific set of source
-code (specified by a source stamp) on a single :class:`Builder`. Each :class:`Builder` runs the
-:class:`BuildRequest` as soon as it can (i.e. when an associated
-buildslave becomes free). :class:`BuildRequest`\s are prioritized from
-oldest to newest, so when a buildslave becomes free, the
+code (specified by one ore more source stamps) on a single :class:`Builder`. 
+Each :class:`Builder` runs the :class:`BuildRequest` as soon as it can (i.e. 
+when an associated buildslave becomes free). :class:`BuildRequest`\s are 
+prioritized from oldest to newest, so when a buildslave becomes free, the
 :class:`Builder` with the oldest :class:`BuildRequest` is run.
 
-The :class:`BuildRequest` contains the :class:`SourceStamp` specification.
+The :class:`BuildRequest` contains one :class:`SourceStamp` specification per codebase.
 The actual process of running the build (the series of :class:`Step`\s that will
 be executed) is implemented by the :class:`Build` object. In this future
 this might be changed, to have the :class:`Build` define *what*
@@ -539,9 +532,9 @@ Builder) to define *how* it gets built.
 
 The :class:`BuildRequest` may be mergeable with other compatible
 :class:`BuildRequest`\s. Builds that are triggered by incoming :class:`Change`\s
-will generally be mergeable. Builds that are triggered by user
-requests are generally not, unless they are multiple requests to build
-the *latest sources* of the same branch.
+will generally be mergeable. Builds that are triggered by user requests are generally not, 
+unless they are multiple requests to build the *latest sources* of the same branch. 
+A merge of buildrequests is performed per codebase, thus on changes having the same codebase.
 
 .. _Builder:
 
@@ -837,6 +830,9 @@ Most Source steps record the revision that they checked out in
 the ``got_revision`` property.  A later step could use this
 property to specify the name of a fully-built tarball, dropped in an
 easily-acessible directory for later testing.
+
+.. attention:: 
+    In builds with more than one sourcestamp its value is unpredictable!
 
 Some projects want to perform nightly builds as well as bulding in response to
 committed changes.  Such a project would run two schedulers, both pointing to

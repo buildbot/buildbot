@@ -30,10 +30,10 @@ class TestChangesConnectorComponent(
 
     def setUp(self):
         d = self.setUpConnectorComponent(
-            table_names=['changes', 'change_links', 'change_files',
-                'change_properties', 'scheduler_changes', 'schedulers',
-                'sourcestamps', 'sourcestamp_changes', 'patches',
-                'change_users', 'users'])
+            table_names=['changes', 'change_files',
+                'change_properties', 'scheduler_changes', 'objects',
+                'sourcestampsets', 'sourcestamps', 'sourcestamp_changes',
+                'patches', 'change_users', 'users'])
 
         def finish_setup(_):
             self.db.changes = changes.ChangesConnectorComponent(self.db)
@@ -50,10 +50,7 @@ class TestChangesConnectorComponent(
         fakedb.Change(changeid=13, author="dustin", comments="fix spelling",
             is_dir=0, branch="master", revision="deadbeef",
             when_timestamp=266738400, revlink=None, category=None,
-            repository='', project=''),
-
-        fakedb.ChangeLink(changeid=13, link='http://buildbot.net'),
-        fakedb.ChangeLink(changeid=13, link='http://sf.net/projects/buildbot'),
+            repository='', codebase='', project=''),
 
         fakedb.ChangeFile(changeid=13, filename='master/README.txt'),
         fakedb.ChangeFile(changeid=13, filename='slave/README.txt'),
@@ -66,7 +63,8 @@ class TestChangesConnectorComponent(
         fakedb.Change(changeid=14, author="warner", comments="fix whitespace",
             is_dir=0, branch="warnerdb", revision="0e92a098b",
             when_timestamp=266738404, revlink='http://warner/0e92a098b',
-            category='devel', repository='git://warner', project='Buildbot'),
+            category='devel', repository='git://warner', codebase='mainapp', 
+            project='Buildbot'),
 
         fakedb.ChangeFile(changeid=14, filename='master/buildbot/__init__.py'),
     ]
@@ -79,10 +77,10 @@ class TestChangesConnectorComponent(
         'comments': u'fix whitespace',
         'files': [u'master/buildbot/__init__.py'],
         'is_dir': 0,
-        'links': [],
         'project': u'Buildbot',
         'properties': {},
         'repository': u'git://warner',
+        'codebase': u'mainapp',
         'revision': u'0e92a098b',
         'revlink': u'http://warner/0e92a098b',
         'when_timestamp': epoch2datetime(266738404),
@@ -93,7 +91,7 @@ class TestChangesConnectorComponent(
          category='devel',
          isdir=0,
          repository=u'git://warner',
-         links=[],
+         codebase=u'mainapp',
          who=u'warner',
          when=266738404,
          comments=u'fix whitespace',
@@ -115,7 +113,6 @@ class TestChangesConnectorComponent(
         ok = ok and sorted(ca.files) == sorted(cb.files)
         ok = ok and ca.comments == cb.comments
         ok = ok and bool(ca.isdir) == bool(cb.isdir)
-        ok = ok and sorted(ca.links) == sorted(cb.links)
         ok = ok and ca.revision == cb.revision
         ok = ok and ca.when == cb.when
         ok = ok and ca.branch == cb.branch
@@ -123,6 +120,7 @@ class TestChangesConnectorComponent(
         ok = ok and ca.revlink == cb.revlink
         ok = ok and ca.properties == cb.properties
         ok = ok and ca.repository == cb.repository
+        ok = ok and ca.codebase == cb.codebase
         ok = ok and ca.project == cb.project
         if not ok:
             def printable(c):
@@ -186,7 +184,6 @@ class TestChangesConnectorComponent(
                  files=[u'master/LICENSING.txt', u'slave/LICENSING.txt'],
                  comments=u'fix spelling',
                  is_dir=0,
-                 links=[u'http://slashdot.org', u'http://wired.com/g'],
                  revision=u'2d6caa52',
                  when_timestamp=epoch2datetime(266738400),
                  branch=u'master',
@@ -194,6 +191,7 @@ class TestChangesConnectorComponent(
                  revlink=None,
                  properties={u'platform': (u'linux', 'Change')},
                  repository=u'',
+                 codebase=u'',
                  project=u'')
         # check all of the columns of the four relevant tables
         def check_change(changeid):
@@ -211,21 +209,10 @@ class TestChangesConnectorComponent(
                 self.assertEqual(r[0].when_timestamp, 266738400)
                 self.assertEqual(r[0].category, None)
                 self.assertEqual(r[0].repository, '')
+                self.assertEqual(r[0].codebase, '')
                 self.assertEqual(r[0].project, '')
             return self.db.pool.do(thd)
         d.addCallback(check_change)
-        def check_change_links(_):
-            def thd(conn):
-                query = self.db.model.change_links.select()
-                query.where(self.db.model.change_links.c.changeid == 1)
-                query.order_by(self.db.model.change_links.c.link)
-                r = conn.execute(query)
-                r = r.fetchall()
-                self.assertEqual(len(r), 2)
-                self.assertEqual(r[0].link, 'http://slashdot.org')
-                self.assertEqual(r[1].link, 'http://wired.com/g')
-            return self.db.pool.do(thd)
-        d.addCallback(check_change_links)
         def check_change_files(_):
             def thd(conn):
                 query = self.db.model.change_files.select()
@@ -268,7 +255,6 @@ class TestChangesConnectorComponent(
                  files=[],
                  comments=u'fix spelling',
                  is_dir=0,
-                 links=[],
                  revision=u'2d6caa52',
                  when_timestamp=None,
                  branch=u'master',
@@ -276,6 +262,7 @@ class TestChangesConnectorComponent(
                  revlink=None,
                  properties={},
                  repository=u'',
+                 codebase=u'',
                  project=u'',
                  _reactor=clock)
         # check all of the columns of the four relevant tables
@@ -288,14 +275,6 @@ class TestChangesConnectorComponent(
                 self.assertEqual(r[0].when_timestamp, 1239898353)
             return self.db.pool.do(thd)
         d.addCallback(check_change)
-        def check_change_links(_):
-            def thd(conn):
-                query = self.db.model.change_links.select()
-                r = conn.execute(query)
-                r = r.fetchall()
-                self.assertEqual(len(r), 0)
-            return self.db.pool.do(thd)
-        d.addCallback(check_change_links)
         def check_change_files(_):
             def thd(conn):
                 query = self.db.model.change_files.select()
@@ -332,7 +311,6 @@ class TestChangesConnectorComponent(
                  files=[],
                  comments=u'fix spelling',
                  is_dir=0,
-                 links=[],
                  revision=u'2d6caa52',
                  when_timestamp=epoch2datetime(1239898353),
                  branch=u'master',
@@ -340,6 +318,7 @@ class TestChangesConnectorComponent(
                  revlink=None,
                  properties={},
                  repository=u'',
+                 codebase=u'',
                  project=u'',
                  uid=1))
         # check all of the columns of the five relevant tables
@@ -352,14 +331,6 @@ class TestChangesConnectorComponent(
                 self.assertEqual(r[0].when_timestamp, 1239898353)
             return self.db.pool.do(thd)
         d.addCallback(check_change)
-        def check_change_links(_):
-            def thd(conn):
-                query = self.db.model.change_links.select()
-                r = conn.execute(query)
-                r = r.fetchall()
-                self.assertEqual(len(r), 0)
-            return self.db.pool.do(thd)
-        d.addCallback(check_change_links)
         def check_change_files(_):
             def thd(conn):
                 query = self.db.model.change_files.select()
@@ -423,22 +394,22 @@ class TestChangesConnectorComponent(
 
     def test_pruneChanges(self):
         d = self.insertTestData([
-            fakedb.Scheduler(schedulerid=29),
+            fakedb.Object(id=29),
             fakedb.SourceStamp(id=234),
 
             fakedb.Change(changeid=11),
 
             fakedb.Change(changeid=12),
-            fakedb.SchedulerChange(schedulerid=29, changeid=12),
+            fakedb.SchedulerChange(objectid=29, changeid=12),
             fakedb.SourceStampChange(sourcestampid=234, changeid=12),
             ] +
 
             self.change13_rows + [
-            fakedb.SchedulerChange(schedulerid=29, changeid=13),
+            fakedb.SchedulerChange(objectid=29, changeid=13),
             ] +
 
             self.change14_rows + [
-            fakedb.SchedulerChange(schedulerid=29, changeid=14),
+            fakedb.SchedulerChange(objectid=29, changeid=14),
 
             fakedb.Change(changeid=15),
             fakedb.SourceStampChange(sourcestampid=234, changeid=15),
@@ -451,8 +422,8 @@ class TestChangesConnectorComponent(
             def thd(conn):
                 results = {}
                 for tbl_name in ('scheduler_changes', 'sourcestamp_changes',
-                                 'change_files', 'change_links',
-                                 'change_properties', 'changes'):
+                                 'change_files', 'change_properties',
+                                 'changes'):
                     tbl = self.db.model.metadata.tables[tbl_name]
                     r = conn.execute(sa.select([tbl.c.changeid]))
                     results[tbl_name] = sorted([ r[0] for r in r.fetchall() ])
@@ -460,7 +431,6 @@ class TestChangesConnectorComponent(
                     'scheduler_changes': [14],
                     'sourcestamp_changes': [15],
                     'change_files': [14],
-                    'change_links': [],
                     'change_properties': [],
                     'changes': [14, 15],
                 })
@@ -519,9 +489,6 @@ class TestChangesConnectorComponent(
             # double-check that they have .files, etc.
             self.assertEqual(sorted(changes[0]['files']),
                         sorted(['master/README.txt', 'slave/README.txt']))
-            self.assertEqual(sorted(changes[0]['links']),
-                        sorted(['http://buildbot.net',
-                                'http://sf.net/projects/buildbot']))
             self.assertEqual(changes[0]['properties'],
                         { 'notest' : ('no', 'Change') })
         d.addCallback(check)

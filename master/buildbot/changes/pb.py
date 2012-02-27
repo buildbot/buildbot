@@ -74,9 +74,6 @@ class ChangePerspective(NewCredPerspective):
         for i, file in enumerate(changedict.get('files', [])):
             if type(file) == str:
                 changedict['files'][i] = file.decode('utf8', 'replace')
-        for i, link in enumerate(changedict.get('links', [])):
-            if type(link) == str:
-                changedict['links'][i] = link.decode('utf8', 'replace')
 
         files = []
         for path in changedict['files']:

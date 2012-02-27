@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import re
 import sys
 import os
@@ -35,7 +37,8 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
     def do_test_load(self, by_name=False, config='', other_files={},
                            stdout_re=None, stderr_re=None):
         configFile = os.path.join('configdir', 'master.cfg')
-        open(configFile, "w").write(config)
+        with open(configFile, "w") as f:
+            f.write(config)
         for filename, contents in other_files.iteritems():
             if type(filename) == type(()):
                 fn = os.path.join('configdir', *filename)
@@ -44,7 +47,8 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                     os.makedirs(dn)
             else:
                 fn = os.path.join('configdir', filename)
-            open(fn, "w").write(contents)
+            with open(fn, "w") as f:
+                f.write(contents)
 
         if by_name:
             cl = checkconfig.ConfigLoader(configFileName=configFile)

@@ -13,10 +13,39 @@
 #
 # Copyright Buildbot Team Members
 
+import sqlalchemy as sa
 import mock
 from buildbot.db import base
 from twisted.trial import unittest
 from twisted.internet import defer
+
+class TestBase(unittest.TestCase):
+
+    def setUp(self):
+        meta = sa.MetaData()
+        self.tbl = sa.Table('tbl', meta,
+                sa.Column('str32', sa.String(length=32)),
+                sa.Column('txt', sa.Text))
+        self.db = mock.Mock()
+        self.db.pool.engine.dialect.name = 'mysql'
+        self.comp = base.DBConnectorComponent(self.db)
+
+    def test_check_length_ok(self):
+        self.comp.check_length(self.tbl.c.str32, "short string")
+
+    def test_check_length_long(self):
+        self.assertRaises(RuntimeError, lambda :
+            self.comp.check_length(self.tbl.c.str32, "long string" * 5))
+
+    def test_check_length_text(self):
+        self.assertRaises(AssertionError, lambda :
+            self.comp.check_length(self.tbl.c.txt, "long string" * 5))
+
+    def test_check_length_long_not_mysql(self):
+        self.db.pool.engine.dialect.name = 'sqlite'
+        self.comp.check_length(self.tbl.c.str32, "long string" * 5)
+        # run that again since the method gets stubbed out
+        self.comp.check_length(self.tbl.c.str32, "long string" * 5)
 
 class TestCachedDecorator(unittest.TestCase):
 

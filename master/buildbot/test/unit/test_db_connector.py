@@ -31,9 +31,9 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
     def setUp(self):
         wfd = defer.waitForDeferred(
             self.setUpRealDatabase(table_names=[
-                    'changes', 'change_properties', 'change_links',
-                    'change_files', 'patches', 'sourcestamps',
-                    'buildset_properties', 'buildsets' ]))
+                    'changes', 'change_properties', 'change_files', 'patches',
+                    'sourcestamps', 'buildset_properties', 'buildsets',
+                    'sourcestampsets' ]))
         yield wfd
         wfd.getResult()
 

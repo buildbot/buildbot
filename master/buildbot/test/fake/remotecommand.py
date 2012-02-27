@@ -22,22 +22,12 @@ DEFAULT_TIMEOUT="DEFAULT_TIMEOUT"
 DEFAULT_MAXTIME="DEFAULT_MAXTIME"
 DEFAULT_USEPTY="DEFAULT_USEPTY"
 
-class FakeRemoteCommand(object):
+class FakeRemoteCommand:
 
-    def __init__(self, remote_command, args, ignore_updates=False):
+    def __init__(self, remote_command, args, collectStdout=False, ignore_updates=False):
         # copy the args and set a few defaults
         self.remote_command = remote_command
         self.args = args.copy()
-
-    def run(self, step, remote):
-        # delegate back to the test case
-        return self.testcase._remotecommand_run(self, step, remote)
-
-
-class FakeLoggedRemoteCommand(FakeRemoteCommand):
-
-    def __init__(self, remote_command, args, collectStdout=False, **kwargs):
-        FakeRemoteCommand.__init__(self, remote_command, args, **kwargs)
         self.logs = {}
         self.rc = -999
         self.collectStdout = collectStdout
@@ -50,18 +40,24 @@ class FakeLoggedRemoteCommand(FakeRemoteCommand):
             logfileName = loog.getName()
         self.logs[logfileName] = loog
 
+    def run(self, step, remote):
+        # delegate back to the test case
+        return self.testcase._remotecommand_run(self, step, remote)
 
-class FakeRemoteShellCommand(FakeLoggedRemoteCommand):
+
+class FakeRemoteShellCommand(FakeRemoteCommand):
 
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=DEFAULT_TIMEOUT, maxTime=DEFAULT_MAXTIME, logfiles={},
+                 initial_stdin=None,
                  usePTY=DEFAULT_USEPTY, logEnviron=True, collectStdout=False):
         args = dict(workdir=workdir, command=command, env=env or {},
                 want_stdout=want_stdout, want_stderr=want_stderr,
+                initial_stdin=initial_stdin,
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
-        FakeLoggedRemoteCommand.__init__(self, "shell", args,
+        FakeRemoteCommand.__init__(self, "shell", args,
                 collectStdout=collectStdout)
 
 
@@ -132,13 +128,23 @@ class Expect(object):
     Define an expected L{RemoteCommand}, with the same arguments
 
     Extra behaviors of the remote command can be added to the instance, using
-    class methods.  For L{Expect}, use L{Expect.behavior}, passing a callable
-    that will be invoked with the real command and can do what it likes:
+    class methods.  Use L{Expect.log} to add a logfile, L{Expect.update} to add
+    an arbitrary update, or add an integer to specify the return code (rc), or
+    add a Failure instance to raise an exception. Additionally, use
+    L{Expect.behavior}, passing a callable that will be invoked with the real
+    command and can do what it likes:
 
         def custom_behavior(command):
             ...
-        ExpectLogged('somecommand', { args='foo' })
+        Expect('somecommand', { args='foo' })
             + Expect.behavior(custom_behavior),
+        ...
+
+        Expect('somecommand', { args='foo' })
+            + Expect.log('stdio', stdout='foo!')
+            + Expect.log('config.log', stdout='some info')
+            + Expect.update('status', 'running')
+            + 0,      # (specifies the rc)
         ...
 
     """
@@ -162,52 +168,6 @@ class Expect(object):
         """
         return ('callable', callable)
 
-    def __add__(self, other):
-        self.behaviors.append(other)
-        return self
-
-    def runBehavior(self, behavior, args, command):
-        """
-        Implement the given behavior.  Returns a Deferred.
-        """
-        if behavior == 'callable':
-            return defer.maybeDeferred(lambda : args[0](command))
-        else:
-            return defer.fail(failure.Failure(
-                        AssertionError('invalid behavior %s' % behavior)))
-
-    @defer.deferredGenerator
-    def runBehaviors(self, command):
-        """
-        Run all expected behaviors for this command
-        """
-        for behavior in self.behaviors:
-            wfd = defer.waitForDeferred(
-                    self.runBehavior(behavior[0], behavior[1:], command))
-            yield wfd
-            wfd.getResult()
-
-
-class ExpectLogged(Expect):
-    """
-    Define an expected L{LoggedRemoteCommand}, with the same arguments
-
-    As with L{Expect}, extra behaviors can be added to the object; use
-    L{ExpectLogged.log} to add a logfile, L{ExpectLogged.update} to add an
-    arbitrary update, or add an integer to specify the return code (rc), or add
-    a Failure instance to raise an exception::
-
-        ExpectLogged('somecommand', { args='foo' })
-            + ExpectLogged.log('stdio', stdout='foo!')
-            + ExpectLogged.log('config.log', stdout='some info')
-            + ExpectLogged.update('status', 'running')
-            + 0,      # (specifies the rc)
-        ...
-
-    """
-    def __init__(self, remote_command, args):
-        Expect.__init__(self, remote_command, args)
-
     @classmethod
     def log(self, name, **streams):
         return ('log', name, streams)
@@ -223,11 +183,13 @@ class ExpectLogged(Expect):
         elif isinstance(other, failure.Failure):
             self.behaviors.append(('err', other))
         else:
-            return Expect.__add__(self, other)
             self.behaviors.append(other)
         return self
 
     def runBehavior(self, behavior, args, command):
+        """
+        Implement the given behavior.  Returns a Deferred.
+        """
         if behavior == 'rc':
             command.rc = args[0]
         elif behavior == 'err':
@@ -244,22 +206,37 @@ class ExpectLogged(Expect):
                     command.stdout += streams['stdout']
             if 'stderr' in streams:
                 command.logs[name].addStderr(streams['stderr'])
+        elif behavior == 'callable':
+            return defer.maybeDeferred(lambda : args[0](command))
         else:
-            return Expect.runBehavior(self, behavior, args, command)
+            return defer.fail(failure.Failure(
+                        AssertionError('invalid behavior %s' % behavior)))
         return defer.succeed(None)
 
+    @defer.deferredGenerator
+    def runBehaviors(self, command):
+        """
+        Run all expected behaviors for this command
+        """
+        for behavior in self.behaviors:
+            wfd = defer.waitForDeferred(
+                    self.runBehavior(behavior[0], behavior[1:], command))
+            yield wfd
+            wfd.getResult()
 
-class ExpectShell(ExpectLogged):
+
+class ExpectShell(Expect):
     """
     Define an expected L{RemoteShellCommand}, with the same arguments Any
     non-default arguments must be specified explicitly (e.g., usePTY).
     """
     def __init__(self, workdir, command, env={},
-                 want_stdout=1, want_stderr=1,
+                 want_stdout=1, want_stderr=1, initial_stdin=None,
                  timeout=DEFAULT_TIMEOUT, maxTime=DEFAULT_MAXTIME, logfiles={},
                  usePTY=DEFAULT_USEPTY, logEnviron=True):
         args = dict(workdir=workdir, command=command, env=env,
                 want_stdout=want_stdout, want_stderr=want_stderr,
+                initial_stdin=initial_stdin,
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
-        ExpectLogged.__init__(self, "shell", args)
+        Expect.__init__(self, "shell", args)

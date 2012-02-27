@@ -23,6 +23,7 @@ from buildbot.test.util import steps, compat
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot import config
+from buildbot.process import properties
 
 class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
 
@@ -102,11 +103,36 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (["'this", "is", "...'"],)*2)
 
+    def test_describe_from_nested_command_list(self):
+        step = shell.ShellCommand(command=["this", ["is", "a"], "nested"])
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (["'this", "is", "...'"],)*2)
+
+    def test_describe_from_nested_command_tuples(self):
+        step = shell.ShellCommand(command=["this", ("is", "a"), "nested"])
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (["'this", "is", "...'"],)*2)
+
+    def test_describe_from_nested_command_list_empty(self):
+        step = shell.ShellCommand(command=["this", [], ["is", "a"], "nested"])
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (["'this", "is", "...'"],)*2)
+
+    def test_describe_from_nested_command_list_deep(self):
+        step = shell.ShellCommand(command=[["this", [[["is", ["a"]]]]]])
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (["'this", "is", "...'"],)*2)
+
     def test_describe_custom(self):
         step = shell.ShellCommand(command="echo hello",
                         description=["echoing"], descriptionDone=["echoed"])
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['echoing'], ['echoed']))
+
+    def test_describe_unrendered_WithProperties(self):
+        step = shell.ShellCommand(command=properties.WithProperties(''))
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (['???'],)*2)
 
     @compat.usesFlushLoggedErrors
     def test_describe_fail(self):
@@ -139,6 +165,48 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                 status_text=["'trial", "-b", "...'"])
+        return self.runStep()
+
+    def test_run_nested_command(self):
+        self.setupStep(
+                shell.ShellCommand(workdir='build',
+                         command=['trial', ['-b', '-B'], 'buildbot.test']))
+        self.expectCommands(
+            ExpectShell(workdir='build',
+                         command=['trial', '-b', '-B', 'buildbot.test'],
+                         usePTY="slave-config")
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, 
+           status_text=["'trial", "-b", "...'"])
+        return self.runStep()
+
+    def test_run_nested_deeply_command(self):
+        self.setupStep(
+                shell.ShellCommand(workdir='build',
+                         command=[['trial', ['-b', ['-B']]], 'buildbot.test']))
+        self.expectCommands(
+            ExpectShell(workdir='build',
+                         command=['trial', '-b', '-B', 'buildbot.test'],
+                         usePTY="slave-config")
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, 
+           status_text=["'trial", "-b", "...'"])
+        return self.runStep()
+
+    def test_run_nested_empty_command(self):
+        self.setupStep(
+                shell.ShellCommand(workdir='build',
+                         command=['trial', [], '-b', [], 'buildbot.test']))
+        self.expectCommands(
+            ExpectShell(workdir='build',
+                         command=['trial', '-b', 'buildbot.test'],
+                         usePTY="slave-config")
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, 
+           status_text=["'trial", "-b", "...'"])
         return self.runStep()
 
     def test_run_env(self):
@@ -191,6 +259,9 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS, status_text=["'echo", "hello'"])
         return self.runStep()
+    
+
+
 
 class TreeSize(steps.BuildStepMixin, unittest.TestCase):
 

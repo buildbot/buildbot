@@ -27,7 +27,7 @@ class TestBuildsConnectorComponent(
     def setUp(self):
         d = self.setUpConnectorComponent(
             table_names=['builds', 'buildrequests', 'buildsets',
-                'sourcestamps', 'patches' ])
+                'sourcestamps', 'sourcestampsets', 'patches' ])
 
         def finish_setup(_):
             self.db.builds = builds.BuildsConnectorComponent(self.db)
@@ -41,9 +41,10 @@ class TestBuildsConnectorComponent(
     # common sample data
 
     background_data = [
-        fakedb.SourceStamp(id=27, revision='abcd'),
-        fakedb.Buildset(id=20, sourcestampid=27),
-        fakedb.Buildset(id=30, sourcestampid=27),
+        fakedb.SourceStampSet(id=27),
+        fakedb.SourceStamp(id=27, sourcestampsetid=27, revision='abcd'),
+        fakedb.Buildset(id=20, sourcestampsetid=27),
+        fakedb.Buildset(id=30, sourcestampsetid=27),
         fakedb.BuildRequest(id=41, buildsetid=20, buildername='b1'),
         fakedb.BuildRequest(id=42, buildsetid=30, buildername='b1'),
     ]

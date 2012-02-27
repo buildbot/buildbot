@@ -15,6 +15,12 @@
 
 import twisted
 from twisted.python import versions
+from buildbot.util import sautils
+
+# NOTE: all of these patches test for applicability *before* importing the
+# patch module.  This will help cut down on unnecessary imports where the
+# patches are not needed, and also avoid problems with patches importing
+# private things in external libraries that no longer exist.
 
 def patch_bug4881():
     # this patch doesn't apply (or even import!) on Windows
@@ -35,6 +41,20 @@ def patch_bug5079():
         from buildbot.monkeypatches import bug5079
         bug5079.patch()
 
+def patch_sqlalchemy2364():
+    # fix for SQLAlchemy bug 2364 
+    if sautils.sa_version() < (0,7,5):
+        from buildbot.monkeypatches import sqlalchemy2364
+        sqlalchemy2364.patch()
+
+def patch_sqlalchemy2189():
+    # fix for SQLAlchemy bug 2189
+    if sautils.sa_version() <= (0,7,1):
+        from buildbot.monkeypatches import sqlalchemy2189
+        sqlalchemy2189.patch()
+
 def patch_all():
     patch_bug4881()
     patch_bug5079()
+    patch_sqlalchemy2364()
+    patch_sqlalchemy2189()

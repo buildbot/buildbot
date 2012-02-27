@@ -1,5 +1,5 @@
-Release Notes
-=============
+Release Notes for Buildbot |version|
+====================================
 
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
@@ -14,54 +14,16 @@ Master
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Forced builds now require that a :bb:sched:`ForceScheduler` be defined in the
-  Buildbot configuration.  For compatible behavior, this should look like::
 
-    from buildbot.schedulers.forcesched import ForceScheduler
-    c['schedulers'].append(ForceScheduler(
-                            name="force",
-                            builderNames=["b1", "b2", ... ]))
-
-  Where all of the builder names in the configuration are listed.  See the
-  documentation for the *much* more flexiblie configuration options now
-  available.
-
-* ``buildbot start`` no longer invokes make if a ``Makefile.buildbot`` exists.
-  If you are using this functionality, consider invoking make directly.
-
-* The ``buildbot sendchange`` option ``--username`` has been removed as
-  promised in :bb:bug:`1711`.
-
-* StatusReceivers' checkConfig method should now take an additional `errors`
-  parameter and call its :py:meth:`~buildbot.config.ConfigErrors.addError`
-  method to indicate errors.
-
-* This is the last release of Buildbot that will be compatible with Python 2.4.
-  The next version will minimally require Python-2.5.
-
+* The configurable callable build.workdir has changed his parameterlist. Instead
+  of a single sourcestamp a list of sourcestamps is passed. Each sourcestamp in 
+  the list has a different :ref:`codebase<Attr-Codebase>`
+  
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
-* The interface for runtime access to the master's configuration has changed
-  considerably.  See :doc:`developer/config` for more details.
-
 Features
 ~~~~~~~~
-
-* Buildbot can now take advantage of authentication done by a front-end web
-  server - see :bb:pull:`266`.
-
-* Buildbot supports a simple cookie-based login system, so users no longer need
-  to enter a username and password for every request.  See the earlier commits
-  in :bb:pull:`278`.
-
-* The master-side SVN step now has an `export` method which is similar to
-  `copy`, but the build directory does not contain Subversion metdata. (:bb:bug:`2078`)
-
-* :py:class:`Property` instances will now render any properties in the
-  default value if necessary.  This makes possible constructs like ::
-
-    command=Property('command', default=Property('default-command'))
 
 Slave
 -----
@@ -76,9 +38,9 @@ Details
 -------
 
 For a more detailed description of the changes made in this version, see the
-git log itself::
+git log itself:
 
-   https://github.com/buildbot/buildbot/compare/buildbot-0.8.4...buildbot-0.8.5
+   git log buildbot-0.8.6..master
 
 Older Versions
 --------------

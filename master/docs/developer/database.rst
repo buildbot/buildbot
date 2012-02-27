@@ -33,9 +33,16 @@ database-independent operation.  Note that the SQLAlchemy ORM is not used in
 Buildbot.  Database queries are carried out in threads, and report their
 results back to the main thread via Twisted Deferreds.
 
+Schema
+------
+
 The database schema is maintained with `SQLAlchemy-Migrate
 <http://code.google.com/p/sqlalchemy-migrate/>`_.  This package handles the
 details of upgrading users between different schema versions.
+
+The schema itself is considered an implementation detail, and may change
+significantly from version to version.  Users should rely on the API (below),
+rather than performing queries against the database itself.
 
 API
 ---
@@ -81,7 +88,7 @@ buildrequests
     * ``complete`` (boolean, true if the request is complete)
     * ``complete_at`` (datetime object, time this request was completed)
 
-    .. py:method:: BuildRequestsConnectorComponent.getBuildRequest(brid)
+    .. py:method:: getBuildRequest(brid)
 
         :param brid: build request id to look up
         :returns: brdict or ``None``, via Deferred
@@ -116,10 +123,11 @@ buildrequests
         A build is considered completed if its ``complete`` column is 1; the
         ``complete_at`` column is not consulted.
 
-    .. py:method:: claimBuildRequests(brids)
+    .. py:method:: claimBuildRequests(brids[, claimed_at=XX])
 
         :param brids: ids of buildrequests to claim
         :type brids: list
+        :param datetime claimed_at: time at which the builds are claimed
         :returns: Deferred
         :raises: :py:exc:`AlreadyClaimedError`
 
@@ -128,6 +136,8 @@ buildrequests
         fail with :py:exc:`AlreadyClaimedError` if *any* of the build
         requests are already claimed by another master instance.  In this case,
         none of the claims will take effect.
+
+        If ``claimed_at`` is not given, then the current time will be used.
 
         As of 0.8.5, this method can no longer be used to re-claim build
         requests.  All given ID's must be unclaimed.  Use
@@ -169,18 +179,20 @@ buildrequests
         not fail in this case.  The method does not check whether a request is
         completed.
 
-    .. py:method:: completeBuildRequests(brids, results)
+    .. py:method:: completeBuildRequests(brids, results[, complete_at=XX])
 
         :param brids: build request IDs to complete
         :type brids: integer
         :param results: integer result code
         :type results: integer
+        :param datetime complete_at: time at which the buildset was completed
         :returns: Deferred
         :raises: :py:exc:`NotClaimedError`
 
         Complete a set of build requests, all of which are owned by this master
         instance.  This will fail with :py:exc:`NotClaimedError` if the build
-        request is already completed or does not exist.
+        request is already completed or does not exist.  If ``complete_at`` is
+        not given, the current time will be used.
 
     .. py:method:: unclaimExpiredRequests(old)
 
@@ -282,16 +294,16 @@ buildsets
     * ``bsid``
     * ``external_idstring`` (arbitrary string for mapping builds externally)
     * ``reason`` (string; reason these builds were triggered)
-    * ``sourcestampid`` (source stamp for this buildset)
+    * ``sourcestampsetid`` (source stamp set for this buildset)
     * ``submitted_at`` (datetime object; time this buildset was created)
     * ``complete`` (boolean; true if all of the builds for this buildset are complete)
     * ``complete_at`` (datetime object; time this buildset was completed)
     * ``results`` (aggregate result of this buildset; see :ref:`Build-Result-Codes`)
 
-    .. py:method:: addBuildset(ssid, reason, properties, builderNames, external_idstring=None)
+    .. py:method:: addBuildset(sourcestampsetid, reason, properties, builderNames, external_idstring=None)
 
-        :param ssid: id of the SourceStamp for this buildset
-        :type ssid: integer
+        :param sourcestampsetid: id of the SourceStampSet for this buildset
+        :type sourcestampsetid: integer
         :param reason: reason for this buildset
         :type reason: short unicode string
         :param properties: properties for this buildset
@@ -310,17 +322,20 @@ buildsets
         inserted buildset ID and ``brids`` is a dictionary mapping buildernames
         to build request IDs.
 
-    .. py:method:: completeBuildset(bsid, results)
+    .. py:method:: completeBuildset(bsid, results[, complete_at=XX])
 
         :param bsid: buildset ID to complete
         :type bsid: integer
         :param results: integer result code
         :type results: integer
+        :param datetime complete_at: time the buildset was completed
         :returns: Deferred
-        :raises: :py:exc:`KeyError` if the buildset does not exist or is already complete
+        :raises: :py:exc:`KeyError` if the buildset does not exist or is
+            already complete
 
         Complete a buildset, marking it with the given ``results`` and setting
-        its ``completed_at`` to the current time.
+        its ``completed_at`` to the current time, if the ``complete_at``
+        argument is omitted.
 
     .. py:method:: getBuildset(bsid)
 
@@ -491,14 +506,14 @@ schedulers
 
     An instance of this class is available at ``master.db.changes``.
 
-    .. index:: schedulerid
+    .. index:: objectid
 
-    Schedulers are identified by a *schedulerid*, which can be determined from
-    the scheduler name and class by :py:meth:`getSchedulerId`.
+    Schedulers are identified by a their objectid - see
+    :py:class:`StateConnectorComponent`.
 
-    .. py:method:: classifyChanges(schedulerid, classifications)
+    .. py:method:: classifyChanges(objectid, classifications)
 
-        :param schedulerid: scheduler classifying the changes
+        :param objectid: scheduler classifying the changes
         :param classifications: mapping of changeid to boolean, where the boolean
             is true if the change is important, and false if it is unimportant
         :type classifications: dictionary
@@ -511,19 +526,19 @@ schedulers
         classifications once they are no longer needed, using
         :py:meth:`flushChangeClassifications`.
 
-    .. py:method: flushChangeClassifications(schedulerid, less_than=None)
+    .. py:method: flushChangeClassifications(objectid, less_than=None)
 
-        :param schedulerid: scheduler owning the flushed changes
+        :param objectid: scheduler owning the flushed changes
         :param less_than: (optional) lowest changeid that should *not* be flushed
         :returns: Deferred
 
         Flush all scheduler_changes for the given scheduler, limiting to those
         with changeid less than ``less_than`` if the parameter is supplied.
 
-    .. py:method:: getChangeClassifications(schedulerid[, branch])
+    .. py:method:: getChangeClassifications(objectid[, branch])
 
-        :param schedulerid: scheduler to look up changes for
-        :type schedulerid: integer
+        :param objectid: scheduler to look up changes for
+        :type objectid: integer
         :param branch: (optional) limit to changes with this branch
         :type branch: string or None (for default branch)
         :returns: dictionary via Deferred
@@ -537,19 +552,6 @@ schedulers
         default branch, and is not the same as omitting the ``branch`` argument
         altogether.
 
-    .. py:method:: getSchedulerId(sched_name, sched_class)
-
-        :param sched_name: the scheduler's configured name
-        :param sched_class: the class name of this scheduler
-        :returns: schedulerid, via a Deferred
-
-        Get the schedulerid for the given scheduler, creating a new id if no
-        matching record is found.
-
-        Note that this makes no attempt to "claim" the schedulerid: schedulers
-        with the same name and class, but running in different masters, will be
-        assigned the same schedulerid - with disastrous results.
-
 sourcestamps
 ~~~~~~~~~~~~
 
@@ -559,17 +561,19 @@ sourcestamps
 
 .. py:class:: SourceStampsConnectorComponent
 
-    This class manages source stamps, as stored in the database.  Source stamps
-    are linked to changes, and build sets link to source stamps, via their
-    id's.
+    This class manages source stamps, as stored in the database. Source stamps
+    are linked to changes. Source stamps with the same sourcestampsetid belong 
+    to the same sourcestampset. Buildsets link to one or more source stamps via 
+    a sourcestampset id.
 
     An instance of this class is available at ``master.db.sourcestamps``.
 
     .. index:: ssid, ssdict
 
-    Source stamps are identified by a *ssid*, and represented internally as an *ssdict*, with keys
+    Source stamps are identified by a *ssid*, and represented internally as a *ssdict*, with keys
 
     * ``ssid``
+    * ``sourcestampsetid`` (set to which the sourcestamp belongs)
     * ``branch`` (branch, or ``None`` for default branch)
     * ``revision`` (revision, or ``None`` to indicate the latest revision, in
       which case this is a relative source stamp)
@@ -625,6 +629,40 @@ sourcestamps
         Get an ssdict representing the given source stamp, or ``None`` if no
         such source stamp exists.
 
+    .. py:method:: getSourceStamps(sourcestampsetid)
+    
+        :param sourcestampsetid: identification of the set, all returned sourcestamps belong to this set
+        :type sourcestampsetid: integer
+        :returns: sslist of ssdict
+        
+        Get a set of sourcestamps identified by a set id. The set is returned as
+        a sslist that contains one or more sourcestamps (represented as ssdicts). 
+        The list is empty if the set does not exist or no sourcestamps belong to the set.
+    
+sourcestampset
+~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.db.sourcestampsets
+
+.. index:: double: SourceStampSets; DB Connector Component
+
+.. py:class:: SourceStampSetsConnectorComponent
+
+    This class is responsible for adding new sourcestampsets to the database.
+    Build sets link to sourcestamp sets, via their (set) id's.
+    
+    An instance of this class is available at ``master.db.sourcestampsets``.
+    
+    Sourcestamp sets are identified by a sourcestampsetid.
+
+    .. py:method:: addSourceStampSet()
+    
+        :returns: new sourcestampsetid as integer, via Deferred
+        
+        Add a new (empty) sourcestampset to the database. The unique identification
+        of the set is returned as integer. The new id can be used to add
+        new sourcestamps to the database and as reference in a buildset.
+    
 state
 ~~~~~
 
