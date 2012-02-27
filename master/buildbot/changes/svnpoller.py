@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 
 # Based on the work of Dave Peticolas for the P4poll
 # Changed to svn (using xml.dom.minidom) by Niklaus Giger
@@ -90,14 +92,12 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         self.cachepath = cachepath
         if self.cachepath and os.path.exists(self.cachepath):
             try:
-                f = open(self.cachepath, "r")
-                self.last_change = int(f.read().strip())
-                log.msg("SVNPoller: SVNPoller(%s) setting last_change to %s" % (self.svnurl, self.last_change))
-                f.close()
+                with open(self.cachepath, "r") as f:
+                    self.last_change = int(f.read().strip())
+                    log.msg("SVNPoller: SVNPoller(%s) setting last_change to %s" % (self.svnurl, self.last_change))
                 # try writing it, too
-                f = open(self.cachepath, "w")
-                f.write(str(self.last_change))
-                f.close()
+                with open(self.cachepath, "w") as f:
+                    f.write(str(self.last_change))
             except:
                 self.cachepath = None
                 log.msg(("SVNPoller: SVNPoller(%s) cache file corrupt or unwriteable; " +
@@ -333,7 +333,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                     log.msg("Ignoring deletion of branch '%s'" % branch)
                 else:
                     chdict = dict(
-                            who=author,
+                            author=author,
                             files=files,
                             comments=comments,
                             revision=revision,
@@ -356,9 +356,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
 
     def finished_ok(self, res):
         if self.cachepath:
-            f = open(self.cachepath, "w")
-            f.write(str(self.last_change))
-            f.close()
+            with open(self.cachepath, "w") as f:
+                f.write(str(self.last_change))
 
         log.msg("SVNPoller: finished polling %s" % res)
         return res

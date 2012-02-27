@@ -179,6 +179,8 @@ class DBThreadPool(threadpool.ThreadPool):
                             "do not return ResultProxy objects!"
                 except sa.exc.OperationalError, e:
                     text = e.orig.args[0]
+                    if not isinstance(text, basestring):
+                        raise
                     if "Lost connection" in text \
                         or "database is locked" in text:
 

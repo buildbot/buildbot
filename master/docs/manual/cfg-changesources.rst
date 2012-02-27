@@ -477,7 +477,7 @@ The :bb:chsrc:`PBChangeSource` is created with the following arguments.
 For example::
 
     from buildbot.changes import pb
-    c['changes'] = pb.PBChangeSource(port=9999, user='laura', passwd='fpga')
+    c['change_source'] = pb.PBChangeSource(port=9999, user='laura', passwd='fpga')
 
 The following hooks are useful for sending changes to a :bb:chsrc:`PBChangeSource`\:
 
@@ -559,32 +559,32 @@ The ``[hgbuildbot]`` section has two other parameters that you
 might specify, both of which control the name of the branch that is
 attached to the changes coming from this hook.
 
-One common branch naming policy for Mercurial repositories is for
-each branch to go into a separate repository, and
-all the branches for a single project share a common parent directory.
-For example, you might have :file:`/var/repos/{PROJECT}/trunk/` and
-:file:`/var/repos/{PROJECT}/release`. To use this style, use the
-``branchtype = dirname`` setting, which simply uses the last
-component of the repository's enclosing directory as the branch name:
-
-.. code-block:: ini
-
-    [hgbuildbot]
-    branchtype = dirname
-    # ...
-
-Another approach is to use Mercurial's built-in branches (the kind
-created with :command:`hg branch` and listed with :command:`hg
-branches`). This feature associates persistent names with particular
-lines of descent within a single repository. (note that the buildbot
-``source.Mercurial`` checkout step does not yet support this kind
-of branch). To have the commit hook deliver this sort of branch name
-with the Change object, use ``branchtype = inrepo``:
+One common branch naming policy for Mercurial repositories is to use
+Mercurial's built-in branches (the kind created with :command:`hg
+branch` and listed with :command:`hg branches`). This feature
+associates persistent names with particular  lines of descent within a
+single repository. (note that the buildbot ``source.Mercurial``
+checkout step does not yet support this kind of branch). To have the
+commit hook deliver this sort of branch name with the Change object,
+use ``branchtype = inrepo``, this is the default behavior:
 
 .. code-block:: ini
 
     [hgbuildbot]
     branchtype = inrepo
+    # ...
+
+Another approach is for each branch to go into a separate repository,
+and all the branches for a single project share a common parent
+directory. For example, you might have :file:`/var/repos/{PROJECT}/trunk/` and
+:file:`/var/repos/{PROJECT}/release`. To use this style, use the
+``branchtype = dirname`` setting, which simply uses the last component
+of the repository's enclosing directory as the branch name:
+
+.. code-block:: ini
+
+    [hgbuildbot]
+    branchtype = dirname
     # ...
 
 Finally, if you want to simply specify the branchname directly, for
@@ -1180,7 +1180,10 @@ are not understood (yet). It accepts the following arguments:
 As an example, to poll the Ostinato project's commit feed every 3 hours, the
 configuration would look like this::
 
-    from contrib.googlecode_atom import GoogleCodeAtomPoller
+    from googlecode_atom import GoogleCodeAtomPoller
     c['change_source'] = GoogleCodeAtomPoller(
         feedurl="http://code.google.com/feeds/p/ostinato/hgchanges/basic",
         pollinterval=10800) 
+
+(note that you will need to download ``googlecode_atom.py`` from the Buildbot
+source and install it somewhere on your PYTHONPATH first)

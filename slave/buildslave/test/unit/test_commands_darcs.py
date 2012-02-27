@@ -45,8 +45,8 @@ class TestDarcs(SourceCommandTestMixin, unittest.TestCase):
             Expect([ 'clobber', 'source' ],
                 self.basedir)
                 + 0,
-            Expect([ 'path/to/darcs', 'get', '--verbose', '--partial', '--repo-name',
-                     'source', 'http://darcs.net'],
+            Expect([ 'path/to/darcs', 'get', '--verbose', '--lazy',
+                '--repo-name', 'source', 'http://darcs.net'],
                 self.basedir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os, urllib
 from cPickle import load
 from twisted.python import log
@@ -314,7 +316,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         log.msg("trying to load status pickle from %s" % filename)
         builder_status = None
         try:
-            builder_status = load(open(filename, "rb"))
+            with open(filename, "rb") as f:
+                builder_status = load(f)
             builder_status.master = self.master
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite

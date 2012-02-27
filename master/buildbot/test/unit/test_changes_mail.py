@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os
 from twisted.trial import unittest
 from buildbot.test.util import changesource, dirs
@@ -38,7 +40,8 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
 
         fake_message = "Subject: test\n\nthis is a test"
         mailfile = os.path.join(newdir, "newmsg")
-        open(mailfile, "w").write(fake_message)
+        with open(mailfile, "w") as f:
+            f.write(fake_message)
 
     def assertMailProcessed(self):
         self.assertFalse(os.path.exists(os.path.join(self.maildir, "new", "newmsg")))

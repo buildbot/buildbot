@@ -63,6 +63,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             self.assertEqual(c['branch'], "br/4321")
             self.assertEqual(c['revision'], "abcdef")
             self.assertEqual(c['revlink'], "http://buildbot.net")
+            self.assertEqual(c['repository'], "ssh://someuser@somehost:29418/pr")
             self.assertEqual(c['comments'], "fix 1234")
             self.assertEqual(c['files'], [ 'unknown' ])
             self.assertEqual(c['properties']['event.change.subject'], 'fix 1234')

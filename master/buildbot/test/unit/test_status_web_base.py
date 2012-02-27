@@ -13,33 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 from buildbot.status.web import base
 from twisted.internet import defer
 from twisted.trial import unittest
 
-class FakeRequest(mock.Mock):
-    written = ''
-    finished = False
-    redirected_to = None
-    failure = None
-
-    def __init__(self):
-        mock.Mock.__init__(self)
-        self.deferred = defer.Deferred()
-
-    def write(self, data):
-        self.written = self.written + data
-
-    def redirect(self, url):
-        self.redirected_to = url
-
-    def finish(self):
-        self.finished = True
-        self.deferred.callback(None)
-
-    def processingFailed(self, f):
-        self.deferred.errback(f)
+from buildbot.test.fake.web import FakeRequest
 
 class ActionResource(unittest.TestCase):
 

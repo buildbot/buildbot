@@ -38,6 +38,9 @@ class StateConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             objects_tbl = self.db.model.objects
 
+            self.check_length(objects_tbl.c.name, name)
+            self.check_length(objects_tbl.c.class_name, class_name)
+
             def select():
                 q = sa.select([ objects_tbl.c.id ],
                         whereclause=((objects_tbl.c.name == name)
@@ -79,6 +82,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
     def getState(self, objectid, name, default=Thunk):
         def thd(conn):
             object_state_tbl = self.db.model.object_state
+
             q = sa.select([ object_state_tbl.c.value_json ],
                     whereclause=((object_state_tbl.c.objectid == objectid)
                                & (object_state_tbl.c.name == name)))
@@ -106,6 +110,8 @@ class StateConnectorComponent(base.DBConnectorComponent):
                 value_json = json.dumps(value)
             except:
                 raise TypeError("Error encoding JSON for %r" % (value,))
+
+            self.check_length(object_state_tbl.c.name, name)
 
             def update():
                 q = object_state_tbl.update(

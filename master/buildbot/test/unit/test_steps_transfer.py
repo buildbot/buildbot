@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import tempfile, os
 from twisted.trial import unittest
 
@@ -57,15 +59,17 @@ class TestFileUpload(unittest.TestCase):
             if commandName == 'uploadFile':
                 self.assertEquals(kwargs['slavesrc'], __file__)
                 writer = kwargs['writer']
-                writer.remote_write(open(__file__, "rb").read())
+                with open(__file__, "rb") as f:
+                    writer.remote_write(f.read())
                 self.assert_(not os.path.exists(self.destfile))
                 writer.remote_close()
                 break
         else:
             self.assert_(False, "No uploadFile command found")
 
-        self.assertEquals(open(self.destfile, "rb").read(),
-                open(__file__, "rb").read())
+        with open(self.destfile, "rb") as dest:
+            with open(__file__, "rb") as expect:
+                self.assertEquals(dest.read(), expect.read())
 
     def testTimestamp(self):
         s = FileUpload(slavesrc=__file__, masterdest=self.destfile, keepstamp=True)
@@ -87,7 +91,8 @@ class TestFileUpload(unittest.TestCase):
             if commandName == 'uploadFile':
                 self.assertEquals(kwargs['slavesrc'], __file__)
                 writer = kwargs['writer']
-                writer.remote_write(open(__file__, "rb").read())
+                with open(__file__, "rb") as f:
+                    writer.remote_write(f.read())
                 self.assert_(not os.path.exists(self.destfile))
                 writer.remote_close()
                 writer.remote_utime(timestamp)
@@ -119,7 +124,8 @@ class TestFileUpload(unittest.TestCase):
             if commandName == 'uploadFile':
                 self.assertEquals(kwargs['slavesrc'], __file__)
                 writer = kwargs['writer']
-                writer.remote_write(open(__file__, "rb").read())
+                with open(__file__, "rb") as f:
+                    writer.remote_write(f.read())
                 self.assert_(not os.path.exists(self.destfile))
                 writer.remote_close()
                 break

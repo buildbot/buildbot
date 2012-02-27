@@ -21,6 +21,7 @@ class FakeSource:
     def __init__(self, mergeable = True):
         self.codebase = ''
         self.mergeable = mergeable
+        self.changes = []
 
     def canBeMergedWith(self, other):
         return self.mergeable
@@ -260,7 +261,7 @@ class TestBuildRequest(unittest.TestCase):
         d.addCallback(check)
         return d
 
-    def test_mergeSourceStampsWith_different_codebases_raises_error(self):
+    def test_canBeMergedWith_different_codebases_raises_error(self):
         """ This testcase has two buildrequests
             Request Change Codebase   Revision Comment
             ----------------------------------------------------------------------
@@ -312,8 +313,7 @@ class TestBuildRequest(unittest.TestCase):
                     buildrequest.BuildRequest.fromBrdict(master, brdict))
         d.addCallback(lambda br : brs.append(br))
         def check(_):
-            self.assertRaises(ValueError,
-                lambda : brs[0].mergeSourceStampsWith(brs[1:]))
+            self.assertEqual(brs[0].canBeMergedWith(brs[1]), False)
 
         d.addCallback(check)
         return d

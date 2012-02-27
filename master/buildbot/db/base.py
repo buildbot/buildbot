@@ -31,6 +31,29 @@ class DBConnectorComponent(object):
             if isinstance(o, CachedMethod):
                 setattr(self, method, o.get_cached_method(self))
 
+    _is_check_length_necessary = None
+    def check_length(self, col, value):
+        # for use by subclasses to check that 'value' will fit in 'col', where
+        # 'col' is a table column from the model.
+
+        # ignore this check for database engines that either provide this error
+        # themselves (postgres) or that do not enforce maximum-length
+        # restrictions (sqlite)
+        if not self._is_check_length_necessary:
+            if self.db.pool.engine.dialect.name == 'mysql':
+                self._is_check_length_necessary = True
+            else:
+                # not necessary, so just stub out the method
+                self.check_length = lambda col, value : None
+                return
+
+        assert col.type.length, "column %s does not have a length" % (col,)
+        if value and len(value) > col.type.length:
+            raise RuntimeError(
+                "value for column %s is greater than max of %d characters: %s"
+                    % (col, col.type.length, value))
+
+
 class CachedMethod(object):
     def __init__(self, cache_name, method):
         self.cache_name = cache_name

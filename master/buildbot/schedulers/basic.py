@@ -40,11 +40,11 @@ class BaseBasicScheduler(base.BaseScheduler):
                 fileIsImportant=None, properties={}, categories=None,
                 change_filter=None, onlyImportant=False):
         if shouldntBeSet is not self.NotSet:
-            raise config.ConfigErrors([
-                "pass arguments to schedulers using keyword arguments" ])
+            config.error(
+                "pass arguments to schedulers using keyword arguments")
         if fileIsImportant and not callable(fileIsImportant):
-            raise config.ConfigErrors([
-                "fileIsImportant must be a callable" ])
+            config.error(
+                "fileIsImportant must be a callable")
 
         # initialize parent classes
         base.BaseScheduler.__init__(self, name, builderNames, properties)
@@ -217,13 +217,13 @@ class BaseBasicScheduler(base.BaseScheduler):
 class SingleBranchScheduler(BaseBasicScheduler):
     def getChangeFilter(self, branch, branches, change_filter, categories):
         if branch is NotABranch and not change_filter:
-            raise config.ConfigErrors([
+            config.error(
                 "the 'branch' argument to SingleBranchScheduler is " +
-                "mandatory unless change_filter is provided"])
+                "mandatory unless change_filter is provided")
         elif branches is not NotABranch:
-            raise config.ConfigErrors([
+            config.error(
                 "the 'branches' argument is not allowed for " +
-                "SingleBranchScheduler"])
+                "SingleBranchScheduler")
 
 
         return filter.ChangeFilter.fromSchedulerConstructorArgs(

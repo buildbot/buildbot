@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os
 import sys
 import mock
@@ -58,7 +60,8 @@ class JobdirService(dirs.DirsMixin, unittest.TestCase):
 
         # creat some new data to process
         jobdata = os.path.join(self.newdir, 'jobdata')
-        open(jobdata, "w").write('JOBDATA')
+        with open(jobdata, "w") as f:
+            f.write('JOBDATA')
 
         # stub out svc.parent.handleJobFile and .jobdir
         def handleJobFile(filename, f):

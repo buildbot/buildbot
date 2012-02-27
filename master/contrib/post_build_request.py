@@ -25,12 +25,12 @@ except AttributeError:
 # Make a dictionary with options from command line
 def buildURL( options ):
     urlDict = {}
-    if options.who:
-        who = options.who
+    if options.author:
+        author = options.author
     else:
-        who = getpass.getuser()
+        author = getpass.getuser()
  
-    urlDict['who'] = who
+    urlDict['author'] = author
     
     if options.files:
         urlDict['files'] = json.dumps(options.files)
@@ -101,10 +101,10 @@ parser = optparse.OptionParser(description=description,
                                add_help_option=True,
                                version=__version__)
 
-parser.add_option("-w", "--who", dest='who', metavar="WHO",
+parser.add_option("-w", "--who", dest='author', metavar="AUTHOR",
             help=textwrap.dedent("""\
             Who is submitting this request.
-            This becomes the Change.who attribute.
+            This becomes the Change.author attribute.
             This defaults to the name of the user running this script
             """))
 parser.add_option("-f", "--file", dest='files', action="append", metavar="FILE",
