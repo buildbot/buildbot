@@ -172,7 +172,9 @@ class BuildRequest(object):
             return False
             
         for c in self_codebases:
-            if len(self.sources[c].changes) != len(other.sources[c].changes):
+            # Check either both or neither have changes
+            if (len(self.sources[c].changes) > 0) ==
+               (len(other.sources[c].changes) > 0):
                 return False
         # all codebases tested, no differences found
         return True
