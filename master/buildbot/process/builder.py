@@ -677,13 +677,12 @@ class Builder(config.ReconfigurableServiceMixin,
         # gather the mergeable requests
         merged_request_objects = [breq_object]
         for other_breq_object in unclaimed_request_objects:
-            if breq_object.requestsHaveSameCodebases(other_breq_object):
-                wfd = defer.waitForDeferred(
-                    defer.maybeDeferred(lambda :
-                        mergeRequests_fn(self, breq_object, other_breq_object)))
-                yield wfd
-                if wfd.getResult():
-                    merged_request_objects.append(other_breq_object)
+            wfd = defer.waitForDeferred(
+                defer.maybeDeferred(lambda :
+                    mergeRequests_fn(self, breq_object, other_breq_object)))
+            yield wfd
+            if wfd.getResult():
+                merged_request_objects.append(other_breq_object)
 
         # convert them back to brdicts and return
         merged_requests = [ br.brdict for br in merged_request_objects ]

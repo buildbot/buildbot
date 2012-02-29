@@ -73,9 +73,9 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                 if not isinstance(b, basestring):
                     ok = False
         if not ok:
-            raise config.ConfigErrors([
+            config.error(
                 "The builderNames argument to a scheduler must be a list "
-                  "of Builder names."])
+                  "of Builder names.")
 
         self.builderNames = builderNames
         "list of builder names to start in each buildset"

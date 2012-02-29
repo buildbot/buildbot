@@ -31,18 +31,18 @@ class Trigger(LoggingBuildStep):
     def __init__(self, schedulerNames=[], sourceStamp=None, updateSourceStamp=None, alwaysUseLatest=False,
                  waitForFinish=False, set_properties={}, copy_properties=[], **kwargs):
         if not schedulerNames:
-            raise config.ConfigErrors([
-                "You must specify a scheduler to trigger" ])
+            config.error(
+                "You must specify a scheduler to trigger")
         if sourceStamp and (updateSourceStamp is not None):
-            raise config.ConfigErrors([
-                "You can't specify both sourceStamp and updateSourceStamp" ])
+            config.error(
+                "You can't specify both sourceStamp and updateSourceStamp")
         if sourceStamp and alwaysUseLatest:
-            raise config.ConfigErrors([
-                "You can't specify both sourceStamp and alwaysUseLatest" ])
+            config.error(
+                "You can't specify both sourceStamp and alwaysUseLatest")
         if alwaysUseLatest and (updateSourceStamp is not None):
-            raise config.ConfigErrors([
+            config.error(
                 "You can't specify both alwaysUseLatest and updateSourceStamp"
-            ])
+            )
         self.schedulerNames = schedulerNames
         self.sourceStamp = sourceStamp
         if updateSourceStamp is not None:

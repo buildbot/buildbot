@@ -172,7 +172,9 @@ class BuildRequest(object):
             return False
             
         for c in self_codebases:
-            if len(self.sources[c].changes) != len(other.sources[c].changes):
+            # Check either both or neither have changes
+            if ((len(self.sources[c].changes) > 0)
+                != (len(other.sources[c].changes) > 0)):
                 return False
         # all codebases tested, no differences found
         return True
@@ -180,8 +182,10 @@ class BuildRequest(object):
     def canBeMergedWith(self, other):
         """
         Returns if both requests can be merged
-        Method assumes that both requests have same codebases
         """
+
+        if not self.requestsHaveChangesForSameCodebases(other):
+            return False
 
         #get codebases from myself, they are equal to other
         self_codebases = set(self.sources.iterkeys())
@@ -195,28 +199,25 @@ class BuildRequest(object):
         return True
 
     def mergeSourceStampsWith(self, others):
-        """
-        Returns one merged sourcestamp for every codebase in self
-        Method assumes that all requests have same codebases
-        """
-        
+        """ Returns one merged sourcestamp for every codebase """
         #get all codebases from all requests
-        self_codebases = set(self.sources.iterkeys())
+        all_codebases = set(self.sources.iterkeys())
+        for other in others:
+            all_codebases |= set(other.sources.iterkeys())
 
-        merged_sources = {}
+        all_merged_sources = {}
         # walk along the codebases
-        for codebase in self_codebases:
+        for codebase in all_codebases:
             all_sources = []
-            all_sources.append(self.sources[codebase])
+            if codebase in self.sources:
+                all_sources.append(self.sources[codebase])
             for other in others:
-                if codebase not in other.sources:
-                    raise ValueError("merging requests requires both requests " + 
-                                      "to have the same codebases")
-                all_sources.append(other.sources[codebase])
+                if codebase in other.sources:
+                    all_sources.append(other.sources[codebase])
             assert len(all_sources)>0, "each codebase should have atleast one sourcestamp"
-            merged_sources[codebase] = all_sources[0].mergeWith(all_sources[1:])
+            all_merged_sources[codebase] = all_sources[0].mergeWith(all_sources[1:])
 
-        return [source for source in merged_sources.itervalues()]
+        return [source for source in all_merged_sources.itervalues()]
 
     def mergeReasons(self, others):
         """Return a reason for the merged build request."""

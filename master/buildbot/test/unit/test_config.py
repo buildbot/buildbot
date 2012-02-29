@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import re
 import os
 import textwrap
@@ -112,6 +114,16 @@ class ConfigErrors(unittest.TestCase):
         self.failUnless(not empty)
         self.failIf(not full)
 
+    def test_error_raises(self):
+        e = self.assertRaises(config.ConfigErrors, config.error, "message")
+        self.assertEqual(e.errors, ["message"])
+
+    def test_error_no_raise(self):
+        e = config.ConfigErrors()
+        self.patch(config, "_errors", e)
+        config.error("message")
+        self.assertEqual(e.errors, ["message"])
+
 
 class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
@@ -149,9 +161,11 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def install_config_file(self, config_file, other_files={}):
         config_file = textwrap.dedent(config_file)
-        open(os.path.join(self.basedir, self.filename), "w").write(config_file)
+        with open(os.path.join(self.basedir, self.filename), "w") as f:
+            f.write(config_file)
         for file, contents in other_files.items():
-            open(file, "w").write(contents)
+            with open(file, "w") as f:
+                f.write(contents)
 
 
     # tests
@@ -208,13 +222,30 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 self.basedir, self.filename))
         self.assertEqual(len(self.flushLoggedErrors(SyntaxError)), 1)
 
-    def test_loadConfig_eval_ConfigErrors(self):
+    def test_loadConfig_eval_ConfigError(self):
         self.install_config_file("""\
                 from buildbot import config
-                raise config.ConfigErrors(['oh noes!'])""")
+                BuildmasterConfig = { 'multiMaster': True }
+                config.error('oh noes!')""")
         self.assertRaisesConfigError("oh noes",
             lambda : config.MasterConfig.loadConfig(
                 self.basedir, self.filename))
+
+    def test_loadConfig_eval_ConfigErrors(self):
+        # We test a config that has embedded errors, as well
+        # as semantic errors that get added later. If an exception is raised
+        # prematurely, then the semantic errors wouldn't get reported.
+        self.install_config_file("""\
+                from buildbot import config
+                BuildmasterConfig = {}
+                config.error('oh noes!')
+                config.error('noes too!')""")
+        e = self.assertRaises(config.ConfigErrors,
+            lambda : config.MasterConfig.loadConfig(
+                self.basedir, self.filename))
+        self.assertEqual(e.errors, ['oh noes!', 'noes too!',
+                'no slaves are configured',
+                'no builders are configured'])
 
     def test_loadConfig_no_BuildmasterConfig(self):
         self.install_config_file('x=10')

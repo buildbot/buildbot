@@ -295,26 +295,22 @@ containing any checkin comments.
 Project
 +++++++
 
-A change's :attr:`project`, by default the empty string, describes the source code
-that changed.  It is a free-form string which the buildbot administrator can
-use to flexibly discriminate among changes.
-
-Generally, a project is an independently-buildable unit of source.  This field
-can be used to apply different build steps to different projects.  For example,
-an open-source application might build its Windows client from a separate
-codebase than its POSIX server.  In this case, the change sources should be
-configured to attach an appropriate project string (say, "win-client" and
-"server") to changes from each codebase.  Schedulers would then examine these
-strings and trigger the appropriate builders for each project.
+The :attr:`project` attribute of a change or source stamp describes the project
+to which it corresponds, as a short human-readable string.  This is useful in
+cases where multiple independent projects are built on the same buildmaster.
+In such cases, it can be used to control which builds are scheduled for a given
+commit, and to limit status displays to only one project.
 
 .. _Attr-Repository:
 
 Repository
 ++++++++++
 
-A change occurs within the context of a specific repository.  This is generally
-specified with a string, and for most version-control systems, this string
-takes the form of a URL.
+A change occurs within the context of a specific repository.  This is a string,
+and for most version-control systems, it takes the form of a URL.  It uniquely
+identifies the repository in which the change occurred.  This is particularly
+helpful for DVCS's, where a change may occur in a repository other than the
+"main" repository for the project.
 
 :class:`Change`\s can be filtered on repository, but more often this field is used as a
 hint for the build steps to figure out which code to check out.
@@ -335,15 +331,15 @@ Each Change can have a :attr:`revision` attribute, which describes how
 to get a tree with a specific state: a tree which includes this Change
 (and all that came before it) but none that come after it. If this
 information is unavailable, the :attr:`revision` attribute will be
-``None``. These revisions are provided by the :class:`ChangeSource`, and
-consumed by the :meth:`computeSourceRevision` method in the appropriate
-:class:`source.Source` class.
+``None``. These revisions are provided by the :class:`ChangeSource`.
+
+Revisions are always strings.
 
 `CVS`
-    :attr:`revision` is an int, seconds since the epoch
+    :attr:`revision` is the seconds since the epoch as an integer.
    
 `SVN`
-    :attr:`revision` is an int, the changeset number (r%d)
+    :attr:`revision` is the revision number
     
 `Darcs`
     :attr:`revision` is a large string, the output of :command:`darcs changes --context`
@@ -352,7 +348,7 @@ consumed by the :meth:`computeSourceRevision` method in the appropriate
     :attr:`revision` is a short string (a hash ID), the output of :command:`hg identify`
 
 `P4`
-    :attr:`revision` is an int, the transaction number
+    :attr:`revision` is the transaction number
     
 `Git`
     :attr:`revision` is a short string (a SHA1 hash), the output of e.g.
@@ -400,16 +396,6 @@ Build Properties
 A Change may have one or more properties attached to it, usually specified
 through the Force Build form or :bb:cmdline:`sendchange`. Properties are discussed
 in detail in the :ref:`Build-Properties` section.
-
-Links
-+++++
-
-.. TODO: who is using 'links'? how is it being used?
-
-Finally, the Change might have a :attr:`links` list, which is intended
-to provide a list of URLs to a *viewcvs*-style web page that
-provides more detail for this Change, perhaps including the full file
-diffs.
 
 .. _Scheduling-Builds:
 

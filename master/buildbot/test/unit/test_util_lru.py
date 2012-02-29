@@ -15,6 +15,7 @@
 
 import string
 import random
+import gc
 from twisted.trial import unittest
 from twisted.internet import defer, reactor
 from twisted.python import failure
@@ -84,6 +85,8 @@ class LRUCache(unittest.TestCase):
             self.lru.get('d'))
         d.addCallback(self.check_result, short('d'), 0, 4)
 
+        gc.collect()
+
         # now try 'a' again - it should be a miss
         self.lru.miss_fn = self.long_miss_fn
         d.addCallback(lambda _ :
@@ -110,11 +113,15 @@ class LRUCache(unittest.TestCase):
             self.lru.get('b'))
         d.addCallback(self.check_result, short('b'), 1, 2)
 
+        gc.collect()
+
         # now try 'a' again - it should be a miss
         self.lru.miss_fn = self.long_miss_fn
         d.addCallback(lambda _ :
             self.lru.get('a'))
         d.addCallback(self.check_result, long('a'), 1, 3)
+
+        gc.collect()
 
         # ..and that expelled B
         d.addCallback(lambda _ :
@@ -252,7 +259,7 @@ class LRUCache(unittest.TestCase):
                 self.lru.get('a'))
         yield wfd
         res = wfd.getResult()
-        self.check_result(res, short('a'), exp_refhits=1)
+        self.check_result(res, res_a, exp_refhits=1)
 
         # but 'b' should give us a new value
         wfd = defer.waitForDeferred(
@@ -359,6 +366,7 @@ class LRUCache(unittest.TestCase):
 
         # reset the size to 1
         self.lru.set_max_size(1)
+        gc.collect()
 
         # and then expect that 'b' is no longer in the cache
         self.lru.miss_fn = self.long_miss_fn

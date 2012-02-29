@@ -53,8 +53,18 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
             transaction = conn.begin()
 
-            ins = self.db.model.changes.insert()
-            r = conn.execute(ins, dict(
+            ch_tbl = self.db.model.changes
+
+            self.check_length(ch_tbl.c.author, author)
+            self.check_length(ch_tbl.c.comments, comments)
+            self.check_length(ch_tbl.c.branch, branch)
+            self.check_length(ch_tbl.c.revision, revision)
+            self.check_length(ch_tbl.c.revlink, revlink)
+            self.check_length(ch_tbl.c.category, category)
+            self.check_length(ch_tbl.c.repository, repository)
+            self.check_length(ch_tbl.c.project, project)
+
+            r = conn.execute(ch_tbl.insert(), dict(
                 author=author,
                 comments=comments,
                 is_dir=is_dir,
@@ -68,19 +78,28 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 project=project))
             changeid = r.inserted_primary_key[0]
             if files:
-                ins = self.db.model.change_files.insert()
-                conn.execute(ins, [
+                tbl = self.db.model.change_files
+                for f in files:
+                    self.check_length(tbl.c.filename, f)
+                conn.execute(tbl.insert(), [
                     dict(changeid=changeid, filename=f)
                         for f in files
                     ])
             if properties:
-                ins = self.db.model.change_properties.insert()
-                conn.execute(ins, [
+                tbl = self.db.model.change_properties
+                inserts = [
                     dict(changeid=changeid,
                         property_name=k,
                         property_value=json.dumps(v))
                     for k,v in properties.iteritems()
-                ])
+                ]
+                for i in inserts:
+                    self.check_length(tbl.c.property_name,
+                            i['property_name'])
+                    self.check_length(tbl.c.property_value,
+                            i['property_value'])
+
+                conn.execute(tbl.insert(), inserts)
             if uid:
                 ins = self.db.model.change_users.insert()
                 conn.execute(ins, dict(changeid=changeid, uid=uid))

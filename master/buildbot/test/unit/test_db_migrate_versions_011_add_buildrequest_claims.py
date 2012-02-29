@@ -85,7 +85,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
     # tests
 
-    def test_foo(self):
+    def test_migrate(self):
         def setup_thd(conn):
             self.create_tables_thd(conn)
 

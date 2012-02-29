@@ -288,7 +288,6 @@ class WithProperties(util.ComparableMixin):
             pmap.clear_temporary_values()
         return s
 
-#this class was originally written by Tom Prince <tom.prince@ualberta.net>       
 class InterpolateMap(object): 
     colon_minus_re = re.compile(r"(.*):-(.*)") 
     colon_tilde_re = re.compile(r"(.*):~(.*)") 
@@ -385,7 +384,6 @@ class InterpolateMap(object):
         if rv is None: rv = '' 
         return rv 
  
-#this class was originally written by Tom Prince <tom.prince@ualberta.net>       
 class Interpolate(util.ComparableMixin): 
     """ 
     This is a marker class, used fairly widely to indicate that we 

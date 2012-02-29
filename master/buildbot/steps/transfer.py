@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 
 import os.path, tarfile, tempfile
 try:
@@ -162,9 +164,8 @@ class _DirectoryWriter(_FileWriter):
             tarfile.TarFile.extractall = _extractall
 
         # Unpack archive and clean up after self
-        archive = tarfile.open(name=self.tarname, mode=mode)
-        archive.extractall(path=self.destroot)
-        archive.close()
+        with tarfile.open(name=self.tarname, mode=mode) as archive:
+            archive.extractall(path=self.destroot)
         os.remove(self.tarname)
 
 
@@ -242,8 +243,8 @@ class FileUpload(_TransferBuildStep):
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
-            raise config.ConfigErrors([
-                'mode must be an integer or None' ])
+            config.error(
+                'mode must be an integer or None')
         self.mode = mode
         self.keepstamp = keepstamp
         self.url = url
@@ -321,8 +322,8 @@ class DirectoryUpload(_TransferBuildStep):
         self.maxsize = maxsize
         self.blocksize = blocksize
         if compress not in (None, 'gz', 'bz2'):
-            raise config.ConfigErrors([
-                "'compress' must be one of None, 'gz', or 'bz2'" ])
+            config.error(
+                "'compress' must be one of None, 'gz', or 'bz2'")
         self.compress = compress
         self.url = url
 
@@ -441,8 +442,8 @@ class FileDownload(_TransferBuildStep):
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
-            raise config.ConfigErrors([
-                'mode must be an integer or None' ])
+            config.error(
+                'mode must be an integer or None')
         self.mode = mode
 
     def start(self):
@@ -512,8 +513,8 @@ class StringDownload(_TransferBuildStep):
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
-            raise config.ConfigErrors([
-                'mode must be an integer or None' ])
+            config.error(
+                'mode must be an integer or None')
         self.mode = mode
 
     def start(self):

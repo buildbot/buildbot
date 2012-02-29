@@ -448,15 +448,15 @@ achive workdir-per-repo::
         def workdir(source_stamp):
             return hashlib.md5 (source_stamp.repository).hexdigest()[:8]
 
-        build = factory.BuildFactory()
-        build.workdir = workdir
+        build_factory = factory.BuildFactory()
+        build_factory.workdir = workdir
 
-        build.addStep(Git(mode="update"))
+        build_factory.addStep(Git(mode="update"))
         # ...
         builders.append ({'name': 'mybuilder',
                           'slavename': 'myslave',
                           'builddir': 'mybuilder',
-                          'factory': build})
+                          'factory': build_factory})
 
 The end result is a set of workdirs like
 

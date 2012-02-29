@@ -112,7 +112,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             got_changes = res.fetchall()
             self.assertEqual(got_changes, [(1, 'https://svn.com/repo_a', 'repo_a')])
 
-        return self.do_test_migration(20, 21, setup_thd, verify_thd)
+        return self.do_test_migration(21, 22, setup_thd, verify_thd)
 
     def test_sourcestamps_has_codebase(self):
         changesdata = [(1000, 'https://svn.com/repo_a', 'repo_a', 1)]
@@ -132,4 +132,4 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             got_sourcestamps = res.fetchall()
             self.assertEqual(got_sourcestamps, [(1000, 'https://svn.com/repo_a', 'repo_a')])
 
-        return self.do_test_migration(20, 21, setup_thd, verify_thd)
+        return self.do_test_migration(21, 22, setup_thd, verify_thd)

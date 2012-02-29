@@ -48,8 +48,13 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 patchid = r.inserted_primary_key[0]
 
             # insert the sourcestamp itself
-            ins = self.db.model.sourcestamps.insert()
-            r = conn.execute(ins, dict(
+            tbl = self.db.model.sourcestamps
+            self.check_length(tbl.c.branch, branch)
+            self.check_length(tbl.c.revision, revision)
+            self.check_length(tbl.c.repository, repository)
+            self.check_length(tbl.c.project, project)
+
+            r = conn.execute(tbl.insert(), dict(
                 branch=branch,
                 revision=revision,
                 patchid=patchid,

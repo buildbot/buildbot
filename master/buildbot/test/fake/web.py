@@ -16,14 +16,23 @@
 from mock import Mock
 
 from twisted.internet import defer
+from twisted.web import server
 
-class MockRequest(Mock):
+class FakeRequest(Mock):
     """
     A fake Twisted Web Request object, including some pointers to the
     buildmaster and an addChange method on that master which will append its
     arguments to self.addedChanges.
     """
+
+    written = ''
+    finished = False
+    redirected_to = None
+    failure = None
+
     def __init__(self, args={}):
+        Mock.__init__(self)
+
         self.args = args
         self.site = Mock()
         self.site.buildbot_service = Mock()
@@ -35,4 +44,33 @@ class MockRequest(Mock):
             return defer.succeed(Mock())
         master.addChange = addChange
 
-        Mock.__init__(self)
+        self.deferred = defer.Deferred()
+
+    def write(self, data):
+        self.written = self.written + data
+
+    def redirect(self, url):
+        self.redirected_to = url
+
+    def finish(self):
+        self.finished = True
+        self.deferred.callback(None)
+
+    def processingFailed(self, f):
+        self.deferred.errback(f)
+
+    # work around http://code.google.com/p/mock/issues/detail?id=105
+    def _get_child_mock(self, **kw):
+        return Mock(**kw)
+
+    # cribed from twisted.web.test._util._render
+    def test_render(self, resource):
+          result = resource.render(self)
+          if isinstance(result, str):
+              self.write(result)
+              self.finish()
+              return self.deferred
+          elif result is server.NOT_DONE_YET:
+              return self.deferred
+          else:
+              raise ValueError("Unexpected return value: %r" % (result,))
