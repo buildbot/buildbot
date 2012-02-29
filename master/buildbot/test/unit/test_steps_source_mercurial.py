@@ -47,10 +47,6 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                     branchType='invalid'))
 
-    def test_invalid_branchType(self):
-        self.assertRaises(ValueError, lambda:
-                mercurial.Mercurial(repourl='x', branchType='invalid'))
-
     def test_mode_full_clean(self):
         self.setupStep(
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',
