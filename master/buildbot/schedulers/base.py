@@ -383,7 +383,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                     repository=repository,
                     branch=branch,
                     revision=revision,
-                    project='no project', #HBX
+                    project='', 
                     changeids=set(),
                     sourcestampsetid=setid)
 

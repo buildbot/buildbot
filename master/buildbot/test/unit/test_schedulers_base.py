@@ -516,7 +516,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         revision='8087', sourcestampsetid=100),
                     'cbC':
                      dict(branch='stable', repository='svn://C..', codebase='cbC',
-                        project=None, revision='12345', sourcestampsetid=100)
+                        project='', revision='12345', sourcestampsetid=100)
                     })
         d.addCallback(check)
         return d
