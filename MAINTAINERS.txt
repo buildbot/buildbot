@@ -92,9 +92,6 @@ Gerrit
 
 == Buildbot Plugins ==
 
-Debug Client
-    S: Orphaned
-
 Status Client
     S: Patched
     M: Mark Wielaard <mark@klomp.org>
