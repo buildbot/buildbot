@@ -91,7 +91,14 @@ class DBThreadPool(threadpool.ThreadPool):
     # in bug #1810.
     __broken_sqlite = False
 
-    def __init__(self, engine):
+    def __init__(self, engine, verbose=False):
+        # verbose is used by upgrade scripts, and if it is set we should print
+        # messages about versions and other warnings
+        log_msg = log.msg
+        if verbose:
+            def log_msg(m):
+                print m
+
         pool_size = 5
 
         # If the engine has an C{optimal_thread_pool_size} attribute, then the
@@ -108,19 +115,18 @@ class DBThreadPool(threadpool.ThreadPool):
         self.engine = engine
         if engine.dialect.name == 'sqlite':
             vers = self.get_sqlite_version()
-            log.msg("Using SQLite Version %s" % (vers,))
             if vers < (3,7):
-                log.msg("NOTE: this old version of SQLite does not support "
+                log_msg("Using SQLite Version %s" % (vers,))
+                log_msg("NOTE: this old version of SQLite does not support "
                         "WAL journal mode; a busy master may encounter "
                         "'Database is locked' errors.  Consider upgrading.")
-            if vers < (3,4):
-                log.msg("NOTE: this old version of SQLite is not supported. "
-                        "It fails for multiple simultaneous accesses to the "
-                        "database: try adding the 'pool_size=1' argument to "
-                        "your db url. ")
+                if vers < (3,4):
+                    log_msg("NOTE: this old version of SQLite is not "
+                            "supported.")
+                    raise RuntimeError("unsupported SQLite version")
             brkn = self.__broken_sqlite = self.detect_bug1810()
             if brkn:
-                log.msg("Applying SQLite workaround from Buildbot bug #1810")
+                log_msg("Applying SQLite workaround from Buildbot bug #1810")
         self._start_evt = reactor.callWhenRunning(self._start)
 
         # patch the do methods to do verbose logging if necessary
