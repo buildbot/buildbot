@@ -195,7 +195,7 @@ Metabuildbot Slave Donors
     D: Maintainers of buildslaves for the Metabuildbot
     M: Steve Milner <smilner@redhat.com>
     M: Dustin J. Mitchell <dustin@v.igoro.us>
-    M: Mozilla Release Engineering <release@mozilla.com>
+    M: Mozilla <dustin@mozilla.com>
     M: Marc-Antoine Ruel <maruel@chromium.org>
     M: Dustin Sallings <dustin@spy.net>
     M: Tom Prince <tom.prince@ualberta.net>
@@ -203,11 +203,12 @@ Metabuildbot Slave Donors
 
 Committers
     D: People who can commit changes to the main Buildbot repository
-    M: Dustin J. Mitchell <dustin@v.igoro.us>
+    M: Amar Takhar <verm@darkbeer.org>
     M: Amber Yust <ayust@yelp.com>
     M: Ben Hearsum <bhearsum@mozilla.com>
     M: Brian Warner <warner@lothar.com>
     M: Chris AtLee <catlee@mozilla.com>
+    M: Dustin J. Mitchell <dustin@v.igoro.us>
     M: Marc-Antoine Ruel <maruel@chromium.org>
     M: Marcus Lindblom <macke@yar.nu>
     M: Tom Prince <tom.prince@ualberta.net>
