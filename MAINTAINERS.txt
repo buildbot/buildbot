@@ -34,11 +34,13 @@ S: Component status.  One of
 == Version Control ==
 
 Perforce VC
-    S: Orphaned
+    S: Maintained
+    M: Bill Deegan <bill@baddogconsulting.com>
     U: http://trac.buildbot.net/wiki/p4
 
 Subversion VC
-    S: Orphaned
+    S: Maintained
+    M: Bill Deegan <bill@baddogconsulting.com>
     U: http://trac.buildbot.net/wiki/svn
 
 CVS VC
