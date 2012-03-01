@@ -1161,25 +1161,6 @@ introduced by a pending changeset.
 Gerrit integration can be also triggered using forced build with ``gerrit_change``
 property with value in format: ``change_number/patchset_number``.
 
-.. bb:step:: BK (Slave-Side)
-
-BitKeeper (Slave-Side)
-++++++++++++++++++++++
-
-The :bb:step:`BK <BK (Slave-Side)>` build step performs a `BitKeeper <http://www.bitkeeper.com/>`_
-checkout or update.
-
-The BitKeeper step takes the following arguments:
-
-``repourl``
-    (required unless ``baseURL`` is provided): the URL at which the
-    BitKeeper source repository is available.
-
-``baseURL``
-    (required unless ``repourl`` is provided): the base repository URL,
-    to which a branch name will be appended. It should probably end in a
-    slash.
-
 .. bb:step:: Repo (Slave-Side)
 
 Repo (Slave-Side)

@@ -53,10 +53,6 @@ Git VC
     M: Amber Yust <ayust@yelp.com>
     U: http://trac.buildbot.net/wiki/git
 
-BitKeeper VC
-    S: Last-Rites
-    U: http://trac.buildbot.net/wiki/bk
-
 Darcs VC
     S: Orphaned
     U: http://trac.buildbot.net/wiki/darcs

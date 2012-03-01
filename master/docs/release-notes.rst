@@ -14,11 +14,12 @@ Master
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 * The configurable callable build.workdir has changed his parameterlist. Instead
   of a single sourcestamp a list of sourcestamps is passed. Each sourcestamp in 
   the list has a different :ref:`codebase<Attr-Codebase>`
-  
+
+* BK support has been removed in this release - see :bb:bug:`2198`.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -30,6 +31,8 @@ Slave
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* BK support has been removed in this release - see :bb:bug:`2198`.
 
 Features
 ~~~~~~~~
