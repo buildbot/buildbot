@@ -404,11 +404,17 @@ class Interpolate(util.ComparableMixin):
     def getRenderingFor(self, props): 
         props = props.getProperties() 
         if self.args:
-            args = props.render(self.args) 
-            return self.fmtstring % tuple(args) 
+            d = props.render(self.args)
+            @d.addCallback
+            def format(args):
+                return self.fmtstring % tuple(args)
+            return d
         else:
-            kwargs = props.render(self.kwargs) 
-            return self.fmtstring % InterpolateMap(props, kwargs) 
+            d = props.render(self.kwargs)
+            @d.addCallback
+            def format(kwargs):
+                return self.fmtstring % InterpolateMap(props, kwargs)
+            return d
 
 class Property(util.ComparableMixin):
     """

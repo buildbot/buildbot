@@ -290,36 +290,48 @@ class TestInterpolateProperties(unittest.TestCase):
     def test_properties(self):
         self.props.setProperty("buildername", "winbld", "test")
         command = Interpolate("echo buildby-%(prop:buildername)s")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo buildby-winbld")
+        return d
         
     def test_property_not_set(self):
         command = Interpolate("echo buildby-%(prop:buildername)s")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo buildby-")
+        return d
 
     def test_property_colon_minus(self):
         command = Interpolate("echo buildby-%(prop:buildername:-blddef)s")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo buildby-blddef")
+        return d
 
     def test_property_colon_tilde_true(self):
         self.props.setProperty("buildername", "winbld", "test")
         command = Interpolate("echo buildby-%(prop:buildername:~blddef)s")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo buildby-winbld")
+        return d
 
     def test_property_colon_tilde_false(self):
         self.props.setProperty("buildername", "", "test")
         command = Interpolate("echo buildby-%(prop:buildername:~blddef)s")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo buildby-blddef")
+        return d
 
     def test_property_colon_plus(self):
         self.props.setProperty("project", "proj1", "test")
         command = Interpolate("echo %(prop:project:+projectdefined)s")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo projectdefined")
+        return d
 
 class TestInterpolateSrc(unittest.TestCase):
     def setUp(self):
@@ -346,73 +358,101 @@ class TestInterpolateSrc(unittest.TestCase):
 
     def test_src(self):
         command = Interpolate("echo %(src:cbB:repository)s")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo cvs://B..")
+        return d
 
     def test_src_src(self):
         command = Interpolate("echo %(src:cbB:repository)s %(src:cbB:project)s")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo cvs://B.. Project")
+        return d
 
     def test_src_attr_empty(self):
         command = Interpolate("echo %(src:cbC:project)s")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo ")
+        return d
 
     def test_src_attr_codebase_notfound(self):
         command = Interpolate("echo %(src:unknown_codebase:project)s")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo ")
+        return d
 
     def test_src_colon_plus_false(self):
         command = Interpolate("echo '%(src:cbD:project:+defaultrepo)s'")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo ''")
+        return d
 
     def test_src_colon_plus_true(self):
         command = Interpolate("echo '%(src:cbB:project:+defaultrepo)s'")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo 'defaultrepo'")
+        return d
 
     def test_src_colon_minus(self):
         command = Interpolate("echo %(src:cbB:nonattr:-defaultrepo)s")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo defaultrepo")
+        return d
 
     def test_src_colon_minus_false(self):
         command = Interpolate("echo '%(src:cbC:project:-noproject)s'")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo ''")
+        return d
 
     def test_src_colon_minus_true(self):
         command = Interpolate("echo '%(src:cbB:project:-noproject)s'")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo 'Project'")
+        return d
 
     def test_src_colon_minus_codebase_notfound(self):
         command = Interpolate("echo '%(src:unknown_codebase:project:-noproject)s'")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo 'noproject'")
+        return d
 
     def test_src_colon_tilde_true(self):
         command = Interpolate("echo '%(src:cbB:project:~noproject)s'")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo 'Project'")
+        return d
 
     def test_src_colon_tilde_false(self):
         command = Interpolate("echo '%(src:cbC:project:~noproject)s'")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo 'noproject'")
+        return d
 
     def test_src_colon_tilde_false_src_as_replacement(self):
         command = Interpolate("echo '%(src:cbC:project:~%(src:cbA:project)s)s'")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo 'Project'")
+        return d
 
     def test_src_colon_tilde_codebase_notfound(self):
         command = Interpolate("echo '%(src:unknown_codebase:project:~noproject)s'")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo 'noproject'")
+        return d
 
 
 class TestInterpolateKwargs(unittest.TestCase):
@@ -429,59 +469,81 @@ class TestInterpolateKwargs(unittest.TestCase):
 
     def test_kwarg(self):
         command = Interpolate("echo %(kw:repository)s", repository = "cvs://A..")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo cvs://A..")
+        return d
 
     def test_kwarg_kwarg(self):
         command = Interpolate("echo %(kw:repository)s %(kw:branch)s",
                               repository = "cvs://A..", branch = "default")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo cvs://A.. default")
+        return d
 
     def test_kwarg_not_mapped(self):
         command = Interpolate("echo %(kw:repository)s", project = "projectA")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo ")
+        return d
 
     def test_kwarg_colon_minus_not_available(self):
         command = Interpolate("echo %(kw:repository:-cvs://A..)s", project = "projectA")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo cvs://A..")
+        return d
 
     def test_kwarg_colon_minus_available(self):
         command = Interpolate("echo %(kw:repository:-cvs://A..)s", repository = "cvs://B..")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo cvs://B..")
+        return d
 
     def test_kwarg_colon_tilde_true(self):
         command = Interpolate("echo %(kw:repository:~cvs://B..)s", repository = "cvs://A..")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo cvs://A..")
+        return d
 
     def test_kwarg_colon_tilde_false(self):
         command = Interpolate("echo %(kw:repository:~cvs://B..)s", repository = "")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo cvs://B..")
+        return d
 
     def test_kwarg_colon_tilde_none(self):
         command = Interpolate("echo %(kw:repository:~cvs://B..)s", repository = None)
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo cvs://B..")
+        return d
 
     def test_kwarg_colon_plus_false(self):
         command = Interpolate("echo %(kw:repository:+cvs://B..)s", project = "project")
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo ")
+        return d
 
     def test_kwarg_colon_plus_true(self):
         command = Interpolate("echo %(kw:repository:+cvs://B..)s", repository = None)
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo cvs://B..")
+        return d
 
     def test_kwargs_colon_minus_false_src_as_replacement(self):
         command = Interpolate("echo '%(kw:text:-%(src:cbA:branch)s)s'", notext='ddd')
-        self.failUnlessEqual(self.build.render(command),
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
                              "echo 'default'")
+        return d
 
 class TestWithProperties(unittest.TestCase):
 
