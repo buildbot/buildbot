@@ -12,12 +12,9 @@ D: Component description (optional)
 U: URL for more information
 
 M: Component maintainer, in the form
-      FullName <address@domain.com>  - STATUS
-   where STATUS is optional, and can be one of
-      Hacker - knows the code and can write fixes
-      Tester - can test patches and advise committers to merge
-      User - can help to triage and explain bugs
-      Retired - former maintainer, now out of the business
+      FullName <address@domain.com>
+   Maintainers have familiarity with the component and can help out with
+   development as well as patch review.
 
 S: Component status.  One of
     Supported: This will be a part of Buildbot forever
@@ -53,7 +50,7 @@ Bazaar VC
 
 Git VC
     S: Maintained
-    M: Amber Yust <ayust@yelp.com> - Hacker
+    M: Amber Yust <ayust@yelp.com>
     U: http://trac.buildbot.net/wiki/git
 
 BitKeeper VC
@@ -71,14 +68,14 @@ Mercurial VC
 
 Repo VC
     S: Maintained
-    M: Chris Soyars <ctsoyars@gmail.com> - Tester
-    M: Piotr Sikora <piotr.sikora@frickle.com> - Hacker
-    M: Pierre Tardy <tardyp@gmail.com> - Hacker
+    M: Chris Soyars <ctsoyars@gmail.com>
+    M: Piotr Sikora <piotr.sikora@frickle.com>
+    M: Pierre Tardy <tardyp@gmail.com>
     U: http://trac.buildbot.net/wiki/repovc
 
 Monotone VC
     S: Maintained
-    M: Richard Levitte <richard@levitte.org> - Hacker
+    M: Richard Levitte <richard@levitte.org>
     U: http://trac.buildbot.net/wiki/mtn
 
 
@@ -86,8 +83,8 @@ Monotone VC
 
 Gerrit
     S: Maintained
-    M: Piotr Sikora <piotr.sikora@frickle.com> - Hacker
-    M: Pierre Tardy <tardyp@gmail.com> - Hacker
+    M: Piotr Sikora <piotr.sikora@frickle.com>
+    M: Pierre Tardy <tardyp@gmail.com>
     U: http://trac.buildbot.net/wiki/gerrit
 
 
@@ -102,12 +99,12 @@ Debug Client
 
 Web Status
     S: Supported
-    M: Marcus Lindblom <macke@yar.nu> - Hacker
+    M: Marcus Lindblom <macke@yar.nu>
     U: http://trac.buildbot.net/wiki/web
 
 IRC Status
     S: Maintained
-    M: Amber Yust <ayust@yelp.com> - Hacker
+    M: Amber Yust <ayust@yelp.com>
     U: http://trac.buildbot.net/wiki/irc
 
 MailNotifier
@@ -120,8 +117,8 @@ MailNotifier
 Virtualization
     D: Use of virtual, start-on-demand slaves
     S: Maintained
-    M: John Carr <john.carr@isotoma.com> - Hacker
-    M: Tom Wardill <tom@howrandom.net> - Hacker
+    M: John Carr <john.carr@isotoma.com>
+    M: Tom Wardill <tom@howrandom.net>
     U: http://trac.buildbot.net/wiki/virtualization
 
 Buildbot Try
