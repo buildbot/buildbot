@@ -65,7 +65,8 @@ Darcs VC
     U: http://trac.buildbot.net/wiki/darcs
 
 Mercurial VC
-    S: Orphaned
+    S: Maintained
+    M: Justin Wood <Callek@gmail.com>
     U: http://trac.buildbot.net/wiki/hg
 
 Repo VC
