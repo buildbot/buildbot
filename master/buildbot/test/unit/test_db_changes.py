@@ -493,3 +493,68 @@ class TestChangesConnectorComponent(
                         { 'notest' : ('no', 'Change') })
         d.addCallback(check)
         return d
+
+    def test_getRecentChanges_branch_master(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=3),
+            fakedb.Change(changeid=4, branch="1"),
+            fakedb.Change(changeid=5),
+            fakedb.Change(changeid=6),
+            fakedb.Change(changeid=7),
+            fakedb.Change(changeid=8, branch="1"),
+            fakedb.Change(changeid=9, branch="1"),
+            fakedb.Change(changeid=10),
+            fakedb.Change(changeid=11),
+            fakedb.Change(changeid=12, branch="1"),
+        ] + self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5, branch='master'))
+        def check(changes):
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [6, 7, 10, 11, 13])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChanges_branch_set(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=3),
+            fakedb.Change(changeid=4, branch="1"),
+            fakedb.Change(changeid=5),
+            fakedb.Change(changeid=6),
+            fakedb.Change(changeid=7),
+            fakedb.Change(changeid=8, branch="1"),
+            fakedb.Change(changeid=9, branch="1"),
+            fakedb.Change(changeid=10),
+            fakedb.Change(changeid=11),
+            fakedb.Change(changeid=12, branch="1"),
+        ] + self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5, branch='1'))
+        def check(changes):
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [4, 8, 9, 12])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChanges_branch_trunk(self):
+        # svnpoller.split_file_branches() uses None for trunk, so we have a different
+        # behaviour than for a normal branch
+        d = self.insertTestData([
+            fakedb.Change(changeid=3, branch=None),
+            fakedb.Change(changeid=4, branch="1"),
+            fakedb.Change(changeid=5, branch=None),
+            fakedb.Change(changeid=6, branch=None),
+            fakedb.Change(changeid=7, branch=None),
+            fakedb.Change(changeid=8, branch="1"),
+            fakedb.Change(changeid=9, branch="1"),
+            fakedb.Change(changeid=10, branch=None),
+            fakedb.Change(changeid=11, branch=None),
+            fakedb.Change(changeid=12, branch="1"),
+        ] + self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5, branch=''))
+        def check(changes):
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [5, 6, 7, 10, 11])
+        d.addCallback(check)
+        return d
