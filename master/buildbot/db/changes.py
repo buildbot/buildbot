@@ -19,6 +19,7 @@ Support for changes in the database
 
 from buildbot.util import json
 import sqlalchemy as sa
+from sqlalchemy.sql import and_
 from twisted.internet import defer, reactor
 from buildbot.db import base
 from buildbot.util import epoch2datetime, datetime2epoch
@@ -138,17 +139,22 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         d = self.db.pool.do(thd)
         return d
 
-    def getRecentChanges(self, count, branch=None):
+    def getRecentChanges(self, count, branch=None, author=None, repository=None, project=None):
         def thd(conn):
             # get the changeids from the 'changes' table
             changes_tbl = self.db.model.changes
+            where_opt = None
             if branch != None:
                 if branch == '':
                     where_opt = (changes_tbl.c.branch == None)
                 else:
                     where_opt = (changes_tbl.c.branch == branch)
-            else:
-                where_opt = None
+            if author != None:
+                where_opt = and_(where_opt, changes_tbl.c.author == author)
+            if repository != None:
+                where_opt = and_(where_opt, changes_tbl.c.repository == repository)
+            if project != None:
+                where_opt = and_(where_opt, changes_tbl.c.project == project)
 
             q = sa.select([changes_tbl.c.changeid],
                     order_by=[sa.desc(changes_tbl.c.changeid)],
