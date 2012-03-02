@@ -30,8 +30,9 @@ class Timed(base.BaseScheduler):
 
     compare_attrs = base.BaseScheduler.compare_attrs
 
-    def __init__(self, name, builderNames, properties={}):
-        base.BaseScheduler.__init__(self, name, builderNames, properties)
+    def __init__(self, name, builderNames, properties={}, codebases = None):
+        base.BaseScheduler.__init__(self, name, builderNames, properties, 
+                                    codebases = codebases)
 
         # tracking for when to start the next build
         self.lastActuated = None
@@ -237,8 +238,10 @@ class Nightly(Timed):
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  branch=NoBranch, fileIsImportant=None, onlyIfChanged=False,
-                 properties={}, change_filter=None, onlyImportant=False):
-        Timed.__init__(self, name=name, builderNames=builderNames, properties=properties)
+                 properties={}, change_filter=None, onlyImportant=False,
+                 codebases = None):
+        Timed.__init__(self, name=name, builderNames=builderNames, properties=properties,
+                       codebases = codebases)
 
         # If True, only important changes will be added to the buildset.
         self.onlyImportant = onlyImportant
@@ -246,9 +249,27 @@ class Nightly(Timed):
         if fileIsImportant and not callable(fileIsImportant):
             config.error(
                 "fileIsImportant must be a callable")
-        if branch is Nightly.NoBranch:
+
+        # one of both parameters must be set
+        if not self.codebases and branch is Nightly.NoBranch:
             config.error(
-                "Nightly parameter 'branch' is required")
+                "Nightly parameter 'branch' is required when codebases is not set")
+
+        # not both
+        if self.codebases and branch is not Nightly.NoBranch:
+            config.error(
+                "Nightly parameter 'branch' or 'codebases' must be set not both")
+
+        if self.codebases:
+            # set branch to valid value
+            self.branch = None
+            # check if branch is set for all codebases
+            for k,v in codebases.iteritems():
+                if 'branch' not in v:
+                    config.error(
+                        "key 'branch' is required in codebases if nightly " + 
+                        "parameter 'branch' is not set")
+                    break
 
         self.minute = minute
         self.hour = hour
@@ -275,7 +296,10 @@ class Nightly(Timed):
         # we will include all such changes in any buildsets we start.  Note
         # that we must check the branch here because it is not included in the
         # change filter
-        if change.branch != self.branch:
+        if self.codebases:
+            if change.codebase not in self.codebases:
+                return defer.succeed(None) # don't care about this change
+        elif change.branch != self.branch:
             return defer.succeed(None) # don't care about this change
         return self.master.db.schedulers.classifyChanges(
                 self.objectid, { change.number : important })

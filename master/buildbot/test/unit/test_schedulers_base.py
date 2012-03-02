@@ -57,7 +57,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.makeScheduler(codebases = codebases)
 
     def test_constructor_codebases_invalid(self):
-        codebases = {"codebase1": {"repository":"", "that":"", "failed":""}}
+        # scheduler only accepts codebases with at least repository set
+        codebases = {"codebase1": {"dictionary":"", "that":"", "fails":""}}
         self.assertRaises(ValueError,
                             lambda : self.makeScheduler(codebases = codebases))
 

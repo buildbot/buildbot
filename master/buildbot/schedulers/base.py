@@ -35,7 +35,6 @@ class BaseScheduler(service.MultiService, ComparableMixin):
     implements(interfaces.IScheduler)
 
     compare_attrs = ('name', 'builderNames', 'properties', 'codebases')
-    allowed_codebase_attrs = set(['repository', 'branch', 'revision'])
 
     def __init__(self, name, builderNames, properties, codebases = None):
         """
@@ -92,14 +91,14 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         # Set the other codebases that are necessary to process the changes
         # These codebases will always result in a sourcestamp with or without changes
         if codebases:
-            try:
-                for codebase, values in codebases.iteritems():
-                    codebase_attrs = set(values.keys())
-                    # (A,B,D) & (A,B,C) = (A,B) != (A,B,C)
-                    if not codebase_attrs.issubset(self.allowed_codebase_attrs):
-                        raise ValueError, "codebase %s has invalid values %s" % (codebase,codebase_attrs)
-            except Exception as ex:
-                raise ValueError, "Codebases does not have the correct dictionary struct: %s" % ex
+            if not isinstance(codebases, dict):
+                raise ValueError, "Codebases must be a dict of dicts"
+            for codebase, codebase_attrs in codebases.iteritems():
+                if not isinstance(codebase_attrs, dict):
+                    raise ValueError, "Codebases must be a dict of dicts"
+                if 'repository' not in codebase_attrs:
+                    raise ValueError, "The key 'repository' is mandatory in codebases"
+        
         self.codebases = codebases
         
         # internal variables
@@ -195,7 +194,10 @@ class BaseScheduler(service.MultiService, ComparableMixin):
             return None
 
     def getRevision(self, codebase):
-        return self.codebases[codebase]['revision']
+        if 'revision' in self.codebases[codebase]:
+            return self.codebases[codebase]['revision']
+        else:
+            return None
     
     ## change handling
 
@@ -317,9 +319,37 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         yield wfd
         setid = wfd.getResult()
 
-        wfd = defer.waitForDeferred(self.master.db.sourcestamps.addSourceStamp(
-                branch=branch, revision=None, repository=repository,
-                project=project, sourcestampsetid=setid))
+        if self.codebases:
+            # add a sourcestamp for each codebase
+            dl = []
+            for codebase, cb_info in self.codebases.iteritems():
+                if 'repository' in cb_info:
+                    ss_repository = cb_info['repository']
+                else: 
+                    ss_repository = repository
+                if 'branch' in cb_info:
+                    ss_branch = cb_info['branch']
+                else:
+                    ss_branch = branch
+                if 'revision' in cb_info:
+                    ss_revision = cb_info['revision']
+                else:
+                    ss_revision = None
+                dl.append(  self.master.db.sourcestamps.addSourceStamp(
+                            codebase=codebase,
+                            repository=ss_repository,
+                            branch=ss_branch,
+                            revision=ss_revision,
+                            project=project,
+                            changeids=set(),
+                            sourcestampsetid=setid))
+            d = defer.gatherResults(dl)
+            wfd = defer.waitForDeferred(d)
+        else:
+            wfd = defer.waitForDeferred(self.master.db.sourcestamps.addSourceStamp(
+                    branch=branch, revision=None, repository=repository,
+                    project=project, sourcestampsetid=setid))
+
         yield wfd
         wfd.getResult()
 
@@ -356,13 +386,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
             return [c.number for c in chDict[codebase]]
 
         def get_last_change_for_codebase(codebase):
-            lastChange = None
-            maxNr = -1
-            for c in chDict[codebase]:
-                if c.number > maxNr:
-                    lastChange = c
-                    maxNr = c.number
-            return lastChange
+            return max(chDict[codebase],key = lambda change: change.number)
 
         def create_sourcestamp(changeids, change, setid = None):
             return self.master.db.sourcestamps.addSourceStamp(
@@ -423,7 +447,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
             lastChange = get_last_change_for_codebase(codebase)
             # pass the last change to fill the sourcestamp 
             dcall = create_sourcestamp( changeids = ids, change=lastChange, 
-                                    setid = setid)
+                                        setid = setid)
             dl.append(dcall)
         d = defer.gatherResults(dl)
         wfd = defer.waitForDeferred(d)
