@@ -205,6 +205,7 @@ Metabuildbot Slave Donors
     M: Marc-Antoine Ruel <maruel@chromium.org>
     M: Dustin Sallings <dustin@spy.net>
     M: Tom Prince <tom.prince@ualberta.net> (irc:tomprince)
+    M: STE||AR Group, Center for Computation and Science, LSU / Bryce Lelbach <blelbach@cct.lsu.edu> (irc:wash)
     U: http://buildbot.buildbot.net
 
 Committers
