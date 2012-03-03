@@ -48,6 +48,11 @@ Bazaar VC
     S: Orphaned
     U: http://trac.buildbot.net/wiki/bzr
 
+BitKeeper VC:
+    S: Maintained
+    M: Harlan Stenn <harlan@pfcs.com>
+    U: http://trac.buildbot.net/wiki/bk
+
 Git VC
     S: Maintained
     M: Amber Yust <ayust@yelp.com>
