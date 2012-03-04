@@ -170,8 +170,13 @@ RedHat / Fedora
     U: https://admin.fedoraproject.org/pkgdb/acls/name/buildbot
 
 Debian / Ubuntu
-    S: Orphaned
-    U: http://packages.ubuntu.com/maverick/buildbot
+    S: Maintained
+    M: Andriy Senkovych <jolly_roger@itblog.org.ua> (irc:jollyroger)
+    M: Adam Collard <adam.collard@gmail.com>
+    U: http://packages.ubuntu.com/oneiric/buildbot
+    U: http://packages.ubuntu.com/oneiric/buildbot-slave
+    U: http://packages.debian.org/sid/buildbot
+    U: http://packages.debian.org/sid/buildbot-slave
 
 OpenCSW
     S: Orphaned
