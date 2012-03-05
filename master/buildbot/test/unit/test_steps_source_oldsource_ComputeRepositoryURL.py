@@ -13,13 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 from twisted.trial import unittest
 
 from buildbot.interfaces import IRenderable
 from buildbot.process.properties import Properties, WithProperties
-from buildbot.steps.source import _ComputeRepositoryURL, Source
-from buildbot.test.util import steps, sourcesteps
+from buildbot.steps.source.oldsource import _ComputeRepositoryURL
 
 
 class SourceStamp(object):
@@ -72,73 +70,3 @@ class RepoURL(unittest.TestCase):
         func = lambda x: WithProperties(x+"%(foo)s")
         url = _ComputeRepositoryURL(func)
         self.assertEquals(self.build.render(url), "testbar")
-
-
-class TestSourceDescription(steps.BuildStepMixin, unittest.TestCase):
-
-    def setUp(self):
-        return self.setUpBuildStep()
-
-    def tearDown(self):
-        return self.tearDownBuildStep()
-
-    def test_constructor_args_strings(self):
-        step = Source(workdir='build',
-                      description='svn update (running)',
-                      descriptionDone='svn update')
-        self.assertEqual(step.description, ['svn update (running)'])
-        self.assertEqual(step.descriptionDone, ['svn update'])
-
-    def test_constructor_args_lists(self):
-        step = Source(workdir='build',
-                      description=['svn', 'update', '(running)'],
-                      descriptionDone=['svn', 'update'])
-        self.assertEqual(step.description, ['svn', 'update', '(running)'])
-        self.assertEqual(step.descriptionDone, ['svn', 'update'])
-
-class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
-
-    def setUp(self):
-        return self.setUpBuildStep()
-
-    def tearDown(self):
-        return self.tearDownBuildStep()
-
-    def test_start_alwaysUseLatest_True(self):
-        step = self.setupStep(Source(alwaysUseLatest=True),
-                {
-                    'branch': 'other-branch',
-                    'revision': 'revision',
-                },
-                patch = 'patch'
-                )
-        step.branch = 'branch'
-        step.startVC = mock.Mock()
-
-        step.startStep(mock.Mock())
-
-        self.assertEqual(step.startVC.call_args, (('branch', None, None), {}))
-
-    def test_start_alwaysUseLatest_False(self):
-        step = self.setupStep(Source(),
-                {
-                    'branch': 'other-branch',
-                    'revision': 'revision',
-                },
-                patch = 'patch'
-                )
-        step.branch = 'branch'
-        step.startVC = mock.Mock()
-
-        step.startStep(mock.Mock())
-
-        self.assertEqual(step.startVC.call_args, (('other-branch', 'revision', 'patch'), {}))
-
-    def test_start_alwaysUseLatest_False_no_branch(self):
-        step = self.setupStep(Source())
-        step.branch = 'branch'
-        step.startVC = mock.Mock()
-
-        step.startStep(mock.Mock())
-
-        self.assertEqual(step.startVC.call_args, (('branch', None, None), {}))
