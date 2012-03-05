@@ -20,6 +20,10 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * BK support has been removed in this release - see :bb:bug:`2198`.
 
+* The undocumented renderable _ComputeRepositoryURL is no longer imported to
+  py:module::`buildbot.steps.source`. It is still available at
+  py:module::`buildbot.steps.source.oldsource`.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 

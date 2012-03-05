@@ -14,8 +14,8 @@
 # Copyright Buildbot Team Members
 
 from buildbot.steps.source.base import Source
-from buildbot.steps.source.oldsource import _ComputeRepositoryURL, CVS, \
+from buildbot.steps.source.oldsource import CVS, \
     SVN, Git, Darcs, Repo, Bzr, Mercurial, P4, P4Sync, Monotone
 
-_hush_pyflakes = [ _ComputeRepositoryURL, Source, CVS, SVN, \
+_hush_pyflakes = [ Source, CVS, SVN, \
      Git, Darcs, Repo, Bzr, Mercurial, P4, P4Sync, Monotone ]
