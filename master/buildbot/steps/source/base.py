@@ -39,7 +39,7 @@ class Source(LoggingBuildStep):
 
     def __init__(self, workdir=None, mode='update', alwaysUseLatest=False,
                  timeout=20*60, retry=None, env=None, logEnviron=True,
-                 description=None, descriptionDone=None, codebase=None,
+                 description=None, descriptionDone=None, codebase='',
                  **kwargs):
         """
         @type  workdir: string
