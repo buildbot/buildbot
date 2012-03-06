@@ -609,20 +609,16 @@ class TestPickles(unittest.TestCase):
             S'project'
             p3
             S''
-            sS'ssid'
-            p4
-            I10
             sS'repository'
-            p5
+            p4
             S''
             sS'patch_info'
-            p6
+            p5
             NsS'buildbot.sourcestamp.SourceStamp.persistenceVersion'
-            p7
+            p6
             I2
             sS'patch'
             Nsb.""")
         ss = cPickle.loads(pkl)
         styles.doUpgrade()
-        self.assertEqual(ss.sourcestampsetid,10)
         self.assertEqual(ss.codebase, '')

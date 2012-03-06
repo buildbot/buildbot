@@ -91,7 +91,7 @@ class Build(properties.PropertiesMixin):
     def setSlaveEnvironment(self, env):
         self.slaveEnvironment = env
 
-    def getSourceStamp(self, codebase):
+    def getSourceStamp(self, codebase=''):
         for source in self.sources:
             if source.codebase == codebase:
                 return source
