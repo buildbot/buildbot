@@ -10,6 +10,9 @@
 # Required-Stop:     $remote_fs
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
+# Short-Description: Buildbot master init script
+# Description:       This file allows running buildbot master instances at
+#                    startup
 ### END INIT INFO
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin

@@ -260,7 +260,7 @@ class Maker:
         master = BuildMaster(self.basedir)
         master.config = master_cfg
         db = connector.DBConnector(master, self.basedir)
-        d = db.setup(check_version=False)
+        d = db.setup(check_version=False, verbose=not self.config['quiet'])
         if not self.config['quiet']:
             print "creating database (%s)" % (master_cfg.db['db_url'],)
         d = db.model.upgrade()
@@ -432,7 +432,7 @@ def upgradeMaster(config):
     db = connector.DBConnector(master, basedir=config['basedir'])
 
     wfd = defer.waitForDeferred(
-            db.setup(check_version=False))
+            db.setup(check_version=False, verbose=not config['quiet']))
     yield wfd
     wfd.getResult()
 

@@ -278,9 +278,6 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     def upgradeToVersion3(self):
         #In version 2 sourcestamps where not part of a set
-        #The database has been upgraded where all existing sourcestamps got an
-        #setid equal to its ssid
-        self.sourcestampsetid = self.ssid
         #version 2 did not have codebase; set to ''
         self.codebase = ''
         self.wasUpgraded = True
@@ -288,8 +285,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     @util.deferredLocked('_getSourceStampSetId_lock')
     def getSourceStampSetId(self, master):
         "temporary; do not use widely!"
-        if self.ssid:
-            return defer.succeed(self.ssid)
+        if self.sourcestampsetid:
+            return defer.succeed(self.sourcestampsetid)
         # add it to the DB
         patch_body = None
         patch_level = None
