@@ -222,7 +222,6 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
                            patch=self.patch, repository=self.repository,
                            codebase=self.codebase, patch_info=self.patch_info,
                            project=self.project, changes=self.changes,
-                           sourcestampsetid=self.sourcestampsetid, 
                            _ignoreChanges=True)
 
     def getText(self):
