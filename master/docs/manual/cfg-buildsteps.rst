@@ -1321,7 +1321,7 @@ The :bb:step:`ShellCommand` arguments are:
     Those variables support expansion so that if you just want to prepend
     :file:`/home/buildbot/bin` to the :envvar:`PATH` environment variable, you can do
     it by putting the value ``${PATH}`` at the end of the value like
-    in the example below. Variables that doesn't exists on the slave will be
+    in the example below. Variables that don't exist on the slave will be
     replaced by ``""``. ::
     
         from buildbot.steps.shell import ShellCommand
@@ -2286,6 +2286,22 @@ In this example, the step renames a tarball based on the day of the week. ::
 .. note:: By default, this step passes a copy of the buildmaster's environment
    variables to the subprocess.  To pass an explicit environment instead, add an
    ``env={..}`` argument.
+
+Environment variables constructed using the ``env`` argument support expansion
+so that if you just want to prepend  :file:`/home/buildbot/bin` to the
+:envvar:`PATH` environment variable, you can do it by putting the value
+``${PATH}`` at the end of the value like in the example below.
+Variables that don't exist on the master will be replaced by ``""``. ::
+
+    from buildbot.steps.master import MasterShellCommand
+    f.addStep(MasterShellCommand(
+                  command=["make", "www"],
+                  env={'PATH': ["/home/buildbot/bin",
+                                "${PATH}"]}))
+
+Note that environment values must be strings (or lists that are turned into
+strings).  In particular, numeric properties such as ``buildnumber`` must
+be substituted using :ref:`WithProperties`.
 
 .. index:: Properties; from steps
 
