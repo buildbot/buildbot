@@ -29,7 +29,7 @@ class MasterShellCommand(BuildStep):
     name='MasterShellCommand'
     description='Running'
     descriptionDone='Ran'
-    renderables = [ 'command' ]
+    renderables = [ 'command', 'env' ]
     haltOnFailure = True
     flunkOnFailure = True
 
@@ -106,17 +106,13 @@ class MasterShellCommand(BuildStep):
             env = os.environ
         else:
             assert isinstance(self.env, dict)
-            env = properties.render(self.env.copy())
+            env = self.env
 
-            # do substitution on variable values matching patern: ${name}
+            # do substitution on variable values matching pattern: ${name}
             p = re.compile('\${([0-9a-zA-Z_]*)}')
             def subst(match):
                 return os.environ.get(match.group(1), "")
             newenv = {}
-            for key in os.environ.keys():
-                # setting a key to None will delete it from the slave environment
-                if key not in env or env[key] is not None:
-                    newenv[key] = os.environ[key]
             for key in env.keys():
                 if env[key] is not None:
                     newenv[key] = p.sub(subst, env[key])
