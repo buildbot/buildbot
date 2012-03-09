@@ -4,7 +4,7 @@ Buildbot Coding Style
 Symbol Names
 ------------
 
-Buildbot follows `PEP8 <http://www.python.org/dev/peps/pep-0008/>` regarding
+Buildbot follows `PEP8 <http://www.python.org/dev/peps/pep-0008/>`_ regarding
 the formatting of symbol names.
 
 The single exception in naming of functions and methods. Because Buildbot uses
@@ -154,7 +154,7 @@ Joining Sequences
 It's often the case that you'll want to perform multiple operations in
 parallel, and re-join the results at the end. For this purpose, you'll want to
 use a `DeferredList
-<http://twistedmatrix.com/documents/current/api/twisted.internet.defer.DeferredList.html>`::
+<http://twistedmatrix.com/documents/current/api/twisted.internet.defer.DeferredList.html>`_::
 
     def getRevInfo(revname):
         results = {}
