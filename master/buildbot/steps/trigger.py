@@ -112,8 +112,17 @@ class Trigger(LoggingBuildStep):
             return self.end(FAILURE)
 
         master = self.build.builder.botmaster.parent # seriously?!
+        
+        def add_sourcestamp_to_set(ss_setid, sourceStamp):
+            d = master.db.sourcestamps.addSourceStamp(
+                    sourcestampsetid = ss_setid,
+                    **sourceStamp)
+            d.addCallback(lambda _ : ss_setid)
+            return d
+
         if self.sourceStamp:
-            d = master.db.sourcestamps.addSourceStamp(**self.sourceStamp)
+            d = master.db.sourcestampsets.addSourceStampSet()
+            d.addCallback(add_sourcestamp_to_set, self.sourceStamp)
         elif self.alwaysUseLatest:
             d = defer.succeed(None)
         else:
@@ -123,11 +132,11 @@ class Trigger(LoggingBuildStep):
                 if got:
                     ss = ss.getAbsoluteSourceStamp(got)
             d = ss.getSourceStampSetId(master)
-        def start_builds(ssid):
+        def start_builds(ss_setid):
             dl = []
             for scheduler in triggered_schedulers:
                 sch = all_schedulers[scheduler]
-                dl.append(sch.trigger(ssid, set_props=props_to_set))
+                dl.append(sch.trigger(ss_setid, set_props=props_to_set))
             self.step_status.setText(['triggered'] + triggered_schedulers)
 
             if self.waitForFinish:
