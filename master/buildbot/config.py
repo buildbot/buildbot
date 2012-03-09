@@ -150,7 +150,7 @@ class MasterConfig(object):
                     errors.addError(error)
                 raise errors
             except:
-                log.err(failure.Failure())
+                log.err(failure.Failure(), 'error while parsing config file:')
                 errors.addError(
                     "error while parsing config file: %s (traceback in logfile)" %
                         (sys.exc_info()[1],),
