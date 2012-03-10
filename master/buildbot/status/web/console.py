@@ -163,11 +163,15 @@ class ConsoleStatusResource(HtmlResource):
         return allChanges                
 
     @defer.deferredGenerator
-    def getAllChanges(self, request, status, debugInfo):
+    def getAllChanges(self, request, status, debugInfo,
+                      branch=None, devName=None, repository=None, project=None):
         master = request.site.buildbot_service.master
 
+        if branch == ANYBRANCH:
+            branch = None
         wfd = defer.waitForDeferred(
-                master.db.changes.getRecentChanges(25))
+                master.db.changes.getRecentChanges(25, branch=branch, author=devName,
+                                                   repository=repository, project=project))
         yield wfd
         chdicts = wfd.getResult()
 
@@ -637,21 +641,12 @@ class ConsoleStatusResource(HtmlResource):
 
         # Get all changes we can find.  This is a DB operation, so it must use
         # a deferred.
-        d = self.getAllChanges(request, status, debugInfo)
+        d = self.getAllChanges(request, status, debugInfo,
+                               branch, devName, repository, project)
         def got_changes(allChanges):
             debugInfo["source_all"] = len(allChanges)
 
-            revFilter = {}
-            if branch != ANYBRANCH:
-                revFilter['branch'] = branch
-            if devName:
-                revFilter['who'] = devName
-            if repository:
-                revFilter['repository'] = repository
-            if project:
-                revFilter['project'] = project
-            revisions = list(self.filterRevisions(allChanges, max_revs=numRevs,
-                                                            filter=revFilter))
+            revisions = list(self.filterRevisions(allChanges, max_revs=numRevs))
             debugInfo["revision_final"] = len(revisions)
 
             # Fetch all the builds for all builders until we get the next build

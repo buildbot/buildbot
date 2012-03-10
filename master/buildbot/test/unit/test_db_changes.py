@@ -493,3 +493,194 @@ class TestChangesConnectorComponent(
                         { 'notest' : ('no', 'Change') })
         d.addCallback(check)
         return d
+
+    def test_getRecentChanges_branch_master(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=3),
+            fakedb.Change(changeid=4, branch="1"),
+            fakedb.Change(changeid=5),
+            fakedb.Change(changeid=6),
+            fakedb.Change(changeid=7),
+            fakedb.Change(changeid=8, branch="1"),
+            fakedb.Change(changeid=9, branch="1"),
+            fakedb.Change(changeid=10),
+            fakedb.Change(changeid=11),
+            fakedb.Change(changeid=12, branch="1"),
+        ] + self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5, branch='master'))
+        def check(changes):
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [6, 7, 10, 11, 13])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChanges_branch_set(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=3),
+            fakedb.Change(changeid=4, branch="1"),
+            fakedb.Change(changeid=5),
+            fakedb.Change(changeid=6),
+            fakedb.Change(changeid=7),
+            fakedb.Change(changeid=8, branch="1"),
+            fakedb.Change(changeid=9, branch="1"),
+            fakedb.Change(changeid=10),
+            fakedb.Change(changeid=11),
+            fakedb.Change(changeid=12, branch="1"),
+        ] + self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5, branch='1'))
+        def check(changes):
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [4, 8, 9, 12])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChanges_branch_trunk(self):
+        # svnpoller.split_file_branches() uses None for trunk, so we have a different
+        # behaviour than for a normal branch
+        d = self.insertTestData([
+            fakedb.Change(changeid=3, branch=None),
+            fakedb.Change(changeid=4, branch="1"),
+            fakedb.Change(changeid=5, branch=None),
+            fakedb.Change(changeid=6, branch=None),
+            fakedb.Change(changeid=7, branch=None),
+            fakedb.Change(changeid=8, branch="1"),
+            fakedb.Change(changeid=9, branch="1"),
+            fakedb.Change(changeid=10, branch=None),
+            fakedb.Change(changeid=11, branch=None),
+            fakedb.Change(changeid=12, branch="1"),
+        ] + self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5, branch=''))
+        def check(changes):
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [5, 6, 7, 10, 11])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChanges_author_frank(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=3),
+            fakedb.Change(changeid=4, author="1"),
+            fakedb.Change(changeid=5),
+            fakedb.Change(changeid=6),
+            fakedb.Change(changeid=7),
+            fakedb.Change(changeid=8, author="1"),
+            fakedb.Change(changeid=9, author="1"),
+            fakedb.Change(changeid=10),
+            fakedb.Change(changeid=11),
+            fakedb.Change(changeid=12, author="1"),
+        ] + self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5, author='frank'))
+        def check(changes):
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [5, 6, 7, 10, 11])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChanges_author_1(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=3),
+            fakedb.Change(changeid=4, author="1"),
+            fakedb.Change(changeid=5),
+            fakedb.Change(changeid=6),
+            fakedb.Change(changeid=7),
+            fakedb.Change(changeid=8, author="1"),
+            fakedb.Change(changeid=9, author="1"),
+            fakedb.Change(changeid=10),
+            fakedb.Change(changeid=11),
+            fakedb.Change(changeid=12, author="1"),
+        ] + self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5, author='1'))
+        def check(changes):
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [4, 8, 9, 12])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChanges_branch_author(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=3,             branch="b1"),
+            fakedb.Change(changeid=4, author="1", branch="b1"),
+            fakedb.Change(changeid=5),
+            fakedb.Change(changeid=6, author="1"),
+            fakedb.Change(changeid=7),
+            fakedb.Change(changeid=8, author="1", branch="b1"),
+            fakedb.Change(changeid=9, author="1"),
+            fakedb.Change(changeid=10,            branch="b1"),
+            fakedb.Change(changeid=11),
+            fakedb.Change(changeid=12, author="1"),
+        ] + self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5, author='1', branch='b1'))
+        def check(changes):
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [4, 8])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChanges_repository(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=3),
+            fakedb.Change(changeid=4, repository="1"),
+            fakedb.Change(changeid=5),
+            fakedb.Change(changeid=6, repository="1"),
+            fakedb.Change(changeid=7, repository="1"),
+            fakedb.Change(changeid=8, repository="1"),
+            fakedb.Change(changeid=9),
+            fakedb.Change(changeid=10, repository="1"),
+            fakedb.Change(changeid=11, repository="1"),
+            fakedb.Change(changeid=12),
+        ] + self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5, repository='1'))
+        def check(changes):
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [6, 7, 8, 10, 11])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChanges_project(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=3),
+            fakedb.Change(changeid=4, project="1"),
+            fakedb.Change(changeid=5),
+            fakedb.Change(changeid=6, project="1"),
+            fakedb.Change(changeid=7),
+            fakedb.Change(changeid=8),
+            fakedb.Change(changeid=9),
+            fakedb.Change(changeid=10),
+            fakedb.Change(changeid=11, project="1"),
+            fakedb.Change(changeid=12),
+        ] + self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5, project='1'))
+        def check(changes):
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [4, 6, 11])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChanges_all_args(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=3, author="2", branch="b1", project="p1", repository="r1"),
+            fakedb.Change(changeid=4, author="1", branch="b1", project="p1", repository="r1"),
+            fakedb.Change(changeid=5),
+            fakedb.Change(changeid=6, author="1", branch="b1", project="p1", repository="r1"),
+            fakedb.Change(changeid=7),
+            fakedb.Change(changeid=8, author="1", branch="b1", project="p2", repository="r1"),
+            fakedb.Change(changeid=9, author="1", branch="b1", project="p1", repository="r2"),
+            fakedb.Change(changeid=10,            branch="b1"),
+            fakedb.Change(changeid=11, author="1", branch="b2", project="p1", repository="r1"),
+            fakedb.Change(changeid=12, author="1"),
+        ] + self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5, author='1', branch='b1', project='p1', repository='r1'))
+        def check(changes):
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [4, 6])
+        d.addCallback(check)
+        return d
