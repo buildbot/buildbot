@@ -33,6 +33,15 @@ def patch_bug4881():
         from buildbot.monkeypatches import bug4881
         bug4881.patch()
 
+def patch_bug4520():
+    # this bug was patched in twisted-11.1.0, and only affects py26 and up
+    import sys
+    py_26 = (sys.version_info[0] > 2 or
+            (sys.version_info[0] == 2 and sys.version_info[1] >= 6))
+    if twisted.version < versions.Version('twisted', 11, 1, 0) and py_26:
+        from buildbot.monkeypatches import bug4520
+        bug4520.patch()
+
 def patch_bug5079():
     # this bug will hopefully be patched in Twisted-12.0.0; it was probably
     # present in Twisted-8.x.0, but the patch doesn't work
@@ -55,6 +64,7 @@ def patch_sqlalchemy2189():
 
 def patch_all():
     patch_bug4881()
+    patch_bug4520()
     patch_bug5079()
     patch_sqlalchemy2364()
     patch_sqlalchemy2189()
