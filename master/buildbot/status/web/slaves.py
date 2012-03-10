@@ -30,14 +30,11 @@ class ShutdownActionResource(ActionResource):
         self.slave = slave
         self.action = "gracefulShutdown"
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def performAction(self, request):
-        d = self.getAuthz(request).actionAllowed(self.action,
-                                                 request,
-                                                 self.slave)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        res = wfd.getResult()
+        res = yield self.getAuthz(request).actionAllowed(self.action,
+                                                        request,
+                                                        self.slave)
 
         url = None
         if res:
@@ -45,7 +42,7 @@ class ShutdownActionResource(ActionResource):
             url = path_to_slave(request, self.slave)
         else:
             url = path_to_authzfail(request)
-        yield url
+        yield defer.returnValue(url)
 
 # /buildslaves/$slavename
 class OneBuildSlaveResource(HtmlResource, BuildLineMixin):

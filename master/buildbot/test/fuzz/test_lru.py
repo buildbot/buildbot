@@ -46,7 +46,7 @@ class LRUCacheFuzzer(unittest.TestCase):
 
     # tests
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_fuzz(self):
         started = reactor.seconds()
 
@@ -77,20 +77,14 @@ class LRUCacheFuzzer(unittest.TestCase):
 
             # give the reactor some time to process pending events
             if random.uniform(0,1.0) < 0.5:
-                wfd = defer.waitForDeferred(
-                    deferUntilLater(0))
-                yield wfd
-                wfd.getResult()
+                yield deferUntilLater(0)
 
         # now wait until all of the pending calls have cleared, noting that
         # this method will be counted as one delayed call, in the current
         # implementation
         while len(reactor.getDelayedCalls()) > 1:
             # give the reactor some time to process pending events
-            wfd = defer.waitForDeferred(
-                deferUntilLater(0.001))
-            yield wfd
-            wfd.getResult()
+            yield deferUntilLater(0.001)
 
 # skip these tests entirely if fuzzing is not enabled
 if 'BUILDBOT_FUZZ' not in os.environ:

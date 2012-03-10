@@ -95,35 +95,26 @@ class Bzr(Source):
         d.addCallback(self._dovccmd)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def full(self):
         if self.method == 'clobber':
-            wfd = defer.waitForDeferred(self.clobber())
-            yield wfd
-            wfd.getResult()
+            yield self.clobber()
             return
         elif self.method == 'copy':
             self.workdir = 'source'
-            wfd = defer.waitForDeferred(self.copy())
-            yield wfd
-            wfd.getResult()
+            yield self.copy()
             return
 
-        wfd = defer.waitForDeferred(self._sourcedirIsUpdatable())
-        yield wfd
-        updatable = wfd.getResult()
+        updatable = self._sourcedirIsUpdatable()
         if not updatable:
             log.msg("No bzr repo present, making full checkout")
-            d = self._doFull()
+            yield self._doFull()
         elif self.method == 'clean':
-            d = self.clean()
+            yield self.clean()
         elif self.method == 'fresh':
-            d = self.fresh()
+            yield self.fresh()
         else:
             raise ValueError("Unknown method, check your configuration")
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        wfd.getResult()
 
     def clobber(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,

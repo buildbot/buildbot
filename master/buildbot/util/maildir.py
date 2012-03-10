@@ -107,7 +107,7 @@ class MaildirService(service.MultiService):
             self.dnotify = None
         return service.MultiService.stopService(self)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def poll(self):
         assert self.basedir
         # see what's new
@@ -121,9 +121,7 @@ class MaildirService(service.MultiService):
         self.files.extend(newfiles)
         for n in newfiles:
             try:
-                wfd = defer.waitForDeferred(self.messageReceived(n))
-                yield wfd
-                wfd.getResult()
+                yield self.messageReceived(n)
             except:
                 log.msg("while reading '%s' from maildir '%s':" % (n, self.basedir))
                 log.err()

@@ -26,7 +26,7 @@ class SchedulerManager(config.ReconfigurableServiceMixin,
         self.setName('scheduler_manager')
         self.master = master
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         timer = metrics.Timer("SchedulerManager.reconfigService")
         timer.start()
@@ -62,11 +62,8 @@ class SchedulerManager(config.ReconfigurableServiceMixin,
         for sch_name in removed_names:
             log.msg("removing scheduler '%s'" % (sch_name,))
             sch = old_by_name[sch_name]
-            wfd = defer.waitForDeferred(
-                    defer.maybeDeferred(lambda :
-                        sch.disownServiceParent()))
-            yield wfd
-            wfd.getResult()
+            yield defer.maybeDeferred(lambda :
+                        sch.disownServiceParent())
             sch.master = None
 
         # .. then additions
@@ -78,11 +75,8 @@ class SchedulerManager(config.ReconfigurableServiceMixin,
             # get the scheduler's objectid
             class_name = '%s.%s' % (sch.__class__.__module__,
                                     sch.__class__.__name__)
-            wfd = defer.waitForDeferred(
-                self.master.db.state.getObjectId(
-                    sch.name, class_name))
-            yield wfd
-            objectid = wfd.getResult()
+            objectid = yield self.master.db.state.getObjectId(
+                                    sch.name, class_name)
 
             # set up the scheduler
             sch.objectid = objectid
@@ -95,10 +89,7 @@ class SchedulerManager(config.ReconfigurableServiceMixin,
                                     absolute=True)
 
         # reconfig any newly-added schedulers, as well as existing
-        wfd = defer.waitForDeferred(
-            config.ReconfigurableServiceMixin.reconfigService(self,
-                                                    new_config))
-        yield wfd
-        wfd.getResult()
+        yield config.ReconfigurableServiceMixin.reconfigService(self,
+                                                        new_config)
 
         timer.stop()

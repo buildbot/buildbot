@@ -213,16 +213,13 @@ class Expect(object):
                         AssertionError('invalid behavior %s' % behavior)))
         return defer.succeed(None)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def runBehaviors(self, command):
         """
         Run all expected behaviors for this command
         """
         for behavior in self.behaviors:
-            wfd = defer.waitForDeferred(
-                    self.runBehavior(behavior[0], behavior[1:], command))
-            yield wfd
-            wfd.getResult()
+            yield self.runBehavior(behavior[0], behavior[1:], command)
 
 
 class ExpectShell(Expect):

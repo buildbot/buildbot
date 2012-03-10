@@ -369,7 +369,7 @@ class UpgradeMasterOptions(MakerBase):
     """
 
 @in_reactor
-@defer.deferredGenerator
+@defer.inlineCallbacks
 def upgradeMaster(config):
     from buildbot import config as config_module
     from buildbot import monkeypatches
@@ -385,7 +385,7 @@ def upgradeMaster(config):
         pidfile = os.path.join(basedir, 'twistd.pid')
         if os.path.exists(pidfile):
             print "'%s' exists - is this master still running?" % (pidfile,)
-            yield 1
+            defer.returnValue(1)
             return
 
     if not config['quiet']: print "checking master.cfg"
@@ -396,12 +396,12 @@ def upgradeMaster(config):
         print "Errors loading configuration:"
         for msg in e.errors:
             print "  " + msg
-        yield 1
+        defer.returnValue(1)
         return
     except:
         print "Errors loading configuration:"
         traceback.print_exc()
-        yield 1
+        defer.returnValue(1)
         return
 
     if not config['quiet']: print "upgrading basedir"
@@ -431,18 +431,11 @@ def upgradeMaster(config):
     master.config = master_cfg
     db = connector.DBConnector(master, basedir=config['basedir'])
 
-    wfd = defer.waitForDeferred(
-            db.setup(check_version=False, verbose=not config['quiet']))
-    yield wfd
-    wfd.getResult()
-
-    wfd = defer.waitForDeferred(
-            db.model.upgrade())
-    yield wfd
-    wfd.getResult()
+    yield db.setup(check_version=False, verbose=not config['quiet'])
+    yield db.model.upgrade()
 
     if not config['quiet']: print "upgrade complete"
-    yield 0
+    defer.returnValue(0)
 
 
 class MasterOptions(MakerBase):

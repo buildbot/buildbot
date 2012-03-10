@@ -157,15 +157,12 @@ class TestBotMaster(unittest.TestCase):
                     self.botmaster.maybeStartBuildsForAllBuilders.called)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigServiceSlaves_add_remove(self):
         sl = FakeBuildSlave('sl1')
         self.new_config.slaves = [ sl ]
 
-        wfd = defer.waitForDeferred(
-                self.botmaster.reconfigServiceSlaves(self.new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.botmaster.reconfigServiceSlaves(self.new_config)
 
         self.assertIdentical(sl.parent, self.botmaster)
         self.assertIdentical(sl.master, self.master)
@@ -173,15 +170,12 @@ class TestBotMaster(unittest.TestCase):
 
         self.new_config.slaves = [ ]
 
-        wfd = defer.waitForDeferred(
-                self.botmaster.reconfigServiceSlaves(self.new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.botmaster.reconfigServiceSlaves(self.new_config)
 
         self.assertIdentical(sl.parent, None)
         self.assertIdentical(sl.master, None)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigServiceSlaves_reconfig(self):
         sl = FakeBuildSlave('sl1')
         self.botmaster.slaves = dict(sl1=sl)
@@ -192,15 +186,12 @@ class TestBotMaster(unittest.TestCase):
         sl_new = FakeBuildSlave('sl1')
         self.new_config.slaves = [ sl_new ]
 
-        wfd = defer.waitForDeferred(
-                self.botmaster.reconfigServiceSlaves(self.new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.botmaster.reconfigServiceSlaves(self.new_config)
 
         # sl was not replaced..
         self.assertIdentical(self.botmaster.slaves['sl1'], sl)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigServiceSlaves_class_changes(self):
         sl = FakeBuildSlave('sl1')
         self.botmaster.slaves = dict(sl1=sl)
@@ -211,24 +202,18 @@ class TestBotMaster(unittest.TestCase):
         sl_new = FakeBuildSlave2('sl1')
         self.new_config.slaves = [ sl_new ]
 
-        wfd = defer.waitForDeferred(
-                self.botmaster.reconfigServiceSlaves(self.new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.botmaster.reconfigServiceSlaves(self.new_config)
 
         # sl *was* replaced (different class)
         self.assertIdentical(self.botmaster.slaves['sl1'], sl_new)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigServiceBuilders_add_remove(self):
         bc = config.BuilderConfig(name='bldr', factory=mock.Mock(),
                             slavename='f')
         self.new_config.builders = [ bc ]
 
-        wfd = defer.waitForDeferred(
-                self.botmaster.reconfigServiceBuilders(self.new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.botmaster.reconfigServiceBuilders(self.new_config)
 
         bldr = self.botmaster.builders['bldr']
         self.assertIdentical(bldr.parent, self.botmaster)
@@ -237,10 +222,7 @@ class TestBotMaster(unittest.TestCase):
 
         self.new_config.builders = [ ]
 
-        wfd = defer.waitForDeferred(
-                self.botmaster.reconfigServiceBuilders(self.new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.botmaster.reconfigServiceBuilders(self.new_config)
 
         self.assertIdentical(bldr.parent, None)
         self.assertIdentical(bldr.master, None)

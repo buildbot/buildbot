@@ -96,7 +96,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                     formatted_results += "no match found\n"
         return formatted_results
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def perspective_commandline(self, op, bb_username, bb_password, ids, info):
         """
         This performs the requested operations from the `buildbot user`
@@ -129,27 +129,19 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
             for user in ids:
                 # get identifier, guaranteed to be in user from checks
                 # done in C{scripts.runner}
-                d = self.master.db.users.identifierToUid(identifier=user)
-                wfd = defer.waitForDeferred(d)
-                yield wfd
-                uid = wfd.getResult()
+                uid = yield self.master.db.users.identifierToUid(
+                                            identifier=user)
 
                 result = None
                 if op == 'remove':
                     if uid:
-                        d = self.master.db.users.removeUser(uid)
-                        wfd = defer.waitForDeferred(d)
-                        yield wfd
-                        wfd.getResult()
+                        yield self.master.db.users.removeUser(uid)
                         result = user
                     else:
                         log.msg("Unable to find uid for identifier %s" % user)
                 elif op == 'get':
                     if uid:
-                        d = self.master.db.users.getUser(uid)
-                        wfd = defer.waitForDeferred(d)
-                        yield wfd
-                        result = wfd.getResult()
+                        result = yield self.master.db.users.getUser(uid)
                     else:
                         log.msg("Unable to find uid for identifier %s" % user)
 
@@ -159,24 +151,19 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                 # get identifier, guaranteed to be in user from checks
                 # done in C{scripts.runner}
                 ident = user.pop('identifier')
-                d = self.master.db.users.identifierToUid(identifier=ident)
-                wfd = defer.waitForDeferred(d)
-                yield wfd
-                uid = wfd.getResult()
+                uid = yield self.master.db.users.identifierToUid(
+                                                 identifier=ident)
 
                 # if only an identifier was in user, we're updating only
                 # the bb_username and bb_password.
                 if not user:
                     if uid:
-                        d = self.master.db.users.updateUser(
+                        result = yield self.master.db.users.updateUser(
                                                        uid=uid,
                                                        identifier=ident,
                                                        bb_username=bb_username,
                                                        bb_password=bb_password)
-                        wfd = defer.waitForDeferred(d)
-                        yield wfd
                         results.append(ident)
-                        result = wfd.getResult()
                     else:
                         log.msg("Unable to find uid for identifier %s"
                                 % user)
@@ -186,7 +173,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                     for attr in user:
                         if op == 'update' or once_through:
                             if uid:
-                                d = self.master.db.users.updateUser(
+                                result = yield self.master.db.users.updateUser(
                                                       uid=uid,
                                                       identifier=ident,
                                                       bb_username=bb_username,
@@ -197,22 +184,19 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                                 log.msg("Unable to find uid for identifier %s"
                                         % user)
                         elif op == 'add':
-                            d = self.master.db.users.findUserByAttr(
+                            result = yield self.master.db.users.findUserByAttr(
                                                       identifier=ident,
                                                       attr_type=attr,
                                                       attr_data=user[attr])
                             once_through = True
-                        wfd = defer.waitForDeferred(d)
-                        yield wfd
                         results.append(ident)
-                        result = wfd.getResult()
 
                         # result is None from updateUser calls
                         if result:
                             results.append(result)
                             uid = result
         results = self.formatResults(op, results)
-        yield results
+        defer.returnValue(results)
 
 class CommandlineUserManager(UsersBase):
     """

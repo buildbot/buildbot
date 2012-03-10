@@ -62,7 +62,7 @@ class AbstractBuildSlave(unittest.TestCase):
             self.ConcreteBuildSlave('bot', 'pass',
                     notify_on_missing=['a@b.com', 13]))
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def do_test_reconfigService(self, old, old_port, new, new_port):
         master = self.master = fakemaster.make_master()
         old.master = master
@@ -80,12 +80,9 @@ class AbstractBuildSlave(unittest.TestCase):
         new_config.slavePortnum = new_port
         new_config.slaves = [ new ]
 
-        wfd = defer.waitForDeferred(
-            old.reconfigService(new_config))
-        yield wfd
-        wfd.getResult()
+        yield old.reconfigService(new_config)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_attrs(self):
         old = self.ConcreteBuildSlave('bot', 'pass',
                 max_builds=2,
@@ -102,10 +99,7 @@ class AbstractBuildSlave(unittest.TestCase):
 
         old.updateSlave = mock.Mock(side_effect=lambda : defer.succeed(None))
 
-        wfd = defer.waitForDeferred(
-            self.do_test_reconfigService(old, 'tcp:1234', new, 'tcp:1234'))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_reconfigService(old, 'tcp:1234', new, 'tcp:1234')
 
         self.assertEqual(old.max_builds, 3)
         self.assertEqual(old.notify_on_missing, ['her@me.com'])
@@ -115,29 +109,23 @@ class AbstractBuildSlave(unittest.TestCase):
         self.assertFalse(self.master.pbmanager.register.called)
         self.assertTrue(old.updateSlave.called)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_reregister_password(self):
         old = self.ConcreteBuildSlave('bot', 'pass')
         new = self.ConcreteBuildSlave('bot', 'newpass')
 
-        wfd = defer.waitForDeferred(
-            self.do_test_reconfigService(old, 'tcp:1234', new, 'tcp:1234'))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_reconfigService(old, 'tcp:1234', new, 'tcp:1234')
 
         self.assertEqual(old.password, 'newpass')
         self.assertTrue(self.old_registration.unregister.called)
         self.assertTrue(self.master.pbmanager.register.called)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_reregister_port(self):
         old = self.ConcreteBuildSlave('bot', 'pass')
         new = self.ConcreteBuildSlave('bot', 'pass')
 
-        wfd = defer.waitForDeferred(
-            self.do_test_reconfigService(old, 'tcp:1234', new, 'tcp:5678'))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_reconfigService(old, 'tcp:1234', new, 'tcp:5678')
 
         self.assertTrue(self.old_registration.unregister.called)
         self.assertTrue(self.master.pbmanager.register.called)

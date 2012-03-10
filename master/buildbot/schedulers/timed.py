@@ -170,7 +170,7 @@ class Timed(base.BaseScheduler):
 
         d = self.actuationLock.acquire()
 
-        @defer.deferredGenerator
+        @defer.inlineCallbacks
         def set_state_and_start(_):
             # bail out if we shouldn't be actuating anymore
             if not self.actuateOk:
@@ -178,20 +178,13 @@ class Timed(base.BaseScheduler):
 
             # mark the last build time
             self.actuateAt = None
-            wfd = defer.waitForDeferred(self.setState('last_build',
-                                                    self.lastActuated))
-            yield wfd
-            wfd.getResult()
+            yield self.setState('last_build', self.lastActuated)
 
             # start the build
-            wfd = defer.waitForDeferred(self.startBuild())
-            yield wfd
-            wfd.getResult()
+            yield self.startBuild()
 
             # schedule the next build (noting the lock is already held)
-            wfd = defer.waitForDeferred(self._scheduleNextBuild_locked())
-            yield wfd
-            wfd.getResult()
+            yield self._scheduleNextBuild_locked()
         d.addCallback(set_state_and_start)
 
         def unlock(x):
@@ -330,15 +323,14 @@ class Nightly(Timed):
             assert dateTime[0] < yearLimit, 'Something is wrong with this code'
         return defer.succeed(time.mktime(dateTime))
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def startBuild(self):
         scheds = self.master.db.schedulers
         # if onlyIfChanged is True, then we will skip this build if no
         # important changes have occurred since the last invocation
         if self.onlyIfChanged:
-            wfd = defer.waitForDeferred(scheds.getChangeClassifications(self.objectid))
-            yield wfd
-            classifications = wfd.getResult()
+            classifications = \
+                    yield scheds.getChangeClassifications(self.objectid)
 
             # see if we have any important changes
             for imp in classifications.itervalues():
@@ -350,20 +342,13 @@ class Nightly(Timed):
                 return
 
             changeids = sorted(classifications.keys())
-            wfd = defer.waitForDeferred(
-                    self.addBuildsetForChanges(reason=self.reason, changeids=changeids))
-            yield wfd
-            wfd.getResult()
+            yield self.addBuildsetForChanges(reason=self.reason,
+                                            changeids=changeids)
 
             max_changeid = changeids[-1] # (changeids are sorted)
-            wfd = defer.waitForDeferred(
-                    scheds.flushChangeClassifications(self.objectid,
-                                                      less_than=max_changeid+1))
-            yield wfd
-            wfd.getResult()
+            yield scheds.flushChangeClassifications(self.objectid,
+                                                      less_than=max_changeid+1)
         else:
             # start a build of the latest revision, whatever that is
-            wfd = defer.waitForDeferred(
-                    self.addBuildsetForLatest(reason=self.reason, branch=self.branch))
-            yield wfd
-            wfd.getResult()
+            yield self.addBuildsetForLatest(reason=self.reason,
+                                            branch=self.branch)

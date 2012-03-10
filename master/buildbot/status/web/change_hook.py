@@ -127,11 +127,9 @@ class ChangeHookResource(resource.Resource):
 
         return (changes, src)
                 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def submitChanges(self, changes, request, src):
         master = request.site.buildbot_service.master
         for chdict in changes:
-            wfd = defer.waitForDeferred(master.addChange(src=src, **chdict))
-            yield wfd
-            change = wfd.getResult()
+            change = yield master.addChange(src=src, **chdict)
             log.msg("injected change %s" % change)
