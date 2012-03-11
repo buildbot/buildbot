@@ -141,10 +141,13 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         )
         jobstr += 'x' * 100000000
 
-        jobio = StringIO.StringIO(jobstr)
+        import tempfile
+        test_temp_file = tempfile.TemporaryFile()
+        test_temp_file.write(jobstr)
+        test_temp_file.seek(0,0)
 
         self.assertRaises(trysched.BadJobfile,
-            lambda : sched.parseJob(jobio))
+            lambda : sched.parseJob(test_temp_file))
 
     def test_parseJob_invalid(self):
         sched = trysched.Try_Jobdir(name='tsched', builderNames=['a'], jobdir='foo')
