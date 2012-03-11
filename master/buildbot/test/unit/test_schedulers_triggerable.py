@@ -59,7 +59,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # trigger the scheduler, exercising properties while we're at it
         set_props = properties.Properties()
         set_props.setProperty('pr', 'op', 'test')
-        d = sched.trigger(91, set_props=set_props)
+        d = sched.trigger(1091, set_props=set_props)
 
         bsid = self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
@@ -120,7 +120,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(callbacks['buildset_completion'], None)
 
         # trigger the scheduler the first time
-        d = sched.trigger(91)
+        d = sched.trigger(1091)
         bsid1 = self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
@@ -133,7 +133,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                                         and self.assertEqual(brids, self.db.buildsets.allBuildRequests(bsid1)))
 
         # and the second time
-        d = sched.trigger(92)
+        d = sched.trigger(1092)
         bsid2 = self.db.buildsets.assertBuildset(bsid1+1, # assumes bsid's are sequential
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
