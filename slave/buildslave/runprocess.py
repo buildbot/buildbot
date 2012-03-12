@@ -26,8 +26,10 @@ import subprocess
 import traceback
 import stat
 from collections import deque
+from tempfile import NamedTemporaryFile
 
 from twisted.python import runtime, log
+from twisted.python.win32 import quoteArguments
 from twisted.internet import reactor, defer, protocol, task, error
 
 from buildslave import util
@@ -406,11 +408,13 @@ class RunProcess:
 
         self.pp = RunProcessPP(self)
 
+        self.using_comspec = False
         if type(self.command) in types.StringTypes:
             if runtime.platformType  == 'win32':
                 argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
                 if '/c' not in argv: argv += ['/c']
                 argv += [self.command]
+                self.using_comspec = True
             else:
                 # for posix, use /bin/sh. for other non-posix, well, doesn't
                 # hurt to try
@@ -427,6 +431,7 @@ class RunProcess:
                 argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
                 if '/c' not in argv: argv += ['/c']
                 argv += list(self.command)
+                self.using_comspec = True
             else:
                 argv = self.command
             # Attempt to format this for use by a shell, although the process isn't perfect
@@ -526,8 +531,35 @@ class RunProcess:
                                     processProtocol, uid, gid, childFDs)
 
         # fall back
-        return reactor.spawnProcess(processProtocol, executable, args, env,
+        if self.using_comspec:
+            return self._spawnAsBatch(processProtocol, executable, args, env,
+                                      path, usePTY=usePTY)
+        else:
+            return reactor.spawnProcess(processProtocol, executable, args, env,
                                         path, usePTY=usePTY)
+
+    def _spawnAsBatch(self, processProtocol, executable, args, env,
+            path, usePTY):
+        """A cheat that routes around the impedance mismatch between
+        twisted and cmd.exe with respect to escaping quotes"""
+        with NamedTemporaryFile(dir='.',suffix=".bat",delete=False) as tf:
+            #echo off hides this cheat from the log files.
+            tf.write( "@echo off\n" )
+            if type(self.command) in types.StringTypes:
+                tf.write( self.command )
+            else:
+                tf.write( quoteArguments(self.command) )
+        argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
+        if '/c' not in argv: argv += ['/c']
+        argv += [tf.name]
+
+        def unlink_temp(result):
+            os.unlink(tf.name)
+            return result
+        self.deferred.addBoth(unlink_temp)
+
+        return reactor.spawnProcess(processProtocol, executable, argv, env,
+                                    path, usePTY=usePTY)
 
     def _chunkForSend(self, data):
         """
