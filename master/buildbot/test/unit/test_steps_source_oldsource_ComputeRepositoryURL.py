@@ -26,7 +26,8 @@ class SourceStamp(object):
 class Build(object):
     s = SourceStamp()
     props = Properties(foo = "bar")
-    def getSourceStamp(self):
+    def getSourceStamp(self, codebase):
+        assert codebase == ''
         return self.s
     def getProperties(self):
         return self.props
