@@ -82,6 +82,10 @@ class VisualStudio(ShellCommand):
     description = "compiling"
     descriptionDone = "compile"
 
+
+    progressMetrics = ( ShellCommand.progressMetrics +
+                            ('projects', 'files','warnings',))
+
     logobserver = None
 
     installdir = None
@@ -138,10 +142,6 @@ class VisualStudio(ShellCommand):
             LIB = LIB,
             PATH = PATH
         )
-
-    def setupProgress(self):
-        self.progressMetrics += ('projects', 'files', 'warnings',)
-        return ShellCommand.setupProgress(self)
 
     def setupLogfiles(self, cmd, logfiles):
         logwarnings = self.addLog("warnings")

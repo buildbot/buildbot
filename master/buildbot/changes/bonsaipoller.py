@@ -253,7 +253,7 @@ class BonsaiPoller(base.PollingChangeSource):
         # get the page, in XML format
         return client.getPage(url, timeout=self.pollInterval)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _process_changes(self, query):
         try:
             bp = BonsaiParser(query)
@@ -268,11 +268,8 @@ class BonsaiPoller(base.PollingChangeSource):
             files = [file.filename + ' (revision '+file.revision+')'
                      for file in cinode.files]
             self.lastChange = self.lastPoll
-            w = defer.waitForDeferred(
-                    self.master.addChange(author = cinode.who,
+            yield self.master.addChange(author = cinode.who,
                                files = files,
                                comments = cinode.log,
                                when_timestamp = epoch2datetime(cinode.date),
-                               branch = self.branch))
-            yield w
-            w.getResult()
+                               branch = self.branch)

@@ -49,7 +49,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.SourceStampSet(id=1091),
             fakedb.SourceStamp(id=91, sourcestampsetid=1091, revision='myrev', branch='br',
-                project='p', repository='r'),
+                project='p', repository='r', codebase='cb'),
         ])
 
         # no subscription should be in place yet
@@ -59,7 +59,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # trigger the scheduler, exercising properties while we're at it
         set_props = properties.Properties()
         set_props.setProperty('pr', 'op', 'test')
-        d = sched.trigger(91, set_props=set_props)
+        d = sched.trigger(1091, set_props=set_props)
 
         bsid = self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
@@ -69,9 +69,9 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                      ],
                      reason='Triggerable(n)',
                      sourcestampsetid=1091),
-                {'r':
+                {'cb':
                  dict(branch='br', project='p', repository='r',
-                     revision='myrev', sourcestampsetid=1091)
+                     codebase='cb', revision='myrev', sourcestampsetid=1091)
                 })
 
         # set up a boolean so that we can know when the deferred fires
@@ -110,9 +110,9 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
             fakedb.SourceStampSet(id=1091),
             fakedb.SourceStampSet(id=1092),
             fakedb.SourceStamp(id=91, sourcestampsetid=1091, revision='myrev1',
-                branch='br', project='p', repository='r'),
+                branch='br', project='p', repository='r', codebase='cb'),
             fakedb.SourceStamp(id=92, sourcestampsetid=1092, revision='myrev2',
-                branch='br', project='p', repository='r'),
+                branch='br', project='p', repository='r', codebase='cb'),
         ])
 
         # no subscription should be in place yet
@@ -120,26 +120,26 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(callbacks['buildset_completion'], None)
 
         # trigger the scheduler the first time
-        d = sched.trigger(91)
+        d = sched.trigger(1091)
         bsid1 = self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
                      reason='Triggerable(n)',
                      sourcestampsetid=1091),
-                {'r':
-                dict(branch='br', project='p', repository='r',
+                {'cb':
+                dict(branch='br', project='p', repository='r', codebase='cb',
                      revision='myrev1', sourcestampsetid=1091)})
         d.addCallback(lambda (res, brids) : self.assertEqual(res, 11) 
                                         and self.assertEqual(brids, self.db.buildsets.allBuildRequests(bsid1)))
 
         # and the second time
-        d = sched.trigger(92)
+        d = sched.trigger(1092)
         bsid2 = self.db.buildsets.assertBuildset(bsid1+1, # assumes bsid's are sequential
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
                      reason='Triggerable(n)', sourcestampsetid=1092),
-                {'r':
-                dict(branch='br', project='p', repository='r',
+                {'cb':
+                dict(branch='br', project='p', repository='r', codebase='cb',
                      revision='myrev2', sourcestampsetid=1092)})
         d.addCallback(lambda (res, brids) : self.assertEqual(res, 22) 
                                         and self.assertEqual(brids, self.db.buildsets.allBuildRequests(bsid2)))

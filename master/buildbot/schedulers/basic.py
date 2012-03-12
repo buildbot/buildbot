@@ -40,11 +40,11 @@ class BaseBasicScheduler(base.BaseScheduler):
                 fileIsImportant=None, properties={}, categories=None,
                 change_filter=None, onlyImportant=False):
         if shouldntBeSet is not self.NotSet:
-            raise config.ConfigErrors([
-                "pass arguments to schedulers using keyword arguments" ])
+            config.error(
+                "pass arguments to schedulers using keyword arguments")
         if fileIsImportant and not callable(fileIsImportant):
-            raise config.ConfigErrors([
-                "fileIsImportant must be a callable" ])
+            config.error(
+                "fileIsImportant must be a callable")
 
         # initialize parent classes
         base.BaseScheduler.__init__(self, name, builderNames, properties)
@@ -113,7 +113,6 @@ class BaseBasicScheduler(base.BaseScheduler):
             # unimportant changes
             if not important:
                 return defer.succeed(None)
-
             # otherwise, we'll build it right away
             return self.addBuildsetForChanges(reason='scheduler',
                             changeids=[ change.number ])
@@ -139,7 +138,7 @@ class BaseBasicScheduler(base.BaseScheduler):
         d.addCallback(fix_timer)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def scanExistingClassifiedChanges(self):
         # call gotChange for each classified change.  This is called at startup
         # and is intended to re-start the treeStableTimer for any changes that
@@ -147,31 +146,19 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         # NOTE: this may double-call gotChange for changes that arrive just as
         # the scheduler starts up.  In practice, this doesn't hurt anything.
-        wfd = defer.waitForDeferred(
-            self.master.db.schedulers.getChangeClassifications(
-                                                        self.objectid))
-        yield wfd
-        classifications = wfd.getResult()
+        classifications = \
+                yield self.master.db.schedulers.getChangeClassifications(
+                                                                self.objectid)
 
         # call gotChange for each change, after first fetching it from the db
         for changeid, important in classifications.iteritems():
-            wfd = defer.waitForDeferred(
-                self.master.db.changes.getChange(changeid))
-            yield wfd
-            chdict = wfd.getResult()
+            chdict = yield self.master.db.changes.getChange(changeid)
 
             if not chdict:
                 continue
 
-            wfd = defer.waitForDeferred(
-                changes.Change.fromChdict(self.master, chdict))
-            yield wfd
-            change = wfd.getResult()
-
-            wfd = defer.waitForDeferred(
-                self.gotChange(change, important))
-            yield wfd
-            wfd.getResult()
+            change = yield changes.Change.fromChdict(self.master, chdict)
+            yield self.gotChange(change, important)
 
     def getTimerNameForChange(self, change):
         raise NotImplementedError # see subclasses
@@ -182,7 +169,7 @@ class BaseBasicScheduler(base.BaseScheduler):
         raise NotImplementedError # see subclasses
 
     @util.deferredLocked('_stable_timers_lock')
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def stableTimerFired(self, timer_name):
         # if the service has already been stoppd then just bail out
         if not self._stable_timers[timer_name]:
@@ -191,40 +178,32 @@ class BaseBasicScheduler(base.BaseScheduler):
         # delete this now-fired timer
         del self._stable_timers[timer_name]
 
-        wfd = defer.waitForDeferred(
-                self.getChangeClassificationsForTimer(self.objectid,
-                                                      timer_name))
-        yield wfd
-        classifications = wfd.getResult()
+        classifications = \
+            yield self.getChangeClassificationsForTimer(self.objectid,
+                                                            timer_name)
 
         # just in case: databases do weird things sometimes!
         if not classifications: # pragma: no cover
             return
 
         changeids = sorted(classifications.keys())
-        wfd = defer.waitForDeferred(
-                self.addBuildsetForChanges(reason='scheduler',
-                                           changeids=changeids))
-        yield wfd
-        wfd.getResult()
+        yield self.addBuildsetForChanges(reason='scheduler',
+                                           changeids=changeids)
 
         max_changeid = changeids[-1] # (changeids are sorted)
-        wfd = defer.waitForDeferred(
-                self.master.db.schedulers.flushChangeClassifications(
-                            self.objectid, less_than=max_changeid+1))
-        yield wfd
-        wfd.getResult()
+        yield self.master.db.schedulers.flushChangeClassifications(
+                            self.objectid, less_than=max_changeid+1)
 
 class SingleBranchScheduler(BaseBasicScheduler):
     def getChangeFilter(self, branch, branches, change_filter, categories):
         if branch is NotABranch and not change_filter:
-            raise config.ConfigErrors([
+            config.error(
                 "the 'branch' argument to SingleBranchScheduler is " +
-                "mandatory unless change_filter is provided"])
+                "mandatory unless change_filter is provided")
         elif branches is not NotABranch:
-            raise config.ConfigErrors([
+            config.error(
                 "the 'branches' argument is not allowed for " +
-                "SingleBranchScheduler"])
+                "SingleBranchScheduler")
 
 
         return filter.ChangeFilter.fromSchedulerConstructorArgs(

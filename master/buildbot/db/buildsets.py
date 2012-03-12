@@ -32,12 +32,17 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
     def addBuildset(self, sourcestampsetid, reason, properties, builderNames,
                    external_idstring=None, _reactor=reactor):
         def thd(conn):
+            buildsets_tbl = self.db.model.buildsets
             submitted_at = _reactor.seconds()
+
+            self.check_length(buildsets_tbl.c.reason, reason)
+            self.check_length(buildsets_tbl.c.external_idstring,
+                    external_idstring)
 
             transaction = conn.begin()
 
             # insert the buildset itself
-            r = conn.execute(self.db.model.buildsets.insert(), dict(
+            r = conn.execute(buildsets_tbl.insert(), dict(
                 sourcestampsetid=sourcestampsetid, submitted_at=submitted_at,
                 reason=reason, complete=0, complete_at=None, results=-1,
                 external_idstring=external_idstring))
@@ -45,18 +50,29 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
             # add any properties
             if properties:
-                conn.execute(self.db.model.buildset_properties.insert(), [
+                bs_props_tbl = self.db.model.buildset_properties
+
+                inserts = [
                     dict(buildsetid=bsid, property_name=k,
                          property_value=json.dumps([v,s]))
-                    for k,(v,s) in properties.iteritems() ])
+                    for k,(v,s) in properties.iteritems() ]
+                for i in inserts:
+                    self.check_length(bs_props_tbl.c.property_name,
+                                      i['property_name'])
+                    self.check_length(bs_props_tbl.c.property_value,
+                                      i['property_value'])
+
+                conn.execute(bs_props_tbl.insert(), inserts)
 
             # and finish with a build request for each builder.  Note that
             # sqlalchemy and the Python DBAPI do not provide a way to recover
             # inserted IDs from a multi-row insert, so this is done one row at
             # a time.
             brids = {}
-            ins = self.db.model.buildrequests.insert()
+            br_tbl = self.db.model.buildrequests
+            ins = br_tbl.insert()
             for buildername in builderNames:
+                self.check_length(br_tbl.c.buildername, buildername)
                 r = conn.execute(ins,
                     dict(buildsetid=bsid, buildername=buildername, priority=0,
                         claimed_at=0, claimed_by_name=None,

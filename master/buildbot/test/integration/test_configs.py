@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os
 from twisted.python import util
 from twisted.trial import unittest
@@ -35,11 +37,13 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
         config.MasterConfig.loadConfig(self.basedir, filename)
 
     def test_0_7_12_config(self):
-        open(self.filename, "w").write(sample_0_7_12)
+        with open(self.filename, "w") as f:
+            f.write(sample_0_7_12)
         config.MasterConfig.loadConfig(self.basedir, self.filename)
 
     def test_0_7_6_config(self):
-        open(self.filename, "w").write(sample_0_7_6)
+        with open(self.filename, "w") as f:
+            f.write(sample_0_7_6)
         config.MasterConfig.loadConfig(self.basedir, self.filename)
 
 

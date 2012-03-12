@@ -35,14 +35,11 @@ class ForceBuildActionResource(ActionResource):
         self.builder = builder
         self.action = "forceBuild"
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def performAction(self, req):
         url = None
         authz = self.getAuthz(req)
-        d = authz.actionAllowed(self.action, req, self.builder)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        res = wfd.getResult()
+        res = yield authz.actionAllowed(self.action, req, self.builder)
 
         if not res:
             url = path_to_authzfail(req)
@@ -67,10 +64,7 @@ class ForceBuildActionResource(ActionResource):
                 if bc:
                     msg += "could not get builder control"
             else:
-                d = bc.rebuildBuild(b, reason, extraProperties)
-                wfd = defer.waitForDeferred(d)
-                yield wfd
-                tup = wfd.getResult()
+                tup = yield bc.rebuildBuild(b, reason, extraProperties)
                 # check that (bsid, brids) were properly stored
                 if not (isinstance(tup, tuple) and 
                         isinstance(tup[0], int) and
@@ -88,7 +82,7 @@ class ForceBuildActionResource(ActionResource):
             # didn't start). This should be the Builder page.
 
             url = path_to_builder(req, self.builder), msg
-        yield url
+        defer.returnValue(url)
 
 
 class StopBuildActionResource(ActionResource):
@@ -97,16 +91,13 @@ class StopBuildActionResource(ActionResource):
         self.build_status = build_status
         self.action = "stopBuild"
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def performAction(self, req):
         authz = self.getAuthz(req)
-        d = authz.actionAllowed(self.action, req, self.build_status)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        res = wfd.getResult()
+        res = yield authz.actionAllowed(self.action, req, self.build_status)
 
         if not res:
-            yield path_to_authzfail(req)
+            defer.returnValue(path_to_authzfail(req))
             return
 
         b = self.build_status
@@ -125,8 +116,7 @@ class StopBuildActionResource(ActionResource):
             if bldc:
                 bldc.stopBuild(reason)
 
-        yield path_to_builder(req, self.build_status.getBuilder())
-        return
+        defer.returnValue(path_to_builder(req, self.build_status.getBuilder()))
 
 # /builders/$builder/builds/$buildnum
 class StatusResourceBuild(HtmlResource):

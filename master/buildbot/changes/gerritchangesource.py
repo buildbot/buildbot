@@ -70,7 +70,7 @@ class GerritChangeSource(base.ChangeSource):
             self.change_source = change_source
             self.data = ""
 
-        @defer.deferredGenerator
+        @defer.inlineCallbacks
         def outReceived(self, data):
             """Do line buffering."""
             self.data += data
@@ -78,10 +78,7 @@ class GerritChangeSource(base.ChangeSource):
             self.data = lines.pop(-1) # last line is either empty or incomplete
             for line in lines:
                 log.msg("gerrit: %s" % (line,))
-                d = self.change_source.lineReceived(line)
-                wfd = defer.waitForDeferred(d)
-                yield wfd
-                wfd.getResult()
+                yield self.change_source.lineReceived(line)
 
         def errReceived(self, data):
             log.msg("gerrit stderr: %s" % (data,))

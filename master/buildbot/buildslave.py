@@ -102,8 +102,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.notify_on_missing = notify_on_missing
         for i in notify_on_missing:
             if not isinstance(i, str):
-                raise config.ConfigErrors([
-                    'notify_on_missing arg %r is not a string' % (i,) ])
+                config.error(
+                    'notify_on_missing arg %r is not a string' % (i,))
         self.missing_timeout = missing_timeout
         self.missing_timer = None
         self.keepalive_interval = keepalive_interval
@@ -627,7 +627,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         """This is called when our graceful shutdown setting changes"""
         self.maybeShutdown()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def shutdown(self):
         """Shutdown the slave"""
         if not self.slave:
@@ -650,9 +650,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             d.addErrback(check_connlost)
             return d
 
-        wfd = defer.waitForDeferred(new_way())
-        yield wfd
-        if wfd.getResult():
+        if (yield new_way()):
             return # done!
 
         # Now, the old way.  Look for a builder with a remote reference to the
@@ -682,9 +680,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
                 return d
             log.err("Couldn't find remote builder to shut down slave")
             return defer.succeed(None)
-        wfd = defer.waitForDeferred(old_way())
-        yield wfd
-        wfd.getResult()
+        yield old_way()
 
     def maybeShutdown(self):
         """Shut down this slave if it has been asked to shut down gracefully,

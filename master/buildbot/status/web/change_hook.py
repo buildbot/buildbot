@@ -63,6 +63,11 @@ class ChangeHookResource(resource.Resource):
         except ValueError, err:
             request.setResponseCode(400, err.args[0])
             return err.args[0]
+        except Exception:
+            log.err(None, "Exception processing web hook.")
+            msg = "Error processing changes."
+            request.setResponseCode(500, msg)
+            return msg
 
         log.msg("Payload: " + str(request.args))
         
@@ -122,11 +127,9 @@ class ChangeHookResource(resource.Resource):
 
         return (changes, src)
                 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def submitChanges(self, changes, request, src):
         master = request.site.buildbot_service.master
         for chdict in changes:
-            wfd = defer.waitForDeferred(master.addChange(src=src, **chdict))
-            yield wfd
-            change = wfd.getResult()
+            change = yield master.addChange(src=src, **chdict)
             log.msg("injected change %s" % change)

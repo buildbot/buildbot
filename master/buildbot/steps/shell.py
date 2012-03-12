@@ -298,8 +298,8 @@ class SetProperty(ShellCommand):
         self.strip = strip
 
         if not ((property is not None) ^ (extract_fn is not None)):
-            raise config.ConfigErrors([
-                "Exactly one of property and extract_fn must be set" ])
+            config.error(
+                "Exactly one of property and extract_fn must be set")
 
         ShellCommand.__init__(self, **kwargs)
 

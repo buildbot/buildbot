@@ -13,16 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
-import twisted
-from twisted.trial import unittest
 
-def add_debugging_monkeypatches():
+def patch_servicechecks():
     """
-    DO NOT CALL THIS DIRECTLY
+    Patch startService and stopService so that they check the previous state
+    first.
 
-    This adds a few "harmless" monkeypatches which make it easier to debug
-    failing tests.  It is called automatically by buildbot.test.__init__.
+    (used for debugging only)
     """
     from twisted.application.service import Service
     old_startService = Service.startService
@@ -35,10 +32,3 @@ def add_debugging_monkeypatches():
         return old_stopService(self)
     Service.startService = startService
     Service.stopService = stopService
-
-    # versions of Twisted before 9.0.0 did not have a UnitTest.patch that worked
-    # on Python-2.7
-    if twisted.version.major <= 9 and sys.version_info[:2] == (2,7):
-        def nopatch(self, *args):
-            raise unittest.SkipTest('unittest.TestCase.patch is not available')
-        unittest.TestCase.patch = nopatch

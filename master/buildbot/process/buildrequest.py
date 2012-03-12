@@ -128,26 +128,96 @@ class BuildRequest(object):
         sslist = wfd.getResult()
         assert len(sslist) > 0, "Empty sourcestampset: db schema enforces set to exist but cannot enforce a non empty set"
 
-        # and turn it into a SourceStamp
-        buildrequest.sources = []
-        for ssdict in sslist:
-            wfd = defer.waitForDeferred(
-                sourcestamp.SourceStamp.fromSsdict(master, ssdict))
-            yield wfd
-            buildrequest.sources.append(wfd.getResult())
+        # and turn it into a SourceStamps
+        buildrequest.sources = {}
+        def store_source(source):
+            buildrequest.sources[source.codebase] = source
 
-        # support old interface where only one source could exist
-        # TODO: remove and change all client objects that use this property
-        if len(buildrequest.sources) > 0:
-            buildrequest.source = buildrequest.sources[0]
+        dlist = []
+        for ssdict in sslist:
+            d = sourcestamp.SourceStamp.fromSsdict(master, ssdict)
+            d.addCallback(store_source)
+            dlist.append(d)
+
+        dl = defer.gatherResults(dlist)
+        wfd = defer.waitForDeferred(dl)
+        yield wfd
+        wfd.getResult()
+  
+        if buildrequest.sources:
+            buildrequest.source = buildrequest.sources.values()[0]
 
         yield buildrequest # return value
 
-    def canBeMergedWith(self, other):
-        return self.source.canBeMergedWith(other.source)
+    def requestsHaveSameCodebases(self, other):
+        self_codebases = set(self.sources.iterkeys())
+        other_codebases = set(other.sources.iterkeys())      
+        return self_codebases == other_codebases
 
-    def mergeWith(self, others):
-        return self.source.mergeWith([o.source for o in others])
+    def requestsHaveChangesForSameCodebases(self, other):
+        # Merge can only be done if both requests have sourcestampsets containing
+        # comparable sourcestamps, that means sourcestamps with the same codebase.
+        # This means that both requests must have exact the same set of codebases
+        # If not then merge cannot be performed.
+        # The second requirement is that both request have the changes in the 
+        # same codebases.
+        #
+        # Normaly a scheduler always delivers the same set of codebases: 
+        #   sourcestamps with and without changes
+        # For the case a scheduler is not configured with a set of codebases
+        # it delivers only a set with sourcestamps that have changes. 
+        self_codebases = set(self.sources.iterkeys())
+        other_codebases = set(other.sources.iterkeys())      
+        if self_codebases != other_codebases:
+            return False
+            
+        for c in self_codebases:
+            # Check either both or neither have changes
+            if ((len(self.sources[c].changes) > 0)
+                != (len(other.sources[c].changes) > 0)):
+                return False
+        # all codebases tested, no differences found
+        return True
+        
+    def canBeMergedWith(self, other):
+        """
+        Returns if both requests can be merged
+        """
+
+        if not self.requestsHaveChangesForSameCodebases(other):
+            return False
+
+        #get codebases from myself, they are equal to other
+        self_codebases = set(self.sources.iterkeys())
+
+        for c in self_codebases:
+            # check to prevent exception
+            if c not in other.sources:
+                return False
+            if not self.sources[c].canBeMergedWith(other.sources[c]):
+                return False
+        return True
+
+    def mergeSourceStampsWith(self, others):
+        """ Returns one merged sourcestamp for every codebase """
+        #get all codebases from all requests
+        all_codebases = set(self.sources.iterkeys())
+        for other in others:
+            all_codebases |= set(other.sources.iterkeys())
+
+        all_merged_sources = {}
+        # walk along the codebases
+        for codebase in all_codebases:
+            all_sources = []
+            if codebase in self.sources:
+                all_sources.append(self.sources[codebase])
+            for other in others:
+                if codebase in other.sources:
+                    all_sources.append(other.sources[codebase])
+            assert len(all_sources)>0, "each codebase should have atleast one sourcestamp"
+            all_merged_sources[codebase] = all_sources[0].mergeWith(all_sources[1:])
+
+        return [source for source in all_merged_sources.itervalues()]
 
     def mergeReasons(self, others):
         """Return a reason for the merged build request."""

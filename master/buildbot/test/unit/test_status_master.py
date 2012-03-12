@@ -48,7 +48,7 @@ class TestStatus(unittest.TestCase):
         d.addCallback(check)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService(self):
         m = mock.Mock(name='master')
         status = master.Status(m)
@@ -60,10 +60,7 @@ class TestStatus(unittest.TestCase):
         sr0 = FakeStatusReceiver()
         config.status = [ sr0 ]
 
-        wfd = defer.waitForDeferred(
-                status.reconfigService(config))
-        yield wfd
-        wfd.getResult()
+        yield status.reconfigService(config)
 
         self.assertTrue(sr0.running)
         self.assertIdentical(sr0.master, m)
@@ -73,10 +70,7 @@ class TestStatus(unittest.TestCase):
         sr2 = FakeStatusReceiver()
         config.status = [ sr1, sr2 ]
 
-        wfd = defer.waitForDeferred(
-                status.reconfigService(config))
-        yield wfd
-        wfd.getResult()
+        yield status.reconfigService(config)
 
         self.assertFalse(sr0.running)
         self.assertIdentical(sr0.master, None)
@@ -90,17 +84,11 @@ class TestStatus(unittest.TestCase):
         sr2 = FakeStatusReceiver()
         config.status = [ sr1, sr2 ]
 
-        wfd = defer.waitForDeferred(
-                status.reconfigService(config))
-        yield wfd
-        wfd.getResult()
+        yield status.reconfigService(config)
 
         # and back to nothing
         config.status = [ ]
-        wfd = defer.waitForDeferred(
-                status.reconfigService(config))
-        yield wfd
-        wfd.getResult()
+        yield status.reconfigService(config)
 
         self.assertIdentical(sr0.master, None)
         self.assertIdentical(sr1.master, None)

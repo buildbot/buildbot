@@ -27,7 +27,7 @@ except ImportError:
 srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr']
 salt_len = 8
 
-@defer.deferredGenerator
+@defer.inlineCallbacks
 def createUserObject(master, author, src=None):
     """
     Take a Change author and source and translate them into a User Object,
@@ -56,14 +56,12 @@ def createUserObject(master, author, src=None):
         log.msg("Unrecognized source argument: %s" % src)
         return
 
-    d = master.db.users.findUserByAttr(identifier=usdict['identifier'],
-                                attr_type=usdict['attr_type'],
-                                attr_data=usdict['attr_data'])
-    wfd = defer.waitForDeferred(d)
-    yield wfd
-    uid = wfd.getResult()
+    uid = yield  master.db.users.findUserByAttr(
+            identifier=usdict['identifier'],
+            attr_type=usdict['attr_type'],
+            attr_data=usdict['attr_data'])
 
-    yield uid
+    defer.returnValue(uid)
 
 def getUserContact(master, contact_type=None, uid=None):
     """

@@ -21,7 +21,7 @@ from twisted.python import log
 from twisted.internet import defer
 
 from buildbot.process import buildstep
-from buildbot.steps.source import Source
+from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.config import ConfigErrors
 
@@ -97,84 +97,55 @@ class SVN(Source):
         d.addErrback(self.failed)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def full(self, _):
         if self.method == 'clobber':
-            wfd = defer.waitForDeferred(self.clobber())
-            yield wfd
-            wfd.getResult()
+            yield self.clobber()
             return
         elif self.method in ['copy', 'export']:
-            wfd = defer.waitForDeferred(self.copy())
-            yield wfd
-            wfd.getResult()
+            yield self.copy()
             return
 
-        wfd = defer.waitForDeferred(self._sourcedirIsUpdatable())
-        yield wfd
-        updatable = wfd.getResult()
+        updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
             # blow away the old (un-updatable) directory
-            wfd = defer.waitForDeferred(
-                self._rmdir(self.workdir))
-            yield wfd
-            wfd.getResult()
+            yield self._rmdir(self.workdir)
 
             # then do a checkout
             checkout_cmd = ['checkout', self.repourl, '.']
             if self.revision:
                 checkout_cmd.extend(["--revision", str(self.revision)])
-            wfd = defer.waitForDeferred(
-                self._dovccmd(checkout_cmd))
-            yield wfd
-            wfd.getResult()
+            yield self._dovccmd(checkout_cmd)
         elif self.method == 'clean':
-            wfd = defer.waitForDeferred(
-                self.clean())
-            yield wfd
-            wfd.getResult()
+            yield self.clean()
         elif self.method == 'fresh':
-            wfd = defer.waitForDeferred(
-                self.fresh())
-            yield wfd
-            wfd.getResult()
+            yield self.fresh()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def incremental(self, _):
-        wfd = defer.waitForDeferred(
-            self._sourcedirIsUpdatable())
-        yield wfd
-        updatable = wfd.getResult()
+        updatable = yield self._sourcedirIsUpdatable()
 
         if not updatable:
             # blow away the old (un-updatable) directory
-            wfd = defer.waitForDeferred(
-                self._rmdir(self.workdir))
-            yield wfd
-            wfd.getResult()
+            yield self._rmdir(self.workdir)
 
             # and plan to do a checkout
             command = ['checkout', self.repourl, '.']
         else:
             # otherwise, do an update
             command = ['update']
+
         if self.revision:
             command.extend(['--revision', str(self.revision)])
 
-        wfd = defer.waitForDeferred(
-            self._dovccmd(command))
-        yield wfd
-        wfd.getResult()
+        yield self._dovccmd(command)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def clobber(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
                                                 'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
-        wfd = defer.waitForDeferred(
-                self.runCommand(cmd))
-        yield wfd
-        wfd.getResult()
+        yield self.runCommand(cmd)
         if cmd.rc != 0:
             raise buildstep.BuildStepFailed()
         
@@ -182,10 +153,7 @@ class SVN(Source):
         if self.revision:
             checkout_cmd.extend(["--revision", str(self.revision)])
 
-        wfd = defer.waitForDeferred(
-                self._dovccmd(checkout_cmd))
-        yield wfd
-        wfd.getResult()
+        yield self._dovccmd(checkout_cmd)
 
     def fresh(self):
         d = self.purge(True)
@@ -203,15 +171,12 @@ class SVN(Source):
         d.addCallback(lambda _: self._dovccmd(cmd))
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def copy(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
                                                 'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
-        wfd = defer.waitForDeferred(
-                self.runCommand(cmd))
-        yield wfd
-        wfd.getResult()
+        yield self.runCommand(cmd)
 
         if cmd.rc != 0:
             raise buildstep.BuildStepFailed()
@@ -220,10 +185,7 @@ class SVN(Source):
         try:
             old_workdir = self.workdir
             self.workdir = 'source'
-            wfd = defer.waitForDeferred(
-                    self.incremental(None))
-            yield wfd
-            wfd.getResult()
+            yield self.incremental(None)
         except: # finally doesn't work in python-2.4
             self.workdir = old_workdir
             raise
@@ -244,10 +206,7 @@ class SVN(Source):
                     env=self.env, logEnviron=self.logEnviron)
         cmd.useLog(self.stdio_log, False)
 
-        wfd = defer.waitForDeferred(
-                self.runCommand(cmd))
-        yield wfd
-        wfd.getResult()
+        yield self.runCommand(cmd)
 
         if cmd.rc != 0:
             raise buildstep.BuildStepFailed()
@@ -261,15 +220,12 @@ class SVN(Source):
         d.addCallbacks(self.finished, self.checkDisconnect)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _rmdir(self, dir):
         cmd = buildstep.RemoteCommand('rmdir',
                 {'dir': dir, 'logEnviron': self.logEnviron })
         cmd.useLog(self.stdio_log, False)
-        wfd = defer.waitForDeferred(
-                self.runCommand(cmd))
-        yield wfd
-        wfd.getResult()
+        yield self.runCommand(cmd)
         if cmd.rc != 0:
             raise buildstep.BuildStepFailed()
 
@@ -330,31 +286,25 @@ class SVN(Source):
         elif self.method is None and self.mode == 'full':
             return 'fresh'
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
         # first, perform a stat to ensure that this is really an svn directory
         cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.svn',
                                                'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
-        wfd = defer.waitForDeferred(
-            self.runCommand(cmd))
-        yield wfd
-        wfd.getResult()
+        yield self.runCommand(cmd)
 
         if cmd.rc != 0:
-            yield False
+            yield defer.returnValue(False)
             return
 
         # then run 'svn info' to check that the URL matches our repourl
-        wfd = defer.waitForDeferred(
-            self._dovccmd(['info'], collectStdout=True))
-        yield wfd
-        stdout = wfd.getResult()
+        stdout = yield self._dovccmd(['info'], collectStdout=True)
 
         # extract the URL, handling whitespace carefully so that \r\n works
         # is a line terminator
         mo = re.search('^URL:\s*(.*?)\s*$', stdout, re.M)
-        yield mo and mo.group(1) == self.repourl
+        yield defer.returnValue(mo and mo.group(1) == self.repourl)
         return
 
     def parseGotRevision(self, _):
@@ -440,19 +390,17 @@ class SVN(Source):
                 continue
             yield filename
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def removeFiles(self, files):
         for filename in files:
             cmd = buildstep.RemoteCommand('rmdir', {'dir': filename,
                                                     'logEnviron': self.logEnviron,})
             cmd.useLog(self.stdio_log, False)
-            wfd = defer.waitForDeferred(self.runCommand(cmd))
-            yield wfd
-            wfd.getResult()
+            yield self.runCommand(cmd)
             if cmd.rc != 0:
-                yield cmd.rc
+                yield defer.returnValue(cmd.rc)
                 return
-        yield 0
+        yield defer.returnValue(0)
 
     def checkSvn(self):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['svn', '--version'],
