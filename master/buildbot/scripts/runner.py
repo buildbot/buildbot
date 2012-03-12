@@ -245,6 +245,22 @@ class Maker:
                 with open(source, "rt") as i:
                     f.write(i.read())
 
+    def templates_dir(self, files):
+        template_dir = os.path.join(self.basedir, "templates")
+        if os.path.exists(template_dir):
+            if not self.quiet:
+                print "templates/ already exists: not replacing"
+            return
+        else:
+            os.mkdir(template_dir)
+        if not self.quiet:
+            print "populating templates/"
+        for target, source in files.iteritems():
+            target = os.path.join(template_dir, target)
+            with open(target, "wt") as f:
+                with open(source, "rt") as i:
+                    f.write(i.read())
+
     def create_db(self):
         from buildbot.db import connector
         from buildbot.master import BuildMaster
@@ -544,6 +560,7 @@ def createMaster(config):
     else:
         masterTAC = "".join(masterTACTemplate)
     contents = masterTAC % config
+    
     m.makeTAC(contents)
     m.sampleconfig(util.sibpath(__file__, "sample.cfg"))
     m.public_html({
@@ -552,6 +569,9 @@ def createMaster(config):
           'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
           'favicon.ico' : util.sibpath(__file__, "../status/web/files/favicon.ico"),
       })
+    m.templates_dir({
+        'README.txt' : util.sibpath(__file__,"../status/web/files/templates_readme.txt"),
+    })
     d = m.create_db()
 
     def print_status(r):
