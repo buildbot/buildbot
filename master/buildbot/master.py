@@ -65,9 +65,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     # database poll operation.
     WARNING_UNCLAIMED_COUNT = 10000
 
-    def __init__(self, basedir, configFileName="master.cfg"):
+    def __init__(self, basedir, configFileName="master.cfg", umask=None):
         service.MultiService.__init__(self)
         self.setName("buildmaster")
+
+        self.umask = umask
 
         self.basedir = basedir
         assert os.path.isdir(self.basedir)
@@ -147,6 +149,10 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         log.msg("Starting BuildMaster -- buildbot.version: %s" %
                 buildbot.version)
+        
+        # Set umask
+        if self.umask is not None:
+            os.umask(self.umask)
 
         # first, apply all monkeypatches
         monkeypatches.patch_all()
