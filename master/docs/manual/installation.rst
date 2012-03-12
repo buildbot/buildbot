@@ -108,6 +108,12 @@ SQLAlchemy-Migrate: http://code.google.com/p/sqlalchemy-migrate/
   Buildbot uses SQLAlchemy-Migrate to manage schema upgrades from version to
   version.
 
+Python-Dateutil: http://labix.org/python-dateutil
+
+  The Nightly scheduler requires Python-Dateutil version 1.5 (the last version
+  to support Python-2.x).  This is a small, pure-python library.  Buildbot will
+  function properly without it if the Nightlys scheduler is not used.
+
 .. _Installing-the-code:
   
 Installing the code
