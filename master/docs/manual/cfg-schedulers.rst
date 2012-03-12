@@ -443,7 +443,7 @@ The full list of parameters is:
     This defaults to \*, meaning every hour.
 
 ``dayOfMonth``
-    The day of the month to start a build.  This defauls to ``*``, meaning
+    The day of the month to start a build.  This defaults to ``*``, meaning
     every day.
 
 ``month``
@@ -451,7 +451,7 @@ The full list of parameters is:
     to \*, meaning every month.
 
 ``dayOfWeek``
-    The day of the week to start a build, with Monday = 0.  This defauls
+    The day of the week to start a build, with Monday = 0.  This defaults
     to \*, meaning every day of the week.
 
 For example, the following master.cfg clause will cause a build to be
