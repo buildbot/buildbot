@@ -499,7 +499,7 @@ rotateLength = %(log-size)s
 maxRotatedFiles = %(log-count)s
 
 # Default umask for server
-umask = 077
+umask = None
 
 
 # if this is a relocatable tac file, get the directory containing the TAC
