@@ -498,6 +498,10 @@ basedir = r'%(basedir)s'
 rotateLength = %(log-size)s
 maxRotatedFiles = %(log-count)s
 
+# Default umask for server
+umask = None
+
+
 # if this is a relocatable tac file, get the directory containing the TAC
 if basedir == '.':
     import os.path
@@ -521,7 +525,7 @@ except ImportError:
 """
 configfile = r'%(config)s'
 
-m = BuildMaster(basedir, configfile)
+m = BuildMaster(basedir, configfile, umask)
 m.setServiceParent(application)
 m.log_rotation.rotateLength = rotateLength
 m.log_rotation.maxRotatedFiles = maxRotatedFiles
