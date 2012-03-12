@@ -214,8 +214,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             if running_missing_timer:
                 self.startMissingTimer()
 
-        self.properties = Properties()
-        self.properties.updateFromProperties(new.properties)
+        properties = Properties()
+        properties.updateFromProperties(new.properties)
+        self.properties = properties
 
         self.updateLocks()
 
