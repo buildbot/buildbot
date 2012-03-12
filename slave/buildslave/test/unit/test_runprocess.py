@@ -158,6 +158,34 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def testMultiWordStringCommand(self):
+        b = FakeSlaveBuilder(False, self.basedir)
+        # careful!  This command must execute the same on windows and UNIX
+        s = runprocess.RunProcess(b, 'echo "Happy Days and Jubilation"',
+                                  self.basedir)
+
+        d = s.start()
+        def check(ign):
+            self.failUnless({'stdout': nl('"Happy Days and Jubilation"\n')}
+                            in b.updates, b.show())
+            self.failUnless({'rc': 0} in b.updates, b.show())
+        d.addCallback(check)
+        return d
+
+    def testMultiWordCommand(self):
+        b = FakeSlaveBuilder(False, self.basedir)
+        # careful!  This command must execute the same on windows and UNIX
+        s = runprocess.RunProcess(b, ['echo', 'Happy Days and Jubilation'],
+                                  self.basedir)
+
+        d = s.start()
+        def check(ign):
+            self.failUnless({'stdout': nl('"Happy Days and Jubilation"\n')}
+                            in b.updates, b.show())
+            self.failUnless({'rc': 0} in b.updates, b.show())
+        d.addCallback(check)
+        return d
+
     def testCommandTimeout(self):
         b = FakeSlaveBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, sleepCommand(10), self.basedir, timeout=5)
