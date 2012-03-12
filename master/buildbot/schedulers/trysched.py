@@ -21,6 +21,7 @@ from twisted.protocols import basic
 
 from buildbot import pbutil
 from buildbot.util.maildir import MaildirService
+from buildbot.util.maildir import NoSuchMaildir
 from buildbot.util import netstrings
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
@@ -79,7 +80,11 @@ class Try_Jobdir(TryBase):
 
     def startService(self):
         # set the watcher's basedir now that we have a master
-        self.watcher.setBasedir(os.path.join(self.master.basedir, self.jobdir))
+        jobdir = os.path.join(self.master.basedir, self.jobdir)
+        self.watcher.setBasedir(jobdir)
+        for subdir in "cur new tmp".split():
+            if not os.path.exists(os.path.join(jobdir, subdir)):
+                os.mkdir(os.path.join(jobdir, subdir))
         TryBase.startService(self)
 
     def parseJob(self, f):
