@@ -62,9 +62,15 @@ def patch_sqlalchemy2189():
         from buildbot.monkeypatches import sqlalchemy2189
         sqlalchemy2189.patch()
 
-def patch_all():
+def patch_all(for_tests=False):
     patch_bug4881()
     patch_bug4520()
     patch_bug5079()
     patch_sqlalchemy2364()
     patch_sqlalchemy2189()
+
+    if for_tests:
+        from buildbot.monkeypatches import servicechecks
+        servicechecks.patch_servicechecks()
+        from buildbot.monkeypatches import testcase_patch
+        testcase_patch.patch_testcase_patch()
