@@ -95,8 +95,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         self.jobdir = os.path.abspath('jobdir')
         if os.path.exists(self.jobdir):
             shutil.rmtree(self.jobdir)
-        for subdir in 'new', 'cur':
-            os.makedirs(os.path.join(self.jobdir, subdir))
+        os.mkdir(self.jobdir)
 
         # build scheduler
         kwargs = dict(name="tsched", builderNames=['a'], jobdir=self.jobdir)
@@ -114,6 +113,11 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         return self.do_test_startService(
                 'jobdir',
                 os.path.abspath('basedir/jobdir'))
+
+    def test_startService_reldir_subdir(self):
+        return self.do_test_startService(
+                'jobdir',
+                os.path.abspath('basedir/jobdir/cur'))
 
     def test_startService_absdir(self):
         return self.do_test_startService(
