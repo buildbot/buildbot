@@ -71,6 +71,11 @@ class BuildRequestStatus:
 
     # methods called by our clients
     @defer.inlineCallbacks
+    def getBsid(self):
+        br = yield self._getBuildRequest()
+        defer.returnValue(br.bsid)
+
+    @defer.inlineCallbacks
     def getSourceStamp(self):
         br = yield self._getBuildRequest()
         defer.returnValue(br.source)

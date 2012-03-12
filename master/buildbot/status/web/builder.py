@@ -231,12 +231,12 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         for pb in statuses:
             changes = []
 
-            source = pb.getSourceStamp()
+            source = yield pb.getSourceStamp()
+            submitTime = yield pb.getSubmitTime()
+            bsid = yield pb.getBsid()
 
-            submitTime = pb.getSubmitTime()
-
-            properties = yield pb.master.db.buildsets.getBuildsetProperties(
-                                                        pb._buildrequest.bsid)
+            properties = yield \
+                    pb.master.db.buildsets.getBuildsetProperties(bsid)
 
             if source.changes:
                 for c in source.changes:
