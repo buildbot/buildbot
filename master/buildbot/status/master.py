@@ -197,7 +197,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
     def getBuilderNames(self, categories=None):
         if categories == None:
-            return self.botmaster.builderNames[:] # don't let them break it
+            return sorted(self.botmaster.builderNames) # don't let them break it
         
         l = []
         # respect addition order
@@ -205,7 +205,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             bldr = self.botmaster.builders[name]
             if bldr.config.category in categories:
                 l.append(name)
-        return l
+        return sorted(l)
 
     def getBuilder(self, name):
         """

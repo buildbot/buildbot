@@ -161,9 +161,18 @@ class our_sdist(sdist):
 
     def make_release_tree(self, base_dir, files):
         sdist.make_release_tree(self, base_dir, files)
+
         # ensure there's a buildbot/VERSION file
         fn = os.path.join(base_dir, 'buildbot', 'VERSION')
         open(fn, 'w').write(version)
+
+        # ensure that NEWS has a copy of the latest release notes, with the
+        # proper version substituted
+        src_fn = os.path.join('docs', 'release-notes.rst')
+        src = open(src_fn).read()
+        src = src.replace('|version|', version)
+        dst_fn = os.path.join(base_dir, 'NEWS')
+        open(dst_fn, 'w').write(src)
 
 
 long_description="""
