@@ -254,7 +254,12 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             submitTime = wfd.getResult()
 
             wfd = defer.waitForDeferred(
-                pb.master.db.buildsets.getBuildsetProperties(pb._buildrequest.bsid))
+                    pb.getBsid())
+            yield wfd
+            bsid = wfd.getResult()
+
+            wfd = defer.waitForDeferred(
+                pb.master.db.buildsets.getBuildsetProperties(bsid))
             yield wfd
             properties = wfd.getResult()
 
