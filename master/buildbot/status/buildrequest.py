@@ -76,6 +76,15 @@ class BuildRequestStatus:
 
     # methods called by our clients
     @defer.deferredGenerator
+    def getBsid(self):
+        wfd = defer.waitForDeferred(
+                self._getBuildRequest())
+        yield wfd
+        br = wfd.getResult()
+
+        yield br.bsid
+
+    @defer.deferredGenerator
     def getSourceStamp(self):
         wfd = defer.waitForDeferred(
                 self._getBuildRequest())
