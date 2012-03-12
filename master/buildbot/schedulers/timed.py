@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import time
-import datetime
 from buildbot import util
 from buildbot.util import croniter
 from buildbot.schedulers import base
@@ -280,13 +278,14 @@ class Nightly(Timed):
             if isDayOfWeek:
                 time = (time + 1) % 7 # Convert from Mon = 0 format to Sun = 0 format for use in croniter
             return time
+
         if isinstance(time, basestring):
             return time
 
         if isDayOfWeek:
-            time = [ (t + 1) % 7 for t in time ]
+            time = [ (t + 1) % 7 for t in time ] # Conversion for croniter (see above)
 
-        return ','.join([ str(s) for s in time ])
+        return ','.join([ str(s) for s in time ]) # Convert the list to a string
 
     def getNextBuildTime(self, lastActuated):
         dateTime = lastActuated or self.now()
