@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from buildbot import util
-from buildbot.util import croniter
 from buildbot.schedulers import base
 from twisted.internet import defer, reactor
 from twisted.python import log
@@ -288,6 +287,9 @@ class Nightly(Timed):
         return ','.join([ str(s) for s in time ]) # Convert the list to a string
 
     def getNextBuildTime(self, lastActuated):
+        # deferred import in case python-dateutil is not present
+        from buildbot.util import croniter
+
         dateTime = lastActuated or self.now()
         sched =  '%s %s %s %s %s' % (self._timeToCron(self.minute),
                                      self._timeToCron(self.hour),
