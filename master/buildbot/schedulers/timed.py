@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import time
 from buildbot import util
 from buildbot.schedulers import base
 from twisted.internet import defer, reactor
@@ -272,56 +271,34 @@ class Nightly(Timed):
             return defer.succeed(None) # don't care about this change
         return self.master.db.schedulers.classifyChanges(
                 self.objectid, { change.number : important })
+    
+    def _timeToCron(self, time, isDayOfWeek = False):
+        if isinstance(time, int):
+            if isDayOfWeek:
+                time = (time + 1) % 7 # Convert from Mon = 0 format to Sun = 0 format for use in croniter
+            return time
+
+        if isinstance(time, basestring):
+            return time
+
+        if isDayOfWeek:
+            time = [ (t + 1) % 7 for t in time ] # Conversion for croniter (see above)
+
+        return ','.join([ str(s) for s in time ]) # Convert the list to a string
 
     def getNextBuildTime(self, lastActuated):
-        def addTime(timetuple, secs):
-            return time.localtime(time.mktime(timetuple)+secs)
+        # deferred import in case python-dateutil is not present
+        from buildbot.util import croniter
 
-        def check(ourvalue, value):
-            if ourvalue == '*': return True
-            if isinstance(ourvalue, int): return value == ourvalue
-            return (value in ourvalue)
-
-        dateTime = time.localtime(lastActuated or self.now())
-
-        # Remove seconds by advancing to at least the next minute
-        dateTime = addTime(dateTime, 60-dateTime[5])
-
-        # Now we just keep adding minutes until we find something that matches
-        # TODO: use a smarter algorithm, now that we have thorough tests
-
-        yearLimit = dateTime[0]+2 # only check 2 years (a lot of minutes!)
-        def isRunTime(timetuple):
-
-            if not check(self.minute, timetuple[4]):
-                return False
-
-            if not check(self.hour, timetuple[3]):
-                return False
-
-            if not check(self.month, timetuple[1]):
-                return False
-
-            if self.dayOfMonth != '*' and self.dayOfWeek != '*':
-                # They specified both day(s) of month AND day(s) of week.
-                # This means that we only have to match one of the two. If
-                # neither one matches, this time is not the right time.
-                if not (check(self.dayOfMonth, timetuple[2]) or
-                        check(self.dayOfWeek, timetuple[6])):
-                    return False
-            else:
-                if not check(self.dayOfMonth, timetuple[2]):
-                    return False
-
-                if not check(self.dayOfWeek, timetuple[6]):
-                    return False
-
-            return True
-
-        while not isRunTime(dateTime):
-            dateTime = addTime(dateTime, 60)
-            assert dateTime[0] < yearLimit, 'Something is wrong with this code'
-        return defer.succeed(time.mktime(dateTime))
+        dateTime = lastActuated or self.now()
+        sched =  '%s %s %s %s %s' % (self._timeToCron(self.minute),
+                                     self._timeToCron(self.hour),
+                                     self._timeToCron(self.dayOfMonth),
+                                     self._timeToCron(self.month),
+                                     self._timeToCron(self.dayOfWeek, True))
+        cron = croniter.croniter(sched, dateTime)
+        nextdate = cron.get_next(float)
+        return defer.succeed(nextdate)
 
     @defer.inlineCallbacks
     def startBuild(self):

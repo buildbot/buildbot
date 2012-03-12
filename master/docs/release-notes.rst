@@ -16,6 +16,9 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * Buildbot master now requires at least Python-2.5 and Twisted-9.0.0.
 
+* Buildbot master requires ``python-dateutil`` version 1.5 to support the
+  Nightly scheduler.
+
 * The configurable callable build.workdir has changed his parameterlist. Instead
   of a single sourcestamp a list of sourcestamps is passed. Each sourcestamp in 
   the list has a different :ref:`codebase<Attr-Codebase>`
