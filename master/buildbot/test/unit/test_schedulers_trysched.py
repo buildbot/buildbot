@@ -569,6 +569,19 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def test_handleJobFile_with_invalid_try_properties(self):
+        d = self.call_handleJobFile(
+            lambda f: self.makeSampleParsedJob(properties=['foo', 'bar']))
+
+        def callback(_):
+            self.fail("shouldn't succeed")
+
+        def errorback(f):
+            f.trap(AttributeError)
+            pass  # A-OK
+        d.addCallbacks(callback, errorback)
+        return d
+
 
 class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
 
