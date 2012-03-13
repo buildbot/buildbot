@@ -149,11 +149,15 @@ class Expect(object):
 
     """
 
-    def __init__(self, remote_command, args):
+    def __init__(self, remote_command, args, incomparable_args=[]):
         """
-        Expect a command named C{remote_command}, with args C{args}.
+
+        Expect a command named C{remote_command}, with args C{args}.  Any args
+        in C{incomparable_args} are not cmopared, but must exist.
+
         """
         self.remote_command = remote_command
+        self.incomparable_args = incomparable_args
         self.args = args
         self.result = None
         self.behaviors = []
