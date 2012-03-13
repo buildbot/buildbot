@@ -129,6 +129,23 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['echoing'], ['echoed']))
 
+    def test_describe_with_suffix(self):
+        step = shell.ShellCommand(command="echo hello", descriptionSuffix="suffix")
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                        (["'echo", "hello'", 'suffix'],)*2)
+
+    def test_describe_custom_with_suffix(self):
+        step = shell.ShellCommand(command="echo hello",
+                                  description=["echoing"], descriptionDone=["echoed"],
+                                  descriptionSuffix="suffix")
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (['echoing', 'suffix'], ['echoed', 'suffix']))
+
+    def test_describe_no_command_with_suffix(self):
+        step = shell.ShellCommand(workdir='build', descriptionSuffix="suffix")
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (['???', 'suffix'],)*2)
+
     def test_describe_unrendered_WithProperties(self):
         step = shell.ShellCommand(command=properties.WithProperties(''))
         self.assertEqual((step.describe(), step.describe(done=True)),

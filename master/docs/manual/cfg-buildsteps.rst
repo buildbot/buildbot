@@ -1436,6 +1436,17 @@ The :bb:step:`ShellCommand` arguments are:
                                description=["testing"],
                                descriptionDone=["tests"]))
 
+``descriptionSuffix``
+    This is an optional suffix appended to the end of the description (ie,
+    after ``description`` and ``descriptionDone``). This can be used to distinguish
+    between build steps that would display the same descriptions in the waterfall.
+    This parameter may be set to list of short strings, a single string, or ``None``.
+    
+    For example, a builder might use the ``Compile`` step to build two different
+    codebases. The ``descriptionSuffix`` could be set to `projectFoo` and `projectBar`,
+    respectively for each step, which will result in the full descriptions
+    `compiling projectFoo` and `compiling projectBar` to be shown in the waterfall.
+
 ``logEnviron``
     If this option is ``True`` (the default), then the step's logfile will describe the
     environment variables on the slave.  In situations where the environment is not
