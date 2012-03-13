@@ -15,6 +15,7 @@
 
 import os
 from twisted.trial import unittest
+from twisted.python import procutils
 from twisted.internet import defer
 from exceptions import Exception
 from buildbot.changes import gitpoller
@@ -108,6 +109,13 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     unittest.TestCase):
 
     def setUp(self):
+        # gitpoller uses which to find git, so make sure that has a consistent
+        # result regardless of the actual OS environment
+        def which(name):
+            self.assertEqual(name, 'git')
+            return ['/path/to/git']
+        self.patch(procutils, 'which', which)
+
         self.setUpGetProcessOutput()
         d = self.setUpChangeSource()
         def create_poller(_):
@@ -122,6 +130,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
     def test_describe(self):
         self.assertSubstring("GitPoller", self.poller.describe())
+
+    def test_gitbin_default(self):
+        self.assertEqual(self.poller.gitbin, "/path/to/git")
 
     def test_poll(self):
         # Test that environment variables get propagated to subprocesses (See #2116)
