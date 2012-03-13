@@ -810,7 +810,7 @@ class RunProcess:
         elif runtime.platformType == "win32":
             if self.interruptSignal == None:
                 log.msg("self.interruptSignal==None, only pretending to kill child")
-            else:
+            elif self.process.pid is not None:
                 log.msg("using TASKKILL /F PID /T to kill pid %s" % self.process.pid)
                 subprocess.check_call("TASKKILL /F /PID %s /T" % self.process.pid)
                 log.msg("taskkill'd pid %s" % self.process.pid)
