@@ -212,6 +212,49 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
+    @compat.skipUnlessPlatformIs("win32")
+    def testPipeEmbedded(self):
+        b = FakeSlaveBuilder(False, self.basedir)
+        s = runprocess.RunProcess(b, ['echo', 'escaped|pipe'],
+                                  self.basedir)
+
+        d = s.start()
+        def check(ign):
+            self.failUnless({'stdout': nl('escaped|pipe\n')} in b.updates, b.show())
+            self.failUnless({'rc': 0} in b.updates, b.show())
+        d.addCallback(check)
+        return d        
+
+    @compat.skipUnlessPlatformIs("win32")
+    def testPipeAlone(self):
+        b = FakeSlaveBuilder(False, self.basedir)
+	#this is highly contrived, but it proves the point.
+	cmd = stdoutCommand("b\\na")
+        cmd[0] = cmd[0].replace(".exe","")
+	cmd.extend(['|','sort'])
+        s = runprocess.RunProcess(b, cmd, self.basedir)
+
+        d = s.start()
+        def check(ign):
+            self.failUnless({'stdout': nl('a\nb\n')} in b.updates, b.show())
+            self.failUnless({'rc': 0} in b.updates, b.show())
+        d.addCallback(check)
+        return d
+    
+    @compat.skipUnlessPlatformIs("win32")
+    def testPipeString(self):
+        b = FakeSlaveBuilder(False, self.basedir)
+	#this is highly contrived, but it proves the point.
+        cmd = sys.executable + ' -c "import sys; sys.stdout.write(\'b\\na\\n\')" | sort'
+        s = runprocess.RunProcess(b, cmd, self.basedir)
+
+        d = s.start()
+        def check(ign):
+            self.failUnless({'stdout': nl('a\nb\n')} in b.updates, b.show())
+            self.failUnless({'rc': 0} in b.updates, b.show())
+        d.addCallback(check)
+        return d
+    
     def testCommandTimeout(self):
         b = FakeSlaveBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, sleepCommand(10), self.basedir, timeout=5)
@@ -238,6 +281,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         clock.advance(6) # should knock out maxTime
         return d
 
+    @compat.skipUnlessPlatformIs("posix")
     def test_stdin_closed(self):
         b = FakeSlaveBuilder(False, self.basedir)
         s = runprocess.RunProcess(b,
@@ -250,8 +294,6 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             self.failUnless({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
-    if runtime.platformType != "posix":
-        test_stdin_closed.skip = "not a POSIX platform"
 
     @compat.usesFlushLoggedErrors
     def test_startCommand_exception(self):
