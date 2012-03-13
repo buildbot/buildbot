@@ -90,7 +90,7 @@ This usually looks something like ::
 
     res = yield self.getAuthz(req).actionAllowed('myNewTrick', req, someExtraArg)
     if not res:
-        yield defer.returnValue(Redirect(path_to_authfail(req)))
+        defer.returnValue(Redirect(path_to_authfail(req)))
         return
 
 The ``someExtraArg`` is optional (it's handled with ``*args``, so you can

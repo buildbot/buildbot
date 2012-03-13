@@ -85,7 +85,7 @@ class GridStatusMixin(object):
                 'state': state,
                 'n_pending': n_pending }
 
-        yield defer.returnValue(cxt)
+        defer.returnValue(cxt)
 
     def getSourceStampKey(self, ss):
         """Given two source stamps, we want to assign them to the same row if
@@ -204,7 +204,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
             cxt['builders'].append(b)
 
         template = request.site.buildbot_service.templates.get_template("grid.html")
-        yield defer.returnValue(template.render(**cxt))
+        defer.returnValue(template.render(**cxt))
 
 
 class TransposedGridStatusResource(HtmlResource, GridStatusMixin):

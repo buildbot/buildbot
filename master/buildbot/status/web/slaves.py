@@ -42,7 +42,7 @@ class ShutdownActionResource(ActionResource):
             url = path_to_slave(request, self.slave)
         else:
             url = path_to_authzfail(request)
-        yield defer.returnValue(url)
+        defer.returnValue(url)
 
 # /buildslaves/$slavename
 class OneBuildSlaveResource(HtmlResource, BuildLineMixin):

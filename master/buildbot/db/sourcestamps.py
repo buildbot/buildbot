@@ -94,7 +94,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
         for ssid in ssids:
             sourcestamp = yield self.getSourceStamp(ssid)
             sslist.append(sourcestamp)
-        yield defer.returnValue(sslist)
+        defer.returnValue(sslist)
 
     @base.cached("ssdicts")
     def getSourceStamp(self, ssid):

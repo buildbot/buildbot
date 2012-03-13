@@ -299,7 +299,7 @@ class Git(Source):
         """
         res = yield self._fetch(None)
         if res == 0:
-            yield defer.returnValue(res)
+            defer.returnValue(res)
             return
         elif self.retryFetch:
             yield self._fetch(None)

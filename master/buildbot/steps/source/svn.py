@@ -295,7 +295,7 @@ class SVN(Source):
         yield self.runCommand(cmd)
 
         if cmd.rc != 0:
-            yield defer.returnValue(False)
+            defer.returnValue(False)
             return
 
         # then run 'svn info' to check that the URL matches our repourl
@@ -304,7 +304,7 @@ class SVN(Source):
         # extract the URL, handling whitespace carefully so that \r\n works
         # is a line terminator
         mo = re.search('^URL:\s*(.*?)\s*$', stdout, re.M)
-        yield defer.returnValue(mo and mo.group(1) == self.repourl)
+        defer.returnValue(mo and mo.group(1) == self.repourl)
         return
 
     def parseGotRevision(self, _):
@@ -398,9 +398,9 @@ class SVN(Source):
             cmd.useLog(self.stdio_log, False)
             yield self.runCommand(cmd)
             if cmd.rc != 0:
-                yield defer.returnValue(cmd.rc)
+                defer.returnValue(cmd.rc)
                 return
-        yield defer.returnValue(0)
+        defer.returnValue(0)
 
     def checkSvn(self):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['svn', '--version'],

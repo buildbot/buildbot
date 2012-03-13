@@ -123,7 +123,7 @@ the style within Buildbot is as follows::
             y += z
 
         if xval > 10:
-            yield defer.returnValue(xval + y)
+            defer.returnValue(xval + y)
             return
 
         self.someOtherMethod()

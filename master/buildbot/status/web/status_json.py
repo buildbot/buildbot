@@ -254,7 +254,7 @@ class JsonResource(resource.Resource):
             callback = callback[0]
             if re.match(r'^[a-zA-Z$][a-zA-Z$0-9.]*$', callback):
                 data = '%s(%s);' % (callback, data)
-        yield defer.returnValue(data)
+        defer.returnValue(data)
 
     @defer.inlineCallbacks
     def asDict(self, request):
@@ -269,7 +269,7 @@ class JsonResource(resource.Resource):
                     data[name] = yield defer.maybeDeferred(lambda :
                                             child.asDict(request))
                 # else silently pass over non-json resources.
-            yield defer.returnValue(data)
+            defer.returnValue(data)
         else:
             raise NotImplementedError()
 

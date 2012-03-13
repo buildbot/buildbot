@@ -28,10 +28,10 @@ class UsersActionResource(ActionResource):
     def performAction(self, req):
         res = yield self.getAuthz(req).actionAllowed('showUsersPage', req)
         if not res:
-            yield defer.returnValue(path_to_authzfail(req))
+            defer.returnValue(path_to_authzfail(req))
             return
         # show the table
-        yield defer.returnValue(path_to_root(req) + "users/table")
+        defer.returnValue(path_to_root(req) + "users/table")
 
 # /users/$uid
 class OneUserResource(HtmlResource):
@@ -75,7 +75,7 @@ class UsersTableResource(HtmlResource):
     def content(self, req, ctx):
         res = yield self.getAuthz(req).actionAllowed('showUsersPage', req)
         if not res:
-            yield defer.returnValue(redirectTo(path_to_authzfail(req), req))
+            defer.returnValue(redirectTo(path_to_authzfail(req), req))
             return
 
         s = self.getStatus(req)
@@ -87,7 +87,7 @@ class UsersTableResource(HtmlResource):
             user['user_link'] = req.childLink(urllib.quote(str(user['uid']), ''))
         template = req.site.buildbot_service.templates.get_template(
                                                               "users_table.html")
-        yield defer.returnValue(template.render(**ctx))
+        defer.returnValue(template.render(**ctx))
 
 # /users
 class UsersResource(HtmlResource):
@@ -108,13 +108,13 @@ class UsersResource(HtmlResource):
         authz = self.getAuthz(req)
         if not authz.needAuthForm(self.action):
             if authz.advertiseAction(self.action):
-                yield defer.returnValue(redirectTo("users/table", req))
+                defer.returnValue(redirectTo("users/table", req))
                 return
             else:
-                yield defer.returnValue(redirectTo(path_to_authzfail(req), req))
+                defer.returnValue(redirectTo(path_to_authzfail(req), req))
                 return
 
         ctx['authz'] = self.getAuthz(req)
         ctx['table_link'] = req.childLink("table")
         template = req.site.buildbot_service.templates.get_template("users.html")
-        yield defer.returnValue(template.render(**ctx))
+        defer.returnValue(template.render(**ctx))

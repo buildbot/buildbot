@@ -32,19 +32,19 @@ class RootPage(HtmlResource):
         if request.path == '/shutdown':
             if res:
                 eventually(status.cleanShutdown)
-                yield defer.returnValue(redirectTo("/", request))
+                defer.returnValue(redirectTo("/", request))
                 return
             else:
-                yield defer.returnValue(
+                defer.returnValue(
                         redirectTo(path_to_authzfail(request), request))
                 return
         elif request.path == '/cancel_shutdown':
             if res:
                 eventually(status.cancelCleanShutdown)
-                yield defer.returnValue(redirectTo("/", request))
+                defer.returnValue(redirectTo("/", request))
                 return
             else:
-                yield defer.returnValue(
+                defer.returnValue(
                         redirectTo(path_to_authzfail(request), request))
                 return
 
@@ -54,4 +54,4 @@ class RootPage(HtmlResource):
                 cancel_shutdown_url = request.childLink("cancel_shutdown"),
                 )
         template = request.site.buildbot_service.templates.get_template("root.html")
-        yield defer.returnValue(template.render(**cxt))
+        defer.returnValue(template.render(**cxt))

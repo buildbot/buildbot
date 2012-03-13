@@ -185,7 +185,7 @@ class ConsoleStatusResource(HtmlResource):
             prevChange = change
         allChanges = newChanges
 
-        yield defer.returnValue(allChanges)
+        defer.returnValue(allChanges)
 
     def getBuildDetails(self, request, builderName, build):
         """Returns an HTML list of failures for a given build."""

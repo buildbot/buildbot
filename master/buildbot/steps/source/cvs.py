@@ -81,18 +81,18 @@ class CVS(Source):
             rv = yield self.doUpdate()
         else:
             rv = yield self.doCheckout(self.workdir)
-        yield defer.returnValue(rv)
+        defer.returnValue(rv)
 
     @defer.inlineCallbacks
     def full(self):
         if self.method == 'clobber':
             rv = yield self.clobber()
-            yield defer.returnValue(rv)
+            defer.returnValue(rv)
             return
 
         elif self.method == 'copy':
             rv = yield self.copy()
-            yield defer.returnValue(rv)
+            defer.returnValue(rv)
             return
 
         updatable = yield self._sourcedirIsUpdatable()
@@ -105,7 +105,7 @@ class CVS(Source):
             rv = yield self.fresh()
         else:
             raise ValueError("Unknown method, check your configuration")
-        yield defer.returnValue(rv)
+        defer.returnValue(rv)
 
     def clobber(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
