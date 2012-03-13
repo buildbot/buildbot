@@ -298,7 +298,7 @@ class RunProcess:
             if environ.has_key('PYTHONPATH'):
                 environ['PYTHONPATH'] += os.pathsep + "${PYTHONPATH}"
 
-            # do substitution on variable values matching patern: ${name}
+            # do substitution on variable values matching pattern: ${name}
             p = re.compile('\${([0-9a-zA-Z_]*)}')
             def subst(match):
                 return os.environ.get(match.group(1), "")
