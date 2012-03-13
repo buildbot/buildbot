@@ -542,13 +542,16 @@ class RunProcess:
             path, usePTY):
         """A cheat that routes around the impedance mismatch between
         twisted and cmd.exe with respect to escaping quotes"""
-        with NamedTemporaryFile(dir='.',suffix=".bat",delete=False) as tf:
-            #echo off hides this cheat from the log files.
-            tf.write( "@echo off\n" )
-            if type(self.command) in types.StringTypes:
-                tf.write( self.command )
-            else:
-                tf.write( quoteArguments(self.command) )
+
+        tf = NamedTemporaryFile(dir='.',suffix=".bat",delete=False)
+        #echo off hides this cheat from the log files.
+        tf.write( "@echo off\n" )
+        if type(self.command) in types.StringTypes:
+            tf.write( self.command )
+        else:
+            tf.write( quoteArguments(self.command) )
+        tf.close()
+
         argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
         if '/c' not in argv: argv += ['/c']
         argv += [tf.name]
