@@ -505,6 +505,22 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
 
     def test_constructor_pollinterval(self):
         self.attachSVNPoller(sample_base, pollinterval=100) # just don't fail!
+        
+    def test_extra_args(self):
+        extra_args = ['--no-auth-cache',]
+        base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
+
+        s = self.attachSVNPoller(svnurl=base, extra_args=extra_args)
+        self.failUnlessEqual(s.extra_args, extra_args)
+        
+    def test_extra_args_propagates_get_logs(self):
+        extra_args = ['--no-auth-cache',]
+        base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
+        s = self.attachSVNPoller(svnurl=base, extra_args=extra_args)
+        self.addGetProcessOutputResult(
+                self.gpoCommandArgsMatch(matchArgs=extra_args),
+                result)
+        #self.gpoCommandArgsMatch(matchArgs=extra_args)
 
 class TestSplitFile(unittest.TestCase):
     def test_split_file_alwaystrunk(self):
