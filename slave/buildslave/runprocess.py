@@ -549,7 +549,13 @@ class RunProcess:
         if type(self.command) in types.StringTypes:
             tf.write( self.command )
         else:
-            tf.write( quoteArguments(self.command) )
+            def maybe_escape_pipes(arg):
+                if arg != '|':
+		    return arg.replace('|','^|')
+                else:
+                    return '|'
+            cmd = [maybe_escape_pipes(arg) for arg in self.command]
+            tf.write( quoteArguments(cmd) )
         tf.close()
 
         argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
