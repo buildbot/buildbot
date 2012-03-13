@@ -143,7 +143,7 @@ class GitPoller(base.PollingChangeSource):
         def get_rev(_):
             d = utils.getProcessOutputAndValue(self.gitbin,
                     ['rev-parse', self.branch],
-                    path=self.workdir, env={})
+                    path=self.workdir, env=os.environ)
             d.addCallback(self._convert_nonzero_to_failure)
             d.addErrback(self._stop_on_failure)
             d.addCallback(lambda (out, err, code) : out.strip())
