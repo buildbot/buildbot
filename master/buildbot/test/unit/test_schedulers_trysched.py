@@ -382,7 +382,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             '5',
             json.dumps({
                 'bsid': 'extid', 'branch': 'trunk', 'baserev': '1234',
-                'patchlevel': '1', 'diff': 'this is my diff, -- ++, etc.',
+                'patchlevel': 1, 'diff': 'this is my diff, -- ++, etc.',
                 'repository': 'repo', 'project': 'proj', 'who': 'who',
                 'comment': 'comment', 'builderNames': ['buildera', 'builderc'],
                 'properties': {'foo': 'bar'},

@@ -169,7 +169,7 @@ class Try_Jobdir(TryBase):
             buildsetID = job_dict['bsid']
             branch = job_dict['branch'] or None
             baserev = job_dict['baserev'] or None
-            patchlevel = int(job_dict['patchlevel'])
+            patchlevel = job_dict['patchlevel']
             diff = job_dict['diff']
             repository = job_dict['repository']
             project = job_dict['project']
