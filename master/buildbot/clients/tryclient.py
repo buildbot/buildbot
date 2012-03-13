@@ -404,7 +404,7 @@ def createJobfile(bsid, branch, baserev, patchlevel, diff, repository,
         job += ns(
             json.dumps({
                 'bsid': bsid, 'branch': branch, 'baserev': str(baserev),
-                'patchlevel': "%d" % patchlevel, 'diff': diff,
+                'patchlevel': patchlevel, 'diff': diff,
                 'repository': repository, 'project': project, 'who': who,
                 'comment': comment, 'builderNames': builderNames,
                 'properties': properties,
