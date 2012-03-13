@@ -1276,6 +1276,11 @@ The :bb:step:`ShellCommand` arguments are:
     If ``command`` contains nested lists (for example, from a properties
     substitution), then that list will be flattened before it is executed.
 
+    On the topic of shell metacharacters, note that in DOS the pipe character
+    (``|``) is conditionally escaped (to ``^|``) when it occurs inside a more
+    complex string in a list of strings.  It remains unescaped when it
+    occurs as part of a single string or as a lone pipe in a list of strings.
+
 ``workdir``
     All ShellCommands are run by default in the ``workdir``, which
     defaults to the :file:`build` subdirectory of the slave builder's
