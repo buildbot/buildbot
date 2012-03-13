@@ -16,9 +16,10 @@
 import time
 import tempfile
 import os
-from twisted.python import log
+from twisted.python import log, procutils
 from twisted.internet import defer, utils
 
+from buildbot import config
 from buildbot.util import deferredLocked
 from buildbot.changes import base
 from buildbot.util import epoch2datetime
@@ -26,14 +27,14 @@ from buildbot.util import epoch2datetime
 class GitPoller(base.PollingChangeSource):
     """This source will poll a remote git repo for changes and submit
     them to the change master."""
-    
+
     compare_attrs = ["repourl", "branch", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
                      "category", "project"]
-                     
+
     def __init__(self, repourl, branch='master', 
                  workdir=None, pollInterval=10*60, 
-                 gitbin='git', usetimestamps=True,
+                 gitbin=None, usetimestamps=True,
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
                  encoding='utf-8'):
@@ -41,6 +42,12 @@ class GitPoller(base.PollingChangeSource):
         if pollinterval != -2:
             pollInterval = pollinterval
         if project is None: project = ''
+
+        if gitbin is None:
+            possibles = procutils.which('git')
+            if not possibles:
+                config.error('No git binary found in PATH')
+            gitbin = possibles[0]
 
         self.repourl = repourl
         self.branch = branch
@@ -136,7 +143,7 @@ class GitPoller(base.PollingChangeSource):
         def get_rev(_):
             d = utils.getProcessOutputAndValue(self.gitbin,
                     ['rev-parse', self.branch],
-                    path=self.workdir, env={})
+                    path=self.workdir, env=os.environ)
             d.addCallback(self._convert_nonzero_to_failure)
             d.addErrback(self._stop_on_failure)
             d.addCallback(lambda (out, err, code) : out.strip())
