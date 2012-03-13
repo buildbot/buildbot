@@ -66,9 +66,10 @@ class AbstractBuildSlave(unittest.TestCase):
     def do_test_reconfigService(self, old, old_port, new, new_port):
         master = self.master = fakemaster.make_master()
         old.master = master
-        self.old_registration = old.registration = \
-                mock.Mock(name='old_registration')
-        old.registered_port = old_port
+        if old_port:
+            self.old_registration = old.registration = \
+                    mock.Mock(name='old_registration')
+            old.registered_port = old_port
         old.missing_timer = mock.Mock(name='missing_timer')
         old.startService()
 
@@ -116,6 +117,28 @@ class AbstractBuildSlave(unittest.TestCase):
         self.assertTrue(old.updateSlave.called)
 
     @defer.deferredGenerator
+    def test_reconfigService_has_properties(self):
+        old = self.ConcreteBuildSlave('bot', 'pass')
+
+        wfd = defer.waitForDeferred(
+            self.do_test_reconfigService(old, 'tcp:1234', old, 'tcp:1234'))
+        yield wfd
+        wfd.getResult()
+
+        self.assertTrue(old.properties.getProperty('slavename'), 'bot')
+
+    @defer.deferredGenerator
+    def test_reconfigService_initial_registration(self):
+        old = self.ConcreteBuildSlave('bot', 'pass')
+
+        wfd = defer.waitForDeferred(
+            self.do_test_reconfigService(old, None, old, 'tcp:1234'))
+        yield wfd
+        wfd.getResult()
+
+        self.assertTrue(self.master.pbmanager.register.called)
+
+    @defer.deferredGenerator
     def test_reconfigService_reregister_password(self):
         old = self.ConcreteBuildSlave('bot', 'pass')
         new = self.ConcreteBuildSlave('bot', 'newpass')
@@ -141,6 +164,12 @@ class AbstractBuildSlave(unittest.TestCase):
 
         self.assertTrue(self.old_registration.unregister.called)
         self.assertTrue(self.master.pbmanager.register.called)
+
+    # FIXME: Test that reconfig properly deals with
+    #   1) locks
+    #   2) telling slave about builder
+    #   3) missing timer
+    # in both the initial config and a reconfiguration.
 
     def test_startMissingTimer_no_parent(self):
         bs = self.ConcreteBuildSlave('bot', 'pass',
