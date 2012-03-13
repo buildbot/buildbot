@@ -1,22 +1,20 @@
 
 {% macro cancel_pending_build(cancel_url, authz, short=False, id='all') %}
-  {% if not short  %}
-    <form method="post" name="cancel" action="{{ cancel_url }}" class='command cancelbuild'
-               {{ 'style="display:inline"' if short else '' }}>
-      {% if not short %}
-        {% if id == 'all' %}
-          <p>To cancel all builds, fill out the following fields and
-            push the 'Cancel' button</p>
-          <p>To cancel individual builds, click the 'Cancel' buttons above.</p>
-        {% else %}
-          <p>To cancel this build, fill out the following fields and
-            push the 'Cancel' button</p>
-        {% endif %}
+  <form method="post" name="cancel" action="{{ cancel_url }}" class='command cancelbuild'
+             {{ 'style="display:inline"' if short else '' }}>
+    {% if not short %}
+      {% if id == 'all' %}
+        <p>To cancel all builds, fill out the following fields and
+          push the 'Cancel' button</p>
+        <p>To cancel individual builds, click the 'Cancel' buttons above.</p>
+      {% else %}
+        <p>To cancel this build, fill out the following fields and
+          push the 'Cancel' button</p>
       {% endif %}
-      <input type="hidden" name="id" value="{{ id }}" />
-      <input type="submit" value="Cancel" />
-    </form>
-  {% endif %}
+    {% endif %}
+    <input type="hidden" name="id" value="{{ id }}" />
+    <input type="submit" value="Cancel" />
+  </form>
 {% endmacro %}
 
 {% macro stop_change_builds(stopchange_url, changenum, authz) %}
