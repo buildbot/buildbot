@@ -818,3 +818,99 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
                               [{'identifier':'x <h@c>','git': 'x <h@c>'}]))
         d.addCallback(check)
         return d
+
+class TestMasterOptions(OptionsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.options_file = {}
+        self.patch(runner, 'loadOptionsFile', lambda : self.options_file)
+
+    def parse(self, *args):
+        self.opts = runner.MasterOptions()
+        self.opts.parseOptions(args)
+        return self.opts
+
+    def defaults_and(self, **kwargs):
+        defaults = dict(force=False, relocatable=False, config='master.cfg',
+                db='sqlite:///state.sqlite', **{'no-logrotate':False,
+                    'log-size':'10000000', 'log-count':'10'})
+        unk_keys = set(kwargs.keys()) - set(defaults.keys())
+        assert not unk_keys, "invalid keys %s" % (unk_keys,)
+        opts = defaults.copy()
+        opts.update(kwargs)
+        return opts
+
+    def test_synopsis(self):
+        opts = runner.MasterOptions()
+        self.assertIn('buildbot create-master', opts.getSynopsis())
+
+    def test_defaults(self):
+        opts = self.parse()
+        exp = self.defaults_and()
+        self.assertOptions(opts, exp)
+
+    def test_force(self):
+        opts = self.parse('-f')
+        exp = self.defaults_and(force=True)
+        self.assertOptions(opts, exp)
+
+    def test_force_long(self):
+        opts = self.parse('--force')
+        exp = self.defaults_and(force=True)
+        self.assertOptions(opts, exp)
+
+    def test_relocatable(self):
+        opts = self.parse('-r')
+        exp = self.defaults_and(relocatable=True)
+        self.assertOptions(opts, exp)
+
+    def test_relocatable_long(self):
+        opts = self.parse('--relocatable')
+        exp = self.defaults_and(relocatable=True)
+        self.assertOptions(opts, exp)
+
+    def test_no_logrotate(self):
+        opts = self.parse('-n')
+        exp = self.defaults_and(**{'no-logrotate' : True})
+        self.assertOptions(opts, exp)
+
+    def test_no_logrotate_long(self):
+        opts = self.parse('--no-logrotate')
+        exp = self.defaults_and(**{'no-logrotate' : True})
+        self.assertOptions(opts, exp)
+
+    def test_config(self):
+        opts = self.parse('-cxyz')
+        exp = self.defaults_and(config='xyz')
+        self.assertOptions(opts, exp)
+
+    def test_config_long(self):
+        opts = self.parse('--config=xyz')
+        exp = self.defaults_and(config='xyz')
+        self.assertOptions(opts, exp)
+
+    def test_log_size(self):
+        opts = self.parse('-s124')
+        exp = self.defaults_and(**{'log-size':'124'})
+        self.assertOptions(opts, exp)
+
+    def test_log_size_long(self):
+        opts = self.parse('--log-size=124')
+        exp = self.defaults_and(**{'log-size':'124'})
+        self.assertOptions(opts, exp)
+
+    def test_log_count(self):
+        opts = self.parse('-l124')
+        exp = self.defaults_and(**{'log-count':'124'})
+        self.assertOptions(opts, exp)
+
+    def test_log_count_long(self):
+        opts = self.parse('--log-count=124')
+        exp = self.defaults_and(**{'log-count':'124'})
+        self.assertOptions(opts, exp)
+
+    def test_db_long(self):
+        opts = self.parse('--db=foo://bar')
+        exp = self.defaults_and(db='foo://bar')
+        self.assertOptions(opts, exp)
+
