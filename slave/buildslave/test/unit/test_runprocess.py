@@ -161,13 +161,33 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
     def testMultiWordStringCommand(self):
         b = FakeSlaveBuilder(False, self.basedir)
         # careful!  This command must execute the same on windows and UNIX
+        s = runprocess.RunProcess(b, 'echo Happy Days and Jubilation',
+                                  self.basedir)
+
+        # no quoting occurs
+        exp = nl('Happy Days and Jubilation\n')
+        d = s.start()
+        def check(ign):
+            self.failUnless({'stdout': exp} in b.updates, b.show())
+            self.failUnless({'rc': 0} in b.updates, b.show())
+        d.addCallback(check)
+        return d
+
+    def testMultiWordStringCommandQuotes(self):
+        b = FakeSlaveBuilder(False, self.basedir)
+        # careful!  This command must execute the same on windows and UNIX
         s = runprocess.RunProcess(b, 'echo "Happy Days and Jubilation"',
                                   self.basedir)
 
+        if runtime.platformType == "win32":
+            # echo doesn't parse out the quotes, so they come through in the
+            # output
+            exp = nl('"Happy Days and Jubilation"\n')
+        else:
+            exp = nl('Happy Days and Jubilation\n')
         d = s.start()
         def check(ign):
-            self.failUnless({'stdout': nl('"Happy Days and Jubilation"\n')}
-                            in b.updates, b.show())
+            self.failUnless({'stdout': exp} in b.updates, b.show())
             self.failUnless({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
@@ -178,10 +198,16 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         s = runprocess.RunProcess(b, ['echo', 'Happy Days and Jubilation'],
                                   self.basedir)
 
+        if runtime.platformType == "win32":
+            # Twisted adds quotes to all arguments, and echo doesn't remove
+            # them, so they appear in the output.
+            exp = nl('"Happy Days and Jubilation"\n')
+        else:
+            exp = nl('Happy Days and Jubilation\n')
+
         d = s.start()
         def check(ign):
-            self.failUnless({'stdout': nl('"Happy Days and Jubilation"\n')}
-                            in b.updates, b.show())
+            self.failUnless({'stdout': exp} in b.updates, b.show())
             self.failUnless({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
