@@ -22,6 +22,7 @@ from twisted.trial import unittest
 from buildbot.test.util import steps
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.steps import master
+from buildbot.process.properties import WithProperties
 
 class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
 
@@ -92,4 +93,37 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                     ('rc', 0),
                 ])
         self.expectOutcome(result=SUCCESS, status_text=['y'])
+        return self.runStep()
+
+    def test_env_subst(self):
+        cmd = [ sys.executable, '-c', 'import os; print os.environ["HELLO"]' ]
+        os.environ['WORLD'] = 'hello'
+        self.setupStep(
+                master.MasterShellCommand(command=cmd,
+                                env={'HELLO': '${WORLD}'}))
+        if runtime.platformType == 'win32':
+            self.expectLogfile('stdio', "hello\r\n")
+        else:
+            self.expectLogfile('stdio', "hello\n")
+        self.expectOutcome(result=SUCCESS, status_text=["Ran"])
+        def _restore_env(res):
+            del os.environ['WORLD']
+            return res
+        d = self.runStep()
+        d.addBoth(_restore_env)
+        return d
+
+    def test_prop_rendering(self):
+        cmd = [ sys.executable, '-c', WithProperties(
+                    'import os; print "%s"; print os.environ[\"BUILD\"]',
+                    'project') ]
+        self.setupStep(
+                master.MasterShellCommand(command=cmd,
+                        env={'BUILD': WithProperties('%s', "project")}))
+        self.properties.setProperty("project", "BUILDBOT-TEST", "TEST")
+        if runtime.platformType == 'win32':
+            self.expectLogfile('stdio', "BUILDBOT-TEST\r\nBUILDBOT-TEST\r\n")
+        else:
+            self.expectLogfile('stdio', "BUILDBOT-TEST\nBUILDBOT-TEST\n")
+        self.expectOutcome(result=SUCCESS, status_text=["Ran"])
         return self.runStep()
