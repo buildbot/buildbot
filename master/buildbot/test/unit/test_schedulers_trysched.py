@@ -445,6 +445,13 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
         self.assertEqual(parsedjob['properties'], {})
 
+    def test_parseJob_v5_invalid_json(self):
+        sched = trysched.Try_Jobdir(
+            name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
+        jobstr = self.makeNetstring('5', '{"comment": "com}')
+        self.assertRaises(trysched.BadJobfile,
+            lambda: sched.parseJob(StringIO.StringIO(jobstr)))
+
     # handleJobFile
 
     def call_handleJobFile(self, parseJob):

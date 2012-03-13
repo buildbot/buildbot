@@ -165,7 +165,10 @@ class Try_Jobdir(TryBase):
             patchlevel = int(patchlevel)
             properties = {}
         elif ver == "5":  # introduced properties and JSON serialization
-            job_dict = json.loads(p.strings[0])
+            try:
+                job_dict = json.loads(p.strings[0])
+            except ValueError:
+                raise BadJobfile("unable to parse JSON")
             buildsetID = job_dict['bsid']
             branch = job_dict['branch'] or None
             baserev = job_dict['baserev'] or None
