@@ -21,6 +21,7 @@ from twisted.protocols import basic
 
 from buildbot import pbutil
 from buildbot.util.maildir import MaildirService
+from buildbot.util import json
 from buildbot.util import netstrings
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
@@ -90,13 +91,24 @@ class Try_Jobdir(TryBase):
     def parseJob(self, f):
         # jobfiles are serialized build requests. Each is a list of
         # serialized netstrings, in the following order:
-        #  "2", the format version number ("1" does not have project/repo)
+        #  format version number:
+        #  "1" the original
+        #  "2" introduces project and repository
+        #  "3" introduces who
+        #  "4" introduces comment
+        #  "5" introduces properties and JSON serialization of values after
+        #      version
         #  buildsetID, arbitrary string, used to find the buildSet later
         #  branch name, "" for default-branch
         #  base revision, "" for HEAD
         #  patchlevel, usually "1"
-        #  patch
+        #  diff, patch to be applied for build
+        #  repository
+        #  project
+        #  who, user requesting build
+        #  comment, comment from user about diff and/or build
         #  builderNames...
+        #  properties, dict of build properties
         p = netstrings.NetstringParser()
         try:
             p.feed(f.read())
@@ -118,6 +130,7 @@ class Try_Jobdir(TryBase):
             project = ''
             who = ''
             comment = ''
+            properties = {}
         elif ver == "2":  # introduced the repository and project property
             (buildsetID, branch, baserev, patchlevel, diff, repository,
              project) = p.strings[:7]
@@ -129,6 +142,7 @@ class Try_Jobdir(TryBase):
             patchlevel = int(patchlevel)
             who = ''
             comment = ''
+            properties = {}
         elif ver == "3":  # introduced who property
             (buildsetID, branch, baserev, patchlevel, diff, repository,
              project, who) = p.strings[:8]
@@ -139,6 +153,7 @@ class Try_Jobdir(TryBase):
                 baserev = None
             patchlevel = int(patchlevel)
             comment = ''
+            properties = {}
         elif ver == "4":  # introduced try comments
             (buildsetID, branch, baserev, patchlevel, diff, repository,
              project, who, comment) = p.strings[:9]
@@ -148,7 +163,20 @@ class Try_Jobdir(TryBase):
             if baserev == "":
                 baserev = None
             patchlevel = int(patchlevel)
-
+            properties = {}
+        elif ver == "5":  # introduced properties and JSON serialization
+            job_dict = json.loads(p.strings[0])
+            buildsetID = job_dict['bsid']
+            branch = job_dict['branch'] or None
+            baserev = job_dict['baserev'] or None
+            patchlevel = int(job_dict['patchlevel'])
+            diff = job_dict['diff']
+            repository = job_dict['repository']
+            project = job_dict['project']
+            who = job_dict['who']
+            comment = job_dict['comment']
+            builderNames = job_dict['builderNames']
+            properties = job_dict['properties']
         else:
             raise BadJobfile("unknown version '%s'" % ver)
         return dict(
@@ -161,7 +189,8 @@ class Try_Jobdir(TryBase):
                 project=project,
                 who=who,
                 comment=comment,
-                jobid=buildsetID)
+                jobid=buildsetID,
+                properties=properties)
 
     def handleJobFile(self, filename, f):
         try:
@@ -209,9 +238,13 @@ class Try_Jobdir(TryBase):
             reason = "'try' job"
             if parsed_job['who']:
                 reason += " by user %s" % parsed_job['who']
-            return self.addBuildsetForSourceStamp(ssid=None, setid=setid,
-                    reason=reason, external_idstring=parsed_job['jobid'],
-                    builderNames=builderNames)
+            properties = parsed_job['properties']
+            requested_props = Properties()
+            requested_props.update(properties, "try build")
+            return self.addBuildsetForSourceStamp(
+                ssid=None, setid=setid,
+                reason=reason, external_idstring=parsed_job['jobid'],
+                builderNames=builderNames, properties=requested_props)
         d.addCallback(create_buildset)
         return d
 
