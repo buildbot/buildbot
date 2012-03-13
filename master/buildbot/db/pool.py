@@ -19,11 +19,10 @@ import inspect
 import shutil
 import os
 import sqlalchemy as sa
-import twisted
 import tempfile
 from buildbot.process import metrics
-from twisted.internet import reactor, threads, defer
-from twisted.python import threadpool, failure, versions, log
+from twisted.internet import reactor, threads
+from twisted.python import threadpool, log
 
 # set this to True for *very* verbose query debugging output; this can
 # be monkey-patched from master.cfg, too:
@@ -221,33 +220,6 @@ class DBThreadPool(threadpool.ThreadPool):
     def do_with_engine(self, callable, *args, **kwargs):
         return threads.deferToThreadPool(reactor, self,
                 self.__thd, True, callable, args, kwargs)
-
-    # older implementations for twisted < 0.8.2, which does not have
-    # deferToThreadPool; this basically re-implements it, although it gets some
-    # of the synchronization wrong - the thread may still be "in use" when the
-    # deferred fires in the parent, which can lead to database accesses hopping
-    # between threads.  In practice, this should not cause any difficulty.
-    if twisted.version < versions.Version('twisted', 8, 2, 0):
-        def __081_wrap(self, with_engine, callable, args, kwargs): # pragma: no cover
-            d = defer.Deferred()
-            def thd():
-                try:
-                    reactor.callFromThread(d.callback,
-                            self.__thd(with_engine, callable, args, kwargs))
-                except:
-                    reactor.callFromThread(d.errback,
-                            failure.Failure())
-            self.callInThread(thd)
-            return d
-
-        def do_081(self, callable, *args, **kwargs): # pragma: no cover
-            return self.__081_wrap(False, callable, args, kwargs)
-
-        def do_with_engine_081(self, callable, *args, **kwargs): # pragma: no cover
-            return self.__081_wrap(True, callable, args, kwargs)
-
-        do = do_081
-        do_with_engine = do_with_engine_081
 
     def detect_bug1810(self):
         # detect buggy SQLite implementations; call only for a known-sqlite
