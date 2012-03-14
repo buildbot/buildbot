@@ -359,7 +359,8 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
                 master=None, passwd=None, who=None, comment=None, diff=None,
                 patchlevel=0, baserev=None, vc=None, branch=None,
                 repository=None, topfile=None, topdir=None, wait=False,
-                dryrun=False, quiet=False, builders=[], properties={})
+                dryrun=False, quiet=False, builders=[], properties={},
+                buildbotbin='buildbot')
         # dashes make python syntax hard..
         defaults['get-builder-names'] = False
         if 'get_builder_names' in kwargs:
@@ -418,13 +419,15 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
                 --host=h --jobdir=j --username=u --master=m --passwd=p
                 --who=w --comment=comm --diff=d --patchlevel=7 --baserev=br
                 --vc=cvs --branch=br --repository=rep --builder=bl
-                --properties=a=b --topfile=Makefile --topdir=.""".split())
+                --properties=a=b --topfile=Makefile --topdir=.
+                --buildbotbin=.virtualenvs/buildbot/bin/buildbot""".split())
         exp = self.defaults_and(wait=True, dryrun=True, get_builder_names=True,
                 quiet=True, connect='pb', host='h', jobdir='j', username='u',
                 master='m', passwd='p', who='w', comment='comm', diff='d',
                 patchlevel=7, baserev='br', vc='cvs', branch='br',
                 repository='rep', builders=['bl'], properties=dict(a='b'),
-                topfile='Makefile', topdir='.')
+                topfile='Makefile', topdir='.',
+                buildbotbin='.virtualenvs/buildbot/bin/buildbot')
         self.assertOptions(opts, exp)
 
     def test_patchlevel_inval(self):
@@ -463,12 +466,14 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
             try_branch='br', try_repository='rep', try_topdir='.',
             try_topfile='Makefile', try_host='h', try_username='u',
             try_jobdir='j', try_password='p', try_master='m', try_who='w',
-            try_comment='comm', try_quiet='y', try_wait='y'))
+            try_comment='comm', try_quiet='y', try_wait='y',
+            try_buildbotbin='.virtualenvs/buildbot/bin/buildbot'))
         opts = self.parse()
         exp = self.defaults_and(wait=True, quiet=True, connect='pb', host='h',
                 jobdir='j', username='u', master='m', passwd='p', who='w',
                 comment='comm', vc='cvs', branch='br', repository='rep',
-                topfile='Makefile', topdir='.')
+                topfile='Makefile', topdir='.',
+                buildbotbin='.virtualenvs/buildbot/bin/buildbot')
         self.assertOptions(opts, exp)
 
 class TestUserOptions(OptionsMixin, unittest.TestCase):
