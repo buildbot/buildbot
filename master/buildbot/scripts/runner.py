@@ -22,146 +22,23 @@ from __future__ import with_statement
 # Also don't forget to mirror your changes on command-line options in manual
 # pages and texinfo documentation.
 
-import copy
 from twisted.python import usage, util, runtime
 from hashlib import md5
 import os
 import re
-import stat
 import sys
 import time
 
 from twisted.internet import defer
 
 from buildbot.interfaces import BuildbotNotRunningError
-
-def in_reactor(f):
-    """decorate a function by running it with maybeDeferred in a reactor"""
-    def wrap(*args, **kwargs):
-        from twisted.internet import reactor
-        result = [ ]
-        def async():
-            d = defer.maybeDeferred(f, *args, **kwargs)
-            def eb(f):
-                f.printTraceback()
-            d.addErrback(eb)
-            def do_stop(r):
-                result.append(r)
-                reactor.stop()
-            d.addBoth(do_stop)
-        reactor.callWhenRunning(async)
-        reactor.run()
-        return result[0]
-    wrap.__doc__ = f.__doc__
-    wrap.__name__ = f.__name__
-    wrap._orig = f # for tests
-    return wrap
-
-def isBuildmasterDir(dir):
-    buildbot_tac = os.path.join(dir, "buildbot.tac")
-    if not os.path.isfile(buildbot_tac):
-        print "no buildbot.tac"
-        return False
-
-    with open(buildbot_tac, "r") as f:
-        contents = f.read()
-    return "Application('buildmaster')" in contents
-
-# the create/start/stop commands should all be run as the same user,
-# preferably a separate 'buildbot' account.
+from buildbot.util import in_reactor
+from buildbot.scripts import base
 
 # Note that the terms 'options' and 'config' are used intechangeably here - in
 # fact, they are intercanged several times.  Caveat legator.
 
-class OptionsWithOptionsFile(usage.Options):
-    # subclasses should set this to a list-of-lists in order to source the
-    # .buildbot/options file.
-    # buildbotOptions = [ [ 'optfile-name', 'option-name' ], .. ]
-    buildbotOptions = None
-
-    def __init__(self, *args):
-        # for options in self.buildbotOptions, optParameters, and the options
-        # file, change the default in optParameters *before* calling through
-        # to the parent constructor
-
-        # Options uses reflect.accumulateClassList, so this *must* be
-        # a class attribute; however, we do not want to permanently change
-        # the class.  So we patch it temporarily and restore it after.
-        cls = self.__class__
-        if hasattr(cls, 'optParameters'):
-            old_optParameters = cls.optParameters
-            cls.optParameters = op = copy.deepcopy(cls.optParameters)
-            if self.buildbotOptions:
-                optfile = loadOptionsFile()
-                for optfile_name, option_name in self.buildbotOptions:
-                    for i in range(len(op)):
-                        if (op[i][0] == option_name and optfile_name in optfile):
-                            op[i] = list(op[i])
-                            op[i][2] = optfile[optfile_name]
-        usage.Options.__init__(self, *args)
-        if hasattr(cls, 'optParameters'):
-            cls.optParameters = old_optParameters
-
-def loadOptionsFile():
-    """Find the .buildbot/FILENAME file. Crawl from the current directory up
-    towards the root, and also look in ~/.buildbot . The first directory
-    that's owned by the user and has the file we're looking for wins. Windows
-    skips the owned-by-user test.
-    
-    @rtype:  dict
-    @return: a dictionary of names defined in the options file. If no options
-             file was found, return an empty dict.
-    """
-
-    here = os.path.abspath(os.getcwd())
-
-    if runtime.platformType == 'win32':
-        # never trust env-vars, use the proper API
-        from win32com.shell import shellcon, shell
-        appdata = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
-        home = os.path.join(appdata, "buildbot")
-    else:
-        home = os.path.expanduser("~/.buildbot")
-
-    searchpath = []
-    toomany = 20
-    while True:
-        searchpath.append(os.path.join(here, ".buildbot"))
-        next = os.path.dirname(here)
-        if next == here:
-            break # we've hit the root
-        here = next
-        toomany -= 1 # just in case
-        if toomany == 0:
-            raise ValueError("Hey, I seem to have wandered up into the "
-                             "infinite glories of the heavens. Oops.")
-    searchpath.append(home)
-
-    localDict = {}
-
-    for d in searchpath:
-        if os.path.isdir(d):
-            if runtime.platformType != 'win32':
-                if os.stat(d)[stat.ST_UID] != os.getuid():
-                    print "skipping %s because you don't own it" % d
-                    continue # security, skip other people's directories
-            optfile = os.path.join(d, "options")
-            if os.path.exists(optfile):
-                try:
-                    with open(optfile, "r") as f:
-                        options = f.read()
-                    exec options in localDict
-                except:
-                    print "error while reading %s" % optfile
-                    raise
-                break
-
-    for k in localDict.keys():
-        if k.startswith("__"):
-            del localDict[k]
-    return localDict
-
-class MakerBase(OptionsWithOptionsFile):
+class MakerBase(base.SubcommandOptions):
     optFlags = [
         ['help', 'h', "Display this message"],
         ["quiet", "q", "Do not emit the commands being run"],
@@ -594,7 +471,7 @@ def stop(config, signame="TERM", wait=False):
     basedir = config['basedir']
     quiet = config['quiet']
 
-    if not isBuildmasterDir(config['basedir']):
+    if not base.isBuildmasterDir(config['basedir']):
         print "not a buildmaster directory"
         sys.exit(1)
 
@@ -634,7 +511,7 @@ def restart(config):
     basedir = config['basedir']
     quiet = config['quiet']
 
-    if not isBuildmasterDir(basedir):
+    if not base.isBuildmasterDir(basedir):
         print "not a buildmaster directory"
         sys.exit(1)
 
@@ -675,7 +552,7 @@ class RestartOptions(MakerBase):
     def getSynopsis(self):
         return "Usage:    buildbot restart [<basedir>]"
 
-class DebugClientOptions(OptionsWithOptionsFile):
+class DebugClientOptions(base.SubcommandOptions):
     optFlags = [
         ['help', 'h', "Display this message"],
         ]
@@ -715,7 +592,7 @@ def debugclient(config):
     d = debug.DebugWidget(master, passwd)
     d.run()
 
-class StatusClientOptions(OptionsWithOptionsFile):
+class StatusClientOptions(base.SubcommandOptions):
     optFlags = [
         ['help', 'h', "Display this message"],
         ]
@@ -744,14 +621,14 @@ class StatusGuiOptions(StatusClientOptions):
         return "Usage:    buildbot statusgui [options]"
 
 def statuslog(config):
-    from buildbot.clients import base
+    from buildbot.clients import base as clbase
     master = config.get('master')
     if master is None:
         raise usage.UsageError("master must be specified: on the command "
                                "line or in ~/.buildbot/options")
     passwd = config.get('passwd')
     username = config.get('username')
-    c = base.TextClient(master, username=username, passwd=passwd)
+    c = clbase.TextClient(master, username=username, passwd=passwd)
     c.run()
 
 def statusgui(config):
@@ -765,9 +642,9 @@ def statusgui(config):
     c = gtkPanes.GtkClient(master, username=username, passwd=passwd)
     c.run()
 
-class SendChangeOptions(OptionsWithOptionsFile):
+class SendChangeOptions(base.SubcommandOptions):
     def __init__(self):
-        OptionsWithOptionsFile.__init__(self)
+        base.SubcommandOptions.__init__(self)
         self['properties'] = {}
 
     optParameters = [
@@ -885,7 +762,7 @@ def sendchange(config, runReactor=False):
     return d
 
 
-class ForceOptions(OptionsWithOptionsFile):
+class ForceOptions(base.SubcommandOptions):
     optParameters = [
         ["builder", None, None, "which Builder to start"],
         ["branch", None, None, "which branch to build"],
@@ -909,7 +786,7 @@ class ForceOptions(OptionsWithOptionsFile):
             self['reason'] = " ".join(args)
 
 
-class TryOptions(OptionsWithOptionsFile):
+class TryOptions(base.SubcommandOptions):
     optParameters = [
         ["connect", "c", None,
          "How to reach the buildmaster, either 'ssh' or 'pb'"],
@@ -1006,7 +883,7 @@ class TryOptions(OptionsWithOptionsFile):
     ]
 
     def __init__(self):
-        OptionsWithOptionsFile.__init__(self)
+        base.SubcommandOptions.__init__(self)
         self['builders'] = []
         self['properties'] = {}
 
@@ -1027,7 +904,7 @@ class TryOptions(OptionsWithOptionsFile):
         return "Usage:    buildbot try [options]"
 
     def postOptions(self):
-        opts = loadOptionsFile()
+        opts = self.optionsFile
         if not self['builders']:
             self['builders'] = opts.get('try_builders', [])
         if opts.get('try_wait', False):
@@ -1044,7 +921,7 @@ def doTry(config):
     t = tryclient.Try(config)
     t.run()
 
-class TryServerOptions(OptionsWithOptionsFile):
+class TryServerOptions(base.SubcommandOptions):
     optParameters = [
         ["jobdir", None, None, "the jobdir (maildir) for submitting jobs"],
         ]
@@ -1070,7 +947,7 @@ def doTryServer(config):
     os.rename(tmpfile, newfile)
 
 
-class CheckConfigOptions(OptionsWithOptionsFile):
+class CheckConfigOptions(base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display error messages or tracebacks"],
     ]
@@ -1100,7 +977,7 @@ def doCheckConfig(config):
     return cl.load(quiet=quiet)
 
 
-class UserOptions(OptionsWithOptionsFile):
+class UserOptions(base.SubcommandOptions):
     optParameters = [
         ["master", "m", None,
          "Location of the buildmaster's PBListener (host:port)"],
@@ -1132,7 +1009,7 @@ class UserOptions(OptionsWithOptionsFile):
         ]
 
     def __init__(self):
-        OptionsWithOptionsFile.__init__(self)
+        base.SubcommandOptions.__init__(self)
         self['ids'] = []
         self['info'] = []
 
@@ -1344,7 +1221,7 @@ def run():
     elif command == "start":
         from buildbot.scripts.startup import start
 
-        if not isBuildmasterDir(so['basedir']):
+        if not base.isBuildmasterDir(so['basedir']):
             print "not a buildmaster directory"
             sys.exit(1)
 

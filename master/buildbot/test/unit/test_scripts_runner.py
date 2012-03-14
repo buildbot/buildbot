@@ -21,12 +21,19 @@ import cStringIO
 import getpass
 import mock
 from twisted.trial import unittest
+from twisted.python import usage
 from twisted.internet import defer, reactor
-from buildbot.scripts import runner, checkconfig
+from buildbot.scripts import base, runner, checkconfig
 from buildbot.clients import sendchange, usersclient
+from buildbot.db import connector
 from buildbot.process.users import users
 
 class OptionsMixin(object):
+
+    def setUpOptions(self):
+        self.options_file = {}
+        self.patch(base.SubcommandOptions, 'loadOptionsFile',
+                lambda other_self : self.options_file)
 
     def assertOptions(self, opts, exp):
         got = dict([(k, opts[k]) for k in exp])
@@ -41,8 +48,7 @@ class OptionsMixin(object):
 class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
-        self.options_file = {}
-        self.patch(runner, 'loadOptionsFile', lambda : self.options_file)
+        self.setUpOptions()
 
     def parse(self, *args):
         self.opts = runner.SendChangeOptions()
@@ -262,8 +268,7 @@ class TestSendChange(unittest.TestCase):
 class TestCheckConfigOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
-        self.options_file = {}
-        self.patch(runner, 'loadOptionsFile', lambda : self.options_file)
+        self.setUpOptions()
 
     def parse(self, *args):
         self.opts = runner.CheckConfigOptions()
@@ -346,8 +351,7 @@ class TestCheckConfig(unittest.TestCase):
 class TestTryOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
-        self.options_file = {}
-        self.patch(runner, 'loadOptionsFile', lambda : self.options_file)
+        self.setUpOptions()
 
     def parse(self, *args):
         self.opts = runner.TryOptions()
@@ -479,8 +483,7 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
 class TestUserOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
-        self.options_file = {}
-        self.patch(runner, 'loadOptionsFile', lambda : self.options_file)
+        self.setUpOptions()
 
     def parse(self, *args):
         self.opts = runner.UserOptions()
@@ -717,8 +720,7 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
 class TestMasterOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
-        self.options_file = {}
-        self.patch(runner, 'loadOptionsFile', lambda : self.options_file)
+        self.setUpOptions()
 
     def parse(self, *args):
         self.opts = runner.MasterOptions()
@@ -727,8 +729,9 @@ class TestMasterOptions(OptionsMixin, unittest.TestCase):
 
     def defaults_and(self, **kwargs):
         defaults = dict(force=False, relocatable=False, config='master.cfg',
-                db='sqlite:///state.sqlite', **{'no-logrotate':False,
-                    'log-size':'10000000', 'log-count':'10'})
+                db='sqlite:///state.sqlite', basedir=os.getcwd(), quiet=False,
+                **{'no-logrotate':False, 'log-size':'10000000',
+                   'log-count':'10'})
         unk_keys = set(kwargs.keys()) - set(defaults.keys())
         assert not unk_keys, "invalid keys %s" % (unk_keys,)
         opts = defaults.copy()
@@ -742,6 +745,16 @@ class TestMasterOptions(OptionsMixin, unittest.TestCase):
     def test_defaults(self):
         opts = self.parse()
         exp = self.defaults_and()
+        self.assertOptions(opts, exp)
+
+    def test_db_quiet(self):
+        opts = self.parse('-q')
+        exp = self.defaults_and(quiet=True)
+        self.assertOptions(opts, exp)
+
+    def test_db_quiet_long(self):
+        opts = self.parse('--quiet')
+        exp = self.defaults_and(quiet=True)
         self.assertOptions(opts, exp)
 
     def test_force(self):
@@ -794,6 +807,10 @@ class TestMasterOptions(OptionsMixin, unittest.TestCase):
         exp = self.defaults_and(**{'log-size':'124'})
         self.assertOptions(opts, exp)
 
+    def test_log_size_noninteger(self):
+        self.assertRaises(usage.UsageError,
+            lambda :self.parse('--log-size=1M'))
+
     def test_log_count(self):
         opts = self.parse('-l124')
         exp = self.defaults_and(**{'log-count':'124'})
@@ -804,8 +821,79 @@ class TestMasterOptions(OptionsMixin, unittest.TestCase):
         exp = self.defaults_and(**{'log-count':'124'})
         self.assertOptions(opts, exp)
 
+    def test_log_count_noninteger(self):
+        self.assertRaises(usage.UsageError,
+            lambda :self.parse('--log-count=M'))
+
     def test_db_long(self):
         opts = self.parse('--db=foo://bar')
         exp = self.defaults_and(db='foo://bar')
         self.assertOptions(opts, exp)
 
+    def test_db_basedir(self):
+        opts = self.parse('-f', '/foo/bar')
+        exp = self.defaults_and(force=True, basedir='/foo/bar')
+        self.assertOptions(opts, exp)
+
+class TestCreateMaster(OptionsMixin, unittest.TestCase):
+
+    def setUp(self):
+        # createMaster is decorated with @in_reactor, so strip that decoration
+        # since the master is already running
+        self.patch(runner, 'createMaster', runner.createMaster._orig)
+
+        # mock out Maker
+        self.maker = mock.Mock()
+        self.maker.create_db.side_effect = lambda *a, **k : defer.succeed(None)
+        self.Maker = mock.Mock(return_value=self.maker)
+        self.patch(runner, 'Maker', self.Maker)
+
+        # set up a nonexistent basedir
+        self.basedir = os.path.abspath('basedir')
+
+    def config(self, **kwargs):
+        config = dict(force=False, relocatable=False, config='master.cfg',
+                db='sqlite:///state.sqlite', basedir=self.basedir, quiet=False,
+                **{'no-logrotate':False, 'log-size':'10000000',
+                   'log-count':'10'})
+        config.update(kwargs)
+        return config
+
+    # TODO: keep for testing Maker methods
+    def assertDBSetup(self, basedir=None, db_url='sqlite:///state.sqlite',
+                            verbose=True):
+        # mock out the database setup
+        self.db = mock.Mock()
+        self.db.setup.side_effect = lambda *a, **k : defer.succeed(None)
+        self.DBConnector = mock.Mock()
+        self.DBConnector.return_value = self.db
+        self.patch(connector, 'DBConnector', self.DBConnector)
+
+        basedir = basedir or self.basedir
+        self.assertEqual(
+            dict(basedir=self.DBConnector.call_args[0][1],
+                 db_url=self.DBConnector.call_args[0][0].config.db['db_url'],
+                 verbose=self.db.setup.call_args[1]['verbose'],
+                 check_version=self.db.setup.call_args[1]['check_version'],
+                 ),
+            dict(basedir=self.basedir,
+                 db_url=db_url,
+                 verbose=True,
+                 check_version=False))
+
+    # tests
+
+    def test_createMaster(self):
+        cfg = self.config()
+        d = runner.createMaster(cfg)
+        @d.addCallback
+        def check(_):
+            self.Maker.assert_called_with(cfg)
+            self.failUnless(self.maker.mkdir.called)
+            self.failUnless(self.maker.chdir.called)
+            self.failUnless(self.maker.makeTAC.called)
+            self.failUnless(self.maker.sampleconfig.called)
+            self.failUnless(self.maker.public_html.called)
+            self.failUnless(self.maker.templates_dir.called)
+            self.failUnless(self.maker.create_db.called)
+        return d

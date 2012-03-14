@@ -175,8 +175,30 @@ def makeList(input):
     else:
         return list(input)
 
+def in_reactor(f):
+    """decorate a function by running it with maybeDeferred in a reactor"""
+    def wrap(*args, **kwargs):
+        from twisted.internet import reactor, defer
+        result = [ ]
+        def async():
+            d = defer.maybeDeferred(f, *args, **kwargs)
+            def eb(f):
+                f.printTraceback()
+            d.addErrback(eb)
+            def do_stop(r):
+                result.append(r)
+                reactor.stop()
+            d.addBoth(do_stop)
+        reactor.callWhenRunning(async)
+        reactor.run()
+        return result[0]
+    wrap.__doc__ = f.__doc__
+    wrap.__name__ = f.__name__
+    wrap._orig = f # for tests
+    return wrap
+
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'LRUCache', 'none_or_str',
     'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC',
-    'diffLists', 'makeList' ]
+    'diffLists', 'makeList', 'in_reactor' ]
