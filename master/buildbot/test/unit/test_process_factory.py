@@ -16,7 +16,7 @@
 from twisted.trial import unittest
 from mock import Mock
 
-from buildbot.process.factory import BuildFactory, ArgumentsInTheWrongPlace, s
+from buildbot.process.factory import BuildFactory, ArgumentsInTheWrongPlace
 from buildbot.process.buildstep import BuildStep
 
 class TestBuildFactory(unittest.TestCase):
@@ -24,10 +24,6 @@ class TestBuildFactory(unittest.TestCase):
     def test_init(self):
         step = BuildStep()
         factory = BuildFactory([step])
-        self.assertEqual(factory.steps, [(BuildStep, {})])
-
-    def test_init_deprecated(self):
-        factory = BuildFactory([s(BuildStep)])
         self.assertEqual(factory.steps, [(BuildStep, {})])
 
     def test_addStep(self):

@@ -13,19 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import deprecate, versions
-
 from buildbot import util
 from buildbot.process.build import Build
 from buildbot.steps.source import CVS, SVN
 from buildbot.steps.shell import Configure, Compile, Test, PerlModuleTest
-
-# deprecated, use BuildFactory.addStep
-@deprecate.deprecated(versions.Version("buildbot", 0, 8, 6))
-def s(steptype, **kwargs):
-    # convenience function for master.cfg files, to create step
-    # specification tuples
-    return (steptype, kwargs)
 
 class ArgumentsInTheWrongPlace(Exception):
     """When calling BuildFactory.addStep(stepinstance), addStep() only takes
@@ -176,7 +167,7 @@ class BasicBuildFactory(GNUAutoconf):
         mode = "clobber"
         if cvsCopy:
             mode = "copy"
-        source = s(CVS, cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
+        source = CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
         GNUAutoconf.__init__(self, source,
                              configure=configure, configureEnv=configureEnv,
                              compile=compile,
@@ -190,7 +181,7 @@ class QuickBuildFactory(BasicBuildFactory):
                  compile="make all",
                  test="make check", cvsCopy=False):
         mode = "update"
-        source = s(CVS, cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
+        source = CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
         GNUAutoconf.__init__(self, source,
                              configure=configure, configureEnv=configureEnv,
                              compile=compile,
@@ -202,7 +193,7 @@ class BasicSVN(GNUAutoconf):
                  configure=None, configureEnv={},
                  compile="make all",
                  test="make check"):
-        source = s(SVN, svnurl=svnurl, mode="update")
+        source = SVN(svnurl=svnurl, mode="update")
         GNUAutoconf.__init__(self, source,
                              configure=configure, configureEnv=configureEnv,
                              compile=compile,
