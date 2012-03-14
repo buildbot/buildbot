@@ -19,7 +19,7 @@ from string import join, capitalize, lower
 from zope.interface import implements
 from twisted.internet import protocol, reactor
 from twisted.words.protocols import irc
-from twisted.python import log, failure
+from twisted.python import log
 from twisted.application import internet
 from twisted.internet import defer, task
 
@@ -734,7 +734,6 @@ class IRCContact(base.StatusReceiver):
             self.send("What you say!")
             return defer.succeed(None)
 
-        error = None
         if meth:
             d = defer.maybeDeferred(meth, args.strip(), who)
             @d.addErrback
