@@ -921,6 +921,10 @@ class TryOptions(OptionsWithOptionsFile):
         ["comment", "C", None,
          "A comment which can be used in notifications for this build"],
 
+        # for ssh to accommodate running in a virtualenv on the buildmaster
+        ["buildbotbin", None, "buildbot",
+         "buildbot binary to use on the buildmaster host"],
+
         ["diff", None, None,
          "Filename of a patch to use instead of scanning a local tree. "
          "Use '-' for stdin."],
@@ -978,6 +982,7 @@ class TryOptions(OptionsWithOptionsFile):
         [ 'try_host', 'host' ],
         [ 'try_username', 'username' ],
         [ 'try_jobdir', 'jobdir' ],
+        [ 'try_buildbotbin', 'buildbotbin' ],
         [ 'try_passwd', 'passwd' ],
         [ 'try_master', 'master' ],
         [ 'try_who', 'who' ],
