@@ -232,9 +232,8 @@ def import_changes(migrate_engine):
 
         migrate_engine.execute(changes.insert(), **values)
 
-        for link in c.links:
-            migrate_engine.execute(change_links.insert(),
-                    changeid=c.number, link=link)
+        # NOTE: change_links is not populated, since it is deleted in db
+        # version 20.  The table is still created, though.
 
         # sometimes c.files contains nested lists -- why, I do not know!  But we deal with
         # it all the same - see bug #915. We'll assume for now that c.files contains *either*
