@@ -15,7 +15,7 @@
 
 from __future__ import with_statement
 
-import tempfile, os
+import math, tempfile, os
 from twisted.trial import unittest
 
 from mock import Mock
@@ -102,6 +102,17 @@ class TestFileUpload(unittest.TestCase):
 
         desttimestamp = ( os.path.getatime(self.destfile),
                           os.path.getmtime(self.destfile) )
+
+        # ensure all filesystems involved return float timestamps with
+        # meaningful fractional parts. If not, coerce all to int.
+        # ext3 is one example where the former is true but not the latter
+        all_fs_yield_fract = (os.stat_float_times() and
+                              math.modf(timestamp[0])[0] and
+                              math.modf(desttimestamp[0])[0])
+        if not all_fs_yield_fract:
+            timestamp = map(int, timestamp)
+            desttimestamp = map(int, desttimestamp)
+
         self.assertAlmostEquals(timestamp[0],desttimestamp[0],places=5)
         self.assertAlmostEquals(timestamp[1],desttimestamp[1],places=5)
 
