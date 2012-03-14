@@ -136,21 +136,21 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
     def test_parseJob_empty(self):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['a'], jobdir='foo')
-        self.assertRaises(trysched.BadJobfile,
-            lambda: sched.parseJob(StringIO.StringIO('')))
+        self.assertRaises(
+            trysched.BadJobfile, sched.parseJob, StringIO.StringIO(''))
 
     def test_parseJob_invalid(self):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['a'], jobdir='foo')
-        self.assertRaises(trysched.BadJobfile,
-            lambda: sched.parseJob(
-                StringIO.StringIO('this is not a netstring')))
+        self.assertRaises(
+            trysched.BadJobfile, sched.parseJob,
+            StringIO.StringIO('this is not a netstring'))
 
     def test_parseJob_invalid_version(self):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['a'], jobdir='foo')
-        self.assertRaises(trysched.BadJobfile,
-            lambda: sched.parseJob(StringIO.StringIO('1:9,')))
+        self.assertRaises(
+            trysched.BadJobfile, sched.parseJob, StringIO.StringIO('1:9,'))
 
     def makeNetstring(self, *strings):
         return ''.join(['%d:%s,' % (len(s), s) for s in strings])
@@ -449,8 +449,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
         jobstr = self.makeNetstring('5', '{"comment": "com}')
-        self.assertRaises(trysched.BadJobfile,
-            lambda: sched.parseJob(StringIO.StringIO(jobstr)))
+        self.assertRaises(
+            trysched.BadJobfile, sched.parseJob, StringIO.StringIO(jobstr))
 
     # handleJobFile
 
