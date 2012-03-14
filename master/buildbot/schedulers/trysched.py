@@ -117,83 +117,49 @@ class Try_Jobdir(TryBase):
         if not p.strings:
             raise BadJobfile("could not find any complete netstrings")
         ver = p.strings.pop(0)
-
-        if ver == "1":
-            buildsetID, branch, baserev, patchlevel, diff = p.strings[:5]
-            builderNames = p.strings[5:]
-            if branch == "":
-                branch = None
-            if baserev == "":
-                baserev = None
-            patchlevel = int(patchlevel)
-            repository = ''
-            project = ''
-            who = ''
-            comment = ''
-            properties = {}
-        elif ver == "2":  # introduced the repository and project property
-            (buildsetID, branch, baserev, patchlevel, diff, repository,
-             project) = p.strings[:7]
-            builderNames = p.strings[7:]
-            if branch == "":
-                branch = None
-            if baserev == "":
-                baserev = None
-            patchlevel = int(patchlevel)
-            who = ''
-            comment = ''
-            properties = {}
-        elif ver == "3":  # introduced who property
-            (buildsetID, branch, baserev, patchlevel, diff, repository,
-             project, who) = p.strings[:8]
-            builderNames = p.strings[8:]
-            if branch == "":
-                branch = None
-            if baserev == "":
-                baserev = None
-            patchlevel = int(patchlevel)
-            comment = ''
-            properties = {}
-        elif ver == "4":  # introduced try comments
-            (buildsetID, branch, baserev, patchlevel, diff, repository,
-             project, who, comment) = p.strings[:9]
-            builderNames = p.strings[9:]
-            if branch == "":
-                branch = None
-            if baserev == "":
-                baserev = None
-            patchlevel = int(patchlevel)
-            properties = {}
-        elif ver == "5":  # introduced properties and JSON serialization
+        keys = [
+            'buildsetID branch baserev patchlevel diff'.split(),
+            ('buildsetID branch baserev patchlevel diff repository '
+             'project'.split()),
+            ('buildsetID branch baserev patchlevel diff repository '
+             'project who'.split()),
+            ('buildsetID branch baserev patchlevel diff repository '
+             'project who comment'.split()),
+        ]
+        parsed_job = {}
+        if ver <= "4":
+            i = int(ver) - 1
+            parsed_job.update(self.parseJob_start(p, keys[i]))
+            parsed_job['builderNames'] = p.strings[len(keys[i]):]
+            parsed_job.update(self.parseJob_finish(parsed_job))
+        elif ver == "5":
             try:
-                job_dict = json.loads(p.strings[0])
+                parsed_job = json.loads(p.strings[0])
             except ValueError:
                 raise BadJobfile("unable to parse JSON")
-            buildsetID = job_dict['bsid']
-            branch = job_dict['branch'] or None
-            baserev = job_dict['baserev'] or None
-            patchlevel = job_dict['patchlevel']
-            diff = job_dict['diff']
-            repository = job_dict['repository']
-            project = job_dict['project']
-            who = job_dict['who']
-            comment = job_dict['comment']
-            builderNames = job_dict['builderNames']
-            properties = job_dict['properties']
+            parsed_job['buildsetID'] = parsed_job.pop('bsid')
+            parsed_job.update(self.parseJob_finish(parsed_job))
+            return parsed_job
         else:
             raise BadJobfile("unknown version '%s'" % ver)
-        return dict(
-                builderNames=builderNames,
-                branch=branch,
-                baserev=baserev,
-                patch_body=diff,
-                patch_level=patchlevel,
-                repository=repository,
-                project=project,
-                who=who,
-                comment=comment,
-                jobid=buildsetID,
-                properties=properties)
+        return parsed_job
+
+    def parseJob_start(self, p, keys):
+        parsed_job = {}
+        for i, key in enumerate(keys):
+            parsed_job[key] = p.strings[i]
+        return parsed_job
+
+    def parseJob_finish(self, parsed_job):
+        parsed_job['jobid'] = parsed_job.pop('buildsetID')
+        parsed_job['branch'] = parsed_job['branch'] or None
+        parsed_job['baserev'] = parsed_job['baserev'] or None
+        parsed_job['patch_level'] = int(parsed_job.pop('patchlevel'))
+        parsed_job['patch_body'] = parsed_job.pop('diff')
+        for key in 'repository project who comment'.split():
+            parsed_job[key] = parsed_job.get(key, '')
+        parsed_job['properties'] = parsed_job.get('properties', {})
+        return parsed_job
 
     def handleJobFile(self, filename, f):
         try:
