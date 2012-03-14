@@ -80,12 +80,7 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
 
     def test_setup_check_version_bad(self):
         d = self.startService(check_version=True)
-        def eb(f):
-            f.trap(connector.DatabaseNotReadyError)
-        def cb(_):
-            self.fail("startService unexpectedly succeeded")
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, connector.DatabaseNotReadyError)
 
     def test_setup_check_version_good(self):
         self.db.model.is_current = lambda : defer.succeed(True)
