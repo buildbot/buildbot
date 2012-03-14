@@ -652,7 +652,7 @@ see :ref:`Concepts-Users`.
 --op
     There are four supported values for the :option:`op` argument:
     :option:`add`, :option:`update`, :option:`remove`, and
-    :option:`show`. Each are described in full in the following sections.
+    :option:`get`. Each are described in full in the following sections.
 
 --bb_username
     Used with the :option:`update` option, this sets the user's username
@@ -733,11 +733,11 @@ For :option:`remove`:
             --username={USER} --passwd={USERPW} \
             --ids={ID1},{ID2},...
 
-For :option:`show`:
+For :option:`get`:
 
 .. code-block:: none
 
-    buildbot user --master={MASTERHOST} --op=show \
+    buildbot user --master={MASTERHOST} --op=get \
             --username={USER} --passwd={USERPW} \
             --ids={ID1},{ID2},...
 
