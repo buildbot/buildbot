@@ -23,8 +23,14 @@ from __future__ import with_statement
 # pages and texinfo documentation.
 
 import copy
-import os, sys, stat, re, time
 from twisted.python import usage, util, runtime
+from hashlib import md5
+import os
+import re
+import stat
+import sys
+import time
+
 from twisted.internet import defer
 
 from buildbot.interfaces import BuildbotNotRunningError
@@ -1047,23 +1053,13 @@ class TryServerOptions(OptionsWithOptionsFile):
 
 
 def doTryServer(config):
-    try:
-        from hashlib import md5
-        assert md5
-    except ImportError:
-        # For Python 2.4 compatibility
-        import md5
     jobdir = os.path.expanduser(config["jobdir"])
     job = sys.stdin.read()
     # now do a 'safecat'-style write to jobdir/tmp, then move atomically to
     # jobdir/new . Rather than come up with a unique name randomly, I'm just
     # going to MD5 the contents and prepend a timestamp.
     timestring = "%d" % time.time()
-    try:
-        m = md5()
-    except TypeError:
-        # For Python 2.4 compatibility
-        m = md5.new()
+    m = md5()
     m.update(job)
     jobhash = m.hexdigest()
     fn = "%s-%s" % (timestring, jobhash)
