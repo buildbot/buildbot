@@ -21,7 +21,7 @@ from twisted.internet import protocol, reactor
 from twisted.words.protocols import irc
 from twisted.python import log, failure
 from twisted.application import internet
-from twisted.internet import task
+from twisted.internet import defer, task
 
 from buildbot import interfaces, util
 from buildbot import version
@@ -720,7 +720,8 @@ class IRCContact(base.StatusReceiver):
         # single user.
         message = message.lstrip()
         if self.silly.has_key(message):
-            return self.doSilly(message)
+            self.doSilly(message)
+            return defer.succeed(None)
 
         parts = message.split(' ', 1)
         if len(parts) == 1:
@@ -731,24 +732,22 @@ class IRCContact(base.StatusReceiver):
         meth = self.getCommandMethod(cmd)
         if not meth and message[-1] == '!':
             self.send("What you say!")
-            return
+            return defer.succeed(None)
 
         error = None
-        try:
-            if meth:
-                meth(args.strip(), who)
-        except UsageError, e:
-            self.send(str(e))
-        except:
-            f = failure.Failure()
-            log.err(f)
-            error = "Something bad happened (see logs)"
-
-        if error:
-            try:
-                self.send(error)
-            except:
-                log.err()
+        if meth:
+            d = defer.maybeDeferred(meth, args.strip(), who)
+            @d.addErrback
+            def usageError(f):
+                f.trap(UsageError)
+                self.send(str(f.value))
+            @d.addErrback
+            def logErr(f):
+                log.err(f)
+                self.send("Something bad happened (see logs)")
+            d.addErrback(log.err)
+            return d
+        return defer.succeed(None)
 
     def handleAction(self, data, user):
         # this is sent when somebody performs an action that mentions the
