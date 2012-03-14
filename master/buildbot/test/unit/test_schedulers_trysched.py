@@ -381,8 +381,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         jobstr = self.makeNetstring(
             '5',
             json.dumps({
-                'bsid': 'extid', 'branch': 'trunk', 'baserev': '1234',
-                'patchlevel': 1, 'diff': 'this is my diff, -- ++, etc.',
+                'jobid': 'extid', 'branch': 'trunk', 'baserev': '1234',
+                'patch_level': 1, 'patch_body': 'this is my diff, -- ++, etc.',
                 'repository': 'repo', 'project': 'proj', 'who': 'who',
                 'comment': 'comment', 'builderNames': ['buildera', 'builderc'],
                 'properties': {'foo': 'bar'},
@@ -421,8 +421,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         jobstr = self.makeNetstring(
             '5',
             json.dumps({
-                'bsid': 'extid', 'branch': 'trunk', 'baserev': '1234',
-                'patchlevel': '1', 'diff': 'this is my diff, -- ++, etc.',
+                'jobid': 'extid', 'branch': 'trunk', 'baserev': '1234',
+                'patch_level': '1', 'diff': 'this is my diff, -- ++, etc.',
                 'repository': 'repo', 'project': 'proj', 'who': 'who',
                 'comment': 'comment', 'builderNames': [],
                 'properties': {'foo': 'bar'},
@@ -436,8 +436,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         jobstr = self.makeNetstring(
             '5',
             json.dumps({
-                'bsid': 'extid', 'branch': 'trunk', 'baserev': '1234',
-                'patchlevel': '1', 'diff': 'this is my diff, -- ++, etc.',
+                'jobid': 'extid', 'branch': 'trunk', 'baserev': '1234',
+                'patch_level': '1', 'diff': 'this is my diff, -- ++, etc.',
                 'repository': 'repo', 'project': 'proj', 'who': 'who',
                 'comment': 'comment', 'builderNames': ['buildera', 'builderb'],
                 'properties': {},

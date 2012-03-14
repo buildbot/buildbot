@@ -373,7 +373,7 @@ def ns(s):
     return "%d:%s," % (len(s), s)
 
 
-def createJobfile(bsid, branch, baserev, patchlevel, diff, repository,
+def createJobfile(jobid, branch, baserev, patch_level, patch_body, repository,
                   project, who, comment, builderNames, properties):
     #Determine job file version from provided arguments
     if properties:
@@ -387,11 +387,11 @@ def createJobfile(bsid, branch, baserev, patchlevel, diff, repository,
     job = ""
     job += ns(str(version))
     if version < 5:
-        job += ns(bsid)
+        job += ns(jobid)
         job += ns(branch)
         job += ns(str(baserev))
-        job += ns("%d" % patchlevel)
-        job += ns(diff)
+        job += ns("%d" % patch_level)
+        job += ns(patch_body)
         job += ns(repository)
         job += ns(project)
         if (version >= 3):
@@ -403,8 +403,8 @@ def createJobfile(bsid, branch, baserev, patchlevel, diff, repository,
     else:
         job += ns(
             json.dumps({
-                'bsid': bsid, 'branch': branch, 'baserev': str(baserev),
-                'patchlevel': patchlevel, 'diff': diff,
+                'jobid': jobid, 'branch': branch, 'baserev': str(baserev),
+                'patch_level': patch_level, 'patch_body': patch_body,
                 'repository': repository, 'project': project, 'who': who,
                 'comment': comment, 'builderNames': builderNames,
                 'properties': properties,

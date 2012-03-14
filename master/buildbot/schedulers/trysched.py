@@ -98,17 +98,17 @@ class Try_Jobdir(TryBase):
         #  "4" introduces comment
         #  "5" introduces properties and JSON serialization of values after
         #      version
-        #  buildsetID, arbitrary string, used to find the buildSet later
-        #  branch name, "" for default-branch
-        #  base revision, "" for HEAD
-        #  patchlevel, usually "1"
-        #  diff, patch to be applied for build
+        #  jobid: arbitrary string, used to find the buildSet later
+        #  branch: branch name, "" for default-branch
+        #  baserev: revision, "" for HEAD
+        #  patch_level: usually "1"
+        #  patch_body: patch to be applied for build
         #  repository
         #  project
-        #  who, user requesting build
-        #  comment, comment from user about diff and/or build
-        #  builderNames...
-        #  properties, dict of build properties
+        #  who: user requesting build
+        #  comment: comment from user about diff and/or build
+        #  builderNames: list of builder names
+        #  properties: dict of build properties
         p = netstrings.NetstringParser()
         try:
             p.feed(f.read())
@@ -117,48 +117,44 @@ class Try_Jobdir(TryBase):
         if not p.strings:
             raise BadJobfile("could not find any complete netstrings")
         ver = p.strings.pop(0)
-        keys = [
-            'buildsetID branch baserev patchlevel diff'.split(),
-            ('buildsetID branch baserev patchlevel diff repository '
-             'project'.split()),
-            ('buildsetID branch baserev patchlevel diff repository '
-             'project who'.split()),
-            ('buildsetID branch baserev patchlevel diff repository '
-             'project who comment'.split()),
-        ]
+        # v1:
+        keys = ['jobid branch baserev patch_level patch_body'.split()]
+        # v2 introduces repository and project
+        keys.append(keys[-1] + 'repository project'.split())
+        # v3 introduces who
+        keys.append(keys[-1] + ['who'])
+        # v4 introduces comment
+        keys.append(keys[-1] + ['comment'])
+        # v5 introduces properties and uses JSON serialization
+
         parsed_job = {}
+
+        def extract_netstrings(p, keys):
+            for i, key in enumerate(keys):
+                parsed_job[key] = p.strings[i]
+
+        def postprocess_parsed_job():
+            # apply defaults and handle type casting
+            parsed_job['branch'] = parsed_job['branch'] or None
+            parsed_job['baserev'] = parsed_job['baserev'] or None
+            parsed_job['patch_level'] = int(parsed_job['patch_level'])
+            for key in 'repository project who comment'.split():
+                parsed_job[key] = parsed_job.get(key, '')
+            parsed_job['properties'] = parsed_job.get('properties', {})
+
         if ver <= "4":
             i = int(ver) - 1
-            parsed_job.update(self.parseJob_start(p, keys[i]))
+            extract_netstrings(p, keys[i])
             parsed_job['builderNames'] = p.strings[len(keys[i]):]
-            parsed_job.update(self.parseJob_finish(parsed_job))
+            postprocess_parsed_job()
         elif ver == "5":
             try:
                 parsed_job = json.loads(p.strings[0])
             except ValueError:
                 raise BadJobfile("unable to parse JSON")
-            parsed_job['buildsetID'] = parsed_job.pop('bsid')
-            parsed_job.update(self.parseJob_finish(parsed_job))
-            return parsed_job
+            postprocess_parsed_job()
         else:
             raise BadJobfile("unknown version '%s'" % ver)
-        return parsed_job
-
-    def parseJob_start(self, p, keys):
-        parsed_job = {}
-        for i, key in enumerate(keys):
-            parsed_job[key] = p.strings[i]
-        return parsed_job
-
-    def parseJob_finish(self, parsed_job):
-        parsed_job['jobid'] = parsed_job.pop('buildsetID')
-        parsed_job['branch'] = parsed_job['branch'] or None
-        parsed_job['baserev'] = parsed_job['baserev'] or None
-        parsed_job['patch_level'] = int(parsed_job.pop('patchlevel'))
-        parsed_job['patch_body'] = parsed_job.pop('diff')
-        for key in 'repository project who comment'.split():
-            parsed_job[key] = parsed_job.get(key, '')
-        parsed_job['properties'] = parsed_job.get('properties', {})
         return parsed_job
 
     def handleJobFile(self, filename, f):
