@@ -15,7 +15,7 @@
 
 from __future__ import with_statement
 
-import math, tempfile, os
+import tempfile, os
 from twisted.trial import unittest
 
 from mock import Mock
