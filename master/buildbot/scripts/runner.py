@@ -329,8 +329,11 @@ class Maker:
                 print "populating public_html/"
             os.mkdir(webdir)
         for target, source in files.iteritems():
-            self.populate_if_missing(os.path.join(webdir, target),
-                                 source)
+            try:
+                self.populate_if_missing(os.path.join(webdir, target),
+                                     source)
+            except IOError:
+                print "Can't write '%s'." % (target,)
 
     def check_master_cfg(self, expected_db_url=None):
         """Check the buildmaster configuration, returning an exit status (so
