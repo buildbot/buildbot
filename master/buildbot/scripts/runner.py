@@ -394,6 +394,7 @@ def upgradeMaster(config):
     monkeypatches.patch_all()
 
     m = Maker(config)
+    m.chdir()
     basedir = os.path.expanduser(config['basedir'])
 
     if runtime.platformType != 'win32': # no pids on win32
@@ -424,7 +425,6 @@ def upgradeMaster(config):
     basedir = os.path.expanduser(config['basedir'])
     # TODO: check TAC file
     # check web files: index.html, default.css, robots.txt
-    m.chdir()
     m.upgrade_public_html({
             'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
             'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
