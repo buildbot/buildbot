@@ -78,7 +78,7 @@ class GridStatusMixin(object):
         if state == "idle" and upcoming:
             state = "waiting"
 
-        n_pending = len(builder.getPendingBuildRequestStatuses())
+        n_pending = len((yield builder.getPendingBuildRequestStatuses()))
 
         cxt = { 'url': path_to_builder(request, builder),
                 'name': builder.getName(),
@@ -196,7 +196,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
                     if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
                         builds[i] = build
 
-            b = self.builder_cxt(request, builder)
+            b = yield self.builder_cxt(request, builder)
 
             b['builds'] = []
             for build in builds:
