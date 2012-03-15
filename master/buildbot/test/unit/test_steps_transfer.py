@@ -15,7 +15,7 @@
 
 from __future__ import with_statement
 
-import tempfile, os
+import math, tempfile, os
 from twisted.trial import unittest
 
 from mock import Mock
@@ -102,8 +102,12 @@ class TestFileUpload(unittest.TestCase):
 
         desttimestamp = ( os.path.getatime(self.destfile),
                           os.path.getmtime(self.destfile) )
-        self.assertAlmostEquals(timestamp[0],desttimestamp[0],places=5)
-        self.assertAlmostEquals(timestamp[1],desttimestamp[1],places=5)
+
+        timestamp = map(int, timestamp)
+        desttimestamp = map(int, desttimestamp)
+
+        self.assertEquals(timestamp[0],desttimestamp[0])
+        self.assertEquals(timestamp[1],desttimestamp[1])
 
     def testURL(self):
         s = FileUpload(slavesrc=__file__, masterdest=self.destfile, url="http://server/file")
