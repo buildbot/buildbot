@@ -26,6 +26,7 @@ from buildbot.scripts import runner, checkconfig
 from buildbot.clients import sendchange, usersclient
 from buildbot.process.users import users
 
+
 class OptionsMixin(object):
 
     def assertOptions(self, opts, exp):
@@ -38,11 +39,12 @@ class OptionsMixin(object):
                                (k, exp[k], opts[k]))
             self.fail("did not get expected options\n" + ("\n".join(msg)))
 
+
 class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.options_file = {}
-        self.patch(runner, 'loadOptionsFile', lambda : self.options_file)
+        self.patch(runner, 'loadOptionsFile', lambda: self.options_file)
 
     def parse(self, *args):
         self.opts = runner.SendChangeOptions()
@@ -98,11 +100,13 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
             '--project p --branch b --category c --revision r --vc s ' +
             '--revision_file rr --property pn:pv --comments c --logfile f ' +
             '--when w --revlink l --encoding e').split())
-        exp = dict(master='m', auth='a', who='w', repository='r', project='p',
-                branch='b', category='c', revision='r', vc='s', revision_file='rr',
-                properties=dict(pn='pv'), comments='c', logfile='f', when='w',
-                revlink='l', encoding='e')
+        exp = dict(
+            master='m', auth='a', who='w', repository='r', project='p',
+            branch='b', category='c', revision='r', vc='s', revision_file='rr',
+            properties=dict(pn='pv'), comments='c', logfile='f', when='w',
+            revlink='l', encoding='e')
         self.assertOptions(opts, exp)
+
 
 class TestSendChange(unittest.TestCase):
 
@@ -137,6 +141,7 @@ class TestSendChange(unittest.TestCase):
 
     def test_sendchange_defaults(self):
         d = runner.sendchange(dict(who='me', master='a:1'))
+
         def check(_):
             # called correctly
             self.assertEqual((self.sender.master, self.sender.auth,
@@ -160,10 +165,13 @@ class TestSendChange(unittest.TestCase):
         return d
 
     def test_sendchange_args(self):
-        d = runner.sendchange(dict(encoding='utf16', who='me', auth='a:b',
-                master='a:1', branch='br', category='cat', revision='rr',
-                properties={'a':'b'}, repository='rep', project='prj', vc='git',
-                revlink='rl', when='1234', comments='comm', files=('a', 'b')))
+        d = runner.sendchange(
+            dict(encoding='utf16', who='me', auth='a:b',
+                 master='a:1', branch='br', category='cat', revision='rr',
+                 properties={'a': 'b'}, repository='rep', project='prj',
+                 vc='git', revlink='rl', when='1234', comments='comm',
+                 files=('a', 'b')))
+
         def check(_):
             self.assertEqual((self.sender.master, self.sender.auth,
                     self.sender.encoding, self.sender.send_kwargs),
@@ -173,7 +181,7 @@ class TestSendChange(unittest.TestCase):
                         'comments': 'comm',
                         'files': ('a', 'b'),
                         'project': 'prj',
-                        'properties': {'a':'b'},
+                        'properties': {'a': 'b'},
                         'repository': 'rep',
                         'revision': 'rr',
                         'revlink': 'rl',
@@ -188,6 +196,7 @@ class TestSendChange(unittest.TestCase):
         with open('rf', 'w') as f:
             f.write('abcd')
         d = runner.sendchange(dict(who='me', master='a:1', revision_file='rf'))
+
         def check(_):
             self.assertEqual((self.sender.master, self.sender.auth,
                     self.sender.encoding, self.sender.send_kwargs['revision']),
@@ -204,6 +213,7 @@ class TestSendChange(unittest.TestCase):
         with open('lf', 'w') as f:
             f.write('hello')
         d = runner.sendchange(dict(who='me', master='a:1', logfile='lf'))
+
         def check(_):
             self.assertEqual((self.sender.master, self.sender.auth,
                     self.sender.encoding, self.sender.send_kwargs['comments']),
@@ -218,9 +228,10 @@ class TestSendChange(unittest.TestCase):
 
     def test_sendchange_logfile_stdin(self):
         stdin = mock.Mock()
-        stdin.read = lambda : 'hi!'
+        stdin.read = lambda: 'hi!'
         self.patch(sys, 'stdin', stdin)
         d = runner.sendchange(dict(who='me', master='a:1', logfile='-'))
+
         def check(_):
             self.assertEqual((self.sender.master, self.sender.auth,
                     self.sender.encoding, self.sender.send_kwargs['comments']),
@@ -234,19 +245,23 @@ class TestSendChange(unittest.TestCase):
         return d
 
     def test_sendchange_bad_vc(self):
-        d = defer.maybeDeferred(lambda :
-                runner.sendchange(dict(master='a:1', who="abc", vc="blargh")))
+        d = defer.maybeDeferred(
+            lambda: runner.sendchange(
+                dict(master='a:1', who="abc", vc="blargh")))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(AssertionError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_sendchange_auth_prompt(self):
-        self.patch(getpass, 'getpass', lambda prompt : 'sekrit')
+        self.patch(getpass, 'getpass', lambda prompt: 'sekrit')
         d = runner.sendchange(dict(who='me', master='a:1', auth='user'))
+
         def check(_):
             self.assertEqual((self.sender.master, self.sender.auth,
                     self.sender.encoding),
@@ -256,32 +271,37 @@ class TestSendChange(unittest.TestCase):
         return d
 
     def test_sendchange_who_required(self):
-        d = defer.maybeDeferred(lambda :
-                runner.sendchange(dict(master='a:1')))
+        d = defer.maybeDeferred(
+            lambda: runner.sendchange(dict(master='a: 1')))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(AssertionError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_sendchange_master_required(self):
-        d = defer.maybeDeferred(lambda :
-                runner.sendchange(dict(who='abc')))
+        d = defer.maybeDeferred(
+            lambda: runner.sendchange(dict(who='abc')))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(AssertionError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
+
 
 class TestCheckConfigOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.options_file = {}
-        self.patch(runner, 'loadOptionsFile', lambda : self.options_file)
+        self.patch(runner, 'loadOptionsFile', lambda: self.options_file)
 
     def parse(self, *args):
         self.opts = runner.CheckConfigOptions()
@@ -307,10 +327,12 @@ class TestCheckConfigOptions(OptionsMixin, unittest.TestCase):
         exp = dict(quiet=True, configFile='master.cfg')
         self.assertOptions(opts, exp)
 
+
 class TestCheckConfig(unittest.TestCase):
 
     class FakeConfigLoader(object):
         testcase = None
+
         def __init__(self, **kwargs):
             self.testcase.ConfigLoader_kwargs = kwargs
 
@@ -365,7 +387,7 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.options_file = {}
-        self.patch(runner, 'loadOptionsFile', lambda : self.options_file)
+        self.patch(runner, 'loadOptionsFile', lambda: self.options_file)
 
     def parse(self, *args):
         self.opts = runner.TryOptions()
@@ -377,7 +399,8 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
                 master=None, passwd=None, who=None, comment=None, diff=None,
                 patchlevel=0, baserev=None, vc=None, branch=None,
                 repository=None, topfile=None, topdir=None, wait=False,
-                dryrun=False, quiet=False, builders=[], properties={})
+                dryrun=False, quiet=False, builders=[], properties={},
+                buildbotbin='buildbot')
         # dashes make python syntax hard..
         defaults['get-builder-names'] = False
         if 'get_builder_names' in kwargs:
@@ -436,13 +459,15 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
                 --host=h --jobdir=j --username=u --master=m --passwd=p
                 --who=w --comment=comm --diff=d --patchlevel=7 --baserev=br
                 --vc=cvs --branch=br --repository=rep --builder=bl
-                --properties=a=b --topfile=Makefile --topdir=.""".split())
+                --properties=a=b --topfile=Makefile --topdir=.
+                --buildbotbin=.virtualenvs/buildbot/bin/buildbot""".split())
         exp = self.defaults_and(wait=True, dryrun=True, get_builder_names=True,
                 quiet=True, connect='pb', host='h', jobdir='j', username='u',
                 master='m', passwd='p', who='w', comment='comm', diff='d',
                 patchlevel=7, baserev='br', vc='cvs', branch='br',
                 repository='rep', builders=['bl'], properties=dict(a='b'),
-                topfile='Makefile', topdir='.')
+                topfile='Makefile', topdir='.',
+                buildbotbin='.virtualenvs/buildbot/bin/buildbot')
         self.assertOptions(opts, exp)
 
     def test_patchlevel_inval(self):
@@ -456,7 +481,7 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
 
     def test_config_builders_override(self):
         self.options_file['try_builders'] = ['a', 'b']
-        opts = self.parse('-b', 'd') # overrides a, b
+        opts = self.parse('-b', 'd')  # overrides a, b
         self.assertOptions(opts, dict(builders=['d']))
 
     def test_config_old_names(self):
@@ -481,19 +506,22 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
             try_branch='br', try_repository='rep', try_topdir='.',
             try_topfile='Makefile', try_host='h', try_username='u',
             try_jobdir='j', try_password='p', try_master='m', try_who='w',
-            try_comment='comm', try_quiet='y', try_wait='y'))
+            try_comment='comm', try_quiet='y', try_wait='y',
+            try_buildbotbin='.virtualenvs/buildbot/bin/buildbot'))
         opts = self.parse()
         exp = self.defaults_and(wait=True, quiet=True, connect='pb', host='h',
                 jobdir='j', username='u', master='m', passwd='p', who='w',
                 comment='comm', vc='cvs', branch='br', repository='rep',
-                topfile='Makefile', topdir='.')
+                topfile='Makefile', topdir='.',
+                buildbotbin='.virtualenvs/buildbot/bin/buildbot')
         self.assertOptions(opts, exp)
+
 
 class TestUserOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.options_file = {}
-        self.patch(runner, 'loadOptionsFile', lambda : self.options_file)
+        self.patch(runner, 'loadOptionsFile', lambda: self.options_file)
 
     def parse(self, *args):
         self.opts = runner.UserOptions()
@@ -529,7 +557,8 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
 
     def test_info_with_id(self):
         opts = self.parse("--info", "tdurden:svn=marla")
-        self.assertEqual(opts['info'], [dict(identifier='tdurden', svn='marla')])
+        self.assertEqual(
+            opts['info'], [dict(identifier='tdurden', svn='marla')])
 
     def test_info_multiple(self):
         opts = self.parse("--info", "git=Tyler Durden <tyler@mayhem.net>",
@@ -543,7 +572,8 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
         self.options_file['user_username'] = 'un'
         self.options_file['user_passwd'] = 'pw'
         opts = self.parse()
-        self.assertOptions(opts, dict(master='mm:99', username='un', passwd='pw'))
+        self.assertOptions(
+            opts, dict(master='mm:99', username='un', passwd='pw'))
 
     def test_config_master(self):
         self.options_file['master'] = 'mm:99'
@@ -587,197 +617,226 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
         self.patch(usersclient, 'UsersClient', fake_UsersClient)
 
     def test_usersclient_no_master(self):
-        d = defer.maybeDeferred(lambda :
-                                    runner.users_client(dict(op='add')))
+        d = defer.maybeDeferred(
+            lambda: runner.users_client(dict(op='add')))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(AssertionError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_usersclient_no_port(self):
-        d = defer.maybeDeferred(lambda :
-                                    runner.users_client(dict(master='a',
-                                                             op='add')))
+        d = defer.maybeDeferred(
+            lambda: runner.users_client(dict(master='a', p='add')))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(AssertionError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_usersclient_no_op(self):
-        d = defer.maybeDeferred(lambda :
-                                    runner.users_client(dict(master='a:9990')))
+        d = defer.maybeDeferred(
+            lambda: runner.users_client(dict(master='a:9990')))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(AssertionError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_usersclient_no_username_password(self):
-        d = defer.maybeDeferred(lambda :
-                                    runner.users_client(dict(master='a:9990',
-                                                             op='add')))
+        d = defer.maybeDeferred(
+            lambda: runner.users_client(dict(master='a:9990', p='add')))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(AssertionError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_usersclient_bad_op(self):
-        d = defer.maybeDeferred(lambda :
-                    runner.users_client(dict(master='a:9990', username="x",
-                                             passwd="y", op='edit')))
+        d = defer.maybeDeferred(
+            lambda: runner.users_client(
+                dict(master='a:9990', username="x", passwd="y", op='edit')))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(AssertionError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_usersclient_just_bb_username(self):
-        d = defer.maybeDeferred(lambda :
-                    runner.users_client(dict(master='a:9990', username="x",
-                                             passwd="y", bb_username='buddy',
-                                             op='update')))
+        d = defer.maybeDeferred(
+            lambda: runner.users_client(
+                dict(master='a:9990', username="x", passwd="y",
+                     bb_username='buddy', op='update')))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(AssertionError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_usersclient_bb_not_update(self):
-        d = defer.maybeDeferred(lambda :
-                    runner.users_client(dict(master='a:9990', username="x",
-                                             passwd="y", bb_username='buddy',
-                                             bb_password='hey', op='add')))
+        d = defer.maybeDeferred(
+            lambda: runner.users_client(
+                dict(master='a:9990', username="x", passwd="y",
+                     bb_username='buddy', bb_password='hey', op='add')))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(AssertionError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_usersclient_no_ids_no_info(self):
-        d = defer.maybeDeferred(lambda :
-                     runner.users_client(dict(master='a:9990', username="x",
-                                              passwd="y", op='add')))
+        d = defer.maybeDeferred(
+            lambda: runner.users_client(
+                dict(master='a:9990', username="x", passwd="y", op='add')))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(AssertionError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_usersclient_ids_and_info(self):
-        d = defer.maybeDeferred(lambda :
-                    runner.users_client(dict(master='a:9990', username="x",
-                                              passwd="y", op='add', ids=['me'],
-                                              info=[{'full_name':'b'}])))
+        d = defer.maybeDeferred(
+            lambda: runner.users_client(
+                dict(master='a:9990', username="x", passwd="y", op='add',
+                     ids=['me'], info=[{'full_name':'b'}])))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(AssertionError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_usersclient_add_and_ids(self):
-        d = defer.maybeDeferred(lambda :
-                    runner.users_client(dict(master='a:9990', username="x",
-                                              passwd="y", op='add', ids=['me'],
-                                              info=None)))
+        d = defer.maybeDeferred(
+            lambda: runner.users_client(
+                dict(master='a:9990', username="x", passwd="y", op='add',
+                     ids=['me'], info=None)))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(AssertionError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_usersclient_update_and_ids(self):
-        d = defer.maybeDeferred(lambda :
-                    runner.users_client(dict(master='a:9990', username="x",
-                                              passwd="y", op='update', ids=['me'],
-                                              info=None)))
+        d = defer.maybeDeferred(
+            lambda: runner.users_client(
+                dict(master='a:9990', username="x", passwd="y", op='update',
+                     ids=['me'], info=None)))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(AssertionError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_usersclient_remove_get_and_info(self):
-        d = defer.maybeDeferred(lambda :
-                    runner.users_client(dict(master='a:9990', username="x",
-                                              passwd="y", op='remove', ids=None,
-                                              info=[{'email':'x'}])))
+        d = defer.maybeDeferred(
+            lambda: runner.users_client(
+                dict(master='a:9990', username="x", passwd="y", op='remove',
+                     ids=None, info=[{'email':'x'}])))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(AssertionError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_usersclient_update_no_identifier(self):
-        d = defer.maybeDeferred(lambda :
-                    runner.users_client(dict(master='a:9990', username="x",
-                                              passwd="y", op='update', ids=None,
-                                              info=[{'email':'x'}])))
+        d = defer.maybeDeferred(
+            lambda: runner.users_client(
+                dict(master='a:9990', username="x", passwd="y", op='update',
+                     ids=None, info=[{'email':'x'}])))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(ValueError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_usersclient_add_existing_identifier(self):
-        d = defer.maybeDeferred(lambda :
-                    runner.users_client(dict(master='a:9990', username="x",
-                                              passwd="y", op='add', ids=None,
-                                              info=[{'identifier':'x'}])))
+        d = defer.maybeDeferred(
+            lambda: runner.users_client(
+                dict(master='a:9990', username="x", passwd="y", op='add',
+                     ids=None, info=[{'identifier':'x'}])))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(ValueError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_usersclient_bad_attr_type(self):
-        d = defer.maybeDeferred(lambda :
-                    runner.users_client(dict(master='a:9990', username="x",
-                                              passwd="y", op='add', ids=None,
-                                              info=[{'b':'y'}])))
+        d = defer.maybeDeferred(
+            lambda: runner.users_client(
+                dict(master='a:9990', username="x", passwd="y", op='add',
+                     ids=None, info=[{'b':'y'}])))
+
         def cb(_):
             self.fail("shouldn't succeed")
+
         def eb(f):
             f.trap(ValueError)
-            pass # A-OK
+            pass  # A-OK
         d.addCallbacks(cb, eb)
         return d
 
     def test_usersclient_send_ids(self):
-        d = runner.users_client(dict(master='a:9990', username="x",
-                                     passwd="y", op='get', bb_username=None,
-                                     bb_password=None, ids=['me', 'you'],
-                                     info=None))
+        d = runner.users_client(
+            dict(master='a:9990', username="x", passwd="y", op='get',
+                 bb_username=None, bb_password=None, ids=['me', 'you'],
+                info=None))
+
         def check(_):
             c = self.usersclient
             self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
@@ -788,14 +847,16 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
 
     def test_usersclient_send_update_info(self):
         encrypted = users.encrypt("day")
+
         def _fake_encrypt(passwd):
             return encrypted
         self.patch(users, 'encrypt', _fake_encrypt)
 
-        d = runner.users_client(dict(master='a:9990', username="x",
-                                     passwd="y", op='update', bb_username='bud',
-                                     bb_password='day', ids=None,
-                                     info=[{'identifier':'x', 'svn':'x'}]))
+        d = runner.users_client(
+            dict(master='a:9990', username="x", passwd="y", op='update',
+                 bb_username='bud', bb_password='day', ids=None,
+                 info=[{'identifier':'x', 'svn':'x'}]))
+
         def check(_):
             c = self.usersclient
             self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
@@ -810,20 +871,23 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
                                      passwd="y", op='add', bb_username=None,
                                      bb_password=None, ids=None,
                                      info=[{'git':'x <h@c>'}]))
+
         def check(_):
             c = self.usersclient
-            self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
-                              c.bb_username, c.bb_password, c.ids, c.info),
-                             ('a', 9990, "x", "y", 'add', None, None, None,
-                              [{'identifier':'x <h@c>','git': 'x <h@c>'}]))
+            self.assertEqual(
+                (c.master, c.port, c.username, c.passwd, c.op,
+                 c.bb_username, c.bb_password, c.ids, c.info),
+                ('a', 9990, "x", "y", 'add', None, None, None,
+                 [{'identifier':'x <h@c>', 'git': 'x <h@c>'}]))
         d.addCallback(check)
         return d
+
 
 class TestMasterOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.options_file = {}
-        self.patch(runner, 'loadOptionsFile', lambda : self.options_file)
+        self.patch(runner, 'loadOptionsFile', lambda: self.options_file)
 
     def parse(self, *args):
         self.opts = runner.MasterOptions()
@@ -831,9 +895,11 @@ class TestMasterOptions(OptionsMixin, unittest.TestCase):
         return self.opts
 
     def defaults_and(self, **kwargs):
-        defaults = dict(force=False, relocatable=False, config='master.cfg',
-                db='sqlite:///state.sqlite', **{'no-logrotate':False,
-                    'log-size':'10000000', 'log-count':'10'})
+        defaults = dict(
+            force=False, relocatable=False, config='master.cfg',
+            db='sqlite:///state.sqlite',
+            **{'no-logrotate': False, 'log-size': '10000000',
+               'log-count': '10'})
         unk_keys = set(kwargs.keys()) - set(defaults.keys())
         assert not unk_keys, "invalid keys %s" % (unk_keys,)
         opts = defaults.copy()
@@ -871,12 +937,12 @@ class TestMasterOptions(OptionsMixin, unittest.TestCase):
 
     def test_no_logrotate(self):
         opts = self.parse('-n')
-        exp = self.defaults_and(**{'no-logrotate' : True})
+        exp = self.defaults_and(**{'no-logrotate': True})
         self.assertOptions(opts, exp)
 
     def test_no_logrotate_long(self):
         opts = self.parse('--no-logrotate')
-        exp = self.defaults_and(**{'no-logrotate' : True})
+        exp = self.defaults_and(**{'no-logrotate': True})
         self.assertOptions(opts, exp)
 
     def test_config(self):
@@ -891,26 +957,25 @@ class TestMasterOptions(OptionsMixin, unittest.TestCase):
 
     def test_log_size(self):
         opts = self.parse('-s124')
-        exp = self.defaults_and(**{'log-size':'124'})
+        exp = self.defaults_and(**{'log-size': '124'})
         self.assertOptions(opts, exp)
 
     def test_log_size_long(self):
         opts = self.parse('--log-size=124')
-        exp = self.defaults_and(**{'log-size':'124'})
+        exp = self.defaults_and(**{'log-size': '124'})
         self.assertOptions(opts, exp)
 
     def test_log_count(self):
         opts = self.parse('-l124')
-        exp = self.defaults_and(**{'log-count':'124'})
+        exp = self.defaults_and(**{'log-count': '124'})
         self.assertOptions(opts, exp)
 
     def test_log_count_long(self):
         opts = self.parse('--log-count=124')
-        exp = self.defaults_and(**{'log-count':'124'})
+        exp = self.defaults_and(**{'log-count': '124'})
         self.assertOptions(opts, exp)
 
     def test_db_long(self):
         opts = self.parse('--db=foo://bar')
         exp = self.defaults_and(db='foo://bar')
         self.assertOptions(opts, exp)
-

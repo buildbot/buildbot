@@ -23,22 +23,34 @@ from __future__ import with_statement
 # pages and texinfo documentation.
 
 import copy
-import os, sys, stat, re, time
-from twisted.python import usage, util, runtime
+from hashlib import md5
+import os
+import re
+import stat
+import sys
+import time
+
 from twisted.internet import defer
+from twisted.python import runtime
+from twisted.python import usage
+from twisted.python import util
 
 from buildbot.interfaces import BuildbotNotRunningError
+
 
 def in_reactor(f):
     """decorate a function by running it with maybeDeferred in a reactor"""
     def wrap(*args, **kwargs):
         from twisted.internet import reactor
-        result = [ ]
+        result = []
+
         def async():
             d = defer.maybeDeferred(f, *args, **kwargs)
+
             def eb(f):
                 f.printTraceback()
             d.addErrback(eb)
+
             def do_stop(r):
                 result.append(r)
                 reactor.stop()
@@ -48,8 +60,9 @@ def in_reactor(f):
         return result[0]
     wrap.__doc__ = f.__doc__
     wrap.__name__ = f.__name__
-    wrap._orig = f # for tests
+    wrap._orig = f                      # for tests
     return wrap
+
 
 def isBuildmasterDir(dir):
     buildbot_tac = os.path.join(dir, "buildbot.tac")
@@ -66,6 +79,7 @@ def isBuildmasterDir(dir):
 
 # Note that the terms 'options' and 'config' are used intechangeably here - in
 # fact, they are intercanged several times.  Caveat legator.
+
 
 class OptionsWithOptionsFile(usage.Options):
     # subclasses should set this to a list-of-lists in order to source the
@@ -89,19 +103,21 @@ class OptionsWithOptionsFile(usage.Options):
                 optfile = loadOptionsFile()
                 for optfile_name, option_name in self.buildbotOptions:
                     for i in range(len(op)):
-                        if (op[i][0] == option_name and optfile_name in optfile):
+                        if (op[i][0] == option_name
+                            and optfile_name in optfile):
                             op[i] = list(op[i])
                             op[i][2] = optfile[optfile_name]
         usage.Options.__init__(self, *args)
         if hasattr(cls, 'optParameters'):
             cls.optParameters = old_optParameters
 
+
 def loadOptionsFile():
     """Find the .buildbot/FILENAME file. Crawl from the current directory up
     towards the root, and also look in ~/.buildbot . The first directory
     that's owned by the user and has the file we're looking for wins. Windows
     skips the owned-by-user test.
-    
+
     @rtype:  dict
     @return: a dictionary of names defined in the options file. If no options
              file was found, return an empty dict.
@@ -123,9 +139,9 @@ def loadOptionsFile():
         searchpath.append(os.path.join(here, ".buildbot"))
         next = os.path.dirname(here)
         if next == here:
-            break # we've hit the root
+            break                       # we've hit the root
         here = next
-        toomany -= 1 # just in case
+        toomany -= 1                    # just in case
         if toomany == 0:
             raise ValueError("Hey, I seem to have wandered up into the "
                              "infinite glories of the heavens. Oops.")
@@ -138,7 +154,7 @@ def loadOptionsFile():
             if runtime.platformType != 'win32':
                 if os.stat(d)[stat.ST_UID] != os.getuid():
                     print "skipping %s because you don't own it" % d
-                    continue # security, skip other people's directories
+                    continue  # security, skip other people's directories
             optfile = os.path.join(d, "options")
             if os.path.exists(optfile):
                 try:
@@ -154,6 +170,7 @@ def loadOptionsFile():
         if k.startswith("__"):
             del localDict[k]
     return localDict
+
 
 class MakerBase(OptionsWithOptionsFile):
     optFlags = [
@@ -180,6 +197,7 @@ class MakerBase(OptionsWithOptionsFile):
     def postOptions(self):
         self['basedir'] = os.path.abspath(self['basedir'])
 
+
 class Maker:
     def __init__(self, config):
         self.config = config
@@ -192,7 +210,8 @@ class Maker:
             if not self.quiet:
                 print "updating existing installation"
             return
-        if not self.quiet: print "mkdir", self.basedir
+        if not self.quiet:
+            print "mkdir", self.basedir
         os.mkdir(self.basedir)
 
     def chdir(self):
@@ -312,12 +331,13 @@ class Maker:
         if os.path.exists(source):
             if os.path.exists(dest):
                 print "Notice: %s now overrides %s" % (dest, source)
-                print "        as the latter is not used by buildbot anymore."  
+                print "        as the latter is not used by buildbot anymore."
                 print "        Decide which one you want to keep."
             else:
                 try:
                     print "Notice: Moving %s to %s." % (source, dest)
-                    print "        You can (and probably want to) remove it if  you haven't modified this file."
+                    print "        You can (and probably want to) remove it "
+                    print "        if  you haven't modified this file."
                     os.renames(source, dest)
                 except Exception, e:
                     print "Error moving %s to %s: %s" % (source, dest, str(e))
@@ -351,6 +371,7 @@ DB_HELP = """
 
       --db='mysql://bbuser:bbpasswd@dbhost/bbdb'
 """
+
 
 class UpgradeMasterOptions(MakerBase):
     optFlags = [
@@ -387,6 +408,7 @@ class UpgradeMasterOptions(MakerBase):
     the default (sqlite), be sure to set that parameter before upgrading.
     """
 
+
 @in_reactor
 @defer.inlineCallbacks
 def upgradeMaster(config):
@@ -400,15 +422,17 @@ def upgradeMaster(config):
     m.chdir()
     basedir = os.path.expanduser(config['basedir'])
 
-    if runtime.platformType != 'win32': # no pids on win32
-        if not config['quiet']: print "checking for running master"
+    if runtime.platformType != 'win32':  # no pids on win32
+        if not config['quiet']:
+            print "checking for running master"
         pidfile = os.path.join(basedir, 'twistd.pid')
         if os.path.exists(pidfile):
             print "'%s' exists - is this master still running?" % (pidfile,)
             defer.returnValue(1)
             return
 
-    if not config['quiet']: print "checking master.cfg"
+    if not config['quiet']:
+        print "checking master.cfg"
     try:
         master_cfg = config_module.MasterConfig.loadConfig(
                                             basedir, 'master.cfg')
@@ -424,15 +448,20 @@ def upgradeMaster(config):
         defer.returnValue(1)
         return
 
-    if not config['quiet']: print "upgrading basedir"
+    if not config['quiet']:
+        print "upgrading basedir"
     basedir = os.path.expanduser(config['basedir'])
     # TODO: check TAC file
     # check web files: index.html, default.css, robots.txt
     m.upgrade_public_html({
-            'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
-            'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
-            'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
-            'favicon.ico' : util.sibpath(__file__, "../status/web/files/favicon.ico"),
+        'bg_gradient.jpg': util.sibpath(
+            __file__, "../status/web/files/bg_gradient.jpg"),
+        'default.css': util.sibpath(
+            __file__, "../status/web/files/default.css"),
+        'robots.txt': util.sibpath(
+            __file__, "../status/web/files/robots.txt"),
+        'favicon.ico': util.sibpath(
+            __file__, "../status/web/files/favicon.ico"),
         })
     m.populate_if_missing(os.path.join(basedir, "master.cfg.sample"),
                             util.sibpath(__file__, "sample.cfg"),
@@ -453,7 +482,8 @@ def upgradeMaster(config):
     yield db.setup(check_version=False, verbose=not config['quiet'])
     yield db.model.upgrade()
 
-    if not config['quiet']: print "upgrade complete"
+    if not config['quiet']:
+        print "upgrade complete"
     defer.returnValue(0)
 
 
@@ -475,6 +505,7 @@ class MasterOptions(MakerBase):
         ["db", None, "sqlite:///state.sqlite",
          "which DB to use for scheduler/status state. See below for syntax."],
         ]
+
     def getSynopsis(self):
         return "Usage:    buildbot create-master [options] [<basedir>]"
 
@@ -503,8 +534,8 @@ class MasterOptions(MakerBase):
             raise usage.UsageError("log-size parameter needs to be an int")
         if not re.match('^\d+$', self['log-count']) and \
                 self['log-count'] != 'None':
-            raise usage.UsageError("log-count parameter needs to be an int "+
-                                   " or None")
+            raise usage.UsageError(
+                "log-count parameter needs to be an int or None")
 
 
 masterTACTemplate = ["""
@@ -532,14 +563,15 @@ application = service.Application('buildmaster')
 """,
 """
 try:
-  from twisted.python.logfile import LogFile
-  from twisted.python.log import ILogObserver, FileLogObserver
-  logfile = LogFile.fromFullPath(os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
-                                 maxRotatedFiles=maxRotatedFiles)
-  application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
+    from twisted.python.logfile import LogFile
+    from twisted.python.log import ILogObserver, FileLogObserver
+    logfile = LogFile.fromFullPath(
+        os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
+        maxRotatedFiles=maxRotatedFiles)
+    application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 except ImportError:
-  # probably not yet twisted 8.2.0 and beyond, can't set log yet
-  pass
+    # probably not yet twisted 8.2.0 and beyond, can't set log yet
+    pass
 """,
 """
 configfile = r'%(config)s'
@@ -550,6 +582,7 @@ m.log_rotation.rotateLength = rotateLength
 m.log_rotation.maxRotatedFiles = maxRotatedFiles
 
 """]
+
 
 @in_reactor
 def createMaster(config):
@@ -563,17 +596,21 @@ def createMaster(config):
     else:
         masterTAC = "".join(masterTACTemplate)
     contents = masterTAC % config
-    
+
     m.makeTAC(contents)
     m.sampleconfig(util.sibpath(__file__, "sample.cfg"))
     m.public_html({
-          'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
-          'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
-          'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
-          'favicon.ico' : util.sibpath(__file__, "../status/web/files/favicon.ico"),
+        'bg_gradient.jpg': util.sibpath(
+            __file__, "../status/web/files/bg_gradient.jpg"),
+        'default.css': util.sibpath(
+            __file__, "../status/web/files/default.css"),
+        'robots.txt': util.sibpath(__file__, "../status/web/files/robots.txt"),
+        'favicon.ico': util.sibpath(
+            __file__, "../status/web/files/favicon.ico"),
       })
     m.templates_dir({
-        'README.txt' : util.sibpath(__file__,"../status/web/files/templates_readme.txt"),
+        'README.txt': util.sibpath(
+            __file__, "../status/web/files/templates_readme.txt"),
     })
     d = m.create_db()
 
@@ -582,6 +619,7 @@ def createMaster(config):
             print "buildmaster configured in %s" % m.basedir
     d.addCallback(print_status)
     return d
+
 
 def stop(config, signame="TERM", wait=False):
     import signal
@@ -598,7 +636,7 @@ def stop(config, signame="TERM", wait=False):
             pid = int(f.read().strip())
     except:
         raise BuildbotNotRunningError
-    signum = getattr(signal, "SIG"+signame)
+    signum = getattr(signal, "SIG" + signame)
     timer = 0
     try:
         os.kill(pid, signum)
@@ -624,6 +662,7 @@ def stop(config, signame="TERM", wait=False):
     if not quiet:
         print "never saw process go away"
 
+
 def restart(config):
     basedir = config['basedir']
     quiet = config['quiet']
@@ -646,28 +685,33 @@ class StartOptions(MakerBase):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ]
+
     def getSynopsis(self):
         return "Usage:    buildbot start [<basedir>]"
+
 
 class StopOptions(MakerBase):
     def getSynopsis(self):
         return "Usage:    buildbot stop [<basedir>]"
 
+
 class ReconfigOptions(MakerBase):
     optFlags = [
         ['quiet', 'q', "Don't display log messages about reconfiguration"],
         ]
+
     def getSynopsis(self):
         return "Usage:    buildbot reconfig [<basedir>]"
-
 
 
 class RestartOptions(MakerBase):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ]
+
     def getSynopsis(self):
         return "Usage:    buildbot restart [<basedir>]"
+
 
 class DebugClientOptions(OptionsWithOptionsFile):
     optFlags = [
@@ -679,9 +723,10 @@ class DebugClientOptions(OptionsWithOptionsFile):
         ["passwd", "p", None, "Debug password to use"],
         ]
     buildbotOptions = [
-        [ 'debugMaster', 'passwd' ],
-        [ 'master', 'master' ],
+        ['debugMaster', 'passwd'],
+        ['master', 'master'],
         ]
+
     def getSynopsis(self):
         return "Usage:    buildbot debugclient [options]"
 
@@ -692,6 +737,7 @@ class DebugClientOptions(OptionsWithOptionsFile):
             self['passwd'] = args[1]
         if len(args) > 2:
             raise usage.UsageError("I wasn't expecting so many arguments")
+
 
 def debugclient(config):
     from buildbot.clients import debug
@@ -709,6 +755,7 @@ def debugclient(config):
     d = debug.DebugWidget(master, passwd)
     d.run()
 
+
 class StatusClientOptions(OptionsWithOptionsFile):
     optFlags = [
         ['help', 'h', "Display this message"],
@@ -716,11 +763,13 @@ class StatusClientOptions(OptionsWithOptionsFile):
     optParameters = [
         ["master", "m", None,
          "Location of the buildmaster's status port (host:port)"],
-        ["username", "u", "statusClient", "Username performing the trial build"],
-        ["passwd", None, "clientpw", "password for PB authentication"],
+        ["username", "u", "statusClient",
+         "Username performing the trial build"],
+        ["passwd", None, "clientpw",
+         "password for PB authentication"],
         ]
     buildbotOptions = [
-        [ 'masterstatus', 'master' ],
+        ['masterstatus', 'master'],
     ]
 
     def parseArgs(self, *args):
@@ -729,13 +778,16 @@ class StatusClientOptions(OptionsWithOptionsFile):
         if len(args) > 1:
             raise usage.UsageError("I wasn't expecting so many arguments")
 
+
 class StatusLogOptions(StatusClientOptions):
     def getSynopsis(self):
         return "Usage:    buildbot statuslog [options]"
 
+
 class StatusGuiOptions(StatusClientOptions):
     def getSynopsis(self):
         return "Usage:    buildbot statusgui [options]"
+
 
 def statuslog(config):
     from buildbot.clients import base
@@ -748,6 +800,7 @@ def statuslog(config):
     c = base.TextClient(master, username=username, passwd=passwd)
     c.run()
 
+
 def statusgui(config):
     from buildbot.clients import gtkPanes
     master = config.get('master')
@@ -759,6 +812,7 @@ def statusgui(config):
     c = gtkPanes.GtkClient(master, username=username, passwd=passwd)
     c.run()
 
+
 class SendChangeOptions(OptionsWithOptionsFile):
     def __init__(self):
         OptionsWithOptionsFile.__init__(self)
@@ -768,7 +822,8 @@ class SendChangeOptions(OptionsWithOptionsFile):
         ("master", "m", None,
          "Location of the buildmaster's PBListener (host:port)"),
         # deprecated in 0.8.3; remove in 0.8.5 (bug #1711)
-        ("auth", "a", None, "Authentication token - username:password, or prompt for password"),
+        ("auth", "a", None,
+         "Authentication token - username:password, or prompt for password"),
         ("who", "W", None, "Author of the commit"),
         ("repository", "R", '', "Repository specifier"),
         ("vc", "s", None, "The VC system in use, one of: cvs, svn, darcs, hg, "
@@ -790,19 +845,21 @@ class SendChangeOptions(OptionsWithOptionsFile):
         ]
 
     buildbotOptions = [
-        [ 'master', 'master' ],
-        [ 'who', 'who' ],
-        [ 'branch', 'branch' ],
-        [ 'category', 'category' ],
-        [ 'vc', 'vc' ],
+        ['master', 'master'],
+        ['who', 'who'],
+        ['branch', 'branch'],
+        ['category', 'category'],
+        ['vc', 'vc'],
     ]
 
     def getSynopsis(self):
         return "Usage:    buildbot sendchange [options] filenames.."
+
     def parseArgs(self, *args):
         self['files'] = args
+
     def opt_property(self, property):
-        name,value = property.split(':', 1)
+        name, value = property.split(':', 1)
         self['properties'][name] = value
 
 
@@ -828,7 +885,7 @@ def sendchange(config, runReactor=False):
     else:
         when = None
     if config.get("revision_file"):
-        with open(config["revision_file"],"r") as f:
+        with open(config["revision_file"], "r") as f:
             revision = f.read()
 
     comments = config.get('comments')
@@ -860,20 +917,23 @@ def sendchange(config, runReactor=False):
     assert master, "you must provide the master location"
 
     s = sendchange.Sender(master, auth, encoding=encoding)
-    d = s.send(branch, revision, comments, files, who=who, category=category, when=when,
-               properties=properties, repository=repository, vc=vc, project=project,
-               revlink=revlink)
+    d = s.send(
+        branch, revision, comments, files, who=who, category=category,
+        when=when, properties=properties, repository=repository, vc=vc,
+        project=project, revlink=revlink)
 
     if runReactor:
         from twisted.internet import reactor
         status = [True]
+
         def printSuccess(_):
             print "change sent successfully"
+
         def failed(f):
             status[0] = False
             print "change NOT sent - something went wrong: " + str(f)
         d.addCallbacks(printSuccess, failed)
-        d.addBoth(lambda _ : reactor.stop())
+        d.addBoth(lambda _: reactor.stop())
         reactor.run()
         return status[0]
     return d
@@ -924,6 +984,10 @@ class TryOptions(OptionsWithOptionsFile):
         ["comment", "C", None,
          "A comment which can be used in notifications for this build"],
 
+        # for ssh to accommodate running in a virtualenv on the buildmaster
+        ["buildbotbin", None, "buildbot",
+         "buildbot binary to use on the buildmaster host"],
+
         ["diff", None, None,
          "Filename of a patch to use instead of scanning a local tree. "
          "Use '-' for stdin."],
@@ -971,27 +1035,28 @@ class TryOptions(OptionsWithOptionsFile):
 
     # Mapping of .buildbot/options names to command-line options
     buildbotOptions = [
-        [ 'try_connect', 'connect' ],
+        ['try_connect', 'connect'],
         #[ 'try_builders', 'builders' ], <-- handled in postOptions
-        [ 'try_vc', 'vc' ],
-        [ 'try_branch', 'branch' ],
-        [ 'try_repository', 'repository' ],
-        [ 'try_topdir', 'topdir' ],
-        [ 'try_topfile', 'topfile' ],
-        [ 'try_host', 'host' ],
-        [ 'try_username', 'username' ],
-        [ 'try_jobdir', 'jobdir' ],
-        [ 'try_passwd', 'passwd' ],
-        [ 'try_master', 'master' ],
-        [ 'try_who', 'who' ],
-        [ 'try_comment', 'comment' ],
+        ['try_vc', 'vc'],
+        ['try_branch', 'branch'],
+        ['try_repository', 'repository'],
+        ['try_topdir', 'topdir'],
+        ['try_topfile', 'topfile'],
+        ['try_host', 'host'],
+        ['try_username', 'username'],
+        ['try_jobdir', 'jobdir'],
+        ['try_buildbotbin', 'buildbotbin'],
+        ['try_passwd', 'passwd'],
+        ['try_master', 'master'],
+        ['try_who', 'who'],
+        ['try_comment', 'comment'],
         #[ 'try_wait', 'wait' ], <-- handled in postOptions
         #[ 'try_quiet', 'quiet' ], <-- handled in postOptions
 
         # Deprecated command mappings from the quirky old days:
-        [ 'try_masterstatus', 'master' ],
-        [ 'try_dir', 'jobdir' ],
-        [ 'try_password', 'passwd' ],
+        ['try_masterstatus', 'master'],
+        ['try_dir', 'jobdir'],
+        ['try_password', 'passwd'],
     ]
 
     def __init__(self):
@@ -1003,9 +1068,10 @@ class TryOptions(OptionsWithOptionsFile):
         self['builders'].append(option)
 
     def opt_properties(self, option):
-        # We need to split the value of this option into a dictionary of properties
+        # We need to split the value of this option into a dictionary
+        # of properties
         propertylist = option.split(",")
-        for i in range(0,len(propertylist)):
+        for i in range(0, len(propertylist)):
             splitproperty = propertylist[i].split("=", 1)
             self['properties'][splitproperty[0]] = splitproperty[1]
 
@@ -1028,37 +1094,30 @@ class TryOptions(OptionsWithOptionsFile):
         if not self['master']:
             self['master'] = opts.get('masterstatus', None)
 
+
 def doTry(config):
     from buildbot.clients import tryclient
     t = tryclient.Try(config)
     t.run()
 
+
 class TryServerOptions(OptionsWithOptionsFile):
     optParameters = [
         ["jobdir", None, None, "the jobdir (maildir) for submitting jobs"],
         ]
+
     def getSynopsis(self):
         return "Usage:    buildbot tryserver [options]"
 
 
 def doTryServer(config):
-    try:
-        from hashlib import md5
-        assert md5
-    except ImportError:
-        # For Python 2.4 compatibility
-        import md5
     jobdir = os.path.expanduser(config["jobdir"])
     job = sys.stdin.read()
     # now do a 'safecat'-style write to jobdir/tmp, then move atomically to
     # jobdir/new . Rather than come up with a unique name randomly, I'm just
     # going to MD5 the contents and prepend a timestamp.
     timestring = "%d" % time.time()
-    try:
-        m = md5()
-    except TypeError:
-        # For Python 2.4 compatibility
-        m = md5.new()
+    m = md5()
     m.update(job)
     jobhash = m.hexdigest()
     fn = "%s-%s" % (timestring, jobhash)
@@ -1124,11 +1183,11 @@ class UserOptions(OptionsWithOptionsFile):
          "Note that 'update' requires --info=id:type=value..."]
     ]
     buildbotOptions = [
-        [ 'master', 'master' ],
-        [ 'user_master', 'master' ],
-        [ 'user_username', 'username' ],
-        [ 'user_passwd', 'passwd' ],
-        ]
+        ['master', 'master'],
+        ['user_master', 'master'],
+        ['user_username', 'username'],
+        ['user_passwd', 'passwd'],
+    ]
 
     def __init__(self):
         OptionsWithOptionsFile.__init__(self)
@@ -1167,6 +1226,7 @@ class UserOptions(OptionsWithOptionsFile):
     Currently implemented types for --info= are:\n
     git, svn, hg, cvs, darcs, bzr, email
     """
+
 
 def users_client(config, runReactor=False):
     from buildbot.clients import usersclient
@@ -1252,16 +1312,19 @@ def users_client(config, runReactor=False):
     if runReactor:
         from twisted.internet import reactor
         status = [True]
+
         def printSuccess(res):
             print res
+
         def failed(f):
             status[0] = False
             print "user op NOT sent - something went wrong: " + str(f)
         d.addCallbacks(printSuccess, failed)
-        d.addBoth(lambda _ : reactor.stop())
+        d.addBoth(lambda _: reactor.stop())
         reactor.run()
         return status[0]
     return d
+
 
 class Options(usage.Options):
     synopsis = "Usage:    buildbot <command> [command options]"
@@ -1381,4 +1444,3 @@ def run():
         if not users_client(so, True):
             sys.exit(1)
     sys.exit(0)
-

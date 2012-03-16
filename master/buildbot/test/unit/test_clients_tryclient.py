@@ -127,7 +127,7 @@ class createJobfile(unittest.TestCase):
             '5',
             json.dumps({
                 'bsid': bsid, 'branch': branch, 'baserev': baserev,
-                'patchlevel': '%d' % patchlevel, 'diff': diff,
+                'patchlevel': patchlevel, 'diff': diff,
                 'repository': repository, 'project': project, 'who': who,
                 'comment': comment, 'builderNames': builderNames,
                 'properties': properties,
