@@ -298,12 +298,7 @@ class LRUCache(unittest.TestCase):
 
         def do_get(test_d, k):
             d = self.lru.get(k)
-            def cb(_):
-                self.fail("unexpected success")
-            def eb(f):
-                f.trap(RuntimeError)
-                pass # expected exception
-            d.addCallbacks(cb, eb)
+            self.assertFailure(d, RuntimeError)
             d.addCallbacks(test_d.callback, test_d.errback)
 
         ds = []

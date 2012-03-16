@@ -79,12 +79,7 @@ class TestStateConnectorComponent(
 
     def test_getState_missing(self):
         d = self.db.state.getState(10, 'nosuch')
-        def cb(_):
-            self.fail("should not have succeeded!")
-        def eb(f):
-            f.trap(KeyError)
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, KeyError)
 
     def test_getState_missing_default(self):
         d = self.db.state.getState(10, 'nosuch', 'abc')
@@ -119,12 +114,7 @@ class TestStateConnectorComponent(
         ])
         d.addCallback(lambda _ :
             self.db.state.getState(10, 'x'))
-        def cb(_):
-            self.fail("should not have succeeded!")
-        def eb(f):
-            f.trap(TypeError)
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, TypeError)
 
     def test_setState(self):
         d = self.insertTestData([
@@ -149,12 +139,7 @@ class TestStateConnectorComponent(
         ])
         d.addCallback(lambda _ :
             self.db.state.setState(10, 'x', self)) # self is not JSON-able..
-        def cb(_):
-            self.fail("should not have succeeded!")
-        def eb(f):
-            f.trap(TypeError)
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, TypeError)
 
     def test_setState_existing(self):
         d = self.insertTestData([

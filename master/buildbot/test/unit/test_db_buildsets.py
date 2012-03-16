@@ -330,24 +330,12 @@ class TestBuildsetsConnectorComponent(
         d.addCallback(lambda _ :
                 self.db.buildsets.completeBuildset(bsid=92, results=6,
                                                    _reactor=self.clock))
-        def cb(_):
-            self.fail("should not succeed")
-        def eb(f):
-            f.trap(KeyError)
-            # pass
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, KeyError)
 
     def test_completeBuildset_missing(self):
         d = self.insert_test_getBuildsets_data()
         d.addCallback(lambda _ :
                 self.db.buildsets.completeBuildset(bsid=93, results=6,
                                                    _reactor=self.clock))
-        def cb(_):
-            self.fail("should not succeed")
-        def eb(f):
-            f.trap(KeyError)
-            # pass
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, KeyError)
 

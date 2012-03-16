@@ -64,12 +64,7 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     revision=12345))
 
         d = self.db.model.upgrade()
-        def eb(f):
-            self.failUnless("UnicodeError" in str(f))
-        def cb(r):
-            self.fail("upgrade did not fail for non-unicode changes")
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, UnicodeError)
 
     def testAsciiChange(self):
         self.make_pickle(
