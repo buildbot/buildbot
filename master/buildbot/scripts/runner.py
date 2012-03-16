@@ -329,8 +329,11 @@ class Maker:
                 print "populating public_html/"
             os.mkdir(webdir)
         for target, source in files.iteritems():
-            self.populate_if_missing(os.path.join(webdir, target),
-                                 source)
+            try:
+                self.populate_if_missing(os.path.join(webdir, target),
+                                     source)
+            except IOError:
+                print "Can't write '%s'." % (target,)
 
     def check_master_cfg(self, expected_db_url=None):
         """Check the buildmaster configuration, returning an exit status (so
@@ -394,6 +397,7 @@ def upgradeMaster(config):
     monkeypatches.patch_all()
 
     m = Maker(config)
+    m.chdir()
     basedir = os.path.expanduser(config['basedir'])
 
     if runtime.platformType != 'win32': # no pids on win32
@@ -424,7 +428,6 @@ def upgradeMaster(config):
     basedir = os.path.expanduser(config['basedir'])
     # TODO: check TAC file
     # check web files: index.html, default.css, robots.txt
-    m.chdir()
     m.upgrade_public_html({
             'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
             'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
