@@ -267,7 +267,9 @@ class Git(Source):
 
         d = self._dovccmd(command)
         def checkout(_):
-            if self.revision:
+            # If called from a ForceBuild, revision defaults to
+            # an empty string.
+            if self.revision and self.revision != "":
                 rev = self.revision
             else:
                 rev = 'FETCH_HEAD'
