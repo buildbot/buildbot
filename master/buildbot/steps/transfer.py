@@ -375,8 +375,6 @@ class DirectoryUpload(_TransferBuildStep):
         # the rest
         if result == SKIPPED:
             return BuildStep.finished(self, SKIPPED)
-        if self.cmd.stderr != '':
-            self.addCompleteLog('stderr', self.cmd.stderr)
 
         if self.cmd.rc is None or self.cmd.rc == 0:
             return BuildStep.finished(self, SUCCESS)
