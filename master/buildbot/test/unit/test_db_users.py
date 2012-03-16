@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import sqlalchemy as sa
 from twisted.trial import unittest
 from buildbot.db import users
 from buildbot.test.util import connector_component
@@ -193,7 +194,8 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
                                   identifier='soap',
                                   attr_type='telepathIO(tm)',
                                   attr_data='hmm,lye'))
-        return self.assertFailure(d, Exception) # exception varies with dialect
+        return self.assertFailure(d, sa.exc.IntegrityError,
+                                     sa.exc.ProgrammingError)
 
     def test_getUser(self):
         d = self.insertTestData(self.user1_rows)
