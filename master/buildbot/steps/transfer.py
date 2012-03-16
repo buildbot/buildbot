@@ -164,8 +164,9 @@ class _DirectoryWriter(_FileWriter):
             tarfile.TarFile.extractall = _extractall
 
         # Unpack archive and clean up after self
-        with tarfile.open(name=self.tarname, mode=mode) as archive:
-            archive.extractall(path=self.destroot)
+        archive = tarfile.open(name=self.tarname, mode=mode)
+        archive.extractall(path=self.destroot)
+        archive.close()
         os.remove(self.tarname)
 
 
