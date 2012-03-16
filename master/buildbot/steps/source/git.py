@@ -20,6 +20,39 @@ from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 
+def isTrueOrIsExactlyZero(v):
+    # nonzero values are true...
+    if v:
+        return True
+    
+    # ... and True for the number zero, but we have to
+    # explicitly guard against v==False, since
+    # isinstance(False, int) is surprisingly True
+    if isinstance(v, int) and v is not False:
+        return True
+    
+    # all other false-ish values are false
+    return False
+
+git_describe_flags = [
+    # on or off
+    ('all',         lambda v: ['--all'] if v else None),
+    ('always',      lambda v: ['--always'] if v else None),
+    ('contains',    lambda v: ['--contains'] if v else None),
+    ('debug',       lambda v: ['--debug'] if v else None),
+    ('long',        lambda v: ['--long'] if v else None),
+    ('exact-match', lambda v: ['--exact-match'] if v else None),
+    ('tags',        lambda v: ['--tags'] if v else None),
+    # string parameter
+    ('match',       lambda v: ['--match', v] if v else None),
+    # numeric parameter
+    ('abbrev',      lambda v: ['--abbrev=%s' % v] if isTrueOrIsExactlyZero(v) else None),
+    ('candidates',  lambda v: ['--candidates=%s' % v] if isTrueOrIsExactlyZero(v) else None),
+    # optional string parameter
+    ('dirty',       lambda v: ['--dirty'] if (v is True or v=='') else None),
+    ('dirty',       lambda v: ['--dirty=%s' % v] if (v and v is not True) else None),
+]
+
 class Git(Source):
     """ Class for Git with all the smarts """
     name='git'
@@ -27,7 +60,8 @@ class Git(Source):
 
     def __init__(self, repourl=None, branch='HEAD', mode='incremental',
                  method=None, submodules=False, shallow=False, progress=False,
-                 retryFetch=False, clobberOnFailure=False, **kwargs):
+                 retryFetch=False, clobberOnFailure=False, getDescription=False,
+                 **kwargs):
         """
         @type  repourl: string
         @param repourl: the URL which points at the git repository
@@ -57,7 +91,12 @@ class Git(Source):
 
         @type  retryFetch: boolean
         @param retryFetch: Retry fetching before failing source checkout.
+        
+        @type  getDescription: boolean or dict
+        @param getDescription: Use 'git describe' to describe the fetched revision
         """
+        if not getDescription:
+            getDescription = False
 
         self.branch    = branch
         self.method    = method
@@ -69,6 +108,7 @@ class Git(Source):
         self.fetchcount = 0
         self.clobberOnFailure = clobberOnFailure
         self.mode = mode
+        self.getDescription = getDescription
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(branch=branch,
                                  mode=mode,
@@ -80,12 +120,15 @@ class Git(Source):
                                  retryFetch=retryFetch,
                                  clobberOnFailure=
                                  clobberOnFailure,
+                                 getDescription=
+                                 getDescription
                                  )
 
         assert self.mode in ['incremental', 'full']
         assert self.repourl is not None
         if self.mode == 'full':
             assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
+        assert isinstance(self.getDescription, (bool, dict))
 
     def startVC(self, branch, revision, patch):
         self.branch = branch or 'HEAD'
@@ -107,6 +150,7 @@ class Git(Source):
         if patch:
             d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
+        d.addCallback(self.parseCommitDescription)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
         return d
@@ -224,17 +268,43 @@ class Git(Source):
         d.addCallbacks(self.finished, self.checkDisconnect)
         return d
 
-    def parseGotRevision(self, _):
-        d = self._dovccmd(['rev-parse', 'HEAD'], collectStdout=True)
-        def setrev(stdout):
-            revision = stdout.strip()
-            if len(revision) != 40:
-                raise buildstep.BuildStepFailed()
-            log.msg("Got Git revision %s" % (revision, ))
-            self.setProperty('got_revision', revision, 'Source')
-            return 0
-        d.addCallback(setrev)
-        return d
+    @defer.inlineCallbacks
+    def parseGotRevision(self, _=None):
+        stdout = yield self._dovccmd(['rev-parse', 'HEAD'], collectStdout=True)
+        revision = stdout.strip()
+        if len(revision) != 40:
+            raise buildstep.BuildStepFailed()
+        log.msg("Got Git revision %s" % (revision, ))
+        self.setProperty('got_revision', revision, 'Source')
+    
+        defer.returnValue(0)
+
+    @defer.inlineCallbacks
+    def parseCommitDescription(self, _=None):
+        if not self.getDescription:
+            defer.returnValue(0)
+            return
+        
+        cmd = ['describe']
+        if isinstance(self.getDescription, dict):
+            for opt, arg in git_describe_flags:
+                opt = self.getDescription.get(opt, None)
+                arg = arg(opt)
+                if arg:
+                    cmd.extend(arg)            
+        cmd.append('HEAD')
+        
+        try:
+            stdout = yield self._dovccmd(cmd, collectStdout=True)
+            desc = stdout.strip()
+            if self.codebase:
+                self.setProperty('commit-description-%s'%self.codebase, desc, 'Source')
+            else:
+                self.setProperty('commit-description', desc, 'Source')
+        except:
+            pass
+            
+        defer.returnValue(0)
 
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['git'] + command,
