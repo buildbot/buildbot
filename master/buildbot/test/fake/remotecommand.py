@@ -29,6 +29,7 @@ class FakeRemoteCommand:
         self.remote_command = remote_command
         self.args = args.copy()
         self.logs = {}
+        self.delayedLogs = {}
         self.rc = -999
         self.collectStdout = collectStdout
         self.updates = {}
@@ -39,6 +40,9 @@ class FakeRemoteCommand:
         if not logfileName:
             logfileName = loog.getName()
         self.logs[logfileName] = loog
+
+    def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
+        self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
 
     def run(self, step, remote):
         # delegate back to the test case
