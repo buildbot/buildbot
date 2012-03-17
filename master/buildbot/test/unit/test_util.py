@@ -179,3 +179,16 @@ class MakeList(unittest.TestCase):
         output = util.makeList(input)
         input.append('c')
         self.assertEqual(output, [ 'a', 'b' ])
+
+class Flatten(unittest.TestCase):
+
+    def test_simple(self):
+        self.assertEqual(util.flatten([1, 2, 3]), [1, 2, 3])
+
+    def test_deep(self):
+        self.assertEqual(util.flatten([ [ 1, 2 ], 3, [ [ 4 ] ] ]),
+                                [1, 2, 3, 4])
+
+    def test_tuples(self):
+        self.assertEqual(util.flatten([ ( 1, 2 ), 3 ]), [ (1, 2), 3 ])
+
