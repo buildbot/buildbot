@@ -908,6 +908,9 @@ multiple branches.
     If specified, this is a pathname of a cache file that :bb:chsrc:`SVNPoller`
     will use to store its state between restarts of the master.
 
+``extra_args``
+    If specified, the extra arguments will be added to the svn command args.
+    
 Several split file functions are available for common SVN repository layouts.
 For a poller that is only monitoring trunk, the default split file function
 is available explicitly as ``split_file_alwaystrunk``::
