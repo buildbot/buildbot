@@ -177,8 +177,16 @@ def datetime2epoch(dt):
     if dt is not None:
         return calendar.timegm(dt.utctimetuple())
 
+def makeList(input):
+    if isinstance(input, basestring):
+        return [ input ]
+    elif input is None:
+        return [ ]
+    else:
+        return list(input)
+
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'LRUCache', 'none_or_str',
     'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC',
-    'diffLists' ]
+    'diffLists', 'makeList' ]

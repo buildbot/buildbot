@@ -98,6 +98,17 @@ package.  As always, see the API documentation for more information.
     added and elements that were removed.  This is largely a convenience
     function for reconfiguring services.
 
+.. py:function: makeList(input)
+
+    :param input: a thing
+    :returns: a list of zero or more things
+
+    This function is intended to support the many places in Buildbot where the
+    user can specify either a string or a list of strings, but the
+    implementation wishes to always consider lists.  It converts any string to
+    a single-element list, ``None`` to an empty list, and any iterable to a
+    list.  Input lists are copied, avoiding aliasing issues.
+
 buildbot.util.bbcollections
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
