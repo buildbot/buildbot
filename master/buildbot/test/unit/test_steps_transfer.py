@@ -164,7 +164,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
         def upload_behavior(command):
             from cStringIO import StringIO
             f = StringIO()
-            archive = tarfile.TarFile(fileobj=f, mode='w')
+            archive = tarfile.TarFile(fileobj=f, name='fake.tar', mode='w')
             archive.addfile(tarfile.TarInfo("test"), StringIO("Hello World!"))
             writer = command.args['writer']
             writer.remote_write(f.getvalue())
