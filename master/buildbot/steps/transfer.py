@@ -171,7 +171,7 @@ class _DirectoryWriter(_FileWriter):
         os.remove(self.tarname)
 
 
-def StatusRemoteCommand(step, remote_command, args):
+def makeStatusRemoteCommand(step, remote_command, args):
     self = buildstep.RemoteCommand(remote_command, args)
     callback = lambda arg: step.step_status.addLog('stdio')
     self.useLogDelayed('stdio', callback, True)
@@ -290,7 +290,7 @@ class FileUpload(_TransferBuildStep):
             'keepstamp': self.keepstamp,
             }
 
-        self.cmd = StatusRemoteCommand(self, 'uploadFile', args)
+        self.cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
         d = self.runCommand(self.cmd)
         @d.addErrback
         def cancel(res):
@@ -363,7 +363,7 @@ class DirectoryUpload(_TransferBuildStep):
             'compress': self.compress
             }
 
-        self.cmd = StatusRemoteCommand(self, 'uploadDirectory', args)
+        self.cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
         d = self.runCommand(self.cmd)
         @d.addErrback
         def cancel(res):
@@ -485,7 +485,7 @@ class FileDownload(_TransferBuildStep):
             'mode': self.mode,
             }
 
-        self.cmd = StatusRemoteCommand(self, 'downloadFile', args)
+        self.cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 
@@ -545,7 +545,7 @@ class StringDownload(_TransferBuildStep):
             'mode': self.mode,
             }
 
-        self.cmd = StatusRemoteCommand(self, 'downloadFile', args)
+        self.cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 
