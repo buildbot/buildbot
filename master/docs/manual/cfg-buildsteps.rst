@@ -1612,7 +1612,9 @@ The available constructor arguments are
 ``mode``
     The mode default to ``rebuild``, which means that first all the
     remaining object files will be cleaned by the compiler. The alternate
-    value is ``build``, where only the updated files will be recompiled.
+    values are ``build``, where only the updated files will be recompiled,
+    and ``clean``, where the current build files are removed and no
+    compilation occurs.
 
 ``projectfile``
     This is a mandatory argument which specifies the project file to be used
