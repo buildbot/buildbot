@@ -370,6 +370,21 @@ class TestVC6(steps.BuildStepMixin, unittest.TestCase):
                 status_text=["compile", "0 projects", "0 files"])
         return self.runStep()
 
+    def test_clean(self):
+        self.setupStep(vstudio.VC6(projectfile='pf', config='cfg',
+                                   project='pj', mode='clean'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['msdev', 'pf', '/MAKE',
+                                 'pj - cfg', '/CLEAN'],
+                        env=self.getExpectedEnv(
+                            r'C:\Program Files\Microsoft Visual Studio'))
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["compile", "0 projects", "0 files"])
+        return self.runStep()
+
     def test_noproj_build(self):
         self.setupStep(vstudio.VC6(projectfile='pf', config='cfg',
                                    mode='build'))
@@ -449,6 +464,21 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                     command=['devenv.com', 'pf', '/Rebuild', 'cfg',
+                                 '/Project', 'pj'],
+                    env=self.getExpectedEnv(
+                        r'C:\Program Files\Microsoft Visual Studio .NET 2003'))
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["compile", "0 projects", "0 files"])
+        return self.runStep()
+
+    def test_clean(self):
+        self.setupStep(vstudio.VC7(projectfile='pf', config='cfg',
+                                   project='pj', mode='clean'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                    command=['devenv.com', 'pf', '/Clean', 'cfg',
                                  '/Project', 'pj'],
                     env=self.getExpectedEnv(
                         r'C:\Program Files\Microsoft Visual Studio .NET 2003'))
@@ -568,6 +598,21 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
                 status_text=["compile", "0 projects", "0 files"])
         return self.runStep()
 
+    def test_clean(self):
+        self.setupStep(vstudio.VC8(projectfile='pf', config='cfg',
+                                   project='pj', mode='clean'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['devenv.com', 'pf', '/Clean',
+                                 'cfg', '/Project', 'pj' ],
+                        env=self.getExpectedEnv(
+                            r'C:\Program Files\Microsoft Visual Studio 8'))
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["compile", "0 projects", "0 files"])
+        return self.runStep()
+    
     def test_rendering(self):
         self.setupStep(vstudio.VC8(projectfile='pf', config='cfg',
                                     arch=Property('a')))
@@ -604,6 +649,22 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=['vcexpress', 'pf', '/Rebuild',
+                                 'cfg', '/Project', 'pj' ],
+                        env=self.getExpectedEnv(
+                            # note: still uses version 8 (?!)
+                            r'C:\Program Files\Microsoft Visual Studio 8'))
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["compile", "0 projects", "0 files"])
+        return self.runStep()
+
+    def test_clean(self):
+        self.setupStep(vstudio.VCExpress9(projectfile='pf', config='cfg',
+                                   project='pj', mode='clean'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['vcexpress', 'pf', '/Clean',
                                  'cfg', '/Project', 'pj' ],
                         env=self.getExpectedEnv(
                             # note: still uses version 8 (?!)
