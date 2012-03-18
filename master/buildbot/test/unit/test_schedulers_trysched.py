@@ -133,6 +133,22 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertRaises(trysched.BadJobfile,
             lambda : sched.parseJob(StringIO.StringIO('')))
 
+    def test_parseJob_longer_than_netstring_MAXLENGTH(self):
+        sched = trysched.Try_Jobdir(name='tsched', builderNames=['a'], jobdir='foo')
+        jobstr = self.makeNetstring(
+            '1', 'extid', 'trunk', '1234', '1', 'this is my diff, -- ++, etc.',
+            'buildera', 'builderc'
+        )
+        jobstr += 'x' * 100000000
+
+        import tempfile
+        test_temp_file = tempfile.TemporaryFile()
+        test_temp_file.write(jobstr)
+        test_temp_file.seek(0,0)
+
+        self.assertRaises(trysched.BadJobfile,
+            lambda : sched.parseJob(test_temp_file))
+
     def test_parseJob_invalid(self):
         sched = trysched.Try_Jobdir(name='tsched', builderNames=['a'], jobdir='foo')
         self.assertRaises(trysched.BadJobfile,
