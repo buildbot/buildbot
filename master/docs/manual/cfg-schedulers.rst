@@ -613,7 +613,7 @@ with it.
 
     Patches in the jobdir are encoded using netstrings, which place an
     arbitrary upper limit on patch size of 99999 bytes.  If your submitted try
-    jobs are rejected with `BadJobFile`, try increasing this limit with a
+    jobs are rejected with `BadJobfile`, try increasing this limit with a
     snippet like this in your `master.cfg`::
 
         from twisted.protocols.basic import NetstringReceiver
