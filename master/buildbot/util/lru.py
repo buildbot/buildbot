@@ -20,128 +20,38 @@ from twisted.internet import defer
 from collections import deque
 from buildbot.util.bbcollections import defaultdict
 
-class AsyncLRUCache(object):
 
-    __slots__ = ('max_size max_queue miss_fn '
-                 'queue cache weakrefs refcount concurrent '
-                 'hits refhits misses'.split())
+class LRUCache(object):
+    """
+    A least-recently-used cache, with a fixed maximum size.
+
+    This cache is designed to control memory usage by minimizing duplication of
+    objects, while avoiding unnecessary re-fetching of the same rows from the
+    database.
+    """
+
+    __slots__ = ('max_size max_queue miss_fn queue cache weakrefs '
+                 'refcount hits refhits misses'.split())
     sentinel = object()
     QUEUE_SIZE_FACTOR = 10
 
     def __init__(self, miss_fn, max_size=50):
-        self.miss_fn = miss_fn
+        """
+        Constructor.
+
+        @param miss_fn: function to call, with key as parameter, for cache
+        misses.
+
+        @param max_size: maximum number of objects in the cache
+        """
         self.max_size = max_size
         self.max_queue = max_size * self.QUEUE_SIZE_FACTOR
         self.queue = deque()
         self.cache = {}
         self.weakrefs = WeakValueDictionary()
-        self.concurrent = {}
         self.hits = self.misses = self.refhits = 0
         self.refcount = defaultdict(lambda : 0)
-
-    def get(self, key, **miss_fn_kwargs):
-        cache = self.cache
-        weakrefs = self.weakrefs
-        refcount = self.refcount
-        concurrent = self.concurrent
-        queue = self.queue
-
-        # utility function to record recent use of this key
-        def ref_key():
-            queue.append(key)
-            refcount[key] = refcount[key] + 1
-
-            # periodically compact the queue by eliminating duplicate keys
-            # while preserving order of most recent access.  Note that this
-            # is only required when the cache does not exceed its maximum
-            # size
-            if len(queue) > self.max_queue:
-                refcount.clear()
-                queue_appendleft = queue.appendleft
-                queue_appendleft(self.sentinel)
-                for k in ifilterfalse(refcount.__contains__,
-                                        iter(queue.pop, self.sentinel)):
-                    queue_appendleft(k)
-                    refcount[k] = 1
-
-        try:
-            result = cache[key]
-            self.hits += 1
-            ref_key()
-            return defer.succeed(result)
-        except KeyError:
-            try:
-                result = weakrefs[key]
-                self.refhits += 1
-                cache[key] = result
-                ref_key()
-                return defer.succeed(result)
-            except KeyError:
-                # if there's already a fetch going on, add
-                # to the list of waiting deferreds
-                conc = concurrent.get(key)
-                if conc:
-                    self.hits += 1
-                    d = defer.Deferred()
-                    conc.append(d)
-                    return d
-
-        # if we're here, we've missed and need to fetch
-        self.misses += 1
-
-        # create a list of waiting deferreds for this key
-        d = defer.Deferred()
-        assert key not in concurrent
-        concurrent[key] = [ d ]
-
-        miss_d = self.miss_fn(key, **miss_fn_kwargs)
-
-        def handle_result(result):
-            if result is not None:
-                cache[key] = result
-                weakrefs[key] = result
-
-                # reference the key once, possibly standing in for multiple
-                # concurrent accesses
-                ref_key()
-
-            self.inv()
-            self._purge()
-
-            # and fire all of the waiting Deferreds
-            dlist = concurrent.pop(key)
-            for d in dlist:
-                d.callback(result)
-
-        def handle_failure(f):
-            # errback all of the waiting Deferreds
-            dlist = concurrent.pop(key)
-            for d in dlist:
-                d.errback(f)
-
-        miss_d.addCallbacks(handle_result, handle_failure)
-        miss_d.addErrback(log.err)
-
-        return d
-
-    def _purge(self):
-        if len(self.cache) <= self.max_size:
-            return
-
-        cache = self.cache
-        refcount = self.refcount
-        queue = self.queue
-        max_size = self.max_size
-
-        # purge least recently used entries, using refcount to count entries
-        # that appear multiple times in the queue
-        while len(cache) > max_size:
-            refc = 1
-            while refc:
-                k = queue.popleft()
-                refc = refcount[k] = refcount[k] - 1
-            del cache[k]
-            del refcount[k]
+        self.miss_fn = miss_fn
 
     def put(self, key, value):
         if key in self.cache:
@@ -149,6 +59,42 @@ class AsyncLRUCache(object):
             self.weakrefs[key] = value
         elif key in self.weakrefs:
             self.weakrefs[key] = value
+        self._ref_key(key)
+
+    def get(self, key, **miss_fn_kwargs):
+        """
+        Fetch a value from the cache by key, invoking C{self.miss_fn(key)}
+        if the key is not in the cache.
+
+        Any additional keyword arguments are passed to the C{miss_fn} as
+        keyword arguments; these can supply additional information relating to
+        the key.  It is up to the caller to ensure that this information is
+        functionally identical for each key value: if the key is already in the
+        cache, the C{miss_fn} will not be invoked, even if the keyword
+        arguments differ.
+
+        @param key: cache key
+        @param **miss_fn_kwargs: keyword arguments to  the miss_fn
+        @returns: cached value
+        """
+        try:
+            return self._get_hit(key)
+        except KeyError:
+            pass
+
+        self.misses += 1
+
+        result = self.miss_fn(key, **miss_fn_kwargs)
+        if result is not None:
+            self.cache[key] = result
+            self.weakrefs[key] = result
+            self._ref_key(key)
+            self._purge()
+
+        return result
+
+    def keys(self):
+        return self.cache.keys()
 
     def set_max_size(self, max_size):
         if self.max_size == max_size:
@@ -181,6 +127,141 @@ class AsyncLRUCache(object):
             log.msg(" expected:", sorted(exp_refcount.items()))
             log.msg("      got:", sorted(self.refcount.items()))
             inv_failed = True
+
+    def _ref_key(self, key):
+        queue = self.queue
+        refcount = self.refcount
+
+        queue.append(key)
+        refcount[key] = refcount[key] + 1
+
+        # periodically compact the queue by eliminating duplicate keys
+        # while preserving order of most recent access.  Note that this
+        # is only required when the cache does not exceed its maximum
+        # size
+        if len(queue) > self.max_queue:
+            refcount.clear()
+            queue_appendleft = queue.appendleft
+            queue_appendleft(self.sentinel)
+            for k in ifilterfalse(refcount.__contains__,
+                                    iter(queue.pop, self.sentinel)):
+                queue_appendleft(k)
+                refcount[k] = 1
+
+    def _get_hit(self, key):
+        try:
+            result = self.cache[key]
+            self.hits += 1
+            self._ref_key(key)
+            return result
+        except KeyError:
+            pass
+
+        result = self.weakrefs[key]
+        self.refhits += 1
+        self.cache[key] = result
+        self._ref_key(key)
+        return result
+
+    def _purge(self):
+        if len(self.cache) <= self.max_size:
+            return
+
+        cache = self.cache
+        refcount = self.refcount
+        queue = self.queue
+        max_size = self.max_size
+
+        # purge least recently used entries, using refcount to count entries
+        # that appear multiple times in the queue
+        while len(cache) > max_size:
+            refc = 1
+            while refc:
+                k = queue.popleft()
+                refc = refcount[k] = refcount[k] - 1
+            del cache[k]
+            del refcount[k]
+
+
+class AsyncLRUCache(LRUCache):
+    """
+    An LRU cache with asynchronous locking to ensure that in the common case of
+    multiple concurrent requests for the same key, only one fetch is performed.
+    """
+
+    __slots__ = ['concurrent']
+
+    def __init__(self, miss_fn, max_size=50):
+        """
+        Constructor.
+
+        @param miss_fn: function to call, with key as parameter, for cache
+        misses.  This function I{must} return a deferred.
+
+        @param max_size: maximum number of objects in the cache
+        """
+        super(AsyncLRUCache, self).__init__(miss_fn, max_size=max_size)
+        self.concurrent = {}
+
+    def get(self, key, **miss_fn_kwargs):
+        """
+        Overrides LRUCache.get.
+
+        @param key: cache key
+        @param **miss_fn_kwargs: keyword arguments to  the miss_fn
+        @returns: cached value via Deferred
+        """
+        try:
+            result = self._get_hit(key)
+            return defer.succeed(result)
+        except KeyError:
+            pass
+
+        concurrent = self.concurrent
+        conc = concurrent.get(key)
+        if conc:
+            self.hits += 1
+            d = defer.Deferred()
+            conc.append(d)
+            return d
+
+        # if we're here, we've missed and need to fetch
+        self.misses += 1
+
+        # create a list of waiting deferreds for this key
+        d = defer.Deferred()
+        assert key not in concurrent
+        concurrent[key] = [ d ]
+
+        miss_d = self.miss_fn(key, **miss_fn_kwargs)
+
+        def handle_result(result):
+            if result is not None:
+                self.cache[key] = result
+                self.weakrefs[key] = result
+
+                # reference the key once, possibly standing in for multiple
+                # concurrent accesses
+                self._ref_key(key)
+
+                self._purge()
+
+            # and fire all of the waiting Deferreds
+            dlist = concurrent.pop(key)
+            for d in dlist:
+                d.callback(result)
+
+        def handle_failure(f):
+            # errback all of the waiting Deferreds
+            dlist = concurrent.pop(key)
+            for d in dlist:
+                d.errback(f)
+
+        miss_d.addCallbacks(handle_result, handle_failure)
+        miss_d.addErrback(log.err)
+
+        return d
+
 
 # for tests
 inv_failed = False
