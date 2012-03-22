@@ -64,7 +64,7 @@ class BuildFactory(util.ComparableMixin):
         warnings.warn(
                 "Passing a BuildStep subclass to factory.addStep is deprecated.  " +
                 "Please pass a BuildStep instance instead.  Support will be dropped in v0.8.7.",
-                    DeprecationWarning, stacklevel=2)
+                    DeprecationWarning, stacklevel=3)
         return step_or_factory
 
     def newBuild(self, requests):
@@ -90,7 +90,7 @@ class BuildFactory(util.ComparableMixin):
             warnings.warn(
                     "Passing a BuildStep subclass to factory.addStep is deprecated.  " +
                     "Please pass a BuildStep instance instead.  Support will be dropped in v0.8.7.",
-                    DeprecationWarning, stacklevel=1)
+                    DeprecationWarning, stacklevel=2)
 
         else:
             raise ValueError('%r is not a BuildStep nor BuildStep subclass' % step_or_factory)
