@@ -214,8 +214,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             if running_missing_timer:
                 self.startMissingTimer()
 
-        self.properties = Properties()
-        self.properties.updateFromProperties(new.properties)
+        properties = Properties()
+        properties.updateFromProperties(new.properties)
+        self.properties = properties
 
         self.updateLocks()
 
@@ -627,7 +628,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         """This is called when our graceful shutdown setting changes"""
         self.maybeShutdown()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def shutdown(self):
         """Shutdown the slave"""
         if not self.slave:
@@ -650,9 +651,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             d.addErrback(check_connlost)
             return d
 
-        wfd = defer.waitForDeferred(new_way())
-        yield wfd
-        if wfd.getResult():
+        if (yield new_way()):
             return # done!
 
         # Now, the old way.  Look for a builder with a remote reference to the
@@ -682,9 +681,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
                 return d
             log.err("Couldn't find remote builder to shut down slave")
             return defer.succeed(None)
-        wfd = defer.waitForDeferred(old_way())
-        yield wfd
-        wfd.getResult()
+        yield old_way()
 
     def maybeShutdown(self):
         """Shut down this slave if it has been asked to shut down gracefully,

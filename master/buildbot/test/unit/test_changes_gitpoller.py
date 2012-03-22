@@ -123,6 +123,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
     def test_describe(self):
         self.assertSubstring("GitPoller", self.poller.describe())
 
+    def test_gitbin_default(self):
+        self.assertEqual(self.poller.gitbin, "git")
+
     def test_poll(self):
         # Test that environment variables get propagated to subprocesses (See #2116)
         os.putenv('TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES', 'TRUE')

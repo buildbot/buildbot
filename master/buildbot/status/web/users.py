@@ -24,17 +24,14 @@ class UsersActionResource(ActionResource):
     def __init__(self):
         self.action = "showUsersPage"
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def performAction(self, req):
-        d = self.getAuthz(req).actionAllowed('showUsersPage', req)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        res = wfd.getResult()
+        res = yield self.getAuthz(req).actionAllowed('showUsersPage', req)
         if not res:
-            yield path_to_authzfail(req)
+            defer.returnValue(path_to_authzfail(req))
             return
         # show the table
-        yield path_to_root(req) + "users/table"
+        defer.returnValue(path_to_root(req) + "users")
 
 # /users/$uid
 class OneUserResource(HtmlResource):
@@ -63,9 +60,9 @@ class OneUserResource(HtmlResource):
         d.addCallback(cb)
         return d
 
-# /users/table
-class UsersTableResource(HtmlResource):
-    pageTitle = "Users Table"
+# /users
+class UsersResource(HtmlResource):
+    pageTitle = "Users"
     addSlash = True
 
     def __init__(self):
@@ -74,56 +71,20 @@ class UsersTableResource(HtmlResource):
     def getChild(self, path, req):
         return OneUserResource(path)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def content(self, req, ctx):
-        d = self.getAuthz(req).actionAllowed('showUsersPage', req)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        res = wfd.getResult()
+        res = yield self.getAuthz(req).actionAllowed('showUsersPage', req)
         if not res:
-            yield redirectTo(path_to_authzfail(req), req)
+            defer.returnValue(redirectTo(path_to_authzfail(req), req))
             return
 
         s = self.getStatus(req)
 
-        d = s.master.db.users.getUsers()
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        usdicts = wfd.getResult()
-
+        usdicts = yield s.master.db.users.getUsers()
         users = ctx['users'] = usdicts
+
         for user in users:
             user['user_link'] = req.childLink(urllib.quote(str(user['uid']), ''))
         template = req.site.buildbot_service.templates.get_template(
-                                                              "users_table.html")
-        yield template.render(**ctx)
-
-# /users
-class UsersResource(HtmlResource):
-    pageTitle = "Users"
-    addSlash = True
-
-    def __init__(self):
-        HtmlResource.__init__(self)
-        self.action = "showUsersPage"
-
-    def getChild(self, path, req):
-        if path == "table":
-            return UsersTableResource()
-
-    @defer.deferredGenerator
-    def content(self, req, ctx):
-        # check for False or True on showUsersPage, redirect immediately
-        authz = self.getAuthz(req)
-        if not authz.needAuthForm(self.action):
-            if authz.advertiseAction(self.action):
-                yield redirectTo("users/table", req)
-                return
-            else:
-                yield redirectTo(path_to_authzfail(req), req)
-                return
-
-        ctx['authz'] = self.getAuthz(req)
-        ctx['table_link'] = req.childLink("table")
-        template = req.site.buildbot_service.templates.get_template("users.html")
-        yield template.render(**ctx)
+                                                              "users.html")
+        defer.returnValue(template.render(**ctx))

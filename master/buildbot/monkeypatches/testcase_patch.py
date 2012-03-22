@@ -15,19 +15,18 @@
 
 import sys
 import twisted
-from twisted.python import versions, runtime
+from twisted.trial import unittest
 
-def usesFlushLoggedErrors(test):
-    "Decorate a test method that uses flushLoggedErrors with this decorator"
-    if (sys.version_info[:2] == (2,7)
-            and twisted.version <= versions.Version('twisted', 9, 0, 0)):
-        test.skip = \
-            "flushLoggedErrors is broken on Python==2.7 and Twisted<=9.0.0"
-    return test
+def patch_testcase_patch():
+    """
+    Patch out TestCase.patch to skip the test on version combinations where it
+    does not work.
 
-def skipUnlessPlatformIs(platform):
-    def closure(test):
-        if runtime.platformType != platform:
-            test.skip = "not a %s platform" % platform
-        return test
-    return closure
+    (used for debugging only)
+    """
+    # versions of Twisted before 9.0.0 did not have a UnitTest.patch that
+    # worked on Python-2.7
+    if twisted.version.major <= 9 and sys.version_info[:2] == (2,7):
+        def nopatch(self, *args):
+            raise unittest.SkipTest('unittest.TestCase.patch is not available')
+        unittest.TestCase.patch = nopatch

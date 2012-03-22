@@ -137,15 +137,17 @@ By now you're probably thinking: "All this time spent and still not done a
 single build ? What was the name of this project again ?"
 
 On the `waterfall <http://localhost:8010/waterfall>`_. page, click on the
-runtests link, and scroll down.  You will see some new options that allow you
-to force a build:
+runtests link.  You'll see a builder page, and in the upper-right corner is a
+box where you can login.  The default username and password are both
+"pyflakes".  Once you've logged in, you will see some new options that allow
+you to force a build:
 
 .. image:: _images/force-build.png
    :alt: force a build.
 
-Type in your name and a reason, then click *Force Build*.  After that, click
-on
-`view in waterfall <http://localhost:8010/waterfall?show=runtests>`_.
+Click *Force Build* - there's no need to fill in any of the fields in this
+case.  Next, click on `view in waterfall
+<http://localhost:8010/waterfall?show=runtests>`_.
 
 You will now see:
 

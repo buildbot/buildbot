@@ -64,15 +64,12 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
         return service.MultiService.startService(self)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         # remove the old listeners, then add the new
         for sr in list(self):
-            wfd = defer.waitForDeferred(
-                defer.maybeDeferred(lambda :
-                    sr.disownServiceParent()))
-            yield wfd
-            wfd.getResult()
+            yield defer.maybeDeferred(lambda :
+                    sr.disownServiceParent())
             sr.master = None
 
         for sr in new_config.status:
@@ -80,11 +77,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             sr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing
-        wfd = defer.waitForDeferred(
-            config.ReconfigurableServiceMixin.reconfigService(self,
-                                                        new_config))
-        yield wfd
-        wfd.getResult()
+        yield config.ReconfigurableServiceMixin.reconfigService(self,
+                                                            new_config)
 
     def stopService(self):
         self._buildset_completion_sub.unsubscribe()
@@ -203,7 +197,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
     def getBuilderNames(self, categories=None):
         if categories == None:
-            return self.botmaster.builderNames[:] # don't let them break it
+            return sorted(self.botmaster.builderNames) # don't let them break it
         
         l = []
         # respect addition order
@@ -211,7 +205,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             bldr = self.botmaster.builders[name]
             if bldr.config.category in categories:
                 l.append(name)
-        return l
+        return sorted(l)
 
     def getBuilder(self, name):
         """

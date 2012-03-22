@@ -33,25 +33,19 @@ class TestUserManager(unittest.TestCase):
     def tearDown(self):
         self.umm.stopService()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService(self):
         # add a user manager
         um1 = FakeUserManager()
         self.config.user_managers = [ um1 ]
 
-        wfd = defer.waitForDeferred(
-                self.umm.reconfigService(self.config))
-        yield wfd
-        wfd.getResult()
+        yield self.umm.reconfigService(self.config)
 
         self.assertTrue(um1.running)
         self.assertIdentical(um1.master, self.master)
 
         # and back to nothing
         self.config.user_managers = [ ]
-        wfd = defer.waitForDeferred(
-                self.umm.reconfigService(self.config))
-        yield wfd
-        wfd.getResult()
+        yield self.umm.reconfigService(self.config)
 
         self.assertIdentical(um1.master, None)

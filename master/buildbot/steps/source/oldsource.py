@@ -37,7 +37,7 @@ class _ComputeRepositoryURL(object):
 
         build = props.getBuild()
         assert build is not None, "Build should be available *during* a build?"
-        s = build.getSourceStamp()
+        s = build.getSourceStamp('') # TODO: use correct codebase
 
         repository = self.repository
 

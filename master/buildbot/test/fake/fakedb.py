@@ -353,7 +353,7 @@ class FakeChangesComponent(FakeDBComponent):
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
             revision=None, when_timestamp=None, branch=None,
             category=None, revlink='', properties={}, repository='',
-            project='', uid=None):
+            project='', codebase='', uid=None):
         if self.changes:
             changeid = max(self.changes.iterkeys()) + 1
         else:
@@ -370,7 +370,8 @@ class FakeChangesComponent(FakeDBComponent):
             category=category,
             revlink=revlink,
             repository=repository,
-            project=project)
+            project=project,
+            codebase=codebase)
         ch.files = files
         ch.properties = properties
 

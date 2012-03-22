@@ -236,13 +236,7 @@ class TestSendChange(unittest.TestCase):
     def test_sendchange_bad_vc(self):
         d = defer.maybeDeferred(lambda :
                 runner.sendchange(dict(master='a:1', who="abc", vc="blargh")))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, AssertionError)
 
     def test_sendchange_auth_prompt(self):
         self.patch(getpass, 'getpass', lambda prompt : 'sekrit')
@@ -258,24 +252,12 @@ class TestSendChange(unittest.TestCase):
     def test_sendchange_who_required(self):
         d = defer.maybeDeferred(lambda :
                 runner.sendchange(dict(master='a:1')))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, AssertionError)
 
     def test_sendchange_master_required(self):
         d = defer.maybeDeferred(lambda :
                 runner.sendchange(dict(who='abc')))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, AssertionError)
 
 class TestCheckConfigOptions(OptionsMixin, unittest.TestCase):
 
@@ -589,189 +571,97 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
     def test_usersclient_no_master(self):
         d = defer.maybeDeferred(lambda :
                                     runner.users_client(dict(op='add')))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, AssertionError)
 
     def test_usersclient_no_port(self):
-        d = defer.maybeDeferred(lambda :
-                                    runner.users_client(dict(master='a',
-                                                             op='add')))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        d = defer.maybeDeferred(
+                lambda : runner.users_client(dict(master='a', op='add')))
+        return self.assertFailure(d, AssertionError)
 
     def test_usersclient_no_op(self):
         d = defer.maybeDeferred(lambda :
                                     runner.users_client(dict(master='a:9990')))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, AssertionError)
 
     def test_usersclient_no_username_password(self):
-        d = defer.maybeDeferred(lambda :
-                                    runner.users_client(dict(master='a:9990',
-                                                             op='add')))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        d = defer.maybeDeferred(
+                lambda : runner.users_client(dict(master='a:9990', op='add')))
+        return self.assertFailure(d, AssertionError)
 
     def test_usersclient_bad_op(self):
-        d = defer.maybeDeferred(lambda :
-                    runner.users_client(dict(master='a:9990', username="x",
-                                             passwd="y", op='edit')))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        d = defer.maybeDeferred(
+                lambda : runner.users_client(dict(master='a:9990',
+                            username="x", passwd="y", op='edit')))
+        return self.assertFailure(d, AssertionError)
 
     def test_usersclient_just_bb_username(self):
         d = defer.maybeDeferred(lambda :
                     runner.users_client(dict(master='a:9990', username="x",
                                              passwd="y", bb_username='buddy',
                                              op='update')))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, AssertionError)
 
     def test_usersclient_bb_not_update(self):
         d = defer.maybeDeferred(lambda :
                     runner.users_client(dict(master='a:9990', username="x",
                                              passwd="y", bb_username='buddy',
                                              bb_password='hey', op='add')))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, AssertionError)
 
     def test_usersclient_no_ids_no_info(self):
         d = defer.maybeDeferred(lambda :
                      runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='add')))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, AssertionError)
 
     def test_usersclient_ids_and_info(self):
         d = defer.maybeDeferred(lambda :
                     runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='add', ids=['me'],
                                               info=[{'full_name':'b'}])))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, AssertionError)
 
     def test_usersclient_add_and_ids(self):
         d = defer.maybeDeferred(lambda :
                     runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='add', ids=['me'],
                                               info=None)))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, AssertionError)
 
     def test_usersclient_update_and_ids(self):
         d = defer.maybeDeferred(lambda :
                     runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='update', ids=['me'],
                                               info=None)))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, AssertionError)
 
     def test_usersclient_remove_get_and_info(self):
         d = defer.maybeDeferred(lambda :
                     runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='remove', ids=None,
                                               info=[{'email':'x'}])))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, AssertionError)
 
     def test_usersclient_update_no_identifier(self):
         d = defer.maybeDeferred(lambda :
                     runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='update', ids=None,
                                               info=[{'email':'x'}])))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(ValueError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, ValueError)
 
     def test_usersclient_add_existing_identifier(self):
         d = defer.maybeDeferred(lambda :
                     runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='add', ids=None,
                                               info=[{'identifier':'x'}])))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(ValueError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, ValueError)
 
     def test_usersclient_bad_attr_type(self):
         d = defer.maybeDeferred(lambda :
                     runner.users_client(dict(master='a:9990', username="x",
                                               passwd="y", op='add', ids=None,
                                               info=[{'b':'y'}])))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(ValueError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, ValueError)
 
     def test_usersclient_send_ids(self):
         d = runner.users_client(dict(master='a:9990', username="x",
@@ -818,3 +708,99 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
                               [{'identifier':'x <h@c>','git': 'x <h@c>'}]))
         d.addCallback(check)
         return d
+
+class TestMasterOptions(OptionsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.options_file = {}
+        self.patch(runner, 'loadOptionsFile', lambda : self.options_file)
+
+    def parse(self, *args):
+        self.opts = runner.MasterOptions()
+        self.opts.parseOptions(args)
+        return self.opts
+
+    def defaults_and(self, **kwargs):
+        defaults = dict(force=False, relocatable=False, config='master.cfg',
+                db='sqlite:///state.sqlite', **{'no-logrotate':False,
+                    'log-size':'10000000', 'log-count':'10'})
+        unk_keys = set(kwargs.keys()) - set(defaults.keys())
+        assert not unk_keys, "invalid keys %s" % (unk_keys,)
+        opts = defaults.copy()
+        opts.update(kwargs)
+        return opts
+
+    def test_synopsis(self):
+        opts = runner.MasterOptions()
+        self.assertIn('buildbot create-master', opts.getSynopsis())
+
+    def test_defaults(self):
+        opts = self.parse()
+        exp = self.defaults_and()
+        self.assertOptions(opts, exp)
+
+    def test_force(self):
+        opts = self.parse('-f')
+        exp = self.defaults_and(force=True)
+        self.assertOptions(opts, exp)
+
+    def test_force_long(self):
+        opts = self.parse('--force')
+        exp = self.defaults_and(force=True)
+        self.assertOptions(opts, exp)
+
+    def test_relocatable(self):
+        opts = self.parse('-r')
+        exp = self.defaults_and(relocatable=True)
+        self.assertOptions(opts, exp)
+
+    def test_relocatable_long(self):
+        opts = self.parse('--relocatable')
+        exp = self.defaults_and(relocatable=True)
+        self.assertOptions(opts, exp)
+
+    def test_no_logrotate(self):
+        opts = self.parse('-n')
+        exp = self.defaults_and(**{'no-logrotate' : True})
+        self.assertOptions(opts, exp)
+
+    def test_no_logrotate_long(self):
+        opts = self.parse('--no-logrotate')
+        exp = self.defaults_and(**{'no-logrotate' : True})
+        self.assertOptions(opts, exp)
+
+    def test_config(self):
+        opts = self.parse('-cxyz')
+        exp = self.defaults_and(config='xyz')
+        self.assertOptions(opts, exp)
+
+    def test_config_long(self):
+        opts = self.parse('--config=xyz')
+        exp = self.defaults_and(config='xyz')
+        self.assertOptions(opts, exp)
+
+    def test_log_size(self):
+        opts = self.parse('-s124')
+        exp = self.defaults_and(**{'log-size':'124'})
+        self.assertOptions(opts, exp)
+
+    def test_log_size_long(self):
+        opts = self.parse('--log-size=124')
+        exp = self.defaults_and(**{'log-size':'124'})
+        self.assertOptions(opts, exp)
+
+    def test_log_count(self):
+        opts = self.parse('-l124')
+        exp = self.defaults_and(**{'log-count':'124'})
+        self.assertOptions(opts, exp)
+
+    def test_log_count_long(self):
+        opts = self.parse('--log-count=124')
+        exp = self.defaults_and(**{'log-count':'124'})
+        self.assertOptions(opts, exp)
+
+    def test_db_long(self):
+        opts = self.parse('--db=foo://bar')
+        exp = self.defaults_and(db='foo://bar')
+        self.assertOptions(opts, exp)
+

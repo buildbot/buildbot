@@ -16,19 +16,12 @@
 from __future__ import with_statement
 # Portions Copyright Dan Radez <dradez+buildbot@redhat.com>
 # Portions Copyright Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
-"""
-RPM Building steps.
-"""
 
+import os
 from buildbot.steps.shell import ShellCommand
-from buildbot.process.buildstep import RemoteShellCommand
-
+from buildbot.process import buildstep
 
 class RpmBuild(ShellCommand):
-    """
-    Build and RPM based on pased spec filename
-    """
-
     name = "rpmbuilder"
     haltOnFailure = 1
     flunkOnFailure = 1
@@ -47,30 +40,6 @@ class RpmBuild(ShellCommand):
                  autoRelease=False,
                  vcsRevision=False,
                  **kwargs):
-        """
-        Creates the RpmBuild object.
-
-        @type specfile: str
-        @param specfile: the name of the spec file for the rpmbuild
-        @type topdir: str
-        @param topdir: the top directory for rpm building.
-        @type builddir: str
-        @param builddir: the directory to use for building
-        @type rpmdir: str
-        @param rpmdir: the directory to dump the rpms into
-        @type sourcedir: str
-        @param sourcedir: the directory that houses source code
-        @type srcrpmdir: str
-        @param srcrpmdir: the directory to dump source rpms into
-        @type dist: str
-        @param dist: the distribution to build for
-        @type autoRelease: boolean
-        @param autoRelease: if the auto release mechanics should be used
-        @type vcsRevision: boolean
-        @param vcsRevision: if the vcs revision mechanics should be used
-        @type kwargs: dict
-        @param kwargs: All further keyword arguments.
-        """
         ShellCommand.__init__(self, **kwargs)
         self.addFactoryArguments(topdir=topdir,
                                  builddir=builddir,
@@ -93,12 +62,9 @@ class RpmBuild(ShellCommand):
         self.vcsRevision = vcsRevision
 
     def start(self):
-        """
-        Buildbot Calls Me when it's time to start
-        """
         if self.autoRelease:
             relfile = '%s.release' % (
-                self.os.path.basename(self.specfile).split('.')[0])
+                os.path.basename(self.specfile).split('.')[0])
             try:
                 with open(relfile, 'r') as rfile:
                     rel = int(rfile.readline().strip())
@@ -114,22 +80,16 @@ class RpmBuild(ShellCommand):
 
         self.rpmbuild = self.rpmbuild + ' -ba %s' % self.specfile
 
-        self.command = ['bash', '-c', self.rpmbuild]
+        self.command = self.rpmbuild
 
         # create the actual RemoteShellCommand instance now
         kwargs = self.remote_kwargs
         kwargs['command'] = self.command
-        cmd = RemoteShellCommand(**kwargs)
+        cmd = buildstep.RemoteShellCommand(**kwargs)
         self.setupEnvironment(cmd)
-        self.checkForOldSlaveAndLogfiles()
         self.startCommand(cmd)
 
     def createSummary(self, log):
-        """
-        Create nice summary logs.
-
-        @param log: The log to create summary off of.
-        """
         rpm_prefixes = ['Provides:', 'Requires(rpmlib):', 'Requires:',
                         'Checking for unpackaged', 'Wrote:',
                         'Executing(%', '+ ']

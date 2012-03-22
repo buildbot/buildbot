@@ -29,6 +29,7 @@ class FakeRemoteCommand:
         self.remote_command = remote_command
         self.args = args.copy()
         self.logs = {}
+        self.delayedLogs = {}
         self.rc = -999
         self.collectStdout = collectStdout
         self.updates = {}
@@ -39,6 +40,9 @@ class FakeRemoteCommand:
         if not logfileName:
             logfileName = loog.getName()
         self.logs[logfileName] = loog
+
+    def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
+        self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
 
     def run(self, step, remote):
         # delegate back to the test case
@@ -149,11 +153,15 @@ class Expect(object):
 
     """
 
-    def __init__(self, remote_command, args):
+    def __init__(self, remote_command, args, incomparable_args=[]):
         """
-        Expect a command named C{remote_command}, with args C{args}.
+
+        Expect a command named C{remote_command}, with args C{args}.  Any args
+        in C{incomparable_args} are not cmopared, but must exist.
+
         """
         self.remote_command = remote_command
+        self.incomparable_args = incomparable_args
         self.args = args
         self.result = None
         self.behaviors = []
@@ -213,16 +221,13 @@ class Expect(object):
                         AssertionError('invalid behavior %s' % behavior)))
         return defer.succeed(None)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def runBehaviors(self, command):
         """
         Run all expected behaviors for this command
         """
         for behavior in self.behaviors:
-            wfd = defer.waitForDeferred(
-                    self.runBehavior(behavior[0], behavior[1:], command))
-            yield wfd
-            wfd.getResult()
+            yield self.runBehavior(behavior[0], behavior[1:], command)
 
 
 class ExpectShell(Expect):

@@ -71,15 +71,12 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
     # db URL to use, if not using a real db
     db_url = "sqlite:///state.sqlite"
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def setUpUpgradeTest(self):
         # set up the "real" db if desired
         if self.use_real_db:
             # note this changes self.db_url
-            wfd = defer.waitForDeferred(
-                self.setUpRealDatabase(sqlite_memory=False))
-            yield wfd
-            wfd.getResult()
+            yield self.setUpRealDatabase(sqlite_memory=False)
 
         self.basedir = None
 
@@ -109,20 +106,14 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
         master = fakemaster.make_master()
         master.config.db['db_url'] = self.db_url
         self.db = connector.DBConnector(master, self.basedir)
-        wfd = defer.waitForDeferred(
-            self.db.setup(check_version=False))
-        yield wfd
-        wfd.getResult()
+        yield self.db.setup(check_version=False)
 
         querylog.log_from_engine(self.db.pool.engine)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def tearDownUpgradeTest(self):
         if self.use_real_db:
-            wfd = defer.waitForDeferred(
-                self.tearDownRealDatabase())
-            yield wfd
-            wfd.getResult()
+            yield self.tearDownRealDatabase()
 
         if self.basedir:
             shutil.rmtree(self.basedir)

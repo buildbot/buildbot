@@ -113,7 +113,7 @@ class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
             d += " (prefix '%s')" % self.prefix
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         # calculate the new port
         port = self.port
@@ -122,17 +122,11 @@ class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
 
         # and, if it's changed, re-register
         if port != self.registered_port:
-            wfd = defer.waitForDeferred(
-                self._unregister())
-            yield wfd
-            wfd.getResult()
+            yield self._unregister()
             self._register(port)
 
-        wfd = defer.waitForDeferred(
-            config.ReconfigurableServiceMixin.reconfigService(self,
-                                                    new_config))
-        yield wfd
-        wfd.getResult()
+        yield config.ReconfigurableServiceMixin.reconfigService(
+                self, new_config)
 
     def stopService(self):
         d = defer.maybeDeferred(base.ChangeSource.stopService, self)

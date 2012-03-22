@@ -153,3 +153,42 @@ class DiffSets(unittest.TestCase):
     def test_removed(self):
         removed, added = util.diffSets(set([1, 2]), set([1]))
         self.assertEqual((removed, added), (set([2]), set([])))
+
+class MakeList(unittest.TestCase):
+
+    def test_empty_string(self):
+        self.assertEqual(util.makeList(''), [ '' ])
+
+    def test_None(self):
+        self.assertEqual(util.makeList(None), [ ])
+
+    def test_string(self):
+        self.assertEqual(util.makeList('hello'), [ 'hello' ])
+
+    def test_unicode(self):
+        self.assertEqual(util.makeList(u'\N{SNOWMAN}'), [ u'\N{SNOWMAN}' ])
+
+    def test_list(self):
+        self.assertEqual(util.makeList(['a','b']), [ 'a', 'b' ])
+
+    def test_tuple(self):
+        self.assertEqual(util.makeList(('a','b')), [ 'a', 'b' ])
+
+    def test_copy(self):
+        input = ['a', 'b']
+        output = util.makeList(input)
+        input.append('c')
+        self.assertEqual(output, [ 'a', 'b' ])
+
+class Flatten(unittest.TestCase):
+
+    def test_simple(self):
+        self.assertEqual(util.flatten([1, 2, 3]), [1, 2, 3])
+
+    def test_deep(self):
+        self.assertEqual(util.flatten([ [ 1, 2 ], 3, [ [ 4 ] ] ]),
+                                [1, 2, 3, 4])
+
+    def test_tuples(self):
+        self.assertEqual(util.flatten([ ( 1, 2 ), 3 ]), [ (1, 2), 3 ])
+

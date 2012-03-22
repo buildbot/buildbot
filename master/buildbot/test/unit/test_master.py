@@ -335,27 +335,20 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
             self.master.reconfigService.assert_called()
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfig_bad_config(self):
         reactor = self.make_reactor()
         self.master.reconfigService = mock.Mock(
                 side_effect=lambda n : defer.succeed(None))
 
-        wfd = defer.waitForDeferred(
-            self.master.startService(_reactor=reactor))
-        yield wfd
-        wfd.getResult()
-
+        yield self.master.startService(_reactor=reactor)
 
         # reset, since startService called reconfigService
         self.master.reconfigService.reset_mock()
 
         # reconfig, with a failure
         self.patch_loadConfig_fail()
-        wfd = defer.waitForDeferred(
-            self.master.reconfig())
-        yield wfd
-        wfd.getResult()
+        yield self.master.reconfig()
 
         self.master.stopService()
 
