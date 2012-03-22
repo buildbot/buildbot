@@ -113,11 +113,11 @@ class Trigger(LoggingBuildStep):
 
         master = self.build.builder.botmaster.parent # seriously?!
         
-        def add_sourcestamp_to_set(sourcestampsetid, sourceStamp):
+        def add_sourcestamp_to_set(ss_setid, sourceStamp):
             d = master.db.sourcestamps.addSourceStamp(
-                    sourcestampsetid = sourcestampsetid,
+                    sourcestampsetid = ss_setid,
                     **sourceStamp)
-            d.addCallback(lambda _ : sourcestampsetid)
+            d.addCallback(lambda _ : ss_setid)
             return d
 
         if self.sourceStamp:
