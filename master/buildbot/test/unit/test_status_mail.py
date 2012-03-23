@@ -176,7 +176,7 @@ class TestMailNotifier(unittest.TestCase):
                                                     buildername='Builder'),
                                 fakedb.Build(number=0, brid=11),
                                 ])
-        mn.parent = self
+        mn.master = self # FIXME: Should be FakeMaster
         
         self.status = Mock()
         mn.master_status = Mock()
@@ -377,7 +377,7 @@ class TestMailNotifier(unittest.TestCase):
             return ["Big Bob <bob@mayhem.net>"]
         build.getResponsibleUsers = _getResponsibleUsers
 
-        mn.parent = self
+        mn.master = self # FIXME: Should be FakeMaster
         self.status = mn.master_status = mn.buildMessageDict = Mock()
         mn.master_status.getBuilder = fakeGetBuilder
         mn.buildMessageDict.return_value = {"body": "body", "type": "text"}
@@ -500,7 +500,7 @@ class TestMailNotifier(unittest.TestCase):
         build1.getSourceStamp = fakeGetSS(ss1)
         build2.getSourceStamp = fakeGetSS(ss2)
 
-        mn.parent = self
+        mn.master = self # FIXME: Should be FakeMaster
         self.status = mn.master_status = mn.buildMessageDict = Mock()
         mn.master_status.getBuilder = fakeGetBuilder
         mn.buildMessageDict.return_value = {"body": "body", "type": "text"}
