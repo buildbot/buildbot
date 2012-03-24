@@ -135,11 +135,12 @@
        <span class="label">{{f.label}}</span><br>
        <span class="select">
        <select name='{{f.name}}' {{ f.multiple and "multiple" or ""}}>
-	 {% for c in f.choices %}
-	 <option {{(c in default_props[sch.name+"."+f.name]) and "selected" or ""}}>{{c}}</option>
-	 {% endfor %}
+         {% for c in f.choices %}
+         <option {{(c in default_props[sch.name+"."+f.name]) and "selected" or ""}}>{{c}}</option>
+         {% endfor %}
        </select> <br>
        </span>
+    </div>
     {% endif %}
     {% endif %}
   {% endfor %}
