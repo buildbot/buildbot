@@ -111,5 +111,3 @@ class GetProcessOutputMixin:
     def gpoAnyPattern(self):
         return lambda bin, args, **kwargs : True
     
-    def gpoCommandArgsMatch(self,matchArgs):
-        print "BIN:%s args:%s "%(bin,args)
