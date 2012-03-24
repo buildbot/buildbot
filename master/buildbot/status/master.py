@@ -22,7 +22,7 @@ from twisted.persisted import styles
 from twisted.internet import defer
 from twisted.application import service
 from zope.interface import implements
-from buildbot import interfaces, config
+from buildbot import config, interfaces, util
 from buildbot.util import bbcollections
 from buildbot.util.eventual import eventually
 from buildbot.changes import changes
@@ -197,7 +197,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
     def getBuilderNames(self, categories=None):
         if categories == None:
-            return sorted(self.botmaster.builderNames) # don't let them break it
+            return util.naturalSort(self.botmaster.builderNames) # don't let them break it
         
         l = []
         # respect addition order
@@ -205,7 +205,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             bldr = self.botmaster.builders[name]
             if bldr.config.category in categories:
                 l.append(name)
-        return sorted(l)
+        return util.naturalSort(l)
 
     def getBuilder(self, name):
         """
