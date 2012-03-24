@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from zope.interface import implements
-import mock
 from twisted.trial import unittest
 from buildbot.status import progress
 

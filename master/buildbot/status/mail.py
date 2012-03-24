@@ -447,8 +447,6 @@ class MailNotifier(base.StatusReceiverMultiService):
                           buildset['results'])
         
     def _gotBuildRequests(self, breqs, buildset):
-        builddicts = []
-        builders =[]
         dl = []
         for breq in breqs:
             buildername = breq['buildername']
