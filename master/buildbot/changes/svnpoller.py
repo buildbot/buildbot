@@ -65,7 +65,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                  svnuser=None, svnpasswd=None,
                  pollInterval=10*60, histmax=100,
                  svnbin='svn', revlinktmpl='', category=None, 
-                 project='', cachepath=None, pollinterval=-2):
+                 project='', cachepath=None, pollinterval=-2,
+                 extra_args=None):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
@@ -73,6 +74,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         if svnurl.endswith("/"):
             svnurl = svnurl[:-1] # strip the trailing slash
         self.svnurl = svnurl
+        self.extra_args = extra_args
         self.split_file = split_file or split_file_alwaystrunk
         self.svnuser = svnuser
         self.svnpasswd = svnpasswd
@@ -171,6 +173,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             args.extend(["--username=%s" % self.svnuser])
         if self.svnpasswd:
             args.extend(["--password=%s" % self.svnpasswd])
+        if self.extra_args:
+            args.extend(self.extra_args)
         d = self.getProcessOutput(args)
         def determine_prefix(output):
             try:
@@ -207,6 +211,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             args.extend(["--username=%s" % self.svnuser])
         if self.svnpasswd:
             args.extend(["--password=%s" % self.svnpasswd])
+        if self.extra_args:
+            args.extend(self.extra_args)
         args.extend(["--limit=%d" % (self.histmax), self.svnurl])
         d = self.getProcessOutput(args)
         return d

@@ -161,6 +161,9 @@ Features
 * MailNotifier allows multiple notification modes in the same instance.  See
   :bb:bug:`2205`.
 
+* SVNPoller now allows passing extra arguments via argument ``extra_args``.
+  See :bb:bug:`1766`
+  
 Slave
 -----
 
