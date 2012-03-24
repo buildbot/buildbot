@@ -35,7 +35,6 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         service.MultiService.__init__(self)
         self.master = master
         self.botmaster = master.botmaster
-        self.db = None
         self.basedir = master.basedir
         self.watchers = []
         # No default limit to the log size
