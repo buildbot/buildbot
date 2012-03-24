@@ -100,10 +100,6 @@ class RemoteCommand(pb.Referenceable):
         self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
 
     def _start(self):
-        if 'stdio' not in self.logs or 'stdio' not in self.delayedLogs:
-            log.msg("RemoteCommand (%s) is running a command, but "
-                    "it isn't being logged to anything. This seems unusual."
-                    % self)
         self.updates = {}
         self._startTime = util.now()
 
