@@ -94,7 +94,8 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
         self.assertEqual(b.result, SUCCESS)
-        self.assert_( ('startStep', (b.remote,), {}) in step.method_calls)
+        self.assert_( ('startStep', (slavebuilder.remote,), {})
+                                    in step.method_calls)
 
     def testStopBuild(self):
         b = self.build
@@ -185,7 +186,8 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
         self.assertEqual(b.result, SUCCESS)
-        self.assert_( ('startStep', (b.remote,), {}) in step.method_calls)
+        self.assert_( ('startStep', (slavebuilder.remote,), {})
+                                in step.method_calls)
         self.assertEquals(claimCount[0], 1)
 
     def testBuildWaitingForLocks(self):
@@ -214,7 +216,8 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assert_( ('startStep', (b.remote,), {}) not in step.method_calls)
+        self.assert_( ('startStep', (slavebuilder.remote,), {})
+                                    not in step.method_calls)
         self.assertEquals(claimCount[0], 1)
         self.assert_(b.currentStep is None)
         self.assert_(b._acquiringLock is not None)
@@ -246,7 +249,8 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assert_( ('startStep', (b.remote,), {}) not in step.method_calls)
+        self.assert_( ('startStep', (slavebuilder.remote,), {})
+                                    not in step.method_calls)
         self.assert_(b.currentStep is None)
         self.assertEqual(b.result, EXCEPTION)
         self.assert_( ('interrupt', ('stop it',), {}) not in step.method_calls)
@@ -278,7 +282,8 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assert_( ('startStep', (b.remote,), {}) not in step.method_calls)
+        self.assert_( ('startStep', (slavebuilder.remote,), {})
+                                    not in step.method_calls)
         self.assert_(b.currentStep is None)
         self.assertEqual(b.result, RETRY)
         self.assert_( ('interrupt', ('stop it',), {}) not in step.method_calls)

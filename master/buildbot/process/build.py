@@ -498,7 +498,12 @@ class Build(properties.PropertiesMixin):
     def buildException(self, why):
         log.msg("%s.buildException" % self)
         log.err(why)
-        self.buildFinished(["build", "exception"], EXCEPTION)
+        # try to finish the build, but since we've already faced an exception,
+        # this may not work well.
+        try:
+            self.buildFinished(["build", "exception"], EXCEPTION)
+        except:
+            log.err(Failure(), 'while finishing a build with an exception')
 
     def buildFinished(self, text, results):
         """This method must be called when the last Step has completed. It
@@ -515,6 +520,7 @@ class Build(properties.PropertiesMixin):
         self.finished = True
         if self.remote:
             self.remote.dontNotifyOnDisconnect(self.lostRemote)
+            self.remote = None
         self.results = results
 
         log.msg(" %s: build finished" % self)
