@@ -21,17 +21,14 @@ from __future__ import with_statement
 # Also don't forget to mirror your changes on command-line options in manual
 # pages and texinfo documentation.
 
-from twisted.python import usage, util, runtime
+from twisted.python import usage
 from hashlib import md5
 import os
 import re
 import sys
 import time
 
-from twisted.internet import defer
-
 from buildbot.interfaces import BuildbotNotRunningError
-from buildbot.util import in_reactor
 from buildbot.scripts import base
 
 # Note that the terms 'options' and 'config' are used intechangeably here - in
@@ -54,70 +51,6 @@ class BasedirMixin(object):
     def postOptions(self):
         self['basedir'] = os.path.abspath(self['basedir'])
 
-
-class Maker:
-    def __init__(self, config):
-        self.config = config
-        self.basedir = config['basedir']
-        self.force = config.get('force', False)
-        self.quiet = config['quiet']
-
-    def populate_if_missing(self, target, source, overwrite=False):
-        with open(source, "rt") as f:
-            new_contents = f.read()
-        if os.path.exists(target):
-            with open(target, "rt") as f:
-                old_contents = f.read()
-            if old_contents != new_contents:
-                if overwrite:
-                    if not self.quiet:
-                        print "%s has old/modified contents" % target
-                        print " overwriting it with new contents"
-                    with open(target, "wt") as f:
-                        f.write(new_contents)
-                else:
-                    if not self.quiet:
-                        print "%s has old/modified contents" % target
-                        print " writing new contents to %s.new" % target
-                    with open(target + ".new", "wt") as f:
-                        f.write(new_contents)
-            # otherwise, it's up to date
-        else:
-            if not self.quiet:
-                print "populating %s" % target
-            with open(target, "wt") as f:
-                f.write(new_contents)
-
-    def move_if_present(self, source, dest):
-        if os.path.exists(source):
-            if os.path.exists(dest):
-                print "Notice: %s now overrides %s" % (dest, source)
-                print "        as the latter is not used by buildbot anymore."  
-                print "        Decide which one you want to keep."
-            else:
-                try:
-                    print "Notice: Moving %s to %s." % (source, dest)
-                    print "        You can (and probably want to) remove it if  you haven't modified this file."
-                    os.renames(source, dest)
-                except Exception, e:
-                    print "Error moving %s to %s: %s" % (source, dest, str(e))
-
-    def upgrade_public_html(self, files):
-        webdir = os.path.join(self.basedir, "public_html")
-        if not os.path.exists(webdir):
-            if not self.quiet:
-                print "populating public_html/"
-            os.mkdir(webdir)
-        for target, source in files.iteritems():
-            try:
-                self.populate_if_missing(os.path.join(webdir, target),
-                                     source)
-            except IOError:
-                print "Can't write '%s'." % (target,)
-
-    def check_master_cfg(self, expected_db_url=None):
-        """Check the buildmaster configuration, returning an exit status (so
-        0=success)."""
 
 DB_HELP = """
     The --db string is evaluated to build the DB object, which specifies
@@ -167,75 +100,6 @@ class UpgradeMasterOptions(BasedirMixin, base.SubcommandOptions):
     the master configuration file.  If you wish to use a database other than
     the default (sqlite), be sure to set that parameter before upgrading.
     """
-
-@in_reactor
-@defer.inlineCallbacks
-def upgradeMaster(config):
-    from buildbot import config as config_module
-    from buildbot import monkeypatches
-    import traceback
-
-    monkeypatches.patch_all()
-
-    m = Maker(config)
-    m.chdir()
-    basedir = os.path.expanduser(config['basedir'])
-
-    if runtime.platformType != 'win32': # no pids on win32
-        if not config['quiet']: print "checking for running master"
-        pidfile = os.path.join(basedir, 'twistd.pid')
-        if os.path.exists(pidfile):
-            print "'%s' exists - is this master still running?" % (pidfile,)
-            defer.returnValue(1)
-            return
-
-    if not config['quiet']: print "checking master.cfg"
-    try:
-        master_cfg = config_module.MasterConfig.loadConfig(
-                                            basedir, 'master.cfg')
-    except config_module.ConfigErrors, e:
-        print "Errors loading configuration:"
-        for msg in e.errors:
-            print "  " + msg
-        defer.returnValue(1)
-        return
-    except:
-        print "Errors loading configuration:"
-        traceback.print_exc()
-        defer.returnValue(1)
-        return
-
-    if not config['quiet']: print "upgrading basedir"
-    basedir = os.path.expanduser(config['basedir'])
-    # TODO: check TAC file
-    # check web files: index.html, default.css, robots.txt
-    m.upgrade_public_html({
-            'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
-            'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
-            'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
-            'favicon.ico' : util.sibpath(__file__, "../status/web/files/favicon.ico"),
-        })
-    m.populate_if_missing(os.path.join(basedir, "master.cfg.sample"),
-                            util.sibpath(__file__, "sample.cfg"),
-                            overwrite=True)
-    # if index.html exists, use it to override the root page tempalte
-    m.move_if_present(os.path.join(basedir, "public_html/index.html"),
-                        os.path.join(basedir, "templates/root.html"))
-
-    from buildbot.db import connector
-    from buildbot.master import BuildMaster
-
-    if not config['quiet']:
-        print "upgrading database (%s)" % (master_cfg.db['db_url'])
-    master = BuildMaster(config['basedir'])
-    master.config = master_cfg
-    db = connector.DBConnector(master, basedir=config['basedir'])
-
-    yield db.setup(check_version=False, verbose=not config['quiet'])
-    yield db.model.upgrade()
-
-    if not config['quiet']: print "upgrade complete"
-    defer.returnValue(0)
 
 
 class CreateMasterOptions(BasedirMixin, base.SubcommandOptions):
@@ -1039,7 +903,8 @@ def run():
         from buildbot.scripts import create_master
         create_master.createMaster(so)
     elif command == "upgrade-master":
-        upgradeMaster(so)
+        from buildbot.scripts import upgrade_master
+        sys.exit(upgrade_master.upgradeMaster(so))
     elif command == "start":
         from buildbot.scripts.startup import start
 
