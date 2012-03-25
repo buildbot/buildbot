@@ -15,12 +15,14 @@
 
 import mock
 from zope.interface import implements
+from twisted.internet import defer
 from twisted.trial import unittest
 from twisted.python import components
 from buildbot.process.properties import PropertyMap, Properties, WithProperties
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Property, PropertiesMixin
 from buildbot.interfaces import IRenderable, IProperties
+from buildbot.test.util.config import ConfigErrorsMixin
 
 class FakeProperties(object):
     def __init__(self, **kwargs):
@@ -60,6 +62,23 @@ class FakeBuild(PropertiesMixin):
         if codebase in self.sources:
             return self.sources[codebase]
         return None
+
+class FakeRenderable(object):
+    implements(IRenderable)
+    def __init__(self, value):
+        self.value = value
+    def getRenderingFor(self, props):
+        return self.value
+
+class DeferredRenderable:
+    implements (IRenderable)
+    def __init__(self):
+        self.d = defer.Deferred()
+    def getRenderingFor(self, build):
+        return self.d
+    def callback(self, value):
+        self.d.callback(value)
+
         
 components.registerAdapter(
         lambda build : IProperties(build.properties),
@@ -278,15 +297,51 @@ class TestPropertyMap(unittest.TestCase):
         self.assertEqual(self.pm['prop_nosuch:+set'], 'set')
 
 
+class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
+    """
+    Test that Interpolate reports erros in the interpolation string
+    at configure time.
+    """
+
+    def test_invalid_params(self):
+        """
+        Test that Interpolate rejects strings with both positional and keyword
+        substitutionss.
+        """
+        self.assertRaises(ValueError, lambda :
+                Interpolate("%s %(foo)s", 1, foo=2))
+    test_invalid_params.skip = "Don't know how to test this."
+
+    def test_positional_string_keyword_args(self):
+        """
+        """
+        self.assertRaisesConfigError("keyword arguments passed to Interpolate "
+                "but uses postional substitutions",
+                lambda: Interpolate("%s", kwarg="test"))
+    test_positional_string_keyword_args.skip = "Don't know how to test this."
+
+    def test_invalid_selector(self):
+        self.assertRaisesConfigError("invalid Interpolate selector 'garbage'",
+                lambda: Interpolate("%(garbage:test)s"))
+
+    def test_no_selector(self):
+        self.assertRaisesConfigError("invalid Interpolate substitution without selector 'garbage'",
+                lambda: Interpolate("%(garbage)s"))
+
+    def test_invalid_default_type(self):
+        self.assertRaisesConfigError("invalid Interpolate default type '@'",
+                lambda: Interpolate("%(prop:some_prop:@wacky)s"))
+
+    def test_nested_invalid_selector(self):
+        self.assertRaisesConfigError("invalid Interpolate selector 'garbage'",
+                lambda: Interpolate("%(prop:some_prop:~%(garbage:test)s)s"))
+
+
+
 class TestInterpolateProperties(unittest.TestCase):
     def setUp(self):
         self.props = Properties()
         self.build = FakeBuild(self.props)
-
-    def test_invalid_params(self):
-        self.assertRaises(ValueError, lambda :
-                Interpolate("%s %(foo)s", 1, foo=2))
-
     def test_properties(self):
         self.props.setProperty("buildername", "winbld", "test")
         command = Interpolate("echo buildby-%(prop:buildername)s")
@@ -331,6 +386,43 @@ class TestInterpolateProperties(unittest.TestCase):
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                              "echo projectdefined")
+        return d
+
+    def test_property_renderable(self):
+        self.props.setProperty("project", FakeRenderable('testing'), "test")
+        command = Interpolate("echo '%(prop:project)s'")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                            "echo 'testing'")
+        return d
+
+    def test_property_deferred(self):
+        renderable = DeferredRenderable()
+        self.props.setProperty("project", renderable, "test")
+        command = Interpolate("echo '%(prop:project)s'")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                            "echo 'testing'")
+        renderable.callback('testing')
+        return d
+
+    def test_nested_property(self):
+        self.props.setProperty("project", "so long!", "test")
+        command = Interpolate("echo '%(prop:missing:~%(prop:project)s)s'")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                            "echo 'so long!'")
+        return d
+
+    def test_nested_property_deferred(self):
+        renderable = DeferredRenderable()
+        self.props.setProperty("missing", renderable, "test")
+        self.props.setProperty("project", "so long!", "test")
+        command = Interpolate("echo '%(prop:missing:~%(prop:project)s)s'")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                            "echo 'so long!'")
+        renderable.callback(False)
         return d
 
 class TestInterpolateSrc(unittest.TestCase):
@@ -490,6 +582,13 @@ class TestInterpolateKwargs(unittest.TestCase):
         return d
 
     def test_kwarg_colon_minus_not_available(self):
+        command = Interpolate("echo %(kw:repository)s", project = "projectA")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                             "echo ")
+        return d
+
+    def test_kwarg_colon_minus_not_available_default(self):
         command = Interpolate("echo %(kw:repository:-cvs://A..)s", project = "projectA")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
@@ -545,6 +644,22 @@ class TestInterpolateKwargs(unittest.TestCase):
                              "echo 'default'")
         return d
 
+    def test_kwargs_renderable(self):
+        command = Interpolate("echo '%(kw:test)s'", test = FakeRenderable('testing'))
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                            "echo 'testing'")
+        return d
+
+    def test_kwargs_deferred(self):
+        renderable = DeferredRenderable()
+        command = Interpolate("echo '%(kw:test)s'", test = renderable)
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                            "echo 'testing'")
+        renderable.callback('testing')
+        return d
+
 class TestWithProperties(unittest.TestCase):
 
     def setUp(self):
@@ -562,6 +677,7 @@ class TestWithProperties(unittest.TestCase):
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                              "build-47.tar.gz")
+        return d
 
     def testDict(self):
         # test dict-style substitution with WithProperties
@@ -570,6 +686,7 @@ class TestWithProperties(unittest.TestCase):
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                              "build-foo.tar.gz")
+        return d
 
     def testDictColonMinus(self):
         # test dict-style substitution with WithProperties
@@ -578,6 +695,7 @@ class TestWithProperties(unittest.TestCase):
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                              "build-foo-empty.tar.gz")
+        return d
 
     def testDictColonPlus(self):
         # test dict-style substitution with WithProperties
@@ -586,6 +704,7 @@ class TestWithProperties(unittest.TestCase):
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                              "build-exists-.tar.gz")
+        return d
 
     def testEmpty(self):
         # None should render as ''
@@ -594,6 +713,7 @@ class TestWithProperties(unittest.TestCase):
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                              "build-.tar.gz")
+        return d
 
     def testRecursiveList(self):
         self.props.setProperty("x", 10, "test")
@@ -603,6 +723,7 @@ class TestWithProperties(unittest.TestCase):
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                              ["10 20", "and", "20 10"])
+        return d
 
     def testRecursiveTuple(self):
         self.props.setProperty("x", 10, "test")
@@ -612,6 +733,7 @@ class TestWithProperties(unittest.TestCase):
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                              ("10 20", "and", "20 10"))
+        return d
 
     def testRecursiveDict(self):
         self.props.setProperty("x", 10, "test")
@@ -621,23 +743,27 @@ class TestWithProperties(unittest.TestCase):
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                              {"10 20" : "20 10"})
+        return d
 
     def testLambdaSubst(self):
         command = WithProperties('%(foo)s', foo=lambda _: 'bar')
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual, 'bar')
+        return d
 
     def testLambdaHasattr(self):
         command = WithProperties('%(foo)s',
                 foo=lambda b : b.hasProperty('x') and 'x' or 'y')
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual, 'y')
+        return d
 
     def testLambdaOverride(self):
         self.props.setProperty('x', 10, 'test')
         command = WithProperties('%(x)s', x=lambda _: 20)
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual, '20')
+        return d
 
     def testLambdaCallable(self):
         self.assertRaises(ValueError, lambda: WithProperties('%(foo)s', foo='bar'))
@@ -648,6 +774,7 @@ class TestWithProperties(unittest.TestCase):
         command = WithProperties('%(z)s', z=lambda props: props.getProperty('x') + props.getProperty('y'))
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual, '30')
+        return d
 
 class TestProperties(unittest.TestCase):
     def setUp(self):
@@ -786,6 +913,7 @@ class TestProperties(unittest.TestCase):
         self.props.setProperty('x', 'y', 'test')
         d = self.props.render(FakeRenderable())
         d.addCallback(self.assertEqual, 'yz')
+        return d
 
 
 class MyPropertiesThing(PropertiesMixin):
@@ -836,7 +964,6 @@ class TestPropertiesMixin(unittest.TestCase):
         self.mp.render([1,2])
         self.mp.properties.render.assert_called_with([1,2])
 
-
 class TestProperty(unittest.TestCase):
 
     def setUp(self):
@@ -850,6 +977,7 @@ class TestProperty(unittest.TestCase):
         d = self.build.render(value)
         d.addCallback(self.failUnlessEqual,
                 1)
+        return d
 
     def testStringProperty(self):
         self.props.setProperty("do-tests", "string", "scheduler")
@@ -858,6 +986,7 @@ class TestProperty(unittest.TestCase):
         d = self.build.render(value)
         d.addCallback(self.failUnlessEqual,
                 "string")
+        return d
 
     def testMissingProperty(self):
         value = Property("do-tests")
@@ -865,6 +994,7 @@ class TestProperty(unittest.TestCase):
         d = self.build.render(value)
         d.addCallback(self.failUnlessEqual,
                 None)
+        return d
 
     def testDefaultValue(self):
         value = Property("do-tests", default="Hello!")
@@ -872,6 +1002,7 @@ class TestProperty(unittest.TestCase):
         d = self.build.render(value)
         d.addCallback(self.failUnlessEqual,
                 "Hello!")
+        return d
 
     def testDefaultValueNested(self):
         self.props.setProperty("xxx", 'yyy', "scheduler")
@@ -881,6 +1012,7 @@ class TestProperty(unittest.TestCase):
         d = self.build.render(value)
         d.addCallback(self.failUnlessEqual,
                 "a-yyy-b")
+        return d
 
     def testIgnoreDefaultValue(self):
         self.props.setProperty("do-tests", "string", "scheduler")
@@ -889,6 +1021,7 @@ class TestProperty(unittest.TestCase):
         d = self.build.render(value)
         d.addCallback(self.failUnlessEqual,
                 "string")
+        return d
 
     def testIgnoreFalseValue(self):
         self.props.setProperty("do-tests-string", "", "scheduler")
@@ -904,6 +1037,7 @@ class TestProperty(unittest.TestCase):
         d = self.build.render(value)
         d.addCallback(self.failUnlessEqual,
                 ["Hello!"] * 4)
+        return d
 
     def testDefaultWhenFalse(self):
         self.props.setProperty("do-tests-string", "", "scheduler")
@@ -919,3 +1053,23 @@ class TestProperty(unittest.TestCase):
         d = self.build.render(value)
         d.addCallback(self.failUnlessEqual,
                 ["", 0, [], None])
+        return d
+
+    def testDeferredDefault(self):
+        default = DeferredRenderable()
+        value = Property("no-such-property", default)
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
+                "default-value")
+        default.callback("default-value")
+        return d
+
+    def testDeferredDefault(self):
+        prop = DeferredRenderable()
+        self.props.setProperty("test-defer", prop, "test")
+        value = Property("test-defer")
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
+                "deferred!")
+        prop.callback("deferred!")
+        return d
