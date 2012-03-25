@@ -159,47 +159,6 @@ class StopOptions(BasedirMixin, base.SubcommandOptions):
     def getSynopsis(self):
         return "Usage:    buildbot stop [<basedir>]"
 
-def stop(config, signame="TERM", wait=False):
-    import signal
-    basedir = config['basedir']
-    quiet = config['quiet']
-
-    if not base.isBuildmasterDir(config['basedir']):
-        print "not a buildmaster directory"
-        sys.exit(1)
-
-    os.chdir(basedir)
-    try:
-        with open("twistd.pid", "rt") as f:
-            pid = int(f.read().strip())
-    except:
-        raise BuildbotNotRunningError
-    signum = getattr(signal, "SIG"+signame)
-    timer = 0
-    try:
-        os.kill(pid, signum)
-    except OSError, e:
-        if e.errno != 3:
-            raise
-
-    if not wait:
-        if not quiet:
-            print "sent SIG%s to process" % signame
-        return
-    time.sleep(0.1)
-    while timer < 10:
-        # poll once per second until twistd.pid goes away, up to 10 seconds
-        try:
-            os.kill(pid, 0)
-        except OSError:
-            if not quiet:
-                print "buildbot process %d is dead" % pid
-            return
-        timer += 1
-        time.sleep(1)
-    if not quiet:
-        print "never saw process go away"
-
 class RestartOptions(BasedirMixin, base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
@@ -215,14 +174,14 @@ def restart(config):
         print "not a buildmaster directory"
         sys.exit(1)
 
-    from buildbot.scripts.startup import start
+    from buildbot.scripts import stop, startup
     try:
-        stop(config, wait=True)
+        stop.stop(config, wait=True)
     except BuildbotNotRunningError:
         pass
     if not quiet:
         print "now restarting buildbot process.."
-    start(config)
+    startup.start(config)
 
 class StartOptions(BasedirMixin, base.SubcommandOptions):
     optFlags = [
@@ -914,13 +873,8 @@ def run():
 
         start(so)
     elif command == "stop":
-        try:
-            stop(so, wait=True)
-        except BuildbotNotRunningError:
-            if not so['quiet']:
-                print "buildmaster not running"
-            sys.exit(0)
-
+        from buildbot.scripts import stop
+        sys.exit(stop.stop(so, wait=True))
     elif command == "restart":
         restart(so)
     elif command == "reconfig" or command == "sighup":
