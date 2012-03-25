@@ -847,13 +847,8 @@ def run():
         from buildbot.scripts import upgrade_master
         sys.exit(upgrade_master.upgradeMaster(so))
     elif command == "start":
-        from buildbot.scripts.startup import start
-
-        if not base.isBuildmasterDir(so['basedir']):
-            print "not a buildmaster directory"
-            sys.exit(1)
-
-        start(so)
+        from buildbot.scripts.start import start
+        sys.exit(start(so))
     elif command == "stop":
         from buildbot.scripts import stop
         sys.exit(stop.stop(so, wait=True))

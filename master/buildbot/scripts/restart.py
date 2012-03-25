@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.scripts import base, stop, startup
+from buildbot.scripts import base, stop, start
 
 def restart(config):
     basedir = config['basedir']
@@ -27,4 +27,4 @@ def restart(config):
         return 1
     if not quiet:
         print "now restarting buildbot process.."
-    return startup.start(config)
+    return start.start(config)

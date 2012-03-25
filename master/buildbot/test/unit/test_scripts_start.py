@@ -17,7 +17,7 @@ from __future__ import with_statement
 
 import os
 from twisted.trial import unittest
-from buildbot.scripts import restart, stop, start
+from buildbot.scripts import start
 from buildbot.test.util import dirs, misc
 
 def mkconfig(**kwargs):
@@ -25,12 +25,26 @@ def mkconfig(**kwargs):
     config.update(kwargs)
     return config
 
-class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
+fake_master_tac = """\
+from twisted.application import service
+from twisted.python import log
+from twisted.internet import reactor
+application = service.Application('highscore')
+class App(service.Service):
+    def startService(self):
+        log.msg("BuildMaster is running") # heh heh heh
+        reactor.callLater(0, reactor.stop)
+app = App()
+app.setServiceParent(application)
+# isBuildmasterDir wants to see this -> Application('buildmaster')
+"""
+
+class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpDirs('basedir')
         with open(os.path.join('basedir', 'buildbot.tac'), 'wt') as f:
-            f.write("Application('buildmaster')")
+            f.write(fake_master_tac)
         self.setUpStdoutAssertions()
 
     def tearDown(self):
@@ -38,27 +52,12 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     # tests
 
-    def test_restart_not_basedir(self):
-        self.assertEqual(restart.restart(mkconfig(basedir='doesntexist')), 1)
+    def test_start_not_basedir(self):
+        self.assertEqual(start.start(mkconfig(basedir='doesntexist')), 1)
         self.assertStdout('not a buildmaster directory')
 
-    def test_restart_stop_fails(self):
-        self.patch(stop, 'stop', lambda config, wait : 1)
-        self.assertEqual(restart.restart(mkconfig()), 1)
-
-    def test_restart_stop_succeeds_start_fails(self):
-        self.patch(stop, 'stop', lambda config, wait : 0)
-        self.patch(start, 'start', lambda config : 1)
-        self.assertEqual(restart.restart(mkconfig()), 1)
-
-    def test_restart_succeeds(self):
-        self.patch(stop, 'stop', lambda config, wait : 0)
-        self.patch(start, 'start', lambda config : 0)
-        self.assertEqual(restart.restart(mkconfig()), 0)
-        self.assertStdout('now restarting')
-
-    def test_restart_succeeds_quiet(self):
-        self.patch(stop, 'stop', lambda config, wait : 0)
-        self.patch(start, 'start', lambda config : 0)
-        self.assertEqual(restart.restart(mkconfig(quiet=True)), 0)
-        self.assertWasQuiet()
+    # the remainder of this script does obscene things:
+    #  - forks
+    #  - shells out to tail
+    #  - starts and stops the reactor
+    # so testing it will be *far* more pain than is worthwhile
