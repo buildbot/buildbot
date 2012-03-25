@@ -133,6 +133,8 @@ class UserNameParameter(StringParameter):
         BaseParameter.__init__(self, name, label, **kw)
 
     def parse_from_arg(self, s):
+        if not s and not self.required:
+            return s
         if self.need_email:
             e = email_utils.parseaddr(s)
             if e[0]=='' or e[1] == '':
@@ -198,7 +200,7 @@ class AnyPropertyParameter(BaseParameter):
 class ForceScheduler(base.BaseScheduler):
     
     compare_attrs = ( 'name', 'builderNames', 'branch', 'reason',
-            'revision','repository','project', 'properties' )
+            'revision', 'repository', 'project', 'forcedProperties' )
 
     def __init__(self, name, builderNames,
             branch=StringParameter(name="branch",default=""), 

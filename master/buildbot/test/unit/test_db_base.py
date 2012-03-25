@@ -76,7 +76,7 @@ class TestCachedDecorator(unittest.TestCase):
 
     # tests
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_cached(self):
         # attach it to the connector
         connector = mock.Mock(name="connector")
@@ -86,20 +86,14 @@ class TestCachedDecorator(unittest.TestCase):
         comp = self.TestConnectorComponent(connector)
 
         # test it twice (to test an implementation detail)
-        wfd = defer.waitForDeferred(
-            comp.getThing("foo"))
-        yield wfd
-        res1 = wfd.getResult()
+        res1 = yield comp.getThing("foo")
 
-        wfd = defer.waitForDeferred(
-            comp.getThing("bar"))
-        yield wfd
-        res2 = wfd.getResult()
+        res2 = yield comp.getThing("bar")
 
         self.assertEqual((res1, res2, comp.invocations),
                     ('foofoo', 'barbar', ['foo', 'bar']))
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_cached_no_cache(self):
         # attach it to the connector
         connector = mock.Mock(name="connector")
@@ -109,7 +103,4 @@ class TestCachedDecorator(unittest.TestCase):
         # build an instance
         comp = self.TestConnectorComponent(connector)
 
-        wfd = defer.waitForDeferred(
-            comp.getThing("foo", no_cache=1))
-        yield wfd
-        wfd.getResult()
+        yield comp.getThing("foo", no_cache=1)

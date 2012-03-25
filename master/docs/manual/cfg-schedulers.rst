@@ -443,7 +443,7 @@ The full list of parameters is:
     This defaults to \*, meaning every hour.
 
 ``dayOfMonth``
-    The day of the month to start a build.  This defauls to ``*``, meaning
+    The day of the month to start a build.  This defaults to ``*``, meaning
     every day.
 
 ``month``
@@ -451,7 +451,7 @@ The full list of parameters is:
     to \*, meaning every month.
 
 ``dayOfWeek``
-    The day of the week to start a build, with Monday = 0.  This defauls
+    The day of the week to start a build, with Monday = 0.  This defaults
     to \*, meaning every day of the week.
 
 For example, the following master.cfg clause will cause a build to be
@@ -613,7 +613,7 @@ with it.
 
     Patches in the jobdir are encoded using netstrings, which place an
     arbitrary upper limit on patch size of 99999 bytes.  If your submitted try
-    jobs are rejected with `BadJobFile`, try increasing this limit with a
+    jobs are rejected with `BadJobfile`, try increasing this limit with a
     snippet like this in your `master.cfg`::
 
         from twisted.protocols.basic import NetstringReceiver

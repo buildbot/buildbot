@@ -192,7 +192,7 @@ class JsonResource(resource.Resource):
         d.addCallbacks(ok, fail)
         return server.NOT_DONE_YET
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def content(self, request):
         """Renders the json dictionaries."""
         # Supported flags.
@@ -230,11 +230,8 @@ class JsonResource(resource.Resource):
                 # some asDict methods return a Deferred, so handle that
                 # properly
                 if hasattr(child, 'asDict'):
-                    wfd = defer.waitForDeferred(
-                            defer.maybeDeferred(lambda :
-                                child.asDict(request)))
-                    yield wfd
-                    child_dict = wfd.getResult()
+                    child_dict = yield defer.maybeDeferred(lambda :
+                                                child.asDict(request))
                 else:
                     child_dict = {
                         'error' : 'Not available',
@@ -244,11 +241,7 @@ class JsonResource(resource.Resource):
                 request.prepath = prepath
                 request.postpath = postpath
         else:
-            wfd = defer.waitForDeferred(
-                    defer.maybeDeferred(lambda :
-                        self.asDict(request)))
-            yield wfd
-            data = wfd.getResult()
+            data = yield defer.maybeDeferred(lambda : self.asDict(request))
 
         if filter_out:
             data = FilterOut(data)
@@ -261,9 +254,9 @@ class JsonResource(resource.Resource):
             callback = callback[0]
             if re.match(r'^[a-zA-Z$][a-zA-Z$0-9.]*$', callback):
                 data = '%s(%s);' % (callback, data)
-        yield data
+        defer.returnValue(data)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def asDict(self, request):
         """Generates the json dictionary.
 
@@ -273,13 +266,10 @@ class JsonResource(resource.Resource):
             for name in self.children:
                 child = self.getChildWithDefault(name, request)
                 if isinstance(child, JsonResource):
-                    wfd = defer.waitForDeferred(
-                            defer.maybeDeferred(lambda :
-                                child.asDict(request)))
-                    yield wfd
-                    data[name] = wfd.getResult()
+                    data[name] = yield defer.maybeDeferred(lambda :
+                                            child.asDict(request))
                 # else silently pass over non-json resources.
-            yield data
+            defer.returnValue(data)
         else:
             raise NotImplementedError()
 

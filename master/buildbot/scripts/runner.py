@@ -245,6 +245,22 @@ class Maker:
                 with open(source, "rt") as i:
                     f.write(i.read())
 
+    def templates_dir(self, files):
+        template_dir = os.path.join(self.basedir, "templates")
+        if os.path.exists(template_dir):
+            if not self.quiet:
+                print "templates/ already exists: not replacing"
+            return
+        else:
+            os.mkdir(template_dir)
+        if not self.quiet:
+            print "populating templates/"
+        for target, source in files.iteritems():
+            target = os.path.join(template_dir, target)
+            with open(target, "wt") as f:
+                with open(source, "rt") as i:
+                    f.write(i.read())
+
     def create_db(self):
         from buildbot.db import connector
         from buildbot.master import BuildMaster
@@ -260,7 +276,7 @@ class Maker:
         master = BuildMaster(self.basedir)
         master.config = master_cfg
         db = connector.DBConnector(master, self.basedir)
-        d = db.setup(check_version=False)
+        d = db.setup(check_version=False, verbose=not self.config['quiet'])
         if not self.config['quiet']:
             print "creating database (%s)" % (master_cfg.db['db_url'],)
         d = db.model.upgrade()
@@ -313,8 +329,11 @@ class Maker:
                 print "populating public_html/"
             os.mkdir(webdir)
         for target, source in files.iteritems():
-            self.populate_if_missing(os.path.join(webdir, target),
-                                 source)
+            try:
+                self.populate_if_missing(os.path.join(webdir, target),
+                                     source)
+            except IOError:
+                print "Can't write '%s'." % (target,)
 
     def check_master_cfg(self, expected_db_url=None):
         """Check the buildmaster configuration, returning an exit status (so
@@ -369,7 +388,7 @@ class UpgradeMasterOptions(MakerBase):
     """
 
 @in_reactor
-@defer.deferredGenerator
+@defer.inlineCallbacks
 def upgradeMaster(config):
     from buildbot import config as config_module
     from buildbot import monkeypatches
@@ -378,6 +397,7 @@ def upgradeMaster(config):
     monkeypatches.patch_all()
 
     m = Maker(config)
+    m.chdir()
     basedir = os.path.expanduser(config['basedir'])
 
     if runtime.platformType != 'win32': # no pids on win32
@@ -385,7 +405,7 @@ def upgradeMaster(config):
         pidfile = os.path.join(basedir, 'twistd.pid')
         if os.path.exists(pidfile):
             print "'%s' exists - is this master still running?" % (pidfile,)
-            yield 1
+            defer.returnValue(1)
             return
 
     if not config['quiet']: print "checking master.cfg"
@@ -396,19 +416,18 @@ def upgradeMaster(config):
         print "Errors loading configuration:"
         for msg in e.errors:
             print "  " + msg
-        yield 1
+        defer.returnValue(1)
         return
     except:
         print "Errors loading configuration:"
         traceback.print_exc()
-        yield 1
+        defer.returnValue(1)
         return
 
     if not config['quiet']: print "upgrading basedir"
     basedir = os.path.expanduser(config['basedir'])
     # TODO: check TAC file
     # check web files: index.html, default.css, robots.txt
-    m.chdir()
     m.upgrade_public_html({
             'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
             'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
@@ -431,18 +450,11 @@ def upgradeMaster(config):
     master.config = master_cfg
     db = connector.DBConnector(master, basedir=config['basedir'])
 
-    wfd = defer.waitForDeferred(
-            db.setup(check_version=False))
-    yield wfd
-    wfd.getResult()
-
-    wfd = defer.waitForDeferred(
-            db.model.upgrade())
-    yield wfd
-    wfd.getResult()
+    yield db.setup(check_version=False, verbose=not config['quiet'])
+    yield db.model.upgrade()
 
     if not config['quiet']: print "upgrade complete"
-    yield 0
+    defer.returnValue(0)
 
 
 class MasterOptions(MakerBase):
@@ -505,6 +517,10 @@ basedir = r'%(basedir)s'
 rotateLength = %(log-size)s
 maxRotatedFiles = %(log-count)s
 
+# Default umask for server
+umask = None
+
+
 # if this is a relocatable tac file, get the directory containing the TAC
 if basedir == '.':
     import os.path
@@ -528,7 +544,7 @@ except ImportError:
 """
 configfile = r'%(config)s'
 
-m = BuildMaster(basedir, configfile)
+m = BuildMaster(basedir, configfile, umask)
 m.setServiceParent(application)
 m.log_rotation.rotateLength = rotateLength
 m.log_rotation.maxRotatedFiles = maxRotatedFiles
@@ -547,6 +563,7 @@ def createMaster(config):
     else:
         masterTAC = "".join(masterTACTemplate)
     contents = masterTAC % config
+    
     m.makeTAC(contents)
     m.sampleconfig(util.sibpath(__file__, "sample.cfg"))
     m.public_html({
@@ -555,6 +572,9 @@ def createMaster(config):
           'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
           'favicon.ico' : util.sibpath(__file__, "../status/web/files/favicon.ico"),
       })
+    m.templates_dir({
+        'README.txt' : util.sibpath(__file__,"../status/web/files/templates_readme.txt"),
+    })
     d = m.create_db()
 
     def print_status(r):

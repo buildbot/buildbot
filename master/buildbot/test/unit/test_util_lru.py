@@ -154,17 +154,14 @@ class LRUCache(unittest.TestCase):
 
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_queue_collapsing(self):
         # just to check that we're practicing with the right queue size (so
         # QUEUE_SIZE_FACTOR is 10)
         self.assertEqual(self.lru.max_queue, 30)
 
         for c in 'a' + 'x' * 27 + 'ab':
-            wfd = defer.waitForDeferred(
-                    self.lru.get(c))
-            yield wfd
-            res = wfd.getResult()
+            res = yield self.lru.get(c)
         self.check_result(res, short('b'), 27, 3)
 
         # at this point, we should have 'x', 'a', and 'b' in the cache, and
@@ -172,32 +169,23 @@ class LRUCache(unittest.TestCase):
         self.assertEqual(len(self.lru.queue), 30)
 
         # This 'get' operation for an existing key should cause compaction
-        wfd = defer.waitForDeferred(
-                self.lru.get('b'))
-        yield wfd
-        res = wfd.getResult()
+        res = yield self.lru.get('b')
         self.check_result(res, short('b'), 28, 3)
 
         self.assertEqual(len(self.lru.queue), 3)
 
         # expect a cached short('a')
         self.lru.miss_fn = self.long_miss_fn
-        wfd = defer.waitForDeferred(
-                self.lru.get('a'))
-        yield wfd
-        res = wfd.getResult()
+        res = yield self.lru.get('a')
         self.check_result(res, short('a'), 29, 3)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_all_misses(self):
         for i, c in enumerate(string.lowercase + string.uppercase):
-            wfd = defer.waitForDeferred(
-                    self.lru.get(c))
-            yield wfd
-            res = wfd.getResult()
+            res = yield self.lru.get(c)
             self.check_result(res, short(c), 0, i+1)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_get_exception(self):
         def fail_miss_fn(k):
             return defer.fail(RuntimeError("oh noes"))
@@ -205,78 +193,51 @@ class LRUCache(unittest.TestCase):
 
         got_exc = False
         try:
-            wfd = defer.waitForDeferred(
-                    self.lru.get('abc'))
-            yield wfd
-            wfd.getResult()
+            yield self.lru.get('abc')
         except RuntimeError:
             got_exc = True
 
         self.assertEqual(got_exc, True)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_all_hits(self):
-        wfd = defer.waitForDeferred(
-                self.lru.get('a'))
-        yield wfd
-        res = wfd.getResult()
+        res = yield self.lru.get('a')
         self.check_result(res, short('a'), 0, 1)
 
         self.lru.miss_fn = self.long_miss_fn
         for i in xrange(100):
-            wfd = defer.waitForDeferred(
-                    self.lru.get('a'))
-            yield wfd
-            res = wfd.getResult()
+            res = yield self.lru.get('a')
             self.check_result(res, short('a'), i+1, 1)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_weakrefs(self):
-        wfd = defer.waitForDeferred(
-                self.lru.get('a'))
-        yield wfd
-        res_a = wfd.getResult()
+        res_a = yield self.lru.get('a')
         self.check_result(res_a, short('a'))
         # note that res_a keeps a reference to this value
 
-        wfd = defer.waitForDeferred(
-                self.lru.get('b'))
-        yield wfd
-        res_b = wfd.getResult()
+        res_b = yield self.lru.get('b')
         self.check_result(res_b, short('b'))
         del res_b # discard reference to b
 
         # blow out the cache and the queue
         self.lru.miss_fn = self.long_miss_fn
         for c in (string.lowercase[2:] * 5):
-            wfd = defer.waitForDeferred(
-                    self.lru.get(c))
-            yield wfd
-            wfd.getResult()
+            yield self.lru.get(c)
 
         # and fetch a again, expecting the cached value
-        wfd = defer.waitForDeferred(
-                self.lru.get('a'))
-        yield wfd
-        res = wfd.getResult()
+        res = yield self.lru.get('a')
         self.check_result(res, res_a, exp_refhits=1)
 
         # but 'b' should give us a new value
-        wfd = defer.waitForDeferred(
-                self.lru.get('b'))
-        yield wfd
-        res = wfd.getResult()
+        res = yield self.lru.get('b')
         self.check_result(res, long('b'), exp_refhits=1)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_fuzz(self):
         chars = list(string.lowercase * 40)
         random.shuffle(chars)
         for i, c in enumerate(chars):
-            wfd = defer.waitForDeferred(
-                    self.lru.get(c))
-            yield wfd
-            res = wfd.getResult()
+            res = yield self.lru.get(c)
             self.check_result(res, short(c))
 
     def test_massively_parallel(self):
@@ -337,12 +298,7 @@ class LRUCache(unittest.TestCase):
 
         def do_get(test_d, k):
             d = self.lru.get(k)
-            def cb(_):
-                self.fail("unexpected success")
-            def eb(f):
-                f.trap(RuntimeError)
-                pass # expected exception
-            d.addCallbacks(cb, eb)
+            self.assertFailure(d, RuntimeError)
             d.addCallbacks(test_d.callback, test_d.errback)
 
         ds = []
@@ -354,14 +310,11 @@ class LRUCache(unittest.TestCase):
         d = defer.gatherResults(ds)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_set_max_size(self):
         # load up the cache with three items
         for c in 'abc':
-            wfd = defer.waitForDeferred(
-                    self.lru.get(c))
-            yield wfd
-            res = wfd.getResult()
+            res = yield self.lru.get(c)
             self.check_result(res, short(c))
 
         # reset the size to 1
@@ -370,10 +323,7 @@ class LRUCache(unittest.TestCase):
 
         # and then expect that 'b' is no longer in the cache
         self.lru.miss_fn = self.long_miss_fn
-        wfd = defer.waitForDeferred(
-                self.lru.get('b'))
-        yield wfd
-        res = wfd.getResult()
+        res = yield self.lru.get('b')
         self.check_result(res, long('b'))
 
     def test_miss_fn_kwargs(self):
@@ -385,7 +335,7 @@ class LRUCache(unittest.TestCase):
         d.addCallback(self.check_result, set(['a', 'b']), 0, 1)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_miss_fn_returns_none(self):
         calls = []
         def none_miss_fn(k):
@@ -394,24 +344,13 @@ class LRUCache(unittest.TestCase):
         self.lru.miss_fn = none_miss_fn
 
         for i in range(2):
-            wfd = defer.waitForDeferred(
-                    self.lru.get('a'))
-            yield wfd
-            self.assertEqual(wfd.getResult(), None)
+            self.assertEqual((yield self.lru.get('a')), None)
 
         # check that the miss_fn was called twice
         self.assertEqual(calls, ['a', 'a'])
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_put(self):
-        wfd = defer.waitForDeferred(
-                self.lru.get('p'))
-        yield wfd
-        self.check_result(wfd.getResult(), short('p'))
-
+        self.assertEqual((yield self.lru.get('p')), short('p'))
         self.lru.put('p', set(['P2P2']))
-
-        wfd = defer.waitForDeferred(
-                self.lru.get('p'))
-        yield wfd
-        self.check_result(wfd.getResult(), set(['P2P2']))
+        self.assertEqual((yield self.lru.get('p')), set(['P2P2']))

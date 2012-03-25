@@ -26,17 +26,14 @@ class UserManagerManager(config.ReconfigurableServiceMixin,
         self.setName('user_manager_manager')
         self.master = master
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         # this is easy - kick out all of the old managers, and add the
         # new ones.
 
         for mgr in list(self):
-            wfd = defer.waitForDeferred(
-                defer.maybeDeferred(lambda :
-                    mgr.disownServiceParent()))
-            yield wfd
-            wfd.getResult()
+            yield defer.maybeDeferred(lambda :
+                    mgr.disownServiceParent())
             mgr.master = None
 
         for mgr in new_config.user_managers:
@@ -44,8 +41,5 @@ class UserManagerManager(config.ReconfigurableServiceMixin,
             mgr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing
-        wfd = defer.waitForDeferred(
-            config.ReconfigurableServiceMixin.reconfigService(self,
-                                                        new_config))
-        yield wfd
-        wfd.getResult()
+        yield config.ReconfigurableServiceMixin.reconfigService(self,
+                                                            new_config)

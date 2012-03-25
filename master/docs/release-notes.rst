@@ -14,11 +14,21 @@ Master
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* Buildbot master now requires at least Python-2.5 and Twisted-9.0.0.
+
+* Buildbot master requires ``python-dateutil`` version 1.5 to support the
+  Nightly scheduler.
 
 * The configurable callable build.workdir has changed his parameterlist. Instead
   of a single sourcestamp a list of sourcestamps is passed. Each sourcestamp in 
   the list has a different :ref:`codebase<Attr-Codebase>`
-  
+
+* BK support has been removed in this release - see :bb:bug:`2198`.
+
+* The undocumented renderable ``_ComputeRepositoryURL`` is no longer imported to
+  :py:mod:`buildbot.steps.source`. It is still available at
+  :py:mod:`buildbot.steps.source.oldsource`.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -31,6 +41,8 @@ Slave
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* BK support has been removed in this release - see :bb:bug:`2198`.
+
 Features
 ~~~~~~~~
 
@@ -40,7 +52,7 @@ Details
 For a more detailed description of the changes made in this version, see the
 git log itself:
 
-   git log buildbot-0.8.6..master
+   git log v0.8.6..master
 
 Older Versions
 --------------

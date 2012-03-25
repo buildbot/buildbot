@@ -20,7 +20,7 @@ from twisted.python import log
 from twisted.internet import defer
 
 from buildbot.process import buildstep
-from buildbot.steps.source import Source
+from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 
 class CVS(Source):
@@ -74,49 +74,38 @@ class CVS(Source):
         d.addErrback(self.failed)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def incremental(self):
-        wfd = defer.waitForDeferred(self._sourcedirIsUpdatable())
-        yield wfd
-        updatable = wfd.getResult()
+        updatable = yield self._sourcedirIsUpdatable()
         if updatable:
-            d = self.doUpdate()
+            rv = yield self.doUpdate()
         else:
-            d = self.doCheckout(self.workdir)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        yield wfd.getResult()
-        return
+            rv = yield self.doCheckout(self.workdir)
+        defer.returnValue(rv)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def full(self):
         if self.method == 'clobber':
-            wfd = defer.waitForDeferred(self.clobber())
-            yield wfd
-            yield wfd.getResult()
+            rv = yield self.clobber()
+            defer.returnValue(rv)
             return
 
         elif self.method == 'copy':
-            wfd = defer.waitForDeferred(self.copy())
-            yield wfd
-            yield wfd.getResult()
+            rv = yield self.copy()
+            defer.returnValue(rv)
             return
 
-        wfd = defer.waitForDeferred(self._sourcedirIsUpdatable())
-        yield wfd
-        updatable = wfd.getResult()
+        updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
             log.msg("CVS repo not present, making full checkout")
-            d = self.doCheckout(self.workdir)
+            rv = yield self.doCheckout(self.workdir)
         elif self.method == 'clean':
-            d = self.clean()
+            rv = yield self.clean()
         elif self.method == 'fresh':
-            d = self.fresh()
+            rv = yield self.fresh()
         else:
             raise ValueError("Unknown method, check your configuration")
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        yield wfd.getResult()
+        defer.returnValue(rv)
 
     def clobber(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,

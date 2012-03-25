@@ -435,9 +435,9 @@ class MailNotifier(base.StatusReceiverMultiService):
             return self.buildMessage(name, [build], results)
         return None
     
-    def _gotBuilds(self, res, builddicts, buildset, builders):
+    def _gotBuilds(self, res, buildset):
         builds = []
-        for (builddictlist, builder) in zip(builddicts, builders):
+        for (builddictlist, builder) in res:
                 for builddict in builddictlist:
                     build = builder.getBuild(builddict['number'])
                     if build is not None and self.isMailNeeded(build, build.results):
@@ -447,17 +447,15 @@ class MailNotifier(base.StatusReceiverMultiService):
                           buildset['results'])
         
     def _gotBuildRequests(self, breqs, buildset):
-        builddicts = []
-        builders =[]
         dl = []
         for breq in breqs:
             buildername = breq['buildername']
-            builders.append(self.master_status.getBuilder(buildername))
+            builder = self.master_status.getBuilder(buildername)
             d = self.parent.db.builds.getBuildsForRequest(breq['brid'])
-            d.addCallback(builddicts.append)
+            d.addCallback(lambda builddictlist: (builddictlist, builder))
             dl.append(d)
-        d = defer.DeferredList(dl)
-        d.addCallback(self._gotBuilds, builddicts, buildset, builders)
+        d = defer.gatherResults(dl)
+        d.addCallback(self._gotBuilds, buildset)
 
     def _gotBuildSet(self, buildset, bsid):
         d = self.parent.db.buildrequests.getBuildRequests(bsid=bsid)

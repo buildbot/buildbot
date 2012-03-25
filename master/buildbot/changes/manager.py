@@ -39,7 +39,7 @@ class ChangeManager(config.ReconfigurableServiceMixin, service.MultiService):
         self.setName('change_manager')
         self.master = master
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         timer = metrics.Timer("ChangeManager.reconfigService")
         timer.start()
@@ -53,11 +53,8 @@ class ChangeManager(config.ReconfigurableServiceMixin, service.MultiService):
                     (len(added), len(removed)))
 
             for src in removed:
-                wfd = defer.waitForDeferred(
-                    defer.maybeDeferred(
-                        src.disownServiceParent))
-                yield wfd
-                wfd.getResult()
+                yield defer.maybeDeferred(
+                        src.disownServiceParent)
                 src.master = None
 
             for src in added:
@@ -69,10 +66,7 @@ class ChangeManager(config.ReconfigurableServiceMixin, service.MultiService):
         metrics.MetricCountEvent.log("num_sources", num_sources, absolute=True)
 
         # reconfig any newly-added change sources, as well as existing
-        wfd = defer.waitForDeferred(
-            config.ReconfigurableServiceMixin.reconfigService(self,
-                                                        new_config))
-        yield wfd
-        wfd.getResult()
+        yield config.ReconfigurableServiceMixin.reconfigService(self,
+                                                        new_config)
 
         timer.stop()

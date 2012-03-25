@@ -25,7 +25,8 @@ except ImportError:
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.python import log
-from buildbot.process.buildstep import RemoteCommand, BuildStep
+from buildbot.process import buildstep
+from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE, SKIPPED
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.util import json
@@ -164,16 +165,17 @@ class _DirectoryWriter(_FileWriter):
             tarfile.TarFile.extractall = _extractall
 
         # Unpack archive and clean up after self
-        with tarfile.open(name=self.tarname, mode=mode) as archive:
-            archive.extractall(path=self.destroot)
+        archive = tarfile.open(name=self.tarname, mode=mode)
+        archive.extractall(path=self.destroot)
+        archive.close()
         os.remove(self.tarname)
 
 
-class StatusRemoteCommand(RemoteCommand):
-    def __init__(self, step, remote_command, args):
-        RemoteCommand.__init__(self, remote_command, args)
-        callback = lambda arg: step.step_status.addLog('stdio')
-        self.useLogDelayed('stdio', callback, True)
+def makeStatusRemoteCommand(step, remote_command, args):
+    self = buildstep.RemoteCommand(remote_command, args)
+    callback = lambda arg: step.step_status.addLog('stdio')
+    self.useLogDelayed('stdio', callback, True)
+    return self
 
 class _TransferBuildStep(BuildStep):
     """
@@ -288,7 +290,7 @@ class FileUpload(_TransferBuildStep):
             'keepstamp': self.keepstamp,
             }
 
-        self.cmd = StatusRemoteCommand(self, 'uploadFile', args)
+        self.cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
         d = self.runCommand(self.cmd)
         @d.addErrback
         def cancel(res):
@@ -361,7 +363,7 @@ class DirectoryUpload(_TransferBuildStep):
             'compress': self.compress
             }
 
-        self.cmd = StatusRemoteCommand(self, 'uploadDirectory', args)
+        self.cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
         d = self.runCommand(self.cmd)
         @d.addErrback
         def cancel(res):
@@ -375,8 +377,6 @@ class DirectoryUpload(_TransferBuildStep):
         # the rest
         if result == SKIPPED:
             return BuildStep.finished(self, SKIPPED)
-        if self.cmd.stderr != '':
-            self.addCompleteLog('stderr', self.cmd.stderr)
 
         if self.cmd.rc is None or self.cmd.rc == 0:
             return BuildStep.finished(self, SUCCESS)
@@ -485,7 +485,7 @@ class FileDownload(_TransferBuildStep):
             'mode': self.mode,
             }
 
-        self.cmd = StatusRemoteCommand(self, 'downloadFile', args)
+        self.cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 
@@ -545,7 +545,7 @@ class StringDownload(_TransferBuildStep):
             'mode': self.mode,
             }
 
-        self.cmd = StatusRemoteCommand(self, 'downloadFile', args)
+        self.cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 

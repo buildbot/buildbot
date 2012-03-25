@@ -1033,15 +1033,12 @@ class ReconfigurableServiceMixin(unittest.TestCase):
             self.assertTrue(svc.called)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_service_failure(self):
         svc = FakeService()
         svc.succeed = False
         try:
-            wfd = defer.waitForDeferred(
-                svc.reconfigService(mock.Mock()))
-            yield wfd
-            wfd.getResult()
+            yield svc.reconfigService(mock.Mock())
         except ValueError:
             pass
         else:
@@ -1085,17 +1082,14 @@ class ReconfigurableServiceMixin(unittest.TestCase):
         return d
 
     @compat.usesFlushLoggedErrors
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_multiservice_nested_failure(self):
         svc = FakeMultiService()
         ch1 = FakeService()
         ch1.setServiceParent(svc)
         ch1.succeed = False
         try:
-            wfd = defer.waitForDeferred(
-                svc.reconfigService(mock.Mock()))
-            yield wfd
-            wfd.getResult()
+            yield svc.reconfigService(mock.Mock())
         except ValueError:
             pass
         else:

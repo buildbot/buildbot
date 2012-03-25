@@ -162,22 +162,16 @@ class ConsoleStatusResource(HtmlResource):
         debugInfo["source_fetch_len"] = len(allChanges)
         return allChanges                
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def getAllChanges(self, request, status, debugInfo):
         master = request.site.buildbot_service.master
 
-        wfd = defer.waitForDeferred(
-                master.db.changes.getRecentChanges(25))
-        yield wfd
-        chdicts = wfd.getResult()
+        chdicts = yield master.db.changes.getRecentChanges(25)
 
         # convert those to Change instances
-        wfd = defer.waitForDeferred(
-            defer.gatherResults([
+        allChanges = yield defer.gatherResults([
                 changes.Change.fromChdict(master, chdict)
-                for chdict in chdicts ]))
-        yield wfd
-        allChanges = wfd.getResult()
+                for chdict in chdicts ])
 
         allChanges.sort(key=self.comparator.getSortingKey())
 
@@ -191,7 +185,7 @@ class ConsoleStatusResource(HtmlResource):
             prevChange = change
         allChanges = newChanges
 
-        yield allChanges
+        defer.returnValue(allChanges)
 
     def getBuildDetails(self, request, builderName, build):
         """Returns an HTML list of failures for a given build."""

@@ -24,6 +24,7 @@ from twisted.python import log
 from twisted.python.procutils import which
 
 from buildbot.sourcestamp import SourceStamp
+from buildbot.util import json
 from buildbot.util import now
 from buildbot.status import builder
 
@@ -336,36 +337,43 @@ def getSourceStamp(vctype, treetop, branch=None, repository=None):
 def ns(s):
     return "%d:%s," % (len(s), s)
 
-def createJobfile(bsid, branch, baserev, patchlevel, diff, repository, 
-                  project, who, comment, builderNames):
-    
-    job = ""
-    
+
+def createJobfile(bsid, branch, baserev, patchlevel, diff, repository,
+                  project, who, comment, builderNames, properties):
     #Determine job file version from provided arguments
-    if comment:
+    if properties:
+        version = 5
+    elif comment:
         version = 4
     elif who:
         version = 3
     else:
         version = 2
-    
+    job = ""
     job += ns(str(version))
-    job += ns(bsid)
-    job += ns(branch)
-    job += ns(str(baserev))
-    job += ns("%d" % patchlevel)
-    job += ns(diff)
-    job += ns(repository)
-    job += ns(project)
-    
-    if (version >= 3):
-        job += ns(who)
-    if (version >= 4):
-        job += ns(comment)
-        
-    for bn in builderNames:
-        job += ns(bn)
- 
+    if version < 5:
+        job += ns(bsid)
+        job += ns(branch)
+        job += ns(str(baserev))
+        job += ns("%d" % patchlevel)
+        job += ns(diff)
+        job += ns(repository)
+        job += ns(project)
+        if (version >= 3):
+            job += ns(who)
+        if (version >= 4):
+            job += ns(comment)
+        for bn in builderNames:
+            job += ns(bn)
+    else:
+        job += ns(
+            json.dumps({
+                'bsid': bsid, 'branch': branch, 'baserev': str(baserev),
+                'patchlevel': "%d" % patchlevel, 'diff': diff,
+                'repository': repository, 'project': project, 'who': who,
+                'comment': comment, 'builderNames': builderNames,
+                'properties': properties,
+            }))
     return job
 
 def getTopdir(topfile, start=None):
@@ -508,11 +516,10 @@ class Try(pb.Referenceable):
             revspec = ss.revision
             if revspec is None:
                 revspec = ""
-            self.jobfile = createJobfile(self.bsid,
-                                         ss.branch or "", revspec,
-                                         patchlevel, diff, ss.repository,
-                                         self.project, self.who, self.comment,
-                                         self.builderNames)
+            self.jobfile = createJobfile(
+                self.bsid, ss.branch or "", revspec, patchlevel, diff,
+                ss.repository, self.project, self.who, self.comment,
+                self.builderNames, self.config.get('properties', {}))
 
     def fakeDeliverJob(self):
         # Display the job to be delivered, but don't perform delivery.

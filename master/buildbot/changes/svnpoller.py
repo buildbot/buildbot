@@ -346,13 +346,10 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
 
         return changes
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def submit_changes(self, changes):
         for chdict in changes:
-            wfd = defer.waitForDeferred(self.master.addChange(src='svn',
-                                                              **chdict))
-            yield wfd
-            wfd.getResult()
+            yield self.master.addChange(src='svn', **chdict)
 
     def finished_ok(self, res):
         if self.cachepath:

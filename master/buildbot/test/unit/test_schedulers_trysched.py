@@ -26,7 +26,9 @@ from twisted.trial import unittest
 from twisted.internet import defer
 
 from buildbot.schedulers import trysched
-from buildbot.test.util import scheduler, dirs
+from buildbot.test.util import dirs
+from buildbot.test.util import scheduler
+from buildbot.util import json
 
 class TryBase(unittest.TestCase):
 
@@ -95,8 +97,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         self.jobdir = os.path.abspath('jobdir')
         if os.path.exists(self.jobdir):
             shutil.rmtree(self.jobdir)
-        for subdir in 'new', 'cur':
-            os.makedirs(os.path.join(self.jobdir, subdir))
+        os.mkdir(self.jobdir)
 
         # build scheduler
         kwargs = dict(name="tsched", builderNames=['a'], jobdir=self.jobdir)
@@ -115,6 +116,11 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                 'jobdir',
                 os.path.abspath('basedir/jobdir'))
 
+    def test_startService_reldir_subdir(self):
+        return self.do_test_startService(
+                'jobdir',
+                os.path.abspath('basedir/jobdir/cur'))
+
     def test_startService_absdir(self):
         return self.do_test_startService(
                 os.path.abspath('jobdir'),
@@ -126,6 +132,22 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         sched = trysched.Try_Jobdir(name='tsched', builderNames=['a'], jobdir='foo')
         self.assertRaises(trysched.BadJobfile,
             lambda : sched.parseJob(StringIO.StringIO('')))
+
+    def test_parseJob_longer_than_netstring_MAXLENGTH(self):
+        sched = trysched.Try_Jobdir(name='tsched', builderNames=['a'], jobdir='foo')
+        jobstr = self.makeNetstring(
+            '1', 'extid', 'trunk', '1234', '1', 'this is my diff, -- ++, etc.',
+            'buildera', 'builderc'
+        )
+        jobstr += 'x' * 100000000
+
+        import tempfile
+        test_temp_file = tempfile.TemporaryFile()
+        test_temp_file.write(jobstr)
+        test_temp_file.seek(0,0)
+
+        self.assertRaises(trysched.BadJobfile,
+            lambda : sched.parseJob(test_temp_file))
 
     def test_parseJob_invalid(self):
         sched = trysched.Try_Jobdir(name='tsched', builderNames=['a'], jobdir='foo')
@@ -158,7 +180,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             'project': '',
             'who': '',
             'comment': '',
-            'repository': ''
+            'repository': '',
+            'properties': {},
         })
 
     def test_parseJob_v1_empty_branch_rev(self):
@@ -172,6 +195,24 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
         self.assertEqual(parsedjob['branch'], None)
         self.assertEqual(parsedjob['baserev'], None)
+
+    def test_parseJob_v1_no_builders(self):
+        sched = trysched.Try_Jobdir(
+            name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
+        jobstr = self.makeNetstring(
+            '1', 'extid', '', '', '1', 'this is my diff, -- ++, etc.'
+        )
+        parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
+        self.assertEqual(parsedjob['builderNames'], [])
+
+    def test_parseJob_v1_no_properties(self):
+        sched = trysched.Try_Jobdir(
+            name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
+        jobstr = self.makeNetstring(
+            '1', 'extid', '', '', '1', 'this is my diff, -- ++, etc.'
+        )
+        parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
+        self.assertEqual(parsedjob['properties'], {})
 
     def test_parseJob_v2(self):
         sched = trysched.Try_Jobdir(name='tsched',
@@ -192,7 +233,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             'project': 'proj',
             'who': '',
             'comment': '',
-            'repository': 'repo'
+            'repository': 'repo',
+            'properties': {},
         })
 
     def test_parseJob_v2_empty_branch_rev(self):
@@ -218,6 +260,16 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
         self.assertEqual(parsedjob['builderNames'], [])
 
+    def test_parseJob_v2_no_properties(self):
+        sched = trysched.Try_Jobdir(
+            name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
+        jobstr = self.makeNetstring(
+            '2', 'extid', 'trunk', '1234', '1', 'this is my diff, -- ++, etc.',
+            'repo', 'proj',
+        )
+        parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
+        self.assertEqual(parsedjob['properties'], {})
+
     def test_parseJob_v3(self):
         sched = trysched.Try_Jobdir(name='tsched',
                 builderNames=['buildera','builderb'], jobdir='foo')
@@ -237,7 +289,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             'project': 'proj',
             'who': 'who',
             'comment': '',
-            'repository': 'repo'
+            'repository': 'repo',
+            'properties': {},
         })
 
     def test_parseJob_v3_empty_branch_rev(self):
@@ -263,6 +316,16 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
         self.assertEqual(parsedjob['builderNames'], [])
 
+    def test_parseJob_v3_no_properties(self):
+        sched = trysched.Try_Jobdir(
+            name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
+        jobstr = self.makeNetstring(
+            '3', 'extid', 'trunk', '1234', '1', 'this is my diff, -- ++, etc.',
+            'repo', 'proj', 'who'
+        )
+        parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
+        self.assertEqual(parsedjob['properties'], {})
+
     def test_parseJob_v4(self):
         sched = trysched.Try_Jobdir(name='tsched',
                 builderNames=['buildera','builderb'], jobdir='foo')
@@ -282,7 +345,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             'project': 'proj',
             'who': 'who',
             'comment': 'comment',
-            'repository': 'repo'
+            'repository': 'repo',
+            'properties': {},
         })
 
     def test_parseJob_v4_empty_branch_rev(self):
@@ -308,6 +372,86 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
         self.assertEqual(parsedjob['builderNames'], [])
 
+    def test_parseJob_v4_no_properties(self):
+        sched = trysched.Try_Jobdir(
+            name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
+        jobstr = self.makeNetstring(
+            '4', 'extid', 'trunk', '1234', '1', 'this is my diff, -- ++, etc.',
+            'repo', 'proj', 'who', 'comment'
+        )
+        parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
+        self.assertEqual(parsedjob['properties'], {})
+
+    def test_parseJob_v5(self):
+        sched = trysched.Try_Jobdir(
+            name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
+        jobstr = self.makeNetstring(
+            '5',
+            json.dumps({
+                'bsid': 'extid', 'branch': 'trunk', 'baserev': '1234',
+                'patchlevel': '1', 'diff': 'this is my diff, -- ++, etc.',
+                'repository': 'repo', 'project': 'proj', 'who': 'who',
+                'comment': 'comment', 'builderNames': ['buildera', 'builderc'],
+                'properties': {'foo': 'bar'},
+            }))
+        parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
+        self.assertEqual(parsedjob, {
+            'baserev': '1234',
+            'branch': 'trunk',
+            'builderNames': ['buildera', 'builderc'],
+            'jobid': 'extid',
+            'patch_body': 'this is my diff, -- ++, etc.',
+            'patch_level': 1,
+            'project': 'proj',
+            'who': 'who',
+            'comment': 'comment',
+            'repository': 'repo',
+            'properties': {'foo': 'bar'},
+        })
+
+    def test_parseJob_v5_empty_branch_rev(self):
+        sched = trysched.Try_Jobdir(
+            name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
+        jobstr = self.makeNetstring(
+                # blank branch, rev are turned to None
+            '4', 'extid', '', '', '1', 'this is my diff, -- ++, etc.',
+            'repo', 'proj', 'who', 'comment',
+            'buildera', 'builderc'
+        )
+        parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
+        self.assertEqual(parsedjob['branch'], None)
+        self.assertEqual(parsedjob['baserev'], None)
+
+    def test_parseJob_v5_no_builders(self):
+        sched = trysched.Try_Jobdir(
+            name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
+        jobstr = self.makeNetstring(
+            '5',
+            json.dumps({
+                'bsid': 'extid', 'branch': 'trunk', 'baserev': '1234',
+                'patchlevel': '1', 'diff': 'this is my diff, -- ++, etc.',
+                'repository': 'repo', 'project': 'proj', 'who': 'who',
+                'comment': 'comment', 'builderNames': [],
+                'properties': {'foo': 'bar'},
+            }))
+        parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
+        self.assertEqual(parsedjob['builderNames'], [])
+
+    def test_parseJob_v5_no_properties(self):
+        sched = trysched.Try_Jobdir(
+            name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
+        jobstr = self.makeNetstring(
+            '5',
+            json.dumps({
+                'bsid': 'extid', 'branch': 'trunk', 'baserev': '1234',
+                'patchlevel': '1', 'diff': 'this is my diff, -- ++, etc.',
+                'repository': 'repo', 'project': 'proj', 'who': 'who',
+                'comment': 'comment', 'builderNames': ['buildera', 'builderb'],
+                'properties': {},
+            }))
+        parsedjob = sched.parseJob(StringIO.StringIO(jobstr))
+        self.assertEqual(parsedjob['properties'], {})
+
     # handleJobFile
 
     def call_handleJobFile(self, parseJob):
@@ -320,7 +464,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         def parseJob_(f):
             assert f is fakefile
             return parseJob(f)
-        sched.parseJob = parseJob
+        sched.parseJob = parseJob_
         return sched.handleJobFile('fakefile', fakefile)
 
     def makeSampleParsedJob(self, **overrides):
@@ -328,7 +472,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             builderNames=['buildera', 'builderb'],
             jobid='extid', patch_body='this is my diff, -- ++, etc.',
             patch_level=1, project='proj', repository='repo', who='who',
-            comment='comment')
+            comment='comment', properties={})
         pj.update(overrides)
         return pj
 
@@ -381,6 +525,31 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                     dict(reason="'try' job by user who",
                         external_idstring='extid',
                         properties=[('scheduler', ('tsched', 'Scheduler'))],
+                        sourcestampsetid=100),
+                    {'':
+                     dict(branch='trunk', repository='repo',  codebase='',
+                        project='proj', revision='1234',
+                        patch_body='this is my diff, -- ++, etc.',
+                        patch_level=1, patch_subdir='',
+                        patch_author='who',
+                        patch_comment='comment',
+                        sourcestampsetid=100)
+                    })
+        d.addCallback(check)
+        return d
+
+    def test_handleJobFile_with_try_properties(self):
+        d = self.call_handleJobFile(
+            lambda f: self.makeSampleParsedJob(properties={'foo': 'bar'}))
+
+        def check(_):
+            self.db.buildsets.assertBuildset('?',
+                    dict(reason="'try' job by user who",
+                        external_idstring='extid',
+                        properties=[
+                            ('foo', ('bar', 'try build')),
+                            ('scheduler', ('tsched', 'Scheduler')),
+                        ],
                         sourcestampsetid=100),
                     {'':
                      dict(branch='trunk', repository='repo',  codebase='',
