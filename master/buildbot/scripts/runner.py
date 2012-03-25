@@ -28,7 +28,6 @@ import re
 import sys
 import time
 
-from buildbot.interfaces import BuildbotNotRunningError
 from buildbot.scripts import base
 
 # Note that the terms 'options' and 'config' are used intechangeably here - in
@@ -165,23 +164,6 @@ class RestartOptions(BasedirMixin, base.SubcommandOptions):
         ]
     def getSynopsis(self):
         return "Usage:    buildbot restart [<basedir>]"
-
-def restart(config):
-    basedir = config['basedir']
-    quiet = config['quiet']
-
-    if not base.isBuildmasterDir(basedir):
-        print "not a buildmaster directory"
-        sys.exit(1)
-
-    from buildbot.scripts import stop, startup
-    try:
-        stop.stop(config, wait=True)
-    except BuildbotNotRunningError:
-        pass
-    if not quiet:
-        print "now restarting buildbot process.."
-    startup.start(config)
 
 class StartOptions(BasedirMixin, base.SubcommandOptions):
     optFlags = [
@@ -876,7 +858,8 @@ def run():
         from buildbot.scripts import stop
         sys.exit(stop.stop(so, wait=True))
     elif command == "restart":
-        restart(so)
+        from buildbot.scripts import restart
+        sys.exit(restart.restart(so))
     elif command == "reconfig" or command == "sighup":
         from buildbot.scripts.reconfig import Reconfigurator
         Reconfigurator().run(so)
