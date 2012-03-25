@@ -15,7 +15,6 @@
 
 from __future__ import with_statement
 
-
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
 #
@@ -38,18 +37,10 @@ from buildbot.scripts import base
 # Note that the terms 'options' and 'config' are used intechangeably here - in
 # fact, they are intercanged several times.  Caveat legator.
 
-class MakerBase(base.SubcommandOptions):
-    optFlags = [
-        ['help', 'h', "Display this message"],
-        ["quiet", "q", "Do not emit the commands being run"],
-        ]
+class BasedirMixin(object):
 
-    usage.Options.longdesc = """
-    Operates upon the specified <basedir> (or the current directory, if not
-    specified).
-    """
-
-    opt_h = usage.Options.opt_help
+    """SubcommandOptions Mixin to handle subcommands that take a basedir
+    argument"""
 
     def parseArgs(self, *args):
         if len(args) > 0:
@@ -63,107 +54,13 @@ class MakerBase(base.SubcommandOptions):
     def postOptions(self):
         self['basedir'] = os.path.abspath(self['basedir'])
 
+
 class Maker:
     def __init__(self, config):
         self.config = config
         self.basedir = config['basedir']
         self.force = config.get('force', False)
         self.quiet = config['quiet']
-
-    def mkdir(self):
-        if os.path.exists(self.basedir):
-            if not self.quiet:
-                print "updating existing installation"
-            return
-        if not self.quiet: print "mkdir", self.basedir
-        os.mkdir(self.basedir)
-
-    def chdir(self):
-        os.chdir(self.basedir)
-
-    def makeTAC(self, contents, secret=False):
-        tacfile = "buildbot.tac"
-        if os.path.exists(tacfile):
-            with open(tacfile, "rt") as f:
-                oldcontents = f.read()
-            if oldcontents == contents:
-                if not self.quiet:
-                    print "buildbot.tac already exists and is correct"
-                return
-            if not self.quiet:
-                print "not touching existing buildbot.tac"
-                print "creating buildbot.tac.new instead"
-            tacfile = "buildbot.tac.new"
-        with open(tacfile, "wt") as f:
-            f.write(contents)
-        if secret:
-            os.chmod(tacfile, 0600)
-
-    def sampleconfig(self, source):
-        target = "master.cfg.sample"
-        if not self.quiet:
-            print "creating %s" % target
-        with open(source, "rt") as f:
-            config_sample = f.read()
-        if self.config['db']:
-            config_sample = config_sample.replace('sqlite:///state.sqlite',
-                                                  self.config['db'])
-        with open(target, "wt") as f:
-            f.write(config_sample)
-        os.chmod(target, 0600)
-
-    def public_html(self, files):
-        webdir = os.path.join(self.basedir, "public_html")
-        if os.path.exists(webdir):
-            if not self.quiet:
-                print "public_html/ already exists: not replacing"
-            return
-        else:
-            os.mkdir(webdir)
-        if not self.quiet:
-            print "populating public_html/"
-        for target, source in files.iteritems():
-            target = os.path.join(webdir, target)
-            with open(target, "wt") as f:
-                with open(source, "rt") as i:
-                    f.write(i.read())
-
-    def templates_dir(self, files):
-        template_dir = os.path.join(self.basedir, "templates")
-        if os.path.exists(template_dir):
-            if not self.quiet:
-                print "templates/ already exists: not replacing"
-            return
-        else:
-            os.mkdir(template_dir)
-        if not self.quiet:
-            print "populating templates/"
-        for target, source in files.iteritems():
-            target = os.path.join(template_dir, target)
-            with open(target, "wt") as f:
-                with open(source, "rt") as i:
-                    f.write(i.read())
-
-    def create_db(self):
-        from buildbot.db import connector
-        from buildbot.master import BuildMaster
-        from buildbot import config as config_module
-
-        from buildbot import monkeypatches
-        monkeypatches.patch_all()
-
-        # create a master with the default configuration, but with db_url
-        # overridden
-        master_cfg = config_module.MasterConfig()
-        master_cfg.db['db_url'] = self.config['db']
-        master = BuildMaster(self.basedir)
-        master.config = master_cfg
-        db = connector.DBConnector(master, self.basedir)
-        d = db.setup(check_version=False, verbose=not self.config['quiet'])
-        if not self.config['quiet']:
-            print "creating database (%s)" % (master_cfg.db['db_url'],)
-        d = db.model.upgrade()
-        return d
 
     def populate_if_missing(self, target, source, overwrite=False):
         with open(source, "rt") as f:
@@ -235,8 +132,9 @@ DB_HELP = """
       --db='mysql://bbuser:bbpasswd@dbhost/bbdb'
 """
 
-class UpgradeMasterOptions(MakerBase):
+class UpgradeMasterOptions(BasedirMixin, base.SubcommandOptions):
     optFlags = [
+        ["quiet", "q", "Do not emit the commands being run"],
         ["replace", "r", "Replace any modified files without confirmation."],
         ]
     optParameters = [
@@ -340,8 +238,9 @@ def upgradeMaster(config):
     defer.returnValue(0)
 
 
-class MasterOptions(MakerBase):
+class CreateMasterOptions(BasedirMixin, base.SubcommandOptions):
     optFlags = [
+        ["quiet", "q", "Do not emit the commands being run"],
         ["force", "f",
          "Re-use an existing directory (will not overwrite master.cfg file)"],
         ["relocatable", "r",
@@ -381,7 +280,7 @@ class MasterOptions(MakerBase):
     """
 
     def postOptions(self):
-        MakerBase.postOptions(self)
+        BasedirMixin.postOptions(self)
         if not re.match('^\d+$', self['log-size']):
             raise usage.UsageError("log-size parameter needs to be an int")
         if not re.match('^\d+$', self['log-count']) and \
@@ -389,82 +288,12 @@ class MasterOptions(MakerBase):
             raise usage.UsageError("log-count parameter needs to be an int "+
                                    " or None")
 
-
-masterTACTemplate = ["""
-import os
-
-from twisted.application import service
-from buildbot.master import BuildMaster
-
-basedir = r'%(basedir)s'
-rotateLength = %(log-size)s
-maxRotatedFiles = %(log-count)s
-
-# Default umask for server
-umask = None
-
-
-# if this is a relocatable tac file, get the directory containing the TAC
-if basedir == '.':
-    import os.path
-    basedir = os.path.abspath(os.path.dirname(__file__))
-
-# note: this line is matched against to check that this is a buildmaster
-# directory; do not edit it.
-application = service.Application('buildmaster')
-""",
-"""
-try:
-  from twisted.python.logfile import LogFile
-  from twisted.python.log import ILogObserver, FileLogObserver
-  logfile = LogFile.fromFullPath(os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
-                                 maxRotatedFiles=maxRotatedFiles)
-  application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
-except ImportError:
-  # probably not yet twisted 8.2.0 and beyond, can't set log yet
-  pass
-""",
-"""
-configfile = r'%(config)s'
-
-m = BuildMaster(basedir, configfile, umask)
-m.setServiceParent(application)
-m.log_rotation.rotateLength = rotateLength
-m.log_rotation.maxRotatedFiles = maxRotatedFiles
-
-"""]
-
-@in_reactor
-def createMaster(config):
-    m = Maker(config)
-    m.mkdir()
-    m.chdir()
-    if config['relocatable']:
-        config['basedir'] = '.'
-    if config['no-logrotate']:
-        masterTAC = "".join([masterTACTemplate[0]] + masterTACTemplate[2:])
-    else:
-        masterTAC = "".join(masterTACTemplate)
-    contents = masterTAC % config
-    
-    m.makeTAC(contents)
-    m.sampleconfig(util.sibpath(__file__, "sample.cfg"))
-    m.public_html({
-          'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
-          'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
-          'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
-          'favicon.ico' : util.sibpath(__file__, "../status/web/files/favicon.ico"),
-      })
-    m.templates_dir({
-        'README.txt' : util.sibpath(__file__,"../status/web/files/templates_readme.txt"),
-    })
-    d = m.create_db()
-
-    def print_status(r):
-        if not m.quiet:
-            print "buildmaster configured in %s" % m.basedir
-    d.addCallback(print_status)
-    return d
+class StopOptions(BasedirMixin, base.SubcommandOptions):
+    optFlags = [
+        ["quiet", "q", "Do not emit the commands being run"],
+        ]
+    def getSynopsis(self):
+        return "Usage:    buildbot stop [<basedir>]"
 
 def stop(config, signame="TERM", wait=False):
     import signal
@@ -507,6 +336,13 @@ def stop(config, signame="TERM", wait=False):
     if not quiet:
         print "never saw process go away"
 
+class RestartOptions(BasedirMixin, base.SubcommandOptions):
+    optFlags = [
+        ['quiet', 'q', "Don't display startup log messages"],
+        ]
+    def getSynopsis(self):
+        return "Usage:    buildbot restart [<basedir>]"
+
 def restart(config):
     basedir = config['basedir']
     quiet = config['quiet']
@@ -524,19 +360,14 @@ def restart(config):
         print "now restarting buildbot process.."
     start(config)
 
-
-class StartOptions(MakerBase):
+class StartOptions(BasedirMixin, base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot start [<basedir>]"
 
-class StopOptions(MakerBase):
-    def getSynopsis(self):
-        return "Usage:    buildbot stop [<basedir>]"
-
-class ReconfigOptions(MakerBase):
+class ReconfigOptions(BasedirMixin, base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display log messages about reconfiguration"],
         ]
@@ -545,17 +376,7 @@ class ReconfigOptions(MakerBase):
 
 
 
-class RestartOptions(MakerBase):
-    optFlags = [
-        ['quiet', 'q', "Don't display startup log messages"],
-        ]
-    def getSynopsis(self):
-        return "Usage:    buildbot restart [<basedir>]"
-
 class DebugClientOptions(base.SubcommandOptions):
-    optFlags = [
-        ['help', 'h', "Display this message"],
-        ]
     optParameters = [
         ["master", "m", None,
          "Location of the buildmaster's slaveport (host:port)"],
@@ -1146,7 +967,7 @@ class Options(usage.Options):
 
     subCommands = [
         # the following are all admin commands
-        ['create-master', None, MasterOptions,
+        ['create-master', None, CreateMasterOptions,
          "Create and populate a directory for a new buildmaster"],
         ['upgrade-master', None, UpgradeMasterOptions,
          "Upgrade an existing buildmaster directory for the current version"],
@@ -1215,7 +1036,8 @@ def run():
     so = config.subOptions
 
     if command == "create-master":
-        createMaster(so)
+        from buildbot.scripts import create_master
+        create_master.createMaster(so)
     elif command == "upgrade-master":
         upgradeMaster(so)
     elif command == "start":

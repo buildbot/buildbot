@@ -25,7 +25,6 @@ from twisted.python import usage
 from twisted.internet import defer, reactor
 from buildbot.scripts import base, runner, checkconfig
 from buildbot.clients import sendchange, usersclient
-from buildbot.db import connector
 from buildbot.process.users import users
 
 class OptionsMixin(object):
@@ -717,13 +716,13 @@ class TestUsersClient(OptionsMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
-class TestMasterOptions(OptionsMixin, unittest.TestCase):
+class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpOptions()
 
     def parse(self, *args):
-        self.opts = runner.MasterOptions()
+        self.opts = runner.CreateMasterOptions()
         self.opts.parseOptions(args)
         return self.opts
 
@@ -739,7 +738,7 @@ class TestMasterOptions(OptionsMixin, unittest.TestCase):
         return opts
 
     def test_synopsis(self):
-        opts = runner.MasterOptions()
+        opts = runner.CreateMasterOptions()
         self.assertIn('buildbot create-master', opts.getSynopsis())
 
     def test_defaults(self):
@@ -835,65 +834,3 @@ class TestMasterOptions(OptionsMixin, unittest.TestCase):
         exp = self.defaults_and(force=True, basedir='/foo/bar')
         self.assertOptions(opts, exp)
 
-class TestCreateMaster(OptionsMixin, unittest.TestCase):
-
-    def setUp(self):
-        # createMaster is decorated with @in_reactor, so strip that decoration
-        # since the master is already running
-        self.patch(runner, 'createMaster', runner.createMaster._orig)
-
-        # mock out Maker
-        self.maker = mock.Mock()
-        self.maker.create_db.side_effect = lambda *a, **k : defer.succeed(None)
-        self.Maker = mock.Mock(return_value=self.maker)
-        self.patch(runner, 'Maker', self.Maker)
-
-        # set up a nonexistent basedir
-        self.basedir = os.path.abspath('basedir')
-
-    def config(self, **kwargs):
-        config = dict(force=False, relocatable=False, config='master.cfg',
-                db='sqlite:///state.sqlite', basedir=self.basedir, quiet=False,
-                **{'no-logrotate':False, 'log-size':'10000000',
-                   'log-count':'10'})
-        config.update(kwargs)
-        return config
-
-    # TODO: keep for testing Maker methods
-    def assertDBSetup(self, basedir=None, db_url='sqlite:///state.sqlite',
-                            verbose=True):
-        # mock out the database setup
-        self.db = mock.Mock()
-        self.db.setup.side_effect = lambda *a, **k : defer.succeed(None)
-        self.DBConnector = mock.Mock()
-        self.DBConnector.return_value = self.db
-        self.patch(connector, 'DBConnector', self.DBConnector)
-
-        basedir = basedir or self.basedir
-        self.assertEqual(
-            dict(basedir=self.DBConnector.call_args[0][1],
-                 db_url=self.DBConnector.call_args[0][0].config.db['db_url'],
-                 verbose=self.db.setup.call_args[1]['verbose'],
-                 check_version=self.db.setup.call_args[1]['check_version'],
-                 ),
-            dict(basedir=self.basedir,
-                 db_url=db_url,
-                 verbose=True,
-                 check_version=False))
-
-    # tests
-
-    def test_createMaster(self):
-        cfg = self.config()
-        d = runner.createMaster(cfg)
-        @d.addCallback
-        def check(_):
-            self.Maker.assert_called_with(cfg)
-            self.failUnless(self.maker.mkdir.called)
-            self.failUnless(self.maker.chdir.called)
-            self.failUnless(self.maker.makeTAC.called)
-            self.failUnless(self.maker.sampleconfig.called)
-            self.failUnless(self.maker.public_html.called)
-            self.failUnless(self.maker.templates_dir.called)
-            self.failUnless(self.maker.create_db.called)
-        return d
