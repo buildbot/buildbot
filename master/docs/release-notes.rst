@@ -8,6 +8,34 @@ Release Notes for Buildbot |version|
 
 The following are the release notes for Buildbot |version|.
 
+0.8.6p1
+-------
+
+In addition to what's listed below, the 0.8.6p1 release adds the following.
+
+* Builders are no longer displayed in the order they were configured.  This was
+  never intended behavior, and will become impossible in the distributed
+  architecture planned for Buildbot-0.9.x.  As of 0.8.6p1, builders are sorted
+  naturally: lexically, but with numeric segments sorted numerically.
+
+* Slave properties in the configuration are now handled correctly.
+
+* The web interface buttons to cancel individual builds now appear when
+  configured.
+
+* The ForceScheduler's properties are correctly updated on reconfig -
+  :bb:bug:`2248`.
+
+* If a slave is lost while waiting for locks, it is properly cleaned up -
+  :bb:bug:`2247`.
+
+* Crashes when adding new steps to a factory in a reconfig are fixed -
+  :bb:bug:`2252`.
+
+* MailNotifier AttributeErrors are fixed - :bb:bug:`2254`.
+
+* Cleanup from failed builds is improved - :bb:bug:`2253`.
+
 Master
 ------
 
