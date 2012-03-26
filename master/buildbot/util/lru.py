@@ -25,9 +25,7 @@ class LRUCache(object):
     """
     A least-recently-used cache, with a fixed maximum size.
 
-    This cache is designed to control memory usage by minimizing duplication of
-    objects, while avoiding unnecessary re-fetching of the same rows from the
-    database.
+    See buildbot manual for more information.
     """
 
     __slots__ = ('max_size max_queue miss_fn queue cache weakrefs '
@@ -36,14 +34,6 @@ class LRUCache(object):
     QUEUE_SIZE_FACTOR = 10
 
     def __init__(self, miss_fn, max_size=50):
-        """
-        Constructor.
-
-        @param miss_fn: function to call, with key as parameter, for cache
-        misses.
-
-        @param max_size: maximum number of objects in the cache
-        """
         self.max_size = max_size
         self.max_queue = max_size * self.QUEUE_SIZE_FACTOR
         self.queue = deque()
@@ -62,21 +52,6 @@ class LRUCache(object):
         self._ref_key(key)
 
     def get(self, key, **miss_fn_kwargs):
-        """
-        Fetch a value from the cache by key, invoking C{self.miss_fn(key)}
-        if the key is not in the cache.
-
-        Any additional keyword arguments are passed to the C{miss_fn} as
-        keyword arguments; these can supply additional information relating to
-        the key.  It is up to the caller to ensure that this information is
-        functionally identical for each key value: if the key is already in the
-        cache, the C{miss_fn} will not be invoked, even if the keyword
-        arguments differ.
-
-        @param key: cache key
-        @param **miss_fn_kwargs: keyword arguments to  the miss_fn
-        @returns: cached value
-        """
         try:
             return self._get_hit(key)
         except KeyError:
@@ -129,6 +104,7 @@ class LRUCache(object):
             inv_failed = True
 
     def _ref_key(self, key):
+        """Record a reference to the argument key."""
         queue = self.queue
         refcount = self.refcount
 
@@ -149,6 +125,7 @@ class LRUCache(object):
                 refcount[k] = 1
 
     def _get_hit(self, key):
+        """Try to do a value lookup from the existing cache entries."""
         try:
             result = self.cache[key]
             self.hits += 1
@@ -164,6 +141,10 @@ class LRUCache(object):
         return result
 
     def _purge(self):
+        """
+        Trim the cache down to max_size by evicting the
+        least-recently-used entries.
+        """
         if len(self.cache) <= self.max_size:
             return
 
@@ -192,25 +173,10 @@ class AsyncLRUCache(LRUCache):
     __slots__ = ['concurrent']
 
     def __init__(self, miss_fn, max_size=50):
-        """
-        Constructor.
-
-        @param miss_fn: function to call, with key as parameter, for cache
-        misses.  This function I{must} return a deferred.
-
-        @param max_size: maximum number of objects in the cache
-        """
         super(AsyncLRUCache, self).__init__(miss_fn, max_size=max_size)
         self.concurrent = {}
 
     def get(self, key, **miss_fn_kwargs):
-        """
-        Overrides LRUCache.get.
-
-        @param key: cache key
-        @param **miss_fn_kwargs: keyword arguments to  the miss_fn
-        @returns: cached value via Deferred
-        """
         try:
             result = self._get_hit(key)
             return defer.succeed(result)
