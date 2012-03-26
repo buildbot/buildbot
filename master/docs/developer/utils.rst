@@ -167,7 +167,7 @@ buildbot.util.lru
 
     :param miss_fn: function to call, with key as parameter, for cache misses.
         The function should return the value associated with the key argument,
-	or None if there is no value associated with the key.
+        or None if there is no value associated with the key.
     :param max_size: maximum number of objects in the cache.
 
     This is a simple least-recently-used cache.  When the cache grows beyond
@@ -231,8 +231,8 @@ buildbot.util.lru
 
         Update the cache with the given key and value, but only if the key is
         already in the cache.  The purpose of this method is to insert a new
-	value into the cache *without* invoking the miss_fn (e.g., to avoid
-	unnecessary overhead).
+        value into the cache *without* invoking the miss_fn (e.g., to avoid
+        unnecessary overhead).
 
     .. py:method set_max_size(max_size)
 

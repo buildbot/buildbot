@@ -173,7 +173,7 @@ class AsyncLRUCache(LRUCache):
     __slots__ = ['concurrent']
 
     def __init__(self, miss_fn, max_size=50):
-        super(AsyncLRUCache, self).__init__(miss_fn, max_size=max_size)
+        LRUCache.__init__(self, miss_fn, max_size=max_size)
         self.concurrent = {}
 
     def get(self, key, **miss_fn_kwargs):
