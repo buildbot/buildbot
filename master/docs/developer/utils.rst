@@ -163,10 +163,11 @@ buildbot.util.lru
 
 .. py:module:: buildbot.util.lru
 
-.. py:class:: AsyncLRUCache(miss_fn, max_size=50):
+.. py:class:: LRUCache(miss_fn, max_size=50):
 
     :param miss_fn: function to call, with key as parameter, for cache misses.
-        This function *must* return a Deferred.
+        The function should return the value associated with the key argument,
+        or None if there is no value associated with the key.
     :param max_size: maximum number of objects in the cache.
 
     This is a simple least-recently-used cache.  When the cache grows beyond
@@ -176,9 +177,6 @@ buildbot.util.lru
     This cache is designed to control memory usage by minimizing duplication of
     objects, while avoiding unnecessary re-fetching of the same rows from the
     database.
-
-    Asynchronous locking is used to ensure that in the common case of multiple
-    concurrent requests for the same key, only one fetch is performed.
 
     All values are also stored in a weak valued dictionary, even after they
     have expired from the cache.  This allows values that are used elsewhere in
@@ -232,9 +230,9 @@ buildbot.util.lru
         :param value: value to place there
 
         Update the cache with the given key and value, but only if the key is
-        already in the cache.  This is intended to be used when updated values
-        are available for an existing cached object, and does not record a
-        reference to the key for purposes of LRU removal.
+        already in the cache.  The purpose of this method is to insert a new
+        value into the cache *without* invoking the miss_fn (e.g., to avoid
+        unnecessary overhead).
 
     .. py:method set_max_size(max_size)
 
@@ -248,6 +246,16 @@ buildbot.util.lru
 
         Check invariants on the cache.  This is intended for debugging
         purposes.
+
+.. py:class:: AsyncLRUCache(miss_fn, max_size=50):
+
+    :param miss_fn: This is the same as the miss_fn for class LRUCache, with
+        the difference that this function *must* return a Deferred.
+    :param max_size: maximum number of objects in the cache.
+
+    This class has the same functional interface as LRUCache, but asynchronous
+    locking is used to ensure that in the common case of multiple concurrent
+    requests for the same key, only one fetch is performed.
 
 buildbot.util.bbcollections
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

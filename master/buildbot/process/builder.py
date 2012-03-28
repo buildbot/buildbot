@@ -82,6 +82,7 @@ class Builder(config.ReconfigurableServiceMixin,
         self.config = builder_config
 
         self.builder_status.setSlavenames(self.config.slavenames)
+        self.builder_status.setCacheSize(new_config.caches['Builds'])
 
         return defer.succeed(None)
 
@@ -756,4 +757,3 @@ class BuilderControl:
             if not success:
                 return False
         return True
-
