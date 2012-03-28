@@ -173,7 +173,6 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
             ((2011, 2, 27,  3, 11), (2011, 3, 1,  0,  0)),
             ((2011, 3,  1,  1, 11), (2011, 3, 1,  2,  0)), # still hourly!
         )
-    test_getNextBuildTime_month_single.skip = "Issue in croniter when months defined https://github.com/taichino/croniter/issues/9"
 
     def test_getNextBuildTime_month_multiple(self):
         sched = self.makeScheduler(name='test', builderNames=['test'], branch=None,
@@ -183,7 +182,6 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
             ((2011, 4,  1,  1, 11), (2011, 4, 1,  2,  0)), # still hourly!
             ((2011, 5, 29,  3, 11), (2011, 6, 1,  0,  0)),
         )
-    test_getNextBuildTime_month_multiple.skip = "Issue in croniter when months defined https://github.com/taichino/croniter/issues/9"
 
     def test_getNextBuildTime_month_dayOfMonth(self):
         sched = self.makeScheduler(name='test', builderNames=['test'], branch=None,
@@ -192,7 +190,6 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
             ((2011, 2, 12,  3, 11), (2011, 3, 15,  0,  0)),
             ((2011, 3, 12,  3, 11), (2011, 3, 15,  0,  0)),
         )
-    test_getNextBuildTime_month_dayOfMonth.skip = "Issue in croniter when months defined https://github.com/taichino/croniter/issues/9"
 
     def test_getNextBuildTime_dayOfMonth_single(self):
         sched = self.makeScheduler(name='test', builderNames=['test'], branch=None,
