@@ -276,7 +276,6 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.wasUpgraded = True
 
     def upgradeToVersion3(self):
-        #In version 2 sourcestamps where not part of a set
         #version 2 did not have codebase; set to ''
         self.codebase = ''
         self.wasUpgraded = True
