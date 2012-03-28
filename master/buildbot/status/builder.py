@@ -196,7 +196,12 @@ class BuilderStatus(styles.Versioned):
         except EOFError:
             raise IndexError("corrupted build pickle %d" % number)
 
-    def cacheMiss(self, number):
+    def cacheMiss(self, number, **kwargs):
+        # If kwargs['val'] exists, this is a new value being added to
+        # the cache.  Just return it.
+        if 'val' in kwargs:
+            return kwargs['val']
+
         # first look in currentBuilds
         for b in self.currentBuilds:
             if b.number == number:
@@ -474,7 +479,7 @@ class BuilderStatus(styles.Versioned):
         assert s.builder is self # paranoia
         assert s not in self.currentBuilds
         self.currentBuilds.append(s)
-        self.buildCache.put(s.number, s)
+        self.buildCache.get(s.number, val=s)
 
         # now that the BuildStatus is prepared to answer queries, we can
         # announce the new build to all our watchers

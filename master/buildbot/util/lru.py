@@ -49,7 +49,6 @@ class LRUCache(object):
             self.weakrefs[key] = value
         elif key in self.weakrefs:
             self.weakrefs[key] = value
-        self._ref_key(key)
 
     def get(self, key, **miss_fn_kwargs):
         try:
