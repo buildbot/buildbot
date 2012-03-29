@@ -87,6 +87,10 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
             except:
                 log.msg("failed to set journal mode - database may fail")
 
+            def connect_listener(connection, record):
+                connection.execute("pragma checkpoint_fullfsync = off")
+            sa.event.listen(Pool, 'connect', connect_listener)
+
     def special_case_mysql(self, u, kwargs):
         """For mysql, take max_idle out of the query arguments, and
         use its value for pool_recycle.  Also, force use_unicode and
