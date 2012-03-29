@@ -16,14 +16,12 @@
 from __future__ import with_statement
 
 
-import weakref
 import os, re, itertools
 from cPickle import load, dump
 
 from zope.interface import implements
 from twisted.python import log, runtime
 from twisted.persisted import styles
-from buildbot.process import metrics
 from buildbot import interfaces, util
 from buildbot.util.lru import LRUCache
 from buildbot.status.event import Event
