@@ -25,8 +25,9 @@ class TestBuildStatus(unittest.TestCase):
     # that these classes are not well isolated!
 
     def setupBuilder(self, buildername, category=None):
-        master = fakemaster.make_master()
-        b = builder.BuilderStatus(buildername=buildername, category=category, master=master)
+        m = fakemaster.make_master()
+        b = builder.BuilderStatus(buildername=buildername, category=category,
+                                    master=m)
         # Awkwardly, Status sets this member variable.
         b.basedir = os.path.abspath(self.mktemp())
         os.mkdir(b.basedir)
