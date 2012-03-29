@@ -240,6 +240,12 @@ class LRUCacheTest(unittest.TestCase):
         self.lru.put('p', set(['P2P2']))
         self.assertEqual(self.lru.get('p'), set(['P2P2']))
 
+    def test_put_nonexistent_key(self):
+        self.assertEqual(self.lru.get('p'), short('p'))
+        self.lru.put('q', set(['new-q']))
+        self.assertEqual(self.lru.get('p'), set(['PPP']))
+        self.assertEqual(self.lru.get('q'), set(['QQQ'])) # not updated
+
 
 class AsyncLRUCacheTest(unittest.TestCase):
 
