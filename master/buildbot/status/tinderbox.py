@@ -149,16 +149,15 @@ class TinderboxMailNotifier(mail.MailNotifier):
             return # ignore this build
         self.buildMessage(name, build, "building")
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def buildMessage(self, name, build, results):
         text = ""
         res = ""
         # shortform
         t = "tinderbox:"
 
-        tree = defer.waitForDeferred(build.render(self.tree))
-        yield tree
-        text += "%s tree: %s\n" % (t, tree.getResult())
+        tree = yield build.render(self.tree)
+        text += "%s tree: %s\n" % (t, tree)
 
         # the start time
         # getTimes() returns a fractioned time that tinderbox doesn't understand
@@ -195,9 +194,8 @@ class TinderboxMailNotifier(mail.MailNotifier):
             # use the builder name
             text += "%s build: %s\n" % (t, name)
         else:
-            columnName = defer.waitForDeferred(build.render(self.columnName))
-            yield columnName
-            text += "%s build: %s\n" % (t, columnName.getResult())
+            columnName = yield build.render(self.columnName)
+            text += "%s build: %s\n" % (t, columnName)
         text += "%s errorparser: %s\n" % (t, self.errorparser)
 
         # if the build just started...
@@ -275,8 +273,4 @@ class TinderboxMailNotifier(mail.MailNotifier):
 
         d = defer.DeferredList([])
         d.addCallback(self._gotRecipients, self.extraRecipients, m)
-        d = defer.waitForDefered(d)
-        yield d
-        yield d.getResults()
-        return
-
+        defer.returnValue(yield d)
