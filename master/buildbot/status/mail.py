@@ -438,13 +438,14 @@ class MailNotifier(base.StatusReceiverMultiService):
     def _gotBuilds(self, res, buildset):
         builds = []
         for (builddictlist, builder) in res:
-                for builddict in builddictlist:
-                    build = builder.getBuild(builddict['number'])
-                    if build is not None and self.isMailNeeded(build, build.results):
-                        builds.append(build)
+            for builddict in builddictlist:
+                build = builder.getBuild(builddict['number'])
+                if build is not None and self.isMailNeeded(build, build.results):
+                    builds.append(build)
 
-        self.buildMessage("Buildset Complete: " + buildset['reason'], builds,
-                          buildset['results'])
+        if builds:
+            self.buildMessage("Buildset Complete: " + buildset['reason'], builds,
+                              buildset['results'])
         
     def _gotBuildRequests(self, breqs, buildset):
         dl = []

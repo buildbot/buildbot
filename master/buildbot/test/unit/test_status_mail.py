@@ -188,6 +188,57 @@ class TestMailNotifier(unittest.TestCase):
         mn.buildsetFinished(99, FAILURE)
         fakeBuildMessage.assert_called_with("Buildset Complete: testReason",
                                             [build], SUCCESS)
+
+    def test_buildsetFinished_doesnt_send_email(self):
+        fakeBuildMessage = Mock()
+        mn = MailNotifier('from@example.org',
+                          buildSetSummary=True,
+                          mode=("failing", "warnings"),
+                          builders=["Builder"])
+        mn.buildMessage = fakeBuildMessage
+
+
+        def fakeGetBuild(number):
+            return build
+
+        def fakeGetBuilder(buildername):
+            if buildername == builder.name:
+                return builder
+            return None
+
+        def fakeGetBuildRequests(self, bsid):
+            return defer.succeed([{"buildername":"Builder", "brid":1}])
+
+        builder = Mock()
+        builder.getBuild = fakeGetBuild
+        builder.name = "Builder"
+
+        build = FakeBuildStatus()
+        build.results = SUCCESS
+        build.finished = True
+        build.reason = "testReason"
+        build.getBuilder.return_value = builder
+
+        self.db = fakedb.FakeDBConnector(self)
+        self.db.insertTestData([fakedb.SourceStampSet(id=127),
+                                fakedb.Buildset(id=99, sourcestampsetid=127,
+                                                results=SUCCESS,
+                                                reason="testReason"),
+                                fakedb.BuildRequest(id=11, buildsetid=99,
+                                                    buildername='Builder'),
+                                fakedb.Build(number=0, brid=11),
+                                ])
+        mn.parent = self
+
+        self.status = Mock()
+        mn.master_status = Mock()
+        mn.master_status.getBuilder = fakeGetBuilder
+        mn.buildMessageDict = Mock()
+        mn.buildMessageDict.return_value = {"body":"body", "type":"text",
+                                            "subject":"subject"}
+
+        mn.buildsetFinished(99, FAILURE)
+        self.assertFalse(fakeBuildMessage.called)
  
 
     def test_buildFinished_ignores_unspecified_categories(self):
