@@ -433,33 +433,12 @@ class TestInterpolateProperties(unittest.TestCase):
                             "echo 'testing'")
         return d
 
-    def test_property_deferred(self):
-        renderable = DeferredRenderable()
-        self.props.setProperty("project", renderable, "test")
-        command = Interpolate("echo '%(prop:project)s'")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                            "echo 'testing'")
-        renderable.callback('testing')
-        return d
-
     def test_nested_property(self):
         self.props.setProperty("project", "so long!", "test")
         command = Interpolate("echo '%(prop:missing:~%(prop:project)s)s'")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                             "echo 'so long!'")
-        return d
-
-    def test_nested_property_deferred(self):
-        renderable = DeferredRenderable()
-        self.props.setProperty("missing", renderable, "test")
-        self.props.setProperty("project", "so long!", "test")
-        command = Interpolate("echo '%(prop:missing:~%(prop:project)s)s'")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                            "echo 'so long!'")
-        renderable.callback(False)
         return d
 
 class TestInterpolateSrc(unittest.TestCase):
@@ -695,6 +674,24 @@ class TestInterpolateKwargs(unittest.TestCase):
         d.addCallback(self.failUnlessEqual,
                             "echo 'testing'")
         renderable.callback('testing')
+        return d
+
+    def test_kwarg_deferred(self):
+        renderable = DeferredRenderable()
+        command = Interpolate("echo '%(kw:project)s'", project=renderable)
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                            "echo 'testing'")
+        renderable.callback('testing')
+        return d
+
+    def test_nested_kwarg_deferred(self):
+        renderable = DeferredRenderable()
+        command = Interpolate("echo '%(kw:missing:~%(kw:fishy)s)s'", missing=renderable, fishy="so long!")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                            "echo 'so long!'")
+        renderable.callback(False)
         return d
 
 class TestWithProperties(unittest.TestCase):
