@@ -365,7 +365,6 @@ class TestInterpolatePositional(unittest.TestCase):
         return d
 
     def test_renderable(self):
-        renderable = DeferredRenderable()
         self.props.setProperty("buildername", "blue fish", "test")
         command = Interpolate("echo '%s'", Property("buildername"))
         d = self.build.render(command)
@@ -1096,14 +1095,4 @@ class TestProperty(unittest.TestCase):
         d.addCallback(self.failUnlessEqual,
                 "default-value")
         default.callback("default-value")
-        return d
-
-    def testDeferredDefault(self):
-        prop = DeferredRenderable()
-        self.props.setProperty("test-defer", prop, "test")
-        value = Property("test-defer")
-        d = self.build.render(value)
-        d.addCallback(self.failUnlessEqual,
-                "deferred!")
-        prop.callback("deferred!")
         return d

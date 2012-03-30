@@ -273,4 +273,4 @@ class TinderboxMailNotifier(mail.MailNotifier):
 
         d = defer.DeferredList([])
         d.addCallback(self._gotRecipients, self.extraRecipients, m)
-        defer.returnValue(yield d)
+        defer.returnValue((yield d))

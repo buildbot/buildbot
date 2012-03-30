@@ -380,7 +380,6 @@ class Interpolate(util.ComparableMixin):
         if not self.args:
             self.interpolations = {}
             self._parse(fmtstring)
-            keys = _getInterpolationList(fmtstring)
         if self.args and self.kwargs:
             raise ValueError('Interpolate takes either positional or keyword substitutions, not both.')
 
@@ -467,15 +466,13 @@ class Interpolate(util.ComparableMixin):
         props = props.getProperties() 
         if self.args:
             d = props.render(self.args)
-            @d.addCallback
-            def format(args):
-                return self.fmtstring % tuple(args)
+            d.addCallback(lambda args:
+                self.fmtstring % tuple(args))
             return d
         else:
             d = props.render(self.interpolations)
-            @d.addCallback
-            def format(res):
-                return self.fmtstring % res
+            d.addCallback(lambda res:
+                self.fmtstring % res)
             return d
 
 class Property(util.ComparableMixin):
