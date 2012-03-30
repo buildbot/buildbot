@@ -45,17 +45,20 @@ class _ComputeRepositoryURL(object):
             return str(s.repository)
         else:
             if callable(repository):
-                return str(props.render(repository(s.repository)))
+                d = props.render(repository(s.repository))
             elif isinstance(repository, dict):
-                return str(props.render(repository.get(s.repository)))
+                d = props.render(repository.get(s.repository))
             elif isinstance(repository, str) or isinstance(repository, unicode):
                 try:
                     return str(repository % s.repository)
                 except TypeError:
                     # that's the backward compatibility case
-                    return props.render(repository)
+                    d = props.render(repository)
             else:
-                return str(props.render(repository))
+                d = props.render(repository)
+
+        d.addCallback(str)
+        return d
 
 
 

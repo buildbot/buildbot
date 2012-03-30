@@ -29,6 +29,9 @@ Deprecations, Removals, and Non-Compatible Changes
   :py:mod:`buildbot.steps.source`. It is still available at
   :py:mod:`buildbot.steps.source.oldsource`.
 
+* ``IProperties.render`` now returns a deferred, so any code rendering properties
+  by hand will need to take this into account.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -45,6 +48,8 @@ Deprecations, Removals, and Non-Compatible Changes
 
 Features
 ~~~~~~~~
+
+* ``IRenderable.getRenderingFor`` can now return a deferred.
 
 Details
 -------
