@@ -1127,7 +1127,7 @@ class IRenderable(Interface):
     """
 
     def getRenderingFor(iprops):
-        """Return the interpolation with the given properties
+        """Return a deferred that fires with interpolation with the given properties
 
         @param iprops: the L{IProperties} provider supplying the properties.
         """

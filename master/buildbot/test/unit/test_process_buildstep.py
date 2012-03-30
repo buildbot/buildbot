@@ -16,7 +16,8 @@
 import re
 import mock
 from twisted.trial import unittest
-from twisted.internet import reactor
+from twisted.internet import defer, reactor
+from twisted.python import log
 from buildbot.process import buildstep
 from buildbot.process.buildstep import regex_log_evaluator
 from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION
@@ -164,7 +165,10 @@ class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
         self.expectHidden(True)
 
         d = self.runStep()
+        d.addErrback(log.err)
         d.addCallback(lambda _ :
+            self.assertEqual(len(self.flushLoggedErrors(defer.FirstError)), 1))
+        d.addCallback(lambda _:
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
         d.addCallback(lambda _ : self.assertTrue(called[0]))
         return d
