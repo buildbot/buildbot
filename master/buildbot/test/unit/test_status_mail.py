@@ -228,7 +228,7 @@ class TestMailNotifier(unittest.TestCase):
                                                     buildername='Builder'),
                                 fakedb.Build(number=0, brid=11),
                                 ])
-        mn.parent = self
+        mn.master = self
 
         self.status = Mock()
         mn.master_status = Mock()
@@ -239,7 +239,7 @@ class TestMailNotifier(unittest.TestCase):
 
         mn.buildsetFinished(99, FAILURE)
         self.assertFalse(fakeBuildMessage.called)
- 
+
 
     def test_buildFinished_ignores_unspecified_categories(self):
         mn = MailNotifier('from@example.org', categories=['fast'])
