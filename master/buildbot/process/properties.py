@@ -377,9 +377,10 @@ class Interpolate(util.ComparableMixin):
         self.fmtstring = fmtstring 
         self.args = args
         self.kwargs = kwargs 
-        self.interpolations = {}
-        self._parse(fmtstring)
-        keys = _getInterpolationList(fmtstring)
+        if not self.args:
+            self.interpolations = {}
+            self._parse(fmtstring)
+            keys = _getInterpolationList(fmtstring)
         if self.args and self.kwargs:
             raise ValueError('Interpolate takes either positional or keyword substitutions, not both.')
 

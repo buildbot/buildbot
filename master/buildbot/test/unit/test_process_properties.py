@@ -338,6 +338,43 @@ class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
 
 
 
+class TestInterpolatePositional(unittest.TestCase):
+    def setUp(self):
+        self.props = Properties()
+        self.build = FakeBuild(self.props)
+
+    def test_string(self):
+        command = Interpolate("test %s", "one fish")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                        "test one fish")
+
+    def test_twoString(self):
+        command = Interpolate("test %s, %s", "one fish", "two fish")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                        "test one fish, two fish")
+
+    def test_deferred(self):
+        renderable = DeferredRenderable()
+        command = Interpolate("echo '%s'", renderable)
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                            "echo 'red fish'")
+        renderable.callback("red fish")
+        return d
+
+    def test_renderable(self):
+        renderable = DeferredRenderable()
+        self.props.setProperty("buildername", "blue fish", "test")
+        command = Interpolate("echo '%s'", Property("buildername"))
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                            "echo 'blue fish'")
+        return d
+
+
+
 class TestInterpolateProperties(unittest.TestCase):
     def setUp(self):
         self.props = Properties()
