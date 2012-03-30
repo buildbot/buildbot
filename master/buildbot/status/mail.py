@@ -359,6 +359,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         base.StatusReceiverMultiService.setServiceParent(self, parent)
         self.master_status = self.parent
         self.master_status.subscribe(self)
+        self.master = self.master_status.master
 
     def startService(self):
         if self.buildSetSummary:
@@ -435,9 +436,9 @@ class MailNotifier(base.StatusReceiverMultiService):
             return self.buildMessage(name, [build], results)
         return None
     
-    def _gotBuilds(self, res, builddicts, buildset, builders):
+    def _gotBuilds(self, res, buildset):
         builds = []
-        for (builddictlist, builder) in zip(builddicts, builders):
+        for (builddictlist, builder) in res:
                 for builddict in builddictlist:
                     build = builder.getBuild(builddict['number'])
                     if build is not None and self.isMailNeeded(build, build.results):
@@ -447,24 +448,22 @@ class MailNotifier(base.StatusReceiverMultiService):
                           buildset['results'])
         
     def _gotBuildRequests(self, breqs, buildset):
-        builddicts = []
-        builders =[]
         dl = []
         for breq in breqs:
             buildername = breq['buildername']
-            builders.append(self.master_status.getBuilder(buildername))
-            d = self.parent.db.builds.getBuildsForRequest(breq['brid'])
-            d.addCallback(builddicts.append)
+            builder = self.master_status.getBuilder(buildername)
+            d = self.master.db.builds.getBuildsForRequest(breq['brid'])
+            d.addCallback(lambda builddictlist: (builddictlist, builder))
             dl.append(d)
-        d = defer.DeferredList(dl)
-        d.addCallback(self._gotBuilds, builddicts, buildset, builders)
+        d = defer.gatherResults(dl)
+        d.addCallback(self._gotBuilds, buildset)
 
     def _gotBuildSet(self, buildset, bsid):
-        d = self.parent.db.buildrequests.getBuildRequests(bsid=bsid)
+        d = self.master.db.buildrequests.getBuildRequests(bsid=bsid)
         d.addCallback(self._gotBuildRequests, buildset)
         
     def buildsetFinished(self, bsid, result):
-        d = self.parent.db.buildsets.getBuildset(bsid=bsid)
+        d = self.master.db.buildsets.getBuildset(bsid=bsid)
         d.addCallback(self._gotBuildSet, bsid)
             
         return d
@@ -670,13 +669,13 @@ class MailNotifier(base.StatusReceiverMultiService):
         dl = []
         ss = build.getSourceStamp()
         for change in ss.changes:
-            d = self.parent.db.changes.getChangeUids(change.number)
+            d = self.master.db.changes.getChangeUids(change.number)
             def getContacts(uids):
                 def uidContactPair(contact, uid):
                     return (contact, uid)
                 contacts = []
                 for uid in uids:
-                    d = users.getUserContact(self.parent,
+                    d = users.getUserContact(self.master,
                             contact_type='email',
                             uid=uid)
                     d.addCallback(lambda contact: uidContactPair(contact, uid))

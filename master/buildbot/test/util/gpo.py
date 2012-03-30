@@ -110,3 +110,4 @@ class GetProcessOutputMixin:
 
     def gpoAnyPattern(self):
         return lambda bin, args, **kwargs : True
+    

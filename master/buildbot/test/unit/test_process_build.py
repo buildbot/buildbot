@@ -110,7 +110,8 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
         self.assertEqual(b.result, SUCCESS)
-        self.assert_( ('startStep', (b.remote,), {}) in step.method_calls)
+        self.assert_( ('startStep', (slavebuilder.remote,), {})
+                                    in step.method_calls)
 
     def testStopBuild(self):
         b = self.build
@@ -201,7 +202,8 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
         self.assertEqual(b.result, SUCCESS)
-        self.assert_( ('startStep', (b.remote,), {}) in step.method_calls)
+        self.assert_( ('startStep', (slavebuilder.remote,), {})
+                                in step.method_calls)
         self.assertEquals(claimCount[0], 1)
 
     def testBuildWaitingForLocks(self):
@@ -230,7 +232,8 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assert_( ('startStep', (b.remote,), {}) not in step.method_calls)
+        self.assert_( ('startStep', (slavebuilder.remote,), {})
+                                    not in step.method_calls)
         self.assertEquals(claimCount[0], 1)
         self.assert_(b.currentStep is None)
         self.assert_(b._acquiringLock is not None)
@@ -262,10 +265,46 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assert_( ('startStep', (b.remote,), {}) not in step.method_calls)
+        self.assert_( ('startStep', (slavebuilder.remote,), {})
+                                    not in step.method_calls)
         self.assert_(b.currentStep is None)
         self.assertEqual(b.result, EXCEPTION)
         self.assert_( ('interrupt', ('stop it',), {}) not in step.method_calls)
+
+    def testStopBuildWaitingForLocks_lostRemote(self):
+        b = self.build
+
+        slavebuilder = Mock()
+
+        l = SlaveLock('lock')
+        lock_access = l.access('counting')
+        l.access = lambda mode: lock_access
+        real_lock = b.builder.botmaster.getLockByID(l).getLock(slavebuilder)
+        b.setLocks([l])
+
+        step = Mock()
+        step.return_value = step
+        step.startStep.return_value = SUCCESS
+        step.alwaysRun = False
+        b.setStepFactories([(step, {})])
+
+        real_lock.claim(Mock(), l.access('counting'))
+
+        def acquireLocks(res=None):
+            retval = Build.acquireLocks(b, res)
+            b.lostRemote()
+            return retval
+        b.acquireLocks = acquireLocks
+
+        b.startBuild(FakeBuildStatus(), None, slavebuilder)
+
+        self.assert_( ('startStep', (slavebuilder.remote,), {})
+                                    not in step.method_calls)
+        self.assert_(b.currentStep is None)
+        self.assertEqual(b.result, RETRY)
+        self.assert_( ('interrupt', ('stop it',), {}) not in step.method_calls)
+        self.build.build_status.setText.assert_called_with(["retry", "lost", "remote"])
+        self.build.build_status.setResults.assert_called_with(RETRY)
 
     def testStopBuildWaitingForStepLocks(self):
         b = self.build

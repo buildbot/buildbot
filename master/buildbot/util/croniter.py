@@ -165,7 +165,7 @@ class croniter(object):
 
         def proc_month(d):
             if expanded[3][0] != '*':
-                diff_month = nearest_diff_method(month, expanded[3], 12)
+                diff_month = nearest_diff_method(d.month, expanded[3], 12)
                 days = DAYS[month - 1]
                 if month == 2 and self.is_leap(year) == True:
                     days += 1

@@ -81,6 +81,18 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         """Special setup for sqlite engines"""
         # try to enable WAL logging
         if u.database:
+            def connect_listener(connection, record):
+                connection.execute("pragma checkpoint_fullfsync = off")
+
+            if sautils.sa_version() < (0,7,0):
+                class CheckpointFullfsyncDisabler(object):
+                    pass
+                disabler = CheckpointFullfsyncDisabler()
+                disabler.connect = connect_listener
+                engine.pool.add_listener(disabler)
+            else:
+                sa.event.listen(Pool, 'connect', connect_listener)
+
             log.msg("setting database journal mode to 'wal'")
             try:
                 engine.execute("pragma journal_mode = wal")

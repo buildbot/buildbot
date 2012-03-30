@@ -71,6 +71,10 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
     # db URL to use, if not using a real db
     db_url = "sqlite:///state.sqlite"
 
+    # these tests take a long time on platforms where sqlite is slow
+    # (e.g., lion, see #2256)
+    timeout = 1200
+
     @defer.inlineCallbacks
     def setUpUpgradeTest(self):
         # set up the "real" db if desired

@@ -200,7 +200,7 @@ class AnyPropertyParameter(BaseParameter):
 class ForceScheduler(base.BaseScheduler):
     
     compare_attrs = ( 'name', 'builderNames', 'branch', 'reason',
-            'revision','repository','project', 'properties' )
+            'revision', 'repository', 'project', 'forcedProperties' )
 
     def __init__(self, name, builderNames,
             branch=StringParameter(name="branch",default=""), 
