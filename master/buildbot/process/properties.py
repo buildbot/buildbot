@@ -330,12 +330,7 @@ class _Lookup(util.ComparableMixin):
 
 
 def _getInterpolationList(fmtstring):
-    #try:
-    #    fmtstring % tuple()
-    #    config.error("Interpolate doesn't handle positional subsitutions.")
-    #    return
-    #except TypeError:
-    #    pass # No positional
+    # TODO: Verify that no positial substitutions are requested
     dd = collections.defaultdict(str)
     fmtstring % dd
     return dd.keys()
@@ -432,7 +427,6 @@ class Interpolate(util.ComparableMixin):
             return fn(arg)
 
     def _parseColon_minus(self, d, kw, repl):
-        #print repl
         return _Lookup(d, kw,
                default=Interpolate(repl, **self.kwargs),
                defaultWhenFalse=False,
