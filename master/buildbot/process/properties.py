@@ -49,19 +49,16 @@ class Properties(util.ComparableMixin):
         # Track keys which are 'runtime', and should not be
         # persisted if a build is rebuilt
         self.runtime = set()
-        self.pmap = PropertyMap(self)
         self.build = None # will be set by the Build when starting
         if kwargs: self.update(kwargs, "TEST")
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['pmap']
         d['build'] = None
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.pmap = PropertyMap(self)
         if not hasattr(self, 'runtime'):
             self.runtime = set()
 
@@ -180,7 +177,7 @@ class PropertiesMixin:
 
 
 
-class PropertyMap:
+class _PropertyMap(object):
     """
     Privately-used mapping object to implement WithProperties' substitutions,
     including the rendering of None as ''.
@@ -253,9 +250,6 @@ class PropertyMap:
         'Add a temporary value (to support keyword arguments to WithProperties)'
         self.temp_vals[key] = val
 
-    def clear_temporary_values(self):
-        self.temp_vals = {}
-
 class WithProperties(util.ComparableMixin):
     """
     This is a marker class, used fairly widely to indicate that we
@@ -277,7 +271,7 @@ class WithProperties(util.ComparableMixin):
             raise ValueError('WithProperties takes either positional or keyword substitutions, not both.')
 
     def getRenderingFor(self, build):
-        pmap = build.getProperties().pmap
+        pmap = _PropertyMap(build.getProperties())
         if self.args:
             strings = []
             for name in self.args:
@@ -287,7 +281,6 @@ class WithProperties(util.ComparableMixin):
             for k,v in self.lambda_subs.iteritems():
                 pmap.add_temporary_value(k, v(build))
             s = self.fmtstring % pmap
-            pmap.clear_temporary_values()
         return s
 
 
