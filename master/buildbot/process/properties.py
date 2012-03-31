@@ -16,7 +16,7 @@
 import collections
 import re
 import weakref
-from buildbot import util
+from buildbot import config, util
 from buildbot.interfaces import IRenderable, IProperties
 from twisted.internet import defer
 from twisted.python.components import registerAdapter
@@ -365,8 +365,6 @@ class Interpolate(util.ComparableMixin):
     compare_attrs = ('fmtstring', 'args', 'kwargs') 
  
     def __init__(self, fmtstring, *args, **kwargs): 
-        global config
-        from buildbot import config
         self.fmtstring = fmtstring 
         self.args = args
         self.kwargs = kwargs 
