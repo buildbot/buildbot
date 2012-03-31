@@ -54,7 +54,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.tearDownSourceStep()
 
     def patch_slaveVersionIsOlderThan(self, result):
-        svn.SVN.slaveVersionIsOlderThan = lambda x, y, z: result
+        self.patch(svn.SVN, 'slaveVersionIsOlderThan', lambda x, y, z: result)
 
     def test_repourl_and_baseURL(self):
         self.assertRaises(config.ConfigErrors, lambda :
