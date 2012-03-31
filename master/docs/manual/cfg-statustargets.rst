@@ -718,6 +718,8 @@ MailNotifier
 
 .. py:class:: buildbot.status.mail.MailNotifier
 
+*\*\*\*WARNING: MailNotifier is known to be buggy \*\*\**
+
 The buildbot can also send email when builds finish. The most common
 use of this is to tell developers when their change has caused the
 build to fail. It is also quite common to send a message to a mailing
