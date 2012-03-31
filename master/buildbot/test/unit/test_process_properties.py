@@ -18,23 +18,12 @@ from zope.interface import implements
 from twisted.internet import defer
 from twisted.trial import unittest
 from twisted.python import components
-from buildbot.process.properties import PropertyMap, Properties, WithProperties
+from buildbot.process.properties import Properties, WithProperties
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Property, PropertiesMixin
 from buildbot.interfaces import IRenderable, IProperties
 from buildbot.test.util.config import ConfigErrorsMixin
 
-class FakeProperties(object):
-    def __init__(self, **kwargs):
-        self.dict = kwargs
-        self.build = None
-    def __getitem__(self, k):
-        return self.dict[k]
-    def has_key(self, k):
-        return self.dict.has_key(k)
-    def getBuild(self):
-        return self.build        
-        
 class FakeSource:
     def __init__(self):
         self.branch = None
@@ -85,8 +74,13 @@ components.registerAdapter(
         FakeBuild, IProperties)
 
 class TestPropertyMap(unittest.TestCase):
+    """
+    Test the behavior of PropertyMap, using the external interace
+    provided by WithProperties.
+    """
+
     def setUp(self):
-        self.fp = FakeProperties(
+        self.props = Properties(
             prop_str='a-string',
             prop_none=None,
             prop_list=['a', 'b'],
@@ -96,205 +90,194 @@ class TestPropertyMap(unittest.TestCase):
             prop_true=True,
             prop_empty='',
         )
-        self.pm = PropertyMap(self.fp)
+        self.build = FakeBuild(self.props)
+
+    def doTestSimpleWithProperties(self, fmtstring, expect, **kwargs):
+        d = self.build.render(WithProperties(fmtstring, **kwargs))
+        d.addCallback(self.failUnlessEqual, "%s" % expect)
+        return d
 
     def testSimpleStr(self):
-        self.assertEqual(self.pm['prop_str'], 'a-string')
+        return self.doTestSimpleWithProperties('%(prop_str)s', 'a-string')
 
     def testSimpleNone(self):
         # None is special-cased to become an empty string
-        self.assertEqual(self.pm['prop_none'], '')
+        return self.doTestSimpleWithProperties('%(prop_none)s', '')
 
     def testSimpleList(self):
-        self.assertEqual(self.pm['prop_list'], ['a', 'b'])
+        return self.doTestSimpleWithProperties('%(prop_list)s', ['a', 'b'])
 
     def testSimpleZero(self):
-        self.assertEqual(self.pm['prop_zero'], 0)
+        return self.doTestSimpleWithProperties('%(prop_zero)s', 0)
 
     def testSimpleOne(self):
-        self.assertEqual(self.pm['prop_one'], 1)
+        return self.doTestSimpleWithProperties('%(prop_one)s', 1)
 
     def testSimpleFalse(self):
-        self.assertEqual(self.pm['prop_false'], False)
+        return self.doTestSimpleWithProperties('%(prop_false)s', False)
 
     def testSimpleTrue(self):
-        self.assertEqual(self.pm['prop_true'], True)
+        return self.doTestSimpleWithProperties('%(prop_true)s', True)
 
     def testSimpleEmpty(self):
-        self.assertEqual(self.pm['prop_empty'], '')
+        return self.doTestSimpleWithProperties('%(prop_empty)s', '')
 
     def testSimpleUnset(self):
-        self.assertRaises(KeyError, lambda : self.pm['prop_nosuch'])
+        d = self.build.render(WithProperties('%(prop_nosuch)s'))
+        return self.assertFailure(d, KeyError)
 
 
     def testColonMinusSet(self):
-        self.assertEqual(self.pm['prop_str:-missing'], 'a-string')
+        return self.doTestSimpleWithProperties('%(prop_str:-missing)s', 'a-string')
 
     def testColonMinusNone(self):
         # None is special-cased here, too
-        self.assertEqual(self.pm['prop_none:-missing'], '')
+        return self.doTestSimpleWithProperties('%(prop_none:-missing)s', '')
 
     def testColonMinusZero(self):
-        self.assertEqual(self.pm['prop_zero:-missing'], 0)
+        return self.doTestSimpleWithProperties('%(prop_zero:-missing)s', 0)
 
     def testColonMinusOne(self):
-        self.assertEqual(self.pm['prop_one:-missing'], 1)
+        return self.doTestSimpleWithProperties('%(prop_one:-missing)s', 1)
 
     def testColonMinusFalse(self):
-        self.assertEqual(self.pm['prop_false:-missing'], False)
+        return self.doTestSimpleWithProperties('%(prop_false:-missing)s', False)
 
     def testColonMinusTrue(self):
-        self.assertEqual(self.pm['prop_true:-missing'], True)
+        return self.doTestSimpleWithProperties('%(prop_true:-missing)s', True)
 
     def testColonMinusEmpty(self):
-        self.assertEqual(self.pm['prop_empty:-missing'], '')
+        return self.doTestSimpleWithProperties('%(prop_empty:-missing)s', '')
 
     def testColonMinusUnset(self):
-        self.assertEqual(self.pm['prop_nosuch:-missing'], 'missing')
+        return self.doTestSimpleWithProperties('%(prop_nosuch:-missing)s', 'missing')
 
 
     def testColonTildeSet(self):
-        self.assertEqual(self.pm['prop_str:~missing'], 'a-string')
+        return self.doTestSimpleWithProperties('%(prop_str:~missing)s', 'a-string')
 
     def testColonTildeNone(self):
         # None is special-cased *differently* for ~:
-        self.assertEqual(self.pm['prop_none:~missing'], 'missing')
+        return self.doTestSimpleWithProperties('%(prop_none:~missing)s', 'missing')
 
     def testColonTildeZero(self):
-        self.assertEqual(self.pm['prop_zero:~missing'], 'missing')
+        return self.doTestSimpleWithProperties('%(prop_zero:~missing)s', 'missing')
 
     def testColonTildeOne(self):
-        self.assertEqual(self.pm['prop_one:~missing'], 1)
+        return self.doTestSimpleWithProperties('%(prop_one:~missing)s', 1)
 
     def testColonTildeFalse(self):
-        self.assertEqual(self.pm['prop_false:~missing'], 'missing')
+        return self.doTestSimpleWithProperties('%(prop_false:~missing)s', 'missing')
 
     def testColonTildeTrue(self):
-        self.assertEqual(self.pm['prop_true:~missing'], True)
+        return self.doTestSimpleWithProperties('%(prop_true:~missing)s', True)
 
     def testColonTildeEmpty(self):
-        self.assertEqual(self.pm['prop_empty:~missing'], 'missing')
+        return self.doTestSimpleWithProperties('%(prop_empty:~missing)s', 'missing')
 
     def testColonTildeUnset(self):
-        self.assertEqual(self.pm['prop_nosuch:~missing'], 'missing')
+        return self.doTestSimpleWithProperties('%(prop_nosuch:~missing)s', 'missing')
 
 
     def testColonPlusSet(self):
-        self.assertEqual(self.pm['prop_str:+present'], 'present')
+        return self.doTestSimpleWithProperties('%(prop_str:+present)s', 'present')
 
     def testColonPlusNone(self):
-        self.assertEqual(self.pm['prop_none:+present'], 'present')
+        return self.doTestSimpleWithProperties('%(prop_none:+present)s', 'present')
 
     def testColonPlusZero(self):
-        self.assertEqual(self.pm['prop_zero:+present'], 'present')
+        return self.doTestSimpleWithProperties('%(prop_zero:+present)s', 'present')
 
     def testColonPlusOne(self):
-        self.assertEqual(self.pm['prop_one:+present'], 'present')
+        return self.doTestSimpleWithProperties('%(prop_one:+present)s', 'present')
 
     def testColonPlusFalse(self):
-        self.assertEqual(self.pm['prop_false:+present'], 'present')
+        return self.doTestSimpleWithProperties('%(prop_false:+present)s', 'present')
 
     def testColonPlusTrue(self):
-        self.assertEqual(self.pm['prop_true:+present'], 'present')
+        return self.doTestSimpleWithProperties('%(prop_true:+present)s', 'present')
 
     def testColonPlusEmpty(self):
-        self.assertEqual(self.pm['prop_empty:+present'], 'present')
+        return self.doTestSimpleWithProperties('%(prop_empty:+present)s', 'present')
 
     def testColonPlusUnset(self):
-        self.assertEqual(self.pm['prop_nosuch:+present'], '')
-
-    def testNoTempValues(self):
-        self.assertEqual(self.pm.temp_vals, {})
+        return self.doTestSimpleWithProperties('%(prop_nosuch:+present)s', '')
 
     def testClearTempValues(self):
-        self.pm.add_temporary_value('prop_temp', 'present')
-        self.pm.clear_temporary_values()
-        self.assertEqual(self.pm.temp_vals, {})
+        d = self.doTestSimpleWithProperties('', '',
+                prop_temp=lambda b: 'present')
+        d.addCallback(lambda _:
+                self.doTestSimpleWithProperties('%(prop_temp:+present)s', ''))
+        return d
 
     def testTempValue(self):
-        self.pm.add_temporary_value('prop_temp', 'present')
-        self.assertEqual(self.pm['prop_temp'], 'present')
-        self.pm.clear_temporary_values()
+        self.doTestSimpleWithProperties('%(prop_temp)s', 'present',
+                prop_temp=lambda b: 'present')
 
     def testTempValueOverrides(self):
-        self.pm.add_temporary_value('prop_one', 2)
-        self.assertEqual(self.pm['prop_one'], 2)
-        self.pm.clear_temporary_values()
+        return self.doTestSimpleWithProperties('%(prop_one)s', 2,
+                prop_one=lambda b: 2)
 
     def testTempValueColonMinusSet(self):
-        self.pm.add_temporary_value('prop_one', 2)
-        self.assertEqual(self.pm['prop_one:-missing'], 2)
-        self.pm.clear_temporary_values()
+        return self.doTestSimpleWithProperties('%(prop_one:-missing)s', 2,
+                prop_one=lambda b: 2)
 
     def testTempValueColonMinusUnset(self):
-        self.pm.add_temporary_value('prop_nosuch', 'temp')
-        self.assertEqual(self.pm['prop_nosuch:-missing'], 'temp')
-        self.pm.clear_temporary_values()
+        return self.doTestSimpleWithProperties('%(prop_nosuch:-missing)s', 'temp',
+                prop_nosuch=lambda b: 'temp')
 
     def testTempValueColonTildeTrueSet(self):
-        self.pm.add_temporary_value('prop_false', 'temp')
-        self.assertEqual(self.pm['prop_false:~nontrue'], 'temp')
-        self.pm.clear_temporary_values()
+        return self.doTestSimpleWithProperties('%(prop_false:~nontrue)s', 'temp',
+                prop_false=lambda b: 'temp')
 
     def testTempValueColonTildeTrueUnset(self):
-        self.pm.add_temporary_value('prop_nosuch', 'temp')
-        self.assertEqual(self.pm['prop_nosuch:~nontrue'], 'temp')
-        self.pm.clear_temporary_values()
+        return self.doTestSimpleWithProperties('%(prop_nosuch:~nontrue)s', 'temp',
+                prop_nosuch=lambda b: 'temp')
 
     def testTempValueColonTildeFalseFalse(self):
-        self.pm.add_temporary_value('prop_false', False)
-        self.assertEqual(self.pm['prop_false:~nontrue'], 'nontrue')
-        self.pm.clear_temporary_values()
+        return self.doTestSimpleWithProperties('%(prop_false:~nontrue)s', 'nontrue',
+                prop_false=lambda b: False)
 
     def testTempValueColonTildeTrueFalse(self):
-        self.pm.add_temporary_value('prop_true', False)
-        self.assertEqual(self.pm['prop_true:~nontrue'], True)
-        self.pm.clear_temporary_values()
+        return self.doTestSimpleWithProperties('%(prop_true:~nontrue)s', True,
+                prop_true=lambda b: False)
 
     def testTempValueColonTildeNoneFalse(self):
-        self.pm.add_temporary_value('prop_nosuch', False)
-        self.assertEqual(self.pm['prop_nosuch:~nontrue'], 'nontrue')
-        self.pm.clear_temporary_values()
+        return self.doTestSimpleWithProperties('%(prop_nosuch:~nontrue)s', 'nontrue',
+                prop_nosuch=lambda b: False)
 
 
     def testTempValueColonTildeFalseZero(self):
-        self.pm.add_temporary_value('prop_false', 0)
-        self.assertEqual(self.pm['prop_false:~nontrue'], 'nontrue')
-        self.pm.clear_temporary_values()
+        return self.doTestSimpleWithProperties('%(prop_false:~nontrue)s', 'nontrue',
+                prop_false=lambda b: 0)
 
     def testTempValueColonTildeTrueZero(self):
-        self.pm.add_temporary_value('prop_true', 0)
-        self.assertEqual(self.pm['prop_true:~nontrue'], True)
-        self.pm.clear_temporary_values()
+        return self.doTestSimpleWithProperties('%(prop_true:~nontrue)s', True,
+                prop_true=lambda b: 0)
 
     def testTempValueColonTildeNoneZero(self):
-        self.pm.add_temporary_value('prop_nosuch', 0)
-        self.assertEqual(self.pm['prop_nosuch:~nontrue'], 'nontrue')
-        self.pm.clear_temporary_values()
+        return self.doTestSimpleWithProperties('%(prop_nosuch:~nontrue)s', 'nontrue',
+                prop_nosuch=lambda b: 0)
 
     def testTempValueColonTildeFalseBlank(self):
-        self.pm.add_temporary_value('prop_false', '')
-        self.assertEqual(self.pm['prop_false:~nontrue'], 'nontrue')
-        self.pm.clear_temporary_values()
+        return self.doTestSimpleWithProperties('%(prop_false:~nontrue)s', 'nontrue',
+                prop_false=lambda b: '')
 
     def testTempValueColonTildeTrueBlank(self):
-        self.pm.add_temporary_value('prop_true', '')
-        self.assertEqual(self.pm['prop_true:~nontrue'], True)
-        self.pm.clear_temporary_values()
+        return self.doTestSimpleWithProperties('%(prop_true:~nontrue)s', True,
+                prop_true=lambda b: '')
 
     def testTempValueColonTildeNoneBlank(self):
-        self.pm.add_temporary_value('prop_nosuch', '')
-        self.assertEqual(self.pm['prop_nosuch:~nontrue'], 'nontrue')
-        self.pm.clear_temporary_values()
+        return self.doTestSimpleWithProperties('%(prop_nosuch:~nontrue)s', 'nontrue',
+                prop_nosuch=lambda b: '')
 
     def testTempValuePlusSetSet(self):
-        self.pm.add_temporary_value('prop_one', 2)
-        self.assertEqual(self.pm['prop_one:+set'], 'set')
-        self.pm.clear_temporary_values()
+        return self.doTestSimpleWithProperties('%(prop_one:+set)s', 'set',
+                prop_one=lambda b: 2)
 
     def testTempValuePlusUnsetSet(self):
-        self.pm.add_temporary_value('prop_nosuch', 1)
-        self.assertEqual(self.pm['prop_nosuch:+set'], 'set')
+        return self.doTestSimpleWithProperties('%(prop_nosuch:+set)s', 'set',
+                prop_nosuch=lambda b: 1)
 
 
 class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
