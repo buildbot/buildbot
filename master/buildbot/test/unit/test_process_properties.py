@@ -1096,3 +1096,50 @@ class TestProperty(unittest.TestCase):
                 "default-value")
         default.callback("default-value")
         return d
+
+
+class TestRenderalbeAdapters(unittest.TestCase):
+    """
+    Tests for list, tuple and dict renderers.
+    """
+
+    def setUp(self):
+        self.props = Properties()
+        self.build = FakeBuild(self.props)
+
+
+    def test_list_deferred(self):
+        r1 = DeferredRenderable()
+        r2 = DeferredRenderable()
+        d = self.build.render([r1, r2])
+        d.addCallback(self.failUnlessEqual,
+                ["lispy", "lists"])
+        r2.callback("lists")
+        r1.callback("lispy")
+        return d
+
+
+    def test_tuple_deferred(self):
+        r1 = DeferredRenderable()
+        r2 = DeferredRenderable()
+        d = self.build.render((r1, r2))
+        d.addCallback(self.failUnlessEqual,
+                ("totally", "tupled"))
+        r2.callback("tupled")
+        r1.callback("totally")
+        return d
+
+
+    def test_dict(self):
+        r1 = DeferredRenderable()
+        r2 = DeferredRenderable()
+        k1 = DeferredRenderable()
+        k2 = DeferredRenderable()
+        d = self.build.render({k1: r1, k2: r2})
+        d.addCallback(self.failUnlessEqual,
+                {"lock": "load", "dict": "lookup"})
+        k1.callback("lock")
+        r1.callback("load")
+        k2.callback("dict")
+        r2.callback("lookup")
+        return d
