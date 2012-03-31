@@ -381,6 +381,26 @@ class RemoteShellCommand(RemoteCommand):
     def __repr__(self):
         return "<RemoteShellCommand '%s'>" % repr(self.command)
 
+class _BuildStepFactory(util.ComparableMixin):
+    """
+    This is a wrapper to record the arguments passed to as BuildStep subclass.
+    We use an instance of this class, rather than a closure mostly to make it
+    easier to test that the right factories are getting created.
+    """
+    compare_attrs = ['factory', 'args', 'kwargs' ]
+    def __init__(self, factory, *args, **kwargs):
+        self.factory = factory
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self):
+        try:
+            return self.factory(*self.args, **self.kwargs)
+        except:
+            log.msg("error while creating step, factory=%s, args=%s, kwargs=%s"
+                    % (self.factory, self.args, self.kwargs))
+            raise
+
 class BuildStep(object, properties.PropertiesMixin):
 
     haltOnFailure = False
@@ -439,14 +459,7 @@ class BuildStep(object, properties.PropertiesMixin):
 
     def __new__(klass, *args, **kwargs):
         self = object.__new__(klass)
-        def factory():
-            try:
-                return klass(*args, **kwargs)
-            except:
-                log.msg("error while creating step, factory=%s, args=%s, kwargs=%s"
-                        % (klass, args, kwargs))
-                raise
-        self.factory = factory
+        self.factory = _BuildStepFactory(klass, *args, **kwargs)
         return self
 
     def describe(self, done=False):
