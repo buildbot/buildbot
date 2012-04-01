@@ -83,7 +83,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'apply', '--index'],
-                        initial_stdin='patch')
+                        initialStdin='patch')
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -119,7 +119,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'apply', '--index'],
-                        initial_stdin='patch')
+                        initialStdin='patch')
             + 1,
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])
