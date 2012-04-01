@@ -72,7 +72,7 @@ class BuildStepMixin(object):
         @param slave_env: environment from the slave at slave startup
         """
         factory = step.getStepFactory()
-        step = self.step = factory()
+        step = self.step = factory.buildStep()
 
         # step.build
 

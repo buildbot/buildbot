@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot import util
+from buildbot import interfaces, util
 from buildbot.process.build import Build
 from buildbot.steps.source import CVS, SVN
 from buildbot.steps.shell import Configure, Compile, Test, PerlModuleTest
@@ -59,10 +59,7 @@ class BuildFactory(util.ComparableMixin):
         return b
 
     def addStep(self, step):
-        if callable(step):
-            self.steps.append(step)
-        else:
-            self.steps.append(step.getStepFactory())
+        self.steps.append(interfaces.IBuildStepFactory(step))
 
     def addSteps(self, steps):
         for s in steps:

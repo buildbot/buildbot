@@ -388,12 +388,14 @@ class _BuildStepFactory(util.ComparableMixin):
     easier to test that the right factories are getting created.
     """
     compare_attrs = ['factory', 'args', 'kwargs' ]
+    implements(interfaces.IBuildStepFactory)
+
     def __init__(self, factory, *args, **kwargs):
         self.factory = factory
         self.args = args
         self.kwargs = kwargs
 
-    def __call__(self):
+    def buildStep(self):
         try:
             return self.factory(*self.args, **self.kwargs)
         except:
@@ -752,6 +754,9 @@ class BuildStep(object, properties.PropertiesMixin):
             value = value(*args, **kwargs)
         return value
 
+components.registerAdapter(
+        BuildStep.getStepFactory,
+        BuildStep, interfaces.IBuildStepFactory)
 components.registerAdapter(
         lambda step : interfaces.IProperties(step.build),
         BuildStep, interfaces.IProperties)

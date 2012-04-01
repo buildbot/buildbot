@@ -298,7 +298,7 @@ class Build(properties.PropertiesMixin):
         sps = []
 
         for factory in self.stepFactories:
-            step = factory()
+            step = factory.buildStep()
             step.setBuild(self)
             step.setBuildSlave(self.slavebuilder.slave)
             if callable (self.workdir):
