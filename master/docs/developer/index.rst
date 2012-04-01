@@ -11,9 +11,10 @@ Buildbot.
 .. toctree::
     :maxdepth: 2
 
-    style
     master-overview
     definitions
+    style
+    tests
     config
     utils
     database
