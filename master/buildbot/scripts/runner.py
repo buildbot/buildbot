@@ -179,8 +179,6 @@ class ReconfigOptions(BasedirMixin, base.SubcommandOptions):
     def getSynopsis(self):
         return "Usage:    buildbot reconfig [<basedir>]"
 
-
-
 class DebugClientOptions(base.SubcommandOptions):
     optParameters = [
         ["master", "m", None,
@@ -188,8 +186,8 @@ class DebugClientOptions(base.SubcommandOptions):
         ["passwd", "p", None, "Debug password to use"],
         ]
     buildbotOptions = [
-        [ 'debugMaster', 'passwd' ],
         [ 'master', 'master' ],
+        [ 'debugMaster', 'master' ],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot debugclient [options]"
@@ -202,21 +200,17 @@ class DebugClientOptions(base.SubcommandOptions):
         if len(args) > 2:
             raise usage.UsageError("I wasn't expecting so many arguments")
 
-def debugclient(config):
-    from buildbot.clients import debug
+    def postOptions(self):
+        base.SubcommandOptions.postOptions(self)
+        master = self.get('master')
+        if master is None:
+            raise usage.UsageError("master must be specified: on the command "
+                                "line or in ~/.buildbot/options")
 
-    master = config.get('master')
-    if master is None:
-        raise usage.UsageError("master must be specified: on the command "
-                               "line or in ~/.buildbot/options")
-
-    passwd = config.get('passwd')
-    if passwd is None:
-        raise usage.UsageError("passwd must be specified: on the command "
-                               "line or in ~/.buildbot/options")
-
-    d = debug.DebugWidget(master, passwd)
-    d.run()
+        passwd = self.get('passwd')
+        if passwd is None:
+            raise usage.UsageError("passwd must be specified: on the command "
+                                "line or in ~/.buildbot/options")
 
 class StatusClientOptions(base.SubcommandOptions):
     optFlags = [
@@ -862,7 +856,8 @@ def run():
         if not sendchange(so, True):
             sys.exit(1)
     elif command == "debugclient":
-        debugclient(so)
+        from buildbot.scripts.debugclient import debugclient
+        sys.exit(debugclient(so))
     elif command == "statuslog":
         statuslog(so)
     elif command == "statusgui":

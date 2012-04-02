@@ -834,3 +834,73 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
         exp = self.defaults_and(force=True, basedir='/foo/bar')
         self.assertOptions(opts, exp)
 
+class TestDebugClientOptions(OptionsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpOptions()
+
+    def parse(self, *args):
+        self.opts = runner.DebugClientOptions()
+        self.opts.parseOptions(args)
+        return self.opts
+
+    def test_synopsis(self):
+        opts = runner.DebugClientOptions()
+        self.assertIn('buildbot debugclient', opts.getSynopsis())
+
+    def test_defaults(self):
+        self.assertRaises(usage.UsageError,
+                lambda : self.parse())
+
+    def test_args_missing_passwd(self):
+        self.assertRaises(usage.UsageError,
+                lambda : self.parse('-m', 'mm'))
+
+    def test_options_long(self):
+        opts = self.parse('--master', 'mm', '--passwd', 'pp')
+        exp = dict(master='mm', passwd='pp')
+        self.assertOptions(opts, exp)
+
+    def test_positional_master_passwd(self):
+        opts = self.parse('foo', 'pass')
+        exp = dict(master='foo', passwd='pass')
+        self.assertOptions(opts, exp)
+
+    def test_positional_master(self):
+        opts = self.parse('-p', 'pass', 'foo')
+        exp = dict(master='foo', passwd='pass')
+        self.assertOptions(opts, exp)
+
+    def test_args_master_passwd(self):
+        opts = self.parse('foo', 'pass')
+        exp = dict(master='foo', passwd='pass')
+        self.assertOptions(opts, exp)
+
+    def test_missing_both(self):
+        self.assertRaises(usage.UsageError,
+            lambda :self.parse())
+
+    def test_missing_passwd(self):
+        self.assertRaises(usage.UsageError,
+            lambda :self.parse('master'))
+
+    def test_missing_master(self):
+        self.assertRaises(usage.UsageError,
+            lambda :self.parse('-p', 'pass'))
+
+    def test_options_extra_positional(self):
+        self.assertRaises(usage.UsageError,
+                lambda : self.parse('mm', 'pp', '??'))
+
+    def test_options_master(self):
+        self.options_file['master'] = 'opt'
+        opts = self.parse('-p', 'pass')
+        exp = dict(master='opt', passwd='pass')
+        self.assertOptions(opts, exp)
+
+    def test_options_debugMaster(self):
+        self.options_file['master'] = 'not seen'
+        self.options_file['debugMaster'] = 'opt'
+        opts = self.parse('-p', 'pass')
+        exp = dict(master='opt', passwd='pass')
+        self.assertOptions(opts, exp)
