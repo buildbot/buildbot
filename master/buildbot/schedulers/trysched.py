@@ -117,14 +117,12 @@ class Try_Jobdir(TryBase):
         if not p.strings:
             raise BadJobfile("could not find any complete netstrings")
         ver = p.strings.pop(0)
-        # v1:
-        keys = ['jobid branch baserev patch_level patch_body'.split()]
-        # v2 introduces repository and project
-        keys.append(keys[-1] + 'repository project'.split())
-        # v3 introduces who
-        keys.append(keys[-1] + ['who'])
-        # v4 introduces comment
-        keys.append(keys[-1] + ['comment'])
+
+        v1_keys = ['jobid', 'branch', 'baserev', 'patch_level', 'patch_body']
+        v2_keys = v1_keys + ['repository', 'project']
+        v3_keys = v2_keys + ['who']
+        v4_keys = v3_keys + ['comment']
+        keys = [v1_keys, v2_keys, v3_keys, v4_keys]
         # v5 introduces properties and uses JSON serialization
 
         parsed_job = {}
