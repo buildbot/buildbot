@@ -236,12 +236,12 @@ class Git(Source):
         d.addCallback(setrev)
         return d
 
-    def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, extra_args={}):
+    def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['git'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            collectStdout=collectStdout,
-                                           **extra_args)
+                                           initialStdin=initialStdin)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting git command : git %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
@@ -288,7 +288,7 @@ class Git(Source):
         return d
 
     def patch(self, _, patch):
-        d = self._dovccmd(['apply', '--index'], extra_args={'initial_stdin': patch})
+        d = self._dovccmd(['apply', '--index'], initialStdin=patch)
         return d
 
     @defer.inlineCallbacks
