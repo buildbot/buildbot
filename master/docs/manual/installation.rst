@@ -179,6 +179,8 @@ Windows users will find these files in other places. You will need to
 make sure that python can find the libraries, and will probably find
 it convenient to have :command:`buildbot` on your :envvar:`PATH`.
 
+.. _Installation-in-a-Virtualenv:
+
 Installation in a Virtualenv
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

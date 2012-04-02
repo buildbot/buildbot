@@ -579,16 +579,13 @@ class Try(pb.Referenceable):
 
     def deliverJob(self):
         # returns a Deferred that fires when the job has been delivered
-
         if self.connect == "ssh":
             tryhost = self.getopt("host")
             tryuser = self.getopt("username")
             trydir = self.getopt("jobdir")
-
+            buildbotbin = self.getopt("buildbotbin")
             argv = ["ssh", "-l", tryuser, tryhost,
-                    "buildbot", "tryserver", "--jobdir", trydir]
-            # now run this command and feed the contents of 'job' into stdin
-
+                    buildbotbin, "tryserver", "--jobdir", trydir]
             pp = RemoteTryPP(self.jobfile)
             reactor.spawnProcess(pp, argv[0], argv, os.environ)
             d = pp.d
