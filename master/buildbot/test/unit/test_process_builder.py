@@ -325,6 +325,38 @@ class TestBuilderBuildCreation(unittest.TestCase):
         yield self.bldr.stopService()
         yield self.bldr.maybeStartBuild()
 
+    @defer.deferredGenerator
+    def test_maybeStartBuild_merge_ordering(self):
+        wfd = defer.waitForDeferred(
+            self.makeBuilder(patch_random=True))
+        yield wfd
+        wfd.getResult()
+
+        self.setSlaveBuilders({'bldr':1})
+
+        # based on the build in bug #2249
+        rows = [
+            fakedb.SourceStampSet(id=1976),
+            fakedb.SourceStamp(id=1976, sourcestampsetid=1976),
+            fakedb.Buildset(id=1980, reason='scheduler', sourcestampsetid=1976,
+                submitted_at=1332024020.67792),
+            fakedb.BuildRequest(id=42880, buildsetid=1980,
+                submitted_at=1332024020.67792, buildername="bldr"),
+
+            fakedb.SourceStampSet(id=1977),
+            fakedb.SourceStamp(id=1977, sourcestampsetid=1977),
+            fakedb.Buildset(id=1981, reason='scheduler', sourcestampsetid=1977,
+                submitted_at=1332025495.19141),
+            fakedb.BuildRequest(id=42922, buildsetid=1981,
+                buildername="bldr", submitted_at=1332025495.19141),
+        ]
+        wfd = defer.waitForDeferred(
+            self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[42880, 42922],
+                exp_builds=[('bldr', [42880, 42922])]))
+        yield wfd
+        wfd.getResult()
+
     # _chooseSlave
 
     def do_test_chooseSlave(self, nextSlave, exp_choice=None, exp_fail=None):
