@@ -751,3 +751,64 @@ class TestDebugClientOptions(OptionsMixin, unittest.TestCase):
         opts = self.parse('-p', 'pass')
         exp = dict(master='opt', passwd='pass')
         self.assertOptions(opts, exp)
+
+
+class TestBaseStatusClientOptions(OptionsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpOptions()
+
+    def parse(self, *args):
+        self.opts = runner.BaseStatusClientOptions()
+        self.opts.parseOptions(args)
+        return self.opts
+
+    def test_defaults(self):
+        opts = self.parse('--master', 'm')
+        exp = dict(master='m', username='statusClient', passwd='clientpw')
+        self.assertOptions(opts, exp)
+
+    def test_short(self):
+        opts = self.parse('-m', 'm', '-u', 'u', '-p', 'p')
+        exp = dict(master='m', username='u', passwd='p')
+        self.assertOptions(opts, exp)
+
+    def test_long(self):
+        opts = self.parse('--master', 'm', '--username', 'u', '--passwd', 'p')
+        exp = dict(master='m', username='u', passwd='p')
+        self.assertOptions(opts, exp)
+
+    def test_positional_master(self):
+        opts = self.parse('--username', 'u', '--passwd', 'p', 'm')
+        exp = dict(master='m', username='u', passwd='p')
+        self.assertOptions(opts, exp)
+
+    def test_positional_extra(self):
+        self.assertRaises(usage.UsageError,
+            lambda : self.parse('--username', 'u', '--passwd', 'p', 'm', '2'))
+
+    def test_missing_master(self):
+        self.assertRaises(usage.UsageError,
+            lambda : self.parse('--username', 'u', '--passwd', 'p'))
+
+    def test_options_masterstatus(self):
+        self.options_file['master'] = 'not seen'
+        self.options_file['masterstatus'] = 'opt'
+        opts = self.parse('-p', 'pass', '-u', 'user')
+        exp = dict(master='opt', username='user', passwd='pass')
+        self.assertOptions(opts, exp)
+
+
+class TestStatusLogOptions(unittest.TestCase):
+
+    def test_synopsis(self):
+        opts = runner.StatusLogOptions()
+        self.assertIn('buildbot statuslog', opts.getSynopsis())
+
+
+class TestStatusGuiOptions(unittest.TestCase):
+
+    def test_synopsis(self):
+        opts = runner.StatusGuiOptions()
+        self.assertIn('buildbot statusgui', opts.getSynopsis())
+

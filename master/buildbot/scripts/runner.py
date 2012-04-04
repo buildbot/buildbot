@@ -212,7 +212,7 @@ class DebugClientOptions(base.SubcommandOptions):
             raise usage.UsageError("passwd must be specified: on the command "
                                 "line or in ~/.buildbot/options")
 
-class StatusClientOptions(base.SubcommandOptions):
+class BaseStatusClientOptions(base.SubcommandOptions):
     optFlags = [
         ['help', 'h', "Display this message"],
         ]
@@ -220,11 +220,18 @@ class StatusClientOptions(base.SubcommandOptions):
         ["master", "m", None,
          "Location of the buildmaster's status port (host:port)"],
         ["username", "u", "statusClient", "Username performing the trial build"],
-        ["passwd", None, "clientpw", "password for PB authentication"],
+        ["passwd", 'p', "clientpw", "password for PB authentication"],
         ]
     buildbotOptions = [
+        [ 'master', 'master' ],
         [ 'masterstatus', 'master' ],
     ]
+
+    def postOptions(self):
+        base.SubcommandOptions.postOptions(self)
+        if self.get('master') is None:
+            raise usage.UsageError("master must be specified: on the command "
+                               "line or in ~/.buildbot/options")
 
     def parseArgs(self, *args):
         if len(args) > 0:
@@ -232,35 +239,13 @@ class StatusClientOptions(base.SubcommandOptions):
         if len(args) > 1:
             raise usage.UsageError("I wasn't expecting so many arguments")
 
-class StatusLogOptions(StatusClientOptions):
+class StatusLogOptions(BaseStatusClientOptions):
     def getSynopsis(self):
         return "Usage:    buildbot statuslog [options]"
 
-class StatusGuiOptions(StatusClientOptions):
+class StatusGuiOptions(BaseStatusClientOptions):
     def getSynopsis(self):
         return "Usage:    buildbot statusgui [options]"
-
-def statuslog(config):
-    from buildbot.clients import base as clbase
-    master = config.get('master')
-    if master is None:
-        raise usage.UsageError("master must be specified: on the command "
-                               "line or in ~/.buildbot/options")
-    passwd = config.get('passwd')
-    username = config.get('username')
-    c = clbase.TextClient(master, username=username, passwd=passwd)
-    c.run()
-
-def statusgui(config):
-    from buildbot.clients import gtkPanes
-    master = config.get('master')
-    if master is None:
-        raise usage.UsageError("master must be specified: on the command "
-                               "line or in ~/.buildbot/options")
-    passwd = config.get('passwd')
-    username = config.get('username')
-    c = gtkPanes.GtkClient(master, username=username, passwd=passwd)
-    c.run()
 
 class SendChangeOptions(base.SubcommandOptions):
     def __init__(self):
@@ -835,9 +820,11 @@ def run():
         from buildbot.scripts.debugclient import debugclient
         sys.exit(debugclient(so))
     elif command == "statuslog":
-        statuslog(so)
+        from buildbot.scripts.statuslog import statuslog
+        sys.exit(statuslog(so))
     elif command == "statusgui":
-        statusgui(so)
+        from buildbot.scripts.statusgui import statusgui
+        sys.exit(statusgui(so))
     elif command == "try":
         doTry(so)
     elif command == "tryserver":
