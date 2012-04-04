@@ -344,7 +344,8 @@ class RemoteShellCommand(RemoteCommand):
                  want_stdout=1, want_stderr=1,
                  timeout=20*60, maxTime=None, logfiles={},
                  usePTY="slave-config", logEnviron=True,
-                 collectStdout=False, interruptSignal=None):
+                 collectStdout=False, interruptSignal=None,
+                 initialStdin=None):
 
         self.command = command # stash .command, set it later
         if env is not None:
@@ -361,6 +362,7 @@ class RemoteShellCommand(RemoteCommand):
                 'maxTime': maxTime,
                 'usePTY': usePTY,
                 'logEnviron': logEnviron,
+                'initial_stdin': initialStdin
                 }
         if interruptSignal is not None:
             args['interruptSignal'] = interruptSignal
