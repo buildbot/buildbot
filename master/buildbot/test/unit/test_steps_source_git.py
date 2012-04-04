@@ -62,7 +62,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.setupStep(
                 git.Git(repourl='http://github.com/buildbot/buildbot.git',
                                     mode='full', method='clean'),
-                patch = 'patch')
+                patch=(1, 'patch'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -82,7 +82,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['git', 'reset', '--hard', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'apply', '--index'],
+                        command=['git', 'apply', '--index', '-p', '1'],
                         initialStdin='patch')
             + 0,
             ExpectShell(workdir='wkdir',
@@ -98,7 +98,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.setupStep(
                 git.Git(repourl='http://github.com/buildbot/buildbot.git',
                                     mode='full', method='clean'),
-                patch = 'patch')
+                patch=(1, 'patch'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -118,7 +118,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['git', 'reset', '--hard', 'FETCH_HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'apply', '--index'],
+                        command=['git', 'apply', '--index', '-p', '1'],
                         initialStdin='patch')
             + 1,
         )
