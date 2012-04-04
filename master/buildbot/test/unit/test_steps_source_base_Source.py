@@ -17,7 +17,7 @@ import mock
 from twisted.trial import unittest
 
 from buildbot.steps.source import Source
-from buildbot.test.util import sourcesteps
+from buildbot.test.util import steps, sourcesteps
 
 class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
 
@@ -85,3 +85,25 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         step.startStep(mock.Mock())
         self.assertEqual(step.build.getSourceStamp.call_args[0], ('codebase',))        
+
+class TestSourceDescription(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_constructor_args_strings(self):
+        step = Source(workdir='build',
+                      description='svn update (running)',
+                      descriptionDone='svn update')
+        self.assertEqual(step.description, ['svn update (running)'])
+        self.assertEqual(step.descriptionDone, ['svn update'])
+
+    def test_constructor_args_lists(self):
+        step = Source(workdir='build',
+                      description=['svn', 'update', '(running)'],
+                      descriptionDone=['svn', 'update'])
+        self.assertEqual(step.description, ['svn', 'update', '(running)'])
+        self.assertEqual(step.descriptionDone, ['svn', 'update'])

@@ -19,7 +19,6 @@ import re
 import os
 import sys
 from buildbot.util import safeTranslate
-from buildbot.process import properties
 from buildbot import interfaces
 from buildbot import locks
 from buildbot.revlinks import default_revlink_matcher
@@ -51,6 +50,8 @@ def error(error):
 class MasterConfig(object):
 
     def __init__(self):
+        # local import to avoid circular imports
+        from buildbot.process import properties
         # default values for all attributes
 
         # global

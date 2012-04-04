@@ -344,7 +344,8 @@ class RemoteShellCommand(RemoteCommand):
                  want_stdout=1, want_stderr=1,
                  timeout=20*60, maxTime=None, logfiles={},
                  usePTY="slave-config", logEnviron=True,
-                 collectStdout=False, interruptSignal=None):
+                 collectStdout=False, interruptSignal=None,
+                 initialStdin=None):
 
         self.command = command # stash .command, set it later
         if env is not None:
@@ -361,6 +362,7 @@ class RemoteShellCommand(RemoteCommand):
                 'maxTime': maxTime,
                 'usePTY': usePTY,
                 'logEnviron': logEnviron,
+                'initial_stdin': initialStdin
                 }
         if interruptSignal is not None:
             args['interruptSignal'] = interruptSignal
@@ -539,13 +541,21 @@ class BuildStep(properties.PropertiesMixin):
         renderables = []
         accumulateClassList(self.__class__, 'renderables', renderables)
 
-        for renderable in renderables:
-            setattr(self, renderable, self.build.render(getattr(self, renderable)))
+        def setRenderable(res, attr):
+            setattr(self, attr, res)
 
-        doStep.addCallback(self._startStep_3)
-        return doStep
+        dl = [ doStep ]
+        for renderable in renderables:
+            d = self.build.render(getattr(self, renderable))
+            d.addCallback(setRenderable, renderable)
+            dl.append(d)
+        dl = defer.gatherResults(dl)
+
+        dl.addCallback(self._startStep_3)
+        return dl
 
     def _startStep_3(self, doStep):
+        doStep = doStep[0]
         try:
             if doStep:
                 if self.start() == SKIPPED:

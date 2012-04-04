@@ -439,13 +439,14 @@ class MailNotifier(base.StatusReceiverMultiService):
     def _gotBuilds(self, res, buildset):
         builds = []
         for (builddictlist, builder) in res:
-                for builddict in builddictlist:
-                    build = builder.getBuild(builddict['number'])
-                    if build is not None and self.isMailNeeded(build, build.results):
-                        builds.append(build)
+            for builddict in builddictlist:
+                build = builder.getBuild(builddict['number'])
+                if build is not None and self.isMailNeeded(build, build.results):
+                    builds.append(build)
 
-        self.buildMessage("Buildset Complete: " + buildset['reason'], builds,
-                          buildset['results'])
+        if builds:
+            self.buildMessage("Buildset Complete: " + buildset['reason'], builds,
+                              buildset['results'])
         
     def _gotBuildRequests(self, breqs, buildset):
         dl = []
@@ -593,18 +594,22 @@ class MailNotifier(base.StatusReceiverMultiService):
         # interpolation if only one build was given
         if self.extraHeaders:
             if len(builds) == 1:
-                extraHeaders = builds[0].render(self.extraHeaders)
+                d = builds[0].render(self.extraHeaders)
             else:
-                extraHeaders = self.extraHeaders
-            for k,v in extraHeaders.items():
-                if k in m:
-                    twlog.msg("Warning: Got header " + k +
-                      " in self.extraHeaders "
-                      "but it already exists in the Message - "
-                      "not adding it.")
-                m[k] = v
+                d = defer.succeed(self.extraHeaders)
+            @d.addCallback
+            def addExtraHeaders(extraHeaders):
+                for k,v in extraHeaders.items():
+                    if k in m:
+                        twlog.msg("Warning: Got header " + k +
+                          " in self.extraHeaders "
+                          "but it already exists in the Message - "
+                          "not adding it.")
+                    m[k] = v
+            d.addCallback(lambda _: m)
+            return d
     
-        return m
+        return defer.succeed(m)
     
     def buildMessageDict(self, name, build, results):
         if self.customMesg:
@@ -640,22 +645,24 @@ class MailNotifier(base.StatusReceiverMultiService):
             if "subject" in tmp:
                 msgdict['subject'] = tmp['subject']
 
-        m = self.createEmail(msgdict, name, self.master_status.getTitle(),
+        d = self.createEmail(msgdict, name, self.master_status.getTitle(),
                              results, builds, patches, logs)
 
-        # now, who is this message going to?
-        if self.sendToInterestedUsers:
-            dl = []
-            for build in builds:
-                if self.lookup:
-                    d = self.useLookup(build)
-                else:
-                    d = self.useUsers(build)
-                dl.append(d)
-            d = defer.gatherResults(dl)
-        else:
-            d = defer.succeed([])
-        d.addCallback(self._gotRecipients, m)
+        @d.addCallback
+        def getRecipients(m):
+            # now, who is this message going to?
+            if self.sendToInterestedUsers:
+                dl = []
+                for build in builds:
+                    if self.lookup:
+                        d = self.useLookup(build)
+                    else:
+                        d = self.useUsers(build)
+                    dl.append(d)
+                d = defer.gatherResults(dl)
+            else:
+                d = defer.succeed([])
+            d.addCallback(self._gotRecipients, m)
         return d
 
     def useLookup(self, build):

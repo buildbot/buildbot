@@ -98,17 +98,17 @@ class Try_Jobdir(TryBase):
         #  "4" introduces comment
         #  "5" introduces properties and JSON serialization of values after
         #      version
-        #  buildsetID, arbitrary string, used to find the buildSet later
-        #  branch name, "" for default-branch
-        #  base revision, "" for HEAD
-        #  patchlevel, usually "1"
-        #  diff, patch to be applied for build
+        #  jobid: arbitrary string, used to find the buildSet later
+        #  branch: branch name, "" for default-branch
+        #  baserev: revision, "" for HEAD
+        #  patch_level: usually "1"
+        #  patch_body: patch to be applied for build
         #  repository
         #  project
-        #  who, user requesting build
-        #  comment, comment from user about diff and/or build
-        #  builderNames...
-        #  properties, dict of build properties
+        #  who: user requesting build
+        #  comment: comment from user about diff and/or build
+        #  builderNames: list of builder names
+        #  properties: dict of build properties
         p = netstrings.NetstringParser()
         f.seek(0,2)
         if f.tell() > basic.NetstringReceiver.MAX_LENGTH:
@@ -122,79 +122,42 @@ class Try_Jobdir(TryBase):
             raise BadJobfile("could not find any complete netstrings")
         ver = p.strings.pop(0)
 
-        if ver == "1":
-            buildsetID, branch, baserev, patchlevel, diff = p.strings[:5]
-            builderNames = p.strings[5:]
-            if branch == "":
-                branch = None
-            if baserev == "":
-                baserev = None
-            patchlevel = int(patchlevel)
-            repository = ''
-            project = ''
-            who = ''
-            comment = ''
-            properties = {}
-        elif ver == "2":  # introduced the repository and project property
-            (buildsetID, branch, baserev, patchlevel, diff, repository,
-             project) = p.strings[:7]
-            builderNames = p.strings[7:]
-            if branch == "":
-                branch = None
-            if baserev == "":
-                baserev = None
-            patchlevel = int(patchlevel)
-            who = ''
-            comment = ''
-            properties = {}
-        elif ver == "3":  # introduced who property
-            (buildsetID, branch, baserev, patchlevel, diff, repository,
-             project, who) = p.strings[:8]
-            builderNames = p.strings[8:]
-            if branch == "":
-                branch = None
-            if baserev == "":
-                baserev = None
-            patchlevel = int(patchlevel)
-            comment = ''
-            properties = {}
-        elif ver == "4":  # introduced try comments
-            (buildsetID, branch, baserev, patchlevel, diff, repository,
-             project, who, comment) = p.strings[:9]
-            builderNames = p.strings[9:]
-            if branch == "":
-                branch = None
-            if baserev == "":
-                baserev = None
-            patchlevel = int(patchlevel)
-            properties = {}
-        elif ver == "5":  # introduced properties and JSON serialization
-            job_dict = json.loads(p.strings[0])
-            buildsetID = job_dict['bsid']
-            branch = job_dict['branch'] or None
-            baserev = job_dict['baserev'] or None
-            patchlevel = int(job_dict['patchlevel'])
-            diff = job_dict['diff']
-            repository = job_dict['repository']
-            project = job_dict['project']
-            who = job_dict['who']
-            comment = job_dict['comment']
-            builderNames = job_dict['builderNames']
-            properties = job_dict['properties']
+        v1_keys = ['jobid', 'branch', 'baserev', 'patch_level', 'patch_body']
+        v2_keys = v1_keys + ['repository', 'project']
+        v3_keys = v2_keys + ['who']
+        v4_keys = v3_keys + ['comment']
+        keys = [v1_keys, v2_keys, v3_keys, v4_keys]
+        # v5 introduces properties and uses JSON serialization
+
+        parsed_job = {}
+
+        def extract_netstrings(p, keys):
+            for i, key in enumerate(keys):
+                parsed_job[key] = p.strings[i]
+
+        def postprocess_parsed_job():
+            # apply defaults and handle type casting
+            parsed_job['branch'] = parsed_job['branch'] or None
+            parsed_job['baserev'] = parsed_job['baserev'] or None
+            parsed_job['patch_level'] = int(parsed_job['patch_level'])
+            for key in 'repository project who comment'.split():
+                parsed_job[key] = parsed_job.get(key, '')
+            parsed_job['properties'] = parsed_job.get('properties', {})
+
+        if ver <= "4":
+            i = int(ver) - 1
+            extract_netstrings(p, keys[i])
+            parsed_job['builderNames'] = p.strings[len(keys[i]):]
+            postprocess_parsed_job()
+        elif ver == "5":
+            try:
+                parsed_job = json.loads(p.strings[0])
+            except ValueError:
+                raise BadJobfile("unable to parse JSON")
+            postprocess_parsed_job()
         else:
             raise BadJobfile("unknown version '%s'" % ver)
-        return dict(
-                builderNames=builderNames,
-                branch=branch,
-                baserev=baserev,
-                patch_body=diff,
-                patch_level=patchlevel,
-                repository=repository,
-                project=project,
-                who=who,
-                comment=comment,
-                jobid=buildsetID,
-                properties=properties)
+        return parsed_job
 
     def handleJobFile(self, filename, f):
         try:

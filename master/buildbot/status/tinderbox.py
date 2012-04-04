@@ -149,20 +149,15 @@ class TinderboxMailNotifier(mail.MailNotifier):
             return # ignore this build
         self.buildMessage(name, build, "building")
 
+    @defer.inlineCallbacks
     def buildMessage(self, name, build, results):
         text = ""
         res = ""
         # shortform
         t = "tinderbox:"
 
-        if type(self.tree) is str:
-            # use the exact string given
-            text += "%s tree: %s\n" % (t, self.tree)
-        elif isinstance(self.tree, WithProperties):
-            # interpolate the WithProperties instance, use that
-            text += "%s tree: %s\n" % (t, build.render(self.tree))
-        else:
-            raise Exception("tree is an unhandled value")
+        tree = yield build.render(self.tree)
+        text += "%s tree: %s\n" % (t, tree)
 
         # the start time
         # getTimes() returns a fractioned time that tinderbox doesn't understand
@@ -198,14 +193,9 @@ class TinderboxMailNotifier(mail.MailNotifier):
         if self.columnName is None:
             # use the builder name
             text += "%s build: %s\n" % (t, name)
-        elif type(self.columnName) is str:
-            # use the exact string given
-            text += "%s build: %s\n" % (t, self.columnName)
-        elif isinstance(self.columnName, WithProperties):
-            # interpolate the WithProperties instance, use that
-            text += "%s build: %s\n" % (t, build.render(self.columnName))
         else:
-            raise Exception("columnName is an unhandled value")
+            columnName = yield build.render(self.columnName)
+            text += "%s build: %s\n" % (t, columnName)
         text += "%s errorparser: %s\n" % (t, self.errorparser)
 
         # if the build just started...
@@ -283,5 +273,4 @@ class TinderboxMailNotifier(mail.MailNotifier):
 
         d = defer.DeferredList([])
         d.addCallback(self._gotRecipients, self.extraRecipients, m)
-        return d
-
+        defer.returnValue((yield d))

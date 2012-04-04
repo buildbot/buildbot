@@ -26,6 +26,7 @@ from twisted.internet import defer
 from buildbot import config, buildslave, interfaces, revlinks
 from buildbot.process import properties
 from buildbot.test.util import dirs, compat
+from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.changes import base as changes_base
 from buildbot.schedulers import base as schedulers_base
 from buildbot.status import base as status_base
@@ -69,32 +70,6 @@ class FakeBuilder(object):
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
-
-
-class ConfigErrorsMixin(object):
-
-    def assertConfigError(self, errors, substr_or_re):
-        if len(errors.errors) > 1:
-            self.fail("too many errors: %s" % (errors.errors,))
-        elif len(errors.errors) < 1:
-            self.fail("expected error did not occur")
-        elif isinstance(substr_or_re, str):
-            if substr_or_re not in errors.errors[0]:
-                self.fail("non-matching error: %s" % (errors.errors,))
-        else:
-            if not substr_or_re.search(errors.errors[0]):
-                self.fail("non-matching error: %s" % (errors.errors,))
-
-    def assertRaisesConfigError(self, substr_or_re, fn):
-        try:
-            fn()
-        except config.ConfigErrors, e:
-            self.assertConfigError(e, substr_or_re)
-        else:
-            self.fail("ConfigErrors not raised")
-
-    def assertNoConfigErrors(self, errors):
-        self.assertEqual(errors.errors, [])
 
 
 class ConfigErrors(unittest.TestCase):

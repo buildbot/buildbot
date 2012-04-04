@@ -92,7 +92,7 @@ class Mercurial(Source):
                             (self.branchType, self.possible_branchTypes))
 
         if repourl is None:
-            errors.append("you must privide a repourl")
+            errors.append("you must provide a repourl")
         
         if errors:
             raise ConfigErrors(errors)
