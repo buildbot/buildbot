@@ -628,6 +628,11 @@ class UserOptions(base.SubcommandOptions):
         [ 'user_passwd', 'passwd' ],
         ]
 
+    longdesc = """
+    Currently implemented types for --info= are:\n
+    git, svn, hg, cvs, darcs, bzr, email
+    """
+
     def __init__(self):
         base.SubcommandOptions.__init__(self)
         self['ids'] = []
@@ -661,105 +666,76 @@ class UserOptions(base.SubcommandOptions):
     def getSynopsis(self):
         return "Usage:    buildbot user [options]"
 
-    longdesc = """
-    Currently implemented types for --info= are:\n
-    git, svn, hg, cvs, darcs, bzr, email
-    """
+    def _checkValidTypes(self, info):
+        from buildbot.process.users import users
+        valid = set(['identifier', 'email'] + users.srcs)
 
-def users_client(config, runReactor=False):
-    from buildbot.clients import usersclient
-    from buildbot.process.users import users    # for srcs, encrypt
-
-    # accepted attr_types by `buildbot user`, in addition to users.srcs
-    attr_types = ['identifier', 'email']
-
-    master = config.get('master')
-    assert master, "you must provide the master location"
-    try:
-        master, port = master.split(":")
-        port = int(port)
-    except:
-        raise AssertionError("master must have the form 'hostname:port'")
-
-    op = config.get('op')
-    assert op, "you must specify an operation: add, remove, update, get"
-    if op not in ['add', 'remove', 'update', 'get']:
-        raise AssertionError("bad op %r, use 'add', 'remove', 'update', "
-                             "or 'get'" % op)
-
-    username = config.get('username')
-    passwd = config.get('passwd')
-    assert username and passwd, "A username and password pair must be given"
-
-    bb_username = config.get('bb_username')
-    bb_password = config.get('bb_password')
-    if bb_username or bb_password:
-        if op != 'update':
-            raise AssertionError("bb_username and bb_password only work "
-                                 "with update")
-        if not bb_username or not bb_password:
-            raise AssertionError("Must specify both bb_username and "
-                                 "bb_password or neither.")
-
-        bb_password = users.encrypt(bb_password)
-
-    # check op and proper args
-    info = config.get('info')
-    ids = config.get('ids')
-
-    # check for erroneous args
-    if not info and not ids:
-        raise AssertionError("must specify either --ids or --info")
-    if info and ids:
-        raise AssertionError("cannot use both --ids and --info, use "
-                         "--ids for 'remove' and 'get', --info "
-                         "for 'add' and 'update'")
-
-    if op == 'add' or op == 'update':
-        if ids:
-            raise AssertionError("cannot use --ids with 'add' or 'update'")
-        if op == 'update':
-            for user in info:
-                if 'identifier' not in user:
-                    raise ValueError("no ids found in update info, use: "
-                                     "--info=id:type=value,type=value,..")
-        if op == 'add':
-            for user in info:
-                if 'identifier' in user:
-                    raise ValueError("id found in add info, use: "
-                                     "--info=type=value,type=value,..")
-    if op == 'remove' or op == 'get':
-        if info:
-            raise AssertionError("cannot use --info with 'remove' or 'get'")
-
-    # find identifier if op == add
-    if info:
-        # check for valid types
         for user in info:
             for attr_type in user:
-                if attr_type not in users.srcs + attr_types:
-                    raise ValueError("Type not a valid attr_type, must be in: "
-                                     "%r" % (users.srcs + attr_types))
+                if attr_type not in valid:
+                    raise usage.UsageError(
+                        "Type not a valid attr_type, must be in: %s"
+                                % ', '.join(valid))
 
+    def postOptions(self):
+        base.SubcommandOptions.postOptions(self)
+
+        master = self.get('master')
+        if not master:
+            raise usage.UsageError("you must provide the master location")
+        try:
+            master, port = master.split(":")
+            port = int(port)
+        except:
+            raise usage.UsageError("master must have the form 'hostname:port'")
+
+        op = self.get('op')
+        if not op:
+            raise usage.UsageError("you must specify an operation: add, "
+                                   "remove, update, get")
+        if op not in ['add', 'remove', 'update', 'get']:
+            raise usage.UsageError("bad op %r, use 'add', 'remove', 'update', "
+                                    "or 'get'" % op)
+
+        if not self.get('username') or not self.get('passwd'):
+            raise usage.UsageError("A username and password must be given")
+
+        bb_username = self.get('bb_username')
+        bb_password = self.get('bb_password')
+        if bb_username or bb_password:
+            if op != 'update':
+                raise usage.UsageError("bb_username and bb_password only work "
+                                       "with update")
+            if not bb_username or not bb_password:
+                raise usage.UsageError("Must specify both bb_username and "
+                                       "bb_password or neither.")
+
+        info = self.get('info')
+        ids = self.get('ids')
+
+        # check for erroneous args
+        if not info and not ids:
+            raise usage.UsageError("must specify either --ids or --info")
+
+        if op == 'add' or op == 'update':
+            if ids:
+                raise usage.UsageError("cannot use --ids with 'add' or "
+                                       "'update'")
+            self._checkValidTypes(info)
+            if op == 'update':
+                for user in info:
+                    if 'identifier' not in user:
+                        raise usage.UsageError("no ids found in update info; "
+                                    "use: --info=id:type=value,type=value,..")
             if op == 'add':
-                user['identifier'] = user.values()[0]
-
-    uc = usersclient.UsersClient(master, username, passwd, port)
-    d = uc.send(op, bb_username, bb_password, ids, info)
-
-    if runReactor:
-        from twisted.internet import reactor
-        status = [True]
-        def printSuccess(res):
-            print res
-        def failed(f):
-            status[0] = False
-            print "user op NOT sent - something went wrong: " + str(f)
-        d.addCallbacks(printSuccess, failed)
-        d.addBoth(lambda _ : reactor.stop())
-        reactor.run()
-        return status[0]
-    return d
+                for user in info:
+                    if 'identifier' in user:
+                        raise usage.UsageError("identifier found in add info, "
+                                    "use: --info=type=value,type=value,..")
+        if op == 'remove' or op == 'get':
+            if info:
+                raise usage.UsageError("cannot use --info with 'remove' "
+                                       "or 'get'")
 
 class Options(usage.Options):
     synopsis = "Usage:    buildbot <command> [command options]"
@@ -870,7 +846,7 @@ def run():
         if not doCheckConfig(so):
             sys.exit(1)
     elif command == "user":
-        if not users_client(so, True):
-            sys.exit(1)
+        from buildbot.scripts.user import user
+        sys.exit(user(so))
     sys.exit(0)
 
