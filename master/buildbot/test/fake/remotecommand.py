@@ -16,6 +16,7 @@
 from twisted.internet import defer
 from twisted.python import failure
 from buildbot.status.logfile import STDOUT, STDERR, HEADER
+from cStringIO import StringIO
 
 
 DEFAULT_TIMEOUT="DEFAULT_TIMEOUT"
@@ -36,10 +37,10 @@ class FakeRemoteCommand:
         if collectStdout:
             self.stdout = ''
 
-    def useLog(self, loog, closeWhenFinished=False, logfileName=None):
+    def useLog(self, log, closeWhenFinished=False, logfileName=None):
         if not logfileName:
-            logfileName = loog.getName()
-        self.logs[logfileName] = loog
+            logfileName = log.getName()
+        self.logs[logfileName] = log
 
     def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
         self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
@@ -78,39 +79,41 @@ class FakeLogFile(object):
     def getName(self):
         return self.name
 
-    def addHeader(self, data):
-        self.header += data
-        self.chunks.append((HEADER, data))
+    def addHeader(self, text):
+        self.header += text
+        self.chunks.append((HEADER, text))
 
-    def addStdout(self, data):
-        self.stdout += data
-        self.chunks.append((STDOUT, data))
+    def addStdout(self, text):
+        self.stdout += text
+        self.chunks.append((STDOUT, text))
         if self.name in self.step.logobservers:
             for obs in self.step.logobservers[self.name]:
-                obs.outReceived(data)
+                obs.outReceived(text)
 
-    def addStderr(self, data):
-        self.stderr += data
-        self.chunks.append((STDERR, data))
+    def addStderr(self, text):
+        self.stderr += text
+        self.chunks.append((STDERR, text))
         if self.name in self.step.logobservers:
             for obs in self.step.logobservers[self.name]:
-                obs.errReceived(data)
+                obs.errReceived(text)
 
-    def readlines(self): # TODO: remove channel arg from logfile.py
-        return self.stdout.split('\n')
+    def readlines(self):
+        io = StringIO(self.stdout)
+        return io.readlines()
 
     def getText(self):
-        return self.stdout
+        return ''.join([ c for str,c in self.chunks
+                           if str in (STDOUT, STDERR)])
 
     def getChunks(self, channels=[], onlyText=False):
         if onlyText:
             return [ data
                         for (ch, data) in self.chunks
-                        if ch in channels ]
+                        if not channels or ch in channels ]
         else:
             return [ (ch, data)
                         for (ch, data) in self.chunks
-                        if ch in channels ]
+                        if not channels or ch in channels ]
 
     def finish(self):
         pass

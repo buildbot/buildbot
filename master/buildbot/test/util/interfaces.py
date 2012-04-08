@@ -28,4 +28,5 @@ class InterfaceTests(object):
                     inspect.formatargspec(*template_argspec),
                     inspect.formatargspec(*actual_argspec))
                 self.fail(msg)
+            return template  # just in case it's useful
         return wrap
