@@ -811,8 +811,8 @@ def run():
         from buildbot.scripts import restart
         sys.exit(restart.restart(so))
     elif command == "reconfig" or command == "sighup":
-        from buildbot.scripts.reconfig import Reconfigurator
-        Reconfigurator().run(so)
+        from buildbot.scripts.reconfig import reconfig
+        sys.exit(reconfig(so))
     elif command == "sendchange":
         if not sendchange(so, True):
             sys.exit(1)
