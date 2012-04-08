@@ -18,7 +18,7 @@ from itertools import ifilterfalse
 from twisted.python import log
 from twisted.internet import defer
 from collections import deque
-from buildbot.util.bbcollections import defaultdict
+from collections import defaultdict
 
 
 class LRUCache(object):

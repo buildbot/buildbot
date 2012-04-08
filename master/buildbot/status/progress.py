@@ -18,7 +18,7 @@ from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.python import log
 from buildbot import util
-from buildbot.util.bbcollections import defaultdict
+from collections import defaultdict
 
 class StepProgress:
     """I keep track of how much progress a single BuildStep has made.
