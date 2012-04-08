@@ -124,9 +124,8 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         return d
 
     def test_findUser_existing(self):
-        d = self.insertTestData(self.user1_rows)
-        d = self.insertTestData(self.user2_rows)
-        d = self.insertTestData(self.user3_rows)
+        d = self.insertTestData(
+                self.user1_rows + self.user2_rows + self.user3_rows)
         d.addCallback(lambda _ : self.db.users.findUserByAttr(
                                   identifier='lye',
                                   attr_type='git',
