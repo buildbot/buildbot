@@ -19,7 +19,7 @@ from string import join, capitalize, lower
 from zope.interface import implements
 from twisted.internet import protocol, reactor
 from twisted.words.protocols import irc
-from twisted.python import log
+from twisted.python import usage, log
 from twisted.application import internet
 from twisted.internet import defer, task
 
@@ -29,7 +29,6 @@ from buildbot.interfaces import IStatusReceiver
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status import base
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, RETRY
-from buildbot.scripts.runner import ForceOptions
 from buildbot.process.properties import Properties
 
 # twisted.internet.ssl requires PyOpenSSL, so be resilient if it's missing
@@ -67,6 +66,30 @@ def maybeColorize(text, color, useColors):
 class UsageError(ValueError):
     def __init__(self, string = "Invalid usage", *more):
         ValueError.__init__(self, string, *more)
+
+class ForceOptions(usage.Options):
+    optParameters = [
+        ["builder", None, None, "which Builder to start"],
+        ["branch", None, None, "which branch to build"],
+        ["revision", None, None, "which revision to build"],
+        ["reason", None, None, "the reason for starting the build"],
+        ["props", None, None,
+         "A set of properties made available in the build environment, "
+         "format is --properties=prop1=value1,prop2=value2,.. "
+         "option can be specified multiple times."],
+        ]
+
+    def parseArgs(self, *args):
+        args = list(args)
+        if len(args) > 0:
+            if self['builder'] is not None:
+                raise UsageError("--builder provided in two ways")
+            self['builder'] = args.pop(0)
+        if len(args) > 0:
+            if self['reason'] is not None:
+                raise UsageError("--reason provided in two ways")
+            self['reason'] = " ".join(args)
+
 
 class IrcBuildRequest:
     hasStarted = False

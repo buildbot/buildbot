@@ -338,30 +338,6 @@ class SendChangeOptions(base.SubcommandOptions):
             raise usage.UsageError("you must provide the master location")
 
 
-class ForceOptions(base.SubcommandOptions):
-    optParameters = [
-        ["builder", None, None, "which Builder to start"],
-        ["branch", None, None, "which branch to build"],
-        ["revision", None, None, "which revision to build"],
-        ["reason", None, None, "the reason for starting the build"],
-        ["props", None, None,
-         "A set of properties made available in the build environment, "
-         "format is --properties=prop1=value1,prop2=value2,.. "
-         "option can be specified multiple times."],
-        ]
-
-    def parseArgs(self, *args):
-        args = list(args)
-        if len(args) > 0:
-            if self['builder'] is not None:
-                raise usage.UsageError("--builder provided in two ways")
-            self['builder'] = args.pop(0)
-        if len(args) > 0:
-            if self['reason'] is not None:
-                raise usage.UsageError("--reason provided in two ways")
-            self['reason'] = " ".join(args)
-
-
 class TryOptions(base.SubcommandOptions):
     optParameters = [
         ["connect", "c", None,
@@ -691,7 +667,6 @@ class Options(usage.Options):
         ['statusgui', None, StatusGuiOptions,
          "Display a small window showing current builder status"],
 
-        #['force', None, ForceOptions, "Run a build"],
         ['try', None, TryOptions, "Run a build with your local changes"],
 
         ['tryserver', None, TryServerOptions,
