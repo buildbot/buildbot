@@ -40,6 +40,7 @@ class OptionsMixin(object):
                                (k, exp[k], opts[k]))
             self.fail("did not get expected options\n" + ("\n".join(msg)))
 
+
 class TestUpgradeMasterOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
@@ -67,6 +68,125 @@ class TestUpgradeMasterOptions(OptionsMixin, unittest.TestCase):
     def test_long(self):
         opts = self.parse('--quiet', '--replace')
         exp = dict(quiet=True, replace=True)
+        self.assertOptions(opts, exp)
+
+
+class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpOptions()
+
+    def parse(self, *args):
+        self.opts = runner.CreateMasterOptions()
+        self.opts.parseOptions(args)
+        return self.opts
+
+    def defaults_and(self, **kwargs):
+        defaults = dict(force=False, relocatable=False, config='master.cfg',
+                db='sqlite:///state.sqlite', basedir=os.getcwd(), quiet=False,
+                **{'no-logrotate':False, 'log-size':'10000000',
+                   'log-count':'10'})
+        unk_keys = set(kwargs.keys()) - set(defaults.keys())
+        assert not unk_keys, "invalid keys %s" % (unk_keys,)
+        opts = defaults.copy()
+        opts.update(kwargs)
+        return opts
+
+    def test_synopsis(self):
+        opts = runner.CreateMasterOptions()
+        self.assertIn('buildbot create-master', opts.getSynopsis())
+
+    def test_defaults(self):
+        opts = self.parse()
+        exp = self.defaults_and()
+        self.assertOptions(opts, exp)
+
+    def test_db_quiet(self):
+        opts = self.parse('-q')
+        exp = self.defaults_and(quiet=True)
+        self.assertOptions(opts, exp)
+
+    def test_db_quiet_long(self):
+        opts = self.parse('--quiet')
+        exp = self.defaults_and(quiet=True)
+        self.assertOptions(opts, exp)
+
+    def test_force(self):
+        opts = self.parse('-f')
+        exp = self.defaults_and(force=True)
+        self.assertOptions(opts, exp)
+
+    def test_force_long(self):
+        opts = self.parse('--force')
+        exp = self.defaults_and(force=True)
+        self.assertOptions(opts, exp)
+
+    def test_relocatable(self):
+        opts = self.parse('-r')
+        exp = self.defaults_and(relocatable=True)
+        self.assertOptions(opts, exp)
+
+    def test_relocatable_long(self):
+        opts = self.parse('--relocatable')
+        exp = self.defaults_and(relocatable=True)
+        self.assertOptions(opts, exp)
+
+    def test_no_logrotate(self):
+        opts = self.parse('-n')
+        exp = self.defaults_and(**{'no-logrotate' : True})
+        self.assertOptions(opts, exp)
+
+    def test_no_logrotate_long(self):
+        opts = self.parse('--no-logrotate')
+        exp = self.defaults_and(**{'no-logrotate' : True})
+        self.assertOptions(opts, exp)
+
+    def test_config(self):
+        opts = self.parse('-cxyz')
+        exp = self.defaults_and(config='xyz')
+        self.assertOptions(opts, exp)
+
+    def test_config_long(self):
+        opts = self.parse('--config=xyz')
+        exp = self.defaults_and(config='xyz')
+        self.assertOptions(opts, exp)
+
+    def test_log_size(self):
+        opts = self.parse('-s124')
+        exp = self.defaults_and(**{'log-size':'124'})
+        self.assertOptions(opts, exp)
+
+    def test_log_size_long(self):
+        opts = self.parse('--log-size=124')
+        exp = self.defaults_and(**{'log-size':'124'})
+        self.assertOptions(opts, exp)
+
+    def test_log_size_noninteger(self):
+        self.assertRaises(usage.UsageError,
+            lambda :self.parse('--log-size=1M'))
+
+    def test_log_count(self):
+        opts = self.parse('-l124')
+        exp = self.defaults_and(**{'log-count':'124'})
+        self.assertOptions(opts, exp)
+
+    def test_log_count_long(self):
+        opts = self.parse('--log-count=124')
+        exp = self.defaults_and(**{'log-count':'124'})
+        self.assertOptions(opts, exp)
+
+    def test_log_count_noninteger(self):
+        self.assertRaises(usage.UsageError,
+            lambda :self.parse('--log-count=M'))
+
+    def test_db_long(self):
+        opts = self.parse('--db=foo://bar')
+        exp = self.defaults_and(db='foo://bar')
+        self.assertOptions(opts, exp)
+
+    def test_db_basedir(self):
+        opts = self.parse('-f', '/foo/bar')
+        exp = self.defaults_and(force=True, basedir='/foo/bar')
         self.assertOptions(opts, exp)
 
 
@@ -117,6 +237,271 @@ class TestStartOptions(BaseTestSimpleOptions, unittest.TestCase):
 class TestReconfigOptions(BaseTestSimpleOptions, unittest.TestCase):
     commandName = 'reconfig'
     optionsClass = runner.ReconfigOptions
+
+
+class TestDebugClientOptions(OptionsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpOptions()
+
+    def parse(self, *args):
+        self.opts = runner.DebugClientOptions()
+        self.opts.parseOptions(args)
+        return self.opts
+
+    def test_synopsis(self):
+        opts = runner.DebugClientOptions()
+        self.assertIn('buildbot debugclient', opts.getSynopsis())
+
+    def test_defaults(self):
+        self.assertRaises(usage.UsageError,
+                lambda : self.parse())
+
+    def test_args_missing_passwd(self):
+        self.assertRaises(usage.UsageError,
+                lambda : self.parse('-m', 'mm'))
+
+    def test_options_long(self):
+        opts = self.parse('--master', 'mm', '--passwd', 'pp')
+        exp = dict(master='mm', passwd='pp')
+        self.assertOptions(opts, exp)
+
+    def test_positional_master_passwd(self):
+        opts = self.parse('foo', 'pass')
+        exp = dict(master='foo', passwd='pass')
+        self.assertOptions(opts, exp)
+
+    def test_positional_master(self):
+        opts = self.parse('-p', 'pass', 'foo')
+        exp = dict(master='foo', passwd='pass')
+        self.assertOptions(opts, exp)
+
+    def test_args_master_passwd(self):
+        opts = self.parse('foo', 'pass')
+        exp = dict(master='foo', passwd='pass')
+        self.assertOptions(opts, exp)
+
+    def test_missing_both(self):
+        self.assertRaises(usage.UsageError,
+            lambda :self.parse())
+
+    def test_missing_passwd(self):
+        self.assertRaises(usage.UsageError,
+            lambda :self.parse('master'))
+
+    def test_missing_master(self):
+        self.assertRaises(usage.UsageError,
+            lambda :self.parse('-p', 'pass'))
+
+    def test_options_extra_positional(self):
+        self.assertRaises(usage.UsageError,
+                lambda : self.parse('mm', 'pp', '??'))
+
+    def test_options_master(self):
+        self.options_file['master'] = 'opt'
+        opts = self.parse('-p', 'pass')
+        exp = dict(master='opt', passwd='pass')
+        self.assertOptions(opts, exp)
+
+    def test_options_debugMaster(self):
+        self.options_file['master'] = 'not seen'
+        self.options_file['debugMaster'] = 'opt'
+        opts = self.parse('-p', 'pass')
+        exp = dict(master='opt', passwd='pass')
+        self.assertOptions(opts, exp)
+
+
+class TestBaseStatusClientOptions(OptionsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpOptions()
+
+    def parse(self, *args):
+        self.opts = runner.BaseStatusClientOptions()
+        self.opts.parseOptions(args)
+        return self.opts
+
+    def test_defaults(self):
+        opts = self.parse('--master', 'm')
+        exp = dict(master='m', username='statusClient', passwd='clientpw')
+        self.assertOptions(opts, exp)
+
+    def test_short(self):
+        opts = self.parse('-m', 'm', '-u', 'u', '-p', 'p')
+        exp = dict(master='m', username='u', passwd='p')
+        self.assertOptions(opts, exp)
+
+    def test_long(self):
+        opts = self.parse('--master', 'm', '--username', 'u', '--passwd', 'p')
+        exp = dict(master='m', username='u', passwd='p')
+        self.assertOptions(opts, exp)
+
+    def test_positional_master(self):
+        opts = self.parse('--username', 'u', '--passwd', 'p', 'm')
+        exp = dict(master='m', username='u', passwd='p')
+        self.assertOptions(opts, exp)
+
+    def test_positional_extra(self):
+        self.assertRaises(usage.UsageError,
+            lambda : self.parse('--username', 'u', '--passwd', 'p', 'm', '2'))
+
+    def test_missing_master(self):
+        self.assertRaises(usage.UsageError,
+            lambda : self.parse('--username', 'u', '--passwd', 'p'))
+
+    def test_options_masterstatus(self):
+        self.options_file['master'] = 'not seen'
+        self.options_file['masterstatus'] = 'opt'
+        opts = self.parse('-p', 'pass', '-u', 'user')
+        exp = dict(master='opt', username='user', passwd='pass')
+        self.assertOptions(opts, exp)
+
+
+class TestStatusLogOptions(unittest.TestCase):
+
+    def test_synopsis(self):
+        opts = runner.StatusLogOptions()
+        self.assertIn('buildbot statuslog', opts.getSynopsis())
+
+
+class TestStatusGuiOptions(unittest.TestCase):
+
+    def test_synopsis(self):
+        opts = runner.StatusGuiOptions()
+        self.assertIn('buildbot statusgui', opts.getSynopsis())
+
+
+class TestTryOptions(OptionsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpOptions()
+
+    def parse(self, *args):
+        self.opts = runner.TryOptions()
+        self.opts.parseOptions(args)
+        return self.opts
+
+    def defaults_and(self, **kwargs):
+        defaults = dict(connect=None, host=None, jobdir=None, username=None,
+                master=None, passwd=None, who=None, comment=None, diff=None,
+                patchlevel=0, baserev=None, vc=None, branch=None,
+                repository=None, topfile=None, topdir=None, wait=False,
+                dryrun=False, quiet=False, builders=[], properties={},
+                buildbotbin='buildbot')
+        # dashes make python syntax hard..
+        defaults['get-builder-names'] = False
+        if 'get_builder_names' in kwargs:
+            kwargs['get-builder-names'] = kwargs['get_builder_names']
+            del kwargs['get_builder_names']
+        assert set(kwargs.keys()) <= set(defaults.keys()), "invalid keys"
+        opts = defaults.copy()
+        opts.update(kwargs)
+        return opts
+
+    def test_synopsis(self):
+        opts = runner.TryOptions()
+        self.assertIn('buildbot try', opts.getSynopsis())
+
+    def test_defaults(self):
+        opts = self.parse()
+        exp = self.defaults_and()
+        self.assertOptions(opts, exp)
+
+    def test_properties(self):
+        opts = self.parse('--properties=a=b')
+        exp = self.defaults_and(properties=dict(a='b'))
+        self.assertOptions(opts, exp)
+
+    def test_properties_multiple_opts(self):
+        opts = self.parse('--properties=X=1', '--properties=Y=2')
+        exp = self.defaults_and(properties=dict(X='1', Y='2'))
+        self.assertOptions(opts, exp)
+
+    def test_properties_equals(self):
+        opts = self.parse('--properties=X=2+2=4')
+        exp = self.defaults_and(properties=dict(X='2+2=4'))
+        self.assertOptions(opts, exp)
+
+    def test_properties_commas(self):
+        opts = self.parse('--properties=a=b,c=d')
+        exp = self.defaults_and(properties=dict(a='b', c='d'))
+        self.assertOptions(opts, exp)
+
+    def test_properties_builders_multiple(self):
+        opts = self.parse('--builder=aa', '--builder=bb')
+        exp = self.defaults_and(builders=['aa', 'bb'])
+        self.assertOptions(opts, exp)
+
+    def test_options_short(self):
+        opts = self.parse(
+                *'-n -q -c pb -u me -m mstr -w you -C comm -p 2 -b bb'.split())
+        exp = self.defaults_and(dryrun=True, quiet=True, connect='pb',
+                username='me', master='mstr', who='you', comment='comm',
+                patchlevel=2, builders=['bb'])
+        self.assertOptions(opts, exp)
+
+    def test_options_long(self):
+        opts = self.parse(
+                *"""--wait --dryrun --get-builder-names --quiet --connect=pb
+                --host=h --jobdir=j --username=u --master=m --passwd=p
+                --who=w --comment=comm --diff=d --patchlevel=7 --baserev=br
+                --vc=cvs --branch=br --repository=rep --builder=bl
+                --properties=a=b --topfile=Makefile --topdir=.
+                --buildbotbin=.virtualenvs/buildbot/bin/buildbot""".split())
+        exp = self.defaults_and(wait=True, dryrun=True, get_builder_names=True,
+                quiet=True, connect='pb', host='h', jobdir='j', username='u',
+                master='m', passwd='p', who='w', comment='comm', diff='d',
+                patchlevel=7, baserev='br', vc='cvs', branch='br',
+                repository='rep', builders=['bl'], properties=dict(a='b'),
+                topfile='Makefile', topdir='.',
+                buildbotbin='.virtualenvs/buildbot/bin/buildbot')
+        self.assertOptions(opts, exp)
+
+    def test_patchlevel_inval(self):
+        self.assertRaises(ValueError, lambda:
+                self.parse('-p', 'a'))
+
+    def test_config_builders(self):
+        self.options_file['try_builders'] = ['a', 'b']
+        opts = self.parse()
+        self.assertOptions(opts, dict(builders=['a', 'b']))
+
+    def test_config_builders_override(self):
+        self.options_file['try_builders'] = ['a', 'b']
+        opts = self.parse('-b', 'd') # overrides a, b
+        self.assertOptions(opts, dict(builders=['d']))
+
+    def test_config_old_names(self):
+        self.options_file['try_masterstatus'] = 'ms'
+        self.options_file['try_dir'] = 'td'
+        self.options_file['try_password'] = 'pw'
+        opts = self.parse()
+        self.assertOptions(opts, dict(master='ms', jobdir='td', passwd='pw'))
+
+    def test_config_masterstatus(self):
+        self.options_file['masterstatus'] = 'ms'
+        opts = self.parse()
+        self.assertOptions(opts, dict(master='ms'))
+
+    def test_config_masterstatus_override(self):
+        self.options_file['masterstatus'] = 'ms'
+        opts = self.parse('-m', 'mm')
+        self.assertOptions(opts, dict(master='mm'))
+
+    def test_config_options(self):
+        self.options_file.update(dict(try_connect='pb', try_vc='cvs',
+            try_branch='br', try_repository='rep', try_topdir='.',
+            try_topfile='Makefile', try_host='h', try_username='u',
+            try_jobdir='j', try_password='p', try_master='m', try_who='w',
+            try_comment='comm', try_quiet='y', try_wait='y',
+            try_buildbotbin='.virtualenvs/buildbot/bin/buildbot'))
+        opts = self.parse()
+        exp = self.defaults_and(wait=True, quiet=True, connect='pb', host='h',
+                jobdir='j', username='u', master='m', passwd='p', who='w',
+                comment='comm', vc='cvs', branch='br', repository='rep',
+                topfile='Makefile', topdir='.',
+                buildbotbin='.virtualenvs/buildbot/bin/buildbot')
+        self.assertOptions(opts, exp)
 
 
 class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
@@ -283,138 +668,6 @@ class TestCheckConfigOptions(OptionsMixin, unittest.TestCase):
         self.assertOptions(opts, exp)
 
 
-class TestTryOptions(OptionsMixin, unittest.TestCase):
-
-    def setUp(self):
-        self.setUpOptions()
-
-    def parse(self, *args):
-        self.opts = runner.TryOptions()
-        self.opts.parseOptions(args)
-        return self.opts
-
-    def defaults_and(self, **kwargs):
-        defaults = dict(connect=None, host=None, jobdir=None, username=None,
-                master=None, passwd=None, who=None, comment=None, diff=None,
-                patchlevel=0, baserev=None, vc=None, branch=None,
-                repository=None, topfile=None, topdir=None, wait=False,
-                dryrun=False, quiet=False, builders=[], properties={},
-                buildbotbin='buildbot')
-        # dashes make python syntax hard..
-        defaults['get-builder-names'] = False
-        if 'get_builder_names' in kwargs:
-            kwargs['get-builder-names'] = kwargs['get_builder_names']
-            del kwargs['get_builder_names']
-        assert set(kwargs.keys()) <= set(defaults.keys()), "invalid keys"
-        opts = defaults.copy()
-        opts.update(kwargs)
-        return opts
-
-    def test_synopsis(self):
-        opts = runner.TryOptions()
-        self.assertIn('buildbot try', opts.getSynopsis())
-
-    def test_defaults(self):
-        opts = self.parse()
-        exp = self.defaults_and()
-        self.assertOptions(opts, exp)
-
-    def test_properties(self):
-        opts = self.parse('--properties=a=b')
-        exp = self.defaults_and(properties=dict(a='b'))
-        self.assertOptions(opts, exp)
-
-    def test_properties_multiple_opts(self):
-        opts = self.parse('--properties=X=1', '--properties=Y=2')
-        exp = self.defaults_and(properties=dict(X='1', Y='2'))
-        self.assertOptions(opts, exp)
-
-    def test_properties_equals(self):
-        opts = self.parse('--properties=X=2+2=4')
-        exp = self.defaults_and(properties=dict(X='2+2=4'))
-        self.assertOptions(opts, exp)
-
-    def test_properties_commas(self):
-        opts = self.parse('--properties=a=b,c=d')
-        exp = self.defaults_and(properties=dict(a='b', c='d'))
-        self.assertOptions(opts, exp)
-
-    def test_properties_builders_multiple(self):
-        opts = self.parse('--builder=aa', '--builder=bb')
-        exp = self.defaults_and(builders=['aa', 'bb'])
-        self.assertOptions(opts, exp)
-
-    def test_options_short(self):
-        opts = self.parse(
-                *'-n -q -c pb -u me -m mstr -w you -C comm -p 2 -b bb'.split())
-        exp = self.defaults_and(dryrun=True, quiet=True, connect='pb',
-                username='me', master='mstr', who='you', comment='comm',
-                patchlevel=2, builders=['bb'])
-        self.assertOptions(opts, exp)
-
-    def test_options_long(self):
-        opts = self.parse(
-                *"""--wait --dryrun --get-builder-names --quiet --connect=pb
-                --host=h --jobdir=j --username=u --master=m --passwd=p
-                --who=w --comment=comm --diff=d --patchlevel=7 --baserev=br
-                --vc=cvs --branch=br --repository=rep --builder=bl
-                --properties=a=b --topfile=Makefile --topdir=.
-                --buildbotbin=.virtualenvs/buildbot/bin/buildbot""".split())
-        exp = self.defaults_and(wait=True, dryrun=True, get_builder_names=True,
-                quiet=True, connect='pb', host='h', jobdir='j', username='u',
-                master='m', passwd='p', who='w', comment='comm', diff='d',
-                patchlevel=7, baserev='br', vc='cvs', branch='br',
-                repository='rep', builders=['bl'], properties=dict(a='b'),
-                topfile='Makefile', topdir='.',
-                buildbotbin='.virtualenvs/buildbot/bin/buildbot')
-        self.assertOptions(opts, exp)
-
-    def test_patchlevel_inval(self):
-        self.assertRaises(ValueError, lambda:
-                self.parse('-p', 'a'))
-
-    def test_config_builders(self):
-        self.options_file['try_builders'] = ['a', 'b']
-        opts = self.parse()
-        self.assertOptions(opts, dict(builders=['a', 'b']))
-
-    def test_config_builders_override(self):
-        self.options_file['try_builders'] = ['a', 'b']
-        opts = self.parse('-b', 'd') # overrides a, b
-        self.assertOptions(opts, dict(builders=['d']))
-
-    def test_config_old_names(self):
-        self.options_file['try_masterstatus'] = 'ms'
-        self.options_file['try_dir'] = 'td'
-        self.options_file['try_password'] = 'pw'
-        opts = self.parse()
-        self.assertOptions(opts, dict(master='ms', jobdir='td', passwd='pw'))
-
-    def test_config_masterstatus(self):
-        self.options_file['masterstatus'] = 'ms'
-        opts = self.parse()
-        self.assertOptions(opts, dict(master='ms'))
-
-    def test_config_masterstatus_override(self):
-        self.options_file['masterstatus'] = 'ms'
-        opts = self.parse('-m', 'mm')
-        self.assertOptions(opts, dict(master='mm'))
-
-    def test_config_options(self):
-        self.options_file.update(dict(try_connect='pb', try_vc='cvs',
-            try_branch='br', try_repository='rep', try_topdir='.',
-            try_topfile='Makefile', try_host='h', try_username='u',
-            try_jobdir='j', try_password='p', try_master='m', try_who='w',
-            try_comment='comm', try_quiet='y', try_wait='y',
-            try_buildbotbin='.virtualenvs/buildbot/bin/buildbot'))
-        opts = self.parse()
-        exp = self.defaults_and(wait=True, quiet=True, connect='pb', host='h',
-                jobdir='j', username='u', master='m', passwd='p', who='w',
-                comment='comm', vc='cvs', branch='br', repository='rep',
-                topfile='Makefile', topdir='.',
-                buildbotbin='.virtualenvs/buildbot/bin/buildbot')
-        self.assertOptions(opts, exp)
-
 class TestUserOptions(OptionsMixin, unittest.TestCase):
 
     # mandatory arguments
@@ -500,252 +753,4 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
         self.assertRaises(usage.UsageError,
             lambda : self.parse('-op=foo'))
 
-class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
-
-    def setUp(self):
-        self.setUpOptions()
-
-    def parse(self, *args):
-        self.opts = runner.CreateMasterOptions()
-        self.opts.parseOptions(args)
-        return self.opts
-
-    def defaults_and(self, **kwargs):
-        defaults = dict(force=False, relocatable=False, config='master.cfg',
-                db='sqlite:///state.sqlite', basedir=os.getcwd(), quiet=False,
-                **{'no-logrotate':False, 'log-size':'10000000',
-                   'log-count':'10'})
-        unk_keys = set(kwargs.keys()) - set(defaults.keys())
-        assert not unk_keys, "invalid keys %s" % (unk_keys,)
-        opts = defaults.copy()
-        opts.update(kwargs)
-        return opts
-
-    def test_synopsis(self):
-        opts = runner.CreateMasterOptions()
-        self.assertIn('buildbot create-master', opts.getSynopsis())
-
-    def test_defaults(self):
-        opts = self.parse()
-        exp = self.defaults_and()
-        self.assertOptions(opts, exp)
-
-    def test_db_quiet(self):
-        opts = self.parse('-q')
-        exp = self.defaults_and(quiet=True)
-        self.assertOptions(opts, exp)
-
-    def test_db_quiet_long(self):
-        opts = self.parse('--quiet')
-        exp = self.defaults_and(quiet=True)
-        self.assertOptions(opts, exp)
-
-    def test_force(self):
-        opts = self.parse('-f')
-        exp = self.defaults_and(force=True)
-        self.assertOptions(opts, exp)
-
-    def test_force_long(self):
-        opts = self.parse('--force')
-        exp = self.defaults_and(force=True)
-        self.assertOptions(opts, exp)
-
-    def test_relocatable(self):
-        opts = self.parse('-r')
-        exp = self.defaults_and(relocatable=True)
-        self.assertOptions(opts, exp)
-
-    def test_relocatable_long(self):
-        opts = self.parse('--relocatable')
-        exp = self.defaults_and(relocatable=True)
-        self.assertOptions(opts, exp)
-
-    def test_no_logrotate(self):
-        opts = self.parse('-n')
-        exp = self.defaults_and(**{'no-logrotate' : True})
-        self.assertOptions(opts, exp)
-
-    def test_no_logrotate_long(self):
-        opts = self.parse('--no-logrotate')
-        exp = self.defaults_and(**{'no-logrotate' : True})
-        self.assertOptions(opts, exp)
-
-    def test_config(self):
-        opts = self.parse('-cxyz')
-        exp = self.defaults_and(config='xyz')
-        self.assertOptions(opts, exp)
-
-    def test_config_long(self):
-        opts = self.parse('--config=xyz')
-        exp = self.defaults_and(config='xyz')
-        self.assertOptions(opts, exp)
-
-    def test_log_size(self):
-        opts = self.parse('-s124')
-        exp = self.defaults_and(**{'log-size':'124'})
-        self.assertOptions(opts, exp)
-
-    def test_log_size_long(self):
-        opts = self.parse('--log-size=124')
-        exp = self.defaults_and(**{'log-size':'124'})
-        self.assertOptions(opts, exp)
-
-    def test_log_size_noninteger(self):
-        self.assertRaises(usage.UsageError,
-            lambda :self.parse('--log-size=1M'))
-
-    def test_log_count(self):
-        opts = self.parse('-l124')
-        exp = self.defaults_and(**{'log-count':'124'})
-        self.assertOptions(opts, exp)
-
-    def test_log_count_long(self):
-        opts = self.parse('--log-count=124')
-        exp = self.defaults_and(**{'log-count':'124'})
-        self.assertOptions(opts, exp)
-
-    def test_log_count_noninteger(self):
-        self.assertRaises(usage.UsageError,
-            lambda :self.parse('--log-count=M'))
-
-    def test_db_long(self):
-        opts = self.parse('--db=foo://bar')
-        exp = self.defaults_and(db='foo://bar')
-        self.assertOptions(opts, exp)
-
-    def test_db_basedir(self):
-        opts = self.parse('-f', '/foo/bar')
-        exp = self.defaults_and(force=True, basedir='/foo/bar')
-        self.assertOptions(opts, exp)
-
-class TestDebugClientOptions(OptionsMixin, unittest.TestCase):
-
-    def setUp(self):
-        self.setUpOptions()
-
-    def parse(self, *args):
-        self.opts = runner.DebugClientOptions()
-        self.opts.parseOptions(args)
-        return self.opts
-
-    def test_synopsis(self):
-        opts = runner.DebugClientOptions()
-        self.assertIn('buildbot debugclient', opts.getSynopsis())
-
-    def test_defaults(self):
-        self.assertRaises(usage.UsageError,
-                lambda : self.parse())
-
-    def test_args_missing_passwd(self):
-        self.assertRaises(usage.UsageError,
-                lambda : self.parse('-m', 'mm'))
-
-    def test_options_long(self):
-        opts = self.parse('--master', 'mm', '--passwd', 'pp')
-        exp = dict(master='mm', passwd='pp')
-        self.assertOptions(opts, exp)
-
-    def test_positional_master_passwd(self):
-        opts = self.parse('foo', 'pass')
-        exp = dict(master='foo', passwd='pass')
-        self.assertOptions(opts, exp)
-
-    def test_positional_master(self):
-        opts = self.parse('-p', 'pass', 'foo')
-        exp = dict(master='foo', passwd='pass')
-        self.assertOptions(opts, exp)
-
-    def test_args_master_passwd(self):
-        opts = self.parse('foo', 'pass')
-        exp = dict(master='foo', passwd='pass')
-        self.assertOptions(opts, exp)
-
-    def test_missing_both(self):
-        self.assertRaises(usage.UsageError,
-            lambda :self.parse())
-
-    def test_missing_passwd(self):
-        self.assertRaises(usage.UsageError,
-            lambda :self.parse('master'))
-
-    def test_missing_master(self):
-        self.assertRaises(usage.UsageError,
-            lambda :self.parse('-p', 'pass'))
-
-    def test_options_extra_positional(self):
-        self.assertRaises(usage.UsageError,
-                lambda : self.parse('mm', 'pp', '??'))
-
-    def test_options_master(self):
-        self.options_file['master'] = 'opt'
-        opts = self.parse('-p', 'pass')
-        exp = dict(master='opt', passwd='pass')
-        self.assertOptions(opts, exp)
-
-    def test_options_debugMaster(self):
-        self.options_file['master'] = 'not seen'
-        self.options_file['debugMaster'] = 'opt'
-        opts = self.parse('-p', 'pass')
-        exp = dict(master='opt', passwd='pass')
-        self.assertOptions(opts, exp)
-
-
-class TestBaseStatusClientOptions(OptionsMixin, unittest.TestCase):
-
-    def setUp(self):
-        self.setUpOptions()
-
-    def parse(self, *args):
-        self.opts = runner.BaseStatusClientOptions()
-        self.opts.parseOptions(args)
-        return self.opts
-
-    def test_defaults(self):
-        opts = self.parse('--master', 'm')
-        exp = dict(master='m', username='statusClient', passwd='clientpw')
-        self.assertOptions(opts, exp)
-
-    def test_short(self):
-        opts = self.parse('-m', 'm', '-u', 'u', '-p', 'p')
-        exp = dict(master='m', username='u', passwd='p')
-        self.assertOptions(opts, exp)
-
-    def test_long(self):
-        opts = self.parse('--master', 'm', '--username', 'u', '--passwd', 'p')
-        exp = dict(master='m', username='u', passwd='p')
-        self.assertOptions(opts, exp)
-
-    def test_positional_master(self):
-        opts = self.parse('--username', 'u', '--passwd', 'p', 'm')
-        exp = dict(master='m', username='u', passwd='p')
-        self.assertOptions(opts, exp)
-
-    def test_positional_extra(self):
-        self.assertRaises(usage.UsageError,
-            lambda : self.parse('--username', 'u', '--passwd', 'p', 'm', '2'))
-
-    def test_missing_master(self):
-        self.assertRaises(usage.UsageError,
-            lambda : self.parse('--username', 'u', '--passwd', 'p'))
-
-    def test_options_masterstatus(self):
-        self.options_file['master'] = 'not seen'
-        self.options_file['masterstatus'] = 'opt'
-        opts = self.parse('-p', 'pass', '-u', 'user')
-        exp = dict(master='opt', username='user', passwd='pass')
-        self.assertOptions(opts, exp)
-
-
-class TestStatusLogOptions(unittest.TestCase):
-
-    def test_synopsis(self):
-        opts = runner.StatusLogOptions()
-        self.assertIn('buildbot statuslog', opts.getSynopsis())
-
-
-class TestStatusGuiOptions(unittest.TestCase):
-
-    def test_synopsis(self):
-        opts = runner.StatusGuiOptions()
-        self.assertIn('buildbot statusgui', opts.getSynopsis())
 

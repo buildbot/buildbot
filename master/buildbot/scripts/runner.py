@@ -31,6 +31,19 @@ from buildbot.scripts import base
 # Note that the terms 'options' and 'config' are used intechangeably here - in
 # fact, they are intercanged several times.  Caveat legator.
 
+DB_HELP = """
+    The --db string is evaluated to build the DB object, which specifies
+    which database the buildmaster should use to hold scheduler state and
+    status information. The default (which creates an SQLite database in
+    BASEDIR/state.sqlite) is equivalent to:
+
+      --db='sqlite:///state.sqlite'
+
+    To use a remote MySQL database instead, use something like:
+
+      --db='mysql://bbuser:bbpasswd@dbhost/bbdb'
+"""
+
 class BasedirMixin(object):
 
     """SubcommandOptions Mixin to handle subcommands that take a basedir
@@ -48,19 +61,6 @@ class BasedirMixin(object):
     def postOptions(self):
         self['basedir'] = os.path.abspath(self['basedir'])
 
-
-DB_HELP = """
-    The --db string is evaluated to build the DB object, which specifies
-    which database the buildmaster should use to hold scheduler state and
-    status information. The default (which creates an SQLite database in
-    BASEDIR/state.sqlite) is equivalent to:
-
-      --db='sqlite:///state.sqlite'
-
-    To use a remote MySQL database instead, use something like:
-
-      --db='mysql://bbuser:bbpasswd@dbhost/bbdb'
-"""
 
 class UpgradeMasterOptions(BasedirMixin, base.SubcommandOptions):
     optFlags = [
@@ -149,12 +149,14 @@ class CreateMasterOptions(BasedirMixin, base.SubcommandOptions):
             raise usage.UsageError("log-count parameter needs to be an int "+
                                    " or None")
 
+
 class StopOptions(BasedirMixin, base.SubcommandOptions):
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot stop [<basedir>]"
+
 
 class RestartOptions(BasedirMixin, base.SubcommandOptions):
     optFlags = [
@@ -163,6 +165,7 @@ class RestartOptions(BasedirMixin, base.SubcommandOptions):
     def getSynopsis(self):
         return "Usage:    buildbot restart [<basedir>]"
 
+
 class StartOptions(BasedirMixin, base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
@@ -170,12 +173,14 @@ class StartOptions(BasedirMixin, base.SubcommandOptions):
     def getSynopsis(self):
         return "Usage:    buildbot start [<basedir>]"
 
+
 class ReconfigOptions(BasedirMixin, base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display log messages about reconfiguration"],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot reconfig [<basedir>]"
+
 
 class DebugClientOptions(base.SubcommandOptions):
     optParameters = [
@@ -210,6 +215,7 @@ class DebugClientOptions(base.SubcommandOptions):
             raise usage.UsageError("passwd must be specified: on the command "
                                 "line or in ~/.buildbot/options")
 
+
 class BaseStatusClientOptions(base.SubcommandOptions):
     optFlags = [
         ['help', 'h', "Display this message"],
@@ -237,13 +243,16 @@ class BaseStatusClientOptions(base.SubcommandOptions):
         if len(args) > 1:
             raise usage.UsageError("I wasn't expecting so many arguments")
 
+
 class StatusLogOptions(BaseStatusClientOptions):
     def getSynopsis(self):
         return "Usage:    buildbot statuslog [options]"
 
+
 class StatusGuiOptions(BaseStatusClientOptions):
     def getSynopsis(self):
         return "Usage:    buildbot statusgui [options]"
+
 
 class SendChangeOptions(base.SubcommandOptions):
     def __init__(self):
@@ -468,6 +477,7 @@ class TryOptions(base.SubcommandOptions):
         if not self['master']:
             self['master'] = opts.get('masterstatus', None)
 
+
 class TryServerOptions(base.SubcommandOptions):
 
     optParameters = [
@@ -480,6 +490,7 @@ class TryServerOptions(base.SubcommandOptions):
     def postOptions(self):
         if not self['jobdir']:
             raise usage.UsageError('jobdir is required')
+
 
 class CheckConfigOptions(base.SubcommandOptions):
     optFlags = [
@@ -636,6 +647,7 @@ class UserOptions(base.SubcommandOptions):
             if info:
                 raise usage.UsageError("cannot use --info with 'remove' "
                                        "or 'get'")
+
 
 class Options(usage.Options):
     synopsis = "Usage:    buildbot <command> [command options]"
