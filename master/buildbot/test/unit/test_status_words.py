@@ -155,9 +155,9 @@ class TestIrcContactChannel(unittest.TestCase):
 
     def test_act(self):
         events = []
-        def me(dest, msg):
+        def describe(dest, msg):
             events.append((dest, msg))
-        self.contact.bot.me = me
+        self.contact.bot.describe = describe
 
         self.contact.act("unmuted")
         self.contact.act(u"unmuted, unicode \N{SNOWMAN}")
