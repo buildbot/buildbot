@@ -40,6 +40,85 @@ class OptionsMixin(object):
                                (k, exp[k], opts[k]))
             self.fail("did not get expected options\n" + ("\n".join(msg)))
 
+class TestUpgradeMasterOptions(OptionsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpOptions()
+
+    def parse(self, *args):
+        self.opts = runner.UpgradeMasterOptions()
+        self.opts.parseOptions(args)
+        return self.opts
+
+    def test_synopsis(self):
+        opts = runner.UpgradeMasterOptions()
+        self.assertIn('buildbot upgrade-master', opts.getSynopsis())
+
+    def test_defaults(self):
+        opts = self.parse()
+        exp = dict(quiet=False, replace=False)
+        self.assertOptions(opts, exp)
+
+    def test_short(self):
+        opts = self.parse('-q', '-r')
+        exp = dict(quiet=True, replace=True)
+        self.assertOptions(opts, exp)
+
+    def test_long(self):
+        opts = self.parse('--quiet', '--replace')
+        exp = dict(quiet=True, replace=True)
+        self.assertOptions(opts, exp)
+
+
+class BaseTestSimpleOptions(OptionsMixin):
+    # tests for options with just --quiet and a usage message
+
+    commandName = None
+    optionsClass = None
+
+    def setUp(self):
+        self.setUpOptions()
+
+    def parse(self, *args):
+        self.opts = self.optionsClass()
+        self.opts.parseOptions(args)
+        return self.opts
+
+    def test_synopsis(self):
+        opts = self.optionsClass()
+        self.assertIn('buildbot %s' % self.commandName, opts.getSynopsis())
+
+    def test_defaults(self):
+        opts = self.parse()
+        exp = dict(quiet=False)
+        self.assertOptions(opts, exp)
+
+    def test_quiet(self):
+        opts = self.parse('--quiet')
+        exp = dict(quiet=True)
+        self.assertOptions(opts, exp)
+
+
+class TestStopOptions(BaseTestSimpleOptions, unittest.TestCase):
+    commandName = 'stop'
+    optionsClass = runner.StopOptions
+
+
+class TestResetartOptions(BaseTestSimpleOptions, unittest.TestCase):
+    commandName = 'restart'
+    optionsClass = runner.RestartOptions
+
+
+class TestStartOptions(BaseTestSimpleOptions, unittest.TestCase):
+    commandName = 'start'
+    optionsClass = runner.StartOptions
+
+
+class TestReconfigOptions(BaseTestSimpleOptions, unittest.TestCase):
+    commandName = 'reconfig'
+    optionsClass = runner.ReconfigOptions
+
+
 class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
 
     master_and_who = ['-m', 'm', '-W', 'w']
