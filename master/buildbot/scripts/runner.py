@@ -494,11 +494,6 @@ class TryOptions(base.SubcommandOptions):
         if not self['master']:
             self['master'] = opts.get('masterstatus', None)
 
-def doTry(config):
-    from buildbot.clients import tryclient
-    t = tryclient.Try(config)
-    t.run()
-
 class TryServerOptions(base.SubcommandOptions):
     optParameters = [
         ["jobdir", None, None, "the jobdir (maildir) for submitting jobs"],
@@ -799,7 +794,8 @@ def run():
         from buildbot.scripts.statusgui import statusgui
         sys.exit(statusgui(so))
     elif command == "try":
-        doTry(so)
+        from buildbot.scripts.trycmd import trycmd
+        sys.exit(trycmd(so))
     elif command == "tryserver":
         doTryServer(so)
     elif command == "checkconfig":
