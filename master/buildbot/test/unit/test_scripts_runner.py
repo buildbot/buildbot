@@ -19,6 +19,7 @@ import os
 import sys
 import getpass
 import mock
+import cStringIO
 from twisted.trial import unittest
 from twisted.python import usage
 from buildbot.scripts import base, runner
@@ -754,3 +755,67 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
             lambda : self.parse('-op=foo'))
 
 
+class TestOptions(OptionsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpOptions()
+
+    def parse(self, *args):
+        self.opts = runner.Options()
+        self.opts.parseOptions(args)
+        return self.opts
+
+    def test_defaults(self):
+        self.assertRaises(usage.UsageError,
+            lambda : self.parse())
+
+    def test_version(self):
+        stdout = cStringIO.StringIO()
+        self.patch(sys, 'stdout', stdout)
+        try:
+            self.parse('--version')
+        except SystemExit, e:
+            self.assertEqual(e.args[0], 0)
+        self.assertIn('Buildbot version:', stdout.getvalue())
+
+class TestRun(unittest.TestCase):
+
+    class MySubCommand(usage.Options):
+        subcommandFunction = 'buildbot.test.unit.test_scripts_runner.subcommandFunction'
+        optFlags = [
+            [ 'loud', 'l', 'be noisy' ]
+        ]
+        def postOptions(self):
+            if self['loud']:
+                raise usage.UsageError('THIS IS ME BEING LOUD')
+
+    def setUp(self):
+        # patch our subcommand in
+        self.patch(runner.Options, 'subCommands',
+            [ [ 'my', None, self.MySubCommand, 'my, my' ] ])
+
+        # and patch in the callback for it
+        global subcommandFunction
+        subcommandFunction = mock.Mock(name='subcommandFunction',
+                return_value=3)
+
+    def test_run_good(self):
+        self.patch(sys, 'argv', [ 'buildbot', 'my' ])
+        try:
+            runner.run()
+        except SystemExit, e:
+            self.assertEqual(e.args[0], 3)
+        else:
+            self.fail("didn't exit")
+
+    def test_run_bad(self):
+        self.patch(sys, 'argv', [ 'buildbot', 'my', '-l' ])
+        stdout = cStringIO.StringIO()
+        self.patch(sys, 'stdout', stdout)
+        try:
+            runner.run()
+        except SystemExit, e:
+            self.assertEqual(e.args[0], 1)
+        else:
+            self.fail("didn't exit")
+        self.assertIn('THIS IS ME', stdout.getvalue())

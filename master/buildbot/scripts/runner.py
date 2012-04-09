@@ -21,7 +21,7 @@ from __future__ import with_statement
 # Also don't forget to mirror your changes on command-line options in manual
 # pages and texinfo documentation.
 
-from twisted.python import usage
+from twisted.python import usage, reflect
 import os
 import re
 import sys
@@ -63,6 +63,7 @@ class BasedirMixin(object):
 
 
 class UpgradeMasterOptions(BasedirMixin, base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.upgrade_master.upgradeMaster"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
         ["replace", "r", "Replace any modified files without confirmation."],
@@ -100,6 +101,7 @@ class UpgradeMasterOptions(BasedirMixin, base.SubcommandOptions):
 
 
 class CreateMasterOptions(BasedirMixin, base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.create_master.createMaster"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
         ["force", "f",
@@ -151,6 +153,7 @@ class CreateMasterOptions(BasedirMixin, base.SubcommandOptions):
 
 
 class StopOptions(BasedirMixin, base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.stop.stop"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
         ]
@@ -159,6 +162,7 @@ class StopOptions(BasedirMixin, base.SubcommandOptions):
 
 
 class RestartOptions(BasedirMixin, base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.restart.restart"
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ]
@@ -167,6 +171,7 @@ class RestartOptions(BasedirMixin, base.SubcommandOptions):
 
 
 class StartOptions(BasedirMixin, base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.start.start"
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ]
@@ -175,6 +180,7 @@ class StartOptions(BasedirMixin, base.SubcommandOptions):
 
 
 class ReconfigOptions(BasedirMixin, base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.reconfig.reconfig"
     optFlags = [
         ['quiet', 'q', "Don't display log messages about reconfiguration"],
         ]
@@ -183,6 +189,7 @@ class ReconfigOptions(BasedirMixin, base.SubcommandOptions):
 
 
 class DebugClientOptions(base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.debugclient.debugclient"
     optParameters = [
         ["master", "m", None,
          "Location of the buildmaster's slaveport (host:port)"],
@@ -245,16 +252,19 @@ class BaseStatusClientOptions(base.SubcommandOptions):
 
 
 class StatusLogOptions(BaseStatusClientOptions):
+    subcommandFunction = "buildbot.scripts.statuslog.statuslog"
     def getSynopsis(self):
         return "Usage:    buildbot statuslog [options]"
 
 
 class StatusGuiOptions(BaseStatusClientOptions):
+    subcommandFunction = "buildbot.scripts.statusgui.statusgui"
     def getSynopsis(self):
         return "Usage:    buildbot statusgui [options]"
 
 
 class SendChangeOptions(base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.sendchange.sendchange"
     def __init__(self):
         base.SubcommandOptions.__init__(self)
         self['properties'] = {}
@@ -348,6 +358,7 @@ class SendChangeOptions(base.SubcommandOptions):
 
 
 class TryOptions(base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.trycmd.trycmd"
     optParameters = [
         ["connect", "c", None,
          "How to reach the buildmaster, either 'ssh' or 'pb'"],
@@ -479,7 +490,7 @@ class TryOptions(base.SubcommandOptions):
 
 
 class TryServerOptions(base.SubcommandOptions):
-
+    subcommandFunction = "buildbot.scripts.tryserver.tryserver"
     optParameters = [
         ["jobdir", None, None, "the jobdir (maildir) for submitting jobs"],
         ]
@@ -493,6 +504,7 @@ class TryServerOptions(base.SubcommandOptions):
 
 
 class CheckConfigOptions(base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.checkconfig.checkconfig"
     optFlags = [
         ['quiet', 'q', "Don't display error messages or tracebacks"],
     ]
@@ -509,6 +521,7 @@ class CheckConfigOptions(base.SubcommandOptions):
 
 
 class UserOptions(base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.user.user"
     optParameters = [
         ["master", "m", None,
          "Location of the buildmaster's PBListener (host:port)"],
@@ -653,44 +666,36 @@ class Options(usage.Options):
     synopsis = "Usage:    buildbot <command> [command options]"
 
     subCommands = [
-        # the following are all admin commands
         ['create-master', None, CreateMasterOptions,
          "Create and populate a directory for a new buildmaster"],
         ['upgrade-master', None, UpgradeMasterOptions,
          "Upgrade an existing buildmaster directory for the current version"],
-        ['start', None, StartOptions, "Start a buildmaster"],
-        ['stop', None, StopOptions, "Stop a buildmaster"],
+        ['start', None, StartOptions,
+         "Start a buildmaster"],
+        ['stop', None, StopOptions,
+         "Stop a buildmaster"],
         ['restart', None, RestartOptions,
          "Restart a buildmaster"],
-
         ['reconfig', None, ReconfigOptions,
          "SIGHUP a buildmaster to make it re-read the config file"],
         ['sighup', None, ReconfigOptions,
          "SIGHUP a buildmaster to make it re-read the config file"],
-
         ['sendchange', None, SendChangeOptions,
          "Send a change to the buildmaster"],
-
         ['debugclient', None, DebugClientOptions,
          "Launch a small debug panel GUI"],
-
         ['statuslog', None, StatusLogOptions,
          "Emit current builder status to stdout"],
         ['statusgui', None, StatusGuiOptions,
          "Display a small window showing current builder status"],
-
-        ['try', None, TryOptions, "Run a build with your local changes"],
-
+        ['try', None, TryOptions,
+         "Run a build with your local changes"],
         ['tryserver', None, TryServerOptions,
          "buildmaster-side 'try' support function, not for users"],
-
         ['checkconfig', None, CheckConfigOptions,
          "test the validity of a master.cfg config file"],
-
         ['user', None, UserOptions,
          "Manage users in buildbot's database"]
-
-        # TODO: 'watch'
         ]
 
     def opt_version(self):
@@ -710,7 +715,7 @@ class Options(usage.Options):
 def run():
     config = Options()
     try:
-        config.parseOptions()
+        config.parseOptions(sys.argv[1:])
     except usage.error, e:
         print "%s:  %s" % (sys.argv[0], e)
         print
@@ -718,50 +723,6 @@ def run():
         print str(c)
         sys.exit(1)
 
-    command = config.subCommand
-    so = config.subOptions
-
-    if command == "create-master":
-        from buildbot.scripts import create_master
-        create_master.createMaster(so)
-    elif command == "upgrade-master":
-        from buildbot.scripts import upgrade_master
-        sys.exit(upgrade_master.upgradeMaster(so))
-    elif command == "start":
-        from buildbot.scripts.start import start
-        sys.exit(start(so))
-    elif command == "stop":
-        from buildbot.scripts import stop
-        sys.exit(stop.stop(so, wait=True))
-    elif command == "restart":
-        from buildbot.scripts import restart
-        sys.exit(restart.restart(so))
-    elif command == "reconfig" or command == "sighup":
-        from buildbot.scripts.reconfig import reconfig
-        sys.exit(reconfig(so))
-    elif command == "sendchange":
-        from buildbot.scripts.sendchange import sendchange
-        sys.exit(sendchange(so))
-    elif command == "debugclient":
-        from buildbot.scripts.debugclient import debugclient
-        sys.exit(debugclient(so))
-    elif command == "statuslog":
-        from buildbot.scripts.statuslog import statuslog
-        sys.exit(statuslog(so))
-    elif command == "statusgui":
-        from buildbot.scripts.statusgui import statusgui
-        sys.exit(statusgui(so))
-    elif command == "try":
-        from buildbot.scripts.trycmd import trycmd
-        sys.exit(trycmd(so))
-    elif command == "tryserver":
-        from buildbot.scripts.tryserver import tryserver
-        sys.exit(tryserver(so))
-    elif command == "checkconfig":
-        from buildbot.scripts.checkconfig import checkconfig
-        sys.exit(checkconfig(so))
-    elif command == "user":
-        from buildbot.scripts.user import user
-        sys.exit(user(so))
-    sys.exit(0)
-
+    subconfig = config.subOptions
+    subcommandFunction = reflect.namedObject(subconfig.subcommandFunction)
+    sys.exit(subcommandFunction(subconfig))
