@@ -22,11 +22,9 @@ from __future__ import with_statement
 # pages and texinfo documentation.
 
 from twisted.python import usage
-from hashlib import md5
 import os
 import re
 import sys
-import time
 
 from buildbot.scripts import base
 
@@ -495,30 +493,17 @@ class TryOptions(base.SubcommandOptions):
             self['master'] = opts.get('masterstatus', None)
 
 class TryServerOptions(base.SubcommandOptions):
+
     optParameters = [
         ["jobdir", None, None, "the jobdir (maildir) for submitting jobs"],
         ]
+
     def getSynopsis(self):
         return "Usage:    buildbot tryserver [options]"
 
-
-def doTryServer(config):
-    jobdir = os.path.expanduser(config["jobdir"])
-    job = sys.stdin.read()
-    # now do a 'safecat'-style write to jobdir/tmp, then move atomically to
-    # jobdir/new . Rather than come up with a unique name randomly, I'm just
-    # going to MD5 the contents and prepend a timestamp.
-    timestring = "%d" % time.time()
-    m = md5()
-    m.update(job)
-    jobhash = m.hexdigest()
-    fn = "%s-%s" % (timestring, jobhash)
-    tmpfile = os.path.join(jobdir, "tmp", fn)
-    newfile = os.path.join(jobdir, "new", fn)
-    with open(tmpfile, "w") as f:
-        f.write(job)
-    os.rename(tmpfile, newfile)
-
+    def postOptions(self):
+        if not self['jobdir']:
+            raise usage.UsageError('jobdir is required')
 
 class CheckConfigOptions(base.SubcommandOptions):
     optFlags = [
@@ -797,7 +782,8 @@ def run():
         from buildbot.scripts.trycmd import trycmd
         sys.exit(trycmd(so))
     elif command == "tryserver":
-        doTryServer(so)
+        from buildbot.scripts.tryserver import tryserver
+        sys.exit(tryserver(so))
     elif command == "checkconfig":
         if not doCheckConfig(so):
             sys.exit(1)

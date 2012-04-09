@@ -150,6 +150,30 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
             lambda : self.parse('--vc=foo', *self.master_and_who))
 
 
+class TestTryServerOptions(OptionsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpOptions()
+
+    def parse(self, *args):
+        self.opts = runner.TryServerOptions()
+        self.opts.parseOptions(args)
+        return self.opts
+
+    def test_synopsis(self):
+        opts = runner.TryServerOptions()
+        self.assertIn('buildbot tryserver', opts.getSynopsis())
+
+    def test_defaults(self):
+        self.assertRaises(usage.UsageError,
+                lambda : self.parse())
+
+    def test_with_jobdir(self):
+        opts = self.parse('--jobdir', 'xyz')
+        exp = dict(jobdir='xyz')
+        self.assertOptions(opts, exp)
+
+
 class TestCheckConfigOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
