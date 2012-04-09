@@ -521,20 +521,6 @@ class CheckConfigOptions(base.SubcommandOptions):
             self['configFile'] = 'master.cfg'
 
 
-def doCheckConfig(config):
-    from buildbot.scripts.checkconfig import ConfigLoader
-    quiet = config.get('quiet')
-    configFileName = config.get('configFile')
-
-    if os.path.isdir(configFileName):
-        os.chdir(configFileName)
-        cl = ConfigLoader(basedir=configFileName)
-    else:
-        cl = ConfigLoader(configFileName=configFileName)
-
-    return cl.load(quiet=quiet)
-
-
 class UserOptions(base.SubcommandOptions):
     optParameters = [
         ["master", "m", None,
@@ -785,8 +771,8 @@ def run():
         from buildbot.scripts.tryserver import tryserver
         sys.exit(tryserver(so))
     elif command == "checkconfig":
-        if not doCheckConfig(so):
-            sys.exit(1)
+        from buildbot.scripts.checkconfig import checkconfig
+        sys.exit(checkconfig(so))
     elif command == "user":
         from buildbot.scripts.user import user
         sys.exit(user(so))

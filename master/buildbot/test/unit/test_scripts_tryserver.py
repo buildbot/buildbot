@@ -34,7 +34,9 @@ class TestStatusLog(dirs.DirsMixin, unittest.TestCase):
         inputfile = StringIO('this is my try job')
         self.patch(sys, 'stdin', inputfile)
 
-        tryserver.tryserver(config)
+        rc = tryserver.tryserver(config)
+
+        self.assertEqual(rc, 0)
 
         newfiles = os.listdir(self.newdir)
         tmpfiles = os.listdir(self.tmpdir)

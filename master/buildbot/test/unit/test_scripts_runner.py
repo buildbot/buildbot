@@ -21,7 +21,7 @@ import getpass
 import mock
 from twisted.trial import unittest
 from twisted.python import usage
-from buildbot.scripts import base, runner, checkconfig
+from buildbot.scripts import base, runner
 
 class OptionsMixin(object):
 
@@ -202,59 +202,6 @@ class TestCheckConfigOptions(OptionsMixin, unittest.TestCase):
         opts = self.parse('-q')
         exp = dict(quiet=True, configFile='master.cfg')
         self.assertOptions(opts, exp)
-
-class TestCheckConfig(unittest.TestCase):
-
-    class FakeConfigLoader(object):
-        testcase = None
-        def __init__(self, **kwargs):
-            self.testcase.ConfigLoader_kwargs = kwargs
-
-        def load(self, quiet=False):
-            self.testcase.config_loaded = True
-            self.testcase.load_quiet = quiet
-            return self.testcase.load_return_value
-
-    def setUp(self):
-        self.patch(checkconfig, 'ConfigLoader',
-                        self.FakeConfigLoader)
-        self.FakeConfigLoader.testcase = self
-        self.load_return_value = True
-        self.config_loaded = False
-        self.load_quiet = False
-        self.ConfigLoader_kwargs = None
-
-    def test_doCheckConfig(self):
-        self.load_return_value = True
-        res = runner.doCheckConfig(dict(configFile='master.cfg', quiet=False))
-        self.assertTrue(res)
-        self.assertTrue(self.config_loaded)
-        self.assertFalse(self.load_quiet)
-        self.assertEqual(self.ConfigLoader_kwargs,
-                dict(configFileName='master.cfg'))
-
-    def test_doCheckConfig_quiet(self):
-        res = runner.doCheckConfig(dict(configFile='master.cfg', quiet=True))
-        self.assertTrue(res)
-        self.assertTrue(self.config_loaded)
-        self.assertTrue(self.load_quiet)
-        self.assertEqual(self.ConfigLoader_kwargs,
-                dict(configFileName='master.cfg'))
-
-    def test_doCheckConfig_dir(self):
-        os.mkdir('checkconfig_dir')
-        res = runner.doCheckConfig(dict(configFile='checkconfig_dir',
-                                      quiet=False))
-        self.assertTrue(res)
-        self.assertTrue(self.config_loaded)
-        self.assertEqual(self.ConfigLoader_kwargs,
-                dict(basedir='checkconfig_dir'))
-
-    def test_doCheckConfig_bad_file(self):
-        self.load_return_value = False
-        res = runner.doCheckConfig(dict(configFile='master.cfg', quiet=False))
-        self.assertFalse(res)
-        self.assertTrue(self.config_loaded)
 
 
 class TestTryOptions(OptionsMixin, unittest.TestCase):
