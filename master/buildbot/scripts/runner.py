@@ -287,84 +287,57 @@ class SendChangeOptions(base.SubcommandOptions):
 
     def getSynopsis(self):
         return "Usage:    buildbot sendchange [options] filenames.."
+
     def parseArgs(self, *args):
         self['files'] = args
+
     def opt_property(self, property):
         name,value = property.split(':', 1)
         self['properties'][name] = value
 
+    def postOptions(self):
+        base.SubcommandOptions.postOptions(self)
 
-def sendchange(config, runReactor=False):
-    """Send a single change to the buildmaster's PBChangeSource. The
-    connection will be drpoped as soon as the Change has been sent."""
-    from buildbot.clients import sendchange
+        if self.get("revision_file"):
+            with open(self["revision_file"],"r") as f:
+                self['revision'] = f.read()
 
-    encoding = config.get('encoding', 'utf8')
-    who = config.get('who')
-    auth = config.get('auth')
-    master = config.get('master')
-    branch = config.get('branch')
-    category = config.get('category')
-    revision = config.get('revision')
-    properties = config.get('properties', {})
-    repository = config.get('repository', '')
-    vc = config.get('vc', None)
-    project = config.get('project', '')
-    revlink = config.get('revlink', '')
-    if config.get('when'):
-        when = float(config.get('when'))
-    else:
-        when = None
-    if config.get("revision_file"):
-        with open(config["revision_file"],"r") as f:
-            revision = f.read()
-
-    comments = config.get('comments')
-    if not comments and config.get('logfile'):
-        if config['logfile'] == "-":
-            comments = sys.stdin.read()
+        if self.get('when'):
+            try:
+                self['when'] = float(self['when'])
+            except:
+                raise usage.UsageError('invalid "when" value %s'
+                                        % (self['when'],))
         else:
-            with open(config['logfile'], "rt") as f:
-                comments = f.read()
-    if comments is None:
-        comments = ""
+            self['when'] = None
 
-    files = config.get('files', ())
+        if not self.get('comments') and self.get('logfile'):
+            if self['logfile'] == "-":
+                self['comments'] = sys.stdin.read()
+            else:
+                with open(self['logfile'], "rt") as f:
+                    self['comments'] = f.read()
+        if self.get('comments') is None:
+            self['comments'] = ""
 
-    vcs = ['cvs', 'svn', 'darcs', 'hg', 'bzr', 'git', 'mtn', 'p4', None]
-    assert vc in vcs, "vc must be 'cvs', 'svn', 'darcs', 'hg', 'bzr', " \
-        "'git', 'mtn', or 'p4'"
+        # fix up the auth with a password if none was given
+        auth = self.get('auth')
+        if not auth:
+            auth = 'change:changepw'
+        if ':' not in auth:
+            import getpass
+            pw = getpass.getpass("Enter password for '%s': " % auth)
+            auth = "%s:%s" % (auth, pw)
+        self['auth'] = tuple(auth.split(':', 1))
 
-    # fix up the auth with a password if none was given
-    if not auth:
-        auth = 'change:changepw'
-    if ':' not in auth:
-        import getpass
-        pw = getpass.getpass("Enter password for '%s': " % auth)
-        auth = "%s:%s" % (auth, pw)
-    auth = auth.split(':', 1)
+        vcs = ['cvs', 'svn', 'darcs', 'hg', 'bzr', 'git', 'mtn', 'p4']
+        if self.get('vc') and self.get('vc') not in vcs:
+            raise usage.UsageError("vc must be one of %s" % (', '.join(vcs)))
 
-    assert who, "you must provide a committer (--who)"
-    assert master, "you must provide the master location"
-
-    s = sendchange.Sender(master, auth, encoding=encoding)
-    d = s.send(branch, revision, comments, files, who=who, category=category, when=when,
-               properties=properties, repository=repository, vc=vc, project=project,
-               revlink=revlink)
-
-    if runReactor:
-        from twisted.internet import reactor
-        status = [True]
-        def printSuccess(_):
-            print "change sent successfully"
-        def failed(f):
-            status[0] = False
-            print "change NOT sent - something went wrong: " + str(f)
-        d.addCallbacks(printSuccess, failed)
-        d.addBoth(lambda _ : reactor.stop())
-        reactor.run()
-        return status[0]
-    return d
+        if not self.get('who'):
+            raise usage.UsageError("you must provide a committer (--who)")
+        if not self.get('master'):
+            raise usage.UsageError("you must provide the master location")
 
 
 class ForceOptions(base.SubcommandOptions):
@@ -814,8 +787,8 @@ def run():
         from buildbot.scripts.reconfig import reconfig
         sys.exit(reconfig(so))
     elif command == "sendchange":
-        if not sendchange(so, True):
-            sys.exit(1)
+        from buildbot.scripts.sendchange import sendchange
+        sys.exit(sendchange(so))
     elif command == "debugclient":
         from buildbot.scripts.debugclient import debugclient
         sys.exit(debugclient(so))

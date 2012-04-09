@@ -17,14 +17,11 @@ from __future__ import with_statement
 
 import os
 import sys
-import cStringIO
 import getpass
 import mock
 from twisted.trial import unittest
 from twisted.python import usage
-from twisted.internet import defer, reactor
 from buildbot.scripts import base, runner, checkconfig
-from buildbot.clients import sendchange
 
 class OptionsMixin(object):
 
@@ -45,8 +42,12 @@ class OptionsMixin(object):
 
 class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
 
+    master_and_who = ['-m', 'm', '-W', 'w']
+
     def setUp(self):
         self.setUpOptions()
+        self.getpass_response = 'typed-password'
+        self.patch(getpass, 'getpass', lambda prompt : self.getpass_response)
 
     def parse(self, *args):
         self.opts = runner.SendChangeOptions()
@@ -58,24 +59,25 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         self.assertIn('buildbot sendchange', opts.getSynopsis())
 
     def test_defaults(self):
-        opts = self.parse()
-        exp = dict(master=None, auth=None, who=None, vc=None,
+        opts = self.parse('-m', 'm', '-W', 'me')
+        exp = dict(master='m', auth=('change', 'changepw'), who='me', vc=None,
                 repository='', project='', branch=None, category=None,
                 revision=None, revision_file=None, property=None,
-                comments=None, logfile=None, when=None, revlink='',
+                comments='', logfile=None, when=None, revlink='',
                 encoding='utf8', files=())
         self.assertOptions(opts, exp)
 
     def test_files(self):
-        opts = self.parse('a', 'b', 'c')
+        opts = self.parse(*self.master_and_who + ['a', 'b', 'c'])
         self.assertEqual(opts['files'], ('a', 'b', 'c'))
 
     def test_properties(self):
-        opts = self.parse('--property', 'x:y', '--property', 'a:b')
+        opts = self.parse('--property', 'x:y', '--property', 'a:b',
+                                *self.master_and_who)
         self.assertEqual(opts['properties'], dict(x="y", a="b"))
 
     def test_properties_with_colon(self):
-        opts = self.parse('--property', 'x:http://foo')
+        opts = self.parse('--property', 'x:http://foo', *self.master_and_who)
         self.assertEquals(opts['properties'], dict(x='http://foo'))
 
     def test_config_file(self):
@@ -83,185 +85,70 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         self.options_file['who'] = 'WWW'
         self.options_file['branch'] = 'BBB'
         self.options_file['category'] = 'CCC'
+        self.options_file['vc'] = 'svn'
         opts = self.parse()
         exp = dict(master='MMM', who='WWW',
-                branch='BBB', category='CCC')
+                branch='BBB', category='CCC', vc='svn')
         self.assertOptions(opts, exp)
 
     def test_short_args(self):
-        opts = self.parse(*('-m m -a a -W w -R r -P p -b b -s s ' +
-            '-C c -r r -p pn:pv -c c -F f -w w -l l -e e').split())
-        exp = dict(master='m', auth='a', who='w', repository='r', project='p',
-                branch='b', category='c', revision='r', vc='s',
-                properties=dict(pn='pv'), comments='c', logfile='f', when='w',
-                revlink='l', encoding='e')
+        opts = self.parse(*('-m m -a a:b -W W -R r -P p -b b -s git ' +
+            '-C c -r r -p pn:pv -c c -F f -w 123 -l l -e e').split())
+        exp = dict(master='m', auth=('a','b'), who='W', repository='r',
+                project='p', branch='b', category='c', revision='r', vc='git',
+                properties=dict(pn='pv'), comments='c', logfile='f',
+                when=123.0, revlink='l', encoding='e')
         self.assertOptions(opts, exp)
 
     def test_long_args(self):
-        opts = self.parse(*('--master m --auth a --who w --repository r ' +
-            '--project p --branch b --category c --revision r --vc s ' +
-            '--revision_file rr --property pn:pv --comments c --logfile f ' +
-            '--when w --revlink l --encoding e').split())
-        exp = dict(master='m', auth='a', who='w', repository='r', project='p',
-                branch='b', category='c', revision='r', vc='s', revision_file='rr',
-                properties=dict(pn='pv'), comments='c', logfile='f', when='w',
-                revlink='l', encoding='e')
+        opts = self.parse(*('--master m --auth a:b --who w --repository r ' +
+            '--project p --branch b --category c --revision r --vc git ' +
+            '--property pn:pv --comments c --logfile f ' +
+            '--when 123 --revlink l --encoding e').split())
+        exp = dict(master='m', auth=('a', 'b'), who='w', repository='r',
+                project='p', branch='b', category='c', revision='r', vc='git',
+                properties=dict(pn='pv'), comments='c', logfile='f',
+                when=123.0, revlink='l', encoding='e')
         self.assertOptions(opts, exp)
 
-class TestSendChange(unittest.TestCase):
+    def test_revision_file(self):
+        with open('revfile', 'wt') as f:
+            f.write('my-rev')
+        self.addCleanup(lambda : os.unlink('revfile'))
+        opts = self.parse('--revision_file', 'revfile', *self.master_and_who)
+        self.assertOptions(opts, dict(revision='my-rev'))
 
-    class FakeSender:
-        def __init__(self, master, auth, encoding=None):
-            self.master = master
-            self.auth = auth
-            self.encoding = encoding
-            self.fail = False
+    def test_invalid_when(self):
+        self.assertRaises(usage.UsageError,
+            lambda : self.parse('--when=foo', *self.master_and_who))
 
-        def send(self, branch, revision, comments, files, **kwargs):
-            kwargs['branch'] = branch
-            kwargs['revision'] = revision
-            kwargs['comments'] = comments
-            kwargs['files'] = files
-            self.send_kwargs = kwargs
-            d = defer.Deferred()
-            if self.fail:
-                reactor.callLater(0, d.errback, RuntimeError("oh noes"))
-            else:
-                reactor.callLater(0, d.callback, None)
-            return d
+    def test_comments_overrides_logfile(self):
+        opts = self.parse('--logfile', 'logs', '--comments', 'foo',
+                                *self.master_and_who)
+        self.assertOptions(opts, dict(comments='foo'))
 
-    def setUp(self):
-        def Sender_constr(*args, **kwargs):
-            self.sender = self.FakeSender(*args, **kwargs)
-            return self.sender
-        self.patch(sendchange, 'Sender', Sender_constr)
+    def test_logfile(self):
+        with open('comments', 'wt') as f:
+            f.write('hi')
+        self.addCleanup(lambda : os.unlink('comments'))
+        opts = self.parse('--logfile', 'comments', *self.master_and_who)
+        self.assertOptions(opts, dict(comments='hi'))
 
-        self.stdout = cStringIO.StringIO()
-        self.patch(sys, 'stdout', self.stdout)
-
-    def test_sendchange_defaults(self):
-        d = runner.sendchange(dict(who='me', master='a:1'))
-        def check(_):
-            # called correctly
-            self.assertEqual((self.sender.master, self.sender.auth,
-                    self.sender.encoding, self.sender.send_kwargs),
-                    ('a:1', ['change','changepw'], 'utf8', {
-                        'branch': None,
-                        'category': None,
-                        'comments': '',
-                        'files': (),
-                        'project': '',
-                        'properties': {},
-                        'repository': '',
-                        'revision': None,
-                        'revlink': '',
-                        'when': None,
-                        'who': 'me',
-                        'vc': None}))
-            # nothing to stdout
-            self.assertEqual(self.stdout.getvalue(), '')
-        d.addCallback(check)
-        return d
-
-    def test_sendchange_args(self):
-        d = runner.sendchange(dict(encoding='utf16', who='me', auth='a:b',
-                master='a:1', branch='br', category='cat', revision='rr',
-                properties={'a':'b'}, repository='rep', project='prj', vc='git',
-                revlink='rl', when='1234', comments='comm', files=('a', 'b')))
-        def check(_):
-            self.assertEqual((self.sender.master, self.sender.auth,
-                    self.sender.encoding, self.sender.send_kwargs),
-                    ('a:1', ['a','b'], 'utf16', {
-                        'branch': 'br',
-                        'category': 'cat',
-                        'comments': 'comm',
-                        'files': ('a', 'b'),
-                        'project': 'prj',
-                        'properties': {'a':'b'},
-                        'repository': 'rep',
-                        'revision': 'rr',
-                        'revlink': 'rl',
-                        'when': 1234.0,
-                        'who': 'me',
-                        'vc': 'git'}))
-            self.assertEqual(self.stdout.getvalue(), '')
-        d.addCallback(check)
-        return d
-
-    def test_sendchange_revision_file(self):
-        with open('rf', 'w') as f:
-            f.write('abcd')
-        d = runner.sendchange(dict(who='me', master='a:1', revision_file='rf'))
-        def check(_):
-            self.assertEqual((self.sender.master, self.sender.auth,
-                    self.sender.encoding, self.sender.send_kwargs['revision']),
-                    ('a:1', ['change','changepw'], 'utf8', 'abcd'))
-            self.assertEqual(self.stdout.getvalue(), '')
-            try:
-                os.unlink('rf')
-            except:
-                pass
-        d.addCallback(check)
-        return d
-
-    def test_sendchange_logfile(self):
-        with open('lf', 'w') as f:
-            f.write('hello')
-        d = runner.sendchange(dict(who='me', master='a:1', logfile='lf'))
-        def check(_):
-            self.assertEqual((self.sender.master, self.sender.auth,
-                    self.sender.encoding, self.sender.send_kwargs['comments']),
-                    ('a:1', ['change','changepw'], 'utf8', 'hello'))
-            self.assertEqual(self.stdout.getvalue(), '')
-            try:
-                os.unlink('lf')
-            except:
-                pass
-        d.addCallback(check)
-        return d
-
-    def test_sendchange_logfile_stdin(self):
+    def test_logfile_stdin(self):
         stdin = mock.Mock()
-        stdin.read = lambda : 'hi!'
+        stdin.read = lambda : 'hi'
         self.patch(sys, 'stdin', stdin)
-        d = runner.sendchange(dict(who='me', master='a:1', logfile='-'))
-        def check(_):
-            self.assertEqual((self.sender.master, self.sender.auth,
-                    self.sender.encoding, self.sender.send_kwargs['comments']),
-                    ('a:1', ['change','changepw'], 'utf8', 'hi!'))
-            self.assertEqual(self.stdout.getvalue(), '')
-            try:
-                os.unlink('lf')
-            except:
-                pass
-        d.addCallback(check)
-        return d
+        opts = self.parse('--logfile', '-', *self.master_and_who)
+        self.assertOptions(opts, dict(comments='hi'))
 
-    def test_sendchange_bad_vc(self):
-        d = defer.maybeDeferred(lambda :
-                runner.sendchange(dict(master='a:1', who="abc", vc="blargh")))
-        return self.assertFailure(d, AssertionError)
+    def test_auth_getpass(self):
+        opts = self.parse('--auth=dustin', *self.master_and_who)
+        self.assertOptions(opts, dict(auth=('dustin', 'typed-password')))
 
-    def test_sendchange_auth_prompt(self):
-        self.patch(getpass, 'getpass', lambda prompt : 'sekrit')
-        d = runner.sendchange(dict(who='me', master='a:1', auth='user'))
-        def check(_):
-            self.assertEqual((self.sender.master, self.sender.auth,
-                    self.sender.encoding),
-                    ('a:1', ['user','sekrit'], 'utf8'))
-            self.assertEqual(self.stdout.getvalue(), '')
-        d.addCallback(check)
-        return d
+    def test_invalid_vcs(self):
+        self.assertRaises(usage.UsageError,
+            lambda : self.parse('--vc=foo', *self.master_and_who))
 
-    def test_sendchange_who_required(self):
-        d = defer.maybeDeferred(lambda :
-                runner.sendchange(dict(master='a:1')))
-        return self.assertFailure(d, AssertionError)
-
-    def test_sendchange_master_required(self):
-        d = defer.maybeDeferred(lambda :
-                runner.sendchange(dict(who='abc')))
-        return self.assertFailure(d, AssertionError)
 
 class TestCheckConfigOptions(OptionsMixin, unittest.TestCase):
 
