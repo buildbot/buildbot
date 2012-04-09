@@ -70,17 +70,6 @@ class Git(Source):
         self.clobberOnFailure = clobberOnFailure
         self.mode = mode
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(branch=branch,
-                                 mode=mode,
-                                 method=method,
-                                 progress=progress,
-                                 repourl=repourl,
-                                 submodules=submodules,
-                                 shallow=shallow,
-                                 retryFetch=retryFetch,
-                                 clobberOnFailure=
-                                 clobberOnFailure,
-                                 )
 
         assert self.mode in ['incremental', 'full']
         assert self.repourl is not None

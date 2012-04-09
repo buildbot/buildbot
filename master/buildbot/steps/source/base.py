@@ -130,16 +130,6 @@ class Source(LoggingBuildStep):
         """
 
         LoggingBuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(workdir=workdir,
-                                 mode=mode,
-                                 alwaysUseLatest=alwaysUseLatest,
-                                 timeout=timeout,
-                                 retry=retry,
-                                 logEnviron=logEnviron,
-                                 env=env,
-                                 description=description,
-                                 descriptionDone=descriptionDone
-                                 )
 
         assert mode in ("update", "copy", "clobber", "export")
         if retry:

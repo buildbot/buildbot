@@ -13,22 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-import warnings
-
-from twisted.python import deprecate, versions
-
-from buildbot import util
+from buildbot import interfaces, util
 from buildbot.process.build import Build
-from buildbot.process.buildstep import BuildStep
 from buildbot.steps.source import CVS, SVN
 from buildbot.steps.shell import Configure, Compile, Test, PerlModuleTest
-
-# deprecated, use BuildFactory.addStep
-@deprecate.deprecated(versions.Version("buildbot", 0, 8, 6))
-def s(steptype, **kwargs):
-    # convenience function for master.cfg files, to create step
-    # specification tuples
-    return (steptype, kwargs)
 
 class ArgumentsInTheWrongPlace(Exception):
     """When calling BuildFactory.addStep(stepinstance), addStep() only takes
@@ -54,18 +42,9 @@ class BuildFactory(util.ComparableMixin):
     compare_attrs = ['buildClass', 'steps', 'useProgress', 'workdir']
 
     def __init__(self, steps=None):
-        if steps is None:
-            steps = []
-        self.steps = [self._makeStepFactory(s) for s in steps]
-
-    def _makeStepFactory(self, step_or_factory):
-        if isinstance(step_or_factory, BuildStep):
-            return step_or_factory.getStepFactory()
-        warnings.warn(
-                "Passing a BuildStep subclass to factory.addStep is deprecated.  " +
-                "Please pass a BuildStep instance instead.  Support will be dropped in v0.8.7.",
-                    DeprecationWarning, stacklevel=3)
-        return step_or_factory
+        self.steps = []
+        if steps:
+            self.addSteps(steps)
 
     def newBuild(self, requests):
         """Create a new Build instance.
@@ -79,22 +58,8 @@ class BuildFactory(util.ComparableMixin):
         b.setStepFactories(self.steps)
         return b
 
-    def addStep(self, step_or_factory, **kwargs):
-        if isinstance(step_or_factory, BuildStep):
-            if kwargs:
-                raise ArgumentsInTheWrongPlace()
-            s = step_or_factory.getStepFactory()
-        elif type(step_or_factory) == type(BuildStep) and \
-                issubclass(step_or_factory, BuildStep):
-            s = (step_or_factory, dict(kwargs))
-            warnings.warn(
-                    "Passing a BuildStep subclass to factory.addStep is deprecated.  " +
-                    "Please pass a BuildStep instance instead.  Support will be dropped in v0.8.7.",
-                    DeprecationWarning, stacklevel=2)
-
-        else:
-            raise ValueError('%r is not a BuildStep nor BuildStep subclass' % step_or_factory)
-        self.steps.append(s)
+    def addStep(self, step):
+        self.steps.append(interfaces.IBuildStepFactory(step))
 
     def addSteps(self, steps):
         for s in steps:
@@ -199,7 +164,7 @@ class BasicBuildFactory(GNUAutoconf):
         mode = "clobber"
         if cvsCopy:
             mode = "copy"
-        source = s(CVS, cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
+        source = CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
         GNUAutoconf.__init__(self, source,
                              configure=configure, configureEnv=configureEnv,
                              compile=compile,
@@ -213,7 +178,7 @@ class QuickBuildFactory(BasicBuildFactory):
                  compile="make all",
                  test="make check", cvsCopy=False):
         mode = "update"
-        source = s(CVS, cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
+        source = CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
         GNUAutoconf.__init__(self, source,
                              configure=configure, configureEnv=configureEnv,
                              compile=compile,
@@ -225,7 +190,7 @@ class BasicSVN(GNUAutoconf):
                  configure=None, configureEnv={},
                  compile="make all",
                  test="make check"):
-        source = s(SVN, svnurl=svnurl, mode="update")
+        source = SVN(svnurl=svnurl, mode="update")
         GNUAutoconf.__init__(self, source,
                              configure=configure, configureEnv=configureEnv,
                              compile=compile,

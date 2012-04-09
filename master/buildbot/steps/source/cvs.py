@@ -43,14 +43,6 @@ class CVS(Source):
         self.method = method
         self.srcdir = 'source'
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(cvsroot=cvsroot,
-                                 cvsmodule=cvsmodule,
-                                 mode=mode,
-                                 method=method,
-                                 global_options=global_options,
-                                 extra_options=extra_options,
-                                 login=login,
-                                 )
 
     def startVC(self, branch, revision, patch):
         self.revision = revision

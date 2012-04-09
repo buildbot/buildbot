@@ -51,17 +51,6 @@ class SVN(Source):
         self.method=method
         self.mode = mode
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(repourl=repourl,
-                                 baseURL=baseURL,
-                                 mode=mode,
-                                 method=method,
-                                 defaultBranch=defaultBranch,
-                                 password=password,
-                                 username=username,
-                                 extra_args=extra_args,
-                                 keep_on_purge=keep_on_purge,
-                                 depth=depth,
-                                 )
         errors = []
         if self.mode not in self.possible_modes:
             errors.append("mode %s is not one of %s" % (self.mode, self.possible_modes))
