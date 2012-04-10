@@ -350,10 +350,8 @@ class Build(properties.PropertiesMixin):
                 self.progress.setExpectationsFrom(expectations)
 
         # we are now ready to set up our BuildStatus.
-        # at the moment that schedulers start to deliver sourcestamps per codebase
-        # buildstatus should support multiple sourcestamps.
-        # until now schedulers deliver exactly one sourcestamp
-        self.build_status.setSourceStamp(self.sources[0])
+        # pass all sourcestamps to the buildstatus
+        self.build_status.setSourceStamps(self.sources)
         self.build_status.setReason(self.reason)
         self.build_status.setBlamelist(self.blamelist())
         self.build_status.setProgress(self.progress)

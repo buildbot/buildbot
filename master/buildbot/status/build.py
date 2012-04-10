@@ -28,10 +28,10 @@ from buildbot.status.buildstep import BuildStepStatus
 class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     implements(interfaces.IBuildStatus, interfaces.IStatusEvent)
 
-    persistenceVersion = 3
+    persistenceVersion = 4
     persistenceForgets = ( 'wasUpgraded', )
 
-    source = None
+    sources = None
     reason = None
     changes = []
     blamelist = []
@@ -88,10 +88,12 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             return None
         return self.builder.getBuild(self.number-1)
 
-    def getSourceStamp(self, absolute=False):
+    def getSourceStamps(self, absolute=False):
         if not absolute or not self.properties.has_key('got_revision'):
-            return self.source
-        return self.source.getAbsoluteSourceStamp(self.properties['got_revision'])
+            return self.sources
+        # the got_revision must be stored per sourcestamp (or in the sourcestamp)
+        #return [ss.getAbsoluteSourceStamp(self.properties['got_revision']) for ss in self.sources]
+        return [ss.getAbsoluteSourceStamp(ss.revision) for ss in self.sources]
 
     def getReason(self):
         return self.reason
@@ -243,9 +245,11 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     def addTestResult(self, result):
         self.testResults[result.getName()] = result
 
-    def setSourceStamp(self, sourceStamp):
-        self.source = sourceStamp
-        self.changes = self.source.changes
+    def setSourceStamps(self, sourceStamps):
+        self.sources = sourceStamps
+        self.changes = []
+        for source in self.sources:
+            self.changes.extend(source.changes)
 
     def setReason(self, reason):
         self.reason = reason
@@ -394,6 +398,12 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.properties.update(propdict, "Upgrade from previous version")
         self.wasUpgraded = True
 
+    def upgradeToVersion4(self):
+        # buildstatus contains list of sourcestamps, convert single to list
+        self.sources = [self.source]
+        del self.source
+        self.wasUpgraded = True
+        
     def checkLogfiles(self):
         # check that all logfiles exist, and remove references to any that
         # have been deleted (e.g., by purge())
@@ -427,7 +437,8 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         # Constant
         result['builderName'] = self.builder.name
         result['number'] = self.getNumber()
-        result['sourceStamp'] = self.getSourceStamp().asDict()
+        # TODO: enable multiple sourcestamps to outside the buildstatus
+        result['sourceStamp'] = self.getSourceStamps()[0].asDict()
         result['reason'] = self.getReason()
         result['blame'] = self.getResponsibleUsers()
 

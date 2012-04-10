@@ -711,13 +711,27 @@ class BuilderControl:
             properties.updateFromProperties(extraProperties)
 
         properties_dict = dict((k,(v,s)) for (k,v,s) in properties.asList())
-        ss = bs.getSourceStamp(absolute=True)
-        d = ss.getSourceStampSetId(self.master.master)
+        ssList = bs.getSourceStamps(absolute=True)
+        def add_sourcestamps(sourcestampsetid, sourcestamps):
+            dl = []
+            for ss in sourcestamps:
+                # add defered to the list
+                dl.append(ss.addSourceStampToDatabase(self.master.master, sourcestampsetid))
+            d = defer.gatherResults(dl)
+            def return_setid(dummy):
+                log.msg('dummy is %s' % dummy)
+                return sourcestampsetid
+            d.addCallback(return_setid)
+            return d
+                
         def add_buildset(sourcestampsetid):
             return self.master.master.addBuildset(
                     builderNames=[self.original.name],
                     sourcestampsetid=sourcestampsetid, reason=reason, properties=properties_dict)
-        d.addCallback(add_buildset)
+        if ssList:
+            d = ssList[0].getSourceStampSetId(self.master.master)
+            d.addCallback(add_sourcestamps, ssList[1:])
+            d.addCallback(add_buildset)
         return d
 
     @defer.inlineCallbacks

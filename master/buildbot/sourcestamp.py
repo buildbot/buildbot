@@ -280,11 +280,16 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.codebase = ''
         self.wasUpgraded = True
 
-    @util.deferredLocked('_getSourceStampSetId_lock')
     def getSourceStampSetId(self, master):
         "temporary; do not use widely!"
         if self.sourcestampsetid:
             return defer.succeed(self.sourcestampsetid)
+        else:
+            return self.addSourceStampToDatabase(master)
+            
+    
+    @util.deferredLocked('_getSourceStampSetId_lock')
+    def addSourceStampToDatabase(self, master, sourcestampsetid = None):
         # add it to the DB
         patch_body = None
         patch_level = None
@@ -301,8 +306,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             patch_author, patch_comment = self.patch_info
 
         def get_setid():
-            if self.sourcestampsetid != None:
-                return defer.succeed( self.sourcestampsetid )
+            if sourcestampsetid != None:
+                return defer.succeed( sourcestampsetid )
             else:
                 return master.db.sourcestampsets.addSourceStampSet()
             return d
