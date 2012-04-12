@@ -51,7 +51,7 @@ class Reconfigurator:
         self.sent_signal = False
         reactor.callLater(0.2, self.sighup)
 
-        lw = LogWatcher(os.path.join("twistd.log"))
+        lw = LogWatcher(os.path.join(basedir, "twistd.log"))
         d = lw.start()
         d.addCallbacks(self.success, self.failure)
         d.addBoth(lambda _ : self.rc)
