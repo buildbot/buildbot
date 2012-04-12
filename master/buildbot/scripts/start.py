@@ -60,6 +60,25 @@ stop it, fix the config file, and restart.
         reactor.stop()
 
 
+def launch(config):
+    os.chdir(config['basedir'])
+    sys.path.insert(0, os.path.abspath(config['basedir']))
+
+    # see if we can launch the application without actually having to
+    # spawn twistd, since spawning processes correctly is a real hassle
+    # on windows.
+    argv = ["twistd",
+            "--no_save",
+            "--logfile=twistd.log", # windows doesn't use the same default
+            "--python=buildbot.tac"]
+    sys.argv = argv
+
+    # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use
+    # _twistw.run . Twisted-2.5.0 and later use twistd.run, even for
+    # windows.
+    from twisted.scripts import twistd
+    twistd.run()
+
 def start(config):
     if not base.isBuildmasterDir(config['basedir']):
         print "not a buildmaster directory"
@@ -85,21 +104,3 @@ def start(config):
     time.sleep(0.2)
     launch(config)
 
-def launch(config):
-    os.chdir(config['basedir'])
-    sys.path.insert(0, os.path.abspath(config['basedir']))
-
-    # see if we can launch the application without actually having to
-    # spawn twistd, since spawning processes correctly is a real hassle
-    # on windows.
-    argv = ["twistd",
-            "--no_save",
-            "--logfile=twistd.log", # windows doesn't use the same default
-            "--python=buildbot.tac"]
-    sys.argv = argv
-
-    # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use
-    # _twistw.run . Twisted-2.5.0 and later use twistd.run, even for
-    # windows.
-    from twisted.scripts import twistd
-    twistd.run()
