@@ -69,6 +69,24 @@ available with all schedulers.
     unimportant, then it will not cause builds to start, but will be
     remembered and shown in status displays.
 
+``codebases``
+    When the scheduler processes data from more than 1 repository at the
+    same time then a corresponding codebase definition should be passed for each
+    repository. A codebase definition is a dictionary with one or more of the 
+    following keys: repository, branch, revision. The codebase definitions are 
+    also to be passed as dictionary::
+        
+        codebases = {'codebase1': {'repository':'....', ...}, 'codebase2': {} }
+
+    Buildsteps can have a reference to one of the codebases. The step will only 
+    get information (revision, branch etc.)  that is related to that codebase.
+    When a scheduler is triggered by new changes, these changes (having a
+    codebase) will be incorporated by the new build. The buildsteps referencing
+    to the codebases that have changes get information about those changes. 
+    The buildstep that references to a codebase that does not have changes in
+    the build get the information from the codebases defintion as configured in
+    the scheduler.
+         
 ``onlyImportant``
     A boolean that, when ``True``, only adds important changes to the
     buildset as sepcified in the ``fileIsImportant`` callable. This
@@ -76,7 +94,6 @@ available with all schedulers.
     ``change_filter`` filters changes. This defaults to
     ``False`` and only applies when ``fileIsImportant`` is
     given.
-
 
 
 The remaining subsections represent a catalog of the available Scheduler types.
