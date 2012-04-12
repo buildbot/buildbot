@@ -31,19 +31,6 @@ from buildbot.scripts import base
 # Note that the terms 'options' and 'config' are used intechangeably here - in
 # fact, they are intercanged several times.  Caveat legator.
 
-DB_HELP = """
-    The --db string is evaluated to build the DB object, which specifies
-    which database the buildmaster should use to hold scheduler state and
-    status information. The default (which creates an SQLite database in
-    BASEDIR/state.sqlite) is equivalent to:
-
-      --db='sqlite:///state.sqlite'
-
-    To use a remote MySQL database instead, use something like:
-
-      --db='mysql://bbuser:bbpasswd@dbhost/bbdb'
-"""
-
 class BasedirMixin(object):
 
     """SubcommandOptions Mixin to handle subcommands that take a basedir
@@ -136,7 +123,17 @@ class CreateMasterOptions(BasedirMixin, base.SubcommandOptions):
     The elements of this dictionary are used to configure the Buildmaster.
     See doc/config.xhtml for details about what can be controlled through
     this interface.
-""" + DB_HELP + """
+
+    The --db string is evaluated to build the DB object, which specifies
+    which database the buildmaster should use to hold scheduler state and
+    status information. The default (which creates an SQLite database in
+    BASEDIR/state.sqlite) is equivalent to:
+
+      --db='sqlite:///state.sqlite'
+
+    To use a remote MySQL database instead, use something like:
+
+      --db='mysql://bbuser:bbpasswd@dbhost/bbdb'
     The --db string is stored verbatim in the buildbot.tac file, and
     evaluated as 'buildbot start' time to pass a DBConnector instance into
     the newly-created BuildMaster object.
