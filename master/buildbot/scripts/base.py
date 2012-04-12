@@ -120,3 +120,22 @@ class SubcommandOptions(usage.Options):
             if k.startswith("__"):
                 del localDict[k]
         return localDict
+
+class BasedirMixin(object):
+
+    """SubcommandOptions Mixin to handle subcommands that take a basedir
+    argument"""
+
+    def parseArgs(self, *args):
+        if len(args) > 0:
+            self['basedir'] = args[0]
+        else:
+            # Use the current directory if no basedir was specified.
+            self['basedir'] = os.getcwd()
+        if len(args) > 1:
+            raise usage.UsageError("I wasn't expecting so many arguments")
+
+    def postOptions(self):
+        self['basedir'] = os.path.abspath(self['basedir'])
+
+

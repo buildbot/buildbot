@@ -22,7 +22,6 @@ from __future__ import with_statement
 # pages and texinfo documentation.
 
 from twisted.python import usage, reflect
-import os
 import re
 import sys
 
@@ -31,25 +30,7 @@ from buildbot.scripts import base
 # Note that the terms 'options' and 'config' are used intechangeably here - in
 # fact, they are intercanged several times.  Caveat legator.
 
-class BasedirMixin(object):
-
-    """SubcommandOptions Mixin to handle subcommands that take a basedir
-    argument"""
-
-    def parseArgs(self, *args):
-        if len(args) > 0:
-            self['basedir'] = args[0]
-        else:
-            # Use the current directory if no basedir was specified.
-            self['basedir'] = os.getcwd()
-        if len(args) > 1:
-            raise usage.UsageError("I wasn't expecting so many arguments")
-
-    def postOptions(self):
-        self['basedir'] = os.path.abspath(self['basedir'])
-
-
-class UpgradeMasterOptions(BasedirMixin, base.SubcommandOptions):
+class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.upgrade_master.upgradeMaster"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
@@ -87,7 +68,7 @@ class UpgradeMasterOptions(BasedirMixin, base.SubcommandOptions):
     """
 
 
-class CreateMasterOptions(BasedirMixin, base.SubcommandOptions):
+class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.create_master.createMaster"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
@@ -140,7 +121,7 @@ class CreateMasterOptions(BasedirMixin, base.SubcommandOptions):
     """
 
     def postOptions(self):
-        BasedirMixin.postOptions(self)
+        base.BasedirMixin.postOptions(self)
         if not re.match('^\d+$', self['log-size']):
             raise usage.UsageError("log-size parameter needs to be an int")
         if not re.match('^\d+$', self['log-count']) and \
@@ -149,7 +130,7 @@ class CreateMasterOptions(BasedirMixin, base.SubcommandOptions):
                                    " or None")
 
 
-class StopOptions(BasedirMixin, base.SubcommandOptions):
+class StopOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.stop.stop"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
@@ -158,7 +139,7 @@ class StopOptions(BasedirMixin, base.SubcommandOptions):
         return "Usage:    buildbot stop [<basedir>]"
 
 
-class RestartOptions(BasedirMixin, base.SubcommandOptions):
+class RestartOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.restart.restart"
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
@@ -167,7 +148,7 @@ class RestartOptions(BasedirMixin, base.SubcommandOptions):
         return "Usage:    buildbot restart [<basedir>]"
 
 
-class StartOptions(BasedirMixin, base.SubcommandOptions):
+class StartOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.start.start"
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
@@ -176,7 +157,7 @@ class StartOptions(BasedirMixin, base.SubcommandOptions):
         return "Usage:    buildbot start [<basedir>]"
 
 
-class ReconfigOptions(BasedirMixin, base.SubcommandOptions):
+class ReconfigOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.reconfig.reconfig"
     optFlags = [
         ['quiet', 'q', "Don't display log messages about reconfiguration"],
