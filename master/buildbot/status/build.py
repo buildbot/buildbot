@@ -31,6 +31,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     persistenceVersion = 4
     persistenceForgets = ( 'wasUpgraded', )
 
+    source = None
     sources = None
     reason = None
     changes = []
@@ -372,7 +373,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.master = master
         for step in self.steps:
             step.setProcessObjects(self, master)
-
     def upgradeToVersion1(self):
         if hasattr(self, "sourceStamp"):
             # the old .sourceStamp attribute wasn't actually very useful
@@ -401,7 +401,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     def upgradeToVersion4(self):
         # buildstatus contains list of sourcestamps, convert single to list
         self.sources = [self.source]
-        del self.source
         self.wasUpgraded = True
         
     def checkLogfiles(self):
