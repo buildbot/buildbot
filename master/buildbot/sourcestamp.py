@@ -132,7 +132,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     def __init__(self, branch=None, revision=None, patch=None, sourcestampsetid=None,
                  patch_info=None, changes=None, project='', repository='',
                  codebase = '', _fromSsdict=False, _ignoreChanges=False):
-        self._getSourceStampSetId_lock = defer.DeferredLock();
+        self._addSourceStampToDatabase_lock = defer.DeferredLock();
 
         # skip all this madness if we're being built from the database
         if _fromSsdict:
@@ -257,7 +257,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     def __setstate__(self, d):
         styles.Versioned.__setstate__(self, d)
-        self._getSourceStampSetId_lock = defer.DeferredLock();
+        self._addSourceStampToDatabase_lock = defer.DeferredLock();
 
     def upgradeToVersion1(self):
         # version 0 was untyped; in version 1 and later, types matter.
@@ -288,7 +288,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             return self.addSourceStampToDatabase(master)
             
     
-    @util.deferredLocked('_getSourceStampSetId_lock')
+    @util.deferredLocked('_addSourceStampToDatabase_lock')
     def addSourceStampToDatabase(self, master, sourcestampsetid = None):
         # add it to the DB
         patch_body = None
