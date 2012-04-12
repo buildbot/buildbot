@@ -152,9 +152,6 @@ def upgradeMaster(config, _noMonkey=False):
     if not _noMonkey: # pragma: no cover
         monkeypatches.patch_all()
 
-    # expand the basedir for convenience later
-    config['basedir'] = os.path.expanduser(config['basedir'])
-
     if not checkBasedir(config):
         defer.returnValue(1)
         return
