@@ -416,10 +416,9 @@ The :bb:step:`SVN` step should be created with the
    (required): this specifies the ``URL`` argument that will be
    given to the :command:`svn checkout` command. It dictates both where
    the repository is located and which sub-tree should be
-   extracted. In this respect, it is like a combination of the CVS
-   ``cvsroot`` and ``cvsmodule`` arguments. One way to specify the branch is
-   to use ``Interpolate``. For example, if you wanted to check out the trunk
-   repository, you could use ``repourl=Interpolate("http://svn.example.com/repos/%(src::branch)s")``
+   extracted. One way to specify the branch is to use ``Interpolate``. For
+   example, if you wanted to check out the trunk repository, you could use
+   ``repourl=Interpolate("http://svn.example.com/repos/%(src::branch)s")``
    Alternatively, if you are using a remote Subversion repository
    which is accessible through HTTP at a URL of ``http://svn.example.com/repos``,
    and you wanted to check out the ``trunk/calc`` sub-tree, you would directly
