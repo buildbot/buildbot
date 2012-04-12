@@ -719,7 +719,6 @@ class BuilderControl:
                 dl.append(ss.addSourceStampToDatabase(self.master.master, sourcestampsetid))
             d = defer.gatherResults(dl)
             def return_setid(dummy):
-                log.msg('dummy is %s' % dummy)
                 return sourcestampsetid
             d.addCallback(return_setid)
             return d
