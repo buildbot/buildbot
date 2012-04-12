@@ -49,10 +49,10 @@ class TestUsersClient(unittest.TestCase):
         self.patch(usersclient, 'UsersClient', fake_UsersClient)
 
         # un-do the effects of @in_reactor
-        self.patch(user, 'users_client', user.users_client._orig)
+        self.patch(user, 'user', user.user._orig)
 
     def test_usersclient_send_ids(self):
-        d = user.users_client(dict(master='a:9990', username="x",
+        d = user.user(dict(master='a:9990', username="x",
                                      passwd="y", op='get', bb_username=None,
                                      bb_password=None, ids=['me', 'you'],
                                      info=None))
@@ -70,7 +70,7 @@ class TestUsersClient(unittest.TestCase):
             return 'ENCRY'
         self.patch(users, 'encrypt', _fake_encrypt)
 
-        d = user.users_client(dict(master='a:9990', username="x",
+        d = user.user(dict(master='a:9990', username="x",
                                      passwd="y", op='update', bb_username='bud',
                                      bb_password='day', ids=None,
                                      info=[{'identifier':'x', 'svn':'x'}]))
@@ -84,7 +84,7 @@ class TestUsersClient(unittest.TestCase):
         return d
 
     def test_usersclient_send_add_info(self):
-        d = user.users_client(dict(master='a:9990', username="x",
+        d = user.user(dict(master='a:9990', username="x",
                                      passwd="y", op='add', bb_username=None,
                                      bb_password=None, ids=None,
                                      info=[{'git':'x <h@c>', 'irc':'aaa'}]))

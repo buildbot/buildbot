@@ -20,7 +20,7 @@ from buildbot.util import in_reactor
 
 @in_reactor
 @defer.inlineCallbacks
-def users_client(config):
+def user(config):
 
     master = config.get('master')
     op = config.get('op')
