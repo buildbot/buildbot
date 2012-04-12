@@ -70,7 +70,7 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         @d.addCallback
         def check(rv):
             self.assertEqual(rv, 0)
-            self.assertStdout('upgrade complete')
+            self.assertInStdout('upgrade complete')
         return d
 
     def test_upgradeMaster_quiet(self):
@@ -127,7 +127,7 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.activeBasedir()
         rv = upgrade_master.checkBasedir(mkconfig())
         self.assertTrue(rv)
-        self.assertStdout('checking basedir')
+        self.assertInStdout('checking basedir')
 
     def test_checkBasedir_quiet(self):
         self.activeBasedir()
@@ -138,7 +138,7 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
     def test_checkBasedir_no_dir(self):
         rv = upgrade_master.checkBasedir(mkconfig(basedir='doesntexist'))
         self.assertFalse(rv)
-        self.assertStdout('is not a Buildbot basedir')
+        self.assertInStdout('is not a Buildbot basedir')
 
     @compat.skipUnlessPlatformIs('posix')
     def test_checkBasedir_active_pidfile(self):
@@ -146,7 +146,7 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         open(os.path.join('test', 'twistd.pid'), 'w').close()
         rv = upgrade_master.checkBasedir(mkconfig())
         self.assertFalse(rv)
-        self.assertStdout('still running')
+        self.assertInStdout('still running')
 
     def test_loadConfig(self):
         @classmethod
@@ -155,7 +155,7 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.patch(config_module.MasterConfig, 'loadConfig', loadConfig)
         cfg = upgrade_master.loadConfig(mkconfig())
         self.assertIsInstance(cfg, config_module.MasterConfig)
-        self.assertStdout('checking')
+        self.assertInStdout('checking')
 
     def test_loadConfig_ConfigErrors(self):
         @classmethod
@@ -164,7 +164,7 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.patch(config_module.MasterConfig, 'loadConfig', loadConfig)
         cfg = upgrade_master.loadConfig(mkconfig())
         self.assertIdentical(cfg, None)
-        self.assertStdout('oh noes')
+        self.assertInStdout('oh noes')
 
     def test_loadConfig_exception(self):
         @classmethod
@@ -173,13 +173,13 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.patch(config_module.MasterConfig, 'loadConfig', loadConfig)
         cfg = upgrade_master.loadConfig(mkconfig())
         self.assertIdentical(cfg, None)
-        self.assertStdout('RuntimeError')
+        self.assertInStdout('RuntimeError')
 
     def test_installFile(self):
         self.writeFile('test/srcfile', 'source data')
         upgrade_master.installFile(mkconfig(), 'test/destfile', 'test/srcfile')
         self.assertEqual(self.readFile('test/destfile'), 'source data')
-        self.assertStdout('creating test/destfile')
+        self.assertInStdout('creating test/destfile')
 
     def test_installFile_existing_differing(self):
         self.writeFile('test/srcfile', 'source data')
@@ -187,7 +187,7 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         upgrade_master.installFile(mkconfig(), 'test/destfile', 'test/srcfile')
         self.assertEqual(self.readFile('test/destfile'), 'dest data')
         self.assertEqual(self.readFile('test/destfile.new'), 'source data')
-        self.assertStdout('writing new contents to')
+        self.assertInStdout('writing new contents to')
 
     def test_installFile_existing_differing_overwrite(self):
         self.writeFile('test/srcfile', 'source data')
@@ -196,7 +196,7 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
                                    overwrite=True)
         self.assertEqual(self.readFile('test/destfile'), 'source data')
         self.assertFalse(os.path.exists('test/destfile.new'))
-        self.assertStdout('overwriting')
+        self.assertInStdout('overwriting')
 
     def test_installFile_existing_same(self):
         self.writeFile('test/srcfile', 'source data')
@@ -224,7 +224,7 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
                 'test/master.cfg.sample',
                 ]:
             self.assertTrue(os.path.exists(f), "%s not found" % f)
-        self.assertStdout('upgrading basedir')
+        self.assertInStdout('upgrading basedir')
 
     def test_upgradeFiles_rename_index_html(self):
         os.mkdir('test/public_html')
@@ -232,7 +232,7 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         upgrade_master.upgradeFiles(mkconfig())
         self.assertFalse(os.path.exists("test/public_html/index.html"))
         self.assertEqual(self.readFile("test/templates/root.html"), 'INDEX')
-        self.assertStdout('Moving ')
+        self.assertInStdout('Moving ')
 
     def test_upgradeFiles_index_html_collision(self):
         os.mkdir('test/public_html')
@@ -242,7 +242,7 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         upgrade_master.upgradeFiles(mkconfig())
         self.assertTrue(os.path.exists("test/public_html/index.html"))
         self.assertEqual(self.readFile("test/templates/root.html"), 'ROOT')
-        self.assertStdout('Decide')
+        self.assertInStdout('Decide')
 
     @defer.inlineCallbacks
     def test_upgradeDatabase(self):

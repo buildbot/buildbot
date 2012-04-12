@@ -44,6 +44,6 @@ class StdoutAssertionsMixin(object):
     def assertWasQuiet(self):
         self.assertEqual(self.stdout.getvalue(), '')
 
-    def assertStdout(self, exp):
+    def assertInStdout(self, exp):
         self.assertIn(exp, self.stdout.getvalue())
 

@@ -54,7 +54,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def test_start_not_basedir(self):
         self.assertEqual(start.start(mkconfig(basedir='doesntexist')), 1)
-        self.assertStdout('not a buildmaster directory')
+        self.assertInStdout('not a buildmaster directory')
 
     # the remainder of this script does obscene things:
     #  - forks

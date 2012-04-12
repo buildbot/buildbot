@@ -79,7 +79,7 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
         d = self.do_test_createMaster(mkconfig(quiet=False))
         @d.addCallback
         def check(_):
-            self.assertStdout('buildmaster configured in')
+            self.assertInStdout('buildmaster configured in')
         return d
 
 class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
@@ -128,7 +128,7 @@ class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.assertFalse(os.path.exists(self.basedir))
         create_master.makeBasedir(mkconfig(basedir=self.basedir))
         self.assertTrue(os.path.exists(self.basedir))
-        self.assertStdout('mkdir %s' % (self.basedir,))
+        self.assertInStdout('mkdir %s' % (self.basedir,))
 
     def test_makeBasedir_quiet(self):
         self.assertFalse(os.path.exists(self.basedir))
@@ -139,7 +139,7 @@ class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
     def test_makeBasedir_existing(self):
         os.mkdir(self.basedir)
         create_master.makeBasedir(mkconfig(basedir=self.basedir))
-        self.assertStdout('updating existing installation')
+        self.assertInStdout('updating existing installation')
 
     def test_makeTAC(self):
         create_master.makeTAC(mkconfig(basedir='test'))
@@ -163,7 +163,7 @@ class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.assertInTacFile("WRONG")
         self.assertTrue(os.path.exists(
             os.path.join('test', 'buildbot.tac.new')))
-        self.assertStdout('not touching existing buildbot.tac')
+        self.assertInStdout('not touching existing buildbot.tac')
 
     def test_makeTAC_existing_incorrect_quiet(self):
         with open(os.path.join('test', 'buildbot.tac'), 'wt') as f:
@@ -177,13 +177,13 @@ class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         create_master.makeTAC(mkconfig(basedir='test'))
         self.assertFalse(os.path.exists(
             os.path.join('test', 'buildbot.tac.new')))
-        self.assertStdout('and is correct')
+        self.assertInStdout('and is correct')
 
     def test_makeSampleConfig(self):
         create_master.makeSampleConfig(mkconfig(basedir='test'))
         self.assertTrue(os.path.exists(
             os.path.join('test', 'master.cfg.sample')))
-        self.assertStdout('creating ')
+        self.assertInStdout('creating ')
 
     def test_makeSampleConfig_db(self):
         create_master.makeSampleConfig(mkconfig(basedir='test', db='XXYYZZ',
