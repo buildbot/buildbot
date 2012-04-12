@@ -32,6 +32,9 @@ Deprecations, Removals, and Non-Compatible Changes
 * ``IProperties.render`` now returns a deferred, so any code rendering properties
   by hand will need to take this into account.
 
+* ``baseURL`` has been removed in :bb:step:`SVN` to use just ``repourl`` - see
+  :bb:bug:`2066`. Branch info should be provided with ``Interpolate``.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
