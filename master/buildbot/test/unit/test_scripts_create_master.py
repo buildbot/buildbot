@@ -144,7 +144,7 @@ class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
     def test_makeTAC_relocatable(self):
         create_master.makeTAC(mkconfig(basedir='test', relocatable=True))
-        self.assertInTacFile("basedir = r'.'")
+        self.assertInTacFile("basedir = '.'")  # repr() prefers ''
         self.assertWasQuiet()
 
     def test_makeTAC_no_logrotate(self):

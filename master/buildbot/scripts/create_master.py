@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import os
+import jinja2
 from twisted.python import util
 from twisted.internet import defer
 from buildbot.util import in_reactor
@@ -31,66 +32,16 @@ def makeBasedir(config):
         print "mkdir", config['basedir']
     os.mkdir(config['basedir'])
 
-
-masterTACTemplate = ["""
-import os
-
-from twisted.application import service
-from buildbot.master import BuildMaster
-
-basedir = r'%(basedir)s'
-rotateLength = %(log-size)s
-maxRotatedFiles = %(log-count)s
-
-# Default umask for server
-umask = None
-
-
-# if this is a relocatable tac file, get the directory containing the TAC
-if basedir == '.':
-    import os.path
-    basedir = os.path.abspath(os.path.dirname(__file__))
-
-# note: this line is matched against to check that this is a buildmaster
-# directory; do not edit it.
-application = service.Application('buildmaster')
-""",
-"""
-try:
-  from twisted.python.logfile import LogFile
-  from twisted.python.log import ILogObserver, FileLogObserver
-  logfile = LogFile.fromFullPath(os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
-                                 maxRotatedFiles=maxRotatedFiles)
-  application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
-except ImportError:
-  # probably not yet twisted 8.2.0 and beyond, can't set log yet
-  pass
-""",
-"""
-configfile = r'%(config)s'
-
-m = BuildMaster(basedir, configfile, umask)
-m.setServiceParent(application)
-m.log_rotation.rotateLength = rotateLength
-m.log_rotation.maxRotatedFiles = maxRotatedFiles
-
-"""]
-
 def makeTAC(config):
+    # render buildbot_tac.tmpl using the config
+    loader = jinja2.FileSystemLoader(os.path.dirname(__file__))
+    env = jinja2.Environment(loader=loader, undefined=jinja2.StrictUndefined)
+    env.filters['repr'] = repr
+    tpl = env.get_template('buildbot_tac.tmpl')
+    cxt = dict((k.replace('-', '_'), v) for k,v in config.iteritems())
+    contents = tpl.render(cxt)
+
     tacfile = os.path.join(config['basedir'], "buildbot.tac")
-
-    if config['no-logrotate']:
-        template = "".join([masterTACTemplate[0]] + masterTACTemplate[2:])
-    else:
-        template = "".join(masterTACTemplate)
-
-    # copy the config dict before modifying
-    subs = config.copy()
-    if subs['relocatable']:
-        subs['basedir'] = '.'
-
-    contents = template % subs
-
     if os.path.exists(tacfile):
         with open(tacfile, "rt") as f:
             oldcontents = f.read()
