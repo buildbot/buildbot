@@ -46,14 +46,14 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
         # mock out everything that createMaster calls, then check that
         # they are called, in order
         functions = [ 'makeBasedir', 'makeTAC', 'makeSampleConfig',
-                      'makePublicHtml', 'makeTemplatesDir', 'createDb' ]
+                      'makePublicHtml', 'makeTemplatesDir', 'createDB' ]
         repls = {}
         calls = []
         for fn in functions:
             repl = repls[fn] = mock.Mock(name=fn)
             repl.side_effect = lambda config, fn=fn : calls.append(fn)
             self.patch(create_master, fn, repl)
-        repls['createDb'].side_effect = (lambda config :
+        repls['createDB'].side_effect = (lambda config :
                             calls.append(fn) or defer.succeed(None))
         d = create_master.createMaster(config)
         @d.addCallback
@@ -201,12 +201,12 @@ class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.assertWasQuiet()
 
     @defer.inlineCallbacks
-    def test_createDb(self):
+    def test_createDB(self):
         setup = mock.Mock(side_effect=lambda **kwargs : defer.succeed(None))
         self.patch(connector.DBConnector, 'setup', setup)
         upgrade = mock.Mock(side_effect=lambda **kwargs : defer.succeed(None))
         self.patch(model.Model, 'upgrade', upgrade)
-        yield create_master.createDb(
+        yield create_master.createDB(
                 mkconfig(basedir='test', quiet=True),
                 _noMonkey=True)
         setup.asset_called_with(check_version=False, verbose=False)

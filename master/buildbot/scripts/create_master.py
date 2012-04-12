@@ -114,7 +114,7 @@ def makeTemplatesDir(config):
                 f.write(i.read())
 
 @defer.inlineCallbacks
-def createDb(config, _noMonkey=False):
+def createDB(config, _noMonkey=False):
     # apply the db monkeypatches (and others - no harm)
     if not _noMonkey: # pragma: no cover
         monkeypatches.patch_all()
@@ -140,7 +140,7 @@ def createMaster(config):
     makeSampleConfig(config)
     makePublicHtml(config)
     makeTemplatesDir(config)
-    yield createDb(config)
+    yield createDB(config)
 
     if not config['quiet']:
         print "buildmaster configured in %s" % (config['basedir'],)
