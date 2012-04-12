@@ -20,6 +20,7 @@ from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import sourcesteps
 from buildbot.process import buildstep
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
+from buildbot.test.util.properties import FakeRenderable
 from buildbot import config
 
 class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
@@ -56,12 +57,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
     def patch_slaveVersionIsOlderThan(self, result):
         self.patch(svn.SVN, 'slaveVersionIsOlderThan', lambda x, y, z: result)
 
-    def test_repourl_and_baseURL(self):
-        self.assertRaises(config.ConfigErrors, lambda :
-                svn.SVN(repourl='http://svn.local/app/trunk',
-                        baseURL='http://svn.local/app/trunk'))
-
-    def test_no_repourl_and_baseURL(self):
+    def test_no_repourl(self):
         self.assertRaises(config.ConfigErrors, lambda :
                 svn.SVN())
 
@@ -108,10 +104,10 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
-    def test_mode_incremental_baseURL(self):
+    def test_mode_incremental_repourl_renderable(self):
         self.setupStep(
-                svn.SVN(baseURL='http://svn.local/', mode='incremental',
-                        defaultBranch='trunk'))
+                svn.SVN(repourl=FakeRenderable('http://svn.local/trunk'),
+                        mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
@@ -138,10 +134,10 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
-    def test_mode_incremental_baseURL_not_updatable(self):
+    def test_mode_incremental_repourl_not_updatable(self):
         self.setupStep(
-                svn.SVN(baseURL='http://svn.local/%%BRANCH%%/app', mode='incremental',
-                        defaultBranch='trunk'))
+                svn.SVN(repourl=FakeRenderable('http://svn.local/trunk/app'),
+                        mode='incremental',))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
@@ -164,10 +160,10 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
-    def test_mode_incremental_baseURL_not_updatable_svninfo_mismatch(self):
+    def test_mode_incremental_repourl_not_updatable_svninfo_mismatch(self):
         self.setupStep(
-                svn.SVN(baseURL='http://svn.local/%%BRANCH%%/app',
-                    mode='incremental', defaultBranch='trunk'))
+                svn.SVN(repourl=FakeRenderable('http://svn.local/trunk/app'),
+                    mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
