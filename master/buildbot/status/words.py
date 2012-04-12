@@ -703,7 +703,7 @@ class IRCContact(base.StatusReceiver):
 
     def act(self, action):
         if not self.muted:
-            self.bot.me(self.dest, action.encode("ascii", "replace"))
+            self.bot.describe(self.dest, action.encode("ascii", "replace"))
 
     # main dispatchers for incoming messages
 
