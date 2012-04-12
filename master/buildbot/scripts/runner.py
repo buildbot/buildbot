@@ -177,6 +177,8 @@ class DebugClientOptions(base.SubcommandOptions):
         [ 'master', 'master' ],
         [ 'debugMaster', 'master' ],
         ]
+    requiredOptions = [ 'master', 'passwd' ]
+
     def getSynopsis(self):
         return "Usage:    buildbot debugclient [options]"
 
@@ -187,18 +189,6 @@ class DebugClientOptions(base.SubcommandOptions):
             self['passwd'] = args[1]
         if len(args) > 2:
             raise usage.UsageError("I wasn't expecting so many arguments")
-
-    def postOptions(self):
-        base.SubcommandOptions.postOptions(self)
-        master = self.get('master')
-        if master is None:
-            raise usage.UsageError("master must be specified: on the command "
-                                "line or in ~/.buildbot/options")
-
-        passwd = self.get('passwd')
-        if passwd is None:
-            raise usage.UsageError("passwd must be specified: on the command "
-                                "line or in ~/.buildbot/options")
 
 
 class BaseStatusClientOptions(base.SubcommandOptions):
@@ -215,12 +205,7 @@ class BaseStatusClientOptions(base.SubcommandOptions):
         [ 'master', 'master' ],
         [ 'masterstatus', 'master' ],
     ]
-
-    def postOptions(self):
-        base.SubcommandOptions.postOptions(self)
-        if self.get('master') is None:
-            raise usage.UsageError("master must be specified: on the command "
-                               "line or in ~/.buildbot/options")
+    requiredOptions = [ 'master' ]
 
     def parseArgs(self, *args):
         if len(args) > 0:
@@ -279,6 +264,8 @@ class SendChangeOptions(base.SubcommandOptions):
         [ 'category', 'category' ],
         [ 'vc', 'vc' ],
     ]
+
+    requiredOptions = [ 'who', 'master' ]
 
     def getSynopsis(self):
         return "Usage:    buildbot sendchange [options] filenames.."
@@ -454,6 +441,7 @@ class TryOptions(base.SubcommandOptions):
         return "Usage:    buildbot try [options]"
 
     def postOptions(self):
+        base.SubcommandOptions.postOptions(self)
         opts = self.optionsFile
         if not self['builders']:
             self['builders'] = opts.get('try_builders', [])
@@ -472,6 +460,7 @@ class TryServerOptions(base.SubcommandOptions):
     optParameters = [
         ["jobdir", None, None, "the jobdir (maildir) for submitting jobs"],
         ]
+    requiredOptions = [ 'jobdir' ]
 
     def getSynopsis(self):
         return "Usage:    buildbot tryserver [options]"
@@ -529,6 +518,7 @@ class UserOptions(base.SubcommandOptions):
         [ 'user_username', 'username' ],
         [ 'user_passwd', 'passwd' ],
         ]
+    requiredOptions = [ 'master' ]
 
     longdesc = """
     Currently implemented types for --info= are:\n
@@ -583,8 +573,6 @@ class UserOptions(base.SubcommandOptions):
         base.SubcommandOptions.postOptions(self)
 
         master = self.get('master')
-        if not master:
-            raise usage.UsageError("you must provide the master location")
         try:
             master, port = master.split(":")
             port = int(port)

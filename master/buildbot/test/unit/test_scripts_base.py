@@ -19,6 +19,7 @@ import cStringIO
 from twisted.trial import unittest
 from buildbot.scripts import base
 from buildbot.test.util import dirs, misc
+from twisted.python import usage
 
 class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
 
@@ -84,6 +85,15 @@ class TestSubcommandOptions(unittest.TestCase):
         self.fakeOptionsFile(volcfg='3')
         opts = self.parse(self.ParamsAndOptions, '--volume', '7')
         self.assertEqual(opts['volume'], '7')
+
+    class RequiredOptions(base.SubcommandOptions):
+        optParameters = [ [ 'volume', 'v', None, 'How Loud?' ] ]
+        requiredOptions = [ 'volume' ]
+
+    def test_requiredOptions(self):
+        self.fakeOptionsFile()
+        self.assertRaises(usage.UsageError,
+                lambda : self.parse(self.RequiredOptions))
 
 class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
                           unittest.TestCase):

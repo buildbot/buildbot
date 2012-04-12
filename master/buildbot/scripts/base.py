@@ -37,6 +37,9 @@ class SubcommandOptions(usage.Options):
     # buildbotOptions = [ [ 'optfile-name', 'parameter-name' ], .. ]
     buildbotOptions = None
 
+    # set this to options that must have non-None values
+    requiredOptions = []
+
     def __init__(self, *args):
         # for options in self.buildbotOptions, optParameters, and the options
         # file, change the default in optParameters to the value in the options
@@ -120,6 +123,15 @@ class SubcommandOptions(usage.Options):
             if k.startswith("__"):
                 del localDict[k]
         return localDict
+
+    def postOptions(self):
+        missing = [ k for k in self.requiredOptions if self[k] is None ]
+        if missing:
+            if len(missing) > 1:
+                msg = 'Required arguments missing: ' + ', '.join(missing)
+            else:
+                msg = 'Required argument missing: ' + missing[0]
+            raise usage.UsageError(msg)
 
 class BasedirMixin(object):
 
