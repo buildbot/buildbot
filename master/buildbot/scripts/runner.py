@@ -236,7 +236,8 @@ class SendChangeOptions(base.SubcommandOptions):
         ("master", "m", None,
          "Location of the buildmaster's PBListener (host:port)"),
         # deprecated in 0.8.3; remove in 0.8.5 (bug #1711)
-        ("auth", "a", None, "Authentication token - username:password, or prompt for password"),
+        ("auth", "a", 'change:changepw',
+         "Authentication token - username:password, or prompt for password"),
         ("who", "W", None, "Author of the commit"),
         ("repository", "R", '', "Repository specifier"),
         ("vc", "s", None, "The VC system in use, one of: cvs, svn, darcs, hg, "
@@ -304,8 +305,6 @@ class SendChangeOptions(base.SubcommandOptions):
 
         # fix up the auth with a password if none was given
         auth = self.get('auth')
-        if not auth:
-            auth = 'change:changepw'
         if ':' not in auth:
             import getpass
             pw = getpass.getpass("Enter password for '%s': " % auth)
