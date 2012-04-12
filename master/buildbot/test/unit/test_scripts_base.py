@@ -14,43 +14,38 @@
 # Copyright Buildbot Team Members
 
 import os
-import sys
 import string
 import cStringIO
 from twisted.trial import unittest
 from buildbot.scripts import base
-from buildbot.test.util import dirs
+from buildbot.test.util import dirs, misc
 
-class TestIBD(dirs.DirsMixin, unittest.TestCase):
+class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpDirs('test')
         self.stdout = cStringIO.StringIO()
-        self.patch(sys, 'stdout', self.stdout)
-
-    def assertPrinted(self, what):
-        self.tearDownDirs()
-        self.assertEqual(self.stdout.getvalue().strip(), what)
+        self.setUpStdoutAssertions()
 
     def test_isBuildmasterDir_no_dir(self):
         self.assertFalse(base.isBuildmasterDir(os.path.abspath('test/nosuch')))
-        self.assertPrinted('no buildbot.tac')
+        self.assertInStdout('no buildbot.tac')
 
     def test_isBuildmasterDir_no_file(self):
         self.assertFalse(base.isBuildmasterDir(os.path.abspath('test')))
-        self.assertPrinted('no buildbot.tac')
+        self.assertInStdout('no buildbot.tac')
 
     def test_isBuildmasterDir_no_Application(self):
         with open(os.path.join('test', 'buildbot.tac'), 'w') as f:
             f.write("foo\nx = Application('buildslave')\nbar")
         self.assertFalse(base.isBuildmasterDir(os.path.abspath('test')))
-        self.assertPrinted('')
+        self.assertWasQuiet()
 
     def test_isBuildmasterDir_matches(self):
         with open(os.path.join('test', 'buildbot.tac'), 'w') as f:
             f.write("foo\nx = Application('buildmaster')\nbar")
         self.assertTrue(base.isBuildmasterDir(os.path.abspath('test')))
-        self.assertPrinted('')
+        self.assertWasQuiet()
 
 class TestSubcommandOptions(unittest.TestCase):
 
@@ -90,13 +85,15 @@ class TestSubcommandOptions(unittest.TestCase):
         opts = self.parse(self.ParamsAndOptions, '--volume', '7')
         self.assertEqual(opts['volume'], '7')
 
-class TestLoadOptionsFile(dirs.DirsMixin, unittest.TestCase):
+class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
+                          unittest.TestCase):
 
     def setUp(self):
         self.setUpDirs('test', 'home')
         self.opts = base.SubcommandOptions()
         self.dir = os.path.abspath('test')
         self.home = os.path.abspath('home')
+        self.setUpStdoutAssertions()
 
     def tearDown(self):
         self.tearDownDirs()
@@ -156,11 +153,9 @@ class TestLoadOptionsFile(dirs.DirsMixin, unittest.TestCase):
 
     def test_loadOptionsFile_syntax_error(self):
         self.writeOptionsFile(self.dir, 'abc=abc')
-        stdout = cStringIO.StringIO()
-        self.patch(sys, 'stdout', stdout)
         self.assertRaises(NameError, lambda :
             self.do_loadOptionsFile(_here=self.dir, exp={}))
-        self.assertIn('error while reading', stdout.getvalue().strip())
+        self.assertInStdout('error while reading')
 
     def test_loadOptionsFile_toomany(self):
         subdir = os.path.join(self.dir, *tuple(string.lowercase))

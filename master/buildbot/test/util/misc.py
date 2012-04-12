@@ -47,3 +47,5 @@ class StdoutAssertionsMixin(object):
     def assertInStdout(self, exp):
         self.assertIn(exp, self.stdout.getvalue())
 
+    def getStdout(self):
+        return self.stdout.getvalue().strip()

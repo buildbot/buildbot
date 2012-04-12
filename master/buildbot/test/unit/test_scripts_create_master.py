@@ -16,8 +16,6 @@
 from __future__ import with_statement
 
 import os
-import sys
-import cStringIO
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer
@@ -74,8 +72,6 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
         return d
 
     def test_createMaster_loud(self):
-        self.stdout = cStringIO.StringIO()
-        self.patch(sys, 'stdout', self.stdout)
         d = self.do_test_createMaster(mkconfig(quiet=False))
         @d.addCallback
         def check(_):

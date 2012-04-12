@@ -23,6 +23,7 @@ import cStringIO
 from twisted.trial import unittest
 from twisted.python import usage
 from buildbot.scripts import base, runner
+from buildbot.test.util import misc
 
 class OptionsMixin(object):
 
@@ -755,10 +756,11 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
             lambda : self.parse('-op=foo'))
 
 
-class TestOptions(OptionsMixin, unittest.TestCase):
+class TestOptions(OptionsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpOptions()
+        self.setUpStdoutAssertions()
 
     def parse(self, *args):
         self.opts = runner.Options()
@@ -770,13 +772,11 @@ class TestOptions(OptionsMixin, unittest.TestCase):
             lambda : self.parse())
 
     def test_version(self):
-        stdout = cStringIO.StringIO()
-        self.patch(sys, 'stdout', stdout)
         try:
             self.parse('--version')
         except SystemExit, e:
             self.assertEqual(e.args[0], 0)
-        self.assertIn('Buildbot version:', stdout.getvalue())
+        self.assertInStdout('Buildbot version:')
 
 class TestRun(unittest.TestCase):
 
