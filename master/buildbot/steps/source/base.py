@@ -183,6 +183,8 @@ class Source(LoggingBuildStep):
         else:
             self.description = [
                 descriptions_for_mode.get(mode, "updating")]
+            if self.codebase:
+                self.description.append(self.codebase)
         if isinstance(self.description, str):
             self.description = [self.description]
 
@@ -191,6 +193,8 @@ class Source(LoggingBuildStep):
         else:
             self.descriptionDone = [
                 descriptionDones_for_mode.get(mode, "update")]
+            if self.codebase:
+                self.descriptionDone.append(self.codebase)
         if isinstance(self.descriptionDone, str):
             self.descriptionDone = [self.descriptionDone]
 
