@@ -91,8 +91,10 @@ class SubcommandOptions(usage.Options):
             here = next
             toomany -= 1 # just in case
             if toomany == 0:
-                raise ValueError("Hey, I seem to have wandered up into the "
-                                "infinite glories of the heavens. Oops.")
+                print ("I seem to have wandered up into the infinite glories "
+                       "of the heavens. Oops.")
+                break
+
         searchpath.append(home)
 
         localDict = {}

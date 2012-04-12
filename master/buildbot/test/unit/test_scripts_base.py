@@ -160,8 +160,8 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
     def test_loadOptionsFile_toomany(self):
         subdir = os.path.join(self.dir, *tuple(string.lowercase))
         os.makedirs(subdir)
-        self.assertRaises(ValueError, lambda :
-                self.do_loadOptionsFile(_here=subdir, exp={}))
+        self.do_loadOptionsFile(_here=subdir, exp={})
+        self.assertInStdout('infinite glories')
 
     # NOTE: testing the ownership check requires patching os.stat, which causes
     # other problems since it is so heavily used.
