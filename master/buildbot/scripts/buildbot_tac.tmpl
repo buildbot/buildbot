@@ -8,8 +8,10 @@ basedir = '.'
 {% else -%}
 basedir = {{ basedir|repr }}
 {%- endif %}
+{% if not no_logrotate -%}
 rotateLength = {{ log_size|repr }}
 maxRotatedFiles = {{ log_count|repr }}
+{%- endif %}
 configfile = {{ config|repr }}
 
 # Default umask for server
@@ -24,19 +26,17 @@ if basedir == '.':
 # directory; do not edit it.
 application = service.Application('buildmaster')
 {% if not no_logrotate -%}
-try:
-  from twisted.python.logfile import LogFile
-  from twisted.python.log import ILogObserver, FileLogObserver
-  logfile = LogFile.fromFullPath(os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
-                                 maxRotatedFiles=maxRotatedFiles)
-  application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
-except ImportError:
-  # probably not yet twisted 8.2.0 and beyond, can't set log yet
-  pass
+from twisted.python.logfile import LogFile
+from twisted.python.log import ILogObserver, FileLogObserver
+logfile = LogFile.fromFullPath(os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
+                                maxRotatedFiles=maxRotatedFiles)
+application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 {%- endif %}
 
 m = BuildMaster(basedir, configfile, umask)
 m.setServiceParent(application)
+{% if not no_logrotate -%}
 m.log_rotation.rotateLength = rotateLength
 m.log_rotation.maxRotatedFiles = maxRotatedFiles
+{%- endif %}
 
