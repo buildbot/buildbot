@@ -409,59 +409,36 @@ checkout or update. There are two
 basic ways of setting up the checkout step, depending upon whether you
 are using multiple branches or not.
 
-The most versatile way to create the :bb:step:`SVN` step is with the
+The :bb:step:`SVN` step should be created with the
 ``repourl`` argument:
 
 ``repourl``
    (required): this specifies the ``URL`` argument that will be
    given to the :command:`svn checkout` command. It dictates both where
    the repository is located and which sub-tree should be
-   extracted. In this respect, it is like a combination of the CVS
-   ``cvsroot`` and ``cvsmodule`` arguments. For example, if you
-   are using a remote Subversion repository which is accessible
-   through HTTP at a URL of ``http://svn.example.com/repos``, and
-   you wanted to check out the ``trunk/calc`` sub-tree, you would
+   extracted. One way to specify the branch is to use ``Interpolate``. For
+   example, if you wanted to check out the trunk repository, you could use
+   ``repourl=Interpolate("http://svn.example.com/repos/%(src::branch)s")``
+   Alternatively, if you are using a remote Subversion repository
+   which is accessible through HTTP at a URL of ``http://svn.example.com/repos``,
+   and you wanted to check out the ``trunk/calc`` sub-tree, you would directly
    use ``repourl="http://svn.example.com/repos/trunk/calc"`` as an
    argument to your :bb:step:`SVN` step.
 
-The ``repourl`` argument can be considered as a universal means to
-create the :bb:step:`SVN` step as it ignores the branch information in the
-:class:`SourceStamp`. ::
+If you are building from multiple branches, then you should create
+the :bb:step:`SVN` step with the ``repourl`` and provide branch
+information with ``Interpolate``::
+
+   from buildbot.steps.source.svn import SVN
+   factory.append(SVN(mode='incremental',
+                  repourl=Interpolate('svn://svn.example.org/svn/%(src::branch)s/myproject')))
+
+Alternatively, the ``repourl`` argument can be used to create the :bb:step:`SVN` step without
+``Interpolate``::
 
    from buildbot.steps.source.svn import SVN
    factory.append(SVN(mode='full',
                   repourl='svn://svn.example.org/svn/myproject/trunk'))
-
-Alternatively, if you are building from multiple branches, then you
-should preferentially create the :bb:step:`SVN` step with the
-``baseURL`` and ``defaultBranch`` arguments instead:
-
-``baseURL``
-   (required): this specifies the base repository URL, to which a
-   branch name will be appended. Alternatively, ``baseURL`` can
-   contain a ``%%BRANCH%%`` placeholder, which will be replaced with
-   the branch name. ``baseURL`` should probably end in a slash.
-
-   For flexibility, ``baseURL`` may contain a ``%%BRANCH%%``
-   placeholder, which will be replaced either by the branch in the
-   SourceStamp or the default specified in ``defaultBranch``. ::
-
-        from buildbot.steps.source.svn import SVN
-        factory.append(SVN(mode='incremental',
-                        baseURL='svn://svn.example.org/svn/%%BRANCH%%/myproject',
-                        defaultBranch='trunk'))
-
-``defaultBranch``
-   (optional): this specifies the name of the branch to use when a
-   Build does not provide one of its own. This is a string that will
-   be appended to ``baseURL`` to create the URL that will be passed to
-   the :command:`svn checkout` command. If you use ``baseURL``
-   without specifying ``defaultBranch`` every :class:`SourceStamp`
-   must come with a valid (not None) ``branch``.
-
-   It is possible to mix to have a mix of :bb:step:`SVN` steps that use
-   either the ``repourl` or ``baseURL`` arguments but not both at
-   the same time.
 
 ``username``
    (optional): if specified, this will be passed to the ``svn``

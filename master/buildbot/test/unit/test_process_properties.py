@@ -23,6 +23,7 @@ from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Property, PropertiesMixin
 from buildbot.interfaces import IRenderable, IProperties
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.properties import FakeRenderable
 
 class FakeSource:
     def __init__(self):
@@ -51,13 +52,6 @@ class FakeBuild(PropertiesMixin):
         if codebase in self.sources:
             return self.sources[codebase]
         return None
-
-class FakeRenderable(object):
-    implements(IRenderable)
-    def __init__(self, value):
-        self.value = value
-    def getRenderingFor(self, props):
-        return self.value
 
 class DeferredRenderable:
     implements (IRenderable)

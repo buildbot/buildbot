@@ -29,20 +29,17 @@ class SVN(Source):
     """I perform Subversion checkout/update operations."""
 
     name = 'svn'
-    branch_placeholder = '%%BRANCH%%'
 
-    renderables = [ 'repourl', 'baseURL' ]
+    renderables = [ 'repourl' ]
     possible_modes = ('incremental', 'full')
     possible_methods = ('clean', 'fresh', 'clobber', 'copy', 'export', None)
 
-    def __init__(self, repourl=None, baseURL=None, mode='incremental',
-                 method=None, defaultBranch=None, username=None,
+    def __init__(self, repourl=None, mode='incremental',
+                 method=None, username=None,
                  password=None, extra_args=None, keep_on_purge=None,
                  depth=None, **kwargs):
 
         self.repourl = repourl
-        self.baseURL = baseURL
-        self.branch = defaultBranch
         self.username = username
         self.password = password
         self.extra_args = extra_args
@@ -52,10 +49,8 @@ class SVN(Source):
         self.mode = mode
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(repourl=repourl,
-                                 baseURL=baseURL,
                                  mode=mode,
                                  method=method,
-                                 defaultBranch=defaultBranch,
                                  password=password,
                                  username=username,
                                  extra_args=extra_args,
@@ -68,18 +63,15 @@ class SVN(Source):
         if self.method not in self.possible_methods:
             errors.append("method %s is not one of %s" % (self.method, self.possible_methods))
 
-        if repourl and baseURL:
-            errors.append("you must provide exactly one of repourl and baseURL")
+        if repourl is None:
+            errors.append("you must provide repourl")
 
-        if repourl is None and baseURL is None:
-            errors.append("you must privide at least one of repourl and baseURL")
         if errors:
             raise ConfigErrors(errors)
 
     def startVC(self, branch, revision, patch):
         self.revision = revision
         self.method = self._getMethod()
-        self.repourl = self.getRepoUrl(branch)
         self.stdio_log = self.addLog("stdio")
 
         d = self.checkSvn()
@@ -258,25 +250,6 @@ class SVN(Source):
                 return cmd.rc
         d.addCallback(lambda _: evaluateCommand(cmd))
         return d
-
-    def getRepoUrl(self, branch):
-        ''' Compute the svn url that will be passed to the svn remote command '''
-        if self.repourl:
-            return self.repourl
-        else:
-            if branch is None:
-                m = ("The SVN source step belonging to builder '%s' does not know "
-                     "which branch to work with. This means that the change source "
-                     "did not specify a branch and that defaultBranch is None." \
-                     % self.build.builder.name)
-                raise RuntimeError(m)
-
-            computed = self.baseURL
-
-            if self.branch_placeholder in self.baseURL:
-                return computed.replace(self.branch_placeholder, branch)
-            else:
-                return computed + branch
 
     def _getMethod(self):
         if self.method is not None and self.mode != 'incremental':
