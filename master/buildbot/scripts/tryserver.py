@@ -13,21 +13,26 @@
 #
 # Copyright Buildbot Team Members
 
+import os
 import sys
-import twisted
-from twisted.python import versions, runtime
+import time
+from hashlib import md5
 
-def usesFlushLoggedErrors(test):
-    "Decorate a test method that uses flushLoggedErrors with this decorator"
-    if (sys.version_info[:2] == (2,7)
-            and twisted.version <= versions.Version('twisted', 9, 0, 0)):
-        test.skip = \
-            "flushLoggedErrors is broken on Python==2.7 and Twisted<=9.0.0"
-    return test
+def tryserver(config):
+    jobdir = os.path.expanduser(config["jobdir"])
+    job = sys.stdin.read()
+    # now do a 'safecat'-style write to jobdir/tmp, then move atomically to
+    # jobdir/new . Rather than come up with a unique name randomly, I'm just
+    # going to MD5 the contents and prepend a timestamp.
+    timestring = "%d" % time.time()
+    m = md5()
+    m.update(job)
+    jobhash = m.hexdigest()
+    fn = "%s-%s" % (timestring, jobhash)
+    tmpfile = os.path.join(jobdir, "tmp", fn)
+    newfile = os.path.join(jobdir, "new", fn)
+    with open(tmpfile, "w") as f:
+        f.write(job)
+    os.rename(tmpfile, newfile)
 
-def skipUnlessPlatformIs(platform):
-    def closure(test):
-        if runtime.platformType != platform:
-            test.skip = "not a %s platform" % platform
-        return test
-    return closure
+    return 0

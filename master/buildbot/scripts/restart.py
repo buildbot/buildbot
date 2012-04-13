@@ -13,21 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
-import twisted
-from twisted.python import versions, runtime
+from buildbot.scripts import base, stop, start
 
-def usesFlushLoggedErrors(test):
-    "Decorate a test method that uses flushLoggedErrors with this decorator"
-    if (sys.version_info[:2] == (2,7)
-            and twisted.version <= versions.Version('twisted', 9, 0, 0)):
-        test.skip = \
-            "flushLoggedErrors is broken on Python==2.7 and Twisted<=9.0.0"
-    return test
+def restart(config):
+    basedir = config['basedir']
+    quiet = config['quiet']
 
-def skipUnlessPlatformIs(platform):
-    def closure(test):
-        if runtime.platformType != platform:
-            test.skip = "not a %s platform" % platform
-        return test
-    return closure
+    if not base.isBuildmasterDir(basedir):
+        print "not a buildmaster directory"
+        return 1
+
+    if stop.stop(config, wait=True) != 0:
+        return 1
+    if not quiet:
+        print "now restarting buildbot process.."
+    return start.start(config)
