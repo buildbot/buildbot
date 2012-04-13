@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 from buildbot.scripts import base, stop, start
 
 def restart(config):
