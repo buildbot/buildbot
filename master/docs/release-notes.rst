@@ -32,6 +32,41 @@ Deprecations, Removals, and Non-Compatible Changes
 * ``IProperties.render`` now returns a deferred, so any code rendering properties
   by hand will need to take this into account.
 
+* ``baseURL`` has been removed in :bb:step:`SVN` to use just ``repourl`` - see
+  :bb:bug:`2066`. Branch info should be provided with ``Interpolate``. ::
+
+    from buildbot.steps.source.svn import SVN
+    factory.append(SVN(baseURL="svn://svn.example.org/svn/"))
+
+  can be replaced with ::
+
+    from buildbot.process.properties import Interpolate
+    from buildbot.steps.source.svn import SVN
+    factory.append(SVN(repourl=Interpolate("svn://svn.example.org/svn/%(src::branch)s")))
+
+  and ::
+
+    from buildbot.steps.source.svn import SVN
+    factory.append(SVN(baseURL="svn://svn.example.org/svn/%%BRANCH%%/project"))
+
+  can be replaced with ::
+
+    from buildbot.process.properties import Interpolate
+    from buildbot.steps.source.svn import SVN
+    factory.append(SVN(repourl=Interpolate("svn://svn.example.org/svn/%(src::branch)s/project")))
+
+  and ::
+
+    from buildbot.steps.source.svn import SVN
+    factory.append(SVN(baseURL="svn://svn.example.org/svn/", defaultBranch="branches/test"))
+
+  can be replaced with ::
+
+    from buildbot.process.properties import Interpolate
+    from buildbot.steps.source.svn import SVN
+    factory.append(SVN(repourl=Interpolate("svn://svn.example.org/svn/%(src::branch:-branches/test)s")))
+
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
