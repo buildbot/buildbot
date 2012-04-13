@@ -158,6 +158,13 @@ package.
         if branch is NotABranch:
             pass # ...
 
+.. py:function:: in_reactor(fn)
+
+    This decorator will cause the wrapped function to be run in the Twisted
+    reactor, with the reactor stopped when the function completes.  It returns
+    the result of the wrapped function.  If the wrapped function fails, its
+    traceback will be printed, the reactor halted, and ``None`` returned.
+
 buildbot.util.lru
 ~~~~~~~~~~~~~~~~~
 

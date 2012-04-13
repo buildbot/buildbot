@@ -37,3 +37,14 @@ class ConfigLoader(object):
         if not quiet:
             print "Config file is good!"
         return 0
+
+def checkconfig(config):
+    quiet = config.get('quiet')
+    configFileName = config.get('configFile')
+
+    if os.path.isdir(configFileName):
+        cl = ConfigLoader(basedir=configFileName)
+    else:
+        cl = ConfigLoader(configFileName=configFileName)
+
+    return cl.load(quiet=quiet)

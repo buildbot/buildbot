@@ -13,21 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
-import twisted
-from twisted.python import versions, runtime
+import mock
+from twisted.trial import unittest
+from buildbot.clients import text
+from buildbot.scripts import statuslog
 
-def usesFlushLoggedErrors(test):
-    "Decorate a test method that uses flushLoggedErrors with this decorator"
-    if (sys.version_info[:2] == (2,7)
-            and twisted.version <= versions.Version('twisted', 9, 0, 0)):
-        test.skip = \
-            "flushLoggedErrors is broken on Python==2.7 and Twisted<=9.0.0"
-    return test
+class TestStatusLog(unittest.TestCase):
 
-def skipUnlessPlatformIs(platform):
-    def closure(test):
-        if runtime.platformType != platform:
-            test.skip = "not a %s platform" % platform
-        return test
-    return closure
+    def test_statuslog(self):
+        TextClient = mock.Mock()
+        self.patch(text, 'TextClient', TextClient)
+        inst = TextClient.return_value = mock.Mock(name='TextClient-instance')
+
+        rc = statuslog.statuslog(dict(master='mm', passwd='pp', username='uu'))
+
+        TextClient.assert_called_with('mm', passwd='pp', username='uu')
+        inst.run.assert_called_with()
+        self.assertEqual(rc, 0)

@@ -13,21 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
-import twisted
-from twisted.python import versions, runtime
+# note that this cannot be run in tests for code coverage, as it requires a
+# different reactor than the default
 
-def usesFlushLoggedErrors(test):
-    "Decorate a test method that uses flushLoggedErrors with this decorator"
-    if (sys.version_info[:2] == (2,7)
-            and twisted.version <= versions.Version('twisted', 9, 0, 0)):
-        test.skip = \
-            "flushLoggedErrors is broken on Python==2.7 and Twisted<=9.0.0"
-    return test
+from buildbot.clients import text
 
-def skipUnlessPlatformIs(platform):
-    def closure(test):
-        if runtime.platformType != platform:
-            test.skip = "not a %s platform" % platform
-        return test
-    return closure
+def statuslog(config):
+    master = config.get('master')
+    passwd = config.get('passwd')
+    username = config.get('username')
+    c = text.TextClient(master, username=username, passwd=passwd)
+    c.run()
+    return 0

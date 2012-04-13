@@ -27,8 +27,8 @@ from buildbot.clients import base, sendchange, tryclient
 modules.extend([base, sendchange, tryclient])
 from buildbot.process import mtrlogobserver, subunitlogobserver
 modules.extend([mtrlogobserver, subunitlogobserver])
-from buildbot.scripts import checkconfig, logwatcher, reconfig, runner, startup
-modules.extend([checkconfig, logwatcher, reconfig, runner, startup])
+from buildbot.scripts import checkconfig, logwatcher, reconfig, runner
+modules.extend([checkconfig, logwatcher, reconfig, runner])
 from buildbot.status import client, html, status_gerrit, status_push
 modules.extend([client, html, status_gerrit, status_push])
 from buildbot.status import tinderbox, words

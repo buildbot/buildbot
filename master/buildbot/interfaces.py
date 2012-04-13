@@ -33,10 +33,6 @@ class BuildSlaveTooOldError(Exception):
 class LatentBuildSlaveFailedToSubstantiate(Exception):
     pass
 
-# other exceptions
-class BuildbotNotRunningError(Exception):
-    pass
-
 class IChangeSource(Interface):
     """
     Service which feeds Change objects to the changemaster. When files or
