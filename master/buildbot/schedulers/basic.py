@@ -201,7 +201,7 @@ class SingleBranchScheduler(BaseBasicScheduler):
         if branch is NotABranch and not change_filter and not self.codebases:
             config.error(
                 "the 'branch' argument to SingleBranchScheduler is " +
-                "mandatory unless change_filter is provided")
+                "mandatory unless change_filter or codebases is provided")
         elif branches is not NotABranch:
             config.error(
                 "the 'branches' argument is not allowed for " +
