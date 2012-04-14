@@ -511,3 +511,9 @@ The classes in the :py:module:`buildbot.util.subscription` module are used for
 master-local subscriptions.  In the near future, all uses of this module will
 be replaced with message-queueing implementations that allow subscriptions and
 subscribers to span multiple masters.
+
+buildbot.util.croniter
+~~~~~~~~~~~~~~~~~~~~~~
+
+This module is a copy of https://github.com/taichino/croniter, and provides
+suport for converting cron-like time specifications into actual times.
