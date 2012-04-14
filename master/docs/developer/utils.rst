@@ -439,3 +439,44 @@ buildbot.util.misc
 
     Tests can monkey-patch the ``_quiet`` method of the class to be notified
     when all planned invocations are complete.
+
+buildbot.util.netstrings
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.netstrings
+
+Similar to maildirs, `netstrings <http://cr.yp.to/proto/netstrings.txt>`_ are
+used occasionally in Buildbot to encode data for interchange.  While Twisted
+supports a basic netstring receiver protocol, it does not have a simple way to
+apply that to a non-network situation.
+
+.. py:class:: NetstringParser
+
+    This class parses strings piece by piece, either collecting the accumulated
+    strings or invoking a callback for each one.
+
+    .. py:method:: feed(data)
+
+        :param data: a portion of netstring-formatted data
+        :raises: :py:exc:`twisted.protocols.basic.NetstringParseError`
+
+        Add arbitrariliy-sized ``data`` to the incoming-data buffer.  Any
+        complete netstrings will trigger a call to the
+        :py:meth:`stringReceived` method.
+
+        Note that this method (like the Twisted class it is based on) cannot
+        detect a trailing partial netstring at EOF - the data will be silently
+        ignored.
+
+    .. py:method:: stringReceived(string):
+
+        :param string: the decoded string
+
+        This method is called for each decoded string as soon as it is read
+        completely.  The default implementation appends the string to the
+        :py:attr:`strings` attribute, but subclasses can do anything.
+
+    .. py:attribute:: strings
+
+        The strings decoded so far, if :py:meth:`stringReceived` is not
+        overridden.
