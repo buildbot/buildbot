@@ -18,13 +18,13 @@ from __future__ import with_statement
 import mock
 import os
 import shutil
-import StringIO
+import cStringIO as StringIO
 import sys
 
 import twisted
 from twisted.internet import defer
 from twisted.trial import unittest
-
+from twisted.protocols import basic
 from buildbot.schedulers import trysched
 from buildbot.test.util import dirs
 from buildbot.test.util import scheduler
@@ -140,17 +140,15 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             trysched.BadJobfile, sched.parseJob, StringIO.StringIO(''))
 
     def test_parseJob_longer_than_netstring_MAXLENGTH(self):
+        self.patch(basic.NetstringReceiver, 'MAX_LENGTH', 100)
         sched = trysched.Try_Jobdir(name='tsched', builderNames=['a'], jobdir='foo')
         jobstr = self.makeNetstring(
             '1', 'extid', 'trunk', '1234', '1', 'this is my diff, -- ++, etc.',
             'buildera', 'builderc'
         )
-        jobstr += 'x' * 100000000
+        jobstr += 'x' * 200
 
-        import tempfile
-        test_temp_file = tempfile.TemporaryFile()
-        test_temp_file.write(jobstr)
-        test_temp_file.seek(0,0)
+        test_temp_file = StringIO.StringIO(jobstr)
 
         self.assertRaises(trysched.BadJobfile,
             lambda : sched.parseJob(test_temp_file))
