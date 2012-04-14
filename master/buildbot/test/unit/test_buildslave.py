@@ -16,10 +16,11 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer
-from buildbot import buildslave, config
+from buildbot import buildslave, config, locks
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake.botmaster import FakeBotMaster
 
-class AbstractBuildSlave(unittest.TestCase):
+class TestAbstractBuildSlave(unittest.TestCase):
 
     class ConcreteBuildSlave(buildslave.AbstractBuildSlave):
         pass
@@ -203,3 +204,35 @@ class AbstractBuildSlave(unittest.TestCase):
         bs.stopMissingTimer()
         self.assertEqual(bs.missing_timer, None)
 
+    def test_setServiceParent_started(self):
+        master = self.master = fakemaster.make_master()
+        botmaster = FakeBotMaster(master)
+        botmaster.startService()
+        bs = self.ConcreteBuildSlave('bot', 'pass')
+        bs.setServiceParent(botmaster)
+        self.assertEqual(bs.botmaster, botmaster)
+        self.assertEqual(bs.master, master)
+
+    def test_setServiceParent_masterLocks(self):
+        """
+        http://trac.buildbot.net/ticket/2278
+        """
+        master = self.master = fakemaster.make_master()
+        botmaster = FakeBotMaster(master)
+        botmaster.startService()
+        lock = locks.MasterLock('masterlock')
+        bs = self.ConcreteBuildSlave('bot', 'pass', locks = [lock])
+        bs.setServiceParent(botmaster)
+
+    def test_setServiceParent_slaveLocks(self):
+        """
+        http://trac.buildbot.net/ticket/2278
+        """
+        master = self.master = fakemaster.make_master()
+        botmaster = FakeBotMaster(master)
+        botmaster.startService()
+        lock = locks.SlaveLock('lock')
+        bs = self.ConcreteBuildSlave('bot', 'pass', locks = [lock])
+        bs.setServiceParent(botmaster)
+
+    test_setServiceParent_slaveLocks.todo = "SlaveLock not support for slave lock"
