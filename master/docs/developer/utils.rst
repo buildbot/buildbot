@@ -514,7 +514,7 @@ This module contains a few utilities that are not included with SQLAlchemy.
 buildbot.util.subscription
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The classes in the :py:module:`buildbot.util.subscription` module are used for
+The classes in the :py:mod:`buildbot.util.subscription` module are used for
 master-local subscriptions.  In the near future, all uses of this module will
 be replaced with message-queueing implementations that allow subscriptions and
 subscribers to span multiple masters.
