@@ -45,32 +45,6 @@ package.
     it is suitable for adapting strings from the configuration for use as
     filenames.  It is not suitable for use with strings from untrusted sources.
 
-.. py:function:: deferredLocked(lock)
-
-    :param lock: a ``DeferredLock`` instance or a string naming one
-
-    This is a decorator to wrap an event-driven method (one returning a
-    ``Deferred``) in an acquire/release pair of a designated ``DeferredLock``.
-    For simple functions with a static lock, this is as easy as::
-
-        someLock = defer.DeferredLock()
-        @util.deferredLocked(someLock)
-        def someLockedFunction():
-            # ..
-            return d
-
-    For class methods which must access a lock that is an instance attribute, the
-    lock can be specified by a string, which will be dynamically resolved to the
-    specific instance at runtime::
-
-        def __init__(self):
-            self.someLock = defer.DeferredLock()
-
-        @util.deferredLocked('someLock')
-        def someLockedFunction():
-            # ..
-            return d
-
 .. py:function:: epoch2datetime(epoch)
 
     :param epoch: an epoch time (integer)
@@ -364,9 +338,189 @@ a good way to avoid long loops that block other activity in the reactor.
 buildbot.util.json
 ~~~~~~~~~~~~~~~~~~
 
+.. py:module:: buildbot.util.json
+
 This package is just an import of the best available JSON module.  Use it
 instead of a more complex conditional import of :mod:`simplejson` or
 :mod:`json`::
 
     from buildbot.util import json
 
+buildbot.util.maildir
+~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.maildir
+
+Several Buildbot components make use of `maildirs
+<http://www.courier-mta.org/maildir.html>`_ to hand off messages between
+components.  On the receiving end, there's a need to watch a maildir for
+incoming messages and trigger some action when one arrives.
+
+.. py:class:: MaildirService(basedir)
+
+        :param basedir: (optional) base directory of the maildir
+
+    A :py:class:`MaildirService` instance watches a maildir for new messages. It
+    should be a child service of some :py:class:`~twisted.application.service.MultiService` instance. When
+    running, this class uses the linux dirwatcher API (if available) or polls for new
+    files in the 'new' maildir subdirectory. When it discovers a new
+    message, it invokes its :py:meth:`messageReceived` method.
+
+    To use this class, subclass it and implement a more interesting
+    :py:meth:`messageReceived` function.
+
+    .. py:method:: setBasedir(basedir)
+
+        :param basedir: base directory of the maildir
+
+        If no ``basedir`` is provided to the constructor, this method must be
+        used to set the basedir before the service starts.
+
+    .. py:method:: messageReceived(filename)
+
+        :param filename: unqualified filename of the new message
+
+        This method is called with the short filename of the new message. The
+        full name of the new file can be obtained with ``os.path.join(maildir,
+        'new', filename)``.  The method is un-implemented in the
+        :py:class:`MaildirService` class, and must be implemented in
+        subclasses.
+
+    .. py:method:: moveToCurDir(filename)
+
+        :param filename: unqualified filename of the new message
+        :returns: open file object
+
+        Call this from :py:meth:`messageReceived` to start processing the
+        message; this moves the message file to the 'cur' directory and returns
+        an open file handle for it.
+
+buildbot.util.misc
+~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.misc
+
+.. py:function:: deferredLocked(lock)
+
+    :param lock: a :py:class:`twisted.internet.defer.DeferredLock` instance or
+        a string naming an instance attribute containing one
+
+    This is a decorator to wrap an event-driven method (one returning a
+    ``Deferred``) in an acquire/release pair of a designated
+    :py:class:`~twisted.internet.defer.DeferredLock`.  For simple functions
+    with a static lock, this is as easy as::
+
+        someLock = defer.DeferredLock()
+        @util.deferredLocked(someLock)
+        def someLockedFunction():
+            # ..
+            return d
+
+    For class methods which must access a lock that is an instance attribute, the
+    lock can be specified by a string, which will be dynamically resolved to the
+    specific instance at runtime::
+
+        def __init__(self):
+            self.someLock = defer.DeferredLock()
+
+        @util.deferredLocked('someLock')
+        def someLockedFunction():
+            # ..
+            return d
+
+.. py:class:: SerializedInvocation(method)
+
+    This is a method wrapper that will serialize calls to an asynchronous
+    method.  If a second call occurs while the first call is still executing,
+    it will not begin until the first call has finished.  If multiple calls
+    queue up, they will be collapsed into a single call.  The effect is that
+    the underlying method is guaranteed to be called at least once after every
+    call to the wrapper.
+
+    Note that if this class is used as a decorator on a method, it will
+    serialize invocations across all class instances.  For synchronization
+    specific to each instance, wrap the method in the constructor::
+
+        def __init__(self):
+            self.someMethod = SerializedInovcation(self.someMethod)
+
+    Tests can monkey-patch the ``_quiet`` method of the class to be notified
+    when all planned invocations are complete.
+
+buildbot.util.netstrings
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.netstrings
+
+Similar to maildirs, `netstrings <http://cr.yp.to/proto/netstrings.txt>`_ are
+used occasionally in Buildbot to encode data for interchange.  While Twisted
+supports a basic netstring receiver protocol, it does not have a simple way to
+apply that to a non-network situation.
+
+.. py:class:: NetstringParser
+
+    This class parses strings piece by piece, either collecting the accumulated
+    strings or invoking a callback for each one.
+
+    .. py:method:: feed(data)
+
+        :param data: a portion of netstring-formatted data
+        :raises: :py:exc:`twisted.protocols.basic.NetstringParseError`
+
+        Add arbitrariliy-sized ``data`` to the incoming-data buffer.  Any
+        complete netstrings will trigger a call to the
+        :py:meth:`stringReceived` method.
+
+        Note that this method (like the Twisted class it is based on) cannot
+        detect a trailing partial netstring at EOF - the data will be silently
+        ignored.
+
+    .. py:method:: stringReceived(string):
+
+        :param string: the decoded string
+
+        This method is called for each decoded string as soon as it is read
+        completely.  The default implementation appends the string to the
+        :py:attr:`strings` attribute, but subclasses can do anything.
+
+    .. py:attribute:: strings
+
+        The strings decoded so far, if :py:meth:`stringReceived` is not
+        overridden.
+
+buildbot.util.sautils
+~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.sautils
+
+This module contains a few utilities that are not included with SQLAlchemy.
+
+.. py:class:: InsertFromSelect(table, select)
+
+    :param table: table into which insert should be performed
+    :param select: select query from which data should be drawn
+
+    This class is taken directly from SQLAlchemy's `compiler.html
+    <http://www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct>`_,
+    and allows a Pythonic representation of ``INSERT INTO .. SELECT ..``
+    queries.
+
+.. py:function:: sa_version()
+
+    Return a 3-tuple representing the SQLAlchemy version.  Note that older
+    versions that did not have a ``__version__`` attribute are represented by
+    ``(0,0,0)``.
+
+buildbot.util.subscription
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The classes in the :py:module:`buildbot.util.subscription` module are used for
+master-local subscriptions.  In the near future, all uses of this module will
+be replaced with message-queueing implementations that allow subscriptions and
+subscribers to span multiple masters.
+
+buildbot.util.croniter
+~~~~~~~~~~~~~~~~~~~~~~
+
+This module is a copy of https://github.com/taichino/croniter, and provides
+suport for converting cron-like time specifications into actual times.
