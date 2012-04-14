@@ -36,7 +36,7 @@ class FakeCache(object):
         return d
 
 
-def make_master(master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
+class FakeMaster(mock.Mock):
     """
     Create a fake Master instance: a Mock with some convenience
     implementations:
@@ -44,15 +44,18 @@ def make_master(master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
     - Non-caching implementation for C{self.caches}
     """
 
-    fakemaster = mock.Mock(name="fakemaster")
+    def __init__(self, master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
+        mock.Mock.__init__(self, name="fakemaster")
+        self._master_id = master_id
+        self.config = config.MasterConfig()
+        self.caches.get_cache = FakeCache
 
-    # set up caches
-    fakemaster.caches.get_cache = FakeCache
+    def getObjectId(self):
+        return defer.succeed(self._master_id)
 
-    # and a getObjectId method
-    fakemaster.getObjectId = (lambda : defer.succeed(master_id))
+    # work around http://code.google.com/p/mock/issues/detail?id=105
+    def _get_child_mock(self, **kw):
+        return mock.Mock(**kw)
 
-    # and some config - this class's constructor is good enough to trust
-    fakemaster.config = config.MasterConfig()
-
-    return fakemaster
+# Leave this alias, in case we want to add more behavior later
+make_master = FakeMaster
