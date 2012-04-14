@@ -45,32 +45,6 @@ package.
     it is suitable for adapting strings from the configuration for use as
     filenames.  It is not suitable for use with strings from untrusted sources.
 
-.. py:function:: deferredLocked(lock)
-
-    :param lock: a ``DeferredLock`` instance or a string naming one
-
-    This is a decorator to wrap an event-driven method (one returning a
-    ``Deferred``) in an acquire/release pair of a designated ``DeferredLock``.
-    For simple functions with a static lock, this is as easy as::
-
-        someLock = defer.DeferredLock()
-        @util.deferredLocked(someLock)
-        def someLockedFunction():
-            # ..
-            return d
-
-    For class methods which must access a lock that is an instance attribute, the
-    lock can be specified by a string, which will be dynamically resolved to the
-    specific instance at runtime::
-
-        def __init__(self):
-            self.someLock = defer.DeferredLock()
-
-        @util.deferredLocked('someLock')
-        def someLockedFunction():
-            # ..
-            return d
-
 .. py:function:: epoch2datetime(epoch)
 
     :param epoch: an epoch time (integer)
@@ -414,3 +388,54 @@ incoming messages and trigger some action when one arrives.
         message; this moves the message file to the 'cur' directory and returns
         an open file handle for it.
 
+buildbot.util.misc
+~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.misc
+
+.. py:function:: deferredLocked(lock)
+
+    :param lock: a :py:class:`twisted.internet.defer.DeferredLock` instance or
+        a string naming an instance attribute containing one
+
+    This is a decorator to wrap an event-driven method (one returning a
+    ``Deferred``) in an acquire/release pair of a designated
+    :py:class:`~twisted.internet.defer.DeferredLock`.  For simple functions
+    with a static lock, this is as easy as::
+
+        someLock = defer.DeferredLock()
+        @util.deferredLocked(someLock)
+        def someLockedFunction():
+            # ..
+            return d
+
+    For class methods which must access a lock that is an instance attribute, the
+    lock can be specified by a string, which will be dynamically resolved to the
+    specific instance at runtime::
+
+        def __init__(self):
+            self.someLock = defer.DeferredLock()
+
+        @util.deferredLocked('someLock')
+        def someLockedFunction():
+            # ..
+            return d
+
+.. py:class:: SerializedInvocation(method)
+
+    This is a method wrapper that will serialize calls to an asynchronous
+    method.  If a second call occurs while the first call is still executing,
+    it will not begin until the first call has finished.  If multiple calls
+    queue up, they will be collapsed into a single call.  The effect is that
+    the underlying method is guaranteed to be called at least once after every
+    call to the wrapper.
+
+    Note that if this class is used as a decorator on a method, it will
+    serialize invocations across all class instances.  For synchronization
+    specific to each instance, wrap the method in the constructor::
+
+        def __init__(self):
+            self.someMethod = SerializedInovcation(self.someMethod)
+
+    Tests can monkey-patch the ``_quiet`` method of the class to be notified
+    when all planned invocations are complete.

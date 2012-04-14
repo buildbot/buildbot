@@ -148,6 +148,21 @@ losing any readability.
 
 Note that code using ``deferredGenerator`` is no longer acceptable in Buildbot.
 
+Locking
+.......
+
+Remember that asynchronous programming does not free you from the need to worry
+about concurrency issues.  Particularly if you are executing a sequence of
+operations, each time you wait for a Deferred, arbitrary other actions can take
+place.
+
+In general, you should try to perform actions atomically, but for the rare
+times synchronization is required, the following might be useful:
+
+* :py:class:`twisted.internet.defer.DeferredLock`
+* :py:func:`buildbot.util.misc.deferredLocked`
+* :py:func:`buildbot.util.misc.SerializedInvocation`
+
 Joining Sequences
 ~~~~~~~~~~~~~~~~~
 
