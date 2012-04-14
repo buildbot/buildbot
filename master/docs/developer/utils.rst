@@ -480,3 +480,26 @@ apply that to a non-network situation.
 
         The strings decoded so far, if :py:meth:`stringReceived` is not
         overridden.
+
+buildbot.util.sautils
+~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.sautils
+
+This module contains a few utilities that are not included with SQLAlchemy.
+
+.. py:class:: InsertFromSelect(table, select)
+
+    :param table: table into which insert should be performed
+    :param select: select query from which data should be drawn
+
+    This class is taken directly from SQLAlchemy's `compiler.html
+    <http://www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct>`_,
+    and allows a Pythonic representation of ``INSERT INTO .. SELECT ..``
+    queries.
+
+.. py:function:: sa_version()
+
+    Return a 3-tuple representing the SQLAlchemy version.  Note that older
+    versions that did not have a ``__version__`` attribute are represented by
+    ``(0,0,0)``.
