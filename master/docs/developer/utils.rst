@@ -503,3 +503,11 @@ This module contains a few utilities that are not included with SQLAlchemy.
     Return a 3-tuple representing the SQLAlchemy version.  Note that older
     versions that did not have a ``__version__`` attribute are represented by
     ``(0,0,0)``.
+
+buildbot.util.subscription
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The classes in the :py:module:`buildbot.util.subscription` module are used for
+master-local subscriptions.  In the near future, all uses of this module will
+be replaced with message-queueing implementations that allow subscriptions and
+subscribers to span multiple masters.
