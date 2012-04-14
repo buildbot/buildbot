@@ -357,9 +357,60 @@ a good way to avoid long loops that block other activity in the reactor.
 buildbot.util.json
 ~~~~~~~~~~~~~~~~~~
 
+.. py:module:: buildbot.util.json
+
 This package is just an import of the best available JSON module.  Use it
 instead of a more complex conditional import of :mod:`simplejson` or
 :mod:`json`::
 
     from buildbot.util import json
+
+buildbot.util.maildir
+~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.maildir
+
+Several Buildbot components make use of `maildirs
+<http://www.courier-mta.org/maildir.html>`_ to hand off messages between
+components.  On the receiving end, there's a need to watch a maildir for
+incoming messages and trigger some action when one arrives.
+
+.. py:class:: MaildirService(basedir)
+
+        :param basedir: (optional) base directory of the maildir
+
+    A :py:class:`MaildirService` instance watches a maildir for new messages. It
+    should be a child service of some :py:class:`~twisted.application.service.MultiService` instance. When
+    running, this class uses the linux dirwatcher API (if available) or polls for new
+    files in the 'new' maildir subdirectory. When it discovers a new
+    message, it invokes its :py:meth:`messageReceived` method.
+
+    To use this class, subclass it and implement a more interesting
+    :py:meth:`messageReceived` function.
+
+    .. py:method:: setBasedir(basedir)
+
+        :param basedir: base directory of the maildir
+
+        If no ``basedir`` is provided to the constructor, this method must be
+        used to set the basedir before the service starts.
+
+    .. py:method:: messageReceived(filename)
+
+        :param filename: unqualified filename of the new message
+
+        This method is called with the short filename of the new message. The
+        full name of the new file can be obtained with ``os.path.join(maildir,
+        'new', filename)``.  The method is un-implemented in the
+        :py:class:`MaildirService` class, and must be implemented in
+        subclasses.
+
+    .. py:method:: moveToCurDir(filename)
+
+        :param filename: unqualified filename of the new message
+        :returns: open file object
+
+        Call this from :py:meth:`messageReceived` to start processing the
+        message; this moves the message file to the 'cur' directory and returns
+        an open file handle for it.
 
