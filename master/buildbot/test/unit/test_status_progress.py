@@ -30,3 +30,14 @@ class TestExpectations(unittest.TestCase):
         stepProgress.finish()
         stepProgress.setProgress("metric", 42)
         expectations.update(newProgress)
+
+
+    def test_removeOldStep(self):
+        """
+        http://trac.buildbot.net/ticket/2281
+        """
+        stepProgress = progress.StepProgress("step", ["metric"])
+        oldProgress = progress.BuildProgress([stepProgress])
+        expectations = progress.Expectations(oldProgress)
+        buildProgress = progress.BuildProgress([])
+        buildProgress.setExpectationsFrom(expectations)
