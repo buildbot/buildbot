@@ -16,6 +16,7 @@
 import weakref
 from twisted.internet import defer
 from buildbot.test.fake import fakedb
+from buildbot.test.fake.pbmanager import FakePBManager
 from buildbot import config
 import mock
 
@@ -49,6 +50,7 @@ class FakeMaster(mock.Mock):
         self._master_id = master_id
         self.config = config.MasterConfig()
         self.caches.get_cache = FakeCache
+        self.pbmanager = FakePBManager()
 
     def getObjectId(self):
         return defer.succeed(self._master_id)
