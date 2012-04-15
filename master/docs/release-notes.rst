@@ -66,6 +66,10 @@ Deprecations, Removals, and Non-Compatible Changes
     from buildbot.steps.source.svn import SVN
     factory.append(SVN(repourl=Interpolate("svn://svn.example.org/svn/%(src::branch:-branches/test)s")))
 
+* The Bzr hook now fills the ``repository`` property (see
+  :bb:bug:`2282`). It also has a numeric ``buildbot_strip`` Bazaar
+  configuration option similar to the ``strip`` of Mercurial hook
+  (number of rightmost segments to remove from the resulting URL).
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

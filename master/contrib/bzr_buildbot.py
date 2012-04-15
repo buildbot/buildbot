@@ -316,6 +316,7 @@ PORT_KEY = 'buildbot_port'
 AUTH_KEY = 'buildbot_auth'
 DRYRUN_KEY = 'buildbot_dry_run'
 PQM_KEY = 'buildbot_pqm'
+STRIP_KEY = 'buildbot_strip'
 SEND_BRANCHNAME_KEY = 'buildbot_send_branch_name'
 
 PUSH_VALUE = 'push'
@@ -397,6 +398,9 @@ def send_change(branch, old_revno, old_revid, new_revno, new_revid, hook):
         blame_merge_author=_is_true(config, PQM_KEY))
     if _is_true(config, SEND_BRANCHNAME_KEY):
         change['branch'] = branch.nick
+    stripcount = int(config.get_user_option(STRIP_KEY) or 0)
+    change['repository'] = branch.user_url.rsplit('/', stripcount + 1)[0]
+
     # as of this writing (in Buildbot 0.7.9), 9989 is the default port when
     # you make a buildbot master.
     port = int(config.get_user_option(PORT_KEY) or 9989)
