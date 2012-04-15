@@ -18,6 +18,7 @@ from buildbot.steps.source import mercurial
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import sourcesteps
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
+from buildbot import config
 
 class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
 
@@ -27,14 +28,24 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownSourceStep()
 
-    def test_repourl_and_baseURL(self):
-        self.assertRaises(ValueError, lambda :
-                mercurial.Mercurial(repourl='http://hg.mozilla.org',
-                                    baseURL="http://hg.mozilla.org"))
-
-    def test_neither_repourl_nor_baseURL(self):
-        self.assertRaises(ValueError, lambda :
+    def test_no_repourl(self):
+        self.assertRaises(config.ConfigErrors, lambda :
                 mercurial.Mercurial(mode="full"))
+
+    def test_incorrect_mode(self):
+        self.assertRaises(config.ConfigErrors, lambda :
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                    mode='invalid'))
+
+    def test_incorrect_method(self):
+        self.assertRaises(config.ConfigErrors, lambda :
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                    method='invalid'))
+
+    def test_incorrect_branchType(self):
+        self.assertRaises(config.ConfigErrors, lambda :
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                    branchType='invalid'))
 
     def test_mode_full_clean(self):
         self.setupStep(
@@ -197,7 +208,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_no_existing_repo_dirname(self):
         self.setupStep(
-                mercurial.Mercurial(baseURL='http://hg.mozilla.org',
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                     mode='incremental', branchType='dirname'),
             )
         self.expectCommands(
@@ -228,7 +239,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_branch_change_dirname(self):
         self.setupStep(
-                mercurial.Mercurial(baseURL='http://hg.mozilla.org/',
+                mercurial.Mercurial(repourl='http://hg.mozilla.org/',
                                     mode='incremental', branchType='dirname', defaultBranch='devel'),
             dict(branch='stable')
             )

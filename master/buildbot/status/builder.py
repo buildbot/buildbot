@@ -13,16 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
 
-import weakref
+
 import os, re, itertools
 from cPickle import load, dump
 
 from zope.interface import implements
 from twisted.python import log, runtime
 from twisted.persisted import styles
-from buildbot.process import metrics
 from buildbot import interfaces, util
+from buildbot.util.lru import LRUCache
 from buildbot.status.event import Event
 from buildbot.status.build import BuildStatus
 from buildbot.status.buildrequest import BuildRequestStatus
@@ -76,8 +77,7 @@ class BuilderStatus(styles.Versioned):
         self.currentBuilds = []
         self.nextBuild = None
         self.watchers = []
-        self.buildCache = weakref.WeakValueDictionary()
-        self.buildCache_LRU = []
+        self.buildCache = LRUCache(self.cacheMiss)
 
     # persistence
 
@@ -89,7 +89,6 @@ class BuilderStatus(styles.Versioned):
         d = styles.Versioned.__getstate__(self)
         d['watchers'] = []
         del d['buildCache']
-        del d['buildCache_LRU']
         for b in self.currentBuilds:
             b.saveYourself()
             # TODO: push a 'hey, build was interrupted' event
@@ -106,8 +105,7 @@ class BuilderStatus(styles.Versioned):
         # when loading, re-initialize the transient stuff. Remember that
         # upgradeToVersion1 and such will be called after this finishes.
         styles.Versioned.__setstate__(self, d)
-        self.buildCache = weakref.WeakValueDictionary()
-        self.buildCache_LRU = []
+        self.buildCache = LRUCache(self.cacheMiss)
         self.currentBuilds = []
         self.watchers = []
         self.slavenames = []
@@ -146,7 +144,8 @@ class BuilderStatus(styles.Versioned):
         filename = os.path.join(self.basedir, "builder")
         tmpfilename = filename + ".tmp"
         try:
-            dump(self, open(tmpfilename, "wb"), -1)
+            with open(tmpfilename, "wb") as f:
+                dump(self, f, -1)
             if runtime.platformType  == 'win32':
                 # windows cannot rename a file on top of an existing one
                 if os.path.exists(filename):
@@ -155,42 +154,25 @@ class BuilderStatus(styles.Versioned):
         except:
             log.msg("unable to save builder %s" % self.name)
             log.err()
-        
 
     # build cache management
+
+    def setCacheSize(self, size):
+        self.buildCache.set_max_size(size)
 
     def makeBuildFilename(self, number):
         return os.path.join(self.basedir, "%d" % number)
 
-    def touchBuildCache(self, build):
-        self.buildCache[build.number] = build
-        if build in self.buildCache_LRU:
-            self.buildCache_LRU.remove(build)
-        cache_size = self.master.config.caches['Builds']
-        self.buildCache_LRU = self.buildCache_LRU[-(cache_size-1):] + [ build ]
-        return build
-
     def getBuildByNumber(self, number):
-        # first look in currentBuilds
-        for b in self.currentBuilds:
-            if b.number == number:
-                return self.touchBuildCache(b)
+        return self.buildCache.get(number)
 
-        # then in the buildCache
-        try:
-            b = self.buildCache[number]
-        except KeyError:
-            metrics.MetricCountEvent.log("buildCache.misses", 1)
-        else:
-            metrics.MetricCountEvent.log("buildCache.hits", 1)
-            return self.touchBuildCache(b)
-
-        # then fall back to loading it from disk
+    def loadBuildFromFile(self, number):
         filename = self.makeBuildFilename(number)
         try:
             log.msg("Loading builder %s's build %d from on-disk pickle"
                 % (self.name, number))
-            build = load(open(filename, "rb"))
+            with open(filename, "rb") as f:
+                build = load(f)
             build.setProcessObjects(self, self.master)
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite
@@ -206,11 +188,25 @@ class BuilderStatus(styles.Versioned):
 
             # check that logfiles exist
             build.checkLogfiles()
-            return self.touchBuildCache(build)
+            return build
         except IOError:
             raise IndexError("no such build %d" % number)
         except EOFError:
             raise IndexError("corrupted build pickle %d" % number)
+
+    def cacheMiss(self, number, **kwargs):
+        # If kwargs['val'] exists, this is a new value being added to
+        # the cache.  Just return it.
+        if 'val' in kwargs:
+            return kwargs['val']
+
+        # first look in currentBuilds
+        for b in self.currentBuilds:
+            if b.number == number:
+                return b
+
+        # then fall back to loading it from disk
+        return self.loadBuildFromFile(number)
 
     def prune(self, events_only=False):
         # begin by pruning our own events
@@ -259,7 +255,7 @@ class BuilderStatus(styles.Versioned):
                     is_logfile = True
 
             if num is None: continue
-            if num in self.buildCache: continue
+            if num in self.buildCache.cache: continue
 
             if (is_logfile and num < earliest_log) or num < earliest_build:
                 pathname = os.path.join(self.basedir, filename)
@@ -481,7 +477,7 @@ class BuilderStatus(styles.Versioned):
         assert s.builder is self # paranoia
         assert s not in self.currentBuilds
         self.currentBuilds.append(s)
-        self.touchBuildCache(s)
+        self.buildCache.get(s.number, val=s)
 
         # now that the BuildStatus is prepared to answer queries, we can
         # announce the new build to all our watchers

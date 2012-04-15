@@ -49,14 +49,6 @@ class NetstringParser(basic.NetstringReceiver):
 
     def feed(self, data):
         """
-        Add arbitrariliy-sized C{data} to the incoming-data buffer.  Any
-        complete netstrings will trigger a call to the stringReceived method.
-
-        Note that this method (and the Twisted class it is based on) cannot
-        detect a trailing partial netstring at EOF - the data will be silently
-        ignored.
-
-        @raise C{twisted.protocols.basic.NetstringParseError}: if invalid
         """
         self.dataReceived(data)
         # dataReceived handles errors unusually quietly!

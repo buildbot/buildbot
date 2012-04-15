@@ -521,7 +521,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
 
         # Invoke the expected callbacks for the suppression file upload.  Note
         # that this assumes all of the remote_* are synchronous, but can be
-        # easily adapted to suit if that changes (using deferredGenerator)
+        # easily adapted to suit if that changes (using inlineCallbacks)
         def upload_behavior(command):
             writer = command.args['writer']
             writer.remote_write(supps_file)

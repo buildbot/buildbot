@@ -82,6 +82,7 @@ class Builder(config.ReconfigurableServiceMixin,
         self.config = builder_config
 
         self.builder_status.setSlavenames(self.config.slavenames)
+        self.builder_status.setCacheSize(new_config.caches['Builds'])
 
         return defer.succeed(None)
 
@@ -100,7 +101,7 @@ class Builder(config.ReconfigurableServiceMixin,
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def getOldestRequestTime(self):
 
         """Returns the submitted_at of the oldest unclaimed build request for
@@ -108,18 +109,15 @@ class Builder(config.ReconfigurableServiceMixin,
 
         @returns: datetime instance or None, via Deferred
         """
-        wfd = defer.waitForDeferred(
-            self.master.db.buildrequests.getBuildRequests(
-                        buildername=self.name, claimed=False))
-        yield wfd
-        unclaimed = wfd.getResult()
+        unclaimed = yield self.master.db.buildrequests.getBuildRequests(
+                        buildername=self.name, claimed=False)
 
         if unclaimed:
             unclaimed = [ brd['submitted_at'] for brd in unclaimed ]
             unclaimed.sort()
-            yield unclaimed[0]
+            defer.returnValue(unclaimed[0])
         else:
-            yield None
+            defer.returnValue(None)
 
     def reclaimAllBuilds(self):
         brids = set()
@@ -247,7 +245,7 @@ class Builder(config.ReconfigurableServiceMixin,
         else:
             self.builder_status.setBigState("idle")
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _startBuildFor(self, slavebuilder, buildrequests):
         """Start a build on the given slave.
         @param build: the L{base.Build} to start
@@ -289,10 +287,7 @@ class Builder(config.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
         try:
-            wfd = defer.waitForDeferred(
-                    slavebuilder.prepare(self.builder_status, build))
-            yield wfd
-            ready = wfd.getResult()
+            ready = yield slavebuilder.prepare(self.builder_status, build)
         except:
             log.err(failure.Failure(), 'while preparing slavebuilder:')
             ready = False
@@ -303,7 +298,7 @@ class Builder(config.ReconfigurableServiceMixin,
             log.msg("slave %s can't build %s after all; re-queueing the "
                     "request" % (build, slavebuilder))
             run_cleanups()
-            yield False
+            defer.returnValue(False)
             return
 
         # ping the slave to make sure they're still there. If they've
@@ -317,10 +312,7 @@ class Builder(config.ReconfigurableServiceMixin,
         log.msg("starting build %s.. pinging the slave %s"
                 % (build, slavebuilder))
         try:
-            wfd = defer.waitForDeferred(
-                    slavebuilder.ping())
-            yield wfd
-            ping_success = wfd.getResult()
+            ping_success = yield slavebuilder.ping()
         except:
             log.err(failure.Failure(), 'while pinging slave before build:')
             ping_success = False
@@ -328,7 +320,7 @@ class Builder(config.ReconfigurableServiceMixin,
         if not ping_success:
             log.msg("slave ping failed; re-queueing the request")
             run_cleanups()
-            yield False
+            defer.returnValue(False)
             return
 
         # The buildslave is ready to go. slavebuilder.buildStarted() sets its
@@ -339,14 +331,11 @@ class Builder(config.ReconfigurableServiceMixin,
 
         # tell the remote that it's starting a build, too
         try:
-            wfd = defer.waitForDeferred(
-                    slavebuilder.remote.callRemote("startBuild"))
-            yield wfd
-            wfd.getResult()
+            yield slavebuilder.remote.callRemote("startBuild")
         except:
             log.err(failure.Failure(), 'while calling remote startBuild:')
             run_cleanups()
-            yield False
+            defer.returnValue(False)
             return
 
         # create the BuildStatus object that goes with the Build
@@ -356,14 +345,12 @@ class Builder(config.ReconfigurableServiceMixin,
         try:
             bids = []
             for req in build.requests:
-                wfd = defer.waitForDeferred(
-                    self.master.db.builds.addBuild(req.id, bs.number))
-                yield wfd
-                bids.append(wfd.getResult())
+                bid = yield self.master.db.builds.addBuild(req.id, bs.number)
+                bids.append(bid)
         except:
             log.err(failure.Failure(), 'while adding rows to build table:')
             run_cleanups()
-            yield False
+            defer.returnValue(False)
             return
 
         # let status know
@@ -383,7 +370,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # make sure the builder's status is represented correctly
         self.updateBigStatus()
 
-        yield True
+        defer.returnValue(True)
 
     def setupProperties(self, props):
         props.setProperty("buildername", self.name, "Builder")
@@ -426,14 +413,11 @@ class Builder(config.ReconfigurableServiceMixin,
 
         self.updateBigStatus()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _maybeBuildsetsComplete(self, requests):
         # inform the master that we may have completed a number of buildsets
         for br in requests:
-            wfd = defer.waitForDeferred(
-                self.master.maybeBuildsetComplete(br.bsid))
-            yield wfd
-            wfd.getResult()
+            yield self.master.maybeBuildsetComplete(br.bsid)
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]
@@ -457,7 +441,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
     # Build Creation
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def maybeStartBuild(self):
         # This method is called by the botmaster whenever this builder should
         # check for and potentially start new builds.  Do not call this method
@@ -479,11 +463,9 @@ class Builder(config.ReconfigurableServiceMixin,
             return
 
         # now, get the available build requests
-        wfd = defer.waitForDeferred(
-                self.master.db.buildrequests.getBuildRequests(
-                        buildername=self.name, claimed=False))
-        yield wfd
-        unclaimed_requests = wfd.getResult()
+        unclaimed_requests = \
+            yield self.master.db.buildrequests.getBuildRequests(
+                    buildername=self.name, claimed=False)
 
         if not unclaimed_requests:
             self.updateBigStatus()
@@ -498,10 +480,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # match them up until we're out of options
         while available_slavebuilders and unclaimed_requests:
             # first, choose a slave (using nextSlave)
-            wfd = defer.waitForDeferred(
-                self._chooseSlave(available_slavebuilders))
-            yield wfd
-            slavebuilder = wfd.getResult()
+            slavebuilder = yield self._chooseSlave(available_slavebuilders)
 
             if not slavebuilder:
                 break
@@ -512,10 +491,7 @@ class Builder(config.ReconfigurableServiceMixin,
                 break
 
             # then choose a request (using nextBuild)
-            wfd = defer.waitForDeferred(
-                self._chooseBuild(unclaimed_requests))
-            yield wfd
-            brdict = wfd.getResult()
+            brdict = yield self._chooseBuild(unclaimed_requests)
 
             if not brdict:
                 break
@@ -527,29 +503,21 @@ class Builder(config.ReconfigurableServiceMixin,
 
             # merge the chosen request with any compatible requests in the
             # queue
-            wfd = defer.waitForDeferred(
-                self._mergeRequests(brdict, unclaimed_requests,
-                                    mergeRequests_fn))
-            yield wfd
-            brdicts = wfd.getResult()
+            brdicts = yield self._mergeRequests(brdict, unclaimed_requests,
+                                    mergeRequests_fn)
 
             # try to claim the build requests
             brids = [ brdict['brid'] for brdict in brdicts ]
             try:
-                wfd = defer.waitForDeferred(
-                        self.master.db.buildrequests.claimBuildRequests(brids))
-                yield wfd
-                wfd.getResult()
+                yield self.master.db.buildrequests.claimBuildRequests(brids)
             except buildrequests.AlreadyClaimedError:
                 # one or more of the build requests was already claimed;
                 # re-fetch the now-partially-claimed build requests and keep
                 # trying to match them
                 self._breakBrdictRefloops(unclaimed_requests)
-                wfd = defer.waitForDeferred(
-                        self.master.db.buildrequests.getBuildRequests(
-                                buildername=self.name, claimed=False))
-                yield wfd
-                unclaimed_requests = wfd.getResult()
+                unclaimed_requests = \
+                    yield self.master.db.buildrequests.getBuildRequests(
+                            buildername=self.name, claimed=False)
 
                 # go around the loop again
                 continue
@@ -560,23 +528,15 @@ class Builder(config.ReconfigurableServiceMixin,
             # loop. TODO: test that!
 
             # _startBuildFor expects BuildRequest objects, so cook some up
-            wfd = defer.waitForDeferred(
-                    defer.gatherResults([ self._brdictToBuildRequest(brdict)
-                                          for brdict in brdicts ]))
-            yield wfd
-            breqs = wfd.getResult()
+            breqs = yield defer.gatherResults(
+                    [ self._brdictToBuildRequest(brdict)
+                      for brdict in brdicts ])
 
-            wfd = defer.waitForDeferred(
-                    self._startBuildFor(slavebuilder, breqs))
-            yield wfd
-            build_started = wfd.getResult()
+            build_started = yield self._startBuildFor(slavebuilder, breqs)
 
             if not build_started:
                 # build was not started, so unclaim the build requests
-                wfd = defer.waitForDeferred(
-                    self.master.db.buildrequests.unclaimBuildRequests(brids))
-                yield wfd
-                wfd.getResult()
+                yield self.master.db.buildrequests.unclaimBuildRequests(brids)
 
                 # and try starting builds again.  If we still have a working slave,
                 # then this may re-claim the same buildrequests
@@ -655,38 +615,34 @@ class Builder(config.ReconfigurableServiceMixin,
     def _defaultMergeRequestFn(self, req1, req2):
         return req1.canBeMergedWith(req2)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _mergeRequests(self, breq, unclaimed_requests, mergeRequests_fn):
         """Use C{mergeRequests_fn} to merge C{breq} against
         C{unclaimed_requests}, where both are build request dictionaries"""
         # short circuit if there is no merging to do
         if not mergeRequests_fn or len(unclaimed_requests) == 1:
-            yield [ breq ]
+            defer.returnValue([ breq ])
             return
 
         # we'll need BuildRequest objects, so get those first
-        wfd = defer.waitForDeferred(
-            defer.gatherResults(
+        unclaimed_request_objects = yield defer.gatherResults(
                 [ self._brdictToBuildRequest(brdict)
-                  for brdict in unclaimed_requests ]))
-        yield wfd
-        unclaimed_request_objects = wfd.getResult()
+                  for brdict in unclaimed_requests ])
+
         breq_object = unclaimed_request_objects.pop(
                 unclaimed_requests.index(breq))
 
         # gather the mergeable requests
         merged_request_objects = [breq_object]
         for other_breq_object in unclaimed_request_objects:
-            wfd = defer.waitForDeferred(
-                defer.maybeDeferred(lambda :
-                    mergeRequests_fn(self, breq_object, other_breq_object)))
-            yield wfd
-            if wfd.getResult():
+            if (yield defer.maybeDeferred(
+                        lambda : mergeRequests_fn(self, breq_object,
+                                                  other_breq_object))):
                 merged_request_objects.append(other_breq_object)
 
         # convert them back to brdicts and return
         merged_requests = [ br.brdict for br in merged_request_objects ]
-        yield merged_requests
+        defer.returnValue(merged_requests)
 
     def _brdictToBuildRequest(self, brdict):
         """
@@ -764,28 +720,23 @@ class BuilderControl:
         d.addCallback(add_buildset)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def getPendingBuildRequestControls(self):
         master = self.original.master
-        wfd = defer.waitForDeferred(
-            master.db.buildrequests.getBuildRequests(
+        brdicts = yield master.db.buildrequests.getBuildRequests(
                 buildername=self.original.name,
-                claimed=False))
-        yield wfd
-        brdicts = wfd.getResult()
+                claimed=False)
 
         # convert those into BuildRequest objects
         buildrequests = [ ]
         for brdict in brdicts:
-            wfd = defer.waitForDeferred(
-                buildrequest.BuildRequest.fromBrdict(self.master.master,
-                                                     brdict))
-            yield wfd
-            buildrequests.append(wfd.getResult())
+            br = yield buildrequest.BuildRequest.fromBrdict(
+                    self.master.master, brdict)
+            buildrequests.append(br)
 
         # and return the corresponding control objects
-        yield [ buildrequest.BuildRequestControl(self.original, r)
-                 for r in buildrequests ]
+        defer.returnValue([ buildrequest.BuildRequestControl(self.original, r)
+                            for r in buildrequests ])
 
     def getBuild(self, number):
         return self.original.getBuild(number)
@@ -806,4 +757,3 @@ class BuilderControl:
             if not success:
                 return False
         return True
-

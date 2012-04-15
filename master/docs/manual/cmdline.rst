@@ -212,12 +212,22 @@ most of the time you will use an explicit path like
 :file:`.buildbot/options` as ``try_host``, ``try_username``,
 ``try_password``, and ``try_jobdir``.
 
-In addition, the SSH approach needs to connect to a :class:`PBListener` status
-port, so it can retrieve and report the results of the build (the PB
-approach uses the existing connection to retrieve status information,
-so this step is not necessary). This requires a :option:`--masterstatus`
-argument, or a ``try_masterstatus`` entry in :file:`.buildbot/options`,
-in the form of a :samp:`{HOSTNAME}:{PORT}` string.
+The SSH approach also provides a :option:`--buildbotbin` argument to
+allow specification of the buildbot binary to run on the
+buildmaster. This is useful in the case where buildbot is installed in
+a :ref:`virtualenv <Installation-in-a-Virtualenv>` on the buildmaster
+host, or in other circumstances where the buildbot command is not on
+the path of the user given by :option:`--username`. The
+:option:`--buildbotbin` argument can be provided in
+:file:`.buildbot/options` as ``try_buildbotbin``
+
+Finally, the SSH approach needs to connect to a :class:`PBListener`
+status port, so it can retrieve and report the results of the build
+(the PB approach uses the existing connection to retrieve status
+information, so this step is not necessary). This requires a
+:option:`--masterstatus` argument, or a ``try_masterstatus`` entry in
+:file:`.buildbot/options`, in the form of a :samp:`{HOSTNAME}:{PORT}`
+string.
 
 The following command line arguments are deprecated, but retained for
 backward compatibility:
@@ -652,7 +662,7 @@ see :ref:`Concepts-Users`.
 --op
     There are four supported values for the :option:`op` argument:
     :option:`add`, :option:`update`, :option:`remove`, and
-    :option:`show`. Each are described in full in the following sections.
+    :option:`get`. Each are described in full in the following sections.
 
 --bb_username
     Used with the :option:`update` option, this sets the user's username
@@ -733,11 +743,11 @@ For :option:`remove`:
             --username={USER} --passwd={USERPW} \
             --ids={ID1},{ID2},...
 
-For :option:`show`:
+For :option:`get`:
 
 .. code-block:: none
 
-    buildbot user --master={MASTERHOST} --op=show \
+    buildbot user --master={MASTERHOST} --op=get \
             --username={USER} --passwd={USERPW} \
             --ids={ID1},{ID2},...
 

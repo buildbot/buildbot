@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import re
 import os
 import textwrap
@@ -24,6 +26,7 @@ from twisted.internet import defer
 from buildbot import config, buildslave, interfaces, revlinks
 from buildbot.process import properties
 from buildbot.test.util import dirs, compat
+from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.changes import base as changes_base
 from buildbot.schedulers import base as schedulers_base
 from buildbot.status import base as status_base
@@ -69,32 +72,6 @@ class FakeBuilder(object):
         self.__dict__.update(kwargs)
 
 
-class ConfigErrorsMixin(object):
-
-    def assertConfigError(self, errors, substr_or_re):
-        if len(errors.errors) > 1:
-            self.fail("too many errors: %s" % (errors.errors,))
-        elif len(errors.errors) < 1:
-            self.fail("expected error did not occur")
-        elif isinstance(substr_or_re, str):
-            if substr_or_re not in errors.errors[0]:
-                self.fail("non-matching error: %s" % (errors.errors,))
-        else:
-            if not substr_or_re.search(errors.errors[0]):
-                self.fail("non-matching error: %s" % (errors.errors,))
-
-    def assertRaisesConfigError(self, substr_or_re, fn):
-        try:
-            fn()
-        except config.ConfigErrors, e:
-            self.assertConfigError(e, substr_or_re)
-        else:
-            self.fail("ConfigErrors not raised")
-
-    def assertNoConfigErrors(self, errors):
-        self.assertEqual(errors.errors, [])
-
-
 class ConfigErrors(unittest.TestCase):
 
     def test_constr(self):
@@ -111,6 +88,16 @@ class ConfigErrors(unittest.TestCase):
         full = config.ConfigErrors(['a'])
         self.failUnless(not empty)
         self.failIf(not full)
+
+    def test_error_raises(self):
+        e = self.assertRaises(config.ConfigErrors, config.error, "message")
+        self.assertEqual(e.errors, ["message"])
+
+    def test_error_no_raise(self):
+        e = config.ConfigErrors()
+        self.patch(config, "_errors", e)
+        config.error("message")
+        self.assertEqual(e.errors, ["message"])
 
 
 class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
@@ -149,9 +136,11 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def install_config_file(self, config_file, other_files={}):
         config_file = textwrap.dedent(config_file)
-        open(os.path.join(self.basedir, self.filename), "w").write(config_file)
+        with open(os.path.join(self.basedir, self.filename), "w") as f:
+            f.write(config_file)
         for file, contents in other_files.items():
-            open(file, "w").write(contents)
+            with open(file, "w") as f:
+                f.write(contents)
 
 
     # tests
@@ -208,13 +197,30 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 self.basedir, self.filename))
         self.assertEqual(len(self.flushLoggedErrors(SyntaxError)), 1)
 
-    def test_loadConfig_eval_ConfigErrors(self):
+    def test_loadConfig_eval_ConfigError(self):
         self.install_config_file("""\
                 from buildbot import config
-                raise config.ConfigErrors(['oh noes!'])""")
+                BuildmasterConfig = { 'multiMaster': True }
+                config.error('oh noes!')""")
         self.assertRaisesConfigError("oh noes",
             lambda : config.MasterConfig.loadConfig(
                 self.basedir, self.filename))
+
+    def test_loadConfig_eval_ConfigErrors(self):
+        # We test a config that has embedded errors, as well
+        # as semantic errors that get added later. If an exception is raised
+        # prematurely, then the semantic errors wouldn't get reported.
+        self.install_config_file("""\
+                from buildbot import config
+                BuildmasterConfig = {}
+                config.error('oh noes!')
+                config.error('noes too!')""")
+        e = self.assertRaises(config.ConfigErrors,
+            lambda : config.MasterConfig.loadConfig(
+                self.basedir, self.filename))
+        self.assertEqual(e.errors, ['oh noes!', 'noes too!',
+                'no slaves are configured',
+                'no builders are configured'])
 
     def test_loadConfig_no_BuildmasterConfig(self):
         self.install_config_file('x=10')
@@ -1027,15 +1033,12 @@ class ReconfigurableServiceMixin(unittest.TestCase):
             self.assertTrue(svc.called)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_service_failure(self):
         svc = FakeService()
         svc.succeed = False
         try:
-            wfd = defer.waitForDeferred(
-                svc.reconfigService(mock.Mock()))
-            yield wfd
-            wfd.getResult()
+            yield svc.reconfigService(mock.Mock())
         except ValueError:
             pass
         else:
@@ -1079,17 +1082,14 @@ class ReconfigurableServiceMixin(unittest.TestCase):
         return d
 
     @compat.usesFlushLoggedErrors
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_multiservice_nested_failure(self):
         svc = FakeMultiService()
         ch1 = FakeService()
         ch1.setServiceParent(svc)
         ch1.succeed = False
         try:
-            wfd = defer.waitForDeferred(
-                svc.reconfigService(mock.Mock()))
-            yield wfd
-            wfd.getResult()
+            yield svc.reconfigService(mock.Mock())
         except ValueError:
             pass
         else:

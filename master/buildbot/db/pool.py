@@ -19,11 +19,10 @@ import inspect
 import shutil
 import os
 import sqlalchemy as sa
-import twisted
 import tempfile
 from buildbot.process import metrics
-from twisted.internet import reactor, threads, defer
-from twisted.python import threadpool, failure, versions, log
+from twisted.internet import reactor, threads
+from twisted.python import threadpool, log
 
 # set this to True for *very* verbose query debugging output; this can
 # be monkey-patched from master.cfg, too:
@@ -91,7 +90,14 @@ class DBThreadPool(threadpool.ThreadPool):
     # in bug #1810.
     __broken_sqlite = False
 
-    def __init__(self, engine):
+    def __init__(self, engine, verbose=False):
+        # verbose is used by upgrade scripts, and if it is set we should print
+        # messages about versions and other warnings
+        log_msg = log.msg
+        if verbose:
+            def log_msg(m):
+                print m
+
         pool_size = 5
 
         # If the engine has an C{optimal_thread_pool_size} attribute, then the
@@ -108,19 +114,18 @@ class DBThreadPool(threadpool.ThreadPool):
         self.engine = engine
         if engine.dialect.name == 'sqlite':
             vers = self.get_sqlite_version()
-            log.msg("Using SQLite Version %s" % (vers,))
             if vers < (3,7):
-                log.msg("NOTE: this old version of SQLite does not support "
+                log_msg("Using SQLite Version %s" % (vers,))
+                log_msg("NOTE: this old version of SQLite does not support "
                         "WAL journal mode; a busy master may encounter "
                         "'Database is locked' errors.  Consider upgrading.")
-            if vers < (3,4):
-                log.msg("NOTE: this old version of SQLite is not supported. "
-                        "It fails for multiple simultaneous accesses to the "
-                        "database: try adding the 'pool_size=1' argument to "
-                        "your db url. ")
+                if vers < (3,4):
+                    log_msg("NOTE: this old version of SQLite is not "
+                            "supported.")
+                    raise RuntimeError("unsupported SQLite version")
             brkn = self.__broken_sqlite = self.detect_bug1810()
             if brkn:
-                log.msg("Applying SQLite workaround from Buildbot bug #1810")
+                log_msg("Applying SQLite workaround from Buildbot bug #1810")
         self._start_evt = reactor.callWhenRunning(self._start)
 
         # patch the do methods to do verbose logging if necessary
@@ -179,6 +184,8 @@ class DBThreadPool(threadpool.ThreadPool):
                             "do not return ResultProxy objects!"
                 except sa.exc.OperationalError, e:
                     text = e.orig.args[0]
+                    if not isinstance(text, basestring):
+                        raise
                     if "Lost connection" in text \
                         or "database is locked" in text:
 
@@ -213,33 +220,6 @@ class DBThreadPool(threadpool.ThreadPool):
     def do_with_engine(self, callable, *args, **kwargs):
         return threads.deferToThreadPool(reactor, self,
                 self.__thd, True, callable, args, kwargs)
-
-    # older implementations for twisted < 0.8.2, which does not have
-    # deferToThreadPool; this basically re-implements it, although it gets some
-    # of the synchronization wrong - the thread may still be "in use" when the
-    # deferred fires in the parent, which can lead to database accesses hopping
-    # between threads.  In practice, this should not cause any difficulty.
-    if twisted.version < versions.Version('twisted', 8, 2, 0):
-        def __081_wrap(self, with_engine, callable, args, kwargs): # pragma: no cover
-            d = defer.Deferred()
-            def thd():
-                try:
-                    reactor.callFromThread(d.callback,
-                            self.__thd(with_engine, callable, args, kwargs))
-                except:
-                    reactor.callFromThread(d.errback,
-                            failure.Failure())
-            self.callInThread(thd)
-            return d
-
-        def do_081(self, callable, *args, **kwargs): # pragma: no cover
-            return self.__081_wrap(False, callable, args, kwargs)
-
-        def do_with_engine_081(self, callable, *args, **kwargs): # pragma: no cover
-            return self.__081_wrap(True, callable, args, kwargs)
-
-        do = do_081
-        do_with_engine = do_with_engine_081
 
     def detect_bug1810(self):
         # detect buggy SQLite implementations; call only for a known-sqlite

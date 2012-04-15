@@ -23,7 +23,7 @@ class MaxQ(ShellCommand):
 
     def __init__(self, testdir=None, **kwargs):
         if not testdir:
-            raise config.ConfigErrors(["please pass testdir"])
+            config.error("please pass testdir")
         kwargs['command'] = 'run_maxq.py %s' % (testdir,)
         ShellCommand.__init__(self, **kwargs)
         self.addFactoryArguments(testdir=testdir)

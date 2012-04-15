@@ -12,12 +12,9 @@ D: Component description (optional)
 U: URL for more information
 
 M: Component maintainer, in the form
-      FullName <address@domain.com>  - STATUS
-   where STATUS is optional, and can be one of
-      Hacker - knows the code and can write fixes
-      Tester - can test patches and advise committers to merge
-      User - can help to triage and explain bugs
-      Retired - former maintainer, now out of the business
+      FullName <address@domain.com> (irc:nick)
+   Maintainers have familiarity with the component and can help out with
+   development as well as patch review.
 
 S: Component status.  One of
     Supported: This will be a part of Buildbot forever
@@ -34,11 +31,13 @@ S: Component status.  One of
 == Version Control ==
 
 Perforce VC
-    S: Orphaned
+    S: Maintained
+    M: Bill Deegan <bill@baddogconsulting.com> (irc:bdbaddog)
     U: http://trac.buildbot.net/wiki/p4
 
 Subversion VC
-    S: Orphaned
+    S: Maintained
+    M: Bill Deegan <bill@baddogconsulting.com> (irc:bdbaddog)
     U: http://trac.buildbot.net/wiki/svn
 
 CVS VC
@@ -49,33 +48,35 @@ Bazaar VC
     S: Orphaned
     U: http://trac.buildbot.net/wiki/bzr
 
+BitKeeper VC:
+    S: Maintained
+    M: Harlan Stenn <harlan@pfcs.com> (irc:harlan)
+    U: http://trac.buildbot.net/wiki/bk
+
 Git VC
     S: Maintained
-    M: Amber Yust <ayust@yelp.com> - Hacker
+    M: Amber Yust <ayust@yelp.com> (irc:Aaeriele)
     U: http://trac.buildbot.net/wiki/git
-
-BitKeeper VC
-    S: Last-Rites
-    U: http://trac.buildbot.net/wiki/bk
 
 Darcs VC
     S: Orphaned
     U: http://trac.buildbot.net/wiki/darcs
 
 Mercurial VC
-    S: Orphaned
+    S: Maintained
+    M: Justin Wood <Callek@gmail.com> (irc:Callek)
     U: http://trac.buildbot.net/wiki/hg
 
 Repo VC
     S: Maintained
-    M: Chris Soyars <ctsoyars@gmail.com> - Tester
-    M: Piotr Sikora <piotr.sikora@frickle.com> - Hacker
-    M: Pierre Tardy <tardyp@gmail.com> - Hacker
+    M: Chris Soyars <ctsoyars@gmail.com>
+    M: Piotr Sikora <piotr.sikora@frickle.com> (irc:PiotrSikora)
+    M: Pierre Tardy <tardyp@gmail.com>
     U: http://trac.buildbot.net/wiki/repovc
 
 Monotone VC
     S: Maintained
-    M: Richard Levitte <richard@levitte.org> - Hacker
+    M: Richard Levitte <richard@levitte.org>
     U: http://trac.buildbot.net/wiki/mtn
 
 
@@ -83,15 +84,12 @@ Monotone VC
 
 Gerrit
     S: Maintained
-    M: Piotr Sikora <piotr.sikora@frickle.com> - Hacker
-    M: Pierre Tardy <tardyp@gmail.com> - Hacker
+    M: Piotr Sikora <piotr.sikora@frickle.com> (irc:PiotrSikora)
+    M: Pierre Tardy <tardyp@gmail.com>
     U: http://trac.buildbot.net/wiki/gerrit
 
 
 == Buildbot Plugins ==
-
-Debug Client
-    S: Orphaned
 
 Status Client
     S: Patched
@@ -102,12 +100,12 @@ Debug Client
 
 Web Status
     S: Supported
-    M: Marcus Lindblom <macke@yar.nu> - Hacker
+    M: Marcus Lindblom <macke@yar.nu>
     U: http://trac.buildbot.net/wiki/web
 
 IRC Status
     S: Maintained
-    M: Amber Yust <ayust@yelp.com> - Hacker
+    M: Amber Yust <ayust@yelp.com> (irc:Aaeriele)
     U: http://trac.buildbot.net/wiki/irc
 
 MailNotifier
@@ -120,8 +118,8 @@ MailNotifier
 Virtualization
     D: Use of virtual, start-on-demand slaves
     S: Maintained
-    M: John Carr <john.carr@isotoma.com> - Hacker
-    M: Tom Wardill <tom@howrandom.net> - Hacker
+    M: John Carr <john.carr@isotoma.com>
+    M: Tom Wardill <tom@howrandom.net>
     U: http://trac.buildbot.net/wiki/virtualization
 
 Buildbot Try
@@ -161,6 +159,7 @@ OpenBSD
 Windows
     S: Patched
     M: Robert Stackhouse <robertstackhouse@gmail.com>
+    M: Justin Wood <Callek@gmail.com> (irc:Callek)
     U: http://trac.buildbot.net/wiki/windows
 
 RedHat / Fedora
@@ -171,8 +170,13 @@ RedHat / Fedora
     U: https://admin.fedoraproject.org/pkgdb/acls/name/buildbot
 
 Debian / Ubuntu
-    S: Orphaned
-    U: http://packages.ubuntu.com/maverick/buildbot
+    S: Maintained
+    M: Andriy Senkovych <jolly_roger@itblog.org.ua> (irc:jollyroger)
+    M: Adam Collard <adam.collard@gmail.com>
+    U: http://packages.ubuntu.com/oneiric/buildbot
+    U: http://packages.ubuntu.com/oneiric/buildbot-slave
+    U: http://packages.debian.org/sid/buildbot
+    U: http://packages.debian.org/sid/buildbot-slave
 
 OpenCSW
     S: Orphaned
@@ -180,7 +184,7 @@ OpenCSW
 
 Gentoo
     S: Maintained
-    M: Dustin J. Mitchell <dustin@v.igoro.us>
+    M: Dustin J. Mitchell <dustin@v.igoro.us> (irc:djmitche)
     U: http://packages.gentoo.org/package/dev-util/buildbot
 
 
@@ -188,26 +192,30 @@ Gentoo
 
 Security
     D: Contacts members of this team directly with any security concerns
-    M: Dustin J. Mitchell <dustin@v.igoro.us>
-    M: Amber Yust <ayust@yelp.com>
+    M: Dustin J. Mitchell <dustin@v.igoro.us> (irc:djmitche)
+    M: Amber Yust <ayust@yelp.com> (irc:Aaeriele)
     M: Steve Milner <smilner@redhat.com>
     U: http://trac.buildbot.net/wiki/SecurityPolicy
 
 Metabuildbot Slave Donors
     D: Maintainers of buildslaves for the Metabuildbot
     M: Steve Milner <smilner@redhat.com>
-    M: Dustin J. Mitchell <dustin@v.igoro.us>
-    M: Mozilla Release Engineering <release@mozilla.com>
+    M: Dustin J. Mitchell <dustin@v.igoro.us> (irc:djmitche)
+    M: Mozilla <dustin@mozilla.com>
     M: Marc-Antoine Ruel <maruel@chromium.org>
     M: Dustin Sallings <dustin@spy.net>
+    M: Tom Prince <tom.prince@ualberta.net> (irc:tomprince)
+    M: STE||AR Group, Center for Computation and Science, LSU / Bryce Lelbach <blelbach@cct.lsu.edu> (irc:wash)
     U: http://buildbot.buildbot.net
 
 Committers
     D: People who can commit changes to the main Buildbot repository
-    M: Dustin J. Mitchell <dustin@v.igoro.us>
-    M: Amber Yust <ayust@yelp.com>
+    M: Amar Takhar <verm@darkbeer.org>
+    M: Amber Yust <ayust@yelp.com> (irc:Aaeriele)
     M: Ben Hearsum <bhearsum@mozilla.com>
     M: Brian Warner <warner@lothar.com>
     M: Chris AtLee <catlee@mozilla.com>
+    M: Dustin J. Mitchell <dustin@v.igoro.us> (irc:djmitche)
     M: Marc-Antoine Ruel <maruel@chromium.org>
     M: Marcus Lindblom <macke@yar.nu>
+    M: Tom Prince <tom.prince@ualberta.net> (irc:tomprince)

@@ -33,10 +33,6 @@ class BuildSlaveTooOldError(Exception):
 class LatentBuildSlaveFailedToSubstantiate(Exception):
     pass
 
-# other exceptions
-class BuildbotNotRunningError(Exception):
-    pass
-
 class IChangeSource(Interface):
     """
     Service which feeds Change objects to the changemaster. When files or
@@ -1127,7 +1123,7 @@ class IRenderable(Interface):
     """
 
     def getRenderingFor(iprops):
-        """Return the interpolation with the given properties
+        """Return a deferred that fires with interpolation with the given properties
 
         @param iprops: the L{IProperties} provider supplying the properties.
         """

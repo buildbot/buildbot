@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import time
 from buildbot import util
 from buildbot.schedulers import base
 from twisted.internet import defer, reactor
@@ -170,7 +169,7 @@ class Timed(base.BaseScheduler):
 
         d = self.actuationLock.acquire()
 
-        @defer.deferredGenerator
+        @defer.inlineCallbacks
         def set_state_and_start(_):
             # bail out if we shouldn't be actuating anymore
             if not self.actuateOk:
@@ -178,20 +177,13 @@ class Timed(base.BaseScheduler):
 
             # mark the last build time
             self.actuateAt = None
-            wfd = defer.waitForDeferred(self.setState('last_build',
-                                                    self.lastActuated))
-            yield wfd
-            wfd.getResult()
+            yield self.setState('last_build', self.lastActuated)
 
             # start the build
-            wfd = defer.waitForDeferred(self.startBuild())
-            yield wfd
-            wfd.getResult()
+            yield self.startBuild()
 
             # schedule the next build (noting the lock is already held)
-            wfd = defer.waitForDeferred(self._scheduleNextBuild_locked())
-            yield wfd
-            wfd.getResult()
+            yield self._scheduleNextBuild_locked()
         d.addCallback(set_state_and_start)
 
         def unlock(x):
@@ -212,8 +204,8 @@ class Periodic(Timed):
         Timed.__init__(self, name=name, builderNames=builderNames,
                     properties=properties)
         if periodicBuildTimer <= 0:
-            raise config.ConfigErrors([
-                "periodicBuildTimer must be positive" ])
+            config.error(
+                "periodicBuildTimer must be positive")
         self.periodicBuildTimer = periodicBuildTimer
         self.branch = branch
         self.reason = "The Periodic scheduler named '%s' triggered this build" % self.name
@@ -244,11 +236,11 @@ class Nightly(Timed):
         self.onlyImportant = onlyImportant
 
         if fileIsImportant and not callable(fileIsImportant):
-            raise config.ConfigErrors([
-                "fileIsImportant must be a callable" ])
+            config.error(
+                "fileIsImportant must be a callable")
         if branch is Nightly.NoBranch:
-            raise config.ConfigErrors([
-                "Nightly parameter 'branch' is required" ])
+            config.error(
+                "Nightly parameter 'branch' is required")
 
         self.minute = minute
         self.hour = hour
@@ -279,66 +271,43 @@ class Nightly(Timed):
             return defer.succeed(None) # don't care about this change
         return self.master.db.schedulers.classifyChanges(
                 self.objectid, { change.number : important })
+    
+    def _timeToCron(self, time, isDayOfWeek = False):
+        if isinstance(time, int):
+            if isDayOfWeek:
+                time = (time + 1) % 7 # Convert from Mon = 0 format to Sun = 0 format for use in croniter
+            return time
+
+        if isinstance(time, basestring):
+            return time
+
+        if isDayOfWeek:
+            time = [ (t + 1) % 7 for t in time ] # Conversion for croniter (see above)
+
+        return ','.join([ str(s) for s in time ]) # Convert the list to a string
 
     def getNextBuildTime(self, lastActuated):
-        def addTime(timetuple, secs):
-            return time.localtime(time.mktime(timetuple)+secs)
+        # deferred import in case python-dateutil is not present
+        from buildbot.util import croniter
 
-        def check(ourvalue, value):
-            if ourvalue == '*': return True
-            if isinstance(ourvalue, int): return value == ourvalue
-            return (value in ourvalue)
+        dateTime = lastActuated or self.now()
+        sched =  '%s %s %s %s %s' % (self._timeToCron(self.minute),
+                                     self._timeToCron(self.hour),
+                                     self._timeToCron(self.dayOfMonth),
+                                     self._timeToCron(self.month),
+                                     self._timeToCron(self.dayOfWeek, True))
+        cron = croniter.croniter(sched, dateTime)
+        nextdate = cron.get_next(float)
+        return defer.succeed(nextdate)
 
-        dateTime = time.localtime(lastActuated or self.now())
-
-        # Remove seconds by advancing to at least the next minute
-        dateTime = addTime(dateTime, 60-dateTime[5])
-
-        # Now we just keep adding minutes until we find something that matches
-        # TODO: use a smarter algorithm, now that we have thorough tests
-
-        yearLimit = dateTime[0]+2 # only check 2 years (a lot of minutes!)
-        def isRunTime(timetuple):
-
-            if not check(self.minute, timetuple[4]):
-                return False
-
-            if not check(self.hour, timetuple[3]):
-                return False
-
-            if not check(self.month, timetuple[1]):
-                return False
-
-            if self.dayOfMonth != '*' and self.dayOfWeek != '*':
-                # They specified both day(s) of month AND day(s) of week.
-                # This means that we only have to match one of the two. If
-                # neither one matches, this time is not the right time.
-                if not (check(self.dayOfMonth, timetuple[2]) or
-                        check(self.dayOfWeek, timetuple[6])):
-                    return False
-            else:
-                if not check(self.dayOfMonth, timetuple[2]):
-                    return False
-
-                if not check(self.dayOfWeek, timetuple[6]):
-                    return False
-
-            return True
-
-        while not isRunTime(dateTime):
-            dateTime = addTime(dateTime, 60)
-            assert dateTime[0] < yearLimit, 'Something is wrong with this code'
-        return defer.succeed(time.mktime(dateTime))
-
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def startBuild(self):
         scheds = self.master.db.schedulers
         # if onlyIfChanged is True, then we will skip this build if no
         # important changes have occurred since the last invocation
         if self.onlyIfChanged:
-            wfd = defer.waitForDeferred(scheds.getChangeClassifications(self.objectid))
-            yield wfd
-            classifications = wfd.getResult()
+            classifications = \
+                    yield scheds.getChangeClassifications(self.objectid)
 
             # see if we have any important changes
             for imp in classifications.itervalues():
@@ -350,20 +319,13 @@ class Nightly(Timed):
                 return
 
             changeids = sorted(classifications.keys())
-            wfd = defer.waitForDeferred(
-                    self.addBuildsetForChanges(reason=self.reason, changeids=changeids))
-            yield wfd
-            wfd.getResult()
+            yield self.addBuildsetForChanges(reason=self.reason,
+                                            changeids=changeids)
 
             max_changeid = changeids[-1] # (changeids are sorted)
-            wfd = defer.waitForDeferred(
-                    scheds.flushChangeClassifications(self.objectid,
-                                                      less_than=max_changeid+1))
-            yield wfd
-            wfd.getResult()
+            yield scheds.flushChangeClassifications(self.objectid,
+                                                      less_than=max_changeid+1)
         else:
             # start a build of the latest revision, whatever that is
-            wfd = defer.waitForDeferred(
-                    self.addBuildsetForLatest(reason=self.reason, branch=self.branch))
-            yield wfd
-            wfd.getResult()
+            yield self.addBuildsetForLatest(reason=self.reason,
+                                            branch=self.branch)

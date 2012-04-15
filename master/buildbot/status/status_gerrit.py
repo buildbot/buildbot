@@ -19,17 +19,20 @@
 ."""
 
 from buildbot.status.base import StatusReceiverMultiService
-from buildbot.status.builder import Results
+from buildbot.status.builder import Results, SUCCESS, RETRY
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 
 def defaultReviewCB(builderName, build, result, status, arg):
+    if result == RETRY:
+        return None, 0, 0
+
     message =  "Buildbot finished compiling your patchset\n"
     message += "on configuration: %s\n" % builderName
     message += "The result is: %s\n" % Results[result].upper()
 
     # message, verified, reviewed
-    return message, (result == 0 or -1), 0
+    return message, (result == SUCCESS or -1), 0
 
 class GerritStatusPush(StatusReceiverMultiService):
     """Event streamer to a gerrit ssh server."""
@@ -87,7 +90,7 @@ class GerritStatusPush(StatusReceiverMultiService):
             downloaded = downloaded.split(" ")
             if downloads and 2 * len(downloads) == len(downloaded):
                 message, verified, reviewed = self.reviewCB(builderName, build, result, self.status, self.reviewArg)
-                if message == None:
+                if message is None:
                     return
                 for i in range(0, len(downloads)):
                     try:
@@ -108,6 +111,8 @@ class GerritStatusPush(StatusReceiverMultiService):
             revision = build.getProperty("got_revision")
             if project is not None and revision is not None:
                 message, verified, reviewed = self.reviewCB(builderName, build, result, self.status, self.reviewArg)
+                if message is None:
+                    return
                 self.sendCodeReview(project, revision, message, verified, reviewed)
                 return
 

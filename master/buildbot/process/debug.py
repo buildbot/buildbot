@@ -34,7 +34,7 @@ class DebugServices(config.ReconfigurableServiceMixin, service.MultiService):
         self.manhole = None
 
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
 
         # debug client
@@ -43,10 +43,7 @@ class DebugServices(config.ReconfigurableServiceMixin, service.MultiService):
 
         if not new_config.debugPassword or config_changed:
             if self.debug_registration:
-                wfd = defer.waitForDeferred(
-                    self.debug_registration.unregister())
-                yield wfd
-                wfd.getResult()
+                yield self.debug_registration.unregister()
                 self.debug_registration = None
 
         if new_config.debugPassword and config_changed:
@@ -64,11 +61,8 @@ class DebugServices(config.ReconfigurableServiceMixin, service.MultiService):
         # manhole
         if new_config.manhole != self.manhole:
             if self.manhole:
-                wfd = defer.waitForDeferred(
-                    defer.maybeDeferred(lambda :
-                        self.manhole.disownServiceParent()))
-                yield wfd
-                wfd.getResult()
+                yield defer.maybeDeferred(lambda :
+                        self.manhole.disownServiceParent())
                 self.manhole.master = None
                 self.manhole = None
 
@@ -78,29 +72,20 @@ class DebugServices(config.ReconfigurableServiceMixin, service.MultiService):
                 self.manhole.setServiceParent(self)
 
         # chain up
-        wfd = defer.waitForDeferred(
-            config.ReconfigurableServiceMixin.reconfigService(self,
-                                                    new_config))
-        yield wfd
-        wfd.getResult()
+        yield config.ReconfigurableServiceMixin.reconfigService(self,
+                                                    new_config)
 
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def stopService(self):
         if self.debug_registration:
-            wfd = defer.waitForDeferred(
-                self.debug_registration.unregister())
-            yield wfd
-            wfd.getResult()
+            yield self.debug_registration.unregister()
             self.debug_registration = None
 
         # manhole will get stopped as a sub-service
 
-        wfd = defer.waitForDeferred(
-            defer.maybeDeferred(lambda :
-                service.MultiService.stopService(self)))
-        yield wfd
-        wfd.getResult()
+        yield defer.maybeDeferred(lambda :
+                service.MultiService.stopService(self))
 
         # clean up
         if self.manhole:

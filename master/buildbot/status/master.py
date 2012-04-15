@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os, urllib
 from cPickle import load
 from twisted.python import log
@@ -20,7 +22,7 @@ from twisted.persisted import styles
 from twisted.internet import defer
 from twisted.application import service
 from zope.interface import implements
-from buildbot import interfaces, config
+from buildbot import config, interfaces, util
 from buildbot.util import bbcollections
 from buildbot.util.eventual import eventually
 from buildbot.changes import changes
@@ -33,7 +35,6 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         service.MultiService.__init__(self)
         self.master = master
         self.botmaster = master.botmaster
-        self.db = None
         self.basedir = master.basedir
         self.watchers = []
         # No default limit to the log size
@@ -62,15 +63,12 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
         return service.MultiService.startService(self)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         # remove the old listeners, then add the new
         for sr in list(self):
-            wfd = defer.waitForDeferred(
-                defer.maybeDeferred(lambda :
-                    sr.disownServiceParent()))
-            yield wfd
-            wfd.getResult()
+            yield defer.maybeDeferred(lambda :
+                    sr.disownServiceParent())
             sr.master = None
 
         for sr in new_config.status:
@@ -78,11 +76,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             sr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing
-        wfd = defer.waitForDeferred(
-            config.ReconfigurableServiceMixin.reconfigService(self,
-                                                        new_config))
-        yield wfd
-        wfd.getResult()
+        yield config.ReconfigurableServiceMixin.reconfigService(self,
+                                                            new_config)
 
     def stopService(self):
         self._buildset_completion_sub.unsubscribe()
@@ -201,7 +196,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
     def getBuilderNames(self, categories=None):
         if categories == None:
-            return self.botmaster.builderNames[:] # don't let them break it
+            return util.naturalSort(self.botmaster.builderNames) # don't let them break it
         
         l = []
         # respect addition order
@@ -209,7 +204,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             bldr = self.botmaster.builders[name]
             if bldr.config.category in categories:
                 l.append(name)
-        return l
+        return util.naturalSort(l)
 
     def getBuilder(self, name):
         """
@@ -314,7 +309,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         log.msg("trying to load status pickle from %s" % filename)
         builder_status = None
         try:
-            builder_status = load(open(filename, "rb"))
+            with open(filename, "rb") as f:
+                builder_status = load(f)
             builder_status.master = self.master
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite

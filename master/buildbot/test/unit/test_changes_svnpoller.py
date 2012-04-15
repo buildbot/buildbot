@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os
 import xml.dom.minidom
 from twisted.internet import defer
@@ -480,18 +482,21 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
 
     def test_cachepath_full(self):
         cachepath = os.path.abspath('revcache')
-        open(cachepath, "w").write('33')
+        with open(cachepath, "w") as f:
+            f.write('33')
         s = self.attachSVNPoller(sample_base, cachepath=cachepath)
         self.assertEqual(s.last_change, 33)
 
         s.last_change = 44
         s.finished_ok(None)
-        self.assertEqual(open(cachepath).read().strip(), '44')
+        with open(cachepath) as f:
+            self.assertEqual(f.read().strip(), '44')
 
     @compat.usesFlushLoggedErrors
     def test_cachepath_bogus(self):
         cachepath = os.path.abspath('revcache')
-        open(cachepath, "w").write('nine')
+        with open(cachepath, "w") as f:
+            f.write('nine')
         s = self.attachSVNPoller(sample_base, cachepath=cachepath)
         self.assertEqual(s.last_change, None)
         self.assertEqual(s.cachepath, None)
@@ -500,7 +505,14 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
 
     def test_constructor_pollinterval(self):
         self.attachSVNPoller(sample_base, pollinterval=100) # just don't fail!
+        
+    def test_extra_args(self):
+        extra_args = ['--no-auth-cache',]
+        base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
 
+        s = self.attachSVNPoller(svnurl=base, extra_args=extra_args)
+        self.failUnlessEqual(s.extra_args, extra_args)
+        
 class TestSplitFile(unittest.TestCase):
     def test_split_file_alwaystrunk(self):
         self.assertEqual(svnpoller.split_file_alwaystrunk('foo'), (None, 'foo'))

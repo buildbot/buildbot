@@ -27,49 +27,31 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
     Basic tests of the DBConnector class - all start with an empty DB
     """
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def setUp(self):
-        wfd = defer.waitForDeferred(
-            self.setUpRealDatabase(table_names=[
+        yield self.setUpRealDatabase(table_names=[
                     'changes', 'change_properties', 'change_files', 'patches',
                     'sourcestamps', 'buildset_properties', 'buildsets',
-                    'sourcestampsets' ]))
-        yield wfd
-        wfd.getResult()
+                    'sourcestampsets' ])
 
         self.master = fakemaster.make_master()
         self.master.config = config.MasterConfig()
         self.db = connector.DBConnector(self.master,
                                 os.path.abspath('basedir'))
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def tearDown(self):
         if self.db.running:
-            wfd = defer.waitForDeferred(
-                self.db.stopService())
-            yield wfd
-            wfd.getResult()
+            yield self.db.stopService()
 
-        wfd = defer.waitForDeferred(
-            self.tearDownRealDatabase())
-        yield wfd
-        wfd.getResult()
+        yield self.tearDownRealDatabase()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def startService(self, check_version=False):
         self.master.config.db['db_url'] = self.db_url
-
-        wfd = defer.waitForDeferred(
-            self.db.setup(check_version=check_version))
-        yield wfd
-        wfd.getResult()
-
+        yield self.db.setup(check_version=check_version)
         self.db.startService()
-
-        wfd = defer.waitForDeferred(
-            self.db.reconfigService(self.master.config))
-        yield wfd
-        wfd.getResult()
+        yield self.db.reconfigService(self.master.config)
 
 
     # tests
@@ -98,12 +80,7 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
 
     def test_setup_check_version_bad(self):
         d = self.startService(check_version=True)
-        def eb(f):
-            f.trap(connector.DatabaseNotReadyError)
-        def cb(_):
-            self.fail("startService unexpectedly succeeded")
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, connector.DatabaseNotReadyError)
 
     def test_setup_check_version_good(self):
         self.db.model.is_current = lambda : defer.succeed(True)

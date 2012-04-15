@@ -559,32 +559,32 @@ The ``[hgbuildbot]`` section has two other parameters that you
 might specify, both of which control the name of the branch that is
 attached to the changes coming from this hook.
 
-One common branch naming policy for Mercurial repositories is for
-each branch to go into a separate repository, and
-all the branches for a single project share a common parent directory.
-For example, you might have :file:`/var/repos/{PROJECT}/trunk/` and
-:file:`/var/repos/{PROJECT}/release`. To use this style, use the
-``branchtype = dirname`` setting, which simply uses the last
-component of the repository's enclosing directory as the branch name:
-
-.. code-block:: ini
-
-    [hgbuildbot]
-    branchtype = dirname
-    # ...
-
-Another approach is to use Mercurial's built-in branches (the kind
-created with :command:`hg branch` and listed with :command:`hg
-branches`). This feature associates persistent names with particular
-lines of descent within a single repository. (note that the buildbot
-``source.Mercurial`` checkout step does not yet support this kind
-of branch). To have the commit hook deliver this sort of branch name
-with the Change object, use ``branchtype = inrepo``:
+One common branch naming policy for Mercurial repositories is to use
+Mercurial's built-in branches (the kind created with :command:`hg
+branch` and listed with :command:`hg branches`). This feature
+associates persistent names with particular  lines of descent within a
+single repository. (note that the buildbot ``source.Mercurial``
+checkout step does not yet support this kind of branch). To have the
+commit hook deliver this sort of branch name with the Change object,
+use ``branchtype = inrepo``, this is the default behavior:
 
 .. code-block:: ini
 
     [hgbuildbot]
     branchtype = inrepo
+    # ...
+
+Another approach is for each branch to go into a separate repository,
+and all the branches for a single project share a common parent
+directory. For example, you might have :file:`/var/repos/{PROJECT}/trunk/` and
+:file:`/var/repos/{PROJECT}/release`. To use this style, use the
+``branchtype = dirname`` setting, which simply uses the last component
+of the repository's enclosing directory as the branch name:
+
+.. code-block:: ini
+
+    [hgbuildbot]
+    branchtype = dirname
     # ...
 
 Finally, if you want to simply specify the branchname directly, for
@@ -908,6 +908,9 @@ multiple branches.
     If specified, this is a pathname of a cache file that :bb:chsrc:`SVNPoller`
     will use to store its state between restarts of the master.
 
+``extra_args``
+    If specified, the extra arguments will be added to the svn command args.
+    
 Several split file functions are available for common SVN repository layouts.
 For a poller that is only monitoring trunk, the default split file function
 is available explicitly as ``split_file_alwaystrunk``::

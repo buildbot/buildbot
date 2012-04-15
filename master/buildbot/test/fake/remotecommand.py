@@ -29,6 +29,7 @@ class FakeRemoteCommand:
         self.remote_command = remote_command
         self.args = args.copy()
         self.logs = {}
+        self.delayedLogs = {}
         self.rc = -999
         self.collectStdout = collectStdout
         self.updates = {}
@@ -40,6 +41,9 @@ class FakeRemoteCommand:
             logfileName = loog.getName()
         self.logs[logfileName] = loog
 
+    def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
+        self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
+
     def run(self, step, remote):
         # delegate back to the test case
         return self.testcase._remotecommand_run(self, step, remote)
@@ -50,11 +54,11 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=DEFAULT_TIMEOUT, maxTime=DEFAULT_MAXTIME, logfiles={},
-                 initial_stdin=None,
+                 initialStdin=None,
                  usePTY=DEFAULT_USEPTY, logEnviron=True, collectStdout=False):
         args = dict(workdir=workdir, command=command, env=env or {},
                 want_stdout=want_stdout, want_stderr=want_stderr,
-                initial_stdin=initial_stdin,
+                initial_stdin=initialStdin,
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
         FakeRemoteCommand.__init__(self, "shell", args,
@@ -149,11 +153,15 @@ class Expect(object):
 
     """
 
-    def __init__(self, remote_command, args):
+    def __init__(self, remote_command, args, incomparable_args=[]):
         """
-        Expect a command named C{remote_command}, with args C{args}.
+
+        Expect a command named C{remote_command}, with args C{args}.  Any args
+        in C{incomparable_args} are not cmopared, but must exist.
+
         """
         self.remote_command = remote_command
+        self.incomparable_args = incomparable_args
         self.args = args
         self.result = None
         self.behaviors = []
@@ -213,16 +221,13 @@ class Expect(object):
                         AssertionError('invalid behavior %s' % behavior)))
         return defer.succeed(None)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def runBehaviors(self, command):
         """
         Run all expected behaviors for this command
         """
         for behavior in self.behaviors:
-            wfd = defer.waitForDeferred(
-                    self.runBehavior(behavior[0], behavior[1:], command))
-            yield wfd
-            wfd.getResult()
+            yield self.runBehavior(behavior[0], behavior[1:], command)
 
 
 class ExpectShell(Expect):
@@ -231,12 +236,12 @@ class ExpectShell(Expect):
     non-default arguments must be specified explicitly (e.g., usePTY).
     """
     def __init__(self, workdir, command, env={},
-                 want_stdout=1, want_stderr=1, initial_stdin=None,
+                 want_stdout=1, want_stderr=1, initialStdin=None,
                  timeout=DEFAULT_TIMEOUT, maxTime=DEFAULT_MAXTIME, logfiles={},
                  usePTY=DEFAULT_USEPTY, logEnviron=True):
         args = dict(workdir=workdir, command=command, env=env,
                 want_stdout=want_stdout, want_stderr=want_stderr,
-                initial_stdin=initial_stdin,
+                initial_stdin=initialStdin,
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
         Expect.__init__(self, "shell", args)

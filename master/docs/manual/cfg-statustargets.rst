@@ -732,11 +732,17 @@ from success to failure. It can also be configured to include various
 build logs in each message.
 
 
-By default, the message will be sent to the Interested Users list
-(:ref:`Doing-Things-With-Users`), which includes all developers who made changes in the
-build. You can add additional recipients with the extraRecipients argument.
-You can also add interested users by setting the  ``owners`` build property
-to a list of users in the scheduler constructor (:ref:`Configuring-Schedulers`).
+If a proper lookup function is configured, the message will be sent to the
+"interested users" list (:ref:`Doing-Things-With-Users`), which includes all
+developers who made changes in the build.  By default, however, Buildbot does
+not know how to construct an email addressed based on the information from the
+version control system.  See the ``lookup`` argument, below, for more
+information.
+
+You can add additional, statically-configured, recipients with the
+``extraRecipients`` argument.  You can also add interested users by setting the
+``owners`` build property to a list of users in the scheduler constructor
+(:ref:`Configuring-Schedulers`).
 
 Each :class:`MailNotifier` sends mail to a single set of recipients. To send
 different kinds of mail to different recipients, use multiple
@@ -803,7 +809,7 @@ For example, if only short emails are desired (e.g., for delivery to phones) ::
     
     mn = MailNotifier(fromaddr="buildbot@example.org",
                       sendToInterestedUsers=False,
-                      mode='problem',
+                      mode=('problem',),
                       extraRecipients=['listaddr@example.org'],
                       messageFormatter=messageFormatter)
 
@@ -899,7 +905,7 @@ given below::
     
     mn = MailNotifier(fromaddr="buildbot@example.org",
                       sendToInterestedUsers=False,
-                      mode='failing',
+                      mode=('failing',),
                       extraRecipients=['listaddr@example.org'],
                       messageFormatter=html_message_formatter)
 
@@ -926,27 +932,24 @@ MailNotifier arguments
     provoked the message.
 
 ``mode``
-    (string). Default to ``all``. One of:
+    (list of strings). A combination of:
 
-    ``all``
-        Send mail about all builds, both passing and failing
-        
     ``change``
-        Only send mail about builds which change status
+        Send mail about builds which change status.
     
     ``failing``
-        Only send mail about builds which fail
-
-    ``warnings``
-        Only send mail about builds which fail or generate warnings
+        Send mail about builds which fail.
 
     ``passing``
-        Only send mail about builds which succeed
+        Send mail about builds which succeed.
         
     ``problem``
-        Only send mail about a build which failed when the previous build has passed.
-        If your builds usually pass, then this will only send mail when a problem
-        occurs.
+        Send mail about a build which failed when the previous build has passed.
+
+    ``warnings``
+        Send mail about builds which generate warnings.
+
+    Defaults to (``failing``, ``passing``, ``warnings``).
 
 ``builders``
     (list of strings). A list of builder names for which mail should be
@@ -998,21 +1001,28 @@ MailNotifier arguments
 ``lookup``
     (implementor of :class:`IEmailLookup`). Object which provides
     :class:`IEmailLookup`, which is responsible for mapping User names (which come
-    from the VC system) into valid email addresses. If not provided, the
-    ``MailNotifier`` will attempt to build the ``sendToInterestedUsers``
-    from the authors of the Changes that led to the Build via :ref:`User-Objects`.
-    If the author of one of the Build's Changes has an email address stored,
-    it will added to the recipients list. With this method, ``owners`` are still
-    added to the recipients.
+    from the VC system) into valid email addresses.
 
-    In either case, ``MailNotifier`` will also send mail to addresses in
-    the extraRecipients list. Most of the time you can use a simple Domain
-    instance. As a shortcut, you can pass as string: this will be treated
-    as if you had provided ``Domain(str)``. For example,
-    ``lookup='twistedmatrix.com'`` will allow mail to be sent to all
-    developers whose SVN usernames match their twistedmatrix.com account
-    names. See :file:`buildbot/status/mail.py` for more details.
+    If the argument is not provided, the ``MailNotifier`` will attempt to build
+    the ``sendToInterestedUsers`` from the authors of the Changes that led to
+    the Build via :ref:`User-Objects`.  If the author of one of the Build's
+    Changes has an email address stored, it will added to the recipients list.
+    With this method, ``owners`` are still added to the recipients.  Note that,
+    in the current implementation of user objects, email addresses are not
+    stored; as a result, unless you have specifically added email addresses to
+    the user database, this functionality is unlikely to actually send any
+    emails.
 
+    Most of the time you can use a simple Domain instance. As a shortcut, you
+    can pass as string: this will be treated as if you had provided
+    ``Domain(str)``. For example, ``lookup='twistedmatrix.com'`` will allow
+    mail to be sent to all developers whose SVN usernames match their
+    twistedmatrix.com account names. See :file:`buildbot/status/mail.py` for
+    more details.
+
+    Regardless of the setting of ``lookup``, ``MailNotifier`` will also send
+    mail to addresses in the ``extraRecipients`` list.
+    
 ``messageFormatter``
     This is a optional function that can be used to generate a custom mail message.
     A :func:`messageFormatter` function takes the mail mode (``mode``), builder
@@ -1038,7 +1048,7 @@ Name of the project
     :meth:`master_status.getProjectName()`
 
 MailNotifier mode
-    ``mode`` (one of ``all``, ``failing``, ``problem``, ``change``, ``passing``)
+    ``mode`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``)
 
 Builder result as a string ::
     
@@ -1343,8 +1353,12 @@ GerritStatusPush
 ::
 
     from buildbot.status.status_gerrit import GerritStatusPush
+    from buildbot.status.builder import Results, SUCCESS, RETRY
 
     def gerritReviewCB(builderName, build, result, status, arg):
+        if result == RETRY:
+            return None, 0, 0
+
         message =  "Buildbot finished compiling your patchset\n"
         message += "on configuration: %s\n" % builderName
         message += "The result is: %s\n" % Results[result].upper()
@@ -1354,7 +1368,7 @@ GerritStatusPush
             message += status.getURLForThing(build) + "\n"
 
         # message, verified, reviewed
-        return message, (result == 0 or -1), 0
+        return message, (result == SUCCESS or -1), 0
 
     c['buildbotURL'] = 'http://buildbot.example.com/'
     c['status'].append(GerritStatusPush('127.0.0.1', 'buildbot',
@@ -1362,6 +1376,8 @@ GerritStatusPush
                                         reviewArg=c['buildbotURL']))
 
 GerritStatusPush sends review of the :class:`Change` back to the Gerrit server.
+``reviewCB`` should return a tuple of message, verified, reviewed. If message
+is ``None``, no review will be sent.
 
 .. [#] Apparently this is the same way http://buildd.debian.org displays build status
 

@@ -268,23 +268,16 @@ have that installed. ::
 The Mercurial step takes the following arguments:
 
 ``repourl``
-   (required unless ``baseURL`` is provided): the URL at which the
-   Mercurial source repository is available.
-
-``baseURL``
-   (required unless ``repourl`` is provided): the base repository URL,
-   to which a branch name will be appended. It should probably end in a
-   slash.
+   where the Mercurial source repository is available.
 
 ``defaultBranch``
-   (allowed if and only if ``baseURL`` is provided): this specifies
-   the name of the branch to use when a Build does not provide one of
-   its own. This will be appended to ``baseURL`` to create the
+   this specifies the name of the branch to use when a Build does not provide
+   one of its own. This will be appended to ``repourl`` to create the
    string that will be passed to the ``hg clone`` command.
 
 ``branchType``
    either 'dirname' (default) or 'inrepo' depending on whether the
-   branch name should be appended to the ``baseURL`` or the branch
+   branch name should be appended to the ``repourl`` or the branch
    is a mercurial named branch and can be found within the ``repourl``.
 
 ``clobberOnBranchChange``
@@ -416,59 +409,36 @@ checkout or update. There are two
 basic ways of setting up the checkout step, depending upon whether you
 are using multiple branches or not.
 
-The most versatile way to create the :bb:step:`SVN` step is with the
-``svnurl`` argument:
+The :bb:step:`SVN` step should be created with the
+``repourl`` argument:
 
-``svnurl``
+``repourl``
    (required): this specifies the ``URL`` argument that will be
    given to the :command:`svn checkout` command. It dictates both where
    the repository is located and which sub-tree should be
-   extracted. In this respect, it is like a combination of the CVS
-   ``cvsroot`` and ``cvsmodule`` arguments. For example, if you
-   are using a remote Subversion repository which is accessible
-   through HTTP at a URL of ``http://svn.example.com/repos``, and
-   you wanted to check out the ``trunk/calc`` sub-tree, you would
-   use ``svnurl="http://svn.example.com/repos/trunk/calc"`` as an
+   extracted. One way to specify the branch is to use ``Interpolate``. For
+   example, if you wanted to check out the trunk repository, you could use
+   ``repourl=Interpolate("http://svn.example.com/repos/%(src::branch)s")``
+   Alternatively, if you are using a remote Subversion repository
+   which is accessible through HTTP at a URL of ``http://svn.example.com/repos``,
+   and you wanted to check out the ``trunk/calc`` sub-tree, you would directly
+   use ``repourl="http://svn.example.com/repos/trunk/calc"`` as an
    argument to your :bb:step:`SVN` step.
 
-The ``svnurl`` argument can be considered as a universal means to
-create the :bb:step:`SVN` step as it ignores the branch information in the
-:class:`SourceStamp`. ::
+If you are building from multiple branches, then you should create
+the :bb:step:`SVN` step with the ``repourl`` and provide branch
+information with ``Interpolate``::
+
+   from buildbot.steps.source.svn import SVN
+   factory.append(SVN(mode='incremental',
+                  repourl=Interpolate('svn://svn.example.org/svn/%(src::branch)s/myproject')))
+
+Alternatively, the ``repourl`` argument can be used to create the :bb:step:`SVN` step without
+``Interpolate``::
 
    from buildbot.steps.source.svn import SVN
    factory.append(SVN(mode='full',
-                  svnurl='svn://svn.example.org/svn/myproject/trunk'))
-
-Alternatively, if you are building from multiple branches, then you
-should preferentially create the :bb:step:`SVN` step with the
-``baseURL`` and ``defaultBranch`` arguments instead:
-
-``baseURL``
-   (required): this specifies the base repository URL, to which a
-   branch name will be appended. Alternatively, ``baseURL`` can
-   contain a ``%%BRANCH%%`` placeholder, which will be replaced with
-   the branch name. ``baseURL`` should probably end in a slash.
-
-   For flexibility, ``baseURL`` may contain a ``%%BRANCH%%``
-   placeholder, which will be replaced either by the branch in the
-   SourceStamp or the default specified in ``defaultBranch``. ::
-
-        from buildbot.steps.source.svn import SVN
-        factory.append(SVN(mode='incremental',
-                        baseURL='svn://svn.example.org/svn/%%BRANCH%%/myproject',
-                        defaultBranch='trunk'))
-
-``defaultBranch``
-   (optional): this specifies the name of the branch to use when a
-   Build does not provide one of its own. This is a string that will
-   be appended to ``baseURL`` to create the URL that will be passed to
-   the :command:`svn checkout` command. If you use ``baseURL``
-   without specifying ``defaultBranch`` every :class:`SourceStamp`
-   must come with a valid (not None) ``branch``.
-
-   It is possible to mix to have a mix of :bb:step:`SVN` steps that use
-   either the ``svnurl` or ``baseURL`` arguments but not both at
-   the same time.
+                  repourl='svn://svn.example.org/svn/myproject/trunk'))
 
 ``username``
    (optional): if specified, this will be passed to the ``svn``
@@ -1168,25 +1138,6 @@ introduced by a pending changeset.
 Gerrit integration can be also triggered using forced build with ``gerrit_change``
 property with value in format: ``change_number/patchset_number``.
 
-.. bb:step:: BK (Slave-Side)
-
-BitKeeper (Slave-Side)
-++++++++++++++++++++++
-
-The :bb:step:`BK <BK (Slave-Side)>` build step performs a `BitKeeper <http://www.bitkeeper.com/>`_
-checkout or update.
-
-The BitKeeper step takes the following arguments:
-
-``repourl``
-    (required unless ``baseURL`` is provided): the URL at which the
-    BitKeeper source repository is available.
-
-``baseURL``
-    (required unless ``repourl`` is provided): the base repository URL,
-    to which a branch name will be appended. It should probably end in a
-    slash.
-
 .. bb:step:: Repo (Slave-Side)
 
 Repo (Slave-Side)
@@ -1302,6 +1253,11 @@ The :bb:step:`ShellCommand` arguments are:
     If ``command`` contains nested lists (for example, from a properties
     substitution), then that list will be flattened before it is executed.
 
+    On the topic of shell metacharacters, note that in DOS the pipe character
+    (``|``) is conditionally escaped (to ``^|``) when it occurs inside a more
+    complex string in a list of strings.  It remains unescaped when it
+    occurs as part of a single string or as a lone pipe in a list of strings.
+
 ``workdir``
     All ShellCommands are run by default in the ``workdir``, which
     defaults to the :file:`build` subdirectory of the slave builder's
@@ -1331,7 +1287,7 @@ The :bb:step:`ShellCommand` arguments are:
     buildslave's environment or the environment specified in the
     :class:`Builder`. The exception is :envvar:`PYTHONPATH`, which is
     merged with (actually prepended to) any existing
-    :envvar:`PYTHONPATH` setting. the following example will prepend
+    :envvar:`PYTHONPATH` setting. The following example will prepend
     :file:`/home/buildbot/lib/python` to any existing
     :envvar:`PYTHONPATH`::
 
@@ -1340,14 +1296,14 @@ The :bb:step:`ShellCommand` arguments are:
                       command=["make", "test"],
                       env={'PYTHONPATH': "/home/buildbot/lib/python"}))
 
-    To avoid the need of concatenating path together in the master
-    config file, if the value consist of an array, it will be joined
-    together using the right platform dependant separator.
+    To avoid the need of concatenating path together in the master config file,
+    if the value is a list, it will be joined together using the right platform
+    dependant separator.
     
     Those variables support expansion so that if you just want to prepend
     :file:`/home/buildbot/bin` to the :envvar:`PATH` environment variable, you can do
     it by putting the value ``${PATH}`` at the end of the value like
-    in the example below. Variables that doesn't exists on the slave will be
+    in the example below. Variables that don't exist on the slave will be
     replaced by ``""``. ::
     
         from buildbot.steps.shell import ShellCommand
@@ -1355,6 +1311,10 @@ The :bb:step:`ShellCommand` arguments are:
                       command=["make", "test"],
                       env={'PATH': ["/home/buildbot/bin",
                                     "${PATH}"]}))
+
+    Note that environment values must be strings (or lists that are turned into
+    strings).  In particular, numeric properties such as ``buildnumber`` must
+    be substituted using :ref:`WithProperties`.
 
 ``want_stdout``
     if ``False``, stdout from the child process is discarded rather than being
@@ -1629,7 +1589,9 @@ The available constructor arguments are
 ``mode``
     The mode default to ``rebuild``, which means that first all the
     remaining object files will be cleaned by the compiler. The alternate
-    value is ``build``, where only the updated files will be recompiled.
+    values are ``build``, where only the updated files will be recompiled,
+    and ``clean``, where the current build files are removed and no
+    compilation occurs.
 
 ``projectfile``
     This is a mandatory argument which specifies the project file to be used
@@ -2309,6 +2271,22 @@ In this example, the step renames a tarball based on the day of the week. ::
    variables to the subprocess.  To pass an explicit environment instead, add an
    ``env={..}`` argument.
 
+Environment variables constructed using the ``env`` argument support expansion
+so that if you just want to prepend  :file:`/home/buildbot/bin` to the
+:envvar:`PATH` environment variable, you can do it by putting the value
+``${PATH}`` at the end of the value like in the example below.
+Variables that don't exist on the master will be replaced by ``""``. ::
+
+    from buildbot.steps.master import MasterShellCommand
+    f.addStep(MasterShellCommand(
+                  command=["make", "www"],
+                  env={'PATH': ["/home/buildbot/bin",
+                                "${PATH}"]}))
+
+Note that environment values must be strings (or lists that are turned into
+strings).  In particular, numeric properties such as ``buildnumber`` must
+be substituted using :ref:`WithProperties`.
+
 .. index:: Properties; from steps
 
 .. _Setting-Properties:
@@ -2450,6 +2428,49 @@ sophisticated ``set_properties``, which takes a dictionary mapping property
 names to values.  You may use :ref:`WithProperties` here to dynamically
 construct new property values.
 
+RPM-Related Steps
+-----------------
+
+.. bb:step:: RpmBuild
+
+These steps work with RPMs and spec files.  The :bb:step:`RpmBuild` step builds
+RPMs based on a spec file::
+
+    from buildbot.steps.package.rpm import RpmBuild
+    f.addStep(RpmBuild(specfile="proj.spec",
+            dist='.el5'))
+
+The step takes the following parameters
+
+``specfile``
+    The ``.spec`` file to build from
+
+``topdir``
+    Definition for ``_topdir``, defaulting to the workdir.
+
+``builddir``
+    Definition for ``_builddir``, defaulting to the workdir.
+
+``rpmdir``
+    Definition for ``_rpmdir``, defaulting to the workdir.
+
+``sourcedir``
+    Definition for ``_sourcedir``, defaulting to the workdir.
+
+``srcrpmdir``
+    Definition for ``_srcrpmdir``, defaulting to the workdir.
+
+``dist``
+    Distribution to build, used as the definition for ``_dist``.
+
+``autoRelease``
+    If true, use the auto-release mechanics.
+
+``vcsRevision``
+    If true, use the version-control revision mechanics.  This uses the
+    ``got_revision`` property to determine the revision and define
+    ``_revision``.
+
 Miscellaneous BuildSteps
 ------------------------
 
@@ -2459,8 +2480,6 @@ A number of steps do not fall into any particular category.
 
 HLint
 +++++
-
-.. py:class:: buildbot.steps.python_twisted.HLint
 
 The :bb:step:`HLint` step runs Twisted Lore, a lint-like checker over a set of
 ``.xhtml`` files.  Any deviations from recommended style is flagged and put

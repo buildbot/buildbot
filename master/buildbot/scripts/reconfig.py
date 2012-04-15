@@ -13,21 +13,23 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 
 import os
 import signal
 import platform
-import sys
 from twisted.internet import reactor
 
 from buildbot.scripts.logwatcher import LogWatcher, BuildmasterTimeoutError, \
      ReconfigError
+from buildbot.util import in_reactor
 
 class Reconfigurator:
 
     rc = 0
 
-    def run(self, config):
+    def run(self, basedir, quiet):
         # Returns "Microsoft" for Vista and "Windows" for other versions
         if platform.system() in ("Windows", "Microsoft"):
             print "Reconfig (through SIGHUP) is not supported on Windows."
@@ -35,11 +37,8 @@ class Reconfigurator:
             print "remotely, but requires Gtk+ libraries to run."
             return
 
-        basedir = config['basedir']
-        quiet = config['quiet']
-        os.chdir(basedir)
-        f = open("twistd.pid", "rt")
-        self.pid = int(f.read().strip())
+        with open(os.path.join(basedir, "twistd.pid"), "rt") as f:
+            self.pid = int(f.read().strip())
         if quiet:
             os.kill(self.pid, signal.SIGHUP)
             return
@@ -50,12 +49,13 @@ class Reconfigurator:
         # 10 seconds have elapsed.
 
         self.sent_signal = False
-        lw = LogWatcher("twistd.log")
+        reactor.callLater(0.2, self.sighup)
+
+        lw = LogWatcher(os.path.join(basedir, "twistd.log"))
         d = lw.start()
         d.addCallbacks(self.success, self.failure)
-        reactor.callLater(0.2, self.sighup)
-        reactor.run()
-        sys.exit(self.rc)
+        d.addBoth(lambda _ : self.rc)
+        return d
 
     def sighup(self):
         if self.sent_signal:
@@ -68,7 +68,6 @@ class Reconfigurator:
         print """
 Reconfiguration appears to have completed successfully.
 """
-        reactor.stop()
 
     def failure(self, why):
         self.rc = 1
@@ -84,5 +83,10 @@ correct them, then try 'buildbot reconfig' again.
             self.sighup()
         else:
             print "Error while following twistd.log: %s" % why
-        reactor.stop()
 
+@in_reactor
+def reconfig(config):
+    basedir = config['basedir']
+    quiet = config['quiet']
+    r = Reconfigurator()
+    return r.run(basedir, quiet)

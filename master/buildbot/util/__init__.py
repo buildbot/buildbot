@@ -20,11 +20,6 @@ import calendar
 from buildbot.util.misc import deferredLocked, SerializedInvocation
 
 def naturalSort(l):
-    """Returns a sorted copy of l, so that numbers in strings are sorted in the
-    proper order.
-
-    e.g. ['foo10', 'foo1', 'foo2'] will be sorted as ['foo1', 'foo2', 'foo10']
-    instead of the default ['foo1', 'foo10', 'foo2']"""
     l = l[:]
     def try_int(s):
         try:
@@ -40,12 +35,11 @@ def naturalSort(l):
     return l
 
 def flatten(l):
-    """Flatten nested lists into a single-level list"""
     if l and type(l[0]) == list:
         rv = []
         for e in l:
             if type(e) == list:
-                rv.extend(e)
+                rv.extend(flatten(e))
             else:
                 rv.append(e)
         return rv
@@ -53,7 +47,6 @@ def flatten(l):
         return l
 
 def now(_reactor=None):
-    """Get the time, using reactor.seconds or time.time"""
     if _reactor and hasattr(_reactor, "seconds"):
         return _reactor.seconds()
     else:
@@ -71,8 +64,6 @@ def formatInterval(eta):
     return ", ".join(eta_parts)
 
 class ComparableMixin:
-    """Specify a list of attributes that are 'important'. These will be used
-    for all comparison operations."""
 
     compare_attrs = []
 
@@ -120,7 +111,6 @@ def safeTranslate(str):
     return str.translate(badchars_map)
 
 def none_or_str(x):
-    """Cast X to a str if it is not None"""
     if x is not None and not isinstance(x, str):
         return str(x)
     return x
@@ -177,8 +167,38 @@ def datetime2epoch(dt):
     if dt is not None:
         return calendar.timegm(dt.utctimetuple())
 
+def makeList(input):
+    if isinstance(input, basestring):
+        return [ input ]
+    elif input is None:
+        return [ ]
+    else:
+        return list(input)
+
+def in_reactor(f):
+    """decorate a function by running it with maybeDeferred in a reactor"""
+    def wrap(*args, **kwargs):
+        from twisted.internet import reactor, defer
+        result = [ ]
+        def async():
+            d = defer.maybeDeferred(f, *args, **kwargs)
+            def eb(f):
+                f.printTraceback()
+            d.addErrback(eb)
+            def do_stop(r):
+                result.append(r)
+                reactor.stop()
+            d.addBoth(do_stop)
+        reactor.callWhenRunning(async)
+        reactor.run()
+        return result[0]
+    wrap.__doc__ = f.__doc__
+    wrap.__name__ = f.__name__
+    wrap._orig = f # for tests
+    return wrap
+
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'LRUCache', 'none_or_str',
     'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC',
-    'diffLists' ]
+    'diffLists', 'makeList', 'in_reactor' ]

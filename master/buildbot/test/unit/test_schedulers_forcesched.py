@@ -56,6 +56,60 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     # tests
 
+    def test_compare_branch(self):
+        self.assertNotEqual(
+                ForceScheduler(name="testched", builderNames=[]),
+                ForceScheduler(name="testched", builderNames=[],
+                    branch=FixedParameter("branch","fishing/pole")))
+
+
+    def test_compare_reason(self):
+        self.assertNotEqual(
+                ForceScheduler(name="testched", builderNames=[],
+                    reason=FixedParameter("reason","no fish for you!")),
+                ForceScheduler(name="testched", builderNames=[],
+                    reason=FixedParameter("reason","thanks for the fish!")))
+
+
+    def test_compare_revision(self):
+        self.assertNotEqual(
+                ForceScheduler(name="testched", builderNames=[],
+                    revision=FixedParameter("revision","fish-v1")),
+                ForceScheduler(name="testched", builderNames=[],
+                    revision=FixedParameter("revision","fish-v2")))
+
+
+    def test_compare_repository(self):
+        self.assertNotEqual(
+                ForceScheduler(name="testched", builderNames=[],
+                    repository=FixedParameter("repository","git://pond.org/fisher.git")),
+                ForceScheduler(name="testched", builderNames=[],
+                    repository=FixedParameter("repository","svn://ocean.com/trawler/")))
+
+
+    def test_compare_project(self):
+        self.assertNotEqual(
+                ForceScheduler(name="testched", builderNames=[],
+                    project=FixedParameter("project","fisher")),
+                ForceScheduler(name="testched", builderNames=[],
+                    project=FixedParameter("project","trawler")))
+
+
+    def test_compare_username(self):
+        self.assertNotEqual(
+                ForceScheduler(name="testched", builderNames=[]),
+                ForceScheduler(name="testched", builderNames=[],
+                    project=FixedParameter("username","The Fisher King <avallach@atlantis.al>")))
+
+
+    def test_compare_properties(self):
+        self.assertNotEqual(
+                ForceScheduler(name="testched", builderNames=[],
+                    properties=[]),
+                ForceScheduler(name="testched", builderNames=[],
+                    properties=[FixedParameter("prop","thanks for the fish!")]))
+
+
     def test_basicForce(self):
         sched = self.makeScheduler()
         req = self.makeRequest(branch='a',reason='because',revision='c',
@@ -82,8 +136,8 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                                    ('scheduler', ('testsched', 'Scheduler')),
                                    ],
                       sourcestampsetid=100),
-                 {'d':
-                  dict(branch='a', revision='c', repository='d',
+                 {'':
+                  dict(branch='a', revision='c', repository='d', codebase='',
                       project='p', sourcestampsetid=100)
                  })
         d.addCallback(check)
@@ -117,7 +171,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                                    ],
                       sourcestampsetid=100),
                  {"":
-                  dict(branch="", revision="", repository="",
+                  dict(branch="", revision="", repository="", codebase='',
                       project="", sourcestampsetid=100)
                  })
         d.addCallback(check)

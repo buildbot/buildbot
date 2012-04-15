@@ -155,9 +155,9 @@ class TestIrcContactChannel(unittest.TestCase):
 
     def test_act(self):
         events = []
-        def me(dest, msg):
+        def describe(dest, msg):
             events.append((dest, msg))
-        self.contact.bot.me = me
+        self.contact.bot.describe = describe
 
         self.contact.act("unmuted")
         self.contact.act(u"unmuted, unicode \N{SNOWMAN}")
@@ -172,23 +172,35 @@ class TestIrcContactChannel(unittest.TestCase):
     def test_handleMessage_silly(self):
         silly_prompt = self.contact.silly.keys()[0]
         self.contact.doSilly = mock.Mock()
-        self.contact.handleMessage(silly_prompt, 'me')
-        self.contact.doSilly.assert_called_with(silly_prompt)
+        d = self.contact.handleMessage(silly_prompt, 'me')
+        @d.addCallback
+        def cb(_):
+            self.contact.doSilly.assert_called_with(silly_prompt)
+        return d
 
     def test_handleMessage_short_command(self):
         self.contact.command_TESTY = mock.Mock()
-        self.contact.handleMessage('testy', 'me')
-        self.contact.command_TESTY.assert_called_with('', 'me')
+        d = self.contact.handleMessage('testy', 'me')
+        @d.addCallback
+        def cb(_):
+            self.contact.command_TESTY.assert_called_with('', 'me')
+        return d
 
     def test_handleMessage_long_command(self):
         self.contact.command_TESTY = mock.Mock()
-        self.contact.handleMessage('testy   westy boo', 'me')
-        self.contact.command_TESTY.assert_called_with('westy boo', 'me')
+        d = self.contact.handleMessage('testy   westy boo', 'me')
+        @d.addCallback
+        def cb(_):
+            self.contact.command_TESTY.assert_called_with('westy boo', 'me')
+        return d
 
     def test_handleMessage_excited(self):
         self.patch_send()
-        self.contact.handleMessage('hi!', 'me')
-        self.assertEqual(len(self.sent), 1) # who cares what it says..
+        d = self.contact.handleMessage('hi!', 'me')
+        @d.addCallback
+        def cb(_):
+            self.assertEqual(len(self.sent), 1) # who cares what it says..
+        return d
 
     @compat.usesFlushLoggedErrors
     def test_handleMessage_exception(self):
@@ -196,19 +208,24 @@ class TestIrcContactChannel(unittest.TestCase):
         def command_TESTY(msg, who):
             raise RuntimeError("FAIL")
         self.contact.command_TESTY = command_TESTY
-        self.contact.handleMessage('testy boom', 'me')
-
-        self.assertEqual(self.sent,
-                [ "Something bad happened (see logs)" ])
-        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+        d = self.contact.handleMessage('testy boom', 'me')
+        @d.addCallback
+        def cb(_):
+            self.assertEqual(self.sent,
+                    [ "Something bad happened (see logs)" ])
+            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+        return d
 
     def test_handleMessage_UsageError(self):
         self.patch_send()
         def command_TESTY(msg, who):
             raise words.UsageError("oh noes")
         self.contact.command_TESTY = command_TESTY
-        self.contact.handleMessage('testy boom', 'me')
-        self.assertEqual(self.sent, [ "oh noes" ])
+        d = self.contact.handleMessage('testy boom', 'me')
+        @d.addCallback
+        def cb(_):
+            self.assertEqual(self.sent, [ "oh noes" ])
+        return d
 
     def test_handleAction_ignored(self):
         self.patch_act()

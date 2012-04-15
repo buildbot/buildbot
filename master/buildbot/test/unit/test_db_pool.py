@@ -48,24 +48,13 @@ class Basic(unittest.TestCase):
             rp = conn.execute("EAT COOKIES")
             return rp.scalar()
         d = self.pool.do(fail)
-        def eb(f):
-            pass
-        def cb(r):
-            self.fail("no exception propagated")
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, sa.exc.OperationalError)
 
     def test_do_exception(self):
         def raise_something(conn):
             raise RuntimeError("oh noes")
         d = self.pool.do(raise_something)
-        def eb(f):
-            f.trap(RuntimeError) # make sure it gets the *right* exception
-            pass
-        def cb(r):
-            self.fail("no exception propagated")
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, RuntimeError)
 
     def test_do_with_engine(self):
         def add(engine, addend1, addend2):
@@ -82,12 +71,7 @@ class Basic(unittest.TestCase):
             rp = engine.execute("EAT COOKIES")
             return rp.scalar()
         d = self.pool.do_with_engine(fail)
-        def eb(f):
-            pass
-        def cb(r):
-            self.fail("no exception propagated")
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, sa.exc.OperationalError)
 
     def test_persistence_across_invocations(self):
         # NOTE: this assumes that both methods are called with the same
@@ -121,7 +105,7 @@ class Stress(unittest.TestCase):
         self.pool.shutdown()
         os.unlink("test.sqlite")
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_inserts(self):
         def write(conn):
             trans = conn.begin()
@@ -139,10 +123,7 @@ class Stress(unittest.TestCase):
             self.pool.do(write2))
         reactor.callLater(0.1, d2.callback, None)
 
-        wfd = defer.waitForDeferred(
-            defer.DeferredList([ d1, d2 ]))
-        yield wfd
-        wfd.getResult()
+        yield defer.DeferredList([ d1, d2 ])
 
     # don't run this test, since it takes 30s
     del test_inserts

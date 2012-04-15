@@ -65,9 +65,8 @@ class Build(properties.PropertiesMixin):
     def __init__(self, requests):
         self.requests = requests
         self.locks = []
-
         # build a source stamp
-        self.source = requests[0].mergeWith(requests[1:])
+        self.sources = requests[0].mergeSourceStampsWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
 
         self.progress = None
@@ -92,14 +91,16 @@ class Build(properties.PropertiesMixin):
     def setSlaveEnvironment(self, env):
         self.slaveEnvironment = env
 
-    def getSourceStamp(self, repository=None):
-        if repository is None:
-            return self.source
-        assert (repository in self.sources)
-        return self.sources[repository]
+    def getSourceStamp(self, codebase):
+        for source in self.sources:
+            if source.codebase == codebase:
+                return source
+        return None
 
     def allChanges(self):
-        return self.source.changes
+        for s in self.sources:
+            for c in s.changes:
+                yield c
 
     def allFiles(self):
         # return a list of all source files that were changed
@@ -117,8 +118,9 @@ class Build(properties.PropertiesMixin):
         for c in self.allChanges():
             if c.who not in blamelist:
                 blamelist.append(c.who)
-        if self.source.patch_info: #Add patch author to blamelist
-            blamelist.append(self.source.patch_info[0])
+        for source in self.sources:
+            if source.patch_info: #Add patch author to blamelist
+                blamelist.append(source.patch_info[0])
         blamelist.sort()
         return blamelist
 
@@ -155,8 +157,8 @@ class Build(properties.PropertiesMixin):
         buildmaster = self.builder.botmaster.parent
         props.updateFromProperties(buildmaster.config.properties)
 
-        # from the SourceStamp, which has properties via Change
-        for change in self.source.changes:
+        # from the SourceStamps, which have properties via Change
+        for change in self.allChanges():
             props.updateFromProperties(change.properties)
 
         # and finally, get any properties from requests (this is the path
@@ -167,10 +169,16 @@ class Build(properties.PropertiesMixin):
         # now set some properties of our own, corresponding to the
         # build itself
         props.setProperty("buildnumber", self.build_status.number, "Build")
-        props.setProperty("branch", self.source.branch, "Build")
-        props.setProperty("revision", self.source.revision, "Build")
-        props.setProperty("repository", self.source.repository, "Build")
-        props.setProperty("project", self.source.project, "Build")
+        
+        if self.sources and len(self.sources) == 1:
+            # old interface for backwards compatibility
+            source = self.sources[0]
+            props.setProperty("branch", source.branch, "Build")
+            props.setProperty("revision", source.revision, "Build")
+            props.setProperty("repository", source.repository, "Build")
+            props.setProperty("codebase", source.codebase, "Build")
+            props.setProperty("project", source.project, "Build")
+
         self.builder.setupProperties(props)
 
     def setupSlaveBuilder(self, slavebuilder):
@@ -297,10 +305,11 @@ class Build(properties.PropertiesMixin):
                 log.msg("error while creating step, factory=%s, args=%s"
                         % (factory, args))
                 raise
+           
             step.setBuild(self)
             step.setBuildSlave(self.slavebuilder.slave)
             if callable (self.workdir):
-                step.setDefaultWorkdir (self.workdir (self.source))
+                step.setDefaultWorkdir (self.workdir (self.sources))
             else:
                 step.setDefaultWorkdir (self.workdir)
             name = step.name
@@ -341,7 +350,10 @@ class Build(properties.PropertiesMixin):
                 self.progress.setExpectationsFrom(expectations)
 
         # we are now ready to set up our BuildStatus.
-        self.build_status.setSourceStamp(self.source)
+        # at the moment that schedulers start to deliver sourcestamps per codebase
+        # buildstatus should support multiple sourcestamps.
+        # until now schedulers deliver exactly one sourcestamp
+        self.build_status.setSourceStamp(self.sources[0])
         self.build_status.setReason(self.reason)
         self.build_status.setBlamelist(self.blamelist())
         self.build_status.setProgress(self.progress)
@@ -448,6 +460,14 @@ class Build(properties.PropertiesMixin):
             # this should cause the step to finish.
             log.msg(" stopping currentStep", self.currentStep)
             self.currentStep.interrupt(Failure(error.ConnectionLost()))
+        else:
+            self.result = RETRY
+            self.text = ["lost", "remote"]
+            self.stopped = True
+            if self._acquiringLock:
+                lock, access, d = self._acquiringLock
+                lock.stopWaitingUntilAvailable(self, access, d)
+                d.callback(None)
 
     def stopBuild(self, reason="<no reason given>"):
         # the idea here is to let the user cancel a build because, e.g.,
@@ -480,6 +500,8 @@ class Build(properties.PropertiesMixin):
             text = ["warnings"]
         elif self.result == EXCEPTION:
             text = ["exception"]
+        elif self.result == RETRY:
+            text = ["retry"]
         else:
             text = ["build", "successful"]
         text.extend(self.text)
@@ -488,7 +510,12 @@ class Build(properties.PropertiesMixin):
     def buildException(self, why):
         log.msg("%s.buildException" % self)
         log.err(why)
-        self.buildFinished(["build", "exception"], EXCEPTION)
+        # try to finish the build, but since we've already faced an exception,
+        # this may not work well.
+        try:
+            self.buildFinished(["build", "exception"], EXCEPTION)
+        except:
+            log.err(Failure(), 'while finishing a build with an exception')
 
     def buildFinished(self, text, results):
         """This method must be called when the last Step has completed. It
@@ -505,6 +532,7 @@ class Build(properties.PropertiesMixin):
         self.finished = True
         if self.remote:
             self.remote.dontNotifyOnDisconnect(self.lostRemote)
+            self.remote = None
         self.results = results
 
         log.msg(" %s: build finished" % self)

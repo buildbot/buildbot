@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 
 import os.path, tarfile, tempfile
 try:
@@ -23,7 +25,8 @@ except ImportError:
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.python import log
-from buildbot.process.buildstep import RemoteCommand, BuildStep
+from buildbot.process import buildstep
+from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE, SKIPPED
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.util import json
@@ -168,11 +171,11 @@ class _DirectoryWriter(_FileWriter):
         os.remove(self.tarname)
 
 
-class StatusRemoteCommand(RemoteCommand):
-    def __init__(self, step, remote_command, args):
-        RemoteCommand.__init__(self, remote_command, args)
-        callback = lambda arg: step.step_status.addLog('stdio')
-        self.useLogDelayed('stdio', callback, True)
+def makeStatusRemoteCommand(step, remote_command, args):
+    self = buildstep.RemoteCommand(remote_command, args)
+    callback = lambda arg: step.step_status.addLog('stdio')
+    self.useLogDelayed('stdio', callback, True)
+    return self
 
 class _TransferBuildStep(BuildStep):
     """
@@ -242,8 +245,8 @@ class FileUpload(_TransferBuildStep):
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
-            raise config.ConfigErrors([
-                'mode must be an integer or None' ])
+            config.error(
+                'mode must be an integer or None')
         self.mode = mode
         self.keepstamp = keepstamp
         self.url = url
@@ -287,7 +290,7 @@ class FileUpload(_TransferBuildStep):
             'keepstamp': self.keepstamp,
             }
 
-        self.cmd = StatusRemoteCommand(self, 'uploadFile', args)
+        self.cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
         d = self.runCommand(self.cmd)
         @d.addErrback
         def cancel(res):
@@ -321,8 +324,8 @@ class DirectoryUpload(_TransferBuildStep):
         self.maxsize = maxsize
         self.blocksize = blocksize
         if compress not in (None, 'gz', 'bz2'):
-            raise config.ConfigErrors([
-                "'compress' must be one of None, 'gz', or 'bz2'" ])
+            config.error(
+                "'compress' must be one of None, 'gz', or 'bz2'")
         self.compress = compress
         self.url = url
 
@@ -360,7 +363,7 @@ class DirectoryUpload(_TransferBuildStep):
             'compress': self.compress
             }
 
-        self.cmd = StatusRemoteCommand(self, 'uploadDirectory', args)
+        self.cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
         d = self.runCommand(self.cmd)
         @d.addErrback
         def cancel(res):
@@ -374,8 +377,6 @@ class DirectoryUpload(_TransferBuildStep):
         # the rest
         if result == SKIPPED:
             return BuildStep.finished(self, SKIPPED)
-        if self.cmd.stderr != '':
-            self.addCompleteLog('stderr', self.cmd.stderr)
 
         if self.cmd.rc is None or self.cmd.rc == 0:
             return BuildStep.finished(self, SUCCESS)
@@ -441,8 +442,8 @@ class FileDownload(_TransferBuildStep):
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
-            raise config.ConfigErrors([
-                'mode must be an integer or None' ])
+            config.error(
+                'mode must be an integer or None')
         self.mode = mode
 
     def start(self):
@@ -484,7 +485,7 @@ class FileDownload(_TransferBuildStep):
             'mode': self.mode,
             }
 
-        self.cmd = StatusRemoteCommand(self, 'downloadFile', args)
+        self.cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 
@@ -512,8 +513,8 @@ class StringDownload(_TransferBuildStep):
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
-            raise config.ConfigErrors([
-                'mode must be an integer or None' ])
+            config.error(
+                'mode must be an integer or None')
         self.mode = mode
 
     def start(self):
@@ -544,7 +545,7 @@ class StringDownload(_TransferBuildStep):
             'mode': self.mode,
             }
 
-        self.cmd = StatusRemoteCommand(self, 'downloadFile', args)
+        self.cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 

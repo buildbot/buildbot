@@ -26,8 +26,10 @@ import subprocess
 import traceback
 import stat
 from collections import deque
+from tempfile import NamedTemporaryFile
 
 from twisted.python import runtime, log
+from twisted.python.win32 import quoteArguments
 from twisted.internet import reactor, defer, protocol, task, error
 
 from buildslave import util
@@ -284,8 +286,8 @@ class RunProcess:
         if not os.path.exists(workdir):
             os.makedirs(workdir)
         if environ:
-            for key in environ:
-                if isinstance(environ[key], list):
+            for key, v in environ.iteritems():
+                if isinstance(v, list):
                     # Need to do os.pathsep translation.  We could either do that
                     # by replacing all incoming ':'s with os.pathsep, or by
                     # accepting lists.  I like lists better.
@@ -296,7 +298,7 @@ class RunProcess:
             if environ.has_key('PYTHONPATH'):
                 environ['PYTHONPATH'] += os.pathsep + "${PYTHONPATH}"
 
-            # do substitution on variable values matching patern: ${name}
+            # do substitution on variable values matching pattern: ${name}
             p = re.compile('\${([0-9a-zA-Z_]*)}')
             def subst(match):
                 return os.environ.get(match.group(1), "")
@@ -305,9 +307,12 @@ class RunProcess:
                 # setting a key to None will delete it from the slave environment
                 if key not in environ or environ[key] is not None:
                     newenv[key] = os.environ[key]
-            for key in environ.keys():
-                if environ[key] is not None:
-                    newenv[key] = p.sub(subst, environ[key])
+            for key, v in environ.iteritems():
+                if v is not None:
+                    if not isinstance(v, basestring):
+                        raise RuntimeError("'env' values must be strings or "
+                                "lists; key '%s' is incorrect" % (key,))
+                    newenv[key] = p.sub(subst, v)
 
             self.environ = newenv
         else: # not environ
@@ -403,11 +408,13 @@ class RunProcess:
 
         self.pp = RunProcessPP(self)
 
+        self.using_comspec = False
         if type(self.command) in types.StringTypes:
             if runtime.platformType  == 'win32':
                 argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
                 if '/c' not in argv: argv += ['/c']
                 argv += [self.command]
+                self.using_comspec = True
             else:
                 # for posix, use /bin/sh. for other non-posix, well, doesn't
                 # hurt to try
@@ -424,6 +431,7 @@ class RunProcess:
                 argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
                 if '/c' not in argv: argv += ['/c']
                 argv += list(self.command)
+                self.using_comspec = True
             else:
                 argv = self.command
             # Attempt to format this for use by a shell, although the process isn't perfect
@@ -523,8 +531,44 @@ class RunProcess:
                                     processProtocol, uid, gid, childFDs)
 
         # fall back
-        return reactor.spawnProcess(processProtocol, executable, args, env,
+        if self.using_comspec:
+            return self._spawnAsBatch(processProtocol, executable, args, env,
+                                      path, usePTY=usePTY)
+        else:
+            return reactor.spawnProcess(processProtocol, executable, args, env,
                                         path, usePTY=usePTY)
+
+    def _spawnAsBatch(self, processProtocol, executable, args, env,
+            path, usePTY):
+        """A cheat that routes around the impedance mismatch between
+        twisted and cmd.exe with respect to escaping quotes"""
+
+        tf = NamedTemporaryFile(dir='.',suffix=".bat",delete=False)
+        #echo off hides this cheat from the log files.
+        tf.write( "@echo off\n" )
+        if type(self.command) in types.StringTypes:
+            tf.write( self.command )
+        else:
+            def maybe_escape_pipes(arg):
+                if arg != '|':
+                    return arg.replace('|','^|')
+                else:
+                    return '|'
+            cmd = [maybe_escape_pipes(arg) for arg in self.command]
+            tf.write( quoteArguments(cmd) )
+        tf.close()
+
+        argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
+        if '/c' not in argv: argv += ['/c']
+        argv += [tf.name]
+
+        def unlink_temp(result):
+            os.unlink(tf.name)
+            return result
+        self.deferred.addBoth(unlink_temp)
+
+        return reactor.spawnProcess(processProtocol, executable, argv, env,
+                                    path, usePTY=usePTY)
 
     def _chunkForSend(self, data):
         """
@@ -766,7 +810,7 @@ class RunProcess:
         elif runtime.platformType == "win32":
             if self.interruptSignal == None:
                 log.msg("self.interruptSignal==None, only pretending to kill child")
-            else:
+            elif self.process.pid is not None:
                 log.msg("using TASKKILL /F PID /T to kill pid %s" % self.process.pid)
                 subprocess.check_call("TASKKILL /F /PID %s /T" % self.process.pid)
                 log.msg("taskkill'd pid %s" % self.process.pid)
