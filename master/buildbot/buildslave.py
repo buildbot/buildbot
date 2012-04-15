@@ -233,6 +233,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         return d
 
     def stopService(self):
+        if self.registration:
+            self.registration.unregister()
         self.stopMissingTimer()
         return service.MultiService.stopService(self)
 
