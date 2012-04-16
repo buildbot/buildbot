@@ -221,6 +221,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         d.addBoth(_log_result)
         return d
 
+    @defer.inlineCallbacks
     def start_instance(self, build):
         """
         I start a new instance of a VM.
@@ -234,36 +235,21 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         if self.domain is not None:
              raise ValueError('domain active')
 
-        d = self._prepare_base_image()
+        yield self._prepare_base_image()
 
-        def _start(res):
+        try:
             if self.xml:
-                d = self.connection.create(self.xml)
-                def _xml_start(res):
-                    self.domain = res
-                    return
-                d.addCallback(_xml_start)
-                return d
-            d = self.connection.lookupByName(self.name)
-            def _really_start(res):
-                self.domain = res
-                return self.domain.create()
-            d.addCallback(_really_start)
-            return d
-        d.addCallback(_start)
-
-        def _started(res):
-            return True
-        d.addCallback(_started)
-
-        def _start_failed(failure):
+                self.domain = yield self.connection.create(self.xml)
+            else:
+                self.domain = yield self.connection.lookupByName(self.name)
+                yield self.domain.create()
+        except Exception, f:
             log.msg("Cannot start a VM (%s), failing gracefully and triggering a new build check" % self.name)
             log.err(failure)
             self.domain = None
             return False
-        d.addErrback(_start_failed)
-
-        return d
+           
+        return True
 
     def stop_instance(self, fast=False):
         """
