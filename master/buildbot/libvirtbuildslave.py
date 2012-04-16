@@ -160,6 +160,38 @@ class LibVirtSlave(AbstractLatentBuildSlave):
 
         self.domain = None
 
+        self.ready = False
+        self._find_existing_instance()
+
+    @defer.inlineCallbacks
+    def _find_existing_instance(self):
+        """
+        I find existing VMs that are already running that might be orphaned instances of this slave.
+        """
+        if not self.connection:
+            defer.returnValue(None)
+
+        domains = yield self.connection.all()
+        for d in domains:
+           name = yield d.name()
+           if name.startswith(self.name):
+               self.domain = d
+               self.substantiated = True
+               break
+
+        self.ready = True
+
+    def canStartBuild(self):
+        if not self.ready:
+            log.msg("Not accepting builds as existing domains not iterated")
+            return False
+
+        if self.domain and not self.isConnected():
+            log.msg("Not accepting builds as existing domain but slave not connected")
+            return False
+
+       return AbstractLatentBuildSlave.canStartBuild(self)
+
     def _prepare_base_image(self):
         """
         I am a private method for creating (possibly cheap) copies of a
