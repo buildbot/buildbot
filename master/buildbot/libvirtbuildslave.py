@@ -154,7 +154,6 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         self.base_image = base_image
         self.xml = xml
 
-        self.insubstantiate_after_build = True
         self.cheap_copy = True
         self.graceful_shutdown = False
 
@@ -301,15 +300,4 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         d.addBoth(_disconnected)
 
         return d
-
-    def buildFinished(self, *args, **kwargs):
-        """
-        I insubstantiate a slave after it has done a build, if that is
-        desired behaviour.
-        """
-        AbstractLatentBuildSlave.buildFinished(self, *args, **kwargs)
-        if self.insubstantiate_after_build:
-            log.msg("Got buildFinished notification - attempting to insubstantiate")
-            self.insubstantiate()
-
 

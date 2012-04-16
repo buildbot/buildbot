@@ -825,7 +825,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         return d
 
     def attached(self, bot):
-        if self.substantiation_deferred is None:
+        if self.substantiation_deferred is None and self.build_wait_timeout >= 0:
             msg = 'Slave %s received connection while not trying to ' \
                     'substantiate.  Disconnecting.' % (self.slavename,)
             log.msg(msg)
@@ -882,7 +882,10 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
         self.building.remove(sb.builder_name)
         if not self.building:
-            self._setBuildWaitTimer()
+            if self.build_wait_timeout == 0:
+                self.insubstantiate()
+            else:
+                self._setBuildWaitTimer()
 
     def _clearBuildWaitTimer(self):
         if self.build_wait_timer is not None:
@@ -892,6 +895,8 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
     def _setBuildWaitTimer(self):
         self._clearBuildWaitTimer()
+        if self.build_wait_timeout < 0:
+            return
         self.build_wait_timer = reactor.callLater(
             self.build_wait_timeout, self._soft_disconnect)
 
@@ -910,6 +915,9 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         self.insubstantiating = False
 
     def _soft_disconnect(self, fast=False):
+        if not self.build_wait_timeout < 0:
+            return AbstractBuildSlave.disconnect(self)
+
         d = AbstractBuildSlave.disconnect(self)
         if self.slave is not None:
             # this could be called when the slave needs to shut down, such as
