@@ -587,7 +587,7 @@ Darcs, but it uses a strictly linear sequence of revisions (one
 history per branch) like Arch. Branches are put in subdirectories.
 This makes it look very much like Mercurial. ::
 
-   from buildbot.steps.source.cvs import Bzr
+   from buildbot.steps.source.bzr import Bzr
    factory.append(Bzr(mode='incremental',
                   repourl='lp:~knielsen/maria/tmp-buildbot-test'))
 
