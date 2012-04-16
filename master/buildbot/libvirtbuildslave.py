@@ -275,7 +275,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         """
         log.msg("Attempting to stop '%s'" % self.name)
         if self.domain is None:
-             log.msg("I don't think that domain is evening running, aborting")
+             log.msg("I don't think that domain is even running, aborting")
              return defer.succeed(None)
 
         domain = self.domain
