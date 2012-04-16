@@ -754,6 +754,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
     substantiated = False
     substantiation_deferred = None
     substantiation_build = None
+    insubstantiating = False
     build_wait_timer = None
     _shutdown_callback_handle = None
 
@@ -866,6 +867,11 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         subject = "Buildbot: buildslave %s never substantiated" % self.slavename
         return self._mail_missing_message(subject, text)
 
+    def canStartBuild(self):
+        if self.insubstantiating:
+            return False
+        return AbstractBuildSlave.canStartBuild(self)
+
     def buildStarted(self, sb):
         assert self.substantiated
         self._clearBuildWaitTimer()
@@ -889,7 +895,9 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         self.build_wait_timer = reactor.callLater(
             self.build_wait_timeout, self._soft_disconnect)
 
+    @defer.inlineCallbacks
     def insubstantiate(self, fast=False):
+        self.insubstantiating = True
         self._clearBuildWaitTimer()
         d = self.stop_instance(fast)
         if self._shutdown_callback_handle is not None:
@@ -898,7 +906,8 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             reactor.removeSystemEventTrigger(handle)
         self.substantiated = False
         self.building.clear() # just to be sure
-        return d
+        yield d
+        self.insubstantiating = False
 
     def _soft_disconnect(self, fast=False):
         d = AbstractBuildSlave.disconnect(self)
