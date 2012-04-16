@@ -93,6 +93,9 @@ class Domain(object):
         self.connection = connection
         self.domain = domain
 
+    def name(self):
+        return queue.executeInThread(self.domain.name)
+
     def create(self):
         return queue.executeInThread(self.domain.create)
 
@@ -130,6 +133,17 @@ class Connection(object):
             return self.DomainClass(self, res)
         d.addCallback(_)
         return d
+
+    @defer.inlineCallbacks
+    def all(self):
+        domains = []
+        domain_ids = yield queue.executeInThread(self.connection.listDomainsID)
+
+        for did in domain_ids:
+            domain = yield queue.executeInThread(self.connection.lookupByID, did)
+            domains.append(self.DomainClass(self, domain))
+
+        defer.returnValue(domains)
 
 
 class LibVirtSlave(AbstractLatentBuildSlave):
