@@ -109,6 +109,8 @@ class Connection(object):
     I am a wrapper around a libvirt Connection object.
     """
 
+    DomainClass = Domain
+
     def __init__(self, uri):
         self.uri = uri
         self.connection = libvirt.open(uri)
@@ -117,7 +119,7 @@ class Connection(object):
         """ I lookup an existing prefined domain """
         d = queue.executeInThread(self.connection.lookupByName, name)
         def _(res):
-            return Domain(self, res)
+            return self.DomainClass(self, res)
         d.addCallback(_)
         return d
 
@@ -125,7 +127,7 @@ class Connection(object):
         """ I take libvirt XML and start a new VM """
         d = queue.executeInThread(self.connection.createXML, xml, 0)
         def _(res):
-            return Domain(self, res)
+            return self.DomainClass(self, res)
         d.addCallback(_)
         return d
 
