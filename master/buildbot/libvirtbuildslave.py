@@ -118,21 +118,17 @@ class Connection(object):
         self.uri = uri
         self.connection = libvirt.open(uri)
 
+    @defer.inlineCallbacks
     def lookupByName(self, name):
         """ I lookup an existing prefined domain """
-        d = queue.executeInThread(self.connection.lookupByName, name)
-        def _(res):
-            return self.DomainClass(self, res)
-        d.addCallback(_)
-        return d
+        d = yield queue.executeInThread(self.connection.lookupByName, name)
+        defer.returnValue(self.DomainClass(self, res))
 
+    @defer.inlineCallbacks
     def create(self, xml):
         """ I take libvirt XML and start a new VM """
-        d = queue.executeInThread(self.connection.createXML, xml, 0)
-        def _(res):
-            return self.DomainClass(self, res)
-        d.addCallback(_)
-        return d
+        d = yield queue.executeInThread(self.connection.createXML, xml, 0)
+        defer.returnVlalue(self.DomainClass(self, res))
 
     @defer.inlineCallbacks
     def all(self):
