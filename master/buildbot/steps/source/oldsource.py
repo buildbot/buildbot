@@ -592,6 +592,7 @@ class Repo(Source):
                  manifest_branch="master",
                  manifest_file="default.xml",
                  tarball=None,
+                 jobs=None,
                  **kwargs):
         """
         @type  manifest_url: string
@@ -609,7 +610,8 @@ class Repo(Source):
         self.args.update({'manifest_branch': manifest_branch,
                           'manifest_file': manifest_file,
                           'tarball': tarball,
-                          'manifest_override_url': None
+                          'manifest_override_url': None,
+                          'jobs': jobs
                           })
 
     def computeSourceRevision(self, changes):
