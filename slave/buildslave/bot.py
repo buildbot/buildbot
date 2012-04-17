@@ -20,7 +20,7 @@ import signal
 
 from twisted.spread import pb
 from twisted.python import log
-from twisted.internet import error, reactor, task
+from twisted.internet import error, reactor, task, defer
 from twisted.application import service, internet
 from twisted.cred import credentials
 
@@ -253,11 +253,13 @@ class Bot(pb.Referenceable, service.MultiService):
         ])
         return commands
 
+    @defer.deferredGenerator
     def remote_setBuilderList(self, wanted):
         retval = {}
-        wanted_dirs = ["info"]
+        wanted_names = set([ name for (name, builddir) in wanted ])
+        wanted_dirs = set([ builddir for (name, builddir) in wanted ])
+        wanted_dirs.add('info')
         for (name, builddir) in wanted:
-            wanted_dirs.append(builddir)
             b = self.builders.get(name, None)
             if b:
                 if b.builddir != builddir:
@@ -272,19 +274,29 @@ class Bot(pb.Referenceable, service.MultiService):
                 b.setBuilddir(builddir)
                 self.builders[name] = b
             retval[name] = b
-        for name in self.builders.keys():
-            if not name in map(lambda a: a[0], wanted):
-                log.msg("removing old builder %s" % name)
-                self.builders[name].disownServiceParent()
-                del(self.builders[name])
 
-        for d in os.listdir(self.basedir):
-            if os.path.isdir(os.path.join(self.basedir, d)):
-                if d not in wanted_dirs:
+        # disown any builders no longer desired
+        to_remove = list(set(self.builders.keys()) - wanted_names)
+        dl = defer.DeferredList([
+            defer.maybeDeferred(self.builders[name].disownServiceParent)
+            for name in to_remove ])
+        wfd = defer.waitForDeferred(dl)
+        yield wfd
+        wfd.getResult()
+
+        # and *then* remove them from the builder list
+        for name in to_remove:
+            del self.builders[name]
+
+        # finally warn about any leftover dirs
+        for dir in os.listdir(self.basedir):
+            if os.path.isdir(os.path.join(self.basedir, dir)):
+                if dir not in wanted_dirs:
                     log.msg("I have a leftover directory '%s' that is not "
                             "being used by the buildmaster: you can delete "
-                            "it now" % d)
-        return retval
+                            "it now" % dir)
+
+        yield retval  # return value
 
     def remote_print(self, message):
         log.msg("message from master:", message)

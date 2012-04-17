@@ -150,9 +150,10 @@ class BuildProgress(pb.Referenceable):
     def setExpectationsFrom(self, exp):
         """Set our expectations from the builder's Expectations object."""
         for name, metrics in exp.steps.items():
-            s = self.steps[name]
-            s.setExpectedTime(exp.times[name])
-            s.setExpectations(exp.steps[name])
+            s = self.steps.get(name)
+            if s:
+                s.setExpectedTime(exp.times[name])
+                s.setExpectations(exp.steps[name])
 
     def newExpectations(self):
         """Call this when one of the steps has changed its expectations.
