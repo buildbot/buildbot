@@ -53,7 +53,7 @@ class Repo(SourceBaseCommand):
         # to the master as string anyway and using eval() could have security implications.
         self.repo_downloaded = ""
 
-        self.sourcedata = "%s %s %s" % (self.manifest_url, self.manifest_branch, self.manifest_file)
+        self.sourcedata = "%s %s" % (self.manifest_url, self.manifest_file)
         self.re_change = re.compile(".* refs/changes/\d\d/(\d+)/(\d+) -> FETCH_HEAD$")
         self.re_head = re.compile("^HEAD is now at ([0-9a-f]+)...")
 
@@ -142,7 +142,7 @@ class Repo(SourceBaseCommand):
                 repo forall -c git reset --hard HEAD 2>/dev/null
              """) % self.__dict__
         return "\n".join([ s.strip() for s in command.splitlines()])
-    
+
     def _doPreInitCleanUp(self, dummy):
         command = self._cleanupCommand()
         return self._Cmd(["bash", "-c", command], self._doInit, abandonOnFailure=False)
