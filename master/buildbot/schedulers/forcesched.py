@@ -45,7 +45,7 @@ class BaseParameter(object):
         # all other properties are generically passed via **kw
         self.__dict__.update(kw)
 
-    def update_from_post(self, master, properties, changes, req):
+    def get_from_post(self, req):
         args = req.args.get(self.name, [])
         if len(args) == 0:
             if self.required:
@@ -70,7 +70,10 @@ class BaseParameter(object):
         if arg == None:
             raise ValueError("need %s: no default provided by config"
                     % (self.name,))
-        properties[self.name] = arg
+        return arg
+
+    def update_from_post(self, master, properties, changes, req):
+        properties[self.name] = self.get_from_post(req)
 
     def parse_from_args(self, l):
         if self.multiple:
@@ -117,10 +120,10 @@ class IntParameter(StringParameter):
 class BooleanParameter(BaseParameter):
     type = "bool"
 
-    def update_from_post(self, master, properties, changes, req):
+    def get_from_post(self, req):
         # damn html's ungeneric checkbox implementation...
         checkbox = req.args.get("checkbox", [""])
-        properties[self.name] = self.name in checkbox
+        return self.name in checkbox
 
 
 class UserNameParameter(StringParameter):
@@ -158,6 +161,9 @@ class InheritBuildParameter(ChoiceStringParameter):
     name = "inherit"
     compatible_builds = None
 
+    def get_from_post(self, req):
+        raise ValueError("InheritBuildParameter can only be used by properties")
+
     def update_from_post(self, master, properties, changes, req):
         arg = req.args.get(self.name, [""])[0]
         splitted_arg = arg.split(" ")[0].split("/")
@@ -182,6 +188,9 @@ class InheritBuildParameter(ChoiceStringParameter):
 
 class AnyPropertyParameter(BaseParameter):
     type = "anyproperty"
+
+    def get_from_post(self, req):
+        raise ValueError("AnyPropertyParameter can only be used by properties")
 
     def update_from_post(self, master, properties, changes, req):
         validation = master.config.validation
@@ -236,6 +245,22 @@ class ForceScheduler(base.BaseScheduler):
     def stopService(self):
         pass
 
+    def gatherPropertiesAndChanges(self, req):
+        properties = {}
+        changeids = []
+
+        for param in self.forcedProperties:
+            param.update_from_post(self.master, properties, changeids, req)
+
+        changeids = map(lambda a: type(a)==int and a or a.number, changeids)
+
+        real_properties = Properties()
+        for pname, pvalue in properties.items():
+            real_properties.setProperty(pname, pvalue, "Force Build Form")
+
+        return defer.succeed((real_properties, changeids))
+
+    @defer.inlineCallbacks
     def forceWithWebRequest(self, owner, builder_name, req):
         """Called by the web UI.
         Authentication is already done, thus owner is passed as argument
@@ -245,60 +270,50 @@ class ForceScheduler(base.BaseScheduler):
             # in the case of buildAll, this method will be called several times
             # for all the builders
             # we just do nothing on a builder that is not in our builderNames
-            return defer.succeed(None)
-        master = self.master
-        properties = {}
-        changeids = []
+            defer.returnValue(None)
+
         # probably need to clean that out later as the IProperty is already a
         # validation mechanism
 
-        validation = master.config.validation
+        validation = self.master.config.validation
         if self.branch.regex == None:
             self.branch.regex = validation['branch']
         if self.revision.regex == None:
             self.revision.regex = validation['revision']
 
-        for param in self.all_fields:
-            if owner and param==self.username:
-                continue # dont enforce username if auth
-            param.update_from_post(master, properties, changeids, req)
-
-        changeids = map(lambda a: type(a)==int and a or a.number, changeids)
-        # everything is validated, we can create our source stamp, and buildrequest
-        reason = properties[self.reason.name]
-        branch = properties[self.branch.name]
-        revision = properties[self.revision.name]
-        repository = properties[self.repository.name]
-        project = properties[self.project.name]
+        reason = self.reason.get_from_post(req)
+        branch = self.branch.get_from_post(req)
+        revision = self.revision.get_from_post(req)
+        repository = self.repository.get_from_post(req)
+        project = self.project.get_from_post(req)
         if owner is None:
-            owner =  properties[self.username.name]
+            owner = self.owner.get_from_post(req)
 
-        std_prop_names = [self.branch.name, 
-                          self.revision.name, self.repository.name,
-                          self.project.name, self.username.name]
-        real_properties = Properties()
-        for pname, pvalue in properties.items():
-            if not pname in std_prop_names:
-                real_properties.setProperty(pname, pvalue, "Force Build Form")
+        properties, changeids = yield self.gatherPropertiesAndChanges(req)
 
-        real_properties.setProperty("owner", owner, "Force Build Form")
+        properties.setProperty("reason", reason, "Force Build Form")
+        properties.setProperty("owner", owner, "Force Build Form")
 
         r = ("The web-page 'force build' button was pressed by '%s': %s"
              % (owner, reason)) 
 
-        d = master.db.sourcestampsets.addSourceStampSet()
-        def add_master_with_setid(sourcestampsetid):
-            master.db.sourcestamps.addSourceStamp(
-                                    sourcestampsetid = sourcestampsetid,
-                                    branch=branch,
-                                    revision=revision, project=project, 
-                                    repository=repository,changeids=changeids)
-            return sourcestampsetid
-            
-        d.addCallback(add_master_with_setid)
-        def got_setid(sourcestampsetid):
-            return self.addBuildsetForSourceStamp(builderNames=[builder_name],
-                                    setid=sourcestampsetid, reason=r,
-                                    properties=real_properties)
-        d.addCallback(got_setid)
-        return d
+        # everything is validated, we can create our source stamp, and buildrequest
+        res = yield self.schedule(builder_name, branch, revision, repository, project, changeids, properties, r)
+        defer.returnValue(res)
+
+    @defer.inlineCallbacks
+    def schedule(self, builder, branch, revision, repository, project, changeids, properties, reason):
+        sourcestampsetid = yield self.master.db.sourcestampsets.addSourceStampSet()
+
+        yield self.master.db.sourcestamps.addSourceStamp(
+                                sourcestampsetid = sourcestampsetid,
+                                branch=branch,
+                                revision=revision, project=project,
+                                repository=repository,changeids=changeids)
+
+        retval = yield self.addBuildsetForSourceStamp(builderNames=[builder],
+                                    setid=sourcestampsetid, reason=reason,
+                                    properties=properties)
+
+        defer.returnValue(retval)
+

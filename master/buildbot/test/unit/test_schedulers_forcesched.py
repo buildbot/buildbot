@@ -15,6 +15,7 @@
 
 import mock
 from twisted.trial import unittest
+from twisted.internet import defer
 from buildbot import config
 from buildbot.schedulers.forcesched import ForceScheduler, StringParameter
 from buildbot.schedulers.forcesched import IntParameter, FixedParameter
@@ -144,39 +145,36 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         return d
 
 
+    @defer.inlineCallbacks
     def do_ParameterTest(self, value, expect, klass, owner='user', req=None,
                             **kwargs):
         sched = self.makeScheduler(properties=[klass(name="p1",**kwargs)])
         if not req:
             req = self.makeRequest(p1=value,reason='because')
         try:
-            d = sched.forceWithWebRequest(owner, 'a', req)
+            bsid, brids = yield sched.forceWithWebRequest(owner, 'a', req)
         except Exception,e:
             if not isinstance(e, expect):
                 raise
-            return # success
-        def check(res):
-            bsid,brids = res
-            self.db.buildsets.assertBuildset\
-                (bsid,
-                 dict(reason="The web-page 'force build' button was pressed "
-                             "by 'user': because",
-                      brids=brids,
-                      external_idstring=None,
-                      properties=[ 
-                                   ('owner', ('user', 'Force Build Form')),
-                                   ('p1', (expect, 'Force Build Form')),
-                                   ('reason', ('because', 'Force Build Form')),
-                                   ('scheduler', ('testsched', 'Scheduler')),
-                                   ],
-                      sourcestampsetid=100),
-                 {"":
-                  dict(branch="", revision="", repository="", codebase='',
-                      project="", sourcestampsetid=100)
-                 })
-        d.addCallback(check)
-        return d
+            defer.returnValue(None) # success
 
+        self.db.buildsets.assertBuildset\
+            (bsid,
+             dict(reason="The web-page 'force build' button was pressed "
+                         "by 'user': because",
+                  brids=brids,
+                  external_idstring=None,
+                  properties=[ 
+                               ('owner', ('user', 'Force Build Form')),
+                               ('p1', (expect, 'Force Build Form')),
+                               ('reason', ('because', 'Force Build Form')),
+                               ('scheduler', ('testsched', 'Scheduler')),
+                               ],
+                  sourcestampsetid=100),
+             {"":
+              dict(branch="", revision="", repository="", codebase='',
+                  project="", sourcestampsetid=100)
+             })
 
     def test_StringParameter(self):
         self.do_ParameterTest(value="testedvalue", expect="testedvalue",
