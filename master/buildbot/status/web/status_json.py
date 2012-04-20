@@ -134,17 +134,18 @@ class JsonResource(resource.Resource):
         resource.Resource.__init__(self)
         # buildbot.status.builder.Status
         self.status = status
-        if self.help:
-            pageTitle = ''
-            if self.pageTitle:
-                pageTitle = self.pageTitle + ' help'
-            self.putChild('help',
-                          HelpResource(self.help, pageTitle=pageTitle, parent_node=self))
 
     def getChildWithDefault(self, path, request):
         """Adds transparent support for url ending with /"""
         if path == "" and len(request.postpath) == 0:
             return self
+        if (path == "path" or path == "help/") and self.help:
+            pageTitle = ''
+            if self.pageTitle:
+                pageTitle = self.pageTitle + ' help'
+            return HelpResource(self.help,
+                                pageTitle=pageTitle,
+                                parent_node=self)
         # Equivalent to resource.Resource.getChildWithDefault()
         if self.children.has_key(path):
             return self.children[path]
@@ -333,12 +334,13 @@ class HelpResource(HtmlResource):
         HtmlResource.__init__(self)
         self.text = text
         self.pageTitle = pageTitle
-        self.parent_node = parent_node
+        self.parent_level = parent_node.level
+        self.parent_children = parent_node.children.keys()
 
     def content(self, request, cxt):
-        cxt['level'] = self.parent_node.level
+        cxt['level'] = self.parent_level
         cxt['text'] = ToHtml(self.text)
-        cxt['children'] = [ n for n in self.parent_node.children.keys() if n != 'help' ]
+        cxt['children'] = [ n for n in self.parent_children if n != 'help' ]
         cxt['flags'] = ToHtml(FLAGS)
         cxt['examples'] = ToHtml(EXAMPLES).replace(
                 'href="/json',
