@@ -22,8 +22,13 @@ import urllib
 import urllib2
 import sys
 
+try:
+  from natsort import natsorted
+except ImportError:
+  # natsorted is a simple helper to sort "naturally", e.g. "vm40" is sorted
+  # after "vm7". Defaults to normal sorting.
+  natsorted = sorted
 
-import natsort
 
 # These values are buildbot constants used for Build and BuildStep.
 # This line was copied from master/buildbot/status/builder.py.
@@ -1018,7 +1023,6 @@ def CMDinteractive(parser, args):
   local_vars = {
       'buildbot': buildbot,
       'b': buildbot,
-      'natsort': natsort,
   }
   code.interact(prompt, None, local_vars)
 
@@ -1070,9 +1074,9 @@ def find_idle_busy_slaves(parser, args, show_idle):
       slaves = builder.slaves.names
     busy_slaves = [build.slave.name for build in builder.current_builds]
     if show_idle:
-      slaves = natsort.natsorted(set(slaves) - set(busy_slaves))
+      slaves = natsorted(set(slaves) - set(busy_slaves))
     else:
-      slaves = natsort.natsorted(set(slaves) & set(busy_slaves))
+      slaves = natsorted(set(slaves) & set(busy_slaves))
     if options.quiet:
       for slave in slaves:
         print slave
