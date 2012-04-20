@@ -31,6 +31,7 @@ try:
 except ImportError:
     import json
 
+from buildbot import config
 from buildbot.status.base import StatusReceiverMultiService
 from buildbot.status.persistent_queue import DiskQueue, IndexedQueue, \
         MemoryQueue, PersistentQueue
@@ -338,6 +339,9 @@ class HttpStatusPush(StatusPush):
         @maxHttpRequestSize: limits the size of encoded data for AE, the default
         is 1MB.
         """
+        if not serverUrl:
+            raise config.ConfigErrors(['HttpStatusPush requires a serverUrl'])
+
         # Parameters.
         self.serverUrl = serverUrl
         self.extra_post_params = extra_post_params or {}
