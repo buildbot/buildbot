@@ -21,6 +21,9 @@ import email.utils as email_utils
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
 
+class ValidationError(ValueError):
+    pass
+
 class BaseParameter(object):
     name = ""
     label = ""
@@ -44,7 +47,7 @@ class BaseParameter(object):
         args = kwargs.get(self.name, [])
         if len(args) == 0:
             if self.required:
-                raise ValueError("'%s' needs to be specified" % (self.label))
+                raise ValidationError("'%s' needs to be specified" % (self.label))
             if self.multiple:
                 args = self.default
             else:
@@ -52,7 +55,7 @@ class BaseParameter(object):
         if self.regex:
             for arg in args:
                 if not self.regex.match(arg):
-                    raise ValueError("%s:'%s' does not match pattern '%s'"
+                    raise ValidationError("%s:'%s' does not match pattern '%s'"
                             % (self.label, arg, self.regex.pattern))
         try:
             arg = self.parse_from_args(args)
@@ -63,7 +66,7 @@ class BaseParameter(object):
                 traceback.print_exc()
             raise e
         if arg == None:
-            raise ValueError("need %s: no default provided by config"
+            raise ValidationError("need %s: no default provided by config"
                     % (self.name,))
         return arg
 
@@ -134,7 +137,7 @@ class UserNameParameter(StringParameter):
         if self.need_email:
             e = email_utils.parseaddr(s)
             if e[0]=='' or e[1] == '':
-                raise ValueError("%s: please fill in email address in the "
+                raise ValidationError("%s: please fill in email address in the "
                         " form User <email@email.com>" % (self.label,))
         return s
 
@@ -146,7 +149,7 @@ class ChoiceStringParameter(BaseParameter):
 
     def parse_from_arg(self, s):
         if self.strict and not s in self.choices:
-            raise ValueError("'%s' does not belongs to list of available choices '%s'"%(s, self.choices))
+            raise ValidationError("'%s' does not belongs to list of available choices '%s'"%(s, self.choices))
         return s
 
 
@@ -155,20 +158,20 @@ class InheritBuildParameter(ChoiceStringParameter):
     compatible_builds = None
 
     def getFromKwargs(self, kwargs):
-        raise ValueError("InheritBuildParameter can only be used by properties")
+        raise ValidationError("InheritBuildParameter can only be used by properties")
 
     def updateFromKwargs(self, master, properties, changes, kwargs):
         arg = kwargs.get(self.name, [""])[0]
         splitted_arg = arg.split(" ")[0].split("/")
         if len(splitted_arg) != 2:
-            raise ValueError("bad build: %s"%(arg))
+            raise ValidationError("bad build: %s"%(arg))
         builder, num = splitted_arg
         builder_status = master.status.getBuilder(builder)
         if not builder_status:
-            raise ValueError("unknown builder: %s in %s"%(builder, arg))
+            raise ValidationError("unknown builder: %s in %s"%(builder, arg))
         b = builder_status.getBuild(int(num))
         if not b:
-            raise ValueError("unknown build: %d in %s"%(num, arg))
+            raise ValidationError("unknown build: %d in %s"%(num, arg))
         props = {self.name:(arg.split(" ")[0])}
         for name, value, source in b.getProperties().asList():
             if source == "Force Build Form":
@@ -183,7 +186,7 @@ class AnyPropertyParameter(BaseParameter):
     type = "anyproperty"
 
     def getFromKwargs(self, kwargs):
-        raise ValueError("AnyPropertyParameter can only be used by properties")
+        raise ValidationError("AnyPropertyParameter can only be used by properties")
 
     def updateFromKwargs(self, master, properties, changes, kwargs):
         validation = master.config.validation
@@ -195,7 +198,7 @@ class AnyPropertyParameter(BaseParameter):
         pval_validate = validation['property_value']
         if not pname_validate.match(pname) \
                 or not pval_validate.match(pvalue):
-            raise ValueError("bad property name='%s', value='%s'" % (pname, pvalue))
+            raise ValidationError("bad property name='%s', value='%s'" % (pname, pvalue))
         properties[pname] = pvalue
 
 

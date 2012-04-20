@@ -144,7 +144,7 @@ class ForceBuildActionResource(ActionResource):
                     yield sch.forceWithWebRequest(owner,
                             self.builder_status.getName(), req)
                     msg = ""
-                except Exception, e:
+                except ValidationError, e:
                     msg = html.escape(e.message.encode('ascii','ignore'))
                 break
 

@@ -206,7 +206,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_UserNameParameterError(self):
         for value in ["test","test@buildbot.net","<test@buildbot.net>"]:
-            self.do_ParameterTest(value=value, expect=ValueError,
+            self.do_ParameterTest(value=value, expect=ValidationError,
                     klass=UserNameParameter, debug=False)
 
 
@@ -216,7 +216,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
 
     def test_ChoiceParameterError(self):
-        self.do_ParameterTest(value='t3', expect=ValueError,
+        self.do_ParameterTest(value='t3', expect=ValidationError,
                 klass=ChoiceStringParameter, choices=['t1','t2'],
                 debug=False)
 
@@ -227,6 +227,6 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
 
     def test_ChoiceParameterMultipleError(self):
-        self.do_ParameterTest(value=['t1','t3'], expect=ValueError,
+        self.do_ParameterTest(value=['t1','t3'], expect=ValidationError,
                 klass=ChoiceStringParameter, choices=['t1','t2'],
                 multiple=True, debug=False)
