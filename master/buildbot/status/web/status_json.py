@@ -139,7 +139,7 @@ class JsonResource(resource.Resource):
         """Adds transparent support for url ending with /"""
         if path == "" and len(request.postpath) == 0:
             return self
-        if path == "path" and self.help:
+        if path == 'help' and self.help:
             pageTitle = ''
             if self.pageTitle:
                 pageTitle = self.pageTitle + ' help'
