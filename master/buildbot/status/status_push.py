@@ -402,9 +402,6 @@ class HttpStatusPush(StatusPush):
     def pushHttp(self):
         """Do the HTTP POST to the server."""
         (encoded_packets, items) = self.popChunk()
-        if not self.serverUrl:
-            # Silently drop the packets.
-            return
 
         def Success(result):
             """Queue up next push."""
