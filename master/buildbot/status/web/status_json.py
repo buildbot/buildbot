@@ -139,7 +139,7 @@ class JsonResource(resource.Resource):
         """Adds transparent support for url ending with /"""
         if path == "" and len(request.postpath) == 0:
             return self
-        if (path == "path" or path == "help/") and self.help:
+        if path == "path" and self.help:
             pageTitle = ''
             if self.pageTitle:
                 pageTitle = self.pageTitle + ' help'
@@ -344,7 +344,7 @@ class HelpResource(HtmlResource):
         cxt['flags'] = ToHtml(FLAGS)
         cxt['examples'] = ToHtml(EXAMPLES).replace(
                 'href="/json',
-                'href="%sjson' % (self.level * '../'))
+                'href="../%sjson' % (self.parent_level * '../'))
 
         template = request.site.buildbot_service.templates.get_template("jsonhelp.html")
         return template.render(**cxt)
