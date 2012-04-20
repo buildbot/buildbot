@@ -40,7 +40,7 @@ class BaseParameter(object):
         # all other properties are generically passed via **kw
         self.__dict__.update(kw)
 
-    def get_from_post(self, kwargs):
+    def getFromKwargs(self, kwargs):
         args = kwargs.get(self.name, [])
         if len(args) == 0:
             if self.required:
@@ -67,8 +67,8 @@ class BaseParameter(object):
                     % (self.name,))
         return arg
 
-    def update_from_post(self, master, properties, changes, kwargs):
-        properties[self.name] = self.get_from_post(kwargs)
+    def updateFromKwargs(self, master, properties, changes, kwargs):
+        properties[self.name] = self.getFromKwargs(kwargs)
 
     def parse_from_args(self, l):
         if self.multiple:
@@ -115,7 +115,7 @@ class IntParameter(StringParameter):
 class BooleanParameter(BaseParameter):
     type = "bool"
 
-    def get_from_post(self, kwargs):
+    def getFromKwargs(self, kwargs):
         return self.name in kwargs and kwargs[self.name] == True
 
 
@@ -154,10 +154,10 @@ class InheritBuildParameter(ChoiceStringParameter):
     name = "inherit"
     compatible_builds = None
 
-    def get_from_post(self, kwargs):
+    def getFromKwargs(self, kwargs):
         raise ValueError("InheritBuildParameter can only be used by properties")
 
-    def update_from_post(self, master, properties, changes, kwargs):
+    def updateFromKwargs(self, master, properties, changes, kwargs):
         arg = kwargs.get(self.name, [""])[0]
         splitted_arg = arg.split(" ")[0].split("/")
         if len(splitted_arg) != 2:
@@ -182,10 +182,10 @@ class InheritBuildParameter(ChoiceStringParameter):
 class AnyPropertyParameter(BaseParameter):
     type = "anyproperty"
 
-    def get_from_post(self, kwargs):
+    def getFromKwargs(self, kwargs):
         raise ValueError("AnyPropertyParameter can only be used by properties")
 
-    def update_from_post(self, master, properties, changes, kwargs):
+    def updateFromKwargs(self, master, properties, changes, kwargs):
         validation = master.config.validation
         pname = kwargs.get("%sname" % self.name, [""])[0]
         pvalue = kwargs.get("%svalue" % self.name, [""])[0]
@@ -244,7 +244,7 @@ class ForceScheduler(base.BaseScheduler):
         changeids = []
 
         for param in self.forcedProperties:
-            yield defer.maybeDeferred(param.update_from_post, self.master, properties, changeids, kwargs)
+            yield defer.maybeDeferred(param.updateFromKwargs, self.master, properties, changeids, kwargs)
 
         changeids = map(lambda a: type(a)==int and a or a.number, changeids)
 
@@ -286,13 +286,13 @@ class ForceScheduler(base.BaseScheduler):
         if self.revision.regex == None:
             self.revision.regex = validation['revision']
 
-        reason = self.reason.get_from_post(kwargs)
-        branch = self.branch.get_from_post(kwargs)
-        revision = self.revision.get_from_post(kwargs)
-        repository = self.repository.get_from_post(kwargs)
-        project = self.project.get_from_post(kwargs)
+        reason = self.reason.getFromKwargs(kwargs)
+        branch = self.branch.getFromKwargs(kwargs)
+        revision = self.revision.getFromKwargs(kwargs)
+        repository = self.repository.getFromKwargs(kwargs)
+        project = self.project.getFromKwargs(kwargs)
         if owner is None:
-            owner = self.owner.get_from_post(kwargs)
+            owner = self.owner.getFromKwargs(kwargs)
 
         properties, changeids = yield self.gatherPropertiesAndChanges(**kwargs)
 
