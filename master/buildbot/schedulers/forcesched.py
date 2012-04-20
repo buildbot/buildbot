@@ -16,12 +16,7 @@
 import traceback
 import re
 from twisted.internet import defer
-try:
-    import email.utils as email_utils
-    email_utils = email_utils
-except ImportError:
-    # Python-2.4 capitalization
-    import email.Utils as email_utils
+import email.utils as email_utils
 
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
