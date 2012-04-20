@@ -379,7 +379,7 @@ class HttpStatusPush(StatusPush):
             else:
                 packets = json.dumps(items, separators=(',',':'))
             params = {'packets': packets}
-            params.update(self.extra_post)
+            params.update(self.extra_post_params)
             data = urllib.urlencode(params)
             if (not self.maxHttpRequestSize or
                 len(data) < self.maxHttpRequestSize):
@@ -399,6 +399,7 @@ class HttpStatusPush(StatusPush):
         """Do the HTTP POST to the server."""
         (encoded_packets, items) = self.popChunk()
         if not self.serverUrl:
+            # Silently drop the packets.
             return
 
         def Success(result):
