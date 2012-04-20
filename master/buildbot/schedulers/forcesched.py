@@ -45,8 +45,8 @@ class BaseParameter(object):
         # all other properties are generically passed via **kw
         self.__dict__.update(kw)
 
-    def get_from_post(self, req):
-        args = req.args.get(self.name, [])
+    def get_from_post(self, kwargs):
+        args = kwargs.get(self.name, [])
         if len(args) == 0:
             if self.required:
                 raise ValueError("'%s' needs to be specified" % (self.label))
@@ -72,8 +72,8 @@ class BaseParameter(object):
                     % (self.name,))
         return arg
 
-    def update_from_post(self, master, properties, changes, req):
-        properties[self.name] = self.get_from_post(req)
+    def update_from_post(self, master, properties, changes, kwargs):
+        properties[self.name] = self.get_from_post(kwargs)
 
     def parse_from_args(self, l):
         if self.multiple:
@@ -120,10 +120,8 @@ class IntParameter(StringParameter):
 class BooleanParameter(BaseParameter):
     type = "bool"
 
-    def get_from_post(self, req):
-        # damn html's ungeneric checkbox implementation...
-        checkbox = req.args.get("checkbox", [""])
-        return self.name in checkbox
+    def get_from_post(self, kwargs):
+        return self.name in kwargs and kwargs[self.name] == True
 
 
 class UserNameParameter(StringParameter):
@@ -161,11 +159,11 @@ class InheritBuildParameter(ChoiceStringParameter):
     name = "inherit"
     compatible_builds = None
 
-    def get_from_post(self, req):
+    def get_from_post(self, kwargs):
         raise ValueError("InheritBuildParameter can only be used by properties")
 
-    def update_from_post(self, master, properties, changes, req):
-        arg = req.args.get(self.name, [""])[0]
+    def update_from_post(self, master, properties, changes, kwargs):
+        arg = kwargs.get(self.name, [""])[0]
         splitted_arg = arg.split(" ")[0].split("/")
         if len(splitted_arg) != 2:
             raise ValueError("bad build: %s"%(arg))
@@ -189,13 +187,13 @@ class InheritBuildParameter(ChoiceStringParameter):
 class AnyPropertyParameter(BaseParameter):
     type = "anyproperty"
 
-    def get_from_post(self, req):
+    def get_from_post(self, kwargs):
         raise ValueError("AnyPropertyParameter can only be used by properties")
 
-    def update_from_post(self, master, properties, changes, req):
+    def update_from_post(self, master, properties, changes, kwargs):
         validation = master.config.validation
-        pname = req.args.get("%sname" % self.name, [""])[0]
-        pvalue = req.args.get("%svalue" % self.name, [""])[0]
+        pname = kwargs.get("%sname" % self.name, [""])[0]
+        pvalue = kwargs.get("%svalue" % self.name, [""])[0]
         if not pname:
             return
         pname_validate = validation['property_name']
@@ -245,12 +243,13 @@ class ForceScheduler(base.BaseScheduler):
     def stopService(self):
         pass
 
-    def gatherPropertiesAndChanges(self, req):
+    @defer.inlineCallbacks
+    def gatherPropertiesAndChanges(self, **kwargs):
         properties = {}
         changeids = []
 
         for param in self.forcedProperties:
-            param.update_from_post(self.master, properties, changeids, req)
+            yield defer.maybeDeferred(param.update_from_post, self.master, properties, changeids, kwargs)
 
         changeids = map(lambda a: type(a)==int and a or a.number, changeids)
 
@@ -258,12 +257,23 @@ class ForceScheduler(base.BaseScheduler):
         for pname, pvalue in properties.items():
             real_properties.setProperty(pname, pvalue, "Force Build Form")
 
-        return defer.succeed((real_properties, changeids))
+        defer.returnValue((real_properties, changeids))
 
-    @defer.inlineCallbacks
     def forceWithWebRequest(self, owner, builder_name, req):
         """Called by the web UI.
         Authentication is already done, thus owner is passed as argument
+        """
+        args = {}
+        # damn html's ungeneric checkbox implementation...
+        for cb in req.args.get("checkbox", []):
+            args[cb] = True
+        args.update(req.args)
+
+        return self.force(owner, builder_name, **args)
+
+    @defer.inlineCallbacks
+    def force(self, owner, builder_name, **kwargs):
+        """
         We check the parameters, and launch the build, if everything is correct
         """
         if not builder_name in self.builderNames:
@@ -281,15 +291,15 @@ class ForceScheduler(base.BaseScheduler):
         if self.revision.regex == None:
             self.revision.regex = validation['revision']
 
-        reason = self.reason.get_from_post(req)
-        branch = self.branch.get_from_post(req)
-        revision = self.revision.get_from_post(req)
-        repository = self.repository.get_from_post(req)
-        project = self.project.get_from_post(req)
+        reason = self.reason.get_from_post(kwargs)
+        branch = self.branch.get_from_post(kwargs)
+        revision = self.revision.get_from_post(kwargs)
+        repository = self.repository.get_from_post(kwargs)
+        project = self.project.get_from_post(kwargs)
         if owner is None:
-            owner = self.owner.get_from_post(req)
+            owner = self.owner.get_from_post(kwargs)
 
-        properties, changeids = yield self.gatherPropertiesAndChanges(req)
+        properties, changeids = yield self.gatherPropertiesAndChanges(**kwargs)
 
         properties.setProperty("reason", reason, "Force Build Form")
         properties.setProperty("owner", owner, "Force Build Form")
