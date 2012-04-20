@@ -20,7 +20,7 @@ from buildbot import config
 from buildbot.schedulers.forcesched import ForceScheduler, StringParameter
 from buildbot.schedulers.forcesched import IntParameter, FixedParameter
 from buildbot.schedulers.forcesched import BooleanParameter, UserNameParameter
-from buildbot.schedulers.forcesched import ChoiceStringParameter
+from buildbot.schedulers.forcesched import ChoiceStringParameter, ValidationError
 from buildbot.test.util import scheduler
 
 class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
@@ -40,17 +40,6 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                 self.OBJECTID)
         sched.master.config = config.MasterConfig()
         return sched
-
-    def makeRequest(self, **args):
-        r = mock.Mock()
-        def get(key):
-            a = args[key]
-            if type(a)==list:
-                return a
-            else:
-                return [a]
-        r.args = dict((k, get(k)) for k in args)
-        return r
 
     # tests
 
@@ -110,13 +99,13 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_basicForce(self):
         sched = self.makeScheduler()
-        req = self.makeRequest(branch='a',reason='because',revision='c',
-                               repository='d', project='p',
-                               property1name='p1',property1value='e',
-                               property2name='p2',property2value='f',
-                               property3name='p3',property3value='g',
-                               property4name='p4',property4value='h')
-        d = sched.forceWithWebRequest('user', 'a', req)
+        d = sched.force('user', 'a', branch='a', reason='because',revision='c',
+                        repository='d', project='p',
+                        property1name='p1',property1value='e',
+                        property2name='p2',property2value='f',
+                        property3name='p3',property3value='g',
+                        property4name='p4',property4value='h'
+                        )
         def check(res):
             bsid,brids = res
             self.db.buildsets.assertBuildset\
@@ -147,9 +136,9 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                             **kwargs):
         sched = self.makeScheduler(properties=[klass(name="p1",**kwargs)])
         if not req:
-            req = self.makeRequest(p1=value,reason='because')
+            req = dict(p1=value, reason='because')
         try:
-            bsid, brids = yield sched.forceWithWebRequest(owner, 'a', req)
+            bsid, brids = yield sched.force(owner, 'a', **req)
         except Exception,e:
             if not isinstance(e, expect):
                 raise
@@ -187,13 +176,13 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
 
     def test_BooleanParameter_True(self):
-        req = self.makeRequest(checkbox=["p1"],reason='because')
+        req = dict(p1=True,reason='because')
         self.do_ParameterTest(value="123", expect=True, klass=BooleanParameter,
                 req=req)
 
 
     def test_BooleanParameter_False(self):
-        req = self.makeRequest(checkbox=["p2"],reason='because')
+        req = dict(p2=True,reason='because')
         self.do_ParameterTest(value="123", expect=False,
                 klass=BooleanParameter, req=req)
 

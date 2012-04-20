@@ -119,7 +119,7 @@ class BooleanParameter(BaseParameter):
     type = "bool"
 
     def getFromKwargs(self, kwargs):
-        return self.name in kwargs and kwargs[self.name] == True
+        return self.name in kwargs and kwargs[self.name] == [True]
 
 
 class UserNameParameter(StringParameter):
@@ -257,18 +257,6 @@ class ForceScheduler(base.BaseScheduler):
 
         defer.returnValue((real_properties, changeids))
 
-    def forceWithWebRequest(self, owner, builder_name, req):
-        """Called by the web UI.
-        Authentication is already done, thus owner is passed as argument
-        """
-        args = {}
-        # damn html's ungeneric checkbox implementation...
-        for cb in req.args.get("checkbox", []):
-            args[cb] = True
-        args.update(req.args)
-
-        return self.force(owner, builder_name, **args)
-
     @defer.inlineCallbacks
     def force(self, owner, builder_name, **kwargs):
         """
@@ -279,6 +267,10 @@ class ForceScheduler(base.BaseScheduler):
             # for all the builders
             # we just do nothing on a builder that is not in our builderNames
             defer.returnValue(None)
+
+        # Currently the validation code expects all kwargs to be lists
+        # I don't want to refactor that now so much sure we comply...
+        kwargs = dict((k, [v]) if not isinstance(v, list) else (k,v) for k,v in kwargs.items())
 
         # probably need to clean that out later as the IProperty is already a
         # validation mechanism
