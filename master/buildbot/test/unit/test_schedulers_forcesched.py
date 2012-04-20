@@ -43,16 +43,13 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     def makeRequest(self, **args):
         r = mock.Mock()
-        def get(key, default):
-            if key in args:
-                a = args[key]
-                if type(a)==list:
-                    return a
-                else:
-                    return [a]
+        def get(key):
+            a = args[key]
+            if type(a)==list:
+                return a
             else:
-                return default
-        r.args.get = get
+                return [a]
+        r.args = dict((k, get(k)) for k in args)
         return r
 
     # tests
