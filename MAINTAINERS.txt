@@ -69,9 +69,9 @@ Mercurial VC
 
 Repo VC
     S: Maintained
-    M: Chris Soyars <ctsoyars@gmail.com>
+    M: Chris Soyars <ctsoyars@gmail.com> (github:ctso)
     M: Piotr Sikora <piotr.sikora@frickle.com> (irc:PiotrSikora)
-    M: Pierre Tardy <tardyp@gmail.com>
+    M: Pierre Tardy <tardyp@gmail.com> (github:tardyp)
     U: http://trac.buildbot.net/wiki/repovc
 
 Monotone VC
