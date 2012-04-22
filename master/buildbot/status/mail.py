@@ -496,7 +496,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                  'buildText': build.getText(),
                  'buildProperties': build.getProperties(),
                  'slavename': build.getSlavename(),
-                 'reason':  build.getReason(),
+                 'reason':  build.getReason().replace('\n', ''),
                  'responsibleUsers': build.getResponsibleUsers(),
                  'branch': "",
                  'revision': "",
