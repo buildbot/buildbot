@@ -85,13 +85,13 @@ class RemoteCommand(pb.Referenceable):
         # when our parent Step calls our .lostRemote() method.
         return self.deferred
 
-    def useLog(self, loog, closeWhenFinished=False, logfileName=None):
-        assert interfaces.ILogFile.providedBy(loog)
+    def useLog(self, log, closeWhenFinished=False, logfileName=None):
+        assert interfaces.ILogFile.providedBy(log)
         if not logfileName:
-            logfileName = loog.getName()
+            logfileName = log.getName()
         assert logfileName not in self.logs
         assert logfileName not in self.delayedLogs
-        self.logs[logfileName] = loog
+        self.logs[logfileName] = log
         self._closeWhenFinished[logfileName] = closeWhenFinished
 
     def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
