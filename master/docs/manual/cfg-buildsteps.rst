@@ -1440,6 +1440,12 @@ The :bb:step:`ShellCommand` arguments are:
     default this is "KILL" (9). Specify "TERM" (15) to give the process a
     chance to cleanup.  This functionality requires a 0.8.6 slave or newer.
 
+``initialStdin``
+    If the command expects input on stdin, that can be supplied a a string with
+    this parameter.  This value should not be excessively large, as it is
+    handled as a single string throughout Buildbot -- for example, do not pass
+    the contents of a tarball with this parameter.
+
 .. bb:step:: Configure
 
 Configure
