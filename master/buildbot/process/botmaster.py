@@ -224,9 +224,6 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
             for n in added_names:
                 slave = new_by_name[n]
                 slave.setServiceParent(self)
-
-                slave.botmaster = self
-                slave.master = self.master
                 self.slaves[n] = slave
 
         metrics.MetricCountEvent.log("num_slaves",
