@@ -88,13 +88,13 @@ def defaultMessage(mode, name, build, results, master_status):
         else:
             text += "The Buildbot has detected a passing build"
 
+    projects = []
     if ss_list:
-        projects = []
         for ss in ss_list:
             if ss.project and ss.project not in projects:
                 projects.append(ss.project)
-    else:
-        projects = master_status.getTitle()
+    if not projects:
+        projects = [master_status.getTitle()]
     text += " on builder %s while building %s.\n" % (name, ', '.join(projects))
 
     if master_status.getURLForThing(build):
