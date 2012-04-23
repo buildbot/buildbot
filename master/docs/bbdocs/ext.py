@@ -222,6 +222,8 @@ class BBDomain(Domain):
         'status' : ObjType('status', 'status'),
         'cmdline' : ObjType('cmdline', 'cmdline'),
         'msg' : ObjType('msg', 'msg'),
+        'rtype' : ObjType('rtype', 'rtype'),
+        'rpath' : ObjType('rpath', 'rpath'),
     }
 
     directives = {
@@ -266,6 +268,31 @@ class BBDomain(Domain):
                         typenames=('type',), can_collapse=True),
                     Field('var', label='Variable', names=('var',)),
                 ]),
+        'rtype' : make_ref_target_directive('rtype',
+                indextemplates=[
+                    'single: Resource Type; %s',
+                ],
+                has_content=True,
+                name_annotation='resource type:',
+                doc_field_types=[
+                    TypedField('attr', label='Attributes', names=('attr',),
+                        typenames=('type',), can_collapse=True),
+                ]),
+        'rpath' : make_ref_target_directive('rpath',
+                indextemplates=[
+                    'single: Resource Path; %s',
+                ],
+                name_annotation='path:',
+                has_content=True,
+                doc_field_types=[
+                    TypedField('pathkey', label='Path Keys',
+                        names=('pathkey',), typenames=('type',),
+                        can_collapse=True),
+                    Field('event', label='Event',
+                        names=('event',)),
+                    Field('opt', label='Option',
+                        names=('opt',)),
+                ]),
     }
 
     roles = {
@@ -276,6 +303,8 @@ class BBDomain(Domain):
         'status' : XRefRole(),
         'cmdline' : XRefRole(),
         'msg' : XRefRole(),
+        'rtype' : XRefRole(),
+        'rpath' : XRefRole(),
         'index' : XRefRole(),
 
         'bug' : BugRole(),
@@ -295,6 +324,8 @@ class BBDomain(Domain):
         make_index("status", "Status Target Index"),
         make_index("cmdline", "Command Line Index"),
         make_index("msg", "MQ Routing Key Index"),
+        make_index("rtype", "Resource Type Index"),
+        make_index("rpath", "Resource Path Index"),
     ]
 
     def resolve_xref(self, env, fromdocname, builder, typ, target, node,

@@ -45,6 +45,15 @@ class Matcher(unittest.TestCase):
         self.assertEqual(self.m[('A', 'a', 'B', 'b')],
                 ('AB', dict(a='a', b='b')))
 
+    def test_pattern_variables_int(self):
+        self.m[('A', 'i:a', 'B', 'i:b')] = 'AB'
+        self.assertEqual(self.m[('A', '10', 'B', '-20')],
+                ('AB', dict(a=10, b=-20)))
+
+    def test_pattern_variables_int_invalid(self):
+        self.m[('A', 'i:a')] = 'AB'
+        self.assertRaises(KeyError, lambda : self.m[('A', '1x0')])
+
     def test_prefix_matching(self):
         self.m[('A', ':a')] = 'A'
         self.m[('A', ':a', 'B', ':b')] = 'AB'

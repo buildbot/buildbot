@@ -7,5 +7,6 @@ externally-maintained code should be written.
 .. toctree::
     :maxdepth: 2
 
+    data
     database
     mq

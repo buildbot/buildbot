@@ -33,6 +33,7 @@ from buildbot import interfaces
 from buildbot.process.builder import BuilderControl
 from buildbot.db import connector as dbconnector, exceptions
 from buildbot.mq import connector as mqconnector
+from buildbot.data import connector as dataconnector
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.process.botmaster import BotMaster
 from buildbot.process import debug
@@ -126,6 +127,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         self.mq = mqconnector.MQConnector(self)
         self.mq.setServiceParent(self)
+
+        self.data = dataconnector.DataConnector(self)
+        self.data.setServiceParent(self)
 
         self.debug = debug.DebugServices(self)
         self.debug.setServiceParent(self)
@@ -427,7 +431,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 codebase = self.config.codebaseGenerator(chdict)
             else:
                 codebase = ''
-            
+
         if src:
             # create user object, returning a corresponding uid
             wfd = defer.waitForDeferred(

@@ -294,32 +294,7 @@ various components.
 Changes
 ~~~~~~~
 
-.. bb:msg:: change.$changeid.new
-
-    :var $changeid: the ID of the new change
-    :key integer changeid: the ID of this change
-    :key string author: the author of the change
-    :key files: source-code filenames changed
-    :type files: list of strings
-    :key string comments: user comments
-    :key string revision: revision for this change, or none if unknown
-    :key timestamp when_timestamp: time of the change
-    :key string branch: branch on which the change took place, or none for
-        the "default branch", whatever that might mean
-    :key string category: user-defined category of this change, or none
-    :key string revlink: link to a web view of this change
-    :key object properties: user-specified properties for this change,
-        represented as an object mapping keys to tuple (value, source)
-    :key string repository: unicode string; repository where this change
-        occurred
-    :key string project: unicode string; user-defined project to which this
-        change corresponds
-
-    This message indicates that a new change has been added.  Since changes are
-    never modified after they are added, this is the only message that will be
-    sent regarding this change.  The content of the message mirrors the change
-    dictionary returned by
-    :py:meth:`~buildbot.db.changes.ChangesConnectorComponent.getChange`.
+See :bb:rtype:`change`.
 
 Buildsets
 ~~~~~~~~~

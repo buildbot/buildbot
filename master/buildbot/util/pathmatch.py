@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import re
+
 class Matcher(object):
 
     def __init__(self):
@@ -24,6 +26,8 @@ class Matcher(object):
         self._patterns[path] = value
         self._dirty = True
 
+    path_elt_re = re.compile('(.?):([a-z0-9]+)')
+    type_fns = dict(i=int)
     def __getitem__(self, path):
         if self._dirty:
             self._compile()
@@ -31,11 +35,23 @@ class Matcher(object):
         patterns = self._by_length.get(len(path), {})
         for pattern in patterns:
             kwargs = {}
-            for ptrn, pth in zip(pattern, path):
-                if ptrn[0] == ':':
-                    kwargs[ptrn[1:]] = pth
+            for pattern_elt, path_elt in zip(pattern, path):
+                mo = self.path_elt_re.match(pattern_elt)
+                if mo:
+                    type_flag, arg_name = mo.groups()
+                    if type_flag:
+                        try:
+                            type_fn = self.type_fns[type_flag]
+                        except:
+                            assert type_flag in self.type_fns, \
+                                    "no such type flag %s" % type_flag
+                        try:
+                            path_elt = type_fn(path_elt)
+                        except:
+                            break
+                    kwargs[arg_name] = path_elt
                 else:
-                    if ptrn != pth:
+                    if pattern_elt != path_elt:
                         break
             else:
                 # complete match

@@ -19,6 +19,7 @@ using a database.  These classes should pass the same tests as are applied to
 the real connector components.
 """
 
+import random
 import base64
 from buildbot.util import json, epoch2datetime, datetime2epoch
 from twisted.python import failure
@@ -112,17 +113,17 @@ class Change(Row):
 
     defaults = dict(
         changeid = None,
-        author = 'frank',
-        comments = 'test change',
+        author = u'frank',
+        comments = u'test change',
         is_dir = 0,
-        branch = 'master',
-        revision = 'abcd',
-        revlink = 'http://vc/abcd',
+        branch = u'master',
+        revision = u'abcd',
+        revlink = u'http://vc/abcd',
         when_timestamp = 1200000,
-        category = 'cat',
-        repository = 'repo',
-        codebase =  'cb',
-        project = 'proj',
+        category = u'cat',
+        repository = u'repo',
+        codebase =  u'cb',
+        project = u'proj',
     )
 
     lists = ('files',)
@@ -388,7 +389,23 @@ class FakeChangesComponent(FakeDBComponent):
         except KeyError:
             return defer.succeed(None)
 
-        chdict = dict(
+        return defer.succeed(self._chdict(row))
+
+    def getChangeUids(self, changeid):
+        try:
+            ch_uids = [self.changes[changeid].uid]
+        except KeyError:
+            ch_uids = []
+        return defer.succeed(ch_uids)
+
+    def getRecentChanges(self, count):
+        ids = sorted(self.changes.keys())
+        chdicts = [ self._chdict(self.changes[id]) for id in ids[-count:] ]
+        random.shuffle(chdicts) # since order is not documented
+        return defer.succeed(chdicts)
+
+    def _chdict(self, row):
+        return dict(
                 changeid=row.changeid,
                 author=row.author,
                 files=row.files,
@@ -404,16 +421,6 @@ class FakeChangesComponent(FakeDBComponent):
                 codebase=row.codebase,
                 project=row.project)
 
-        return defer.succeed(chdict)
-
-    def getChangeUids(self, changeid):
-        try:
-            ch_uids = [self.changes[changeid].uid]
-        except KeyError:
-            ch_uids = []
-        return defer.succeed(ch_uids)
-
-    # TODO: getRecentChanges
 
     # fake methods
 
