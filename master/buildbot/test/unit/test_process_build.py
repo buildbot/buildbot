@@ -170,7 +170,7 @@ class TestBuild(unittest.TestCase):
         claimCount = [0]
         lock_access = l.access('counting')
         l.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(l).getLock(slavebuilder)
+        real_lock = b.builder.botmaster.getLockByID(l).getLock(slavebuilder.slave)
         def claim(owner, access):
             claimCount[0] += 1
             return real_lock.old_claim(owner, access)
@@ -199,7 +199,7 @@ class TestBuild(unittest.TestCase):
         claimCount = [0]
         lock_access = l.access('counting')
         l.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(l).getLock(slavebuilder)
+        real_lock = b.builder.botmaster.getLockByID(l).getLock(slavebuilder.slave)
         def claim(owner, access):
             claimCount[0] += 1
             return real_lock.old_claim(owner, access)

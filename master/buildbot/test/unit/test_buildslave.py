@@ -234,5 +234,3 @@ class TestAbstractBuildSlave(unittest.TestCase):
         lock = locks.SlaveLock('lock')
         bs = self.ConcreteBuildSlave('bot', 'pass', locks = [lock])
         bs.setServiceParent(botmaster)
-
-    test_setServiceParent_slaveLocks.todo = "SlaveLock not support for slave lock"
