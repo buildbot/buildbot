@@ -165,7 +165,6 @@ class TestBotMaster(unittest.TestCase):
         yield self.botmaster.reconfigServiceSlaves(self.new_config)
 
         self.assertIdentical(sl.parent, self.botmaster)
-        self.assertIdentical(sl.master, self.master)
         self.assertEqual(self.botmaster.slaves, { 'sl1' : sl })
 
         self.new_config.slaves = [ ]

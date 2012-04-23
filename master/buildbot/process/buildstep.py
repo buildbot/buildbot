@@ -487,7 +487,7 @@ class BuildStep(properties.PropertiesMixin):
         self.locks = lock_list
         # then narrow SlaveLocks down to the slave that this build is being
         # run on
-        self.locks = [(l.getLock(self.build.slavebuilder), la) for l, la in self.locks]
+        self.locks = [(l.getLock(self.build.slavebuilder.slave), la) for l, la in self.locks]
         for l, la in self.locks:
             if l in self.build.locks:
                 log.msg("Hey, lock %s is claimed by both a Step (%s) and the"

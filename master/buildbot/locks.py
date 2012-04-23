@@ -175,8 +175,8 @@ class RealSlaveLock:
     def __repr__(self):
         return self.description
 
-    def getLock(self, slavebuilder):
-        slavename = slavebuilder.slave.slavename
+    def getLock(self, slave):
+        slavename = slave.slavename
         if not self.locks.has_key(slavename):
             maxCount = self.maxCountForSlave.get(slavename,
                                                  self.maxCount)

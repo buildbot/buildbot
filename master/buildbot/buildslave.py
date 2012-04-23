@@ -176,6 +176,12 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             return # oh well..
         self.botmaster.maybeStartBuildsForSlave(self.slavename)
 
+    def setServiceParent(self, parent):
+        # botmaster needs to set before setServiceParent which calls startService
+        self.botmaster = parent
+        self.master = parent.master
+        service.MultiService.setServiceParent(self, parent)
+
     def startService(self):
         self.updateLocks()
         self.startMissingTimer()
