@@ -52,7 +52,8 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
         @param codebases: codebases that are necessary to process the changes
         @type codebases: dict with following struct:
-            {'codebase':{'repository':'', 'branch':'', 'revision:''}
+            key: '<codebase>'
+            value: {'repository':'<repo>', 'branch':'<br>', 'revision:'<rev>'}
 
         @param consumeChanges: true if this scheduler wishes to be informed
         about the addition of new changes.  Defaults to False.  This should
@@ -90,7 +91,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
         # Set the other codebases that are necessary to process the changes
         # These codebases will always result in a sourcestamp with or without changes
-        if codebases:
+        if codebases is not None:
             if not isinstance(codebases, dict):
                 raise ValueError, "Codebases must be a dict of dicts"
             for codebase, codebase_attrs in codebases.iteritems():
@@ -188,17 +189,11 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         return self.codebases[codebase]['repository']
 
     def getBranch(self, codebase):
-        if 'branch' in self.codebases[codebase]:
-            return self.codebases[codebase]['branch']
-        else:
-            return None
+        return self.codebases[codebase].get('branch', None)
 
     def getRevision(self, codebase):
-        if 'revision' in self.codebases[codebase]:
-            return self.codebases[codebase]['revision']
-        else:
-            return None
-    
+        return self.codebases[codebase].get('revision', None)
+
     ## change handling
 
     def startConsumingChanges(self, fileIsImportant=None, change_filter=None,
@@ -326,18 +321,9 @@ class BaseScheduler(service.MultiService, ComparableMixin):
             # add a sourcestamp for each codebase
             dl = []
             for codebase, cb_info in self.codebases.iteritems():
-                if 'repository' in cb_info:
-                    ss_repository = cb_info['repository']
-                else: 
-                    ss_repository = repository
-                if 'branch' in cb_info:
-                    ss_branch = cb_info['branch']
-                else:
-                    ss_branch = branch
-                if 'revision' in cb_info:
-                    ss_revision = cb_info['revision']
-                else:
-                    ss_revision = None
+                ss_repository = cb_info.get('repository', repository)
+                ss_branch = cb_info.get('branch', branch)
+                ss_revision = cb_info.get('revision', None)
                 dl.append(  self.master.db.sourcestamps.addSourceStamp(
                             codebase=codebase,
                             repository=ss_repository,
@@ -428,6 +414,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         d = defer.gatherResults(dl)
         wfd = defer.waitForDeferred(d)
         yield wfd
+        wfd.getResult()
 
         #process all unchanged codebases
         if self.codebases is not None:
@@ -440,7 +427,8 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                     dl.append(dcall)
             d = defer.gatherResults(dl)
             wfd = defer.waitForDeferred(d)
-            yield wfd                 
+            yield wfd
+            wfd.getResult()
                  
         # process all changed codebases
         dl = []
@@ -454,7 +442,8 @@ class BaseScheduler(service.MultiService, ComparableMixin):
             dl.append(dcall)
         d = defer.gatherResults(dl)
         wfd = defer.waitForDeferred(d)
-        yield wfd                 
+        yield wfd
+        wfd.getResult()    
 
         # add one buildset, this buildset is connected to the sourcestamps by the setid
         wfd = defer.waitForDeferred(self.addBuildsetForSourceStamp( setid=setid, 
@@ -504,7 +493,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         properties_dict = properties.asDict()
 
         if setid == None:
-            if ssid != None:
+            if ssid is not None:
                 wfd = defer.waitForDeferred(self.master.db.sourcestamps.getSourceStamp(ssid))
                 yield wfd
                 ssdict = wfd.getResult()
