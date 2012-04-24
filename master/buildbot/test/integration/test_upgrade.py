@@ -593,7 +593,7 @@ class TestPickles(unittest.TestCase):
                 Nsb.""")
         ss = cPickle.loads(pkl)
         self.assertTrue(ss.revision is None)
-        self.assertTrue(hasattr(ss, '_getSourceStampSetId_lock'))
+        self.assertTrue(hasattr(ss, '_addSourceStampToDatabase_lock'))
 
     def test_sourcestamp_version3(self):
         pkl = textwrap.dedent("""\
