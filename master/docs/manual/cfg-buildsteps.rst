@@ -229,10 +229,11 @@ parameters are mostly to specify where exactly the sources are coming from.
     will download code from an arbitrary repository.
 
 ``codebase``
-    Specifies which changes in a build are processed by the step. The default codebase
-    value is ''. The codebase must correspond to a codebase assigned by the 
-    :bb:cfg:`codebaseGenerator`. If there is no codebaseGenerator defined in the master 
-    then codebase doesn't need to be set, the default value will then match all changes. 
+    This specifies which codebase the source step should use to select the right
+    source stamp. The default codebase value is ''. The codebase must correspond
+    to a codebase assigned by the :bb:cfg:`codebaseGenerator`. If there is no
+    codebaseGenerator defined in the master then codebase doesn't need to be set,
+    the default value will then match all changes. 
     
 ``timeout``
     Specifies the timeout for slave-side operations, in seconds.  If
