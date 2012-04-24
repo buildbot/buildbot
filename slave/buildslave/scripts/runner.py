@@ -269,6 +269,7 @@ class MakerBase(usage.Options):
 class StartOptions(MakerBase):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
+        ['nodaemon', None, "Don't daemonize"],
         ]
     def getSynopsis(self):
         return "Usage:    buildslave start [<basedir>]"
@@ -280,6 +281,7 @@ class StopOptions(MakerBase):
 class RestartOptions(MakerBase):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
+        ['nodaemon', None, "Don't daemonize"],
         ]
     def getSynopsis(self):
         return "Usage:    buildslave restart [<basedir>]"
