@@ -93,7 +93,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         if not absolute or not self.properties.has_key('got_revision'):
             return self.sources
         # the got_revision must be stored per sourcestamp (or in the sourcestamp)
-        #return [ss.getAbsoluteSourceStamp(self.properties['got_revision']) for ss in self.sources]
         return [ss.getAbsoluteSourceStamp(ss.revision) for ss in self.sources]
 
     def getReason(self):
