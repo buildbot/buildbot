@@ -78,7 +78,11 @@ available with all schedulers.
         
         codebases = {'codebase1': {'repository':'....', ...}, 'codebase2': {} }
 
-    Buildsteps can have a reference to one of the codebases. The step will only 
+    .. IMPORTANT:: ``codebases`` behaves also like a change_filter on codebase.
+        If ``codebases`` is set then the scheduler will only process changes  when their 
+        codebases are found in ``codebases``
+
+    Buildsteps can have a reference to one of the codebases. The step will only
     get information (revision, branch etc.)  that is related to that codebase.
     When a scheduler is triggered by new changes, these changes (having a
     codebase) will be incorporated by the new build. The buildsteps referencing
@@ -86,7 +90,7 @@ available with all schedulers.
     The buildstep that references to a codebase that does not have changes in
     the build get the information from the codebases defintion as configured in
     the scheduler.
-         
+
 ``onlyImportant``
     A boolean that, when ``True``, only adds important changes to the
     buildset as sepcified in the ``fileIsImportant`` callable. This

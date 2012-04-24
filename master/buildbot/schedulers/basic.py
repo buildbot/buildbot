@@ -198,7 +198,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
 class SingleBranchScheduler(BaseBasicScheduler):
     def getChangeFilter(self, branch, branches, change_filter, categories):
-        if branch is NotABranch and not change_filter and not self.codebases:
+        if branch is NotABranch and not change_filter and self.codebases is not None:
             config.error(
                 "the 'branch' argument to SingleBranchScheduler is " +
                 "mandatory unless change_filter or codebases is provided")
