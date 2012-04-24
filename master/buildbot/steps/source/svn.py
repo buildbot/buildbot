@@ -79,6 +79,7 @@ class SVN(Source):
             if not svnInstalled:
                 raise BuildSlaveTooOldError("SVN is not installed on slave")
             return 0
+        d.addCallback(checkInstall)
 
         if self.mode == 'full':
             d.addCallback(self.full)

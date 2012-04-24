@@ -106,6 +106,7 @@ class Mercurial(Source):
             if not hgInstalled:
                 raise BuildSlaveTooOldError("Mercurial is not installed on slave")
             return 0
+        d.addCallback(checkInstall)
 
         if self.branchType == 'dirname':
             self.repourl = self.repourl + (branch or '')
