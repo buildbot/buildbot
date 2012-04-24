@@ -731,7 +731,11 @@ class BuilderControl:
             d = ssList[0].getSourceStampSetId(self.master.master)
             d.addCallback(add_sourcestamps, ssList[1:])
             d.addCallback(add_buildset)
-        return d
+            return d
+        else:
+            log.msg('Cannot start rebuild, rebuild has no sourcestamps for a new build')
+            return defer.succeed(None)
+        
 
     @defer.inlineCallbacks
     def getPendingBuildRequestControls(self):
