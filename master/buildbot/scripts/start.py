@@ -71,6 +71,8 @@ def launch(config):
             "--no_save",
             "--logfile=twistd.log", # windows doesn't use the same default
             "--python=buildbot.tac"]
+    if config['nodaemon']:
+        argv.extend(['--nodaemon'])
     sys.argv = argv
 
     # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use
