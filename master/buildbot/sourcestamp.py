@@ -306,7 +306,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             patch_author, patch_comment = self.patch_info
 
         def get_setid():
-            if sourcestampsetid != None:
+            if sourcestampsetid is not None:
                 return defer.succeed( sourcestampsetid )
             else:
                 return master.db.sourcestampsets.addSourceStampSet()
