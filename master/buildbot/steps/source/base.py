@@ -257,7 +257,7 @@ class Source(LoggingBuildStep):
                     self.addCompleteLog("patch", patch[1])
             else:
                 log.msg("No sourcestamp found in build for codebase '%s'" % self.codebase)
-                self.step_status.setText("Codebase '%s' not in build" % self.codebase)
+                self.step_status.setText(["Codebase", '%s' % self.codebase ,"not", "in", "build" ])
                 self.addCompleteLog("log",
                                     "No sourcestamp found in build for codebase '%s'" \
                                     % self.codebase)
