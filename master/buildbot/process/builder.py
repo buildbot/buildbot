@@ -699,6 +699,7 @@ class BuilderControl:
         d.addCallback(get_brs)
         return d
 
+    @defer.inlineCallbacks
     def rebuildBuild(self, bs, reason="<rebuild, no reason given>", extraProperties=None):
         if not bs.isFinished():
             return
@@ -712,30 +713,24 @@ class BuilderControl:
 
         properties_dict = dict((k,(v,s)) for (k,v,s) in properties.asList())
         ssList = bs.getSourceStamps(absolute=True)
-        def add_sourcestamps(sourcestampsetid, sourcestamps):
+        
+        if ssList:
+            sourcestampsetid = yield  ssList[0].getSourceStampSetId(self.master.master)
             dl = []
-            for ss in sourcestamps:
+            for ss in ssList[1:]:
                 # add defered to the list
                 dl.append(ss.addSourceStampToDatabase(self.master.master, sourcestampsetid))
-            d = defer.gatherResults(dl)
-            def return_setid(dummy):
-                return sourcestampsetid
-            d.addCallback(return_setid)
-            return d
-                
-        def add_buildset(sourcestampsetid):
-            return self.master.master.addBuildset(
+            yield defer.gatherResults(dl)
+
+            bsid, brids = yield self.master.master.addBuildset(
                     builderNames=[self.original.name],
-                    sourcestampsetid=sourcestampsetid, reason=reason, properties=properties_dict)
-        if ssList:
-            d = ssList[0].getSourceStampSetId(self.master.master)
-            d.addCallback(add_sourcestamps, ssList[1:])
-            d.addCallback(add_buildset)
-            return d
+                    sourcestampsetid=sourcestampsetid, 
+                    reason=reason, 
+                    properties=properties_dict)
+            defer.returnValue((bsid, brids))
         else:
             log.msg('Cannot start rebuild, rebuild has no sourcestamps for a new build')
-            return defer.succeed(None)
-        
+            defer.returnValue(None)
 
     @defer.inlineCallbacks
     def getPendingBuildRequestControls(self):
