@@ -182,17 +182,6 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         "Returns a list of the next times that builds are scheduled, if known."
         return []
 
-    ## codebase related methods
-    ## to have the code less dependent from input structure
-    def getRepository(self, codebase):
-        return self.codebases[codebase]['repository']
-
-    def getBranch(self, codebase):
-        return self.codebases[codebase].get('branch', None)
-
-    def getRevision(self, codebase):
-        return self.codebases[codebase].get('revision', None)
-
     ## change handling
 
     def startConsumingChanges(self, fileIsImportant=None, change_filter=None,
@@ -378,9 +367,9 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                 if codebase not in changesByCodebase:
                     # codebase has no changes
                     # create a sourcestamp that has no changes
-                    repository = self.getRepository(codebase)
-                    branch = self.getBranch(codebase)
-                    revision = self.getRevision(codebase)
+                    repository = self.codebases[codebase]['repository']
+                    branch = self.codebases[codebase].get('branch', None)
+                    revision = self.codebases[codebase].get('revision', None)
                     yield self.master.db.sourcestamps.addSourceStamp(
                             codebase=codebase,
                             repository=repository,
