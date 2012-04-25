@@ -85,7 +85,8 @@ class DevBuild:
         self.eta = build.getETA()
         self.details = details
         self.when = build.getTimes()[0]
-        self.source = build.getSourceStamp()
+        #TODO: support multiple sourcestamps
+        self.source = build.getSourceStamps()[0]
 
 
 class ConsoleStatusResource(HtmlResource):
@@ -155,7 +156,7 @@ class ConsoleStatusResource(HtmlResource):
             while build and depth < max_depth and build_count < max_builds:
                 depth += 1
                 build_count += 1
-                sourcestamp = build.getSourceStamp()
+                sourcestamp = build.getSourceStamps()[0]
                 allChanges.extend(sourcestamp.changes[:])
                 build = build.getPreviousBuild()
 
