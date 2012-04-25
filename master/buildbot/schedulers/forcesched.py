@@ -286,8 +286,9 @@ class ForceScheduler(base.BaseScheduler):
         revision = self.revision.getFromKwargs(kwargs)
         repository = self.repository.getFromKwargs(kwargs)
         project = self.project.getFromKwargs(kwargs)
+
         if owner is None:
-            owner = self.owner.getFromKwargs(kwargs)
+            owner = self.username.getFromKwargs(kwargs)
 
         properties, changeids = yield self.gatherPropertiesAndChanges(**kwargs)
 
