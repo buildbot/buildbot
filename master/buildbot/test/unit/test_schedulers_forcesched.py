@@ -110,8 +110,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             bsid,brids = res
             self.db.buildsets.assertBuildset\
                 (bsid,
-                 dict(reason="The web-page 'force build' button was pressed by"
-                            " 'user': because",
+                 dict(reason="A build was forced by 'user': because",
                       brids=brids,
                       external_idstring=None,
                       properties=[ ('owner', ('user', 'Force Build Form')),
@@ -146,8 +145,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
         self.db.buildsets.assertBuildset\
             (bsid,
-             dict(reason="The web-page 'force build' button was pressed "
-                         "by 'user': because",
+             dict(reason="A build was forced by 'user': because",
                   brids=brids,
                   external_idstring=None,
                   properties=[ 

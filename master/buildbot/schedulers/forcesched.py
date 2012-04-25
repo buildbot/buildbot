@@ -294,8 +294,7 @@ class ForceScheduler(base.BaseScheduler):
         properties.setProperty("reason", reason, "Force Build Form")
         properties.setProperty("owner", owner, "Force Build Form")
 
-        r = ("The web-page 'force build' button was pressed by '%s': %s"
-             % (owner, reason)) 
+        r = ("A build was forced by '%s': %s" % (owner, reason))
 
         # everything is validated, we can create our source stamp, and buildrequest
         res = yield self.schedule(builder_name, branch, revision, repository, project, changeids, properties, r)
