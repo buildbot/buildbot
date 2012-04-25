@@ -19,7 +19,6 @@ from twisted.application import service
 from twisted.internet import defer
 from buildbot.process.properties import Properties
 from buildbot.util import ComparableMixin
-from buildbot.changes import changes
 from buildbot import config, interfaces
 
 class BaseScheduler(service.MultiService, ComparableMixin):
@@ -351,107 +350,67 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         yield wfd.getResult()
 
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def addBuildsetForChanges(self, reason='', external_idstring=None,
             changeids=[], builderNames=None, properties=None):
         assert changeids is not []
-        chDict = {}
+        changesByCodebase = {}
 
-        def getChange(changeid = None):
-            d = self.master.db.changes.getChange(changeid)
-            def chdict2change(chdict):
-                if not chdict:
-                    return None
-                return changes.Change.fromChdict(self.master, chdict)
-            d.addCallback(chdict2change)
-            return d
-
-        def groupChange(change):
-            if change.codebase not in chDict:
-                chDict[change.codebase] = []
-            chDict[change.codebase].append(change)
-
-        def get_changeids_from_codebase(codebase):
-            return [c.number for c in chDict[codebase]]
+        def groupChangeByCodebase(chdict):
+            if chdict["codebase"] not in changesByCodebase:
+                changesByCodebase[chdict["codebase"]] = []
+            changesByCodebase[chdict["codebase"]].append(chdict)
 
         def get_last_change_for_codebase(codebase):
-            return max(chDict[codebase],key = lambda change: change.number)
-
-        def create_sourcestamp(changeids, change, setid = None):
-            return self.master.db.sourcestamps.addSourceStamp(
-                    codebase=change.codebase,
-                    repository=change.repository,
-                    branch=change.branch,
-                    revision=change.revision,
-                    project=change.project,
-                    changeids=changeids,
-                    sourcestampsetid=setid)
-
-        def create_sourcestamp_without_changes(setid, codebase):
-            repository = self.getRepository(codebase)
-            branch = self.getBranch(codebase)
-            revision = self.getRevision(codebase)
-            return self.master.db.sourcestamps.addSourceStamp(
-                    codebase=codebase,
-                    repository=repository,
-                    branch=branch,
-                    revision=revision,
-                    project='', 
-                    changeids=set(),
-                    sourcestampsetid=setid)
+            return max(changesByCodebase[codebase],key = lambda change: change["changeid"])
 
         # Define setid for this set of changed repositories
-        wfd = defer.waitForDeferred(self.master.db.sourcestampsets.addSourceStampSet())
-        yield wfd
-        setid = wfd.getResult()
+        setid = yield self.master.db.sourcestampsets.addSourceStampSet()
 
         # Changes are retrieved from database and grouped by their codebase
-        dl = []
         for changeid in changeids:
-            dcall = getChange(changeid = changeid)
-            dcall.addCallback(groupChange)
-            dl.append(dcall)
-        d = defer.gatherResults(dl)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        wfd.getResult()
+            chdict = yield self.master.db.changes.getChange(changeid)
+            groupChangeByCodebase(chdict)
 
         #process all unchanged codebases
-        if self.codebases is not None:
-            dl = []
+        if self.codebases:
             for codebase in self.codebases.iterkeys():
-                if codebase not in chDict:
+                if codebase not in changesByCodebase:
                     # codebase has no changes
                     # create a sourcestamp that has no changes
-                    dcall = create_sourcestamp_without_changes(setid, codebase)
-                    dl.append(dcall)
-            d = defer.gatherResults(dl)
-            wfd = defer.waitForDeferred(d)
-            yield wfd
-            wfd.getResult()
+                    repository = self.getRepository(codebase)
+                    branch = self.getBranch(codebase)
+                    revision = self.getRevision(codebase)
+                    yield self.master.db.sourcestamps.addSourceStamp(
+                            codebase=codebase,
+                            repository=repository,
+                            branch=branch,
+                            revision=revision,
+                            project='',
+                            changeids=set(),
+                            sourcestampsetid=setid)
                  
         # process all changed codebases
-        dl = []
-        for codebase in chDict:
+        for codebase in changesByCodebase:
             # collect the changeids
-            ids = get_changeids_from_codebase(codebase)
+            ids = [c["changeid"] for c in changesByCodebase[codebase]]
             lastChange = get_last_change_for_codebase(codebase)
             # pass the last change to fill the sourcestamp 
-            dcall = create_sourcestamp( changeids = ids, change=lastChange, 
-                                        setid = setid)
-            dl.append(dcall)
-        d = defer.gatherResults(dl)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        wfd.getResult()    
+            yield  self.master.db.sourcestamps.addSourceStamp(
+                        codebase=lastChange["codebase"],
+                        repository=lastChange["repository"],
+                        branch=lastChange["branch"],
+                        revision=lastChange["revision"],
+                        project=lastChange["project"],
+                        changeids=ids,
+                        sourcestampsetid=setid)
 
         # add one buildset, this buildset is connected to the sourcestamps by the setid
-        wfd = defer.waitForDeferred(self.addBuildsetForSourceStamp( setid=setid, 
+        bsid,brids = yield self.addBuildsetForSourceStamp( setid=setid,
                             reason=reason, external_idstring=external_idstring,
-                            builderNames=builderNames, properties=properties))
+                            builderNames=builderNames, properties=properties)
 
-        yield wfd
-        yield wfd.getResult()
+        defer.returnValue((bsid,brids))
 
     @defer.deferredGenerator
     def addBuildsetForSourceStamp(self, ssid=None, setid=None, reason='', external_idstring=None,
