@@ -92,12 +92,12 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         # These codebases will always result in a sourcestamp with or without changes
         if codebases is not None:
             if not isinstance(codebases, dict):
-                raise ValueError, "Codebases must be a dict of dicts"
+                config.error("Codebases must be a dict of dicts")
             for codebase, codebase_attrs in codebases.iteritems():
                 if not isinstance(codebase_attrs, dict):
-                    raise ValueError, "Codebases must be a dict of dicts"
+                    config.error("Codebases must be a dict of dicts")
                 if 'repository' not in codebase_attrs:
-                    raise ValueError, "The key 'repository' is mandatory in codebases"
+                    config.error("The key 'repository' is mandatory in codebases")
         
         self.codebases = codebases
         
@@ -342,13 +342,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
     @defer.inlineCallbacks
     def addBuildsetForChanges(self, reason='', external_idstring=None,
             changeids=[], builderNames=None, properties=None):
-        assert changeids is not []
         changesByCodebase = {}
-
-        def groupChangeByCodebase(chdict):
-            if chdict["codebase"] not in changesByCodebase:
-                changesByCodebase[chdict["codebase"]] = []
-            changesByCodebase[chdict["codebase"]].append(chdict)
 
         def get_last_change_for_codebase(codebase):
             return max(changesByCodebase[codebase],key = lambda change: change["changeid"])
@@ -359,39 +353,42 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         # Changes are retrieved from database and grouped by their codebase
         for changeid in changeids:
             chdict = yield self.master.db.changes.getChange(changeid)
-            groupChangeByCodebase(chdict)
+            # group change by codebase
+            changesByCodebase.setdefault(chdict["codebase"], []).append(chdict)
 
         #process all unchanged codebases
-        if self.codebases:
-            for codebase in self.codebases.iterkeys():
+        if self.codebases is not None:
+            for codebase in self.codebases:
+                args = {'codebase': codebase, 'sourcestampsetid': setid }
                 if codebase not in changesByCodebase:
                     # codebase has no changes
                     # create a sourcestamp that has no changes
-                    repository = self.codebases[codebase]['repository']
-                    branch = self.codebases[codebase].get('branch', None)
-                    revision = self.codebases[codebase].get('revision', None)
-                    yield self.master.db.sourcestamps.addSourceStamp(
-                            codebase=codebase,
-                            repository=repository,
-                            branch=branch,
-                            revision=revision,
-                            project='',
-                            changeids=set(),
-                            sourcestampsetid=setid)
-                 
-        # process all changed codebases
-        for codebase in changesByCodebase:
-            # collect the changeids
-            ids = [c["changeid"] for c in changesByCodebase[codebase]]
+                    args['repository'] = self.codebases[codebase]['repository']
+                    args['branch'] = self.codebases[codebase].get('branch', None)
+                    args['revision'] = self.codebases[codebase].get('revision', None)
+                    args['changeids'] = set()
+                    args['project'] = ''
+                else:
+                    args['changeids'] = [c["changeid"] for c in changesByCodebase[codebase]]
+                    lastChange = get_last_change_for_codebase(codebase)
+                    for key in ['repository', 'branch', 'revision', 'project']:
+                        args[key] = lastChange[key]
+
+                yield self.master.db.sourcestamps.addSourceStamp(**args)
+        else: # codebases None
+            if len(changesByCodebase) != 1:
+                config.error("Changes have different codebases while 'codebases' is not defined")
+            # get the one and only key
+            codebase = changesByCodebase.keys()[0]
             lastChange = get_last_change_for_codebase(codebase)
             # pass the last change to fill the sourcestamp 
             yield  self.master.db.sourcestamps.addSourceStamp(
-                        codebase=lastChange["codebase"],
+                        codebase=codebase,
                         repository=lastChange["repository"],
                         branch=lastChange["branch"],
                         revision=lastChange["revision"],
                         project=lastChange["project"],
-                        changeids=ids,
+                        changeids=changeids,
                         sourcestampsetid=setid)
 
         # add one buildset, this buildset is connected to the sourcestamps by the setid
