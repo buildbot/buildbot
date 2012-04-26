@@ -70,6 +70,11 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
+ * ``BuildStep.start`` can now optionally return a deferred and any errback
+   will be handled gracefully. If you use inlineCallbacks, this means that
+   unexpected exceptions and failures raised will be captured and logged and
+   the build shut down normally.
+
 Features
 ~~~~~~~~
 

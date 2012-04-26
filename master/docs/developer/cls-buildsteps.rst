@@ -181,16 +181,16 @@ BuildStep
 
     .. py:method:: start()
 
-        :returns: ``None`` or :data:`~buildbot.status.results.SKIPPED`
+	:returns: Deferred, ``None`` or
+            :data:`~buildbot.status.results.SKIPPED`
 
         Begin the step. Subclasses should override this method to do local
         processing, fire off remote commands, etc.  The parent method raises
         :exc:`NotImplementedError`.
 
-        Note that this method does *not* return a Deferred.  When the step is
-        done, it should call :meth:`finished`, with a result -- a constant from
-        :mod:`buildbot.status.results`.  The result will be handed off to
-        the :class:`~buildbot.process.build.Build`.
+        When the step is done, it should call :meth:`finished`, with a result
+        -- a constant from :mod:`buildbot.status.results`.  The result will be
+        handed off to the :class:`~buildbot.process.build.Build`.
 
         If the step encounters an exception, it should call :meth:`failed` with
         a Failure object. This method automatically fails the whole build with
