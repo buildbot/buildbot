@@ -276,6 +276,9 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.wasUpgraded = True
 
     def upgradeToVersion3(self):
+        #The database has been upgraded where all existing sourcestamps got an
+        #setid equal to its ssid
+        self.sourcestampsetid = self.ssid
         #version 2 did not have codebase; set to ''
         self.codebase = ''
         self.wasUpgraded = True
