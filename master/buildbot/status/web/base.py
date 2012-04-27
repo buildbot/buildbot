@@ -334,8 +334,7 @@ class HtmlResource(resource.Resource, ContextMixin):
             return data
         d.addCallback(handle)
         def ok(data):
-            if data:
-                request.write(data)
+            request.write(data)
             try:
                 request.finish()
             except RuntimeError:
