@@ -85,13 +85,13 @@ class RemoteCommand(pb.Referenceable):
         # when our parent Step calls our .lostRemote() method.
         return self.deferred
 
-    def useLog(self, loog, closeWhenFinished=False, logfileName=None):
-        assert interfaces.ILogFile.providedBy(loog)
+    def useLog(self, log, closeWhenFinished=False, logfileName=None):
+        assert interfaces.ILogFile.providedBy(log)
         if not logfileName:
-            logfileName = loog.getName()
+            logfileName = log.getName()
         assert logfileName not in self.logs
         assert logfileName not in self.delayedLogs
-        self.logs[logfileName] = loog
+        self.logs[logfileName] = log
         self._closeWhenFinished[logfileName] = closeWhenFinished
 
     def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
@@ -487,7 +487,7 @@ class BuildStep(properties.PropertiesMixin):
         self.locks = lock_list
         # then narrow SlaveLocks down to the slave that this build is being
         # run on
-        self.locks = [(l.getLock(self.build.slavebuilder), la) for l, la in self.locks]
+        self.locks = [(l.getLock(self.build.slavebuilder.slave), la) for l, la in self.locks]
         for l, la in self.locks:
             if l in self.build.locks:
                 log.msg("Hey, lock %s is claimed by both a Step (%s) and the"

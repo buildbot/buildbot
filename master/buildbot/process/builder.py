@@ -260,9 +260,12 @@ class Builder(config.ReconfigurableServiceMixin,
         # into a list so that, at any point, we can abort this operation.
         cleanups = []
         def run_cleanups():
-            while cleanups:
-                fn = cleanups.pop()
-                fn()
+            try:
+                while cleanups:
+                    fn = cleanups.pop()
+                    fn()
+            except:
+                log.err(failure.Failure(), "while running %r" % (run_cleanups,))
 
         # the last cleanup we want to perform is to update the big
         # status based on any other cleanup

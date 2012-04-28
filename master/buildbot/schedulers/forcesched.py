@@ -283,7 +283,7 @@ class ForceScheduler(base.BaseScheduler):
 
         real_properties.setProperty("owner", owner, "Force Build Form")
 
-        r = ("The web-page 'force build' button was pressed by '%s': %s\n"
+        r = ("The web-page 'force build' button was pressed by '%s': %s"
              % (owner, reason)) 
 
         d = master.db.sourcestampsets.addSourceStampSet()
