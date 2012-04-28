@@ -471,8 +471,11 @@ changes
 
     .. py:method:: getRecentChanges(count)
 
+        :param count: maximum number of instances to return
+        :returns: list of dictionaries via Deferred, ordered by changeid
+
         Get a list of the ``count`` most recent changes, represented as
-        dictionaies; returns fewer if that many do not exist.
+        dictionaries; returns fewer if that many do not exist.
 
         .. note::
             For this function, "recent" is determined by the order of the
@@ -480,10 +483,6 @@ changes
             DVCS's, where the timestamp of a change may be significantly
             earlier than the time at which it is merged into a repository
             monitored by Buildbot.
-
-        @param count: maximum number of instances to return
-
-        @returns: list of dictionaries via Deferred, ordered by changeid
 
     .. py:method:: getLatestChangeid()
 
