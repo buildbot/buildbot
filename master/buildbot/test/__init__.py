@@ -28,3 +28,8 @@ except ImportError:
     print >>sys.stderr, ("\nBuildbot tests require the 'mock' module; "
                          "try 'pip install mock'")
     os._exit(1)
+
+if mock.__version__.split('.')[:2] < (0, 8):
+    print >>sys.stderr, ("\nBuildbot tests require mock version 0.8.0 or "
+                         "higher; try 'pip install -U mock'")
+    os._exit(1)

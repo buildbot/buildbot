@@ -12,6 +12,8 @@ Nine
 ..
     For the mo ment, release notes for the nine branch go here, for ease of merging.
 
+* Buildbot's tests now require at least Mock-0.8.0.
+
 Master
 ++++++
 
