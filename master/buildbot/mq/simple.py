@@ -44,7 +44,7 @@ class SimpleMQ(config.ReconfigurableServiceMixin, base.MQBase):
         if persistent_name:
             if persistent_name in self.persistent_qrefs:
                 qref = self.persistent_qrefs[persistent_name]
-                qref.start_consuming(callback)
+                qref.startConsuming(callback)
             else:
                 qref = PersistentQueueRef(self, callback, topics)
                 self.qrefs.append(qref)
@@ -114,7 +114,7 @@ class PersistentQueueRef(QueueRef):
         QueueRef.__init__(self, mq, callback, topics)
         self.queue = []
 
-    def start_consuming(self, callback):
+    def startConsuming(self, callback):
         self.callback = callback
         self.active = True
 
