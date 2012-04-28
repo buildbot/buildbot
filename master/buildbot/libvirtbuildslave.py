@@ -19,8 +19,12 @@ import os
 from twisted.internet import defer, utils, reactor, threads
 from twisted.python import log
 from buildbot.buildslave import AbstractBuildSlave, AbstractLatentBuildSlave
+from buildbot import config
 
-import libvirt
+try:
+    import libvirt
+except ImportError:
+    libvirt = None
 
 
 class WorkQueue(object):
@@ -148,6 +152,10 @@ class LibVirtSlave(AbstractLatentBuildSlave):
                  missing_timeout=60*20, build_wait_timeout=60*10, properties={}, locks=None):
         AbstractLatentBuildSlave.__init__(self, name, password, max_builds, notify_on_missing,
                                           missing_timeout, build_wait_timeout, properties, locks)
+
+        if not libvirt:
+            config.error("The python module 'libvirt' is needed to use a LibVirtSlave")
+
         self.name = name
         self.connection = connection
         self.image = hd_image
