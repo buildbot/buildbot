@@ -344,14 +344,21 @@ class MasterConfig(object):
 
 
     def load_mq(self, filename, config_dict, errors):
+        from buildbot.mq import connector # avoid circular imports
         if 'mq' in config_dict:
-            mq = config_dict['mq']
-            if set(mq.keys()) - set(['type', 'debug']):
-                errors.addError("unrecognized keys in c['mq']")
-            self.mq.update(mq)
+            self.mq.update(config_dict['mq'])
 
-        if self.mq['type'] not in ('simple',):
-            errors.addError("mq type '%s' is not known" % (self.mq['type'],))
+        classes = connector.MQConnector.classes
+        typ = self.mq.get('type', 'simple')
+        if typ not in classes:
+            errors.addError("mq type '%s' is not known" % (typ,))
+            return
+
+        known_keys = classes[typ]['keys']
+        unk = set(self.mq.keys()) - known_keys - set(['type'])
+        if unk:
+            errors.addError("unrecognized keys in c['mq']: %s"
+                    % (', '.join(unk),))
 
 
     def load_metrics(self, filename, config_dict, errors):

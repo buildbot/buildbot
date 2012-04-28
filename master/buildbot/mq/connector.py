@@ -20,8 +20,10 @@ from twisted.python.reflect import namedObject
 class MQConnector(config.ReconfigurableServiceMixin, service.MultiService):
 
     classes = {
-        # if you add types here, add them to master/buildbot/config.py, too
-        'simple' : "buildbot.mq.simple.SimpleMQ",
+        'simple' : {
+            'class' : "buildbot.mq.simple.SimpleMQ",
+            'keys' : set(['debug']),
+        },
     }
 
     def __init__(self, master):
@@ -39,7 +41,7 @@ class MQConnector(config.ReconfigurableServiceMixin, service.MultiService):
         typ = self.master.config.mq['type']
         assert typ in self.classes # this is checked by MasterConfig
         self.impl_type = typ
-        cls = namedObject(self.classes[typ])
+        cls = namedObject(self.classes[typ]['class'])
         self.impl = cls(self.master)
 
         # set up the impl as a child service

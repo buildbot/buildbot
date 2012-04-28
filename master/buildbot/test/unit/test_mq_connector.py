@@ -35,14 +35,19 @@ class MQConnector(unittest.TestCase):
         self.mqconfig = self.master.config.mq = {}
         self.conn = connector.MQConnector(self.master)
 
+    def patchFakeMQ(self, name='fake'):
+        self.patch(connector.MQConnector, 'classes',
+            { name :
+                { 'class':'buildbot.test.unit.test_mq_connector.FakeMQ' },
+            })
+
     def test_setup_unknown_type(self):
         self.mqconfig['type'] = 'unknown'
         self.assertRaises(AssertionError, lambda :
                 self.conn.setup())
 
     def test_setup_simple_type(self):
-        self.patch(connector.MQConnector, 'classes',
-                    dict(simple='buildbot.test.unit.test_mq_connector.FakeMQ'))
+        self.patchFakeMQ(name='simple')
         self.mqconfig['type'] = 'simple'
         self.conn.setup()
         self.assertIsInstance(self.conn.impl, FakeMQ)
@@ -51,8 +56,7 @@ class MQConnector(unittest.TestCase):
                          self.conn.startConsuming)
 
     def test_reconfigService(self):
-        self.patch(connector.MQConnector, 'classes',
-                    dict(fake='buildbot.test.unit.test_mq_connector.FakeMQ'))
+        self.patchFakeMQ()
         self.mqconfig['type'] = 'fake'
         self.conn.setup()
         new_config = mock.Mock()
@@ -65,8 +69,7 @@ class MQConnector(unittest.TestCase):
 
     @defer.deferredGenerator
     def test_reconfigService_change_type(self):
-        self.patch(connector.MQConnector, 'classes',
-                    dict(fake='buildbot.test.unit.test_mq_connector.FakeMQ'))
+        self.patchFakeMQ()
         self.mqconfig['type'] = 'fake'
         self.conn.setup()
         new_config = mock.Mock()
