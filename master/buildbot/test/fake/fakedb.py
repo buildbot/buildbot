@@ -107,6 +107,18 @@ class BuildRequestClaim(Row):
     required_columns = ('brid', 'objectid', 'claimed_at')
 
 
+class Tag(Row):
+    table = "tags"
+
+    defaults = dict(
+        id = None,
+        tag = 'test tag',
+    )
+
+    id_column = 'id'
+    required_columns = ('tag',)
+
+
 class Change(Row):
     table = "changes"
 
@@ -161,6 +173,16 @@ class ChangeUser(Row):
     )
 
     required_columns = ('changeid',)
+
+class ChangeTags(Row):
+    table = "change_tags"
+
+    defaults = dict(
+        changeid = None,
+        tagid = None,
+    )
+
+    required_columns = ('changeid','tagid')
 
 class Patch(Row):
     table = "patches"
