@@ -6,6 +6,15 @@ Release Notes for Buildbot |version|
     Most simply need an additional bulleted list item, but more significant
     changes can be given a subsection of their own.
 
+Nine
+++++
+
+..
+    For the mo ment, release notes for the nine branch go here, for ease of merging.
+
+Master
+++++++
+
 The following are the release notes for Buildbot |version|.
 
 Master
