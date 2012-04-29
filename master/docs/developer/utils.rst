@@ -511,6 +511,28 @@ This module contains a few utilities that are not included with SQLAlchemy.
     versions that did not have a ``__version__`` attribute are represented by
     ``(0,0,0)``.
 
+buildbot.util.pathmatcher
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.pathmatcher
+
+.. py:class:: Matcher
+
+    This class implements the path-matching algorithm used by the data API.
+
+    Patterns are tuples of strings, with strings beginning with a colon (``:``) denoting variables.
+    A tuple of strings matches a pattern if the lengths are identical, and if every non-variable pattern element matches exactly.
+
+    A matcher object takes patterns using dictionary-assignment syntax::
+
+        matcher[('change', ':changeid')] = Change()
+
+    and performs matching using the dictionary-lookup syntax::
+
+        changeEndpoint, kwargs = matcher[('change', '13')]
+
+    where the result is a tuple of the original assigned object (the ``Change`` instance in this case) and the values of any variables in the path.
+
 buildbot.util.subscription
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
