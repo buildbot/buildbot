@@ -197,7 +197,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
             log.msg("Not accepting builds as existing domain but slave not connected")
             return False
 
-       return AbstractLatentBuildSlave.canStartBuild(self)
+        return AbstractLatentBuildSlave.canStartBuild(self)
 
     def _prepare_base_image(self):
         """
@@ -255,9 +255,9 @@ class LibVirtSlave(AbstractLatentBuildSlave):
             log.msg("Cannot start a VM (%s), failing gracefully and triggering a new build check" % self.name)
             log.err(failure)
             self.domain = None
-            return False
-           
-        return True
+            defer.returnValue(False)
+
+        defer.returnValue(True)
 
     def stop_instance(self, fast=False):
         """
