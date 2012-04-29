@@ -17,29 +17,7 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer, reactor, utils
 from buildbot import libvirtbuildslave, config
-from buildbot.test.fake import fakemaster
-
-class FakeLibVirt(object):
-
-    def __init__(self, patch):
-        self.patch = patch
-        self.domains = {}
-
-        self.libvirt = mock.Mock()
-        self.patch(libvirtbuildslave, "libvirt", self.libvirt)
-
-        conn = self.libvirt_conn = self.libvirt.open.return_value = mock.Mock()
-        conn.listDomainsID.side_effect = self.domains.keys
-        conn.lookupByName.side_effect = lambda name: self.domains[name]
-        conn.lookupByID.side_effect = lambda name: self.domains[name]
-
-        self.conn = libvirtbuildslave.Connection("test:///")
-
-    def add_domain(self, name):
-        domain = mock.Mock()
-        domain.name.return_value = name
-        self.domains[name] = domain
-        return domain
+from buildbot.test.fake import fakemaster, libvirt
 
 
 class TestLibVirtSlave(unittest.TestCase):
@@ -48,7 +26,9 @@ class TestLibVirtSlave(unittest.TestCase):
         pass
 
     def setUp(self):
-        self.libvirt = FakeLibVirt(patch=self.patch)
+        self.patch(libvirtbuildslave, "libvirt", libvirt)
+        self.conn = libvirtbuildslave.Connection("test://")
+        self.lvconn = self.conn.connection
 
     def test_constructor_nolibvirt(self):
         self.patch(libvirtbuildslave, "libvirt", None)
@@ -56,22 +36,21 @@ class TestLibVirtSlave(unittest.TestCase):
             'bot', 'pass', None, 'path', 'path')
 
     def test_constructor_minimal(self):
-        conn = self.libvirt.conn
-        bs = self.ConcreteBuildSlave('bot', 'pass', conn, 'path', 'otherpath')
+        bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'path', 'otherpath')
         yield bs._find_existing_deferred
         self.assertEqual(bs.slavename, 'bot')
         self.assertEqual(bs.password, 'pass')
-        self.assertEqual(bs.connection, conn)
+        self.assertEqual(bs.connection, self.conn)
         self.assertEqual(bs.image, 'path')
         self.assertEqual(bs.base_image, 'otherpath')
         self.assertEqual(bs.keepalive_interval, 3600)
 
     @defer.inlineCallbacks
     def test_find_existing(self):
-        d = self.libvirt.add_domain("bot")
+        d = self.lvconn.fake_add("bot")
 
-        bs = self.ConcreteBuildSlave('bot', 'pass', self.libvirt.conn, 'p', 'o')
-        yield bs._find_existing_deferred        
+        bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'p', 'o')
+        yield bs._find_existing_deferred
 
         self.assertEqual(bs.domain.domain, d)
         self.assertEqual(bs.substantiated, True)
@@ -81,7 +60,7 @@ class TestLibVirtSlave(unittest.TestCase):
         self.patch(utils, "getProcessValue", mock.Mock())
         utils.getProcessValue.side_effect = lambda x,y: defer.succeed(0)
 
-        bs = self.ConcreteBuildSlave('bot', 'pass', self.libvirt.conn, 'p', None)
+        bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'p', None)
         yield bs._find_existing_deferred
         yield bs._prepare_base_image()
 
@@ -92,7 +71,7 @@ class TestLibVirtSlave(unittest.TestCase):
         self.patch(utils, "getProcessValue", mock.Mock())
         utils.getProcessValue.side_effect = lambda x,y: defer.succeed(0)
 
-        bs = self.ConcreteBuildSlave('bot', 'pass', self.libvirt.conn, 'p', 'o')
+        bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'p', 'o')
         yield bs._find_existing_deferred
         yield bs._prepare_base_image()
 
@@ -105,7 +84,7 @@ class TestLibVirtSlave(unittest.TestCase):
         self.patch(utils, "getProcessValue", mock.Mock())
         utils.getProcessValue.side_effect = lambda x,y: defer.succeed(0)
 
-        bs = self.ConcreteBuildSlave('bot', 'pass', self.libvirt.conn, 'p', 'o')
+        bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'p', 'o')
         yield bs._find_existing_deferred
         bs.cheap_copy = False
         yield bs._prepare_base_image()
@@ -115,7 +94,7 @@ class TestLibVirtSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_start_instance(self):
-        bs = self.ConcreteBuildSlave('b', 'p', self.libvirt.conn, 'p', 'o',
+        bs = self.ConcreteBuildSlave('b', 'p', self.conn, 'p', 'o',
             xml='<xml/>')
 
         prep = mock.Mock()
@@ -129,7 +108,7 @@ class TestLibVirtSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setup_canStartBuild(self):
-        bs = self.ConcreteBuildSlave('b', 'p', self.libvirt.conn, 'p', 'o')
+        bs = self.ConcreteBuildSlave('b', 'p', self.conn, 'p', 'o')
         yield bs._find_existing_deferred
         bs.updateLocks()
         defer.returnValue(bs)
