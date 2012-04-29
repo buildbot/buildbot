@@ -17,7 +17,7 @@
 import os
 
 from twisted.internet import defer, utils, reactor, threads
-from twisted.python import log
+from twisted.python import log, failure
 from buildbot.buildslave import AbstractBuildSlave, AbstractLatentBuildSlave
 from buildbot import config
 
@@ -125,14 +125,14 @@ class Connection(object):
     @defer.inlineCallbacks
     def lookupByName(self, name):
         """ I lookup an existing prefined domain """
-        d = yield queue.executeInThread(self.connection.lookupByName, name)
+        res = yield queue.executeInThread(self.connection.lookupByName, name)
         defer.returnValue(self.DomainClass(self, res))
 
     @defer.inlineCallbacks
     def create(self, xml):
         """ I take libvirt XML and start a new VM """
-        d = yield queue.executeInThread(self.connection.createXML, xml, 0)
-        defer.returnVlalue(self.DomainClass(self, res))
+        res = yield queue.executeInThread(self.connection.createXML, xml, 0)
+        defer.returnValue(self.DomainClass(self, res))
 
     @defer.inlineCallbacks
     def all(self):
@@ -168,7 +168,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         self.domain = None
 
         self.ready = False
-        self._find_existing_instance()
+        self._find_existing_deferred = self._find_existing_instance()
 
     @defer.inlineCallbacks
     def _find_existing_instance(self):
@@ -241,7 +241,8 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         in the list of defined virtual machines and start that.
         """
         if self.domain is not None:
-             raise ValueError('domain active')
+             log.msg("Cannot start_instance '%s' as already active" % self.name)
+             defer.returnValue(False)
 
         yield self._prepare_base_image()
 
@@ -253,7 +254,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
                 yield self.domain.create()
         except Exception, f:
             log.msg("Cannot start a VM (%s), failing gracefully and triggering a new build check" % self.name)
-            log.err(failure)
+            log.err(failure.Failure())
             self.domain = None
             defer.returnValue(False)
 

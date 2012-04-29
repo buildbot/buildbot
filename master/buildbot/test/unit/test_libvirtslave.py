@@ -15,14 +15,40 @@
 
 import mock
 from twisted.trial import unittest
-from twisted.internet import defer, reactor
+from twisted.internet import defer, reactor, utils
 from buildbot import libvirtbuildslave, config
 from buildbot.test.fake import fakemaster
+
+class FakeLibVirt(object):
+
+    def __init__(self, patch):
+        self.patch = patch
+        self.domains = {}
+
+        self.libvirt = mock.Mock()
+        self.patch(libvirtbuildslave, "libvirt", self.libvirt)
+
+        conn = self.libvirt_conn = self.libvirt.open.return_value = mock.Mock()
+        conn.listDomainsID.side_effect = self.domains.keys
+        conn.lookupByName.side_effect = lambda name: self.domains[name]
+        conn.lookupByID.side_effect = lambda name: self.domains[name]
+
+        self.conn = libvirtbuildslave.Connection("test:///")
+
+    def add_domain(self, name):
+        domain = mock.Mock()
+        domain.name.return_value = name
+        self.domains[name] = domain
+        return domain
+
 
 class TestLibVirtSlave(unittest.TestCase):
 
     class ConcreteBuildSlave(libvirtbuildslave.LibVirtSlave):
         pass
+
+    def setUp(self):
+        self.libvirt = FakeLibVirt(patch=self.patch)
 
     def test_constructor_nolibvirt(self):
         self.patch(libvirtbuildslave, "libvirt", None)
@@ -30,18 +56,121 @@ class TestLibVirtSlave(unittest.TestCase):
             'bot', 'pass', None, 'path', 'path')
 
     def test_constructor_minimal(self):
-        self.patch(libvirtbuildslave, "libvirt", mock.Mock())
-
-        connection = mock.Mock()
-        connection.all.return_value = []
-
-        bs = self.ConcreteBuildSlave('bot', 'pass', connection, 'path', 'otherpath')
+        conn = self.libvirt.conn
+        bs = self.ConcreteBuildSlave('bot', 'pass', conn, 'path', 'otherpath')
+        yield bs._find_existing_deferred
         self.assertEqual(bs.slavename, 'bot')
         self.assertEqual(bs.password, 'pass')
-        self.assertEqual(bs.connection, connection)
+        self.assertEqual(bs.connection, conn)
         self.assertEqual(bs.image, 'path')
         self.assertEqual(bs.base_image, 'otherpath')
         self.assertEqual(bs.keepalive_interval, 3600)
+
+    @defer.inlineCallbacks
+    def test_find_existing(self):
+        d = self.libvirt.add_domain("bot")
+
+        bs = self.ConcreteBuildSlave('bot', 'pass', self.libvirt.conn, 'p', 'o')
+        yield bs._find_existing_deferred        
+
+        self.assertEqual(bs.domain.domain, d)
+        self.assertEqual(bs.substantiated, True)
+
+    @defer.inlineCallbacks
+    def test_prepare_base_image_none(self):
+        self.patch(utils, "getProcessValue", mock.Mock())
+        utils.getProcessValue.side_effect = lambda x,y: defer.succeed(0)
+
+        bs = self.ConcreteBuildSlave('bot', 'pass', self.libvirt.conn, 'p', None)
+        yield bs._find_existing_deferred
+        yield bs._prepare_base_image()
+
+        self.assertEqual(utils.getProcessValue.call_count, 0)
+
+    @defer.inlineCallbacks
+    def test_prepare_base_image_cheap(self):
+        self.patch(utils, "getProcessValue", mock.Mock())
+        utils.getProcessValue.side_effect = lambda x,y: defer.succeed(0)
+
+        bs = self.ConcreteBuildSlave('bot', 'pass', self.libvirt.conn, 'p', 'o')
+        yield bs._find_existing_deferred
+        yield bs._prepare_base_image()
+
+        utils.getProcessValue.assert_called_with(
+            "qemu-img", ["create", "-b", "o", "-f", "qcow2", "p"])
+
+    @defer.inlineCallbacks
+    def test_prepare_base_image_full(self):
+        pass
+        self.patch(utils, "getProcessValue", mock.Mock())
+        utils.getProcessValue.side_effect = lambda x,y: defer.succeed(0)
+
+        bs = self.ConcreteBuildSlave('bot', 'pass', self.libvirt.conn, 'p', 'o')
+        yield bs._find_existing_deferred
+        bs.cheap_copy = False
+        yield bs._prepare_base_image()
+
+        utils.getProcessValue.assert_called_with(
+            "cp", ["o", "p"])
+
+    @defer.inlineCallbacks
+    def test_start_instance(self):
+        bs = self.ConcreteBuildSlave('b', 'p', self.libvirt.conn, 'p', 'o',
+            xml='<xml/>')
+
+        prep = mock.Mock()
+        prep.side_effect = lambda: defer.succeed(0)
+        self.patch(bs, "_prepare_base_image", prep)
+
+        yield bs._find_existing_deferred
+        started = yield bs.start_instance(mock.Mock())
+
+        self.assertEqual(started, True)
+
+    @defer.inlineCallbacks
+    def setup_canStartBuild(self):
+        bs = self.ConcreteBuildSlave('b', 'p', self.libvirt.conn, 'p', 'o')
+        yield bs._find_existing_deferred
+        bs.updateLocks()
+        defer.returnValue(bs)
+
+    @defer.inlineCallbacks
+    def test_canStartBuild(self):
+        bs = yield self.setup_canStartBuild()
+        self.assertEqual(bs.canStartBuild(), True)
+
+    @defer.inlineCallbacks
+    def test_canStartBuild_notready(self):
+        """
+        If a LibVirtSlave hasnt finished scanning for existing VMs then we shouldn't
+        start builds on it as it might create a 2nd VM when we want to reuse the existing
+        one.
+        """
+        bs = yield self.setup_canStartBuild()
+        bs.ready = False
+        self.assertEqual(bs.canStartBuild(), False)
+
+    @defer.inlineCallbacks
+    def test_canStartBuild_domain_and_not_connected(self):
+        """
+        If we've found that the VM this slave would instance already exists but hasnt
+        connected then we shouldn't start builds or we'll end up with a dupe.
+        """
+        bs = yield self.setup_canStartBuild()
+        bs.domain = mock.Mock()
+        self.assertEqual(bs.canStartBuild(), False)
+
+    @defer.inlineCallbacks
+    def test_canStartBuild_domain_and_connected(self):
+        """
+        If we've found an existing VM and it is connected then we should start builds
+        """
+        bs = yield self.setup_canStartBuild()
+        bs.domain = mock.Mock()
+        isconnected = mock.Mock()
+        isconnected.return_value = True
+        self.patch(bs, "isConnected", isconnected)
+        self.assertEqual(bs.canStartBuild(), True)
 
 
 class TestWorkQueue(unittest.TestCase):
