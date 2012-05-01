@@ -35,7 +35,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.tearDownScheduler()
 
     def makeScheduler(self, name='testsched', builderNames=['a', 'b'],
-                            properties={}, codebases = None):
+                            properties={}, codebases = {'':{}}):
         sched = self.attachScheduler(
                 base.BaseScheduler(name=name, builderNames=builderNames,
                                    properties=properties, codebases=codebases),
@@ -290,7 +290,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='n', builderNames=['b'])
         self.db.insertTestData([
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                            repository='svn://...', codebase='cbsvn',
+                            repository='svn://...', codebase='',
                             project='world-domination'),
         ])
         d = sched.addBuildsetForChanges(reason='power', changeids=[13])
@@ -300,8 +300,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))],
                         sourcestampsetid=100),
-                    {'cbsvn':
-                     dict(branch='trunk', repository='svn://...', codebase='cbsvn',
+                    {'':
+                     dict(branch='trunk', repository='svn://...', codebase='',
                         changeids=set([13]), project='world-domination',
                         revision='9283', sourcestampsetid=100)
                     })
@@ -313,7 +313,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='n', builderNames=['c'])
         self.db.insertTestData([
             fakedb.Change(changeid=14, branch='default', revision='123:abc',
-                            repository='', project='', codebase='svn'),
+                            repository='', project='', codebase=''),
         ])
         d = sched.addBuildsetForChanges(reason='downstream', changeids=[14],
                             properties=props)
@@ -326,10 +326,10 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                             ('xxx', ('yyy', 'TEST')),
                         ],
                         sourcestampsetid=100),
-                    {'svn':
+                    {'':
                      dict(branch='default', revision='123:abc', repository='',
                          project='', changeids=set([14]), sourcestampsetid=100,
-                         codebase='svn')
+                         codebase='')
                     })
         d.addCallback(check)
         return d
@@ -338,7 +338,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='n', builderNames=['b'])
         self.db.insertTestData([
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                          codebase='cbsvn', repository='svn://...', 
+                          codebase='', repository='svn://...', 
                           project='world-domination'),
         ])
         d = sched.addBuildsetForChanges(reason='power', changeids=[13],
@@ -349,8 +349,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))],
                         sourcestampsetid=100),
-                    {'cbsvn':
-                     dict(branch='trunk', repository='svn://...', codebase='cbsvn',
+                    {'':
+                     dict(branch='trunk', repository='svn://...', codebase='',
                          changeids=set([13]), project='world-domination',
                          revision='9283', sourcestampsetid=100)
                     })
@@ -396,13 +396,13 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
                             repository='svn://...', project='knitting',
-                            codebase='cbsvn'),
+                            codebase=''),
             fakedb.Change(changeid=14, branch='devel', revision='9284',
                             repository='svn://...', project='making-tea',
-                            codebase='cbsvn'),
+                            codebase=''),
             fakedb.Change(changeid=15, branch='trunk', revision='9285',
                             repository='svn://...', project='world-domination',
-                            codebase='cbsvn'),
+                            codebase=''),
         ])
 
         # note that the changeids are given out of order here; it should still
@@ -414,35 +414,13 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[('scheduler', ('n', 'Scheduler'))],
                         sourcestampsetid=100),
-                    {'cbsvn':
-                     dict(branch='trunk', repository='svn://...', codebase='cbsvn',
+                    {'':
+                     dict(branch='trunk', repository='svn://...', codebase='',
                         changeids=set([13,14,15]), project='world-domination',
                         revision='9285', sourcestampsetid=100)
                     })
         d.addCallback(check)
         return d
-
-    def test_addBuildsetForChanges_no_codebases_set_changes_have_multiple_codebases(self):
-        # The scheduler has no set of codebases but changes are coming in with
-        # codebases set. This implies a configuration error as there exists
-        # a codebaseGenerator but the scheduler has no information to process
-        # these different codebases properly
-        sched = self.makeScheduler(name='n', builderNames=['b', 'c'])
-        self.db.insertTestData([
-            fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                            repository='svn://A..', project='knitting',
-                            codebase='cbA'),
-            fakedb.Change(changeid=14, branch='trunk', revision='8085',
-                            repository='svn://B..', project='boxing',
-                            codebase='cbB'),
-        ])
-
-        # A configuration error should be raised
-        self.failUnlessFailure( 
-            sched.addBuildsetForChanges(
-                reason='power', 
-                changeids=[13, 14]),
-            config.ConfigErrors)
 
     def test_addBuildsetForChanges_codebases_set_multiple_changed_codebases(self):
         codebases = { 'cbA':dict(
