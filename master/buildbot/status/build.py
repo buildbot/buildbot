@@ -31,7 +31,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     persistenceVersion = 4
     persistenceForgets = ( 'wasUpgraded', )
 
-    source = None
     sources = None
     reason = None
     changes = []
@@ -399,7 +398,9 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
     def upgradeToVersion4(self):
         # buildstatus contains list of sourcestamps, convert single to list
-        self.sources = [self.source]
+        if hasattr(self, "source"):
+            self.sources = [self.source]
+            del self.source
         self.wasUpgraded = True
         
     def checkLogfiles(self):
