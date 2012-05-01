@@ -38,8 +38,7 @@ class BaseBasicScheduler(base.BaseScheduler):
     def __init__(self, name, shouldntBeSet=NotSet, treeStableTimer=None,
                 builderNames=None, branch=NotABranch, branches=NotABranch,
                 fileIsImportant=None, properties={}, categories=None,
-                change_filter=None, onlyImportant=False,
-                codebases = None):
+                change_filter=None, onlyImportant=False, **kwargs):
         if shouldntBeSet is not self.NotSet:
             config.error(
                 "pass arguments to schedulers using keyword arguments")
@@ -48,8 +47,7 @@ class BaseBasicScheduler(base.BaseScheduler):
                 "fileIsImportant must be a callable")
 
         # initialize parent classes
-        base.BaseScheduler.__init__(self, name, builderNames, properties, 
-                                    codebases=codebases)
+        base.BaseScheduler.__init__(self, name, builderNames, properties, **kwargs)
 
         self.treeStableTimer = treeStableTimer
         self.fileIsImportant = fileIsImportant

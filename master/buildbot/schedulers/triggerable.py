@@ -22,9 +22,9 @@ class Triggerable(base.BaseScheduler):
 
     compare_attrs = base.BaseScheduler.compare_attrs
 
-    def __init__(self, name, builderNames, properties={}, codebases = None):
+    def __init__(self, name, builderNames, properties={}, **kwargs):
         base.BaseScheduler.__init__(self, name, builderNames, properties,
-                                    codebases = codebases)
+                                    **kwargs)
         self._waiters = {}
         self._bsc_subscription = None
         self.reason = "Triggerable(%s)" % name
