@@ -461,7 +461,7 @@ class BuildStep(object, properties.PropertiesMixin):
 
     def __new__(klass, *args, **kwargs):
         self = object.__new__(klass)
-        self.factory = _BuildStepFactory(klass, *args, **kwargs)
+        self._factory = _BuildStepFactory(klass, *args, **kwargs)
         return self
 
     def describe(self, done=False):
@@ -480,8 +480,8 @@ class BuildStep(object, properties.PropertiesMixin):
         # this is here for backwards compatability
         pass
 
-    def getStepFactory(self):
-        return self.factory
+    def _getStepFactory(self):
+        return self._factory
 
     def setStepStatus(self, step_status):
         self.step_status = step_status
@@ -755,7 +755,7 @@ class BuildStep(object, properties.PropertiesMixin):
         return value
 
 components.registerAdapter(
-        BuildStep.getStepFactory,
+        BuildStep._getStepFactory,
         BuildStep, interfaces.IBuildStepFactory)
 components.registerAdapter(
         lambda step : interfaces.IProperties(step.build),

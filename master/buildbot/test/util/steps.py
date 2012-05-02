@@ -71,7 +71,7 @@ class BuildStepMixin(object):
 
         @param slave_env: environment from the slave at slave startup
         """
-        factory = step.getStepFactory()
+        factory = interfaces.IBuildStepFactory(step)
         step = self.step = factory.buildStep()
 
         # step.build

@@ -33,8 +33,8 @@ class TestBuildFactory(unittest.TestCase):
 
     def test_addStep_notAStep(self):
         factory = BuildFactory()
-        # This fails because object doesn't have .getStepFactory
-        self.assertRaises(AttributeError, factory.addStep, object())
+        # This fails because object isn't adaptable to IBuildStepFactory
+        self.assertRaises(TypeError, factory.addStep, object())
 
     def test_addStep_ArgumentsInTheWrongPlace(self):
         factory = BuildFactory()
