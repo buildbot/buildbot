@@ -446,17 +446,7 @@ class AllBuildsJsonResource(JsonResource):
         if isinstance(path, int) or _IS_INT.match(path):
             build_status = self.builder_status.getBuild(int(path))
             if build_status:
-                build_status_number = str(build_status.getNumber())
-                # Happens with negative numbers.
-                child = self.children.get(build_status_number)
-                if child:
-                    return child
-                # Create it on-demand.
-                child = BuildJsonResource(self.status, build_status)
-                # Cache it. Never cache negative numbers.
-                # TODO(maruel): Cleanup the cache once it's too heavy!
-                self.putChild(build_status_number, child)
-                return child
+                return BuildJsonResource(self.status, build_status)
         return JsonResource.getChild(self, path, request)
 
     def asDict(self, request):
