@@ -254,7 +254,6 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
     ## starting bulids
 
-    @defer.deferredGenerator
     def addBuildsetForLatest(self, reason='', external_idstring=None,
                         branch=None, repository='', project='',
                         builderNames=None, properties=None):
@@ -262,10 +261,6 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         Add a buildset for the 'latest' source in the given branch,
         repository, and project.  This will create a relative sourcestamp for
         the buildset.
-
-        This method will add any properties provided to the scheduler
-        constructor to the buildset, and will call the master's addBuildset
-        method with the appropriate parameters.
 
         @param reason: reason for this buildset
         @type reason: unicode string
@@ -280,13 +275,46 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         @type properties: L{buildbot.process.properties.Properties}
         @returns: (buildset ID, buildrequest IDs) via Deferred
         """
+
+        return self.addBuildSetForSourceStampDetails(
+            reason = reason,
+            external_idstring = external_idstring,
+            branch = branch,
+            repository = repository,
+            project = project,
+            builderNames = builderNames,
+            properties = properties
+            )
+
+    @defer.deferredGenerator
+    def addBuildSetForSourceStampDetails(self, reason='', external_idstring=None,
+                        branch=None, repository='', project='', revision=None,
+                        builderNames=None, properties=None):
+        """
+        Given details about the source code to build, create a source stamp and
+        then add a buildset for it.
+
+        @param reason: reason for this buildset
+        @type reason: unicode string
+        @param external_idstring: external identifier for this buildset, or None
+        @param branch: branch to build (note that None often has a special meaning)
+        @param repository: repository name for sourcestamp
+        @param project: project name for sourcestamp
+        @param revision: revision to build - default is latest
+        @param builderNames: builders to name in the buildset (defaults to
+            C{self.builderNames})
+        @param properties: a properties object containing initial properties for
+            the buildset
+        @type properties: L{buildbot.process.properties.Properties}
+        @returns: (buildset ID, buildrequest IDs) via Deferred
+        """
         # Define setid for this set of changed repositories
         wfd = defer.waitForDeferred(self.master.db.sourcestampsets.addSourceStampSet())
         yield wfd
         setid = wfd.getResult()
 
         wfd = defer.waitForDeferred(self.master.db.sourcestamps.addSourceStamp(
-                branch=branch, revision=None, repository=repository,
+                branch=branch, revision=revision, repository=repository,
                 project=project, sourcestampsetid=setid))
         yield wfd
         wfd.getResult()
@@ -415,3 +443,4 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                                         external_idstring=external_idstring))
         yield wfd
         yield wfd.getResult()
+

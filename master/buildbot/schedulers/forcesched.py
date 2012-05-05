@@ -298,22 +298,15 @@ class ForceScheduler(base.BaseScheduler):
         r = ("A build was forced by '%s': %s" % (owner, reason))
 
         # everything is validated, we can create our source stamp, and buildrequest
-        res = yield self.schedule(builder_name, branch, revision, repository, project, changeids, properties, r)
+        res = yield self.addBuildSetForSourceStampDetails(
+            reason = r,
+            branch = branch,
+            repository = repository,
+            revision = revision,
+            project = project,
+            builderNames = [builder_name],
+            properties = properties,
+            )
+
         defer.returnValue(res)
-
-    @defer.inlineCallbacks
-    def schedule(self, builder, branch, revision, repository, project, changeids, properties, reason):
-        sourcestampsetid = yield self.master.db.sourcestampsets.addSourceStampSet()
-
-        yield self.master.db.sourcestamps.addSourceStamp(
-                                sourcestampsetid = sourcestampsetid,
-                                branch=branch,
-                                revision=revision, project=project,
-                                repository=repository,changeids=changeids)
-
-        retval = yield self.addBuildsetForSourceStamp(builderNames=[builder],
-                                    setid=sourcestampsetid, reason=reason,
-                                    properties=properties)
-
-        defer.returnValue(retval)
 
