@@ -23,7 +23,9 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_slave, path_to_builder, path_to_change, \
     path_to_root, ICurrentBox, build_get_class, \
     map_branches, path_to_authzfail, ActionResource
-from buildbot.schedulers.forcesched import ForceScheduler, InheritBuildParameter
+from buildbot.schedulers.forcesched import ForceScheduler
+from buildbot.schedulers.forcesched import InheritBuildParameter
+from buildbot.schedulers.forcesched import ValidationError
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
 
@@ -138,13 +140,21 @@ class ForceBuildActionResource(ActionResource):
             defer.returnValue((path_to_builder(req, self.builder_status),
                                "forcescheduler arg not found"))
             return
+
+        args = {}
+        # damn html's ungeneric checkbox implementation...
+        for cb in req.args.get("checkbox", []):
+            args[cb] = True
+        args.update(req.args)
+
+        builder_name = self.builder_status.getName()
+
         for sch in master.allSchedulers():
             if schedulername == sch.name:
                 try:
-                    yield sch.forceWithWebRequest(owner,
-                            self.builder_status.getName(), req)
+                    yield self.force(owner, builder_name, **args)
                     msg = ""
-                except Exception, e:
+                except ValidationError, e:
                     msg = html.escape(e.message.encode('ascii','ignore'))
                 break
 
