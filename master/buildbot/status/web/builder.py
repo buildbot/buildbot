@@ -138,13 +138,21 @@ class ForceBuildActionResource(ActionResource):
             defer.returnValue((path_to_builder(req, self.builder_status),
                                "forcescheduler arg not found"))
             return
+
+        args = {}
+        # damn html's ungeneric checkbox implementation...
+        for cb in req.args.get("checkbox", []):
+            args[cb] = True
+        args.update(req.args)
+
+        builder_name = self.builder_status.getName()
+
         for sch in master.allSchedulers():
             if schedulername == sch.name:
                 try:
-                    yield sch.forceWithWebRequest(owner,
-                            self.builder_status.getName(), req)
+                    yield self.force(owner, builder_name, **args)
                     msg = ""
-                except Exception, e:
+                except ValidationError, e:
                     msg = html.escape(e.message.encode('ascii','ignore'))
                 break
 
