@@ -29,8 +29,9 @@ class Timed(base.BaseScheduler):
 
     compare_attrs = base.BaseScheduler.compare_attrs
 
-    def __init__(self, name, builderNames, properties={}):
-        base.BaseScheduler.__init__(self, name, builderNames, properties)
+    def __init__(self, name, builderNames, properties={}, **kwargs):
+        base.BaseScheduler.__init__(self, name, builderNames, properties, 
+                                    **kwargs)
 
         # tracking for when to start the next build
         self.lastActuated = None
@@ -229,8 +230,10 @@ class Nightly(Timed):
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  branch=NoBranch, fileIsImportant=None, onlyIfChanged=False,
-                 properties={}, change_filter=None, onlyImportant=False):
-        Timed.__init__(self, name=name, builderNames=builderNames, properties=properties)
+                 properties={}, change_filter=None, onlyImportant=False,
+                 codebases = base.BaseScheduler.DefaultCodebases):
+        Timed.__init__(self, name=name, builderNames=builderNames, properties=properties,
+                       codebases = codebases)
 
         # If True, only important changes will be added to the buildset.
         self.onlyImportant = onlyImportant
@@ -238,6 +241,7 @@ class Nightly(Timed):
         if fileIsImportant and not callable(fileIsImportant):
             config.error(
                 "fileIsImportant must be a callable")
+
         if branch is Nightly.NoBranch:
             config.error(
                 "Nightly parameter 'branch' is required")
@@ -266,7 +270,7 @@ class Nightly(Timed):
         # both important and unimportant changes on our branch are recorded, as
         # we will include all such changes in any buildsets we start.  Note
         # that we must check the branch here because it is not included in the
-        # change filter
+        # change filter. 
         if change.branch != self.branch:
             return defer.succeed(None) # don't care about this change
         return self.master.db.schedulers.classifyChanges(

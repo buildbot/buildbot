@@ -434,7 +434,10 @@ class BuildLineMixin:
         text = build.getText()
         rev = str(build.getProperty("got_revision", "??"))
         css_class = css_classes.get(results, "")
-        repo = build.getSourceStamp().repository
+        ss_list = build.getSourceStamps()
+        if ss_list:
+            # TODO: support multiple sourcestamps in web interface
+            repo = ss_list[0].repository
 
         if type(text) == list:
             text = " ".join(text)

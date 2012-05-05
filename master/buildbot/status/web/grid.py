@@ -103,7 +103,8 @@ class GridStatusMixin(object):
         num = 0
         while build and num < numBuilds:
             start = build.getTimes()[0]
-            ss = build.getSourceStamp(absolute=True)
+            #TODO: support multiple sourcestamps
+            ss = build.getSourceStamps(absolute=True)[0]
 
             okay_build = True
 
@@ -134,7 +135,8 @@ class GridStatusMixin(object):
             if categories and builder.category not in categories:
                 continue
             for build in self.getRecentBuilds(builder, numBuilds, branch):
-                ss = build.getSourceStamp(absolute=True)
+                #TODO: support multiple sourcestamps
+                ss = build.getSourceStamps(absolute=True)[0]
                 key= self.getSourceStampKey(ss)
                 start = build.getTimes()[0]
                 if key not in sourcestamps or sourcestamps[key][1] > start:
@@ -190,7 +192,8 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
                 continue
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):
-                ss = build.getSourceStamp(absolute=True)
+                #TODO: support multiple sourcestamps
+                ss = build.getSourceStamps(absolute=True)[0]
                 key= self.getSourceStampKey(ss)
                 for i in range(len(stamps)):
                     if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
@@ -259,7 +262,8 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
                 continue
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):
-                ss = build.getSourceStamp(absolute=True)
+                #TODO: support multiple sourcestamps
+                ss = build.getSourceStamps(absolute=True)[0]
                 key = self.getSourceStampKey(ss)
                 for i in range(len(stamps)):
                     if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:

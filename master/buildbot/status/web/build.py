@@ -159,7 +159,10 @@ class StatusResourceBuild(HtmlResource):
             if b.getTestResults():
                 cxt['tests_link'] = req.childLink("tests")
 
-        ss = cxt['ss'] = b.getSourceStamp()
+        ssList = b.getSourceStamps()
+        if ssList:
+            # TODO: support multiple sourcestamps
+            ss = cxt['ss'] = ssList[0]
 
         if ss.branch is None and ss.revision is None and ss.patch is None and not ss.changes:
             cxt['most_recent_rev_build'] = True
