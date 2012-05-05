@@ -181,8 +181,8 @@ BuildStep
 
     .. py:method:: start()
 
-	:returns: Deferred, ``None`` or
-            :data:`~buildbot.status.results.SKIPPED`
+        :returns: ``None`` or :data:`~buildbot.status.results.SKIPPED`,
+            optionally via a Deferred.
 
         Begin the step. Subclasses should override this method to do local
         processing, fire off remote commands, etc.  The parent method raises
