@@ -137,9 +137,9 @@ The key points to notice here:
   requires that it be enclosed in its own set of parentheses.
 * Python does not permit returning a value from a generator, so statements like
   ``return xval + y`` are invalid.  Instead, yield the result of
-  ``defer.returnValue``.  Remember that this expression does *not* alter
-  control flow, so in many cases this statement will be followed by a bare
-  ``return``, as in the example.
+  ``defer.returnValue``.  Although this function does cause an immediate
+  function exit, for clarity it should be followed by a bare ``return``, as in
+  the example.
 
 The great advantage of ``inlineCallbacks`` is that it allows you to use all
 of the usual Pythonic control structures in their natural form. In particular,
