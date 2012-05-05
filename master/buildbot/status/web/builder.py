@@ -23,7 +23,9 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_slave, path_to_builder, path_to_change, \
     path_to_root, ICurrentBox, build_get_class, \
     map_branches, path_to_authzfail, ActionResource
-from buildbot.schedulers.forcesched import ForceScheduler, InheritBuildParameter
+from buildbot.schedulers.forcesched import ForceScheduler
+from buildbot.schedulers.forcesched import InheritBuildParameter
+from buildbot.schedulers.forcesched import ValidationError
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
 
