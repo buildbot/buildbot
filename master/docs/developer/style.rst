@@ -139,7 +139,7 @@ The key points to notice here:
   ``return xval + y`` are invalid.  Instead, yield the result of
   ``defer.returnValue``.  Although this function does cause an immediate
   function exit, for clarity it should be followed by a bare ``return``, as in
-  the example.
+  the example, unless it is the last statement in a function.
 
 The great advantage of ``inlineCallbacks`` is that it allows you to use all
 of the usual Pythonic control structures in their natural form. In particular,

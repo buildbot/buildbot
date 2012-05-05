@@ -267,6 +267,7 @@ class ForceScheduler(base.BaseScheduler):
             # for all the builders
             # we just do nothing on a builder that is not in our builderNames
             defer.returnValue(None)
+            return
 
         # Currently the validation code expects all kwargs to be lists
         # I don't want to refactor that now so much sure we comply...
