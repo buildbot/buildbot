@@ -290,8 +290,8 @@ class TestAbstractLatentSlave(unittest.TestCase):
         self.assertEqual(bs.canStartBuild(), False)
         self.assertEqual(bs.build_wait_timer, None)
 
-    def test_build_wait_timeout_negative(self):
-        bs, slavebuilder = self.setup_slave_that_is_building("bot", "pass", build_wait_timeout=-1)
+    def test_build_wait_timeout_none(self):
+        bs, slavebuilder = self.setup_slave_that_is_building("bot", "pass", build_wait_timeout=None)
         bs.buildFinished(slavebuilder)
         self.assertEqual(bs.insubstantiating, False)
         self.assertEqual(bs.canStartBuild(), True)
