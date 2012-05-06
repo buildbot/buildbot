@@ -168,10 +168,10 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         self.domain = None
 
         self.ready = False
-        self._find_existing_deferred = self._find_existing_instance()
+        self._find_existing_deferred = self._findExistingInstance()
 
     @defer.inlineCallbacks
-    def _find_existing_instance(self):
+    def _findExistingInstance(self):
         """
         I find existing VMs that are already running that might be orphaned instances of this slave.
         """
@@ -199,7 +199,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
 
         return AbstractLatentBuildSlave.canStartBuild(self)
 
-    def _prepare_base_image(self):
+    def _prepareBaseImage(self):
         """
         I am a private method for creating (possibly cheap) copies of a
         base_image for start_instance to boot.
@@ -244,7 +244,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
              log.msg("Cannot start_instance '%s' as already active" % self.name)
              defer.returnValue(False)
 
-        yield self._prepare_base_image()
+        yield self._prepareBaseImage()
 
         try:
             if self.xml:

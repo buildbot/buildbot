@@ -56,30 +56,30 @@ class TestLibVirtSlave(unittest.TestCase):
         self.assertEqual(bs.substantiated, True)
 
     @defer.inlineCallbacks
-    def test_prepare_base_image_none(self):
+    def test_prepareBaseImage_none(self):
         self.patch(utils, "getProcessValue", mock.Mock())
         utils.getProcessValue.side_effect = lambda x,y: defer.succeed(0)
 
         bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'p', None)
         yield bs._find_existing_deferred
-        yield bs._prepare_base_image()
+        yield bs._prepareBaseImage()
 
         self.assertEqual(utils.getProcessValue.call_count, 0)
 
     @defer.inlineCallbacks
-    def test_prepare_base_image_cheap(self):
+    def test_prepareBaseImage_cheap(self):
         self.patch(utils, "getProcessValue", mock.Mock())
         utils.getProcessValue.side_effect = lambda x,y: defer.succeed(0)
 
         bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'p', 'o')
         yield bs._find_existing_deferred
-        yield bs._prepare_base_image()
+        yield bs._prepareBaseImage()
 
         utils.getProcessValue.assert_called_with(
             "qemu-img", ["create", "-b", "o", "-f", "qcow2", "p"])
 
     @defer.inlineCallbacks
-    def test_prepare_base_image_full(self):
+    def test_prepareBaseImage_full(self):
         pass
         self.patch(utils, "getProcessValue", mock.Mock())
         utils.getProcessValue.side_effect = lambda x,y: defer.succeed(0)
@@ -87,7 +87,7 @@ class TestLibVirtSlave(unittest.TestCase):
         bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'p', 'o')
         yield bs._find_existing_deferred
         bs.cheap_copy = False
-        yield bs._prepare_base_image()
+        yield bs._prepareBaseImage()
 
         utils.getProcessValue.assert_called_with(
             "cp", ["o", "p"])
@@ -99,7 +99,7 @@ class TestLibVirtSlave(unittest.TestCase):
 
         prep = mock.Mock()
         prep.side_effect = lambda: defer.succeed(0)
-        self.patch(bs, "_prepare_base_image", prep)
+        self.patch(bs, "_prepareBaseImage", prep)
 
         yield bs._find_existing_deferred
         started = yield bs.start_instance(mock.Mock())
