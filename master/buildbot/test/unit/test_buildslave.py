@@ -235,3 +235,65 @@ class TestAbstractBuildSlave(unittest.TestCase):
         lock = locks.SlaveLock('lock')
         bs = self.ConcreteBuildSlave('bot', 'pass', locks = [lock])
         bs.setServiceParent(botmaster)
+
+
+class TestAbstractLatentSlave(unittest.TestCase):
+    
+    class ConcreteBuildSlave(buildslave.AbstractLatentBuildSlave):
+        def start_instance(self):
+            self.starting = defer.Deferred()
+            return self.starting
+        def stop_instance(self, fast):
+            self.stopping = defer.Deferred()
+            return self.stopping
+
+    def setup_slave(self, *args, **kwargs):
+        master = self.master = fakemaster.make_master()
+        botmaster = FakeBotMaster(master)
+        botmaster.startService()
+
+        bs = self.ConcreteBuildSlave(*args, **kwargs)
+        bs.setServiceParent(botmaster)
+        return bs
+
+    def setup_slave_that_is_building(self, *args, **kwargs):
+        bs = self.setup_slave(*args, **kwargs)
+        slavebuilder = mock.Mock()
+        slavebuilder.builder_name = "somebuilder"
+        bs.building = set(("somebuilder", ))
+        return bs, slavebuilder
+
+    def test_canStartBuild(self):
+        bs = self.setup_slave("bot", "pass")
+        self.assertEqual(bs.canStartBuild(), True)
+
+    def test_canStartBuild_insubstantiating(self):
+        bs = self.setup_slave("bot", "pass")
+        self.assertEqual(bs.canStartBuild(), True)
+        bs.insubstantiate()
+        self.assertEqual(bs.canStartBuild(), False)
+        bs.stopping.callback(None)
+        self.assertEqual(bs.canStartBuild(), True)
+
+    def test_build_wait_timeout(self):
+        bs, slavebuilder = self.setup_slave_that_is_building("bot", "pass", build_wait_timeout=1)
+        bs.buildFinished(slavebuilder)
+        self.assertEqual(bs.insubstantiating, False)
+        self.assertEqual(bs.canStartBuild(), True)
+        self.assertEqual(bs.build_wait_timer.active(), True)
+        bs._clearBuildWaitTimer()
+
+    def test_build_wait_timeout_zero(self):
+        bs, slavebuilder = self.setup_slave_that_is_building("bot", "pass", build_wait_timeout=0)
+        bs.buildFinished(slavebuilder)
+        self.assertEqual(bs.insubstantiating, True)
+        self.assertEqual(bs.canStartBuild(), False)
+        self.assertEqual(bs.build_wait_timer, None)
+
+    def test_build_wait_timeout_negative(self):
+        bs, slavebuilder = self.setup_slave_that_is_building("bot", "pass", build_wait_timeout=-1)
+        bs.buildFinished(slavebuilder)
+        self.assertEqual(bs.insubstantiating, False)
+        self.assertEqual(bs.canStartBuild(), True)
+        self.assertEqual(bs.build_wait_timer, None)
+
