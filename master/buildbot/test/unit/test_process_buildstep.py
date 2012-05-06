@@ -194,3 +194,35 @@ class TestLoggingBuildStep(unittest.TestCase):
         lbs = buildstep.LoggingBuildStep(log_eval_func=eval)
         status = lbs.evaluateCommand(cmd)
         self.assertEqual(status, WARNINGS, "evaluateCommand didn't call log_eval_func or overrode its results")
+
+
+class FailingCustomStep(buildstep.LoggingBuildStep):
+
+    def __init__(self, exception=buildstep.BuildStepFailed, *args, **kwargs):
+        buildstep.LoggingBuildStep.__init__(self, *args, **kwargs)
+        self.exception = exception
+
+    @defer.inlineCallbacks
+    def start(self):
+        yield defer.succeed(None)
+        raise self.exception()
+
+
+class TestCustomStepExecution(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_step_raining_buildstepfailed_in_start(self):
+        self.setupStep(FailingCustomStep())
+        self.expectOutcome(result=FAILURE, status_text=["generic"])
+        return self.runStep()
+
+    def test_step_raising_exception_in_start(self):
+        self.setupStep(FailingCustomStep(exception=ValueError))
+        self.expectOutcome(result=FAILURE, status_text=["generic"])
+        return self.runStep()
+
