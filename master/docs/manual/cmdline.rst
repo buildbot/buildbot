@@ -85,6 +85,10 @@ buildmaster administrators:
     directory. The daemon is launched in the background, with events logged
     to a file named :file:`twistd.log`.
 
+--nodaemon
+    Don't daemonize. The process will start in the foreground.
+    It will only return to the command-line when it is stopped.
+
 ``stop``
 
     This terminates the daemon (either buildmaster or buildslave) running
@@ -901,6 +905,10 @@ directory. The daemon is launched in the background, with events logged
 to a file named :file:`twistd.log`. ::
 
     buildbot start BASEDIR
+
+--nodaemon
+    Don't daemonize. The process will start in the foreground.
+    It will only return to the command-line when it is stopped.
 
 .. bb:cmdline:: stop (buildslave)
 

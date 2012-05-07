@@ -143,6 +143,7 @@ class RestartOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.restart.restart"
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
+        ['nodaemon', None, "Don't daemonize (stay in foreground)"],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot restart [<basedir>]"
@@ -152,6 +153,7 @@ class StartOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.start.start"
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
+        ['nodaemon', None, "Don't daemonize (stay in foreground)"],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot start [<basedir>]"
