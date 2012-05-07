@@ -152,7 +152,7 @@ class ForceBuildActionResource(ActionResource):
         for sch in master.allSchedulers():
             if schedulername == sch.name:
                 try:
-                    yield self.force(owner, builder_name, **args)
+                    yield sch.force(owner, builder_name, **args)
                     msg = ""
                 except ValidationError, e:
                     msg = html.escape(e.message.encode('ascii','ignore'))
