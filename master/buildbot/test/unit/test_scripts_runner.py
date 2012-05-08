@@ -230,10 +230,20 @@ class TestResetartOptions(BaseTestSimpleOptions, unittest.TestCase):
     commandName = 'restart'
     optionsClass = runner.RestartOptions
 
+    def test_nodaemon(self):
+        opts = self.parse('--nodaemon')
+        exp = dict(nodaemon=True)
+        self.assertOptions(opts, exp)
+
 
 class TestStartOptions(BaseTestSimpleOptions, unittest.TestCase):
     commandName = 'start'
     optionsClass = runner.StartOptions
+
+    def test_nodaemon(self):
+        opts = self.parse('--nodaemon')
+        exp = dict(nodaemon=True)
+        self.assertOptions(opts, exp)
 
 
 class TestReconfigOptions(BaseTestSimpleOptions, unittest.TestCase):

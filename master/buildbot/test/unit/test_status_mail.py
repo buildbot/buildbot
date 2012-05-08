@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import sys
 from mock import Mock
 from buildbot import config
 from twisted.trial import unittest
@@ -22,6 +23,9 @@ from twisted.internet import defer
 from buildbot.test.fake import fakedb
 from buildbot.test.fake.fakebuild import FakeBuildStatus
 from buildbot.process import properties
+
+py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
+                                    and sys.version_info[1] >= 7)
 
 class FakeLog(object):
     def __init__(self, text):
@@ -41,6 +45,30 @@ class FakeLog(object):
 
 
 class TestMailNotifier(unittest.TestCase):
+
+    def do_test_createEmail_cte(self, funnyChars, expEncoding):
+        builds = [ FakeBuildStatus(name='build') ]
+        msgdict = create_msgdict(funnyChars)
+        mn = MailNotifier('from@example.org')
+        d = mn.createEmail(msgdict, u'builder-name', u'project-name',
+                           SUCCESS, builds)
+        @d.addCallback
+        def callback(m):
+            cte_lines = [ l for l in m.as_string().split("\n")
+                          if l.startswith('Content-Transfer-Encoding:') ]
+            self.assertEqual(cte_lines,
+                    [ 'Content-Transfer-Encoding: %s' % expEncoding ],
+                    `m.as_string()`)
+        return d
+
+    def test_createEmail_message_content_transfer_encoding_7bit(self):
+        return self.do_test_createEmail_cte(u"old fashioned ascii",
+                '7bit' if py_27 else 'base64')
+
+    def test_createEmail_message_content_transfer_encoding_8bit(self):
+        return self.do_test_createEmail_cte(u"\U0001F4A7",
+                '8bit' if py_27 else 'base64')
+
     def test_createEmail_message_without_patch_and_log_contains_unicode(self):
         builds = [ FakeBuildStatus(name="build") ]
         msgdict = create_msgdict()
@@ -582,7 +610,7 @@ class TestMailNotifier(unittest.TestCase):
         mn.buildMessage(builder.name, [build1, build2], build1.result)
         self.assertEqual(m['To'], "tyler@mayhem.net, user2@example.net")
 
-def create_msgdict():
-    unibody = u'Unicode body with non-ascii (\u00E5\u00E4\u00F6).'
+def create_msgdict(funny_chars=u'\u00E5\u00E4\u00F6'):
+    unibody = u'Unicode body with non-ascii (%s).' % funny_chars
     msg_dict = dict(body=unibody, type='plain')
     return msg_dict
