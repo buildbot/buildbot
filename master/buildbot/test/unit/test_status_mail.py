@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import sys
 from mock import Mock
 from buildbot import config
 from twisted.trial import unittest
@@ -22,6 +23,9 @@ from twisted.internet import defer
 from buildbot.test.fake import fakedb
 from buildbot.test.fake.fakebuild import FakeBuildStatus
 from buildbot.process import properties
+
+py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
+                                    and sys.version_info[1] >= 7)
 
 class FakeLog(object):
     def __init__(self, text):
@@ -58,10 +62,12 @@ class TestMailNotifier(unittest.TestCase):
         return d
 
     def test_createEmail_message_content_transfer_encoding_7bit(self):
-        return self.do_test_createEmail_cte(u"old fashioned ascii", '7bit')
+        return self.do_test_createEmail_cte(u"old fashioned ascii",
+                '7bit' if py_27 else 'base64')
 
     def test_createEmail_message_content_transfer_encoding_8bit(self):
-        return self.do_test_createEmail_cte(u"\U0001F4A7", '8bit')
+        return self.do_test_createEmail_cte(u"\U0001F4A7",
+                '8bit' if py_27 else 'base64')
 
     def test_createEmail_message_without_patch_and_log_contains_unicode(self):
         builds = [ FakeBuildStatus(name="build") ]

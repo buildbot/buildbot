@@ -41,7 +41,8 @@ try:
 except ImportError:
     have_ssl = False
 
-# this incantation teaches email to output utf-8 using QP
+# this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
+# although it has no effect before python-2.7.
 from email import Charset
 Charset.add_charset('utf-8', Charset.SHORTEST, None, 'utf-8')
 
