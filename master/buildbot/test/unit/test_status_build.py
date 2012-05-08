@@ -30,6 +30,9 @@ class FakeSource(util.ComparableMixin):
         self.codebase = codebase
         self.revision = revision
 
+    def clone(self):
+        return FakeSource(self.codebase, self.revision)
+
     def getAbsoluteSourceStamp(self, revision):
         return FakeSource(self.codebase, revision)
 
