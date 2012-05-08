@@ -167,9 +167,9 @@ class StatusResourceBuild(HtmlResource):
         if ss.branch is None and ss.revision is None and ss.patch is None and not ss.changes:
             cxt['most_recent_rev_build'] = True
 
-
-        got_revision = b.getProperty("got_revision")
-        if got_revision:
+        all_got_revisions = b.getAllGotRevisions()
+        if all_got_revisions:
+            got_revision = all_got_revisions[ss.codebase]
             cxt['got_revision'] = str(got_revision)
 
         try:

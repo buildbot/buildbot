@@ -504,7 +504,11 @@ class BuildersResource(HtmlResource):
             if builds:
                 b = builds[0]
                 bld['build_url'] = (bld['link'] + "/builds/%d" % b.getNumber())
-                label = b.getProperty("got_revision")
+                label = None
+                all_got_revisions = build.getAllGotRevisions() or {}
+                # If len = 1 then try if revision can be used as label.
+                if len(all_got_revisions) == 1:
+                    label = all_got_revisions[all_got_revisions.keys()[0]]
                 if not label or len(str(label)) > 20:
                     label = "#%d" % b.getNumber()
 

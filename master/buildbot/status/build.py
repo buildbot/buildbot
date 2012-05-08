@@ -88,11 +88,27 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             return None
         return self.builder.getBuild(self.number-1)
 
+    def getAllGotRevisions(self):
+        all_got_revisions = self.properties.getProperty('got_revision', None)
+        # For backwards compatibility all_got_revisions is a string if codebases
+        # are not used. Convert to the default internal type (dict)
+        if isinstance(all_got_revisions, str):
+            all_got_revisions = {'': all_got_revisions}
+        return all_got_revisions
+
     def getSourceStamps(self, absolute=False):
-        if not absolute or not self.properties.has_key('got_revision'):
-            return self.sources
-        # the got_revision must be stored per sourcestamp (or in the sourcestamp)
-        return [ss.getAbsoluteSourceStamp(ss.revision) for ss in self.sources]
+        sourcestamps = []
+        all_got_revisions = self.getAllGotRevisions()
+        if not absolute or not all_got_revisions:
+            sourcestamps.extend(self.sources)
+        else:
+            for ss in self.sources:
+                if ss.codebase in all_got_revisions:
+                    got_revision = all_got_revisions[ss.codebase]
+                    sourcestamps.append(ss.getAbsoluteSourceStamp(got_revision))
+                else:
+                    sourcestamps.append(ss)
+        return sourcestamps
 
     def getReason(self):
         return self.reason

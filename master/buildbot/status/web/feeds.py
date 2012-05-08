@@ -179,6 +179,7 @@ class FeedResource(XmlResource):
             # title: trunk r22191 (plus patch) failed on
             # 'i686-debian-sarge1 shared gcc-3.3.5'
             ss_list = build.getSourceStamps()
+            all_got_revisions = build.getAllGotRevisions() or {}
             source = ""
             src_cxts = []
             for ss in ss_list:
@@ -192,18 +193,16 @@ class FeedResource(XmlResource):
                 else:
                     sc['repository'] = ss.repository
                     sc['branch'] = ss.branch
-                    sc['revision'] = str(ss.revision)
+                    got_revision = all_got_revisions.get(ss.codebase, None)
+                    if got_revision:
+                        sc['revision'] = got_revision
+                    else:
+                        sc['revision'] = str(ss.revision)
                 if ss.patch:
                     sc['revision'] += " (plus patch)"
                 if ss.changes:
                     pass
                 src_cxts.append(sc)
-            got_revision = build.getProperty("got_revision")
-            if got_revision:
-                got_revision = str(got_revision)
-                if len(got_revision) > 40:
-                    got_revision = "[revision string too long]"
-                source += "(Got Revision: %s)" % got_revision
             failflag = (build.getResults() != FAILURE)
             pageTitle = ('Builder "%s" has %s' %
                 (build.getBuilder().getName(), ["failed","succeeded"][failflag],)

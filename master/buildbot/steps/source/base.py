@@ -198,6 +198,20 @@ class Source(LoggingBuildStep):
         if isinstance(self.descriptionDone, str):
             self.descriptionDone = [self.descriptionDone]
 
+    def setProperty(self, name, value , source):
+        if self.codebase != '':
+            assert not isinstance(self.getProperty(name, None), str), \
+             "Sourcestep %s has a codebase, other sourcesteps don't" \
+             % self.name
+            property_dict = self.getProperty(name, {})
+            property_dict[self.codebase] = value
+            LoggingBuildStep.setProperty(self, name, property_dict, source)
+        else:
+            assert not isinstance(self.getProperty(name, None), dict), \
+             "Sourcestep %s does not have a codebase, other sourcesteps do" \
+             % self.name
+            LoggingBuildStep.setProperty(self, name, value, source)
+
     def setStepStatus(self, step_status):
         LoggingBuildStep.setStepStatus(self, step_status)
 
