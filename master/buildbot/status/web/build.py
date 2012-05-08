@@ -160,16 +160,15 @@ class StatusResourceBuild(HtmlResource):
                 cxt['tests_link'] = req.childLink("tests")
 
         ssList = b.getSourceStamps()
-        if ssList:
-            # TODO: support multiple sourcestamps
-            ss = cxt['ss'] = ssList[0]
+        # TODO: support multiple sourcestamps
+        ss = cxt['ss'] = ssList[0]
 
         if ss.branch is None and ss.revision is None and ss.patch is None and not ss.changes:
             cxt['most_recent_rev_build'] = True
 
         all_got_revisions = b.getAllGotRevisions()
         if all_got_revisions:
-            got_revision = all_got_revisions[ss.codebase]
+            got_revision = all_got_revisions.get(ss.codebase, "??")
             cxt['got_revision'] = str(got_revision)
 
         try:
