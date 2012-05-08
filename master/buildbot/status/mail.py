@@ -41,6 +41,10 @@ try:
 except ImportError:
     have_ssl = False
 
+# this incantation teaches email to output utf-8 using QP
+from email import Charset
+Charset.add_charset('utf-8', Charset.SHORTEST, None, 'utf-8')
+
 from buildbot import interfaces, util, config
 from buildbot.process.users import users
 from buildbot.status import base
