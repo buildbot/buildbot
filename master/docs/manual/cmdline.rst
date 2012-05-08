@@ -55,57 +55,76 @@ Some of its subcommands are intended for buildmaster admins, while
 some are for developers who are editing the code that the buildbot is
 monitoring.
 
-.. bb:cmdline:: create-master
-.. bb:cmdline:: start (buildbot)
-.. bb:cmdline:: stop (buildbot)
-.. bb:cmdline:: sighup
-
 Administrator Tools
 ~~~~~~~~~~~~~~~~~~~
 
 The following :command:`buildbot` sub-commands are intended for
 buildmaster administrators:
 
-``create-master``
+.. bb:cmdline:: create-master
 
-    This creates a new directory and populates it with files that allow it
-    to be used as a buildmaster's base directory.
-
-    You will usually want to use the :option:`-r` option to create a relocatable
-    :file:`buildbot.tac`.  This allows you to move the master directory without
-    editing this file.
+create-master
++++++++++++++
 
 .. code-block:: none
 
     buildbot create-master -r {BASEDIR}
 
-``start``
+This creates a new directory and populates it with files that allow it to be used as a buildmaster's base directory.
 
-    This starts a buildmaster which was already created in the given base
-    directory. The daemon is launched in the background, with events logged
-    to a file named :file:`twistd.log`.
+You will usually want to use the :option:`-r` option to create a relocatable :file:`buildbot.tac`.
+This allows you to move the master directory without editing this file.
 
---nodaemon
-    Don't daemonize. The process will start in the foreground.
-    It will only return to the command-line when it is stopped.
+.. bb:cmdline:: start (buildbot)
 
-``stop``
+start
++++++
 
-    This terminates the daemon (either buildmaster or buildslave) running
-    in the given directory.
+.. code-block:: none
+
+    buildbot start [--nodaemon] {BASEDIR}
+
+This starts a buildmaster which was already created in the given base directory.
+The daemon is launched in the background, with events logged to a file named :file:`twistd.log`.
+
+The :option:`--nodaemon` option instructs Buildbot to skip daemonizing.
+The process will start in the foreground.
+It will only return to the command-line when it is stopped.
+
+.. bb:cmdline:: restart (buildbot)
+
+restart
++++++++
+
+.. code-block:: none
+
+    buildbot restart [--nodaemon] {BASEDIR}
+
+Restart the buildmaster.
+This is equivalent to ``stop`` followed by ``start``
+The :option:`--nodaemon` option has the same meaning as for ``start``.
+
+.. bb:cmdline:: stop (buildbot)
+
+stop
+++++
 
 .. code-block:: none
 
     buildbot stop {BASEDIR}
 
-``sighup``
+This terminates the daemon (either buildmaster or buildslave) running in the given directory.
 
-    This sends a SIGHUP to the buildmaster running in the given directory,
-    which causes it to re-read its :file:`master.cfg` file.
+.. bb:cmdline:: sighup
+
+sighup
+++++++
 
 .. code-block:: none
 
     buildbot sighup {BASEDIR}
+
+This sends a SIGHUP to the buildmaster running in the given directory, which causes it to re-read its :file:`master.cfg` file.
 
 Developer Tools
 ~~~~~~~~~~~~~~~
@@ -888,8 +907,9 @@ be used as a buildslave's base directory. You must provide several
 arguments, which are used to create the initial :file:`buildbot.tac`
 file.
 
-The :option:`-r` option is advisable here, just like for
-``create-master``. ::
+The :option:`-r` option is advisable here, just like for ``create-master``.
+
+.. code-block:: none
 
     buildslave create-slave -r {BASEDIR} {MASTERHOST}:{PORT} {SLAVENAME} {PASSWORD}
 
@@ -902,20 +922,38 @@ start
 
 This starts a buildslave which was already created in the given base
 directory. The daemon is launched in the background, with events logged
-to a file named :file:`twistd.log`. ::
+to a file named :file:`twistd.log`.
 
-    buildbot start BASEDIR
+.. code-block:: none
 
---nodaemon
-    Don't daemonize. The process will start in the foreground.
-    It will only return to the command-line when it is stopped.
+    buildslave start [--nodaemon] BASEDIR
+
+The :option:`--nodaemon` option instructs Buildbot to skip daemonizing. The
+process will start in the foreground.  It will only return to the command-line
+when it is stopped.
+
+.. bb:cmdline:: restart (buildslave)
+
+restart
+~~~~~~~
+
+.. code-block:: none
+
+    buildslave restart [--nodaemon] BASEDIR
+
+This restarts a buildslave which is already running.
+It is equivalent to a ``stop`` followed by a ``start``.
+
+The :option:`--nodaemon` option has the same meaning as for ``start``.
 
 .. bb:cmdline:: stop (buildslave)
 
 stop
 ~~~~
 
-This terminates the daemon buildslave running in the given directory. ::
+This terminates the daemon buildslave running in the given directory.
+
+.. code-block:: none
 
     buildbot stop BASEDIR
 
