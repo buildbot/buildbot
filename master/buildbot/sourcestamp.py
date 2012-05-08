@@ -217,12 +217,18 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
                                 changes=changes)
         return newsource
 
-    def getAbsoluteSourceStamp(self, got_revision):
-        return SourceStamp(branch=self.branch, revision=got_revision,
+    def clone(self):
+        # Create an exact but identityless copy
+        return SourceStamp(branch=self.branch, revision=self.revision,
                            patch=self.patch, repository=self.repository,
                            codebase=self.codebase, patch_info=self.patch_info,
                            project=self.project, changes=self.changes,
                            _ignoreChanges=True)
+
+    def getAbsoluteSourceStamp(self, got_revision):
+        cloned = self.clone()
+        cloned.revision = got_revision
+        return cloned
 
     def getText(self):
         # note: this won't work for VC systems with huge 'revision' strings
@@ -313,7 +319,6 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
                 return defer.succeed( sourcestampsetid )
             else:
                 return master.db.sourcestampsets.addSourceStampSet()
-            return d
             
         def set_setid(setid):
             self.sourcestampsetid = setid
