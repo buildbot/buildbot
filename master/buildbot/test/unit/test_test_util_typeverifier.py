@@ -14,15 +14,15 @@
 # Copyright Buildbot Team Members
 
 from twisted.trial import unittest
-from buildbot.test.util import resourcetype
+from buildbot.test.util import typeverifier
 
-class ResourceTypeVerifier(unittest.TestCase):
+class TypeVerifier(unittest.TestCase):
 
     verifier = None
     def setUp(self):
         # just set this up once..
         if not self.verifier:
-            verifier = resourcetype.ResourceTypeVerifier(
+            verifier = typeverifier.TypeVerifier(
                     'testtype',
                     attrs=dict(testid='integer', somestring='string',
                         string_or_none='string:none'))
@@ -62,7 +62,7 @@ class ResourceTypeVerifier(unittest.TestCase):
                 'string_or_none' : None }))
 
     def do_test_type(self, type, matching, nonmatching):
-        verif = resourcetype.ResourceTypeVerifier(type + '-test',
+        verif = typeverifier.TypeVerifier(type + '-test',
                 attrs=dict(x=type))
         for v in matching:
             verif(self, dict(x=v))

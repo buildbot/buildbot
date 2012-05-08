@@ -67,6 +67,10 @@ class Row(object):
             setattr(self, col, {})
         for col in kwargs.keys():
             assert col in self.defaults, "%s is not a valid column" % col
+        # cast to unicode
+        for k, v in self.values.iteritems():
+            if isinstance(v, str):
+                self.values[k] = unicode(v)
         # make the values appear as attributes
         self.__dict__.update(self.values)
 
@@ -343,7 +347,7 @@ class FakeChangesComponent(FakeDBComponent):
                 ch = self.changes[row.changeid]
                 n, vs = row.property_name, row.property_value
                 v, s = json.loads(vs)
-                ch.properties.setProperty(n, v, s)
+                ch.properties[n] = (v, s)
 
             elif isinstance(row, ChangeUser):
                 ch = self.changes[row.changeid]
@@ -354,7 +358,7 @@ class FakeChangesComponent(FakeDBComponent):
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
             revision=None, when_timestamp=None, branch=None,
             category=None, revlink='', properties={}, repository='',
-            project='', codebase='', uid=None):
+            codebase='', project='', uid=None):
         if self.changes:
             changeid = max(self.changes.iterkeys()) + 1
         else:
@@ -383,9 +387,9 @@ class FakeChangesComponent(FakeDBComponent):
             return defer.succeed(max(self.changes.iterkeys()))
         return defer.succeed(None)
 
-    def getChange(self, changeid):
+    def getChange(self, key, no_cache=False):
         try:
-            row = self.changes[changeid]
+            row = self.changes[key]
         except KeyError:
             return defer.succeed(None)
 

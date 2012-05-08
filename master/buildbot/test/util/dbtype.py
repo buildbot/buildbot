@@ -13,16 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
+# concrete verifiers for documented resource types
+
 from buildbot.test.util import typeverifier
 
-verifyChange = typeverifier.TypeVerifier('change',
+verifyChdict = typeverifier.TypeVerifier('chdict',
     attrs = dict(
         changeid='integer',
         author='string',
         files='stringlist',
         comments='string',
         revision='string:none',
-        when_timestamp='integer',
+        when_timestamp='datetime',
         branch='string:none',
         category='string:none',
         revlink='string:none',
@@ -30,6 +32,6 @@ verifyChange = typeverifier.TypeVerifier('change',
         repository='string',
         project='string',
         codebase='string',
-        link='Link',
+        is_dir='integer',
         ))
 
