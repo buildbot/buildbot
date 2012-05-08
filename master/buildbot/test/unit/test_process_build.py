@@ -83,6 +83,15 @@ class FakeBuildStatus(Mock):
 class FakeBuilderStatus:
     implements(interfaces.IBuilderStatus)
 
+class FakeStepFactory(object):
+    """Fake step factory that just returns a fixed step object."""
+    implements(interfaces.IBuildStepFactory)
+    def __init__(self, step):
+        self.step = step
+
+    def buildStep(self):
+        return self.step
+
 class TestBuild(unittest.TestCase):
 
     def setUp(self):
@@ -102,7 +111,7 @@ class TestBuild(unittest.TestCase):
         step = Mock()
         step.return_value = step
         step.startStep.return_value = SUCCESS
-        b.setStepFactories([lambda: step])
+        b.setStepFactories([FakeStepFactory(step)])
 
         slavebuilder = Mock()
 
@@ -117,7 +126,7 @@ class TestBuild(unittest.TestCase):
 
         step = Mock()
         step.return_value = step
-        b.setStepFactories([lambda: step])
+        b.setStepFactories([FakeStepFactory(step)])
 
         slavebuilder = Mock()
 
@@ -148,8 +157,8 @@ class TestBuild(unittest.TestCase):
         step2.return_value = step2
         step2.alwaysRun = True
         b.setStepFactories([
-            lambda: step1,
-            lambda: step2,
+            FakeStepFactory(step1),
+            FakeStepFactory(step2),
             ])
 
         slavebuilder = Mock()
@@ -196,7 +205,7 @@ class TestBuild(unittest.TestCase):
         step = Mock()
         step.return_value = step
         step.startStep.return_value = SUCCESS
-        b.setStepFactories([lambda: step])
+        b.setStepFactories([FakeStepFactory(step)])
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
@@ -225,7 +234,7 @@ class TestBuild(unittest.TestCase):
         step = Mock()
         step.return_value = step
         step.startStep.return_value = SUCCESS
-        b.setStepFactories([lambda: step])
+        b.setStepFactories([FakeStepFactory(step)])
 
         real_lock.claim(Mock(), l.access('counting'))
 
@@ -252,7 +261,7 @@ class TestBuild(unittest.TestCase):
         step.return_value = step
         step.startStep.return_value = SUCCESS
         step.alwaysRun = False
-        b.setStepFactories([lambda: step])
+        b.setStepFactories([FakeStepFactory(step)])
 
         real_lock.claim(Mock(), l.access('counting'))
 
@@ -285,7 +294,7 @@ class TestBuild(unittest.TestCase):
         step.return_value = step
         step.startStep.return_value = SUCCESS
         step.alwaysRun = False
-        b.setStepFactories([lambda: step])
+        b.setStepFactories([FakeStepFactory(step)])
 
         real_lock.claim(Mock(), l.access('counting'))
 
@@ -316,7 +325,7 @@ class TestBuild(unittest.TestCase):
         real_lock = b.builder.botmaster.getLockByID(l).getLock(slavebuilder)
 
         step = LoggingBuildStep(locks=[lock_access])
-        b.setStepFactories([lambda: step])
+        b.setStepFactories([FakeStepFactory(step)])
 
         real_lock.claim(Mock(), l.access('counting'))
 
