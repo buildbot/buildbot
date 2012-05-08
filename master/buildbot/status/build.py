@@ -453,7 +453,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['builderName'] = self.builder.name
         result['number'] = self.getNumber()
         # TODO: enable multiple sourcestamps to outside the buildstatus
-        result['sourceStamp'] = self.getSourceStamps()[0].asDict()
+        result['sourceStamps'] = [ss.asDict() for ss in self.getSourceStamps()]
         result['reason'] = self.getReason()
         result['blame'] = self.getResponsibleUsers()
 
