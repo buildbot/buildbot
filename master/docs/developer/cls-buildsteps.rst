@@ -68,22 +68,6 @@ BuildStep
 
         If true, the step will run even if a previous step halts the build with ``haltOnFailure``.
 
-    A step acts as a factory for more steps.
-    See :ref:`Writing-BuildStep-Constructors` for advice on writing subclass constructors.
-    The following methods handle this factory behavior.
-
-    .. py:method:: addFactoryArguments(..)
-
-        Add the given keyword arguments to the arguments used to create new
-        step instances;
-
-    .. py:method:: getStepFactory()
-
-        :returns: tuple of (class, keyword arguments)
-
-        Get a factory for new instances of this step.  The step can be created
-        by calling the class with the given keyword arguments.
-
     A few important pieces of information are not available when a step is constructed, and are added later.
     These are set by the following methods; the order in which these methods are called is not defined.
 

@@ -544,7 +544,6 @@ Writing BuildStep Constructors
 
 Build steps act as their own factories, so their constructors are a bit more complex than necessary.
 In the configuration file, a :class:`~buildbot.process.buildstep.BuildStep` object is instantiated, but because steps store state locally while executing, this object cannot be used during builds.
-Instead, the build machinery calls the step's :meth:`~buildbot.process.buildstep.BuildStep.getStepFactory` method to get a tuple of a callable and keyword arguments that should be used to create a new instance.
 
 Consider the use of a :class:`BuildStep` in :file:`master.cfg`::
 
@@ -552,19 +551,11 @@ Consider the use of a :class:`BuildStep` in :file:`master.cfg`::
 
 This creates a single instance of class ``MyStep``.
 However, Buildbot needs a new object each time the step is executed.
-this is accomplished by storing the information required to instantiate a new object in the :attr:`~buildbot.process.buildstep.BuildStep.factory` attribute.
-When the time comes to construct a new :class:`~buildbot.process.build.Build`, :class:`~buildbot.process.factory.BuildFactory` consults this attribute (via :meth:`~buildbot.process.buildstep.BuildStep.getStepFactory`) and instantiates a new step object.
-
+An instance of :class:`~buildbot.process.buildstep.BuildStep` rembers how it was constructed, and can create copies of itself.
 When writing a new step class, then, keep in mind are that you cannot do anything "interesting" in the constructor -- limit yourself to checking and storing arguments.
-Each constructor in a sequence of :class:`BuildStep` subclasses must ensure the following:
 
-* the parent class's constructor is called with all otherwise-unspecified
-  keyword arguments.
-
-* all keyword arguments for the class itself are passed to :meth:`addFactoryArguments`.
-
+It is customary to call the parent class's constructor with all otherwise-unspecified keyword arguments.
 Keep a ``**kwargs`` argument on the end of your options, and pass that up to the parent class's constructor.
-If the class overrides constructor arguments for the parent class, those should be updated in ``kwargs``, rather than passed directly (which will cause errors during instantiation).
 
 The whole thing looks like this::
 
@@ -590,20 +581,12 @@ The whole thing looks like this::
             self.frob_how_many = how_many
             self.frob_how = frob_how
     
-            # and record arguments for later
-            self.addFactoryArguments(
-                frob_what=frob_what,
-                frob_how_many=frob_how_many,
-                frob_how=frob_how)
-    
     class FastFrobnify(Frobnify):
         def __init__(self,
                 speed=5,
                 **kwargs)
             Frobnify.__init__(self, **kwargs)
             self.speed = speed
-            self.addFactoryArguments(
-                speed=speed)
 
 Running Commands
 ~~~~~~~~~~~~~~~~
