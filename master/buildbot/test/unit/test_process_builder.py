@@ -44,7 +44,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
                      slavebuilddir="sbdir", factory=self.factory)
         config_args.update(config_kwargs)
         builder_config = config.BuilderConfig(**config_args)
-        self.bldr = builder.Builder(builder_config.name)
+        self.bldr = builder.Builder(builder_config.name, _addServices=False)
         self.master.db = self.db = fakedb.FakeDBConnector(self)
         self.bldr.master = self.master
         self.bldr.botmaster = self.master.botmaster
@@ -61,9 +61,6 @@ class TestBuilderBuildCreation(unittest.TestCase):
             # last, based on its name
             self.patch(random, "choice",
                     lambda lst : sorted(lst, key=lambda m : m.name)[-1])
-
-        # we don't want the reclaim service running during tests..
-        self.bldr.reclaim_svc.disownServiceParent()
 
         self.bldr.startService()
 
@@ -718,12 +715,9 @@ class TestGetOldestRequestTime(unittest.TestCase):
         builder_config = config.BuilderConfig(
                         name=name, slavename="slv", builddir="bdir",
                         slavebuilddir="sbdir", factory=self.factory)
-        self.bldr = builder.Builder(builder_config.name)
+        self.bldr = builder.Builder(builder_config.name, _addServices=False)
         self.master.db = self.db = fakedb.FakeDBConnector(self)
         self.bldr.master = self.master
-
-        # we don't want the reclaim service running during tests..
-        self.bldr.reclaim_svc.disownServiceParent()
 
         self.bldr.startService()
 

@@ -37,7 +37,7 @@ class Builder(config.ReconfigurableServiceMixin,
     # reconfigure builders before slaves
     reconfig_priority = 196
 
-    def __init__(self, name):
+    def __init__(self, name, _addServices=True):
         service.MultiService.__init__(self)
         self.name = name
 
@@ -61,13 +61,15 @@ class Builder(config.ReconfigurableServiceMixin,
         self.config = None
         self.builder_status = None
 
-        self.reclaim_svc = internet.TimerService(10*60, self.reclaimAllBuilds)
-        self.reclaim_svc.setServiceParent(self)
+        if _addServices:
+            self.reclaim_svc = internet.TimerService(10*60,
+                                            self.reclaimAllBuilds)
+            self.reclaim_svc.setServiceParent(self)
 
-        # update big status every 30 minutes, working around #1980
-        self.updateStatusService = internet.TimerService(30*60,
-                                        self.updateBigStatus)
-        self.updateStatusService.setServiceParent(self)
+            # update big status every 30 minutes, working around #1980
+            self.updateStatusService = internet.TimerService(30*60,
+                                            self.updateBigStatus)
+            self.updateStatusService.setServiceParent(self)
 
     def reconfigService(self, new_config):
         # find this builder in the config
@@ -243,6 +245,8 @@ class Builder(config.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
     def updateBigStatus(self):
+        if not self.builder_status:
+            return
         if not self.slaves:
             self.builder_status.setBigState("offline")
         elif self.building or self.old_building:
