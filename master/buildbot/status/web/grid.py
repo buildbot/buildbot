@@ -193,11 +193,12 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):
                 #TODO: support multiple sourcestamps
-                ss = build.getSourceStamps(absolute=True)[0]
-                key= self.getSourceStampKey(ss)
-                for i in range(len(stamps)):
-                    if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
-                        builds[i] = build
+                if build.getSourceStamps() == 1:
+                    ss = build.getSourceStamps(absolute=True)[0]
+                    key= self.getSourceStampKey(ss)
+                    for i in range(len(stamps)):
+                        if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
+                            builds[i] = build
 
             b = yield self.builder_cxt(request, builder)
 
