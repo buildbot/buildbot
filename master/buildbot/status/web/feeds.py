@@ -180,7 +180,6 @@ class FeedResource(XmlResource):
             # 'i686-debian-sarge1 shared gcc-3.3.5'
             ss_list = build.getSourceStamps()
             all_got_revisions = build.getAllGotRevisions() or {}
-            source = ""
             src_cxts = []
             for ss in ss_list:
                 sc = {}
