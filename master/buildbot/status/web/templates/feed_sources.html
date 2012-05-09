@@ -1,0 +1,16 @@
+{% macro srcs_desc(src) -%}
+  <div>
+    {%- if src.codebase -%}
+    <b>Codebase: {{ src.codebase }}</b><br/>
+    {% endif %}
+    <p>
+    Repository: {{ src.repository }}<br/>
+    {%- if src.branch -%}
+    Branch: {{ src.branch }}<br/>
+    {% endif %}
+    {%- if src.revision -%}
+    Revision: {{ src.revision }}<br/>
+    {% endif %}
+    </p>
+  </div>
+{%- endmacro %}

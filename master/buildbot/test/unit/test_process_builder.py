@@ -743,3 +743,75 @@ class TestGetOldestRequestTime(unittest.TestCase):
         d.addCallback(check)
         return d
 
+class TestRebuild(unittest.TestCase):
+
+    def makeBuilder(self, name, sourcestamps):
+        self.bstatus = mock.Mock()
+        bstatus_properties = mock.Mock()
+        bstatus_properties.properties = {}
+        self.bstatus.getProperties.return_value = bstatus_properties
+        self.bstatus.getSourceStamps.return_value = sourcestamps
+        self.factory = mock.Mock()
+        self.master = fakemaster.make_master()
+        # only include the necessary required config
+        builder_config = config.BuilderConfig(
+                        name=name, slavename="slv", builddir="bdir",
+                        slavebuilddir="sbdir", factory=self.factory)
+        self.bldr = builder.Builder(builder_config.name)
+        self.master.db = self.db = fakedb.FakeDBConnector(self)
+        self.bldr.master = self.master
+        self.bldr.master.master.addBuildset.return_value = (1, [100])
+
+    def do_test_rebuild(self,
+                        sourcestampsetid,
+                        nr_of_sourcestamps):
+
+        # Store combinations of sourcestampId and sourcestampSetId
+        self.sslist = {}
+        self.ssseq = 1
+        def addSourceStampToDatabase(master, sourcestampsetid):
+            self.sslist[self.ssseq] = sourcestampsetid
+            self.ssseq += 1
+            return defer.succeed(sourcestampsetid)
+        def getSourceStampSetId(master):
+            return addSourceStampToDatabase(master, sourcestampsetid = sourcestampsetid)
+
+        sslist = []
+        for x in range(nr_of_sourcestamps):
+            ssx = mock.Mock()
+            ssx.addSourceStampToDatabase = addSourceStampToDatabase
+            ssx.getSourceStampSetId = getSourceStampSetId
+            sslist.append(ssx)
+
+        self.makeBuilder(name='bldr1', sourcestamps = sslist)
+        self.bldrctrl = builder.BuilderControl(self.bldr, self.master)
+
+        d = self.bldrctrl.rebuildBuild(self.bstatus, reason = 'unit test', extraProperties = {})
+
+        return d
+
+    @defer.inlineCallbacks
+    def test_rebuild_with_no_sourcestamps(self):
+        yield self.do_test_rebuild(101, 0)
+        self.assertEqual(self.sslist, {})
+
+    @defer.inlineCallbacks
+    def test_rebuild_with_single_sourcestamp(self):
+        yield self.do_test_rebuild(101, 1)
+        self.assertEqual(self.sslist, {1:101})
+        self.master.master.addBuildset.assert_called_with(builderNames=['bldr1'],
+                                                          sourcestampsetid=101,
+                                                          reason = 'unit test', 
+                                                          properties = {})
+
+
+    @defer.inlineCallbacks
+    def test_rebuild_with_multiple_sourcestamp(self):
+        yield self.do_test_rebuild(101, 3)
+        self.assertEqual(self.sslist, {1:101, 2:101, 3:101})
+        self.master.master.addBuildset.assert_called_with(builderNames=['bldr1'],
+                                                          sourcestampsetid=101,
+                                                          reason = 'unit test',
+                                                          properties = {})
+        
+        

@@ -143,7 +143,7 @@ class BuildRequest(object):
         wfd = defer.waitForDeferred(dl)
         yield wfd
         wfd.getResult()
-  
+
         if buildrequest.sources:
             buildrequest.source = buildrequest.sources.values()[0]
 

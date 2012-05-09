@@ -394,4 +394,4 @@ class SVN(Source):
             return None
         lastChange = max([int(c.revision) for c in changes])
         return lastChange
-    
+

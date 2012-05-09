@@ -711,6 +711,7 @@ class BuilderControl:
         d.addCallback(get_brs)
         return d
 
+    @defer.inlineCallbacks
     def rebuildBuild(self, bs, reason="<rebuild, no reason given>", extraProperties=None):
         if not bs.isFinished():
             return
@@ -723,14 +724,25 @@ class BuilderControl:
             properties.updateFromProperties(extraProperties)
 
         properties_dict = dict((k,(v,s)) for (k,v,s) in properties.asList())
-        ss = bs.getSourceStamp(absolute=True)
-        d = ss.getSourceStampSetId(self.master.master)
-        def add_buildset(sourcestampsetid):
-            return self.master.master.addBuildset(
+        ssList = bs.getSourceStamps(absolute=True)
+        
+        if ssList:
+            sourcestampsetid = yield  ssList[0].getSourceStampSetId(self.master.master)
+            dl = []
+            for ss in ssList[1:]:
+                # add defered to the list
+                dl.append(ss.addSourceStampToDatabase(self.master.master, sourcestampsetid))
+            yield defer.gatherResults(dl)
+
+            bsid, brids = yield self.master.master.addBuildset(
                     builderNames=[self.original.name],
-                    sourcestampsetid=sourcestampsetid, reason=reason, properties=properties_dict)
-        d.addCallback(add_buildset)
-        return d
+                    sourcestampsetid=sourcestampsetid, 
+                    reason=reason, 
+                    properties=properties_dict)
+            defer.returnValue((bsid, brids))
+        else:
+            log.msg('Cannot start rebuild, rebuild has no sourcestamps for a new build')
+            defer.returnValue(None)
 
     @defer.inlineCallbacks
     def getPendingBuildRequestControls(self):

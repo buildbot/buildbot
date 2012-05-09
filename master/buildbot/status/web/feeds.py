@@ -178,29 +178,35 @@ class FeedResource(XmlResource):
 
             # title: trunk r22191 (plus patch) failed on
             # 'i686-debian-sarge1 shared gcc-3.3.5'
-            ss = build.getSourceStamp()
+            ss_list = build.getSourceStamps()
+            all_got_revisions = build.getAllGotRevisions() or {}
             source = ""
-            if ss.branch:
-                source += "Branch %s " % ss.branch
-            if ss.revision:
-                source += "Revision %s " % str(ss.revision)
-            if ss.patch:
-                source += " (plus patch)"
-            if ss.changes:
-                pass
-            if (ss.branch is None and ss.revision is None and ss.patch is None
-                and not ss.changes):
-                source += "Latest revision "
-            got_revision = build.getProperty("got_revision")
-            if got_revision:
-                got_revision = str(got_revision)
-                if len(got_revision) > 40:
-                    got_revision = "[revision string too long]"
-                source += "(Got Revision: %s)" % got_revision
+            src_cxts = []
+            for ss in ss_list:
+                sc = {}
+                sc['codebase'] = ss.codebase
+                if (ss.branch is None and ss.revision is None and ss.patch is None
+                    and not ss.changes):
+                    sc['repository'] = None
+                    sc['branch'] = None
+                    sc['revision'] = "Latest revision"
+                else:
+                    sc['repository'] = ss.repository
+                    sc['branch'] = ss.branch
+                    got_revision = all_got_revisions.get(ss.codebase, None)
+                    if got_revision:
+                        sc['revision'] = got_revision
+                    else:
+                        sc['revision'] = str(ss.revision)
+                if ss.patch:
+                    sc['revision'] += " (plus patch)"
+                if ss.changes:
+                    pass
+                src_cxts.append(sc)
             failflag = (build.getResults() != FAILURE)
-            pageTitle = ('%s %s on "%s"' %
-                     (source, ["failed","succeeded"][failflag],
-                      build.getBuilder().getName()))
+            pageTitle = ('Builder "%s" has %s' %
+                (build.getBuilder().getName(), ["failed","succeeded"][failflag],)
+                        )
 
             # Add information about the failing steps.
             failed_steps = []
@@ -225,6 +231,7 @@ class FeedResource(XmlResource):
                         log_lines.extend(unilist)
 
             bc = {}
+            bc['sources'] = src_cxts
             bc['date'] = rfc822_time(finishedTime)
             bc['summary_link'] = ('%sbuilders/%s' %
                                   (self.link,
