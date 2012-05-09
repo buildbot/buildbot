@@ -29,17 +29,19 @@ class MasterShellCommand(BuildStep):
     name='MasterShellCommand'
     description='Running'
     descriptionDone='Ran'
-    renderables = [ 'command', 'env' ]
+    descriptionSuffix = None
+    renderables = [ 'command', 'env', 'description', 'descriptionDone', 'descriptionSuffix' ]
     haltOnFailure = True
     flunkOnFailure = True
 
     def __init__(self, command,
-                 description=None, descriptionDone=None,
+                 description=None, descriptionDone=None, descriptionSuffix=None,
                  env=None, path=None, usePTY=0,
                  **kwargs):
         BuildStep.__init__(self, **kwargs)
         self.addFactoryArguments(description=description,
                                  descriptionDone=descriptionDone,
+                                 descriptionSuffix=descriptionSuffix,
                                  env=env, path=path, usePTY=usePTY,
                                  command=command)
 
@@ -52,6 +54,10 @@ class MasterShellCommand(BuildStep):
             self.descriptionDone = descriptionDone
         if isinstance(self.descriptionDone, str):
             self.descriptionDone = [self.descriptionDone]
+        if descriptionSuffix:
+            self.descriptionSuffix = descriptionSuffix
+        if isinstance(self.descriptionSuffix, str):
+            self.descriptionSuffix = [self.descriptionSuffix]
         self.env=env
         self.path=path
         self.usePTY=usePTY
@@ -100,7 +106,7 @@ class MasterShellCommand(BuildStep):
         stdio_log.addHeader("** RUNNING ON BUILDMASTER **\n")
         stdio_log.addHeader(" in dir %s\n" % os.getcwd())
         stdio_log.addHeader(" argv: %s\n" % (argv,))
-        self.step_status.setText(list(self.description))
+        self.step_status.setText(self.describe())
 
         if self.env is None:
             env = os.environ
@@ -126,8 +132,16 @@ class MasterShellCommand(BuildStep):
 
     def processEnded(self, status_object):
         if status_object.value.exitCode != 0:
-            self.step_status.setText(["failed (%d)" % status_object.value.exitCode])
+            self.descriptionDone = ["failed (%d)" % status_object.value.exitCode]
+            self.step_status.setText(self.describe(done=True))
             self.finished(FAILURE)
         else:
-            self.step_status.setText(list(self.descriptionDone))
+            self.step_status.setText(self.describe(done=True))
             self.finished(SUCCESS)
+
+    def describe(self, done=False):
+        desc = self.descriptionDone if done else self.description
+        if self.descriptionSuffix:
+            desc = desc[:]
+            desc.extend(self.descriptionSuffix)
+        return desc

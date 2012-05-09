@@ -65,9 +65,13 @@ class ShellCommand(buildstep.LoggingBuildStep):
     """
 
     name = "shell"
-    renderables = [ 'description', 'descriptionDone', 'slaveEnvironment', 'remote_kwargs', 'command', 'logfiles' ]
+    renderables = buildstep.LoggingBuildStep.renderables + [
+                   'slaveEnvironment', 'remote_kwargs', 'command']
+    
     description = None # set this to a list of short strings to override
     descriptionDone = None # alternate description when the step is complete
+    descriptionSuffix = None # extra information to append to suffix
+
     command = None # set this to a command, or set in kwargs
     # logfiles={} # you can also set 'logfiles' to a dictionary, and it
     #               will be merged with any logfiles= argument passed in
@@ -78,7 +82,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
     flunkOnFailure = True
 
     def __init__(self, workdir=None,
-                 description=None, descriptionDone=None,
+                 description=None, descriptionDone=None, descriptionSuffix=None,
                  command=None,
                  usePTY="slave-config",
                  **kwargs):
@@ -95,6 +99,12 @@ class ShellCommand(buildstep.LoggingBuildStep):
             self.descriptionDone = descriptionDone
         if isinstance(self.descriptionDone, str):
             self.descriptionDone = [self.descriptionDone]
+
+        if descriptionSuffix:
+            self.descriptionSuffix = descriptionSuffix
+        if isinstance(self.descriptionSuffix, str):
+            self.descriptionSuffix = [self.descriptionSuffix]
+
         if command:
             self.setCommand(command)
 
@@ -108,6 +118,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
         self.addFactoryArguments(workdir=workdir,
                                  description=description,
                                  descriptionDone=descriptionDone,
+                                 descriptionSuffix=descriptionSuffix,
                                  command=command)
 
         # everything left over goes to the RemoteShellCommand
@@ -148,6 +159,13 @@ class ShellCommand(buildstep.LoggingBuildStep):
              self._flattenList(mainlist, x)
 
     def describe(self, done=False):
+        desc = self._describe(done)
+        if self.descriptionSuffix:
+            desc = desc[:]
+            desc.extend(self.descriptionSuffix)
+        return desc
+
+    def _describe(self, done=False):
         """Return a list of short strings to describe this step, for the
         status display. This uses the first few words of the shell command.
         You can replace this by setting .description in your subclass, or by
