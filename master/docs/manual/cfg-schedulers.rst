@@ -822,8 +822,8 @@ file is something like::
                  # input for user to type his name
                  username=UserNameParameter(label="your name:<br>", size=80),
 
-                 # A completly customized property list.  The name of the
-                 property is the name of the parameter
+                 # A completely customized property list.  The name of the
+                 # property is the name of the parameter
                  properties=[
 
                     BooleanParameter(name="force_build_clean",
