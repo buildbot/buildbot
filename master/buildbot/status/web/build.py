@@ -160,16 +160,10 @@ class StatusResourceBuild(HtmlResource):
                 cxt['tests_link'] = req.childLink("tests")
 
         ssList = b.getSourceStamps()
-        # TODO: support multiple sourcestamps
-        ss = cxt['ss'] = ssList[0]
+        sourcestamps = cxt['sourcestamps'] = ssList
 
-        if ss.branch is None and ss.revision is None and ss.patch is None and not ss.changes:
-            cxt['most_recent_rev_build'] = True
-
-        all_got_revisions = b.getAllGotRevisions()
-        if all_got_revisions:
-            got_revision = all_got_revisions.get(ss.codebase, "??")
-            cxt['got_revision'] = str(got_revision)
+        all_got_revisions = b.getAllGotRevisions() or {}
+        cxt['got_revisions'] = all_got_revisions
 
         try:
             cxt['slave_url'] = path_to_slave(req, status.getSlave(b.getSlavename()))
@@ -224,10 +218,13 @@ class StatusResourceBuild(HtmlResource):
 
         ps = cxt['properties'] = []
         for name, value, source in b.getProperties().asList():
-            uvalue = unicode(value)
-            p = { 'name': name, 'value': uvalue, 'source': source}            
-            if len(uvalue) > 500:
-                p['short_value'] = uvalue[:500]
+            if not isinstance(value, dict):
+                cxt_value = unicode(value)
+            else:
+                cxt_value = value
+            p = { 'name': name, 'value': cxt_value, 'source': source}
+            if len(cxt_value) > 500:
+                p['short_value'] = cxt_value[:500]
             if name in parameters:
                 param = parameters[name]
                 if isinstance(param, TextParameter):
@@ -249,8 +246,13 @@ class StatusResourceBuild(HtmlResource):
             now = util.now()
             cxt['elapsed'] = util.formatInterval(now - start)
             
-        cxt['exactly'] = (ss.revision is not None) or b.getChanges()
-
+        exactly = True
+        has_changes = False
+        for ss in sourcestamps:
+            exactly = exactly and (ss.revision is not None)
+            has_changes = has_changes or ss.changes
+        cxt['exactly'] = (exactly) or b.getChanges()
+        cxt['has_changes'] = has_changes
         cxt['build_url'] = path_to_build(req, b)
         cxt['authz'] = self.getAuthz(req)
 
