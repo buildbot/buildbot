@@ -36,8 +36,8 @@ class FakeBuildStatus:
     def getProperties(self):
         return Properties()
 
-    def setSourceStamp(self, ss):
-        self.ss = ss
+    def setSourceStamps(self, ss_list):
+        self.ss_list = ss_list
 
     def setReason(self, reason):
         self.reason = reason

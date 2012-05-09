@@ -455,8 +455,8 @@ class IBuildStatus(Interface):
         'forced', and 'periodic' are the most likely values. 'try' will be
         added in the future."""
 
-    def getSourceStamp():
-        """Return a SourceStamp object which can be used to re-create
+    def getSourceStamps():
+        """Return a list of SourceStamp objects which can be used to re-create
         the source tree that this build used.
 
         This method will return None if the source information is no longer

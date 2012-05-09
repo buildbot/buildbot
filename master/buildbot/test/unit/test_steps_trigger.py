@@ -110,7 +110,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         ])
 
         # the build has a getSourceStamp method
-        def getSourceStamp():
+        def getSourceStamp(codebase):
             return FakeSourceStamp(self.THIS_SSID, self.THIS_SS_SETID)
         self.build.getSourceStamp = getSourceStamp
 

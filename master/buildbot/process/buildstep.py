@@ -554,11 +554,13 @@ class BuildStep(properties.PropertiesMixin):
         dl.addCallback(self._startStep_3)
         return dl
 
+    @defer.inlineCallbacks
     def _startStep_3(self, doStep):
         doStep = doStep[0]
         try:
             if doStep:
-                if self.start() == SKIPPED:
+                result = yield defer.maybeDeferred(self.start)
+                if result == SKIPPED:
                     doStep = False
         except:
             log.msg("BuildStep.startStep exception in .start")

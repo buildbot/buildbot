@@ -265,6 +265,8 @@ class BuilderStatus(styles.Versioned):
 
     # IBuilderStatus methods
     def getName(self):
+        # if builderstatus page does show not up without any reason then 
+        # str(self.name) may be a workaround
         return self.name
 
     def getState(self):

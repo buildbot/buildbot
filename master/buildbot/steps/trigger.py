@@ -126,7 +126,7 @@ class Trigger(LoggingBuildStep):
         elif self.alwaysUseLatest:
             d = defer.succeed(None)
         else:
-            ss = self.build.getSourceStamp()
+            ss = self.build.getSourceStamp('')
             if self.updateSourceStamp:
                 got = properties.getProperty('got_revision')
                 if got:
