@@ -33,12 +33,7 @@ upgrade_message = textwrap.dedent("""\
         buildbot upgrade-master path/to/master
 
     to upgrade the database, and try starting the buildmaster again.  You may
-    want to make a backup of your buildmaster before doing so.  If you are
-    using MySQL, you must specify the connector string on the upgrade-master
-    command line:
-
-        buildbot upgrade-master --db=<db-url> path/to/master
-
+    want to make a backup of your buildmaster before doing so.
     """).strip()
 
 class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
