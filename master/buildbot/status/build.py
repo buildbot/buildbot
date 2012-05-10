@@ -101,7 +101,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         if not absolute:
             sourcestamps.extend(self.sources)
         else:
-            all_got_revisions = self.getAllGotRevisions()
+            all_got_revisions = self.getAllGotRevisions() or {}
             # always make a new instance
             for ss in self.sources:
                 if ss.codebase in all_got_revisions:
