@@ -73,13 +73,19 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
- * ``BuildStep.start`` can now optionally return a deferred and any errback
-   will be handled gracefully. If you use inlineCallbacks, this means that
-   unexpected exceptions and failures raised will be captured and logged and
-   the build shut down normally.
+* ``BuildStep.start`` can now optionally return a deferred and any errback will
+  be handled gracefully. If you use inlineCallbacks, this means that unexpected
+  exceptions and failures raised will be captured and logged and the build shut
+  down normally.
 
 Features
 ~~~~~~~~
+
+* Buildbot now supports building projects composed of multiple codebases.  New
+  schedulers can aggregate changes to multipl codebases into source stamp sets
+  (with one source stamp for each codebase).  Source steps then check out each
+  codebase as required, and the remainder of the build process proceeds
+  normally.  See the documentation for details.
 
 Slave
 -----
