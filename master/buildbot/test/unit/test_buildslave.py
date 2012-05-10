@@ -107,26 +107,16 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(self.master.pbmanager._registrations, [])
         self.assertTrue(old.updateSlave.called)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_has_properties(self):
         old = self.ConcreteBuildSlave('bot', 'pass')
-
-        wfd = defer.waitForDeferred(
-            self.do_test_reconfigService(old, 'tcp:1234', old, 'tcp:1234'))
-        yield wfd
-        wfd.getResult()
-
+        yield self.do_test_reconfigService(old, 'tcp:1234', old, 'tcp:1234')
         self.assertTrue(old.properties.getProperty('slavename'), 'bot')
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_initial_registration(self):
         old = self.ConcreteBuildSlave('bot', 'pass')
-
-        wfd = defer.waitForDeferred(
-            self.do_test_reconfigService(old, None, old, 'tcp:1234'))
-        yield wfd
-        wfd.getResult()
-
+        yield self.do_test_reconfigService(old, None, old, 'tcp:1234')
         self.assertEqual(self.master.pbmanager._registrations, [('tcp:1234', 'bot', 'pass')])
 
     @defer.inlineCallbacks

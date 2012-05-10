@@ -322,12 +322,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
         yield self.bldr.stopService()
         yield self.bldr.maybeStartBuild()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_merge_ordering(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder(patch_random=True))
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder(patch_random=True)
 
         self.setSlaveBuilders({'bldr':1})
 
@@ -347,12 +344,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
             fakedb.BuildRequest(id=42922, buildsetid=1981,
                 buildername="bldr", submitted_at=1332025495.19141),
         ]
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
+        yield self.do_test_maybeStartBuild(rows=rows,
                 exp_claims=[42880, 42922],
-                exp_builds=[('bldr', [42880, 42922])]))
-        yield wfd
-        wfd.getResult()
+                exp_builds=[('bldr', [42880, 42922])])
 
     # _chooseSlave
 
