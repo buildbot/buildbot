@@ -167,9 +167,8 @@ class StatusResourceBuild(HtmlResource):
             cxt['most_recent_rev_build'] = True
 
         all_got_revisions = b.getAllGotRevisions()
-        if all_got_revisions:
-            got_revision = all_got_revisions.get(ss.codebase, "??")
-            cxt['got_revision'] = str(got_revision)
+        got_revision = all_got_revisions.get(ss.codebase, "??")
+        cxt['got_revision'] = str(got_revision)
 
         try:
             cxt['slave_url'] = path_to_slave(req, status.getSlave(b.getSlavename()))

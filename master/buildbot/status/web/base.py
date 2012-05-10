@@ -438,10 +438,7 @@ class BuildLineMixin:
         if ss_list:
             # TODO: support multiple sourcestamps in web interface
             repo = ss_list[0].repository
-            if all_got_revision:
-                rev = all_got_revision[ss_list[0].codebase]
-            else:
-                rev = "??"
+            rev = all_got_revision.get(ss_list[0].codebase, "??")
         else:
             repo = 'unknown, no information in build'
             rev = 'unknown'
