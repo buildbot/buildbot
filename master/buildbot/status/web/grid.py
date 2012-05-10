@@ -193,7 +193,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):
                 #TODO: support multiple sourcestamps
-                if build.getSourceStamps() == 1:
+                if len(build.getSourceStamps()) == 1:
                     ss = build.getSourceStamps(absolute=True)[0]
                     key= self.getSourceStampKey(ss)
                     for i in range(len(stamps)):
@@ -205,6 +205,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
             b['builds'] = []
             for build in builds:
                 b['builds'].append(self.build_cxt(request, build))
+
             cxt['builders'].append(b)
 
         template = request.site.buildbot_service.templates.get_template("grid.html")
