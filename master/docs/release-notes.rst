@@ -82,7 +82,7 @@ Features
 ~~~~~~~~
 
 * Buildbot now supports building projects composed of multiple codebases.  New
-  schedulers can aggregate changes to multipl codebases into source stamp sets
+  schedulers can aggregate changes to multiple codebases into source stamp sets
   (with one source stamp for each codebase).  Source steps then check out each
   codebase as required, and the remainder of the build process proceeds
   normally.  See the documentation for details.
