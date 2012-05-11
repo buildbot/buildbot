@@ -121,6 +121,12 @@ else:
     setup_args['install_requires'] = [
         'twisted >= 8.0.0',
     ]
+    setup_args['setup_requires'] = [
+        'setuptools_trial',
+    ]
+    setup_args['tests_require'] = [
+        'mock',
+    ]
 
     if os.getenv('NO_INSTALL_REQS'):
         setup_args['install_requires'] = None
