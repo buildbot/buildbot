@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
+from buildbot.util import topicmatch
 
 class FakeMQConnector(object):
 
@@ -32,19 +33,23 @@ class FakeMQConnector(object):
 
     def produce(self, routingKey, data):
         self.productions.append((routingKey, data))
+        # note - no consumers are called: IT'S A FAKE
 
-    def call_consumer(self, topic, key, msg):
+    def callConsumer(self, routingKey, msg):
+        matched = False
         for q in self.qrefs:
-            if topic in q.topics:
-                return q.callback(key, msg)
-        else:
-            assert 0, "no consumer found"
+            if q.matcher.matches(routingKey):
+                matched = True
+                q.callback(routingKey, msg)
+        if not matched:
+            raise AssertionError("no consumer found")
 
     def startConsuming(self, callback, *topics, **kwargs):
         qref = FakeQueueRef()
         qref.qrefs = self.qrefs
         qref.callback = callback
         qref.topics = topics
+        qref.matcher = topicmatch.TopicMatcher(topics)
         qref.kwargs = kwargs
         self.qrefs.append(qref)
         return qref

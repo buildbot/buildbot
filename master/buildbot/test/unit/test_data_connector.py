@@ -57,7 +57,7 @@ class DataConnector(unittest.TestCase):
 
         # put the qref through its paces, using the FakeMQConnector
         qref = self.data.startConsuming(cb, {}, ('foo', '10', 'bar'))
-        self.master.mq.call_consumer('foo.*.bar', 'foo.10.bar', ['msg'])
+        self.master.mq.callConsumer('foo.10.bar', ['msg'])
         cb.assert_called_with('foo.10.bar', ['msg'])
         qref.stopConsuming()
         self.assertEqual(self.master.mq.qrefs, [])

@@ -89,8 +89,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertFalse(self.fired)
 
         # pretend a non-matching buildset is complete
-        sched.master.mq.call_consumer('buildset.*.complete',
-                'buildset.%d.complete' % (bsid+27),
+        sched.master.mq.callConsumer('buildset.%d.complete' % (bsid+27),
                 dict(bsid=bsid+27, result=3))
 
         # scheduler should not have reacted
@@ -100,8 +99,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertFalse(self.fired)
 
         # pretend the matching buildset is complete
-        sched.master.mq.call_consumer('buildset.*.complete',
-                'buildset.%d.complete' % bsid,
+        sched.master.mq.callConsumer('buildset.%d.complete' % bsid,
                 dict(bsid=bsid, result=13))
 
         # scheduler should have reacted
@@ -153,17 +151,13 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
             [('buildset.*.complete',)])
 
         # let a few buildsets complete
-        sched.master.mq.call_consumer('buildset.*.complete',
-                'buildset.%d.complete' % (bsid2+27,),
+        sched.master.mq.callConsumer('buildset.%d.complete' % (bsid2+27,),
                 dict(bsid=bsid2+27, result=3))
-        sched.master.mq.call_consumer('buildset.*.complete',
-                'buildset.%d.complete' % (bsid2,),
+        sched.master.mq.callConsumer('buildset.%d.complete' % (bsid2,),
                 dict(bsid=bsid2, result=22))
-        sched.master.mq.call_consumer('buildset.*.complete',
-                'buildset.%d.complete' % (bsid2+7,),
+        sched.master.mq.callConsumer('buildset.%d.complete' % (bsid2+7,),
                 dict(bsid=bsid2+7, result=3))
-        sched.master.mq.call_consumer('buildset.*.complete',
-                'buildset.%d.complete' % (bsid1,),
+        sched.master.mq.callConsumer('buildset.%d.complete' % (bsid1,),
                 dict(bsid=bsid1, result=11))
 
         # both should have triggered with appropriate results, and the
