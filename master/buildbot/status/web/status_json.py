@@ -423,9 +423,10 @@ class BuildJsonResource(JsonResource):
     def __init__(self, status, build_status):
         JsonResource.__init__(self, status)
         self.build_status = build_status
+        # TODO: support multiple sourcestamps
+        sourcestamp = build_status.getSourceStamps()[0]
         self.putChild('source_stamp',
-                      SourceStampJsonResource(status,
-                                              build_status.getSourceStamp()))
+                      SourceStampJsonResource(status, sourcestamp))
         self.putChild('steps', BuildStepsJsonResource(status, build_status))
 
     def asDict(self, request):

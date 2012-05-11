@@ -14,6 +14,10 @@ Nine
 
 * Buildbot's tests now require at least Mock-0.8.0.
 
+* Buildbot no longer polls the database for jobs.  The
+  :bb:cfg:`db_poll_interval` configuration parameter and the :bb:cfg:`db` key
+  of the same name are deprecated and will be ignored.
+
 Master
 ++++++
 
@@ -77,20 +81,26 @@ Deprecations, Removals, and Non-Compatible Changes
     from buildbot.steps.source.svn import SVN
     factory.append(SVN(repourl=Interpolate("svn://svn.example.org/svn/%(src::branch:-branches/test)s")))
 
-* Buildbot no longer polls the database for jobs.  The
-  :bb:cfg:`db_poll_interval` configuration parameter and the :bb:cfg:`db` key
-  of the same name are deprecated and will be ignored.
+* ``Source`` and ``ShellCommand`` steps now have an optional ``descriptionSuffix``, a suffix to the
+   ``description``/``descriptionDone`` values. For example this can help distinguish between
+    multiple ``Compile`` steps that are applied to different codebases.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
- * ``BuildStep.start`` can now optionally return a deferred and any errback
-   will be handled gracefully. If you use inlineCallbacks, this means that
-   unexpected exceptions and failures raised will be captured and logged and
-   the build shut down normally.
+* ``BuildStep.start`` can now optionally return a deferred and any errback will
+  be handled gracefully. If you use inlineCallbacks, this means that unexpected
+  exceptions and failures raised will be captured and logged and the build shut
+  down normally.
 
 Features
 ~~~~~~~~
+
+* Buildbot now supports building projects composed of multiple codebases.  New
+  schedulers can aggregate changes to multiple codebases into source stamp sets
+  (with one source stamp for each codebase).  Source steps then check out each
+  codebase as required, and the remainder of the build process proceeds
+  normally.  See the documentation for details.
 
 Slave
 -----

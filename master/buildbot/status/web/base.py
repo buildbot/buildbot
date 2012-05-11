@@ -432,9 +432,21 @@ class BuildLineMixin:
         builder_name = build.getBuilder().getName()
         results = build.getResults()
         text = build.getText()
-        rev = str(build.getProperty("got_revision", "??"))
+        all_got_revision = build.getAllGotRevisions()
         css_class = css_classes.get(results, "")
-        repo = build.getSourceStamp().repository
+        ss_list = build.getSourceStamps()
+        if ss_list:
+            repo = ss_list[0].repository
+            if all_got_revision:
+                if len(ss_list) == 1:
+                    rev = all_got_revision.get(ss_list[0].codebase, "??")
+                else:
+                    rev = "multiple rev."
+            else:
+                rev = "??"
+        else:
+            repo = 'unknown, no information in build'
+            rev = 'unknown'
 
         if type(text) == list:
             text = " ".join(text)

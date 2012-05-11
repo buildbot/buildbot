@@ -372,12 +372,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
         yield self.bldr.stopService()
         yield self.bldr.maybeStartBuild()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_merge_ordering(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder(patch_random=True))
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder(patch_random=True)
 
         self.setSlaveBuilders({'bldr':1})
 
@@ -397,12 +394,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
             fakedb.BuildRequest(id=42922, buildsetid=1981,
                 buildername="bldr", submitted_at=1332025495.19141),
         ]
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
+        yield self.do_test_maybeStartBuild(rows=rows,
                 exp_claims=[42880, 42922],
-                exp_builds=[('bldr', [42880, 42922])]))
-        yield wfd
-        wfd.getResult()
+                exp_builds=[('bldr', [42880, 42922])])
 
     # _chooseSlave
 
@@ -819,3 +813,75 @@ class TestGetOldestRequestTime(unittest.TestCase):
         d.addCallback(check)
         return d
 
+class TestRebuild(unittest.TestCase):
+
+    def makeBuilder(self, name, sourcestamps):
+        self.bstatus = mock.Mock()
+        bstatus_properties = mock.Mock()
+        bstatus_properties.properties = {}
+        self.bstatus.getProperties.return_value = bstatus_properties
+        self.bstatus.getSourceStamps.return_value = sourcestamps
+        self.factory = mock.Mock()
+        self.master = fakemaster.make_master()
+        # only include the necessary required config
+        builder_config = config.BuilderConfig(
+                        name=name, slavename="slv", builddir="bdir",
+                        slavebuilddir="sbdir", factory=self.factory)
+        self.bldr = builder.Builder(builder_config.name)
+        self.master.db = self.db = fakedb.FakeDBConnector(self)
+        self.bldr.master = self.master
+        self.bldr.master.master.addBuildset.return_value = (1, [100])
+
+    def do_test_rebuild(self,
+                        sourcestampsetid,
+                        nr_of_sourcestamps):
+
+        # Store combinations of sourcestampId and sourcestampSetId
+        self.sslist = {}
+        self.ssseq = 1
+        def addSourceStampToDatabase(master, sourcestampsetid):
+            self.sslist[self.ssseq] = sourcestampsetid
+            self.ssseq += 1
+            return defer.succeed(sourcestampsetid)
+        def getSourceStampSetId(master):
+            return addSourceStampToDatabase(master, sourcestampsetid = sourcestampsetid)
+
+        sslist = []
+        for x in range(nr_of_sourcestamps):
+            ssx = mock.Mock()
+            ssx.addSourceStampToDatabase = addSourceStampToDatabase
+            ssx.getSourceStampSetId = getSourceStampSetId
+            sslist.append(ssx)
+
+        self.makeBuilder(name='bldr1', sourcestamps = sslist)
+        self.bldrctrl = builder.BuilderControl(self.bldr, self.master)
+
+        d = self.bldrctrl.rebuildBuild(self.bstatus, reason = 'unit test', extraProperties = {})
+
+        return d
+
+    @defer.inlineCallbacks
+    def test_rebuild_with_no_sourcestamps(self):
+        yield self.do_test_rebuild(101, 0)
+        self.assertEqual(self.sslist, {})
+
+    @defer.inlineCallbacks
+    def test_rebuild_with_single_sourcestamp(self):
+        yield self.do_test_rebuild(101, 1)
+        self.assertEqual(self.sslist, {1:101})
+        self.master.master.addBuildset.assert_called_with(builderNames=['bldr1'],
+                                                          sourcestampsetid=101,
+                                                          reason = 'unit test', 
+                                                          properties = {})
+
+
+    @defer.inlineCallbacks
+    def test_rebuild_with_multiple_sourcestamp(self):
+        yield self.do_test_rebuild(101, 3)
+        self.assertEqual(self.sslist, {1:101, 2:101, 3:101})
+        self.master.master.addBuildset.assert_called_with(builderNames=['bldr1'],
+                                                          sourcestampsetid=101,
+                                                          reason = 'unit test',
+                                                          properties = {})
+        
+        

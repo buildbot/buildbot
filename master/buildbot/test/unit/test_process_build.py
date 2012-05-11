@@ -33,6 +33,7 @@ class FakeChange:
         
 class FakeSource:
     def __init__(self):
+        self.sourcestampsetid = None
         self.changes = []
         self.branch = None
         self.revision = None

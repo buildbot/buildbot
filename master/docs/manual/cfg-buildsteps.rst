@@ -228,6 +228,13 @@ parameters are mostly to specify where exactly the sources are coming from.
     web, or have the :class:`WebStatus` change hooks enabled; as the buildslave
     will download code from an arbitrary repository.
 
+``codebase``
+    This specifies which codebase the source step should use to select the right
+    source stamp. The default codebase value is ''. The codebase must correspond
+    to a codebase assigned by the :bb:cfg:`codebaseGenerator`. If there is no
+    codebaseGenerator defined in the master then codebase doesn't need to be set,
+    the default value will then match all changes. 
+    
 ``timeout``
     Specifies the timeout for slave-side operations, in seconds.  If
     your repositories are particularly large, then you may need to
@@ -1428,6 +1435,17 @@ The :bb:step:`ShellCommand` arguments are:
         f.addStep(ShellCommand(command=["make", "test"],
                                description=["testing"],
                                descriptionDone=["tests"]))
+
+``descriptionSuffix``
+    This is an optional suffix appended to the end of the description (ie,
+    after ``description`` and ``descriptionDone``). This can be used to distinguish
+    between build steps that would display the same descriptions in the waterfall.
+    This parameter may be set to list of short strings, a single string, or ``None``.
+    
+    For example, a builder might use the ``Compile`` step to build two different
+    codebases. The ``descriptionSuffix`` could be set to `projectFoo` and `projectBar`,
+    respectively for each step, which will result in the full descriptions
+    `compiling projectFoo` and `compiling projectBar` to be shown in the waterfall.
 
 ``logEnviron``
     If this option is ``True`` (the default), then the step's logfile will describe the

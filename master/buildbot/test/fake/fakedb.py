@@ -126,7 +126,7 @@ class Change(Row):
         when_timestamp = 1200000,
         category = u'cat',
         repository = u'repo',
-        codebase =  u'cb',
+        codebase =  u'',
         project = u'proj',
     )
 

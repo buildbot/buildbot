@@ -80,6 +80,9 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                 master.MasterShellCommand(description='x', descriptionDone='y',
                                 env={'a':'b'}, path=['/usr/bin'], usePTY=True,
                                 command='true'))
+        
+        self.assertEqual(self.step.describe(), ['x'])
+        
         if runtime.platformType == 'win32':
             exp_argv = [ r'C:\WINDOWS\system32\cmd.exe', '/c', 'true' ]
         else:
@@ -126,4 +129,30 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         else:
             self.expectLogfile('stdio', "BUILDBOT-TEST\nBUILDBOT-TEST\n")
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
+        return self.runStep()
+
+    def test_constr_args_descriptionSuffix(self):
+        self.setupStep(
+                master.MasterShellCommand(description='x', descriptionDone='y',
+                                          descriptionSuffix='z',
+                                env={'a':'b'}, path=['/usr/bin'], usePTY=True,
+                                command='true'))
+
+        # call twice to make sure the suffix doesnt get double added
+        self.assertEqual(self.step.describe(), ['x', 'z'])        
+        self.assertEqual(self.step.describe(), ['x', 'z'])
+
+        if runtime.platformType == 'win32':
+            exp_argv = [ r'C:\WINDOWS\system32\cmd.exe', '/c', 'true' ]
+        else:
+            exp_argv = [ '/bin/sh', '-c', 'true' ]
+        self.patchSpawnProcess(
+                exp_cmd=exp_argv[0], exp_argv=exp_argv,
+                exp_path=['/usr/bin'], exp_usePTY=True, exp_env={'a':'b'},
+                outputs=[
+                    ('out', 'hello!\n'),
+                    ('err', 'world\n'),
+                    ('rc', 0),
+                ])
+        self.expectOutcome(result=SUCCESS, status_text=['y', 'z'])
         return self.runStep()
