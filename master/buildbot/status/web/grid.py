@@ -193,17 +193,19 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):
                 #TODO: support multiple sourcestamps
-                ss = build.getSourceStamps(absolute=True)[0]
-                key= self.getSourceStampKey(ss)
-                for i in range(len(stamps)):
-                    if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
-                        builds[i] = build
+                if len(build.getSourceStamps()) == 1:
+                    ss = build.getSourceStamps(absolute=True)[0]
+                    key= self.getSourceStampKey(ss)
+                    for i in range(len(stamps)):
+                        if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
+                            builds[i] = build
 
             b = yield self.builder_cxt(request, builder)
 
             b['builds'] = []
             for build in builds:
                 b['builds'].append(self.build_cxt(request, build))
+
             cxt['builders'].append(b)
 
         template = request.site.buildbot_service.templates.get_template("grid.html")
@@ -263,11 +265,12 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):
                 #TODO: support multiple sourcestamps
-                ss = build.getSourceStamps(absolute=True)[0]
-                key = self.getSourceStampKey(ss)
-                for i in range(len(stamps)):
-                    if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
-                        builds[i] = build
+                if len(build.getSourceStamps()) == 1:
+                    ss = build.getSourceStamps(absolute=True)[0]
+                    key = self.getSourceStampKey(ss)
+                    for i in range(len(stamps)):
+                        if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
+                            builds[i] = build
 
             b = yield self.builder_cxt(request, builder)
             builders.append(b)
@@ -275,5 +278,4 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
             builder_builds.append(map(lambda b: self.build_cxt(request, b), builds))
 
         template = request.site.buildbot_service.templates.get_template('grid_transposed.html')
-        yield template.render(**cxt)
-
+        defer.returnValue(template.render(**cxt))

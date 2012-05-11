@@ -436,9 +436,14 @@ class BuildLineMixin:
         css_class = css_classes.get(results, "")
         ss_list = build.getSourceStamps()
         if ss_list:
-            # TODO: support multiple sourcestamps in web interface
             repo = ss_list[0].repository
-            rev = all_got_revision.get(ss_list[0].codebase, "??")
+            if all_got_revision:
+                if len(ss_list) == 1:
+                    rev = all_got_revision.get(ss_list[0].codebase, "??")
+                else:
+                    rev = "multiple rev."
+            else:
+                rev = "??"
         else:
             repo = 'unknown, no information in build'
             rev = 'unknown'
