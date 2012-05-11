@@ -141,7 +141,9 @@ class Change:
 
     def asText(self):
         data = ""
-        data += self.getFileContents()
+        data += "Files:\n"
+        for f in self.files:
+            data += " %s\n" % f
         if self.repository:
             data += "On: %s\n" % self.repository
         if self.project:
@@ -149,7 +151,10 @@ class Change:
         data += "At: %s\n" % self.getTime()
         data += "Changed By: %s\n" % self.who
         data += "Comments: %s" % self.comments
-        data += "Properties: \n%s\n\n" % self.getProperties()
+        data += "Properties: \n"
+        for prop in self.properties.asList():
+            data += "  %s: %s" % (prop[0], prop[1])
+        data += '\n\n'
         return data
 
     def asDict(self):
@@ -193,25 +198,6 @@ class Change:
         return [html.escape(self.who)]
     def getLogs(self):
         return {}
-
-    def getFileContents(self):
-        data = ""
-        if len(self.files) == 1:
-            if self.isdir:
-                data += "Directory: %s\n" % self.files[0]
-            else:
-                data += "File: %s\n" % self.files[0]
-        else:
-            data += "Files:\n"
-            for f in self.files:
-                data += " %s\n" % f
-        return data
-
-    def getProperties(self):
-        data = ""
-        for prop in self.properties.asList():
-            data += "  %s: %s" % (prop[0], prop[1])
-        return data
 
 
 class ChangeMaster: # pragma: no cover

@@ -19,6 +19,7 @@ using a database.  These classes should pass the same tests as are applied to
 the real connector components.
 """
 
+import copy
 import random
 import base64
 from buildbot.util import json, epoch2datetime, datetime2epoch
@@ -130,7 +131,7 @@ class Change(Row):
         project = u'proj',
     )
 
-    lists = ('files',)
+    lists = ('files','uids')
     dicts = ('properties',)
     id_column = 'changeid'
 
@@ -337,7 +338,8 @@ class FakeChangesComponent(FakeDBComponent):
     def insertTestData(self, rows):
         for row in rows:
             if isinstance(row, Change):
-                self.changes[row.changeid] = row
+                # copy this since we'll be modifying it (e.g., adding files)
+                self.changes[row.changeid] = copy.deepcopy(row)
 
             elif isinstance(row, ChangeFile):
                 ch = self.changes[row.changeid]
@@ -351,7 +353,7 @@ class FakeChangesComponent(FakeDBComponent):
 
             elif isinstance(row, ChangeUser):
                 ch = self.changes[row.changeid]
-                ch.uid = row.uid
+                ch.uids.append(row.uid)
 
     # component methods
 
@@ -397,7 +399,7 @@ class FakeChangesComponent(FakeDBComponent):
 
     def getChangeUids(self, changeid):
         try:
-            ch_uids = [self.changes[changeid].uid]
+            ch_uids = self.changes[changeid].uids
         except KeyError:
             ch_uids = []
         return defer.succeed(ch_uids)
