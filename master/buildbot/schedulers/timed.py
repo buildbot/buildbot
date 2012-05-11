@@ -224,57 +224,22 @@ class Periodic(Timed):
     def startBuild(self):
         return self.addBuildsetForLatest(reason=self.reason, branch=self.branch)
 
-class Nightly(Timed):
+class NightlyBase(Timed):
     compare_attrs = (Timed.compare_attrs
             + ('minute', 'hour', 'dayOfMonth', 'month',
                'dayOfWeek', 'onlyIfChanged', 'fileIsImportant',
                'change_filter', 'onlyImportant',))
 
-    class NoBranch: pass
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
-                 branch=NoBranch, fileIsImportant=None, onlyIfChanged=False,
-                 properties={}, change_filter=None, onlyImportant=False):
+                 properties={}):
         Timed.__init__(self, name=name, builderNames=builderNames, properties=properties)
-
-        # If True, only important changes will be added to the buildset.
-        self.onlyImportant = onlyImportant
-
-        if fileIsImportant:
-            assert callable(fileIsImportant), \
-                "fileIsImportant must be a callable"
-        assert branch is not Nightly.NoBranch, \
-                "Nightly parameter 'branch' is required"
 
         self.minute = minute
         self.hour = hour
         self.dayOfMonth = dayOfMonth
         self.month = month
         self.dayOfWeek = dayOfWeek
-        self.branch = branch
-        self.onlyIfChanged = onlyIfChanged
-        self.fileIsImportant = fileIsImportant
-        self.change_filter = filter.ChangeFilter.fromSchedulerConstructorArgs(
-                change_filter=change_filter)
-        self.reason = "The Nightly scheduler named '%s' triggered this build" % self.name
-
-    def startTimedSchedulerService(self):
-        if self.onlyIfChanged:
-            return self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
-                                              change_filter=self.change_filter,
-                                              onlyImportant=self.onlyImportant)
-        else:
-            return self.master.db.schedulers.flushChangeClassifications(self.schedulerid)
-
-    def gotChange(self, change, important):
-        # both important and unimportant changes on our branch are recorded, as
-        # we will include all such changes in any buildsets we start.  Note
-        # that we must check the branch here because it is not included in the
-        # change filter
-        if change.branch != self.branch:
-            return defer.succeed(None) # don't care about this change
-        return self.master.db.schedulers.classifyChanges(
-                self.schedulerid, { change.number : important })
 
     def getNextBuildTime(self, lastActuated):
         def addTime(timetuple, secs):
@@ -325,6 +290,52 @@ class Nightly(Timed):
             dateTime = addTime(dateTime, 60)
             assert dateTime[0] < yearLimit, 'Something is wrong with this code'
         return defer.succeed(time.mktime(dateTime))
+
+class Nightly(NightlyBase):
+    compare_attrs = (NightlyBase.compare_attrs
+            + ('onlyIfChanged', 'fileIsImportant', 'change_filter', 'onlyImportant',))
+
+    class NoBranch: pass
+    def __init__(self, name, builderNames, minute=0, hour='*',
+                 dayOfMonth='*', month='*', dayOfWeek='*',
+                 branch=NoBranch, fileIsImportant=None, onlyIfChanged=False,
+                 properties={}, change_filter=None, onlyImportant=False):
+        NightlyBase.__init__(self, name=name, builderNames=builderNames, minute=minute, hour='*',
+                dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, properties=properties)
+
+        # If True, only important changes will be added to the buildset.
+        self.onlyImportant = onlyImportant
+
+        if fileIsImportant:
+            assert callable(fileIsImportant), \
+                "fileIsImportant must be a callable"
+        assert branch is not Nightly.NoBranch, \
+                "Nightly parameter 'branch' is required"
+
+        self.branch = branch
+        self.onlyIfChanged = onlyIfChanged
+        self.fileIsImportant = fileIsImportant
+        self.change_filter = filter.ChangeFilter.fromSchedulerConstructorArgs(
+                change_filter=change_filter)
+        self.reason = "The Nightly scheduler named '%s' triggered this build" % self.name
+
+    def startTimedSchedulerService(self):
+        if self.onlyIfChanged:
+            return self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
+                                              change_filter=self.change_filter,
+                                              onlyImportant=self.onlyImportant)
+        else:
+            return self.master.db.schedulers.flushChangeClassifications(self.schedulerid)
+
+    def gotChange(self, change, important):
+        # both important and unimportant changes on our branch are recorded, as
+        # we will include all such changes in any buildsets we start.  Note
+        # that we must check the branch here because it is not included in the
+        # change filter
+        if change.branch != self.branch:
+            return defer.succeed(None) # don't care about this change
+        return self.master.db.schedulers.classifyChanges(
+                self.schedulerid, { change.number : important })
 
     @defer.deferredGenerator
     def startBuild(self):
