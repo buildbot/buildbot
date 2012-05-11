@@ -84,8 +84,10 @@ available with all schedulers.
                      'codebase2': {'repository':'....'} }
 
     .. IMPORTANT:: ``codebases`` behaves also like a change_filter on codebase.
-        If ``codebases`` is set then the scheduler will only process changes  when their 
-        codebases are found in ``codebases``
+        The scheduler will only process changes  when their codebases are found
+        in ``codebases``. By default ``codebases`` is set to ``{'':{}}`` which
+        means that only changes with codebase '' (default value for codebase)
+        will be accepted by the scheduler.
 
     Buildsteps can have a reference to one of the codebases. The step will only
     get information (revision, branch etc.)  that is related to that codebase.
