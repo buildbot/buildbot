@@ -336,6 +336,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         log.msg("added builder %s in category %s" % (name, category))
         # an unpickled object might not have category set from before,
         # so set it here to make sure
+        builder_status.category = category
         builder_status.master = self.master
         builder_status.basedir = os.path.join(self.basedir, basedir)
         builder_status.name = name # it might have been updated
