@@ -737,20 +737,18 @@ Codebase Generator
 
 ::
 
+    all_repositories = {
+        r'https://hg/hg/mailsuite/mailclient': 'mailexe',
+        r'https://hg/hg/mailsuite/mapilib': 'mapilib',
+        r'https://hg/hg/mailsuite/imaplib': 'imaplib',
+        r'https://github.com/mailinc/mailsuite/mailclient': 'mailexe',
+        r'https://github.com/mailinc/mailsuite/mapilib': 'mapilib',
+        r'https://github.com/mailinc/mailsuite/imaplib': 'imaplib',
+    }
+
     def codebaseGenerator(chdict):
-        all_repositories = {
-            r'https://hg/hg/mailsuite/mailclient': 'mailexe',
-            r'https://hg/hg/mailsuite/mapilib': 'mapilib',
-            r'https://hg/hg/mailsuite/imaplib': 'imaplib',
-            r'https://github.com/mailinc/mailsuite/mailclient': 'mailexe',
-            r'https://github.com/mailinc/mailsuite/mapilib': 'mapilib',
-            r'https://github.com/mailinc/mailsuite/imaplib': 'imaplib',
-        }
-        if chdict['repository'] in all_repositories:
-            return all_repositories[chdict['repository']]
-        else:
-            return ''
-            
+        return all_repositories[chdict['repository']]
+
     c['codebaseGenerator'] = codebaseGenerator
 
 For any incomming change a :ref:`codebase<Attr-Codebase>` is set to ''. This
