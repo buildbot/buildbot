@@ -511,10 +511,10 @@ This module contains a few utilities that are not included with SQLAlchemy.
     versions that did not have a ``__version__`` attribute are represented by
     ``(0,0,0)``.
 
-buildbot.util.pathmatcher
-~~~~~~~~~~~~~~~~~~~~~~~~~
+buildbot.util.pathmatch
+~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:module:: buildbot.util.pathmatcher
+.. py:module:: buildbot.util.pathmatch
 
 .. py:class:: Matcher
 
@@ -532,6 +532,23 @@ buildbot.util.pathmatcher
         changeEndpoint, kwargs = matcher[('change', '13')]
 
     where the result is a tuple of the original assigned object (the ``Change`` instance in this case) and the values of any variables in the path.
+
+buildbot.util.topicmatch
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.topicmatch
+
+.. py:class:: TopicMatcher(topics)
+
+    :param list topics: topics to match
+
+    This class implements the AMQP-defined syntax: routing keys are treated as dot-separated sequences of words and matched against topics.
+    A star (``*``) in the topic will match any single word, while an octothorpe (``#``) will match zero or more words.
+
+    .. py:method:: matches(routingKey)
+
+        :param string routingKey: routing key to examine
+        :returns: True if the routing key matches a topic
 
 buildbot.util.subscription
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

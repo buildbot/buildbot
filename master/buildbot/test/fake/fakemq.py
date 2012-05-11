@@ -30,8 +30,8 @@ class FakeMQConnector(object):
         self.setup_called = True
         return defer.succeed(None)
 
-    def produce(self, routing_key, data):
-        self.productions.append((routing_key, data))
+    def produce(self, routingKey, data):
+        self.productions.append((routingKey, data))
 
     def call_consumer(self, topic, key, msg):
         for q in self.qrefs:
