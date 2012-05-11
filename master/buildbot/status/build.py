@@ -89,7 +89,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         return self.builder.getBuild(self.number-1)
 
     def getAllGotRevisions(self):
-        all_got_revisions = self.properties.getProperty('got_revision', None)
+        all_got_revisions = self.properties.getProperty('got_revision', {})
         # For backwards compatibility all_got_revisions is a string if codebases
         # are not used. Convert to the default internal type (dict)
         if isinstance(all_got_revisions, str):
