@@ -1116,14 +1116,29 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
-
         if codebase:
             self.expectOutcome(result=SUCCESS, status_text=["update", codebase])
-            self.expectProperty('commit-description-%s' % codebase, 'Tag-1234', 'Source')
+            self.expectProperty('got_revision', {codebase:'f6ad368298bd941e934a41f3babc827b2aa95a1d'}, 'Source')
+            self.expectProperty('commit-description', {codebase:'Tag-1234'}, 'Source')
         else:
             self.expectOutcome(result=SUCCESS, status_text=["update"])
+            self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
             self.expectProperty('commit-description', 'Tag-1234', 'Source')
+
+    def test_getDescription_empty_dict(self):
+        self.setup_getDescription_test(
+            setup_args = {},
+            output_args = []
+        )
+        return self.runStep()
+
+    def test_getDescription_empty_dict_with_codebase(self):
+        self.setup_getDescription_test(
+            setup_args = {},
+            output_args = [],
+            codebase = 'baz'
+        )
+        return self.runStep()
 
     def test_getDescription_match(self):
         self.setup_getDescription_test(

@@ -95,7 +95,7 @@ class Git(Source):
         @type  getDescription: boolean or dict
         @param getDescription: Use 'git describe' to describe the fetched revision
         """
-        if not getDescription:
+        if not getDescription and not isinstance(getDescription, dict):
             getDescription = False
 
         self.branch    = branch
@@ -281,7 +281,7 @@ class Git(Source):
 
     @defer.inlineCallbacks
     def parseCommitDescription(self, _=None):
-        if not self.getDescription:
+        if self.getDescription==False: # dict() should not return here
             defer.returnValue(0)
             return
         
@@ -297,10 +297,7 @@ class Git(Source):
         try:
             stdout = yield self._dovccmd(cmd, collectStdout=True)
             desc = stdout.strip()
-            if self.codebase:
-                self.setProperty('commit-description-%s'%self.codebase, desc, 'Source')
-            else:
-                self.setProperty('commit-description', desc, 'Source')
+            self.setProperty('commit-description', desc, 'Source')
         except:
             pass
             
