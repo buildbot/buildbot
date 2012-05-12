@@ -56,6 +56,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_full_clean_patch(self):
@@ -92,6 +93,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_full_clean_patch_fail(self):
@@ -123,6 +125,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectNoProperty('got_revision')
         return self.runStep()
 
     def test_mode_full_clean_branch(self):
@@ -157,6 +160,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_full_clean_parsefail(self):
@@ -186,6 +190,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 128,
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectNoProperty('got_revision')
         return self.runStep()
 
     def test_mode_full_clean_no_existing_repo(self):
@@ -265,6 +270,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_full_clobber_branch(self):
@@ -292,6 +298,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_incremental(self):
@@ -321,6 +328,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_incremental_branch(self):
@@ -353,6 +361,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_full_fresh(self):
@@ -384,6 +393,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_incremental_given_revision(self):
@@ -412,6 +422,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_full_fresh_submodule(self):
@@ -450,6 +461,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_full_clobber_shallow(self):
@@ -477,6 +489,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_incremental_retryFetch(self):
@@ -514,6 +527,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_incremental_retryFetch_branch(self):
@@ -554,6 +568,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_incremental_clobberOnFailure(self):
@@ -592,6 +607,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_incremental_clobberOnFailure_branch(self):
@@ -630,6 +646,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_full_copy(self):
@@ -664,6 +681,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
 
@@ -691,6 +709,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_full_clobber_given_revision(self):
@@ -722,6 +741,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_revparse_failure(self):
@@ -753,6 +773,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectNoProperty('got_revision')
         return self.runStep()
 
     def test_mode_full_clobber_submodule(self):
@@ -783,6 +804,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_repourl(self):
@@ -818,6 +840,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_full_fresh_clobberOnFailure(self):
@@ -853,6 +876,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_full_no_method(self):
@@ -884,6 +908,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_full_with_env(self):
@@ -920,6 +945,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
         return self.runStep()
 
     def test_mode_full_logEnviron(self):
@@ -956,4 +982,337 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        return self.runStep()
+
+    def test_getDescription(self):
+        # clone of: test_mode_incremental
+        # only difference is to set the getDescription property
+
+        self.setupStep(
+                git.Git(repourl='http://github.com/buildbot/buildbot.git',
+                                    mode='incremental',
+                                    getDescription=True))
+        self.expectCommands(
+            ## copied from test_mode_incremental:
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.git',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+            
+            ## plus this to test describe:            
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'describe', 'HEAD'])
+            + ExpectShell.log('stdio',
+                stdout='Tag-1234')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('commit-description', 'Tag-1234', 'Source')
+        return self.runStep()
+
+    def test_getDescription_failed(self):
+        # clone of: test_mode_incremental
+        # only difference is to set the getDescription property
+
+        # this tests when 'git describe' fails; for example, there are no
+        # tags in the repository
+        
+        self.setupStep(
+                git.Git(repourl='http://github.com/buildbot/buildbot.git',
+                                    mode='incremental',
+                                    getDescription=True))
+        self.expectCommands(
+            ## copied from test_mode_incremental:
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.git',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+            
+            ## plus this to test describe:            
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'describe', 'HEAD'])
+            + ExpectShell.log('stdio',
+                stdout='')
+            + 128, # error, but it's suppressed
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectNoProperty('commit-description')
+        return self.runStep()
+
+    def setup_getDescription_test(self, setup_args, output_args, codebase=None):
+        # clone of: test_mode_full_clobber
+        # only difference is to set the getDescription property
+
+        kwargs = {}
+        if codebase is not None:
+            kwargs.update(codebase=codebase)
+
+        self.setupStep(
+                git.Git(repourl='http://github.com/buildbot/buildbot.git',
+                        mode='full', method='clobber', progress=True,
+                        getDescription=setup_args,
+                        **kwargs))
+
+        self.expectCommands(
+            ## copied from test_mode_full_clobber:
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clone',
+                                 '--branch', 'HEAD',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 '.', '--progress'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+            
+            ## plus this to test describe:            
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'describe'] +
+                                output_args +
+                                ['HEAD'])
+            + ExpectShell.log('stdio',
+                stdout='Tag-1234')
+            + 0,
+        )
+        
+        if codebase:
+            self.expectOutcome(result=SUCCESS, status_text=["update", codebase])
+            self.expectProperty('got_revision', {codebase:'f6ad368298bd941e934a41f3babc827b2aa95a1d'}, 'Source')
+            self.expectProperty('commit-description', {codebase:'Tag-1234'}, 'Source')
+        else:
+            self.expectOutcome(result=SUCCESS, status_text=["update"])
+            self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+            self.expectProperty('commit-description', 'Tag-1234', 'Source')
+
+    def test_getDescription_empty_dict(self):
+        self.setup_getDescription_test(
+            setup_args = {},
+            output_args = []
+        )
+        return self.runStep()
+
+    def test_getDescription_empty_dict_with_codebase(self):
+        self.setup_getDescription_test(
+            setup_args = {},
+            output_args = [],
+            codebase = 'baz'
+        )
+        return self.runStep()
+
+    def test_getDescription_match(self):
+        self.setup_getDescription_test(
+            setup_args = { 'match': 'stuff-*' },
+            output_args = ['--match', 'stuff-*']
+        )
+        return self.runStep()
+    def test_getDescription_match_false(self):
+        self.setup_getDescription_test(
+            setup_args = { 'match': None },
+            output_args = []
+        )
+        return self.runStep()
+        
+    def test_getDescription_tags(self):
+        self.setup_getDescription_test(
+            setup_args = { 'tags': True },
+            output_args = ['--tags']
+        )
+        return self.runStep()
+    def test_getDescription_tags_false(self):
+        self.setup_getDescription_test(
+            setup_args = { 'tags': False },
+            output_args = []
+        )
+        return self.runStep()
+        
+    def test_getDescription_all(self):
+        self.setup_getDescription_test(
+            setup_args = { 'all': True },
+            output_args = ['--all']
+        )
+        return self.runStep()
+    def test_getDescription_all_false(self):
+        self.setup_getDescription_test(
+            setup_args = { 'all': False },
+            output_args = []
+        )
+        return self.runStep()
+        
+    def test_getDescription_abbrev(self):
+        self.setup_getDescription_test(
+            setup_args = { 'abbrev': 7 },
+            output_args = ['--abbrev=7']
+        )
+        return self.runStep()
+    def test_getDescription_abbrev_zero(self):
+        self.setup_getDescription_test(
+            setup_args = { 'abbrev': 0 },
+            output_args = ['--abbrev=0']
+        )
+        return self.runStep()
+    def test_getDescription_abbrev_false(self):
+        self.setup_getDescription_test(
+            setup_args = { 'abbrev': False },
+            output_args = []
+        )
+        return self.runStep()
+        
+    def test_getDescription_dirty(self):
+        self.setup_getDescription_test(
+            setup_args = { 'dirty': True },
+            output_args = ['--dirty']
+        )
+        return self.runStep()
+    def test_getDescription_dirty_empty_str(self):
+        self.setup_getDescription_test(
+            setup_args = { 'dirty': '' },
+            output_args = ['--dirty']
+        )
+        return self.runStep()
+    def test_getDescription_dirty_str(self):
+        self.setup_getDescription_test(
+            setup_args = { 'dirty': 'foo' },
+            output_args = ['--dirty=foo']
+        )
+        return self.runStep()
+    def test_getDescription_dirty_false(self):
+        self.setup_getDescription_test(
+            setup_args = { 'dirty': False },
+            output_args = []
+        )
+        return self.runStep()
+        
+    def test_getDescription_contains(self):
+        self.setup_getDescription_test(
+            setup_args = { 'contains': True },
+            output_args = ['--contains']
+        )
+        return self.runStep()
+    def test_getDescription_contains_false(self):
+        self.setup_getDescription_test(
+            setup_args = { 'contains': False },
+            output_args = []
+        )
+        return self.runStep()
+        
+    def test_getDescription_candidates(self):
+        self.setup_getDescription_test(
+            setup_args = { 'candidates': 7 },
+            output_args = ['--candidates=7']
+        )
+        return self.runStep()
+    def test_getDescription_candidates_zero(self):
+        self.setup_getDescription_test(
+            setup_args = { 'candidates': 0 },
+            output_args = ['--candidates=0']
+        )
+        return self.runStep()
+    def test_getDescription_candidates_false(self):
+        self.setup_getDescription_test(
+            setup_args = { 'candidates': False },
+            output_args = []
+        )
+        return self.runStep()
+
+    def test_getDescription_exact_match(self):
+        self.setup_getDescription_test(
+            setup_args = { 'exact-match': True },
+            output_args = ['--exact-match']
+        )
+        return self.runStep()
+    def test_getDescription_exact_match_false(self):
+        self.setup_getDescription_test(
+            setup_args = { 'exact-match': False },
+            output_args = []
+        )
+        return self.runStep()
+
+    def test_getDescription_debug(self):
+        self.setup_getDescription_test(
+            setup_args = { 'debug': True },
+            output_args = ['--debug']
+        )
+        return self.runStep()
+    def test_getDescription_debug_false(self):
+        self.setup_getDescription_test(
+            setup_args = { 'debug': False },
+            output_args = []
+        )
+        return self.runStep()
+
+    def test_getDescription_long(self):
+        self.setup_getDescription_test(
+            setup_args = { 'long': True },
+            output_args = ['--long']
+        )
+    def test_getDescription_long_false(self):
+        self.setup_getDescription_test(
+            setup_args = { 'long': False },
+            output_args = []
+        )
+        return self.runStep()
+
+    def test_getDescription_always(self):
+        self.setup_getDescription_test(
+            setup_args = { 'always': True },
+            output_args = ['--always']
+        )
+    def test_getDescription_always_false(self):
+        self.setup_getDescription_test(
+            setup_args = { 'always': False },
+            output_args = []
+        )
+        return self.runStep()
+
+    def test_getDescription_lotsa_stuff(self):
+        self.setup_getDescription_test(
+            setup_args = { 'match': 'stuff-*',
+                           'abbrev': 6,
+                           'exact-match': True},
+            output_args = ['--exact-match',
+                           '--match', 'stuff-*',
+                           '--abbrev=6'],
+            codebase='baz'
+        )
         return self.runStep()
