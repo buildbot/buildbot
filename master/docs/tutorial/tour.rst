@@ -49,32 +49,6 @@ Now, look for the section marked *PROJECT IDENTITY* which reads::
 
 If you want, you can change either of these links to anything you want to see what happens when you change them. 
 
-Setting Authorized Web Users
-----------------------------
-
-Further down, look for the WebStatus configuration::
-
-   c['status'] = []
-
-   from buildbot.status import html
-   from buildbot.status.web import authz, auth
-
-   authz_cfg=authz.Authz(
-       # change any of these to True to enable; see the manual for more
-       # options
-       auth=auth.BasicAuth([("pyflakes","pyflakes")]),
-       gracefulShutdown = False,
-       forceBuild = 'auth', # use this to test your slave once it is set up
-       forceAllBuilds = False,
-       pingBuilder = False,
-       stopBuild = False,
-       stopAllBuilds = False,
-       cancelPendingBuild = False,
-   )
-   c['status'].append(html.WebStatus(http_port=8010, authz=authz_cfg))
-
-The auth.BasicAuth() define authorized users and their passwords.  You can change these or add new ones.
-
 After making a change go into the terminal and type::
 
   buildbot reconfig master
@@ -266,6 +240,34 @@ You can also see the new builds in the web interface.
 
 .. image:: _images/irc-testrun.png
    :alt: a successful test run from IRC happened.
+
+Setting Authorized Web Users
+----------------------------
+
+Further down, look for the WebStatus configuration::
+
+   c['status'] = []
+
+   from buildbot.status import html
+   from buildbot.status.web import authz, auth
+
+   authz_cfg=authz.Authz(
+       # change any of these to True to enable; see the manual for more
+       # options
+       auth=auth.BasicAuth([("pyflakes","pyflakes")]),
+       gracefulShutdown = False,
+       forceBuild = 'auth', # use this to test your slave once it is set up
+       forceAllBuilds = False,
+       pingBuilder = False,
+       stopBuild = False,
+       stopAllBuilds = False,
+       cancelPendingBuild = False,
+   )
+   c['status'].append(html.WebStatus(http_port=8010, authz=authz_cfg))
+
+The ``auth.BasicAuth()`` define authorized users and their passwords.  You can
+change these or add new ones.  See :bb:status:`WebStatus` for more about the
+WebStatus configuration.
 
 Debugging with Manhole
 ----------------------
