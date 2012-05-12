@@ -89,6 +89,9 @@ Features
 
 * ``Git`` has a new ``getDescription`` option, which will run `git describe` after checkout
 
+* A new ternary substitution operator ``:?:`` and ``:#?:`` to use with the ``Interpolate``
+  and ``WithProperties`` classes.
+
 Slave
 -----
 
