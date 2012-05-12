@@ -81,13 +81,14 @@ Features
   schedulers can aggregate changes to multiple codebases into source stamp sets
   (with one source stamp for each codebase).  Source steps then check out each
   codebase as required, and the remainder of the build process proceeds
-  normally.  See the documentation for details.
+  normally.  See the :ref:`Multiple-source-trees` for details.
 
 * ``Source`` and ``ShellCommand`` steps now have an optional ``descriptionSuffix``, a suffix to the
    ``description``/``descriptionDone`` values. For example this can help distinguish between
     multiple ``Compile`` steps that are applied to different codebases.
 
 * ``Git`` has a new ``getDescription`` option, which will run `git describe` after checkout
+  normally.  See the documentation for details.
 
 Slave
 -----

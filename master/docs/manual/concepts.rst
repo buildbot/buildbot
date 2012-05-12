@@ -131,6 +131,61 @@ that revision marker. When the VC system does not provide this, a
 timestamp from the middle of the tree-stable period is used to
 generate the source tree [#]_.
 
+.. _Multiple-source-trees:
+
+Multiple source-trees
++++++++++++++++++++++
+
+What if an end-product is composed of several components and all these components
+have different repositories? Changes may arrive from different repositories within
+the tree-stable-timer period. Buildbot will not only use the source-trees that
+contain changes but also needs the remaining source-trees to build the complete
+product. 
+
+For this reason a :ref:`Scheduler<Scheduling-Builds>` can be configured to base a build on a set
+of several source-trees that can (partly) be overidden by the specific revisions
+inside the arrived :class:`Change`\s.
+
+
+A single source-tree is identified by its repository, branch and revision. The
+repository is a reference to a place where the sources reside. In projects it is
+possible to have the same sources at different places (for example a collection
+of fork of the same repository). For this reason an extra identifier 'codebase'
+has been introduced to make buildbot categorize all copies of the same source-tree
+as the same. Furthermore, the codebase_ allow you to uniquely identify a *part* of
+your project.
+
+A complete multiple repository configuration consists of:
+
+    - a *codebase generator*
+
+        Every relevant change arriving from a VC must contain a codebase.
+        Because VC's do not supply a codebase this has to be done by a so
+        called :bb:cfg:`codebaseGenerator` that is defined in the
+        configuration.
+
+    - some *schedulers*
+
+        The :bb:cfg:`scheduler<schedulers>` has to be configured with a set of all
+        required ``codebases`` to build a product. These codebases indicate the set of
+        required source-trees. In order for the scheduler to be able to produce a
+        complete set for each build, each given codebase will be supplied a default
+        repository, branch, and revision. Those ones will be used for the codebases
+        where no changes arrived.
+
+    - multiple *source steps*
+
+        A :ref:`Builder` has to contains a :ref:`source step<Source-Checkout>` for
+        each needed source-tree. Each of the source steps has a ``codebase`` attribute
+        which is used to retrieve the corresponding repository, branch and revision
+        data. This information comes from the arrived changes or from the
+        scheduler's configured default values.
+
+.. warning::
+
+    Defining a :bb:cfg:`codebaseGenerator` that returns non empty (not
+    ``''``) codebases, change the behavior of all the schedulers.
+
 .. _How-Different-VC-Systems-Specify-Sources:
 
 How Different VC Systems Specify Sources

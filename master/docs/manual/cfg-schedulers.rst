@@ -73,14 +73,21 @@ available with all schedulers.
     When the scheduler processes data from more than 1 repository at the
     same time then a corresponding codebase definition should be passed for each
     repository. A codebase definition is a dictionary with one or more of the 
-    following keys: repository, branch, revision. The codebase definitions are 
-    also to be passed as dictionary::
-        
-        codebases = {'codebase1': {'repository':'....', ...}, 'codebase2': {} }
+    following keys: repository, branch, revision. The codebase definitions have
+    also to be passed as dictionary.
+
+    .. code-block:: python
+
+        codebases = {'codebase1': {'repository':'....',
+                                   'branch':'default',
+                                   'revision': None},
+                     'codebase2': {'repository':'....'} }
 
     .. IMPORTANT:: ``codebases`` behaves also like a change_filter on codebase.
-        If ``codebases`` is set then the scheduler will only process changes  when their 
-        codebases are found in ``codebases``
+        The scheduler will only process changes  when their codebases are found
+        in ``codebases``. By default ``codebases`` is set to ``{'':{}}`` which
+        means that only changes with codebase '' (default value for codebase)
+        will be accepted by the scheduler.
 
     Buildsteps can have a reference to one of the codebases. The step will only
     get information (revision, branch etc.)  that is related to that codebase.
