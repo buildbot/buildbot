@@ -251,12 +251,12 @@ syntaxes in the parentheses.
 ``propname:?:sub_if_true:sub_if_false``
 
 ``propname:#?:sub_if_exists:sub_if_missing``
-    Ternary substitution, depending on either ``propname`` being
-    ``True`` (like ``:~``) or being present (like ``:+``). Notice that
-    there is a colon immediately following the question mark *and* between
-    the two substitution alternatives. The character that follows the question
-    mark is used as the delimeter between the two alternatives. In the above
-    examples, it is a colon, but any single character can be used.
+    Ternary substitution, depending on either ``propname`` being ``True`` (with
+    ``:?``, similar to ``:~``) or being present (with ``:#?``, like ``:+``).
+    Notice that there is a colon immediately following the question mark *and*
+    between the two substitution alternatives. The character that follows the
+    question mark is used as the delimeter between the two alternatives. In the
+    above examples, it is a colon, but any single character can be used.
     
     
 Although these are similar to shell substitutions, no other
