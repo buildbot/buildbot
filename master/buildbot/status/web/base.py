@@ -514,6 +514,8 @@ def createJinjaEnv(revlink=None, changecommentlink=None,
 
     env.install_null_translations() # needed until we have a proper i18n backend
 
+    env.tests['mapping'] = lambda obj : isinstance(obj, dict)
+
     env.filters.update(dict(
         urlencode = urllib.quote,
         email = emailfilter,
