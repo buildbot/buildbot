@@ -85,8 +85,8 @@ Features
   schedulers can aggregate changes to multiple codebases into source stamp sets
   (with one source stamp for each codebase).  Source steps then check out each
   codebase as required, and the remainder of the build process proceeds
-  normally.  See the documentation for details.
-
+  normally.  See the :ref:`Multiple-source-trees` for details.
+  
 Slave
 -----
 
