@@ -704,9 +704,9 @@ an URL to the revision.  Note that the revision id may not always be in the
 form you expect, so code defensively.  In particular, a revision of "??" may be
 supplied when no other information is available.
 
-Note that :class:`SourceStamp`\s that are not created from version-control changes (e.g.,
-those created by a Nightly or Periodic scheduler) will have an empty repository
-string, as the respository is not known.
+Note that :class:`SourceStamp`\s that are not created from version-control
+changes (e.g., those created by a Nightly or Periodic scheduler) may have an
+empty repository string, if the respository is not known to the scheduler.
 
 Revision Link Helpers
 +++++++++++++++++++++
