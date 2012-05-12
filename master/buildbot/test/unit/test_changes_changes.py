@@ -75,8 +75,9 @@ class Change(unittest.TestCase):
 
     def test_asDict(self):
         dict = self.change23.asDict()
+        self.assertIn('1978', dict['at']) # timezone-sensitive
+        del dict['at']
         self.assertEqual(dict, {
-            'at': 'Thu 15 Jun 1978 01:00:04',
             'branch': u'warnerdb',
             'category': u'devel',
             'codebase': u'mainapp',
