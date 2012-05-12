@@ -563,63 +563,6 @@ class TestInterpolateProperties(unittest.TestCase):
                              "echo 'proj2'")
         return d
 
-    def test_property_substitute_recursively(self):
-        self.props.setProperty("project", "proj1", "test")
-        command = Interpolate("echo '%(prop:no_such:-%(prop:project)s)s'")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                             "echo 'proj1'")
-        return d
-
-    def test_property_colon_ternary_present(self):
-        self.props.setProperty("project", "proj1", "test")
-        command = Interpolate("echo %(prop:project:?:defined:missing)s")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                             "echo defined")
-        return d
-
-    def test_property_colon_ternary_missing(self):
-        command = Interpolate("echo %(prop:project:?|defined|missing)s")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                             "echo missing")
-        return d
-
-    def test_property_colon_ternary_hash_true(self):
-        self.props.setProperty("project", "winbld", "test")
-        command = Interpolate("echo buildby-%(prop:project:#?:T:F)s")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                             "echo buildby-T")
-        return d
-
-    def test_property_colon_ternary_hash_false(self):
-        self.props.setProperty("project", "", "test")
-        command = Interpolate("echo buildby-%(prop:project:#?|T|F)s")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                             "echo buildby-F")
-        return d
-
-    def test_property_colon_ternary_substitute_recursively_true(self):
-        self.props.setProperty("P", "present", "test")
-        self.props.setProperty("one", "proj1", "test")
-        self.props.setProperty("two", "proj2", "test")
-        command = Interpolate("echo '%(prop:P:?|%(prop:one)s|%(prop:two)s)s'")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                             "echo 'proj1'")
-        return d
-
-    def test_property_colon_ternary_substitute_recursively_false(self):
-        self.props.setProperty("one", "proj1", "test")
-        self.props.setProperty("two", "proj2", "test")
-        command = Interpolate("echo '%(prop:P:?|%(prop:one)s|%(prop:two)s)s'")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                             "echo 'proj2'")
-        return d
 
 class TestInterpolateSrc(unittest.TestCase):
     def setUp(self):
