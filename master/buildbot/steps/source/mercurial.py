@@ -71,14 +71,6 @@ class Mercurial(Source):
         self.clobberOnBranchChange = clobberOnBranchChange
         self.mode = mode
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(repourl=repourl,
-                                 mode=mode,
-                                 method=method,
-                                 defaultBranch=defaultBranch,
-                                 branchType=branchType,
-                                 clobberOnBranchChange=
-                                 clobberOnBranchChange,
-                                 )
 
         errors = []
         if self.mode not in self.possible_modes:

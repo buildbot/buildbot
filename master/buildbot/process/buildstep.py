@@ -383,7 +383,29 @@ class RemoteShellCommand(RemoteCommand):
     def __repr__(self):
         return "<RemoteShellCommand '%s'>" % repr(self.command)
 
-class BuildStep(properties.PropertiesMixin):
+class _BuildStepFactory(util.ComparableMixin):
+    """
+    This is a wrapper to record the arguments passed to as BuildStep subclass.
+    We use an instance of this class, rather than a closure mostly to make it
+    easier to test that the right factories are getting created.
+    """
+    compare_attrs = ['factory', 'args', 'kwargs' ]
+    implements(interfaces.IBuildStepFactory)
+
+    def __init__(self, factory, *args, **kwargs):
+        self.factory = factory
+        self.args = args
+        self.kwargs = kwargs
+
+    def buildStep(self):
+        try:
+            return self.factory(*self.args, **self.kwargs)
+        except:
+            log.msg("error while creating step, factory=%s, args=%s, kwargs=%s"
+                    % (self.factory, self.args, self.kwargs))
+            raise
+
+class BuildStep(object, properties.PropertiesMixin):
 
     haltOnFailure = False
     flunkOnWarnings = False
@@ -426,7 +448,6 @@ class BuildStep(properties.PropertiesMixin):
     progress = None
 
     def __init__(self, **kwargs):
-        self.factory = (self.__class__, dict(kwargs))
         for p in self.__class__.parms:
             if kwargs.has_key(p):
                 setattr(self, p, kwargs[p])
@@ -439,6 +460,11 @@ class BuildStep(properties.PropertiesMixin):
 
         self._acquiringLock = None
         self.stopped = False
+
+    def __new__(klass, *args, **kwargs):
+        self = object.__new__(klass)
+        self._factory = _BuildStepFactory(klass, *args, **kwargs)
+        return self
 
     def describe(self, done=False):
         return [self.name]
@@ -453,10 +479,11 @@ class BuildStep(properties.PropertiesMixin):
         pass
 
     def addFactoryArguments(self, **kwargs):
-        self.factory[1].update(kwargs)
+        # this is here for backwards compatability
+        pass
 
-    def getStepFactory(self):
-        return self.factory
+    def _getStepFactory(self):
+        return self._factory
 
     def setStepStatus(self, step_status):
         self.step_status = step_status
@@ -732,6 +759,9 @@ class BuildStep(properties.PropertiesMixin):
         return value
 
 components.registerAdapter(
+        BuildStep._getStepFactory,
+        BuildStep, interfaces.IBuildStepFactory)
+components.registerAdapter(
         lambda step : interfaces.IProperties(step.build),
         BuildStep, interfaces.IProperties)
 
@@ -759,9 +789,6 @@ class LoggingBuildStep(BuildStep):
     def __init__(self, logfiles={}, lazylogfiles=False, log_eval_func=None,
                  *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
-        self.addFactoryArguments(logfiles=logfiles,
-                                 lazylogfiles=lazylogfiles,
-                                 log_eval_func=log_eval_func)
 
         if logfiles and not isinstance(logfiles, dict):
             config.error(

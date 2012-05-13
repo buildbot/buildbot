@@ -39,11 +39,6 @@ class MasterShellCommand(BuildStep):
                  env=None, path=None, usePTY=0,
                  **kwargs):
         BuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(description=description,
-                                 descriptionDone=descriptionDone,
-                                 descriptionSuffix=descriptionSuffix,
-                                 env=env, path=path, usePTY=usePTY,
-                                 command=command)
 
         self.command=command
         if description:

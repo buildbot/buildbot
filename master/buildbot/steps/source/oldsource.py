@@ -62,7 +62,6 @@ class _ComputeRepositoryURL(object):
 
 
 
-
 class CVS(Source):
     """I do CVS checkout/update operations.
 
@@ -164,16 +163,6 @@ class CVS(Source):
         self.cvsroot = _ComputeRepositoryURL(cvsroot)
 
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(cvsroot=cvsroot,
-                                 cvsmodule=cvsmodule,
-                                 global_options=global_options,
-                                 checkout_options=checkout_options,
-                                 export_options=export_options,
-                                 extra_options=extra_options,
-                                 branch=branch,
-                                 checkoutDelay=checkoutDelay,
-                                 login=login,
-                                 )
 
         self.args.update({'cvsmodule': cvsmodule,
                           'global_options': global_options,
@@ -310,18 +299,6 @@ class SVN(Source):
         self.depth = depth
 
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(svnurl=svnurl,
-                                 baseURL=baseURL,
-                                 defaultBranch=defaultBranch,
-                                 directory=directory,
-                                 username=username,
-                                 password=password,
-                                 extra_args=extra_args,
-                                 keep_on_purge=keep_on_purge,
-                                 ignore_ignores=ignore_ignores,
-                                 always_purge=always_purge,
-                                 depth=depth,
-                                 )
 
         if svnurl and baseURL:
             raise ValueError("you must use either svnurl OR baseURL")
@@ -466,10 +443,6 @@ class Darcs(Source):
         self.baseURL = _ComputeRepositoryURL(baseURL)
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(repourl=repourl,
-                                 baseURL=baseURL,
-                                 defaultBranch=defaultBranch,
-                                 )
         assert self.args['mode'] != "export", \
                "Darcs does not have an 'export' mode"
         if repourl and baseURL:
@@ -564,14 +537,6 @@ class Git(Source):
         Source.__init__(self, **kwargs)
         self.repourl = _ComputeRepositoryURL(repourl)
         self.branch = branch
-        self.addFactoryArguments(repourl=repourl,
-                                 branch=branch,
-                                 submodules=submodules,
-                                 ignore_ignores=ignore_ignores,
-                                 reference=reference,
-                                 shallow=shallow,
-                                 progress=progress,
-                                 )
         self.args.update({'submodules': submodules,
                           'ignore_ignores': ignore_ignores,
                           'reference': reference,
@@ -640,11 +605,6 @@ class Repo(Source):
         """
         Source.__init__(self, **kwargs)
         self.manifest_url = _ComputeRepositoryURL(manifest_url)
-        self.addFactoryArguments(manifest_url=manifest_url,
-                                 manifest_branch=manifest_branch,
-                                 manifest_file=manifest_file,
-                                 tarball=tarball,
-                                 )
         self.args.update({'manifest_branch': manifest_branch,
                           'manifest_file': manifest_file,
                           'tarball': tarball,
@@ -788,11 +748,6 @@ class Bzr(Source):
         self.baseURL = _ComputeRepositoryURL(baseURL)
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(repourl=repourl,
-                                 baseURL=baseURL,
-                                 defaultBranch=defaultBranch,
-                                 forceSharedRepo=forceSharedRepo
-                                 )
         self.args.update({'forceSharedRepo': forceSharedRepo})
         if repourl and baseURL:
             raise ValueError("you must provide exactly one of repourl and"
@@ -878,12 +833,6 @@ class Mercurial(Source):
         self.branchType = branchType
         self.clobberOnBranchChange = clobberOnBranchChange
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(repourl=repourl,
-                                 baseURL=baseURL,
-                                 defaultBranch=defaultBranch,
-                                 branchType=branchType,
-                                 clobberOnBranchChange=clobberOnBranchChange,
-                                 )
         if repourl and baseURL:
             raise ValueError("you must provide exactly one of repourl and"
                              " baseURL")
@@ -975,15 +924,6 @@ class P4(Source):
         self.p4base = _ComputeRepositoryURL(p4base)
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(p4base=p4base,
-                                 defaultBranch=defaultBranch,
-                                 p4port=p4port,
-                                 p4user=p4user,
-                                 p4passwd=p4passwd,
-                                 p4extra_views=p4extra_views,
-                                 p4line_end=p4line_end,
-                                 p4client=p4client,
-                                 )
         self.args['p4port'] = p4port
         self.args['p4user'] = p4user
         self.args['p4passwd'] = p4passwd
@@ -1042,11 +982,6 @@ class P4Sync(Source):
         assert kwargs['mode'] == "copy", "P4Sync can only be used in mode=copy"
         self.branch = None
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(p4port=p4port,
-                                 p4user=p4user,
-                                 p4passwd=p4passwd,
-                                 p4client=p4client,
-                                )
         self.args['p4port'] = p4port
         self.args['p4user'] = p4user
         self.args['p4passwd'] = p4passwd
@@ -1093,10 +1028,6 @@ class Monotone(Source):
             raise ValueError("you must provide a repository uri in 'repourl'")
         if (not branch):
             raise ValueError("you must provide a default branch in 'branch'")
-        self.addFactoryArguments(repourl=repourl,
-                                 branch=branch,
-                                 progress=progress,
-                                 )
         self.args.update({'branch': branch,
                           'progress': progress,
                           })

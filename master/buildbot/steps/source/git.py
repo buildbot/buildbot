@@ -110,19 +110,6 @@ class Git(Source):
         self.mode = mode
         self.getDescription = getDescription
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(branch=branch,
-                                 mode=mode,
-                                 method=method,
-                                 progress=progress,
-                                 repourl=repourl,
-                                 submodules=submodules,
-                                 shallow=shallow,
-                                 retryFetch=retryFetch,
-                                 clobberOnFailure=
-                                 clobberOnFailure,
-                                 getDescription=
-                                 getDescription
-                                 )
 
         assert self.mode in ['incremental', 'full']
         assert self.repourl is not None

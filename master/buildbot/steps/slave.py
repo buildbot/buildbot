@@ -30,8 +30,6 @@ class SetPropertiesFromEnv(buildstep.BuildStep):
 
     def __init__(self, variables, source="SlaveEnvironment", **kwargs):
         buildstep.BuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(variables = variables,
-                                 source = source)
         self.variables = variables
         self.source = source
 
@@ -74,7 +72,6 @@ class FileExists(buildstep.BuildStep):
 
     def __init__(self, file, **kwargs):
         buildstep.BuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(file = file)
         self.file = file
 
     def start(self):
@@ -115,7 +112,6 @@ class RemoveDirectory(buildstep.BuildStep):
 
     def __init__(self, dir, **kwargs):
         buildstep.BuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(dir = dir)
         self.dir = dir
 
     def start(self):
@@ -150,7 +146,6 @@ class MakeDirectory(buildstep.BuildStep):
 
     def __init__(self, dir, **kwargs):
         buildstep.BuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(dir = dir)
         self.dir = dir
 
     def start(self):

@@ -34,12 +34,6 @@ class Bzr(Source):
         self.mode = mode
         self.method = method
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(repourl=repourl,
-                                 mode=mode,
-                                 method=method,
-                                 baseURL=baseURL,
-                                 defaultBranch=defaultBranch,
-                                 )
         if repourl and baseURL:
             raise ValueError("you must provide exactly one of repourl and"
                              " baseURL")

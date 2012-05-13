@@ -56,13 +56,6 @@ class Trigger(LoggingBuildStep):
         self.running = False
         self.ended = False
         LoggingBuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(schedulerNames=schedulerNames,
-                                 sourceStamp=sourceStamp,
-                                 updateSourceStamp=updateSourceStamp,
-                                 alwaysUseLatest=alwaysUseLatest,
-                                 waitForFinish=waitForFinish,
-                                 set_properties=set_properties,
-                                 copy_properties=copy_properties)
 
     def interrupt(self, reason):
         if self.running and not self.ended:

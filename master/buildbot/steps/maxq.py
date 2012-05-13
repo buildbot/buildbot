@@ -26,7 +26,6 @@ class MaxQ(ShellCommand):
             config.error("please pass testdir")
         kwargs['command'] = 'run_maxq.py %s' % (testdir,)
         ShellCommand.__init__(self, **kwargs)
-        self.addFactoryArguments(testdir=testdir)
 
     def commandComplete(self, cmd):
         output = cmd.logs['stdio'].getText()

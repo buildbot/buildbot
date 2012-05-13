@@ -71,10 +71,8 @@ class BuildStepMixin(object):
 
         @param slave_env: environment from the slave at slave startup
         """
-        # yes, Virginia, "factory" refers both to the tuple and its first
-        # element TODO: fix that up
-        factory, args = step.getStepFactory()
-        step = self.step = factory(**args)
+        factory = interfaces.IBuildStepFactory(step)
+        step = self.step = factory.buildStep()
 
         # step.build
 

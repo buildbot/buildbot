@@ -1204,3 +1204,8 @@ class IProperties(Interface):
 
 class IScheduler(Interface):
     pass
+
+class IBuildStepFactory(Interface):
+    def buildStep():
+        """
+        """
