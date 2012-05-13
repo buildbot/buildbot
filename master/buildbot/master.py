@@ -318,7 +318,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     ## triggering methods
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def addChange(self, who=None, files=None, comments=None, author=None,
             isdir=None, is_dir=None, revision=None, when=None,
             when_timestamp=None, branch=None, category=None, revlink='',
@@ -434,35 +434,22 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         if src:
             # create user object, returning a corresponding uid
-            wfd = defer.waitForDeferred(
-                users.createUserObject(self, author, src))
-            yield wfd
-            uid = wfd.getResult()
+            uid = yield users.createUserObject(self, author, src)
         else:
             uid = None
 
         # add the Change to the database
-        wfd = defer.waitForDeferred(
-            self.db.changes.addChange(author=author, files=files,
+        changeid = yield self.db.changes.addChange(author=author, files=files,
                             comments=comments, is_dir=is_dir,
                             revision=revision, when_timestamp=when_timestamp,
                             branch=branch, category=category,
                             revlink=revlink, properties=properties,
                             repository=repository, project=project,
-                            codebase=codebase, uid=uid))
-        yield wfd
-        changeid = wfd.getResult()
+                            codebase=codebase, uid=uid)
 
         # convert the changeid to a Change instance
-        wfd = defer.waitForDeferred(
-                self.db.changes.getChange(changeid))
-        yield wfd
-        chdict = wfd.getResult()
-
-        wfd = defer.waitForDeferred(
-                changes.Change.fromChdict(self, chdict))
-        yield wfd
-        change = wfd.getResult()
+        chdict = yield self.db.changes.getChange(changeid)
+        change = yield changes.Change.fromChdict(self, chdict)
 
         # log, being careful to handle funny characters
         msg = u"added change %s to database" % change
@@ -474,9 +461,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         msg['when_timestamp'] = datetime2epoch(msg['when_timestamp'])
         self.mq.produce("change.%d.new" % changeid, msg)
 
-        yield change
+        defer.returnValue(change)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def addBuildset(self, scheduler, **kwargs):
         """
         Add a buildset to the buildmaster and act on it.  Interface is
@@ -486,10 +473,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         resulting builds.  This method also takes a 'scheduler' parameter
         to name the initiating scheduler.
         """
-        wfd = defer.waitForDeferred(
-            self.db.buildsets.addBuildset(**kwargs))
-        yield wfd
-        bsid, brids = wfd.getResult()
+        bsid, brids = yield self.db.buildsets.addBuildset(**kwargs)
 
         log.msg("added buildset %d to database" % bsid)
 
@@ -515,7 +499,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             properties=kwargs.get('properties', {}))
         self.mq.produce("buildset.%d.new" % bsid, msg)
 
-        yield (bsid,brids) # return value
+        defer.returnValue((bsid,brids))
 
     @defer.inlineCallbacks
     def maybeBuildsetComplete(self, bsid, _reactor=reactor):

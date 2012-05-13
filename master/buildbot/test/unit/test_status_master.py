@@ -96,20 +96,17 @@ class TestStatus(unittest.TestCase):
         self.assertIdentical(sr1.master, None)
         self.assertIdentical(sr2.master, None)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_change_consumer_cb_nobody_interested(self):
         m = mock.Mock(name='master')
         status = master.Status(m)
 
-        wfd = defer.waitForDeferred(
-            status.change_consumer_cb('change.13.new',
-                    dict(changeid=13)))
-        yield wfd
-        wfd.getResult()
+        yield status.change_consumer_cb('change.13.new',
+                    dict(changeid=13))
 
         self.assertFalse(m.db.changes.getChange.called)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_change_consumer_cb(self):
         status = self.makeStatus()
 
@@ -130,11 +127,8 @@ class TestStatus(unittest.TestCase):
         watcher.changeAdded = mock.Mock(name='changeAdded')
         status.subscribe(watcher)
 
-        wfd = defer.waitForDeferred(
-            status.change_consumer_cb('change.13.new',
-                    dict(changeid=13)))
-        yield wfd
-        wfd.getResult()
+        yield status.change_consumer_cb('change.13.new',
+                    dict(changeid=13))
 
         self.assertTrue(watcher.changeAdded.called)
         args, kwargs = watcher.changeAdded.call_args

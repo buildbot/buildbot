@@ -380,7 +380,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
                 if hasattr(observer, 'requestSubmitted'):
                     eventually(observer.requestSubmitted, brs)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def change_consumer_cb(self, key, msg):
         # get a list of watchers - no sense querying the change
         # if nobody's listening
@@ -389,15 +389,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         if not interested:
             return
 
-        wfd = defer.waitForDeferred(
-            self.master.db.changes.getChange(msg['changeid']))
-        yield wfd
-        chdict = wfd.getResult()
-
-        wfd = defer.waitForDeferred(
-            changes.Change.fromChdict(self.master, chdict))
-        yield wfd
-        change = wfd.getResult()
+        chdict = yield self.master.db.changes.getChange(msg['changeid'])
+        change = yield changes.Change.fromChdict(self.master, chdict)
 
         for t in interested:
             t.changeAdded(change)

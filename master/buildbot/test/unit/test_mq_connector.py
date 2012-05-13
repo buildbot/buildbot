@@ -67,7 +67,7 @@ class MQConnector(unittest.TestCase):
             self.assertIdentical(self.conn.impl.new_config, new_config)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_change_type(self):
         self.patchFakeMQ()
         self.mqconfig['type'] = 'fake'
@@ -75,10 +75,7 @@ class MQConnector(unittest.TestCase):
         new_config = mock.Mock()
         new_config.mq = dict(type='other')
         try:
-            wfd = defer.waitForDeferred(
-                self.conn.reconfigService(new_config))
-            yield wfd
-            wfd.getResult()
+            yield self.conn.reconfigService(new_config)
         except AssertionError:
             pass # expected
         else:

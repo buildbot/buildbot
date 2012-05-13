@@ -217,12 +217,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
                 exp_mq=[claim_11_msg],
                 now=1234)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_start_fails(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder(mergeRequests=False))
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder(mergeRequests=False)
 
         self.setSlaveBuilders({'test-slave1':1})
         rows = self.base_rows + [
@@ -235,11 +232,8 @@ class TestBuilderBuildCreation(unittest.TestCase):
                                             return_value=defer.succeed(None))
         self.bldr._msg_buildrequests_unclaimed = mock.Mock()
 
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[10], exp_builds=[]))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[10], exp_builds=[])
 
         # check that brid 10 was unclaimed after it was claimed, a message
         # was sent, and the botmaster was informed
@@ -728,7 +722,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
         self.assertEqual(claims, [ (set([10,11,12,15]),) ])
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_msg_buildrequests_unclaimed(self):
         br1 = mock.Mock(name='br1')
         br1.bsid = 10
@@ -740,10 +734,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         br2.id = 14
         br2.buildername = 'bldr'
 
-        wfd = defer.waitForDeferred(
-                self.makeBuilder('bldr'))
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder('bldr')
 
         self.bldr._msg_buildrequests_unclaimed([br1, br2])
 

@@ -431,7 +431,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         self.updateBigStatus()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _notify_completions(self, requests, results, complete_at_epoch):
         # send a message for each request
         for br in requests:
@@ -455,10 +455,7 @@ class Builder(config.ReconfigurableServiceMixin,
             if br.bsid in seen_bsids:
                 continue
             seen_bsids.add(br.bsid)
-            wfd = defer.waitForDeferred(
-                self.master.maybeBuildsetComplete(br.bsid))
-            yield wfd
-            wfd.getResult()
+            yield self.master.maybeBuildsetComplete(br.bsid)
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]

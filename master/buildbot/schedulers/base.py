@@ -212,7 +212,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                 'change.*.new')
         return defer.succeed(None)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _changeCallback(self, key, msg, fileIsImportant, change_filter,
                                 onlyImportant):
 
@@ -221,15 +221,8 @@ class BaseScheduler(service.MultiService, ComparableMixin):
             return
 
         # get a change object, since the API requires it
-        wfd = defer.waitForDeferred(
-            self.master.db.changes.getChange(msg['changeid']))
-        yield wfd
-        chdict = wfd.getResult()
-
-        wfd = defer.waitForDeferred(
-            changes.Change.fromChdict(self.master, chdict))
-        yield wfd
-        change = wfd.getResult()
+        chdict = yield self.master.db.changes.getChange(msg['changeid'])
+        change = yield changes.Change.fromChdict(self.master, chdict)
 
         # filter it
         if change_filter and not change_filter.filter_change(change):
