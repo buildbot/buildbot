@@ -402,6 +402,38 @@ The Git step takes the following arguments:
       performs all the incremental checkout behavior in ``source``
       directory.
 
+``getDescription``
+
+   (optional) After checkout, invoke a `git describe` on the revision and save
+   the result in a property; the property's name is either ``commit-description``
+   or ``commit-description-foo``, depending on whether the ``codebase``
+   argument was also provided. The argument should either be a ``bool`` or ``dict``,
+   and will change how `git describe` is called:
+
+   * ``getDescription=False``: disables this feature explicitly
+   * ``getDescription=True`` or empty ``dict()``: Run `git describe` with no args
+   * ``getDescription={...}``: a dict with keys named the same as the git option.
+     Each key's value can be ``False`` or ``None`` to explicitly skip that argument.
+     
+     For the following keys, a value of ``True`` appends the same-named git argument:
+     
+      * ``all`` : `--all`
+      * ``always``: `--always`
+      * ``contains``: `--contains`
+      * ``debug``: `--debug`
+      * ``long``: `--long``
+      * ``exact-match``: `--exact-match`
+      * ``tags``: `--tags`
+      * ``dirty``: `--dirty`
+     
+     For the following keys, an integer or string value (depending on what git expects)
+     will set the argument's parameter appropriately. Examples show the key-value pair:
+     
+      * ``match=foo``: `--match foo`
+      * ``abbrev=7``: `--abbrev=7`
+      * ``candidates=7``: `--candidates=7`
+      * ``dirty=foo``: `--dirty=foo`
+    
 .. bb:step:: SVN
 
 .. _Step-SVN:

@@ -53,7 +53,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     """
 
     compare_attrs = ["svnurl", "split_file",
-                     "svnuser", "svnpasswd",
+                     "svnuser", "svnpasswd", "project",
                      "pollInterval", "histmax",
                      "svnbin", "category", "cachepath"]
 

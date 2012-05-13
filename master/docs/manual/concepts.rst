@@ -5,131 +5,61 @@ This chapter defines some of the basic concepts that the Buildbot
 uses. You'll need to understand how the Buildbot sees the world to
 configure it properly.
 
+.. index: repository
+.. index: codebase
+.. index: project
+.. index: revision
+.. index: branch
+.. index: source stamp
+
+.. _Source-Stamps:
+
+Source Stamps
+-------------
+
+Source code comes from *respositories*, provided by version control systems.
+Repositories are generally identified by URLs, e.g., ``git://github.com/buildbot/buildbot.git``.
+
+In these days of distribtued version control systems, the same *codebase* may appear in mutiple repositories.
+For example, ``https://github.com/mozilla/mozilla-central`` and ``http://hg.mozilla.org/mozilla-release`` both contain the Firefox codebase, although not exactly the same code.
+
+Many *projects* are built from multiple codebases.
+For example, a company may build several applications based on the same core library.
+The "app" codebase and the "core" codebase are in separate repositories, but are compiled together and constitute a single project.
+Changes to either codebase should cause a rebuild of the application.
+
+Most version control systems define some sort of *revision* that can be used (sometimes in combination with a *branch*) to uniquely specify a particular version of the source code.
+
+To build a project, Buildbot needs to know exactly which version of each codebase it should build.
+It uses a *source stamp* to do so for each codebase; the collection of sourcestamps required for a project is called a *source stamp set*.
+
+.. index: change
+
 .. _Version-Control-Systems:
 
 Version Control Systems
 -----------------------
 
-These source trees come from a Version Control System of some kind.
-CVS and Subversion are two popular ones, but the Buildbot supports
-others. All VC systems have some notion of an upstream
-`repository` which acts as a server [#]_, from which clients
-can obtain source trees according to various parameters. The VC
-repository provides source trees of various projects, for different
-branches, and from various points in time. The first thing we have to
-do is to specify which source tree we want to get.
+Buildbot supports a significant number of version control systems, so it treats them abstractly.
 
-.. _Generalizing-VC-Systems:
+For purposes of deciding when to perform builds, Buildbot's change sources monitor repositories, and represent any updates to those repositories as *changes*.
+These change sources fall broadly into two categories: pollers which periodically check the repository for updates; and hooks, where the repository is configured to notify Buildbot whenever an update occurs.
 
-Generalizing VC Systems
-~~~~~~~~~~~~~~~~~~~~~~~
+This concept does not map perfectly to every version control system.
+For example, for CVS Buildbot must guess that version updates made to multiple files within a short time represent a single change; for DVCS's like Git, Buildbot records a change when a commit is pushed to the monitored repository, not when it is initially committed.
+We assume that the :class:`Change`\s arrive at the master in the same order in which they are committed to the repository.
 
-For the purposes of the Buildbot, we will try to generalize all VC
-systems as having repositories that each provide sources for a variety
-of projects. Each project is defined as a directory tree with source
-files. The individual files may each have revisions, but we ignore
-that and treat the project as a whole as having a set of revisions
-(CVS is the only VC system still in widespread use that has
-per-file revisions, as everything modern has moved to atomic tree-wide
-changesets). Each time someone commits a change to the project, a new
-revision becomes available. These revisions can be described by a
-tuple with two items: the first is a branch tag, and the second is
-some kind of revision stamp or timestamp. Complex projects may have
-multiple branch tags, but there is always a default branch. The
-timestamp may be an actual timestamp (such as the :option:`-D` option to CVS),
-or it may be a monotonically-increasing transaction number (such as
-the change number used by SVN and P4, or the revision number used by
-Bazaar, or a labeled tag used in CVS. [#]_)
-The SHA1 revision ID used by Mercurial, and Git is
-also a kind of revision stamp, in that it specifies a unique copy of
-the source tree, as does a Darcs ``context`` file.
+When it comes time to actually perform a build, a scheduler prepares a source stamp set, as described above, based on its configuration.
+When the build begins, one or more source steps use the information in the source stamp set to actually check out the source code, using the normal VCS commands.
 
-When we aren't intending to make any changes to the sources we check out
-(at least not any that need to be committed back upstream), there are two
-basic ways to use a VC system:
+Tree Stability
+~~~~~~~~~~~~~~
 
-  * Retrieve a specific set of source revisions: some tag or key is used
-    to index this set, which is fixed and cannot be changed by subsequent
-    developers committing new changes to the tree. Releases are built from
-    tagged revisions like this, so that they can be rebuilt again later
-    (probably with controlled modifications).
-
-  * Retrieve the latest sources along a specific branch: some tag is used
-    to indicate which branch is to be used, but within that constraint we want
-    to get the latest revisions.
-
-Build personnel or CM staff typically use the first approach: the
-build that results is (ideally) completely specified by the two
-parameters given to the VC system: repository and revision tag. This
-gives QA and end-users something concrete to point at when reporting
-bugs. Release engineers are also reportedly fond of shipping code that
-can be traced back to a concise revision tag of some sort.
-
-Developers are more likely to use the second approach: each morning
-the developer does an update to pull in the changes committed by the
-team over the last day. These builds are not easy to fully specify: it
-depends upon exactly when you did a checkout, and upon what local
-changes the developer has in their tree. Developers do not normally
-tag each build they produce, because there is usually significant
-overhead involved in creating these tags. Recreating the trees used by
-one of these builds can be a challenge. Some VC systems may provide
-implicit tags (like a revision number), while others may allow the use
-of timestamps to mean "the state of the tree at time X" as opposed
-to a tree-state that has been explicitly marked.
-
-The Buildbot is designed to help developers, so it usually works in
-terms of *the latest* sources as opposed to specific tagged
-revisions. However, it would really prefer to build from reproducible
-source trees, so implicit revisions are used whenever possible.
-
-.. _Source-Tree-Specifications:
-
-Source Tree Specifications
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-So for the Buildbot's purposes we treat each VC system as a server
-which can take a list of specifications as input and produce a source
-tree as output. Some of these specifications are static: they are
-attributes of the builder and do not change over time. Others are more
-variable: each build will have a different value. The repository is
-changed over time by a sequence of Changes, each of which represents a
-single developer making changes to some set of files. These Changes
-are cumulative.
-
-For normal builds, the Buildbot wants to get well-defined source trees
-that contain specific :class:`Change`\s, and exclude other :class:`Change`\s that may have
-occurred after the desired ones. We assume that the :class:`Change`\s arrive at
-the buildbot (through one of the mechanisms described in
-:ref:`Change-Sources`) in the same order in which they are committed to the
-repository. The Buildbot waits for the tree to become ``stable``
-before initiating a build, for two reasons. The first is that
-developers frequently make multiple related commits in quick
-succession, even when the VC system provides ways to make atomic
-transactions involving multiple files at the same time. Running a
-build in the middle of these sets of changes would use an inconsistent
-set of source files, and is likely to fail (and is certain to be less
-useful than a build which uses the full set of changes). The
-tree-stable-timer is intended to avoid these useless builds that
-include some of the developer's changes but not all. The second reason
-is that some VC systems (i.e. CVS) do not provide repository-wide
-transaction numbers, so that timestamps are the only way to refer to
-a specific repository state. These timestamps may be somewhat
-ambiguous, due to processing and notification delays. By waiting until
-the tree has been stable for, say, 10 minutes, we can choose a
-timestamp from the middle of that period to use for our source
-checkout, and then be reasonably sure that any clock-skew errors will
-not cause the build to be performed on an inconsistent set of source
-files.
-
-The :class:`Scheduler`\s always use the tree-stable-timer, with a timeout that
-is configured to reflect a reasonable tradeoff between build latency
-and change frequency. When the VC system provides coherent
-repository-wide revision markers (such as Subversion's revision
-numbers, or in fact anything other than CVS's timestamps), the
-resulting :class:`Build` is simply performed against a source tree defined by
-that revision marker. When the VC system does not provide this, a
-timestamp from the middle of the tree-stable period is used to
-generate the source tree [#]_.
+Changes tend to arrive at a buildmaster in bursts.
+In many cases, these bursts of changes are meant to be taken together.
+For example, a developer may have pushed multiple commits to a DVCS that comprise the same new feature or bugfix.
+To avoid trying to build every change, Buildbot supports the notion of *tree stability*, by waiting for a burst of changes to finish before starting to schedule builds.
+This is implemented as a timer, with builds not scheduled until no changes have occurred for the duration of the timer.
 
 .. _How-Different-VC-Systems-Specify-Sources:
 
@@ -236,15 +166,17 @@ SHA1 hash as returned by e.g. ``mtn automate select w:``. No
 attempt is made to ensure that the specified revision is actually a
 subset of the specified branch.
 
+.. index: change
+
 .. _Attributes-of-Changes:
 
-Attributes of Changes
-~~~~~~~~~~~~~~~~~~~~~
+Changes
+-------
 
 .. _Attr-Who:
 
 Who
-+++
+~~~
 
 Each :class:`Change` has a :attr:`who` attribute, which specifies which developer is
 responsible for the change. This is a string which comes from a namespace
@@ -261,7 +193,7 @@ incoming Changes will have their ``who`` parsed and stored.
 .. _Attr-Files:
 
 Files
-+++++
+~~~~~
 
 It also has a list of :attr:`files`, which are just the tree-relative
 filenames of any files that were added, deleted, or modified for this
@@ -285,47 +217,42 @@ full test suite.
 .. _Attr-Comments:
 
 Comments
-++++++++
+~~~~~~~~
 
-The Change also has a :attr:`comments` attribute, which is a string
-containing any checkin comments.
+The Change also has a :attr:`comments` attribute, which is a string containing any checkin comments.
 
 .. _Attr-Project:
 
 Project
-+++++++
+~~~~~~~
 
-The :attr:`project` attribute of a change or source stamp describes the project
-to which it corresponds, as a short human-readable string.  This is useful in
-cases where multiple independent projects are built on the same buildmaster.
-In such cases, it can be used to control which builds are scheduled for a given
-commit, and to limit status displays to only one project.
+The :attr:`project` attribute of a change or source stamp describes the project to which it corresponds, as a short human-readable string.
+This is useful in cases where multiple independent projects are built on the same buildmaster.
+In such cases, it can be used to control which builds are scheduled for a given commit, and to limit status displays to only one project.
 
 .. _Attr-Repository:
 
 Repository
-++++++++++
+~~~~~~~~~~
 
-A change occurs within the context of a specific repository.  This is a string,
-and for most version-control systems, it takes the form of a URL.  It uniquely
-identifies the repository in which the change occurred.  This is particularly
-helpful for DVCS's, where a change may occur in a repository other than the
-"main" repository for the project.
-
-:class:`Change`\s can be filtered on repository, but more often this field is used as a
-hint for the build steps to figure out which code to check out.
+This attibute specifies the repository in which this change occurred.
+In the case of DVCS's, this information may be required to check out the committed source code.
+However, using the repository from a change has security risks: if Buildbot is configured to blidly trust this information, then it may easily be tricked into building arbitrary source code, potentially compromising the buildslaves and the integrity of subsequent builds.
 
 .. _Attr-Codebase:
 
 Codebase
-++++++++
+~~~~~~~~
 
-The codebase is derived from a change. A complete software product may be composed of more than one repository. Each repository has its own unique position inside the product design (i.e. main module, shared library, resources, documentation). To be able to start builds from different VCS's and still distinquish the different repositories `codebase`'s are used. By default the codebase is ''. The `master.cfg` may contain a callable that determines the codebase from an incomming change and replaces the default value(see. :bb:cfg:`codebaseGenerator`). A codebase is not allowed to contain ':'.
+This attribute specifies the codebase to which this change was made.
+As described :ref:`above <Source-Stamps>`, multiple repositories may contain the same codebase.
+A change's codebase is usually determined by the bb:cfg:`codebaseGenerator` configuration.
+By default the codebase is ''; this value is used automatically for single-codebase configurations.
 
 .. _Attr-Revision:
 
 Revision
-++++++++
+~~~~~~~~
 
 Each Change can have a :attr:`revision` attribute, which describes how
 to get a tree with a specific state: a tree which includes this Change
@@ -356,7 +283,7 @@ Revisions are always strings.
 
 
 Branches
-++++++++
+~~~~~~~~
 
 The Change might also have a :attr:`branch` attribute. This indicates
 that all of the Change's files are in the same named branch. The
@@ -390,8 +317,8 @@ same as Darcs.
 `Monotone`
     branch='warner-newfeature', files=['src/foo.c']
 
-Build Properties
-++++++++++++++++
+Change Properties
+~~~~~~~~~~~~~~~~~
 
 A Change may have one or more properties attached to it, usually specified
 through the Force Build form or :bb:cmdline:`sendchange`. Properties are discussed
@@ -454,8 +381,8 @@ individual :class:`BuildRequests` are delivered to the target
 
 .. _BuildSet:
 
-BuildSet
---------
+BuildSets
+---------
 
 A :class:`BuildSet` is the name given to a set of :class:`Build`\s that all
 compile/test the same version of the tree on multiple :class:`Builder`\s. In
@@ -513,8 +440,8 @@ appropriate :class:`Builder`\s.
 
 .. _BuildRequest:
 
-BuildRequest
-------------
+BuildRequests
+-------------
 
 A :class:`BuildRequest` is a request to build a specific set of source
 code (specified by one ore more source stamps) on a single :class:`Builder`. 
@@ -538,8 +465,8 @@ A merge of buildrequests is performed per codebase, thus on changes having the s
 
 .. _Builder:
 
-Builder
--------
+Builders
+--------
 
 The Buildmaster runs a collection of :class:`Builder`\s, each of which handles a single
 type of build (e.g. full versus quick), on one or more build slaves.   :class:`Builder`\s
@@ -562,7 +489,7 @@ checkout/compile/test commands are executed).
 .. _Concepts-Build-Factories:
 
 Build Factories
-~~~~~~~~~~~~~~~
+---------------
 
 A builder also has a :class:`BuildFactory`, which is responsible for creating new :class:`Build`
 instances: because the :class:`Build` instance is what actually performs each build,
@@ -572,7 +499,7 @@ is done (:ref:`Concepts-Build`).
 .. _Concepts-Build-Slaves:
 
 Build Slaves
-~~~~~~~~~~~~
+------------
 
 Each builder is associated with one of more :class:`BuildSlave`\s.  A builder which is
 used to perform Mac OS X builds (as opposed to Linux or Solaris builds) should
@@ -595,8 +522,8 @@ all these things mean you should use separate Builders.
 
 .. _Concepts-Build:
 
-Build
------
+Builds
+------
 
 A build is a single compile or test run of a particular version of the source
 code, and is comprised of a series of steps.  It is ultimately up to you what
@@ -845,16 +772,42 @@ Rather than create a build factory for each slave, the steps can use
 buildslave properties to identify the unique aspects of each slave
 and adapt the build process dynamically.
 
-.. rubric:: Footnotes
+.. _Multiple-Codebase-Builds:
 
-.. [#] Except Darcs, but since the Buildbot never modifies its local source tree we can ignore
-    the fact that Darcs uses a less centralized model
-    
-.. [#] Many VC systems provide more complexity than this: in particular the local
-    views that P4 and ClearCase can assemble out of various source
-    directories are more complex than we're prepared to take advantage of
-    here
-    
-.. [#] This ``checkoutDelay`` defaults
-    to half the tree-stable timer, but it can be overridden with an
-    argument to the :class:`Source` Step
+Multiple-Codebase Builds
+------------------------
+
+What if an end-product is composed of code from several codebases?
+Changes may arrive from different repositories within the tree-stable-timer period.
+Buildbot will not only use the source-trees that contain changes but also needs the remaining source-trees to build the complete product.
+
+For this reason a :ref:`Scheduler<Scheduling-Builds>` can be configured to base a build on a set of several source-trees that can (partly) be overidden by the information from incoming :class:`Change`\s.
+
+As descibed :ref:`above <Source-Stamps>`, the source for each codebase is identified by a source stamp, containing its repository, branch and revision.
+A full build set will specify a source stamp set describing the source to use for each codebase.
+
+Configuring all of this takes a coordinated approach.  A complete multiple repository configuration consists of:
+
+    - a *codebase generator*
+
+        Every relevant change arriving from a VC must contain a codebase.
+        This is done by a :bb:cfg:`codebaseGenerator` that is defined in the configuration.
+        Most generators examine the repository of a change to determine its codebase, using project-specific rules.
+
+    - some *schedulers*
+
+        Each :bb:cfg:`scheduler<schedulers>` has to be configured with a set of all required ``codebases`` to build a product.
+        These codebases indicate the set of required source-trees.
+        In order for the scheduler to be able to produce a complete set for each build, the configuration can give a default repository, branch, and revision for each codebase.
+        When a scheduler must generate a source stamp for a codebase that has received no changes, it applies these default values.
+
+    - multiple *source steps* - one for each codebase
+
+        A :ref:`Builder`'s build factory must include a :ref:`source step<Source-Checkout>` for each codebase.
+        Each of the source steps has a ``codebase`` attribute which is used to select an appropriate source stamp from the source stamp set for a build.
+        This information comes from the arrived changes or from the scheduler's configured default values.
+
+.. warning::
+
+    Defining a :bb:cfg:`codebaseGenerator` that returns non-empty (not ``''``) codebases will change the behavior of all the schedulers.
+

@@ -949,6 +949,12 @@ MailNotifier arguments
     ``warnings``
         Send mail about builds which generate warnings.
 
+    ``exception``
+        Send mail about builds which generate exceptions.
+
+    ``all``
+        Always send mail about builds.
+        
     Defaults to (``failing``, ``passing``, ``warnings``).
 
 ``builders``
@@ -1048,7 +1054,8 @@ Name of the project
     :meth:`master_status.getProjectName()`
 
 MailNotifier mode
-    ``mode`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``)
+    ``mode`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``,
+        ``exception``, ``all``)
 
 Builder result as a string ::
     

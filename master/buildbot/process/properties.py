@@ -185,6 +185,17 @@ class _PropertyMap(object):
     colon_minus_re = re.compile(r"(.*):-(.*)")
     colon_tilde_re = re.compile(r"(.*):~(.*)")
     colon_plus_re = re.compile(r"(.*):\+(.*)")
+    
+    colon_ternary_re = re.compile(r"""(?P<prop>.*) # the property to match
+                                      :            # colon
+                                      (?P<alt>\#)? # might have the alt marker '#'
+                                      \?           # question mark
+                                      (?P<delim>.) # the delimiter
+                                      (?P<true>.*) # sub-if-true
+                                      (?P=delim)   # the delimiter again
+                                      (?P<false>.*)# sub-if-false
+                                      """, re.VERBOSE)
+
     def __init__(self, properties):
         # use weakref here to avoid a reference loop
         self.properties = weakref.ref(properties)
@@ -225,10 +236,38 @@ class _PropertyMap(object):
             else:
                 return ''
 
+        def colon_ternary(mo):
+            # %(prop:?:T:F)s
+            # if prop exists, use T; otherwise, F
+            # %(prop:#?:T:F)s
+            # if prop is true, use T; otherwise, F
+            groups = mo.groupdict()
+            
+            prop = groups['prop']
+            
+            if prop in self.temp_vals:
+                if groups['alt']:
+                    use_true = self.temp_vals[prop]
+                else:
+                    use_true = True
+            elif properties.has_key(prop):
+                if groups['alt']:
+                    use_true = properties[prop]
+                else:
+                    use_true = True
+            else:
+                use_true = False
+            
+            if use_true:
+                return groups['true']
+            else:
+                return groups['false']
+
         for regexp, fn in [
             ( self.colon_minus_re, colon_minus ),
             ( self.colon_tilde_re, colon_tilde ),
             ( self.colon_plus_re, colon_plus ),
+            ( self.colon_ternary_re, colon_ternary ),
             ]:
             mo = regexp.match(key)
             if mo:
@@ -436,6 +475,27 @@ class Interpolate(util.ComparableMixin):
                defaultWhenFalse=False,
                elideNoneAs='')
 
+    colon_ternary_re = re.compile(r"""(?P<delim>.) # the delimiter
+                                      (?P<true>.*) # sub-if-true
+                                      (?P=delim)   # the delimiter again
+                                      (?P<false>.*)# sub-if-false
+                                      """, re.VERBOSE)
+
+    def _parseColon_ternary(self, d, kw, repl, defaultWhenFalse=False):
+        m = self.colon_ternary_re.match(repl)
+        if not m:
+            config.error("invalid Interpolate ternary expression for selector '%s' and delim '%s'" % (kw, repl[0]))
+            return None
+        m = m.groupdict()
+        return _Lookup(d, kw,
+               hasKey=Interpolate(m['true'], **self.kwargs),
+               default=Interpolate(m['false'], **self.kwargs),
+               defaultWhenFalse=defaultWhenFalse,
+               elideNoneAs='')
+
+    def _parseColon_ternary_hash(self, d, kw, repl):
+        return self._parseColon_ternary(d, kw, repl, defaultWhenFalse=True)
+
     def _parse(self, fmtstring):
         keys = _getInterpolationList(fmtstring)
         for key in keys:
@@ -443,13 +503,17 @@ class Interpolate(util.ComparableMixin):
                 d, kw, repl = self._parseSubstitution(key)
                 if repl is None:
                     repl = '-'
-                for char, fn in [
+                for pattern, fn in [
                     ( "-", self._parseColon_minus ),
                     ( "~", self._parseColon_tilde ),
                     ( "+", self._parseColon_plus ),
+                    ( "?", self._parseColon_ternary ),
+                    ( "#?", self._parseColon_ternary_hash )
                     ]:
-                    if repl[0] == char:
-                        self.interpolations[key] = fn(d, kw, repl[1:])
+                    junk, matches, tail = repl.partition(pattern)
+                    if not junk and matches:
+                        self.interpolations[key] = fn(d, kw, tail)
+                        break
                 if not self.interpolations.has_key(key):
                     config.error("invalid Interpolate default type '%s'" % repl[0])
 

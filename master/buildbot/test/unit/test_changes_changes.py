@@ -95,23 +95,24 @@ class Change(unittest.TestCase):
 
     def test_asText(self):
         text = self.change23.asText()
-        self.assertEqual(text, textwrap.dedent(u'''\
+        self.assertTrue(re.match(textwrap.dedent(u'''\
             Files:
              master/README.txt
              slave/README.txt
             On: git://warner
             For: Buildbot
-            At: Thu 15 Jun 1978 01:00:04
+            At: .*
             Changed By: dustin
             Comments: fix whitespaceProperties: 
               notest: no
 
-            '''))
+            '''), text), text)
 
     def test_asDict(self):
         dict = self.change23.asDict()
+        self.assertIn('1978', dict['at']) # timezone-sensitive
+        del dict['at']
         self.assertEqual(dict, {
-            'at': 'Thu 15 Jun 1978 01:00:04',
             'branch': u'warnerdb',
             'category': u'devel',
             'codebase': u'mainapp',

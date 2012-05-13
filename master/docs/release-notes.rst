@@ -81,10 +81,6 @@ Deprecations, Removals, and Non-Compatible Changes
     from buildbot.steps.source.svn import SVN
     factory.append(SVN(repourl=Interpolate("svn://svn.example.org/svn/%(src::branch:-branches/test)s")))
 
-* ``Source`` and ``ShellCommand`` steps now have an optional ``descriptionSuffix``, a suffix to the
-   ``description``/``descriptionDone`` values. For example this can help distinguish between
-    multiple ``Compile`` steps that are applied to different codebases.
-
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -100,7 +96,17 @@ Features
   schedulers can aggregate changes to multiple codebases into source stamp sets
   (with one source stamp for each codebase).  Source steps then check out each
   codebase as required, and the remainder of the build process proceeds
+  normally.  See the :ref:`Multiple-Codebase-Builds` for details.
+
+* ``Source`` and ``ShellCommand`` steps now have an optional ``descriptionSuffix``, a suffix to the
+   ``description``/``descriptionDone`` values. For example this can help distinguish between
+    multiple ``Compile`` steps that are applied to different codebases.
+
+* ``Git`` has a new ``getDescription`` option, which will run `git describe` after checkout
   normally.  See the documentation for details.
+
+* A new ternary substitution operator ``:?:`` and ``:#?:`` to use with the ``Interpolate``
+  and ``WithProperties`` classes.
 
 Slave
 -----
