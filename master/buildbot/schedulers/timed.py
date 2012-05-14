@@ -15,6 +15,7 @@
 
 import time
 from buildbot import util
+from buildbot.process import buildstep, properties
 from buildbot.schedulers import base
 from twisted.internet import defer, reactor
 from twisted.python import log
@@ -374,3 +375,48 @@ class Nightly(NightlyBase):
                     self.addBuildsetForLatest(reason=self.reason, branch=self.branch))
             yield wfd
             wfd.getResult()
+
+class NightlyTriggerable(NightlyBase):
+    def __init__(self, name, builderNames, minute=0, hour='*',
+                 dayOfMonth='*', month='*', dayOfWeek='*',
+                 properties={}):
+        NightlyBase.__init__(self, name=name, builderNames=builderNames, minute=minute, hour='*',
+                dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, properties=properties)
+
+        self._lastTrigger = None
+        self.reason = "The NightlyTriggerable scheduler named '%s' triggered this build" % self.name
+
+    def trigger(self, ssid, set_props=None):
+        """Trigger this scheduler with the given sourcestamp ID. Returns a
+        deferred that will fire when the buildset is finished."""
+        self._lastTrigger = (ssid, set_props)
+        ## FIXME: Trigger expects a callback with the success of the triggered
+        ## build, if waitForFinish is True. That probably isn't important here,
+        ## so just return SUCCESS for now.
+        return defer.succeed(buildstep.SUCCESS)
+
+    def startBuild(self):
+        if self._lastTrigger is None:
+            return defer.succeed(None)
+
+        (ssid, set_props) = self._lastTrigger
+        self._lastTrigger = None
+
+        ## TODO: The following code is copied from Triggerable.trigger
+
+        # properties for this buildset are composed of our own properties,
+        # potentially overridden by anything from the triggering build
+        props = properties.Properties()
+        props.updateFromProperties(self.properties)
+        if set_props:
+            props.updateFromProperties(set_props)
+
+        # note that this does not use the buildset subscriptions mechanism, as
+        # the duration of interest to the caller is bounded by the lifetime of
+        # this process.
+        if ssid:
+            d = self.addBuildsetForSourceStamp(reason=self.reason, ssid=ssid,
+                    properties=props)
+        else:
+            d = self.addBuildsetForLatest(reason=self.reason, properties=props)
+        return d
