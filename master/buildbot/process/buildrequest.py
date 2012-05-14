@@ -115,10 +115,7 @@ class BuildRequest(object):
         yield wfd
         buildset_properties = wfd.getResult()
 
-        pr = properties.Properties()
-        for name, (value, source) in buildset_properties.iteritems():
-            pr.setProperty(name, value, source)
-        buildrequest.properties = pr
+        buildrequest.properties = properties.Properties.fromDict(buildset_properties)
 
         # fetch the sourcestamp dictionary
         wfd = defer.waitForDeferred(
