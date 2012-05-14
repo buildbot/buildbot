@@ -230,9 +230,7 @@ class Periodic(Timed):
 
 class NightlyBase(Timed):
     compare_attrs = (Timed.compare_attrs
-            + ('minute', 'hour', 'dayOfMonth', 'month',
-               'dayOfWeek', 'onlyIfChanged', 'fileIsImportant',
-               'change_filter', 'onlyImportant',))
+            + ('minute', 'hour', 'dayOfMonth', 'month', 'dayOfWeek'))
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
@@ -297,7 +295,8 @@ class NightlyBase(Timed):
 
 class Nightly(NightlyBase):
     compare_attrs = (NightlyBase.compare_attrs
-            + ('onlyIfChanged', 'fileIsImportant', 'change_filter', 'onlyImportant',))
+            + ('branch', 'onlyIfChanged', 'fileIsImportant',
+               'change_filter', 'onlyImportant',))
 
     class NoBranch: pass
     def __init__(self, name, builderNames, minute=0, hour='*',
