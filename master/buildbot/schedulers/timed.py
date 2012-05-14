@@ -386,21 +386,42 @@ class NightlyTriggerable(NightlyBase):
         self._lastTrigger = None
         self.reason = "The NightlyTriggerable scheduler named '%s' triggered this build" % self.name
 
+    def startService(self):
+        NightlyBase.startService(self)
+
+        # get the scheduler's lastTrigger time (note: only done at startup)
+        d = self.getState('lastTrigger', None)
+        def setLast(lastTrigger):
+            if lastTrigger:
+                self._lastTrigger = (lastTrigger[0], properties.Properties.fromDict(lastTrigger[1]))
+        d.addCallback(setLast)
+
     def trigger(self, ssid, set_props=None):
         """Trigger this scheduler with the given sourcestamp ID. Returns a
         deferred that will fire when the buildset is finished."""
         self._lastTrigger = (ssid, set_props)
+
+        # record the trigger in the db
+        if set_props:
+            propsDict = set_props.asDict()
+        else:
+            propsDict = {}
+        d = self.setState('lastTrigger',
+                (ssid, propsDict))
+
         ## FIXME: Trigger expects a callback with the success of the triggered
         ## build, if waitForFinish is True. That probably isn't important here,
         ## so just return SUCCESS for now.
-        return defer.succeed(buildstep.SUCCESS)
+        return d.addCallback(lambda _: buildstep.SUCCESS)
 
+    @defer.inlineCallbacks
     def startBuild(self):
         if self._lastTrigger is None:
-            return defer.succeed(None)
+            defer.returnValue(None)
 
         (ssid, set_props) = self._lastTrigger
         self._lastTrigger = None
+        yield self.setState('lastTrigger', None)
 
         ## TODO: The following code is copied from Triggerable.trigger
 
@@ -411,12 +432,8 @@ class NightlyTriggerable(NightlyBase):
         if set_props:
             props.updateFromProperties(set_props)
 
-        # note that this does not use the buildset subscriptions mechanism, as
-        # the duration of interest to the caller is bounded by the lifetime of
-        # this process.
         if ssid:
-            d = self.addBuildsetForSourceStamp(reason=self.reason, ssid=ssid,
+            yield self.addBuildsetForSourceStamp(reason=self.reason, ssid=ssid,
                     properties=props)
         else:
-            d = self.addBuildsetForLatest(reason=self.reason, properties=props)
-        return d
+            yield self.addBuildsetForLatest(reason=self.reason, properties=props)

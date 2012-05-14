@@ -183,3 +183,64 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
                     reason="The NightlyTriggerable scheduler named 'test' triggered this build"),
                 dict(branch='br', project='p', repository='r',
                     revision='myrev2'))
+
+    def test_savedTrigger(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'],
+                minute=[5])
+        self.db.insertTestData([
+            fakedb.SourceStamp(id=91, revision='myrev', branch='br',
+                project='p', repository='r'),
+            fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
+            fakedb.ObjectState(objectid=self.SCHEDULERID, name='lastTrigger', value_json='[ 91, {} ]'),
+        ])
+
+        sched.startService()
+
+        self.clock.advance(60*60) # Run for 1h
+
+        self.db.buildsets.assertBuildset('?',
+                dict(external_idstring=None,
+                    properties=[('scheduler', ('test', 'Scheduler'))],
+                    reason="The NightlyTriggerable scheduler named 'test' triggered this build"),
+                dict(branch='br', project='p', repository='r',
+                    revision='myrev'))
+
+    def test_saveTrigger(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'],
+                minute=[5])
+        self.db.insertTestData([
+            fakedb.SourceStamp(id=91, revision='myrev', branch='br',
+                project='p', repository='r'),
+            fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
+        ])
+
+        sched.startService()
+
+        d = sched.trigger(91)
+
+        @d.addCallback
+        def cb(_):
+            self.db.state.assertState(self.SCHEDULERID, lastTrigger=[91, {}])
+
+        return d
+
+    def test_saveTrigger_noTrigger(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'],
+                minute=[5])
+        self.db.insertTestData([
+            fakedb.SourceStamp(id=91, revision='myrev', branch='br',
+                project='p', repository='r'),
+            fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
+        ])
+
+        sched.startService()
+
+        d = sched.trigger(91)
+
+        self.clock.advance(60*60) # Run for 1h
+
+        @d.addCallback
+        def cb(_):
+            self.db.state.assertState(self.SCHEDULERID, lastTrigger=None)
+
+        return d
