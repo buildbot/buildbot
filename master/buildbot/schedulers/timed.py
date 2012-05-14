@@ -14,7 +14,10 @@
 # Copyright Buildbot Team Members
 
 import time
+from zope.interface import implements
+
 from buildbot import util
+from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process import buildstep, properties
 from buildbot.schedulers import base
 from twisted.internet import defer, reactor
@@ -377,6 +380,7 @@ class Nightly(NightlyBase):
             wfd.getResult()
 
 class NightlyTriggerable(NightlyBase):
+    implements(ITriggerableScheduler)
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  properties={}):
