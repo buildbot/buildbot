@@ -382,13 +382,16 @@ class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
         self.assertRaisesConfigError("invalid Interpolate selector 'garbage'",
                 lambda: Interpolate("%(prop:some_prop:~%(garbage:test)s)s"))
 
-
-    def test_colon_ternary_bad_delimeter(self):
-        self.assertRaisesConfigError("invalid Interpolate ternary expression for selector 'P' and delim ':'",
+    def test_colon_ternary_missing_delimeter(self):
+        self.assertRaisesConfigError("invalid Interpolate ternary expression 'one' with delimiter ':'",
                 lambda: Interpolate("echo '%(prop:P:?:one)s'"))
 
+    def test_colon_ternary_paren_delimiter(self):
+        self.assertRaisesConfigError("invalid Interpolate ternary expression 'one(:)' with delimiter ':'",
+                lambda: Interpolate("echo '%(prop:P:?:one(:))s'"))
+
     def test_colon_ternary_hash_bad_delimeter(self):
-        self.assertRaisesConfigError("invalid Interpolate ternary expression for selector 'P' and delim '|'",
+        self.assertRaisesConfigError("invalid Interpolate ternary expression 'one' with delimiter '|'",
                 lambda: Interpolate("echo '%(prop:P:#?|one)s'"))
 
 
@@ -561,6 +564,25 @@ class TestInterpolateProperties(unittest.TestCase):
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                              "echo 'proj2'")
+        return d
+
+    def test_property_colon_ternary_substitute_recursively_delimited_true(self):
+        self.props.setProperty("P", "present", "test")
+        self.props.setProperty("one", "proj1", "test")
+        self.props.setProperty("two", "proj2", "test")
+        command = Interpolate("echo '%(prop:P:?|%(prop:one:?|true|false)s|%(prop:two:?|false|true)s)s'")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                             "echo 'true'")
+        return d
+
+    def test_property_colon_ternary_substitute_recursively_delimited_false(self):
+        self.props.setProperty("one", "proj1", "test")
+        self.props.setProperty("two", "proj2", "test")
+        command = Interpolate("echo '%(prop:P:?|%(prop:one:?|true|false)s|%(prop:two:?|false|true)s)s'")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                             "echo 'false'")
         return d
 
 

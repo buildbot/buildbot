@@ -456,6 +456,20 @@ class Interpolate(util.ComparableMixin):
         else:
             return fn(arg)
 
+    @staticmethod
+    def _splitBalancedParen(delim, arg):
+        parenCount = 0
+        for i in range(0, len(arg)):
+            if arg[i] == "(":
+                parenCount += 1
+            if arg[i] == ")":
+                parenCount -= 1
+                if parenCount < 0:
+                    raise ValueError
+            if parenCount == 0 and arg[i] == delim:
+                return arg[0:i], arg[i+1:]
+        return arg
+
     def _parseColon_minus(self, d, kw, repl):
         return _Lookup(d, kw,
                default=Interpolate(repl, **self.kwargs),
@@ -475,21 +489,19 @@ class Interpolate(util.ComparableMixin):
                defaultWhenFalse=False,
                elideNoneAs='')
 
-    colon_ternary_re = re.compile(r"""(?P<delim>.) # the delimiter
-                                      (?P<true>.*) # sub-if-true
-                                      (?P=delim)   # the delimiter again
-                                      (?P<false>.*)# sub-if-false
-                                      """, re.VERBOSE)
-
     def _parseColon_ternary(self, d, kw, repl, defaultWhenFalse=False):
-        m = self.colon_ternary_re.match(repl)
-        if not m:
-            config.error("invalid Interpolate ternary expression for selector '%s' and delim '%s'" % (kw, repl[0]))
+        delim = repl[0]
+        if delim == '(':
+            config.error("invalid Interpolate ternary delimiter '('")
             return None
-        m = m.groupdict()
+        try:
+            truePart, falsePart = self._splitBalancedParen(delim, repl[1:])
+        except ValueError:
+            config.error("invalid Interpolate ternary expression '%s' with delimiter '%s'" % (repl[1:], repl[0]))
+            return None
         return _Lookup(d, kw,
-               hasKey=Interpolate(m['true'], **self.kwargs),
-               default=Interpolate(m['false'], **self.kwargs),
+               hasKey=Interpolate(truePart, **self.kwargs),
+               default=Interpolate(falsePart, **self.kwargs),
                defaultWhenFalse=defaultWhenFalse,
                elideNoneAs='')
 
