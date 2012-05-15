@@ -436,18 +436,14 @@ class Builder(config.ReconfigurableServiceMixin,
         # send a message for each request
         for br in requests:
             bsid = br.bsid
-            builderid = br.buildername # TODO
             brid = br.id
-            key = 'buildrequest.%d.%s.%d.complete' % (bsid, builderid, brid)
-            msg = dict(
-                brid=brid,
-                bsid=bsid,
-                buildername=br.buildername,
+            self.master.mq.produce(_type='buildrequest', _event='complete',
+                buildrequest=brid,
+                buildset=bsid,
+                builderName=br.buildername,
                 builderid=-1, # TODO
                 complete_at=complete_at_epoch,
                 results=results)
-            self.master.mq.produce(key, msg)
-
         # now inform the master that we may have completed a number of
         # buildsets -- one for each build request with a unique bsid
         seen_bsids = set()
@@ -571,16 +567,13 @@ class Builder(config.ReconfigurableServiceMixin,
             masterid = yield self.master.getObjectId()
 
             for brdict in brdicts:
-                key = 'buildrequest.%d.%s.%d.claimed' % (brdict['buildsetid'],
-                        brdict['buildername'], brdict['brid'])
-                msg = dict(
-                    bsid=brdict['buildsetid'],
-                    brid=brdict['brid'],
+                self.master.mq.produce(_type='buildrequest', _event='claimed',
+                    buildset=brdict['buildsetid'],
+                    buildrequest=brdict['brid'],
                     buildername=brdict['buildername'],
                     builderid=-1,
                     claimed_at=claimed_at_epoch,
                     masterid=masterid)
-                self.master.mq.produce(key, msg)
 
             # claim was successful, so initiate a build for this set of
             # requests.  Note that if the build fails from here on out (e.g.,
@@ -743,10 +736,11 @@ class Builder(config.ReconfigurableServiceMixin,
             bsid = breq.bsid
             buildername = breq.buildername
             brid = breq.id
-            key = 'buildrequest.%s.%s.%s.unclaimed' % (bsid, buildername, brid)
-            msg = dict(brid=brid, bsid=bsid, buildername=buildername,
-                    builderid=-1)
-            self.master.mq.produce(key, msg)
+            self.master.mq.produce(_type='buildrequest', _event='unclaimed',
+                buildrequest=brid,
+                buildset=bsid,
+                buildername=buildername,
+                builderid=-1)
 
 class BuilderControl:
     implements(interfaces.IBuilderControl)

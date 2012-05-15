@@ -49,13 +49,13 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
     def startService(self):
         # subscribe to the things we need to know about
         self._buildset_new_consumer = self.master.mq.startConsuming(
-                self.bs_new_consumer_cb, 'buildset.*.new')
+                self.bs_new_consumer_cb, dict(_type='buildset', _event='new'))
         self._buildset_complete_consumer = self.master.mq.startConsuming(
-                self.bs_complete_consumer_cb, 'buildset.*.complete')
+                self.bs_complete_consumer_cb, dict(_type='buildset', _event='complete'))
         self._br_consumer = self.master.mq.startConsuming(
-                self.br_consumer_cb, 'buildrequest.*.*.*.new')
+                self.br_consumer_cb, dict(_type='buildrequest', _event='new'))
         self._change_consumer = self.master.mq.startConsuming(
-                self.change_consumer_cb, 'change.*.new')
+                self.change_consumer_cb, dict(_type='change', _event='new'))
 
         return service.MultiService.startService(self)
 

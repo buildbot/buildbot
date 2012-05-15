@@ -459,7 +459,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         msg = dict()
         msg.update(chdict)
         msg['when_timestamp'] = datetime2epoch(msg['when_timestamp'])
-        self.mq.produce("change.%d.new" % changeid, msg)
+        self.mq.produce(_type="change", _event="new", **msg)
 
         defer.returnValue(change)
 
@@ -479,25 +479,21 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # notify about the component build requests
         for bn, brid in brids.iteritems():
-            msg = dict(
-                brid=brid,
-                bsid=bsid,
+            self.mq.produce(_type='buildrequest', _event='new',
+                buildrequest=brid,
+                buildset=bsid,
                 buildername=bn,
                 builderid=-1) # TODO
-            self.mq.produce(
-                    'buildrequest.%d.%s.%d.new' % (bsid, bn, brid),
-                    msg)
 
         # and the buildset itself
-        msg = dict(
-            bsid=bsid,
+        self.mq.produce(_type='buildset', _event='new',
+            buildset=bsid,
             external_idstring=kwargs.get('external_idstring', None),
             reason=kwargs['reason'],
             sourcestampsetid=kwargs['sourcestampsetid'],
-            brids=brids,
+            buildrequests=brids,
             scheduler=scheduler,
             properties=kwargs.get('properties', {}))
-        self.mq.produce("buildset.%d.new" % bsid, msg)
 
         defer.returnValue((bsid,brids))
 
@@ -532,11 +528,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 complete_at=complete_at)
 
         # new-style notification
-        msg = dict(
-            bsid=bsid,
+        # TODO: Complete state
+        self.mq.produce(_type='buildset', _event='complete',
+            buildset=bsid,
             complete_at=complete_at_epoch,
             results=cumulative_results)
-        self.mq.produce('buildset.%d.complete' % bsid, msg)
 
 
     ## state maintenance (private)
@@ -589,12 +585,10 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         d = self.getObjectId()
         @d.addCallback
         def send(objectid):
-            key = 'master.%d.%s' % (objectid, state)
-            msg = dict(
-                masterid=objectid,
-                master_hostname=self.hostname,
-                master_basedir=os.path.abspath(self.basedir))
-            self.mq.produce(key, msg)
+            self.mq.produce(_type='master', _event=state,
+                master=objectid,
+                hostname=self.hostname,
+                basedir=os.path.abspath(self.basedir))
         d.addErrback(log.msg, "while sending master message")
 
 class Control:

@@ -145,8 +145,8 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # consume both 'new' and 'unclaimed' build requests
         self.buildreqest_consumer = self.master.mq.startConsuming(
                 buildRequestAdded,
-                'buildrequest.*.*.*.new',
-                'buildrequest.*.*.*.unclaimed')
+                dict(_type='buildrequest', _event='new'),
+                dict(_type='buildrequest', _event='unclaimed'))
         service.MultiService.startService(self)
 
     @defer.inlineCallbacks
