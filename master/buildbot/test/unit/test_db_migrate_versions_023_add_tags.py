@@ -18,6 +18,8 @@ from sqlalchemy.engine import reflection
 from twisted.python import log
 from twisted.trial import unittest
 from buildbot.test.util import migration
+import datetime
+from buildbot.util import UTC, datetime2epoch
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -49,7 +51,36 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('project', sa.String(length=512), nullable=False,
                 server_default=''),
         )
+        sa.Index('changes_category', self.changes.c.category)
         self.changes.create(bind=conn)
+
+        idx = sa.Index('changes_category', self.changes.c.category)
+        idx.create()
+
+    def reload_tables_after_migration(self, conn):
+        metadata = sa.MetaData()
+        metadata.bind = conn
+        self.changes = sa.Table('changes', metadata, autoload=True)
+        self.tags = sa.Table('tags', metadata, autoload=True)
+        self.change_tags = sa.Table('change_tags', metadata, autoload=True)
+
+    # Populate test data to the changes table as before migration to 023.
+    def populate_changes(self, conn, changes):
+        dt_when = datetime.datetime(2012, 2, 19, 12, 31, 15, tzinfo=UTC)
+
+        for changeid, category in changes:
+            conn.execute(self.changes.insert(),
+                    changeid = changeid,
+                    author = 'develop',
+                    comments = 'no comment',
+                    is_dir = 0,
+                    branch = 'default',
+                    revision = 'FD56A89',
+                    when_timestamp = datetime2epoch(dt_when),
+                    category = category,
+                    repository = 'https://svn.com/repo_a',
+                    codebase = 'repo_a',
+                    project = '')
 
     # tests
 
@@ -110,5 +141,35 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 sorted([
                     'change_tags_tagid',
                 ]))
+
+        return self.do_test_migration(22, 23, setup_thd, verify_thd)
+
+    # no categories
+    # mix unique categories and nulls
+    # multiple categories
+        
+    def test_migrated_data_unique_tags(self):
+        test_data = [
+                (1, 'category1'),
+                (2, 'category2'),
+                (3, 'category3'),
+            ]
+
+        def setup_thd(conn):
+            self.create_tables_thd(conn)
+            self.populate_changes(conn, test_data)
+
+        def verify_thd(conn):
+            self.reload_tables_after_migration(conn)
+
+            # Check tags records.
+            res = conn.execute(sa.select([self.tags.c.id, self.tags.c.tag]))
+            got_tags = res.fetchall()
+            self.assertEqual(got_tags, test_data)
+
+            # Check change_tags records.
+            res = conn.execute(sa.select([self.change_tags.c.changeid, self.tags.c.tagid]))
+            got_tags = res.fetchall()
+            self.assertEqual(got_tags, [(1,1), (2,2), (3,3)])
 
         return self.do_test_migration(22, 23, setup_thd, verify_thd)

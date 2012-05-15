@@ -31,7 +31,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
             revision=None, when_timestamp=None, branch=None,
-            category=None, revlink='', properties={}, repository='', codebase='',
+            tags=None, revlink='', properties={}, repository='', codebase='',
             project='', uid=None, _reactor=reactor):
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
@@ -60,7 +60,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             self.check_length(ch_tbl.c.branch, branch)
             self.check_length(ch_tbl.c.revision, revision)
             self.check_length(ch_tbl.c.revlink, revlink)
-            self.check_length(ch_tbl.c.category, category)
             self.check_length(ch_tbl.c.repository, repository)
             self.check_length(ch_tbl.c.project, project)
 
@@ -72,7 +71,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 revision=revision,
                 revlink=revlink,
                 when_timestamp=datetime2epoch(when_timestamp),
-                category=category,
                 repository=repository,
                 codebase=codebase,
                 project=project))
@@ -219,7 +217,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 revision=ch_row.revision,
                 when_timestamp=epoch2datetime(ch_row.when_timestamp),
                 branch=ch_row.branch,
-                category=ch_row.category,
                 revlink=ch_row.revlink,
                 properties={}, # see below
                 repository=ch_row.repository,

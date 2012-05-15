@@ -212,9 +212,6 @@ class Model(base.DBConnectorComponent):
         # future!
         sa.Column('when_timestamp', sa.Integer, nullable=False),
 
-        # an arbitrary string used for filtering changes
-        sa.Column('category', sa.String(256)),
-
         # repository specifies, along with revision and branch, the
         # source tree in which this change was detected.
         sa.Column('repository', sa.String(length=512), nullable=False,
@@ -387,7 +384,6 @@ class Model(base.DBConnectorComponent):
     sa.Index('changes_branch', changes.c.branch)
     sa.Index('changes_revision', changes.c.revision)
     sa.Index('changes_author', changes.c.author)
-    sa.Index('changes_category', changes.c.category)
     sa.Index('changes_when_timestamp', changes.c.when_timestamp)
     sa.Index('change_files_changeid', change_files.c.changeid)
     sa.Index('change_properties_changeid', change_properties.c.changeid)

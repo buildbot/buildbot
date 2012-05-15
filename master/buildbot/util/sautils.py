@@ -31,6 +31,20 @@ def _visit_insert_from_select(element, compiler, **kw):
         compiler.process(element.select)
     )
 
+class InsertColumnsFromSelect(Executable, ClauseElement):
+    def __init__(self, table, columns, select):
+        self.table = table
+        self.columns = columns
+        self.select = select
+
+@compiler.compiles(InsertColumnsFromSelect)
+def _visit_insert_from_select(element, compiler, **kw):
+    return "INSERT INTO %s (%s) %s" % (
+        compiler.process(element.table, asfrom=True),
+        element.columns,
+        compiler.process(element.select)
+    )
+
 def sa_version():
     if hasattr(sa, '__version__'):
         return tuple(map(int, sa.__version__.split('.')))
