@@ -223,6 +223,10 @@ class TestCustomStepExecution(steps.BuildStepMixin, unittest.TestCase):
 
     def test_step_raising_exception_in_start(self):
         self.setupStep(FailingCustomStep(exception=ValueError))
-        self.expectOutcome(result=FAILURE, status_text=["generic"])
-        return self.runStep()
+        self.expectOutcome(result=EXCEPTION, status_text=["generic", "exception"])
+        d = self.runStep()
+        @d.addCallback
+        def cb(_):
+            self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
+        return d
 
