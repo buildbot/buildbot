@@ -101,8 +101,8 @@ class TestStatus(unittest.TestCase):
         m = mock.Mock(name='master')
         status = master.Status(m)
 
-        yield status.change_consumer_cb('change.13.new',
-                    dict(changeid=13))
+        yield status.change_consumer_cb(dict(_type='change', _event='new',
+                    changeid=13)))
 
         self.assertFalse(m.db.changes.getChange.called)
 
@@ -127,8 +127,8 @@ class TestStatus(unittest.TestCase):
         watcher.changeAdded = mock.Mock(name='changeAdded')
         status.subscribe(watcher)
 
-        yield status.change_consumer_cb('change.13.new',
-                    dict(changeid=13))
+        yield status.change_consumer_cb(dict(_type='change', _event='new',
+                    changeid=13)))
 
         self.assertTrue(watcher.changeAdded.called)
         args, kwargs = watcher.changeAdded.call_args

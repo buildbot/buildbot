@@ -26,18 +26,18 @@ class QueueRef(unittest.TestCase):
         cb = mock.Mock(name='cb')
         qref = base.QueueRef(cb)
 
-        qref.invoke('rk', 'd')
+        qref.invoke('rk')
 
-        cb.assert_called_with('rk', 'd')
+        cb.assert_called_with('rk')
 
     def test_success_deferred(self):
         cb = mock.Mock(name='cb')
         cb.return_value = defer.succeed(None)
         qref = base.QueueRef(cb)
 
-        qref.invoke('rk', 'd')
+        qref.invoke('rk')
 
-        cb.assert_called_with('rk', 'd')
+        cb.assert_called_with('rk')
 
     @compat.usesFlushLoggedErrors
     def test_exception(self):
@@ -45,9 +45,9 @@ class QueueRef(unittest.TestCase):
         cb.side_effect = RuntimeError('oh noes!')
         qref = base.QueueRef(cb)
 
-        qref.invoke('rk', 'd')
+        qref.invoke('rk')
 
-        cb.assert_called_with('rk', 'd')
+        cb.assert_called_with('rk')
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @compat.usesFlushLoggedErrors
@@ -56,7 +56,7 @@ class QueueRef(unittest.TestCase):
         cb.return_value = defer.fail(failure.Failure(RuntimeError('oh noes!')))
         qref = base.QueueRef(cb)
 
-        qref.invoke('rk', 'd')
+        qref.invoke('rk')
 
-        cb.assert_called_with('rk', 'd')
+        cb.assert_called_with('rk')
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)

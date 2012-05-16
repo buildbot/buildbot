@@ -31,11 +31,11 @@ class FakeMQConnector(object):
         self.setup_called = True
         return defer.succeed(None)
 
-    def produce(self, data):
+    def produce(self, **data):
         self.productions.append(data)
         # note - no consumers are called: IT'S A FAKE
 
-    def callConsumer(self, msg):
+    def callConsumer(self, **msg):
         matched = False
         for q in self.qrefs:
             if q.matcher.matches(msg):

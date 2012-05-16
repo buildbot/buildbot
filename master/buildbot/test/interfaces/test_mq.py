@@ -25,12 +25,12 @@ class Tests(interfaces.InterfaceTests):
         raise NotImplementedError
 
     def test_empty_produce(self):
-        self.mq.produce('a.b.c', dict(x=1))
+        self.mq.produce(_type='a', _event='b', x=1)
         # ..nothing happens
 
     def test_signature_produce(self):
         @self.assertArgSpecMatches(self.mq.produce)
-        def produce(self, routingKey, data):
+        def produce(self, **data):
             pass
 
     def test_signature_startConsuming(self):
