@@ -32,12 +32,12 @@ class SimpleMQ(config.ReconfigurableServiceMixin, base.MQBase):
         return config.ReconfigurableServiceMixin.reconfigService(self,
                                                             new_config)
 
-    def produce(self, routingKey, data):
+    def produce(self, **data):
         if self.debug:
-            log.msg("MSG: %s\n%s" % (routingKey, pprint.pformat(data)))
+            log.msg("MSG: %s.%s\n%s" % (data['_type'], data['_event'], pprint.pformat(data)))
         for qref in self.qrefs:
-            if qref.matcher.matches(routingKey):
-                qref.invoke(routingKey, data)
+            if qref.matcher.matches(data):
+                qref.invoke(data)
 
     def startConsuming(self, callback, *topics, **kwargs):
         persistent_name = kwargs.get('persistent_name', None)
@@ -84,12 +84,12 @@ class PersistentQueueRef(QueueRef):
 
         # invoke for every message that was missed
         queue, self.queue = self.queue, []
-        for routingKey, data in queue:
-            self.invoke(routingKey, data)
+        for data in queue:
+            self.invoke(data)
 
     def stopConsuming(self):
         self.callback = self.addToQueue
         self.active = False
 
-    def addToQueue(self, routingKey, data):
-        self.queue.append((routingKey, data))
+    def addToQueue(self, data):
+        self.queue.append(data)

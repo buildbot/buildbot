@@ -140,7 +140,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         return self.builders.values()
 
     def startService(self):
-        def buildRequestAdded(key, msg):
+        def buildRequestAdded(msg):
             self.maybeStartBuildsForBuilder(msg['buildername'])
         # consume both 'new' and 'unclaimed' build requests
         self.buildreqest_consumer = self.master.mq.startConsuming(

@@ -207,7 +207,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         # register for changes with master
         assert not self._change_consumer
         self._change_consumer = self.master.mq.startConsuming(
-                lambda k,m : self._changeCallback(k, m, fileIsImportant,
+                lambda m : self._changeCallback(m, fileIsImportant,
                                             change_filter, onlyImportant),
                 dict(_type='change', _event='new'))
         return defer.succeed(None)

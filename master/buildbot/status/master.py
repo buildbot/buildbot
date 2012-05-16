@@ -371,11 +371,11 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             if hasattr(t, 'slaveDisconnected'):
                 t.slaveDisconnected(name)
 
-    def br_consumer_cb(self, key, msg):
+    def br_consumer_cb(self, msg):
         buildername = msg['buildername']
         if buildername in self._builder_observers:
             brs = buildrequest.BuildRequestStatus(buildername,
-                                                msg['brid'], self)
+                                                msg['buildrequest'], self)
             for observer in self._builder_observers[buildername]:
                 if hasattr(observer, 'requestSubmitted'):
                     eventually(observer.requestSubmitted, brs)
@@ -443,8 +443,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
     def _builder_unsubscribe(self, buildername, watcher):
         self._builder_observers.discard(buildername, watcher)
 
-    def bs_new_consumer_cb(self, key, msg):
-        bsid = msg['bsid']
+    def bs_new_consumer_cb(self, msg):
+        bsid = msg['buildset']
         d = self.master.db.buildsets.getBuildset(bsid)
         def do_notifies(bsdict):
             bss = buildset.BuildSetStatus(bsdict, self)
@@ -454,6 +454,6 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         d.addCallback(do_notifies)
         return d
 
-    def bs_complete_consumer_cb(self, key, msg):
-        self._maybeBuildsetFinished(msg['bsid'])
+    def bs_complete_consumer_cb(self, msg):
+        self._maybeBuildsetFinished(msg['buildset'])
 

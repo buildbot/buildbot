@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import log, failure
+from twisted.python import log
 from twisted.internet import defer
 from twisted.application import service
 
@@ -23,7 +23,7 @@ class MQBase(service.Service):
         self.setName('mq-implementation')
         self.master = master
 
-    def produce(self, routing_key, data):
+    def produce(self, _type, _event, **kwargs):
         raise NotImplementedError
 
     def startConsuming(self, callback, *topics, **kwargs):
@@ -36,17 +36,12 @@ class QueueRef(object):
     def __init__(self, callback):
         self.callback = callback
 
-    def invoke(self, routing_key, data):
+    def invoke(self, data):
         if not self.callback:
             return
 
-        try:
-            x = self.callback(routing_key, data)
-        except Exception:
-            log.err(failure.Failure(), 'while invoking %r' % (self.callback,))
-            return
-        if isinstance(x, defer.Deferred):
-            x.addErrback(log.err, 'while invoking %r' % (self.callback,))
+        d = defer.maybeDeferred(self.callback, data)
+        d.addErrback(log.err, 'while invoking %r' % (self.callback,))
 
     def stopConsuming(self):
         # subclasses should set self.callback to None in this method

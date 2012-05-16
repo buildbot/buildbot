@@ -13,44 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
-import re
-
-_needsQuotesRegexp = re.compile(r'([\\.*?+{}\[\]|()])')
 class TopicMatcher(object):
 
     def __init__(self, topics):
-        def topicToRegexp(topic):
-            subs = { '.' : r'\.', '*' : r'[^.]+', }
+        self.topics = topics
 
-            parts = re.split(r'(\.)', topic)
-            topic_re = []
-            while parts:
-                part = parts.pop(0)
-                if part in subs:
-                    topic_re.append(subs[part])
-                elif part == '#':
-                    if parts:
-                        # pop the following '.', as it will not exist when
-                        # matching zero words.
-                        parts.pop(0)
-                        topic_re.append(r'([^.]+\.)*')
-                    else:
-                        # pop the previous '.' from the regexp, as it will not
-                        # exist when matching zero words
-                        if topic_re:
-                            topic_re.pop()
-                            topic_re.append(r'(\.[^.]+)*')
-                        else:
-                            # topic is just '#': degenerate case
-                            topic_re.append(r'.+')
-                else:
-                    topic_re.append(_needsQuotesRegexp.sub(r'\\\1', part))
-            topic_re = ''.join(topic_re) + '$'
-            return re.compile(topic_re)
-        self.topics = [ topicToRegexp(t) for t in topics ]
+    def _matchTopic(self, topic, msg):
+        try:
+            for key in topic:
+                if topic[key] != msg[key]:
+                    return False
+            return True
+        except KeyError:
+            return False
 
     def matches(self, routingKey):
-        for re in self.topics:
-            if re.match(routingKey):
+        for topic in self.topics:
+            if self._matchTopic(topic, routingKey):
                 return True
         return False
