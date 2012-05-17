@@ -286,12 +286,13 @@ class ForceScheduler(base.BaseScheduler):
 
         d = master.db.sourcestampsets.addSourceStampSet()
         def add_master_with_setid(sourcestampsetid):
-            master.db.sourcestamps.addSourceStamp(
+            d = master.db.sourcestamps.addSourceStamp(
                                     sourcestampsetid = sourcestampsetid,
                                     branch=branch,
                                     revision=revision, project=project, 
                                     repository=repository,changeids=changeids)
-            return sourcestampsetid
+            d.addCallback(lambda _: sourcestampsetid)
+            return d
             
         d.addCallback(add_master_with_setid)
         def got_setid(sourcestampsetid):
