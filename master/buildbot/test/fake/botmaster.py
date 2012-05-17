@@ -30,3 +30,7 @@ class FakeBotMaster(service.MultiService):
         # that this requires that MasterLock and SlaveLock (marker) instances
         # be hashable and that they should compare properly.
         return self.locks[lockid]
+
+    def maybeStartBuildsForSlave(self, slavename):
+        pass
+
