@@ -49,7 +49,7 @@ class TestChangesConnectorComponent(
     change13_rows = [
         fakedb.Change(changeid=13, author="dustin", comments="fix spelling",
             is_dir=0, branch="master", revision="deadbeef",
-            when_timestamp=266738400, revlink=None, category=None,
+            when_timestamp=266738400, revlink=None,
             repository='', codebase='', project=''),
 
         fakedb.ChangeFile(changeid=13, filename='master/README.txt'),
@@ -63,7 +63,7 @@ class TestChangesConnectorComponent(
         fakedb.Change(changeid=14, author="warner", comments="fix whitespace",
             is_dir=0, branch="warnerdb", revision="0e92a098b",
             when_timestamp=266738404, revlink='http://warner/0e92a098b',
-            category='devel', repository='git://warner', codebase='mainapp', 
+            repository='git://warner', codebase='mainapp', 
             project='Buildbot'),
 
         fakedb.ChangeFile(changeid=14, filename='master/buildbot/__init__.py'),
@@ -73,7 +73,6 @@ class TestChangesConnectorComponent(
         'changeid': 14,
         'author': u'warner',
         'branch': u'warnerdb',
-        'category': u'devel',
         'comments': u'fix whitespace',
         'files': [u'master/buildbot/__init__.py'],
         'is_dir': 0,
@@ -88,7 +87,6 @@ class TestChangesConnectorComponent(
 
     def change14(self):
         c = Change(**dict(
-         category='devel',
          isdir=0,
          repository=u'git://warner',
          codebase=u'mainapp',
@@ -116,7 +114,6 @@ class TestChangesConnectorComponent(
         ok = ok and ca.revision == cb.revision
         ok = ok and ca.when == cb.when
         ok = ok and ca.branch == cb.branch
-        ok = ok and ca.category == cb.category
         ok = ok and ca.revlink == cb.revlink
         ok = ok and ca.properties == cb.properties
         ok = ok and ca.repository == cb.repository
@@ -187,7 +184,6 @@ class TestChangesConnectorComponent(
                  revision=u'2d6caa52',
                  when_timestamp=epoch2datetime(266738400),
                  branch=u'master',
-                 category=None,
                  revlink=None,
                  properties={u'platform': (u'linux', 'Change')},
                  repository=u'',
@@ -207,7 +203,6 @@ class TestChangesConnectorComponent(
                 self.assertEqual(r[0].branch, 'master')
                 self.assertEqual(r[0].revision, '2d6caa52')
                 self.assertEqual(r[0].when_timestamp, 266738400)
-                self.assertEqual(r[0].category, None)
                 self.assertEqual(r[0].repository, '')
                 self.assertEqual(r[0].codebase, '')
                 self.assertEqual(r[0].project, '')
@@ -258,7 +253,6 @@ class TestChangesConnectorComponent(
                  revision=u'2d6caa52',
                  when_timestamp=None,
                  branch=u'master',
-                 category=None,
                  revlink=None,
                  properties={},
                  repository=u'',
@@ -314,7 +308,6 @@ class TestChangesConnectorComponent(
                  revision=u'2d6caa52',
                  when_timestamp=epoch2datetime(1239898353),
                  branch=u'master',
-                 category=None,
                  revlink=None,
                  properties={},
                  repository=u'',

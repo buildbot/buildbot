@@ -51,11 +51,10 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('project', sa.String(length=512), nullable=False,
                 server_default=''),
         )
-        sa.Index('changes_category', self.changes.c.category)
         self.changes.create(bind=conn)
 
         idx = sa.Index('changes_category', self.changes.c.category)
-        idx.create()
+        idx.create(bind=conn)
 
     def reload_tables_after_migration(self, conn):
         metadata = sa.MetaData()
@@ -168,7 +167,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             self.assertEqual(got_tags, test_data)
 
             # Check change_tags records.
-            res = conn.execute(sa.select([self.change_tags.c.changeid, self.tags.c.tagid]))
+            res = conn.execute(sa.select([self.change_tags.c.changeid, self.change_tags.c.tagid]))
             got_tags = res.fetchall()
             self.assertEqual(got_tags, [(1,1), (2,2), (3,3)])
 
