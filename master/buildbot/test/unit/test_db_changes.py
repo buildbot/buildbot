@@ -441,7 +441,7 @@ class TestChangesConnectorComponent(
     def test_pruneChanges_lots(self):
         d = self.insertTestData([
             fakedb.Change(changeid=n)
-            for n in xrange(150)
+            for n in xrange(1, 151)
         ])
 
         d.addCallback(lambda _ : self.db.changes.pruneChanges(1))
