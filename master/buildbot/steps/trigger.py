@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process.buildstep import LoggingBuildStep, SUCCESS, FAILURE, EXCEPTION
 from buildbot.process.properties import Properties
-from buildbot.schedulers.triggerable import Triggerable
 from twisted.python import log
 from twisted.internet import defer
 from buildbot import config
@@ -93,7 +93,7 @@ class Trigger(LoggingBuildStep):
             scheduler = scheduler
             if all_schedulers.has_key(scheduler):
                 sch = all_schedulers[scheduler]
-                if isinstance(sch, Triggerable):
+                if ITriggerableScheduler.providedBy(sch):
                     triggered_schedulers.append(scheduler)
                 else:
                     unknown_schedulers.append(scheduler)

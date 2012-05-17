@@ -52,6 +52,13 @@ class Properties(util.ComparableMixin):
         self.build = None # will be set by the Build when starting
         if kwargs: self.update(kwargs, "TEST")
 
+    @classmethod
+    def fromDict(cls, propDict):
+        properties = cls()
+        for name, (value, source) in propDict.iteritems():
+            properties.setProperty(name, value, source)
+        return properties
+
     def __getstate__(self):
         d = self.__dict__.copy()
         d['build'] = None

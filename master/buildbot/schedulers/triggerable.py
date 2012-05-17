@@ -13,12 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
+from zope.interface import implements
+
 from twisted.python import failure
 from twisted.internet import defer
+from buildbot.interfaces import ITriggerableScheduler
 from buildbot.schedulers import base
 from buildbot.process.properties import Properties
 
 class Triggerable(base.BaseScheduler):
+    implements(ITriggerableScheduler)
 
     compare_attrs = base.BaseScheduler.compare_attrs
 
