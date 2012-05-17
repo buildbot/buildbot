@@ -394,6 +394,22 @@ class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
         self.assertRaisesConfigError("invalid Interpolate ternary expression 'one' with delimiter '|'",
                 lambda: Interpolate("echo '%(prop:P:#?|one)s'"))
 
+    def test_prop_invalid_character(self):
+        self.assertRaisesConfigError("Property name must be alphanumeric for prop Interpolation 'a+a'",
+                lambda: Interpolate("echo '%(prop:a+a)s'"))
+
+    def test_kw_invalid_character(self):
+        self.assertRaisesConfigError("Keyword must be alphanumeric for kw Interpolation 'a+a'",
+                lambda: Interpolate("echo '%(kw:a+a)s'"))
+
+    def test_src_codebase_invalid_character(self):
+        self.assertRaisesConfigError("Codebase must be alphanumeric for src Interpolation 'a+a:a'",
+                lambda: Interpolate("echo '%(src:a+a:a)s'"))
+
+    def test_src_attr_invalid_character(self):
+        self.assertRaisesConfigError("Attribute must be alphanumeric for src Interpolation 'a:a+a'",
+                lambda: Interpolate("echo '%(src:a:a+a)s'"))
+
 
 class TestInterpolatePositional(unittest.TestCase):
     def setUp(self):

@@ -402,6 +402,8 @@ class Interpolate(util.ComparableMixin):
  
     implements(IRenderable) 
     compare_attrs = ('fmtstring', 'args', 'kwargs') 
+
+    identifier_re = re.compile('^[\w-]*$')
  
     def __init__(self, fmtstring, *args, **kwargs): 
         self.fmtstring = fmtstring 
@@ -419,6 +421,9 @@ class Interpolate(util.ComparableMixin):
             prop, repl = arg.split(":", 1)
         except ValueError:
             prop, repl = arg, None
+        if not Interpolate.identifier_re.match(prop):
+            config.error("Property name must be alphanumeric for prop Interpolation '%s'" % arg)
+            prop = repl = None
         return _thePropertyDict, prop, repl
 
     @staticmethod
@@ -433,6 +438,12 @@ class Interpolate(util.ComparableMixin):
             except ValueError:
                 config.error("Must specify both codebase and attribute for src Interpolation '%s'" % arg)
                 codebase = attr = repl = None
+        if not Interpolate.identifier_re.match(codebase):
+            config.error("Codebase must be alphanumeric for src Interpolation '%s'" % arg)
+            codebase = attr = repl = None
+        if not Interpolate.identifier_re.match(attr):
+            config.error("Attribute must be alphanumeric for src Interpolation '%s'" % arg)
+            codebase = attr = repl = None
         return _SourceStampDict(codebase), attr, repl
 
     def _parse_kw(self, arg):
@@ -440,6 +451,9 @@ class Interpolate(util.ComparableMixin):
             kw, repl = arg.split(":", 1)
         except ValueError:
             kw, repl = arg, None
+        if not Interpolate.identifier_re.match(kw):
+            config.error("Keyword must be alphanumeric for kw Interpolation '%s'" % arg)
+            kw = repl = None
         return _Lazy(self.kwargs), kw, repl
 
     def _parseSubstitution(self, fmt):
