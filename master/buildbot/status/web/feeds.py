@@ -130,29 +130,11 @@ class FeedResource(XmlResource):
         # This could clearly be implemented much better if we had
         # access to a global list of builds.
         for b in builders:
-            lastbuild = b.getLastFinishedBuild()
-            if lastbuild is None:
-                continue
-
-            lastnr = lastbuild.getNumber()
-
-            totalbuilds = 0
-            i = lastnr
-            while i >= 0:
-                build = b.getBuild(i)
-                i -= 1
-                if not build:
-                    continue
-
-                results = build.getResults()
-
-                if failures_only == "false" or results == FAILURE:
-                    totalbuilds += 1
-                    builds.append(build)
-
-                # stop for this builder when our total nr. of feeds is reached
-                if totalbuilds >= maxFeeds:
-                    break
+            if failures_only:
+                results = (FAILURE,)
+            else:
+                results = None
+            builds.extend(b.generateFinishedBuilds(results=results, max_search=maxFeeds))
 
         # Sort build list by date, youngest first.
         # To keep compatibility with python < 2.4, use this for sorting instead:

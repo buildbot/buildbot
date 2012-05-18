@@ -327,6 +327,7 @@ class BuilderStatus(styles.Versioned):
                                num_builds=None,
                                max_buildnum=None,
                                finished_before=None,
+                               results=None,
                                max_search=200):
         got = 0
         branches = set(branches)
@@ -351,6 +352,9 @@ class BuilderStatus(styles.Versioned):
             # sourcestamps match, skip this build
             if branches and not branches & self._getBuildBranches(build):
                 continue
+            if results is not None:
+                if build.getResults() not in results:
+                    continue
             got += 1
             yield build
             if num_builds is not None:
