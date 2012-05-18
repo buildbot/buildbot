@@ -149,7 +149,6 @@ class Source(LoggingBuildStep):
             assert isinstance(repeats, int)
             assert repeats > 0
         self.args = {'mode': mode,
-                     'timeout': timeout,
                      'retry': retry,
                      'patch': None, # set during .start
                      }
@@ -166,6 +165,7 @@ class Source(LoggingBuildStep):
 
         self.logEnviron = logEnviron
         self.env = env
+        self.timeout = timeout
 
         descriptions_for_mode = {
             "clobber": "checkout",
@@ -285,6 +285,7 @@ class Source(LoggingBuildStep):
 
         self.args['logEnviron'] = self.logEnviron
         self.args['env'] = self.env
+        self.args['timeout'] = self.timeout
         self.startVC(branch, revision, patch)
 
     def commandComplete(self, cmd):

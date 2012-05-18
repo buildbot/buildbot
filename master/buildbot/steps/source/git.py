@@ -294,6 +294,7 @@ class Git(Source):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['git'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
+                                           timeout=self.timeout,
                                            collectStdout=collectStdout,
                                            initialStdin=initialStdin)
         cmd.useLog(self.stdio_log, False)
