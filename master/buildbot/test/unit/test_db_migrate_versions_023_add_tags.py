@@ -143,20 +143,27 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
         return self.do_test_migration(22, 23, setup_thd, verify_thd)
 
-    # no categories
     # mix unique categories and nulls
-    # multiple categories
         
     def test_migrated_data_unique_tags(self):
-        test_data = [
+        test_data = {
+            'changes'     : [
                 (1, 'category1'),
                 (2, 'category2'),
-                (3, 'category3'),
-            ]
+                (3, 'category3'), ],
+            'tags'        : [
+                (1, 'category1'),
+                (2, 'category2'),
+                (3, 'category3'), ],
+            'change_tags' : [
+                (1, 1),
+                (2, 2),
+                (3, 3), ],
+            }
 
         def setup_thd(conn):
             self.create_tables_thd(conn)
-            self.populate_changes(conn, test_data)
+            self.populate_changes(conn, test_data['changes'])
 
         def verify_thd(conn):
             self.reload_tables_after_migration(conn)
@@ -164,11 +171,88 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             # Check tags records.
             res = conn.execute(sa.select([self.tags.c.id, self.tags.c.tag]))
             got_tags = res.fetchall()
-            self.assertEqual(got_tags, test_data)
+            self.assertEqual(got_tags, test_data['tags'])
 
             # Check change_tags records.
             res = conn.execute(sa.select([self.change_tags.c.changeid, self.change_tags.c.tagid]))
             got_tags = res.fetchall()
-            self.assertEqual(got_tags, [(1,1), (2,2), (3,3)])
+            self.assertEqual(got_tags, test_data['change_tags'])
+
+        return self.do_test_migration(22, 23, setup_thd, verify_thd)
+
+    def test_migrated_data_no_categories(self):
+        test_data = {
+            'changes'     : [
+                (1, None),
+                (2, None),
+                (3, None), ],
+            'tags'        : [],
+            'change_tags' : [],
+            }
+
+        def setup_thd(conn):
+            self.create_tables_thd(conn)
+            self.populate_changes(conn, test_data['changes'])
+
+        def verify_thd(conn):
+            self.reload_tables_after_migration(conn)
+
+            # Check tags records.
+            res = conn.execute(sa.select([self.tags.c.id, self.tags.c.tag]))
+            got_tags = res.fetchall()
+            self.assertEqual(got_tags, test_data['tags'])
+
+            # Check change_tags records.
+            res = conn.execute(sa.select([self.change_tags.c.changeid, self.change_tags.c.tagid]))
+            got_tags = res.fetchall()
+            self.assertEqual(got_tags, test_data['change_tags'])
+
+        return self.do_test_migration(22, 23, setup_thd, verify_thd)
+
+    def test_migrated_data_not_unique_tags(self):
+        test_data = {
+            'changes'     : [
+                ( 1, 'category1'),
+                ( 2, 'category2'),
+                ( 3, 'category3'),
+                ( 4, None),
+                (11, 'category1'),
+                (12, 'category2'),
+                (22, 'category2'),
+                (13, 'category3'),
+                (23, 'category3'),
+                (33, 'category3'), ],
+            'tags'        : [
+                (1, 'category1'),
+                (2, 'category2'),
+                (3, 'category3'), ],
+            'change_tags' : [
+                ( 1, 1),
+                ( 2, 2),
+                ( 3, 3),
+                (11, 1),
+                (12, 2),
+                (13, 3),
+                (22, 2),
+                (23, 3),
+                (33, 3), ],
+            }
+
+        def setup_thd(conn):
+            self.create_tables_thd(conn)
+            self.populate_changes(conn, test_data['changes'])
+
+        def verify_thd(conn):
+            self.reload_tables_after_migration(conn)
+
+            # Check tags records.
+            res = conn.execute(sa.select([self.tags.c.id, self.tags.c.tag]))
+            got_tags = res.fetchall()
+            self.assertEqual(got_tags, test_data['tags'])
+
+            # Check change_tags records.
+            res = conn.execute(sa.select([self.change_tags.c.changeid, self.change_tags.c.tagid]))
+            got_tags = res.fetchall()
+            self.assertEqual(got_tags, test_data['change_tags'])
 
         return self.do_test_migration(22, 23, setup_thd, verify_thd)
