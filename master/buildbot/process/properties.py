@@ -15,8 +15,10 @@
 
 import collections
 import re
+import warnings
 import weakref
 from buildbot import config, util
+from buildbot.util import json
 from buildbot.interfaces import IRenderable, IProperties
 from twisted.internet import defer
 from twisted.python.components import registerAdapter
@@ -119,6 +121,14 @@ class Properties(util.ComparableMixin):
     has_key = hasProperty
 
     def setProperty(self, name, value, source, runtime=False):
+        try:
+            json.dumps(value)
+        except TypeError:
+            warnings.warn(
+                    "Non jsonable properties are not explicitly supported and" +
+                    "will be explicitly disallowed in a future version.",
+                    DeprecationWarning, stacklevel=2)
+
         self.properties[name] = (value, source)
         if runtime:
             self.runtime.add(name)
