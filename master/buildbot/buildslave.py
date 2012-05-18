@@ -611,7 +611,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         # first, see if we have a MailNotifier we can use. This gives us a
         # fromaddr and a relayhost.
         buildmaster = self.botmaster.master
-        for st in buildmaster.statusTargets:
+        for st in buildmaster.status:
             if isinstance(st, MailNotifier):
                 break
         else:
