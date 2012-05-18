@@ -20,6 +20,7 @@ from twisted.python import log
 from twisted.internet import defer
 
 from buildbot.process import buildstep
+from buildbot.steps.shell import StringFileWriter
 from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 
@@ -221,17 +222,36 @@ class CVS(Source):
         d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
+    @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/CVS',
-                                               'logEnviron': self.logEnviron})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def _fail(tmp):
-            if cmd.rc != 0:
-                return False
-            return True
-        d.addCallback(_fail)
-        return d
+        myFileWriter = StringFileWriter()
+        args = {
+                'workdir': self.build.path_module.join(self.workdir, 'CVS'),
+                'writer': myFileWriter,
+                'maxSize': None,
+                'blocksize': 32*1024,
+                }
+
+        cmd = buildstep.RemoteCommand('uploadFile',
+                dict(slavesrc='Root', **args),
+                ignore_updates=True)
+        yield self.runCommand(cmd)
+        if cmd.rc != 0:
+            defer.returnValue(False)
+        if myFileWriter.buffer.strip() != self.cvsroot:
+            defer.returnValue(False)
+
+        myFileWriter.buffer = ""
+        cmd = buildstep.RemoteCommand('uploadFile',
+                dict(slavesrc='Repository', **args),
+                ignore_updates=True)
+        yield self.runCommand(cmd)
+        if cmd.rc != 0:
+            defer.returnValue(False)
+        if myFileWriter.buffer.strip() != self.cvsmodule:
+            defer.returnValue(False)
+
+        defer.returnValue(True)
 
     def parseGotRevision(self, res):
         revision = time.strftime("%Y-%m-%d %H:%M:%S +0000", time.gmtime())
