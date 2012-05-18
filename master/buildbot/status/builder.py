@@ -219,7 +219,7 @@ class BuilderStatus(styles.Versioned):
         # get the horizons straight
         buildHorizon = self.master.config.buildHorizon
         if buildHorizon is not None:
-            earliest_build = self.nextBuildNumber - self.buildHorizon
+            earliest_build = self.nextBuildNumber - buildHorizon
         else:
             earliest_build = 0
 
