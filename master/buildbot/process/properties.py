@@ -94,9 +94,7 @@ class Properties(util.ComparableMixin):
     def update(self, dict, source, runtime=False):
         """Update this object from a dictionary, with an explicit source specified."""
         for k, v in dict.items():
-            self.properties[k] = (v, source)
-            if runtime:
-                self.runtime.add(k)
+            self.setProperty(k, v, source, runtime=runtime)
 
     def updateFromProperties(self, other):
         """Update this object based on another object; the other object's """
