@@ -220,10 +220,6 @@ class IBuildSetStatus(Interface):
         @returns: list of names via Deferred"""
     def isFinished():
         pass
-    def waitUntilSuccess():
-        """Return a Deferred that fires (with this IBuildSetStatus object)
-        when the outcome of the BuildSet is known, i.e., upon the first
-        failure, or after all builds complete successfully."""
     def waitUntilFinished():
         """Return a Deferred that fires (with this IBuildSetStatus object)
         when all builds have finished."""
