@@ -73,7 +73,7 @@ class CVS(Source):
         if updatable:
             rv = yield self.doUpdate()
         else:
-            rv = yield self.doCheckout(self.workdir)
+            rv = yield self.clobber()
         defer.returnValue(rv)
 
     @defer.inlineCallbacks

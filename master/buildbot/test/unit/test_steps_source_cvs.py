@@ -169,6 +169,9 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                         writer=ExpectRemoteRef(shell.StringFileWriter)))
             + Expect.behavior(uploadString('the-end-of-the-universe'))
             + 0,
+            Expect('rmdir', dict(dir='source',
+                                 logEnviron=True))
+            + 0,
             ExpectShell(workdir='',
                         command=['cvs',
                                  '-d',
@@ -256,6 +259,9 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                         slavesrc='Root', workdir='wkdir/CVS',
                         writer=ExpectRemoteRef(shell.StringFileWriter)))
             + 1,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
             ExpectShell(workdir='',
                         command=['cvs',
                                  '-d',
@@ -280,6 +286,9 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                         slavesrc='Root', workdir='wkdir/CVS',
                         writer=ExpectRemoteRef(shell.StringFileWriter)))
             + Expect.behavior(uploadString('the-end-of-the-universe'))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -310,6 +319,9 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                         slavesrc='Repository', workdir='wkdir/CVS',
                         writer=ExpectRemoteRef(shell.StringFileWriter)))
             + Expect.behavior(uploadString('the-end-of-the-universe'))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -412,6 +424,9 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                         slavesrc='Root', workdir='wkdir/CVS',
                         writer=ExpectRemoteRef(shell.StringFileWriter)))
             + 1,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
             ExpectShell(workdir='',
                         command=['cvs', '-q', '-d',
                                  ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
