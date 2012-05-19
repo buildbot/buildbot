@@ -15,9 +15,10 @@
 
 from __future__ import with_statement
 
-import re
 import os
+import re
 import sys
+import warnings
 from buildbot.util import safeTranslate
 from buildbot import interfaces
 from buildbot import locks
@@ -445,6 +446,10 @@ class MasterConfig(object):
             if sl.slavename in ("debug", "change", "status"):
                 msg = "slave name '%s' is reserved" % sl.slavename
                 errors.addError(msg)
+
+            if os.path.isabs(sl.builder):
+                warnings.warn("Absolute path '%s' for builder may cause mayhem. " +
+                        "Perhaps you meant to specify slavebuilddir instead.")
 
         self.slaves = config_dict['slaves']
 
