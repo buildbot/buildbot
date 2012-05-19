@@ -213,7 +213,7 @@ class TestWorkQueue(unittest.TestCase):
 
     def test_handle_immediate_errback(self):
         def work():
-            return defer.fail("Sad times")
+            return defer.fail(RuntimeError("Sad times"))
         return self.expect_errback(self.queue.execute(work))
 
     def test_handle_delayed_errback(self):
