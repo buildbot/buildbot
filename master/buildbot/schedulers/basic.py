@@ -193,6 +193,11 @@ class BaseBasicScheduler(base.BaseScheduler):
         yield self.master.db.schedulers.flushChangeClassifications(
                             self.objectid, less_than=max_changeid+1)
 
+    def getPendingBuildTimes(self):
+        # This isn't locked, since the caller expects and immediate value,
+        # and in any case, this is only an estimate.
+        return [timer.getTime() for timer in self._stable_timers.values() if timer and timer.active()]
+
 class SingleBranchScheduler(BaseBasicScheduler):
     def getChangeFilter(self, branch, branches, change_filter, categories):
         if branch is NotABranch and not change_filter and self.codebases is not None:
