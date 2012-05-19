@@ -23,6 +23,7 @@ from buildbot import config
 
 try:
     import libvirt
+    libvirt = libvirt
 except ImportError:
     libvirt = None
 
@@ -252,7 +253,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
             else:
                 self.domain = yield self.connection.lookupByName(self.name)
                 yield self.domain.create()
-        except Exception, f:
+        except Exception:
             log.msg("Cannot start a VM (%s), failing gracefully and triggering a new build check" % self.name)
             log.err(failure.Failure())
             self.domain = None

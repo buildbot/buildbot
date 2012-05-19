@@ -16,8 +16,9 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer, reactor, utils
+from twisted.python import failure
 from buildbot import libvirtbuildslave, config
-from buildbot.test.fake import fakemaster, libvirt
+from buildbot.test.fake import libvirt
 
 
 class TestLibVirtSlave(unittest.TestCase):
@@ -167,7 +168,8 @@ class TestWorkQueue(unittest.TestCase):
     def delayed_errback(self):
         def work():
             d = defer.Deferred()
-            reactor.callLater(0, d.errback, Failure("Test failure"))
+            reactor.callLater(0, d.errback,
+                    failure.Failure(RuntimeError("Test failure")))
             return d
         return work
 
