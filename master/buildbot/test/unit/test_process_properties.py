@@ -497,31 +497,12 @@ class TestInterpolateProperties(unittest.TestCase):
                              "echo projectdefined")
         return d
 
-    def test_property_renderable(self):
-        self.props.setProperty("project", FakeRenderable('testing'), "test")
-        command = Interpolate("echo '%(prop:project)s'")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                            "echo 'testing'")
-        return d
-
     def test_nested_property(self):
         self.props.setProperty("project", "so long!", "test")
         command = Interpolate("echo '%(prop:missing:~%(prop:project)s)s'")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                             "echo 'so long!'")
-        return d
-
-    def test_nested_property_deferred(self):
-        renderable = DeferredRenderable()
-        self.props.setProperty("missing", renderable, "test")
-        self.props.setProperty("project", "so long!", "test")
-        command = Interpolate("echo '%(prop:missing:~%(prop:project)s)s'")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                            "echo 'so long!'")
-        renderable.callback(False)
         return d
 
     def test_property_substitute_recursively(self):
@@ -1066,6 +1047,11 @@ class TestProperties(unittest.TestCase):
         self.failUnlessEqual(self.props.getPropertySource('d'), 'new')
         self.failUnlessEqual(self.props.getProperty('x'), 24)
         self.failUnlessEqual(self.props.getPropertySource('x'), 'old')
+
+    def test_setProperty_notJsonable(self):
+        self.props.setProperty("project", FakeRenderable('testing'), "test")
+        self.props.setProperty("project", object, "test")
+        self.assertEqual(len(self.flushWarnings([self.test_setProperty_notJsonable])), 2)
 
     # IProperties methods
 
