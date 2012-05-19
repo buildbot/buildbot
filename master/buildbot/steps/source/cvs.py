@@ -153,11 +153,11 @@ class CVS(Source):
                                            logEnviron=self.logEnviron)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
-        def evaluate(rc):
-            if rc != 0:
+        def evaluate(cmd):
+            if cmd.didFail():
                 raise buildstep.BuildStepFailed()
-            return rc
-        d.addCallback(lambda _: evaluate(cmd.rc))
+            return cmd.rc
+        d.addCallback(evaluate)
         return d
         
     def doCheckout(self, dir):

@@ -25,7 +25,7 @@ DEFAULT_USEPTY="DEFAULT_USEPTY"
 
 class FakeRemoteCommand:
 
-    def __init__(self, remote_command, args, collectStdout=False, ignore_updates=False):
+    def __init__(self, remote_command, args, collectStdout=False, ignore_updates=False, successfulRC=(0,)):
         # copy the args and set a few defaults
         self.remote_command = remote_command
         self.args = args.copy()
@@ -34,6 +34,7 @@ class FakeRemoteCommand:
         self.rc = -999
         self.collectStdout = collectStdout
         self.updates = {}
+        self.successfulRC = successfulRC
         if collectStdout:
             self.stdout = ''
 
@@ -49,6 +50,9 @@ class FakeRemoteCommand:
         # delegate back to the test case
         return self.testcase._remotecommand_run(self, step, remote)
 
+    def didFail(self):
+        return self.rc not in self.successfulRC
+
 
 class FakeRemoteShellCommand(FakeRemoteCommand):
 
@@ -56,14 +60,15 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
                  want_stdout=1, want_stderr=1,
                  timeout=DEFAULT_TIMEOUT, maxTime=DEFAULT_MAXTIME, logfiles={},
                  initialStdin=None,
-                 usePTY=DEFAULT_USEPTY, logEnviron=True, collectStdout=False):
+                 usePTY=DEFAULT_USEPTY, logEnviron=True, collectStdout=False,
+                 successfulRC=(0,)):
         args = dict(workdir=workdir, command=command, env=env or {},
                 want_stdout=want_stdout, want_stderr=want_stderr,
                 initial_stdin=initialStdin,
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
         FakeRemoteCommand.__init__(self, "shell", args,
-                collectStdout=collectStdout)
+                collectStdout=collectStdout, successfulRC=successfulRC)
 
 
 class FakeLogFile(object):
