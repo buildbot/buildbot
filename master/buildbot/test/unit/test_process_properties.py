@@ -24,6 +24,7 @@ from buildbot.process.properties import Property, PropertiesMixin
 from buildbot.interfaces import IRenderable, IProperties
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.properties import FakeRenderable
+from buildbot.test.util import compat
 
 class FakeSource:
     def __init__(self):
@@ -1048,6 +1049,7 @@ class TestProperties(unittest.TestCase):
         self.failUnlessEqual(self.props.getProperty('x'), 24)
         self.failUnlessEqual(self.props.getPropertySource('x'), 'old')
 
+    @compat.usesFlushWarnings
     def test_setProperty_notJsonable(self):
         self.props.setProperty("project", FakeRenderable('testing'), "test")
         self.props.setProperty("project", object, "test")
