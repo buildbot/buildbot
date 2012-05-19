@@ -26,7 +26,8 @@ from buildbot.steps.source.base import Source
 class _ComputeRepositoryURL(object):
     implements(IRenderable)
 
-    def __init__(self, repository):
+    def __init__(self, step, repository):
+        self.step = step
         self.repository = repository
 
     def getRenderingFor(self, props):
@@ -37,7 +38,7 @@ class _ComputeRepositoryURL(object):
 
         build = props.getBuild()
         assert build is not None, "Build should be available *during* a build?"
-        s = build.getSourceStamp('') # TODO: use correct codebase
+        s = build.getSourceStamp(self.step.codebase)
 
         repository = self.repository
 
@@ -160,7 +161,7 @@ class CVS(Source):
 
         self.checkoutDelay = checkoutDelay
         self.branch = branch
-        self.cvsroot = _ComputeRepositoryURL(cvsroot)
+        self.cvsroot = _ComputeRepositoryURL(self, cvsroot)
 
         Source.__init__(self, **kwargs)
 
@@ -287,8 +288,8 @@ class SVN(Source):
             warn("Please use workdir=, not directory=", DeprecationWarning)
             kwargs['workdir'] = directory
 
-        self.svnurl = svnurl and _ComputeRepositoryURL(svnurl)
-        self.baseURL = _ComputeRepositoryURL(baseURL)
+        self.svnurl = svnurl and _ComputeRepositoryURL(self, svnurl)
+        self.baseURL = _ComputeRepositoryURL(self, baseURL)
         self.branch = defaultBranch
         self.username = username
         self.password = password
@@ -439,8 +440,8 @@ class Darcs(Source):
                               C{baseURL} and the result handed to the
                               'darcs pull' command.
         """
-        self.repourl = _ComputeRepositoryURL(repourl)
-        self.baseURL = _ComputeRepositoryURL(baseURL)
+        self.repourl = _ComputeRepositoryURL(self, repourl)
+        self.baseURL = _ComputeRepositoryURL(self, baseURL)
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
         assert self.args['mode'] != "export", \
@@ -535,7 +536,7 @@ class Git(Source):
                          lack of output, but requires Git 1.7.2+.
         """
         Source.__init__(self, **kwargs)
-        self.repourl = _ComputeRepositoryURL(repourl)
+        self.repourl = _ComputeRepositoryURL(self, repourl)
         self.branch = branch
         self.args.update({'submodules': submodules,
                           'ignore_ignores': ignore_ignores,
@@ -604,7 +605,7 @@ class Repo(Source):
 
         """
         Source.__init__(self, **kwargs)
-        self.manifest_url = _ComputeRepositoryURL(manifest_url)
+        self.manifest_url = _ComputeRepositoryURL(self, manifest_url)
         self.args.update({'manifest_branch': manifest_branch,
                           'manifest_file': manifest_file,
                           'tarball': tarball,
@@ -744,8 +745,8 @@ class Bzr(Source):
                                 if not using update/copy mode, or if using
                                 update/copy mode with multiple branches.
         """
-        self.repourl = _ComputeRepositoryURL(repourl)
-        self.baseURL = _ComputeRepositoryURL(baseURL)
+        self.repourl = _ComputeRepositoryURL(self, repourl)
+        self.baseURL = _ComputeRepositoryURL(self, baseURL)
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
         self.args.update({'forceSharedRepo': forceSharedRepo})
@@ -827,8 +828,8 @@ class Mercurial(Source):
                                       at each branch change. Otherwise, just
                                       update to the branch.
         """
-        self.repourl = _ComputeRepositoryURL(repourl)
-        self.baseURL = _ComputeRepositoryURL(baseURL)
+        self.repourl = _ComputeRepositoryURL(self, repourl)
+        self.baseURL = _ComputeRepositoryURL(self, baseURL)
         self.branch = defaultBranch
         self.branchType = branchType
         self.clobberOnBranchChange = clobberOnBranchChange
@@ -921,7 +922,7 @@ class P4(Source):
         @param p4client: The perforce client to use for this buildslave.
         """
 
-        self.p4base = _ComputeRepositoryURL(p4base)
+        self.p4base = _ComputeRepositoryURL(self, p4base)
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
         self.args['p4port'] = p4port
@@ -1023,7 +1024,7 @@ class Monotone(Source):
                          lack of output.
         """
         Source.__init__(self, **kwargs)
-        self.repourl = _ComputeRepositoryURL(repourl)
+        self.repourl = _ComputeRepositoryURL(self, repourl)
         if (not repourl):
             raise ValueError("you must provide a repository uri in 'repourl'")
         if (not branch):
