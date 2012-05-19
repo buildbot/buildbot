@@ -96,14 +96,12 @@ class BaseBasicScheduler(base.BaseScheduler):
     def stopService(self):
         # the base stopService will unsubscribe from new changes
         d = base.BaseScheduler.stopService(self)
-        d.addCallback(lambda _ :
-                self._stable_timers_lock.acquire())
+        @util.deferredLocked(self._stable_timers_lock)
         def cancel_timers(_):
             for timer in self._stable_timers.values():
                 if timer:
                     timer.cancel()
             self._stable_timers = {}
-            self._stable_timers_lock.release()
         d.addCallback(cancel_timers)
         return d
 
