@@ -101,7 +101,7 @@ class BaseBasicScheduler(base.BaseScheduler):
             for timer in self._stable_timers.values():
                 if timer:
                     timer.cancel()
-            self._stable_timers = {}
+            self._stable_timers.clear()
         d.addCallback(cancel_timers)
         return d
 
