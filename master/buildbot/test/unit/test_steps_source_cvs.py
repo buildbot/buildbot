@@ -415,7 +415,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='',
                         command=['cvs', '-q', '-d',
                                  ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
-                                 '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/', '-l'])
+                                 '-z3', 'checkout', '-d', 'wkdir', '-l', 'mozilla/browser/'])
             + 0,
             )
         self.expectOutcome(result=SUCCESS, status_text=["update"])

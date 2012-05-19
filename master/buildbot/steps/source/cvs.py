@@ -162,13 +162,13 @@ class CVS(Source):
         return d
         
     def doCheckout(self, dir):
-        command = ['-d', self.cvsroot, '-z3', 'checkout', '-d', dir,
-                   self.cvsmodule]
+        command = ['-d', self.cvsroot, '-z3', 'checkout', '-d', dir ]
         command = self.global_options + command + self.extra_options
         if self.branch:
             command += ['-r', self.branch]
         if self.revision:
             command += ['-D', self.revision]
+        command += [ self.cvsmodule ]
         d = self._dovccmd(command, '')
         return d
 
