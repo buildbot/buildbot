@@ -425,6 +425,12 @@ class MasterConfig(object):
             errors.addError("c['builders'] must be a list of builder configs")
             return
 
+        for builder in builders:
+            if os.path.isabs(builder.builddir):
+                warnings.warn("Absolute path '%s' for builder may cause "
+                        "mayhem.  Perhaps you meant to specify slavebuilddir "
+                        "instead.")
+
         self.builders = builders
 
 
@@ -446,10 +452,6 @@ class MasterConfig(object):
             if sl.slavename in ("debug", "change", "status"):
                 msg = "slave name '%s' is reserved" % sl.slavename
                 errors.addError(msg)
-
-            if os.path.isabs(sl.builder):
-                warnings.warn("Absolute path '%s' for builder may cause mayhem. " +
-                        "Perhaps you meant to specify slavebuilddir instead.")
 
         self.slaves = config_dict['slaves']
 
