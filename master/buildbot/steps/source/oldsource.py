@@ -956,51 +956,6 @@ class P4(Source):
         cmd = RemoteCommand("p4", args)
         self.startCommand(cmd)
 
-class P4Sync(Source):
-    """
-    DEPRECATED - will be removed in 0.8.5.
-    
-    This is a partial solution for using a P4 source repository. You are
-    required to manually set up each build slave with a useful P4
-    environment, which means setting various per-slave environment variables,
-    and creating a P4 client specification which maps the right files into
-    the slave's working directory. Once you have done that, this step merely
-    performs a 'p4 sync' to update that workspace with the newest files.
-
-    Each slave needs the following environment:
-
-     - PATH: the 'p4' binary must be on the slave's PATH
-     - P4USER: each slave needs a distinct user account
-     - P4CLIENT: each slave needs a distinct client specification
-
-    You should use 'p4 client' (?) to set up a client view spec which maps
-    the desired files into $SLAVEBASE/$BUILDERBASE/source .
-    """
-
-    name = "p4sync"
-
-    def __init__(self, p4port, p4user, p4passwd, p4client, **kwargs):
-        assert kwargs['mode'] == "copy", "P4Sync can only be used in mode=copy"
-        self.branch = None
-        Source.__init__(self, **kwargs)
-        self.args['p4port'] = p4port
-        self.args['p4user'] = p4user
-        self.args['p4passwd'] = p4passwd
-        self.args['p4client'] = p4client
-
-    def computeSourceRevision(self, changes):
-        if not changes:
-            return None
-        lastChange = max([int(c.revision) for c in changes])
-        return lastChange
-
-    def startVC(self, branch, revision, patch):
-        slavever = self.slaveVersion("p4sync")
-        assert slavever, "slave is too old, does not know about p4"
-        cmd = RemoteCommand("p4sync", self.args)
-        self.startCommand(cmd)
-
-
 class Monotone(Source):
     """Check out a source tree from a monotone repository 'repourl'."""
 

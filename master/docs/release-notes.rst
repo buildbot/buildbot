@@ -66,6 +66,8 @@ Deprecations, Removals, and Non-Compatible Changes
     from buildbot.steps.source.svn import SVN
     factory.append(SVN(repourl=Interpolate("svn://svn.example.org/svn/%(src::branch:-branches/test)s")))
 
+* The ``P4Sync`` step, deprecated since 0.8.5, has been removed.  The ``P4`` step remains.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
