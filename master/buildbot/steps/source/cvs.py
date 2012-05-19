@@ -228,7 +228,7 @@ class CVS(Source):
         args = {
                 'workdir': self.build.path_module.join(self.workdir, 'CVS'),
                 'writer': myFileWriter,
-                'maxSize': None,
+                'maxsize': None,
                 'blocksize': 32*1024,
                 }
 
@@ -236,20 +236,24 @@ class CVS(Source):
                 dict(slavesrc='Root', **args),
                 ignore_updates=True)
         yield self.runCommand(cmd)
-        if cmd.rc != 0:
+        if cmd.rc is not None and cmd.rc != 0:
             defer.returnValue(False)
+            return
         if myFileWriter.buffer.strip() != self.cvsroot:
             defer.returnValue(False)
+            return
 
         myFileWriter.buffer = ""
         cmd = buildstep.RemoteCommand('uploadFile',
                 dict(slavesrc='Repository', **args),
                 ignore_updates=True)
         yield self.runCommand(cmd)
-        if cmd.rc != 0:
+        if cmd.rc is not None and cmd.rc != 0:
             defer.returnValue(False)
+            return
         if myFileWriter.buffer.strip() != self.cvsmodule:
             defer.returnValue(False)
+            return
 
         defer.returnValue(True)
 
