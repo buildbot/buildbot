@@ -19,6 +19,7 @@ from twisted.internet import defer, reactor, utils
 from twisted.python import failure
 from buildbot import libvirtbuildslave, config
 from buildbot.test.fake import libvirt
+from buildbot.test.util import compat
 
 
 class TestLibVirtSlave(unittest.TestCase):
@@ -106,6 +107,28 @@ class TestLibVirtSlave(unittest.TestCase):
         started = yield bs.start_instance(mock.Mock())
 
         self.assertEqual(started, True)
+
+    @compat.usesFlushLoggedErrors
+    @defer.inlineCallbacks
+    def test_start_instance_create_fails(self):
+        bs = self.ConcreteBuildSlave('b', 'p', self.conn, 'p', 'o',
+            xml='<xml/>')
+
+        prep = mock.Mock()
+        prep.side_effect = lambda: defer.succeed(0)
+        self.patch(bs, "_prepare_base_image", prep)
+
+        create = mock.Mock()
+        create.side_effect = lambda self : defer.fail(
+                failure.Failure(RuntimeError('oh noes')))
+        self.patch(libvirtbuildslave.Connection, 'create', create)
+
+        yield bs._find_existing_deferred
+        started = yield bs.start_instance(mock.Mock())
+
+        self.assertEqual(bs.domain, None)
+        self.assertEqual(started, False)
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
     def setup_canStartBuild(self):

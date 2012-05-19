@@ -253,9 +253,10 @@ class LibVirtSlave(AbstractLatentBuildSlave):
             else:
                 self.domain = yield self.connection.lookupByName(self.name)
                 yield self.domain.create()
-        except Exception:
-            log.msg("Cannot start a VM (%s), failing gracefully and triggering a new build check" % self.name)
-            log.err(failure.Failure())
+        except:
+            log.err(failure.Failure(),
+                    "Cannot start a VM (%s), failing gracefully and triggering"
+                    "a new build check" % self.name)
             self.domain = None
             defer.returnValue(False)
 
