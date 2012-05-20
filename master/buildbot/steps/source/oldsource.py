@@ -61,9 +61,85 @@ class _ComputeRepositoryURL(object):
         d.addCallback(str)
         return d
 
+class SlaveSource(Source):
+
+    def __init__(self, mode='update', retry=None,
+                 codebase='', **kwargs):
+        """
+        @type  mode: string
+        @param mode: the kind of VC operation that is desired:
+           - 'update': specifies that the checkout/update should be
+             performed directly into the workdir. Each build is performed
+             in the same directory, allowing for incremental builds. This
+             minimizes disk space, bandwidth, and CPU time. However, it
+             may encounter problems if the build process does not handle
+             dependencies properly (if you must sometimes do a 'clean
+             build' to make sure everything gets compiled), or if source
+             files are deleted but generated files can influence test
+             behavior (e.g. python's .pyc files), or when source
+             directories are deleted but generated files prevent CVS from
+             removing them. When used with a patched checkout, from a
+             previous buildbot try for instance, it will try to "revert"
+             the changes first and will do a clobber if it is unable to
+             get a clean checkout. The behavior is SCM-dependent.
+
+           - 'copy': specifies that the source-controlled workspace
+             should be maintained in a separate directory (called the
+             'copydir'), using checkout or update as necessary. For each
+             build, a new workdir is created with a copy of the source
+             tree (rm -rf workdir; cp -R -P -p copydir workdir). This
+             doubles the disk space required, but keeps the bandwidth low
+             (update instead of a full checkout). A full 'clean' build
+             is performed each time.  This avoids any generated-file
+             build problems, but is still occasionally vulnerable to
+             problems such as a CVS repository being manually rearranged
+             (causing CVS errors on update) which are not an issue with
+             a full checkout.
+
+           - 'clobber': specifies that the working directory should be
+             deleted each time, necessitating a full checkout for each
+             build. This insures a clean build off a complete checkout,
+             avoiding any of the problems described above, but is
+             bandwidth intensive, as the whole source tree must be
+             pulled down for each build.
+
+           - 'export': is like 'clobber', except that e.g. the 'cvs
+             export' command is used to create the working directory.
+             This command removes all VC metadata files (the
+             CVS/.svn/{arch} directories) from the tree, which is
+             sometimes useful for creating source tarballs (to avoid
+             including the metadata in the tar file). Not all VC systems
+             support export.
+
+        @type  retry: tuple of ints (delay, repeats) (or None)
+        @param retry: if provided, VC update failures are re-attempted up
+                      to REPEATS times, with DELAY seconds between each
+                      attempt. Some users have slaves with poor connectivity
+                      to their VC repository, and they say that up to 80% of
+                      their build failures are due to transient network
+                      failures that could be handled by simply retrying a
+                      couple times.
+        """
+        Source.__init__(self, **kwargs)
+
+        assert mode in ("update", "copy", "clobber", "export")
+        if retry:
+            delay, repeats = retry
+            assert isinstance(repeats, int)
+            assert repeats > 0
+        self.args = {'mode': mode,
+                     'retry': retry,
+                     }
+
+    def start(self):
+        self.args['workdir'] = self.workdir
+        self.args['logEnviron'] = self.logEnviron
+        self.args['env'] = self.env
+        self.args['timeout'] = self.timeout
+        Source.start(self)
 
 
-class CVS(Source):
+class CVS(SlaveSource):
     """I do CVS checkout/update operations.
 
     Note: if you are doing anonymous/pserver CVS operations, you will need
@@ -163,7 +239,7 @@ class CVS(Source):
         self.branch = branch
         self.cvsroot = _ComputeRepositoryURL(self, cvsroot)
 
-        Source.__init__(self, **kwargs)
+        SlaveSource.__init__(self, **kwargs)
 
         self.args.update({'cvsmodule': cvsmodule,
                           'global_options': global_options,
@@ -245,7 +321,7 @@ class CVS(Source):
         self.startCommand(cmd, warnings)
 
 
-class SVN(Source):
+class SVN(SlaveSource):
     """I perform Subversion checkout/update operations."""
 
     name = 'svn'
@@ -299,7 +375,7 @@ class SVN(Source):
         self.always_purge = always_purge
         self.depth = depth
 
-        Source.__init__(self, **kwargs)
+        SlaveSource.__init__(self, **kwargs)
 
         if svnurl and baseURL:
             raise ValueError("you must use either svnurl OR baseURL")
@@ -405,7 +481,7 @@ class SVN(Source):
         self.startCommand(cmd, warnings)
 
 
-class Darcs(Source):
+class Darcs(SlaveSource):
     """Check out a source tree from a Darcs repository at 'repourl'.
 
     Darcs has no concept of file modes. This means the eXecute-bit will be
@@ -443,7 +519,7 @@ class Darcs(Source):
         self.repourl = _ComputeRepositoryURL(self, repourl)
         self.baseURL = _ComputeRepositoryURL(self, baseURL)
         self.branch = defaultBranch
-        Source.__init__(self, **kwargs)
+        SlaveSource.__init__(self, **kwargs)
         assert self.args['mode'] != "export", \
                "Darcs does not have an 'export' mode"
         if repourl and baseURL:
@@ -495,7 +571,7 @@ class Darcs(Source):
         self.startCommand(cmd)
 
 
-class Git(Source):
+class Git(SlaveSource):
     """Check out a source tree from a git repository 'repourl'."""
 
     name = "git"
@@ -535,7 +611,7 @@ class Git(Source):
                          can solve long fetches getting killed due to
                          lack of output, but requires Git 1.7.2+.
         """
-        Source.__init__(self, **kwargs)
+        SlaveSource.__init__(self, **kwargs)
         self.repourl = _ComputeRepositoryURL(self, repourl)
         self.branch = branch
         self.args.update({'submodules': submodules,
@@ -580,7 +656,7 @@ class Git(Source):
         self.startCommand(cmd)
 
 
-class Repo(Source):
+class Repo(SlaveSource):
     """Check out a source tree from a repo repository described by manifest."""
 
     name = "repo"
@@ -604,7 +680,7 @@ class Repo(Source):
         @param manifest_file: The manifest to use for sync.
 
         """
-        Source.__init__(self, **kwargs)
+        SlaveSource.__init__(self, **kwargs)
         self.manifest_url = _ComputeRepositoryURL(self, manifest_url)
         self.args.update({'manifest_branch': manifest_branch,
                           'manifest_file': manifest_file,
@@ -705,7 +781,7 @@ class Repo(Source):
             self.step_status.setText(["repo download issues"])
 
 
-class Bzr(Source):
+class Bzr(SlaveSource):
     """Check out a source tree from a bzr (Bazaar) repository at 'repourl'.
 
     """
@@ -748,7 +824,7 @@ class Bzr(Source):
         self.repourl = _ComputeRepositoryURL(self, repourl)
         self.baseURL = _ComputeRepositoryURL(self, baseURL)
         self.branch = defaultBranch
-        Source.__init__(self, **kwargs)
+        SlaveSource.__init__(self, **kwargs)
         self.args.update({'forceSharedRepo': forceSharedRepo})
         if repourl and baseURL:
             raise ValueError("you must provide exactly one of repourl and"
@@ -786,7 +862,7 @@ class Bzr(Source):
         self.startCommand(cmd)
 
 
-class Mercurial(Source):
+class Mercurial(SlaveSource):
     """Check out a source tree from a mercurial repository 'repourl'."""
 
     name = "hg"
@@ -833,7 +909,7 @@ class Mercurial(Source):
         self.branch = defaultBranch
         self.branchType = branchType
         self.clobberOnBranchChange = clobberOnBranchChange
-        Source.__init__(self, **kwargs)
+        SlaveSource.__init__(self, **kwargs)
         if repourl and baseURL:
             raise ValueError("you must provide exactly one of repourl and"
                              " baseURL")
@@ -880,7 +956,7 @@ class Mercurial(Source):
         return changes[-1].revision
 
 
-class P4(Source):
+class P4(SlaveSource):
     """ P4 is a class for accessing perforce revision control"""
     name = "p4"
 
@@ -924,7 +1000,7 @@ class P4(Source):
 
         self.p4base = _ComputeRepositoryURL(self, p4base)
         self.branch = defaultBranch
-        Source.__init__(self, **kwargs)
+        SlaveSource.__init__(self, **kwargs)
         self.args['p4port'] = p4port
         self.args['p4user'] = p4user
         self.args['p4passwd'] = p4passwd
@@ -933,7 +1009,7 @@ class P4(Source):
         self.p4client = p4client
 
     def setBuild(self, build):
-        Source.setBuild(self, build)
+        SlaveSource.setBuild(self, build)
         self.args['p4client'] = self.p4client % {
             'slave': build.slavename,
             'builder': build.builder.name,
@@ -956,7 +1032,7 @@ class P4(Source):
         cmd = RemoteCommand("p4", args)
         self.startCommand(cmd)
 
-class Monotone(Source):
+class Monotone(SlaveSource):
     """Check out a source tree from a monotone repository 'repourl'."""
 
     name = "mtn"
@@ -978,7 +1054,7 @@ class Monotone(Source):
                          can solve long fetches getting killed due to
                          lack of output.
         """
-        Source.__init__(self, **kwargs)
+        SlaveSource.__init__(self, **kwargs)
         self.repourl = _ComputeRepositoryURL(self, repourl)
         if (not repourl):
             raise ValueError("you must provide a repository uri in 'repourl'")
