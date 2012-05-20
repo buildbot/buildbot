@@ -18,6 +18,7 @@ from twisted.python import runtime
 from twisted.internet import reactor
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE
+from twisted.internet import error
 from twisted.internet.protocol import ProcessProtocol
 
 class MasterShellCommand(BuildStep):
@@ -36,7 +37,7 @@ class MasterShellCommand(BuildStep):
 
     def __init__(self, command,
                  description=None, descriptionDone=None, descriptionSuffix=None,
-                 env=None, path=None, usePTY=0,
+                 env=None, path=None, usePTY=0, interruptSignal="KILL",
                  **kwargs):
         BuildStep.__init__(self, **kwargs)
 
@@ -56,6 +57,7 @@ class MasterShellCommand(BuildStep):
         self.env=env
         self.path=path
         self.usePTY=usePTY
+        self.interruptSignal = interruptSignal
 
     class LocalPP(ProcessProtocol):
         def __init__(self, step):
@@ -68,7 +70,10 @@ class MasterShellCommand(BuildStep):
             self.step.stdio_log.addStderr(data)
 
         def processEnded(self, status_object):
-            self.step.stdio_log.addHeader("exit status %d\n" % status_object.value.exitCode)
+            if status_object.value.exitCode is not None:
+                self.step.stdio_log.addHeader("exit status %d\n" % status_object.value.exitCode)
+            if status_object.value.signal is not None:
+                self.step.stdio_log.addHeader("signal %s\n" % status_object.value.signal)
             self.step.processEnded(status_object)
 
     def start(self):
@@ -121,12 +126,16 @@ class MasterShellCommand(BuildStep):
         stdio_log.addHeader(" env: %r\n" % (env,))
 
         # TODO add a timeout?
-        reactor.spawnProcess(self.LocalPP(self), argv[0], argv,
+        self.process = reactor.spawnProcess(self.LocalPP(self), argv[0], argv,
                 path=self.path, usePTY=self.usePTY, env=env )
         # (the LocalPP object will call processEnded for us)
 
     def processEnded(self, status_object):
-        if status_object.value.exitCode != 0:
+        if status_object.value.signal is not None:
+            self.descriptionDone = ["killed (%s)" % status_object.value.signal]
+            self.step_status.setText(self.describe(done=True))
+            self.finished(FAILURE)
+        elif status_object.value.exitCode != 0:
             self.descriptionDone = ["failed (%d)" % status_object.value.exitCode]
             self.step_status.setText(self.describe(done=True))
             self.finished(FAILURE)
@@ -140,3 +149,12 @@ class MasterShellCommand(BuildStep):
             desc = desc[:]
             desc.extend(self.descriptionSuffix)
         return desc
+
+    def interrupt(self, reason):
+        try:
+            self.process.signalProcess(self.interruptSignal)
+        except KeyError: # Process not started yet
+            pass
+        except error.ProcessExitedAlready:
+            pass
+        BuildStep.interrupt(self, reason)
