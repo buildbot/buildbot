@@ -2343,6 +2343,9 @@ Note that environment values must be strings (or lists that are turned into
 strings).  In particular, numeric properties such as ``buildnumber`` must
 be substituted using :ref:`WithProperties`.
 
+``interruptSignal``
+   (optional) Signal to use to end the process, if the step is interrupted.
+
 .. index:: Properties; from steps
 
 .. _Setting-Properties:

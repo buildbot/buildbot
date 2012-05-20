@@ -15,12 +15,11 @@
 
 import os
 import sys
-import mock
-from twisted.python import runtime
-from twisted.internet import reactor
+from twisted.python import failure, runtime
+from twisted.internet import error, reactor
 from twisted.trial import unittest
 from buildbot.test.util import steps
-from buildbot.status.results import SUCCESS, FAILURE
+from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION
 from buildbot.steps import master
 from buildbot.process.properties import WithProperties
 
@@ -51,9 +50,11 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                 elif output[0] == 'err':
                     pp.errReceived(output[1])
                 elif output[0] == 'rc':
-                    so = mock.Mock(name='status_object')
-                    so.value.exitCode = output[1]
-                    pp.processEnded(so)
+                    if output[1] != 0:
+                        so = error.ProcessTerminated(exitCode=output[1])
+                    else:
+                        so = error.ProcessDone(None)
+                    pp.processEnded(failure.Failure(so))
         self.patch(reactor, 'spawnProcess', spawnProcess)
 
     def test_real_cmd(self):
@@ -66,6 +67,16 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
             self.expectLogfile('stdio', "hello\n")
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
         return self.runStep()
+
+    def test_real_cmd_interrupted(self):
+        cmd = [ sys.executable, '-c', 'while True: pass' ]
+        self.setupStep(
+                master.MasterShellCommand(command=cmd))
+        self.expectLogfile('stdio', "")
+        self.expectOutcome(result=EXCEPTION, status_text=["killed (9)", "interrupted"])
+        d = self.runStep()
+        self.step.interrupt("KILL")
+        return d
 
     def test_real_cmd_fails(self):
         cmd = [ sys.executable, '-c', 'import sys; sys.exit(1)' ]
