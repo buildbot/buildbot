@@ -607,6 +607,15 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertIsInstance(self.cfg.builders[0], config.BuilderConfig)
         self.assertEqual(self.cfg.builders[0].name, 'x')
 
+    @compat.usesFlushWarnings
+    def test_load_builders_abs_builddir(self):
+        bldr = dict(name='x', factory=mock.Mock(), slavename='x',
+                builddir=os.path.abspath('.'))
+        self.cfg.load_builders(self.filename,
+                dict(builders=[bldr]), self.errors)
+        self.assertEqual(
+            len(self.flushWarnings([self.cfg.load_builders])),
+            1)
 
     def test_load_slaves_defaults(self):
         self.cfg.load_slaves(self.filename, {}, self.errors)

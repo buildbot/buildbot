@@ -15,9 +15,10 @@
 
 from __future__ import with_statement
 
-import re
 import os
+import re
 import sys
+import warnings
 from buildbot.util import safeTranslate
 from buildbot import interfaces
 from buildbot import locks
@@ -423,6 +424,12 @@ class MasterConfig(object):
         except RuntimeError:
             errors.addError("c['builders'] must be a list of builder configs")
             return
+
+        for builder in builders:
+            if os.path.isabs(builder.builddir):
+                warnings.warn("Absolute path '%s' for builder may cause "
+                        "mayhem.  Perhaps you meant to specify slavebuilddir "
+                        "instead.")
 
         self.builders = builders
 
