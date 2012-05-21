@@ -17,6 +17,7 @@ from twisted.python import failure
 from twisted.internet import defer
 from buildbot.schedulers import base
 from buildbot.process.properties import Properties
+from buildbot import config
 
 class Triggerable(base.BaseScheduler):
 
@@ -75,41 +76,52 @@ class Triggerable(base.BaseScheduler):
     @defer.inlineCallbacks
     def _addBuildsetForTrigger(self, reason, setid, sourcestamps, 
                                got_revision, properties):
+
+        def createLookup(input_list, key):
+            output_dict = {}
+            for item in input_list:
+                output_dict[item[key]] = item
+            return output_dict
+
         if got_revision is None:
             got_revision = {}
         if sourcestamps is None:
             sourcestamps = []
 
-        existing = {}
+        # Create lookup for sourcestamps that exist in database
+        existing_lookup = {}
         if setid:
-            # Create lookup for existing sourcestamps
-            existing_sourcestamps = yield self.master.db.sourcestamps.getSourceStamps(setid)
-            for ssdict in existing_sourcestamps:
-                existing[ssdict['codebase']] = ssdict
+            existing_list = yield self.master.db.sourcestamps.getSourceStamps(setid)
+            existing_lookup = createLookup(existing_list, 'codebase')
 
-        passed = {}
-        if sourcestamps:
-            # Create lookup for passed sourcestamps
-            for ssdict in sourcestamps:
-                passed[ssdict['codebase']] = ssdict
+        # Create lookup for sourcestamps that where passed
+        passed_lookup = createLookup(sourcestamps, 'codebase')
 
         # Define new setid for this set of triggering sourcestamps
         new_setid = yield self.master.db.sourcestampsets.addSourceStampSet()
 
-        # Merge codebases with setid, sourcestamps and got_revision and
-        # add a sourcestamp for each codebase
+        # Merge codebases with the passed setid, sourcestamps and got_revision
+        # This results in a new sourcestamp for each codebase
         for codebase in self.codebases:
             ss = self.codebases[codebase].copy()
              # apply info from setid
-            ss.update(existing.get(codebase,{}))
+            ss.update(existing_lookup.get(codebase,{}))
             # apply info from got_revision
             ss['revision'] = got_revision.get(codebase, ss.get('revision', None))
-            # apply info from passed ss
-            ss.update(passed.get(codebase,{}))
+            # apply info from passed sourcestamp
+            ss.update(passed_lookup.get(codebase,{}))
 
+            # at least repository must be set, this is normaly forced except when 
+            # codebases is not explicitly set in configuration file.
+            ss_repository = ss.get('repository')
+            if not ss_repository:
+                config.error("The codebases argument is not set but still receiving " +
+                             "non empty codebase values")
+
+            # add sourcestamp to the new setid
             yield self.master.db.sourcestamps.addSourceStamp(
                         codebase=codebase,
-                        repository=ss['repository'],
+                        repository=ss_repository,
                         branch=ss.get('branch', None),
                         revision=ss.get('revision', None),
                         project=ss.get('project', ''),
