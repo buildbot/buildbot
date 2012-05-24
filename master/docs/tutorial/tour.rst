@@ -278,7 +278,7 @@ After restarting the master, you can ssh into the master and get an interactive 
     If you see this, the temporary solution is to install the previous version
     of pyasn1::
 
-        pip instasll pyasn1-0.0.13b
+        pip install pyasn1-0.0.13b
 
 If you wanted to check which slaves are connected and what builders those slaves are assigned to you could do::
 
