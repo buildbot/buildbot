@@ -97,15 +97,8 @@ class Build(properties.PropertiesMixin):
                 return source
         return None
 
-    def getSourceStampSetId(self):
-        if self.sources:
-            return self.sources[0].sourcestampsetid
-        else:
-            return None
-
     def getAllSourceStamps(self):
-        for s in self.sources:
-            yield s
+        return list(self.sources)
 
     def allChanges(self):
         for s in self.sources:
