@@ -79,64 +79,95 @@ class Trigger(LoggingBuildStep):
             self.ended = True
             return self.finished(result)
 
-    @defer.inlineCallbacks
-    def start(self):
+    # Create the properties that are used for the trigger
+    def createTriggerProperties(self):
         properties = self.build.getProperties()
 
         # make a new properties object from a dict rendered by the old 
         # properties object
-        props_to_set = Properties()
-        props_to_set.update(self.set_properties, "Trigger")
+        trigger_properties = Properties()
+        trigger_properties.update(self.set_properties, "Trigger")
         for p in self.copy_properties:
             if p not in properties:
                 continue
-            props_to_set.setProperty(p, properties[p],
+            trigger_properties.setProperty(p, properties[p],
                         "%s (in triggering build)" % properties.getPropertySource(p))
+        return trigger_properties
 
-        self.running = True
-
-        # (is there an easier way to find the BuildMaster?)
+    # Get all scheduler instances that were configured
+    # A tuple of (triggerables, invalidnames) is returned
+    def getSchedulers(self):
         all_schedulers = self.build.builder.botmaster.parent.allSchedulers()
         all_schedulers = dict([(sch.name, sch) for sch in all_schedulers])
-        unknown_schedulers = []
+        invalid_schedulers = []
         triggered_schedulers = []
-
         # don't fire any schedulers if we discover an unknown one
         for scheduler in self.schedulerNames:
             scheduler = scheduler
             if all_schedulers.has_key(scheduler):
                 sch = all_schedulers[scheduler]
                 if isinstance(sch, Triggerable):
-                    triggered_schedulers.append(scheduler)
+                    triggered_schedulers.append(sch)
                 else:
-                    unknown_schedulers.append(scheduler)
+                    invalid_schedulers.append(scheduler)
             else:
-                unknown_schedulers.append(scheduler)
+                invalid_schedulers.append(scheduler)
 
-        if unknown_schedulers:
-            self.step_status.setText(['no scheduler:'] + unknown_schedulers)
-            self.end(FAILURE)
-            return
+        return (triggered_schedulers, invalid_schedulers)
 
-        master = self.build.builder.botmaster.parent # seriously?!
-        sourceStamps = self.sourceStamps
-        got = None
-        if self.alwaysUseLatest:
-            ss_setid = None
-        else:
-            ss_setid = self.build.getSourceStampSetId()
-        if self.updateSourceStamp:
+    def prepareSourcestampListForTrigger(self):
+        # start with the sourcestamps from current build
+        ss_for_trigger = {}
+        objs_from_build = self.build.getAllSourceStamps()
+        for ss in objs_from_build:
+            ss_for_trigger[ss.codebase] = ss.asDict(includePatch = True)
+            if self.alwaysUseLatest:
+                # Reset revision so latest version will be requested from vcs
+                ss_for_trigger[ss.codebase]['revision'] = None
+
+        # overrule revision in sourcestamps with got revision
+        if self.updateSourceStamp and not self.alwaysUseLatest:
+            properties = self.build.getProperties()
             got = properties.getProperty('got_revision')
             # be sure property is always a dictionary
             if got and not isinstance(got, dict):
                 got = {'': got}
+            for codebase in ss_for_trigger:
+                if codebase in got:
+                    ss_for_trigger[codebase]['revision'] = got[codebase]
+
+        # update sourcestamps from build with passed set of fixed sourcestamps
+        # or add fixed sourcestamp to the dictionary
+        for ss in self.sourceStamps:
+            codebase = ss.get('codebase','')
+            if codebase in ss_for_trigger:
+                ss_for_trigger[codebase].update(ss)
+            else:
+                ss_for_trigger[codebase] = ss
+
+        return ss_for_trigger
+
+    @defer.inlineCallbacks
+    def start(self):
+        # Get all triggerable schedulers and check if there are invalid schedules
+        (triggered_schedulers, invalid_schedulers) = self.getSchedulers()
+        if invalid_schedulers:
+            self.step_status.setText(['not valid scheduler:'] + invalid_schedulers)
+            self.end(FAILURE)
+            return
+
+        self.running = True
+
+        props_to_set = self.createTriggerProperties()
+
+        ss_for_trigger = self.prepareSourcestampListForTrigger()
 
         dl = []
-        for scheduler in triggered_schedulers:
-            sch = all_schedulers[scheduler]
-            dl.append(sch.trigger(ss_setid, set_props=props_to_set, 
-                          got_revision=got, sourcestamps=sourceStamps))
-        self.step_status.setText(['triggered'] + triggered_schedulers)
+        triggered_names = []
+        for sch in triggered_schedulers:
+            dl.append(sch.trigger(ss_for_trigger, set_props=props_to_set))
+            triggered_names.append(sch.name)
+        self.step_status.setText(['triggered'] + triggered_names)
 
         if self.waitForFinish:
             rclist = yield defer.DeferredList(dl, consumeErrors=1)
@@ -172,6 +203,7 @@ class Trigger(LoggingBuildStep):
             result = SUCCESS
 
         if brids:
+            master = self.build.builder.botmaster.parent
             def add_links(res):
                 # reverse the dictionary lookup for brid to builder name
                 brid_to_bn = dict((_brid,_bn) for _bn,_brid in brids.iteritems())

@@ -30,10 +30,8 @@ class Triggerable(base.BaseScheduler):
         self._bsc_subscription = None
         self.reason = "Triggerable(%s)" % name
 
-    def trigger(self, ss_setid, sourcestamps = None, got_revision = None, 
-                set_props=None):
-        """Trigger this scheduler with the given sourcestampset ID, optionally 
-        a set of sourcestamps and a dictionary with got_revision entries.
+    def trigger(self, sourcestamps = None, set_props=None):
+        """Trigger this scheduler with the optional given list of sourcestamps
         Returns a deferred that will fire when the buildset is finished."""
         # properties for this buildset are composed of our own properties,
         # potentially overridden by anything from the triggering build
@@ -45,11 +43,7 @@ class Triggerable(base.BaseScheduler):
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of
         # this process.
-        if ss_setid or sourcestamps or got_revision:
-            d = self._addBuildsetForTrigger(self.reason, ss_setid, sourcestamps, 
-                                            got_revision, props)
-        else:
-            d = self.addBuildsetForLatest(reason=self.reason, properties=props)
+        d = self._addBuildsetForTrigger(self.reason, sourcestamps, props)
         def setup_waiter((bsid,brids)):
             d = defer.Deferred()
             self._waiters[bsid] = (d, brids)
@@ -74,42 +68,20 @@ class Triggerable(base.BaseScheduler):
         return base.BaseScheduler.stopService(self)
 
     @defer.inlineCallbacks
-    def _addBuildsetForTrigger(self, reason, setid, sourcestamps, 
-                               got_revision, properties):
+    def _addBuildsetForTrigger(self, reason, sourcestamps,  properties):
 
-        def createLookup(input_list, key):
-            output_dict = {}
-            for item in input_list:
-                output_dict[item[key]] = item
-            return output_dict
-
-        if got_revision is None:
-            got_revision = {}
         if sourcestamps is None:
-            sourcestamps = []
-
-        # Create lookup for sourcestamps that exist in database
-        existing_lookup = {}
-        if setid:
-            existing_list = yield self.master.db.sourcestamps.getSourceStamps(setid)
-            existing_lookup = createLookup(existing_list, 'codebase')
-
-        # Create lookup for sourcestamps that where passed
-        passed_lookup = createLookup(sourcestamps, 'codebase')
+            sourcestamps = {}
 
         # Define new setid for this set of triggering sourcestamps
         new_setid = yield self.master.db.sourcestampsets.addSourceStampSet()
 
-        # Merge codebases with the passed setid, sourcestamps and got_revision
+        # Merge codebases with the passed list of sourcestamps
         # This results in a new sourcestamp for each codebase
         for codebase in self.codebases:
             ss = self.codebases[codebase].copy()
              # apply info from setid
-            ss.update(existing_lookup.get(codebase,{}))
-            # apply info from got_revision
-            ss['revision'] = got_revision.get(codebase, ss.get('revision', None))
-            # apply info from passed sourcestamp
-            ss.update(passed_lookup.get(codebase,{}))
+            ss.update(sourcestamps.get(codebase,{}))
 
             # at least repository must be set, this is normaly forced except when 
             # codebases is not explicitly set in configuration file.

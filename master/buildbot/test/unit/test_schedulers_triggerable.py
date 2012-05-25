@@ -46,12 +46,6 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_trigger(self):
         sched = self.makeScheduler(codebases = {'cb':{'repository':'r'}})
-        self.db.insertTestData([
-            fakedb.SourceStampSet(id=100),
-            fakedb.SourceStamp(id=91, sourcestampsetid=100, revision='myrev', branch='br',
-                project='p', repository='r', codebase='cb'),
-        ])
-
         # no subscription should be in place yet
         callbacks = self.master.getSubscriptionCallbacks()
         self.assertEqual(callbacks['buildset_completion'], None)
@@ -59,7 +53,12 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # trigger the scheduler, exercising properties while we're at it
         set_props = properties.Properties()
         set_props.setProperty('pr', 'op', 'test')
-        d = sched.trigger(100, set_props=set_props)
+        ss = {'revision':'myrev',
+              'branch':'br',
+              'project':'p',
+              'repository':'r',
+              'codebase':'cb' }
+        d = sched.trigger({'cb': ss}, set_props=set_props)
 
         bsid = self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
@@ -68,10 +67,10 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                          ('scheduler', ('n', 'Scheduler')),
                      ],
                      reason='Triggerable(n)',
-                     sourcestampsetid=101),
+                     sourcestampsetid=100),
                 {'cb':
                  dict(branch='br', project='p', repository='r',
-                     codebase='cb', revision='myrev', sourcestampsetid=101)
+                     codebase='cb', revision='myrev', sourcestampsetid=100)
                 })
 
         # set up a boolean so that we can know when the deferred fires
@@ -106,41 +105,45 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_trigger_overlapping(self):
         sched = self.makeScheduler(codebases = {'cb':{'repository':'r'}})
-        self.db.insertTestData([
-            fakedb.SourceStampSet(id=100),
-            fakedb.SourceStampSet(id=101),
-            fakedb.SourceStamp(id=91, sourcestampsetid=100, revision='myrev1',
-                branch='br', project='p', repository='r', codebase='cb'),
-            fakedb.SourceStamp(id=92, sourcestampsetid=101, revision='myrev2',
-                branch='br', project='p', repository='r', codebase='cb'),
-        ])
 
         # no subscription should be in place yet
         callbacks = self.master.getSubscriptionCallbacks()
         self.assertEqual(callbacks['buildset_completion'], None)
 
+        # define sourcestamp
+        ss = {'revision':'myrev1',
+          'branch':'br',
+          'project':'p',
+          'repository':'r',
+          'codebase':'cb' }
         # trigger the scheduler the first time
-        d = sched.trigger(100)
+        d = sched.trigger({'cb':ss})
         bsid1 = self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
                      reason='Triggerable(n)',
-                     sourcestampsetid=102),
+                     sourcestampsetid=100),
                 {'cb':
                 dict(branch='br', project='p', repository='r', codebase='cb',
-                     revision='myrev1', sourcestampsetid=102)})
+                     revision='myrev1', sourcestampsetid=100)})
         d.addCallback(lambda (res, brids) : self.assertEqual(res, 11) 
                                         and self.assertEqual(brids, self.db.buildsets.allBuildRequests(bsid1)))
 
+        # define sourcestamp
+        ss = {'revision':'myrev2',
+          'branch':'br',
+          'project':'p',
+          'repository':'r',
+          'codebase':'cb' }
         # and the second time
-        d = sched.trigger(101)
+        d = sched.trigger({'cb':ss})
         bsid2 = self.db.buildsets.assertBuildset(bsid1+1, # assumes bsid's are sequential
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
-                     reason='Triggerable(n)', sourcestampsetid=103),
+                     reason='Triggerable(n)', sourcestampsetid=101),
                 {'cb':
                 dict(branch='br', project='p', repository='r', codebase='cb',
-                     revision='myrev2', sourcestampsetid=103)})
+                     revision='myrev2', sourcestampsetid=101)})
         d.addCallback(lambda (res, brids) : self.assertEqual(res, 22) 
                                         and self.assertEqual(brids, self.db.buildsets.allBuildRequests(bsid2)))
 
@@ -159,127 +162,52 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         callbacks = self.master.getSubscriptionCallbacks()
         self.assertEqual(callbacks['buildset_completion'], None)
 
-    def test_trigger_with_fixed_sourcestamps(self):
-        # Test a scheduler with 4 repositories. 
-        # Trigger the scheduler with a build containing repositories 1 and 2
-        # and pass a set of fixed sourcestamps with repositories 1 and 3
+    def test_trigger_with_unknown_sourcestamp(self):
+        # Test a scheduler with 2 repositories.
+        # Trigger the scheduler with a sourcestamp that is unknown to the scheduler
         # Expected Result: 
-        #    sourcestamp 1 for repository 1 based on fixed sourcestamp
-        #    sourcestamp 2 for repository 2 based on sourcestamp from build
-        #    sourcestamp 3 for repository 3 based on fixed sourcestamp
-        #    sourcestamp 4 for repository 4 based on configured sourcestamp
+        #    sourcestamp 1 for repository 1 based on configured sourcestamp
+        #    sourcestamp 2 for repository 2 based on configured sourcestamp
         sched = self.makeScheduler(
-                   codebases = {'cb':{'repository':'r', 'branch': 'branchX'}, 
-                                'cb2':{'repository':'r2', 'branch': 'branchX'},
-                                'cb3':{'repository':'r3', 'branch': 'branchX'},
-                                'cb4':{'repository':'r4', 'branch': 'branchX'},})
+                   codebases = {'cb':{'repository':'r', 'branch': 'branchX'},
+                                'cb2':{'repository':'r2', 'branch': 'branchX'},})
 
-        self.db.insertTestData([
-            fakedb.SourceStampSet(id=100),
-            fakedb.SourceStamp(id=91, sourcestampsetid=100, revision='myrev1',
-                branch='br', project='p', repository='r', codebase='cb'),
-            fakedb.SourceStamp(id=92, sourcestampsetid=100, revision='myrev2',
-                branch='br', project='p', repository='r2', codebase='cb2'),
-        ])
-
-        ss1 = {'repository': 'r', 'codebase': 'cb', 'revision': 'fixrev1', 
+        ss = {'repository': 'r3', 'codebase': 'cb3', 'revision': 'fixrev3',
                'branch': 'default', 'project': 'p' }
-        ss2 = {'repository': 'r3', 'codebase': 'cb3', 'revision': 'fixrev3', 
-               'branch': 'default', 'project': 'p' }
-        d = sched.trigger(100, sourcestamps = [ss1, ss2])
+        d = sched.trigger(sourcestamps = {'cb3': ss})
 
         self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
                      reason='Triggerable(n)',
-                     sourcestampsetid=101),
+                     sourcestampsetid=100),
                 {'cb':
-                dict(branch='default', project='p', repository='r', codebase='cb',
-                     revision='fixrev1', sourcestampsetid=101),
+                dict(branch='branchX', project='', repository='r', codebase='cb',
+                     revision=None, sourcestampsetid=100),
                 'cb2':
-                dict(branch='br', project='p', repository='r2', codebase='cb2',
-                     revision='myrev2', sourcestampsetid=101),
-                'cb3':
-                dict(branch='default', project='p', repository='r3', codebase='cb3',
-                     revision='fixrev3', sourcestampsetid=101),
-                'cb4':
-                dict(branch='branchX', project='', repository='r4', codebase='cb4',
-                     revision=None, sourcestampsetid=101)})
+                dict(branch='branchX', project='', repository='r2', codebase='cb2',
+                     revision=None, sourcestampsetid=100),})
 
-    def test_trigger_with_got_revision(self):
-        # Test a scheduler with 2 repositories. 
-        # Trigger the scheduler with a build containing repositories 1 and 2
-        # and pass a set of got revision values for repository 1 and 2
+    def test_trigger_without_sourcestamps(self):
+        # Test a scheduler with 2 repositories.
+        # Trigger the scheduler without a sourcestamp
         # Expected Result: 
-        #    sourcestamp 1 for repo 1 based on sourcestamp from build, other revision
-        #    sourcestamp 2 for repo 2 based on sourcestamp from build, other revision
+        #    sourcestamp 1 for repository 1 based on configured sourcestamp
+        #    sourcestamp 2 for repository 2 based on configured sourcestamp
         sched = self.makeScheduler(
-                codebases = {'cb':{'repository':'r', 'branch': 'branchX'}, 
-                             'cb2':{'repository':'r2', 'branch': 'branchX'}})
+                   codebases = {'cb':{'repository':'r', 'branch': 'branchX'},
+                                'cb2':{'repository':'r2', 'branch': 'branchX'},})
 
-        self.db.insertTestData([
-            fakedb.SourceStampSet(id=100),
-            fakedb.SourceStamp(id=91, sourcestampsetid=100, revision='myrev1',
-                branch='br', project='p', repository='r', codebase='cb'),
-            fakedb.SourceStamp(id=92, sourcestampsetid=100, revision='myrev2',
-                branch='br', project='p', repository='r2', codebase='cb2'),
-        ])
-
-        got_revision = {'cb': 'gotrevision1a', }
-        d = sched.trigger(100, got_revision = got_revision)
+        d = sched.trigger(sourcestamps = None)
 
         self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
                      reason='Triggerable(n)',
-                     sourcestampsetid=101),
+                     sourcestampsetid=100),
                 {'cb':
-                dict(branch='br', project='p', repository='r', codebase='cb',
-                     revision='gotrevision1a', sourcestampsetid=101),
+                dict(branch='branchX', project='', repository='r', codebase='cb',
+                     revision=None, sourcestampsetid=100),
                 'cb2':
-                dict(branch='br', project='p', repository='r2', codebase='cb2',
-                     revision='myrev2', sourcestampsetid=101),})
-
-    def test_trigger_with_fixed_sourcestamps_and_got_revision(self):
-        # Test a scheduler with 3 repositories. 
-        # Trigger the scheduler with a build containing repositories 1 and 2
-        # and pass a set of got revision values for repository 1 and 2
-        # and pass a set of 2 fixed sourcestamps with repository 1 and 3
-        # Expected Result: 
-        #    sourcestamp 1 for repo 1 based on fixed sourcestamp (ignore got_revision)
-        #    sourcestamp 2 for repo 2 based on sourcestamp from build, got revision
-        #    sourcestamp 3 for repo 3 based on fixed sourcestamp
-        sched = self.makeScheduler(
-                codebases = {'cb':{'repository':'r', 'branch': 'branchX'}, 
-                             'cb2':{'repository':'r2', 'branch': 'branchX'},
-                             'cb3':{'repository':'r3', 'branch': 'branchX'},})
-
-        self.db.insertTestData([
-            fakedb.SourceStampSet(id=100),
-            fakedb.SourceStamp(id=91, sourcestampsetid=100, revision='myrev1',
-                branch='br', project='p', repository='r', codebase='cb'),
-            fakedb.SourceStamp(id=92, sourcestampsetid=100, revision='myrev2',
-                branch='br', project='p', repository='r2', codebase='cb2'),
-        ])
-
-        ss1 = {'repository': 'r', 'codebase': 'cb', 'revision': 'fixrev1', 
-               'branch': 'default', 'project': 'p' }
-        ss2 = {'repository': 'r3', 'codebase': 'cb3', 'revision': 'fixrev3', 
-               'branch': 'default', 'project': 'p' }
-        got_revision = {'cb': 'gotrevision1a', 'cb2': 'gotrevision2a', }
-        d = sched.trigger(100, sourcestamps = [ss1, ss2], got_revision = got_revision)
-
-        self.db.buildsets.assertBuildset('?',
-                dict(external_idstring=None,
-                     properties=[('scheduler', ('n', 'Scheduler'))],
-                     reason='Triggerable(n)',
-                     sourcestampsetid=101),
-                {'cb':
-                dict(branch='default', project='p', repository='r', codebase='cb',
-                     revision='fixrev1', sourcestampsetid=101),
-                'cb2':
-                dict(branch='br', project='p', repository='r2', codebase='cb2',
-                     revision='gotrevision2a', sourcestampsetid=101),
-                'cb3':
-                dict(branch='default', project='p', repository='r3', codebase='cb3',
-                     revision='fixrev3', sourcestampsetid=101),})
+                dict(branch='branchX', project='', repository='r2', codebase='cb2',
+                     revision=None, sourcestampsetid=100),})

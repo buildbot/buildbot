@@ -248,12 +248,19 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             text.append("[patch]")
         return text
 
-    def asDict(self):
+    def asDict(self, includePatch = False):
         result = {}
         # Constant
         result['revision'] = self.revision
+
         # TODO(maruel): Make the patch content a suburl.
         result['hasPatch'] = self.patch is not None
+        if self.patch and includePatch:
+            result['patch_level'] = self.patch[0]
+            result['patch_body'] = self.patch[1]
+            result['patch_author'] = self.patch_info[0]
+            result['patch_comment'] = self.patch_info[1]
+
         result['branch'] = self.branch
         result['changes'] = [c.asDict() for c in getattr(self, 'changes', [])]
         result['project'] = self.project
