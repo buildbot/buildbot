@@ -689,7 +689,9 @@ The parameters are just the basics:
     See :ref:`Configuring-Schedulers`.
 
 ``codebases``
-    
+    See :ref:`Configuring-Schedulers`.
+
+
 This class is only useful in conjunction with the :class:`Trigger` step.
 Here is a fully-worked example::
 
