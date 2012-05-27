@@ -86,14 +86,14 @@ class HLint(ShellCommand):
 
     def evaluateCommand(self, cmd):
         # warnings are in stdout, rc is always 0, unless the tools break
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         if self.warnings:
             return WARNINGS
         return SUCCESS
 
     def getText2(self, cmd, results):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return ["hlint"]
         return ["%d hlin%s" % (self.warnings,
                                self.warnings == 1 and 't' or 'ts')]
@@ -409,7 +409,7 @@ class Trial(ShellCommand):
         text = []
         text2 = ""
 
-        if cmd.rc == 0:
+        if not cmd.didFail():
             if parsed:
                 results = SUCCESS
                 if total:

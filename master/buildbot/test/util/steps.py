@@ -250,5 +250,7 @@ class BuildStepMixin(object):
         self.assertEqual((exp.remote_command, exp.args), got)
 
         # let the Expect object show any behaviors that are required
-        return exp.runBehaviors(command)
+        d = exp.runBehaviors(command)
+        d.addCallback(lambda _: command)
+        return d
 
