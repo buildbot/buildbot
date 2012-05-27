@@ -24,6 +24,8 @@ class FakeRemoteCommand(object):
     # callers should set this to the running TestCase instance
     testcase = None
 
+    active = False
+
     def __init__(self, remote_command, args,
             ignore_updates=False, collectStdout=False, successfulRC=(0,)):
         # copy the args and set a few defaults

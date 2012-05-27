@@ -79,6 +79,10 @@ class Tests(interfaces.InterfaceTests):
         cmd = self.makeRemoteCommand()
         self.assertIsInstance(cmd.logs, dict)
 
+    def test_signature_active(self):
+        cmd = self.makeRemoteCommand()
+        self.assertIsInstance(cmd.active, bool)
+
 
 class TestRunCommand(unittest.TestCase, Tests):
 
