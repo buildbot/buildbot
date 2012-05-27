@@ -21,7 +21,7 @@ from twisted.python import log
 from buildbot.process import buildstep
 from buildbot.process.buildstep import regex_log_evaluator
 from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION
-from buildbot.test.fake import fakebuild
+from buildbot.test.fake import fakebuild, remotecommand
 from buildbot.test.util import steps, compat
 
 class FakeLogFile:
@@ -31,44 +31,54 @@ class FakeLogFile:
     def getText(self):
         return self.text
 
-class FakeCmd:
-    def __init__(self, stdout, stderr, rc=0):
-        self.logs = {'stdout': FakeLogFile(stdout),
-                     'stderr': FakeLogFile(stderr)}
-        self.rc = rc
-
 class FakeStepStatus:
     pass
 
 class TestRegexLogEvaluator(unittest.TestCase):
+
+    def makeRemoteCommand(self, rc, stdout, stderr=''):
+        cmd = remotecommand.FakeRemoteCommand('cmd', {})
+        cmd.fakeLogData(self, 'stdio', stdout=stdout, stderr=stderr)
+        cmd.rc = rc
+        return cmd
+
     def test_find_worse_status(self):
-        cmd = FakeCmd("This is log text", "")
+        cmd = self.makeRemoteCommand(0, 'This is a big step')
         step_status = FakeStepStatus()
-        r = [(re.compile("This is"), FAILURE)]
+        r = [(re.compile("This is"), WARNINGS)]
         new_status = regex_log_evaluator(cmd, step_status, r)
-        self.assertEqual(new_status, FAILURE, "regex_log_evaluator returned %d, should've returned %d" % (new_status, FAILURE))
+        self.assertEqual(new_status, WARNINGS,
+                "regex_log_evaluator returned %d, expected %d"
+                % (new_status, WARNINGS))
 
     def test_multiple_regexes(self):
-        cmd = FakeCmd("Normal stdout text\nan error", "")
+        cmd = self.makeRemoteCommand(0, "Normal stdout text\nan error")
         step_status = FakeStepStatus()
         r = [(re.compile("Normal stdout"), SUCCESS),
              (re.compile("error"), FAILURE)]
         new_status = regex_log_evaluator(cmd, step_status, r)
-        self.assertEqual(new_status, FAILURE, "regex_log_evaluator returned %d, should've returned %d" % (new_status, FAILURE))
+        self.assertEqual(new_status, FAILURE,
+                "regex_log_evaluator returned %d, expected %d"
+                % (new_status, FAILURE))
 
     def test_exception_not_in_stdout(self):
-        cmd = FakeCmd("Completely normal output", "exception output")
+        cmd = self.makeRemoteCommand(0,
+                "Completely normal output", "exception output")
         step_status = FakeStepStatus()
         r = [(re.compile("exception"), EXCEPTION)]
         new_status = regex_log_evaluator(cmd, step_status, r)
-        self.assertEqual(new_status, EXCEPTION, "regex_log_evaluator returned %d, should've returned %d" % (new_status, EXCEPTION))
+        self.assertEqual(new_status, EXCEPTION,
+                "regex_log_evaluator returned %d, expected %d"
+                % (new_status, EXCEPTION))
 
     def test_pass_a_string(self):
-        cmd = FakeCmd("Output", "Some weird stuff on stderr")
+        cmd = self.makeRemoteCommand(0, "Output", "Some weird stuff on stderr")
         step_status = FakeStepStatus()
         r = [("weird stuff", WARNINGS)]
         new_status = regex_log_evaluator(cmd, step_status, r)
-        self.assertEqual(new_status, WARNINGS, "regex_log_evaluator returned %d, should've returned %d" % (new_status, WARNINGS))
+        self.assertEqual(new_status, WARNINGS,
+                "regex_log_evaluator returned %d, expected %d"
+                % (new_status, WARNINGS))
 
 
 class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
@@ -180,20 +190,27 @@ class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
 
 
 class TestLoggingBuildStep(unittest.TestCase):
+
+    def makeRemoteCommand(self, rc, stdout, stderr=''):
+        cmd = remotecommand.FakeRemoteCommand('cmd', {})
+        cmd.fakeLogData(self, 'stdio', stdout=stdout, stderr=stderr)
+        cmd.rc = rc
+        return cmd
+
     def test_evaluateCommand_success(self):
-        cmd = FakeCmd("Log text", "Log text")
+        cmd = self.makeRemoteCommand(0, "Log text", "Log text")
         lbs = buildstep.LoggingBuildStep()
         status = lbs.evaluateCommand(cmd)
         self.assertEqual(status, SUCCESS, "evaluateCommand returned %d, should've returned %d" % (status, SUCCESS))
 
     def test_evaluateCommand_failed(self):
-        cmd = FakeCmd("Log text", "", 23)
+        cmd = self.makeRemoteCommand(23, "Log text", "")
         lbs = buildstep.LoggingBuildStep()
         status = lbs.evaluateCommand(cmd)
         self.assertEqual(status, FAILURE, "evaluateCommand returned %d, should've returned %d" % (status, FAILURE))
 
     def test_evaluateCommand_log_eval_func(self):
-        cmd = FakeCmd("Log text", "")
+        cmd = self.makeRemoteCommand(0, "Log text")
         def eval(cmd, step_status):
             return WARNINGS
         lbs = buildstep.LoggingBuildStep(log_eval_func=eval)
