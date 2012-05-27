@@ -377,8 +377,6 @@ class WebStatus(service.MultiService):
                 (self.http_port, self.distrib_port, hex(id(self))))
 
     def setServiceParent(self, parent):
-        service.MultiService.setServiceParent(self, parent)
-
         # this class keeps a *separate* link to the buildmaster, rather than
         # just using self.parent, so that when we are "disowned" (and thus
         # parent=None), any remaining HTTP clients of this WebStatus will still
@@ -443,6 +441,8 @@ class WebStatus(service.MultiService):
             s.setServiceParent(self)
 
         self.setupSite()
+
+        service.MultiService.setServiceParent(self, parent)
 
     def setupSite(self):
         # this is responsible for creating the root resource. It isn't done
