@@ -640,11 +640,19 @@ class BuildStep(object, properties.PropertiesMixin):
         # from finished() so that subclasses can override finished()
         if self.progress:
             self.progress.finish()
+
+        try:
+            hidden = self._maybeEvaluate(self.hideStepIf, results, self)
+        except Exception:
+            why = Failure()
+            self.addHTMLLog("err.html", formatFailure(why))
+            self.addCompleteLog("err.text", why.getTraceback())
+            results = EXCEPTION
+            hidden = False
+
         self.step_status.stepFinished(results)
-        
-        hidden = self._maybeEvaluate(self.hideStepIf, results, self)
         self.step_status.setHidden(hidden)
-        
+
         self.releaseLocks()
         self.deferred.callback(results)
 

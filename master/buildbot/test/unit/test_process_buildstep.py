@@ -85,9 +85,9 @@ class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
 
     # support
 
-    def _setupWaterfallTest(self, hideStepIf, expect):
+    def _setupWaterfallTest(self, hideStepIf, expect, expectedResult=SUCCESS):
         self.setupStep(TestBuildStep.FakeBuildStep(hideStepIf=hideStepIf))
-        self.expectOutcome(result=SUCCESS, status_text=["generic"])
+        self.expectOutcome(result=expectedResult, status_text=["generic"])
         self.expectHidden(expect)
 
     # tests
@@ -145,6 +145,11 @@ class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
         d = self.runStep()
         d.addCallback(lambda _ : self.assertTrue(called[0]))
         return d
+
+    def test_hideStepIf_fails(self):
+        # 0/0 causes DivideByZeroError, which should be flagged as an exception
+        self._setupWaterfallTest(lambda : 0/0, False, expectedResult=EXCEPTION)
+        return self.runStep()
 
     @compat.usesFlushLoggedErrors
     def test_hideStepIf_Callable_Exception(self):
