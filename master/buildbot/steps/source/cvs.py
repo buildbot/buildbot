@@ -46,6 +46,7 @@ class CVS(Source):
         Source.__init__(self, **kwargs)
 
     def startVC(self, branch, revision, patch):
+        self.branch = branch
         self.revision = revision
         self.stdio_log = self.addLog("stdio")
         self.method = self._getMethod()
