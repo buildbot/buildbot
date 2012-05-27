@@ -692,21 +692,21 @@ class Builder(config.ReconfigurableServiceMixin,
 class BuilderControl:
     implements(interfaces.IBuilderControl)
 
-    def __init__(self, builder, master):
+    def __init__(self, builder, control):
         self.original = builder
-        self.master = master
+        self.control = control
 
     def submitBuildRequest(self, ss, reason, props=None):
-        d = ss.getSourceStampSetId(self.master.master)
+        d = ss.getSourceStampSetId(self.control.master)
         def add_buildset(sourcestampsetid):
-            return self.master.master.addBuildset(
+            return self.control.master.addBuildset(
                     builderNames=[self.original.name],
                     sourcestampsetid=sourcestampsetid, reason=reason, properties=props)
         d.addCallback(add_buildset)
         def get_brs((bsid,brids)):
             brs = BuildRequestStatus(self.original.name,
                                      brids[self.original.name],
-                                     self.master.master.status)
+                                     self.control.master.status)
             return brs
         d.addCallback(get_brs)
         return d
@@ -727,14 +727,14 @@ class BuilderControl:
         ssList = bs.getSourceStamps(absolute=True)
         
         if ssList:
-            sourcestampsetid = yield  ssList[0].getSourceStampSetId(self.master.master)
+            sourcestampsetid = yield  ssList[0].getSourceStampSetId(self.control.master)
             dl = []
             for ss in ssList[1:]:
                 # add defered to the list
-                dl.append(ss.addSourceStampToDatabase(self.master.master, sourcestampsetid))
+                dl.append(ss.addSourceStampToDatabase(self.control.master, sourcestampsetid))
             yield defer.gatherResults(dl)
 
-            bsid, brids = yield self.master.master.addBuildset(
+            bsid, brids = yield self.control.master.addBuildset(
                     builderNames=[self.original.name],
                     sourcestampsetid=sourcestampsetid, 
                     reason=reason, 
@@ -755,7 +755,7 @@ class BuilderControl:
         buildrequests = [ ]
         for brdict in brdicts:
             br = yield buildrequest.BuildRequest.fromBrdict(
-                    self.master.master, brdict)
+                    self.control.master, brdict)
             buildrequests.append(br)
 
         # and return the corresponding control objects
