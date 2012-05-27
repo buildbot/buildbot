@@ -69,7 +69,15 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         for sr in list(self):
             yield defer.maybeDeferred(lambda :
                     sr.disownServiceParent())
-            sr.master = None
+
+            # WebStatus instances tend to "hang around" longer than we'd like -
+            # if there's an ongoing HTTP request, or even a connection held
+            # open by keepalive, then users may still be talking to an old
+            # WebStatus.  So WebStatus objects get to keep their `master`
+            # attribute, but all other status objects lose theirs.  And we want
+            # to test this without importing WebStatus, so we use name
+            if not sr.__class__.__name__.endswith('WebStatus'):
+                sr.master = None
 
         for sr in new_config.status:
             sr.master = self.master
