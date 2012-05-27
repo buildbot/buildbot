@@ -1500,6 +1500,10 @@ The :bb:step:`ShellCommand` arguments are:
     handled as a single string throughout Buildbot -- for example, do not pass
     the contents of a tarball with this parameter.
 
+``successfulRC``
+    This is a list or tuple of the exit codes that should be treated as successful.
+    The default is to treat just 0 as successful.
+
 .. bb:step:: Configure
 
 Configure

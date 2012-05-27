@@ -172,7 +172,7 @@ class _DirectoryWriter(_FileWriter):
 
 
 def makeStatusRemoteCommand(step, remote_command, args):
-    self = buildstep.RemoteCommand(remote_command, args)
+    self = buildstep.RemoteCommand(remote_command, args,  successfulRC=(None, 0))
     callback = lambda arg: step.step_status.addLog('stdio')
     self.useLogDelayed('stdio', callback, True)
     return self
@@ -213,9 +213,9 @@ class _TransferBuildStep(BuildStep):
         if result == SKIPPED:
             return BuildStep.finished(self, SKIPPED)
 
-        if self.cmd.rc is None or self.cmd.rc == 0:
-            return BuildStep.finished(self, SUCCESS)
-        return BuildStep.finished(self, FAILURE)
+        if self.cmd.didFail():
+            return BuildStep.finished(self, FAILURE)
+        return BuildStep.finished(self, SUCCESS)
 
 
 class FileUpload(_TransferBuildStep):
@@ -361,11 +361,9 @@ class DirectoryUpload(_TransferBuildStep):
         if result == SKIPPED:
             return BuildStep.finished(self, SKIPPED)
 
-        if self.cmd.rc is None or self.cmd.rc == 0:
-            return BuildStep.finished(self, SUCCESS)
-        return BuildStep.finished(self, FAILURE)
-
-
+        if self.cmd.didFail():
+            return BuildStep.finished(self, FAILURE)
+        return BuildStep.finished(self, SUCCESS)
 
 
 class _FileReader(pb.Referenceable):

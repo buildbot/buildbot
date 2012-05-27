@@ -58,7 +58,7 @@ class BuildEPYDoc(ShellCommand):
         self.errors = errors
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         if self.warnings or self.errors:
             return WARNINGS
@@ -118,7 +118,7 @@ class PyFlakes(ShellCommand):
 
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         for m in self.flunkingIssues:
             if self.getProperty("pyflakes-%s" % m):
