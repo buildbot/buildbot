@@ -130,7 +130,7 @@ class SVN(Source):
                                                 'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
-        if cmd.rc != 0:
+        if cmd.didFail():
             raise buildstep.BuildStepFailed()
         
         checkout_cmd = ['checkout', self.repourl, '.']
@@ -162,7 +162,7 @@ class SVN(Source):
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
-        if cmd.rc != 0:
+        if cmd.didFail():
             raise buildstep.BuildStepFailed()
 
         # temporarily set workdir = 'source' and do an incremental checkout
@@ -192,7 +192,7 @@ class SVN(Source):
 
         yield self.runCommand(cmd)
 
-        if cmd.rc != 0:
+        if cmd.didFail():
             raise buildstep.BuildStepFailed()
 
     def finish(self, res):
@@ -210,7 +210,7 @@ class SVN(Source):
                 {'dir': dir, 'logEnviron': self.logEnviron })
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
-        if cmd.rc != 0:
+        if cmd.didFail():
             raise buildstep.BuildStepFailed()
 
     def _dovccmd(self, command, collectStdout=False):
@@ -233,7 +233,7 @@ class SVN(Source):
         log.msg("Starting SVN command : svn %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
-            if cmd.rc != 0:
+            if cmd.didFail():
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
             if collectStdout:
@@ -259,7 +259,7 @@ class SVN(Source):
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
-        if cmd.rc != 0:
+        if cmd.didFail():
             defer.returnValue(False)
             return
 
