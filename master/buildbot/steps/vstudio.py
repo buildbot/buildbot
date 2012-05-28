@@ -178,7 +178,7 @@ class VisualStudio(ShellCommand):
         self.step_status.setStatistic('errors', self.logobserver.nbErrors)
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         if self.logobserver.nbErrors > 0:
             return FAILURE

@@ -287,7 +287,7 @@ class TreeSize(ShellCommand):
             self.setProperty("tree-size-KiB", self.kib, "treesize")
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         if self.kib is None:
             return WARNINGS # not sure how 'du' could fail, but whatever
@@ -318,7 +318,7 @@ class SetProperty(ShellCommand):
 
     def commandComplete(self, cmd):
         if self.property:
-            if cmd.rc != 0:
+            if cmd.didFail():
                 return
             result = cmd.logs['stdio'].getText()
             if self.strip: result = result.strip()
@@ -585,7 +585,7 @@ class WarningCountingShellCommand(ShellCommand):
 
 
     def evaluateCommand(self, cmd):
-        if ( cmd.rc != 0 or
+        if ( cmd.didFail() or
            ( self.maxWarnCount != None and self.warnCount > self.maxWarnCount ) ):
             return FAILURE
         if self.warnCount:
@@ -661,7 +661,7 @@ class PerlModuleTest(Test):
         passed = 0
         failed = 0
         rc = SUCCESS
-        if cmd.rc > 0:
+        if cmd.didFail():
             rc = FAILURE
 
         # New version of Test::Harness?

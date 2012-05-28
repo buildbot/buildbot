@@ -85,7 +85,7 @@ class FileExists(buildstep.BuildStep):
         d.addErrback(self.failed)
 
     def commandComplete(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             self.step_status.setText(["File not found."])
             self.finished(FAILURE)
             return
@@ -125,7 +125,7 @@ class RemoveDirectory(buildstep.BuildStep):
         d.addErrback(self.failed)
 
     def commandComplete(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             self.step_status.setText(["Delete failed."])
             self.finished(FAILURE)
             return
@@ -159,7 +159,7 @@ class MakeDirectory(buildstep.BuildStep):
         d.addErrback(self.failed)
 
     def commandComplete(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             self.step_status.setText(["Create failed."])
             self.finished(FAILURE)
             return

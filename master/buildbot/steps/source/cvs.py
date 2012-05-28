@@ -46,6 +46,7 @@ class CVS(Source):
         Source.__init__(self, **kwargs)
 
     def startVC(self, branch, revision, patch):
+        self.branch = branch
         self.revision = revision
         self.stdio_log = self.addLog("stdio")
         self.method = self._getMethod()
@@ -154,11 +155,11 @@ class CVS(Source):
                                            logEnviron=self.logEnviron)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
-        def evaluate(rc):
-            if rc != 0:
+        def evaluate(cmd):
+            if cmd.didFail():
                 raise buildstep.BuildStepFailed()
-            return rc
-        d.addCallback(lambda _: evaluate(cmd.rc))
+            return cmd.rc
+        d.addCallback(evaluate)
         return d
         
     def doCheckout(self, dir):

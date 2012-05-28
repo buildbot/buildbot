@@ -301,7 +301,7 @@ class Git(Source):
         log.msg("Starting git command : git %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
-            if abandonOnFailure and cmd.rc != 0:
+            if abandonOnFailure and cmd.didFail():
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
             if collectStdout:
@@ -411,7 +411,7 @@ class Git(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _fail(tmp):
-            if cmd.rc != 0:
+            if cmd.didFail():
                 return False
             return True
         d.addCallback(_fail)
