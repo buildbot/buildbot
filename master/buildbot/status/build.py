@@ -211,9 +211,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         return self.testResults
 
     def getLogs(self):
-        # TODO: steps should contribute significant logs instead of this
-        # hack, which returns every log from every step. The logs should get
-        # names like "compile" and "test" instead of "compile.output"
         logs = []
         for s in self.steps:
             for loog in s.getLogs():
