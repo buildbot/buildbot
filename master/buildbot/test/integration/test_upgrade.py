@@ -382,7 +382,21 @@ class UpgradeTestV082(UpgradeTestMixin, unittest.TestCase):
         ])
 
     def test_upgrade(self):
-        return self.do_test_upgrade()
+        d = self.do_test_upgrade()
+        @d.addCallback
+        def check_pickles(_):
+            # try to unpickle things down to the level of a logfile
+            filename = os.path.join(self.basedir, 'builder', 'builder')
+            with open(filename, "rb") as f:
+                builder_status = cPickle.load(f)
+            builder_status.master = self.master
+            builder_status.basedir = os.path.join(self.basedir, 'builder')
+            b0 = builder_status.loadBuildFromFile(0)
+            logs = b0.getLogs()
+            log = logs[0]
+            text = log.getText()
+            self.assertIn('HEAD is now at', text)
+        return d
 
 
 class UpgradeTestV083(UpgradeTestMixin, unittest.TestCase):
