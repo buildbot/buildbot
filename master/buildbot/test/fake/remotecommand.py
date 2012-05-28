@@ -59,6 +59,7 @@ class FakeRemoteCommand(object):
         return self.rc not in self.successfulRC
 
     def fakeLogData(self, step, log, header='', stdout='', stderr=''):
+        # note that this should not be used in the same test as useLog(Delayed)
         self.logs[log] = l = FakeLogFile(log, step)
         l.fakeData(header=header, stdout=stdout, stderr=stderr)
 
