@@ -73,7 +73,13 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
                 master.MasterShellCommand(command=cmd))
         self.expectLogfile('stdio', "")
-        self.expectOutcome(result=EXCEPTION, status_text=["killed (9)", "interrupted"])
+        if runtime.platformType == 'win32':
+            # windows doesn't have signals, so we don't get 'killed'
+            self.expectOutcome(result=EXCEPTION,
+                    status_text=["failed (1)", "interrupted"])
+        else:
+            self.expectOutcome(result=EXCEPTION,
+                    status_text=["killed (9)", "interrupted"])
         d = self.runStep()
         self.step.interrupt("KILL")
         return d
