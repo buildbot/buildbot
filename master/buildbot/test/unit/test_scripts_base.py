@@ -116,7 +116,7 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         patches = []
 
         def expanduser(p):
-            return p.replace('~', self.home + '/')
+            return p.replace('~/', self.home + '/')
         patches.append(self.patch(os.path, 'expanduser', expanduser))
 
         old_dirname = os.path.dirname
