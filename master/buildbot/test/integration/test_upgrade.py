@@ -539,6 +539,50 @@ class UpgradeTestV085(UpgradeTestMixin, unittest.TestCase):
         return d
 
 
+class UpgradeTestV086p1(UpgradeTestMixin, unittest.TestCase):
+
+    source_tarball = "v086p1.tgz"
+
+    def verify_thd(self, conn):
+        "partially verify the contents of the db - run in a thread"
+        model = self.db.model
+
+        tbl = model.buildrequests
+        r = conn.execute(tbl.select(order_by=tbl.c.id))
+        buildreqs = [ (br.id, br.buildsetid,
+                       br.complete, br.results)
+                      for br in r.fetchall() ]
+        self.assertEqual(buildreqs, [(1, 1, 1, 4)]) # note EXCEPTION status
+
+        br_claims = model.buildrequest_claims
+        objects = model.objects
+        r = conn.execute(sa.select([ br_claims.outerjoin(objects,
+                    br_claims.c.objectid == objects.c.id)]))
+        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.name, brc.class_name)
+                      for brc in r.fetchall() ]
+        self.assertEqual(buildreqs, [
+            (1, 1338229046, u'euclid.r.igoro.us:/A/bbrun',
+                u'buildbot.master.BuildMaster'),
+        ])
+
+    def test_upgrade(self):
+        d = self.do_test_upgrade()
+        @d.addCallback
+        def check_pickles(_):
+            # try to unpickle things down to the level of a logfile
+            filename = os.path.join(self.basedir, 'builder', 'builder')
+            with open(filename, "rb") as f:
+                builder_status = cPickle.load(f)
+            builder_status.master = self.master
+            builder_status.basedir = os.path.join(self.basedir, 'builder')
+            b0 = builder_status.loadBuildFromFile(0)
+            logs = b0.getLogs()
+            log = logs[0]
+            text = log.getText()
+            self.assertIn('HEAD is now at', text)
+        return d
+
+
 class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
     def setUp(self):
         d = self.setUpChangeImport()
