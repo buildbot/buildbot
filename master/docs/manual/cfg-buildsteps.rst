@@ -2429,8 +2429,9 @@ True, then no SourceStamps are given, corresponding to using the latest revision
 of the repositories specified in the Source steps. This is useful if the triggered
 builds use to a different source repository.  The argument ``sourceStamps`` 
 accepts a list of dictionaries containing the keys ``branch``, ``revision``,
-``branch``, ``repository``, ``project``, and optionally ``patch_level``,
-``patch_level`` and ``patch_subdir`` and creates the corresponding SourceStamps.
+``repository``, ``project``, and optionally ``patch_level``,
+``patch_body``, ``patch_subdir``, ``patch_author`` and ``patch_comment``
+and creates the corresponding SourceStamps.
 If only one sourceStamp has to be specified then the argument ``sourceStamp``
 can be used for a dictionary containing the keys mentioned above. The arguments
 ``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp`` can be specified
