@@ -127,7 +127,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
     ## state management
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def getState(self, *args, **kwargs):
         """
         For use by subclasses; get a named state value from the scheduler's
@@ -141,18 +141,14 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         """
         # get the objectid, if not known
         if self._objectid is None:
-            wfd = defer.waitForDeferred(
-                self.master.db.state.getObjectId(self.name,
-                                        self.__class__.__name__))
-            yield wfd
-            self._objectid = wfd.getResult()
+            self._objectid = yield self.master.db.state.getObjectId(self.name,
+                                                    self.__class__.__name__)
 
-        wfd = defer.waitForDeferred(
-            self.master.db.state.getState(self._objectid, *args, **kwargs))
-        yield wfd
-        yield wfd.getResult()
+        rv = yield self.master.db.state.getState(self._objectid, *args,
+                                                                    **kwargs)
+        defer.returnValue(rv)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def setState(self, key, value):
         """
         For use by subclasses; set a named state value in the scheduler's
@@ -165,16 +161,10 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         """
         # get the objectid, if not known
         if self._objectid is None:
-            wfd = defer.waitForDeferred(
-                self.master.db.state.getObjectId(self.name,
-                                        self.__class__.__name__))
-            yield wfd
-            self._objectid = wfd.getResult()
+            self._objectid = yield self.master.db.state.getObjectId(self.name,
+                                                self.__class__.__name__)
 
-        wfd = defer.waitForDeferred(
-            self.master.db.state.setState(self._objectid, key, value))
-        yield wfd
-        wfd.getResult()
+        yield self.master.db.state.setState(self._objectid, key, value)
 
     ## status queries
 
@@ -334,7 +324,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         defer.returnValue((bsid,brids))
 
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def addBuildSetForSourceStampDetails(self, reason='', external_idstring=None,
                         branch=None, repository='', project='', revision=None,
                         builderNames=None, properties=None):
@@ -357,23 +347,18 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         @returns: (buildset ID, buildrequest IDs) via Deferred
         """
         # Define setid for this set of changed repositories
-        wfd = defer.waitForDeferred(self.master.db.sourcestampsets.addSourceStampSet())
-        yield wfd
-        setid = wfd.getResult()
+        setid = yield self.master.db.sourcestampsets.addSourceStampSet()
 
-        wfd = defer.waitForDeferred(self.master.db.sourcestamps.addSourceStamp(
+        yield self.master.db.sourcestamps.addSourceStamp(
                 branch=branch, revision=revision, repository=repository,
-                project=project, sourcestampsetid=setid))
-        yield wfd
-        wfd.getResult()
+                project=project, sourcestampsetid=setid)
 
-        wfd = defer.waitForDeferred(self.addBuildsetForSourceStamp(
+        rv = yield self.addBuildsetForSourceStamp(
                                 setid=setid, reason=reason,
                                 external_idstring=external_idstring,
                                 builderNames=builderNames,
-                                properties=properties))
-        yield wfd
-        yield wfd.getResult()
+                                properties=properties)
+        defer.returnValue(rv)
 
 
     @defer.inlineCallbacks
@@ -419,7 +404,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
         defer.returnValue((bsid,brids))
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def addBuildsetForSourceStamp(self, ssid=None, setid=None, reason='', external_idstring=None,
             properties=None, builderNames=None):
         """
@@ -460,19 +445,15 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
         if setid == None:
             if ssid is not None:
-                wfd = defer.waitForDeferred(self.master.db.sourcestamps.getSourceStamp(ssid))
-                yield wfd
-                ssdict = wfd.getResult()
+                ssdict = yield self.master.db.sourcestamps.getSourceStamp(ssid)
                 setid = ssdict['sourcestampsetid']
             else:
                 # no sourcestamp and no sets
                 yield None
 
-        wfd = defer.waitForDeferred(self.master.addBuildset(
-                                        sourcestampsetid=setid, reason=reason,
-                                        properties=properties_dict,
-                                        builderNames=builderNames,
-                                        external_idstring=external_idstring))
-        yield wfd
-        yield wfd.getResult()
+        rv = yield self.master.addBuildset(sourcestampsetid=setid,
+                            reason=reason, properties=properties_dict,
+                            builderNames=builderNames,
+                            external_idstring=external_idstring)
+        defer.returnValue(rv)
 

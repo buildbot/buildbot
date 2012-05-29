@@ -704,9 +704,9 @@ an URL to the revision.  Note that the revision id may not always be in the
 form you expect, so code defensively.  In particular, a revision of "??" may be
 supplied when no other information is available.
 
-Note that :class:`SourceStamp`\s that are not created from version-control changes (e.g.,
-those created by a Nightly or Periodic scheduler) will have an empty repository
-string, as the respository is not known.
+Note that :class:`SourceStamp`\s that are not created from version-control
+changes (e.g., those created by a Nightly or Periodic scheduler) may have an
+empty repository string, if the respository is not known to the scheduler.
 
 Revision Link Helpers
 +++++++++++++++++++++
@@ -737,20 +737,18 @@ Codebase Generator
 
 ::
 
+    all_repositories = {
+        r'https://hg/hg/mailsuite/mailclient': 'mailexe',
+        r'https://hg/hg/mailsuite/mapilib': 'mapilib',
+        r'https://hg/hg/mailsuite/imaplib': 'imaplib',
+        r'https://github.com/mailinc/mailsuite/mailclient': 'mailexe',
+        r'https://github.com/mailinc/mailsuite/mapilib': 'mapilib',
+        r'https://github.com/mailinc/mailsuite/imaplib': 'imaplib',
+    }
+
     def codebaseGenerator(chdict):
-        all_repositories = {
-            r'https://hg/hg/mailsuite/mailclient': 'mailexe',
-            r'https://hg/hg/mailsuite/mapilib': 'mapilib',
-            r'https://hg/hg/mailsuite/imaplib': 'imaplib',
-            r'https://github.com/mailinc/mailsuite/mailclient': 'mailexe',
-            r'https://github.com/mailinc/mailsuite/mapilib': 'mapilib',
-            r'https://github.com/mailinc/mailsuite/imaplib': 'imaplib',
-        }
-        if chdict['repository'] in all_repositories:
-            return all_repositories[chdict['repository']]
-        else:
-            return ''
-            
+        return all_repositories[chdict['repository']]
+
     c['codebaseGenerator'] = codebaseGenerator
 
 For any incomming change a :ref:`codebase<Attr-Codebase>` is set to ''. This

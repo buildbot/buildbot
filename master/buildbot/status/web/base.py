@@ -436,10 +436,12 @@ class BuildLineMixin:
         css_class = css_classes.get(results, "")
         ss_list = build.getSourceStamps()
         if ss_list:
-            # TODO: support multiple sourcestamps in web interface
             repo = ss_list[0].repository
             if all_got_revision:
-                rev = all_got_revision[ss_list[0].codebase]
+                if len(ss_list) == 1:
+                    rev = all_got_revision.get(ss_list[0].codebase, "??")
+                else:
+                    rev = "multiple rev."
             else:
                 rev = "??"
         else:
@@ -511,6 +513,8 @@ def createJinjaEnv(revlink=None, changecommentlink=None,
                              undefined=AlmostStrictUndefined)
 
     env.install_null_translations() # needed until we have a proper i18n backend
+
+    env.tests['mapping'] = lambda obj : isinstance(obj, dict)
 
     env.filters.update(dict(
         urlencode = urllib.quote,
@@ -786,3 +790,14 @@ class AlmostStrictUndefined(jinja2.StrictUndefined):
         fully as strict as StrictUndefined '''
     def __nonzero__(self):
         return False
+
+_charsetRe = re.compile('charset=([^;]*)', re.I)
+def getRequestCharset(req):
+    """Get the charset for an x-www-form-urlencoded request"""
+    # per http://stackoverflow.com/questions/708915/detecting-the-character-encoding-of-an-http-post-request
+    hdr = req.getHeader('Content-Type')
+    if hdr:
+        mo = _charsetRe.search(hdr)
+        if mo:
+            return mo.group(1).strip()
+    return 'utf-8' # reasonable guess, works for ascii

@@ -179,7 +179,7 @@ class FeedResource(XmlResource):
             # title: trunk r22191 (plus patch) failed on
             # 'i686-debian-sarge1 shared gcc-3.3.5'
             ss_list = build.getSourceStamps()
-            all_got_revisions = build.getAllGotRevisions() or {}
+            all_got_revisions = build.getAllGotRevisions()
             src_cxts = []
             for ss in ss_list:
                 sc = {}

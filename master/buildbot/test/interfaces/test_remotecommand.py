@@ -25,41 +25,72 @@ from twisted.trial import unittest
 
 class Tests(interfaces.InterfaceTests):
 
-    def makeRemoteCommand(self, name, args):
-        raise NotImplementedError
+    remoteCommandClass = None
+
+    def makeRemoteCommand(self):
+        return self.remoteCommandClass('ping', {'arg':'val'})
+
+    def test_signature_RemoteCommand_constructor(self):
+        @self.assertArgSpecMatches(self.remoteCommandClass.__init__)
+        def __init__(self, remote_command, args, ignore_updates=False,
+                collectStdout=False, successfulRC=(0,)):
+            pass
+
+    def test_signature_RemoteShellCommand_constructor(self):
+        @self.assertArgSpecMatches(self.remoteShellCommandClass.__init__)
+        def __init__(self, workdir, command, env=None, want_stdout=1,
+                want_stderr=1, timeout=20*60, maxTime=None, logfiles={},
+                usePTY="slave-config", logEnviron=True, collectStdout=False,
+                interruptSignal=None, initialStdin=None, successfulRC=(0,)):
+            pass
+
+    def test_signature_run(self):
+        cmd = self.makeRemoteCommand()
+        @self.assertArgSpecMatches(cmd.run)
+        def run(self, step, remote):
+            pass
 
     def test_signature_useLog(self):
-        rc = self.makeRemoteCommand('ping', {'arg':'val'})
-        @self.assertArgSpecMatches(rc.useLog)
+        cmd = self.makeRemoteCommand()
+        @self.assertArgSpecMatches(cmd.useLog)
         def useLog(self, log, closeWhenFinished=False, logfileName=None):
             pass
 
     def test_signature_useLogDelayed(self):
-        rc = self.makeRemoteCommand('ping', {'arg':'val'})
-        @self.assertArgSpecMatches(rc.useLogDelayed)
+        cmd = self.makeRemoteCommand()
+        @self.assertArgSpecMatches(cmd.useLogDelayed)
         def useLogDelayed(self, logfileName, activateCallBack,
                 closeWhenFinished=False):
             pass
 
-    def test_signature_run(self):
-        rc = self.makeRemoteCommand('ping', {'arg':'val'})
-        @self.assertArgSpecMatches(rc.run)
-        def run(self, step, remote):
+    def test_signature_interrupt(self):
+        cmd = self.makeRemoteCommand()
+        @self.assertArgSpecMatches(cmd.interrupt)
+        def useLogDelayed(self, why):
             pass
 
+    def test_signature_didFail(self):
+        cmd = self.makeRemoteCommand()
+        @self.assertArgSpecMatches(cmd.didFail)
+        def useLogDelayed(self):
+            pass
 
-class RealTests(Tests):
-    pass
+    def test_signature_logs(self):
+        cmd = self.makeRemoteCommand()
+        self.assertIsInstance(cmd.logs, dict)
+
+    def test_signature_active(self):
+        cmd = self.makeRemoteCommand()
+        self.assertIsInstance(cmd.active, bool)
 
 
-class TestRunCommand(unittest.TestCase, RealTests):
+class TestRunCommand(unittest.TestCase, Tests):
 
-    def makeRemoteCommand(self, name, args):
-        return buildstep.RemoteCommand(name, args)
+    remoteCommandClass = buildstep.RemoteCommand
+    remoteShellCommandClass = buildstep.RemoteShellCommand
 
 
 class TestFakeRunCommand(unittest.TestCase, Tests):
 
-    def makeRemoteCommand(self, name, args):
-        return remotecommand.FakeRemoteCommand(name, args)
-
+    remoteCommandClass = remotecommand.FakeRemoteCommand
+    remoteShellCommandClass = remotecommand.FakeRemoteShellCommand

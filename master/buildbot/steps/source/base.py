@@ -26,9 +26,13 @@ class Source(LoggingBuildStep):
     starts a RemoteCommand with those arguments.
     """
 
-    renderables = [ 'workdir', 'description', 'descriptionDone' ]
+    renderables = LoggingBuildStep.renderables + [
+                     'description', 'descriptionDone', 'descriptionSuffix',
+                     'workdir' ]
+
     description = None # set this to a list of short strings to override
     descriptionDone = None # alternate description when the step is complete
+    descriptionSuffix = None # extra information to append to suffix
 
     # if the checkout fails, there's no point in doing anything else
     haltOnFailure = True
@@ -39,8 +43,8 @@ class Source(LoggingBuildStep):
 
     def __init__(self, workdir=None, mode='update', alwaysUseLatest=False,
                  timeout=20*60, retry=None, env=None, logEnviron=True,
-                 description=None, descriptionDone=None, codebase='',
-                 **kwargs):
+                 description=None, descriptionDone=None, descriptionSuffix=None,
+                 codebase='', **kwargs):
         """
         @type  workdir: string
         @param workdir: local directory (relative to the Builder's root)
@@ -128,7 +132,7 @@ class Source(LoggingBuildStep):
                            variables on the slave. In situations where the
                            environment is not relevant and is long, it may
                            be easier to set logEnviron=False.
-+
+
         @type codebase: string
         @param codebase: Specifies which changes in a build are processed by
         the step. The default codebase value is ''. The codebase must correspond
@@ -138,17 +142,6 @@ class Source(LoggingBuildStep):
         """
 
         LoggingBuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(workdir=workdir,
-                                 mode=mode,
-                                 alwaysUseLatest=alwaysUseLatest,
-                                 timeout=timeout,
-                                 retry=retry,
-                                 logEnviron=logEnviron,
-                                 env=env,
-                                 description=description,
-                                 descriptionDone=descriptionDone,
-                                 codebase=codebase,
-                                 )
 
         assert mode in ("update", "copy", "clobber", "export")
         if retry:
@@ -164,8 +157,10 @@ class Source(LoggingBuildStep):
         self.workdir = workdir
 
         self.sourcestamp = None
-        # Codebase cannot be set yet
+
         self.codebase = codebase
+        if self.codebase:
+            self.name = ' '.join((self.name, self.codebase))
 
         self.alwaysUseLatest = alwaysUseLatest
 
@@ -183,8 +178,6 @@ class Source(LoggingBuildStep):
         else:
             self.description = [
                 descriptions_for_mode.get(mode, "updating")]
-            if self.codebase:
-                self.description.append(self.codebase)
         if isinstance(self.description, str):
             self.description = [self.description]
 
@@ -193,10 +186,15 @@ class Source(LoggingBuildStep):
         else:
             self.descriptionDone = [
                 descriptionDones_for_mode.get(mode, "update")]
-            if self.codebase:
-                self.descriptionDone.append(self.codebase)
         if isinstance(self.descriptionDone, str):
             self.descriptionDone = [self.descriptionDone]
+
+        if descriptionSuffix:
+            self.descriptionSuffix = descriptionSuffix
+        else:
+            self.descriptionSuffix = self.codebase or None # want None in lieu of ''
+        if isinstance(self.descriptionSuffix, str):
+            self.descriptionSuffix = [self.descriptionSuffix]
 
     def setProperty(self, name, value , source):
         if self.codebase != '':
@@ -219,9 +217,11 @@ class Source(LoggingBuildStep):
         self.workdir = self.workdir or workdir
 
     def describe(self, done=False):
-        if done:
-            return self.descriptionDone
-        return self.description
+        desc = self.descriptionDone if done else self.description
+        if self.descriptionSuffix:
+            desc = desc[:]
+            desc.extend(self.descriptionSuffix)
+        return desc
 
     def computeSourceRevision(self, changes):
         """Each subclass must implement this method to do something more

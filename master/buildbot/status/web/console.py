@@ -234,30 +234,33 @@ class ConsoleStatusResource(HtmlResource):
         number = 0
         while build and number < numBuilds:
             debugInfo["builds_scanned"] += 1
-            number += 1
 
-            # Get the last revision in this build.
-            # We first try "got_revision", but if it does not work, then
-            # we try "revision".
-            got_rev = build.getProperty("got_revision", build.getProperty("revision", -1))
-            if got_rev != -1 and not self.comparator.isValidRevision(got_rev):
-                got_rev = -1
+            # The console page cannot handle builds that have more than 1 revision
+            if len(build.getSourceStamps()) == 1:
+                number += 1
+                # Get the last revision in this build.
+                # We first try "got_revision", but if it does not work, then
+                # we try "revision".
+                got_rev = build.getProperty("got_revision", build.getProperty("revision", -1))
+                if got_rev != -1 and not self.comparator.isValidRevision(got_rev):
+                    got_rev = -1
 
-            # We ignore all builds that don't have last revisions.
-            # TODO(nsylvain): If the build is over, maybe it was a problem
-            # with the update source step. We need to find a way to tell the
-            # user that his change might have broken the source update.
-            if got_rev != -1:
-                details = self.getBuildDetails(request, builderName, build)
-                devBuild = DevBuild(got_rev, build, details)
-                builds.append(devBuild)
+                    
+                # We ignore all builds that don't have last revisions.
+                # TODO(nsylvain): If the build is over, maybe it was a problem
+                # with the update source step. We need to find a way to tell the
+                # user that his change might have broken the source update.
+                if got_rev != -1:
+                    details = self.getBuildDetails(request, builderName, build)
+                    devBuild = DevBuild(got_rev, build, details)
+                    builds.append(devBuild)
 
-                # Now break if we have enough builds.
-                current_revision = self.getChangeForBuild(
-                    build, revision)
-                if self.comparator.isRevisionEarlier(
-                    devBuild, current_revision):
-                    break
+                    # Now break if we have enough builds.
+                    current_revision = self.getChangeForBuild(
+                        build, revision)
+                    if self.comparator.isRevisionEarlier(
+                        devBuild, current_revision):
+                        break
 
             build = build.getPreviousBuild()
 

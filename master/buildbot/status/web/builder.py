@@ -22,7 +22,8 @@ from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_slave, path_to_builder, path_to_change, \
     path_to_root, ICurrentBox, build_get_class, \
-    map_branches, path_to_authzfail, ActionResource
+    map_branches, path_to_authzfail, ActionResource, \
+    getRequestCharset
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.forcesched import InheritBuildParameter
 from buildbot.schedulers.forcesched import ValidationError
@@ -141,11 +142,16 @@ class ForceBuildActionResource(ActionResource):
                                "forcescheduler arg not found"))
             return
 
-        args = {}
+        args = req.args.copy()
+
+        # decode all of the args
+        encoding = getRequestCharset(req)
+        for name, argl in args.iteritems():
+            args[name] = [ arg.decode(encoding) for arg in argl ]
+
         # damn html's ungeneric checkbox implementation...
-        for cb in req.args.get("checkbox", []):
+        for cb in args.get("checkbox", []):
             args[cb] = True
-        args.update(req.args)
 
         builder_name = self.builder_status.getName()
 
@@ -183,7 +189,7 @@ def buildForceContext(cxt, req, master, buildername=None):
                 else:
                     # filter out unicode chars, and html stuff
                     if type(default)==unicode:
-                        default = html.escape(default.encode('ascii','ignore'))
+                        default = html.escape(default.encode('utf-8','ignore'))
                     default_props[pname] = default
     cxt['force_schedulers'] = force_schedulers
     cxt['default_props'] = default_props
@@ -481,9 +487,12 @@ class BuildersResource(HtmlResource):
     @defer.inlineCallbacks
     def content(self, req, cxt):
         status = self.getStatus(req)
+        encoding = getRequestCharset(req)
 
         builders = req.args.get("builder", status.getBuilderNames())
-        branches = [b for b in req.args.get("branch", []) if b]
+        branches = [ b.decode(encoding)
+                for b in req.args.get("branch", [])
+                if b ]
 
         # get counts of pending builds for each builder
         brstatus_ds = []
@@ -515,7 +524,7 @@ class BuildersResource(HtmlResource):
                 b = builds[0]
                 bld['build_url'] = (bld['link'] + "/builds/%d" % b.getNumber())
                 label = None
-                all_got_revisions = b.getAllGotRevisions() or {}
+                all_got_revisions = b.getAllGotRevisions()
                 # If len = 1 then try if revision can be used as label.
                 if len(all_got_revisions) == 1:
                     label = all_got_revisions[all_got_revisions.keys()[0]]

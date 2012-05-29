@@ -89,7 +89,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         return self.builder.getBuild(self.number-1)
 
     def getAllGotRevisions(self):
-        all_got_revisions = self.properties.getProperty('got_revision', None)
+        all_got_revisions = self.properties.getProperty('got_revision', {})
         # For backwards compatibility all_got_revisions is a string if codebases
         # are not used. Convert to the default internal type (dict)
         if isinstance(all_got_revisions, str):
@@ -101,7 +101,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         if not absolute:
             sourcestamps.extend(self.sources)
         else:
-            all_got_revisions = self.getAllGotRevisions()
+            all_got_revisions = self.getAllGotRevisions() or {}
             # always make a new instance
             for ss in self.sources:
                 if ss.codebase in all_got_revisions:
@@ -211,9 +211,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         return self.testResults
 
     def getLogs(self):
-        # TODO: steps should contribute significant logs instead of this
-        # hack, which returns every log from every step. The logs should get
-        # names like "compile" and "test" instead of "compile.output"
         logs = []
         for s in self.steps:
             for loog in s.getLogs():
@@ -456,7 +453,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         # Constant
         result['builderName'] = self.builder.name
         result['number'] = self.getNumber()
-        # TODO: enable multiple sourcestamps to outside the buildstatus
         result['sourceStamps'] = [ss.asDict() for ss in self.getSourceStamps()]
         result['reason'] = self.getReason()
         result['blame'] = self.getResponsibleUsers()

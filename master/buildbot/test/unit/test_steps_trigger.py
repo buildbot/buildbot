@@ -81,7 +81,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         # should be fixed!
 
         # set up a buildmaster that knows about two fake schedulers, a and b
-        self.build.builder.botmaster.parent = m = fakemaster.make_master()
+        m = fakemaster.make_master()
+        self.build.builder.botmaster = m.botmaster
         m.db = fakedb.FakeDBConnector(self)
         m.status = master.Status(m)
         m.config.buildbotURL = "baseurl/"

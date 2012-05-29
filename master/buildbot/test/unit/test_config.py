@@ -607,6 +607,15 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertIsInstance(self.cfg.builders[0], config.BuilderConfig)
         self.assertEqual(self.cfg.builders[0].name, 'x')
 
+    @compat.usesFlushWarnings
+    def test_load_builders_abs_builddir(self):
+        bldr = dict(name='x', factory=mock.Mock(), slavename='x',
+                builddir=os.path.abspath('.'))
+        self.cfg.load_builders(self.filename,
+                dict(builders=[bldr]), self.errors)
+        self.assertEqual(
+            len(self.flushWarnings([self.cfg.load_builders])),
+            1)
 
     def test_load_slaves_defaults(self):
         self.cfg.load_slaves(self.filename, {}, self.errors)
@@ -700,13 +709,12 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.slaves = [ mock.Mock() ]
         self.cfg.builders = [ b1, b2 ]
 
-    def setup_builder_locks(self, builder_lock=None, dup_builder_lock=False,
-                                  step_lock=None, dup_step_lock=False):
+    def setup_builder_locks(self, builder_lock=None, dup_builder_lock=False):
         def bldr(name):
             b = mock.Mock()
             b.name = name
             b.locks = []
-            b.factory.steps = [ ('cls', dict(locks=[])) ]
+            b.factory.steps = [ ('cls', (), dict(locks=[])) ]
             return b
 
         def lock(name):
@@ -720,11 +728,6 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             b1.locks.append(lock(builder_lock))
             if dup_builder_lock:
                 b2.locks.append(lock(builder_lock))
-        if step_lock:
-            s1, s2 = b1.factory.steps[0][1], b2.factory.steps[0][1]
-            s1['locks'].append(lock(step_lock))
-            if dup_step_lock:
-                s2['locks'].append(lock(step_lock))
 
     # tests
 
@@ -767,23 +770,13 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertNoConfigErrors(self.errors)
 
 
-    def test_check_locks_step_and_builder(self):
-        self.setup_builder_locks(builder_lock='l', step_lock='l')
-        self.cfg.check_locks(self.errors)
-        self.assertConfigError(self.errors, "Two locks share")
-
     def test_check_locks_dup_builder_lock(self):
         self.setup_builder_locks(builder_lock='l', dup_builder_lock=True)
         self.cfg.check_locks(self.errors)
         self.assertConfigError(self.errors, "Two locks share")
 
-    def test_check_locks_dup_step_lock(self):
-        self.setup_builder_locks(step_lock='l', dup_step_lock=True)
-        self.cfg.check_locks(self.errors)
-        self.assertConfigError(self.errors, "Two locks share")
-
     def test_check_locks(self):
-        self.setup_builder_locks(builder_lock='bl', step_lock='sl')
+        self.setup_builder_locks(builder_lock='bl')
         self.cfg.check_locks(self.errors)
         self.assertNoConfigErrors(self.errors)
 

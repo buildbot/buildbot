@@ -23,6 +23,7 @@ import buildbot
 from buildbot.test.util import compat
 from buildbot.process import botmaster, builder
 from buildbot import pbmanager, buildslave, config
+from buildbot.status import master
 from buildbot.test.fake import fakemaster
 
 class FakeSlaveBuilder(pb.Referenceable):
@@ -114,6 +115,8 @@ class TestSlaveComm(unittest.TestCase):
 
         self.botmaster = botmaster.BotMaster(self.master)
         self.botmaster.startService()
+
+        self.master.status = master.Status(self.master)
 
         self.buildslave = None
         self.port = None

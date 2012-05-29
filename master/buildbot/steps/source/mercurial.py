@@ -71,14 +71,6 @@ class Mercurial(Source):
         self.clobberOnBranchChange = clobberOnBranchChange
         self.mode = mode
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(repourl=repourl,
-                                 mode=mode,
-                                 method=method,
-                                 defaultBranch=defaultBranch,
-                                 branchType=branchType,
-                                 clobberOnBranchChange=
-                                 clobberOnBranchChange,
-                                 )
 
         errors = []
         if self.mode not in self.possible_modes:
@@ -237,7 +229,7 @@ class Mercurial(Source):
         log.msg("Starting mercurial command : hg %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
-            if cmd.rc != 0:
+            if cmd.didFail():
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
             if collectStdout:
@@ -284,7 +276,7 @@ class Mercurial(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _fail(tmp):
-            if cmd.rc != 0:
+            if cmd.didFail():
                 return False
             return True
         d.addCallback(_fail)

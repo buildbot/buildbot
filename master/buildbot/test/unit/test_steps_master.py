@@ -15,12 +15,11 @@
 
 import os
 import sys
-import mock
-from twisted.python import runtime
-from twisted.internet import reactor
+from twisted.python import failure, runtime
+from twisted.internet import error, reactor
 from twisted.trial import unittest
 from buildbot.test.util import steps
-from buildbot.status.results import SUCCESS, FAILURE
+from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION
 from buildbot.steps import master
 from buildbot.process.properties import WithProperties
 
@@ -51,9 +50,11 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                 elif output[0] == 'err':
                     pp.errReceived(output[1])
                 elif output[0] == 'rc':
-                    so = mock.Mock(name='status_object')
-                    so.value.exitCode = output[1]
-                    pp.processEnded(so)
+                    if output[1] != 0:
+                        so = error.ProcessTerminated(exitCode=output[1])
+                    else:
+                        so = error.ProcessDone(None)
+                    pp.processEnded(failure.Failure(so))
         self.patch(reactor, 'spawnProcess', spawnProcess)
 
     def test_real_cmd(self):
@@ -66,6 +67,22 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
             self.expectLogfile('stdio', "hello\n")
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
         return self.runStep()
+
+    def test_real_cmd_interrupted(self):
+        cmd = [ sys.executable, '-c', 'while True: pass' ]
+        self.setupStep(
+                master.MasterShellCommand(command=cmd))
+        self.expectLogfile('stdio', "")
+        if runtime.platformType == 'win32':
+            # windows doesn't have signals, so we don't get 'killed'
+            self.expectOutcome(result=EXCEPTION,
+                    status_text=["failed (1)", "interrupted"])
+        else:
+            self.expectOutcome(result=EXCEPTION,
+                    status_text=["killed (9)", "interrupted"])
+        d = self.runStep()
+        self.step.interrupt("KILL")
+        return d
 
     def test_real_cmd_fails(self):
         cmd = [ sys.executable, '-c', 'import sys; sys.exit(1)' ]
@@ -80,6 +97,9 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                 master.MasterShellCommand(description='x', descriptionDone='y',
                                 env={'a':'b'}, path=['/usr/bin'], usePTY=True,
                                 command='true'))
+        
+        self.assertEqual(self.step.describe(), ['x'])
+        
         if runtime.platformType == 'win32':
             exp_argv = [ r'C:\WINDOWS\system32\cmd.exe', '/c', 'true' ]
         else:
@@ -126,4 +146,30 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         else:
             self.expectLogfile('stdio', "BUILDBOT-TEST\nBUILDBOT-TEST\n")
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
+        return self.runStep()
+
+    def test_constr_args_descriptionSuffix(self):
+        self.setupStep(
+                master.MasterShellCommand(description='x', descriptionDone='y',
+                                          descriptionSuffix='z',
+                                env={'a':'b'}, path=['/usr/bin'], usePTY=True,
+                                command='true'))
+
+        # call twice to make sure the suffix doesnt get double added
+        self.assertEqual(self.step.describe(), ['x', 'z'])        
+        self.assertEqual(self.step.describe(), ['x', 'z'])
+
+        if runtime.platformType == 'win32':
+            exp_argv = [ r'C:\WINDOWS\system32\cmd.exe', '/c', 'true' ]
+        else:
+            exp_argv = [ '/bin/sh', '-c', 'true' ]
+        self.patchSpawnProcess(
+                exp_cmd=exp_argv[0], exp_argv=exp_argv,
+                exp_path=['/usr/bin'], exp_usePTY=True, exp_env={'a':'b'},
+                outputs=[
+                    ('out', 'hello!\n'),
+                    ('err', 'world\n'),
+                    ('rc', 0),
+                ])
+        self.expectOutcome(result=SUCCESS, status_text=['y', 'z'])
         return self.runStep()

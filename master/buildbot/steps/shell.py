@@ -65,9 +65,13 @@ class ShellCommand(buildstep.LoggingBuildStep):
     """
 
     name = "shell"
-    renderables = [ 'description', 'descriptionDone', 'slaveEnvironment', 'remote_kwargs', 'command', 'logfiles' ]
+    renderables = buildstep.LoggingBuildStep.renderables + [
+                   'slaveEnvironment', 'remote_kwargs', 'command']
+    
     description = None # set this to a list of short strings to override
     descriptionDone = None # alternate description when the step is complete
+    descriptionSuffix = None # extra information to append to suffix
+
     command = None # set this to a command, or set in kwargs
     # logfiles={} # you can also set 'logfiles' to a dictionary, and it
     #               will be merged with any logfiles= argument passed in
@@ -78,7 +82,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
     flunkOnFailure = True
 
     def __init__(self, workdir=None,
-                 description=None, descriptionDone=None,
+                 description=None, descriptionDone=None, descriptionSuffix=None,
                  command=None,
                  usePTY="slave-config",
                  **kwargs):
@@ -95,6 +99,12 @@ class ShellCommand(buildstep.LoggingBuildStep):
             self.descriptionDone = descriptionDone
         if isinstance(self.descriptionDone, str):
             self.descriptionDone = [self.descriptionDone]
+
+        if descriptionSuffix:
+            self.descriptionSuffix = descriptionSuffix
+        if isinstance(self.descriptionSuffix, str):
+            self.descriptionSuffix = [self.descriptionSuffix]
+
         if command:
             self.setCommand(command)
 
@@ -105,17 +115,11 @@ class ShellCommand(buildstep.LoggingBuildStep):
                 buildstep_kwargs[k] = kwargs[k]
                 del kwargs[k]
         buildstep.LoggingBuildStep.__init__(self, **buildstep_kwargs)
-        self.addFactoryArguments(workdir=workdir,
-                                 description=description,
-                                 descriptionDone=descriptionDone,
-                                 command=command)
 
         # everything left over goes to the RemoteShellCommand
         kwargs['workdir'] = workdir # including a copy of 'workdir'
         kwargs['usePTY'] = usePTY
         self.remote_kwargs = kwargs
-        # we need to stash the RemoteShellCommand's args too
-        self.addFactoryArguments(**kwargs)
 
     def setBuild(self, build):
         buildstep.LoggingBuildStep.setBuild(self, build)
@@ -148,6 +152,13 @@ class ShellCommand(buildstep.LoggingBuildStep):
              self._flattenList(mainlist, x)
 
     def describe(self, done=False):
+        desc = self._describe(done)
+        if self.descriptionSuffix:
+            desc = desc[:]
+            desc.extend(self.descriptionSuffix)
+        return desc
+
+    def _describe(self, done=False):
         """Return a list of short strings to describe this step, for the
         status display. This uses the first few words of the shell command.
         You can replace this by setting .description in your subclass, or by
@@ -276,7 +287,7 @@ class TreeSize(ShellCommand):
             self.setProperty("tree-size-KiB", self.kib, "treesize")
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         if self.kib is None:
             return WARNINGS # not sure how 'du' could fail, but whatever
@@ -303,15 +314,11 @@ class SetProperty(ShellCommand):
 
         ShellCommand.__init__(self, **kwargs)
 
-        self.addFactoryArguments(property=self.property)
-        self.addFactoryArguments(extract_fn=self.extract_fn)
-        self.addFactoryArguments(strip=self.strip)
-
         self.property_changes = {}
 
     def commandComplete(self, cmd):
         if self.property:
-            if cmd.rc != 0:
+            if cmd.didFail():
                 return
             result = cmd.logs['stdio'].getText()
             if self.strip: result = result.strip()
@@ -405,12 +412,6 @@ class WarningCountingShellCommand(ShellCommand):
         # And upcall to let the base class do its work
         ShellCommand.__init__(self, **kwargs)
 
-        self.addFactoryArguments(warningPattern=warningPattern,
-                                 directoryEnterPattern=directoryEnterPattern,
-                                 directoryLeavePattern=directoryLeavePattern,
-                                 warningExtractor=warningExtractor,
-                                 maxWarnCount=maxWarnCount,
-                                 suppressionFile=suppressionFile)
         self.suppressions = []
         self.directoryStack = []
 
@@ -584,7 +585,7 @@ class WarningCountingShellCommand(ShellCommand):
 
 
     def evaluateCommand(self, cmd):
-        if ( cmd.rc != 0 or
+        if ( cmd.didFail() or
            ( self.maxWarnCount != None and self.warnCount > self.maxWarnCount ) ):
             return FAILURE
         if self.warnCount:
@@ -660,7 +661,7 @@ class PerlModuleTest(Test):
         passed = 0
         failed = 0
         rc = SUCCESS
-        if cmd.rc > 0:
+        if cmd.didFail():
             rc = FAILURE
 
         # New version of Test::Harness?

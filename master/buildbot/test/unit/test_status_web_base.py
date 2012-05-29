@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 from buildbot.status.web import base
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -57,4 +58,25 @@ class ActionResource(unittest.TestCase):
             # pass - all good!
         d.addErrback(check)
         return d
+
+class Functions(unittest.TestCase):
+
+    def do_test_getRequestCharset(self, hdr, exp):
+        req = mock.Mock()
+        req.getHeader.return_value = hdr
+
+        self.assertEqual(base.getRequestCharset(req), exp)
+
+    def test_getRequestCharset_empty(self):
+        return self.do_test_getRequestCharset(None, 'utf-8')
+
+    def test_getRequestCharset_specified(self):
+        return self.do_test_getRequestCharset(
+            'application/x-www-form-urlencoded ; charset=ISO-8859-1',
+            'ISO-8859-1')
+
+    def test_getRequestCharset_other_params(self):
+        return self.do_test_getRequestCharset(
+            'application/x-www-form-urlencoded ; charset=UTF-16 ; foo=bar',
+            'UTF-16')
 

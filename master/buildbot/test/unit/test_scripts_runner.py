@@ -21,7 +21,7 @@ import getpass
 import mock
 import cStringIO
 from twisted.trial import unittest
-from twisted.python import usage
+from twisted.python import usage, runtime
 from buildbot.scripts import base, runner
 from buildbot.test.util import misc
 
@@ -187,8 +187,9 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
         self.assertOptions(opts, exp)
 
     def test_db_basedir(self):
-        opts = self.parse('-f', '/foo/bar')
-        exp = self.defaults_and(force=True, basedir='/foo/bar')
+        path = r'c:\foo\bar' if runtime.platformType == "win32" else '/foo/bar'
+        opts = self.parse('-f', path)
+        exp = self.defaults_and(force=True, basedir=path)
         self.assertOptions(opts, exp)
 
 

@@ -49,7 +49,7 @@ Charset.add_charset('utf-8', Charset.SHORTEST, None, 'utf-8')
 from buildbot import interfaces, util, config
 from buildbot.process.users import users
 from buildbot.status import base
-from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, Results
+from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION, Results
 
 VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
 
@@ -92,6 +92,8 @@ def defaultMessage(mode, name, build, results, master_status):
             text += "The Buildbot has detected a restored build"
         else:
             text += "The Buildbot has detected a passing build"
+    elif results == EXCEPTION:
+        text += "The Buildbot has detected a build exception"
 
     projects = []
     if ss_list:
@@ -177,7 +179,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                      "subject", "sendToInterestedUsers", "customMesg",
                      "messageFormatter", "extraHeaders"]
 
-    possible_modes = ("change", "failing", "passing", "problem", "warnings")
+    possible_modes = ("change", "failing", "passing", "problem", "warnings", "exception")
 
     def __init__(self, fromaddr, mode=("failing", "passing", "warnings"),
                  categories=None, builders=None, addLogs=False,
@@ -220,6 +222,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                      - "problem": send mail about a build which failed
                                   when the previous build passed
                      - "warnings": send mail if a build contain warnings
+                     - "exception": send mail if a build fails due to an exception
+                     - "all": always send mail
                      Defaults to ("failing", "passing", "warnings").
 
         @type  builders: list of strings
@@ -316,7 +320,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.fromaddr = fromaddr
         if isinstance(mode, basestring):
             if mode == "all":
-                mode = ("failing", "passing", "warnings")
+                mode = ("failing", "passing", "warnings", "exception")
             elif mode == "warnings":
                 mode = ("failing", "warnings")
             else:
@@ -433,6 +437,8 @@ class MailNotifier(base.StatusReceiverMultiService):
             if prev and prev.getResults() != FAILURE:
                 return True
         if "warnings" in self.mode and results == WARNINGS:
+            return True
+        if "exception" in self.mode and results == EXCEPTION:
             return True
 
         return False

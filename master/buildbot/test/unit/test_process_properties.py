@@ -24,6 +24,7 @@ from buildbot.process.properties import Property, PropertiesMixin
 from buildbot.interfaces import IRenderable, IProperties
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.properties import FakeRenderable
+from buildbot.test.util import compat
 
 class FakeSource:
     def __init__(self):
@@ -197,6 +198,58 @@ class TestPropertyMap(unittest.TestCase):
     def testColonPlusUnset(self):
         return self.doTestSimpleWithProperties('%(prop_nosuch:+present)s', '')
 
+
+    def testColonTernarySet(self):
+        return self.doTestSimpleWithProperties('%(prop_str:?:present:missing)s', 'present')
+
+    def testColonTernaryNone(self):
+        return self.doTestSimpleWithProperties('%(prop_none:?:present:missing)s', 'present')
+
+    def testColonTernaryZero(self):
+        return self.doTestSimpleWithProperties('%(prop_zero:?|present|missing)s', 'present')
+
+    def testColonTernaryOne(self):
+        return self.doTestSimpleWithProperties('%(prop_one:?:present:missing)s', 'present')
+
+    def testColonTernaryFalse(self):
+        return self.doTestSimpleWithProperties('%(prop_false:?|present|missing)s', 'present')
+
+    def testColonTernaryTrue(self):
+        return self.doTestSimpleWithProperties('%(prop_true:?:present:missing)s', 'present')
+
+    def testColonTernaryEmpty(self):
+        return self.doTestSimpleWithProperties('%(prop_empty:?ApresentAmissing)s', 'present')
+
+    def testColonTernaryUnset(self):
+        return self.doTestSimpleWithProperties('%(prop_nosuch:?#present#missing)s', 'missing')
+
+
+    def testColonTernaryHashSet(self):
+        return self.doTestSimpleWithProperties('%(prop_str:#?:truish:falsish)s', 'truish')
+        
+    def testColonTernaryHashNone(self):
+        # None is special-cased *differently* for '#?'
+        return self.doTestSimpleWithProperties('%(prop_none:#?|truish|falsish)s', 'falsish')
+
+    def testColonTernaryHashZero(self):
+        return self.doTestSimpleWithProperties('%(prop_zero:#?:truish:falsish)s', 'falsish')
+
+    def testColonTernaryHashOne(self):
+        return self.doTestSimpleWithProperties('%(prop_one:#?:truish:falsish)s', 'truish')
+
+    def testColonTernaryHashFalse(self):
+        return self.doTestSimpleWithProperties('%(prop_false:#?:truish:falsish)s', 'falsish')
+
+    def testColonTernaryHashTrue(self):
+        return self.doTestSimpleWithProperties('%(prop_true:#?|truish|falsish)s', 'truish')
+
+    def testColonTernaryHashEmpty(self):
+        return self.doTestSimpleWithProperties('%(prop_empty:#?:truish:falsish)s', 'falsish')
+
+    def testColonTernaryHashUnset(self):
+        return self.doTestSimpleWithProperties('%(prop_nosuch:#?.truish.falsish)s', 'falsish')
+
+
     def testClearTempValues(self):
         d = self.doTestSimpleWithProperties('', '',
                 prop_temp=lambda b: 'present')
@@ -274,6 +327,23 @@ class TestPropertyMap(unittest.TestCase):
                 prop_nosuch=lambda b: 1)
 
 
+    def testTempValueColonTernaryTrue(self):
+        return self.doTestSimpleWithProperties('%(prop_temp:?:present:missing)s', 'present',
+                prop_temp=lambda b: True)
+
+    def testTempValueColonTernaryFalse(self):
+        return self.doTestSimpleWithProperties('%(prop_temp:?|present|missing)s', 'present',
+                prop_temp=lambda b: False)
+
+    def testTempValueColonTernaryHashTrue(self):
+        return self.doTestSimpleWithProperties('%(prop_temp:#?|truish|falsish)s', 'truish',
+                prop_temp=lambda b: 1)
+
+    def testTempValueColonTernaryHashFalse(self):
+        return self.doTestSimpleWithProperties('%(prop_temp:#?|truish|falsish)s', 'falsish',
+                prop_nosuch=lambda b: 0)
+
+
 class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
     """
     Test that Interpolate reports erros in the interpolation string
@@ -313,6 +383,33 @@ class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
         self.assertRaisesConfigError("invalid Interpolate selector 'garbage'",
                 lambda: Interpolate("%(prop:some_prop:~%(garbage:test)s)s"))
 
+    def test_colon_ternary_missing_delimeter(self):
+        self.assertRaisesConfigError("invalid Interpolate ternary expression 'one' with delimiter ':'",
+                lambda: Interpolate("echo '%(prop:P:?:one)s'"))
+
+    def test_colon_ternary_paren_delimiter(self):
+        self.assertRaisesConfigError("invalid Interpolate ternary expression 'one(:)' with delimiter ':'",
+                lambda: Interpolate("echo '%(prop:P:?:one(:))s'"))
+
+    def test_colon_ternary_hash_bad_delimeter(self):
+        self.assertRaisesConfigError("invalid Interpolate ternary expression 'one' with delimiter '|'",
+                lambda: Interpolate("echo '%(prop:P:#?|one)s'"))
+
+    def test_prop_invalid_character(self):
+        self.assertRaisesConfigError("Property name must be alphanumeric for prop Interpolation 'a+a'",
+                lambda: Interpolate("echo '%(prop:a+a)s'"))
+
+    def test_kw_invalid_character(self):
+        self.assertRaisesConfigError("Keyword must be alphanumeric for kw Interpolation 'a+a'",
+                lambda: Interpolate("echo '%(kw:a+a)s'"))
+
+    def test_src_codebase_invalid_character(self):
+        self.assertRaisesConfigError("Codebase must be alphanumeric for src Interpolation 'a+a:a'",
+                lambda: Interpolate("echo '%(src:a+a:a)s'"))
+
+    def test_src_attr_invalid_character(self):
+        self.assertRaisesConfigError("Attribute must be alphanumeric for src Interpolation 'a:a+a'",
+                lambda: Interpolate("echo '%(src:a:a+a)s'"))
 
 
 class TestInterpolatePositional(unittest.TestCase):
@@ -401,14 +498,6 @@ class TestInterpolateProperties(unittest.TestCase):
                              "echo projectdefined")
         return d
 
-    def test_property_renderable(self):
-        self.props.setProperty("project", FakeRenderable('testing'), "test")
-        command = Interpolate("echo '%(prop:project)s'")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                            "echo 'testing'")
-        return d
-
     def test_nested_property(self):
         self.props.setProperty("project", "so long!", "test")
         command = Interpolate("echo '%(prop:missing:~%(prop:project)s)s'")
@@ -416,6 +505,84 @@ class TestInterpolateProperties(unittest.TestCase):
         d.addCallback(self.failUnlessEqual,
                             "echo 'so long!'")
         return d
+
+    def test_property_substitute_recursively(self):
+        self.props.setProperty("project", "proj1", "test")
+        command = Interpolate("echo '%(prop:no_such:-%(prop:project)s)s'")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                             "echo 'proj1'")
+        return d
+
+    def test_property_colon_ternary_present(self):
+        self.props.setProperty("project", "proj1", "test")
+        command = Interpolate("echo %(prop:project:?:defined:missing)s")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                             "echo defined")
+        return d
+
+    def test_property_colon_ternary_missing(self):
+        command = Interpolate("echo %(prop:project:?|defined|missing)s")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                             "echo missing")
+        return d
+
+    def test_property_colon_ternary_hash_true(self):
+        self.props.setProperty("project", "winbld", "test")
+        command = Interpolate("echo buildby-%(prop:project:#?:T:F)s")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                             "echo buildby-T")
+        return d
+
+    def test_property_colon_ternary_hash_false(self):
+        self.props.setProperty("project", "", "test")
+        command = Interpolate("echo buildby-%(prop:project:#?|T|F)s")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                             "echo buildby-F")
+        return d
+
+    def test_property_colon_ternary_substitute_recursively_true(self):
+        self.props.setProperty("P", "present", "test")
+        self.props.setProperty("one", "proj1", "test")
+        self.props.setProperty("two", "proj2", "test")
+        command = Interpolate("echo '%(prop:P:?|%(prop:one)s|%(prop:two)s)s'")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                             "echo 'proj1'")
+        return d
+
+    def test_property_colon_ternary_substitute_recursively_false(self):
+        self.props.setProperty("one", "proj1", "test")
+        self.props.setProperty("two", "proj2", "test")
+        command = Interpolate("echo '%(prop:P:?|%(prop:one)s|%(prop:two)s)s'")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                             "echo 'proj2'")
+        return d
+
+    def test_property_colon_ternary_substitute_recursively_delimited_true(self):
+        self.props.setProperty("P", "present", "test")
+        self.props.setProperty("one", "proj1", "test")
+        self.props.setProperty("two", "proj2", "test")
+        command = Interpolate("echo '%(prop:P:?|%(prop:one:?|true|false)s|%(prop:two:?|false|true)s)s'")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                             "echo 'true'")
+        return d
+
+    def test_property_colon_ternary_substitute_recursively_delimited_false(self):
+        self.props.setProperty("one", "proj1", "test")
+        self.props.setProperty("two", "proj2", "test")
+        command = Interpolate("echo '%(prop:P:?|%(prop:one:?|true|false)s|%(prop:two:?|false|true)s)s'")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                             "echo 'false'")
+        return d
+
 
 class TestInterpolateSrc(unittest.TestCase):
     def setUp(self):
@@ -716,6 +883,15 @@ class TestWithProperties(unittest.TestCase):
                              "build-exists-.tar.gz")
         return d
 
+    def testDictColonTernary(self):
+        # test dict-style substitution with WithProperties
+        self.props.setProperty("prop1", "foo", "test")
+        command = WithProperties("build-%(prop1:?:exists:missing)s-%(prop2:?:exists:missing)s.tar.gz")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                             "build-exists-missing.tar.gz")
+        return d
+
     def testEmpty(self):
         # None should render as ''
         self.props.setProperty("empty", None, "test")
@@ -872,6 +1048,12 @@ class TestProperties(unittest.TestCase):
         self.failUnlessEqual(self.props.getPropertySource('d'), 'new')
         self.failUnlessEqual(self.props.getProperty('x'), 24)
         self.failUnlessEqual(self.props.getPropertySource('x'), 'old')
+
+    @compat.usesFlushWarnings
+    def test_setProperty_notJsonable(self):
+        self.props.setProperty("project", FakeRenderable('testing'), "test")
+        self.props.setProperty("project", object, "test")
+        self.assertEqual(len(self.flushWarnings([self.test_setProperty_notJsonable])), 2)
 
     # IProperties methods
 

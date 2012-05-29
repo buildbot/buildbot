@@ -184,13 +184,15 @@ class Build(properties.PropertiesMixin):
     def setupSlaveBuilder(self, slavebuilder):
         self.slavebuilder = slavebuilder
 
+        self.path_module = slavebuilder.slave.path_module
+
         # navigate our way back to the L{buildbot.buildslave.BuildSlave}
         # object that came from the config, and get its properties
         buildslave_properties = slavebuilder.slave.properties
         self.getProperties().updateFromProperties(buildslave_properties)
         if slavebuilder.slave.slave_basedir:
             self.setProperty("workdir",
-                    slavebuilder.slave.path_module.join(
+                    self.path_module.join(
                         slavebuilder.slave.slave_basedir,
                         self.builder.config.slavebuilddir),
                     "slave")
@@ -297,15 +299,8 @@ class Build(properties.PropertiesMixin):
         stepnames = {}
         sps = []
 
-        for factory, args in self.stepFactories:
-            args = args.copy()
-            try:
-                step = factory(**args)
-            except:
-                log.msg("error while creating step, factory=%s, args=%s"
-                        % (factory, args))
-                raise
-           
+        for factory in self.stepFactories:
+            step = factory.buildStep()
             step.setBuild(self)
             step.setBuildSlave(self.slavebuilder.slave)
             if callable (self.workdir):

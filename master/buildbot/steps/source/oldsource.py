@@ -26,7 +26,8 @@ from buildbot.steps.source.base import Source
 class _ComputeRepositoryURL(object):
     implements(IRenderable)
 
-    def __init__(self, repository):
+    def __init__(self, step, repository):
+        self.step = step
         self.repository = repository
 
     def getRenderingFor(self, props):
@@ -37,7 +38,7 @@ class _ComputeRepositoryURL(object):
 
         build = props.getBuild()
         assert build is not None, "Build should be available *during* a build?"
-        s = build.getSourceStamp('') # TODO: use correct codebase
+        s = build.getSourceStamp(self.step.codebase)
 
         repository = self.repository
 
@@ -59,7 +60,6 @@ class _ComputeRepositoryURL(object):
 
         d.addCallback(str)
         return d
-
 
 
 
@@ -161,19 +161,9 @@ class CVS(Source):
 
         self.checkoutDelay = checkoutDelay
         self.branch = branch
-        self.cvsroot = _ComputeRepositoryURL(cvsroot)
+        self.cvsroot = _ComputeRepositoryURL(self, cvsroot)
 
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(cvsroot=cvsroot,
-                                 cvsmodule=cvsmodule,
-                                 global_options=global_options,
-                                 checkout_options=checkout_options,
-                                 export_options=export_options,
-                                 extra_options=extra_options,
-                                 branch=branch,
-                                 checkoutDelay=checkoutDelay,
-                                 login=login,
-                                 )
 
         self.args.update({'cvsmodule': cvsmodule,
                           'global_options': global_options,
@@ -298,8 +288,8 @@ class SVN(Source):
             warn("Please use workdir=, not directory=", DeprecationWarning)
             kwargs['workdir'] = directory
 
-        self.svnurl = svnurl and _ComputeRepositoryURL(svnurl)
-        self.baseURL = _ComputeRepositoryURL(baseURL)
+        self.svnurl = svnurl and _ComputeRepositoryURL(self, svnurl)
+        self.baseURL = _ComputeRepositoryURL(self, baseURL)
         self.branch = defaultBranch
         self.username = username
         self.password = password
@@ -310,18 +300,6 @@ class SVN(Source):
         self.depth = depth
 
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(svnurl=svnurl,
-                                 baseURL=baseURL,
-                                 defaultBranch=defaultBranch,
-                                 directory=directory,
-                                 username=username,
-                                 password=password,
-                                 extra_args=extra_args,
-                                 keep_on_purge=keep_on_purge,
-                                 ignore_ignores=ignore_ignores,
-                                 always_purge=always_purge,
-                                 depth=depth,
-                                 )
 
         if svnurl and baseURL:
             raise ValueError("you must use either svnurl OR baseURL")
@@ -462,14 +440,10 @@ class Darcs(Source):
                               C{baseURL} and the result handed to the
                               'darcs pull' command.
         """
-        self.repourl = _ComputeRepositoryURL(repourl)
-        self.baseURL = _ComputeRepositoryURL(baseURL)
+        self.repourl = _ComputeRepositoryURL(self, repourl)
+        self.baseURL = _ComputeRepositoryURL(self, baseURL)
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(repourl=repourl,
-                                 baseURL=baseURL,
-                                 defaultBranch=defaultBranch,
-                                 )
         assert self.args['mode'] != "export", \
                "Darcs does not have an 'export' mode"
         if repourl and baseURL:
@@ -562,16 +536,8 @@ class Git(Source):
                          lack of output, but requires Git 1.7.2+.
         """
         Source.__init__(self, **kwargs)
-        self.repourl = _ComputeRepositoryURL(repourl)
+        self.repourl = _ComputeRepositoryURL(self, repourl)
         self.branch = branch
-        self.addFactoryArguments(repourl=repourl,
-                                 branch=branch,
-                                 submodules=submodules,
-                                 ignore_ignores=ignore_ignores,
-                                 reference=reference,
-                                 shallow=shallow,
-                                 progress=progress,
-                                 )
         self.args.update({'submodules': submodules,
                           'ignore_ignores': ignore_ignores,
                           'reference': reference,
@@ -626,6 +592,7 @@ class Repo(Source):
                  manifest_branch="master",
                  manifest_file="default.xml",
                  tarball=None,
+                 jobs=None,
                  **kwargs):
         """
         @type  manifest_url: string
@@ -639,16 +606,12 @@ class Repo(Source):
 
         """
         Source.__init__(self, **kwargs)
-        self.manifest_url = _ComputeRepositoryURL(manifest_url)
-        self.addFactoryArguments(manifest_url=manifest_url,
-                                 manifest_branch=manifest_branch,
-                                 manifest_file=manifest_file,
-                                 tarball=tarball,
-                                 )
+        self.manifest_url = _ComputeRepositoryURL(self, manifest_url)
         self.args.update({'manifest_branch': manifest_branch,
                           'manifest_file': manifest_file,
                           'tarball': tarball,
-                          'manifest_override_url': None
+                          'manifest_override_url': None,
+                          'jobs': jobs
                           })
 
     def computeSourceRevision(self, changes):
@@ -784,15 +747,10 @@ class Bzr(Source):
                                 if not using update/copy mode, or if using
                                 update/copy mode with multiple branches.
         """
-        self.repourl = _ComputeRepositoryURL(repourl)
-        self.baseURL = _ComputeRepositoryURL(baseURL)
+        self.repourl = _ComputeRepositoryURL(self, repourl)
+        self.baseURL = _ComputeRepositoryURL(self, baseURL)
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(repourl=repourl,
-                                 baseURL=baseURL,
-                                 defaultBranch=defaultBranch,
-                                 forceSharedRepo=forceSharedRepo
-                                 )
         self.args.update({'forceSharedRepo': forceSharedRepo})
         if repourl and baseURL:
             raise ValueError("you must provide exactly one of repourl and"
@@ -872,18 +830,12 @@ class Mercurial(Source):
                                       at each branch change. Otherwise, just
                                       update to the branch.
         """
-        self.repourl = _ComputeRepositoryURL(repourl)
-        self.baseURL = _ComputeRepositoryURL(baseURL)
+        self.repourl = _ComputeRepositoryURL(self, repourl)
+        self.baseURL = _ComputeRepositoryURL(self, baseURL)
         self.branch = defaultBranch
         self.branchType = branchType
         self.clobberOnBranchChange = clobberOnBranchChange
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(repourl=repourl,
-                                 baseURL=baseURL,
-                                 defaultBranch=defaultBranch,
-                                 branchType=branchType,
-                                 clobberOnBranchChange=clobberOnBranchChange,
-                                 )
         if repourl and baseURL:
             raise ValueError("you must provide exactly one of repourl and"
                              " baseURL")
@@ -972,18 +924,9 @@ class P4(Source):
         @param p4client: The perforce client to use for this buildslave.
         """
 
-        self.p4base = _ComputeRepositoryURL(p4base)
+        self.p4base = _ComputeRepositoryURL(self, p4base)
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(p4base=p4base,
-                                 defaultBranch=defaultBranch,
-                                 p4port=p4port,
-                                 p4user=p4user,
-                                 p4passwd=p4passwd,
-                                 p4extra_views=p4extra_views,
-                                 p4line_end=p4line_end,
-                                 p4client=p4client,
-                                 )
         self.args['p4port'] = p4port
         self.args['p4user'] = p4user
         self.args['p4passwd'] = p4passwd
@@ -1015,56 +958,6 @@ class P4(Source):
         cmd = RemoteCommand("p4", args)
         self.startCommand(cmd)
 
-class P4Sync(Source):
-    """
-    DEPRECATED - will be removed in 0.8.5.
-    
-    This is a partial solution for using a P4 source repository. You are
-    required to manually set up each build slave with a useful P4
-    environment, which means setting various per-slave environment variables,
-    and creating a P4 client specification which maps the right files into
-    the slave's working directory. Once you have done that, this step merely
-    performs a 'p4 sync' to update that workspace with the newest files.
-
-    Each slave needs the following environment:
-
-     - PATH: the 'p4' binary must be on the slave's PATH
-     - P4USER: each slave needs a distinct user account
-     - P4CLIENT: each slave needs a distinct client specification
-
-    You should use 'p4 client' (?) to set up a client view spec which maps
-    the desired files into $SLAVEBASE/$BUILDERBASE/source .
-    """
-
-    name = "p4sync"
-
-    def __init__(self, p4port, p4user, p4passwd, p4client, **kwargs):
-        assert kwargs['mode'] == "copy", "P4Sync can only be used in mode=copy"
-        self.branch = None
-        Source.__init__(self, **kwargs)
-        self.addFactoryArguments(p4port=p4port,
-                                 p4user=p4user,
-                                 p4passwd=p4passwd,
-                                 p4client=p4client,
-                                )
-        self.args['p4port'] = p4port
-        self.args['p4user'] = p4user
-        self.args['p4passwd'] = p4passwd
-        self.args['p4client'] = p4client
-
-    def computeSourceRevision(self, changes):
-        if not changes:
-            return None
-        lastChange = max([int(c.revision) for c in changes])
-        return lastChange
-
-    def startVC(self, branch, revision, patch):
-        slavever = self.slaveVersion("p4sync")
-        assert slavever, "slave is too old, does not know about p4"
-        cmd = RemoteCommand("p4sync", self.args)
-        self.startCommand(cmd)
-
-
 class Monotone(Source):
     """Check out a source tree from a monotone repository 'repourl'."""
 
@@ -1088,15 +981,11 @@ class Monotone(Source):
                          lack of output.
         """
         Source.__init__(self, **kwargs)
-        self.repourl = _ComputeRepositoryURL(repourl)
+        self.repourl = _ComputeRepositoryURL(self, repourl)
         if (not repourl):
             raise ValueError("you must provide a repository uri in 'repourl'")
         if (not branch):
             raise ValueError("you must provide a default branch in 'branch'")
-        self.addFactoryArguments(repourl=repourl,
-                                 branch=branch,
-                                 progress=progress,
-                                 )
         self.args.update({'branch': branch,
                           'progress': progress,
                           })

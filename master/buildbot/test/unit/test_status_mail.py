@@ -17,7 +17,7 @@ import sys
 from mock import Mock
 from buildbot import config
 from twisted.trial import unittest
-from buildbot.status.results import SUCCESS, FAILURE
+from buildbot.status.results import SUCCESS, FAILURE, WARNINGS, EXCEPTION
 from buildbot.status.mail import MailNotifier
 from twisted.internet import defer
 from buildbot.test.fake import fakedb
@@ -440,15 +440,70 @@ class TestMailNotifier(unittest.TestCase):
 
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
 
-    def test_buildFinished_mode_all_always_sends_email(self):
+    def run_simple_test_sends_email_for_mode(self, mode, result):
         mock_method = Mock()
         self.patch(MailNotifier, "buildMessage", mock_method)
-        mn = MailNotifier('from@example.org', mode=("failing", "passing", "warnings"))
+        mn = MailNotifier('from@example.org', mode=mode)
 
         build = FakeBuildStatus(name="build")
-        mn.buildFinished('dummyBuilder', build, FAILURE)
+        mn.buildFinished('dummyBuilder', build, result)
 
-        mock_method.assert_called_with('dummyBuilder', [build], FAILURE)
+        mock_method.assert_called_with('dummyBuilder', [build], result)
+
+    def run_simple_test_ignores_email_for_mode(self, mode, result):
+        mock_method = Mock()
+        self.patch(MailNotifier, "buildMessage", mock_method)
+        mn = MailNotifier('from@example.org', mode=mode)
+
+        build = FakeBuildStatus(name="build")
+        mn.buildFinished('dummyBuilder', build, result)
+
+        self.assertFalse(mock_method.called)
+
+    def test_buildFinished_mode_all_for_success(self):
+        self.run_simple_test_sends_email_for_mode("all", SUCCESS)
+    def test_buildFinished_mode_all_for_failure(self):
+        self.run_simple_test_sends_email_for_mode("all", FAILURE)
+    def test_buildFinished_mode_all_for_warnings(self):
+        self.run_simple_test_sends_email_for_mode("all", WARNINGS)
+    def test_buildFinished_mode_all_for_exception(self):
+        self.run_simple_test_sends_email_for_mode("all", EXCEPTION)
+
+    def test_buildFinished_mode_failing_for_success(self):
+        self.run_simple_test_ignores_email_for_mode("failing", SUCCESS)
+    def test_buildFinished_mode_failing_for_failure(self):
+        self.run_simple_test_sends_email_for_mode("failing", FAILURE)
+    def test_buildFinished_mode_failing_for_warnings(self):
+        self.run_simple_test_ignores_email_for_mode("failing", WARNINGS)
+    def test_buildFinished_mode_failing_for_exception(self):
+        self.run_simple_test_ignores_email_for_mode("failing", EXCEPTION)
+
+    def test_buildFinished_mode_exception_for_success(self):
+        self.run_simple_test_ignores_email_for_mode("exception", SUCCESS)
+    def test_buildFinished_mode_exception_for_failure(self):
+        self.run_simple_test_ignores_email_for_mode("exception", FAILURE)
+    def test_buildFinished_mode_exception_for_warnings(self):
+        self.run_simple_test_ignores_email_for_mode("exception", WARNINGS)
+    def test_buildFinished_mode_exception_for_exception(self):
+        self.run_simple_test_sends_email_for_mode("exception", EXCEPTION)
+
+    def test_buildFinished_mode_warnings_for_success(self):
+        self.run_simple_test_ignores_email_for_mode("warnings", SUCCESS)
+    def test_buildFinished_mode_warnings_for_failure(self):
+        self.run_simple_test_sends_email_for_mode("warnings", FAILURE)
+    def test_buildFinished_mode_warnings_for_warnings(self):
+        self.run_simple_test_sends_email_for_mode("warnings", WARNINGS)
+    def test_buildFinished_mode_warnings_for_exception(self):
+        self.run_simple_test_ignores_email_for_mode("warnings", EXCEPTION)
+
+    def test_buildFinished_mode_passing_for_success(self):
+        self.run_simple_test_sends_email_for_mode("passing", SUCCESS)
+    def test_buildFinished_mode_passing_for_failure(self):
+        self.run_simple_test_ignores_email_for_mode("passing", FAILURE)
+    def test_buildFinished_mode_passing_for_warnings(self):
+        self.run_simple_test_ignores_email_for_mode("passing", WARNINGS)
+    def test_buildFinished_mode_passing_for_exception(self):
+        self.run_simple_test_ignores_email_for_mode("passing", EXCEPTION)
 
     def test_buildFinished_mode_failing_ignores_successful_build(self):
         mn = MailNotifier('from@example.org', mode=("failing",))
