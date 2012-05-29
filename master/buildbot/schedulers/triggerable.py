@@ -69,7 +69,6 @@ class Triggerable(base.BaseScheduler):
 
     @defer.inlineCallbacks
     def _addBuildsetForTrigger(self, reason, sourcestamps,  properties):
-
         if sourcestamps is None:
             sourcestamps = {}
 
@@ -80,7 +79,8 @@ class Triggerable(base.BaseScheduler):
         # This results in a new sourcestamp for each codebase
         for codebase in self.codebases:
             ss = self.codebases[codebase].copy()
-             # apply info from setid
+             # apply info from passed sourcestamps onto the configured default
+             # sourcestamp attributes for this codebase.
             ss.update(sourcestamps.get(codebase,{}))
 
             # at least repository must be set, this is normaly forced except when 
