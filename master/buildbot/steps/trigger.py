@@ -120,7 +120,7 @@ class Trigger(LoggingBuildStep):
         ss_for_trigger = {}
         objs_from_build = self.build.getAllSourceStamps()
         for ss in objs_from_build:
-            ss_for_trigger[ss.codebase] = ss.asDict(includePatch = True)
+            ss_for_trigger[ss.codebase] = ss.asDict()
             if self.alwaysUseLatest:
                 # Reset revision so latest version will be requested from vcs
                 ss_for_trigger[ss.codebase]['revision'] = None
