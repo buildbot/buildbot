@@ -127,7 +127,7 @@ class SchedulerMixin(object):
         revision=None
         when=None
         branch=None
-        category=None
+        tags=[]
         revlink=''
         properties={}
         repository=''

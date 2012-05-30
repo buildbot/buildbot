@@ -36,7 +36,6 @@ class Change:
 
     number = None
     branch = None
-    category = None
     revision = None # used to create a source-stamp
     links = [] # links are gone, but upgrade code expects this attribute
 
@@ -62,7 +61,6 @@ class Change:
         change.isdir = chdict['is_dir']
         change.revision = chdict['revision']
         change.branch = chdict['branch']
-        change.category = chdict['category']
         change.revlink = chdict['revlink']
         change.repository = chdict['repository']
         change.codebase = chdict['codebase']
@@ -74,6 +72,9 @@ class Change:
             when = datetime2epoch(when)
         change.when = when
 
+        change.tags = chdict['tags'][:]
+        change.tags.sort()
+
         change.files = chdict['files'][:]
         change.files.sort()
 
@@ -84,7 +85,7 @@ class Change:
         return defer.succeed(change)
 
     def __init__(self, who, files, comments, isdir=0,
-                 revision=None, when=None, branch=None, category=None,
+                 revision=None, when=None, branch=None, tags=None,
                  revlink='', properties={}, repository='', codebase='', 
                  project='', _fromChdict=False):
         # skip all this madness if we're being built from the database
@@ -111,13 +112,16 @@ class Change:
         else:
             self.when = when
         self.branch = none_or_unicode(branch)
-        self.category = none_or_unicode(category)
         self.revlink = revlink
         self.properties = Properties()
         self.properties.update(properties, "Change")
         self.repository = repository
         self.codebase = codebase
         self.project = project
+
+        # keep a sorted list of the tags, for easier display
+        self.tags = (tags or [])[:]
+        self.tags.sort()
 
         # keep a sorted list of the files, for easier display
         self.files = (files or [])[:]
@@ -133,10 +137,10 @@ class Change:
 
     def __str__(self):
         return (u"Change(revision=%r, who=%r, branch=%r, comments=%r, " +
-                u"when=%r, category=%r, project=%r, repository=%r, " +
+                u"when=%r, project=%r, repository=%r, " +
                 u"codebase=%r)") % (
                 self.revision, self.who, self.branch, self.comments,
-                self.when, self.category, self.project, self.repository,
+                self.when, self.project, self.repository,
                 self.codebase)
 
     def __cmp__(self, other):
@@ -159,13 +163,16 @@ class Change:
         '''returns a dictonary with suitable info for html/mail rendering'''
         result = {}
 
+        tags = [ dict(tag=f) for t in self.tags ]
+        tags.sort(cmp=lambda a, b: a['tag'] < b['tag'])
+
         files = [ dict(name=f) for f in self.files ]
         files.sort(cmp=lambda a, b: a['name'] < b['name'])
 
         # Constant
         result['number'] = self.number
         result['branch'] = self.branch
-        result['category'] = self.category
+        result['tags'] = tags
         result['who'] = self.getShortAuthor()
         result['comments'] = self.comments
         result['revision'] = self.revision
@@ -256,7 +263,7 @@ class ChangeMaster: # pragma: no cover
                 c.revision = unicode(c.revision)
 
             for attr in ("who", "comments", "revlink", "category", "branch", "revision"):
-                a = getattr(c, attr)
+                a = getattr(c, attr, None)
                 if isinstance(a, str):
                     try:
                         setattr(c, attr, a.decode(old_encoding))

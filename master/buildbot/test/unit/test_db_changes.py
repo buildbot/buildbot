@@ -20,6 +20,7 @@ from twisted.trial import unittest
 from twisted.internet import defer, task
 from buildbot.changes.changes import Change
 from buildbot.db import changes
+from buildbot.db import tags
 from buildbot.test.util import connector_component
 from buildbot.test.fake import fakedb
 from buildbot.util import epoch2datetime
@@ -33,10 +34,11 @@ class TestChangesConnectorComponent(
             table_names=['changes', 'change_files',
                 'change_properties', 'scheduler_changes', 'objects',
                 'sourcestampsets', 'sourcestamps', 'sourcestamp_changes',
-                'patches', 'change_users', 'users'])
+                'patches', 'change_users', 'change_tags', 'tags', 'users'])
 
         def finish_setup(_):
             self.db.changes = changes.ChangesConnectorComponent(self.db)
+            self.db.tags = tags.ChangesConnectorComponent(self.db)
         d.addCallback(finish_setup)
 
         return d
@@ -82,6 +84,7 @@ class TestChangesConnectorComponent(
         'codebase': u'mainapp',
         'revision': u'0e92a098b',
         'revlink': u'http://warner/0e92a098b',
+        'tags': [],
         'when_timestamp': epoch2datetime(266738404),
     }
 
@@ -119,6 +122,7 @@ class TestChangesConnectorComponent(
         ok = ok and ca.repository == cb.repository
         ok = ok and ca.codebase == cb.codebase
         ok = ok and ca.project == cb.project
+        ok = ok and sorted(ca.tags) == sorted(cb.tags)
         if not ok:
             def printable(c):
                 return pprint.pformat(c.__dict__)

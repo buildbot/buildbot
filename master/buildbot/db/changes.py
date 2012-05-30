@@ -21,6 +21,7 @@ from buildbot.util import json
 import sqlalchemy as sa
 from twisted.internet import defer, reactor
 from buildbot.db import base
+from buildbot.db import tags
 from buildbot.util import epoch2datetime, datetime2epoch
 
 class ChDict(dict):
@@ -75,6 +76,13 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 codebase=codebase,
                 project=project))
             changeid = r.inserted_primary_key[0]
+            if tags:
+                tagids = changes.ChangesConnectorComponent(self.db).resolveTags(tags)
+                tbl = self.db.model.change_tags
+                conn.execute(tbl.insert(), [
+                    dict(changeid=changeid, tagid=t)
+                        for t in tagids
+                    ])
             if files:
                 tbl = self.db.model.change_files
                 for f in files:
@@ -192,8 +200,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
             # and delete from all relevant tables, in dependency order
             for table_name in ('scheduler_changes', 'sourcestamp_changes',
-                               'change_files', 'change_properties', 'changes',
-                               'change_users'):
+                               'change_files', 'change_properties',
+                               'change_users', 'change_tags', 'changes'):
                 remaining = ids_to_delete[:]
                 while remaining:
                     batch, remaining = remaining[:100], remaining[100:]
@@ -207,10 +215,13 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         # given a row from the 'changes' table
         change_files_tbl = self.db.model.change_files
         change_properties_tbl = self.db.model.change_properties
+        change_tags_tbl = self.db.model.change_tags
+        tags_tbl = self.db.model.tags
 
         chdict = ChDict(
                 changeid=ch_row.changeid,
                 author=ch_row.author,
+                tags=[],  # see below
                 files=[], # see below
                 comments=ch_row.comments,
                 is_dir=ch_row.is_dir,
@@ -222,6 +233,14 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 repository=ch_row.repository,
                 codebase=ch_row.codebase,
                 project=ch_row.project)
+
+        query = sa.select(
+                    [tags_tbl.c.tag],
+                ).where(tags_tbl.c.id == change_tags_tbl.c.tagid
+                ).where(change_tags_tbl.c.changeid == ch_row.changeid)
+        rows = conn.execute(query)
+        for r in rows:
+            chdict['tags'].append(r.tag)
 
         query = change_files_tbl.select(
                 whereclause=(change_files_tbl.c.changeid == ch_row.changeid))
