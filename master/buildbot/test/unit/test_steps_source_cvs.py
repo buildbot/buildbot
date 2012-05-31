@@ -65,6 +65,39 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
+    def test_mode_full_clean_timeout(self):
+        self.setupStep(
+            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                    cvsmodule="mozilla/browser/", mode='full', method='clean',
+                    login=True, timeout=1))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        timeout=1,
+                        command=['cvs', '--version'])
+            + 0,
+            Expect('uploadFile', dict(blocksize=32768, maxsize=None,
+                        slavesrc='Root', workdir='wkdir/CVS',
+                        writer=ExpectRemoteRef(shell.StringFileWriter)))
+            + Expect.behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
+            + 0,
+            Expect('uploadFile', dict(blocksize=32768, maxsize=None,
+                        slavesrc='Repository', workdir='wkdir/CVS',
+                        writer=ExpectRemoteRef(shell.StringFileWriter)))
+            + Expect.behavior(uploadString('mozilla/browser/'))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        timeout=1,
+                        command=['cvsdiscard'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        timeout=1,
+                        command=['cvs', '-z3', 'update', '-dP'])
+            + 0,
+            )
+
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
     def test_mode_full_clean_branch(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",

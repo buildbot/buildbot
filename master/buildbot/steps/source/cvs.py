@@ -152,7 +152,8 @@ class CVS(Source):
             command += ['--ignore']
         cmd = buildstep.RemoteShellCommand(self.workdir, command,
                                            env=self.env,
-                                           logEnviron=self.logEnviron)
+                                           logEnviron=self.logEnviron,
+                                           timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def evaluate(cmd):
@@ -212,6 +213,7 @@ class CVS(Source):
         cmd = buildstep.RemoteShellCommand(workdir, ['cvs'] +
                                            command,
                                            env=self.env,
+                                           timeout=self.timeout,
                                            logEnviron=self.logEnviron)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
