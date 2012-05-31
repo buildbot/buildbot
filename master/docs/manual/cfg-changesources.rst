@@ -519,7 +519,7 @@ or comma (see also 'hg help config'):
 
     master = 
         buildmaster.example.org:9987
-	buildmaster2.example.org:9989
+        buildmaster2.example.org:9989
 
 .. note:: Mercurial lets you define multiple ``changegroup`` hooks by
    giving them distinct names, like ``changegroup.foo`` and
