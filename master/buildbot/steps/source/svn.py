@@ -187,7 +187,7 @@ class SVN(Source):
             export_cmd.extend(['source', self.workdir])
 
             cmd = buildstep.RemoteShellCommand('', export_cmd,
-                    env=self.env, logEnviron=self.logEnviron)
+                    env=self.env, logEnviron=self.logEnviron, timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
 
         yield self.runCommand(cmd)
@@ -283,6 +283,7 @@ class SVN(Source):
         cmd = buildstep.RemoteShellCommand(svnversion_dir, ['svnversion'],
                                            env=self.env,
                                            logEnviron=self.logEnviron,
+                                           timeout=self.timeout,
                                            collectStdout=True)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
@@ -371,7 +372,8 @@ class SVN(Source):
     def checkSvn(self):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['svn', '--version'],
                                            env=self.env,
-                                           logEnviron=self.logEnviron)
+                                           logEnviron=self.logEnviron,
+                                           timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def evaluate(cmd):

@@ -104,6 +104,44 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
+    def test_mode_incremental_timeout(self):
+        self.setupStep(
+                svn.SVN(repourl='http://svn.local/app/trunk',
+                        mode='incremental',username='user',
+                        timeout=1,
+                        password='pass', extra_args=['--random']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        timeout=1,
+                        command=['svn', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.svn',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        timeout=1,
+                        command=['svn', 'info', '--non-interactive',
+                                 '--no-auth-cache', '--username', 'user',
+                                 '--password', 'pass', '--random'])
+            + ExpectShell.log('stdio',
+                stdout="URL: http://svn.local/app/trunk")
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        timeout=1,
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache', '--username', 'user',
+                                 '--password', 'pass', '--random'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        timeout=1,
+                        command=['svnversion'])
+            + ExpectShell.log('stdio',
+                stdout='100')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
     def test_mode_incremental_repourl_renderable(self):
         self.setupStep(
                 svn.SVN(repourl=FakeRenderable('http://svn.local/trunk'),
@@ -716,6 +754,48 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['svn', 'export', 'source', 'wkdir'])
             + 0,
             ExpectShell(workdir='source',
+                        command=['svnversion'])
+            + ExpectShell.log('stdio',
+                stdout='100')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_mode_full_export_timeout(self):
+        self.setupStep(
+                svn.SVN(repourl='http://svn.local/app/trunk',
+                                    timeout=1,
+                                    mode='full', method='export'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        timeout=1,
+                        command=['svn', '--version'])
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
+            Expect('stat', dict(file='source/.svn',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='source',
+                        timeout=1,
+                        command=['svn', 'info', '--non-interactive',
+                                 '--no-auth-cache' ])
+            + ExpectShell.log('stdio',
+                stdout="URL: http://svn.local/app/trunk")
+            + 0,
+            ExpectShell(workdir='source',
+                        timeout=1,
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache'])
+            + 0,
+            ExpectShell(workdir='',
+                        timeout=1,
+                        command=['svn', 'export', 'source', 'wkdir'])
+            + 0,
+            ExpectShell(workdir='source',
+                        timeout=1,
                         command=['svnversion'])
             + ExpectShell.log('stdio',
                 stdout='100')
