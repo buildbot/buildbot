@@ -83,6 +83,9 @@ class Tests(interfaces.InterfaceTests):
         cmd = self.makeRemoteCommand()
         self.assertIsInstance(cmd.active, bool)
 
+    def test_RemoteShellCommand_constructor(self):
+        self.remoteShellCommandClass('wkdir', 'some-command')
+
 
 class TestRunCommand(unittest.TestCase, Tests):
 
