@@ -511,6 +511,16 @@ hostname/portnumber as appropriate for your buildbot:
     master = buildmaster.example.org:9987
     # .. other hgbuildbot parameters ..
 
+The ``master`` configuration key allows to have more than one buildmaster
+specification. The buildmasters have to be separated by a whitspace
+or comma (see also 'hg help config'):
+
+.. code-block:: ini
+
+    master = 
+        buildmaster.example.org:9987
+        buildmaster2.example.org:9989
+
 .. note:: Mercurial lets you define multiple ``changegroup`` hooks by
    giving them distinct names, like ``changegroup.foo`` and
    ``changegroup.bar``, which is why we use ``changegroup.buildbot``
