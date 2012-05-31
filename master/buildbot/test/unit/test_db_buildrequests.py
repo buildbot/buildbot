@@ -20,7 +20,7 @@ from twisted.internet import task, defer
 from buildbot.db import buildrequests
 from buildbot.test.util import connector_component, db
 from buildbot.test.fake import fakedb
-from buildbot.util import UTC
+from buildbot.util import UTC, epoch2datetime
 
 class TestBuildsetsConnectorComponent(
             connector_component.ConnectorComponentMixin,
@@ -49,7 +49,7 @@ class TestBuildsetsConnectorComponent(
         d = self.setUpConnectorComponent(
             table_names=[ 'patches', 'changes', 'sourcestamp_changes',
                 'buildsets', 'buildset_properties', 'buildrequests',
-                'objects', 'buildrequest_claims', 'sourcestamps' ])
+                'objects', 'buildrequest_claims', 'sourcestamps', 'sourcestampsets' ])
 
         def finish_setup(_):
             self.db.buildrequests = \
@@ -60,12 +60,13 @@ class TestBuildsetsConnectorComponent(
         # set up a sourcestamp and buildset for use below
         d.addCallback(lambda _ :
             self.insertTestData([
-                fakedb.SourceStamp(id=234),
+                fakedb.SourceStampSet(id=234),
+                fakedb.SourceStamp(id=234, sourcestampsetid=234),
                 fakedb.Object(id=self.MASTER_ID, name="fake master",
                                          class_name="BuildMaster"),
                 fakedb.Object(id=self.OTHER_MASTER_ID, name="other master",
                                          class_name="BuildMaster"),
-                fakedb.Buildset(id=self.BSID, sourcestampid=234),
+                fakedb.Buildset(id=self.BSID, sourcestampsetid=234),
             ]))
 
         return d
@@ -227,7 +228,7 @@ class TestBuildsetsConnectorComponent(
     def test_getBuildRequests_bsid_arg(self):
         d = self.insertTestData([
             # the buildset that we are *not* looking for
-            fakedb.Buildset(id=self.BSID+1, sourcestampid=234),
+            fakedb.Buildset(id=self.BSID+1, sourcestampsetid=234),
 
             fakedb.BuildRequest(id=70, buildsetid=self.BSID,
                 complete=0, complete_at=None),
@@ -280,7 +281,7 @@ class TestBuildsetsConnectorComponent(
                     claimed_at=self.CLAIMED_AT_EPOCH),
 
             # 49: different bsid
-            fakedb.Buildset(id=self.BSID+1, sourcestampid=234),
+            fakedb.Buildset(id=self.BSID+1, sourcestampsetid=234),
             fakedb.BuildRequest(id=49, buildsetid=self.BSID+1,
                 buildername="bbb", complete=1, results=92,
                 complete_at=self.COMPLETE_AT_EPOCH),
@@ -296,14 +297,14 @@ class TestBuildsetsConnectorComponent(
         return d
 
     def do_test_claimBuildRequests(self, rows, now, brids, expected=None,
-                                  expfailure=None):
+                                  expfailure=None, claimed_at=None):
         clock = task.Clock()
         clock.advance(now)
 
         d = self.insertTestData(rows)
         d.addCallback(lambda _ :
             self.db.buildrequests.claimBuildRequests(brids=brids,
-                        _reactor=clock))
+                        claimed_at=claimed_at, _reactor=clock))
         def check(brlist):
             self.assertNotEqual(expected, None,
                     "unexpected success from claimBuildRequests")
@@ -331,6 +332,13 @@ class TestBuildsetsConnectorComponent(
             fakedb.BuildRequest(id=44, buildsetid=self.BSID),
             ], 1300305712, [ 44 ],
             [ (44, 1300305712, self.MASTER_ID) ])
+
+    def test_claimBuildRequests_single_explicit_claimed_at(self):
+        return self.do_test_claimBuildRequests([
+            fakedb.BuildRequest(id=44, buildsetid=self.BSID),
+            ], 1300305712, [ 44 ],
+            [ (44, 14000000, self.MASTER_ID) ],
+            claimed_at=epoch2datetime(14000000))
 
     def test_claimBuildRequests_multiple(self):
         return self.do_test_claimBuildRequests([
@@ -485,14 +493,16 @@ class TestBuildsetsConnectorComponent(
         return d
 
     def do_test_completeBuildRequests(self, rows, now, expected=None,
-                                     expfailure=None, brids=[44]):
+                                     expfailure=None, brids=[44],
+                                     complete_at=None):
         clock = task.Clock()
         clock.advance(now)
 
         d = self.insertTestData(rows)
         d.addCallback(lambda _ :
             self.db.buildrequests.completeBuildRequests(brids=brids,
-                                            results=7, _reactor=clock))
+                                            results=7, complete_at=complete_at,
+                                            _reactor=clock))
         def check(brlist):
             self.assertNotEqual(expected, None,
                     "unexpected success from completeBuildRequests")
@@ -518,6 +528,15 @@ class TestBuildsetsConnectorComponent(
                     claimed_at=1300103810),
             ], 1300305712,
             [ (44, 1, 7, 1300305712) ])
+
+    def test_completeBuildRequests_explicit_time(self):
+        return self.do_test_completeBuildRequests([
+            fakedb.BuildRequest(id=44, buildsetid=self.BSID),
+            fakedb.BuildRequestClaim(brid=44, objectid=self.MASTER_ID,
+                    claimed_at=1300103810),
+            ], 1300305712,
+            [ (44, 1, 7, 999999) ],
+            complete_at=epoch2datetime(999999))
 
     def test_completeBuildRequests_multiple(self):
         return self.do_test_completeBuildRequests([

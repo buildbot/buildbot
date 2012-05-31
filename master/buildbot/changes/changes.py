@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os, time
 from cPickle import dump
 
@@ -36,6 +38,7 @@ class Change:
     branch = None
     category = None
     revision = None # used to create a source-stamp
+    links = [] # links are gone, but upgrade code expects this attribute
 
     @classmethod
     def fromChdict(cls, master, chdict):
@@ -57,12 +60,12 @@ class Change:
         change.who = chdict['author']
         change.comments = chdict['comments']
         change.isdir = chdict['is_dir']
-        change.links = chdict['links']
         change.revision = chdict['revision']
         change.branch = chdict['branch']
         change.category = chdict['category']
         change.revlink = chdict['revlink']
         change.repository = chdict['repository']
+        change.codebase = chdict['codebase']
         change.project = chdict['project']
         change.number = chdict['changeid']
 
@@ -80,10 +83,10 @@ class Change:
 
         return defer.succeed(change)
 
-    def __init__(self, who, files, comments, isdir=0, links=None,
+    def __init__(self, who, files, comments, isdir=0,
                  revision=None, when=None, branch=None, category=None,
-                 revlink='', properties={}, repository='', project='',
-                 _fromChdict=False):
+                 revlink='', properties={}, repository='', codebase='', 
+                 project='', _fromChdict=False):
         # skip all this madness if we're being built from the database
         if _fromChdict:
             return
@@ -91,9 +94,6 @@ class Change:
         self.who = who
         self.comments = comments
         self.isdir = isdir
-        if links is None:
-            links = []
-        self.links = links
 
         def none_or_unicode(x):
             if x is None: return x
@@ -116,10 +116,11 @@ class Change:
         self.properties = Properties()
         self.properties.update(properties, "Change")
         self.repository = repository
+        self.codebase = codebase
         self.project = project
 
         # keep a sorted list of the files, for easier display
-        self.files = files[:]
+        self.files = (files or [])[:]
         self.files.sort()
 
     def __setstate__(self, dict):
@@ -132,9 +133,11 @@ class Change:
 
     def __str__(self):
         return (u"Change(revision=%r, who=%r, branch=%r, comments=%r, " +
-                u"when=%r, category=%r, project=%r, repository=%r)") % (
+                u"when=%r, category=%r, project=%r, repository=%r, " +
+                u"codebase=%r)") % (
                 self.revision, self.who, self.branch, self.comments,
-                self.when, self.category, self.project, self.repository)
+                self.when, self.category, self.project, self.repository,
+                self.codebase)
 
     def asText(self):
         data = ""
@@ -153,16 +156,8 @@ class Change:
         '''returns a dictonary with suitable info for html/mail rendering'''
         result = {}
 
-        files = []
-        for file in self.files:
-            link = filter(lambda s: s.find(file) != -1, self.links)
-            if len(link) == 1:
-                url = link[0]
-            else:
-                url = None
-            files.append(dict(url=url, name=file))
-
-        files = sorted(files, cmp=lambda a, b: a['name'] < b['name'])
+        files = [ dict(name=f) for f in self.files ]
+        files.sort(cmp=lambda a, b: a['name'] < b['name'])
 
         # Constant
         result['number'] = self.number
@@ -178,6 +173,7 @@ class Change:
         result['revlink'] = getattr(self, 'revlink', None)
         result['properties'] = self.properties.asList()
         result['repository'] = getattr(self, 'repository', None)
+        result['codebase'] = getattr(self, 'codebase', '')
         result['project'] = getattr(self, 'project', None)
         return result
 
@@ -234,7 +230,8 @@ class ChangeMaster: # pragma: no cover
         filename = os.path.join(self.basedir, "changes.pck")
         tmpfilename = filename + ".tmp"
         try:
-            dump(self, open(tmpfilename, "wb"))
+            with open(tmpfilename, "wb") as f:
+                dump(self, f)
             if runtime.platformType  == 'win32':
                 # windows cannot rename a file on top of an existing one
                 if os.path.exists(filename):

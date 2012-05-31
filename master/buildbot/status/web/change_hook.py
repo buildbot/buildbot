@@ -19,7 +19,7 @@
 # but "the rest" is pretty minimal
 
 import re
-from twisted.web import resource
+from twisted.web import resource, server
 from twisted.python.reflect import namedModule
 from twisted.python import log
 from twisted.internet import defer
@@ -62,16 +62,27 @@ class ChangeHookResource(resource.Resource):
             changes, src = self.getChanges( request )
         except ValueError, err:
             request.setResponseCode(400, err.args[0])
-            return defer.succeed(err.args[0])
+            return err.args[0]
+        except Exception:
+            log.err(None, "Exception processing web hook.")
+            msg = "Error processing changes."
+            request.setResponseCode(500, msg)
+            return msg
 
         log.msg("Payload: " + str(request.args))
         
         if not changes:
             log.msg("No changes found")
-            return defer.succeed("no changes found")
+            return "no changes found"
         d = self.submitChanges( changes, request, src )
-        d.addCallback(lambda _ : "OK")
-        return d
+        def ok(_):
+            request.setResponseCode(202)
+            request.finish()
+        def err(_):
+            request.setResponseCode(500)
+            request.finish()
+        d.addCallbacks(ok, err)
+        return server.NOT_DONE_YET
 
     
     def getChanges(self, request):
@@ -116,11 +127,9 @@ class ChangeHookResource(resource.Resource):
 
         return (changes, src)
                 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def submitChanges(self, changes, request, src):
         master = request.site.buildbot_service.master
         for chdict in changes:
-            wfd = defer.waitForDeferred(master.addChange(src=src, **chdict))
-            yield wfd
-            change = wfd.getResult()
+            change = yield master.addChange(src=src, **chdict)
             log.msg("injected change %s" % change)

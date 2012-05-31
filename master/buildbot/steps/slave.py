@@ -30,8 +30,6 @@ class SetPropertiesFromEnv(buildstep.BuildStep):
 
     def __init__(self, variables, source="SlaveEnvironment", **kwargs):
         buildstep.BuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(variables = variables,
-                                 source = source)
         self.variables = variables
         self.source = source
 
@@ -74,7 +72,6 @@ class FileExists(buildstep.BuildStep):
 
     def __init__(self, file, **kwargs):
         buildstep.BuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(file = file)
         self.file = file
 
     def start(self):
@@ -82,13 +79,13 @@ class FileExists(buildstep.BuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about stat")
-        cmd = buildstep.LoggedRemoteCommand('stat', {'file': self.file })
+        cmd = buildstep.RemoteCommand('stat', {'file': self.file })
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
 
     def commandComplete(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             self.step_status.setText(["File not found."])
             self.finished(FAILURE)
             return
@@ -115,7 +112,6 @@ class RemoveDirectory(buildstep.BuildStep):
 
     def __init__(self, dir, **kwargs):
         buildstep.BuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(dir = dir)
         self.dir = dir
 
     def start(self):
@@ -123,13 +119,13 @@ class RemoveDirectory(buildstep.BuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about rmdir")
-        cmd = buildstep.LoggedRemoteCommand('rmdir', {'dir': self.dir })
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.dir })
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
 
     def commandComplete(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             self.step_status.setText(["Delete failed."])
             self.finished(FAILURE)
             return
@@ -150,7 +146,6 @@ class MakeDirectory(buildstep.BuildStep):
 
     def __init__(self, dir, **kwargs):
         buildstep.BuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(dir = dir)
         self.dir = dir
 
     def start(self):
@@ -158,13 +153,13 @@ class MakeDirectory(buildstep.BuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about mkdir")
-        cmd = buildstep.LoggedRemoteCommand('mkdir', {'dir': self.dir })
+        cmd = buildstep.RemoteCommand('mkdir', {'dir': self.dir })
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
 
     def commandComplete(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             self.step_status.setText(["Create failed."])
             self.finished(FAILURE)
             return

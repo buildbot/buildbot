@@ -26,7 +26,7 @@ class SchedulerManager(config.ReconfigurableServiceMixin,
         self.setName('scheduler_manager')
         self.master = master
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         timer = metrics.Timer("SchedulerManager.reconfigService")
         timer.start()
@@ -62,43 +62,24 @@ class SchedulerManager(config.ReconfigurableServiceMixin,
         for sch_name in removed_names:
             log.msg("removing scheduler '%s'" % (sch_name,))
             sch = old_by_name[sch_name]
-            wfd = defer.waitForDeferred(
-                    defer.maybeDeferred(lambda :
-                        sch.disownServiceParent()))
-            yield wfd
-            wfd.getResult()
+            yield defer.maybeDeferred(lambda :
+                        sch.disownServiceParent())
             sch.master = None
 
         # .. then additions
 
-        # account for some renamed classes in buildbot - classes that have
-        # changed their module import path, but should still access the same
-        # state
-        new_class_names = {
-            # new : old
-            'buildbot.schedulers.dependent.Dependent' :
-                            'buildbot.schedulers.basic.Dependent',
-            'buildbot.schedulers.basic.SingleBranchScheduler' :
-                            'buildbot.schedulers.basic.Scheduler',
-        }
         for sch_name in added_names:
             log.msg("adding scheduler '%s'" % (sch_name,))
             sch = new_by_name[sch_name]
 
-            # get the translated class name
+            # get the scheduler's objectid
             class_name = '%s.%s' % (sch.__class__.__module__,
                                     sch.__class__.__name__)
-            class_name = new_class_names.get(class_name, class_name)
-
-            # get the schedulerid
-            wfd = defer.waitForDeferred(
-                self.master.db.schedulers.getSchedulerId(
-                    sch.name, class_name))
-            yield wfd
-            schedulerid = wfd.getResult()
+            objectid = yield self.master.db.state.getObjectId(
+                                    sch.name, class_name)
 
             # set up the scheduler
-            sch.schedulerid = schedulerid
+            sch.objectid = objectid
             sch.master = self.master
 
             # *then* attacah and start it
@@ -108,10 +89,7 @@ class SchedulerManager(config.ReconfigurableServiceMixin,
                                     absolute=True)
 
         # reconfig any newly-added schedulers, as well as existing
-        wfd = defer.waitForDeferred(
-            config.ReconfigurableServiceMixin.reconfigService(self,
-                                                    new_config))
-        yield wfd
-        wfd.getResult()
+        yield config.ReconfigurableServiceMixin.reconfigService(self,
+                                                        new_config)
 
         timer.stop()

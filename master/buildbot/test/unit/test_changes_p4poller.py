@@ -201,13 +201,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
 
         # call _poll, so we can catch the failure
         d = self.changesource._poll()
-        def cb(_):
-            self.fail("_poll should have failed")
-        def eb(f):
-            f.trap(P4PollerError)
-            self.assertEquals(self.changesource.last_change, None)
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, P4PollerError)
 
     def test_poll_failed_describe(self):
         self.attachChangeSource(
@@ -222,12 +216,11 @@ class TestP4Poller(changesource.ChangeSourceMixin,
 
         # call _poll, so we can catch the failure
         d = self.changesource._poll()
-        def cb(_):
-            self.fail("_poll should have failed")
-        def eb(f):
-            f.trap(P4PollerError)
-            self.assertEquals(self.changesource.last_change, 2) # 2 was processed OK
-        d.addCallbacks(cb, eb)
+        self.assertFailure(d, P4PollerError)
+        @d.addCallback
+        def check(_):
+            # check that 2 was processed OK
+            self.assertEquals(self.changesource.last_change, 2)
         return d
 
     def test_poll_split_file(self):

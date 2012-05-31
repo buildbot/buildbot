@@ -22,19 +22,19 @@ from buildbot import config
 class SchedulerManager(unittest.TestCase):
 
     def setUp(self):
-        self.next_schedulerid = 13
-        self.schedulerids = {}
+        self.next_objectid = 13
+        self.objectids = {}
 
         self.master = mock.Mock()
-        def getSchedulerId(sched_name, class_name):
+        def getObjectId(sched_name, class_name):
             k = (sched_name, class_name)
             try:
-                rv = self.schedulerids[k]
+                rv = self.objectids[k]
             except:
-                rv = self.schedulerids[k] = self.next_schedulerid
-                self.next_schedulerid += 1
+                rv = self.objectids[k] = self.next_objectid
+                self.next_objectid += 1
             return defer.succeed(rv)
-        self.master.db.schedulers.getSchedulerId = getSchedulerId
+        self.master.db.state.getObjectId = getObjectId
 
         self.new_config = mock.Mock()
 
@@ -55,7 +55,7 @@ class SchedulerManager(unittest.TestCase):
         def startService(self):
             assert not self.already_started
             assert self.master is not None
-            assert self.schedulerid is not None
+            assert self.objectid is not None
             self.already_started = True
             base.BaseScheduler.startService(self)
 
@@ -63,7 +63,7 @@ class SchedulerManager(unittest.TestCase):
             d = base.BaseScheduler.stopService(self)
             def still_set(_):
                 assert self.master is not None
-                assert self.schedulerid is not None
+                assert self.objectid is not None
             d.addCallback(still_set)
             return d
 
@@ -86,15 +86,12 @@ class SchedulerManager(unittest.TestCase):
 
     # tests
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_add_and_change_and_remove(self):
         sch1 = self.makeSched(self.ReconfigSched, 'sch1', attr='alpha')
         self.new_config.schedulers = dict(sch1=sch1)
 
-        wfd = defer.waitForDeferred(
-            self.sm.reconfigService(self.new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.sm.reconfigService(self.new_config)
 
         self.assertIdentical(sch1.parent, self.sm)
         self.assertIdentical(sch1.master, self.master)
@@ -104,10 +101,7 @@ class SchedulerManager(unittest.TestCase):
         sch2 = self.makeSched(self.ReconfigSched, 'sch2', attr='alpha')
         self.new_config.schedulers = dict(sch1=sch1_new, sch2=sch2)
 
-        wfd = defer.waitForDeferred(
-            self.sm.reconfigService(self.new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.sm.reconfigService(self.new_config)
 
         # sch1 is still the active scheduler, and has been reconfig'd,
         # and has the correct attribute
@@ -123,23 +117,17 @@ class SchedulerManager(unittest.TestCase):
 
         self.new_config.schedulers = {}
 
-        wfd = defer.waitForDeferred(
-            self.sm.reconfigService(self.new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.sm.reconfigService(self.new_config)
 
         self.assertIdentical(sch1.parent, None)
         self.assertIdentical(sch1.master, None)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_class_name_change(self):
         sch1 = self.makeSched(self.ReconfigSched, 'sch1')
         self.new_config.schedulers = dict(sch1=sch1)
 
-        wfd = defer.waitForDeferred(
-            self.sm.reconfigService(self.new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.sm.reconfigService(self.new_config)
 
         self.assertIdentical(sch1.parent, self.sm)
         self.assertIdentical(sch1.master, self.master)
@@ -148,25 +136,19 @@ class SchedulerManager(unittest.TestCase):
         sch1_new = self.makeSched(self.ReconfigSched2, 'sch1')
         self.new_config.schedulers = dict(sch1=sch1_new)
 
-        wfd = defer.waitForDeferred(
-            self.sm.reconfigService(self.new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.sm.reconfigService(self.new_config)
 
         # sch1 had its class name change, so sch1_new is now the active
         # instance
         self.assertIdentical(sch1_new.parent, self.sm)
         self.assertIdentical(sch1_new.master, self.master)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_add_and_change_and_remove_no_reconfig(self):
         sch1 = self.makeSched(self.Sched, 'sch1', attr='alpha')
         self.new_config.schedulers = dict(sch1=sch1)
 
-        wfd = defer.waitForDeferred(
-            self.sm.reconfigService(self.new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.sm.reconfigService(self.new_config)
 
         self.assertIdentical(sch1.parent, self.sm)
         self.assertIdentical(sch1.master, self.master)
@@ -175,10 +157,7 @@ class SchedulerManager(unittest.TestCase):
         sch2 = self.makeSched(self.Sched, 'sch2', attr='alpha')
         self.new_config.schedulers = dict(sch1=sch1_new, sch2=sch2)
 
-        wfd = defer.waitForDeferred(
-            self.sm.reconfigService(self.new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.sm.reconfigService(self.new_config)
 
         # sch1 is not longer active, and sch1_new is
         self.assertIdentical(sch1.parent, None)

@@ -47,12 +47,6 @@ def getChanges(request, options=None):
             files = json.loads( args.get('files')[0] )
         else:
             files = []
-                
-        links = None
-        if args.get('links'):
-            links = json.loads( args.get('links')[0] )
-        else:
-            links = []
 
         properties = None
         if args.get('properties'):
@@ -62,7 +56,9 @@ def getChanges(request, options=None):
             
         revision = firstOrNothing(args.get('revision'))
         when     = firstOrNothing(args.get('when'))
-        who = firstOrNothing(args.get('who'))
+        author = firstOrNothing(args.get('author'))
+        if not author:
+            author = firstOrNothing(args.get('who'))
         comments = firstOrNothing(args.get('comments'))
         isdir = firstOrNothing(args.get('isdir',0))
         branch = firstOrNothing(args.get('branch'))
@@ -71,8 +67,8 @@ def getChanges(request, options=None):
         repository = firstOrNothing(args.get('repository'))
         project = firstOrNothing(args.get('project'))
               
-        chdict = dict(who=who, files=files, comments=comments,
-                isdir=isdir, links=links, revision=revision, when=when,
+        chdict = dict(author=author, files=files, comments=comments,
+                isdir=isdir, revision=revision, when=when,
                 branch=branch, category=category, revlink=revlink,
                 properties=properties, repository=repository,
                 project=project)

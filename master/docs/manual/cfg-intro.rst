@@ -120,24 +120,39 @@ the recommended replacements instead:
    % buildbot checkconfig master.cfg
    /usr/lib/python2.4/site-packages/buildbot/master.py:559: DeprecationWarning: c['sources'] is
    deprecated as of 0.7.6 and will be removed by 0.8.0 . Please use c['change_source'] instead.
-     warnings.warn(m, DeprecationWarning)
    Config file is good!
+
+If you have errors in your configuration file, checkconfig will let you know:
+
+.. code-block:: none
+
+    % buildbot checkconfig master.cfg
+    Configuration Errors:
+    c['slaves'] must be a list of BuildSlave instances
+    no slaves are configured
+    builder 'smoketest' uses unknown slaves 'linux-002'
 
 If the config file is simply broken, that will be caught too:
 
 .. code-block:: none
 
-   % buildbot checkconfig master.cfg
-   Traceback (most recent call last):
-     File "/usr/lib/python2.4/site-packages/buildbot/scripts/runner.py", line 834, in doCheckConfig
-       ConfigLoader(configFile)
-     File "/usr/lib/python2.4/site-packages/buildbot/scripts/checkconfig.py", line 31, in __init__
-       self.loadConfig(configFile)
-     File "/usr/lib/python2.4/site-packages/buildbot/master.py", line 480, in loadConfig
-       exec f in localDict
-     File "/home/warner/BuildBot/master/foolscap/master.cfg", line 90, in ?
-       c[bogus] = "stuff"
-   NameError: name 'bogus' is not defined
+    % buildbot checkconfig master.cfg
+    error while parsing config file:
+    Traceback (most recent call last):
+    File "/home/buildbot/master/bin/buildbot", line 4, in <module>
+        runner.run()
+    File "/home/buildbot/master/buildbot/scripts/runner.py", line 1358, in run
+        if not doCheckConfig(so):
+    File "/home/buildbot/master/buildbot/scripts/runner.py", line 1079, in doCheckConfig
+        return cl.load(quiet=quiet)
+    File "/home/buildbot/master/buildbot/scripts/checkconfig.py", line 29, in load
+        self.basedir, self.configFileName)
+    --- <exception caught here> ---
+    File "/home/buildbot/master/buildbot/config.py", line 147, in loadConfig
+        exec f in localDict
+    exceptions.SyntaxError: invalid syntax (master.cfg, line 52)
+    Configuration Errors:
+    error while parsing config file: invalid syntax (master.cfg, line 52) (traceback in logfile)
 
 Loading the Config File
 -----------------------

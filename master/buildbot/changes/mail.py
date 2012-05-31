@@ -75,12 +75,8 @@ class CVSMaildirSource(MaildirSource):
     name = "CVSMaildirSource"
 
     def __init__(self, maildir, prefix=None, category='',
-                 repository='', urlmaker=None, properties={}):
-        """If urlmaker is defined, it will be called with three arguments:
-        filename, previous version, new version. It returns a url for that
-        file."""
+                 repository='', properties={}):
         MaildirSource.__init__(self, maildir, prefix, category, repository)
-        self.urlmaker = urlmaker
         self.properties = properties
         
     def parse(self, m, prefix=None):
@@ -95,9 +91,9 @@ class CVSMaildirSource(MaildirSource):
             return None # no From means this message isn't from buildbot-cvs-mail
         at = addr.find("@")
         if at == -1:
-            who = addr # might still be useful
+            author = addr # might still be useful
         else:
-            who = addr[:at]
+            author = addr[:at]
 
         # CVS accecpts RFC822 dates. buildbot-cvs-mail adds the date as
         # part of the mail header, so use that.
@@ -227,11 +223,7 @@ class CVSMaildirSource(MaildirSource):
             m = singleFileRE.match(fileList)
             if m:
                 curFile = path + '/' + m.group(1)
-                oldRev = m.group(2)
-                newRev = m.group(3)
                 files.append( curFile )
-                if self.urlmaker:
-                    links.append(self.urlmaker(curFile, oldRev, newRev ))
                 fileList = fileList[m.end():]
             else:
                 log.msg('CVSMaildirSource no files matched regex. Ignoring')
@@ -244,7 +236,7 @@ class CVSMaildirSource(MaildirSource):
         comments = comments.rstrip() + "\n"
         if comments == '\n':
             comments = None
-        return ('cvs', dict(who=who, files=files, comments=comments,
+        return ('cvs', dict(author=author, files=files, comments=comments,
                             isdir=isdir, when=when, branch=branch,
                             revision=rev, category=category,
                             repository=cvsroot, project=project,
@@ -291,9 +283,9 @@ class SVNCommitEmailMaildirSource(MaildirSource):
             return None # no From means this message isn't from svn
         at = addr.find("@")
         if at == -1:
-            who = addr # might still be useful
+            author = addr # might still be useful
         else:
-            who = addr[:at]
+            author = addr[:at]
 
         # we take the time of receipt as the time of checkin. Not correct (it
         # depends upon the email latency), but it avoids the
@@ -315,7 +307,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
             # "Author: jmason"
             match = re.search(r"^Author: (\S+)", line)
             if match:
-                who = match.group(1)
+                author = match.group(1)
 
             # "New Revision: 105955"
             match = re.search(r"^New Revision: (\d+)", line)
@@ -374,7 +366,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
             log.msg("no matching files found, ignoring commit")
             return None
 
-        return ('svn', dict(who=who, files=files, comments=comments,
+        return ('svn', dict(author=author, files=files, comments=comments,
                             when=when, revision=rev))
 
 # bzr Launchpad branch subscription mails. Sample mail:
@@ -427,10 +419,10 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
 
         # Put these into a dictionary, otherwise we cannot assign them
         # from nested function definitions.
-        d = { 'files': [], 'comments': "" }
+        d = { 'files': [], 'comments': u"" }
         gobbler = None
         rev = None
-        who = None
+        author = None
         when = util.now()
         def gobble_comment(s):
             d['comments'] += s + "\n"
@@ -450,7 +442,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         lines = list(body_line_iterator(m, True))
         rev = None
         while lines:
-            line = lines.pop(0)
+            line = unicode(lines.pop(0), "utf-8", errors="ignore")
 
             # revno: 101
             match = re.search(r"^revno: ([0-9.]+)", line)
@@ -460,7 +452,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
             # committer: Joe <joe@acme.com>
             match = re.search(r"^committer: (.*)$", line)
             if match:
-                who = match.group(1)
+                author = match.group(1)
 
             # timestamp: Fri 2009-05-15 10:35:43 +0200
             # datetime.strptime() is supposed to support %z for time zone, but
@@ -502,8 +494,8 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
                 else:
                     branch = None
 
-        if rev and who:
-            return ('bzr', dict(who=who, files=d['files'],
+        if rev and author:
+            return ('bzr', dict(author=author, files=d['files'],
                                 comments=d['comments'],
                                 when=when, revision=rev,
                                 branch=branch, repository=repository or ''))

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os
 import cPickle
 from twisted.persisted import styles
@@ -189,7 +191,8 @@ def import_changes(migrate_engine):
     # .changes attribute.  Note that we use 'r', and not 'rb', because these
     # pickles were written using the old text pickle format, which requires
     # newline translation
-    source = cPickle.load(open(changes_pickle,"r"))
+    with open(changes_pickle,"r") as f:
+        source = cPickle.load(f)
     styles.doUpgrade()
 
     #if not quiet: print " (%d Change objects)" % len(source.changes)
@@ -229,9 +232,8 @@ def import_changes(migrate_engine):
 
         migrate_engine.execute(changes.insert(), **values)
 
-        for link in c.links:
-            migrate_engine.execute(change_links.insert(),
-                    changeid=c.number, link=link)
+        # NOTE: change_links is not populated, since it is deleted in db
+        # version 20.  The table is still created, though.
 
         # sometimes c.files contains nested lists -- why, I do not know!  But we deal with
         # it all the same - see bug #915. We'll assume for now that c.files contains *either*

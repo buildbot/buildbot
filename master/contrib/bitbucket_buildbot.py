@@ -89,8 +89,8 @@ class BitBucketBuildBot(resource.Resource):
                 'comments': commit['message'],
                 'who': commit['author'],
                 'files': files,
-                'links': [revlink],
-                'properties': dict(repository=repo_url),
+                'repository': repo_url,
+                'properties': dict(),
                 }
             changes.append(change)
         # Submit the changes, if any
@@ -102,6 +102,7 @@ class BitBucketBuildBot(resource.Resource):
         factory = pb.PBClientFactory()
         deferred = factory.login(credentials.UsernamePassword("change",
                                                               "changepw"))
+        logging.debug('Trying to connect to: %s:%d'%(host,port))
         reactor.connectTCP(host, port, factory)
         deferred.addErrback(self.connectFailed)
         deferred.addCallback(self.connected, changes)

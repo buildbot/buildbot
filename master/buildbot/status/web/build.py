@@ -22,8 +22,9 @@ import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, \
      css_classes, path_to_build, path_to_builder, path_to_slave, \
-     getAndCheckProperties, ActionResource, path_to_authfail
-
+     getAndCheckProperties, ActionResource, path_to_authzfail, \
+     getRequestCharset
+from buildbot.schedulers.forcesched import ForceScheduler, TextParameter
 from buildbot.status.web.step import StepsResource
 from buildbot.status.web.tests import TestsResource
 from buildbot import util, interfaces
@@ -35,17 +36,14 @@ class ForceBuildActionResource(ActionResource):
         self.builder = builder
         self.action = "forceBuild"
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def performAction(self, req):
         url = None
         authz = self.getAuthz(req)
-        d = authz.actionAllowed(self.action, req, self.builder)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        res = wfd.getResult()
+        res = yield authz.actionAllowed(self.action, req, self.builder)
 
         if not res:
-            url = path_to_authfail(req)
+            url = path_to_authzfail(req)
         else:
             # get a control object
             c = interfaces.IControl(self.getBuildmaster(req))
@@ -54,23 +52,26 @@ class ForceBuildActionResource(ActionResource):
             b = self.build_status
             builder_name = self.builder.getName()
             log.msg("web rebuild of build %s:%s" % (builder_name, b.getNumber()))
-            name = authz.getUsername(req)
+            name =authz.getUsernameFull(req)
             comments = req.args.get("comments", ["<no reason specified>"])[0]
+            comments.decode(getRequestCharset(req))
             reason = ("The web-page 'rebuild' button was pressed by "
                       "'%s': %s\n" % (name, comments))
+            msg = ""
             extraProperties = getAndCheckProperties(req)
             if not bc or not b.isFinished() or extraProperties is None:
-                log.msg("could not rebuild: bc=%s, isFinished=%s"
-                        % (bc, b.isFinished()))
-                # TODO: indicate an error
+                msg = "could not rebuild: "
+                if b.isFinished():
+                    msg += "build still not finished "
+                if bc:
+                    msg += "could not get builder control"
             else:
-                d = bc.rebuildBuild(b, reason, extraProperties)
-                wfd = defer.waitForDeferred(d)
-                yield wfd
-                tup = wfd.getResult()
+                tup = yield bc.rebuildBuild(b, reason, extraProperties)
                 # check that (bsid, brids) were properly stored
-                if not isinstance(tup, (int, dict)):
-                    log.err("while rebuilding a build")
+                if not (isinstance(tup, tuple) and 
+                        isinstance(tup[0], int) and
+                        isinstance(tup[1], dict)):
+                    msg = "rebuilding a build failed "+ str(tup)
             # we're at
             # http://localhost:8080/builders/NAME/builds/5/rebuild?[args]
             # Where should we send them?
@@ -82,8 +83,8 @@ class ForceBuildActionResource(ActionResource):
             # evidence of their build starting (or to see the reason that it
             # didn't start). This should be the Builder page.
 
-            url = path_to_builder(req, self.builder)
-        yield url
+            url = path_to_builder(req, self.builder), msg
+        defer.returnValue(url)
 
 
 class StopBuildActionResource(ActionResource):
@@ -92,23 +93,21 @@ class StopBuildActionResource(ActionResource):
         self.build_status = build_status
         self.action = "stopBuild"
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def performAction(self, req):
         authz = self.getAuthz(req)
-        d = authz.actionAllowed(self.action, req, self.build_status)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        res = wfd.getResult()
+        res = yield authz.actionAllowed(self.action, req, self.build_status)
 
         if not res:
-            yield path_to_authfail(req)
+            defer.returnValue(path_to_authzfail(req))
             return
 
         b = self.build_status
         log.msg("web stopBuild of build %s:%s" % \
                     (b.getBuilder().getName(), b.getNumber()))
-        name = authz.getUsername(req)
+        name = authz.getUsernameFull(req)
         comments = req.args.get("comments", ["<no reason specified>"])[0]
+        comments.decode(getRequestCharset(req))
         # html-quote both the username and comments, just to be safe
         reason = ("The web-page 'stop build' button was pressed by "
                   "'%s': %s\n" % (html.escape(name), html.escape(comments)))
@@ -120,8 +119,7 @@ class StopBuildActionResource(ActionResource):
             if bldc:
                 bldc.stopBuild(reason)
 
-        yield path_to_builder(req, self.build_status.getBuilder())
-        return
+        defer.returnValue(path_to_builder(req, self.build_status.getBuilder()))
 
 # /builders/$builder/builds/$buildnum
 class StatusResourceBuild(HtmlResource):
@@ -164,15 +162,11 @@ class StatusResourceBuild(HtmlResource):
             if b.getTestResults():
                 cxt['tests_link'] = req.childLink("tests")
 
-        ss = cxt['ss'] = b.getSourceStamp()
+        ssList = b.getSourceStamps()
+        sourcestamps = cxt['sourcestamps'] = ssList
 
-        if ss.branch is None and ss.revision is None and ss.patch is None and not ss.changes:
-            cxt['most_recent_rev_build'] = True
-
-
-        got_revision = b.getProperty("got_revision")
-        if got_revision:
-            cxt['got_revision'] = str(got_revision)
+        all_got_revisions = b.getAllGotRevisions()
+        cxt['got_revisions'] = all_got_revisions
 
         try:
             cxt['slave_url'] = path_to_slave(req, status.getSlave(b.getSlavename()))
@@ -183,9 +177,11 @@ class StatusResourceBuild(HtmlResource):
 
         for s in b.getSteps():
             step = {'name': s.getName() }
-            cxt['steps'].append(step)
 
             if s.isFinished():
+                if s.isHidden():
+                    continue
+
                 step['css_class'] = css_classes[s.getResults()[0]]
                 (start, end) = s.getTimes()
                 step['time_to_run'] = util.formatInterval(end - start)
@@ -200,6 +196,8 @@ class StatusResourceBuild(HtmlResource):
                 step['css_class'] = "not_started"
                 step['time_to_run'] = ""
 
+            cxt['steps'].append(step)
+
             step['link'] = req.childLink("steps/%s" % 
                                     urllib.quote(s.getName(), safe=''))
             step['text'] = " ".join(s.getText())
@@ -213,13 +211,30 @@ class StatusResourceBuild(HtmlResource):
                                             urllib.quote(logname, safe=''))), 
                                       'name': logname })
 
+        scheduler = b.getProperty("scheduler", None)
+        parameters = {}
+        master = self.getBuildmaster(req)
+        for sch in master.allSchedulers():
+            if isinstance(sch, ForceScheduler) and scheduler == sch.name:
+                for p in sch.all_fields:
+                    parameters[p.name] = p
+
         ps = cxt['properties'] = []
         for name, value, source in b.getProperties().asList():
-            value = unicode(value)
-            p = { 'name': name, 'value': value, 'source': source}            
-            if len(value) > 500:
-                p['short_value'] = value[:500]
-
+            if not isinstance(value, dict):
+                cxt_value = unicode(value)
+            else:
+                cxt_value = value
+            p = { 'name': name, 'value': cxt_value, 'source': source}
+            if len(cxt_value) > 500:
+                p['short_value'] = cxt_value[:500]
+            if name in parameters:
+                param = parameters[name]
+                if isinstance(param, TextParameter):
+                    p['text'] = param.value_to_text(value)
+                    p['cols'] = param.cols
+                    p['rows'] = param.rows
+                p['label'] = param.label
             ps.append(p)
 
         
@@ -234,8 +249,13 @@ class StatusResourceBuild(HtmlResource):
             now = util.now()
             cxt['elapsed'] = util.formatInterval(now - start)
             
-        cxt['exactly'] = (ss.revision is not None) or b.getChanges()
-
+        exactly = True
+        has_changes = False
+        for ss in sourcestamps:
+            exactly = exactly and (ss.revision is not None)
+            has_changes = has_changes or ss.changes
+        cxt['exactly'] = (exactly) or b.getChanges()
+        cxt['has_changes'] = has_changes
         cxt['build_url'] = path_to_build(req, b)
         cxt['authz'] = self.getAuthz(req)
 
@@ -250,8 +270,10 @@ class StatusResourceBuild(HtmlResource):
         b = self.build_status
         log.msg("web stopBuild of build %s:%s" % \
                 (b.getBuilder().getName(), b.getNumber()))
-        name = self.getAuthz(req).getUsername(req)
+
+        name = self.getAuthz(req).getUsernameFull(req)
         comments = req.args.get("comments", ["<no reason specified>"])[0]
+        comments.decode(getRequestCharset(req))
         # html-quote both the username and comments, just to be safe
         reason = ("The web-page 'stop build' button was pressed by "
                   "'%s': %s\n" % (html.escape(name), html.escape(comments)))

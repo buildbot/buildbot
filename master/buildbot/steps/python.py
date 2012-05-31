@@ -58,7 +58,7 @@ class BuildEPYDoc(ShellCommand):
         self.errors = errors
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         if self.warnings or self.errors:
             return WARNINGS
@@ -118,7 +118,7 @@ class PyFlakes(ShellCommand):
 
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         for m in self.flunkingIssues:
             if self.getProperty("pyflakes-%s" % m):
@@ -225,16 +225,13 @@ class Sphinx(ShellCommand):
                  sphinx_builder=None, sphinx = 'sphinx-build', tags = [],
                  defines = {}, mode='incremental', **kwargs):
 
-        errors = []
         if sphinx_builddir is None:
             # Who the heck is not interested in the built doc ?
-            errors.append("Sphinx argument sphinx_builddir is required")
+            config.error("Sphinx argument sphinx_builddir is required")
 
         if mode not in ('incremental', 'full'):
-            errors.append("Sphinx argument mode has to be 'incremental' or" +
+            config.error("Sphinx argument mode has to be 'incremental' or" +
                           "'full' is required")
-        if errors:
-            raise config.ConfigErrors(errors)
 
         self.warnings = 0
         self.success = False
@@ -262,17 +259,6 @@ class Sphinx(ShellCommand):
 
         command.extend([sphinx_sourcedir, sphinx_builddir])
         self.setCommand(command)
-
-        self.addFactoryArguments(
-            sphinx = sphinx,
-            sphinx_sourcedir = sphinx_sourcedir,
-            sphinx_builddir = sphinx_builddir,
-            sphinx_builder = sphinx_builder,
-            tags = tags,
-            defines = defines,
-            mode = mode,
-        )
-
 
     def createSummary(self, log):
 

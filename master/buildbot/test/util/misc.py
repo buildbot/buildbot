@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 import os
+import sys
+import cStringIO
 
 class PatcherMixin(object):
     """
@@ -31,4 +33,19 @@ class PatcherMixin(object):
             self.addCleanup(cleanup)
             os.uname = replacement
 
+class StdoutAssertionsMixin(object):
+    """
+    Mix this in to be able to assert on stdout during the test
+    """
+    def setUpStdoutAssertions(self):
+        self.stdout = cStringIO.StringIO()
+        self.patch(sys, 'stdout', self.stdout)
 
+    def assertWasQuiet(self):
+        self.assertEqual(self.stdout.getvalue(), '')
+
+    def assertInStdout(self, exp):
+        self.assertIn(exp, self.stdout.getvalue())
+
+    def getStdout(self):
+        return self.stdout.getvalue().strip()

@@ -21,7 +21,7 @@ from twisted.web.error import NoResource
 from twisted.internet import defer
 
 from buildbot.status.web.base import HtmlResource, abbreviate_age, \
-    BuildLineMixin, ActionResource, path_to_slave, path_to_authfail
+    BuildLineMixin, ActionResource, path_to_slave, path_to_authzfail
 from buildbot import util
 
 class ShutdownActionResource(ActionResource):
@@ -30,22 +30,19 @@ class ShutdownActionResource(ActionResource):
         self.slave = slave
         self.action = "gracefulShutdown"
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def performAction(self, request):
-        d = self.getAuthz(request).actionAllowed(self.action,
-                                                 request,
-                                                 self.slave)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        res = wfd.getResult()
+        res = yield self.getAuthz(request).actionAllowed(self.action,
+                                                        request,
+                                                        self.slave)
 
         url = None
         if res:
             self.slave.setGraceful(True)
             url = path_to_slave(request, self.slave)
         else:
-            url = path_to_authfail(request)
-        yield url
+            url = path_to_authzfail(request)
+        defer.returnValue(url)
 
 # /buildslaves/$slavename
 class OneBuildSlaveResource(HtmlResource, BuildLineMixin):

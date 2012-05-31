@@ -1,3 +1,5 @@
+{% from 'feed_sources.html' import srcs_desc %}
+
 {% macro item_desc(b, title_url, title) -%}
   <p>
     Date: {{ b.date }}<br/>
@@ -7,6 +9,9 @@
     Author list: <b>{{ b.responsible_users|join(', ') }}</b><br/>
     Failed step(s): <b>{{ b.failed_steps|join(', ') }}</b><br/>
   </p>
+  {% for src in b.sources %}
+  {{ srcs_desc(src) }}
+  {% endfor %}
   <p>
     <i>Last lines of the build log:</i>
   </p>

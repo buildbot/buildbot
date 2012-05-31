@@ -29,7 +29,7 @@ class TestDebugServices(unittest.TestCase):
         self.master = mock.Mock(name='master')
         self.config = config.MasterConfig()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_debug(self):
         # mock out PBManager
         self.master.pbmanager = pbmanager = mock.Mock()
@@ -44,19 +44,13 @@ class TestDebugServices(unittest.TestCase):
         # start off with no debug password
         self.config.slavePortnum = '9824'
         self.config.debugPassword = None
-        wfd = defer.waitForDeferred(
-            ds.reconfigService(self.config))
-        yield wfd
-        wfd.getResult()
+        yield ds.reconfigService(self.config)
 
         self.assertFalse(pbmanager.register.called)
 
         # set the password, and see it register
         self.config.debugPassword = 'seeeekrit'
-        wfd = defer.waitForDeferred(
-            ds.reconfigService(self.config))
-        yield wfd
-        wfd.getResult()
+        yield ds.reconfigService(self.config)
 
         self.assertTrue(pbmanager.register.called)
         self.assertEqual(pbmanager.register.call_args[0][:3],
@@ -68,10 +62,7 @@ class TestDebugServices(unittest.TestCase):
         # change the password, and see it re-register
         self.config.debugPassword = 'lies'
         pbmanager.register.reset_mock()
-        wfd = defer.waitForDeferred(
-            ds.reconfigService(self.config))
-        yield wfd
-        wfd.getResult()
+        yield ds.reconfigService(self.config)
 
         self.assertTrue(registration.unregister.called)
         self.assertTrue(pbmanager.register.called)
@@ -82,10 +73,7 @@ class TestDebugServices(unittest.TestCase):
         self.config.debugPassword = None
         pbmanager.register.reset_mock()
         registration.unregister.reset_mock()
-        wfd = defer.waitForDeferred(
-            ds.reconfigService(self.config))
-        yield wfd
-        wfd.getResult()
+        yield ds.reconfigService(self.config)
 
         self.assertTrue(registration.unregister.called)
         self.assertFalse(pbmanager.register.called)
@@ -93,65 +81,44 @@ class TestDebugServices(unittest.TestCase):
         # re-register to test stopService
         self.config.debugPassword = 'confusion'
         pbmanager.register.reset_mock()
-        wfd = defer.waitForDeferred(
-            ds.reconfigService(self.config))
-        yield wfd
-        wfd.getResult()
+        yield ds.reconfigService(self.config)
 
         # stop the service, and see that it unregisters
         pbmanager.register.reset_mock()
         registration.unregister.reset_mock()
-        wfd = defer.waitForDeferred(
-            ds.stopService())
-        yield wfd
-        wfd.getResult()
+        yield ds.stopService()
 
         self.assertTrue(registration.unregister.called)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_manhole(self):
         master = mock.Mock(name='master')
         ds = debug.DebugServices(master)
         ds.startService()
 
         # start off with no manhole
-        wfd = defer.waitForDeferred(
-            ds.reconfigService(self.config))
-        yield wfd
-        wfd.getResult()
+        yield ds.reconfigService(self.config)
 
         # set a manhole, fire it up
         self.config.manhole = manhole = FakeManhole()
-        wfd = defer.waitForDeferred(
-            ds.reconfigService(self.config))
-        yield wfd
-        wfd.getResult()
+        yield ds.reconfigService(self.config)
 
         self.assertTrue(manhole.running)
         self.assertIdentical(manhole.master, master)
 
         # unset it, see it stop
         self.config.manhole = None
-        wfd = defer.waitForDeferred(
-            ds.reconfigService(self.config))
-        yield wfd
-        wfd.getResult()
+        yield ds.reconfigService(self.config)
 
         self.assertFalse(manhole.running)
         self.assertIdentical(manhole.master, None)
 
         # re-start to test stopService
         self.config.manhole = manhole
-        wfd = defer.waitForDeferred(
-            ds.reconfigService(self.config))
-        yield wfd
-        wfd.getResult()
+        yield ds.reconfigService(self.config)
 
         # stop the service, and see that it unregisters
-        wfd = defer.waitForDeferred(
-            ds.stopService())
-        yield wfd
-        wfd.getResult()
+        yield ds.stopService()
 
         self.assertFalse(manhole.running)
         self.assertIdentical(manhole.master, None)

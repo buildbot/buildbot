@@ -15,16 +15,18 @@
 
 
 from twisted.web import html
-from twisted.web.util import Redirect
 import urllib, time
 from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_slave, path_to_builder, path_to_change, \
-    path_to_root, getAndCheckProperties, ICurrentBox, build_get_class, \
-    map_branches, path_to_authfail, ActionResource
-
+    path_to_root, ICurrentBox, build_get_class, \
+    map_branches, path_to_authzfail, ActionResource, \
+    getRequestCharset
+from buildbot.schedulers.forcesched import ForceScheduler
+from buildbot.schedulers.forcesched import InheritBuildParameter
+from buildbot.schedulers.forcesched import ValidationError
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
 
@@ -35,16 +37,13 @@ class ForceAllBuildsActionResource(ActionResource):
         self.selectedOrAll = selectedOrAll
         self.action = "forceAllBuilds"
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def performAction(self, req):
         authz = self.getAuthz(req)
-        d = authz.actionAllowed('forceAllBuilds', req)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        res = wfd.getResult()
+        res = yield authz.actionAllowed('forceAllBuilds', req)
 
         if not res:
-            yield path_to_authfail(req)
+            defer.returnValue(path_to_authzfail(req))
             return
 
         builders = None
@@ -55,11 +54,11 @@ class ForceAllBuildsActionResource(ActionResource):
 
         for bname in builders:
             builder_status = self.status.getBuilder(bname)
-            build = StatusResourceBuilder(builder_status)
-            build.force(req, auth_ok=True) # auth_ok because we already checked
-
+            ar = ForceBuildActionResource(builder_status)
+            d = ar.performAction(req)
+            d.addErrback(log.err, "(ignored) while trying to force build")
         # back to the welcome page
-        yield path_to_root(req)
+        defer.returnValue(path_to_root(req))
 
 class StopAllBuildsActionResource(ActionResource):
 
@@ -68,15 +67,12 @@ class StopAllBuildsActionResource(ActionResource):
         self.selectedOrAll = selectedOrAll
         self.action = "stopAllBuilds"
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def performAction(self, req):
         authz = self.getAuthz(req)
-        d = authz.actionAllowed('stopAllBuilds', req)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        res = wfd.getResult()
+        res = yield authz.actionAllowed('stopAllBuilds', req)
         if not res:
-            yield path_to_authfail(req)
+            defer.returnValue(path_to_authzfail(req))
             return
 
         builders = None
@@ -96,8 +92,9 @@ class StopAllBuildsActionResource(ActionResource):
                     continue
                 build = StatusResourceBuild(build_status)
                 build.stop(req, auth_ok=True)
+
         # go back to the welcome page
-        yield path_to_root(req)
+        defer.returnValue(path_to_root(req))
 
 class PingBuilderActionResource(ActionResource):
 
@@ -105,90 +102,97 @@ class PingBuilderActionResource(ActionResource):
         self.builder_status = builder_status
         self.action = "pingBuilder"
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def performAction(self, req):
         log.msg("web ping of builder '%s'" % self.builder_status.getName())
-        d = self.getAuthz(req).actionAllowed('pingBuilder', req, self.builder_status)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        res = wfd.getResult()
+        res = yield self.getAuthz(req).actionAllowed('pingBuilder', req,
+                                                    self.builder_status)
         if not res:
             log.msg("..but not authorized")
-            yield path_to_authfail(req)
+            defer.returnValue(path_to_authzfail(req))
             return
 
         c = interfaces.IControl(self.getBuildmaster(req))
         bc = c.getBuilder(self.builder_status.getName())
         bc.ping()
         # send the user back to the builder page
-        yield path_to_builder(req, self.builder_status)
+        defer.returnValue(path_to_builder(req, self.builder_status))
 
 class ForceBuildActionResource(ActionResource):
 
-    def __init__(self, builder_status, req_args):
+    def __init__(self, builder_status):
         self.builder_status = builder_status
-        self.req_args = req_args
         self.action = "forceBuild"
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def performAction(self, req):
         # check if this is allowed
-        d = self.getAuthz(req).actionAllowed(self.action, req,
+        res = yield self.getAuthz(req).actionAllowed(self.action, req,
                                              self.builder_status)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        res = wfd.getResult()
         if not res:
             log.msg("..but not authorized")
-            yield path_to_authfail(req)
+            defer.returnValue(path_to_authzfail(req))
             return
 
         master = self.getBuildmaster(req)
-
-        # keep weird stuff out of the branch revision, and property strings.
-        branch_validate = master.config.validation['branch']
-        revision_validate = master.config.validation['revision']
-        if not branch_validate.match(self.req_args['branch']):
-            log.msg("bad branch '%s'" % self.req_args['branch'])
-            yield path_to_builder(req, self.builder_status)
+        owner = self.getAuthz(req).getUsernameFull(req)
+        schedulername = req.args.get("forcescheduler", ["<unknown>"])[0]
+        if schedulername == "<unknown>":
+            defer.returnValue((path_to_builder(req, self.builder_status),
+                               "forcescheduler arg not found"))
             return
-        if not revision_validate.match(self.req_args['revision']):
-            log.msg("bad revision '%s'" % self.req_args['revision'])
-            yield path_to_builder(req, self.builder_status)
-            return
-        properties = getAndCheckProperties(req)
-        if properties is None:
-            yield path_to_builder(req, self.builder_status)
-            return
-        if not self.req_args['branch']:
-            self.req_args['branch'] = None
-        if not self.req_args['revision']:
-            self.req_args['revision'] = None
 
-        d = master.db.sourcestamps.addSourceStamp(
-                                      branch=self.req_args['branch'],
-                                      revision=self.req_args['revision'],
-                                      project=self.req_args['project'],
-                                      repository=self.req_args['repository'])
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        ssid = wfd.getResult()
+        args = req.args.copy()
 
-        r = ("The web-page 'force build' button was pressed by '%s': %s\n"
-             % (html.escape(self.req_args['name']),
-                html.escape(self.req_args['reason'])))
-        d = master.addBuildset(builderNames=[self.builder_status.getName()],
-                               ssid=ssid, reason=r,
-                               properties=properties.asDict())
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        tup = wfd.getResult()
-        # check that (bsid, brids) were properly stored
-        if not isinstance(tup, (int, dict)):
-            log.err("(ignored) while trying to force build")
+        # decode all of the args
+        encoding = getRequestCharset(req)
+        for name, argl in args.iteritems():
+            args[name] = [ arg.decode(encoding) for arg in argl ]
+
+        # damn html's ungeneric checkbox implementation...
+        for cb in args.get("checkbox", []):
+            args[cb] = True
+
+        builder_name = self.builder_status.getName()
+
+        for sch in master.allSchedulers():
+            if schedulername == sch.name:
+                try:
+                    yield sch.force(owner, builder_name, **args)
+                    msg = ""
+                except ValidationError, e:
+                    msg = html.escape(e.message.encode('ascii','ignore'))
+                break
 
         # send the user back to the builder page
-        yield path_to_builder(req, self.builder_status)
+        defer.returnValue((path_to_builder(req, self.builder_status), msg))
+
+
+def buildForceContext(cxt, req, master, buildername=None):
+    force_schedulers = {}
+    default_props = {}
+    for sch in master.allSchedulers():
+        if isinstance(sch, ForceScheduler) and (buildername is None or(buildername in sch.builderNames)):
+            force_schedulers[sch.name] = sch
+            for p in sch.all_fields:
+                pname = "%s.%s"%(sch.name, p.name)
+                default = p.default
+                if isinstance(p, InheritBuildParameter):
+                    # yes, I know, its bad to overwrite the parameter attribute,
+                    # but I dont have any other simple way of doing this atm.
+                    p.choices = p.compatible_builds(master.status, buildername)
+                    if p.choices:
+                        default = p.choices[0]
+                default = req.args.get(pname, [default])[0]
+                if p.type=="bool":
+                    default_props[pname] = default and "checked" or ""
+                else:
+                    # filter out unicode chars, and html stuff
+                    if type(default)==unicode:
+                        default = html.escape(default.encode('utf-8','ignore'))
+                    default_props[pname] = default
+    cxt['force_schedulers'] = force_schedulers
+    cxt['default_props'] = default_props
 
 # /builders/$builder
 class StatusResourceBuilder(HtmlResource, BuildLineMixin):
@@ -227,7 +231,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         return b
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def content(self, req, cxt):
         b = self.builder_status
 
@@ -239,22 +243,16 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         cxt['current'] = [self.builder(x, req) for x in b.getCurrentBuilds()]
 
         cxt['pending'] = []
-        wfd = defer.waitForDeferred(
-            b.getPendingBuildRequestStatuses())
-        yield wfd
-        statuses = wfd.getResult()
+        statuses = yield b.getPendingBuildRequestStatuses()
         for pb in statuses:
             changes = []
 
-            wfd = defer.waitForDeferred(
-                    pb.getSourceStamp())
-            yield wfd
-            source = wfd.getResult()
+            source = yield pb.getSourceStamp()
+            submitTime = yield pb.getSubmitTime()
+            bsid = yield pb.getBsid()
 
-            wfd = defer.waitForDeferred(
-                    pb.getSubmitTime())
-            yield wfd
-            submitTime = wfd.getResult()
+            properties = yield \
+                    pb.master.db.buildsets.getBuildsetProperties(bsid)
 
             if source.changes:
                 for c in source.changes:
@@ -270,6 +268,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 'id': pb.brid,
                 'changes' : changes,
                 'num_changes' : len(changes),
+                'properties' : properties,
                 })
 
         numbuilds = int(req.args.get('numbuilds', ['5'])[0])
@@ -292,67 +291,16 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         cxt['authz'] = self.getAuthz(req)
         cxt['builder_url'] = path_to_builder(req, b)
-
+        buildForceContext(cxt, req, self.getBuildmaster(req), b.getName())
         template = req.site.buildbot_service.templates.get_template("builder.html")
-        yield template.render(**cxt)
-
-    def force(self, req, auth_ok=False):
-        name = self.getAuthz(req).getUsername(req)
-        reason = req.args.get("comments", ["<no reason specified>"])[0]
-        branch = req.args.get("branch", [""])[0]
-        revision = req.args.get("revision", [""])[0]
-        repository = req.args.get("repository", [""])[0]
-        project = req.args.get("project", [""])[0]
-
-        log.msg("web forcebuild of builder '%s', branch='%s', revision='%s',"
-                " repository='%s', project='%s' by user '%s'" % (
-                self.builder_status.getName(), branch, revision, repository,
-                project, name))
-
-        if not auth_ok:
-            req_args = dict(name=name, reason=reason, branch=branch,
-                            revision=revision, repository=repository,
-                            project=project)
-            return ForceBuildActionResource(self.builder_status, req_args)
-
-        master = self.getBuildmaster(req)
-
-        # keep weird stuff out of the branch revision, and property strings.
-        branch_validate = master.config.validation['branch']
-        revision_validate = master.config.validation['revision']
-        if not branch_validate.match(branch):
-            log.msg("bad branch '%s'" % branch)
-            return Redirect(path_to_builder(req, self.builder_status))
-        if not revision_validate.match(revision):
-            log.msg("bad revision '%s'" % revision)
-            return Redirect(path_to_builder(req, self.builder_status))
-        properties = getAndCheckProperties(req)
-        if properties is None:
-            return Redirect(path_to_builder(req, self.builder_status))
-        if not branch:
-            branch = None
-        if not revision:
-            revision = None
-
-        d = master.db.sourcestamps.addSourceStamp(branch=branch,
-                revision=revision, project=project, repository=repository)
-        def make_buildset(ssid):
-            r = ("The web-page 'force build' button was pressed by '%s': %s\n"
-                 % (html.escape(name), html.escape(reason)))
-            return master.addBuildset(
-                    builderNames=[self.builder_status.getName()],
-                    ssid=ssid, reason=r, properties=properties.asDict())
-        d.addCallback(make_buildset)
-        d.addErrback(log.err, "(ignored) while trying to force build")
-        # send the user back to the builder page
-        return Redirect(path_to_builder(req, self.builder_status))
+        defer.returnValue(template.render(**cxt))
 
     def ping(self, req):
         return PingBuilderActionResource(self.builder_status)
 
     def getChild(self, path, req):
         if path == "force":
-            return self.force(req)
+            return ForceBuildActionResource(self.builder_status)
         if path == "ping":
             return self.ping(req)
         if path == "cancelbuild":
@@ -370,7 +318,7 @@ class CancelChangeResource(ActionResource):
         ActionResource.__init__(self)
         self.builder_status = builder_status
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def performAction(self, req):
         try:
             request_id = req.args.get("id", [None])[0]
@@ -387,32 +335,26 @@ class CancelChangeResource(ActionResource):
             c = interfaces.IControl(self.getBuildmaster(req))
             builder_control = c.getBuilder(self.builder_status.getName())
 
-            wfd = defer.waitForDeferred(
-                    builder_control.getPendingBuildRequestControls())
-            yield wfd
-            brcontrols = wfd.getResult()
+            brcontrols = yield builder_control.getPendingBuildRequestControls()
 
             for build_req in brcontrols:
                 if cancel_all or (build_req.brid == request_id):
                     log.msg("Cancelling %s" % build_req)
-                    d = authz.actionAllowed('cancelPendingBuild',
-                                            req, build_req)
-                    wfd = defer.waitForDeferred(d)
-                    yield wfd
-                    res = wfd.getResult()
+                    res = yield authz.actionAllowed('cancelPendingBuild', req,
+                                                                build_req)
                     if res:
                         build_req.cancel()
                     else:
-                        yield path_to_authfail(req)
+                        defer.returnValue(path_to_authzfail(req))
                         return
                     if not cancel_all:
                         break
 
-        yield path_to_builder(req, self.builder_status)
+        defer.returnValue(path_to_builder(req, self.builder_status))
 
 class StopChangeMixin(object):
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def stopChangeForBuilder(self, req, builder_status, auth_ok=False):
         try:
             request_change = req.args.get("change", [None])[0]
@@ -425,23 +367,14 @@ class StopChangeMixin(object):
             c = interfaces.IControl(self.getBuildmaster(req))
             builder_control = c.getBuilder(builder_status.getName())
 
-            wfd = defer.waitForDeferred(
-                    builder_control.getPendingBuildRequestControls())
-            yield wfd
-            brcontrols = wfd.getResult()
-
+            brcontrols = yield builder_control.getPendingBuildRequestControls()
             build_controls = dict((x.brid, x) for x in brcontrols)
 
-            wfd = defer.waitForDeferred(
-                    builder_status.getPendingBuildRequestStatuses())
-            yield wfd
-            build_req_statuses = wfd.getResult()
+            build_req_statuses = yield \
+                    builder_status.getPendingBuildRequestStatuses()
 
             for build_req in build_req_statuses:
-                wfd = defer.waitForDeferred(
-                        build_req.getSourceStamp())
-                yield wfd
-                ss = wfd.getResult()
+                ss = yield build_req.getSourceStamp()
 
                 if not ss.changes:
                     continue
@@ -450,17 +383,14 @@ class StopChangeMixin(object):
                     if change.number == request_change:
                         control = build_controls[build_req.brid]
                         log.msg("Cancelling %s" % control)
-                        d = authz.actionAllowed('stopChange', req, control)
-                        wfd = defer.waitForDeferred(d)
-                        yield wfd
-                        res = wfd.getResult()
+                        res = yield authz.actionAllowed('stopChange', req, control)
                         if (auth_ok or res):
                             control.cancel()
                         else:
-                            yield False
+                            defer.returnValue(False)
                             return
 
-        yield True
+        defer.returnValue(True)
 
 
 class StopChangeResource(StopChangeMixin, ActionResource):
@@ -469,18 +399,15 @@ class StopChangeResource(StopChangeMixin, ActionResource):
         ActionResource.__init__(self)
         self.builder_status = builder_status
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def performAction(self, req):
         """Cancel all pending builds that include a given numbered change."""
-        wfd = defer.waitForDeferred(
-            self.stopChangeForBuilder(req, self.builder_status))
-        yield wfd
-        success = wfd.getResult()
+        success = yield self.stopChangeForBuilder(req, self.builder_status)
 
         if not success:
-            yield path_to_authfail(req)
+            defer.returnValue(path_to_authzfail(req))
         else:
-            yield path_to_builder(req, self.builder_status)
+            defer.returnValue(path_to_builder(req, self.builder_status))
 
 
 class StopChangeAllResource(StopChangeMixin, ActionResource):
@@ -489,27 +416,23 @@ class StopChangeAllResource(StopChangeMixin, ActionResource):
         ActionResource.__init__(self)
         self.status = status
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def performAction(self, req):
         """Cancel all pending builds that include a given numbered change."""
         authz = self.getAuthz(req)
-        wfd = defer.waitForDeferred(authz.actionAllowed('stopChange', req))
-        yield wfd
-        res = wfd.getResult()
+        res = yield authz.actionAllowed('stopChange', req)
         if not res:
-            yield path_to_authfail(req)
+            defer.returnValue(path_to_authzfail(req))
             return
 
         for bname in self.status.getBuilderNames():
             builder_status = self.status.getBuilder(bname)
-            wfd = defer.waitForDeferred(
-                self.stopChangeForBuilder(req, builder_status, auth_ok=True))
-            yield wfd
-            if not wfd.getResult():
-                yield path_to_authfail(req)
+            res = yield self.stopChangeForBuilder(req, builder_status, auth_ok=True)
+            if not res:
+                defer.returnValue(path_to_authzfail(req))
                 return
 
-        yield path_to_root(req)
+        defer.returnValue(path_to_root(req))
 
 
 # /builders/_all
@@ -561,12 +484,15 @@ class BuildersResource(HtmlResource):
     pageTitle = "Builders"
     addSlash = True
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def content(self, req, cxt):
         status = self.getStatus(req)
+        encoding = getRequestCharset(req)
 
         builders = req.args.get("builder", status.getBuilderNames())
-        branches = [b for b in req.args.get("branch", []) if b]
+        branches = [ b.decode(encoding)
+                for b in req.args.get("branch", [])
+                if b ]
 
         # get counts of pending builds for each builder
         brstatus_ds = []
@@ -578,10 +504,7 @@ class BuildersResource(HtmlResource):
             d = builder_status.getPendingBuildRequestStatuses()
             d.addCallback(keep_count, builderName)
             brstatus_ds.append(d)
-        wfd = defer.waitForDeferred(
-            defer.gatherResults(brstatus_ds))
-        yield wfd
-        wfd.getResult()
+        yield defer.gatherResults(brstatus_ds)
 
         cxt['branches'] = branches
         bs = cxt['builders'] = []
@@ -600,7 +523,11 @@ class BuildersResource(HtmlResource):
             if builds:
                 b = builds[0]
                 bld['build_url'] = (bld['link'] + "/builds/%d" % b.getNumber())
-                label = b.getProperty("got_revision")
+                label = None
+                all_got_revisions = b.getAllGotRevisions()
+                # If len = 1 then try if revision can be used as label.
+                if len(all_got_revisions) == 1:
+                    label = all_got_revisions[all_got_revisions.keys()[0]]
                 if not label or len(str(label)) > 20:
                     label = "#%d" % b.getNumber()
 
@@ -621,9 +548,9 @@ class BuildersResource(HtmlResource):
         cxt['authz'] = self.getAuthz(req)
         cxt['num_building'] = building
         cxt['num_online'] = online
-
+        buildForceContext(cxt, req, self.getBuildmaster(req))
         template = req.site.buildbot_service.templates.get_template("builders.html")
-        yield template.render(**cxt)
+        defer.returnValue(template.render(**cxt))
 
     def getChild(self, path, req):
         s = self.getStatus(req)

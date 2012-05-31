@@ -22,12 +22,6 @@ from twisted.python import log
 from twisted.internet import defer
 
 def deferredLocked(lock_or_attr):
-    """
-    Wrap a function which returns a Deferred with a DeferredLock.  The
-    DeferredLock is given by the argument to the decorator; if this argument is
-    a string, then the function is assumed to be a method, and the named
-    attribute of SELF is used as the lock object.
-    """
     def decorator(fn):
         def wrapper(*args, **kwargs):
             lock = lock_or_attr
@@ -44,20 +38,6 @@ def deferredLocked(lock_or_attr):
     return decorator
 
 class SerializedInvocation(object):
-    """
-    A method wrapper to serialize calls to a deferred method.  If a second call
-    occurs while the first call is still executing, it will not begin until the
-    first call has finished.  If multiple calls queue up, they will be
-    collapsed into a single call.
-
-    The effect is that the underlying method is guaranteed to be called at
-    least once after every call to the wrapper.
-
-    Note that this cannot be used as a decorator on a method, as it will
-    serialize invocations across all class instances.  Tests can monkey-patch
-    the C{_quiet} method to be notified when all planned invocations are
-    complete.
-    """
     def __init__(self, method):
         self.method = method
         self.running = False

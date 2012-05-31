@@ -101,7 +101,9 @@ class BaseLock:
 
         debuglog("%s release(%s, %s)" % (self, owner, access.mode))
         entry = (owner, access)
-        assert entry in self.owners
+        if not entry in self.owners:
+            debuglog("%s already released" % self)
+            return
         self.owners.remove(entry)
         # who can we wake up?
         # After an exclusive access, we may need to wake up several waiting.
@@ -173,8 +175,8 @@ class RealSlaveLock:
     def __repr__(self):
         return self.description
 
-    def getLock(self, slavebuilder):
-        slavename = slavebuilder.slave.slavename
+    def getLock(self, slave):
+        slavename = slave.slavename
         if not self.locks.has_key(slavename):
             maxCount = self.maxCountForSlave.get(slavename,
                                                  self.maxCount)

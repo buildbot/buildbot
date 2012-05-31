@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Portions Copyright Buildbot Team Members
+
+from __future__ import with_statement
 # Portions Copyright Canonical Ltd. 2009
 
 """A LatentSlave that uses EC2 to instantiate the slaves on demand.
@@ -95,12 +97,9 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                     "access key identifier either when instantiating this %s "
                     "or in the %s file (on two lines).\n" %
                     (self.__class__.__name__, aws_id_file_path))
-            aws_file = open(aws_id_file_path, 'r')
-            try:
+            with open(aws_id_file_path, 'r') as aws_file:
                 identifier = aws_file.readline().strip()
                 secret_identifier = aws_file.readline().strip()
-            finally:
-                aws_file.close()
         else:
             assert aws_id_file_path is None, \
                     'if you supply the identifier and secret_identifier, ' \

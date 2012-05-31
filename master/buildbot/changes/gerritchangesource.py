@@ -62,6 +62,7 @@ class GerritChangeSource(base.ChangeSource):
         self.username = username
         self.identity_file = identity_file
         self.process = None
+        self.wantProcess = False
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
 
     class LocalPP(ProcessProtocol):
@@ -69,7 +70,7 @@ class GerritChangeSource(base.ChangeSource):
             self.change_source = change_source
             self.data = ""
 
-        @defer.deferredGenerator
+        @defer.inlineCallbacks
         def outReceived(self, data):
             """Do line buffering."""
             self.data += data
@@ -77,10 +78,7 @@ class GerritChangeSource(base.ChangeSource):
             self.data = lines.pop(-1) # last line is either empty or incomplete
             for line in lines:
                 log.msg("gerrit: %s" % (line,))
-                d = self.change_source.lineReceived(line)
-                wfd = defer.waitForDeferred(d)
-                yield wfd
-                wfd.getResult()
+                yield self.change_source.lineReceived(line)
 
         def errReceived(self, data):
             log.msg("gerrit stderr: %s" % (data,))
@@ -124,6 +122,8 @@ class GerritChangeSource(base.ChangeSource):
         return self.addChange(dict(
                 author="%s <%s>" % (change["owner"]["name"], change["owner"]["email"]),
                 project=change["project"],
+                repository="ssh://%s@%s:%s/%s" % (
+                    self.username, self.gerritserver, self.gerritport, change["project"]),
                 branch=change["branch"]+"/"+change["number"],
                 revision=event["patchSet"]["revision"],
                 revlink=change["url"],
@@ -141,6 +141,8 @@ class GerritChangeSource(base.ChangeSource):
         return self.addChange(dict(
                 author=author,
                 project=ref["project"],
+                repository="ssh://%s@%s:%s/%s" % (
+                    self.username, self.gerritserver, self.gerritport, ref["project"]),
                 branch=ref["refName"],
                 revision=ref["newRev"],
                 comments="Gerrit: patchset(s) merged.",
@@ -151,8 +153,8 @@ class GerritChangeSource(base.ChangeSource):
     def streamProcessStopped(self):
         self.process = None
 
-        # if the service is stopped, don't try to restart
-        if not self.parent:
+        # if the service is stopped, don't try to restart the process
+        if not self.wantProcess:
             log.msg("service is not running; not reconnecting")
             return
 
@@ -181,9 +183,11 @@ class GerritChangeSource(base.ChangeSource):
           [ "ssh" ] + args + [ "gerrit", "stream-events" ])
 
     def startService(self):
+        self.wantProcess = True
         self.startStreamProcess()
 
     def stopService(self):
+        self.wantProcess = False
         if self.process:
             self.process.signalProcess("KILL")
         # TODO: if this occurs while the process is restarting, some exceptions may

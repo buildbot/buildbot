@@ -25,11 +25,11 @@ from buildbot import config
 
 class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
-    SCHEDULERID = 132
+    OBJECTID = 132
 
     def makeScheduler(self, firstBuildDuration=0, **kwargs):
         sched = self.attachScheduler(timed.Nightly(**kwargs),
-                self.SCHEDULERID)
+                self.OBJECTID)
 
         # add a Clock to help checking timing issues
         self.clock = sched._reactor = task.Clock()
@@ -87,18 +87,17 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
     ## detailed getNextBuildTime tests
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def do_getNextBuildTime_test(self, sched, *expectations):
         for lastActuated, expected in expectations:
             # convert from tuples to epoch time (in local timezone)
             lastActuated_ep, expected_ep = [
                    time.mktime(t + (0,) * (8 - len(t)) + (-1,))
                    for t in (lastActuated, expected) ]
-            wfd = defer.waitForDeferred(sched.getNextBuildTime(lastActuated_ep))
-            yield wfd
-            got_ep = wfd.getResult()
+            got_ep = yield sched.getNextBuildTime(lastActuated_ep)
             self.assertEqual(got_ep, expected_ep,
-                "%s -> %s != %s" % (lastActuated, time.localtime(got_ep), expected))
+                "%s -> %s != %s" % (lastActuated, time.localtime(got_ep),
+                                    expected))
 
     def test_getNextBuildTime_hourly(self):
         sched = self.makeScheduler(name='test', builderNames=['test'], branch=None)
@@ -257,14 +256,14 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                         minute=[10, 20, 21, 40, 50, 51])
 
         # add a change classification
-        self.db.schedulers.fakeClassifications(self.SCHEDULERID,
+        self.db.schedulers.fakeClassifications(self.OBJECTID,
                                                             { 19 : True })
 
         sched.startService()
 
         # check that the classification has been flushed, since this
         # invocation has not requested onlyIfChanged
-        self.db.schedulers.assertClassifications(self.SCHEDULERID, {})
+        self.db.schedulers.assertClassifications(self.OBJECTID, {})
 
         self.clock.advance(0) # let it get set up
         while self.clock.seconds() < 30*60: # run for 30 minutes

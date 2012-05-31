@@ -24,7 +24,7 @@ from twisted.python.failure import Failure
 from twisted.web.util import formatFailure
 from twisted.python.reflect import accumulateClassList
 
-from buildbot import interfaces, locks, util
+from buildbot import interfaces, locks, util, config
 from buildbot.status import progress
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION, RETRY, worst_status
@@ -39,11 +39,26 @@ class RemoteCommand(pb.Referenceable):
     _commandCounter = 0
 
     active = False
+    rc = None
+    debug = False
 
-    def __init__(self, remote_command, args, ignore_updates=False):
+    def __init__(self, remote_command, args, ignore_updates=False,
+            collectStdout=False, successfulRC=(0,)):
+        self.logs = {}
+        self.delayedLogs = {}
+        self._closeWhenFinished = {}
+        self.collectStdout = collectStdout
+        self.stdout = ''
+
+        self._startTime = None
+        self._remoteElapsed = None
         self.remote_command = remote_command
         self.args = args
         self.ignore_updates = ignore_updates
+        self.successfulRC = successfulRC
+
+    def __repr__(self):
+        return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
 
     def run(self, step, remote):
         self.active = True
@@ -72,16 +87,30 @@ class RemoteCommand(pb.Referenceable):
         # when our parent Step calls our .lostRemote() method.
         return self.deferred
 
+    def useLog(self, log, closeWhenFinished=False, logfileName=None):
+        assert interfaces.ILogFile.providedBy(log)
+        if not logfileName:
+            logfileName = log.getName()
+        assert logfileName not in self.logs
+        assert logfileName not in self.delayedLogs
+        self.logs[logfileName] = log
+        self._closeWhenFinished[logfileName] = closeWhenFinished
+
+    def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
+        assert logfileName not in self.logs
+        assert logfileName not in self.delayedLogs
+        self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
+
     def _start(self):
-        # Allow use of WithProperties in logfile path names.
-        cmd_args = self.args
+        self.updates = {}
+        self._startTime = util.now()
 
         # This method only initiates the remote command.
         # We will receive remote_update messages as the command runs.
         # We will get a single remote_complete when it finishes.
         # We should fire self.deferred when the command is done.
         d = self.remote.callRemote("startCommand", self, self.commandID,
-                                   self.remote_command, cmd_args)
+                                   self.remote_command, self.args)
         return d
 
     def _finished(self, failure=None):
@@ -152,9 +181,6 @@ class RemoteCommand(pb.Referenceable):
                 max_updatenum = num
         return max_updatenum
 
-    def remoteUpdate(self, update):
-        raise NotImplementedError("You must implement this in a subclass")
-
     def remote_complete(self, failure=None):
         """
         Called by the slave's L{buildbot.slave.bot.SlaveBuilder} to
@@ -170,52 +196,6 @@ class RemoteCommand(pb.Referenceable):
         if self.active:
             reactor.callLater(0, self._finished, failure)
         return None
-
-    def remoteComplete(self, maybeFailure):
-        return maybeFailure
-
-class LoggedRemoteCommand(RemoteCommand):
-
-    rc = None
-    debug = False
-
-    def __init__(self, remote_command, args, collectStdout=False, **kwargs):
-        self.logs = {}
-        self.delayedLogs = {}
-        self._closeWhenFinished = {}
-        self.collectStdout = collectStdout
-        self.stdout = ''
-        RemoteCommand.__init__(self, remote_command, args, **kwargs)
-
-        self._startTime = None
-        self._remoteElapsed = None
-
-    def __repr__(self):
-        return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
-
-    def useLog(self, loog, closeWhenFinished=False, logfileName=None):
-        assert interfaces.ILogFile.providedBy(loog)
-        if not logfileName:
-            logfileName = loog.getName()
-        assert logfileName not in self.logs
-        assert logfileName not in self.delayedLogs
-        self.logs[logfileName] = loog
-        self._closeWhenFinished[logfileName] = closeWhenFinished
-
-    def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
-        assert logfileName not in self.logs
-        assert logfileName not in self.delayedLogs
-        self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
-
-    def _start(self):
-        log.msg("LoggedRemoteCommand._start")
-        if 'stdio' not in self.logs:
-            log.msg("LoggedRemoteCommand (%s) is running a command, but "
-                    "it isn't being logged to anything. This seems unusual."
-                    % self)
-        self.updates = {}
-        self._startTime = util.now()
-        return RemoteCommand._start(self)
 
     def addStdout(self, data):
         if 'stdio' in self.logs:
@@ -245,7 +225,7 @@ class LoggedRemoteCommand(RemoteCommand):
         else:
             log.msg("%s.addToLog: no such log %s" % (self, logname))
 
-    @metrics.countMethod('LoggedRemoteCommand.remoteUpdate()')
+    @metrics.countMethod('RemoteCommand.remoteUpdate()')
     def remoteUpdate(self, update):
         if self.debug:
             for k,v in update.items():
@@ -280,7 +260,7 @@ class LoggedRemoteCommand(RemoteCommand):
     def remoteComplete(self, maybeFailure):
         if self._startTime and self._remoteElapsed:
             delta = (util.now() - self._startTime) - self._remoteElapsed
-            metrics.MetricTimeEvent.log("LoggedRemoteCommand.overhead", delta)
+            metrics.MetricTimeEvent.log("RemoteCommand.overhead", delta)
 
         for name,loog in self.logs.items():
             if self._closeWhenFinished[name]:
@@ -290,6 +270,10 @@ class LoggedRemoteCommand(RemoteCommand):
                     log.msg("closing log %s" % loog)
                 loog.finish()
         return maybeFailure
+
+    def didFail(self):
+        return self.rc not in self.successfulRC
+LoggedRemoteCommand = RemoteCommand
 
 
 class LogObserver:
@@ -360,12 +344,13 @@ class LogLineObserver(LogObserver):
         pass
 
 
-class RemoteShellCommand(LoggedRemoteCommand):
+class RemoteShellCommand(RemoteCommand):
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=20*60, maxTime=None, logfiles={},
                  usePTY="slave-config", logEnviron=True,
-                 collectStdout=False, interruptSignal=None):
+                 collectStdout=False, interruptSignal=None,
+                 initialStdin=None, successfulRC=(0,)):
 
         self.command = command # stash .command, set it later
         if env is not None:
@@ -382,10 +367,12 @@ class RemoteShellCommand(LoggedRemoteCommand):
                 'maxTime': maxTime,
                 'usePTY': usePTY,
                 'logEnviron': logEnviron,
+                'initial_stdin': initialStdin
                 }
         if interruptSignal is not None:
             args['interruptSignal'] = interruptSignal
-        LoggedRemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout)
+        RemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout,
+                successfulRC=successfulRC)
 
     def _start(self):
         self.args['command'] = self.command
@@ -397,12 +384,34 @@ class RemoteShellCommand(LoggedRemoteCommand):
         what = "command '%s' in dir '%s'" % (self.args['command'],
                                              self.args['workdir'])
         log.msg(what)
-        return LoggedRemoteCommand._start(self)
+        return RemoteCommand._start(self)
 
     def __repr__(self):
         return "<RemoteShellCommand '%s'>" % repr(self.command)
 
-class BuildStep(properties.PropertiesMixin):
+class _BuildStepFactory(util.ComparableMixin):
+    """
+    This is a wrapper to record the arguments passed to as BuildStep subclass.
+    We use an instance of this class, rather than a closure mostly to make it
+    easier to test that the right factories are getting created.
+    """
+    compare_attrs = ['factory', 'args', 'kwargs' ]
+    implements(interfaces.IBuildStepFactory)
+
+    def __init__(self, factory, *args, **kwargs):
+        self.factory = factory
+        self.args = args
+        self.kwargs = kwargs
+
+    def buildStep(self):
+        try:
+            return self.factory(*self.args, **self.kwargs)
+        except:
+            log.msg("error while creating step, factory=%s, args=%s, kwargs=%s"
+                    % (self.factory, self.args, self.kwargs))
+            raise
+
+class BuildStep(object, properties.PropertiesMixin):
 
     haltOnFailure = False
     flunkOnWarnings = False
@@ -411,6 +420,7 @@ class BuildStep(properties.PropertiesMixin):
     warnOnFailure = False
     alwaysRun = False
     doStepIf = True
+    hideStepIf = False
 
     # properties set on a build step are, by nature, always runtime properties
     set_runtime_properties = True
@@ -432,6 +442,7 @@ class BuildStep(properties.PropertiesMixin):
              'progressMetrics',
              'useProgress',
              'doStepIf',
+             'hideStepIf',
              ]
 
     name = "generic"
@@ -443,7 +454,6 @@ class BuildStep(properties.PropertiesMixin):
     progress = None
 
     def __init__(self, **kwargs):
-        self.factory = (self.__class__, dict(kwargs))
         for p in self.__class__.parms:
             if kwargs.has_key(p):
                 setattr(self, p, kwargs[p])
@@ -456,6 +466,11 @@ class BuildStep(properties.PropertiesMixin):
 
         self._acquiringLock = None
         self.stopped = False
+
+    def __new__(klass, *args, **kwargs):
+        self = object.__new__(klass)
+        self._factory = _BuildStepFactory(klass, *args, **kwargs)
+        return self
 
     def describe(self, done=False):
         return [self.name]
@@ -470,10 +485,11 @@ class BuildStep(properties.PropertiesMixin):
         pass
 
     def addFactoryArguments(self, **kwargs):
-        self.factory[1].update(kwargs)
+        # this is here for backwards compatability
+        pass
 
-    def getStepFactory(self):
-        return self.factory
+    def _getStepFactory(self):
+        return self._factory
 
     def setStepStatus(self, step_status):
         self.step_status = step_status
@@ -504,7 +520,7 @@ class BuildStep(properties.PropertiesMixin):
         self.locks = lock_list
         # then narrow SlaveLocks down to the slave that this build is being
         # run on
-        self.locks = [(l.getLock(self.build.slavebuilder), la) for l, la in self.locks]
+        self.locks = [(l.getLock(self.build.slavebuilder.slave), la) for l, la in self.locks]
         for l, la in self.locks:
             if l in self.build.locks:
                 log.msg("Hey, lock %s is claimed by both a Step (%s) and the"
@@ -558,16 +574,26 @@ class BuildStep(properties.PropertiesMixin):
         renderables = []
         accumulateClassList(self.__class__, 'renderables', renderables)
 
+        def setRenderable(res, attr):
+            setattr(self, attr, res)
+
+        dl = [ doStep ]
         for renderable in renderables:
-            setattr(self, renderable, self.build.render(getattr(self, renderable)))
+            d = self.build.render(getattr(self, renderable))
+            d.addCallback(setRenderable, renderable)
+            dl.append(d)
+        dl = defer.gatherResults(dl)
 
-        doStep.addCallback(self._startStep_3)
-        return doStep
+        dl.addCallback(self._startStep_3)
+        return dl
 
+    @defer.inlineCallbacks
     def _startStep_3(self, doStep):
+        doStep = doStep[0]
         try:
             if doStep:
-                if self.start() == SKIPPED:
+                result = yield defer.maybeDeferred(self.start)
+                if result == SKIPPED:
                     doStep = False
         except:
             log.msg("BuildStep.startStep exception in .start")
@@ -620,13 +646,25 @@ class BuildStep(properties.PropertiesMixin):
         # from finished() so that subclasses can override finished()
         if self.progress:
             self.progress.finish()
+
+        try:
+            hidden = self._maybeEvaluate(self.hideStepIf, results, self)
+        except Exception:
+            why = Failure()
+            self.addHTMLLog("err.html", formatFailure(why))
+            self.addCompleteLog("err.text", why.getTraceback())
+            results = EXCEPTION
+            hidden = False
+
         self.step_status.stepFinished(results)
+        self.step_status.setHidden(hidden)
+
         self.releaseLocks()
         self.deferred.callback(results)
 
     def failed(self, why):
         # This can either be a BuildStepFailed exception/failure, meaning we
-        # should call self.finish, or it can be a real exception, which should
+        # should call self.finished, or it can be a real exception, which should
         # be recorded as such.
         if why.check(BuildStepFailed):
             self.finished(FAILURE)
@@ -642,6 +680,9 @@ class BuildStep(properties.PropertiesMixin):
             self.step_status.setText([self.name, "exception"])
             self.step_status.setText2([self.name])
             self.step_status.stepFinished(EXCEPTION)
+
+            hidden = self._maybeEvaluate(self.hideStepIf, EXCEPTION, self)
+            self.step_status.setHidden(hidden)
         except:
             log.msg("exception during failure processing")
             log.err()
@@ -724,8 +765,16 @@ class BuildStep(properties.PropertiesMixin):
         c.buildslave = self.buildslave
         d = c.run(self, self.remote)
         return d
+    
+    @staticmethod
+    def _maybeEvaluate(value, *args, **kwargs):
+        if callable(value):
+            value = value(*args, **kwargs)
+        return value
 
-
+components.registerAdapter(
+        BuildStep._getStepFactory,
+        BuildStep, interfaces.IBuildStepFactory)
 components.registerAdapter(
         lambda step : interfaces.IProperties(step.build),
         BuildStep, interfaces.IProperties)
@@ -754,20 +803,19 @@ class LoggingBuildStep(BuildStep):
     def __init__(self, logfiles={}, lazylogfiles=False, log_eval_func=None,
                  *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
-        self.addFactoryArguments(logfiles=logfiles,
-                                 lazylogfiles=lazylogfiles,
-                                 log_eval_func=log_eval_func)
 
-        if logfiles:
-            assert type(logfiles) is type({}), \
-                "the ShellCommand 'logfiles' parameter must be a dictionary"
+        if logfiles and not isinstance(logfiles, dict):
+            config.error(
+                "the ShellCommand 'logfiles' parameter must be a dictionary")
 
         # merge a class-level 'logfiles' attribute with one passed in as an
         # argument
         self.logfiles = self.logfiles.copy()
         self.logfiles.update(logfiles)
         self.lazylogfiles = lazylogfiles
-        assert not log_eval_func or callable(log_eval_func)
+        if log_eval_func and not callable(log_eval_func):
+            config.error(
+                "the 'log_eval_func' paramater must be a callable")
         self.log_eval_func = log_eval_func
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
@@ -815,7 +863,7 @@ class LoggingBuildStep(BuildStep):
     def setupLogfiles(self, cmd, logfiles):
         for logname,remotefilename in logfiles.items():
             if self.lazylogfiles:
-                # Ask LoggedRemoteCommand to watch a logfile, but only add
+                # Ask RemoteCommand to watch a logfile, but only add
                 # it when/if we see any data.
                 #
                 # The dummy default argument local_logname is a work-around for
@@ -826,7 +874,7 @@ class LoggingBuildStep(BuildStep):
             else:
                 # tell the BuildStepStatus to add a LogFile
                 newlog = self.addLog(logname)
-                # and tell the LoggedRemoteCommand to feed it
+                # and tell the RemoteCommand to feed it
                 cmd.useLog(newlog, True)
 
     def interrupt(self, reason):
@@ -859,7 +907,7 @@ class LoggingBuildStep(BuildStep):
     def evaluateCommand(self, cmd):
         if self.log_eval_func:
             return self.log_eval_func(cmd, self.step_status)
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         return SUCCESS
 
@@ -907,7 +955,7 @@ class LoggingBuildStep(BuildStep):
 # )
 def regex_log_evaluator(cmd, step_status, regexes):
     worst = SUCCESS
-    if cmd.rc != 0:
+    if cmd.didFail():
         worst = FAILURE
     for err, possible_status in regexes:
         # worst_status returns the worse of the two status' passed to it.

@@ -576,10 +576,7 @@ class PBListener(base.StatusReceiverMultiService):
 
     def setServiceParent(self, parent):
         base.StatusReceiverMultiService.setServiceParent(self, parent)
-        self.setup()
-
-    def setup(self):
-        self.status = self.parent.getStatus()
+        self.status = parent
 
     def requestAvatar(self, avatarID, mind, interface):
         assert interface == pb.IPerspective

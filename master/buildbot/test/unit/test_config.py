@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import re
 import os
 import textwrap
@@ -21,9 +23,10 @@ from zope.interface import implements
 from twisted.trial import unittest
 from twisted.application import service
 from twisted.internet import defer
-from buildbot import config, buildslave, interfaces
+from buildbot import config, buildslave, interfaces, revlinks
 from buildbot.process import properties
 from buildbot.test.util import dirs, compat
+from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.changes import base as changes_base
 from buildbot.schedulers import base as schedulers_base
 from buildbot.status import base as status_base
@@ -69,32 +72,6 @@ class FakeBuilder(object):
         self.__dict__.update(kwargs)
 
 
-class ConfigErrorsMixin(object):
-
-    def assertConfigError(self, errors, substr_or_re):
-        if len(errors.errors) > 1:
-            self.fail("too many errors: %s" % (errors.errors,))
-        elif len(errors.errors) < 1:
-            self.fail("expected error did not occur")
-        elif isinstance(substr_or_re, str):
-            if substr_or_re not in errors.errors[0]:
-                self.fail("non-matching error: %s" % (errors.errors,))
-        else:
-            if not substr_or_re.search(errors.errors[0]):
-                self.fail("non-matching error: %s" % (errors.errors,))
-
-    def assertRaisesConfigError(self, substr_or_re, fn):
-        try:
-            fn()
-        except config.ConfigErrors, e:
-            self.assertConfigError(e, substr_or_re)
-        else:
-            self.fail("ConfigErrors not raised")
-
-    def assertNoConfigErrors(self, errors):
-        self.assertEqual(errors.errors, [])
-
-
 class ConfigErrors(unittest.TestCase):
 
     def test_constr(self):
@@ -111,6 +88,16 @@ class ConfigErrors(unittest.TestCase):
         full = config.ConfigErrors(['a'])
         self.failUnless(not empty)
         self.failIf(not full)
+
+    def test_error_raises(self):
+        e = self.assertRaises(config.ConfigErrors, config.error, "message")
+        self.assertEqual(e.errors, ["message"])
+
+    def test_error_no_raise(self):
+        e = config.ConfigErrors()
+        self.patch(config, "_errors", e)
+        config.error("message")
+        self.assertEqual(e.errors, ["message"])
 
 
 class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
@@ -149,9 +136,11 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def install_config_file(self, config_file, other_files={}):
         config_file = textwrap.dedent(config_file)
-        open(os.path.join(self.basedir, self.filename), "w").write(config_file)
+        with open(os.path.join(self.basedir, self.filename), "w") as f:
+            f.write(config_file)
         for file, contents in other_files.items():
-            open(file, "w").write(contents)
+            with open(file, "w") as f:
+                f.write(contents)
 
 
     # tests
@@ -171,6 +160,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             change_sources = [],
             status = [],
             user_managers = [],
+            revlink = revlinks.default_revlink_matcher
             )
         expected.update(global_defaults)
         got = dict([
@@ -207,13 +197,30 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 self.basedir, self.filename))
         self.assertEqual(len(self.flushLoggedErrors(SyntaxError)), 1)
 
-    def test_loadConfig_eval_ConfigErrors(self):
+    def test_loadConfig_eval_ConfigError(self):
         self.install_config_file("""\
                 from buildbot import config
-                raise config.ConfigErrors(['oh noes!'])""")
+                BuildmasterConfig = { 'multiMaster': True }
+                config.error('oh noes!')""")
         self.assertRaisesConfigError("oh noes",
             lambda : config.MasterConfig.loadConfig(
                 self.basedir, self.filename))
+
+    def test_loadConfig_eval_ConfigErrors(self):
+        # We test a config that has embedded errors, as well
+        # as semantic errors that get added later. If an exception is raised
+        # prematurely, then the semantic errors wouldn't get reported.
+        self.install_config_file("""\
+                from buildbot import config
+                BuildmasterConfig = {}
+                config.error('oh noes!')
+                config.error('noes too!')""")
+        e = self.assertRaises(config.ConfigErrors,
+            lambda : config.MasterConfig.loadConfig(
+                self.basedir, self.filename))
+        self.assertEqual(e.errors, ['oh noes!', 'noes too!',
+                'no slaves are configured',
+                'no builders are configured'])
 
     def test_loadConfig_no_BuildmasterConfig(self):
         self.install_config_file('x=10')
@@ -418,6 +425,14 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         mh = mock.Mock(name='manhole')
         self.do_test_load_global(dict(manhole=mh), manhole=mh)
 
+    def test_load_global_revlink_callable(self):
+        callable = lambda : None
+        self.do_test_load_global(dict(revlink=callable),
+                revlink=callable)
+
+    def test_load_global_revlink_invalid(self):
+        self.cfg.load_global(self.filename, dict(revlink=''), self.errors)
+        self.assertConfigError(self.errors, "must be a callable")
 
     def test_load_validation_defaults(self):
         self.cfg.load_validation(self.filename, {}, self.errors)
@@ -597,6 +612,15 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertIsInstance(self.cfg.builders[0], config.BuilderConfig)
         self.assertEqual(self.cfg.builders[0].name, 'x')
 
+    @compat.usesFlushWarnings
+    def test_load_builders_abs_builddir(self):
+        bldr = dict(name='x', factory=mock.Mock(), slavename='x',
+                builddir=os.path.abspath('.'))
+        self.cfg.load_builders(self.filename,
+                dict(builders=[bldr]), self.errors)
+        self.assertEqual(
+            len(self.flushWarnings([self.cfg.load_builders])),
+            1)
 
     def test_load_slaves_defaults(self):
         self.cfg.load_slaves(self.filename, {}, self.errors)
@@ -690,13 +714,12 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.slaves = [ mock.Mock() ]
         self.cfg.builders = [ b1, b2 ]
 
-    def setup_builder_locks(self, builder_lock=None, dup_builder_lock=False,
-                                  step_lock=None, dup_step_lock=False):
+    def setup_builder_locks(self, builder_lock=None, dup_builder_lock=False):
         def bldr(name):
             b = mock.Mock()
             b.name = name
             b.locks = []
-            b.factory.steps = [ ('cls', dict(locks=[])) ]
+            b.factory.steps = [ ('cls', (), dict(locks=[])) ]
             return b
 
         def lock(name):
@@ -710,11 +733,6 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             b1.locks.append(lock(builder_lock))
             if dup_builder_lock:
                 b2.locks.append(lock(builder_lock))
-        if step_lock:
-            s1, s2 = b1.factory.steps[0][1], b2.factory.steps[0][1]
-            s1['locks'].append(lock(step_lock))
-            if dup_step_lock:
-                s2['locks'].append(lock(step_lock))
 
     # tests
 
@@ -757,23 +775,13 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertNoConfigErrors(self.errors)
 
 
-    def test_check_locks_step_and_builder(self):
-        self.setup_builder_locks(builder_lock='l', step_lock='l')
-        self.cfg.check_locks(self.errors)
-        self.assertConfigError(self.errors, "Two locks share")
-
     def test_check_locks_dup_builder_lock(self):
         self.setup_builder_locks(builder_lock='l', dup_builder_lock=True)
         self.cfg.check_locks(self.errors)
         self.assertConfigError(self.errors, "Two locks share")
 
-    def test_check_locks_dup_step_lock(self):
-        self.setup_builder_locks(step_lock='l', dup_step_lock=True)
-        self.cfg.check_locks(self.errors)
-        self.assertConfigError(self.errors, "Two locks share")
-
     def test_check_locks(self):
-        self.setup_builder_locks(builder_lock='bl', step_lock='sl')
+        self.setup_builder_locks(builder_lock='bl')
         self.cfg.check_locks(self.errors)
         self.assertNoConfigErrors(self.errors)
 
@@ -989,9 +997,11 @@ class FakeService(config.ReconfigurableServiceMixin,
                     service.Service):
 
     succeed = True
+    call_index = 1
 
     def reconfigService(self, new_config):
-        self.called = True
+        self.called = FakeService.call_index
+        FakeService.call_index += 1
         d = config.ReconfigurableServiceMixin.reconfigService(self, new_config)
         if not self.succeed:
             @d.addCallback
@@ -1021,15 +1031,12 @@ class ReconfigurableServiceMixin(unittest.TestCase):
             self.assertTrue(svc.called)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_service_failure(self):
         svc = FakeService()
         svc.succeed = False
         try:
-            wfd = defer.waitForDeferred(
-                svc.reconfigService(mock.Mock()))
-            yield wfd
-            wfd.getResult()
+            yield svc.reconfigService(mock.Mock())
         except ValueError:
             pass
         else:
@@ -1052,18 +1059,35 @@ class ReconfigurableServiceMixin(unittest.TestCase):
             self.assertTrue(ch3.called)
         return d
 
+    def test_multiservice_priority(self):
+        parent = FakeMultiService()
+        svc128 = FakeService()
+        svc128.setServiceParent(parent)
+
+        services = [ svc128 ]
+        for i in range(20, 1, -1):
+            svc = FakeService()
+            svc.reconfig_priority = i
+            svc.setServiceParent(parent)
+            services.append(svc)
+
+        d = parent.reconfigService(mock.Mock())
+        @d.addCallback
+        def check(_):
+            prio_order = [ svc.called for svc in services ]
+            called_order = sorted(prio_order)
+            self.assertEqual(prio_order, called_order)
+        return d
+
     @compat.usesFlushLoggedErrors
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_multiservice_nested_failure(self):
         svc = FakeMultiService()
         ch1 = FakeService()
         ch1.setServiceParent(svc)
         ch1.succeed = False
         try:
-            wfd = defer.waitForDeferred(
-                svc.reconfigService(mock.Mock()))
-            yield wfd
-            wfd.getResult()
+            yield svc.reconfigService(mock.Mock())
         except ValueError:
             pass
         else:

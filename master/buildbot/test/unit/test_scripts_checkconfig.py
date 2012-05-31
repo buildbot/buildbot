@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
+import mock
 import re
 import sys
 import os
@@ -35,7 +38,8 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
     def do_test_load(self, by_name=False, config='', other_files={},
                            stdout_re=None, stderr_re=None):
         configFile = os.path.join('configdir', 'master.cfg')
-        open(configFile, "w").write(config)
+        with open(configFile, "w") as f:
+            f.write(config)
         for filename, contents in other_files.iteritems():
             if type(filename) == type(()):
                 fn = os.path.join('configdir', *filename)
@@ -44,7 +48,8 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                     os.makedirs(dn)
             else:
                 fn = os.path.join('configdir', filename)
-            open(fn, "w").write(contents)
+            with open(fn, "w") as f:
+                f.write(contents)
 
         if by_name:
             cl = checkconfig.ConfigLoader(configFileName=configFile)
@@ -134,4 +139,30 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
             ('otherpackage', 'othermodule.py') : 'port = 9989',
         }
         self.do_test_load(config=config, other_files=other_files)
+
+
+class TestCheckconfig(unittest.TestCase):
+
+    def setUp(self):
+        self.ConfigLoader = mock.Mock(name='ConfigLoader')
+        self.instance = mock.Mock(name='ConfigLoader()')
+        self.ConfigLoader.return_value = self.instance
+        self.instance.load.return_value = 3
+        self.patch(checkconfig, 'ConfigLoader', self.ConfigLoader)
+
+    def test_checkconfig_given_dir(self):
+        self.assertEqual(checkconfig.checkconfig(dict(configFile='.')), 3)
+        self.ConfigLoader.assert_called_with(basedir='.')
+        self.instance.load.assert_called_with(quiet=None)
+
+    def test_checkconfig_given_file(self):
+        config = dict(configFile='master.cfg')
+        self.assertEqual(checkconfig.checkconfig(config), 3)
+        self.ConfigLoader.assert_called_with(configFileName='master.cfg')
+        self.instance.load.assert_called_with(quiet=None)
+
+    def test_checkconfig_quiet(self):
+        config = dict(configFile='master.cfg', quiet=True)
+        self.assertEqual(checkconfig.checkconfig(config), 3)
+        self.instance.load.assert_called_with(quiet=True)
 

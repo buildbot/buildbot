@@ -3,6 +3,10 @@
 <table class="info">
   {% set row_class=cycler('alt','') %}
   <tr class="{{ row_class.next() }}">
+    <td class="left">Category</td>
+    <td><b>{{ c.category }}</b></td>
+  </tr>
+  <tr class="{{ row_class.next() }}">
     <td class="left">Changed by</td>
     <td><b>{{ c.who|email }}</b></td>
   </tr>

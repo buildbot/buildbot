@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os, urllib
 from cPickle import load
 from twisted.python import log
@@ -20,7 +22,7 @@ from twisted.persisted import styles
 from twisted.internet import defer
 from twisted.application import service
 from zope.interface import implements
-from buildbot import interfaces, config
+from buildbot import config, interfaces, util
 from buildbot.util import bbcollections
 from buildbot.util.eventual import eventually
 from buildbot.changes import changes
@@ -33,7 +35,6 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         service.MultiService.__init__(self)
         self.master = master
         self.botmaster = master.botmaster
-        self.db = None
         self.basedir = master.basedir
         self.watchers = []
         # No default limit to the log size
@@ -62,27 +63,29 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
         return service.MultiService.startService(self)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         # remove the old listeners, then add the new
         for sr in list(self):
-            wfd = defer.waitForDeferred(
-                defer.maybeDeferred(lambda :
-                    sr.disownServiceParent()))
-            yield wfd
-            wfd.getResult()
-            sr.master = None
+            yield defer.maybeDeferred(lambda :
+                    sr.disownServiceParent())
+
+            # WebStatus instances tend to "hang around" longer than we'd like -
+            # if there's an ongoing HTTP request, or even a connection held
+            # open by keepalive, then users may still be talking to an old
+            # WebStatus.  So WebStatus objects get to keep their `master`
+            # attribute, but all other status objects lose theirs.  And we want
+            # to test this without importing WebStatus, so we use name
+            if not sr.__class__.__name__.endswith('WebStatus'):
+                sr.master = None
 
         for sr in new_config.status:
             sr.master = self.master
             sr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing
-        wfd = defer.waitForDeferred(
-            config.ReconfigurableServiceMixin.reconfigService(self,
-                                                        new_config))
-        yield wfd
-        wfd.getResult()
+        yield config.ReconfigurableServiceMixin.reconfigService(self,
+                                                            new_config)
 
     def stopService(self):
         self._buildset_completion_sub.unsubscribe()
@@ -113,8 +116,20 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
     def getBuildbotURL(self):
         return self.master.config.buildbotURL
 
+    def getStatus(self):
+        # some listeners expect their .parent to be a BuildMaster object, and
+        # use this method to get the Status object.  This is documented, so for
+        # now keep it working.
+        return self
+
     def getMetrics(self):
         return self.master.metrics
+
+    def getURLForBuild(self, builder_name, build_number):
+        prefix = self.getBuildbotURL()
+        return prefix + "builders/%s/builds/%d" % (
+            urllib.quote(builder_name, safe=''),
+            build_number)
 
     def getURLForThing(self, thing):
         prefix = self.getBuildbotURL()
@@ -132,9 +147,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         if interfaces.IBuildStatus.providedBy(thing):
             build = thing
             bldr = build.getBuilder()
-            return prefix + "builders/%s/builds/%d" % (
-                urllib.quote(bldr.getName(), safe=''),
-                build.getNumber())
+            return self.getURLForBuild(bldr.getName(), build.getNumber())
+            
         if interfaces.IBuildStepStatus.providedBy(thing):
             step = thing
             build = step.getBuild()
@@ -190,7 +204,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
     def getBuilderNames(self, categories=None):
         if categories == None:
-            return self.botmaster.builderNames[:] # don't let them break it
+            return util.naturalSort(self.botmaster.builderNames) # don't let them break it
         
         l = []
         # respect addition order
@@ -198,7 +212,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             bldr = self.botmaster.builders[name]
             if bldr.config.category in categories:
                 l.append(name)
-        return l
+        return util.naturalSort(l)
 
     def getBuilder(self, name):
         """
@@ -303,7 +317,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         log.msg("trying to load status pickle from %s" % filename)
         builder_status = None
         try:
-            builder_status = load(open(filename, "rb"))
+            with open(filename, "rb") as f:
+                builder_status = load(f)
             builder_status.master = self.master
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite
@@ -329,6 +344,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         log.msg("added builder %s in category %s" % (name, category))
         # an unpickled object might not have category set from before,
         # so set it here to make sure
+        builder_status.category = category
         builder_status.master = self.master
         builder_status.basedir = os.path.join(self.basedir, basedir)
         builder_status.name = name # it might have been updated

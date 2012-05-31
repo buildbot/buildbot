@@ -19,7 +19,7 @@ from twisted.python import log
 from twisted.application import internet, service
 from buildbot import config
 from buildbot.db import enginestrategy
-from buildbot.db import pool, model, changes, schedulers, sourcestamps
+from buildbot.db import pool, model, changes, schedulers, sourcestamps, sourcestampsets
 from buildbot.db import state, buildsets, buildrequests, builds, users
 
 class DatabaseNotReadyError(Exception):
@@ -33,12 +33,7 @@ upgrade_message = textwrap.dedent("""\
         buildbot upgrade-master path/to/master
 
     to upgrade the database, and try starting the buildmaster again.  You may
-    want to make a backup of your buildmaster before doing so.  If you are
-    using MySQL, you must specify the connector string on the upgrade-master
-    command line:
-
-        buildbot upgrade-master --db=<db-url> path/to/master
-
+    want to make a backup of your buildmaster before doing so.
     """).strip()
 
 class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
@@ -70,6 +65,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         self.changes = changes.ChangesConnectorComponent(self)
         self.schedulers = schedulers.SchedulersConnectorComponent(self)
         self.sourcestamps = sourcestamps.SourceStampsConnectorComponent(self)
+        self.sourcestampsets = sourcestampsets.SourceStampSetsConnectorComponent(self)
         self.buildsets = buildsets.BuildsetsConnectorComponent(self)
         self.buildrequests = buildrequests.BuildRequestsConnectorComponent(self)
         self.state = state.StateConnectorComponent(self)
@@ -81,7 +77,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         self.cleanup_timer.setServiceParent(self)
 
 
-    def setup(self, check_version=True):
+    def setup(self, check_version=True, verbose=True):
         db_url = self.configured_url = self.master.config.db['db_url']
 
         log.msg("Setting up database with URL %r" % (db_url,))
@@ -89,7 +85,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         # set up the engine and pool
         self._engine = enginestrategy.create_engine(db_url,
                                 basedir=self.basedir)
-        self.pool = pool.DBThreadPool(self._engine)
+        self.pool = pool.DBThreadPool(self._engine, verbose=verbose)
 
         # make sure the db is up to date, unless specifically asked not to
         if check_version:

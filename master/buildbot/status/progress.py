@@ -18,6 +18,7 @@ from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.python import log
 from buildbot import util
+from collections import defaultdict
 
 class StepProgress:
     """I keep track of how much progress a single BuildStep has made.
@@ -149,9 +150,10 @@ class BuildProgress(pb.Referenceable):
     def setExpectationsFrom(self, exp):
         """Set our expectations from the builder's Expectations object."""
         for name, metrics in exp.steps.items():
-            s = self.steps[name]
-            s.setExpectedTime(exp.times[name])
-            s.setExpectations(exp.steps[name])
+            s = self.steps.get(name)
+            if s:
+                s.setExpectedTime(exp.times[name])
+                s.setExpectations(exp.steps[name])
 
     def newExpectations(self):
         """Call this when one of the steps has changed its expectations.
@@ -269,7 +271,7 @@ class Expectations:
 
         # .steps maps stepname to dict2
         # dict2 maps metricname to final end-of-step value
-        self.steps = {}
+        self.steps = defaultdict(dict)
 
         # .times maps stepname to per-step elapsed time
         self.times = {}
@@ -292,7 +294,7 @@ class Expectations:
 
     def update(self, buildprogress):
         for name, stepprogress in buildprogress.steps.items():
-            old = self.times[name]
+            old = self.times.get(name)
             current = stepprogress.totalTime()
             if current == None:
                 log.msg("Expectations.update: current[%s] was None!" % name)
@@ -304,7 +306,7 @@ class Expectations:
                       (name, new, old, current)
             
             for metric, current in stepprogress.progress.items():
-                old = self.steps[name][metric]
+                old = self.steps[name].get(metric)
                 new = self.wavg(old, current)
                 if self.debug:
                     print "new expectation[%s][%s] = %s, old %s, cur %s" % \

@@ -44,8 +44,6 @@ class BuildStepMixin(object):
         remotecommand.FakeRemoteCommand.testcase = self
         self.patch(buildstep, 'RemoteCommand',
                 remotecommand.FakeRemoteCommand)
-        self.patch(buildstep, 'LoggedRemoteCommand',
-                remotecommand.FakeLoggedRemoteCommand)
         self.patch(buildstep, 'RemoteShellCommand',
                 remotecommand.FakeRemoteShellCommand)
         self.expected_remote_commands = []
@@ -73,10 +71,8 @@ class BuildStepMixin(object):
 
         @param slave_env: environment from the slave at slave startup
         """
-        # yes, Virginia, "factory" refers both to the tuple and its first
-        # element TODO: fix that up
-        factory, args = step.getStepFactory()
-        step = self.step = factory(**args)
+        factory = interfaces.IBuildStepFactory(step)
+        step = self.step = factory.buildStep()
 
         # step.build
 
@@ -160,6 +156,7 @@ class BuildStepMixin(object):
         self.exp_properties = {}
         self.exp_missing_properties = []
         self.exp_logfiles = {}
+        self.exp_hidden = False
 
         return step
 
@@ -194,6 +191,12 @@ class BuildStepMixin(object):
         Expect a logfile with the given contents
         """
         self.exp_logfiles[logfile] = contents
+    
+    def expectHidden(self, hidden):
+        """
+        Set whether the step is expected to be hidden.
+        """
+        self.exp_hidden = hidden
 
     def runStep(self):
         """
@@ -220,6 +223,7 @@ class BuildStepMixin(object):
                 self.failIf(self.properties.hasProperty(pn))
             for log, contents in self.exp_logfiles.iteritems():
                 self.assertEqual(self.step_status.logs[log].stdout, contents)
+            self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
         d.addCallback(check)
         return d
 
@@ -234,10 +238,19 @@ class BuildStepMixin(object):
             self.fail("got command %r when no further commands were expected"
                     % (got,))
 
-        # first check any ExpectedRemoteReference instances
         exp = self.expected_remote_commands.pop(0)
+
+        # handle any incomparable args
+        for arg in exp.incomparable_args:
+            self.failUnless(arg in got[1],
+                    "incomparable arg '%s' not received" % (arg,))
+            del got[1][arg]
+
+        # first check any ExpectedRemoteReference instances
         self.assertEqual((exp.remote_command, exp.args), got)
 
         # let the Expect object show any behaviors that are required
-        return exp.runBehaviors(command)
+        d = exp.runBehaviors(command)
+        d.addCallback(lambda _: command)
+        return d
 

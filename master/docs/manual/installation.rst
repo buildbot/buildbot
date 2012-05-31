@@ -31,20 +31,21 @@ buildslave:
 
 Python: http://www.python.org
 
-  Buildbot requires python-2.4 or later.  Buildbot versions later than 0.8.6
-  will require Python-2.5, and Python-2.7 is recommended.
+  Buildbot requires python-2.5 or later on the master, although Python-2.7 is
+  recommended.  The slave run on Python-2.4.
 
 Twisted: http://twistedmatrix.com
 
-  Both the buildmaster and the buildslaves require Twisted-8.0.x or
-  later. As always, the most recent version is recommended.
+  Buildbot requires Twisted-9.0.0 or later on the master, and Twisted-8.1.0 on
+  the slave. As always, the most recent version is recommended.
 
-  Twisted is delivered as a collection of subpackages. You'll need at
-  least "Twisted" (the core package), and you'll also want `TwistedMail`_,
-  `TwistedWeb`_, and `TwistedWords`_ (for sending email, serving a web status
-  page, and delivering build status via IRC, respectively). You might
-  also want `TwistedConch`_ (for the encrypted Manhole debug port). Note
-  that Twisted requires ZopeInterface to be installed as well.
+  In some cases, Twisted is delivered as a collection of subpackages. You'll
+  need at least "Twisted" (the core package), and you'll also want
+  `TwistedMail`_, `TwistedWeb`_, and `TwistedWords`_ (for sending email,
+  serving a web status page, and delivering build status via IRC,
+  respectively). You might also want `TwistedConch`_ (for the encrypted Manhole
+  debug port). Note that Twisted requires ZopeInterface to be installed as
+  well.
 
 Of course, your project's build process will impose additional
 requirements on the buildslaves. These hosts must have all the tools
@@ -72,9 +73,10 @@ Buildmaster Requirements
 
 sqlite3: http://www.sqlite.org
 
-  Buildbot requires SQLite to store its state.  Version 3.3.8 or higher is
-  recommended, as earlier versions had trouble with contention for database
-  tables.
+  Buildbot requires SQLite to store its state.  Version 3.7.0 or higher is
+  recommended, although Buildbot will run against earlier versions -- at the
+  risk of "Database is locked" errors.  The minimum version is 3.4.0, below
+  which parallel database queries and schema introspection fail.
 
 pysqlite: http://pypi.python.org/pypi/pysqlite
 
@@ -93,19 +95,24 @@ Jinja2: http://jinja.pocoo.org/
   Jinja2 is a general purpose templating language and is used by Buildbot
   to generate the HTML output.
 
-
 SQLAlchemy: http://www.sqlalchemy.org/
 
-  Buildbot requires SQLAlchemy 0.6 or higher. SQLAlchemy allows Buildbot to
+  Buildbot requires SQLAlchemy 0.6.0 or higher. SQLAlchemy allows Buildbot to
   build database schemas and queries for a wide variety of database systems.
 
 SQLAlchemy-Migrate: http://code.google.com/p/sqlalchemy-migrate/
 
-  Buildbot requires one of the following SQLAlchemy-Migrate versions: 0.6.0,
+  Buildbot requires one of the following SQLAlchemy-Migrate versions:
   0.6.1, 0.7.0, and 0.7.1.  Sadly, Migrate's inter-version compatibility is not
   good, so other versions - newer or older - are unlikely to work correctly.
   Buildbot uses SQLAlchemy-Migrate to manage schema upgrades from version to
   version.
+
+Python-Dateutil: http://labix.org/python-dateutil
+
+  The Nightly scheduler requires Python-Dateutil version 1.5 (the last version
+  to support Python-2.x).  This is a small, pure-python library.  Buildbot will
+  function properly without it if the Nightlys scheduler is not used.
 
 .. _Installing-the-code:
   
@@ -171,6 +178,8 @@ when it tries to load the libaries, then something went wrong.
 Windows users will find these files in other places. You will need to
 make sure that python can find the libraries, and will probably find
 it convenient to have :command:`buildbot` on your :envvar:`PATH`.
+
+.. _Installation-in-a-Virtualenv:
 
 Installation in a Virtualenv
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -254,17 +263,36 @@ takes care of logging and daemonization (running the program in the
 background). :file:`/usr/bin/buildbot` is a front end which runs `twistd`
 for you.)
 
-Using MySQL
-~~~~~~~~~~~
+Using A Database Server
+~~~~~~~~~~~~~~~~~~~~~~~
 
-If you want to use MySQL as the database backend for your Buildbot, add the
-``--db`` option to the ``create-master`` invocation to specify the
-connection string for the :ref:`MySQL database <Database-Specification>`, and
-make sure that the same URL appears in the ``c['db_url']`` parameter in your
-configuration file.
+If you want to use a database server (e.g., MySQL or Postgres) as the database
+backend for your Buildbot, add the ``--db`` option to the ``create-master``
+invocation to specify the :ref:`connection string <Database-Specification>` for
+the database, and make sure that the same URL appears in the ``db_url`` of the
+:bb:cfg:`db` parameter in your configuration file.
+
+Additional Requirements
+'''''''''''''''''''''''
+
+Depending on the selected database, further Python packages will be required.
+Consult the SQLAlchemy dialect list for a full description.  The most common
+choice for MySQL is
+
+MySQL-python: http://mysql-python.sourceforge.net/
+
+  To communicate with MySQL, SQLAlchemy requires MySQL-python.  Any reasonably
+  recent version of MySQL-python should suffice.
+
+The most common choice for Postgres is
+
+Psycopg: http://initd.org/psycopg/
+
+    SQLAlchemy uses Psycopg to communicate with Postgres.  Any reasonably
+    recent version should suffice.
 
 Buildmaster Options
-'''''''''''''''''''
+~~~~~~~~~~~~~~~~~~~
 
 This section lists options to the ``create-master`` command.
 You can also type ``buildbot create-master --help`` for an up-to-the-moment summary.

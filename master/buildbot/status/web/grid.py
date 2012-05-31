@@ -61,7 +61,7 @@ class GridStatusMixin(object):
         cxt['class'] = build_get_class(build)
         return cxt
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def builder_cxt(self, request, builder):
         state, builds = builder.getState()
 
@@ -78,17 +78,14 @@ class GridStatusMixin(object):
         if state == "idle" and upcoming:
             state = "waiting"
 
-        wfd = defer.waitForDeferred(
-                builder.getPendingBuildRequestStatuses())
-        yield wfd
-        n_pending = len(wfd.getResult())
+        n_pending = len((yield builder.getPendingBuildRequestStatuses()))
 
         cxt = { 'url': path_to_builder(request, builder),
                 'name': builder.getName(),
                 'state': state,
                 'n_pending': n_pending }
 
-        yield cxt
+        defer.returnValue(cxt)
 
     def getSourceStampKey(self, ss):
         """Given two source stamps, we want to assign them to the same row if
@@ -106,7 +103,8 @@ class GridStatusMixin(object):
         num = 0
         while build and num < numBuilds:
             start = build.getTimes()[0]
-            ss = build.getSourceStamp(absolute=True)
+            #TODO: support multiple sourcestamps
+            ss = build.getSourceStamps(absolute=True)[0]
 
             okay_build = True
 
@@ -137,7 +135,8 @@ class GridStatusMixin(object):
             if categories and builder.category not in categories:
                 continue
             for build in self.getRecentBuilds(builder, numBuilds, branch):
-                ss = build.getSourceStamp(absolute=True)
+                #TODO: support multiple sourcestamps
+                ss = build.getSourceStamps(absolute=True)[0]
                 key= self.getSourceStampKey(ss)
                 start = build.getTimes()[0]
                 if key not in sourcestamps or sourcestamps[key][1] > start:
@@ -156,7 +155,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
     status = None
     changemaster = None
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def content(self, request, cxt):
         """This method builds the regular grid display.
         That is, build stamps across the top, build hosts down the left side
@@ -193,24 +192,24 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
                 continue
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):
-                ss = build.getSourceStamp(absolute=True)
-                key= self.getSourceStampKey(ss)
-                for i in range(len(stamps)):
-                    if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
-                        builds[i] = build
+                #TODO: support multiple sourcestamps
+                if len(build.getSourceStamps()) == 1:
+                    ss = build.getSourceStamps(absolute=True)[0]
+                    key= self.getSourceStampKey(ss)
+                    for i in range(len(stamps)):
+                        if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
+                            builds[i] = build
 
-            wfd = defer.waitForDeferred(
-                    self.builder_cxt(request, builder))
-            yield wfd
-            b = wfd.getResult()
+            b = yield self.builder_cxt(request, builder)
 
             b['builds'] = []
             for build in builds:
                 b['builds'].append(self.build_cxt(request, build))
+
             cxt['builders'].append(b)
 
         template = request.site.buildbot_service.templates.get_template("grid.html")
-        yield template.render(**cxt)
+        defer.returnValue(template.render(**cxt))
 
 
 class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
@@ -219,7 +218,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
     changemaster = None
     default_rev_order = "asc"
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def content(self, request, cxt):
         """This method builds the transposed grid display.
         That is, build hosts across the top, build stamps down the left side
@@ -265,19 +264,18 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
                 continue
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):
-                ss = build.getSourceStamp(absolute=True)
-                key = self.getSourceStampKey(ss)
-                for i in range(len(stamps)):
-                    if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
-                        builds[i] = build
+                #TODO: support multiple sourcestamps
+                if len(build.getSourceStamps()) == 1:
+                    ss = build.getSourceStamps(absolute=True)[0]
+                    key = self.getSourceStampKey(ss)
+                    for i in range(len(stamps)):
+                        if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
+                            builds[i] = build
 
-            wfd = defer.waitForDeferred(
-                    self.builder_cxt(request, builder))
-            yield wfd
-            builders.append(wfd.getResult())
+            b = yield self.builder_cxt(request, builder)
+            builders.append(b)
 
             builder_builds.append(map(lambda b: self.build_cxt(request, b), builds))
 
         template = request.site.buildbot_service.templates.get_template('grid_transposed.html')
-        yield template.render(**cxt)
-
+        defer.returnValue(template.render(**cxt))

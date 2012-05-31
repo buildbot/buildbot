@@ -1,10 +1,9 @@
-include MANIFEST.in README NEWS CREDITS COPYING UPGRADING
+include MANIFEST.in README CREDITS COPYING UPGRADING
 
 include docs/examples/*.cfg
 include docs/conf.py
 include docs/Makefile
 include docs/buildbot.1
-include docs/*.png
 include docs/*.rst
 include docs/_images/*
 include docs/_static/*
@@ -21,6 +20,7 @@ include docs/bbdocs/*
 include docs/developer/*
 
 include buildbot/scripts/sample.cfg
+include buildbot/scripts/buildbot_tac.tmpl
 include buildbot/status/web/files/*
 include buildbot/status/web/templates/*.html buildbot/status/web/templates/*.xml
 include buildbot/clients/debug.glade
@@ -28,6 +28,7 @@ include buildbot/buildbot.png
 
 include buildbot/db/migrate/README buildbot/db/migrate/migrate.cfg
 
-include contrib/* contrib/windows/* contrib/os-x/* contrib/css/*
+include contrib/* contrib/windows/* contrib/os-x/* contrib/css/* contrib/libvirt/*
+include contrib/blockertest/*
 include contrib/trac/* contrib/trac/bbwatcher/* contrib/trac/bbwatcher/templates/*
 include contrib/init-scripts/*
