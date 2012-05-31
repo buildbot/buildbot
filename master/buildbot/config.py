@@ -361,6 +361,10 @@ class MasterConfig(object):
             if not isinstance(caches, dict):
                 errors.addError("c['caches'] must be a dictionary")
             else:
+                vals = caches.values()
+                for x in vals:
+                  if (not isinstance(x, int)):
+                     errors.addError("value must be an int")
                 self.caches.update(caches)
 
         if 'buildCacheSize' in config_dict:
