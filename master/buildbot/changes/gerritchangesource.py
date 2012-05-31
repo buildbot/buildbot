@@ -113,7 +113,7 @@ class GerritChangeSource(base.ChangeSource):
         flatten(properties, "event", event)
         return func(properties,event)
     def addChange(self, chdict):
-        d = self.master.addChange(**chdict)
+        d = self.master.data.update.addChange(**chdict)
         # eat failures..
         d.addErrback(log.err, 'error adding change from GerritChangeSource')
         return d

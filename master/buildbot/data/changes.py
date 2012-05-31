@@ -29,7 +29,7 @@ def _fixChange(change):
 
 class Change(base.Endpoint):
 
-    pathPattern = ( 'change', 'i:changeid' )
+    key = 'change'
 
     def get(self, options, kwargs):
         d = self.master.db.changes.getChange(kwargs['changeid'])
@@ -39,8 +39,8 @@ class Change(base.Endpoint):
 
 class Changes(base.Endpoint):
 
-    pathPattern = ( 'change', )
-    pathTopicTemplate = 'change.#' # TODO: test
+    key = 'changes'
+    type = 'change'
 
     def get(self, options, kwargs):
         try:

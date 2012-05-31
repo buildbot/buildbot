@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import re
-
 class Endpoint(object):
 
     # set the pathPattern to the pattern that should trigger this endpoint
@@ -36,32 +34,7 @@ class Endpoint(object):
         raise NotImplementedError
 
     def getSubscriptionTopic(self, options, kwargs):
-        if self.pathTopicTemplate:
-            if '%'  not in self.pathTopicTemplate:
-                return self.pathTopicTemplate
-            safekwargs = SafeDict(kwargs)
-            return self.pathTopicTemplate % safekwargs
-
-
-class SafeDict(object):
-    # utility class to allow %-substitution with the results not containing
-    # topic metacharacters (.*#)
-
-    def __init__(self, dict):
-        self.dict = dict
-
-    metacharacters_re = re.compile('[.*#]')
-    def __getitem__(self, k):
-        return self.metacharacters_re.sub('_', self.dict[k])
-
-
-class Link(object):
-
-    __slots__ = [ 'path' ]
-
-    # a link to another resource, specified as a path
-    def __init__(self, path):
-        self.path = path
-
-    def __repr__(self):
-        return "Link(%r)" % (self.path,)
+        if self.type:
+            if kwargs and not isinstance(kwargs, dict): ## FIXME
+                kwargs = dict(_event=kwargs)
+            return dict(_type=self.type, **kwargs)

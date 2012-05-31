@@ -25,7 +25,7 @@ from twisted.application import service
 
 import buildbot
 import buildbot.pbmanager
-from buildbot.util import epoch2datetime, datetime2epoch
+from buildbot.util import epoch2datetime
 from buildbot.status.master import Status
 from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
@@ -439,7 +439,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             uid = None
 
         # add the Change to the database
-        changeid = yield self.db.changes.addChange(author=author, files=files,
+        chdict = yield self.data.update.addChange(author=author, files=files,
                             comments=comments, is_dir=is_dir,
                             revision=revision, when_timestamp=when_timestamp,
                             branch=branch, category=category,
@@ -448,18 +448,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                             codebase=codebase, uid=uid)
 
         # convert the changeid to a Change instance
-        chdict = yield self.db.changes.getChange(changeid)
         change = yield changes.Change.fromChdict(self, chdict)
-
-        # log, being careful to handle funny characters
-        msg = u"added change %s to database" % change
-        log.msg(msg.encode('utf-8', 'replace'))
-
-        # new-style notification
-        msg = dict()
-        msg.update(chdict)
-        msg['when_timestamp'] = datetime2epoch(msg['when_timestamp'])
-        self.mq.produce(_type="change", _event="new", **msg)
 
         defer.returnValue(change)
 

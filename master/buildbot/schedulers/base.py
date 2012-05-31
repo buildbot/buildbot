@@ -206,10 +206,10 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
         # register for changes with master
         assert not self._change_consumer
-        self._change_consumer = self.master.mq.startConsuming(
+        self._change_consumer = self.master.data.startConsuming(
                 lambda m : self._changeCallback(m, fileIsImportant,
                                             change_filter, onlyImportant),
-                dict(_type='change', _event='new'))
+                'change', 'new')
         return defer.succeed(None)
 
     @defer.inlineCallbacks
@@ -221,8 +221,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
             return
 
         # get a change object, since the API requires it
-        chdict = yield self.master.db.changes.getChange(msg['changeid'])
-        change = yield changes.Change.fromChdict(self.master, chdict)
+        change = yield changes.Change.fromChdict(self.master, msg)
 
         # filter it
         if change_filter and not change_filter.filter_change(change):

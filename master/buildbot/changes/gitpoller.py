@@ -269,7 +269,7 @@ class GitPoller(base.PollingChangeSource):
                 raise failures[0]
 
             timestamp, author, files, comments = [ r[1] for r in results ]
-            yield self.master.addChange(
+            yield self.master.data.update.addChange(
                    author=author,
                    revision=rev,
                    files=files,

@@ -15,7 +15,6 @@
 
 import inspect
 from twisted.application import service
-from buildbot.util import pathmatch
 from buildbot.data import update, exceptions, base
 
 class DataConnector(service.Service):
@@ -25,7 +24,7 @@ class DataConnector(service.Service):
         self.master = master
         self.update = update.UpdateComponent(master)
 
-        self.matcher = pathmatch.Matcher()
+        self.matcher = {}
         self._setup()
 
     def _setup(self):
@@ -33,7 +32,7 @@ class DataConnector(service.Service):
             for sym in dir(mod):
                 obj = getattr(mod, sym)
                 if inspect.isclass(obj) and issubclass(obj, base.Endpoint):
-                    self.matcher[obj.pathPattern] = obj(self.master)
+                    self.matcher[obj.key] = obj(self.master)
 
         # scan all of the endpoint modules
         from buildbot.data import changes
@@ -45,12 +44,12 @@ class DataConnector(service.Service):
         except KeyError:
             raise exceptions.InvalidPathError
 
-    def get(self, options, path):
-        endpoint, kwargs = self._lookup(path)
+    def get(self, path, kwargs=None, options=None):
+        endpoint = self._lookup(path)
         return endpoint.get(options, kwargs)
 
-    def startConsuming(self, callback, options, path):
-        endpoint, kwargs = self._lookup(path)
+    def startConsuming(self, callback, path, kwargs=None, options=None):
+        endpoint = self._lookup(path)
         topic = endpoint.getSubscriptionTopic(options, kwargs)
         if not topic:
             raise exceptions.InvalidPathError
