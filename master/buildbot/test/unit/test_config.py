@@ -551,7 +551,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 dict(caches=dict(foo="1")),
                 self.errors)
         self.assertConfigError(self.errors,
-	                       "value for cache size 'foo' must be an integer")
+                               "value for cache size 'foo' must be an integer")
 
     def test_load_schedulers_defaults(self):
         self.cfg.load_schedulers(self.filename, {}, self.errors)

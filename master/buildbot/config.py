@@ -365,7 +365,7 @@ class MasterConfig(object):
                 for (x, y) in valPairs:
                   if (not isinstance(y, int)):
                      errors.addError(
-		     "value for cache size '%s' must be an integer" % x)
+                     "value for cache size '%s' must be an integer" % x)
                 self.caches.update(caches)
 
         if 'buildCacheSize' in config_dict:
