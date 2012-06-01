@@ -42,19 +42,20 @@ class Bzr(Source):
             raise ValueError("you must privide at least one of repourl and"
                              " baseURL")
 
-        if self.repourl is None:
-            self.repourl = self.baseURL + defaultBranch
-
         assert self.mode in ['incremental', 'full']
 
         if self.mode == 'full':
             assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
 
     def startVC(self, branch, revision, patch):
-        self.branch = branch or 'master'
+        if branch:
+            self.branch = branch
         self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = self.addLog("stdio")
+
+        if self.repourl is None:
+            self.repourl = self.baseURL + self.branch
 
         d = self.checkBzr()
         def checkInstall(bzrInstalled):
