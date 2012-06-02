@@ -95,6 +95,8 @@ Features
 * A new ternary substitution operator ``:?:`` and ``:#?:`` to use with the ``Interpolate``
   and ``WithProperties`` classes.
 
+* The mercurial hook now supports multple masters.  See :bb:pull:`436`.
+
 Slave
 -----
 
