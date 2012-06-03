@@ -225,10 +225,11 @@ class HgPoller(base.PollingChangeSource):
             current_file = open(current_filename, 'r')
         except IOError:
             # TODO make a special case for non-writeable etc.
-            raise
+            current_str = None
+        else:
+            current_str = current_file.read().strip()
+            current_file.close()
 
-        current_str = current_file.read().strip()
-        current_file.close()
         if current_str:
             # hg log ranges are inclusive
             current = int(current_str)
