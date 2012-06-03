@@ -18,10 +18,10 @@ Steps and objects related to mock building.
 """
 
 import re
-import os.path
 
 from buildbot.steps.shell import ShellCommand
 from buildbot.process import buildstep
+from buildbot import config
 
 class Mock(ShellCommand):
     """Add the mock logfiles and clean them if they already exist. Add support
@@ -32,11 +32,7 @@ class Mock(ShellCommand):
     haltOnFailure = 1
     flunkOnFailure = 1
 
-    logfiles = {
-        "build.log": "build.log",
-        "root.log": "root.log",
-        "state.log": "state.log",
-    }
+    mock_logfiles = ['build.log', 'root.log', 'state.log']
 
     root = None
     resultdir = None
@@ -60,11 +56,10 @@ class Mock(ShellCommand):
             self.root = root
         if resultdir:
             self.resultdir = resultdir
-        if self.resultdir:
-            for lname in self.logfiles.keys():
-                self.logfiles[lname] = os.path.join(resultdir, self.logfiles[lname])
 
-        assert self.root, "No mock root specified"
+        if not self.root:
+            config.error("You must specify a mock root")
+
 
         self.command = ['mock', '--root', self.root]
         if self.resultdir:
@@ -74,8 +69,17 @@ class Mock(ShellCommand):
         """
         Try to remove the old mock logs first.
         """
+        if self.resultdir:
+            for lname in self.mock_logfiles:
+                self.logfiles[lname] = self.build.path_module.join(self.resultdir,
+                                                                   lname)
+        else:
+            for lname in self.mock_logfiles:
+                self.logfiles[lname] = lname
 
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': ['build/'+ f for f in self.logfiles.values()] })
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': 
+                map(lambda l: self.build.path_module.join('build', self.logfiles[l]),
+                self.mock_logfiles)})
         d = self.runCommand(cmd)
         d.addCallback(self.removeDone)
         d.addErrback(self.failed)
@@ -117,8 +121,10 @@ class MockBuildSRPM(Mock):
         if sources:
             self.sources = sources
 
-        assert self.spec, "No specfile specified"
-        assert self.sources, "No sources dir specified"
+        if not self.spec:
+            config.error("You must specify a spec file")
+        if not self.sources:
+            config.error("You must specify a sources dir")
 
         self.command += ['--buildsrpm', '--spec', self.spec,
                          '--sources', self.sources]
@@ -152,6 +158,7 @@ class MockRebuild(Mock):
         if srpm:
             self.srpm = srpm
 
-        assert self.srpm, "No srpm specified"
+        if not self.srpm:
+            config.error("You must specify a srpm")
         
         self.command += ['rebuild', self.srpm]
