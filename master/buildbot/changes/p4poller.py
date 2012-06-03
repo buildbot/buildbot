@@ -178,7 +178,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                         branch_files[branch] = [file]
 
             for branch in branch_files:
-                yield self.master.addChange(
+                yield self.master.data.update.addChange(
                        author=who,
                        files=branch_files[branch],
                        comments=comments,

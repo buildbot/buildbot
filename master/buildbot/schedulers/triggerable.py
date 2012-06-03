@@ -73,18 +73,18 @@ class Triggerable(base.BaseScheduler):
         if self._waiters and not self._buildset_complete_consumer:
             self._buildset_complete_consumer = self.master.mq.startConsuming(
                     self._buildset_complete_cb,
-                    'buildset.*.complete')
+                    dict(_type='buildset', _event='complete'))
         elif not self._waiters and self._buildset_complete_consumer:
             self._buildset_complete_consumer.stopConsuming()
             self._buildset_complete_consumer = None
 
-    def _buildset_complete_cb(self, key, msg):
-        if msg['bsid'] not in self._waiters:
+    def _buildset_complete_cb(self, msg):
+        if msg['buildset'] not in self._waiters:
             return
 
         # pop this bsid from the waiters list, and potentially stop consuming
         # buildset completion notifications
-        d, brids = self._waiters.pop(msg['bsid'])
+        d, brids = self._waiters.pop(msg['buildset'])
         self._updateWaiters()
 
         # fire the callback to indicate that the triggered build is complete

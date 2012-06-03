@@ -131,5 +131,7 @@ class ChangeHookResource(resource.Resource):
     def submitChanges(self, changes, request, src):
         master = request.site.buildbot_service.master
         for chdict in changes:
+            ## FIXME: Change to use data.update.addChange
+            ## Not done yet, since master.addChange handles backwards compat names
             change = yield master.addChange(src=src, **chdict)
             log.msg("injected change %s" % change)

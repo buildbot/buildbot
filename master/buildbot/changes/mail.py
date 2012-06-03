@@ -60,7 +60,7 @@ class MaildirSource(MaildirService, util.ComparableMixin):
             if chtuple:
                 src, chdict = chtuple
             if chdict:
-                return self.master.addChange(src=src, **chdict)
+                return self.master.data.update.addChange(src=src, **chdict)
             else:
                 log.msg("no change found in maildir file '%s'" % filename)
         d.addCallback(add_change)

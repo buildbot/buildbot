@@ -31,16 +31,16 @@ class FakeMQConnector(object):
         self.setup_called = True
         return defer.succeed(None)
 
-    def produce(self, routingKey, data):
-        self.productions.append((routingKey, data))
+    def produce(self, **data):
+        self.productions.append(data)
         # note - no consumers are called: IT'S A FAKE
 
-    def callConsumer(self, routingKey, msg):
+    def callConsumer(self, **msg):
         matched = False
         for q in self.qrefs:
-            if q.matcher.matches(routingKey):
+            if q.matcher.matches(msg):
                 matched = True
-                q.callback(routingKey, msg)
+                q.callback(msg)
         if not matched:
             raise AssertionError("no consumer found")
 

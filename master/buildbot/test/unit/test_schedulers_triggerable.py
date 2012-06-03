@@ -85,22 +85,22 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # not fired yet
         self.assertEqual(
             [ q.topics for q in sched.master.mq.qrefs ],
-            [('buildset.*.complete',)])
+            [(dict(_type='buildset', _event='complete'),)])
         self.assertFalse(self.fired)
 
         # pretend a non-matching buildset is complete
-        sched.master.mq.callConsumer('buildset.%d.complete' % (bsid+27),
-                dict(bsid=bsid+27, result=3))
+        sched.master.mq.callConsumer(_type='buildset', _event='complete',
+                buildset=bsid+27, result=3)
 
         # scheduler should not have reacted
         self.assertEqual(
             [ q.topics for q in sched.master.mq.qrefs ],
-            [('buildset.*.complete',)])
+            [(dict(_type='buildset', _event='complete'),)])
         self.assertFalse(self.fired)
 
         # pretend the matching buildset is complete
-        sched.master.mq.callConsumer('buildset.%d.complete' % bsid,
-                dict(bsid=bsid, result=13))
+        sched.master.mq.callConsumer(_type='buildset', _event='complete',
+                buildset=bsid, result=13)
 
         # scheduler should have reacted
         self.assertEqual(sched.master.mq.qrefs, [])
@@ -148,17 +148,17 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # check that the scheduler has subscribed to buildset changes
         self.assertEqual(
             [ q.topics for q in sched.master.mq.qrefs ],
-            [('buildset.*.complete',)])
+            [(dict(_type='buildset', _event='complete'),)])
 
         # let a few buildsets complete
-        sched.master.mq.callConsumer('buildset.%d.complete' % (bsid2+27,),
-                dict(bsid=bsid2+27, result=3))
-        sched.master.mq.callConsumer('buildset.%d.complete' % (bsid2,),
-                dict(bsid=bsid2, result=22))
-        sched.master.mq.callConsumer('buildset.%d.complete' % (bsid2+7,),
-                dict(bsid=bsid2+7, result=3))
-        sched.master.mq.callConsumer('buildset.%d.complete' % (bsid1,),
-                dict(bsid=bsid1, result=11))
+        sched.master.mq.callConsumer(_type='buildset', _event='complete',
+                buildset=bsid2+27, result=3)
+        sched.master.mq.callConsumer(_type='buildset', _event='complete',
+                buildset=bsid2, result=22)
+        sched.master.mq.callConsumer(_type='buildset', _event='complete',
+                buildset=bsid2+7, result=3)
+        sched.master.mq.callConsumer(_type='buildset', _event='complete',
+                buildset=bsid1, result=11)
 
         # both should have triggered with appropriate results, and the
         # subscription should be cancelled

@@ -355,7 +355,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     @defer.inlineCallbacks
     def submit_changes(self, changes):
         for chdict in changes:
-            yield self.master.addChange(src='svn', **chdict)
+            yield self.master.data.update.addChange(src='svn', **chdict)
 
     def finished_ok(self, res):
         if self.cachepath:

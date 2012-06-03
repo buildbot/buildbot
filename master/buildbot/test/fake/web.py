@@ -39,6 +39,7 @@ class FakeRequest(Mock):
         master = self.site.buildbot_service.master = Mock()
 
         self.addedChanges = []
+        # FIXME:
         def addChange(**kwargs):
             self.addedChanges.append(kwargs)
             return defer.succeed(Mock())

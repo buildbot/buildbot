@@ -58,7 +58,7 @@ class MQConnector(config.ReconfigurableServiceMixin, service.MultiService):
         return config.ReconfigurableServiceMixin.reconfigService(self,
                                                             new_config)
 
-    def produce(self, routing_key, data):
+    def produce(self, data):
         # will be patched after configuration to point to the running
         # implementation's method
         raise NotImplementedError

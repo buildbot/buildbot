@@ -268,7 +268,7 @@ class BonsaiPoller(base.PollingChangeSource):
             files = [file.filename + ' (revision '+file.revision+')'
                      for file in cinode.files]
             self.lastChange = self.lastPoll
-            yield self.master.addChange(author = cinode.who,
+            yield self.master.data.update.addChange(author = cinode.who,
                                files = files,
                                comments = cinode.log,
                                when_timestamp = epoch2datetime(cinode.date),

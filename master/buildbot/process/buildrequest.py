@@ -229,14 +229,11 @@ class BuildRequest(object):
             return
 
         # send a cancellation message
-        key = 'buildrequest.%d.%s.%d.cancelled' % (self.bsid,
-                                        self.buildername, self.id)
-        msg = dict(
-            brid=self.id,
-            bsid=self.bsid,
+        self.master.mq.produce(_type='buildrequest', _event='cancelled',
+            buildrequest=self.id,
+            buildset=self.bsid,
             buildername=self.buildername,
             builderid=-1) # TODO
-        self.master.mq.produce(key, msg)
 
         # then complete it with 'FAILURE'; this is the closest we can get to
         # cancelling a request without running into trouble with dangling

@@ -87,7 +87,7 @@ class ChangePerspective(NewCredPerspective):
 
         if not files:
             log.msg("No files listed in change... bit strange, but not fatal.")
-        d = self.master.addChange(**changedict)
+        d = self.master.data.update.addChange(**changedict)
         # since this is a remote method, we can't return a Change instance, so
         # this just sets the return value to None:
         d.addCallback(lambda _ : None)

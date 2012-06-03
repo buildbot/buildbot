@@ -25,7 +25,7 @@ from twisted.application import service
 
 import buildbot
 import buildbot.pbmanager
-from buildbot.util import epoch2datetime, datetime2epoch
+from buildbot.util import epoch2datetime
 from buildbot.status.master import Status
 from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
@@ -439,7 +439,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             uid = None
 
         # add the Change to the database
-        changeid = yield self.db.changes.addChange(author=author, files=files,
+        chdict = yield self.data.update.addChange(author=author, files=files,
                             comments=comments, is_dir=is_dir,
                             revision=revision, when_timestamp=when_timestamp,
                             branch=branch, category=category,
@@ -448,18 +448,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                             codebase=codebase, uid=uid)
 
         # convert the changeid to a Change instance
-        chdict = yield self.db.changes.getChange(changeid)
         change = yield changes.Change.fromChdict(self, chdict)
-
-        # log, being careful to handle funny characters
-        msg = u"added change %s to database" % change
-        log.msg(msg.encode('utf-8', 'replace'))
-
-        # new-style notification
-        msg = dict()
-        msg.update(chdict)
-        msg['when_timestamp'] = datetime2epoch(msg['when_timestamp'])
-        self.mq.produce("change.%d.new" % changeid, msg)
 
         defer.returnValue(change)
 
@@ -479,25 +468,21 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # notify about the component build requests
         for bn, brid in brids.iteritems():
-            msg = dict(
-                brid=brid,
-                bsid=bsid,
+            self.mq.produce(_type='buildrequest', _event='new',
+                buildrequest=brid,
+                buildset=bsid,
                 buildername=bn,
                 builderid=-1) # TODO
-            self.mq.produce(
-                    'buildrequest.%d.%s.%d.new' % (bsid, bn, brid),
-                    msg)
 
         # and the buildset itself
-        msg = dict(
-            bsid=bsid,
+        self.mq.produce(_type='buildset', _event='new',
+            buildset=bsid,
             external_idstring=kwargs.get('external_idstring', None),
             reason=kwargs['reason'],
             sourcestampsetid=kwargs['sourcestampsetid'],
-            brids=brids,
+            buildrequests=brids,
             scheduler=scheduler,
             properties=kwargs.get('properties', {}))
-        self.mq.produce("buildset.%d.new" % bsid, msg)
 
         defer.returnValue((bsid,brids))
 
@@ -532,11 +517,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 complete_at=complete_at)
 
         # new-style notification
-        msg = dict(
-            bsid=bsid,
+        # TODO: Complete state
+        self.mq.produce(_type='buildset', _event='complete',
+            buildset=bsid,
             complete_at=complete_at_epoch,
             results=cumulative_results)
-        self.mq.produce('buildset.%d.complete' % bsid, msg)
 
 
     ## state maintenance (private)
@@ -589,12 +574,10 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         d = self.getObjectId()
         @d.addCallback
         def send(objectid):
-            key = 'master.%d.%s' % (objectid, state)
-            msg = dict(
-                masterid=objectid,
-                master_hostname=self.hostname,
-                master_basedir=os.path.abspath(self.basedir))
-            self.mq.produce(key, msg)
+            self.mq.produce(_type='master', _event=state,
+                master=objectid,
+                hostname=self.hostname,
+                basedir=os.path.abspath(self.basedir))
         d.addErrback(log.msg, "while sending master message")
 
 class Control:

@@ -62,7 +62,8 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
         def check(change):
             # check the correct message was received
             self.assertEqual(self.master.mq.productions, [
-                ( 'change.500.new', {
+                { '_type' : 'change',
+                    '_event' : 'new',
                     'author': u'warner',
                     'branch': u'warnerdb',
                     'category': u'devel',
@@ -77,7 +78,7 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
                     'revision': u'0e92a098b',
                     'revlink': u'http://warner/0e92a098b',
                     'when_timestamp': 256738404,
-                })
+                }
             ])
         d.addCallback(check)
         return d
@@ -95,27 +96,27 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
 
             # check that the proper message was produced
             self.assertEqual(sorted(self.master.mq.productions), sorted([
-                ( 'buildset.200.new', {
-                    'bsid': bsid,
+                { '_type': 'buildset', '_event': 'new',
+                    'buildset': bsid,
                     'external_idstring': 'eid',
                     'reason': 'rsn',
                     'sourcestampsetid': sourcestampsetid,
-                    'brids': dict(a=1000, b=1001),
+                    'buildrequests': dict(a=1000, b=1001),
                     'properties': {},
                     'scheduler': 'schname',
-                }),
-                ( 'buildrequest.200.a.1000.new', {
-                    'brid': 1000,
-                    'bsid': 200,
+                },
+                { '_type': 'buildrequest', '_event': 'new',
+                    'buildrequest': 1000,
+                    'buildset': 200,
                     'buildername': 'a',
                     'builderid': -1,
-                }),
-                ( 'buildrequest.200.b.1001.new', {
-                    'brid': 1001,
-                    'bsid': 200,
+                },
+                { '_type': 'buildrequest', '_event': 'new',
+                    'buildrequest': 1001,
+                    'buildset': 200,
                     'buildername': 'b',
                     'builderid': -1,
-                }),
+                },
             ]))
         d.addCallback(check)
         return d
@@ -135,11 +136,11 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
         self.master.maybeBuildsetComplete(440, _reactor=clock)
 
         self.assertEqual(self.master.mq.productions, [
-            ( 'buildset.440.complete', {
-                'bsid': 440,
+            { '_type': 'buildset', '_event': 'complete',
+                'buildset': 440,
                 'complete_at': 1234,
                 'results': SUCCESS,
-            }),
+            },
         ])
 
 
@@ -357,16 +358,16 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
 
             # check started/stopped messages
             self.assertEqual(self.master.mq.productions, [
-                ( 'master.100.started', {
-                    'master_basedir': self.basedir,
-                    'master_hostname': self.master.hostname,
-                    'masterid': 100,
-                }),
-                ( 'master.100.stopped', {
-                    'master_basedir': self.basedir,
-                    'master_hostname': self.master.hostname,
-                    'masterid': 100,
-                }),
+                { '_type': 'master', '_event': 'started',
+                    'basedir': self.basedir,
+                    'hostname': self.master.hostname,
+                    'master': 100,
+                },
+                { '_type': 'master', '_event': 'stopped',
+                    'basedir': self.basedir,
+                    'hostname': self.master.hostname,
+                    'master': 100,
+                },
                 ])
         return d
 
