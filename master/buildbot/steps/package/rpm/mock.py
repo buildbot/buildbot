@@ -63,7 +63,7 @@ class Mock(ShellCommand):
 
         self.command = ['mock', '--root', self.root]
         if self.resultdir:
-            self.command += ['--resultdir', 'result']
+            self.command += ['--resultdir', self.resultdir]
 
     def start(self):
         """
@@ -161,4 +161,4 @@ class MockRebuild(Mock):
         if not self.srpm:
             config.error("You must specify a srpm")
         
-        self.command += ['rebuild', self.srpm]
+        self.command += ['--rebuild', self.srpm]
