@@ -57,11 +57,7 @@ server and retrieve information about every build the buildbot knows
 about, as well as find out what the buildbot is currently working on.
 
 The first page you will see is the *Welcome Page*, which contains
-links to all the other useful pages. By default, this page is served from
-the :file:`status/web/templates/root.html` file in buildbot's library area.
-If you'd like to override this page or the other templates found there,
-copy the files you're interested in into a :file:`templates/` directory in
-the buildmaster's base directory.
+links to all the other useful pages.
 
 One of the most complex resource provided by :class:`WebStatus` is the
 *Waterfall Display*, which shows a time-based chart of events. This
@@ -708,6 +704,28 @@ that periodically poll the Google Code commit feed for changes.
    ``'branch'`` option::
 
       change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX', 'branch': 'master'}}
+
+
+WebStatus templates
+###################
+
+By default, the templates are fetched from :file:`status/web/templates/` file
+in buildbot's library area. If you'd like to override a template found there,
+copy the files you're interested in into a :file:`templates/` directory in the
+buildmaster's base directory.
+
+You can also provide additional Jinja 2 loaders::
+
+    import jinja2
+    myloaders = [
+        jinja2.FileSystemLoader("/tmp/mypath"),
+        ]
+
+    c['status'].append(html.WebStatus(
+        …,
+        jinja_loaders = myloaders,
+    ))
+
 
 .. bb:status:: MailNotifier
 
