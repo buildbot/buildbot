@@ -2498,10 +2498,14 @@ construct new property values.
 RPM-Related Steps
 -----------------
 
+These steps work with RPMs and spec files.
+
 .. bb:step:: RpmBuild
 
-These steps work with RPMs and spec files.  The :bb:step:`RpmBuild` step builds
-RPMs based on a spec file::
+RpmBuild
+++++++++
+
+The :bb:step:`RpmBuild` step builds RPMs based on a spec file::
 
     from buildbot.steps.package.rpm import RpmBuild
     f.addStep(RpmBuild(specfile="proj.spec",
@@ -2537,6 +2541,82 @@ The step takes the following parameters
     If true, use the version-control revision mechanics.  This uses the
     ``got_revision`` property to determine the revision and define
     ``_revision``.
+
+.. bb:step:: RpmLint
+
+RpmLint
++++++++
+
+The :bb:step:`RpmLint` step checks for common problems in RPM packages or
+spec files::
+
+    from buildbot.steps.package.rpm import RpmLint
+    f.addStep(RpmLint())
+
+The step takes the following parameters
+
+``fileloc``
+    The file or directory to check. In case of a directory, it is recursively
+    searched for RPMs and spec files to check.
+
+``config``
+    Path to a rpmlint config file. This is passed as the user configuration
+    file if present.
+
+Mock Steps
+++++++++++
+
+Mock (http://fedoraproject.org/wiki/Projects/Mock) creates chroots and builds
+packages in them. It populates the changeroot with a basic system
+and the packages listed as build requirement. The type of chroot to build
+is specified with the ``root`` parameter. To use mock your buildbot user must
+be added to the ``mock`` group.
+
+.. bb:step:: MockBuildSRPM
+
+MockBuildSRPM Step
+++++++++++++++++++
+
+The :bb:step:`MockBuildSRPM` step builds a SourceRPM based on a spec file and
+optionaly a source directory::
+
+    from buildbot.steps.package.rpm import MockBuildSRPM
+    f.addStep(MockBuildSRPM(root='default', spec='mypkg.spec'))
+
+The step takes the following parameters
+
+``root``
+    Use chroot configuration defined in ``/etc/mock/<root>.cfg``.
+
+``resultdir``
+    The directory where the logfiles and the SourceRPM are written to.
+
+``spec``
+    Build the SourceRPM from this spec file.
+
+``sources``
+    Path to the directory containing the sources, defaulting to ``.``.
+
+.. bb:step:: MockRebuild
+
+MockRebuild Step
+++++++++++++++++
+
+The :bb:step:`MockRebuild` step rebuilds a SourceRPM package::
+
+    from buildbot.steps.package.rpm import MockRebuild
+    f.addStep(MockRebuild(root='default', spec='mypkg-1.0-1.src.rpm'))
+
+The step takes the following parameters
+
+``root``
+    Uses chroot configuration defined in ``/etc/mock/<root>.cfg``.
+
+``resultdir``
+    The directory where the logfiles and the SourceRPM are written to.
+
+``srpm``
+    The path to the SourceRPM to rebuild.
 
 Miscellaneous BuildSteps
 ------------------------
