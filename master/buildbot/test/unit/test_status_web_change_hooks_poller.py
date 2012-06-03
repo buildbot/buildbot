@@ -18,6 +18,8 @@ from twisted.internet import defer
 from buildbot.changes import base
 import buildbot.status.web.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
+from buildbot.changes.manager import ChangeManager
+
 
 class TestPollingChangeHook(unittest.TestCase):
     class Subclass(base.PollingChangeSource):
@@ -27,50 +29,50 @@ class TestPollingChangeHook(unittest.TestCase):
         def poll(self):
             self.called = True
 
-    def setUp(self):
+    def setUpRequest(self, args):
         self.changeHook = change_hook.ChangeHookResource(dialects={'poller' : True})
-        self.changesrc= self.Subclass()
+
+        self.request = FakeRequest(args=args)
+        self.request.uri = "/change_hook/poller"
+        self.request.method = "GET"
+
+        master = self.request.site.buildbot_service.master
+        master.change_svc = ChangeManager(master)
+
+        self.changesrc = self.Subclass("example", None)
+        self.changesrc.setServiceParent(master.change_svc)
+
+        anotherchangesrc = base.ChangeSource()
+        anotherchangesrc.setName("notapoller")
+        anotherchangesrc.setServiceParent(master.change_svc)
+
+        return self.request.test_render(self.changeHook)
 
     @defer.inlineCallbacks
     def test_no_args(self):
-        self.request = FakeRequest(args={})
-        self.request.uri = "/change_hook/poller"
-        self.request.method = "GET"
-        yield self.request.test_render(self.changeHook)
-
-        expected = "Request missing parameter 'poller'"
-        self.assertEqual(self.request.written, expected)
-        self.request.setResponseCode.assert_called_with(400, expected)
+        yield self.setUpRequest({})
+        self.assertEqual(self.request.written, "no changes found")
+        self.assertEqual(self.changesrc.called, True)
 
     @defer.inlineCallbacks
     def test_no_poller(self):
-        self.request = FakeRequest(args={"poller":["example"]})
-        self.request.uri = "/change_hook/poller"
-        self.request.method = "GET"
-        self.request.master.change_svc.getServiceNamed.side_effect = KeyError
-        yield self.request.test_render(self.changeHook)
-
-        expected = "No such change source 'example'"
+        yield self.setUpRequest({"poller": ["nosuchpoller"]})
+        expected = "Could not find pollers: nosuchpoller"
         self.assertEqual(self.request.written, expected)
         self.request.setResponseCode.assert_called_with(400, expected)
+        self.assertEqual(self.changesrc.called, False)
 
     @defer.inlineCallbacks
     def test_invalid_poller(self):
-        self.request = FakeRequest(args={"poller":["example"]})
-        self.request.uri = "/change_hook/poller"
-        self.request.method = "GET"
-        yield self.request.test_render(self.changeHook)
-
-        expected = "No such polling change source 'example'"
+        yield self.setUpRequest({"poller": ["notapoller"]})
+        expected = "Could not find pollers: notapoller"
         self.assertEqual(self.request.written, expected)
         self.request.setResponseCode.assert_called_with(400, expected)
+        self.assertEqual(self.changesrc.called, False)
 
     @defer.inlineCallbacks
     def test_trigger_poll(self):
-        self.request = FakeRequest(args={"poller":["example"]})
-        self.request.uri = "/change_hook/poller"
-        self.request.method = "GET"
-        self.request.master.change_svc.getServiceNamed.return_value = self.changesrc
-        yield self.request.test_render(self.changeHook)
+        yield self.setUpRequest({"poller": ["example"]})
+        self.assertEqual(self.request.written, "no changes found")
         self.assertEqual(self.changesrc.called, True)
 

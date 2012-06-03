@@ -736,6 +736,9 @@ Then you will be able to trigger a poll of the SVN repository by poking the
 
     curl http://yourbuildbot/change_hook/poller?poller=amanda
 
+If no ``poller`` argument is provided then the hook will trigger polling of all
+polling change sources.
+
 
 .. bb:status:: MailNotifier
 

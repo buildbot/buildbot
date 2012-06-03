@@ -21,26 +21,26 @@ from buildbot.changes.base import PollingChangeSource
 
 def getChanges(req, options=None):
     change_svc = req.site.buildbot_service.master.change_svc
-
-    if not "poller" in req.args:
-        raise ValueError("Request missing parameter 'poller'")
+    poll_all = not "poller" in req.args
 
     pollers = []
 
-    for pollername in req.args['poller']:
-        try:
-            source = change_svc.getServiceNamed(pollername)
-        except KeyError:
-            raise ValueError("No such change source '%s'" % pollername)
-
+    for source in change_svc:
         if not isinstance(source, PollingChangeSource):
-            raise ValueError("No such polling change source '%s'" % pollername)
-
+            continue
+        if not hasattr(source, "name"):
+            continue
+        if not poll_all and not source.name in req.args['poller']:
+            continue
         pollers.append(source)
 
+    if not poll_all:
+        missing = set(req.args['poller']) - set(s.name for s in pollers)
+        if missing:
+            raise ValueError("Could not find pollers: %s" % ",".join(missing))
+
     for p in pollers:
-        source.doPoll()
+        p.doPoll()
 
     return [], None
-
 
