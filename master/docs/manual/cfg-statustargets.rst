@@ -739,6 +739,14 @@ Then you will be able to trigger a poll of the SVN repository by poking the
 If no ``poller`` argument is provided then the hook will trigger polling of all
 polling change sources.
 
+You can restrict which pollers the webhook has access to using the ``allowed``
+option::
+
+    c['status'].append(html.WebStatus(
+        …,
+        change_hook_dialects={'poller': {'allowed': ['amanda']}}
+    ))
+
 
 .. bb:status:: MailNotifier
 

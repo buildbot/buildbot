@@ -29,8 +29,8 @@ class TestPollingChangeHook(unittest.TestCase):
         def poll(self):
             self.called = True
 
-    def setUpRequest(self, args):
-        self.changeHook = change_hook.ChangeHookResource(dialects={'poller' : True})
+    def setUpRequest(self, args, options=True):
+        self.changeHook = change_hook.ChangeHookResource(dialects={'poller' : options})
 
         self.request = FakeRequest(args=args)
         self.request.uri = "/change_hook/poller"
@@ -73,6 +73,20 @@ class TestPollingChangeHook(unittest.TestCase):
     @defer.inlineCallbacks
     def test_trigger_poll(self):
         yield self.setUpRequest({"poller": ["example"]})
+        self.assertEqual(self.request.written, "no changes found")
+        self.assertEqual(self.changesrc.called, True)
+
+    @defer.inlineCallbacks
+    def test_allowlist_deny(self):
+        yield self.setUpRequest({"poller": ["example"]}, options={"allowed": []})
+        expected = "Could not find pollers: example"
+        self.assertEqual(self.request.written, expected)
+        self.request.setResponseCode.assert_called_with(400, expected)
+        self.assertEqual(self.changesrc.called, False)
+
+    @defer.inlineCallbacks
+    def test_allowlist_allow(self):
+        yield self.setUpRequest({"poller": ["example"]}, options={"allowed": ["example"]})
         self.assertEqual(self.request.written, "no changes found")
         self.assertEqual(self.changesrc.called, True)
 
