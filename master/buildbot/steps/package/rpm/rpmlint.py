@@ -53,10 +53,10 @@ class RpmLint(Test):
         if config:
             self.config = config
 
-        self.command = ["/usr/bin/rpmlint", "-i"]
+        self.command = ["rpmlint", "-i"]
         if self.config:
             self.command += ['-f', self.config]
-        self.command.append(fileloc)
+        self.command.append(self.fileloc)
 
     def createSummary(self, log):
         """
