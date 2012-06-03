@@ -790,3 +790,14 @@ class AlmostStrictUndefined(jinja2.StrictUndefined):
         fully as strict as StrictUndefined '''
     def __nonzero__(self):
         return False
+
+_charsetRe = re.compile('charset=([^;]*)', re.I)
+def getRequestCharset(req):
+    """Get the charset for an x-www-form-urlencoded request"""
+    # per http://stackoverflow.com/questions/708915/detecting-the-character-encoding-of-an-http-post-request
+    hdr = req.getHeader('Content-Type')
+    if hdr:
+        mo = _charsetRe.search(hdr)
+        if mo:
+            return mo.group(1).strip()
+    return 'utf-8' # reasonable guess, works for ascii

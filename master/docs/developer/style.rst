@@ -9,7 +9,7 @@ the formatting of symbol names.
 
 The single exception in naming of functions and methods. Because Buildbot uses
 Twisted so heavily, and Twisted uses interCaps, Buildbot methods should do the
-same. That is, methods and functions should be spelled with the first character
+same. That is, you should spell methods and functions with the first character
 in lower-case, and the first letter of subsequent words capitalized, e.g.,
 ``compareToOther`` or ``getChangesGreaterThan``. This point is not applied very
 consistently in Buildbot, but let's try to be consistent in new code. 
@@ -30,8 +30,8 @@ Just about anything might block - even getters and setters!
 Helpful Twisted Classes
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Twisted has some useful, but little-known classes.  They are listed here with
-brief descriptions, but you should consult the API documentation or source code
+Twisted has some useful, but little-known classes.  
+Brief descriptions follow, but you should consult the API documentation or source code
 for the full details.
 
 :class:`twisted.internet.task.LoopingCall`
@@ -39,8 +39,8 @@ for the full details.
 
 :class:`twisted.application.internet.TimerService`
     Similar to ``t.i.t.LoopingCall``, but implemented as a service that will
-    automatically start and stop the function calls when the service is started and
-    stopped.
+    automatically start and stop the function calls when the service starts and
+    stops.
 
 Sequences of Operations
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -134,11 +134,11 @@ The key points to notice here:
 * Use the decorator form of ``inlineCallbacks``
 * In most cases, the result of a ``yield`` expression should be assigned to a
   variable.  It can be used in a larger expression, but remember that Python
-  requires that it be enclosed in its own set of parentheses.
+  requires that you enclose the expression in its own set of parentheses.
 * Python does not permit returning a value from a generator, so statements like
   ``return xval + y`` are invalid.  Instead, yield the result of
   ``defer.returnValue``.  Although this function does cause an immediate
-  function exit, for clarity it should be followed by a bare ``return``, as in
+  function exit, for clarity follow it with a bare ``return``, as in
   the example, unless it is the last statement in a function.
 
 The great advantage of ``inlineCallbacks`` is that it allows you to use all
@@ -157,7 +157,7 @@ operations, each time you wait for a Deferred, arbitrary other actions can take
 place.
 
 In general, you should try to perform actions atomically, but for the rare
-times synchronization is required, the following might be useful:
+situations that require synchronization, the following might be useful:
 
 * :py:class:`twisted.internet.defer.DeferredLock`
 * :py:func:`buildbot.util.misc.deferredLocked`
@@ -168,8 +168,8 @@ Joining Sequences
 
 It's often the case that you'll want to perform multiple operations in
 parallel, and re-join the results at the end. For this purpose, you'll want to
-use a `DeferredList
-<http://twistedmatrix.com/documents/current/api/twisted.internet.defer.DeferredList.html>`_::
+use a `DeferredList <http://twistedmatrix.com/documents/current/api/twisted.internet.defer.DeferredList.html>`_
+::
 
     def getRevInfo(revname):
         results = {}
@@ -192,5 +192,5 @@ use a `DeferredList
         return d
 
 Here the deferred list will wait for both ``rev_parse_d`` and ``log_d`` to
-fire, or for one of them to fail.  Callbacks and errbacks can be attached to a
+fire, or for one of them to fail. You may attach  Callbacks and errbacks to a
 ``DeferredList`` just as for a deferred.

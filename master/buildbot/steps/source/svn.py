@@ -48,15 +48,6 @@ class SVN(Source):
         self.method=method
         self.mode = mode
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(repourl=repourl,
-                                 mode=mode,
-                                 method=method,
-                                 password=password,
-                                 username=username,
-                                 extra_args=extra_args,
-                                 keep_on_purge=keep_on_purge,
-                                 depth=depth,
-                                 )
         errors = []
         if self.mode not in self.possible_modes:
             errors.append("mode %s is not one of %s" % (self.mode, self.possible_modes))
@@ -139,7 +130,7 @@ class SVN(Source):
                                                 'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
-        if cmd.rc != 0:
+        if cmd.didFail():
             raise buildstep.BuildStepFailed()
         
         checkout_cmd = ['checkout', self.repourl, '.']
@@ -171,7 +162,7 @@ class SVN(Source):
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
-        if cmd.rc != 0:
+        if cmd.didFail():
             raise buildstep.BuildStepFailed()
 
         # temporarily set workdir = 'source' and do an incremental checkout
@@ -196,12 +187,12 @@ class SVN(Source):
             export_cmd.extend(['source', self.workdir])
 
             cmd = buildstep.RemoteShellCommand('', export_cmd,
-                    env=self.env, logEnviron=self.logEnviron)
+                    env=self.env, logEnviron=self.logEnviron, timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
 
         yield self.runCommand(cmd)
 
-        if cmd.rc != 0:
+        if cmd.didFail():
             raise buildstep.BuildStepFailed()
 
     def finish(self, res):
@@ -219,7 +210,7 @@ class SVN(Source):
                 {'dir': dir, 'logEnviron': self.logEnviron })
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
-        if cmd.rc != 0:
+        if cmd.didFail():
             raise buildstep.BuildStepFailed()
 
     def _dovccmd(self, command, collectStdout=False):
@@ -237,12 +228,13 @@ class SVN(Source):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['svn'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
+                                           timeout=self.timeout,
                                            collectStdout=collectStdout)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting SVN command : svn %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
-            if cmd.rc != 0:
+            if cmd.didFail():
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
             if collectStdout:
@@ -268,7 +260,7 @@ class SVN(Source):
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
-        if cmd.rc != 0:
+        if cmd.didFail():
             defer.returnValue(False)
             return
 
@@ -291,6 +283,7 @@ class SVN(Source):
         cmd = buildstep.RemoteShellCommand(svnversion_dir, ['svnversion'],
                                            env=self.env,
                                            logEnviron=self.logEnviron,
+                                           timeout=self.timeout,
                                            collectStdout=True)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
@@ -379,7 +372,8 @@ class SVN(Source):
     def checkSvn(self):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['svn', '--version'],
                                            env=self.env,
-                                           logEnviron=self.logEnviron)
+                                           logEnviron=self.logEnviron,
+                                           timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def evaluate(cmd):

@@ -17,10 +17,15 @@
 import os
 
 from twisted.internet import defer, utils, reactor, threads
-from twisted.python import log
+from twisted.python import log, failure
 from buildbot.buildslave import AbstractBuildSlave, AbstractLatentBuildSlave
+from buildbot import config
 
-import libvirt
+try:
+    import libvirt
+    libvirt = libvirt
+except ImportError:
+    libvirt = None
 
 
 class WorkQueue(object):
@@ -93,6 +98,9 @@ class Domain(object):
         self.connection = connection
         self.domain = domain
 
+    def name(self):
+        return queue.executeInThread(self.domain.name)
+
     def create(self):
         return queue.executeInThread(self.domain.create)
 
@@ -109,25 +117,34 @@ class Connection(object):
     I am a wrapper around a libvirt Connection object.
     """
 
+    DomainClass = Domain
+
     def __init__(self, uri):
         self.uri = uri
         self.connection = libvirt.open(uri)
 
+    @defer.inlineCallbacks
     def lookupByName(self, name):
         """ I lookup an existing prefined domain """
-        d = queue.executeInThread(self.connection.lookupByName, name)
-        def _(res):
-            return Domain(self, res)
-        d.addCallback(_)
-        return d
+        res = yield queue.executeInThread(self.connection.lookupByName, name)
+        defer.returnValue(self.DomainClass(self, res))
 
+    @defer.inlineCallbacks
     def create(self, xml):
         """ I take libvirt XML and start a new VM """
-        d = queue.executeInThread(self.connection.createXML, xml, 0)
-        def _(res):
-            return Domain(self, res)
-        d.addCallback(_)
-        return d
+        res = yield queue.executeInThread(self.connection.createXML, xml, 0)
+        defer.returnValue(self.DomainClass(self, res))
+
+    @defer.inlineCallbacks
+    def all(self):
+        domains = []
+        domain_ids = yield queue.executeInThread(self.connection.listDomainsID)
+
+        for did in domain_ids:
+            domain = yield queue.executeInThread(self.connection.lookupByID, did)
+            domains.append(self.DomainClass(self, domain))
+
+        defer.returnValue(domains)
 
 
 class LibVirtSlave(AbstractLatentBuildSlave):
@@ -136,17 +153,52 @@ class LibVirtSlave(AbstractLatentBuildSlave):
                  missing_timeout=60*20, build_wait_timeout=60*10, properties={}, locks=None):
         AbstractLatentBuildSlave.__init__(self, name, password, max_builds, notify_on_missing,
                                           missing_timeout, build_wait_timeout, properties, locks)
+
+        if not libvirt:
+            config.error("The python module 'libvirt' is needed to use a LibVirtSlave")
+
         self.name = name
         self.connection = connection
         self.image = hd_image
         self.base_image = base_image
         self.xml = xml
 
-        self.insubstantiate_after_build = True
         self.cheap_copy = True
         self.graceful_shutdown = False
 
         self.domain = None
+
+        self.ready = False
+        self._find_existing_deferred = self._find_existing_instance()
+
+    @defer.inlineCallbacks
+    def _find_existing_instance(self):
+        """
+        I find existing VMs that are already running that might be orphaned instances of this slave.
+        """
+        if not self.connection:
+            defer.returnValue(None)
+
+        domains = yield self.connection.all()
+        for d in domains:
+           name = yield d.name()
+           if name.startswith(self.name):
+               self.domain = d
+               self.substantiated = True
+               break
+
+        self.ready = True
+
+    def canStartBuild(self):
+        if not self.ready:
+            log.msg("Not accepting builds as existing domains not iterated")
+            return False
+
+        if self.domain and not self.isConnected():
+            log.msg("Not accepting builds as existing domain but slave not connected")
+            return False
+
+        return AbstractLatentBuildSlave.canStartBuild(self)
 
     def _prepare_base_image(self):
         """
@@ -178,6 +230,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         d.addBoth(_log_result)
         return d
 
+    @defer.inlineCallbacks
     def start_instance(self, build):
         """
         I start a new instance of a VM.
@@ -189,38 +242,25 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         in the list of defined virtual machines and start that.
         """
         if self.domain is not None:
-             raise ValueError('domain active')
+             log.msg("Cannot start_instance '%s' as already active" % self.name)
+             defer.returnValue(False)
 
-        d = self._prepare_base_image()
+        yield self._prepare_base_image()
 
-        def _start(res):
+        try:
             if self.xml:
-                d = self.connection.create(self.xml)
-                def _xml_start(res):
-                    self.domain = res
-                    return
-                d.addCallback(_xml_start)
-                return d
-            d = self.connection.lookupByName(self.name)
-            def _really_start(res):
-                self.domain = res
-                return self.domain.create()
-            d.addCallback(_really_start)
-            return d
-        d.addCallback(_start)
-
-        def _started(res):
-            return True
-        d.addCallback(_started)
-
-        def _start_failed(failure):
-            log.msg("Cannot start a VM (%s), failing gracefully and triggering a new build check" % self.name)
-            log.err(failure)
+                self.domain = yield self.connection.create(self.xml)
+            else:
+                self.domain = yield self.connection.lookupByName(self.name)
+                yield self.domain.create()
+        except:
+            log.err(failure.Failure(),
+                    "Cannot start a VM (%s), failing gracefully and triggering"
+                    "a new build check" % self.name)
             self.domain = None
-            return False
-        d.addErrback(_start_failed)
+            defer.returnValue(False)
 
-        return d
+        defer.returnValue(True)
 
     def stop_instance(self, fast=False):
         """
@@ -231,7 +271,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         """
         log.msg("Attempting to stop '%s'" % self.name)
         if self.domain is None:
-             log.msg("I don't think that domain is evening running, aborting")
+             log.msg("I don't think that domain is even running, aborting")
              return defer.succeed(None)
 
         domain = self.domain
@@ -257,15 +297,4 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         d.addBoth(_disconnected)
 
         return d
-
-    def buildFinished(self, *args, **kwargs):
-        """
-        I insubstantiate a slave after it has done a build, if that is
-        desired behaviour.
-        """
-        AbstractLatentBuildSlave.buildFinished(self, *args, **kwargs)
-        if self.insubstantiate_after_build:
-            log.msg("Got buildFinished notification - attempting to insubstantiate")
-            self.insubstantiate()
-
 

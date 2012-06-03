@@ -110,19 +110,6 @@ class Git(Source):
         self.mode = mode
         self.getDescription = getDescription
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(branch=branch,
-                                 mode=mode,
-                                 method=method,
-                                 progress=progress,
-                                 repourl=repourl,
-                                 submodules=submodules,
-                                 shallow=shallow,
-                                 retryFetch=retryFetch,
-                                 clobberOnFailure=
-                                 clobberOnFailure,
-                                 getDescription=
-                                 getDescription
-                                 )
 
         assert self.mode in ['incremental', 'full']
         assert self.repourl is not None
@@ -307,13 +294,14 @@ class Git(Source):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['git'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
+                                           timeout=self.timeout,
                                            collectStdout=collectStdout,
                                            initialStdin=initialStdin)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting git command : git %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
-            if abandonOnFailure and cmd.rc != 0:
+            if abandonOnFailure and cmd.didFail():
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
             if collectStdout:
@@ -423,7 +411,7 @@ class Git(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _fail(tmp):
-            if cmd.rc != 0:
+            if cmd.didFail():
                 return False
             return True
         d.addCallback(_fail)

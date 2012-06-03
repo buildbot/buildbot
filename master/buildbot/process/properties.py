@@ -15,8 +15,10 @@
 
 import collections
 import re
+import warnings
 import weakref
 from buildbot import config, util
+from buildbot.util import json
 from buildbot.interfaces import IRenderable, IProperties
 from twisted.internet import defer
 from twisted.python.components import registerAdapter
@@ -94,9 +96,7 @@ class Properties(util.ComparableMixin):
     def update(self, dict, source, runtime=False):
         """Update this object from a dictionary, with an explicit source specified."""
         for k, v in dict.items():
-            self.properties[k] = (v, source)
-            if runtime:
-                self.runtime.add(k)
+            self.setProperty(k, v, source, runtime=runtime)
 
     def updateFromProperties(self, other):
         """Update this object based on another object; the other object's """
@@ -121,6 +121,14 @@ class Properties(util.ComparableMixin):
     has_key = hasProperty
 
     def setProperty(self, name, value, source, runtime=False):
+        try:
+            json.dumps(value)
+        except TypeError:
+            warnings.warn(
+                    "Non jsonable properties are not explicitly supported and" +
+                    "will be explicitly disallowed in a future version.",
+                    DeprecationWarning, stacklevel=2)
+
         self.properties[name] = (value, source)
         if runtime:
             self.runtime.add(name)
@@ -402,6 +410,8 @@ class Interpolate(util.ComparableMixin):
  
     implements(IRenderable) 
     compare_attrs = ('fmtstring', 'args', 'kwargs') 
+
+    identifier_re = re.compile('^[\w-]*$')
  
     def __init__(self, fmtstring, *args, **kwargs): 
         self.fmtstring = fmtstring 
@@ -419,6 +429,9 @@ class Interpolate(util.ComparableMixin):
             prop, repl = arg.split(":", 1)
         except ValueError:
             prop, repl = arg, None
+        if not Interpolate.identifier_re.match(prop):
+            config.error("Property name must be alphanumeric for prop Interpolation '%s'" % arg)
+            prop = repl = None
         return _thePropertyDict, prop, repl
 
     @staticmethod
@@ -433,6 +446,12 @@ class Interpolate(util.ComparableMixin):
             except ValueError:
                 config.error("Must specify both codebase and attribute for src Interpolation '%s'" % arg)
                 codebase = attr = repl = None
+        if not Interpolate.identifier_re.match(codebase):
+            config.error("Codebase must be alphanumeric for src Interpolation '%s'" % arg)
+            codebase = attr = repl = None
+        if not Interpolate.identifier_re.match(attr):
+            config.error("Attribute must be alphanumeric for src Interpolation '%s'" % arg)
+            codebase = attr = repl = None
         return _SourceStampDict(codebase), attr, repl
 
     def _parse_kw(self, arg):
@@ -440,6 +459,9 @@ class Interpolate(util.ComparableMixin):
             kw, repl = arg.split(":", 1)
         except ValueError:
             kw, repl = arg, None
+        if not Interpolate.identifier_re.match(kw):
+            config.error("Keyword must be alphanumeric for kw Interpolation '%s'" % arg)
+            kw = repl = None
         return _Lazy(self.kwargs), kw, repl
 
     def _parseSubstitution(self, fmt):
@@ -455,6 +477,20 @@ class Interpolate(util.ComparableMixin):
             return None
         else:
             return fn(arg)
+
+    @staticmethod
+    def _splitBalancedParen(delim, arg):
+        parenCount = 0
+        for i in range(0, len(arg)):
+            if arg[i] == "(":
+                parenCount += 1
+            if arg[i] == ")":
+                parenCount -= 1
+                if parenCount < 0:
+                    raise ValueError
+            if parenCount == 0 and arg[i] == delim:
+                return arg[0:i], arg[i+1:]
+        return arg
 
     def _parseColon_minus(self, d, kw, repl):
         return _Lookup(d, kw,
@@ -475,21 +511,19 @@ class Interpolate(util.ComparableMixin):
                defaultWhenFalse=False,
                elideNoneAs='')
 
-    colon_ternary_re = re.compile(r"""(?P<delim>.) # the delimiter
-                                      (?P<true>.*) # sub-if-true
-                                      (?P=delim)   # the delimiter again
-                                      (?P<false>.*)# sub-if-false
-                                      """, re.VERBOSE)
-
     def _parseColon_ternary(self, d, kw, repl, defaultWhenFalse=False):
-        m = self.colon_ternary_re.match(repl)
-        if not m:
-            config.error("invalid Interpolate ternary expression for selector '%s' and delim '%s'" % (kw, repl[0]))
+        delim = repl[0]
+        if delim == '(':
+            config.error("invalid Interpolate ternary delimiter '('")
             return None
-        m = m.groupdict()
+        try:
+            truePart, falsePart = self._splitBalancedParen(delim, repl[1:])
+        except ValueError:
+            config.error("invalid Interpolate ternary expression '%s' with delimiter '%s'" % (repl[1:], repl[0]))
+            return None
         return _Lookup(d, kw,
-               hasKey=Interpolate(m['true'], **self.kwargs),
-               default=Interpolate(m['false'], **self.kwargs),
+               hasKey=Interpolate(truePart, **self.kwargs),
+               default=Interpolate(falsePart, **self.kwargs),
                defaultWhenFalse=defaultWhenFalse,
                elideNoneAs='')
 

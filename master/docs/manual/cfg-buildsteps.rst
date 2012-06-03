@@ -1209,6 +1209,10 @@ The Repo step takes the following arguments:
     directory which contains all the git objects. This feature helps
     to minimize network usage on very big projects.
 
+``jobs``
+    (optional, defaults to ``None``): Number of projects to fetch
+    simultaneously while syncing. Passed to repo sync subcommand with "-j".
+
 This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will
 automatically use the :command:`repo download` command of repo to
 download the additionnal changes introduced by a pending changeset.
@@ -1495,6 +1499,10 @@ The :bb:step:`ShellCommand` arguments are:
     this parameter.  This value should not be excessively large, as it is
     handled as a single string throughout Buildbot -- for example, do not pass
     the contents of a tarball with this parameter.
+
+``successfulRC``
+    This is a list or tuple of the exit codes that should be treated as successful.
+    The default is to treat just 0 as successful.
 
 .. bb:step:: Configure
 
@@ -2342,6 +2350,9 @@ Variables that don't exist on the master will be replaced by ``""``. ::
 Note that environment values must be strings (or lists that are turned into
 strings).  In particular, numeric properties such as ``buildnumber`` must
 be substituted using :ref:`WithProperties`.
+
+``interruptSignal``
+   (optional) Signal to use to end the process, if the step is interrupted.
 
 .. index:: Properties; from steps
 

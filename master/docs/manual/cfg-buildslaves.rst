@@ -154,7 +154,19 @@ very useful for some situations.
 
 The buildslaves that are started on-demand are called "latent" buildslaves.
 As of this writing, buildbot ships with an abstract base class for building
-latent buildslaves, and a concrete implementation for AWS EC2.
+latent buildslaves, and a concrete implementation for AWS EC2 and for libvirt.
+
+Common Options
+++++++++++++++
+
+The following options are available for all latent buildslaves.
+
+``build_wait_timeout``
+    This option allows you to specify how long a latent slave should wait after
+    a build for another build before it shuts down. It defaults to 10 minutes.
+    If this is set to 0 then the slave will be shut down immediately. If it is
+    less than 0 it will never automatically shutdown.
+
 
 .. index::
    AWS EC2
@@ -343,10 +355,6 @@ The :class:`EC2LatentBuildSlave` supports all other configuration from the stand
 to wait for an EC2 instance to attach before considering the attempt to have
 failed, and email addresses to alert, respectively.  ``missing_timeout``
 defaults to 20 minutes.
-
-The ``build_wait_timeout`` allows you to specify how long an :class:`EC2LatentBuildSlave`
-should wait after a build for another build before it shuts down the EC2
-instance.  It defaults to 10 minutes.
 
 ``keypair_name`` and ``security_name`` allow you to specify different names for
 these AWS EC2 values.  They both default to ``latent_buildbot_slave``.

@@ -20,6 +20,7 @@ from twisted.python import failure
 from twisted.internet import defer, task
 from buildbot import config
 from buildbot.test.fake import fakedb, fakemaster, fakemq
+from buildbot.status import master
 from buildbot.process import builder
 from buildbot.db import buildrequests
 from buildbot.util import epoch2datetime
@@ -231,6 +232,8 @@ class TestBuilderBuildCreation(unittest.TestCase):
         self.db.buildrequests.unclaimBuildRequests = db_unclaimBRs = mock.Mock(
                                             return_value=defer.succeed(None))
         self.bldr._msg_buildrequests_unclaimed = mock.Mock()
+        self.bldr.botmaster.maybeStartBuildsForBuilder = mock.Mock()
+
 
         yield self.do_test_maybeStartBuild(rows=rows,
                 exp_claims=[10], exp_builds=[])
@@ -772,6 +775,7 @@ class TestGetOldestRequestTime(unittest.TestCase):
         self.bstatus = mock.Mock()
         self.factory = mock.Mock()
         self.master = fakemaster.make_master()
+        self.master.status = master.Status(self.master)
         # only include the necessary required config
         builder_config = config.BuilderConfig(
                         name=name, slavename="slv", builddir="bdir",
@@ -821,7 +825,8 @@ class TestRebuild(unittest.TestCase):
         self.bldr = builder.Builder(builder_config.name)
         self.master.db = self.db = fakedb.FakeDBConnector(self)
         self.bldr.master = self.master
-        self.bldr.master.master.addBuildset.return_value = (1, [100])
+        self.master.addBuildset = addBuildset = mock.Mock()
+        addBuildset.return_value = (1, [100])
 
     def do_test_rebuild(self,
                         sourcestampsetid,
@@ -845,7 +850,9 @@ class TestRebuild(unittest.TestCase):
             sslist.append(ssx)
 
         self.makeBuilder(name='bldr1', sourcestamps = sslist)
-        self.bldrctrl = builder.BuilderControl(self.bldr, self.master)
+        control = mock.Mock(spec=['master'])
+        control.master = self.master
+        self.bldrctrl = builder.BuilderControl(self.bldr, control)
 
         d = self.bldrctrl.rebuildBuild(self.bstatus, reason = 'unit test', extraProperties = {})
 
@@ -860,7 +867,7 @@ class TestRebuild(unittest.TestCase):
     def test_rebuild_with_single_sourcestamp(self):
         yield self.do_test_rebuild(101, 1)
         self.assertEqual(self.sslist, {1:101})
-        self.master.master.addBuildset.assert_called_with(builderNames=['bldr1'],
+        self.master.addBuildset.assert_called_with(builderNames=['bldr1'],
                                                           sourcestampsetid=101,
                                                           reason = 'unit test', 
                                                           properties = {})
@@ -870,7 +877,7 @@ class TestRebuild(unittest.TestCase):
     def test_rebuild_with_multiple_sourcestamp(self):
         yield self.do_test_rebuild(101, 3)
         self.assertEqual(self.sslist, {1:101, 2:101, 3:101})
-        self.master.master.addBuildset.assert_called_with(builderNames=['bldr1'],
+        self.master.addBuildset.assert_called_with(builderNames=['bldr1'],
                                                           sourcestampsetid=101,
                                                           reason = 'unit test',
                                                           properties = {})

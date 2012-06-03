@@ -115,18 +115,11 @@ class ShellCommand(buildstep.LoggingBuildStep):
                 buildstep_kwargs[k] = kwargs[k]
                 del kwargs[k]
         buildstep.LoggingBuildStep.__init__(self, **buildstep_kwargs)
-        self.addFactoryArguments(workdir=workdir,
-                                 description=description,
-                                 descriptionDone=descriptionDone,
-                                 descriptionSuffix=descriptionSuffix,
-                                 command=command)
 
         # everything left over goes to the RemoteShellCommand
         kwargs['workdir'] = workdir # including a copy of 'workdir'
         kwargs['usePTY'] = usePTY
         self.remote_kwargs = kwargs
-        # we need to stash the RemoteShellCommand's args too
-        self.addFactoryArguments(**kwargs)
 
     def setBuild(self, build):
         buildstep.LoggingBuildStep.setBuild(self, build)
@@ -294,7 +287,7 @@ class TreeSize(ShellCommand):
             self.setProperty("tree-size-KiB", self.kib, "treesize")
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         if self.kib is None:
             return WARNINGS # not sure how 'du' could fail, but whatever
@@ -321,15 +314,11 @@ class SetProperty(ShellCommand):
 
         ShellCommand.__init__(self, **kwargs)
 
-        self.addFactoryArguments(property=self.property)
-        self.addFactoryArguments(extract_fn=self.extract_fn)
-        self.addFactoryArguments(strip=self.strip)
-
         self.property_changes = {}
 
     def commandComplete(self, cmd):
         if self.property:
-            if cmd.rc != 0:
+            if cmd.didFail():
                 return
             result = cmd.logs['stdio'].getText()
             if self.strip: result = result.strip()
@@ -423,12 +412,6 @@ class WarningCountingShellCommand(ShellCommand):
         # And upcall to let the base class do its work
         ShellCommand.__init__(self, **kwargs)
 
-        self.addFactoryArguments(warningPattern=warningPattern,
-                                 directoryEnterPattern=directoryEnterPattern,
-                                 directoryLeavePattern=directoryLeavePattern,
-                                 warningExtractor=warningExtractor,
-                                 maxWarnCount=maxWarnCount,
-                                 suppressionFile=suppressionFile)
         self.suppressions = []
         self.directoryStack = []
 
@@ -602,7 +585,7 @@ class WarningCountingShellCommand(ShellCommand):
 
 
     def evaluateCommand(self, cmd):
-        if ( cmd.rc != 0 or
+        if ( cmd.didFail() or
            ( self.maxWarnCount != None and self.warnCount > self.maxWarnCount ) ):
             return FAILURE
         if self.warnCount:
@@ -678,7 +661,7 @@ class PerlModuleTest(Test):
         passed = 0
         failed = 0
         rc = SUCCESS
-        if cmd.rc > 0:
+        if cmd.didFail():
             rc = FAILURE
 
         # New version of Test::Harness?
