@@ -81,14 +81,10 @@ class Mock(ShellCommand):
                 map(lambda l: self.build.path_module.join('build', self.logfiles[l]),
                 self.mock_logfiles)})
         d = self.runCommand(cmd)
+        def removeDone(cmd):
+            ShellCommand.start(self)
         d.addCallback(self.removeDone)
         d.addErrback(self.failed)
-
-    def removeDone(self, cmd):
-        """
-        Now run the actual mock build.
-        """
-        ShellCommand.start(self)
 
 class MockBuildSRPM(Mock):
     """Build a srpm within a mock. Requires a spec file and a sources dir."""
