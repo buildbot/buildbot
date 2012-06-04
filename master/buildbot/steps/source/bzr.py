@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import os
+
 from twisted.python import log
 from twisted.internet import defer
 
@@ -55,8 +57,7 @@ class Bzr(Source):
         self.stdio_log = self.addLog("stdio")
 
         if self.repourl is None:
-            self.repourl = self.build.path_module.join(self.baseURL,
-                                                       self.branch)
+            self.repourl = os.path.join(self.baseURL, self.branch)
 
         d = self.checkBzr()
         def checkInstall(bzrInstalled):
