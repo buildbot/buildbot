@@ -69,3 +69,20 @@ class ISlaveCommand(Interface):
         Child shell processes should be killed. Simple ShellCommand classes
         can just insert a header line indicating that the process will be
         killed, then os.kill() the child."""
+
+class ISlaveProtocol(Interface):
+
+    def sendUpdates(self, builder, updates):
+        """
+        send an update to the master
+        """
+
+    def sendComplete(self, builder, failure):
+        """
+        send a completion signal to the master, for builds and commands
+        """
+
+    def gracefulShutdown(self):
+        """
+        request shutdown from master
+        """
