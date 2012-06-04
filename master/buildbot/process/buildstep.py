@@ -372,7 +372,7 @@ class RemoteShellCommand(RemoteCommand):
         if interruptSignal is not None:
             args['interruptSignal'] = interruptSignal
         RemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout,
-                sucessfulRC=successfulRC)
+                successfulRC=successfulRC)
 
     def _start(self):
         self.args['command'] = self.command

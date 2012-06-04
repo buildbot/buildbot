@@ -196,6 +196,7 @@ class Bzr(Source):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['bzr'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
+                                           timeout=self.timeout,
                                            collectStdout=collectStdout)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
