@@ -578,3 +578,15 @@ class TestSplitFile(unittest.TestCase):
                 svnpoller.split_file_branches('tags/testthis/subdir/file.c'),
                 None)
 
+    def test_split_file_project_branches(self):
+        self.assertEqual(
+                svnpoller.split_file_project_branches('buildbot/trunk/subdir/file.c'),
+                dict(project='buildbot', path='subdir/file.c'))
+        self.assertEqual(
+                svnpoller.split_file_project_branches('buildbot/branches/1.5.x/subdir/file.c'),
+                dict(project='buildbot', branch='branches/1.5.x', path='subdir/file.c'))
+        # tags are ignored:
+        self.assertEqual(
+                svnpoller.split_file_project_branches('buildbot/tags/testthis/subdir/file.c'),
+                None)
+
