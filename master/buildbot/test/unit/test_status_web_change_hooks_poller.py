@@ -42,6 +42,9 @@ class TestPollingChangeHook(unittest.TestCase):
         self.changesrc = self.Subclass("example", None)
         self.changesrc.setServiceParent(master.change_svc)
 
+        self.disabledChangesrc = self.Subclass("disabled", None)
+        self.disabledChangesrc.setServiceParent(master.change_svc)
+
         anotherchangesrc = base.ChangeSource()
         anotherchangesrc.setName("notapoller")
         anotherchangesrc.setServiceParent(master.change_svc)
@@ -53,6 +56,7 @@ class TestPollingChangeHook(unittest.TestCase):
         yield self.setUpRequest({})
         self.assertEqual(self.request.written, "no changes found")
         self.assertEqual(self.changesrc.called, True)
+        self.assertEqual(self.disabledChangesrc.called, True)
 
     @defer.inlineCallbacks
     def test_no_poller(self):
@@ -61,6 +65,7 @@ class TestPollingChangeHook(unittest.TestCase):
         self.assertEqual(self.request.written, expected)
         self.request.setResponseCode.assert_called_with(400, expected)
         self.assertEqual(self.changesrc.called, False)
+        self.assertEqual(self.disabledChangesrc.called, False)
 
     @defer.inlineCallbacks
     def test_invalid_poller(self):
@@ -69,24 +74,34 @@ class TestPollingChangeHook(unittest.TestCase):
         self.assertEqual(self.request.written, expected)
         self.request.setResponseCode.assert_called_with(400, expected)
         self.assertEqual(self.changesrc.called, False)
+        self.assertEqual(self.disabledChangesrc.called, False)
 
     @defer.inlineCallbacks
     def test_trigger_poll(self):
         yield self.setUpRequest({"poller": ["example"]})
         self.assertEqual(self.request.written, "no changes found")
         self.assertEqual(self.changesrc.called, True)
+        self.assertEqual(self.disabledChangesrc.called, False)
 
     @defer.inlineCallbacks
     def test_allowlist_deny(self):
-        yield self.setUpRequest({"poller": ["example"]}, options={"allowed": []})
-        expected = "Could not find pollers: example"
+        yield self.setUpRequest({"poller": ["disabled"]}, options={"allowed": ["example"]})
+        expected = "Could not find pollers: disabled"
         self.assertEqual(self.request.written, expected)
         self.request.setResponseCode.assert_called_with(400, expected)
         self.assertEqual(self.changesrc.called, False)
+        self.assertEqual(self.disabledChangesrc.called, False)
 
     @defer.inlineCallbacks
     def test_allowlist_allow(self):
         yield self.setUpRequest({"poller": ["example"]}, options={"allowed": ["example"]})
         self.assertEqual(self.request.written, "no changes found")
         self.assertEqual(self.changesrc.called, True)
+        self.assertEqual(self.disabledChangesrc.called, False)
 
+    @defer.inlineCallbacks
+    def test_allowlist_all(self):
+        yield self.setUpRequest({}, options={"allowed": ["example"]})
+        self.assertEqual(self.request.written, "no changes found")
+        self.assertEqual(self.changesrc.called, True)
+        self.assertEqual(self.disabledChangesrc.called, False)
