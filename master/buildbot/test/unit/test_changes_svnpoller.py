@@ -242,9 +242,9 @@ def make_logentry_elements(maxrevision):
 def split_file(path):
     pieces = path.split("/")
     if pieces[0] == "branch":
-        return "branch", "/".join(pieces[1:])
+        return dict(branch="branch", path="/".join(pieces[1:]))
     if pieces[0] == "trunk":
-        return None, "/".join(pieces[1:])
+        return dict(path="/".join(pieces[1:]))
     raise RuntimeError("there shouldn't be any files like %r" % path)
 
 
@@ -352,9 +352,13 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         # note that parsing occurs in reverse
         self.failUnlessEqual(changes[0]['branch'], "branch")
         self.failUnlessEqual(changes[0]['revision'], '2')
+        self.failUnlessEqual(changes[0]['project'], '')
+        self.failUnlessEqual(changes[0]['repository'], base)
         self.failUnlessEqual(changes[1]['branch'], "branch")
         self.failUnlessEqual(changes[1]['files'], ["main.c"])
         self.failUnlessEqual(changes[1]['revision'], '3')
+        self.failUnlessEqual(changes[1]['project'], '')
+        self.failUnlessEqual(changes[1]['repository'], base)
 
         changes = s.create_changes([ logentries[4] ])
         self.failUnlessEqual(len(changes), 1)
@@ -381,6 +385,34 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         return gpo.Expect('svn', 'log', '--xml', '--verbose', '--non-interactive',
                 '--username=dustin', '--password=bbrocks',
                 '--limit=100', sample_base)
+    def test_create_changes_overriden_project(self):
+        def custom_split_file(path):
+            f = split_file(path)
+            if f:
+                f["project"] = "overriden-project"
+                f["repository"] = "overriden-repository"
+            return f
+
+        base = ("file:///home/warner/stuff/Projects/BuildBot/trees/" +
+                "svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample")
+        s = self.attachSVNPoller(base, split_file=custom_split_file)
+        s._prefix = "sample"
+
+        logentries = dict(zip(xrange(1, 7), reversed(make_logentry_elements(6))))
+        changes = s.create_changes(reversed([ logentries[3], logentries[2] ]))
+        self.failUnlessEqual(len(changes), 2)
+
+        # note that parsing occurs in reverse
+        self.failUnlessEqual(changes[0]['branch'], "branch")
+        self.failUnlessEqual(changes[0]['revision'], '2')
+        self.failUnlessEqual(changes[0]['project'], "overriden-project")
+        self.failUnlessEqual(changes[0]['repository'], "overriden-repository")
+
+        self.failUnlessEqual(changes[1]['branch'], "branch")
+        self.failUnlessEqual(changes[1]['files'], ["main.c"])
+        self.failUnlessEqual(changes[1]['revision'], '3')
+        self.failUnlessEqual(changes[1]['project'], "overriden-project")
+        self.failUnlessEqual(changes[1]['repository'], "overriden-repository")
 
     def test_poll(self):
         s = self.attachSVNPoller(sample_base, split_file=split_file,
