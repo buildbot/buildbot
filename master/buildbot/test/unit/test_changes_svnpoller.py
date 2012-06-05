@@ -522,7 +522,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         
 class TestSplitFile(unittest.TestCase):
     def test_split_file_alwaystrunk(self):
-        self.assertEqual(svnpoller.split_file_alwaystrunk('foo'), (None, 'foo'))
+        self.assertEqual(svnpoller.split_file_alwaystrunk('foo'), dict(path='foo'))
 
     def test_split_file_branches_trunk(self):
         self.assertEqual(
@@ -577,3 +577,4 @@ class TestSplitFile(unittest.TestCase):
         self.assertEqual(
                 svnpoller.split_file_branches('tags/testthis/subdir/file.c'),
                 None)
+

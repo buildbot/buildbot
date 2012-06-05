@@ -32,7 +32,7 @@ import os, urllib
 # these split_file_* functions are available for use as values to the
 # split_file= argument.
 def split_file_alwaystrunk(path):
-    return (None, path)
+    return dict(path=path)
 
 def split_file_branches(path):
     # turn "trunk/subdir/file.c" into (None, "subdir/file.c")
@@ -49,6 +49,18 @@ def split_file_branches(path):
     else:
         return None
 
+def split_file_project_branches(path):
+    # turn projectname/trunk/subdir/file.c into SVNFile(project=projectname, branch=trunk, path=subdir/file.c)
+    if not "/" in path:
+        return None
+    project, path = path.split("/", 1)
+    f = split_file_branches(path)
+    if f:
+        info = dict(project=project, path=f[1])
+        if f[0]:
+            info['branch'] = f[0]
+        return info
+    return f
 
 class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     """
@@ -283,7 +295,13 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         if relative_path.startswith("/"):
             relative_path = relative_path[1:]
         where = self.split_file(relative_path)
-        # 'where' is either None or (branch, final_path)
+        # 'where' is either None, (branch, final_path) or a dict
+        if not where:
+            return
+        if isinstance(where, tuple):
+            where = dict(branch=where[0], path=where[1])
+        for key in ("project", "repository", "branch", "path"):
+            where.setdefault(key, None)
         return where
 
     def create_changes(self, new_logentries):
@@ -331,27 +349,29 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 # if 'where' is None, the file was outside any project that
                 # we care about and we should ignore it
                 if where:
-                    branch, filename = where
-                    if not branch in branches:
-                        branches[branch] = { 'files': [], 'number_of_directories': 0}
+                    key = where["project"], where["repository"], where["branch"]
+                    filename = where["path"]
+                    if not key in branches:
+                        branches[key] = { 'files': [], 'number_of_directories': 0}
                     if filename == "":
                         # root directory of branch
-                        branches[branch]['files'].append(filename)
-                        branches[branch]['number_of_directories'] += 1
+                        branches[key]['files'].append(filename)
+                        branches[key]['number_of_directories'] += 1
                     elif filename.endswith("/"):
                         # subdirectory of branch
-                        branches[branch]['files'].append(filename[:-1])
-                        branches[branch]['number_of_directories'] += 1
+                        branches[key]['files'].append(filename[:-1])
+                        branches[key]['number_of_directories'] += 1
                     else:
-                        branches[branch]['files'].append(filename)
+                        branches[key]['files'].append(filename)
 
-                    if not branches[branch].has_key('action'):
-                        branches[branch]['action'] = action
+                    if not branches[key].has_key('action'):
+                        branches[key]['action'] = action
 
-            for branch in branches.keys():
-                action = branches[branch]['action']
-                files  = branches[branch]['files']
-                number_of_directories_changed = branches[branch]['number_of_directories']
+            for key in branches.keys():
+                project, repository, branch = key
+                action = branches[key]['action']
+                files  = branches[key]['files']
+                number_of_directories_changed = branches[key]['number_of_directories']
                 number_of_files_changed = len(files)
 
                 if action == u'D' and number_of_directories_changed == 1 and number_of_files_changed == 1 and files[0] == '':
@@ -365,8 +385,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                             branch=branch,
                             revlink=revlink,
                             category=self.category,
-                            repository=self.svnurl,
-                            project = self.project)
+                            repository=repository or self.svnurl,
+                            project=project or self.project)
                     changes.append(chdict)
 
         return changes
