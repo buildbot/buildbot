@@ -2469,30 +2469,33 @@ are added to the waterfall and the build detail web pages for each
 triggered build. If this argument is ``False`` (the default) or not given,
 then the buildstep succeeds immediately after triggering the schedulers.
 
-The SourceStamp to use for the triggered build is controlled by the arguments
-``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp``.  If
+The SourceStamps to use for the triggered build are controlled by the arguments
+``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamps``.  If
 ``updateSourceStamp`` is ``True`` (the default), then step updates the
-:class:`SourceStamp` given to the :bb:sched:`Triggerable` schedulers to include
+:class:`SourceStamp`s given to the :bb:sched:`Triggerable` schedulers to include
 ``got_revision`` (the revision actually used in this build) as ``revision``
 (the revision to use in the triggered builds). This is useful to ensure that
-all of the builds use exactly the same :class:`SourceStamp`, even if other
+all of the builds use exactly the same :class:`SourceStamp`s, even if other
 :class:`Change`\s have occurred while the build was running. If
 ``updateSourceStamp`` is False (and neither of the other arguments are
-specified), then the exact same SourceStamp is used. If ``alwaysUseLatest`` is
-True, then no SourceStamp is given, corresponding to using the latest revision
-of the repository specified in the Source step. This is useful if the triggered
-builds use to a different source repository.  :class:`SourceStamp` accepts a
-dictionary containing the keys ``branch``, ``revision``, ``branch``,
-``repository``, ``project``, and optionally ``patch_level``, ``patch_level``
-and ``patch_subdir`` and creates the corresponding SourceStamp.  All of
-``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp`` can be
-specified using properties.
+specified), then the exact same SourceStamps are used. If ``alwaysUseLatest`` is
+True, then no SourceStamps are given, corresponding to using the latest revisions
+of the repositories specified in the Source steps. This is useful if the triggered
+builds use to a different source repository.  The argument ``sourceStamps`` 
+accepts a list of dictionaries containing the keys ``branch``, ``revision``,
+``repository``, ``project``, and optionally ``patch_level``,
+``patch_body``, ``patch_subdir``, ``patch_author`` and ``patch_comment``
+and creates the corresponding SourceStamps.
+If only one sourceStamp has to be specified then the argument ``sourceStamp``
+can be used for a dictionary containing the keys mentioned above. The arguments
+``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp`` can be specified
+using properties.
 
 Two parameters allow control of the properties that are passed to the triggered
 scheduler.  To simply copy properties verbatim, list them in the
 ``copy_properties`` parameter.  To set properties explicitly, use the more
 sophisticated ``set_properties``, which takes a dictionary mapping property
-names to values.  You may use :ref:`WithProperties` here to dynamically
+names to values.  You may use :ref:`WithProperties` here to dynamically 
 construct new property values.
 
 RPM-Related Steps
