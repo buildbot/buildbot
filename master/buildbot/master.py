@@ -42,6 +42,7 @@ from buildbot.process.users.manager import UserManagerManager
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import monkeypatches
 from buildbot import config
+from buildbot import clean
 
 ########################################
 
@@ -194,6 +195,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                     _reactor.callLater(0, self.reconfig)
                 signal.signal(signal.SIGHUP, sighup)
 
+            if hasattr(signal, "SIGUSR1"):
+                def sigusr1(*args):
+                    _reactor.callLater(0, self.clean)
+                signal.signal(signal.SIGUSR1, sigusr1)
+
             # call the parent method
             yield defer.maybeDeferred(lambda :
                     service.MultiService.startService(self))
@@ -253,6 +259,32 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         return d # for tests
 
+    def clean(self):
+        d = self.doReconfig()
+
+        d.addErrback(log.err, 'while reconfiguring')
+
+        return d # for tests
+
+    @defer.inlineCallbacks
+    def doClean(self):
+        log.msg("Clean shutdown")
+        failed = False
+        try:
+            yield self.cleanShutdownService(self)
+        except:
+            log.err(failure.Failure(), 'during reconfig:')
+            failed = True
+
+        if failed:
+            if changes_made:
+                log.msg("WARNING: reconfig partially applied; master "
+                        "may malfunction")
+            else:
+                log.msg("reconfig aborted without making any changes")
+        else:
+            log.msg("configuration update complete")
+
 
     @defer.inlineCallbacks
     def doReconfig(self):
@@ -305,6 +337,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         return config.ReconfigurableServiceMixin.reconfigService(self,
                                             new_config)
 
+    def cleanShutdownService(self):
+        return config.ReconfigurableServiceMixin.cleanShutdownService(self,
+                                            new_config)
 
     ## informational methods
 
