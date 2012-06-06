@@ -17,7 +17,6 @@ from twisted.trial import unittest
 from buildbot.schedulers import triggerable
 from buildbot.process import properties
 from buildbot.test.util import scheduler
-from buildbot.test.fake import fakedb
 
 class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
@@ -72,7 +71,6 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                  dict(branch='br', project='p', repository='r',
                      codebase='cb', revision='myrev', sourcestampsetid=100)
                 })
-
         # set up a boolean so that we can know when the deferred fires
         self.fired = False
         def fired((result, brids)):
@@ -174,7 +172,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         ss = {'repository': 'r3', 'codebase': 'cb3', 'revision': 'fixrev3',
                'branch': 'default', 'project': 'p' }
-        d = sched.trigger(sourcestamps = {'cb3': ss})
+        sched.trigger(sourcestamps = {'cb3': ss})
 
         self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
@@ -198,7 +196,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                    codebases = {'cb':{'repository':'r', 'branch': 'branchX'},
                                 'cb2':{'repository':'r2', 'branch': 'branchX'},})
 
-        d = sched.trigger(sourcestamps = None)
+        sched.trigger(sourcestamps = None)
 
         self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
