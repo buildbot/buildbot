@@ -66,10 +66,13 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                  p4base='//', p4bin='p4',
                  split_file=lambda branchfile: (None, branchfile),
                  pollInterval=60 * 10, histmax=None, pollinterval=-2,
-                 encoding='utf8', project=None):
+                 encoding='utf8', project=None, name=None):
+
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
+
+        base.PollingChangeSource.__init__(self, name=name, pollInterval=pollInterval)
 
         if project is None:
             project = ''
@@ -80,7 +83,6 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         self.p4base = p4base
         self.p4bin = p4bin
         self.split_file = split_file
-        self.pollInterval = pollInterval
         self.encoding = encoding
         self.project = project
 

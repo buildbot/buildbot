@@ -36,15 +36,18 @@ class GitPoller(base.PollingChangeSource):
                  gitbin='git', usetimestamps=True,
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
-                 encoding='utf-8'):
+                 encoding='utf-8', name=None):
+
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
+
+        base.PollingChangeSource.__init__(self, name=name, pollInterval=pollInterval)
+
         if project is None: project = ''
 
         self.repourl = repourl
         self.branch = branch
-        self.pollInterval = pollInterval
         self.fetch_refspec = fetch_refspec
         self.encoding = encoding
         self.lastChange = time.time()
