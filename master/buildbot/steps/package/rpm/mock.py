@@ -23,6 +23,19 @@ from buildbot.steps.shell import ShellCommand
 from buildbot.process import buildstep
 from buildbot import config
 
+class MockStateObserver(buildstep.LogLineObserver):
+    _line_re = re.compile(r'^.*State Changed: (.*)$')
+
+    def outLineReceived(self, line):
+        m = self._line_re.search(line.strip())
+        if m:
+            state = m.group(1)
+            if not state == 'end':
+                self.step.descriptionSuffix = ["[%s]"%m.group(1)]
+            else:
+                self.step.descriptionSuffix = None
+            self.step.step_status.setText(self.step.describe(False))
+
 class Mock(ShellCommand):
     """Add the mock logfiles and clean them if they already exist. Add support
     for the root and resultdir parameter of mock."""
@@ -76,6 +89,7 @@ class Mock(ShellCommand):
         else:
             for lname in self.mock_logfiles:
                 self.logfiles[lname] = lname
+        self.addLogObserver('state.log', MockStateObserver())
 
         cmd = buildstep.RemoteCommand('rmdir', {'dir': 
                 map(lambda l: self.build.path_module.join('build', self.logfiles[l]),
@@ -83,7 +97,7 @@ class Mock(ShellCommand):
         d = self.runCommand(cmd)
         def removeDone(cmd):
             ShellCommand.start(self)
-        d.addCallback(self.removeDone)
+        d.addCallback(removeDone)
         d.addErrback(self.failed)
 
 class MockBuildSRPM(Mock):
