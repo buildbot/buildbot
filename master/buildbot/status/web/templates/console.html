@@ -182,7 +182,7 @@ function checkMouseLeave(element, event) {
   
 {% for r in revisions %}
   {% set alt = alt_class.next() %}
-  {% set last = "last" if loop.last else "" %}
+  {% set firstrev = "first" if loop.first else '' %}
 
   <tr>
     <td class='DevRev {{ alt }}' width="1%">
@@ -193,7 +193,8 @@ function checkMouseLeave(element, event) {
     </td>
 
   {% for c in categories %}
-    <td class='DevStatus {{ alt }} {{ last }}'>
+    {% set last = "last" if loop.last else "" %}
+    <td class='DevStatus {{ alt }} {{ last if not firstrev else '' }}'>
       <table width="100%">
         <tr>    
     {% for b in r.builds[c.name] %}
