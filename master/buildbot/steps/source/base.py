@@ -26,9 +26,13 @@ class Source(LoggingBuildStep):
     starts a RemoteCommand with those arguments.
     """
 
-    renderables = [ 'workdir', 'description', 'descriptionDone' ]
+    renderables = LoggingBuildStep.renderables + [
+                     'description', 'descriptionDone', 'descriptionSuffix',
+                     'workdir' ]
+
     description = None # set this to a list of short strings to override
     descriptionDone = None # alternate description when the step is complete
+    descriptionSuffix = None # extra information to append to suffix
 
     # if the checkout fails, there's no point in doing anything else
     haltOnFailure = True
@@ -39,57 +43,12 @@ class Source(LoggingBuildStep):
 
     def __init__(self, workdir=None, mode='update', alwaysUseLatest=False,
                  timeout=20*60, retry=None, env=None, logEnviron=True,
-                 description=None, descriptionDone=None, codebase='',
-                 **kwargs):
+                 description=None, descriptionDone=None, descriptionSuffix=None,
+                 codebase='', **kwargs):
         """
         @type  workdir: string
         @param workdir: local directory (relative to the Builder's root)
                         where the tree should be placed
-
-        @type  mode: string
-        @param mode: the kind of VC operation that is desired:
-           - 'update': specifies that the checkout/update should be
-             performed directly into the workdir. Each build is performed
-             in the same directory, allowing for incremental builds. This
-             minimizes disk space, bandwidth, and CPU time. However, it
-             may encounter problems if the build process does not handle
-             dependencies properly (if you must sometimes do a 'clean
-             build' to make sure everything gets compiled), or if source
-             files are deleted but generated files can influence test
-             behavior (e.g. python's .pyc files), or when source
-             directories are deleted but generated files prevent CVS from
-             removing them. When used with a patched checkout, from a
-             previous buildbot try for instance, it will try to "revert"
-             the changes first and will do a clobber if it is unable to
-             get a clean checkout. The behavior is SCM-dependent.
-
-           - 'copy': specifies that the source-controlled workspace
-             should be maintained in a separate directory (called the
-             'copydir'), using checkout or update as necessary. For each
-             build, a new workdir is created with a copy of the source
-             tree (rm -rf workdir; cp -R -P -p copydir workdir). This
-             doubles the disk space required, but keeps the bandwidth low
-             (update instead of a full checkout). A full 'clean' build
-             is performed each time.  This avoids any generated-file
-             build problems, but is still occasionally vulnerable to
-             problems such as a CVS repository being manually rearranged
-             (causing CVS errors on update) which are not an issue with
-             a full checkout.
-
-           - 'clobber': specifies that the working directory should be
-             deleted each time, necessitating a full checkout for each
-             build. This insures a clean build off a complete checkout,
-             avoiding any of the problems described above, but is
-             bandwidth intensive, as the whole source tree must be
-             pulled down for each build.
-
-           - 'export': is like 'clobber', except that e.g. the 'cvs
-             export' command is used to create the working directory.
-             This command removes all VC metadata files (the
-             CVS/.svn/{arch} directories) from the tree, which is
-             sometimes useful for creating source tarballs (to avoid
-             including the metadata in the tar file). Not all VC systems
-             support export.
 
         @type  alwaysUseLatest: boolean
         @param alwaysUseLatest: whether to always update to the most
@@ -113,22 +72,13 @@ class Source(LoggingBuildStep):
         is can result in an incoherent set of sources (splitting a
         non-atomic commit) which may not build at all.
 
-        @type  retry: tuple of ints (delay, repeats) (or None)
-        @param retry: if provided, VC update failures are re-attempted up
-                      to REPEATS times, with DELAY seconds between each
-                      attempt. Some users have slaves with poor connectivity
-                      to their VC repository, and they say that up to 80% of
-                      their build failures are due to transient network
-                      failures that could be handled by simply retrying a
-                      couple times.
-
         @type logEnviron: boolean
         @param logEnviron: If this option is true (the default), then the
                            step's logfile will describe the environment
                            variables on the slave. In situations where the
                            environment is not relevant and is long, it may
                            be easier to set logEnviron=False.
-+
+
         @type codebase: string
         @param codebase: Specifies which changes in a build are processed by
         the step. The default codebase value is ''. The codebase must correspond
@@ -138,39 +88,21 @@ class Source(LoggingBuildStep):
         """
 
         LoggingBuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(workdir=workdir,
-                                 mode=mode,
-                                 alwaysUseLatest=alwaysUseLatest,
-                                 timeout=timeout,
-                                 retry=retry,
-                                 logEnviron=logEnviron,
-                                 env=env,
-                                 description=description,
-                                 descriptionDone=descriptionDone,
-                                 codebase=codebase,
-                                 )
 
-        assert mode in ("update", "copy", "clobber", "export")
-        if retry:
-            delay, repeats = retry
-            assert isinstance(repeats, int)
-            assert repeats > 0
-        self.args = {'mode': mode,
-                     'timeout': timeout,
-                     'retry': retry,
-                     'patch': None, # set during .start
-                     }
         # This will get added to args later, after properties are rendered
         self.workdir = workdir
 
         self.sourcestamp = None
-        # Codebase cannot be set yet
+
         self.codebase = codebase
+        if self.codebase:
+            self.name = ' '.join((self.name, self.codebase))
 
         self.alwaysUseLatest = alwaysUseLatest
 
         self.logEnviron = logEnviron
         self.env = env
+        self.timeout = timeout
 
         descriptions_for_mode = {
             "clobber": "checkout",
@@ -183,8 +115,6 @@ class Source(LoggingBuildStep):
         else:
             self.description = [
                 descriptions_for_mode.get(mode, "updating")]
-            if self.codebase:
-                self.description.append(self.codebase)
         if isinstance(self.description, str):
             self.description = [self.description]
 
@@ -193,10 +123,15 @@ class Source(LoggingBuildStep):
         else:
             self.descriptionDone = [
                 descriptionDones_for_mode.get(mode, "update")]
-            if self.codebase:
-                self.descriptionDone.append(self.codebase)
         if isinstance(self.descriptionDone, str):
             self.descriptionDone = [self.descriptionDone]
+
+        if descriptionSuffix:
+            self.descriptionSuffix = descriptionSuffix
+        else:
+            self.descriptionSuffix = self.codebase or None # want None in lieu of ''
+        if isinstance(self.descriptionSuffix, str):
+            self.descriptionSuffix = [self.descriptionSuffix]
 
     def setProperty(self, name, value , source):
         if self.codebase != '':
@@ -219,9 +154,11 @@ class Source(LoggingBuildStep):
         self.workdir = self.workdir or workdir
 
     def describe(self, done=False):
-        if done:
-            return self.descriptionDone
-        return self.description
+        desc = self.descriptionDone if done else self.description
+        if self.descriptionSuffix:
+            desc = desc[:]
+            desc.extend(self.descriptionSuffix)
+        return desc
 
     def computeSourceRevision(self, changes):
         """Each subclass must implement this method to do something more
@@ -241,9 +178,6 @@ class Source(LoggingBuildStep):
                                 "Faked %s checkout/update 'successful'\n" \
                                 % self.name)
             return SKIPPED
-
-        # Allow workdir to be WithProperties
-        self.args['workdir'] = self.workdir
 
         if not self.alwaysUseLatest:
             # what source stamp would this step like to use?
@@ -283,8 +217,6 @@ class Source(LoggingBuildStep):
             branch = self.branch
             patch = None
 
-        self.args['logEnviron'] = self.logEnviron
-        self.args['env'] = self.env
         self.startVC(branch, revision, patch)
 
     def commandComplete(self, cmd):

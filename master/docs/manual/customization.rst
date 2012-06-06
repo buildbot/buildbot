@@ -525,69 +525,37 @@ Properties Objects
 Writing New BuildSteps
 ----------------------
 
-While it is a good idea to keep your build process self-contained in
-the source code tree, sometimes it is convenient to put more
-intelligence into your Buildbot configuration. One way to do this is
-to write a custom :class:`BuildStep`. Once written, this Step can be used in
-the :file:`master.cfg` file.
+While it is a good idea to keep your build process self-contained in the source code tree, sometimes it is convenient to put more intelligence into your Buildbot configuration.
+One way to do this is to write a custom :class:`BuildStep`.
+Once written, this Step can be used in the :file:`master.cfg` file.
 
-The best reason for writing a custom :class:`BuildStep` is to better parse the
-results of the command being run. For example, a :class:`BuildStep` that knows
-about JUnit could look at the logfiles to determine which tests had
-been run, how many passed and how many failed, and then report more
-detailed information than a simple ``rc==0`` -based `good/bad`
-decision.
+The best reason for writing a custom :class:`BuildStep` is to better parse the results of the command being run.
+For example, a :class:`BuildStep` that knows about JUnit could look at the logfiles to determine which tests had been run, how many passed and how many failed, and then report more detailed information than a simple ``rc==0`` -based `good/bad` decision.
 
-Buildbot has acquired a large fleet of build steps, and sports a number of
-knobs and hooks to make steps easier to write.  This section may seem a bit
-overwhelming, but most custom steps will only need to apply one or two of the
-techniques outlined here.
+Buildbot has acquired a large fleet of build steps, and sports a number of knobs and hooks to make steps easier to write.
+This section may seem a bit overwhelming, but most custom steps will only need to apply one or two of the techniques outlined here.
 
-For complete documentation of the build step interfaces, see
-:doc:`../developer/cls-buildsteps`.
+For complete documentation of the build step interfaces, see :doc:`../developer/cls-buildsteps`.
 
 .. _Writing-BuildStep-Constructors:
 
 Writing BuildStep Constructors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Build steps act as their own factories, so their constructors are a bit more
-complex than necessary.  In the configuration file, a
-:class:`~buildbot.process.buildstep.BuildStep` object is instantiated, but
-because steps store state locally while executing, this object cannot be used
-during builds.  Instead, the build machinery calls the step's
-:meth:`~buildbot.process.buildstep.BuildStep.getStepFactory` method to get a
-tuple of a callable and keyword arguments that should be used to create a new
-instance.
+Build steps act as their own factories, so their constructors are a bit more complex than necessary.
+In the configuration file, a :class:`~buildbot.process.buildstep.BuildStep` object is instantiated, but because steps store state locally while executing, this object cannot be used during builds.
 
 Consider the use of a :class:`BuildStep` in :file:`master.cfg`::
 
     f.addStep(MyStep(someopt="stuff", anotheropt=1))
 
-This creates a single instance of class ``MyStep``.  However, Buildbot needs a
-new object each time the step is executed.  this is accomplished by storing the
-information required to instantiate a new object in the
-:attr:`~buildbot.process.buildstep.BuildStep.factory` attribute.  When the time
-comes to construct a new :class:`~buildbot.process.build.Build`,
-:class:`~buildbot.process.factory.BuildFactory` consults this attribute (via
-:meth:`~buildbot.process.buildstep.BuildStep.getStepFactory`) and instantiates
-a new step object.
+This creates a single instance of class ``MyStep``.
+However, Buildbot needs a new object each time the step is executed.
+An instance of :class:`~buildbot.process.buildstep.BuildStep` rembers how it was constructed, and can create copies of itself.
+When writing a new step class, then, keep in mind are that you cannot do anything "interesting" in the constructor -- limit yourself to checking and storing arguments.
 
-When writing a new step class, then, keep in mind are that you cannot do
-anything "interesting" in the constructor -- limit yourself to checking and
-storing arguments.  Each constructor in a sequence of :class:`BuildStep`
-subclasses must ensure the following:
-
-* the parent class's constructor is called with all otherwise-unspecified
-  keyword arguments.
-
-* all keyword arguments for the class itself are passed to
-  :meth:`addFactoryArguments`.
-
-Keep a ``**kwargs`` argument on the end of your options, and pass that up to
-the parent class's constructor.  If the class overrides constructor arguments
-for the parent class, those should be updated in ``kwargs``, rather than passed
-directly (which will cause errors during instantiation).
+It is customary to call the parent class's constructor with all otherwise-unspecified keyword arguments.
+Keep a ``**kwargs`` argument on the end of your options, and pass that up to the parent class's constructor.
 
 The whole thing looks like this::
 
@@ -613,36 +581,24 @@ The whole thing looks like this::
             self.frob_how_many = how_many
             self.frob_how = frob_how
     
-            # and record arguments for later
-            self.addFactoryArguments(
-                frob_what=frob_what,
-                frob_how_many=frob_how_many,
-                frob_how=frob_how)
-    
     class FastFrobnify(Frobnify):
         def __init__(self,
                 speed=5,
                 **kwargs)
             Frobnify.__init__(self, **kwargs)
             self.speed = speed
-            self.addFactoryArguments(
-                speed=speed)
 
 Running Commands
 ~~~~~~~~~~~~~~~~
 
-To spawn a command in the buildslave, create a
-:class:`~buildbot.process.buildstep.RemoteCommand` instance in your step's
-``start`` method and run it with
-:meth:`~buildbot.process.buildstep.BuildStep.runCommand`::
+To spawn a command in the buildslave, create a :class:`~buildbot.process.buildstep.RemoteCommand` instance in your step's ``start`` method and run it with :meth:`~buildbot.process.buildstep.BuildStep.runCommand`::
 
     cmd = RemoteCommand(args)
     d = self.runCommand(cmd)
 
 To add a LogFile, use :meth:`~buildbot.process.buildstep.BuildStep.addLog`.
-Make sure the log gets closed when it finishes. When giving a Logfile to a
-:class:`~buildbot.process.buildstep.RemoteShellCommand`, just ask it to close
-the log when the command completes::
+Make sure the log gets closed when it finishes.
+When giving a Logfile to a :class:`~buildbot.process.buildstep.RemoteShellCommand`, just ask it to close the log when the command completes::
 
     log = self.addLog('output')
     cmd.useLog(log, closeWhenFinished=True)

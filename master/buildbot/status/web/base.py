@@ -436,10 +436,12 @@ class BuildLineMixin:
         css_class = css_classes.get(results, "")
         ss_list = build.getSourceStamps()
         if ss_list:
-            # TODO: support multiple sourcestamps in web interface
             repo = ss_list[0].repository
             if all_got_revision:
-                rev = all_got_revision[ss_list[0].codebase]
+                if len(ss_list) == 1:
+                    rev = all_got_revision.get(ss_list[0].codebase, "??")
+                else:
+                    rev = "multiple rev."
             else:
                 rev = "??"
         else:
@@ -479,7 +481,7 @@ def map_branches(branches):
 # jinja utilities
 
 def createJinjaEnv(revlink=None, changecommentlink=None,
-                     repositories=None, projects=None):
+                     repositories=None, projects=None, jinja_loaders=None):
     ''' Create a jinja environment changecommentlink is used to
         render HTML in the WebStatus and for mail changes
 
@@ -501,16 +503,20 @@ def createJinjaEnv(revlink=None, changecommentlink=None,
     # See http://buildbot.net/trac/ticket/658
     assert not hasattr(sys, "frozen"), 'Frozen config not supported with jinja (yet)'
 
-    default_loader = jinja2.PackageLoader('buildbot.status.web', 'templates')
-    root = os.path.join(os.getcwd(), 'templates')
-    loader = jinja2.ChoiceLoader([jinja2.FileSystemLoader(root),
-                                  default_loader])
+    all_loaders = [jinja2.FileSystemLoader(os.path.join(os.getcwd(), 'templates'))]
+    if jinja_loaders:
+        all_loaders.extend(jinja_loaders)
+    all_loaders.append(jinja2.PackageLoader('buildbot.status.web', 'templates'))
+    loader = jinja2.ChoiceLoader(all_loaders)
+
     env = jinja2.Environment(loader=loader,
                              extensions=['jinja2.ext.i18n'],
                              trim_blocks=True,
                              undefined=AlmostStrictUndefined)
 
     env.install_null_translations() # needed until we have a proper i18n backend
+
+    env.tests['mapping'] = lambda obj : isinstance(obj, dict)
 
     env.filters.update(dict(
         urlencode = urllib.quote,
@@ -786,3 +792,14 @@ class AlmostStrictUndefined(jinja2.StrictUndefined):
         fully as strict as StrictUndefined '''
     def __nonzero__(self):
         return False
+
+_charsetRe = re.compile('charset=([^;]*)', re.I)
+def getRequestCharset(req):
+    """Get the charset for an x-www-form-urlencoded request"""
+    # per http://stackoverflow.com/questions/708915/detecting-the-character-encoding-of-an-http-post-request
+    hdr = req.getHeader('Content-Type')
+    if hdr:
+        mo = _charsetRe.search(hdr)
+        if mo:
+            return mo.group(1).strip()
+    return 'utf-8' # reasonable guess, works for ascii

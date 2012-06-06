@@ -57,11 +57,8 @@ server and retrieve information about every build the buildbot knows
 about, as well as find out what the buildbot is currently working on.
 
 The first page you will see is the *Welcome Page*, which contains
-links to all the other useful pages. By default, this page is served from
-the :file:`status/web/templates/root.html` file in buildbot's library area.
-If you'd like to override this page or the other templates found there,
-copy the files you're interested in into a :file:`templates/` directory in
-the buildmaster's base directory.
+links to all the other useful pages. By default, this page is served from the
+:file:`status/web/templates/root.html` file in buildbot's library area.
 
 One of the most complex resource provided by :class:`WebStatus` is the
 *Waterfall Display*, which shows a time-based chart of events. This
@@ -86,11 +83,28 @@ in great detail below.
 Configuration
 +++++++++++++
 
-Buildbot now uses a templating system for the web interface. The source
+The simplest possible configuration for WebStatus is::
+
+    from buildbot.status.html import WebStatus
+    c['status'].append(WebStatus(8080))
+
+Buildbot uses a templating system for the web interface. The source
 of these templates can be found in the :file:`status/web/templates/` directory
 in buildbot's library area. You can override these templates by creating
 alternate versions in a :file:`templates/` directory within the buildmaster's
 base directory.
+
+If that isn't enough you can also provide additional Jinja2 template loaders::
+
+    import jinja2
+    myloaders = [
+        jinja2.FileSystemLoader("/tmp/mypath"),
+        ]
+
+    c['status'].append(html.WebStatus(
+        …,
+        jinja_loaders = myloaders,
+    ))
 
 The first time a buildmaster is created, the :file:`public_html/`
 directory is populated with some sample files, which you will probably
@@ -98,13 +112,10 @@ want to customize for your own project. These files are all static:
 the buildbot does not modify them in any way as it serves them to HTTP
 clients.
 
-Note that templates in :file:`templates/` take precedence over static files in
-:file:`public_html/`. ::
+Templates in :file:`templates/` take precedence over static files in
+:file:`public_html/`.
 
-    from buildbot.status.html import WebStatus
-    c['status'].append(WebStatus(8080))
-
-Note that the initial :file:`robots.txt` file has Disallow lines for all of
+The initial :file:`robots.txt` file has Disallow lines for all of
 the dynamically-generated buildbot pages, to discourage web spiders
 and search engines from consuming a lot of CPU time as they crawl
 through the entire history of your buildbot. If you are running the
@@ -709,6 +720,45 @@ that periodically poll the Google Code commit feed for changes.
 
       change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX', 'branch': 'master'}}
 
+Poller hook
+###########
+
+The poller hook allows you to use GET requests to trigger polling. One
+advantage of this is your buildbot instance can (at start up) poll to get
+changes that happened while it was down, but then you can still use a commit
+hook to get fast notification of new changes.
+
+Suppose you have a poller configured like this::
+
+    c['change_source'] = SVNPoller(
+        name="amanda",
+        svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
+        split_file=split_file_branches)
+
+And you configure your WebStatus to enable this hook::
+
+    c['status'].append(html.WebStatus(
+        …,
+        change_hook_dialects={'poller': True}
+    ))
+
+Then you will be able to trigger a poll of the SVN repository by poking the
+``/change_hook/poller`` URL from a commit hook like this::
+
+    curl http://yourbuildbot/change_hook/poller?poller=amanda
+
+If no ``poller`` argument is provided then the hook will trigger polling of all
+polling change sources.
+
+You can restrict which pollers the webhook has access to using the ``allowed``
+option::
+
+    c['status'].append(html.WebStatus(
+        …,
+        change_hook_dialects={'poller': {'allowed': ['amanda']}}
+    ))
+
+
 .. bb:status:: MailNotifier
 
 .. index:: single: email; MailNotifier
@@ -949,6 +999,12 @@ MailNotifier arguments
     ``warnings``
         Send mail about builds which generate warnings.
 
+    ``exception``
+        Send mail about builds which generate exceptions.
+
+    ``all``
+        Always send mail about builds.
+        
     Defaults to (``failing``, ``passing``, ``warnings``).
 
 ``builders``
@@ -1048,7 +1104,8 @@ Name of the project
     :meth:`master_status.getProjectName()`
 
 MailNotifier mode
-    ``mode`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``)
+    ``mode`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``,
+        ``exception``, ``all``)
 
 Builder result as a string ::
     

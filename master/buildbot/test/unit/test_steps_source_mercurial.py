@@ -86,6 +86,52 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
+    def test_mode_full_clean_timeout(self):
+        self.setupStep(
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                    timeout=1,
+                                    mode='full', method='clean', branchType='inrepo'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        timeout=1,
+                        command=['hg', '--verbose', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        timeout=1,
+                        command=['hg', '--verbose', '--config',
+                                 'extensions.purge=', 'purge'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        timeout=1,
+                        command=['hg', '--verbose', 'pull',
+                                 'http://hg.mozilla.org'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        timeout=1,
+                        command=['hg', '--verbose', 'identify', '--branch'])
+            + ExpectShell.log('stdio',
+                stdout='default')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        timeout=1,
+                        command=['hg', '--verbose', 'update',
+                                 '--clean'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        timeout=1,
+                        command=['hg', '--verbose', 'identify',
+                                    '--id', '--debug'])
+            + ExpectShell.log('stdio', stdout='\n')
+            + ExpectShell.log('stdio',
+                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
     def test_mode_full_clean_no_existing_repo(self):
         self.setupStep(
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',

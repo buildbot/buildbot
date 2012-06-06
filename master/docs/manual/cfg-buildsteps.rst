@@ -402,6 +402,38 @@ The Git step takes the following arguments:
       performs all the incremental checkout behavior in ``source``
       directory.
 
+``getDescription``
+
+   (optional) After checkout, invoke a `git describe` on the revision and save
+   the result in a property; the property's name is either ``commit-description``
+   or ``commit-description-foo``, depending on whether the ``codebase``
+   argument was also provided. The argument should either be a ``bool`` or ``dict``,
+   and will change how `git describe` is called:
+
+   * ``getDescription=False``: disables this feature explicitly
+   * ``getDescription=True`` or empty ``dict()``: Run `git describe` with no args
+   * ``getDescription={...}``: a dict with keys named the same as the git option.
+     Each key's value can be ``False`` or ``None`` to explicitly skip that argument.
+     
+     For the following keys, a value of ``True`` appends the same-named git argument:
+     
+      * ``all`` : `--all`
+      * ``always``: `--always`
+      * ``contains``: `--contains`
+      * ``debug``: `--debug`
+      * ``long``: `--long``
+      * ``exact-match``: `--exact-match`
+      * ``tags``: `--tags`
+      * ``dirty``: `--dirty`
+     
+     For the following keys, an integer or string value (depending on what git expects)
+     will set the argument's parameter appropriately. Examples show the key-value pair:
+     
+      * ``match=foo``: `--match foo`
+      * ``abbrev=7``: `--abbrev=7`
+      * ``candidates=7``: `--candidates=7`
+      * ``dirty=foo``: `--dirty=foo`
+    
 .. bb:step:: SVN
 
 .. _Step-SVN:
@@ -1177,6 +1209,10 @@ The Repo step takes the following arguments:
     directory which contains all the git objects. This feature helps
     to minimize network usage on very big projects.
 
+``jobs``
+    (optional, defaults to ``None``): Number of projects to fetch
+    simultaneously while syncing. Passed to repo sync subcommand with "-j".
+
 This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will
 automatically use the :command:`repo download` command of repo to
 download the additionnal changes introduced by a pending changeset.
@@ -1436,6 +1472,17 @@ The :bb:step:`ShellCommand` arguments are:
                                description=["testing"],
                                descriptionDone=["tests"]))
 
+``descriptionSuffix``
+    This is an optional suffix appended to the end of the description (ie,
+    after ``description`` and ``descriptionDone``). This can be used to distinguish
+    between build steps that would display the same descriptions in the waterfall.
+    This parameter may be set to list of short strings, a single string, or ``None``.
+    
+    For example, a builder might use the ``Compile`` step to build two different
+    codebases. The ``descriptionSuffix`` could be set to `projectFoo` and `projectBar`,
+    respectively for each step, which will result in the full descriptions
+    `compiling projectFoo` and `compiling projectBar` to be shown in the waterfall.
+
 ``logEnviron``
     If this option is ``True`` (the default), then the step's logfile will describe the
     environment variables on the slave.  In situations where the environment is not
@@ -1452,6 +1499,10 @@ The :bb:step:`ShellCommand` arguments are:
     this parameter.  This value should not be excessively large, as it is
     handled as a single string throughout Buildbot -- for example, do not pass
     the contents of a tarball with this parameter.
+
+``successfulRC``
+    This is a list or tuple of the exit codes that should be treated as successful.
+    The default is to treat just 0 as successful.
 
 .. bb:step:: Configure
 
@@ -2299,6 +2350,9 @@ Variables that don't exist on the master will be replaced by ``""``. ::
 Note that environment values must be strings (or lists that are turned into
 strings).  In particular, numeric properties such as ``buildnumber`` must
 be substituted using :ref:`WithProperties`.
+
+``interruptSignal``
+   (optional) Signal to use to end the process, if the step is interrupted.
 
 .. index:: Properties; from steps
 

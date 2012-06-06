@@ -677,6 +677,8 @@ class HTMLLogFile:
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['step']
+        if d.has_key('master'):
+            del d['master']
         return d
 
 

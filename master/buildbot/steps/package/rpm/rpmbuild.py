@@ -41,16 +41,6 @@ class RpmBuild(ShellCommand):
                  vcsRevision=False,
                  **kwargs):
         ShellCommand.__init__(self, **kwargs)
-        self.addFactoryArguments(topdir=topdir,
-                                 builddir=builddir,
-                                 rpmdir=rpmdir,
-                                 sourcedir=sourcedir,
-                                 specdir=specdir,
-                                 srcrpmdir=srcrpmdir,
-                                 specfile=specfile,
-                                 dist=dist,
-                                 autoRelease=autoRelease,
-                                 vcsRevision=vcsRevision)
         self.rpmbuild = (
             'rpmbuild --define "_topdir %s" --define "_builddir %s"'
             ' --define "_rpmdir %s" --define "_sourcedir %s"'

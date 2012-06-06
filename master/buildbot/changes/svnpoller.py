@@ -53,7 +53,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     """
 
     compare_attrs = ["svnurl", "split_file",
-                     "svnuser", "svnpasswd",
+                     "svnuser", "svnpasswd", "project",
                      "pollInterval", "histmax",
                      "svnbin", "category", "cachepath"]
 
@@ -66,10 +66,13 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                  pollInterval=10*60, histmax=100,
                  svnbin='svn', revlinktmpl='', category=None, 
                  project='', cachepath=None, pollinterval=-2,
-                 extra_args=None):
+                 extra_args=None, name=None):
+
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
+
+        base.PollingChangeSource.__init__(self, name=name, pollInterval=pollInterval)
 
         if svnurl.endswith("/"):
             svnurl = svnurl[:-1] # strip the trailing slash
@@ -85,7 +88,6 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                                          # required for ssh-agent auth
 
         self.svnbin = svnbin
-        self.pollInterval = pollInterval
         self.histmax = histmax
         self._prefix = None
         self.category = category

@@ -91,7 +91,7 @@ class BuildRequest(object):
         return cache.get(brdict['brid'], brdict=brdict, master=master)
 
     @classmethod
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _make_br(cls, brid, brdict, master):
         buildrequest = cls()
         buildrequest.id = brid
@@ -103,18 +103,12 @@ class BuildRequest(object):
         buildrequest.master = master
 
         # fetch the buildset to get the reason
-        wfd = defer.waitForDeferred(
-            master.db.buildsets.getBuildset(brdict['buildsetid']))
-        yield wfd
-        buildset = wfd.getResult()
+        buildset = yield master.db.buildsets.getBuildset(brdict['buildsetid'])
         assert buildset # schema should guarantee this
         buildrequest.reason = buildset['reason']
 
         # fetch the buildset properties, and convert to Properties
-        wfd = defer.waitForDeferred(
-            master.db.buildsets.getBuildsetProperties(brdict['buildsetid']))
-        yield wfd
-        buildset_properties = wfd.getResult()
+        buildset_properties = yield master.db.buildsets.getBuildsetProperties(brdict['buildsetid'])
 
         pr = properties.Properties()
         for name, (value, source) in buildset_properties.iteritems():
@@ -122,10 +116,7 @@ class BuildRequest(object):
         buildrequest.properties = pr
 
         # fetch the sourcestamp dictionary
-        wfd = defer.waitForDeferred(
-            master.db.sourcestamps.getSourceStamps(buildset['sourcestampsetid']))
-        yield wfd
-        sslist = wfd.getResult()
+        sslist = yield  master.db.sourcestamps.getSourceStamps(buildset['sourcestampsetid'])
         assert len(sslist) > 0, "Empty sourcestampset: db schema enforces set to exist but cannot enforce a non empty set"
 
         # and turn it into a SourceStamps
@@ -139,15 +130,12 @@ class BuildRequest(object):
             d.addCallback(store_source)
             dlist.append(d)
 
-        dl = defer.gatherResults(dlist)
-        wfd = defer.waitForDeferred(dl)
-        yield wfd
-        wfd.getResult()
+        yield defer.gatherResults(dlist)
 
         if buildrequest.sources:
             buildrequest.source = buildrequest.sources.values()[0]
 
-        yield buildrequest # return value
+        defer.returnValue(buildrequest)
 
     def requestsHaveSameCodebases(self, other):
         self_codebases = set(self.sources.iterkeys())
@@ -230,15 +218,12 @@ class BuildRequest(object):
     def getSubmitTime(self):
         return self.submittedAt
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def cancelBuildRequest(self):
         # first, try to claim the request; if this fails, then it's too late to
         # cancel the build anyway
         try:
-            wfd = defer.waitForDeferred(
-                self.master.db.buildrequests.claimBuildRequests([self.id]))
-            yield wfd
-            wfd.getResult()
+            yield self.master.db.buildrequests.claimBuildRequests([self.id])
         except buildrequests.AlreadyClaimedError:
             log.msg("build request already claimed; cannot cancel")
             return
@@ -246,17 +231,11 @@ class BuildRequest(object):
         # then complete it with 'FAILURE'; this is the closest we can get to
         # cancelling a request without running into trouble with dangling
         # references.
-        wfd = defer.waitForDeferred(
-            self.master.db.buildrequests.completeBuildRequests([self.id],
-                                                                FAILURE))
-        yield wfd
-        wfd.getResult()
+        yield self.master.db.buildrequests.completeBuildRequests([self.id],
+                                                                FAILURE)
 
         # and let the master know that the enclosing buildset may be complete
-        wfd = defer.waitForDeferred(
-                self.master.maybeBuildsetComplete(self.bsid))
-        yield wfd
-        wfd.getResult()
+        yield self.master.maybeBuildsetComplete(self.bsid)
 
 class BuildRequestControl:
     implements(interfaces.IBuildRequestControl)

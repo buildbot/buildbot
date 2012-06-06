@@ -37,107 +37,6 @@ def include(d, e):
     
     return (d, [f for f in glob.glob('%s/%s'%(d, e)) if os.path.isfile(f)])
 
-class _SetupBuildCommand(Command):
-    """
-    Master setup build command to subclass from.
-    """
-
-    user_options = []
-
-    def initialize_options(self):
-        """
-        Setup the current dir.
-        """
-        self._dir = os.getcwd()
-
-    def finalize_options(self):
-        """
-        Required.
-        """
-        pass
-
-
-class TestCommand(_SetupBuildCommand):
-    """
-    Executes tests from setup.
-    """
-
-    description = "Run unittests inline"
-
-    def run(self):
-        """
-        Public run method.
-        """
-        self._run(os.path.normpath(os.path.abspath(
-           os.path.join('buildbot', 'test'))))
-
-    def _run(self, test_loc):
-        """
-        Executes the test step.
-
-        @param test_loc: location of test module
-        @type test_loc: str
-        """
-        from twisted.scripts.trial import run
-
-        # remove the 'test' option from argv
-        sys.argv.remove('test')
-
-        # Mimick the trial script by adding the path as the last arg
-        sys.argv.append(test_loc)
-
-        # Add the current dir to path and pull it all together
-        sys.path.insert(0, os.path.curdir)
-        sys.path[:] = map(os.path.abspath, sys.path)
-        # GO!
-        run()
-
-
-class SdistTestCommand(TestCommand):
-    """
-    Runs unittests from the sdist output.
-    """
-
-    description = "Run unittests from inside an sdist distribution"
-
-    def run(self):
-        """
-        Interesting magic to get a source dist and running trial on it.
-
-        NOTE: there is magic going on here! If you know a better way feel
-              free to update it.
-        """
-        # Clean out dist/
-        if os.path.exists('dist'):
-            for root, dirs, files in os.walk('dist', topdown=False):
-                for name in files:
-                    os.remove(os.path.join(root, name))
-                for name in dirs:
-                    os.rmdir(os.path.join(root, name))
-        # Import setup making it as if we ran setup.py with the sdist arg
-        sys.argv.append('sdist')
-        import setup #@Reimport @UnresolvedImport @UnusedImport
-        try:
-            # attempt to extract the sdist data
-            from gzip import GzipFile
-            from tarfile import TarFile
-            # We open up the gzip as well as using the first item as the sdist
-            gz = GzipFile(os.path.join('dist', os.listdir('dist')[0]))
-            tf = TarFile(fileobj=gz)
-            # Make the output dir and generate the extract path
-            os.mkdir(os.path.join('dist', 'sdist_test'))
-            ex_path = os.path.join('dist', 'sdist_test',
-                tf.getmembers()[0].name, 'buildbot', 'test')
-            # Extract the data and run tests
-            print "Extracting to %s" % ex_path
-            tf.extractall(os.path.join('dist', 'sdist_test'))
-            print "Executing tests ..."
-            self._run(os.path.normpath(os.path.abspath(ex_path)))
-        except IndexError, ie:
-            # We get called twice and the IndexError is OK
-            pass
-
-
 class install_data_twisted(install_data):
     """make sure data files are installed in package.
     this is evil.
@@ -255,18 +154,18 @@ setup_args = {
                     "buildbot/status/web/files/default.css",
                     "buildbot/status/web/files/bg_gradient.jpg",
                     "buildbot/status/web/files/robots.txt",
+                    "buildbot/status/web/files/templates_readme.txt",
                     "buildbot/status/web/files/favicon.ico",
                 ]),
                 include("buildbot/status/web/templates", '*.html'),
                 include("buildbot/status/web/templates", '*.xml'),
                 ("buildbot/scripts", [
                     "buildbot/scripts/sample.cfg",
+                    "buildbot/scripts/buildbot_tac.tmpl",
                 ]),
                 ],
     'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
-                 'test': TestCommand,
-                 'sdist_test': SdistTestCommand,
                  'sdist': our_sdist},
     }
 
@@ -294,6 +193,12 @@ else:
         # versions.
         'sqlalchemy-migrate ==0.6.1, ==0.7.0, ==0.7.1, ==0.7.2',
         'python-dateutil==1.5',
+    ]
+    setup_args['setup_requires'] = [
+        'setuptools_trial',
+    ]
+    setup_args['tests_require'] = [
+        'mock',
     ]
     # Python-2.6 and up includes json
     if not py_26:

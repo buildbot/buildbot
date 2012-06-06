@@ -58,7 +58,7 @@ class BuildEPYDoc(ShellCommand):
         self.errors = errors
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         if self.warnings or self.errors:
             return WARNINGS
@@ -118,7 +118,7 @@ class PyFlakes(ShellCommand):
 
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         for m in self.flunkingIssues:
             if self.getProperty("pyflakes-%s" % m):
@@ -259,17 +259,6 @@ class Sphinx(ShellCommand):
 
         command.extend([sphinx_sourcedir, sphinx_builddir])
         self.setCommand(command)
-
-        self.addFactoryArguments(
-            sphinx = sphinx,
-            sphinx_sourcedir = sphinx_sourcedir,
-            sphinx_builddir = sphinx_builddir,
-            sphinx_builder = sphinx_builder,
-            tags = tags,
-            defines = defines,
-            mode = mode,
-        )
-
 
     def createSummary(self, log):
 

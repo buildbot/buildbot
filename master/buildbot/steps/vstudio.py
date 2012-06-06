@@ -131,17 +131,6 @@ class VisualStudio(ShellCommand):
             self.PATH = PATH
         # always upcall !
         ShellCommand.__init__(self, **kwargs)
-        self.addFactoryArguments(
-            installdir = installdir,
-            mode = mode,
-            projectfile = projectfile,
-            config = config,
-            useenv = useenv,
-            project = project,
-            INCLUDE = INCLUDE,
-            LIB = LIB,
-            PATH = PATH
-        )
 
     def setupLogfiles(self, cmd, logfiles):
         logwarnings = self.addLog("warnings")
@@ -189,7 +178,7 @@ class VisualStudio(ShellCommand):
         self.step_status.setStatistic('errors', self.logobserver.nbErrors)
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         if self.logobserver.nbErrors > 0:
             return FAILURE
@@ -305,7 +294,6 @@ class VC8(VC7):
 
         # always upcall !
         VisualStudio.__init__(self, **kwargs)
-        self.addFactoryArguments(arch = arch)
 
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)

@@ -15,9 +15,10 @@
 
 from __future__ import with_statement
 
-import re
 import os
+import re
 import sys
+import warnings
 from buildbot.util import safeTranslate
 from buildbot import interfaces
 from buildbot import locks
@@ -360,6 +361,11 @@ class MasterConfig(object):
             if not isinstance(caches, dict):
                 errors.addError("c['caches'] must be a dictionary")
             else:
+                valPairs = caches.items()
+                for (x, y) in valPairs:
+                  if (not isinstance(y, int)):
+                     errors.addError(
+                     "value for cache size '%s' must be an integer" % x)
                 self.caches.update(caches)
 
         if 'buildCacheSize' in config_dict:
@@ -423,6 +429,12 @@ class MasterConfig(object):
         except RuntimeError:
             errors.addError("c['builders'] must be a list of builder configs")
             return
+
+        for builder in builders:
+            if os.path.isabs(builder.builddir):
+                warnings.warn("Absolute path '%s' for builder may cause "
+                        "mayhem.  Perhaps you meant to specify slavebuilddir "
+                        "instead.")
 
         self.builders = builders
 
@@ -546,15 +558,6 @@ class MasterConfig(object):
             if b.locks:
                 for l in b.locks:
                     check_lock(l)
-
-            # factories don't necessarily need to implement a .steps attribute
-            # but in practice most do, so we'll check that if it exists
-            if not hasattr(b.factory, 'steps'):
-                continue
-            for s in b.factory.steps:
-                for l in s[1].get('locks', []):
-                    check_lock(l)
-
 
     def check_builders(self, errors):
         # look both for duplicate builder names, and for builders pointing

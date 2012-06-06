@@ -19,13 +19,15 @@ from buildbot.status.logfile import STDOUT, STDERR, HEADER
 from cStringIO import StringIO
 
 
-DEFAULT_TIMEOUT="DEFAULT_TIMEOUT"
-DEFAULT_MAXTIME="DEFAULT_MAXTIME"
-DEFAULT_USEPTY="DEFAULT_USEPTY"
+class FakeRemoteCommand(object):
 
-class FakeRemoteCommand:
+    # callers should set this to the running TestCase instance
+    testcase = None
 
-    def __init__(self, remote_command, args, collectStdout=False, ignore_updates=False):
+    active = False
+
+    def __init__(self, remote_command, args,
+            ignore_updates=False, collectStdout=False, successfulRC=(0,)):
         # copy the args and set a few defaults
         self.remote_command = remote_command
         self.args = args.copy()
@@ -34,8 +36,13 @@ class FakeRemoteCommand:
         self.rc = -999
         self.collectStdout = collectStdout
         self.updates = {}
+        self.successfulRC = successfulRC
         if collectStdout:
             self.stdout = ''
+
+    def run(self, step, remote):
+        # delegate back to the test case
+        return self.testcase._remotecommand_run(self, step, remote)
 
     def useLog(self, log, closeWhenFinished=False, logfileName=None):
         if not logfileName:
@@ -45,25 +52,32 @@ class FakeRemoteCommand:
     def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
         self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
 
-    def run(self, step, remote):
-        # delegate back to the test case
-        return self.testcase._remotecommand_run(self, step, remote)
+    def interrupt(self, why):
+        raise NotImplementedError
+
+    def didFail(self):
+        return self.rc not in self.successfulRC
+
+    def fakeLogData(self, step, log, header='', stdout='', stderr=''):
+        # note that this should not be used in the same test as useLog(Delayed)
+        self.logs[log] = l = FakeLogFile(log, step)
+        l.fakeData(header=header, stdout=stdout, stderr=stderr)
 
 
 class FakeRemoteShellCommand(FakeRemoteCommand):
 
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
-                 timeout=DEFAULT_TIMEOUT, maxTime=DEFAULT_MAXTIME, logfiles={},
-                 initialStdin=None,
-                 usePTY=DEFAULT_USEPTY, logEnviron=True, collectStdout=False):
+                 timeout=20*60, maxTime=None, logfiles={},
+                 usePTY="slave-config", logEnviron=True, collectStdout=False,
+                 interruptSignal=None, initialStdin=None, successfulRC=(0,)):
         args = dict(workdir=workdir, command=command, env=env or {},
                 want_stdout=want_stdout, want_stderr=want_stderr,
                 initial_stdin=initialStdin,
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
         FakeRemoteCommand.__init__(self, "shell", args,
-                collectStdout=collectStdout)
+                collectStdout=collectStdout, successfulRC=successfulRC)
 
 
 class FakeLogFile(object):
@@ -118,6 +132,16 @@ class FakeLogFile(object):
     def finish(self):
         pass
 
+    def fakeData(self, header='', stdout='', stderr=''):
+        if header:
+            self.header += header
+            self.chunks.append((HEADER, header))
+        if stdout:
+            self.stdout += stdout
+            self.chunks.append((STDOUT, stdout))
+        if stderr:
+            self.stderr += stderr
+            self.chunks.append((STDERR, stderr))
 
 class ExpectRemoteRef(object):
     """
@@ -240,8 +264,8 @@ class ExpectShell(Expect):
     """
     def __init__(self, workdir, command, env={},
                  want_stdout=1, want_stderr=1, initialStdin=None,
-                 timeout=DEFAULT_TIMEOUT, maxTime=DEFAULT_MAXTIME, logfiles={},
-                 usePTY=DEFAULT_USEPTY, logEnviron=True):
+                 timeout=20*60, maxTime=None, logfiles={},
+                 usePTY="slave-config", logEnviron=True):
         args = dict(workdir=workdir, command=command, env=env,
                 want_stdout=want_stdout, want_stderr=want_stderr,
                 initial_stdin=initialStdin,
