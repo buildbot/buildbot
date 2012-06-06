@@ -17,20 +17,22 @@ from twisted.python import failure
 from twisted.internet import defer
 from buildbot.schedulers import base
 from buildbot.process.properties import Properties
+from buildbot import config
 
 class Triggerable(base.BaseScheduler):
 
     compare_attrs = base.BaseScheduler.compare_attrs
 
-    def __init__(self, name, builderNames, properties={}):
-        base.BaseScheduler.__init__(self, name, builderNames, properties)
+    def __init__(self, name, builderNames, properties={}, **kwargs):
+        base.BaseScheduler.__init__(self, name, builderNames, properties,
+                                    **kwargs)
         self._waiters = {}
         self._bsc_subscription = None
         self.reason = "Triggerable(%s)" % name
 
-    def trigger(self, ss_setid, set_props=None):
-        """Trigger this scheduler with the given sourcestampset ID. Returns a
-        deferred that will fire when the buildset is finished."""
+    def trigger(self, sourcestamps = None, set_props=None):
+        """Trigger this scheduler with the optional given list of sourcestamps
+        Returns a deferred that will fire when the buildset is finished."""
         # properties for this buildset are composed of our own properties,
         # potentially overridden by anything from the triggering build
         props = Properties()
@@ -41,11 +43,7 @@ class Triggerable(base.BaseScheduler):
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of
         # this process.
-        if ss_setid:
-            d = self.addBuildsetForSourceStamp(reason=self.reason, setid=ss_setid,
-                    properties=props)
-        else:
-            d = self.addBuildsetForLatest(reason=self.reason, properties=props)
+        d = self._addBuildsetForTrigger(self.reason, sourcestamps, props)
         def setup_waiter((bsid,brids)):
             d = defer.Deferred()
             self._waiters[bsid] = (d, brids)
@@ -68,6 +66,50 @@ class Triggerable(base.BaseScheduler):
             self._waiters = {}
 
         return base.BaseScheduler.stopService(self)
+
+    @defer.inlineCallbacks
+    def _addBuildsetForTrigger(self, reason, sourcestamps,  properties):
+        if sourcestamps is None:
+            sourcestamps = {}
+
+        # Define new setid for this set of triggering sourcestamps
+        new_setid = yield self.master.db.sourcestampsets.addSourceStampSet()
+
+        # Merge codebases with the passed list of sourcestamps
+        # This results in a new sourcestamp for each codebase
+        for codebase in self.codebases:
+            ss = self.codebases[codebase].copy()
+             # apply info from passed sourcestamps onto the configured default
+             # sourcestamp attributes for this codebase.
+            ss.update(sourcestamps.get(codebase,{}))
+
+            # at least repository must be set, this is normaly forced except when 
+            # codebases is not explicitly set in configuration file.
+            ss_repository = ss.get('repository')
+            if not ss_repository:
+                config.error("The codebases argument is not set but still receiving " +
+                             "non empty codebase values")
+
+            # add sourcestamp to the new setid
+            yield self.master.db.sourcestamps.addSourceStamp(
+                        codebase=codebase,
+                        repository=ss_repository,
+                        branch=ss.get('branch', None),
+                        revision=ss.get('revision', None),
+                        project=ss.get('project', ''),
+                        changeids=[c['number'] for c in getattr(ss, 'changes', [])],
+                        patch_body=ss.get('patch_body', None),
+                        patch_level=ss.get('patch_level', None),
+                        patch_author=ss.get('patch_author', None),
+                        patch_comment=ss.get('patch_comment', None),
+                        sourcestampsetid=new_setid)
+
+        bsid,brids = yield self.addBuildsetForSourceStamp(
+                                setid=new_setid, reason=reason,
+                                properties=properties)
+
+        defer.returnValue((bsid,brids))
+
 
     def _updateWaiters(self):
         if self._waiters and not self._bsc_subscription:

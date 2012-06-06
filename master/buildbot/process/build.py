@@ -97,6 +97,9 @@ class Build(properties.PropertiesMixin):
                 return source
         return None
 
+    def getAllSourceStamps(self):
+        return list(self.sources)
+
     def allChanges(self):
         for s in self.sources:
             for c in s.changes:
