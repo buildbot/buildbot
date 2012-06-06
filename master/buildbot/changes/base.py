@@ -81,9 +81,9 @@ class PollingChangeSource(ChangeSource):
     def startService(self):
         ChangeSource.startService(self)
 
-	# delay starting doing anything until the reactor is running - if
-	# services are still starting up, they may miss an initial flood of
-	# changes
+        # delay starting doing anything until the reactor is running - if
+        # services are still starting up, they may miss an initial flood of
+        # changes
         if self.pollInterval:
             reactor.callWhenRunning(self.startLoop)
         else:
