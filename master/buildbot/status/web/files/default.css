@@ -229,9 +229,9 @@ td.Alt {
 }
 
 .legend {
-	border-radius: 5px;
-	-webkit-border-radius: 5px;
-	-moz-border-radius: 5px;
+	border-radius: 5px !important;
+	-webkit-border-radius: 5px !important;
+	-moz-border-radius: 5px !important;
 	width: 100px;
 	max-width: 100px;
 	text-align: center;
