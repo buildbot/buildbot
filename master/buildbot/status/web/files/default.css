@@ -214,14 +214,17 @@ td.DevComment {
 	font-weight: normal;
 	padding: 8px 8px 8px 8px;
 	color: #333333;
+	background-color: #eee;
+	text-align: left;
+}
+
+td.DevBottom {
 	border-bottom-right-radius: 5px;
 	-webkit-border-bottom-right-radius: 5px;
 	-moz-border-radius-bottomright: 5px;
 	border-bottom-left-radius: 5px;
 	-webkit-border-bottom-left-radius: 5px;
 	-moz-border-radius-bottomleft: 5px;
-	background-color: #eee;
-	text-align: left;
 }
 
 td.Alt {
