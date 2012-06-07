@@ -262,7 +262,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     def clean(self):
         d = self.doClean()
 
-        d.addErrback(log.err, 'while reconfiguring')
+        d.addErrback(log.err, 'while shutting down')
 
         return d # for tests
 
