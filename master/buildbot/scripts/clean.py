@@ -56,7 +56,7 @@ class CleanShutdown:
         d.addBoth(lambda _ : self.rc)
         return d
 
-   def sigusr1(self):
+    def sigusr1(self):
         if self.sent_signal:
             return
         print "sending SIGUSR1 to process %d" % self.pid

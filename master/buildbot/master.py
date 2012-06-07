@@ -42,7 +42,7 @@ from buildbot.process.users.manager import UserManagerManager
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import monkeypatches
 from buildbot import config
-from buildbot import clean
+from buildbot.scripts import clean
 
 ########################################
 
@@ -260,7 +260,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         return d # for tests
 
     def clean(self):
-        d = self.doReconfig()
+        d = self.doClean()
 
         d.addErrback(log.err, 'while reconfiguring')
 
@@ -271,19 +271,15 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         log.msg("Clean shutdown")
         failed = False
         try:
-            yield self.cleanShutdownService(self)
+            yield self.cleanShutdownService()
         except:
-            log.err(failure.Failure(), 'during reconfig:')
+            log.err(failure.Failure(), 'during clean:')
             failed = True
 
         if failed:
-            if changes_made:
-                log.msg("WARNING: reconfig partially applied; master "
-                        "may malfunction")
-            else:
-                log.msg("reconfig aborted without making any changes")
+            log.msg("clean shutdown failed")
         else:
-            log.msg("configuration update complete")
+            log.msg("clean shutdown complete")
 
 
     @defer.inlineCallbacks
@@ -338,8 +334,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                                             new_config)
 
     def cleanShutdownService(self):
-        return config.ReconfigurableServiceMixin.cleanShutdownService(self,
-                                            new_config)
+        return clean.clean(config)
 
     ## informational methods
 
