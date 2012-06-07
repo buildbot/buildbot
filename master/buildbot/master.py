@@ -459,7 +459,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         msg = dict()
         msg.update(chdict)
         msg['when_timestamp'] = datetime2epoch(msg['when_timestamp'])
-        self.mq.produce("change.%d.new" % changeid, msg)
+        self.mq.produce(('change', str(changeid), 'new'), msg)
 
         defer.returnValue(change)
 
@@ -479,14 +479,14 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # notify about the component build requests
         for bn, brid in brids.iteritems():
+            builderid = -1 # TODO
             msg = dict(
                 brid=brid,
                 bsid=bsid,
                 buildername=bn,
-                builderid=-1) # TODO
-            self.mq.produce(
-                    'buildrequest.%d.%s.%d.new' % (bsid, bn, brid),
-                    msg)
+                builderid=builderid)
+            self.mq.produce(('buildrequest', str(bsid), str(builderid),
+                                str(brid), 'new'), msg)
 
         # and the buildset itself
         msg = dict(
@@ -497,7 +497,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             brids=brids,
             scheduler=scheduler,
             properties=kwargs.get('properties', {}))
-        self.mq.produce("buildset.%d.new" % bsid, msg)
+        self.mq.produce(("buildset", str(bsid), "new"), msg)
 
         defer.returnValue((bsid,brids))
 
@@ -536,7 +536,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             bsid=bsid,
             complete_at=complete_at_epoch,
             results=cumulative_results)
-        self.mq.produce('buildset.%d.complete' % bsid, msg)
+        self.mq.produce(('buildset', str(bsid), 'complete'), msg)
 
 
     ## state maintenance (private)
@@ -589,12 +589,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         d = self.getObjectId()
         @d.addCallback
         def send(objectid):
-            key = 'master.%d.%s' % (objectid, state)
             msg = dict(
                 masterid=objectid,
                 master_hostname=self.hostname,
                 master_basedir=os.path.abspath(self.basedir))
-            self.mq.produce(key, msg)
+            self.mq.produce(('master', str(objectid), state), msg)
         d.addErrback(log.msg, "while sending master message")
 
 class Control:

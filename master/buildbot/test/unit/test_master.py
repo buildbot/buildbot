@@ -62,7 +62,7 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
         def check(change):
             # check the correct message was received
             self.assertEqual(self.master.mq.productions, [
-                ( 'change.500.new', {
+                ( ('change', '500', 'new'), {
                     'author': u'warner',
                     'branch': u'warnerdb',
                     'category': u'devel',
@@ -95,7 +95,7 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
 
             # check that the proper message was produced
             self.assertEqual(sorted(self.master.mq.productions), sorted([
-                ( 'buildset.200.new', {
+                ( ('buildset', '200', 'new'), {
                     'bsid': bsid,
                     'external_idstring': 'eid',
                     'reason': 'rsn',
@@ -104,13 +104,13 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
                     'properties': {},
                     'scheduler': 'schname',
                 }),
-                ( 'buildrequest.200.a.1000.new', {
+                ( ('buildrequest', '200', '-1', '1000', 'new'), {
                     'brid': 1000,
                     'bsid': 200,
                     'buildername': 'a',
                     'builderid': -1,
                 }),
-                ( 'buildrequest.200.b.1001.new', {
+                ( ('buildrequest', '200', '-1', '1001', 'new'), {
                     'brid': 1001,
                     'bsid': 200,
                     'buildername': 'b',
@@ -135,7 +135,7 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
         self.master.maybeBuildsetComplete(440, _reactor=clock)
 
         self.assertEqual(self.master.mq.productions, [
-            ( 'buildset.440.complete', {
+            ( ('buildset', '440', 'complete'), {
                 'bsid': 440,
                 'complete_at': 1234,
                 'results': SUCCESS,
@@ -357,12 +357,12 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
 
             # check started/stopped messages
             self.assertEqual(self.master.mq.productions, [
-                ( 'master.100.started', {
+                ( ('master', '100', 'started'), {
                     'master_basedir': self.basedir,
                     'master_hostname': self.master.hostname,
                     'masterid': 100,
                 }),
-                ( 'master.100.stopped', {
+                ( ('master', '100', 'stopped'), {
                     'master_basedir': self.basedir,
                     'master_hostname': self.master.hostname,
                     'masterid': 100,

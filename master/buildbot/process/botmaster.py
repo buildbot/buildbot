@@ -143,10 +143,12 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         def buildRequestAdded(key, msg):
             self.maybeStartBuildsForBuilder(msg['buildername'])
         # consume both 'new' and 'unclaimed' build requests
-        self.buildreqest_consumer = self.master.mq.startConsuming(
+        self.buildrequest_consumer_new = self.master.mq.startConsuming(
                 buildRequestAdded,
-                'buildrequest.*.*.*.new',
-                'buildrequest.*.*.*.unclaimed')
+                ('buildrequest', None, None, None, 'new'))
+        self.buildrequest_consumer_unclaimed = self.master.mq.startConsuming(
+                buildRequestAdded,
+                ('buildrequest', None, None, None, 'unclaimed'))
         service.MultiService.startService(self)
 
     @defer.inlineCallbacks
@@ -273,9 +275,12 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
 
     def stopService(self):
-        if self.buildrequest_consumer:
-            self.buildrequest_consumer.stopConsuming()
-            self.buildrequest_consumer = None
+        if self.buildrequest_consumer_new:
+            self.buildrequest_consumer_new.stopConsuming()
+            self.buildrequest_consumer_new = None
+        if self.buildrequest_consumer_unclaimed:
+            self.buildrequest_consumer_unclaimed.stopConsuming()
+            self.buildrequest_consumer_unclaimed = None
         for b in self.builders.values():
             b.builder_status.addPointEvent(["master", "shutdown"])
             b.builder_status.saveYourself()

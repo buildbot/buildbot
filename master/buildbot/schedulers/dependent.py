@@ -42,10 +42,10 @@ class Dependent(base.BaseScheduler):
     def startService(self):
         self._buildset_new_consumer = self.master.mq.startConsuming(
                     self._buildset_new_cb,
-                    'buildset.*.new')
+                    ('buildset', None, 'new'))
         self._buildset_complete_consumer = self.master.mq.startConsuming(
                     self._buildset_complete_cb,
-                    'buildset.*.complete')
+                    ('buildset', None, 'complete'))
 
         # check for any buildsets completed before we started
         d = self._checkCompletedBuildsets(None, )

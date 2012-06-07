@@ -13,24 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
+from twisted.trial import unittest
+from buildbot.test.util import tuplematching
+from buildbot.util import tuplematch
 
-class FakeUpdateComponent(object):
-    pass
+class MatchTuple(tuplematching.TupleMatchingMixin, unittest.TestCase):
 
-class FakeDataConnector(object):
-    def __init__(self, master):
-        self.master = master
-        self.update = FakeUpdateComponent()
-        self.update.master = master
-
-    def get(self, options, path):
-        pass
-
-    def startConsuming(self, callback, options, path):
-        qref = mock.Mock()
-        qref.stopConsuming = lambda self : None
-        return qref
-
-    def control(self, action, args, path):
-        pass
+    # called by the TupleMatchingMixin methods
+    def do_test_match(self, routingKey, shouldMatch, filter):
+        result = tuplematch.matchTuple(routingKey, filter)
+        self.assertEqual(shouldMatch, result, '%r %s %r'
+                    % (routingKey,
+                       'should match' if shouldMatch else "shouldn't match",
+                       filter))

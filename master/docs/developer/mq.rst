@@ -40,9 +40,14 @@ connector's API is defined below.  The connector itself is always available as
 The connector API is quite simple.  It is loosely based on AMQP, although
 simplified because there is only one exchange (see :ref:`queue-schema`).
 
-All messages include a "topic", which is a string describing the content of the
-message, suitable for filtering.  The topics and associated message types are
-described below in :ref:`message-schema`.
+All messages include a "routing key", which is a tuple of *7-bit ascii* strings describing the content of the message.
+By convention, the first element of the tuple gives the type of the data in the message.
+The last element of the tuple describes the event represented by the message.
+The remaining elements of the tuple describe attributes of the data in the message that may be useful for filtering; for example, buildsets may usefully be filtered on buildsetids.
+The topics and associated message types are described below in :ref:`message-schema`.
+
+Filters are also specified with tuples.
+For a filter to match a routing key, it must have the same length, and each element of the filter that is not None must match the corresponding routing key element exactly.
 
 .. py:class:: MQConnector
 
@@ -53,56 +58,36 @@ described below in :ref:`message-schema`.
 
     .. py:method:: produce(routing_key, data)
 
-        :param routing_key: the routing key for this message
+        :param tuple routing_key: the routing key for this message
         :param data: JSON-serializable body of the message
 
-        This method produces a new message and sends it to the exchange for
-        dissemination to consumers.
+        This method produces a new message and queues it for delivery to any associated consumers.
 
-        The routing key and data should match one of the formats given in
-        :ref:`message-schema`.
+        The routing key and data should match one of the formats given in :ref:`message-schema`.
 
-        The method returns immediately; the caller will not receive any
-        indication of a failure to transmit the message, although errors will
-        be displayed in ``twistd.log``.
+        The method returns immediately; the caller will not receive any indication of a failure to transmit the message, although errors will be displayed in ``twistd.log``.
 
-    .. py:method:: startConsuming(callback, topic, [topic, ..]
-                                [, persistent_name=name])
+    .. py:method:: startConsuming(callback, filter[, persistent_name=name])
 
         :param callback: callable to invoke for matching messages
-        :param topic: pattern for routing keys of interest
+        :param tuple filter: filter for routing keys of interest
         :param persistent_name: persistent name for this consumer
         :returns: a :py:class:`QueueRef` instance
 
-        This method will begin consuming messages matching any of the given
-        topics, invoking ``callback`` for each message.
+        This method will begin consuming messages matching the filter, invoking ``callback`` for each message.  See above for the format of the filter.
 
-        Topics follow the AMQP-defined syntax: routing keys are treated as
-        dot-separated sequences of words and matched against topics. A star
-        (``*``) in the topic will match any single word, while an octothorpe
-        (``#``) will match zero or more words.
+        The callback will be invoked with two arguments: the message's routing key and the message body, as a Python data structure.
+        It may return a Deferred, but no special processing other than error handling will be applied to that Deferred.
+        In particular, note that the callback may be invoked a second time before the Deferred from the first invocation fires.
 
-        The callback will be invoked with two arguments: the message's routing
-        key and the message body, as a Python data structure.  It may return a
-        Deferred, but no special processing other than error handling will be
-        applied to that Deferred.  In particular, note that the callback may be
-        invoked a second time before the Deferred from the first invocation
-        fires.
+        A message is considered delivered as soon as the callback is invoked - there is no support for acknowledgements or re-queueing unhandled messages.
 
-        A message is considered delivered as soon as the callback is invoked -
-        there is no support for acknowledgements or re-queueing unhandled
-        messages.  This may change in future versions.
+        Note that the timing of messages is implementation-dependent.
+        It is not guaranteed that messages sent before the :py:meth:`startConsuming` method completes will be received.
+        In fact, because the registration process may not be immediate, even messages sent after the method completes may not be received.
 
-        Note that the timing of messages is implementation-dependent.  It is
-        not guaranteed that messages sent before the :py:meth:`startConsuming`
-        method completes will be received.  In fact, because the registration
-        process may not be immediate, even messages sent after the method
-        completes may not be received.
-
-        If ``persistent_name`` is given, then the consumer is assumed to be
-        persistent, and consumption can be resumed with the given name.
-        Messages that arrive when no consumer is active are queued, and will be
-        delivered when a consumer becomes active.
+        If ``persistent_name`` is given, then the consumer is assumed to be persistent, and consumption can be resumed with the given name.
+        Messages that arrive when no consumer is active are queued and will be delivered when a consumer becomes active.
 
 .. py:class:: QueueRef
 

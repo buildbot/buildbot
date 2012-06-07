@@ -209,7 +209,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         self._change_consumer = self.master.mq.startConsuming(
                 lambda k,m : self._changeCallback(k, m, fileIsImportant,
                                             change_filter, onlyImportant),
-                'change.*.new')
+                ('change', None, 'new'))
         return defer.succeed(None)
 
     @defer.inlineCallbacks

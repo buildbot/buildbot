@@ -205,7 +205,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        claim_11_msg = ( 'buildrequest.11.bldr.11.claimed', {
+        claim_11_msg = ( ('buildrequest', '11', 'bldr', '11', 'claimed'), {
             'bsid': 11,
             'builderid': -1,
             'brid': 11,
@@ -742,9 +742,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
         self.bldr._msg_buildrequests_unclaimed([br1, br2])
 
         self.assertEqual(sorted(self.master.mq.productions), [
-            ( 'buildrequest.10.bldr.13.unclaimed',
+            ( ('buildrequest', '10', 'bldr', '13', 'unclaimed'),
                 dict(brid=13, bsid=10, builderid=-1, buildername='bldr')),
-            ( 'buildrequest.10.bldr.14.unclaimed',
+            ( ('buildrequest', '10', 'bldr', '14', 'unclaimed'),
                 dict(brid=14, bsid=10, builderid=-1, buildername='bldr')),
         ])
 

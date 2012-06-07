@@ -13,16 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from buildbot.test.util import topicmatching
-from buildbot.util import topicmatch
+import itertools
 
-class TopicMatcher(topicmatching.TopicMatchingMixin, unittest.TestCase):
-
-    # called by the TopicMatchingMixin methods
-    def do_test_match(self, routingKey, shouldMatch, *topics):
-        matcher = topicmatch.TopicMatcher(topics)
-        self.assertEqual(shouldMatch, matcher.matches(routingKey), '%r %s %r'
-                    % (routingKey,
-                       'should match' if shouldMatch else "shouldn't match",
-                       topics))
+def matchTuple(routingKey, filter):
+    if len(filter) != len(routingKey):
+        return False
+    for k, f in itertools.izip(routingKey, filter):
+        if f is not None and f != k:
+            return False
+    return True

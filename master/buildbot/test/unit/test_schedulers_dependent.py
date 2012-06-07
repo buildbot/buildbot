@@ -65,12 +65,12 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         sched.startService()
 
         self.assertEqual(
-            sorted([ q.topics for q in sched.master.mq.qrefs ]),
-            [('buildset.*.complete',), ('buildset.*.new',)])
+            sorted([ q.filter for q in sched.master.mq.qrefs ]),
+            [('buildset', None, 'complete',), ('buildset', None, 'new',)])
 
         d = sched.stopService()
         def check(_):
-            self.assertEqual([ q.topics for q in sched.master.mq.qrefs ], [])
+            self.assertEqual([ q.filter for q in sched.master.mq.qrefs ], [])
         d.addCallback(check)
         return d
 
@@ -86,7 +86,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
                             codebase = 'cb'),
             fakedb.Buildset(id=44, sourcestampsetid=1093),
             ])
-        sched.master.mq.callConsumer('buildset.44.new',
+        sched.master.mq.callConsumer(('buildset', '44', 'new'),
                 dict(bsid=44, scheduler=scheduler_name))
 
         # check whether scheduler is subscribed to that buildset
@@ -97,7 +97,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         # pretend that the buildset is finished
         self.db.buildsets.fakeBuildsetCompletion(bsid=44, result=result)
-        sched.master.mq.callConsumer('buildset.44.complete',
+        sched.master.mq.callConsumer(('buildset', '44', 'complete'),
                 dict(bsid=44, result=result))
 
         # and check whether a buildset was added in response

@@ -52,13 +52,13 @@ class DataConnector(unittest.TestCase):
     def test_startConsuming(self):
         self.master.mq = fakemq.FakeMQConnector(self.master)
         ep = self.patchFooPattern()
-        ep.getSubscriptionTopic.return_value = 'foo.*.bar'
+        ep.getSubscriptionTopic.return_value = ('foo', None, 'bar')
         cb = mock.create_autospec(lambda routing_key, msg : None)
 
         # put the qref through its paces, using the FakeMQConnector
         qref = self.data.startConsuming(cb, {}, ('foo', '10', 'bar'))
-        self.master.mq.callConsumer('foo.10.bar', ['msg'])
-        cb.assert_called_with('foo.10.bar', ['msg'])
+        self.master.mq.callConsumer(('foo', '10', 'bar'), ['msg'])
+        cb.assert_called_with(('foo', '10', 'bar'), ['msg'])
         qref.stopConsuming()
         self.assertEqual(self.master.mq.qrefs, [])
 

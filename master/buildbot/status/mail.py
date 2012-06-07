@@ -379,7 +379,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         if self.buildSetSummary:
             self._buildset_complete_consumer = self.master.mq.startConsuming(
                     self._buildset_complete_cb,
-                    'buildset.*.complete')
+                    ('buildset', None, 'complete'))
 
         base.StatusReceiverMultiService.startService(self)
 

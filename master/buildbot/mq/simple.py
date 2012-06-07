@@ -17,7 +17,7 @@ import pprint
 from twisted.python import log
 from buildbot.mq import base
 from buildbot import config
-from buildbot.util import topicmatch
+from buildbot.util import tuplematch
 
 class SimpleMQ(config.ReconfigurableServiceMixin, base.MQBase):
 
@@ -36,32 +36,32 @@ class SimpleMQ(config.ReconfigurableServiceMixin, base.MQBase):
         if self.debug:
             log.msg("MSG: %s\n%s" % (routingKey, pprint.pformat(data)))
         for qref in self.qrefs:
-            if qref.matcher.matches(routingKey):
+            if tuplematch.matchTuple(routingKey, qref.filter):
                 qref.invoke(routingKey, data)
 
-    def startConsuming(self, callback, *topics, **kwargs):
-        persistent_name = kwargs.get('persistent_name', None)
+    def startConsuming(self, callback, filter, persistent_name=None):
         if persistent_name:
             if persistent_name in self.persistent_qrefs:
                 qref = self.persistent_qrefs[persistent_name]
                 qref.startConsuming(callback)
             else:
-                qref = PersistentQueueRef(self, callback, topics)
+                qref = PersistentQueueRef(self, callback, filter)
                 self.qrefs.append(qref)
                 self.persistent_qrefs[persistent_name] = qref
         else:
-            qref = QueueRef(self, callback, topics)
+            qref = QueueRef(self, callback, filter)
             self.qrefs.append(qref)
         return qref
 
+
 class QueueRef(base.QueueRef):
 
-    __slots__ = [ 'mq', 'matcher' ]
+    __slots__ = [ 'mq', 'filter' ]
 
-    def __init__(self, mq, callback, topics):
+    def __init__(self, mq, callback, filter):
         base.QueueRef.__init__(self, callback)
         self.mq = mq
-        self.matcher = topicmatch.TopicMatcher(topics)
+        self.filter = filter
 
     def stopConsuming(self):
         self.callback = None
@@ -70,12 +70,13 @@ class QueueRef(base.QueueRef):
         except ValueError:
             pass
 
+
 class PersistentQueueRef(QueueRef):
 
     __slots__ = [ 'active', 'queue' ]
 
-    def __init__(self, mq, callback, topics):
-        QueueRef.__init__(self, mq, callback, topics)
+    def __init__(self, mq, callback, filter):
+        QueueRef.__init__(self, mq, callback, filter)
         self.queue = []
 
     def startConsuming(self, callback):
