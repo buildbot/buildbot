@@ -26,6 +26,8 @@ class BuildmasterTimeoutError(Exception):
     pass
 class ReconfigError(Exception):
     pass
+class CleanShutdownError(Exception):
+    pass
 
 class TailProcess(protocol.ProcessProtocol):
     def outReceived(self, data):

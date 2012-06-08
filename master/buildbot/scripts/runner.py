@@ -167,6 +167,14 @@ class ReconfigOptions(base.BasedirMixin, base.SubcommandOptions):
     def getSynopsis(self):
         return "Usage:    buildbot reconfig [<basedir>]"
 
+class CleanShutdownOptions(base.BasedirMixin, base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.clean.clean"
+    optFlags = [
+        ['quiet', 'q', "Don't display log messages about clean shutdown"],
+        ]
+    def getSynopsis(self):
+        return "Usage:    buildbot clean [<basedir>]"
+
 
 class DebugClientOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.debugclient.debugclient"
@@ -647,6 +655,8 @@ class Options(usage.Options):
          "SIGHUP a buildmaster to make it re-read the config file"],
         ['sighup', None, ReconfigOptions,
          "SIGHUP a buildmaster to make it re-read the config file"],
+        ['clean', None, CleanShutdownOptions,
+         "Clean shutdown a buildmaster"],
         ['sendchange', None, SendChangeOptions,
          "Send a change to the buildmaster"],
         ['debugclient', None, DebugClientOptions,

@@ -42,6 +42,7 @@ from buildbot.process.users.manager import UserManagerManager
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import monkeypatches
 from buildbot import config
+from buildbot.scripts import clean
 
 ########################################
 
@@ -194,6 +195,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                     _reactor.callLater(0, self.reconfig)
                 signal.signal(signal.SIGHUP, sighup)
 
+            if hasattr(signal, "SIGUSR1"):
+                def sigusr1(*args):
+                    _reactor.callLater(0, self.clean)
+                signal.signal(signal.SIGUSR1, sigusr1)
+
             # call the parent method
             yield defer.maybeDeferred(lambda :
                     service.MultiService.startService(self))
@@ -253,6 +259,28 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         return d # for tests
 
+    def clean(self):
+        d = self.doClean()
+
+        d.addErrback(log.err, 'while shutting down')
+
+        return d # for tests
+
+    @defer.inlineCallbacks
+    def doClean(self):
+        log.msg("Clean shutdown")
+        failed = False
+        try:
+            yield self.cleanShutdownService()
+        except:
+            log.err(failure.Failure(), 'during clean:')
+            failed = True
+
+        if failed:
+            log.msg("clean shutdown failed")
+        else:
+            log.msg("clean shutdown complete")
+
 
     @defer.inlineCallbacks
     def doReconfig(self):
@@ -305,6 +333,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         return config.ReconfigurableServiceMixin.reconfigService(self,
                                             new_config)
 
+    def cleanShutdownService(self):
+        return clean.clean(config)
 
     ## informational methods
 
