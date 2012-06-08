@@ -13,18 +13,32 @@
 #
 # Copyright Buildbot Team Members
 
-import re
+class ResourceType(object):
+    type = None
+    endpoints = []
+    keyFields = []
+
+    def __init__(self, master):
+        self.master = master
+
+    def getEndpoints(self):
+        endpoints = self.endpoints[:]
+        for i in xrange(len(endpoints)):
+            ep = endpoints[i]
+            if not issubclass(ep, Endpoint):
+                raise TypeError("Not an Endpoint subclass")
+            endpoints[i] = ep(self.master)
+        return endpoints
+
+    def produceEvent(self, msg, event):
+        routingKey = (self.type,) \
+             + tuple(str(msg[k]) for k in self.keyFields) \
+             + (event,)
+        self.master.mq.produce(routingKey, msg)
+
 
 class Endpoint(object):
-
-    # set the pathPattern to the pattern that should trigger this endpoint
     pathPattern = None
-
-    # the mq topic corresponding to this path, with %(..)s safely substituted
-    # from the path kwargs; for more complex cases, override
-    # getSubscriptionTopic.
-
-    pathTopicTemplate = None
 
     def __init__(self, master):
         self.master = master
@@ -35,33 +49,24 @@ class Endpoint(object):
     def control(self, action, args, kwargs):
         raise NotImplementedError
 
-    def getSubscriptionTopic(self, options, kwargs):
-        if self.pathTopicTemplate:
-            if '%'  not in self.pathTopicTemplate:
-                return self.pathTopicTemplate
-            safekwargs = SafeDict(kwargs)
-            return self.pathTopicTemplate % safekwargs
-
-
-class SafeDict(object):
-    # utility class to allow %-substitution with the results not containing
-    # topic metacharacters (.*#)
-
-    def __init__(self, dict):
-        self.dict = dict
-
-    metacharacters_re = re.compile('[.*#]')
-    def __getitem__(self, k):
-        return self.metacharacters_re.sub('_', self.dict[k])
+    def startConsuming(self, callback, options, kwargs):
+        raise NotImplementedError
 
 
 class Link(object):
+    "A Link points to another resource, specified by path"
 
     __slots__ = [ 'path' ]
 
-    # a link to another resource, specified as a path
     def __init__(self, path):
         self.path = path
 
     def __repr__(self):
         return "Link(%r)" % (self.path,)
+
+
+def updateMethod(func):
+    """Decorate this resourceType instance as an update method, made available
+    at master.data.updates.$funcname"""
+    func.isUpdateMethod = True
+    return func

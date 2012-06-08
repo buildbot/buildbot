@@ -13,16 +13,63 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 from twisted.trial import unittest
 from buildbot.data import base
 from buildbot.test.util import endpoint
+from buildbot.test.fake import fakemaster
 
-class MyEndpoint(base.Endpoint):
+class ResourceType(unittest.TestCase):
 
-    pathPattern = ('foo', ':foo', 'bar')
+    def makeResourceTypeSubclass(self, **attributes):
+        attributes.setdefault('type', 'thing')
+        return type('ThingResourceType', (base.ResourceType,), attributes)
+
+    def test_sets_master(self):
+        cls = self.makeResourceTypeSubclass()
+        master = mock.Mock()
+        inst = cls(master)
+        self.assertIdentical(inst.master, master)
+
+    def test_getEndpoints_instances_fails(self):
+        ep = base.Endpoint(None)
+        cls = self.makeResourceTypeSubclass(endpoints=[ep])
+        inst = cls(None)
+        try:
+            inst.getEndpoints()
+        except TypeError:
+            pass
+        else:
+            self.fail("should have raised TypeError")
+
+    def test_getEndpoints_classes(self):
+        class MyEndpoint(base.Endpoint):
+            pass
+        cls = self.makeResourceTypeSubclass(endpoints=[MyEndpoint])
+        master = mock.Mock()
+        inst = cls(master)
+        eps = inst.getEndpoints()
+        self.assertIsInstance(eps[0], MyEndpoint)
+        self.assertIdentical(eps[0].master, master)
+
+    def test_produceEvent(self):
+        cls = self.makeResourceTypeSubclass(
+                type='singular',
+                keyFields=('fooid', 'barid'))
+        master = fakemaster.make_master(testcase=self, wantMq=True)
+        master.mq.verifyMessages = False # since this is a pretend message
+        inst = cls(master)
+        inst.produceEvent(dict(fooid=10, barid='20'), # note integer vs. string
+                         'tested')
+        self.assertEqual(master.mq.productions, [
+            (('singular', '10', '20', 'tested'), dict(fooid=10, barid='20'))
+        ])
 
 
 class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
+
+    class MyEndpoint(base.Endpoint):
+        pathPattern = ( 'my', 'pattern' )
 
     endpointClass = MyEndpoint
 
@@ -32,46 +79,17 @@ class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-    def patchMatcher(self):
-        self.ep.matcher
-
     def test_sets_master(self):
         self.assertIdentical(self.master, self.ep.master)
 
-    def test_getSubscriptionTopic(self):
-        self.patch(MyEndpoint, 'pathTopicTemplate', 'foo.%(foo)s.#.bar')
-        self.assertEqual(self.ep.getSubscriptionTopic({}, dict(foo='f')),
-                'foo.f.#.bar')
 
-    def test_getSubscriptionTopic_SafeDict(self):
-        self.patch(MyEndpoint, 'pathTopicTemplate', 'foo.%(foo)s.#.bar')
-        self.assertEqual(self.ep.getSubscriptionTopic({}, dict(foo='f.g')),
-                'foo.f_g.#.bar')
+class Link(unittest.TestCase):
 
-    def test_getSubscriptionTopic_no_subs(self):
-        self.patch(MyEndpoint, 'pathTopicTemplate', 'foo.*.bar')
-        self.assertEqual(self.ep.getSubscriptionTopic({}, dict(foo='f')),
-                'foo.*.bar')
+    def test_path(self):
+        l = base.Link(('a', 'b'))
+        self.assertEqual(l.path, ('a', 'b'))
 
-    def test_getSubscriptionTopic_no_topic(self):
-        self.assertEqual(self.ep.getSubscriptionTopic({}, dict(foo='f')),
-                None)
+    def test_repr(self):
+        l = base.Link(('a', 'b'))
+        self.assertEqual(`l`, "Link(('a', 'b'))")
 
-
-class SafeDict(unittest.TestCase):
-
-    def setUp(self):
-        self.d = base.SafeDict(dict(good='abcd', bad_dot='a.c',
-                        bad_star='a*c', bad_hash='a#c'))
-
-    def test_good(self):
-        self.assertEqual(self.d['good'], 'abcd')
-
-    def test_bad_dot(self):
-        self.assertEqual(self.d['bad_dot'], 'a_c')
-
-    def test_bad_star(self):
-        self.assertEqual(self.d['bad_star'], 'a_c')
-
-    def test_bad_hash(self):
-        self.assertEqual(self.d['bad_hash'], 'a_c')

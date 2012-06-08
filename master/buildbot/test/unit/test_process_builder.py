@@ -19,7 +19,7 @@ from twisted.trial import unittest
 from twisted.python import failure
 from twisted.internet import defer, task
 from buildbot import config
-from buildbot.test.fake import fakedb, fakemaster, fakemq
+from buildbot.test.fake import fakedb, fakemaster
 from buildbot.status import master
 from buildbot.process import builder
 from buildbot.db import buildrequests
@@ -39,15 +39,16 @@ class TestBuilderBuildCreation(unittest.TestCase):
         """Set up C{self.bldr}"""
         self.bstatus = mock.Mock()
         self.factory = mock.Mock()
-        self.master = fakemaster.make_master()
+        self.master = fakemaster.make_master(testcase=self,
+                wantMq=True, wantDb=True)
+        self.mq = self.master.mq
+        self.db = self.master.db
         # only include the necessary required config, plus user-requested
         config_args = dict(name="bldr", slavename="slv", builddir="bdir",
                      slavebuilddir="sbdir", factory=self.factory)
         config_args.update(config_kwargs)
         builder_config = config.BuilderConfig(**config_args)
         self.bldr = builder.Builder(builder_config.name, _addServices=False)
-        self.master.db = self.db = fakedb.FakeDBConnector(self)
-        self.master.mq = self.mq = fakemq.FakeMQConnector(self)
         self.bldr.master = self.master
         self.bldr.botmaster = self.master.botmaster
 

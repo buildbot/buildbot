@@ -115,6 +115,11 @@ def none_or_str(x):
         return str(x)
     return x
 
+def ascii2unicode(x):
+    if isinstance(x, unicode):
+        return x
+    return unicode(x, 'ascii')
+
 # place a working json module at 'buildbot.util.json'.  Code is adapted from
 # Paul Wise <pabs@debian.org>:
 #   http://lists.debian.org/debian-python/2010/02/msg00016.html

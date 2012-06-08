@@ -310,10 +310,6 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             for p in pathlist.getElementsByTagName("path"):
                 action = p.getAttribute("action")
                 path = "".join([t.data for t in p.childNodes])
-                # the rest of buildbot is certaily not yet ready to handle
-                # unicode filenames, because they get put in RemoteCommands
-                # which get sent via PB to the buildslave, and PB doesn't
-                # handle unicode.
                 path = path.encode("ascii")
                 if path.startswith("/"):
                     path = path[1:]
@@ -355,7 +351,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     @defer.inlineCallbacks
     def submit_changes(self, changes):
         for chdict in changes:
-            yield self.master.addChange(src='svn', **chdict)
+            yield self.master.data.updates.addChange(src='svn', **chdict)
 
     def finished_ok(self, res):
         if self.cachepath:

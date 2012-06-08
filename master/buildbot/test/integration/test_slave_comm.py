@@ -24,7 +24,7 @@ from buildbot.test.util import compat
 from buildbot.process import botmaster, builder
 from buildbot import pbmanager, buildslave, config
 from buildbot.status import master
-from buildbot.test.fake import fakemaster, fakemq
+from buildbot.test.fake import fakemaster
 
 class FakeSlaveBuilder(pb.Referenceable):
     """
@@ -107,8 +107,7 @@ class TestSlaveComm(unittest.TestCase):
     """
 
     def setUp(self):
-        self.master = fakemaster.make_master()
-        self.master.mq = fakemq.FakeMQConnector(self.master)
+        self.master = fakemaster.make_master(testcase=self, wantMq=True)
 
         # set the slave port to a loopback address with unspecified
         # port

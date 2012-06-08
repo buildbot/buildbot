@@ -23,10 +23,9 @@ from twisted.python import log
 from buildbot import master, monkeypatches, config
 from buildbot.db import exceptions
 from buildbot.test.util import dirs, compat
-from buildbot.test.fake import fakedb, fakemq
-from buildbot.util import epoch2datetime
-from buildbot.process.users import users
+from buildbot.test.fake import fakedb, fakemq, fakedata
 from buildbot.status.results import SUCCESS
+from buildbot.changes.changes import Change
 
 class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
 
@@ -41,7 +40,7 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
         def set_master(_):
             self.master = master.BuildMaster(basedir)
             self.master.db = fakedb.FakeDBConnector(self)
-            self.master.mq = fakemq.FakeMQConnector(self)
+            self.master.mq = fakemq.FakeMQConnector(self.master, self)
         d.addCallback(set_master)
         return d
 
@@ -50,37 +49,6 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
 
     # master.$masterid.{started,stopped} are checked in
     # StartupAndReconfig.test_startup_ok, below
-
-    def test_change_message(self):
-        d = self.master.addChange(author='warner', branch='warnerdb',
-                category='devel', comments='fix whitespace',
-                files=[u'master/buildbot/__init__.py'],
-                project='Buildbot', properties={},
-                repository='git://warner', revision='0e92a098b',
-                revlink='http://warner/0e92a098b',
-                when_timestamp=epoch2datetime(256738404))
-        def check(change):
-            # check the correct message was received
-            self.assertEqual(self.master.mq.productions, [
-                ( ('change', '500', 'new'), {
-                    'author': u'warner',
-                    'branch': u'warnerdb',
-                    'category': u'devel',
-                    'codebase': '',
-                    'comments': u'fix whitespace',
-                    'changeid' : change.number,
-                    'files': [u'master/buildbot/__init__.py'],
-                    'is_dir': 0,
-                    'project': u'Buildbot',
-                    'properties': {},
-                    'repository': u'git://warner',
-                    'revision': u'0e92a098b',
-                    'revlink': u'http://warner/0e92a098b',
-                    'when_timestamp': 256738404,
-                })
-            ])
-        d.addCallback(check)
-        return d
 
     def test_buildset_messages(self):
         sourcestampsetid=111
@@ -143,107 +111,89 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
         ])
 
 
-class AddChange(dirs.DirsMixin, unittest.TestCase):
+class OldTriggeringMethods(unittest.TestCase):
 
     def setUp(self):
-        basedir = os.path.abspath('basedir')
-        d = self.setUpDirs(basedir)
-        def set_master(_):
-            self.master = master.BuildMaster(basedir)
-            self.master.mq = fakemq.FakeMQConnector(self)
-        d.addCallback(set_master)
-        return d
+        self.master = master.BuildMaster(basedir=None)
 
-    def tearDown(self):
-        return self.tearDownDirs()
+        self.master.data = fakedata.FakeDataConnector(self.master, self)
+        self.master.db = fakedb.FakeDBConnector(self)
+        self.master.db.insertTestData([
+            fakedb.Change(changeid=1, author='this is a test'),
+        ])
 
-    def do_test_addChange_args(self, args=(), kwargs={}, exp_db_kwargs={}):
+        self.fake_Change = mock.Mock(name='fake_Change')
+        def fromChdict(master, chdict):
+            if chdict['author'] != 'this is a test':
+                raise AssertionError("did not get expected chdict")
+            return defer.succeed(self.fake_Change)
+        self.patch(Change, 'fromChdict', staticmethod(fromChdict))
+
+    def do_test_addChange_args(self, args=(), kwargs={}, exp_data_kwargs={}):
         # add default arguments
-        default_db_kwargs = dict(files=None, comments=None, author=None,
-                is_dir=0, revision=None, when_timestamp=None,
-                branch=None, category=None, revlink='', properties={},
-                repository='', codebase='', project='', uid=None)
-        k = default_db_kwargs
-        k.update(exp_db_kwargs)
-        exp_db_kwargs = k
-
-        self.master.db = mock.Mock()
-        got = []
-        def db_addChange(*args, **kwargs):
-            got[:] = args, kwargs
-            # use an exception as a quick way to bail out of the remainder
-            # of the addChange method
-            return defer.fail(RuntimeError)
-        self.master.db.changes.addChange = db_addChange
+        default_data_kwargs = {
+            'author': None,
+            'branch': None,
+            'category': None,
+            'codebase': None,
+            'comments': None,
+            'files': None,
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': None,
+            'revlink': '',
+            'src': None,
+            'when_timestamp': None,
+        }
+        default_data_kwargs.update(exp_data_kwargs)
+        exp_data_kwargs = default_data_kwargs
 
         d = self.master.addChange(*args, **kwargs)
-        d.addCallback(lambda _ : self.fail("should not succeed"))
-        def check(f):
-            self.assertEqual(got, [(), exp_db_kwargs])
-        d.addErrback(check)
+        @d.addCallback
+        def check(change):
+            self.assertIdentical(change, self.fake_Change)
+            self.assertEqual(self.master.data.updates.changesAdded,
+                    [ exp_data_kwargs ])
         return d
 
     def test_addChange_args_author(self):
         # who should come through as author
         return self.do_test_addChange_args(
                 kwargs=dict(who='me'),
-                exp_db_kwargs=dict(author='me'))
+                exp_data_kwargs=dict(author='me'))
 
     def test_addChange_args_isdir(self):
         # isdir should come through as is_dir
         return self.do_test_addChange_args(
                 kwargs=dict(isdir=1),
-                exp_db_kwargs=dict(is_dir=1))
+                exp_data_kwargs=dict())
 
     def test_addChange_args_when(self):
         # when should come through as when_timestamp, as a datetime
         return self.do_test_addChange_args(
                 kwargs=dict(when=892293875),
-                exp_db_kwargs=dict(when_timestamp=epoch2datetime(892293875)))
+                exp_data_kwargs=dict(when_timestamp=892293875))
 
     def test_addChange_args_properties(self):
         # properties should be qualified with a source
         return self.do_test_addChange_args(
                 kwargs=dict(properties={ 'a' : 'b' }),
-                exp_db_kwargs=dict(properties={ 'a' : ('b', 'Change') }))
+                exp_data_kwargs=dict(properties={ 'a' : 'b'}))
 
     def test_addChange_args_properties_tuple(self):
         # properties should be qualified with a source, even if they
         # already look like they have a source
         return self.do_test_addChange_args(
                 kwargs=dict(properties={ 'a' : ('b', 'Change') }),
-                exp_db_kwargs=dict(properties={
-                    'a' : (('b', 'Change'), 'Change') }))
+                exp_data_kwargs=dict(properties={ 'a' : ('b', 'Change') }))
 
     def test_addChange_args_positional(self):
         # master.addChange can take author, files, comments as positional
         # arguments
         return self.do_test_addChange_args(
                 args=('me', ['a'], 'com'),
-                exp_db_kwargs=dict(author='me', files=['a'], comments='com'))
-                
-    def do_test_createUserObjects_args(self, args=(), kwargs={}, exp_args=()):
-        got = []
-        def fake_createUserObject(*args, **kwargs):
-            got[:] = args, kwargs
-            # use an exception as a quick way to bail out of the remainder
-            # of the createUserObject method
-            return defer.fail(RuntimeError)
-
-        self.patch(users, 'createUserObject', fake_createUserObject)
-
-        d = self.master.addChange(*args, **kwargs)
-        d.addCallback(lambda _ : self.fail("should not succeed"))
-        def check(f):
-            self.assertEqual(got, [exp_args, {}])
-        d.addErrback(check)
-        return d
-
-    def test_addChange_createUserObject_args(self):
-        # who should come through as author
-        return self.do_test_createUserObjects_args(
-                kwargs=dict(who='me', src='git'),
-                exp_args=(self.master, 'me', 'git'))
+                exp_data_kwargs=dict(author='me', files=['a'], comments='com'))
 
 
 class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
@@ -266,7 +216,7 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
 
             self.master = master.BuildMaster(self.basedir)
             self.db = self.master.db = fakedb.FakeDBConnector(self)
-            self.mq = self.master.mq = fakemq.FakeMQConnector(self)
+            self.mq = self.master.mq = fakemq.FakeMQConnector(self.master, self)
 
         @d.addCallback
         def patch_log_msg(_):

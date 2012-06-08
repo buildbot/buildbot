@@ -155,7 +155,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             if not m:
                 raise P4PollerError("Unexpected 'p4 describe -s' result: %r" % result)
             who = m.group('who')
-            when = time.mktime(time.strptime(m.group('when'), self.datefmt))
+            when = int(time.mktime(time.strptime(m.group('when'),
+                                                 self.datefmt)))
             comments = ''
             while not lines[0].startswith('Affected files'):
                 comments += lines.pop(0) + '\n'
@@ -178,12 +179,12 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                         branch_files[branch] = [file]
 
             for branch in branch_files:
-                yield self.master.addChange(
+                yield self.master.data.updates.addChange(
                        author=who,
                        files=branch_files[branch],
                        comments=comments,
                        revision=str(num),
-                       when_timestamp=util.epoch2datetime(when),
+                       when_timestamp=when,
                        branch=branch,
                        project=self.project)
 

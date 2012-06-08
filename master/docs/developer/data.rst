@@ -9,13 +9,13 @@ The data api is divided into four sections:
  * getters - fetching data from the db API, and
  * subscriptions - subscribing to messages from the mq layer;
  * control -  allows state to be changed in specific ways by sending appropriate messages (e.g., stopping a build); and
- * update - direct updates to state appropriate messages.
+ * updates - direct updates to state appropriate messages.
 
 The getters and subscriptions are exposed everywhere.
 Access to the control section should be authenticated at higher levels, as the data layer does no authentication.
 The updates section is for use only by the process layer.
 
-The interfaces for all sections but the update sections are intended to be language-agnostic.  That is, they should be callable from JavaScript via HTTP, or via some other interface added to Buildbot after the fact.
+The interfaces for all sections but the updates sections are intended to be language-agnostic.  That is, they should be callable from JavaScript via HTTP, or via some other interface added to Buildbot after the fact.
 
 Getter
 ------
@@ -38,10 +38,10 @@ Control
 The control sections defines a set of actions that cause Buildbot to behave in a certain way, e.g., rebuilding a build or shutting down a slave.
 Actions correspond to a particular resource, although sometimes that resource is the root resource (an empty tuple).
 
-Update
-------
+Updates
+-------
 
-The update sections defines a free-form set of methods that Buildbot's process implementation calls to update data.
+The updates section defines a free-form set of methods that Buildbot's process implementation calls to update data.
 Most update methods both modify state via the db API and send a message via the mq API.
 Some are simple wrappers for these APIs, while others contain more complex logic, e.g., building a source stamp set for a collection of changes.
 This section is the proper place to put common functionality, e.g., rebuilding builds or assembling buildsets.
@@ -56,8 +56,9 @@ Python Interface
 
 .. py:class:: DataConnector
 
-    Within the buildmaster process, the root of the data API is available at `self.master.data`.
-    The first three sections are implemented with the :py:meth:`get`, :py:meth:`startConsuming`, and :py:meth:`control` methods, while the update section is implemented using the :py:attr:`update` attribute.
+    This class implements the root of the data API.
+    Within the buildmaster process, the data connector is available at `self.master.data`.
+    The first three sections are implemented with the :py:meth:`get`, :py:meth:`startConsuming`, and :py:meth:`control` methods, respectively, while the updates section is implemented using the :py:attr:`updates` attribute.
     The ``path`` arguments to these methods should always be tuples.  Integer arguments can be presented as either integers or strings that can be parsed by ``int``; all other arguments must be strings.
 
     .. py:method:: get(options, path)
@@ -101,11 +102,34 @@ Python Interface
 Updates
 .......
 
-The update section is available at `self.master.data.update`, and contains a number of ad-hoc methods needed by the process modules.
+The updates section is available at `self.master.data.updates`, and contains a number of ad-hoc methods needed by the process modules.
 
-..
-    TODO: document it
+The methods are divided into different classes, but through some initialization-time magic, all appear as attributes of ``self.master.data.updates``.
 
+.. py:class:: buildbot.data.changes.ChangeResourceType
+
+    .. py:method:: addChange(files=None, comments=None, author=None, revision=None, when_timestamp=None, branch=None, category=None, revlink='', properties={}, repository='', codebase=None, project='', src=None):
+
+        :param files: a list of filenames that were changed
+        :type files: list of unicode strings
+        :param unicode comments: user comments on the change
+        :param unicode author: the author of this change
+        :param unicode revision: the revision identifier for this change
+        :param integer when_timestamp: when this change occurred (seconds since the epoch), or the current time if None
+        :param unicode branch: the branch on which this change took place
+        :param unicode category: category for this change
+        :param string revlink: link to a web view of this revision
+        :param properties: properties to set on this change
+        :type properties: dictionary with string keys and simple values (JSON-able).  Note that the property source is *not* included in this dictionary.
+        :param unicode repository: the repository in which this change took place
+        :param unicode project: the project this change is a part of
+        :param unicode src: source of the change (vcs or other)
+        :returns: the ID of the new change
+
+        Add a new change to Buildbot.
+        This method is the interface between change sources and the rest of Buildbot.
+
+        All parameters should be passed as keyword arguments.
 
 Links
 .....
@@ -142,6 +166,170 @@ Exceptions
 
 .. _Data Model:
 
+Extending the Data API
+----------------------
+
+.. py:currentmodule:: buildbot.data.base
+
+The data API may be extended in various ways: adding new endpoints, new fields to resource types, new update methods, or entirely new resource types.
+In any case, you should only extend the API if you plan to submit the extensions to be merged into Buildbot itself.
+Private API extensions are strongly discouraged.
+
+Adding Resource Types
++++++++++++++++++++++
+
+You'll need to use both plural and singular forms of the resource type; in this example, we'll use 'pub' and 'pubs'.
+You can also follow an existing file, like :bb:src:`master/buildbot/data/changes.py`, to see when to use which form.
+
+In :bb:src:`master/buildbot/data/pubs.py`, create a subclass of :py:class:`ResourceType`::
+
+    from buildbot.data import base
+    class PubResourceType(base.ResourceType):
+        type = "pub"
+        endpoints = []
+        keyFields = [ 'pubid' ]
+
+.. py:class:: ResourceType
+
+    .. py:attribute:: type
+
+        :type: string
+
+        The singular, lower-cased name of the resource type.
+        This becomes the first component in message routing keys.
+
+    .. py:attribute:: endpoints
+
+        :type: list
+
+        Subclasses should set this to a list of endpoint classes for this resource type.
+
+    .. py:attribute:: keyFields
+
+        :type: list
+
+        This attribute should list the message fields hose values will comprise the fields in the message routing key between the type and the event.
+
+        In the example above, a call to ``produceEvent({ 'pubid' : 10, 'name' : 'Winchester' }, 'opened')`` would result in a message with routing key ``('pub', '10', 'opened')``.
+
+    .. py:method:: getEndpoints()
+
+        :returns: a list of :py:class:`~Endpoint` instances
+
+        This method returns a list of the endpoint instances associated with the resource type.
+
+        The base method instantiates each class in the :py:attr:`~ResourceType.endpoints` attribute.
+        Most subclasses can simply list :py:class:`~Endpoint` subclasses in ``endpoints``.
+
+    .. py:method:: produceEvent(msg, event)
+
+        :param dict msg: the message body
+        :param string event: the name of the event that has occurred
+
+        This is a convenience method to produce an event message for this resource type.
+        It formats the routing key correctly and sends the message, thereby ensuring consistent routing-key structure.
+
+Like all Buildbot source files, every resource type module must have corresponding tests.
+These should thoroughly exercise all update methods.
+
+Similarly, all resource types must be documented in the Buildbot documentation, linked from the bottom of this file.
+
+You will also need to add type verification information.
+See :ref:`Adding-Fields-to-Resource-Types` for details.
+
+Adding Endpoints
+++++++++++++++++
+
+Each resource path is implemented as an :py:class:`~Endpoint` instance.
+In most cases, each instance is of a different class, but this is not required.
+
+The data connector's :py:meth:`~buildbot.data.connector.DataConnector.get`, :py:meth:`~buildbot.data.connector.DataConnector.startConsuming`, and :py:meth:`~buildbot.data.connector.DataConnector.control` methods all take a ``path`` argument that is used to look up the corresponding endpoint.
+The path matching is performed by :py:mod:`buildbot.util.pathmatch`, and supports automatically extracting variable fields from the path.
+See that module's description for details.
+
+.. py:class:: Endpoint
+
+    .. py:attribute:: pathPattern
+
+        :type: tuple
+
+        The path pattern which incoming paths must match to select this endpoint.
+
+    .. py:method:: get(options, kwargs)
+
+        :param options: dictionary containing model-specific options
+        :param kwargs: fields extracted from the path
+
+    .. py:method:: startConsuming(callback, options, kwargs)
+
+        :param callback: a function to call for each message
+        :param options: dictionary containing model-specific options
+        :param kwargs: fields extracted from the path
+
+    .. py:method:: control(action, args, kwargs)
+
+        :param action: a short string naming the action to perform
+        :param args: dictionary containing arguments for the action
+        :param kwargs: fields extracted from the path
+
+Continuing the pub example, a simple endpoint would look like this::
+
+    class PubEndpoint(base.Endpoint):
+        pathPattern = ( 'pub', 'i:pubid' )
+        def get(self, options, kwargs):
+            return self.master.db.pubs.getPub(kwargs['pubid'])
+
+In a more complex implementation, the options might be used to indicate whether or not the pub's menu should be included in the result.
+
+Endpoint implementations must have unit tests.
+An endpoint's path should be documented in the ``.rst`` file for its resource type.
+
+Adding Update Methods
++++++++++++++++++++++
+
+Update methods are for use by the Buildbot process code, and as such are generally designed to suit the needs of that code.
+They generally encapsulate logic common to multiple users (e.g., creating buildsets), and finish by performing modifications in the database and sending a corresponding message.
+
+Update methods are considered part of Buildbot's user-visible interface, and as such incompatible changes should be avoied wherever possible.
+Instead, either add a new method (and potentially re-implement existing methods in terms of the new method) or add new, optional parameters to an existing method.
+If an incompatible change is unavoidable, it should be described clearly in the release notes.
+
+Update methods are implemented as methods of :py:class:`~buildbot.data.base.ResourceType` subclasses, decorated with ``@base.updateMethod``:
+
+.. py:function:: updateMethod(f)
+
+    A decorator for :py:class:`~buildbot.data.base.ResourceType` subclass methods, indicating that the method should be copied to ``master.data.updates``.
+
+Returning to the pub example::
+
+    class PubResourceType(base.ResourceType):
+        # ...
+        @base.updateMethod
+        @defer.inlineCallbacks
+        def setPubTapList(self, pubid, beers):
+            pub = yield self.master.db.pubs.getPub(pubid)
+            # ...
+            self.produceMessage(pub, 'taps-updated')
+
+.. _Adding-Fields-to-Resource-Types:
+
+Adding Fields to Resource Types
++++++++++++++++++++++++++++++++
+
+The details of the fields of a resource type are rigorously enforced at several points in the Buildbot tests.
+This enforcement is performed by modules under :bb:src:`master/buildbot/test/util/types`, one per resource type.
+
+There are three types of verification performed: messages, database dictionaries, and getter return values (data).
+For each type, a verifier is listed in :bb:src:`master/buildbot/test/util/types/__init__.py`, by object name, with  prefix of ``buildbot.test.util.types`` assumed.
+
+Message verifiers take a routing key and message, and should check both for well-formedness.
+Database dictionary verifiers take a type (e.g., ``chdict``) and the value to be verified (a dictionary).
+Data verifiers take a type (e.g., ``change``), options, and the value to be verified (a dictionary).
+They should consult the options to determine which variant is expected.
+
+The module :py:mod:`buildbot.test.util.verifier` provides useful utility methods for all three types of verification.
+Consult this module and the existing verifier modules for more details.
+
 Data Model
 ----------
 
@@ -151,11 +339,19 @@ For each resource type, the API specifies
 
  * the attributes of the resource and their types (e.g., changes have a string specifying their project);
  * the format of links to other resources (e.g., buildsets to sourcestamp sets);
+ * the paths relating to the resource type;
+ * the format of routing keys for messages relating to the resource type;
  * the events that can occur on that resource (e.g., a buildrequest can be claimed); and
  * options and filters for getting resources.
 
-Paths are described here as separated by slashes.
+Some resource type attributes only appear in certain formats, as noted in the documentation for the resource types.
+In general, messages do not include any optional attributes, nor links.
+
+Paths are given here separated by slashes, with key names prefixed by ``:`` and described below.
+Similarly, message routing keys given here are separated by dots, with key names prefixed by ``$``.
 The translation to tuples and other formats should be obvious.
+
+All strings in the data model are unicode strings.
 
 .. toctree::
     :maxdepth: 1

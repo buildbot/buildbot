@@ -72,8 +72,8 @@ class SchedulerMixin(object):
 
         # set up a fake master
         db = self.db = fakedb.FakeDBConnector(self)
-        mq = self.mq = fakemq.FakeMQConnector(self)
         self.master = FakeMaster(os.path.abspath('basedir'), db)
+        mq = self.mq = fakemq.FakeMQConnector(self.master, self)
         self.master.mq = mq
         scheduler.master = self.master
 

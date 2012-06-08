@@ -1,16 +1,11 @@
 Release Notes for Buildbot |version|
 ====================================
 
-..
-    Any change that adds a feature or fixes a bug should have an entry here.
-    Most simply need an additional bulleted list item, but more significant
-    changes can be given a subsection of their own.
-
 Nine
-++++
+----
 
 ..
-    For the mo ment, release notes for the nine branch go here, for ease of merging.
+    For the moment, release notes for the nine branch go here, for ease of merging.
 
 * Buildbot's tests now require at least Mock-0.8.0.
 
@@ -18,8 +13,21 @@ Nine
   :bb:cfg:`db_poll_interval` configuration parameter and the :bb:cfg:`db` key
   of the same name are deprecated and will be ignored.
 
-Master
-++++++
+* The interface for adding changes has changed.  The new method is :py:meth:`~buildbot.data.changes.ChangeResourceType.addChange` (invoked as ``master.data.updates.addChange``), although the old interface (``master.addChange``) will remain in place for a few versions.
+  The new method:
+
+  * returns a uid, not a Change instance;
+
+  * takes its ``when_timestamp`` argument as epoch time (UNIX time), not a datetime instance; and
+
+  * does not accept the deprecated parameters ``who``, ``isdir``, ``is_dir``, and ``when``.
+
+  Please adjust any custom change sources accordingly.
+
+..
+    Any change that adds a feature or fixes a bug should have an entry here.
+    Most simply need an additional bulleted list item, but more significant
+    changes can be given a subsection of their own.
 
 The following are the release notes for Buildbot |version|.
 

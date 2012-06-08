@@ -20,7 +20,7 @@ from twisted.internet import defer
 from twisted.application import service
 from buildbot.process.botmaster import BotMaster
 from buildbot import config, interfaces
-from buildbot.test.fake import fakemaster, fakemq
+from buildbot.test.fake import fakemaster
 
 class TestCleanShutdown(unittest.TestCase):
     def setUp(self):
@@ -127,8 +127,8 @@ class FakeBuildSlave2(FakeBuildSlave):
 class TestBotMaster(unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
-        self.master.mq = fakemq.FakeMQConnector(self.master)
+        self.master = fakemaster.make_master(testcase=self, wantMq=True)
+        self.master.mq = self.master.mq
         self.botmaster = BotMaster(self.master)
         self.new_config = mock.Mock()
         self.botmaster.startService()

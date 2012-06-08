@@ -50,8 +50,8 @@ class EndpointMixin(interfaces.InterfaceTests):
             pass
 
     def test_startConsuming_spec(self):
-        @self.assertArgSpecMatches(self.ep.getSubscriptionTopic)
-        def getSubscriptionTopic(self, options, kwargs):
+        @self.assertArgSpecMatches(self.ep.startConsuming)
+        def startConsuming(self, callback, options, kwargs):
             pass
 
     def test_control_spec(self):

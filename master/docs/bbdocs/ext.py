@@ -222,6 +222,7 @@ class BBDomain(Domain):
         'status' : ObjType('status', 'status'),
         'cmdline' : ObjType('cmdline', 'cmdline'),
         'msg' : ObjType('msg', 'msg'),
+        'event' : ObjType('event', 'event'),
         'rtype' : ObjType('rtype', 'rtype'),
         'rpath' : ObjType('rpath', 'rpath'),
     }
@@ -268,6 +269,14 @@ class BBDomain(Domain):
                         typenames=('type',), can_collapse=True),
                     Field('var', label='Variable', names=('var',)),
                 ]),
+        'event' : make_ref_target_directive('event',
+                indextemplates=[
+                    'single: event; %s',
+                ],
+                has_content=True,
+                name_annotation = 'event:',
+                doc_field_types=[
+                ]),
         'rtype' : make_ref_target_directive('rtype',
                 indextemplates=[
                     'single: Resource Type; %s',
@@ -303,6 +312,7 @@ class BBDomain(Domain):
         'status' : XRefRole(),
         'cmdline' : XRefRole(),
         'msg' : XRefRole(),
+        'event' : XRefRole(),
         'rtype' : XRefRole(),
         'rpath' : XRefRole(),
         'index' : XRefRole(),
@@ -324,8 +334,9 @@ class BBDomain(Domain):
         make_index("status", "Status Target Index"),
         make_index("cmdline", "Command Line Index"),
         make_index("msg", "MQ Routing Key Index"),
-        make_index("rtype", "Resource Type Index"),
-        make_index("rpath", "Resource Path Index"),
+        make_index("event", "Data API Event Index"),
+        make_index("rtype", "Data API Resource Type Index"),
+        make_index("rpath", "Data API Path Index"),
     ]
 
     def resolve_xref(self, env, fromdocname, builder, typ, target, node,

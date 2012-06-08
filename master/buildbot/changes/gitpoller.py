@@ -21,7 +21,6 @@ from twisted.internet import defer, utils
 
 from buildbot.util import deferredLocked
 from buildbot.changes import base
-from buildbot.util import epoch2datetime
 
 class GitPoller(base.PollingChangeSource):
     """This source will poll a remote git repo for changes and submit
@@ -184,7 +183,7 @@ class GitPoller(base.PollingChangeSource):
             stripped_output = git_output.strip()
             if self.usetimestamps:
                 try:
-                    stamp = float(stripped_output)
+                    stamp = int(stripped_output)
                 except Exception, e:
                         log.msg('gitpoller: caught exception converting output \'%s\' to timestamp' % stripped_output)
                         raise e
@@ -269,12 +268,12 @@ class GitPoller(base.PollingChangeSource):
                 raise failures[0]
 
             timestamp, author, files, comments = [ r[1] for r in results ]
-            yield self.master.addChange(
+            yield self.master.data.updates.addChange(
                    author=author,
                    revision=rev,
                    files=files,
                    comments=comments,
-                   when_timestamp=epoch2datetime(timestamp),
+                   when_timestamp=timestamp,
                    branch=self.branch,
                    category=self.category,
                    project=self.project,

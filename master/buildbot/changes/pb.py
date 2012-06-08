@@ -19,7 +19,6 @@ from twisted.internet import defer
 
 from buildbot.pbutil import NewCredPerspective
 from buildbot.changes import base
-from buildbot.util import epoch2datetime
 from buildbot import config
 
 class ChangePerspective(NewCredPerspective):
@@ -49,18 +48,17 @@ class ChangePerspective(NewCredPerspective):
         # "old" names (who, when, and isdir), as they are not deprecated yet,
         # although the master will accept the new names (author,
         # when_timestamp, and is_dir).  After a few revisions have passed, we
-        # can switch the client to use the new names.
+        # can switch the client to use the new names.  isdir/is_dir are no
+        # longer used and thus deleted here
         if 'isdir' in changedict:
-            changedict['is_dir'] = changedict['isdir']
             del changedict['isdir']
+        if 'is_dir' in changedict:
+            del changedict['is_dir']
         if 'who' in changedict:
             changedict['author'] = changedict['who']
             del changedict['who']
         if 'when' in changedict:
-            when = None
-            if changedict['when'] is not None:
-                when = epoch2datetime(changedict['when'])
-            changedict['when_timestamp'] = when
+            changedict['when_timestamp'] = changedict['when']
             del changedict['when']
 
         # turn any bytestring keys into unicode, assuming utf8 but just
@@ -87,9 +85,9 @@ class ChangePerspective(NewCredPerspective):
 
         if not files:
             log.msg("No files listed in change... bit strange, but not fatal.")
-        d = self.master.addChange(**changedict)
-        # since this is a remote method, we can't return a Change instance, so
-        # this just sets the return value to None:
+        d = self.master.data.updates.addChange(**changedict)
+        # set the return value to None, so we don't get users depending on
+        # getting a changeid
         d.addCallback(lambda _ : None)
         return d
 

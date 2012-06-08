@@ -192,3 +192,21 @@ class Flatten(unittest.TestCase):
     def test_tuples(self):
         self.assertEqual(util.flatten([ ( 1, 2 ), 3 ]), [ (1, 2), 3 ])
 
+class Ascii2Unicode(unittest.TestCase):
+
+    def test_unicode(self):
+        rv = util.ascii2unicode(u'\N{SNOWMAN}')
+        self.assertEqual((rv, type(rv)), (u'\N{SNOWMAN}', unicode))
+
+    def test_ascii(self):
+        rv = util.ascii2unicode('abcd')
+        self.assertEqual((rv, type(rv)), (u'abcd', unicode))
+
+    def test_nonascii(self):
+        self.assertRaises(UnicodeDecodeError, lambda :
+            util.ascii2unicode('a\x85'))
+
+    def test_None(self):
+        self.assertRaises(TypeError, lambda :
+            util.ascii2unicode(None))
+

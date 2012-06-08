@@ -75,6 +75,13 @@ class Row(object):
         # make the values appear as attributes
         self.__dict__.update(self.values)
 
+    def __cmp__(self, other):
+        return cmp(self.__class__, other.__class__) \
+                or cmp(self.values, other.values)
+
+    def __repr__(self):
+        return '%s(**%r)' % (self.__class__.__name__, self.values)
+
     def nextId(self):
         if not hasattr(self.__class__, '_next_id'):
             self.__class__._next_id = 1000
@@ -382,6 +389,9 @@ class FakeChangesComponent(FakeDBComponent):
         ch.files = files
         ch.properties = properties
 
+        if uid:
+            ch.uids.append(uid)
+
         return defer.succeed(changeid)
 
     def getLatestChangeid(self):
@@ -427,6 +437,13 @@ class FakeChangesComponent(FakeDBComponent):
                 codebase=row.codebase,
                 project=row.project)
 
+    # assertions
+
+    def assertChange(self, changeid, row):
+        self.t.assertEqual(self.changes[changeid], row)
+
+    def assertChangeUsers(self, changeid, expectedUids):
+        self.t.assertEqual(self.changes[changeid].uids, expectedUids)
 
     # fake methods
 

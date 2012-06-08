@@ -15,7 +15,7 @@
 
 import mock
 from twisted.trial import unittest
-from buildbot.test.fake import fakemaster, fakemq
+from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces, tuplematching
 from buildbot.mq import simple
 
@@ -25,7 +25,7 @@ class Tests(interfaces.InterfaceTests):
         raise NotImplementedError
 
     def test_empty_produce(self):
-        self.mq.produce('a.b.c', dict(x=1))
+        self.mq.produce(('a', 'b', 'c'), dict(x=1))
         # ..nothing happens
 
     def test_signature_produce(self):
@@ -107,8 +107,9 @@ class RealTests(tuplematching.TupleMatchingMixin, Tests):
 class TestFakeMQ(unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
-        self.mq = fakemq.FakeMQConnector(self.master)
+        self.master = fakemaster.make_master(testcase=self, wantMq=True)
+        self.mq = self.master.mq
+        self.mq.verifyMessages = False
 
 class TestSimpleMQ(unittest.TestCase, RealTests):
 

@@ -13,14 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 from twisted.trial import unittest
+from twisted.internet import defer
 from buildbot.data import changes, exceptions
-from buildbot.test.util import resourcetype, endpoint
-from buildbot.test.fake import fakedb
+from buildbot.util import epoch2datetime
+from buildbot.test.util import types, endpoint
+from buildbot.test.fake import fakedb, fakemaster
 
 class Change(endpoint.EndpointMixin, unittest.TestCase):
 
-    endpointClass = changes.Change
+    endpointClass = changes.ChangeEndpoint
 
     def setUp(self):
         self.setUpEndpoint()
@@ -39,7 +42,7 @@ class Change(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(changeid=13))
         @d.addCallback
         def check(change):
-            resourcetype.verifyChange(self, change)
+            types.verifyData(self, 'change', {}, change)
             self.assertEqual(change['project'], 'world-domination')
         return d
 
@@ -54,7 +57,7 @@ class Change(endpoint.EndpointMixin, unittest.TestCase):
 
 class Changes(endpoint.EndpointMixin, unittest.TestCase):
 
-    endpointClass = changes.Changes
+    endpointClass = changes.ChangesEndpoint
 
     def setUp(self):
         self.setUpEndpoint()
@@ -76,9 +79,9 @@ class Changes(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict())
         @d.addCallback
         def check(changes):
-            resourcetype.verifyChange(self, changes[0])
+            types.verifyData(self, 'change', {}, changes[0])
             self.assertEqual(changes[0]['changeid'], 13)
-            resourcetype.verifyChange(self, changes[1])
+            types.verifyData(self, 'change', {}, changes[1])
             self.assertEqual(changes[1]['changeid'], 14)
         return d
 
@@ -87,9 +90,168 @@ class Changes(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(changes):
             self.assertEqual(len(changes), 1)
-            resourcetype.verifyChange(self, changes[0])
+            types.verifyData(self, 'change', {}, changes[0])
         return d
 
     def test_get_invalid_count(self):
         d = self.callGet(dict(count='ten'), dict())
         self.assertFailure(d, exceptions.InvalidOptionException)
+
+class ChangeResourceType(unittest.TestCase):
+
+    def setUp(self):
+        self.master = fakemaster.make_master(wantMq=True, wantDb=True,
+                                                testcase=self)
+        self.rtype = changes.ChangeResourceType(self.master)
+
+    def do_test_addChange(self, kwargs,
+            expectedRoutingKey, expectedMessage, expectedRow,
+            expectedChangeUsers=[]):
+        d = self.rtype.addChange(**kwargs)
+        def check(changeid):
+            self.assertEqual(changeid, 500)
+            # check the correct message was received
+            self.assertEqual(self.master.mq.productions, [
+                ( expectedRoutingKey, expectedMessage),
+            ])
+            # and that the correct data was inserted into the db
+            self.master.db.changes.assertChange(500, expectedRow)
+            self.master.db.changes.assertChangeUsers(500, expectedChangeUsers)
+        d.addCallback(check)
+        return d
+
+    def test_addChange(self):
+        # src and codebase are default here
+        kwargs = dict(author='warner', branch='warnerdb',
+                category='devel', comments='fix whitespace',
+                files=[u'master/buildbot/__init__.py'],
+                project='Buildbot', repository='git://warner',
+                revision='0e92a098b', revlink='http://warner/0e92a098b',
+                when_timestamp=epoch2datetime(256738404),
+                properties=dict(foo=20))
+        expectedRoutingKey = ('change', '500', 'new')
+        expectedMessage = {
+            'author': u'warner',
+            'branch': u'warnerdb',
+            'category': u'devel',
+            'codebase': u'',
+            'comments': u'fix whitespace',
+            'changeid' : 500,
+            'files': [u'master/buildbot/__init__.py'],
+            'project': u'Buildbot',
+            'properties': {u'foo': (20, u'Change')},
+            'repository': u'git://warner',
+            'revision': u'0e92a098b',
+            'revlink': u'http://warner/0e92a098b',
+            'when_timestamp': 256738404,
+            # uid
+        }
+        expectedRow = fakedb.Change(
+            changeid=500,
+            author='warner',
+            comments='fix whitespace',
+            branch='warnerdb',
+            revision='0e92a098b',
+            revlink='http://warner/0e92a098b',
+            when_timestamp=256738404,
+            category='devel',
+            repository='git://warner',
+            codebase='',
+            project='Buildbot',
+        )
+        return self.do_test_addChange(kwargs,
+                expectedRoutingKey, expectedMessage, expectedRow)
+
+    def test_addChange_src_codebase(self):
+        self.master.users = mock.Mock(name='master.users')
+        self.master.users.createUserObject.return_value = defer.succeed(123)
+        kwargs = dict(author='warner', branch='warnerdb',
+                category='devel', comments='fix whitespace',
+                files=[u'master/buildbot/__init__.py'],
+                project='Buildbot', repository='git://warner',
+                revision='0e92a098b', revlink='http://warner/0e92a098b',
+                when_timestamp=epoch2datetime(256738404),
+                properties=dict(foo=20), src='git', codebase=u'cb')
+        expectedRoutingKey = ('change', '500', 'new')
+        expectedMessage = {
+            'author': u'warner',
+            'branch': u'warnerdb',
+            'category': u'devel',
+            'codebase': u'cb',
+            'comments': u'fix whitespace',
+            'changeid' : 500,
+            'files': [u'master/buildbot/__init__.py'],
+            'project': u'Buildbot',
+            'properties': {u'foo': (20, u'Change')},
+            'repository': u'git://warner',
+            'revision': u'0e92a098b',
+            'revlink': u'http://warner/0e92a098b',
+            'when_timestamp': 256738404,
+            # uid
+        }
+        expectedRow = fakedb.Change(
+            changeid=500,
+            author='warner',
+            comments='fix whitespace',
+            branch='warnerdb',
+            revision='0e92a098b',
+            revlink='http://warner/0e92a098b',
+            when_timestamp=256738404,
+            category='devel',
+            repository='git://warner',
+            codebase='cb',
+            project='Buildbot',
+        )
+        d = self.do_test_addChange(kwargs,
+                expectedRoutingKey, expectedMessage, expectedRow,
+                expectedChangeUsers=[123])
+        @d.addCallback
+        def check(_):
+            self.master.users.createUserObject.assert_called_once_with(
+                                                self.master, 'warner', 'git')
+        return d
+
+    def test_addChange_src_codebaseGenerator(self):
+        self.master.config = mock.Mock(name='master.config')
+        self.master.config.codebaseGenerator = \
+                lambda change : 'cb-%s' % change['category']
+        kwargs = dict(author='warner', branch='warnerdb',
+                category='devel', comments='fix whitespace',
+                files=[u'master/buildbot/__init__.py'],
+                project='Buildbot', repository='git://warner',
+                revision='0e92a098b', revlink='http://warner/0e92a098b',
+                when_timestamp=epoch2datetime(256738404),
+                properties=dict(foo=20))
+        expectedRoutingKey = ('change', '500', 'new')
+        expectedMessage = {
+            'author': u'warner',
+            'branch': u'warnerdb',
+            'category': u'devel',
+            'codebase': u'cb-devel',
+            'comments': u'fix whitespace',
+            'changeid' : 500,
+            'files': [u'master/buildbot/__init__.py'],
+            'project': u'Buildbot',
+            'properties': {u'foo': (20, u'Change')},
+            'repository': u'git://warner',
+            'revision': u'0e92a098b',
+            'revlink': u'http://warner/0e92a098b',
+            'when_timestamp': 256738404,
+            # uid
+        }
+        expectedRow = fakedb.Change(
+            changeid=500,
+            author='warner',
+            comments='fix whitespace',
+            branch='warnerdb',
+            revision='0e92a098b',
+            revlink='http://warner/0e92a098b',
+            when_timestamp=256738404,
+            category='devel',
+            repository='git://warner',
+            codebase='cb-devel',
+            project='Buildbot',
+        )
+        return self.do_test_addChange(kwargs,
+                expectedRoutingKey, expectedMessage, expectedRow)
+
