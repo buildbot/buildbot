@@ -18,6 +18,8 @@ import socket
 import sys
 import signal
 
+from zope.interface import implements
+
 from twisted.spread import pb
 from twisted.python import log
 from twisted.internet import error, reactor, task, defer
@@ -28,6 +30,7 @@ import buildslave
 from buildslave.pbutil import ReconnectingPBClientFactory
 from buildslave.commands import registry, base
 from buildslave import monkeypatches
+from buildslave.interfaces import ISlaveProtocol
 
 class UnknownCommand(pb.Error):
     pass
@@ -185,7 +188,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
         if self.remoteStep:
             update = [data, 0]
             updates = [update]
-            d = self.remoteStep.callRemote("update", updates)
+            d = self.parent.sendUpdates(self, updates)
             d.addCallback(self.ackUpdate)
             d.addErrback(self._ackFailed, "SlaveBuilder.sendUpdate")
 
@@ -218,7 +221,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
             return
         if self.remoteStep:
             self.remoteStep.dontNotifyOnDisconnect(self.lostRemoteStep)
-            d = self.remoteStep.callRemote("complete", failure)
+            d = self.parent.sendComplete(self, failure)
             d.addCallback(self.ackComplete)
             d.addErrback(self._ackFailed, "sendComplete")
             self.remoteStep = None
@@ -232,6 +235,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
 
 class Bot(pb.Referenceable, service.MultiService):
     """I represent the slave-side bot."""
+    implements (ISlaveProtocol)
     usePTY = None
     name = "bot"
 
@@ -332,6 +336,29 @@ class Bot(pb.Referenceable, service.MultiService):
         # resilinet to slaves dropping their connections, so there is no harm
         # if this timeout is too short.
         reactor.callLater(0.2, reactor.stop)
+
+    def sendUpdates(self, builder, updates):
+        return builder.remoteStep.callRemote("update", updates)
+
+    def sendComplete(self, builder, failure):
+        return builder.remoteStep.callRemote("complete", failure)
+
+    def gracefulShutdown(self):
+        if not self.factory.perspective:
+            log.msg("No active connection, shutting down NOW")
+            reactor.stop()
+            return
+
+        log.msg("Telling the master we want to shutdown after any running builds are finished")
+        d = self.factory.perspective.callRemote("shutdown")
+        def _shutdownfailed(err):
+            if err.check(AttributeError):
+                log.msg("Master does not support slave initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
+            else:
+                log.msg('callRemote("shutdown") failed')
+                log.err(err)
+        d.addErrback(_shutdownfailed)
+        return d
 
 class BotFactory(ReconnectingPBClientFactory):
     # 'keepaliveInterval' serves two purposes. The first is to keep the
@@ -529,19 +556,5 @@ class BuildSlave(service.MultiService):
 
     def gracefulShutdown(self):
         """Start shutting down"""
-        if not self.bf.perspective:
-            log.msg("No active connection, shutting down NOW")
-            reactor.stop()
-            return
-
         log.msg("Telling the master we want to shutdown after any running builds are finished")
-        d = self.bf.perspective.callRemote("shutdown")
-        def _shutdownfailed(err):
-            if err.check(AttributeError):
-                log.msg("Master does not support slave initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
-            else:
-                log.msg('callRemote("shutdown") failed')
-                log.err(err)
-
-        d.addErrback(_shutdownfailed)
-        return d
+        return self.bot.gracefulShutdown()
