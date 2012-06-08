@@ -280,7 +280,7 @@ class Nightly(NightlyBase):
                  properties={}, change_filter=None, onlyImportant=False,
                  codebases = base.BaseScheduler.DefaultCodebases):
         NightlyBase.__init__(self, name=name, builderNames=builderNames,
-                minute=minute, hour='*', dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth,
+                minute=minute, hour=hour, dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth,
                 properties=properties, codebases=codebases)
 
         # If True, only important changes will be added to the buildset.
@@ -354,7 +354,7 @@ class NightlyTriggerable(NightlyBase):
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  properties={}):
-        NightlyBase.__init__(self, name=name, builderNames=builderNames, minute=minute, hour='*',
+        NightlyBase.__init__(self, name=name, builderNames=builderNames, minute=minute, hour=hour,
                 dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, properties=properties)
 
         self._lastTrigger = None
