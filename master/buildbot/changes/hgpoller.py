@@ -217,12 +217,35 @@ class HgPoller(base.PollingChangeSource):
 
         # hg log on a range of revisions is never empty
         # also, if a numeric revision does not exist, a node may match
-        # therefore we have to check explicitely that tip > current
-        tiprev = yield utils.getProcessOutput(self.hgbin,
-                    ['log', '-r', 'tip', '--template={rev}'],
-                    path=self.workdir, env=os.environ, errortoo=False )
+        # therefore we have to check explicitely that branch head > current.
+        # We'll get an error if there is no head for this branch, which is
+        # proabably a good thing, since it's probably a mispelling
+        # (if really buildbotting a branch that does not have any changeset
+        # yet, one shouldn't be surprised to get errors)
+        d = utils.getProcessOutput(self.hgbin,
+                    ['heads', self.branch, '--template={rev}' + os.linesep],
+                    path=self.workdir, env=os.environ, errortoo=False)
 
-        if int(tiprev.strip()) <= current:
+        def no_head_err(exc):
+            log.err("hgpoller: could not find branch %r in repository %r" % (
+                self.branch, self.repourl))
+        d.addErrback(no_head_err)
+
+        heads = yield d
+        if not heads:
+            return
+
+        if len(heads.split()) > 1:
+            log.err(("hgpoller: caught several heads in branch %r "
+                     "from repository %r. Staying at revision %d. You should "
+                     "wait until the situation is normal again due to a merge "
+                     "or directly strip if remote repo gets stripped later."
+                     ) % (self.branch, self.repourl, current))
+            return
+
+        # in case of whole reconstruction, are we sure that we'll get the
+        # same node -> rev assignations ?
+        if int(heads.strip()) <= current:
             return
 
         # get the change list
