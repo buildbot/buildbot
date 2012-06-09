@@ -171,9 +171,10 @@ class HgPoller(base.PollingChangeSource):
         # get a deferred object that performs the fetch
         args = ['pull', '-b', self.branch, self.repourl]
 
-        # This command always produces data on stderr, but we actually do not care
-        # about the stderr or stdout from this command. We set errortoo=True to
-        # avoid an errback from the deferred. The callback which will be added to this
+        # This command always produces data on stderr, but we actually do not
+        # care about the stderr or stdout from this command.
+        # We set errortoo=True to avoid an errback from the deferred.
+        # The callback which will be added to this
         # deferred will not use the response.
         d = utils.getProcessOutput(self.hgbin, args,
                     path=self.workdir,

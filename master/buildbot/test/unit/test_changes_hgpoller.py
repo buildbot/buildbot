@@ -181,6 +181,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(self.changes_added[0]['branch'], 'default')
             self.assertEqual(self.changes_added[0]['files'], [ '/etc/0' ])
             self.assertEqual(self.changes_added[0]['src'], 'hg')
+
             self.assertEqual(self.changes_added[1]['author'], 'by:1')
             self.assertEqual(self.changes_added[1]['when_timestamp'],
                                         epoch2datetime(1273258009))
