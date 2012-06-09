@@ -93,33 +93,11 @@ class HgPoller(base.PollingChangeSource):
             return d
         d.addCallback(hg_init)
 
-        def hg_pull_branch(_):
-            """Pull only changesets from the branch we're interested in."""
-            args = ['pull', '-b', self.branch, self.repourl]
-            d = utils.getProcessOutputAndValue(self.hgbin, args,
-                    path=self.workdir, env=os.environ)
-            d.addCallback(self._convert_nonzero_to_failure)
-            d.addErrback(self._stop_on_failure)
-            return d
-        d.addCallback(hg_pull_branch)
+        def msg(_):
+            log.msg(
+                "hgpoller: finished initializing working dir %r" % self.workdir)
 
-        def get_rev(_):
-            # GR TODO: we may have several heads
-            # raise ? what then ?
-            # take the first ?
-            d = utils.getProcessOutputAndValue(self.hgbin,
-                    ['--template={node}', 'heads', self.branch],
-                    path=self.workdir, env=os.environ)
-            d.addCallback(self._convert_nonzero_to_failure)
-            d.addErrback(self._stop_on_failure)
-            d.addCallback(lambda (out, err, code) : out.strip())
-            return d
-        d.addCallback(get_rev)
-
-        def print_rev(rev):
-            log.msg("hgpoller: finished initializing working dir from %s at rev %s"
-                    % (self.repourl, rev))
-        d.addCallback(print_rev)
+        d.addCallback(msg)
         return d
 
     def describe(self):
