@@ -142,16 +142,16 @@ class HTPasswdAuth(AuthBase):
         m = hashlib.md5("%s$%s$%s"%(password, magic, salt))
 
         final = hashlib.md5(password + salt + password).digest()
+        
+        # Add as many characters from final as password has
+        m.update((final*(int(len(password)/16)+1))[:len(password)])
 
-        for i in range(len(password), 0, -16):
-            m.update(final[:min(16, i)])
-
-        final = '\x00'*16
+        del final
 
         i = len(password)
         while i:
             if i & 1:
-                m.update(final[:1])
+                m.update('\x00')
             else:
                 m.update(password[:1])
             i >>= 1
