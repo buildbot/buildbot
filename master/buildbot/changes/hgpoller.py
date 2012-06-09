@@ -19,6 +19,7 @@ import os
 from twisted.python import log
 from twisted.internet import defer, utils
 
+from buildbot import config
 from buildbot.util import deferredLocked
 from buildbot.changes import base
 from buildbot.util import epoch2datetime
@@ -53,11 +54,7 @@ class HgPoller(base.PollingChangeSource):
         self.initLock = defer.DeferredLock()
 
         if self.workdir == None:
-            # GR TODO no need of deprecation for a brand new poller
-            # find out what to raise instead
-            self.workdir = tempfile.gettempdir() + '/hgpoller_work'
-            log.msg("WARNING: hgpoller using deprecated temporary workdir " +
-                    "'%s'; consider setting workdir=" % self.workdir)
+            config.error("workdir is mandatory for now in HgPoller")
 
     def startService(self):
         # make our workdir absolute, relative to the master's basedir
