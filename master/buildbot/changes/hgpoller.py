@@ -116,52 +116,35 @@ class HgPoller(base.PollingChangeSource):
         d.addErrback(self._process_changes_failure)
         return d
 
-    def _get_commit_comments(self, rev):
-        args = ['log', '-r', rev, r'--template={desc|strip}\n']
-        d = utils.getProcessOutput(self.hgbin, args, path=self.workdir, env=os.environ, errortoo=False )
-        def process(git_output):
-            stripped_output = git_output.strip().decode(self.encoding)
-            if len(stripped_output) == 0:
-                raise EnvironmentError('could not get commit comment for rev')
-            return stripped_output
-        d.addCallback(process)
-        return d
+    def _get_rev_details(self, rev):
+        """Return a deferred for (date, author, files, comments) of given rev.
 
-    def _get_commit_timestamp(self, rev):
-        # unix timestamp
-        args = ['log', '-r', rev, '--template={date|hgdate}']
-        d = utils.getProcessOutput(self.hgbin, args, path=self.workdir, env=os.environ, errortoo=False )
+        Deferred will be in error if rev is unknown.
+        """
+        args = ['log', '-r', rev, os.linesep.join((
+            '--template={date|hgdate}',
+            '{author}',
+            '{files}',
+            '{desc|strip}'))]
+        # Mercurial fails with status 255 if rev is unknown
+        d = utils.getProcessOutput(self.hgbin, args, path=self.workdir,
+                                   env=os.environ, errortoo=False )
         def process(output):
-            """hgdate format is 'seconds correction_to_utc'."""
-            output = output.strip()
-            if self.usetimestamps:
-                try:
-                    stamp = sum(float(d) for d in output.split())
-                except Exception, e:
-                        log.msg('hgpoller: caught exception converting output \'%s\' to timestamp' % stripped_output)
-                        raise e
-                return stamp
+            # fortunately, Mercurial issues all filenames one one line
+            date, author, files, comments = output.decode(self.encoding).split(
+                os.linesep, 3)
+
+            if not self.usetimestamps:
+                stamp = None
             else:
-                return None
-        d.addCallback(process)
-        return d
+                try:
+                    stamp = sum(float(d) for d in date.split())
+                except:
+                    log.msg('hgpoller: caught exception converting output %r '
+                            'to timestamp' % date)
+                    raise
+            return stamp, author.strip(), files.split(), comments.strip()
 
-    def _get_commit_files(self, rev):
-        args = ['log', '-r', rev, '--template={files}']
-        d = utils.getProcessOutput(self.hgbin, args, path=self.workdir, env=os.environ, errortoo=False )
-        def process(output):
-            return output.split()
-        d.addCallback(process)
-        return d
-
-    def _get_commit_author(self, rev):
-        args = ['log', '-r', rev, '--template={author}']
-        d = utils.getProcessOutput(self.hgbin, args, path=self.workdir, env=os.environ, errortoo=False )
-        def process(output):
-            stripped_output = output.strip().decode(self.encoding)
-            if not stripped_output:
-                raise EnvironmentError('could not get commit author for rev')
-            return stripped_output
         d.addCallback(process)
         return d
 
@@ -268,6 +251,8 @@ class HgPoller(base.PollingChangeSource):
             revrange = '0:%d' % head
         else:
             revrange = '%d:%s' % (current + 1, head)
+
+        # two passes for hg log makes parsing simpler (comments is multi-lines)
         revListArgs = ['log', '-b', self.branch, '-r', revrange,
                        r'--template={rev}:{node}\n']
         results = yield utils.getProcessOutput(self.hgbin, revListArgs,
@@ -277,26 +262,10 @@ class HgPoller(base.PollingChangeSource):
         self.changeCount = len(revNodeList)
 
         log.msg('hgpoller: processing %d changes: %r in %r'
-                % (self.changeCount, revNodeList, self.workdir) )
+                % (self.changeCount, revNodeList, self.workdir))
         for rev, node in revNodeList:
-            dl = defer.DeferredList([
-                self._get_commit_timestamp(rev),
-                self._get_commit_author(rev),
-                self._get_commit_files(rev),
-                self._get_commit_comments(rev),
-            ], consumeErrors=True)
-
-            results = yield dl
-
-            # check for failures
-            failures = [ r[1] for r in results if not r[0] ]
-            if failures:
-                # just fail on the first error; they're probably all related!
-                current_file.close()
-                raise failures[0]
-
-            timestamp, author, files, comments = [ r[1] for r in results ]
-
+            timestamp, author, files, comments = yield self._get_rev_details(
+                node)
             yield self.master.addChange(
                    author=author,
                    revision=node,
