@@ -134,12 +134,29 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(change['comments'], 'This is rev 1')
 
         d.addCallback(check_changes)
-
-        def check_state(_):
-            st = self.poller.getCurrentRev()
-            def check(oid_rev):
-                self.assertEqual(oid_rev[1], 1)
-            st.addCallback(check)
-        d.addCallback(check_state)
-
+        d.addCallback(self.check_current_rev(1))
         return d
+
+    def check_current_rev(self, wished):
+        def check_on_rev(_):
+            d = self.poller.getCurrentRev()
+            d.addCallback(lambda oid_rev: self.assertEqual(oid_rev[1], wished))
+        return check_on_rev
+
+    @defer.inlineCallbacks
+    def test_poll_several_heads(self):
+        # If there are several heads on the named branch, the poller musn't
+        # climb (good enough for now, ideally it should even go to the common
+        # ancestor)
+
+        self.addGetProcessOutputResult(
+                self.gpoSubcommandPattern('hg', 'pull'), "any output")
+        self.addGetProcessOutputResult(
+                self.gpoFullcommandPattern('hg', 'heads', 'default'),
+                os.linesep.join(('5', '6')))
+
+        yield self.poller.setCurrentRev(3)
+
+        # do the poll: we must stay at rev 3
+        d = self.poller.poll()
+        d.addCallback(self.check_current_rev(3))

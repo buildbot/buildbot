@@ -190,6 +190,20 @@ class HgPoller(base.PollingChangeSource):
         d.addCallback(oid_cb)
         return d
 
+    def setCurrentRev(self, rev, oid=None):
+        """Return a deferred to set current revision in persistent state.
+
+        oid is self's id for state db. It can be passed to avoid a db lookup."""
+        if oid is None:
+            d = self.getStateObjectId()
+        else:
+            d = defer.succeed(oid)
+        def set_in_state(obj_id):
+            return self.master.db.state.setState(obj_id, 'current_rev', rev)
+
+        d.addCallback(set_in_state)
+        return d
+
     def getHead(self):
         """Return a deferred for branch head revision or None.
 
@@ -213,11 +227,10 @@ class HgPoller(base.PollingChangeSource):
 
             if len(heads.split()) > 1:
                 log.err(("hgpoller: caught several heads in branch %r "
-                         "from repository %r. Staying at revision %d. "
+                         "from repository %r. Staying at previous revision"
                          "You should wait until the situation is normal again "
                          "due to a merge or directly strip if remote repo "
-                         "gets stripped later.") % (self.branch, self.repourl,
-                                                    current))
+                         "gets stripped later.") % (self.branch, self.repourl))
                 return
 
             # in case of whole reconstruction, are we sure that we'll get the
@@ -279,7 +292,7 @@ class HgPoller(base.PollingChangeSource):
                    src='hg')
             # writing after addChange so that a rev is never missed,
             # but at once to avoid impact from later errors
-            yield self.master.db.state.setState(oid, 'current_rev', rev)
+            yield self.setCurrentRev(rev, oid=oid)
 
     def _process_changes_failure(self, f):
         log.msg('hgpoller: repo poll failed')
