@@ -172,8 +172,8 @@ class HgPoller(base.PollingChangeSource):
 
         Being unique among pollers, workdir is used as instance name for db.
         """
-        return self.master.db.state.getObjectId(self.workdir,
-                                                self.db_class_name)
+        return self.master.db.state.getObjectId(
+            '#'.join((self.workdir, self.branch)), self.db_class_name)
 
     def getCurrentRev(self):
         """Return a deferred for object id in state db and current numeric rev.
