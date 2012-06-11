@@ -32,6 +32,8 @@ class HgPoller(base.PollingChangeSource):
                      "pollInterval", "hgpoller", "usetimestamps",
                      "category", "project"]
 
+    db_class_name = 'HgPoller'
+
     def __init__(self, repourl, branch='default',
                  workdir=None, pollInterval=10*60,
                  hgbin='hg', usetimestamps=True,
@@ -182,6 +184,14 @@ class HgPoller(base.PollingChangeSource):
 
         return d
 
+    def getStateObjectId(self):
+        """Return a deferred for object id in state db.
+
+        Being unique among pollers, workdir is used as instance name for db.
+        """
+        return self.master.db.state.getObjectId(self.workdir,
+                                                self.db_class_name)
+
     @defer.inlineCallbacks
     def _process_changes(self, unused_output):
         """Send info about pulled changes to the master and record current.
@@ -192,32 +202,13 @@ class HgPoller(base.PollingChangeSource):
         instead, we simply store the current rev number in a file.
         Recall that hg rev numbers are local and incremental.
         """
-
-        # GR: don't know buildbot enivronment too well, but everything seems to
-        # indicate that there's no concurrency on pollers.
-        # maybe this should be deferred, too ?
-        current_filename = os.path.join(self.workdir, 'hgpoller-current')
-        try:
-            current_file = open(current_filename, 'r')
-        except IOError:
-            # TODO make a special case for non-writeable etc.
-            current_str = None
-        else:
-            current_str = current_file.read().strip()
-            current_file.close()
-
-        if current_str:
-            # hg log ranges are inclusive
-            current = int(current_str)
-            revrange = '%d:tip' % (current + 1)
-        else:
-            # in first iteration, just take the tip of branch
-            current = None
-            revrange = '%s:tip' % self.branch
+        oid = yield self.getStateObjectId()
+        current = yield self.master.db.state.getState(oid, 'current_rev', None)
+        current = int(current)
 
         # hg log on a range of revisions is never empty
-        # also, if a numeric revision does not exist, a node may match
-        # therefore we have to check explicitely that branch head > current.
+        # also, if a numeric revision does not exist, a node may match.
+        # Therefore, we have to check explicitely that branch head > current.
         # We'll get an error if there is no head for this branch, which is
         # proabably a good thing, since it's probably a mispelling
         # (if really buildbotting a branch that does not have any changeset
@@ -245,8 +236,16 @@ class HgPoller(base.PollingChangeSource):
 
         # in case of whole reconstruction, are we sure that we'll get the
         # same node -> rev assignations ?
-        if int(heads.strip()) <= current:
+        head = int(heads.strip())
+        if head <= current:
             return
+
+        if current is None:
+            # in first iteration, just take the head of branch
+            # TODO: check what Dustin said about yielding all
+            revrange = '%d' % head
+        else:
+            revrange = '%d:%s' % (current + 1, head)
 
         # get the change list
         revListArgs = ['log', '-b', self.branch, '-r', revrange,
@@ -281,9 +280,6 @@ class HgPoller(base.PollingChangeSource):
 
             timestamp, author, files, comments = [ r[1] for r in results ]
 
-            # writing at once in case something goes wrong in later revs
-            current_file = open(current_filename, 'w')
-            current_file.write(rev + os.linesep) # newline is human nicety
             yield self.master.addChange(
                    author=author,
                    revision=node,
@@ -295,6 +291,9 @@ class HgPoller(base.PollingChangeSource):
                    project=self.project,
                    repository=self.repourl,
                    src='hg')
+            # writing after addChange so that a rev is never missed,
+            # but at once to avoid impact from later errors
+            yield self.master.db.state.setState(oid, 'current_rev', rev)
 
     def _process_changes_failure(self, f):
         log.msg('hgpoller: repo poll failed')
