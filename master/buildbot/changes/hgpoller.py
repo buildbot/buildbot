@@ -264,9 +264,8 @@ class HgPoller(base.PollingChangeSource):
 
         self.changeCount = 0
         if current is None:
-            # in first iteration, just take the head of branch
-            # TODO: check what Dustin said about yielding all
-            revrange = '%d' % head
+            # we could have used current = -1 convention as well (as hg does)
+            revrange = '0:%d' % head
         else:
             revrange = '%d:%s' % (current + 1, head)
         revListArgs = ['log', '-b', self.branch, '-r', revrange,
