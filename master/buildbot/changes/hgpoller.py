@@ -192,6 +192,58 @@ class HgPoller(base.PollingChangeSource):
         return self.master.db.state.getObjectId(self.workdir,
                                                 self.db_class_name)
 
+    def getCurrentRev(self):
+        """Return a deferred for object id in state db and current numeric rev.
+
+        If never has been set, current rev is None.
+        """
+        d = self.getStateObjectId()
+        def oid_cb(oid):
+            current = self.master.db.state.getState(oid, 'current_rev', None)
+            def to_int(cur):
+                return oid, cur and int(cur) or None
+            current.addCallback(to_int)
+            return current
+        d.addCallback(oid_cb)
+        return d
+
+    def getHead(self):
+        """Return a deferred for branch head revision or None.
+
+        We'll get an error if there is no head for this branch, which is
+        proabably a good thing, since it's probably a mispelling
+        (if really buildbotting a branch that does not have any changeset
+        yet, one shouldn't be surprised to get errors)
+        """
+        d = utils.getProcessOutput(self.hgbin,
+                    ['heads', self.branch, '--template={rev}' + os.linesep],
+                    path=self.workdir, env=os.environ, errortoo=False)
+
+        def no_head_err(exc):
+            log.err("hgpoller: could not find branch %r in repository %r" % (
+                self.branch, self.repourl))
+        d.addErrback(no_head_err)
+
+        def results(heads):
+            if not heads:
+                return
+
+            if len(heads.split()) > 1:
+                log.err(("hgpoller: caught several heads in branch %r "
+                         "from repository %r. Staying at revision %d. "
+                         "You should wait until the situation is normal again "
+                         "due to a merge or directly strip if remote repo "
+                         "gets stripped later.") % (self.branch, self.repourl,
+                                                    current))
+                return
+
+            # in case of whole reconstruction, are we sure that we'll get the
+            # same node -> rev assignations ?
+            return int(heads.strip())
+
+        d.addCallback(results)
+        return d
+
     @defer.inlineCallbacks
     def _process_changes(self, unused_output):
         """Send info about pulled changes to the master and record current.
@@ -202,65 +254,31 @@ class HgPoller(base.PollingChangeSource):
         instead, we simply store the current rev number in a file.
         Recall that hg rev numbers are local and incremental.
         """
-        oid = yield self.getStateObjectId()
-        current = yield self.master.db.state.getState(oid, 'current_rev', None)
-        current = int(current)
-
+        oid, current = yield self.getCurrentRev()
         # hg log on a range of revisions is never empty
         # also, if a numeric revision does not exist, a node may match.
         # Therefore, we have to check explicitely that branch head > current.
-        # We'll get an error if there is no head for this branch, which is
-        # proabably a good thing, since it's probably a mispelling
-        # (if really buildbotting a branch that does not have any changeset
-        # yet, one shouldn't be surprised to get errors)
-        d = utils.getProcessOutput(self.hgbin,
-                    ['heads', self.branch, '--template={rev}' + os.linesep],
-                    path=self.workdir, env=os.environ, errortoo=False)
-
-        def no_head_err(exc):
-            log.err("hgpoller: could not find branch %r in repository %r" % (
-                self.branch, self.repourl))
-        d.addErrback(no_head_err)
-
-        heads = yield d
-        if not heads:
-            return
-
-        if len(heads.split()) > 1:
-            log.err(("hgpoller: caught several heads in branch %r "
-                     "from repository %r. Staying at revision %d. You should "
-                     "wait until the situation is normal again due to a merge "
-                     "or directly strip if remote repo gets stripped later."
-                     ) % (self.branch, self.repourl, current))
-            return
-
-        # in case of whole reconstruction, are we sure that we'll get the
-        # same node -> rev assignations ?
-        head = int(heads.strip())
+        head = yield self.getHead()
         if head <= current:
             return
 
+        self.changeCount = 0
         if current is None:
             # in first iteration, just take the head of branch
             # TODO: check what Dustin said about yielding all
             revrange = '%d' % head
         else:
             revrange = '%d:%s' % (current + 1, head)
-
-        # get the change list
         revListArgs = ['log', '-b', self.branch, '-r', revrange,
                        r'--template={rev}:{node}\n']
-        self.changeCount = 0
         results = yield utils.getProcessOutput(self.hgbin, revListArgs,
                     path=self.workdir, env=os.environ, errortoo=False )
 
         revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
-
         self.changeCount = len(revNodeList)
 
         log.msg('hgpoller: processing %d changes: %r in %r'
                 % (self.changeCount, revNodeList, self.workdir) )
-
         for rev, node in revNodeList:
             dl = defer.DeferredList([
                 self._get_commit_timestamp(rev),

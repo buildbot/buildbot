@@ -28,7 +28,8 @@ os.environ['TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'] = 'TRUE'
 class HgOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
     """Test HgPoller methods for parsing hg output"""
     def setUp(self):
-        self.poller = hgpoller.HgPoller('http://hg.example.com')
+        self.poller = hgpoller.HgPoller('http://hg.example.com',
+                                        workdir='/some/dir')
         self.setUpGetProcessOutput()
 
     def tearDown(self):
@@ -114,14 +115,13 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         d = self.setUpChangeSource()
         self.remote_repo = 'ssh://example.com/foo/baz'
         def create_poller(_):
-            self.poller = hgpoller.HgPoller(self.remote_repo)
+            self.poller = hgpoller.HgPoller(self.remote_repo,
+                                            workdir='/some/dir')
             self.poller.master = self.master
-            os.mkdir(self.poller.workdir)
         d.addCallback(create_poller)
         return d
 
     def tearDown(self):
-        shutil.rmtree(self.poller.workdir)
         self.tearDownGetProcessOutput()
         return self.tearDownChangeSource()
 
@@ -145,13 +145,17 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                 "no interesting output")
 
         self.addGetProcessOutputResult(
-                self.gpoSubcommandPattern('hg', 'log'), '1')
+                self.gpoSubcommandPattern('hg', 'heads'), '1')
 
         self.addGetProcessOutputResult(
                 self.gpoSubcommandPattern('hg', 'log'),
                 '\n'.join([
                     '0:64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
                     '1:4423cdbcbb89c14e50dd5f4152415afd686c5241']))
+
+        def cur():
+            return defer.succeed(('test_oid', None))
+        self.patch(self.poller, 'getCurrentRev', cur)
 
         # and patch out the _get_commit_foo methods which were already tested
         # above
