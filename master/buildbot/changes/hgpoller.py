@@ -51,7 +51,6 @@ class HgPoller(base.PollingChangeSource):
         self.usetimestamps = usetimestamps
         self.category = category
         self.project = project
-        self.changeCount = 0
         self.commitInfo  = {}
         self.initLock = defer.DeferredLock()
 
@@ -244,8 +243,6 @@ class HgPoller(base.PollingChangeSource):
         head = yield self.getHead()
         if head <= current:
             return
-
-        self.changeCount = 0
         if current is None:
             # we could have used current = -1 convention as well (as hg does)
             revrange = '0:%d' % head
@@ -259,10 +256,9 @@ class HgPoller(base.PollingChangeSource):
                     path=self.absWorkdir(), env=os.environ, errortoo=False )
 
         revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
-        self.changeCount = len(revNodeList)
 
         log.msg('hgpoller: processing %d changes: %r in %r'
-                % (self.changeCount, revNodeList, self.absWorkdir()))
+                % (len(revNodeList), revNodeList, self.absWorkdir()))
         for rev, node in revNodeList:
             timestamp, author, files, comments = yield self._get_rev_details(
                 node)
