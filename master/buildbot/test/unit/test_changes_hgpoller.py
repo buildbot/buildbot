@@ -34,10 +34,14 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         self.setUpGetProcessOutput()
         d = self.setUpChangeSource()
         self.remote_repo = 'ssh://example.com/foo/baz'
+        self.repo_ready = True
+        def isRepositoryReady():
+            return self.repo_ready
         def create_poller(_):
             self.poller = hgpoller.HgPoller(self.remote_repo,
                                             workdir='/some/dir')
             self.poller.master = self.master
+            self.poller.isRepositoryReady = isRepositoryReady
         def create_db(_):
             db = self.master.db = FakeDBConnector(self)
             return db.setup()
@@ -67,6 +71,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(self.poller.hgbin, "hg")
 
     def test_poll_initial(self):
+        self.repo_ready = False
         # Test that environment variables get propagated to subprocesses
         # (See #2116)
         os.putenv('TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES', 'TRUE')
@@ -77,6 +82,10 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
 
         # patch out getProcessOutput and getProcessOutputAndValue for
         # expected hg calls
+
+        self.addGetProcessOutputAndValueResult(
+                self.gpoSubcommandPattern('hg', 'init'),
+                ("any stdout", "any stderr", 0))
         self.addGetProcessOutputResult(
                 self.gpoSubcommandPattern('hg', 'pull'), "any output")
         self.addGetProcessOutputResult(

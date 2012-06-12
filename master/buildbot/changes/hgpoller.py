@@ -64,43 +64,7 @@ class HgPoller(base.PollingChangeSource):
             self.workdir = os.path.join(self.master.basedir, self.workdir)
             log.msg("hgpoller: using workdir '%s'" % self.workdir)
 
-        # initialize the repository we'll use to get changes; note that
-        # startService is not an event-driven method, so this method will
-        # instead acquire self.initLock immediately when it is called.
-        if not os.path.exists(self.workdir + r'/.hg'):
-            d = self.initRepository()
-            d.addErrback(log.err, 'while initializing HgPoller repository')
-        else:
-            log.msg("HgPoller repository already exists")
-
-        # call this *after* initRepository, so that the initLock is locked first
         base.PollingChangeSource.startService(self)
-
-    @deferredLocked('initLock')
-    def initRepository(self):
-        d = defer.succeed(None)
-        def make_dir(_):
-            dirpath = os.path.dirname(self.workdir.rstrip(os.sep))
-            if not os.path.exists(dirpath):
-                log.msg('hgpoller: creating parent directories for workdir')
-                os.makedirs(dirpath)
-        d.addCallback(make_dir)
-
-        def hg_init(_):
-            log.msg('hgpoller: initializing working dir from %s' % self.repourl)
-            d = utils.getProcessOutputAndValue(self.hgbin,
-                    ['init', self.workdir], env=os.environ)
-            d.addCallback(self._convert_nonzero_to_failure)
-            d.addErrback(self._stop_on_failure)
-            return d
-        d.addCallback(hg_init)
-
-        def msg(_):
-            log.msg(
-                "hgpoller: finished initializing working dir %r" % self.workdir)
-
-        d.addCallback(msg)
-        return d
 
     def describe(self):
         status = ""
@@ -148,10 +112,32 @@ class HgPoller(base.PollingChangeSource):
         d.addCallback(process)
         return d
 
-    def _get_changes(self):
-        log.msg('hgpoller: polling hg repo at %s' % self.repourl)
+    def isRepositoryReady(self):
+        """Easy to patch in tests."""
+        return os.path.exists(os.path.join(self.workdir, '.hg'))
 
+    def initRepository(self):
+        """Have mercurial init the workdir as a repository (hg init) if needed.
+
+        hg init will also create all needed intermediate directories.
+        """
+        if self.isRepositoryReady():
+            return defer.succeed(None)
+        log.msg('hgpoller: initializing working dir from %s' % self.repourl)
+        d = utils.getProcessOutputAndValue(self.hgbin, ['init', self.workdir],
+                                           env=os.environ)
+        d.addCallback(self._convert_nonzero_to_failure)
+        d.addErrback(self._stop_on_failure)
+        d.addCallback(lambda _ : log.msg(
+            "hgpoller: finished initializing working dir %r" % self.workdir))
+        return d
+
+    def _get_changes(self):
         self.lastPoll = time.time()
+
+        d = self.initRepository()
+        d.addCallback(lambda _ : log.msg(
+            "hgpoller: polling hg repo at %s" % self.repourl))
 
         # get a deferred object that performs the fetch
         args = ['pull', '-b', self.branch, self.repourl]
@@ -161,9 +147,9 @@ class HgPoller(base.PollingChangeSource):
         # We set errortoo=True to avoid an errback from the deferred.
         # The callback which will be added to this
         # deferred will not use the response.
-        d = utils.getProcessOutput(self.hgbin, args,
-                    path=self.workdir,
-                    env=os.environ, errortoo=True )
+        d.addCallback(lambda _: utils.getProcessOutput(
+            self.hgbin, args, path=self.workdir,
+            env=os.environ, errortoo=True))
 
         return d
 
