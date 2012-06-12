@@ -334,7 +334,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                                             new_config)
 
     def cleanShutdownService(self):
-        return clean.clean(config)
+        return self.botmaster.cleanShutdown()
 
     ## informational methods
 
