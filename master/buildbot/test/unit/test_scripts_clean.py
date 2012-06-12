@@ -56,7 +56,7 @@ class TestCleanShutdown(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.Tes
             else:
                 return result
         self.patch(os, 'kill', kill)
-        rv = clean.clean(config)
+        rv = clean.clean(config, **kwargs)
         self.assertEqual(kill_sequence, [])
         return rv
 
@@ -66,4 +66,10 @@ class TestCleanShutdown(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.Tes
         self.assertInStdout('not running')
         self.assertEqual(rv, 0)
 
+    @compat.skipUnlessPlatformIs('posix')
+    def test_clean_running(self):
+        rv = self.do_test_clean(mkconfig(),
+                                [ (signal.SIGUSR1, OSError(3, 'No such process'))])
+        self.assertInStdout('Clean shutdown appears to have completed successfully.')
+        self.assertEqual(rv, 0)
 

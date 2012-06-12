@@ -36,11 +36,15 @@ class CleanShutdown:
            print "not a buildmaster directory"
            return 1
 
-        with open(os.path.join(basedir, "twistd.pid"), "rt") as f:
-            self.pid = int(f.read().strip())
-        if quiet:
-            os.kill(self.pid, signal.SIGUSR1)
-            return
+        if os.path.exists(os.path.join(basedir, "twistd.pid")):
+           with open(os.path.join(basedir, "twistd.pid"), "rt") as f:
+                self.pid = int(f.read().strip())
+           if quiet:
+               os.kill(self.pid, signal.SIGUSR1)
+               return
+        else:
+           print "not running"
+           return 0
 
         # keep reading twistd.log. Display all messages between "loading
         # configuration from ..." and "configuration update complete" or
