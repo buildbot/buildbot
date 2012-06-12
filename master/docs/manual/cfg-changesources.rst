@@ -68,6 +68,7 @@ Mercurial
  * :bb:chsrc:`PBChangeSource` (listening for connections from
    :file:`buildbot/changes/hgbuildbot.py` run as an in-process 'changegroup'
    hook)
+ * :bb:chsrc:`HgPoller` (polling a remote Mercurial repository)
  * :bb:chsrc:`GoogleCodeAtomPoller` (polling the
    commit feed for a GoogleCode Git repository)
 
@@ -1055,6 +1056,91 @@ An configuration for the git poller might look like this::
     c['change_source'] = GitPoller('git@example.com:foobaz/myrepo.git',
                                    branch='great_new_feature',
                                    workdir='/home/buildbot/gitpoller_workdir')
+
+.. bb:chsrc:: HgPoller
+
+.. _HgPoller:
+
+HgPoller
+~~~~~~~~
+
+If you cannot take advantage of post-receive hooks as provided by
+:file:`buildbot/changes/hgbuildbot.py` for example, then you can use the
+:bb:chsrc:`HgPoller`.
+
+The :bb:chsrc:`HgPoller` periodically pulls a named branch from a remote
+Mercurial repository and processes any changes. It requires its own working
+directory for operation, which must be specified via the ``workdir`` property.
+
+The :bb:chsrc:`HgPoller` requires a working ``hg`` executable, and at least a
+read-only access to the repository it polls (possibly through ssh keys or by
+tweaking the ``hgrc`` of the system user buildbot runs as).
+
+The :bb:chsrc:`HgPoller` will not transmit any change if there are several heads
+on the watched named branch. This is similar (although not identical) to the
+Mercurial executable behaviour. This exceptional condition is usually the result
+of a developer mistake, and usually does not last for long. It is reported in
+logs. If fixed by a later merge, the buildmaster administrator does not have
+anything to do: that merge will be transmitted, together with the intermediate
+ones.
+
+The :bb:chsrc:`HgPoller` accepts the following arguments:
+
+``repourl``
+    the url that describes the remote repository, e.g.
+    ``http://hg.example.com/projects/myrepo``.
+    Any url suitable for ``hg pull`` can be specified.
+
+``branch``
+    the desired branch to pull, will default to ``'default'``
+
+``workdir``
+    the directory where the poller should keep its local repository. It
+    is mandatory for now, although later releases may provide a meaningful
+    default.
+
+    It also serves to identify the poller in the buildmaster internal
+    database. Changing it may result in re-processing all changes so far.
+
+    Several :bb:chsrc:`HgPoller` instances may share the same ``workdir`` for
+    mutualisation of the common history between two different branches, thus
+    easing on local and remote system resources and bandwith.
+
+    If relative, the ``workdir`` will be interpreted from the master directory.
+
+``pollinterval``
+    interval in seconds between polls, default is 10 minutes
+
+``hgbin``
+    path to the Mercurial binary, defaults to just ``'hg'``
+
+``category``
+    Set the category to be used for the changes produced by the
+    :bb:chsrc:`HgPoller`. This will then be set in any changes generated
+    by the :bb:chsrc:`HgPoller`, and can be used in a Change Filter for
+    triggering particular builders.
+
+``project``
+    Set the name of the project to be used for the
+    :bb:chsrc:`HgPoller`. This will then be set in any changes generated
+    by the ``HgPoller``, and can be used in a Change Filter for
+    triggering particular builders.
+
+``usetimestamps``
+    parse each revision's commit timestamp (default is ``True``),
+    or ignore it in favor of the current time (so recently processed
+    commits appear together in the waterfall page)
+
+``encoding``
+    Set encoding will be used to parse author's name and commit
+    message. Default encoding is ``'utf-8'``.
+
+A configuration for the Mercurial poller might look like this::
+
+    from buildbot.changes.hgpoller import HgPoller
+    c['change_source'] = HgPoller('http://hg.example.org/projects/myrepo',
+                                   branch='great_new_feature',
+                                   workdir='hg-myrepo')
 
 .. bb:chsrc:: GerritChangeSource
 
