@@ -58,20 +58,13 @@ class HgPoller(base.PollingChangeSource):
         if self.workdir == None:
             config.error("workdir is mandatory for now in HgPoller")
 
-    def startService(self):
-        # make our workdir absolute, relative to the master's basedir
-        if not os.path.isabs(self.workdir):
-            self.workdir = os.path.join(self.master.basedir, self.workdir)
-            log.msg("hgpoller: using workdir '%s'" % self.workdir)
-
-        base.PollingChangeSource.startService(self)
-
     def describe(self):
         status = ""
         if not self.master:
             status = "[STOPPED - check log]"
-        return ("HgPoller watching the remote Mercurial repository %s, "
-                "branch: %s %s") % (self.repourl, self.branch, status)
+        return ("HgPoller watching the remote Mercurial repository %r, "
+                "branch: %r, in workdir %r %s") % (self.repourl, self.branch,
+                                                   self.workdir, status)
 
     @deferredLocked('initLock')
     def poll(self):
@@ -79,6 +72,12 @@ class HgPoller(base.PollingChangeSource):
         d.addCallback(self._process_changes)
         d.addErrback(self._process_changes_failure)
         return d
+
+    def absWorkdir(self):
+        workdir = self.workdir
+        if os.path.isabs(workdir):
+            return workdir
+        return os.path.join(self.master.basedir, workdir)
 
     def _get_rev_details(self, rev):
         """Return a deferred for (date, author, files, comments) of given rev.
@@ -91,7 +90,7 @@ class HgPoller(base.PollingChangeSource):
             '{files}',
             '{desc|strip}'))]
         # Mercurial fails with status 255 if rev is unknown
-        d = utils.getProcessOutput(self.hgbin, args, path=self.workdir,
+        d = utils.getProcessOutput(self.hgbin, args, path=self.absWorkdir(),
                                    env=os.environ, errortoo=False )
         def process(output):
             # fortunately, Mercurial issues all filenames one one line
@@ -114,7 +113,7 @@ class HgPoller(base.PollingChangeSource):
 
     def isRepositoryReady(self):
         """Easy to patch in tests."""
-        return os.path.exists(os.path.join(self.workdir, '.hg'))
+        return os.path.exists(os.path.join(self.absWorkdir(), '.hg'))
 
     def initRepository(self):
         """Have mercurial init the workdir as a repository (hg init) if needed.
@@ -124,7 +123,8 @@ class HgPoller(base.PollingChangeSource):
         if self.isRepositoryReady():
             return defer.succeed(None)
         log.msg('hgpoller: initializing working dir from %s' % self.repourl)
-        d = utils.getProcessOutputAndValue(self.hgbin, ['init', self.workdir],
+        d = utils.getProcessOutputAndValue(self.hgbin,
+                                           ['init', self.absWorkdir()],
                                            env=os.environ)
         d.addCallback(self._convert_nonzero_to_failure)
         d.addErrback(self._stop_on_failure)
@@ -148,7 +148,7 @@ class HgPoller(base.PollingChangeSource):
         # The callback which will be added to this
         # deferred will not use the response.
         d.addCallback(lambda _: utils.getProcessOutput(
-            self.hgbin, args, path=self.workdir,
+            self.hgbin, args, path=self.absWorkdir(),
             env=os.environ, errortoo=True))
 
         return d
@@ -184,10 +184,11 @@ class HgPoller(base.PollingChangeSource):
             d = self.getStateObjectId()
         else:
             d = defer.succeed(oid)
+
         def set_in_state(obj_id):
             return self.master.db.state.setState(obj_id, 'current_rev', rev)
-
         d.addCallback(set_in_state)
+
         return d
 
     def getHead(self):
@@ -200,7 +201,7 @@ class HgPoller(base.PollingChangeSource):
         """
         d = utils.getProcessOutput(self.hgbin,
                     ['heads', self.branch, '--template={rev}' + os.linesep],
-                    path=self.workdir, env=os.environ, errortoo=False)
+                    path=self.absWorkdir(), env=os.environ, errortoo=False)
 
         def no_head_err(exc):
             log.err("hgpoller: could not find branch %r in repository %r" % (
@@ -255,13 +256,13 @@ class HgPoller(base.PollingChangeSource):
         revListArgs = ['log', '-b', self.branch, '-r', revrange,
                        r'--template={rev}:{node}\n']
         results = yield utils.getProcessOutput(self.hgbin, revListArgs,
-                    path=self.workdir, env=os.environ, errortoo=False )
+                    path=self.absWorkdir(), env=os.environ, errortoo=False )
 
         revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
         self.changeCount = len(revNodeList)
 
         log.msg('hgpoller: processing %d changes: %r in %r'
-                % (self.changeCount, revNodeList, self.workdir))
+                % (self.changeCount, revNodeList, self.absWorkdir()))
         for rev, node in revNodeList:
             timestamp, author, files, comments = yield self._get_rev_details(
                 node)
