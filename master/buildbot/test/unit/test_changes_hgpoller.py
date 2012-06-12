@@ -169,3 +169,34 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         # do the poll: we must stay at rev 3
         d = self.poller.poll()
         d.addCallback(self.check_current_rev(3))
+
+    @defer.inlineCallbacks
+    def test_poll_regular(self):
+        # normal operation. There's a previous revision, we get a new one.
+        self.addGetProcessOutputResult(
+                self.gpoSubcommandPattern('hg', 'pull'), "any output")
+        self.addGetProcessOutputResult(
+                self.gpoFullcommandPattern('hg', 'heads', 'default'),
+                '5' + os.linesep)
+        self.addGetProcessOutputResult(
+                self.gpoFullcommandPattern('hg', 'log', '-b', 'default',
+                                           '-r', '5:5'), '5:784bd')
+        self.addGetProcessOutputResult(
+                self.gpoFullcommandPattern('hg', 'log', '-r', '784bd'),
+                os.linesep.join(['1273258009.0 -7200',
+                                 'Joe Test <joetest@example.org>',
+                                 'file1 file2',
+                                 'Comment for rev 5',
+                                 '']))
+
+        yield self.poller.setCurrentRev(4)
+
+        d = self.poller.poll()
+        d.addCallback(self.check_current_rev(5))
+
+        def check_changes(_):
+            self.assertEquals(len(self.changes_added), 1)
+            change = self.changes_added[0]
+            self.assertEqual(change['revision'], '784bd')
+            self.assertEqual(change['comments'], 'Comment for rev 5')
+        d.addCallback(check_changes)
