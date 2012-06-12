@@ -38,9 +38,17 @@ class InterfaceTests(object):
 
             return (args, spec[1], spec[2], defaults or None)
 
+        def remove_decorators(func):
+            try:
+                return func.func_original
+            except AttributeError:
+                return func
+
         def wrap(template):
-            actual_argspec = filter(inspect.getargspec(actual))
-            template_argspec = filter(inspect.getargspec(template))
+            actual_argspec = filter(
+                    inspect.getargspec(remove_decorators(actual)))
+            template_argspec = filter(
+                    inspect.getargspec(remove_decorators(template)))
             if actual_argspec != template_argspec:
                 msg = "Expected: %s; got: %s" % (
                     inspect.formatargspec(*template_argspec),
