@@ -13,12 +13,13 @@ Database Specification
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Buildbot requires a connection to a database to maintain certain state
-information, such as tracking pending build requests.  By default this is
-stored in a sqlite file called :file:`state.sqlite` in the base directory of your
-master.  This can be overridden with the :bb:cfg:`db_url` parameter.
+information, such as tracking pending build requests.  In the default
+configuration Buildbot uses file-based SQLite database, stored in the
+:file:`state.sqlite` file of the master's base directory. Override
+this configuration with the :bb:cfg:`db_url` parameter.
 
-The database configuration is specified as a dictionary named ``db``, where all
-keys are optional::
+Buildbot accepts a database configuration in a dictionary named
+``db``. All keys are optional: ::
 
     c['db'] = {
         'db_url' : 'sqlite:///state.sqlite',
@@ -27,9 +28,9 @@ keys are optional::
 
 The ``db_url`` key indicates the database engine to use.  The format of this
 parameter is completely documented at http://www.sqlalchemy.org/docs/dialects/,
-but is generally of the form ::
+but is generally of the form: ::
 
-    driver://[username:password@]host:port/database[?args]
+     driver://[username:password@]host:port/database[?args]
 
 The optional ``db_poll_interval`` specifies the interval, in seconds, between
 checks for pending tasks in the database.  This parameter is generally only
@@ -52,10 +53,10 @@ Examples::
 
     c['db_url'] = "sqlite:///state.sqlite"
 
-No special configuration is required to use SQLite.
+SQLite requires no special configuration.
 
-If you have trouble with "database is locked" exceptions, try adding
-``serialize_access=1`` to the DB URL as a workaround::
+If Buildbot produces "database is locked" exceptions, try adding
+``serialize_access=1`` to the DB URL as a workaround: ::
 
     c['db_url'] = "sqlite:///state.sqlite?serialize_access=1"
 
@@ -68,8 +69,7 @@ MySQL
 
 .. code-block:: python
 
-    c['db_url'] = "mysql://user:pass@somehost.com/database_name?max_idle=300"
-
+   c['db_url'] = "mysql://user:pass@somehost.com/database_name?max_idle=300"
 
 The ``max_idle`` argument for MySQL connections is unique to Buildbot, and
 should be set to something less than the ``wait_timeout`` configured for your
@@ -108,7 +108,7 @@ Postgres
 
     c['db_url'] = "postgresql://username@hostname/dbname"
 
-No special configuration is required to use Postgres.
+PosgreSQL requires no special configuration.
 
 .. bb:cfg:: multiMaster
 
@@ -344,8 +344,8 @@ The available caches are:
 ``BuildRequests``
     the number of BuildRequest objects kept in memory.  This number should be
     higher than the typical number of outstanding build requests.  If the master
-    ordinarily finds jobs for BuildRequests immediately, it can be set to a
-    relatively low value.
+    ordinarily finds jobs for BuildRequests immediately, you may set a
+    lower value.
 
 ``SourceStamps``
    the number of SourceStamp objects kept in memory.  This number
@@ -374,9 +374,9 @@ The available caches are:
 Merging Build Requests
 ~~~~~~~~~~~~~~~~~~~~~~
 
-::
+.. code-block:: python
 
-    c['mergeRequests'] = True
+   c['mergeRequests'] = True
 
 This is a global default value for builders' :bb:cfg:`mergeRequests` parameter,
 and controls the merging of build requests.  This parameter can be overridden
@@ -392,20 +392,20 @@ values for this parameter.
 Prioritizing Builders
 ~~~~~~~~~~~~~~~~~~~~~
 
-::
+.. code-block:: python
 
-    def prioritizeBuilders(buildmaster, builders):
-        # ...
-    c['prioritizeBuilders'] = prioritizeBuilders
+   def prioritizeBuilders(buildmaster, builders):
+       # ...
+   c['prioritizeBuilders'] = prioritizeBuilders
 
 By default, buildbot will attempt to start builds on builders in order,
-beginning with the builder with the oldest pending request.  This behaviour can
-be customized with the :bb:cfg:`prioritizeBuilders` configuration key, which
-takes a callable.  See :ref:`Builder-Priority-Functions` for details on this
+beginning with the builder with the oldest pending request.  Customize
+this behavior with the :bb:cfg:`prioritizeBuilders` configuration key, which
+takes a callable. See :ref:`Builder-Priority-Functions` for details on this
 callable.
 
-This parameter controls the order in which builders are permitted to start
-builds, and is relevant in cases where there is resource contention between
+This parameter controls the order that the build master can start
+builds, and is useful in situations where there is resource contention between
 builders, e.g., for a test database.  It does not affect the order in which a
 builder processes the build requests in its queue.  For that purpose, see
 :ref:`Prioritizing-Builds`.
@@ -438,9 +438,11 @@ inbound connections to this port.
 defined in the ``twisted.application.strports`` module (try
 ``pydoc twisted.application.strports`` to get documentation on
 the format). This means that you can have the buildmaster listen on a
-localhost-only port by doing::
+localhost-only port by doing: 
 
-    c['slavePortnum'] = "tcp:10000:interface=127.0.0.1"
+.. code-block:: python
+
+   c['slavePortnum'] = "tcp:10000:interface=127.0.0.1"
 
 This might be useful if you only run buildslaves on the same machine,
 and they are all configured to contact the buildmaster at
@@ -455,12 +457,14 @@ Defining Global Properties
 
 The :bb:cfg:`properties` configuration key defines a dictionary
 of properties that will be available to all builds started by the
-buildmaster::
+buildmaster: 
 
-    c['properties'] = {
-        'Widget-version' : '1.2',
-        'release-stage' : 'alpha'
-    }
+.. code-block:: python
+
+   c['properties'] = {
+       'Widget-version' : '1.2',
+       'release-stage' : 'alpha'
+   }
 
 .. bb:cfg:: debugPassword
 
@@ -474,9 +478,11 @@ buildmaster with the diagnostic tool launched by :samp:`buildbot
 debugclient {MASTER}:{PORT}`. From this tool, you can reload the config
 file, manually force builds, and inject changes, which may be useful
 for testing your buildmaster without actually commiting changes to
-your repository (or before you have the Change Sources set up). The
-debug tool uses the same port number as the slaves do:
-:bb:cfg:`slavePortnum`, and is authenticated with this password. ::
+your repository (or before you have the Change Sources configured.) 
+
+The debug tool uses the same port number as the slaves,
+:bb:cfg:`slavePortnum`, and you may configure its authentication
+credentials as follows: ::
 
     c['debugPassword'] = "debugpassword"
 
@@ -718,17 +724,25 @@ of capture groups. The replacement text should have sed-style references to
 that capture groups (i.e. '\1' for the first capture group), and a single '%s'
 reference, for the revision ID. The repository given is tried against each
 regular expression in turn. The results are the substituted into the
-replacement text, along with the revision ID to obtain the revision link. ::
+replacement text, along with the revision ID to obtain the revision link. 
+
+::
 
         from buildbot import revlinks
-        c['revlink'] = revlinks.RevlinkMatch([r'git://notmuchmail.org/git/\(.*\)']
-                                                r'http://git.notmuchmail.org/git/\1/commit/%s')
+        c['revlink'] = revlinks.RevlinkMatch([r'git://notmuchmail.org/git/\(.*\)'], r'http://git.notmuchmail.org/git/\1/commit/%s')
+
+Consider the following example for creating appropriate links to
+GitHub repositories:
+
+::
+
+        from buildbot import revlinks
+        c['revlink'] = revlinks.RevlinkMatch([r'git://github.com/(.*)/(.*)'], r'https://github.com/\1/\2/commit/%s')
 
 :class:`buildbot.revlinks.RevlinkMultiplexer` takes a list of revision link
 callables, and tries each in turn, returning the first successful match.
 
 .. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch
-
 
 .. bb:cfg:: codebaseGenerator
 
