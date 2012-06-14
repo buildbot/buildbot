@@ -448,6 +448,8 @@ The full list of parameters is:
 ``change_filter``
 
 ``onlyImportant``
+
+``codebases``
     See :ref:`Configuring-Schedulers`.  Note that ``fileIsImportant`` and
     ``change_filter`` are only relevant if ``onlyIfChanged`` is
     ``True``.
@@ -693,7 +695,6 @@ The parameters are just the basics:
 ``builderNames``
 
 ``properties``
-    See :ref:`Configuring-Schedulers`.
 
 ``codebases``
     See :ref:`Configuring-Schedulers`.
@@ -753,7 +754,7 @@ NightlyTriggerable Scheduler
 
 The :class:`NightlyTriggerable` scheduler is a mix of the :class:`Nightly` and :class:`Triggerable` schedulers.
 This scheduler triggers builds at a particular time of day, week, or year, exactly as the :class:`Nightly` scheduler.
-However, the source stamp that is used that provided by the last :class:`Trigger` step that targeted this scheduler.
+However, the source stamp set that is used that provided by the last :class:`Trigger` step that targeted this scheduler.
 
 The parameters are just the basics:
 
@@ -762,6 +763,8 @@ The parameters are just the basics:
 ``builderNames``
 
 ``properties``
+
+``codebases``
     See :ref:`Configuring-Schedulers`.
 
 ``minute``
