@@ -383,7 +383,7 @@ class NightlyTriggerable(NightlyBase):
         d = self.setState('lastTrigger',
                 (sourcestamps, propsDict))
 
-        ## FIXME: Trigger expects a callback with the success of the triggered
+        ## Trigger expects a callback with the success of the triggered
         ## build, if waitForFinish is True. That probably isn't important here,
         ## so just return SUCCESS for now.
         return d.addCallback(lambda _: buildstep.SUCCESS)
@@ -396,8 +396,6 @@ class NightlyTriggerable(NightlyBase):
         (sourcestamps, set_props) = self._lastTrigger
         self._lastTrigger = None
         yield self.setState('lastTrigger', None)
-
-        ## TODO: The following code is copied from Triggerable.trigger
 
         # properties for this buildset are composed of our own properties,
         # potentially overridden by anything from the triggering build
