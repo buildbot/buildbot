@@ -353,9 +353,9 @@ class NightlyTriggerable(NightlyBase):
     implements(ITriggerableScheduler)
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
-                 properties={}):
+                 properties={}, codebases=base.BaseScheduler.DefaultCodebases):
         NightlyBase.__init__(self, name=name, builderNames=builderNames, minute=minute, hour=hour,
-                dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, properties=properties)
+                dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, properties=properties, codebases=codebases)
 
         self._lastTrigger = None
         self.reason = "The NightlyTriggerable scheduler named '%s' triggered this build" % self.name
@@ -370,10 +370,10 @@ class NightlyTriggerable(NightlyBase):
                 self._lastTrigger = (lastTrigger[0], properties.Properties.fromDict(lastTrigger[1]))
         d.addCallback(setLast)
 
-    def trigger(self, ssid, set_props=None):
+    def trigger(self, sourcestamps, set_props=None):
         """Trigger this scheduler with the given sourcestamp ID. Returns a
         deferred that will fire when the buildset is finished."""
-        self._lastTrigger = (ssid, set_props)
+        self._lastTrigger = (sourcestamps, set_props)
 
         # record the trigger in the db
         if set_props:
@@ -381,7 +381,7 @@ class NightlyTriggerable(NightlyBase):
         else:
             propsDict = {}
         d = self.setState('lastTrigger',
-                (ssid, propsDict))
+                (sourcestamps, propsDict))
 
         ## FIXME: Trigger expects a callback with the success of the triggered
         ## build, if waitForFinish is True. That probably isn't important here,
@@ -393,7 +393,7 @@ class NightlyTriggerable(NightlyBase):
         if self._lastTrigger is None:
             defer.returnValue(None)
 
-        (ssid, set_props) = self._lastTrigger
+        (sourcestamps, set_props) = self._lastTrigger
         self._lastTrigger = None
         yield self.setState('lastTrigger', None)
 
@@ -406,8 +406,5 @@ class NightlyTriggerable(NightlyBase):
         if set_props:
             props.updateFromProperties(set_props)
 
-        if ssid:
-            yield self.addBuildsetForSourceStamp(reason=self.reason, ssid=ssid,
-                    properties=props)
-        else:
-            yield self.addBuildsetForLatest(reason=self.reason, properties=props)
+        yield self.addBuildsetForSourceStampSetDetails(reason=self.reason, sourcestamps=sourcestamps,
+                properties=props)

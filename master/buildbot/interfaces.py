@@ -1206,7 +1206,7 @@ class ITriggerableScheduler(Interface):
     A scheduler that can be triggered by buildsteps.
     """
 
-    def trigger(ssid, set_props=None):
+    def trigger(sourcestamps, set_props=None):
         """Trigger a build with the given source stamp and properties.
         """
 
