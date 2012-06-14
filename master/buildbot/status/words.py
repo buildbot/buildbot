@@ -843,7 +843,6 @@ class IrcStatusBot(irc.IRCClient):
     def privmsg(self, user, channel, message):
         user = user.split('!', 1)[0] # rest is ~user@hostname
         # channel is '#twisted' or 'buildbot' (for private messages)
-        channel = channel.lower()
         if channel == self.nickname:
             # private message
             contact = self.getContact(user)
