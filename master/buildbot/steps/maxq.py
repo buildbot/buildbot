@@ -34,7 +34,7 @@ class MaxQ(ShellCommand):
     def evaluateCommand(self, cmd):
         # treat a nonzero exit status as a failure, if no other failures are
         # detected
-        if not self.failures and cmd.rc != 0:
+        if not self.failures and cmd.didFail():
             self.failures = 1
         if self.failures:
             return FAILURE

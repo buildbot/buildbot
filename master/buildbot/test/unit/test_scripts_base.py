@@ -21,7 +21,7 @@ import cStringIO
 from twisted.trial import unittest
 from buildbot.scripts import base
 from buildbot.test.util import dirs, misc
-from twisted.python import usage
+from twisted.python import usage, runtime
 
 class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
 
@@ -115,9 +115,14 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         # avoid breaking other parts of the test system
         patches = []
 
-        def expanduser(p):
-            return p.replace('~', self.home + '/')
-        patches.append(self.patch(os.path, 'expanduser', expanduser))
+        if runtime.platformType == 'win32':
+            from win32com.shell import shell
+            patches.append(self.patch(shell, 'SHGetFolderPath',
+                lambda *args : self.home))
+        else:
+            def expanduser(p):
+                return p.replace('~/', self.home + '/')
+            patches.append(self.patch(os.path, 'expanduser', expanduser))
 
         old_dirname = os.path.dirname
         def dirname(p):
@@ -133,9 +138,9 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
             for p in patches:
                 p.restore()
 
-    def writeOptionsFile(self, dir, content):
-        os.makedirs(os.path.join(dir, '.buildbot'))
-        with open(os.path.join(dir, '.buildbot', 'options'), 'w') as f:
+    def writeOptionsFile(self, dir, content, bbdir='.buildbot'):
+        os.makedirs(os.path.join(dir, bbdir))
+        with open(os.path.join(dir, bbdir, 'options'), 'w') as f:
             f.write(content)
 
     def test_loadOptionsFile_subdirs_not_found(self):
@@ -160,7 +165,10 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
     def test_loadOptionsFile_subdirs_at_homedir(self):
         subdir = os.path.join(self.dir, 'a', 'b')
         os.makedirs(subdir)
-        self.writeOptionsFile(self.home, 'abc=123')
+        # on windows, the subdir of the home (well, appdata) dir
+        # is 'buildbot', not '.buildbot'
+        self.writeOptionsFile(self.home, 'abc=123',
+            'buildbot' if runtime.platformType == 'win32' else '.buildbot')
         self.do_loadOptionsFile(_here=subdir, exp={'abc':123})
 
     def test_loadOptionsFile_syntax_error(self):

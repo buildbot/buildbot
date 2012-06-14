@@ -37,6 +37,8 @@ class Repo(SourceBaseCommand):
     ['tarball'] (optional):         The tarball base to accelerate the fetch.
     ['repo_downloads'] (optional):  Repo downloads to do. Computer from GerritChangeSource
                                     and forced build properties.
+    ['jobs'] (optional):            number of connections to run in parallel
+                                    repo tool will use while syncing
     """
 
     header = "repo operation"
@@ -52,6 +54,7 @@ class Repo(SourceBaseCommand):
         # we're using string instead of an array here, because it will be transferred back
         # to the master as string anyway and using eval() could have security implications.
         self.repo_downloaded = ""
+        self.jobs = args.get('jobs')
 
         self.sourcedata = "%s %s" % (self.manifest_url, self.manifest_file)
         self.re_change = re.compile(".* refs/changes/\d\d/(\d+)/(\d+) -> FETCH_HEAD$")
@@ -165,6 +168,8 @@ class Repo(SourceBaseCommand):
         if self.manifest_override_url:
             os.system("cd %s/.repo; ln -sf ../manifest_override.xml manifest.xml"%(self._fullSrcdir()))
         command = ['sync']
+        if self.jobs:
+          command.append('-j' + str(self.jobs))
         self.sendStatus({"header": "synching manifest %s from branch %s from %s\n"
                                    % (self.manifest_file, self.manifest_branch, self.manifest_url)})
         return self._repoCmd(command, self._didSync)

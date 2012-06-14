@@ -224,12 +224,13 @@ class Mercurial(Source):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
+                                           timeout=self.timeout,
                                            collectStdout=collectStdout)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting mercurial command : hg %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
-            if cmd.rc != 0:
+            if cmd.didFail():
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
             if collectStdout:
@@ -276,7 +277,7 @@ class Mercurial(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _fail(tmp):
-            if cmd.rc != 0:
+            if cmd.didFail():
                 return False
             return True
         d.addCallback(_fail)

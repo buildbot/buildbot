@@ -37,12 +37,15 @@ class Build(object):
         self.props.build = self
         return defer.maybeDeferred(IRenderable(value).getRenderingFor, self.props)
 
+class FakeStep(object):
+    codebase = ''
+
 class RepoURL(unittest.TestCase):
     def setUp(self):
         self.build = Build()
 
     def test_backward_compatibility(self):
-        url = _ComputeRepositoryURL("repourl")
+        url = _ComputeRepositoryURL(FakeStep(), "repourl")
         d = self.build.render(url)
         @d.addCallback
         def callback(res):
@@ -50,7 +53,7 @@ class RepoURL(unittest.TestCase):
         return d
 
     def test_format_string(self):
-        url = _ComputeRepositoryURL("http://server/%s")
+        url = _ComputeRepositoryURL(FakeStep(), "http://server/%s")
         d = self.build.render(url)
         @d.addCallback
         def callback(res):
@@ -60,7 +63,7 @@ class RepoURL(unittest.TestCase):
     def test_dict(self):
         dict = {}
         dict['test'] = "ssh://server/testrepository"
-        url = _ComputeRepositoryURL(dict)
+        url = _ComputeRepositoryURL(FakeStep(), dict)
         d = self.build.render(url)
         @d.addCallback
         def callback(res):
@@ -69,7 +72,7 @@ class RepoURL(unittest.TestCase):
 
     def test_callable(self):
         func = lambda x: x[::-1]
-        url = _ComputeRepositoryURL(func)
+        url = _ComputeRepositoryURL(FakeStep(), func)
         d = self.build.render(url)
         @d.addCallback
         def callback(res):
@@ -77,7 +80,7 @@ class RepoURL(unittest.TestCase):
         return d
 
     def test_backward_compatibility_render(self):
-        url = _ComputeRepositoryURL(WithProperties("repourl%(foo)s"))
+        url = _ComputeRepositoryURL(FakeStep(), WithProperties("repourl%(foo)s"))
         d = self.build.render(url)
         @d.addCallback
         def callback(res):
@@ -86,7 +89,7 @@ class RepoURL(unittest.TestCase):
 
     def test_dict_render(self):
         d = dict(test=WithProperties("repourl%(foo)s"))
-        url = _ComputeRepositoryURL(d)
+        url = _ComputeRepositoryURL(FakeStep(), d)
         d = self.build.render(url)
         @d.addCallback
         def callback(res):
@@ -95,7 +98,7 @@ class RepoURL(unittest.TestCase):
 
     def test_callable_render(self):
         func = lambda x: WithProperties(x+"%(foo)s")
-        url = _ComputeRepositoryURL(func)
+        url = _ComputeRepositoryURL(FakeStep(), func)
         d = self.build.render(url)
         @d.addCallback
         def callback(res):

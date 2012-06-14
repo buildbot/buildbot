@@ -148,7 +148,7 @@ class WebStatus(service.MultiService):
                  order_console_by_time=False, changecommentlink=None,
                  revlink=None, projects=None, repositories=None,
                  authz=None, logRotateLength=None, maxRotatedFiles=None,
-                 change_hook_dialects = {}, provide_feeds=None):
+                 change_hook_dialects = {}, provide_feeds=None, jinja_loaders=None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -266,6 +266,10 @@ class WebStatus(service.MultiService):
                               Otherwise, a dictionary of strings of
                               the type of feeds provided.  Current
                               possibilities are "atom", "json", and "rss"
+
+        @type  jinja_loaders: None or list
+        @param jinja_loaders: If not empty, a list of additional Jinja2 loader
+                              objects to search for templates.
         """
 
         service.MultiService.__init__(self)
@@ -344,6 +348,8 @@ class WebStatus(service.MultiService):
         else:
             self.provide_feeds = provide_feeds
 
+        self.jinja_loaders = jinja_loaders
+
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
         #self.putChild("", IndexOrWaterfallRedirection())
         self.putChild("waterfall", WaterfallStatusResource(num_events=num_events,
@@ -377,8 +383,6 @@ class WebStatus(service.MultiService):
                 (self.http_port, self.distrib_port, hex(id(self))))
 
     def setServiceParent(self, parent):
-        service.MultiService.setServiceParent(self, parent)
-
         # this class keeps a *separate* link to the buildmaster, rather than
         # just using self.parent, so that when we are "disowned" (and thus
         # parent=None), any remaining HTTP clients of this WebStatus will still
@@ -404,7 +408,7 @@ class WebStatus(service.MultiService):
         else:
             revlink = self.master.config.revlink
         self.templates = createJinjaEnv(revlink, self.changecommentlink,
-                                        self.repositories, self.projects)
+                                        self.repositories, self.projects, self.jinja_loaders)
 
         if not self.site:
             
@@ -443,6 +447,8 @@ class WebStatus(service.MultiService):
             s.setServiceParent(self)
 
         self.setupSite()
+
+        service.MultiService.setServiceParent(self, parent)
 
     def setupSite(self):
         # this is responsible for creating the root resource. It isn't done

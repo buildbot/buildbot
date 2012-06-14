@@ -1209,6 +1209,10 @@ The Repo step takes the following arguments:
     directory which contains all the git objects. This feature helps
     to minimize network usage on very big projects.
 
+``jobs``
+    (optional, defaults to ``None``): Number of projects to fetch
+    simultaneously while syncing. Passed to repo sync subcommand with "-j".
+
 This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will
 automatically use the :command:`repo download` command of repo to
 download the additionnal changes introduced by a pending changeset.
@@ -1495,6 +1499,10 @@ The :bb:step:`ShellCommand` arguments are:
     this parameter.  This value should not be excessively large, as it is
     handled as a single string throughout Buildbot -- for example, do not pass
     the contents of a tarball with this parameter.
+
+``successfulRC``
+    This is a list or tuple of the exit codes that should be treated as successful.
+    The default is to treat just 0 as successful.
 
 .. bb:step:: Configure
 
@@ -2343,6 +2351,9 @@ Note that environment values must be strings (or lists that are turned into
 strings).  In particular, numeric properties such as ``buildnumber`` must
 be substituted using :ref:`WithProperties`.
 
+``interruptSignal``
+   (optional) Signal to use to end the process, if the step is interrupted.
+
 .. index:: Properties; from steps
 
 .. _Setting-Properties:
@@ -2458,39 +2469,46 @@ are added to the waterfall and the build detail web pages for each
 triggered build. If this argument is ``False`` (the default) or not given,
 then the buildstep succeeds immediately after triggering the schedulers.
 
-The SourceStamp to use for the triggered build is controlled by the arguments
-``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp``.  If
+The SourceStamps to use for the triggered build are controlled by the arguments
+``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamps``.  If
 ``updateSourceStamp`` is ``True`` (the default), then step updates the
-:class:`SourceStamp` given to the :bb:sched:`Triggerable` schedulers to include
+:class:`SourceStamp`s given to the :bb:sched:`Triggerable` schedulers to include
 ``got_revision`` (the revision actually used in this build) as ``revision``
 (the revision to use in the triggered builds). This is useful to ensure that
-all of the builds use exactly the same :class:`SourceStamp`, even if other
+all of the builds use exactly the same :class:`SourceStamp`s, even if other
 :class:`Change`\s have occurred while the build was running. If
 ``updateSourceStamp`` is False (and neither of the other arguments are
-specified), then the exact same SourceStamp is used. If ``alwaysUseLatest`` is
-True, then no SourceStamp is given, corresponding to using the latest revision
-of the repository specified in the Source step. This is useful if the triggered
-builds use to a different source repository.  :class:`SourceStamp` accepts a
-dictionary containing the keys ``branch``, ``revision``, ``branch``,
-``repository``, ``project``, and optionally ``patch_level``, ``patch_level``
-and ``patch_subdir`` and creates the corresponding SourceStamp.  All of
-``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp`` can be
-specified using properties.
+specified), then the exact same SourceStamps are used. If ``alwaysUseLatest`` is
+True, then no SourceStamps are given, corresponding to using the latest revisions
+of the repositories specified in the Source steps. This is useful if the triggered
+builds use to a different source repository.  The argument ``sourceStamps`` 
+accepts a list of dictionaries containing the keys ``branch``, ``revision``,
+``repository``, ``project``, and optionally ``patch_level``,
+``patch_body``, ``patch_subdir``, ``patch_author`` and ``patch_comment``
+and creates the corresponding SourceStamps.
+If only one sourceStamp has to be specified then the argument ``sourceStamp``
+can be used for a dictionary containing the keys mentioned above. The arguments
+``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp`` can be specified
+using properties.
 
 Two parameters allow control of the properties that are passed to the triggered
 scheduler.  To simply copy properties verbatim, list them in the
 ``copy_properties`` parameter.  To set properties explicitly, use the more
 sophisticated ``set_properties``, which takes a dictionary mapping property
-names to values.  You may use :ref:`WithProperties` here to dynamically
+names to values.  You may use :ref:`WithProperties` here to dynamically 
 construct new property values.
 
 RPM-Related Steps
 -----------------
 
+These steps work with RPMs and spec files.
+
 .. bb:step:: RpmBuild
 
-These steps work with RPMs and spec files.  The :bb:step:`RpmBuild` step builds
-RPMs based on a spec file::
+RpmBuild
+++++++++
+
+The :bb:step:`RpmBuild` step builds RPMs based on a spec file::
 
     from buildbot.steps.package.rpm import RpmBuild
     f.addStep(RpmBuild(specfile="proj.spec",
@@ -2526,6 +2544,82 @@ The step takes the following parameters
     If true, use the version-control revision mechanics.  This uses the
     ``got_revision`` property to determine the revision and define
     ``_revision``.
+
+.. bb:step:: RpmLint
+
+RpmLint
++++++++
+
+The :bb:step:`RpmLint` step checks for common problems in RPM packages or
+spec files::
+
+    from buildbot.steps.package.rpm import RpmLint
+    f.addStep(RpmLint())
+
+The step takes the following parameters
+
+``fileloc``
+    The file or directory to check. In case of a directory, it is recursively
+    searched for RPMs and spec files to check.
+
+``config``
+    Path to a rpmlint config file. This is passed as the user configuration
+    file if present.
+
+Mock Steps
+++++++++++
+
+Mock (http://fedoraproject.org/wiki/Projects/Mock) creates chroots and builds
+packages in them. It populates the changeroot with a basic system
+and the packages listed as build requirement. The type of chroot to build
+is specified with the ``root`` parameter. To use mock your buildbot user must
+be added to the ``mock`` group.
+
+.. bb:step:: MockBuildSRPM
+
+MockBuildSRPM Step
+++++++++++++++++++
+
+The :bb:step:`MockBuildSRPM` step builds a SourceRPM based on a spec file and
+optionaly a source directory::
+
+    from buildbot.steps.package.rpm import MockBuildSRPM
+    f.addStep(MockBuildSRPM(root='default', spec='mypkg.spec'))
+
+The step takes the following parameters
+
+``root``
+    Use chroot configuration defined in ``/etc/mock/<root>.cfg``.
+
+``resultdir``
+    The directory where the logfiles and the SourceRPM are written to.
+
+``spec``
+    Build the SourceRPM from this spec file.
+
+``sources``
+    Path to the directory containing the sources, defaulting to ``.``.
+
+.. bb:step:: MockRebuild
+
+MockRebuild Step
+++++++++++++++++
+
+The :bb:step:`MockRebuild` step rebuilds a SourceRPM package::
+
+    from buildbot.steps.package.rpm import MockRebuild
+    f.addStep(MockRebuild(root='default', spec='mypkg-1.0-1.src.rpm'))
+
+The step takes the following parameters
+
+``root``
+    Uses chroot configuration defined in ``/etc/mock/<root>.cfg``.
+
+``resultdir``
+    The directory where the logfiles and the SourceRPM are written to.
+
+``srpm``
+    The path to the SourceRPM to rebuild.
 
 Miscellaneous BuildSteps
 ------------------------

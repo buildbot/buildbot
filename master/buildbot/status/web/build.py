@@ -22,7 +22,8 @@ import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, \
      css_classes, path_to_build, path_to_builder, path_to_slave, \
-     getAndCheckProperties, ActionResource, path_to_authzfail
+     getAndCheckProperties, ActionResource, path_to_authzfail, \
+     getRequestCharset
 from buildbot.schedulers.forcesched import ForceScheduler, TextParameter
 from buildbot.status.web.step import StepsResource
 from buildbot.status.web.tests import TestsResource
@@ -53,6 +54,7 @@ class ForceBuildActionResource(ActionResource):
             log.msg("web rebuild of build %s:%s" % (builder_name, b.getNumber()))
             name =authz.getUsernameFull(req)
             comments = req.args.get("comments", ["<no reason specified>"])[0]
+            comments.decode(getRequestCharset(req))
             reason = ("The web-page 'rebuild' button was pressed by "
                       "'%s': %s\n" % (name, comments))
             msg = ""
@@ -105,6 +107,7 @@ class StopBuildActionResource(ActionResource):
                     (b.getBuilder().getName(), b.getNumber()))
         name = authz.getUsernameFull(req)
         comments = req.args.get("comments", ["<no reason specified>"])[0]
+        comments.decode(getRequestCharset(req))
         # html-quote both the username and comments, just to be safe
         reason = ("The web-page 'stop build' button was pressed by "
                   "'%s': %s\n" % (html.escape(name), html.escape(comments)))
@@ -270,6 +273,7 @@ class StatusResourceBuild(HtmlResource):
 
         name = self.getAuthz(req).getUsernameFull(req)
         comments = req.args.get("comments", ["<no reason specified>"])[0]
+        comments.decode(getRequestCharset(req))
         # html-quote both the username and comments, just to be safe
         reason = ("The web-page 'stop build' button was pressed by "
                   "'%s': %s\n" % (html.escape(name), html.escape(comments)))

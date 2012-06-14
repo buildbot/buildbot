@@ -35,12 +35,32 @@ class PollingChangeSource(ChangeSource):
     Utility subclass for ChangeSources that use some kind of periodic polling
     operation.  Subclasses should define C{poll} and set C{self.pollInterval}.
     The rest is taken care of.
+
+    Any subclass will be available via the "poller" webhook.
     """
 
     pollInterval = 60
     "time (in seconds) between calls to C{poll}"
 
     _loop = None
+
+    def __init__(self, name=None, pollInterval=60*10):
+        if name:
+            self.setName(name)
+        self.pollInterval = pollInterval
+
+        self.doPoll = util.misc.SerializedInvocation(self.doPoll)
+
+    def doPoll(self):
+        """
+        This is the method that is called by LoopingCall to actually poll.
+        It may also be called by change hooks to request a poll.
+        It is serialiazed - if you call it while a poll is in progress
+        then the 2nd invocation won't start until the 1st has finished.
+        """
+        d = defer.maybeDeferred(self.poll)
+        d.addErrback(log.err, 'while polling for changes')
+        return d
 
     def poll(self):
         """
@@ -49,22 +69,27 @@ class PollingChangeSource(ChangeSource):
         method will be called again after C{pollInterval} seconds.
         """
 
-    def startService(self):
-        ChangeSource.startService(self)
-        def do_poll():
-            d = defer.maybeDeferred(self.poll)
-            d.addErrback(log.err, 'while polling for changes')
-            return d
+    def startLoop(self):
+        self._loop = task.LoopingCall(self.doPoll)
+        self._loop.start(self.pollInterval, now=False)
 
-        # delay starting the loop until the reactor is running, and do not
-        # run it immediately - if services are still starting up, they may
-        # miss an initial flood of changes
-        def start_loop():
-            self._loop = task.LoopingCall(do_poll)
-            self._loop.start(self.pollInterval, now=False)
-        reactor.callWhenRunning(start_loop)
-
-    def stopService(self):
+    def stopLoop(self):
         if self._loop and self._loop.running:
             self._loop.stop()
+            self._loop = None
+
+    def startService(self):
+        ChangeSource.startService(self)
+
+        # delay starting doing anything until the reactor is running - if
+        # services are still starting up, they may miss an initial flood of
+        # changes
+        if self.pollInterval:
+            reactor.callWhenRunning(self.startLoop)
+        else:
+            reactor.callWhenRunning(self.doPoll)
+
+    def stopService(self):
+        self.stopLoop()
         return ChangeSource.stopService(self)
+

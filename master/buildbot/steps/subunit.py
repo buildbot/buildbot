@@ -81,7 +81,7 @@ class SubunitShellCommand(ShellCommand):
         self.text2 = [text2]
         
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         return self.results
 

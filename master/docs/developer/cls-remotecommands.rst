@@ -13,7 +13,7 @@ detail in :ref:`master-slave-updates`.
 RemoteCommand
 ~~~~~~~~~~~~~
 
-.. py:class:: RemoteCommand(remote_command, args, collectStdout=False, ignore_updates=False)
+.. py:class:: RemoteCommand(remote_command, args, collectStdout=False, ignore_updates=False, successfulRC=tuple(0))
 
     :param remote_command: command to run on the slave
     :type remote_command: string
@@ -21,6 +21,7 @@ RemoteCommand
     :type args: dictionary
     :param collectStdout: if True, collect the command's stdout
     :param ignore_updates: true to ignore remote updates
+    :param successfulRC: list or tuple of ``rc`` values to treat as successes
 
     This class handles running commands, consisting of a command name and
     a dictionary of arguments.  If true, ``ignore_updates`` will suppress any
@@ -60,6 +61,12 @@ RemoteCommand
         it returns will fire when the interrupt request is received by the
         slave; this may be a long time before the command itself completes, at
         which time the Deferred returned from :meth:`run` will fire.
+
+    .. py:method:: didFail()
+
+        :returns: bool
+
+        This method checks the ``rc`` against the list of successful exit statuses, and returns ``True`` if it is not in the list.
 
     The following methods are invoked from the slave.  They should not be
     called directly.

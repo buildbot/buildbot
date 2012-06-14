@@ -97,6 +97,9 @@ class Build(properties.PropertiesMixin):
                 return source
         return None
 
+    def getAllSourceStamps(self):
+        return list(self.sources)
+
     def allChanges(self):
         for s in self.sources:
             for c in s.changes:
@@ -184,13 +187,15 @@ class Build(properties.PropertiesMixin):
     def setupSlaveBuilder(self, slavebuilder):
         self.slavebuilder = slavebuilder
 
+        self.path_module = slavebuilder.slave.path_module
+
         # navigate our way back to the L{buildbot.buildslave.BuildSlave}
         # object that came from the config, and get its properties
         buildslave_properties = slavebuilder.slave.properties
         self.getProperties().updateFromProperties(buildslave_properties)
         if slavebuilder.slave.slave_basedir:
             self.setProperty("workdir",
-                    slavebuilder.slave.path_module.join(
+                    self.path_module.join(
                         slavebuilder.slave.slave_basedir,
                         self.builder.config.slavebuilddir),
                     "slave")
