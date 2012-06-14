@@ -776,7 +776,7 @@ class IRCContact(base.StatusReceiver):
         # buildbot (like '/me kicks buildbot'). 'user' is the name/nick/id of
         # the person who performed the action, so if their action provokes a
         # response, they can be named.  This is 100% silly.
-        if not data.endswith("s buildbot"):
+        if not data.endswith("s "+ self.bot.nickname):
             return
         words = data.split()
         verb = words[-2]
@@ -859,7 +859,7 @@ class IrcStatusBot(irc.IRCClient):
         user = user.split('!', 1)[0] # rest is ~user@hostname
         # somebody did an action (/me actions) in the broadcast channel
         contact = self.getContact(channel)
-        if "buildbot" in data:
+        if self.nickname in data:
             contact.handleAction(data, user)
 
     def signedOn(self):
