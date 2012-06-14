@@ -827,6 +827,7 @@ class IrcStatusBot(irc.IRCClient):
             self.msg(dest, message)
 
     def getContact(self, name):
+        name = name.lower() # nicknames and channel names are case insensitive
         if name in self.contacts:
             return self.contacts[name]
         new_contact = self.contactClass(self, name)
