@@ -24,6 +24,7 @@ class TestIrcContactChannel(unittest.TestCase):
 
     def setUp(self):
         self.bot = mock.Mock(name='IRCStatusBot-instance')
+        self.bot.nickname = 'nick'
         self.bot.notify_events = { 'success' : 1, 'failure' : 1 }
 
         # fake out subscription/unsubscription
@@ -234,12 +235,12 @@ class TestIrcContactChannel(unittest.TestCase):
 
     def test_handleAction_kick(self):
         self.patch_act()
-        self.contact.handleAction('kicks buildbot', 'me')
+        self.contact.handleAction('kicks nick', 'me')
         self.assertEqual(self.actions, ['kicks back'])
 
     def test_handleAction_stpuid(self):
         self.patch_act()
-        self.contact.handleAction('stupids buildbot', 'me')
+        self.contact.handleAction('stupids nick', 'me')
         self.assertEqual(self.actions, ['stupids me too'])
 
 
@@ -297,10 +298,26 @@ class TestIrcStatusBot(unittest.TestCase):
         self.assertIdentical(c1, c1b)
         self.assertIsInstance(c2, words.IRCContact)
 
+    def test_getContact_case_insensitive(self):
+        b = self.makeBot()
+
+        c1 = b.getContact('c1')
+        c1b = b.getContact('C1')
+
+        self.assertIdentical(c1, c1b)
+
     def test_privmsg_user(self):
         b = self.makeBot()
         b.contactClass = FakeContact
         b.privmsg('jimmy!~foo@bar', 'nick', 'hello')
+
+        c = b.getContact('jimmy')
+        self.assertEqual(c.messages, [('hello', 'jimmy')])
+
+    def test_privmsg_user_uppercase(self):
+        b = self.makeBot('NICK', 'pass', ['#ch'], [], self.status, [], {})
+        b.contactClass = FakeContact
+        b.privmsg('jimmy!~foo@bar', 'NICK', 'hello')
 
         c = b.getContact('jimmy')
         self.assertEqual(c.messages, [('hello', 'jimmy')])
@@ -329,13 +346,21 @@ class TestIrcStatusBot(unittest.TestCase):
         c = b.getContact('#ch')
         self.assertEqual(c.actions, [])
 
+    def test_action_unrelated_buildbot(self):
+        b = self.makeBot()
+        b.contactClass = FakeContact
+        b.action('jimmy!~foo@bar', '#ch', 'waves at buildbot')# b.nickname is not 'buildbot'
+
+        c = b.getContact('#ch')
+        self.assertEqual(c.actions, [])
+
     def test_action_related(self):
         b = self.makeBot()
         b.contactClass = FakeContact
-        b.action('jimmy!~foo@bar', '#ch', 'waves at buildbot')
+        b.action('jimmy!~foo@bar', '#ch', 'waves at nick')
 
         c = b.getContact('#ch')
-        self.assertEqual(c.actions, [('waves at buildbot', 'jimmy')])
+        self.assertEqual(c.actions, [('waves at nick', 'jimmy')])
 
     def test_signedOn(self):
         b = self.makeBot('nick', 'pass',
