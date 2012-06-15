@@ -366,8 +366,13 @@ class NightlyTriggerable(NightlyBase):
         # get the scheduler's lastTrigger time (note: only done at startup)
         d = self.getState('lastTrigger', None)
         def setLast(lastTrigger):
-            if lastTrigger:
-                self._lastTrigger = (lastTrigger[0], properties.Properties.fromDict(lastTrigger[1]))
+            try:
+                if lastTrigger:
+                    assert isinstance(lastTrigger[0], dict)
+                    self._lastTrigger = (lastTrigger[0], properties.Properties.fromDict(lastTrigger[1]))
+            except:
+                # If the lastTrigger isn't of the right format, ignore it
+                log.msg("NightlyTriggerable Scheduler <%s>: bad lastTrigger: %r" % (self.name, lastTrigger))
         d.addCallback(setLast)
 
     def trigger(self, sourcestamps, set_props=None):
