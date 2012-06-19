@@ -97,7 +97,7 @@ class GitPoller(base.PollingChangeSource):
         def git_init(_):
             log.msg('gitpoller: initializing working dir from %s' % self.repourl)
             d = utils.getProcessOutputAndValue(self.gitbin,
-                    ['init', self.workdir], env=os.environ)
+                    ['init', '--bare', self.workdir], env=os.environ)
             d.addCallback(self._convert_nonzero_to_failure)
             d.addErrback(self._stop_on_failure)
             return d
@@ -218,6 +218,7 @@ class GitPoller(base.PollingChangeSource):
         return d
 
     def _get_changes(self):
+        """Fetch changes from remote repository."""
         log.msg('gitpoller: polling git repo at %s' % self.repourl)
 
         self.lastPoll = time.time()
@@ -238,6 +239,13 @@ class GitPoller(base.PollingChangeSource):
 
     @defer.inlineCallbacks
     def _process_changes(self, unused_output):
+        """
+        Read changes since last change.
+
+        - Read list of commit hashes.
+        - Extract details from each commit.
+        - Add changes to database.
+        """
         # get the change list
         revListArgs = ['log', '%s..origin/%s' % (self.branch, self.branch), r'--format=%H']
         self.changeCount = 0
@@ -291,6 +299,7 @@ class GitPoller(base.PollingChangeSource):
         return None
         
     def _catch_up(self, res):
+        """Update repository to record last seen change."""
         if self.changeCount == 0:
             log.msg('gitpoller: no changes, no catch_up')
             return
