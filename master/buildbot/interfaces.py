@@ -216,7 +216,7 @@ class IBuildSetStatus(Interface):
     def getBuilderNames():
         """Return a list of the names of all Builders on which this set will
         do builds.
-        
+
         @returns: list of names via Deferred"""
     def isFinished():
         pass
@@ -1213,4 +1213,45 @@ class ITriggerableScheduler(Interface):
 class IBuildStepFactory(Interface):
     def buildStep():
         """
+        """
+class IMasterProtocol(Interface):
+
+    def setBuilderList(self, builders):
+        """
+        set BuilderList for a BuildSlave
+        """
+
+    def startBuild(self, builder, args):
+        """
+        start Build on a SlaveBuilder
+        """
+
+    def getSlaveStatus(self):
+        """
+        send SlaveStatus to Master
+        """
+
+    def getSlaveInfo(self):
+        """
+        send SlaveInfo to Master on request
+        """
+
+    def setMaster(self, master):
+        """
+        set Master for a SlaveBuilder
+        """
+
+    def startCommand(self, builder, args):
+        """
+        start a command on a SlaveBuilder
+        """
+
+    def interruptCommmand(self, builder, args):
+        """
+        interrupt a command on a SlaveBuilder
+        """
+
+    def shutdown(self):
+        """
+        shutdown a slave
         """
