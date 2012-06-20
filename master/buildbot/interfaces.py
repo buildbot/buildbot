@@ -1236,11 +1236,6 @@ class IMasterProtocol(Interface):
         send SlaveInfo to Master on request
         """
 
-    def setMaster(self, master):
-        """
-        set Master for a SlaveBuilder
-        """
-
     def startCommand(self, builder, args):
         """
         start a command on a SlaveBuilder
