@@ -23,7 +23,7 @@ from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Property, PropertiesMixin
 from buildbot.interfaces import IRenderable, IProperties
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.properties import FakeRenderable
+from buildbot.test.util.properties import ConstantRenderable
 from buildbot.test.util import compat
 
 class FakeSource:
@@ -804,7 +804,7 @@ class TestInterpolateKwargs(unittest.TestCase):
         return d
 
     def test_kwargs_renderable(self):
-        command = Interpolate("echo '%(kw:test)s'", test = FakeRenderable('testing'))
+        command = Interpolate("echo '%(kw:test)s'", test = ConstantRenderable('testing'))
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                             "echo 'testing'")
@@ -1051,7 +1051,7 @@ class TestProperties(unittest.TestCase):
 
     @compat.usesFlushWarnings
     def test_setProperty_notJsonable(self):
-        self.props.setProperty("project", FakeRenderable('testing'), "test")
+        self.props.setProperty("project", ConstantRenderable('testing'), "test")
         self.props.setProperty("project", object, "test")
         self.assertEqual(len(self.flushWarnings([self.test_setProperty_notJsonable])), 2)
 
