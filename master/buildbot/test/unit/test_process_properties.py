@@ -1098,12 +1098,12 @@ class TestProperties(unittest.TestCase):
         self.assertIdentical(self.props.getBuild(), self.props.build)
 
     def test_render(self):
-        class FakeRenderable(object):
+        class Renderable(object):
             implements(IRenderable)
             def getRenderingFor(self, props):
                 return props.getProperty('x') + 'z'
         self.props.setProperty('x', 'y', 'test')
-        d = self.props.render(FakeRenderable())
+        d = self.props.render(Renderable())
         d.addCallback(self.assertEqual, 'yz')
         return d
 
