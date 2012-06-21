@@ -16,7 +16,6 @@
 import os
 from twisted.trial import unittest
 from twisted.internet import defer
-from exceptions import Exception
 from buildbot.changes import gitpoller
 from buildbot.test.util import changesource, gpo
 from buildbot.util import epoch2datetime
@@ -24,28 +23,25 @@ from buildbot.util import epoch2datetime
 # Test that environment variables get propagated to subprocesses (See #2116)
 os.environ['TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'] = 'TRUE'
 
-class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
+class GitOutputParsing(gpo.GetProcessOutputMixin_v2, unittest.TestCase):
     """Test GitPoller methods for parsing git output"""
     def setUp(self):
         self.poller = gitpoller.GitPoller('git@example.com:foo/baz.git')
         self.setUpGetProcessOutput()
-
-    def tearDown(self):
-        self.tearDownGetProcessOutput()
         
-    def _perform_git_output_test(self, methodToTest,
+    dummyRevStr = '12345abcde'
+    def _perform_git_output_test(self, methodToTest, args,
                                  desiredGoodOutput, desiredGoodResult,
                                  emptyRaisesException=True):
-        dummyRevStr = '12345abcde'
 
         # make this call to self.patch here so that we raise a SkipTest if it
         # is not supported
-        self.addGetProcessOutputResult(self.gpoAnyPattern(), '')
+        self.expectCommands(gpo.Expect('git', *args))
 
         d = defer.succeed(None)
         def call_empty(_):
             # we should get an Exception with empty output from git
-            return methodToTest(dummyRevStr)
+            return methodToTest(self.dummyRevStr)
         d.addCallback(call_empty)
     
         def cb_empty(_):
@@ -55,55 +51,60 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
             if not emptyRaisesException:
                 self.fail("getProcessOutput should NOT have failed on empty output")
         d.addCallbacks(cb_empty, eb_empty)
+        d.addCallback(lambda _: self.assertAllCommandsRan())
 
         # and the method shouldn't supress any exceptions
+        self.expectCommands(gpo.Expect('git', *args).stderr("some error"))
         def call_exception(_):
-            # we should get an Exception with empty output from git
-            self.addGetProcessOutputResult(self.gpoAnyPattern(),
-                    lambda b, a, **k: defer.fail(Exception('fake')))
-            return methodToTest(dummyRevStr)
+            return methodToTest(self.dummyRevStr)
         d.addCallback(call_exception)
     
         def cb_exception(_):
-            self.fail("getProcessOutput should have failed on empty output")
+            self.fail("getProcessOutput should have failed on stderr output")
         def eb_exception(f):
             pass
         d.addCallbacks(cb_exception, eb_exception)
+        d.addCallback(lambda _: self.assertAllCommandsRan())
 
         # finally we should get what's expected from good output
+        self.expectCommands(gpo.Expect('git', *args).stdout(desiredGoodOutput))
         def call_desired(_):
-            self.addGetProcessOutputResult(self.gpoAnyPattern(),
-                desiredGoodOutput)
-            return methodToTest(dummyRevStr)
+            return methodToTest(self.dummyRevStr)
         d.addCallback(call_desired)
     
         def cb_desired(r):
             self.assertEquals(r, desiredGoodResult)
         d.addCallback(cb_desired)
+        d.addCallback(lambda _: self.assertAllCommandsRan())
         
     def test_get_commit_author(self):
         authorStr = 'Sammy Jankis <email@example.com>'
         return self._perform_git_output_test(self.poller._get_commit_author,
+                ['log', self.dummyRevStr, '--no-walk', '--format=%aN <%aE>'],
                 authorStr, authorStr)
         
     def test_get_commit_comments(self):
         commentStr = 'this is a commit message\n\nthat is multiline'
         return self._perform_git_output_test(self.poller._get_commit_comments,
+                ['log', self.dummyRevStr, '--no-walk', '--format=%s%n%b'],
                 commentStr, commentStr)
         
     def test_get_commit_files(self):
         filesStr = 'file1\nfile2'
-        return self._perform_git_output_test(self.poller._get_commit_files, filesStr, 
+        return self._perform_git_output_test(self.poller._get_commit_files,
+                ['log', self.dummyRevStr, '--name-only', '--no-walk', '--format=%n'],
+                filesStr,
                                       filesStr.split(), emptyRaisesException=False)    
         
     def test_get_commit_timestamp(self):
         stampStr = '1273258009'
         return self._perform_git_output_test(self.poller._get_commit_timestamp,
+                ['log', self.dummyRevStr, '--no-walk', '--format=%ct'],
                 stampStr, float(stampStr))
 
     # _get_changes is tested in TestGitPoller, below
 
-class TestGitPoller(gpo.GetProcessOutputMixin,
+class TestGitPoller(gpo.GetProcessOutputMixin_v2,
                     changesource.ChangeSourceMixin,
                     unittest.TestCase):
 
@@ -117,7 +118,6 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         return d
         
     def tearDown(self):
-        self.tearDownGetProcessOutput()
         return self.tearDownChangeSource()
 
     def test_describe(self):
@@ -128,23 +128,18 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
     def test_poll(self):
         # Test that environment variables get propagated to subprocesses (See #2116)
-        os.putenv('TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES', 'TRUE')
-        self.addGetProcessOutputExpectEnv({'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES': 'TRUE'})
-        self.addGetProcessOutputAndValueExpectEnv({'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES': 'TRUE'})
+        #os.putenv('TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES', 'TRUE')
+        #self.addGetProcessOutputExpectEnv({'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES': 'TRUE'})
 
         # patch out getProcessOutput and getProcessOutputAndValue for the
         # benefit of the _get_changes method
-        self.addGetProcessOutputResult(
-                self.gpoSubcommandPattern('git', 'fetch'),
-                "no interesting output")
-        self.addGetProcessOutputResult(
-                self.gpoSubcommandPattern('git', 'log'),
-                '\n'.join([
-                    '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
-                    '4423cdbcbb89c14e50dd5f4152415afd686c5241']))
-        self.addGetProcessOutputAndValueResult(
-                self.gpoSubcommandPattern('git', 'reset'),
-                ('done', '', 0))
+        self.expectCommands(
+                gpo.Expect('git', 'fetch', 'origin').stdout('no interesting output'),
+                gpo.Expect('git', 'log', 'master..origin/master', '--format=%H').stdout(
+                    '\n'.join([
+                        '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+                        '4423cdbcbb89c14e50dd5f4152415afd686c5241'])),
+                gpo.Expect('git', 'reset', '--hard', 'origin/master').stdout('done'))
 
         # and patch out the _get_commit_foo methods which were already tested
         # above
@@ -180,6 +175,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(self.changes_added[1]['comments'], 'hello!')
             self.assertEqual(self.changes_added[1]['files'], [ '/etc/64a' ])
             self.assertEqual(self.changes_added[1]['src'], 'git')
+            self.assertAllCommandsRan()
         d.addCallback(check_changes)
 
         return d
