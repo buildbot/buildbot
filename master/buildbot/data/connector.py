@@ -38,7 +38,6 @@ class DataConnector(service.Service):
         self._setup()
 
     def _scanModule(self, mod, _noSetattr=False):
-        self.updates = Updates()
         for sym in dir(mod):
             obj = getattr(mod, sym)
             if inspect.isclass(obj) and issubclass(obj, base.ResourceType):
@@ -55,6 +54,7 @@ class DataConnector(service.Service):
                     self.matcher[epoint.pathPattern] = epoint
 
     def _setup(self):
+        self.updates = Updates()
         for moduleName in self.submodules:
             module = reflect.namedModule(moduleName)
             self._scanModule(module)

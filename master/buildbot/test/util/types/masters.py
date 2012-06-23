@@ -21,6 +21,7 @@ def verifyData(testcase, type, options, value):
         masterid='integer',
         name='string',
         state='enum:started,stopped',
+        link='Link',
         ))
 
 def verifyMessage(testcase, routingKey, message):

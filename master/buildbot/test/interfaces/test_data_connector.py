@@ -46,6 +46,11 @@ class Tests(interfaces.InterfaceTests):
                 project=u'', src=None):
             pass
 
+    def test_signature_updates_setMasterState(self):
+        @self.assertArgSpecMatches(self.data.updates.setMasterState)
+        def setMasterState(self, state=None):
+            pass
+
 
 class TestFakeData(unittest.TestCase, Tests):
 

@@ -26,7 +26,8 @@ class MasterEndpoint(base.Endpoint):
         return defer.succeed(
             dict(masterid=1,
                  name=unicode(self.master.master_name),
-                 state=u'started'))
+                 state=u'started',
+                 link=base.Link(('master', str(kwargs['masterid'])))))
 
 
 class MastersEndpoint(base.Endpoint):
@@ -38,7 +39,9 @@ class MastersEndpoint(base.Endpoint):
         return defer.succeed([
             dict(masterid=1,
                  name=unicode(self.master.master_name),
-                 state=u'started') ])
+                 state=u'started',
+                 link=base.Link(('master', str(1))))
+            ])
 
 
 class MasterResourceType(base.ResourceType):
@@ -49,9 +52,12 @@ class MasterResourceType(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def setMasterState(self, masterid, name, state=None):
+    def setMasterState(self, state=None):
         assert state in ('started', 'stopped')
-        yield None
+        # get the masterid and name
+        name = unicode(self.master.master_name)
+        masterid = yield self.master.getObjectId()
+        # and produce the event
         self.produceEvent(
-                dict(masterid=masterid, name=name, state=state),
-                state)
+                dict(masterid=masterid, name=name, state=unicode(state)),
+                str(state))

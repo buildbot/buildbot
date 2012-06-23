@@ -217,6 +217,7 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
             self.master = master.BuildMaster(self.basedir)
             self.db = self.master.db = fakedb.FakeDBConnector(self)
             self.mq = self.master.mq = fakemq.FakeMQConnector(self.master, self)
+            self.data = self.master.data = fakedata.FakeDataConnector(self.master, self)
 
         @d.addCallback
         def patch_log_msg(_):
@@ -306,18 +307,8 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
             self.assertLogged("BuildMaster is running")
 
             # check started/stopped messages
-            self.assertEqual(self.master.mq.productions, [
-                ( ('master', '100', 'started'), {
-                    'master_basedir': self.basedir,
-                    'master_hostname': self.master.hostname,
-                    'masterid': 100,
-                }),
-                ( ('master', '100', 'stopped'), {
-                    'master_basedir': self.basedir,
-                    'master_hostname': self.master.hostname,
-                    'masterid': 100,
-                }),
-                ])
+            self.assertEqual(self.master.data.updates.masterStateChanges,
+                    ['started', 'stopped'])
         return d
 
     def test_reconfig(self):

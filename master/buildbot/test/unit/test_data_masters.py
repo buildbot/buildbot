@@ -77,3 +77,5 @@ class MasterResourceType(unittest.TestCase):
                                                 testcase=self)
         self.rtype = masters.MasterResourceType(self.master)
 
+    def test_setMasterState(self):
+        self.rtype.setMasterState('stopped')

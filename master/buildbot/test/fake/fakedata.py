@@ -26,9 +26,9 @@ class FakeUpdates(object):
         self.master = master
         self.testcase = testcase
 
-        # test cases should assert the value of this list.  Changes are
-        # numbered starting at 1.
-        self.changesAdded = []
+        # test cases should assert the values here:
+        self.changesAdded = [] # Changes are numbered starting at 1.
+        self.masterStateChanges = [] # dictionaries
 
     def addChange(self, files=None, comments=None, author=None,
             revision=None, when_timestamp=None, branch=None, category=None,
@@ -58,8 +58,12 @@ class FakeUpdates(object):
         self.changesAdded[-1].pop('self')
         return defer.succeed(len(self.changesAdded))
 
-    def assertChangesAdded(self, expected):
-        self.assertEqual
+    def setMasterState(self, state=None):
+        self.testcase.assertIsInstance(state, basestring)
+        self.testcase.assertIn(state, ('started', 'stopped'))
+        self.masterStateChanges.append(state)
+        return defer.succeed(None)
+
 
 class FakeDataConnector(object):
     # FakeDataConnector inherits from DataConnector so it can get all of the

@@ -504,15 +504,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     # master messages
 
     def _setMasterState(self, state):
+        # for early termination and a few other cases, don't explode
         if not self._master_initialized:
             return
-
-        d = self.getObjectId()
-        @d.addCallback
-        def send(objectid):
-            self.data.updates.setMasterState(
-                masterid=objectid, name=self.master_name, state=state)
-        d.addErrback(log.msg, "while sending master message")
+        d = self.data.updates.setMasterState(state=state)
+        d.addErrback(log.err, "while sending master message")
 
 class Control:
     implements(interfaces.IControl)

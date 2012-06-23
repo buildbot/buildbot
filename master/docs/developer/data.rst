@@ -113,9 +113,11 @@ The updates section is available at `self.master.data.updates`, and contains a n
 .. note:
     The update methods are implemented in resource type classes, but through some initialization-time magic, all appear as attributes of ``self.master.data.updates``.
 
+All update methods return a Deferred.
+
 .. py:class:: buildbot.data.changes.ChangeResourceType
 
-    .. py:method:: addChange(files=None, comments=None, author=None, revision=None, when_timestamp=None, branch=None, category=None, revlink='', properties={}, repository='', codebase=None, project='', src=None):
+    .. py:method:: addChange(files=None, comments=None, author=None, revision=None, when_timestamp=None, branch=None, category=None, revlink='', properties={}, repository='', codebase=None, project='', src=None)
 
         :param files: a list of filenames that were changed
         :type files: list of unicode strings
@@ -131,7 +133,7 @@ The updates section is available at `self.master.data.updates`, and contains a n
         :param unicode repository: the repository in which this change took place
         :param unicode project: the project this change is a part of
         :param unicode src: source of the change (vcs or other)
-        :returns: the ID of the new change
+        :returns: the ID of the new change, via Deferred
 
         Add a new change to Buildbot.
         This method is the interface between change sources and the rest of Buildbot.
@@ -141,6 +143,15 @@ The updates section is available at `self.master.data.updates`, and contains a n
         All parameters labeled 'unicode' must be unicode strings and not bytestrings.
         Filenames in ``files``, and property names, must also be unicode strings.
         This is tested by the fake implementation.
+
+.. py:class:: buildbot.data.changes.MasterResourceType
+
+    .. py:method:: setMasterState(state=None)
+
+        :param string state: the new state of this master ('started' or 'stopped')
+        :returns: Deferred
+
+        Record a change in state for this master.
 
 Links
 .....
@@ -278,9 +289,9 @@ In :bb:src:`master/buildbot/data/pubs.py`, create a subclass of :py:class:`Resou
 Like all Buildbot source files, every resource type module must have corresponding tests.
 These should thoroughly exercise all update methods.
 
-Similarly, all resource types must be documented in the Buildbot documentation, linked from the bottom of this file.
+All resource types must be documented in the Buildbot documentation, linked from the bottom of this file (:bb:src:`master/docs/developer/data.rst`).
 
-You will also need to add type verification information.
+All resource types must have corresponding type verification information.
 See :ref:`Adding-Fields-to-Resource-Types` for details.
 
 Adding Endpoints
@@ -357,6 +368,11 @@ Returning to the pub example::
             pub = yield self.master.db.pubs.getPub(pubid)
             # ...
             self.produceMessage(pub, 'taps-updated')
+
+Update methods should be documented in :bb:src:`master/docs/developer/data.rst`.
+They should be thoroughly tested with unit tests.
+They should have a fake implentation in :bb:src:`master/buildbot/test/fake/fakedata.py`.
+That fake implementation should be tested to match the real implementation in :bb:src:`master/buildbot/test/interfaces/test_data_connector.py`.
 
 .. _Adding-Fields-to-Resource-Types:
 
