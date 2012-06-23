@@ -99,6 +99,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         except AttributeError:
             self.hostname = socket.getfqdn()
 
+        self.master_name = "%s:%s" % (self.hostname,
+                os.path.abspath(self.basedir or '.'))
+
     def create_child_services(self):
         # note that these are order-dependent.  If you get the order wrong,
         # you'll know it, as the master will fail to start.
@@ -214,12 +217,12 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         self._master_initialized = True
 
-        self.produce_master_msg('started')
+        self._setMasterState('started')
         log.msg("BuildMaster is running")
 
 
     def stopService(self):
-        self.produce_master_msg('stopped')
+        self._setMasterState('stopped')
         log.msg("BuildMsater is stopped")
         self._master_initialized = False
 
@@ -473,9 +476,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # failing that, get it from the DB; multiple calls to this function
         # at the same time will not hurt
-        master_name = "%s:%s" % (self.hostname, os.path.abspath(self.basedir))
 
-        d = self.db.state.getObjectId(master_name,
+        d = self.db.state.getObjectId(self.master_name,
                 "buildbot.master.BuildMaster")
         def keep(id):
             self._object_id = id
@@ -501,18 +503,15 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     # master messages
 
-    def produce_master_msg(self, state):
+    def _setMasterState(self, state):
         if not self._master_initialized:
             return
 
         d = self.getObjectId()
         @d.addCallback
         def send(objectid):
-            msg = dict(
-                masterid=objectid,
-                master_hostname=self.hostname,
-                master_basedir=os.path.abspath(self.basedir))
-            self.mq.produce(('master', str(objectid), state), msg)
+            self.data.updates.setMasterState(
+                masterid=objectid, name=self.master_name, state=state)
         d.addErrback(log.msg, "while sending master message")
 
 class Control:

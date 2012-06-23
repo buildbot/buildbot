@@ -26,7 +26,7 @@ _messageVerifiers = {
     'change' : 'changes.verifyMessage',
     'buildset' : None,
     'buildrequest' : None,
-    'master' : None,
+    'master' : 'masters.verifyMessage',
 }
 def verifyMessage(testcase, routingKey, message):
     return _call(_messageVerifiers[routingKey[0]], testcase, routingKey, message)
@@ -39,6 +39,7 @@ def verifyDbDict(testcase, type, value):
 
 _dataVerifiers = {
     'change' : 'changes.verifyData',
+    'master' : 'masters.verifyData',
 }
 def verifyData(testcase, type, options, value):
     return _call(_dataVerifiers[type], testcase, type, options, value)

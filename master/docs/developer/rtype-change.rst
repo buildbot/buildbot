@@ -40,6 +40,5 @@ Changes
     .. bb:rpath:: /change/:changeid
 
         :pathkey integer changeid: the ID of the change
-        :event new: the change has just been added
 
         This path selects a specific change, identified by ID.

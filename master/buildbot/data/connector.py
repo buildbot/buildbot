@@ -27,6 +27,7 @@ class DataConnector(service.Service):
 
     submodules = [
         'buildbot.data.changes',
+        'buildbot.data.masters',
     ]
 
     def __init__(self, master):

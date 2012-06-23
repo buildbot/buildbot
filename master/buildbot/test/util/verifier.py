@@ -54,6 +54,10 @@ def _dictProblems(value, typename, attrs):
         noneok = typ.endswith(':none')
         if noneok:
             typ = typ[:-5]
+        if ':' in typ:
+            typ, rest = typ.split(':', 1)
+        else:
+            rest = ''
 
         if typ == 'integer':
             valfn = lambda v : isinstance(v, int)
@@ -68,6 +72,9 @@ def _dictProblems(value, typename, attrs):
             valfn = lambda v : isinstance(v, base.Link)
         elif typ == 'datetime':
             valfn = lambda v : isinstance(v, datetime.datetime)
+        elif typ == 'enum':
+            vals = set(rest.split(','))
+            valfn = lambda v : isinstance(v, unicode) and v in vals
         else:
             raise RuntimeError('invalid type %s' % typ)
 

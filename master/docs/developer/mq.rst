@@ -220,24 +220,6 @@ Master Components
 Masters use these messages to announce starts, stops, and reconfigurations of
 various components.
 
-.. bb:msg:: master.$masterid.started
-
-    :var $masterid: the ID of the master that is starting up
-    :key integer masterid: the ID of the master that is starting up
-    :key string master_hostname: the hostname of the master
-    :key string master_basedir: the basedir of the master
-
-    This message indicates that a buildmaster has started.
-
-.. bb:msg:: master.$masterid.stopped
-
-    :var $masterid: the ID of the master that is starting up
-    :key integer masterid: the ID of the master that is starting up
-    :key string hostname: the hostname of the master
-    :key string basedir: the basedir of the master
-
-    This message indicates that a buildmaster has stopped.
-
 .. bb:msg:: scheduler.$schedulerid.started (TODO)
 
     :var $schedulerid: the ID of the scheduler that is starting up
