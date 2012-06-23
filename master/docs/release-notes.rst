@@ -22,6 +22,8 @@ Nine
 
   * does not accept the deprecated parameters ``who``, ``isdir``, ``is_dir``, and ``when``.
 
+  * requires that all strings be unicode, not bytestrings.
+
   Please adjust any custom change sources accordingly.
 
 ..

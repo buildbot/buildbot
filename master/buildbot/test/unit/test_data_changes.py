@@ -126,13 +126,13 @@ class ChangeResourceType(unittest.TestCase):
 
     def test_addChange(self):
         # src and codebase are default here
-        kwargs = dict(author='warner', branch='warnerdb',
-                category='devel', comments='fix whitespace',
+        kwargs = dict(author=u'warner', branch=u'warnerdb',
+                category=u'devel', comments=u'fix whitespace',
                 files=[u'master/buildbot/__init__.py'],
-                project='Buildbot', repository='git://warner',
-                revision='0e92a098b', revlink='http://warner/0e92a098b',
+                project=u'Buildbot', repository=u'git://warner',
+                revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
                 when_timestamp=epoch2datetime(256738404),
-                properties=dict(foo=20))
+                properties={u'foo': 20})
         expectedRoutingKey = ('change', '500', 'new')
         expectedMessage = {
             'author': u'warner',
@@ -169,13 +169,13 @@ class ChangeResourceType(unittest.TestCase):
     def test_addChange_src_codebase(self):
         self.master.users = mock.Mock(name='master.users')
         self.master.users.createUserObject.return_value = defer.succeed(123)
-        kwargs = dict(author='warner', branch='warnerdb',
-                category='devel', comments='fix whitespace',
+        kwargs = dict(author=u'warner', branch=u'warnerdb',
+                category=u'devel', comments=u'fix whitespace',
                 files=[u'master/buildbot/__init__.py'],
-                project='Buildbot', repository='git://warner',
-                revision='0e92a098b', revlink='http://warner/0e92a098b',
+                project=u'Buildbot', repository=u'git://warner',
+                revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
                 when_timestamp=epoch2datetime(256738404),
-                properties=dict(foo=20), src='git', codebase=u'cb')
+                properties={u'foo' : 20}, src=u'git', codebase=u'cb')
         expectedRoutingKey = ('change', '500', 'new')
         expectedMessage = {
             'author': u'warner',
@@ -219,13 +219,13 @@ class ChangeResourceType(unittest.TestCase):
         self.master.config = mock.Mock(name='master.config')
         self.master.config.codebaseGenerator = \
                 lambda change : 'cb-%s' % change['category']
-        kwargs = dict(author='warner', branch='warnerdb',
-                category='devel', comments='fix whitespace',
+        kwargs = dict(author=u'warner', branch=u'warnerdb',
+                category=u'devel', comments=u'fix whitespace',
                 files=[u'master/buildbot/__init__.py'],
-                project='Buildbot', repository='git://warner',
-                revision='0e92a098b', revlink='http://warner/0e92a098b',
+                project=u'Buildbot', repository=u'git://warner',
+                revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
                 when_timestamp=epoch2datetime(256738404),
-                properties=dict(foo=20))
+                properties={u'foo' : 20})
         expectedRoutingKey = ('change', '500', 'new')
         expectedMessage = {
             'author': u'warner',

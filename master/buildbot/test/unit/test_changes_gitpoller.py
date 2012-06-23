@@ -78,23 +78,29 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
     
         def cb_desired(r):
             self.assertEquals(r, desiredGoodResult)
+            # check types
+            if isinstance(r, basestring):
+                self.assertIsInstance(r, unicode)
+            elif isinstance(r, list):
+                [ self.assertIsInstance(e, unicode) for e in r ]
         d.addCallback(cb_desired)
-        
+
     def test_get_commit_author(self):
         authorStr = 'Sammy Jankis <email@example.com>'
         return self._perform_git_output_test(self.poller._get_commit_author,
                 authorStr, authorStr)
-        
+
     def test_get_commit_comments(self):
         commentStr = 'this is a commit message\n\nthat is multiline'
         return self._perform_git_output_test(self.poller._get_commit_comments,
                 commentStr, commentStr)
-        
+
     def test_get_commit_files(self):
         filesStr = 'file1\nfile2'
-        return self._perform_git_output_test(self.poller._get_commit_files, filesStr, 
-                                      filesStr.split(), emptyRaisesException=False)    
-        
+        return self._perform_git_output_test(self.poller._get_commit_files,
+                filesStr, filesStr.split(),
+                emptyRaisesException=False)
+
     def test_get_commit_timestamp(self):
         stampStr = '1273258009'
         return self._perform_git_output_test(self.poller._get_commit_timestamp,
@@ -151,13 +157,13 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             return defer.succeed(1273258009)
         self.patch(self.poller, '_get_commit_timestamp', timestamp)
         def author(rev):
-            return defer.succeed('by:' + rev[:8])
+            return defer.succeed(u'by:' + rev[:8])
         self.patch(self.poller, '_get_commit_author', author)
         def files(rev):
-            return defer.succeed(['/etc/' + rev[:3]])
+            return defer.succeed([u'/etc/' + rev[:3]])
         self.patch(self.poller, '_get_commit_files', files)
         def comments(rev):
-            return defer.succeed('hello!')
+            return defer.succeed(u'hello!')
         self.patch(self.poller, '_get_commit_comments', comments)
 
         # do the poll

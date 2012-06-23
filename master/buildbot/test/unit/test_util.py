@@ -207,6 +207,4 @@ class Ascii2Unicode(unittest.TestCase):
             util.ascii2unicode('a\x85'))
 
     def test_None(self):
-        self.assertRaises(TypeError, lambda :
-            util.ascii2unicode(None))
-
+        self.assertEqual(util.ascii2unicode(None), None)

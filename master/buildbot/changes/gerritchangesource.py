@@ -128,7 +128,7 @@ class GerritChangeSource(base.ChangeSource):
                 revision=event["patchSet"]["revision"],
                 revlink=change["url"],
                 comments=change["subject"],
-                files=["unknown"],
+                files=[u"unknown"],
                 category=event["type"],
                 properties=properties))
     def eventReceived_ref_updated(self, properties, event):
@@ -146,7 +146,7 @@ class GerritChangeSource(base.ChangeSource):
                 branch=ref["refName"],
                 revision=ref["newRev"],
                 comments="Gerrit: patchset(s) merged.",
-                files=["unknown"],
+                files=[u"unknown"],
                 category=event["type"],
                 properties=properties))
 

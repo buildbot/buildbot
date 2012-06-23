@@ -15,7 +15,6 @@
 
 from twisted.internet import defer
 from twisted.python import log
-from buildbot import util
 from buildbot.data import base, exceptions
 from buildbot.process import metrics
 from buildbot.util import datetime2epoch, epoch2datetime
@@ -61,13 +60,15 @@ class ChangeResourceType(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def addChange(self, files=None, comments=None, author=None, revision=None,
-            when_timestamp=None, branch=None, category=None, revlink='',
-            properties={}, repository='', codebase=None, project='', src=None):
+            when_timestamp=None, branch=None, category=None, revlink=u'',
+            properties={}, repository=u'', codebase=None, project=u'',
+            src=None):
         metrics.MetricCountEvent.log("added_changes", 1)
 
-        # TODO: temporary
-        properties = dict( (util.ascii2unicode(k), (v, u'Change'))
-                           for k, v in properties.iteritems() )
+        # add the source to the properties
+        for k in properties:
+            properties[k] = (properties[k], u'Change')
+
         if src:
             # create user object, returning a corresponding uid
             uid = yield self.master.users.createUserObject(self.master,
@@ -77,17 +78,17 @@ class ChangeResourceType(base.ResourceType):
 
         change = {
             'changeid': None, # not known yet
-            'author': unicode(author),
-            'files': map(unicode, files),
-            'comments': unicode(comments),
-            'revision': unicode(revision) if revision is not None else None,
+            'author': author,
+            'files': files,
+            'comments': comments,
+            'revision': revision,
             'when_timestamp': datetime2epoch(when_timestamp),
-            'branch': unicode(branch) if branch is not None else None,
-            'category': unicode(category) if category is not None else None,
-            'revlink': unicode(revlink) if revlink is not None else None,
+            'branch': branch,
+            'category': category,
+            'revlink': revlink,
             'properties': properties,
-            'repository': unicode(repository),
-            'project': unicode(project),
+            'repository': repository,
+            'project': project,
             'codebase': None, # not set yet
             # 'uid': uid, -- not in data API yet?
         }

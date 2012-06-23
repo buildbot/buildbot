@@ -120,7 +120,7 @@ The methods are divided into different classes, but through some initialization-
         :param unicode category: category for this change
         :param string revlink: link to a web view of this revision
         :param properties: properties to set on this change
-        :type properties: dictionary with string keys and simple values (JSON-able).  Note that the property source is *not* included in this dictionary.
+        :type properties: dictionary with unicode keys and simple values (JSON-able).  Note that the property source is *not* included in this dictionary.
         :param unicode repository: the repository in which this change took place
         :param unicode project: the project this change is a part of
         :param unicode src: source of the change (vcs or other)
@@ -130,6 +130,10 @@ The methods are divided into different classes, but through some initialization-
         This method is the interface between change sources and the rest of Buildbot.
 
         All parameters should be passed as keyword arguments.
+
+        All parameters labeled 'unicode' must be unicode strings and not bytestrings.
+        Filenames in ``files``, and property names, must also be unicode strings.
+        This is tested by the fake implementation.
 
 Links
 .....

@@ -26,7 +26,7 @@ from twisted.application import service
 
 import buildbot
 import buildbot.pbmanager
-from buildbot.util import epoch2datetime, datetime2epoch
+from buildbot.util import epoch2datetime, datetime2epoch, ascii2unicode
 from buildbot.status.master import Status
 from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
@@ -355,6 +355,19 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # timestamp must be an epoch timestamp now
         if isinstance(kwargs.get('when_timestamp'), datetime.datetime):
             kwargs['when_timestamp'] = datetime2epoch(kwargs['when_timestamp'])
+
+        # unicodify stuff
+        for k in ('comments', 'author', 'revision', 'branch', 'category',
+                  'revlink', 'repository', 'codebase', 'project'):
+            if k in kwargs:
+                kwargs[k] = ascii2unicode(kwargs[k])
+        if kwargs.get('files'):
+            kwargs['files'] = [ ascii2unicode(f)
+                                for f in kwargs['files'] ]
+        if kwargs.get('properties'):
+            kwargs['properties'] = dict( (ascii2unicode(k), v)
+                for k, v in kwargs['properties'].iteritems() )
+
 
         # pass the converted call on to the data API
         changeid = yield self.data.updates.addChange(**kwargs)

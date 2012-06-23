@@ -82,7 +82,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         self.split_file = split_file
         self.pollInterval = pollInterval
         self.encoding = encoding
-        self.project = project
+        self.project = util.ascii2unicode(project)
 
     def describe(self):
         return "p4source %s %s" % (self.p4port, self.p4base)
@@ -183,7 +183,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                        author=who,
                        files=branch_files[branch],
                        comments=comments,
-                       revision=str(num),
+                       revision=unicode(num),
                        when_timestamp=when,
                        branch=branch,
                        project=self.project)

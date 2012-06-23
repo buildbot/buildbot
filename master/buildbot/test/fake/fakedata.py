@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 import types
 from twisted.internet import defer
 from buildbot.data import connector
@@ -33,31 +32,28 @@ class FakeUpdates(object):
 
     def addChange(self, files=None, comments=None, author=None,
             revision=None, when_timestamp=None, branch=None, category=None,
-            revlink='', properties={}, repository='', codebase=None,
-            project='', src=None):
-        # double-check args, types, etc.
-        if 0:
-            # TODO...
-            self.testcase.assertIsInstance(files, list)
-            for f in files:
-                self.testcase.assertIsInstance(f, unicode)
-            self.testcase.assertIsInstance(comments, (types.NoneType, unicode))
-            self.testcase.assertIsInstance(author, (types.NoneType, unicode))
-            self.testcase.assertIsInstance(revision, (types.NoneType, unicode))
-            self.testcase.assertIsInstance(when_timestamp, (types.NoneType, int))
-            self.testcase.assertIsInstance(branch, (types.NoneType, unicode))
-            self.testcase.assertIsInstance(category, (types.NoneType, unicode))
-            self.testcase.assertIsInstance(revlink, (types.NoneType, unicode))
-            self.testcase.assertIsInstance(properties, dict)
-            for k, v in properties.iteritems():
-                self.testcase.assertIsInstance(k, unicode)
-                # v needs to be json-able; no need to check that here
-            self.testcase.assertIsInstance(repository, unicode)
-            self.testcase.assertIsInstance(codebase, unicode)
-            self.testcase.assertIsInstance(project, unicode)
-            self.testcase.assertIsInstance(src, (types.NoneType, unicode))
+            revlink=u'', properties={}, repository=u'', codebase=None,
+            project=u'', src=None):
 
-        # ensure we get all of the args and don't forget if more are added
+        # double-check args, types, etc.
+        if files is not None:
+            self.testcase.assertIsInstance(files, list)
+            map(lambda f : self.testcase.assertIsInstance(f, unicode), files)
+        self.testcase.assertIsInstance(comments, (types.NoneType, unicode))
+        self.testcase.assertIsInstance(author, (types.NoneType, unicode))
+        self.testcase.assertIsInstance(revision, (types.NoneType, unicode))
+        self.testcase.assertIsInstance(when_timestamp, (types.NoneType, int))
+        self.testcase.assertIsInstance(branch, (types.NoneType, unicode))
+        self.testcase.assertIsInstance(category, (types.NoneType, unicode))
+        self.testcase.assertIsInstance(revlink, (types.NoneType, unicode))
+        self.testcase.assertIsInstance(properties, dict)
+        self.testcase.assertIsInstance(repository, unicode)
+        self.testcase.assertIsInstance(codebase, (types.NoneType, unicode))
+        self.testcase.assertIsInstance(project, unicode)
+        self.testcase.assertIsInstance(src, (types.NoneType, unicode))
+
+        # use locals() to ensure we get all of the args and don't forget if
+        # more are added
         if not self.changesAdded:
             self.changesAdded = []
         self.changesAdded.append(locals())

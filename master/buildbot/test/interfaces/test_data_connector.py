@@ -42,8 +42,8 @@ class Tests(interfaces.InterfaceTests):
         @self.assertArgSpecMatches(self.data.updates.addChange)
         def addChange(self, files=None, comments=None, author=None,
                 revision=None, when_timestamp=None, branch=None, category=None,
-                revlink='', properties={}, repository='', codebase=None,
-                project='', src=None):
+                revlink=u'', properties={}, repository=u'', codebase=None,
+                project=u'', src=None):
             pass
 
 

@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 
+import types
 import time, re, string
 import datetime
 import calendar
@@ -116,7 +117,7 @@ def none_or_str(x):
     return x
 
 def ascii2unicode(x):
-    if isinstance(x, unicode):
+    if isinstance(x, (unicode, types.NoneType)):
         return x
     return unicode(x, 'ascii')
 
