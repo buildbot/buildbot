@@ -74,7 +74,6 @@ class Changes(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-
     def test_get(self):
         d = self.callGet(dict(), dict())
         @d.addCallback
@@ -96,6 +95,11 @@ class Changes(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_invalid_count(self):
         d = self.callGet(dict(count='ten'), dict())
         self.assertFailure(d, exceptions.InvalidOptionException)
+
+    def test_startConsuming(self):
+        self.callStartConsuming({}, {},
+                expected_filter=('change', None, 'new'))
+
 
 class ChangeResourceType(unittest.TestCase):
 

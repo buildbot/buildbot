@@ -74,7 +74,7 @@ class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = MyEndpoint
 
     def setUp(self):
-        self.setUpEndpoint(needDB=False)
+        self.setUpEndpoint()
 
     def tearDown(self):
         self.tearDownEndpoint()

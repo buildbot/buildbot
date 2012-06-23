@@ -47,6 +47,10 @@ class ChangesEndpoint(base.Endpoint):
             return map(_fixChange, changes)
         return d
 
+    def startConsuming(self, callback, options, kwargs):
+        return self.master.mq.startConsuming(callback,
+                ('change', None, 'new'))
+
 
 class ChangeResourceType(base.ResourceType):
 

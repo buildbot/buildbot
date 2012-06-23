@@ -35,18 +35,11 @@ Changes
         This path lists changes, sorted by ID.
         The ``count`` option can be used to limit the number of changes.
 
-        .. bb:event:: /change new
-
-            :routing_key change.$changeid.new:
-
-            TODO: this should be ```change.new`` to match the path
-
-            A new change has been added to the cluster.
-
-            The message contains
+        Consuming from this path selects :bb:event:`change.$changeid.new` events.
 
     .. bb:rpath:: /change/:changeid
 
         :pathkey integer changeid: the ID of the change
         :event new: the change has just been added
 
+        This path selects a specific change, identified by ID.
