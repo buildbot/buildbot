@@ -13,30 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import os
-import mock
-from buildbot.test.fake import fakedb, fakemq
-
-class FakeMaster(object):
-
-    def __init__(self, basedir, db):
-        self.basedir = basedir
-        self.db = db
-        self.caches = mock.Mock(name="caches")
-        self.caches.get_cache = self.get_cache
-
-    def addBuildset(self, scheduler, **kwargs):
-        return self.db.buildsets.addBuildset(**kwargs)
-
-    # caches
-
-    def get_cache(self, cache_name, miss_fn):
-        c = mock.Mock(name=cache_name)
-        c.get = miss_fn
-        return c
-
-    # useful assertions
-
+from buildbot.test.fake import fakemaster, fakedb
 
 class SchedulerMixin(object):
     """
@@ -71,11 +48,15 @@ class SchedulerMixin(object):
         scheduler.objectid = objectid
 
         # set up a fake master
-        db = self.db = fakedb.FakeDBConnector(self)
-        self.master = FakeMaster(os.path.abspath('basedir'), db)
-        mq = self.mq = fakemq.FakeMQConnector(self.master, self)
-        self.master.mq = mq
+        self.master = fakemaster.make_master(testcase=self,
+                wantDb=True, wantMq=True, wantData=True)
+        db = self.db = self.master.db
+        self.mq = self.master.mq
         scheduler.master = self.master
+
+        # temporary
+        self.master.addBuildset = lambda scheduler, **kwargs : \
+                self.master.db.buildsets.addBuildset(**kwargs)
 
         db.insertTestData([
             fakedb.Object(id=objectid, name=scheduler.name,

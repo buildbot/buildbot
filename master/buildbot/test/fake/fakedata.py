@@ -76,15 +76,21 @@ class FakeDataConnector(connector.DataConnector):
         self.master = master
         self.updates = FakeUpdates(master, testcase)
 
-    # TODO: these methods should call through to a real DataConnector..
+        # get, startConsuming, and control are delegated to a real connector,
+        # after some additional assertions
+        self.realConnector = connector.DataConnector(master)
 
     def get(self, options, path):
-        pass # TODO..
+        if not isinstance(path, tuple):
+            raise TypeError('path must be a tuple')
+        return self.realConnector.get(options, path)
 
     def startConsuming(self, callback, options, path):
-        qref = mock.Mock()
-        qref.stopConsuming = lambda self : None
-        return qref
+        if not isinstance(path, tuple):
+            raise TypeError('path must be a tuple')
+        return self.realConnector.startConsuming(callback, options, path)
 
     def control(self, action, args, path):
-        pass # TODO..
+        if not isinstance(path, tuple):
+            raise TypeError('path must be a tuple')
+        return self.realConnector.control(action, args, path)
