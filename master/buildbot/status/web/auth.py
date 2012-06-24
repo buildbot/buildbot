@@ -92,6 +92,13 @@ class HTPasswdAuth(AuthBase):
         """C{file} is a path to an .htpasswd file."""
         assert os.path.exists(file)
         self.file = file
+        
+        try:
+            from ctypes import CDLL
+            self.apr = CDLL("libaprutil-1.so.0")
+        except:
+            self.apr = None
+
 
     def authenticate(self, user, passwd):
         """Authenticate C{user} and C{passwd} against an .htpasswd file"""
@@ -107,11 +114,20 @@ class HTPasswdAuth(AuthBase):
         if not lines:
             self.err = "Invalid user/passwd"
             return False
-        # This is the DES-hash of the password. The first two characters are
-        # the salt used to introduce disorder in the DES algorithm.
         hash = lines[0][1]
-        from crypt import crypt #@UnresolvedImport
-        res = hash == crypt(passwd, hash[0:2])
+        res = False
+        # Try to validate the password with libaprutils if available.
+        # Support all the hash types from apr.
+        # Fallback to simple DES-hash checking if unavailable.
+        if self.apr:
+            res = self.apr.apr_password_validate(passwd, hash) == 0
+        else:
+            # Fallback to simple DES-hash checking as libaprutils is not
+            # available. hash is the DES-hash of the password. The first
+            # two characters are the salt used to introduce disorder in
+            # the DES algorithm.
+            from crypt import crypt #@UnresolvedImport
+            res = hash == crypt(passwd, hash[0:2])
         if res:
             self.err = ""
         else:
