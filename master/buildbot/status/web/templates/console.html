@@ -164,7 +164,7 @@ function checkMouseLeave(element, event) {
     <td width="1%">
     </td>
   {% for c in categories %}
-    <td class='DevSlave {{ alt_class.next() }} {{ "last" if loop.last else '' }}'>
+    <td class='DevSlave {{ alt_class.next() }}'>
       <table width="100%">
         <tr>          
     {% for s in slaves[c.name] %}          
@@ -182,7 +182,7 @@ function checkMouseLeave(element, event) {
   
 {% for r in revisions %}
   {% set alt = alt_class.next() %}
-  {% set last = "last" if loop.last else "" %}
+  {% set firstrev = "first" if loop.first else '' %}
 
   <tr>
     <td class='DevRev {{ alt }}' width="1%">
@@ -193,7 +193,8 @@ function checkMouseLeave(element, event) {
     </td>
 
   {% for c in categories %}
-    <td class='DevStatus {{ alt }} {{ last }}'>
+    {% set last = "last" if loop.last else "" %}
+    <td class='DevStatus {{ alt }} {{ last if not firstrev else '' }}'>
       <table width="100%">
         <tr>    
     {% for b in r.builds[c.name] %}
@@ -210,14 +211,14 @@ function checkMouseLeave(element, event) {
   </tr>
    
   <tr>
-    <td colspan="{{ r.span }}" class='DevComment {{ alt }}'> 
+    <td colspan="{{ r.span }}" class='DevComment {{ alt }} {% if not r.details %}DevBottom{% endif %}'> 
       {{ r.comments|changecomment(r.project or None)|replace('\n', '<br/>')|replace('  ','&nbsp; ') }}
     </td>
   </tr>
  
   {% if r.details %}
   <tr>
-    <td colspan="{{ r.span }}" class='DevDetails {{ alt }}'>
+    <td colspan="{{ r.span }}" class='DevDetails {{ alt }} DevBottom'>
       <ul style='margin: 0px; padding: 0 0 0 1.5em;'>
     {% for d in r.details %}
         <li>{{ d.buildername }}: {{ d.status }} - &nbsp;
