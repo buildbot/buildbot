@@ -35,13 +35,13 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         d = self.setUpChangeSource()
         self.remote_repo = 'ssh://example.com/foo/baz'
         self.repo_ready = True
-        def isRepositoryReady():
+        def _isRepositoryReady():
             return self.repo_ready
         def create_poller(_):
             self.poller = hgpoller.HgPoller(self.remote_repo,
                                             workdir='/some/dir')
             self.poller.master = self.master
-            self.poller.isRepositoryReady = isRepositoryReady
+            self.poller._isRepositoryReady = _isRepositoryReady
         def create_db(_):
             db = self.master.db = FakeDBConnector(self)
             return db.setup()
@@ -148,7 +148,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
 
     def check_current_rev(self, wished):
         def check_on_rev(_):
-            d = self.poller.getCurrentRev()
+            d = self.poller._getCurrentRev()
             d.addCallback(lambda oid_rev: self.assertEqual(oid_rev[1], wished))
         return check_on_rev
 
@@ -164,7 +164,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                 self.gpoFullcommandPattern('hg', 'heads', 'default'),
                 os.linesep.join(('5', '6')))
 
-        yield self.poller.setCurrentRev(3)
+        yield self.poller._setCurrentRev(3)
 
         # do the poll: we must stay at rev 3
         d = self.poller.poll()
@@ -189,7 +189,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                                  'Comment for rev 5',
                                  '']))
 
-        yield self.poller.setCurrentRev(4)
+        yield self.poller._setCurrentRev(4)
 
         d = self.poller.poll()
         d.addCallback(self.check_current_rev(5))
