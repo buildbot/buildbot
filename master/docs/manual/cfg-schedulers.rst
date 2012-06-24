@@ -413,9 +413,9 @@ between builds, not the absolute time-of-day of each Build, so this
 could easily wind up an *evening* or *every afternoon* scheduler
 depending upon when it was first activated.
 
-.. _Nightly-Scheduler:
-
 .. bb:sched:: Nightly
+
+.. _Nightly-Scheduler:
 
 Nightly Scheduler
 ~~~~~~~~~~~~~~~~~
@@ -747,10 +747,12 @@ Here is a fully-worked example::
                                          waitForFinish=True))
 
 
+.. bb:sched:: NightlyTriggerable
+
 NightlyTriggerable Scheduler
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:clas:: buildbot.schedulers.timed.NightlyTriggerable
+.. py:class:: buildbot.schedulers.timed.NightlyTriggerable
 
 The :class:`NightlyTriggerable` scheduler is a mix of the :class:`Nightly` and :class:`Triggerable` schedulers.
 This scheduler triggers builds at a particular time of day, week, or year, exactly as the :class:`Nightly` scheduler.
@@ -776,7 +778,7 @@ The parameters are just the basics:
 ``month``
 
 ``dayOfWeek``
-    See :ref:`Nightly Scheduler`.
+    See :bb:sched:`Nightly`.
 
 This class is only useful in conjunction with the :class:`Trigger` step.
 Note that ``waitForFinish`` is ignored by :class:`Trigger` steps targeting this scheduler.

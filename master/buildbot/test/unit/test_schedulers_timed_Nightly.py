@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import time
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer, task

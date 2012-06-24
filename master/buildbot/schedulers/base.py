@@ -325,7 +325,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
 
     @defer.inlineCallbacks
-    def addBuildSetForSourceStampDetails(self, reason='', external_idstring=None,
+    def addBuildsetForSourceStampDetails(self, reason='', external_idstring=None,
                         branch=None, repository='', project='', revision=None,
                         builderNames=None, properties=None):
         """

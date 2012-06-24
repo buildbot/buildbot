@@ -299,7 +299,7 @@ class ForceScheduler(base.BaseScheduler):
         r = ("A build was forced by '%s': %s" % (owner, reason))
 
         # everything is validated, we can create our source stamp, and buildrequest
-        res = yield self.addBuildSetForSourceStampDetails(
+        res = yield self.addBuildsetForSourceStampDetails(
             reason = r,
             branch = branch,
             repository = repository,
