@@ -779,7 +779,7 @@ The parameters are just the basics:
     See :ref:`Nightly Scheduler`.
 
 This class is only useful in conjunction with the :class:`Trigger` step.
-Note that ``waitForFinish`` is currenlty ignored by :class:`Trigger` steps targeting this scheduler.
+Note that ``waitForFinish`` is ignored by :class:`Trigger` steps targeting this scheduler.
 
 Here is a fully-worked example::
 

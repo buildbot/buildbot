@@ -389,8 +389,9 @@ class NightlyTriggerable(NightlyBase):
                 (sourcestamps, propsDict))
 
         ## Trigger expects a callback with the success of the triggered
-        ## build, if waitForFinish is True. That probably isn't important here,
-        ## so just return SUCCESS for now.
+        ## build, if waitForFinish is True.
+        ## Just return SUCCESS, to indicate that the trigger was succesful,
+        ## don't want for the nightly to run.
         return d.addCallback(lambda _: buildstep.SUCCESS)
 
     @defer.inlineCallbacks
