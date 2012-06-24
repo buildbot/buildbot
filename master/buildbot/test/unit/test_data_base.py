@@ -35,12 +35,7 @@ class ResourceType(unittest.TestCase):
         ep = base.Endpoint(None)
         cls = self.makeResourceTypeSubclass(endpoints=[ep])
         inst = cls(None)
-        try:
-            inst.getEndpoints()
-        except TypeError:
-            pass
-        else:
-            self.fail("should have raised TypeError")
+        self.assertRaises(TypeError, lambda : inst.getEndpoints())
 
     def test_getEndpoints_classes(self):
         class MyEndpoint(base.Endpoint):

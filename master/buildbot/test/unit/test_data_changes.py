@@ -167,7 +167,7 @@ class ChangeResourceType(unittest.TestCase):
                 expectedRoutingKey, expectedMessage, expectedRow)
 
     def test_addChange_src_codebase(self):
-        self.master.users = mock.Mock(name='master.users')
+        self.master.users = mock.Mock(name='master.users') # FIXME real fake
         self.master.users.createUserObject.return_value = defer.succeed(123)
         kwargs = dict(author=u'warner', branch=u'warnerdb',
                 category=u'devel', comments=u'fix whitespace',

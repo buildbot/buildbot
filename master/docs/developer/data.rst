@@ -104,7 +104,8 @@ Updates
 
 The updates section is available at `self.master.data.updates`, and contains a number of ad-hoc methods needed by the process modules.
 
-The methods are divided into different classes, but through some initialization-time magic, all appear as attributes of ``self.master.data.updates``.
+.. note:
+    The update methods are implemented in resource type classes, but through some initialization-time magic, all appear as attributes of ``self.master.data.updates``.
 
 .. py:class:: buildbot.data.changes.ChangeResourceType
 
@@ -142,9 +143,8 @@ Links
 
 .. py:class:: Link
 
-    A link giving the path for this or another object.  Instances of this class
-    should be serialized appropriately for the medium, e.g., URLs in an HTTP
-    API.
+    A link giving the path for this or another object.
+    Instances of this class should be serialized appropriately for the medium, e.g., URLs in an HTTP API.
 
     .. py:attribute:: path
 
@@ -293,6 +293,7 @@ Adding Update Methods
 
 Update methods are for use by the Buildbot process code, and as such are generally designed to suit the needs of that code.
 They generally encapsulate logic common to multiple users (e.g., creating buildsets), and finish by performing modifications in the database and sending a corresponding message.
+In general, Buildbot does not depend on timing of either the database or message broker, so the order in which these operations are initiated is not important.
 
 Update methods are considered part of Buildbot's user-visible interface, and as such incompatible changes should be avoied wherever possible.
 Instead, either add a new method (and potentially re-implement existing methods in terms of the new method) or add new, optional parameters to an existing method.

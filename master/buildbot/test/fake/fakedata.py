@@ -26,9 +26,9 @@ class FakeUpdates(object):
         self.master = master
         self.testcase = testcase
 
-    # test cases should assert the value of this list.  Changes are numbered
-    # starting at 1.
-    changesAdded = []
+        # test cases should assert the value of this list.  Changes are
+        # numbered starting at 1.
+        self.changesAdded = []
 
     def addChange(self, files=None, comments=None, author=None,
             revision=None, when_timestamp=None, branch=None, category=None,
@@ -54,8 +54,6 @@ class FakeUpdates(object):
 
         # use locals() to ensure we get all of the args and don't forget if
         # more are added
-        if not self.changesAdded:
-            self.changesAdded = []
         self.changesAdded.append(locals())
         self.changesAdded[-1].pop('self')
         return defer.succeed(len(self.changesAdded))
@@ -63,7 +61,7 @@ class FakeUpdates(object):
     def assertChangesAdded(self, expected):
         self.assertEqual
 
-class FakeDataConnector(connector.DataConnector):
+class FakeDataConnector(object):
     # FakeDataConnector inherits from DataConnector so it can get all of the
     # proper getter behavior; it overrides all of the relevant updates with
     # fake methods, though.

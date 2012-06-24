@@ -13,10 +13,11 @@ Nine
   :bb:cfg:`db_poll_interval` configuration parameter and the :bb:cfg:`db` key
   of the same name are deprecated and will be ignored.
 
-* The interface for adding changes has changed.  The new method is :py:meth:`~buildbot.data.changes.ChangeResourceType.addChange` (invoked as ``master.data.updates.addChange``), although the old interface (``master.addChange``) will remain in place for a few versions.
+* The interface for adding changes has changed.
+  The new method is :py:meth:`~buildbot.data.changes.ChangeResourceType.addChange` (invoked as ``master.data.updates.addChange``), although the old interface (``master.addChange``) will remain in place for a few versions.
   The new method:
 
-  * returns a uid, not a Change instance;
+  * returns a change ID, not a Change instance;
 
   * takes its ``when_timestamp`` argument as epoch time (UNIX time), not a datetime instance; and
 

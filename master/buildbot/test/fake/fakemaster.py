@@ -100,6 +100,8 @@ class FakeMaster(object):
 def make_master(wantMq=False, wantDb=False, wantData=False,
         testcase=None, **kwargs):
     master = FakeMaster(**kwargs)
+    if wantData:
+        wantMq = wantDb = True
     if wantMq:
         assert testcase is not None, "need testcase for wantMq"
         master.mq = fakemq.FakeMQConnector(master, testcase)
@@ -107,7 +109,5 @@ def make_master(wantMq=False, wantDb=False, wantData=False,
         assert testcase is not None, "need testcase for wantDb"
         master.db = fakedb.FakeDBConnector(testcase)
     if wantData:
-        assert wantDb is not None, "need wantDb for wantData"
-        assert testcase is not None, "need testcase for wantData"
         master.data = fakedata.FakeDataConnector(master, testcase)
     return master
