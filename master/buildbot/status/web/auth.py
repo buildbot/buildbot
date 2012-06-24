@@ -107,16 +107,99 @@ class HTPasswdAuth(AuthBase):
         if not lines:
             self.err = "Invalid user/passwd"
             return False
-        # This is the DES-hash of the password. The first two characters are
-        # the salt used to introduce disorder in the DES algorithm.
+            
         hash = lines[0][1]
-        from crypt import crypt #@UnresolvedImport
-        res = hash == crypt(passwd, hash[0:2])
+        phash = None
+        if hash[:6] == '$apr1$':
+            phash = self.cryptMD5(passwd, hash)
+	elif hash[:5] == '{SHA}':
+	    phash = self.cryptSHA1(passwd, None)
+        else:
+            phash = self.crypt(passwd, hash)
+	
+        res = (hash == phash)
         if res:
             self.err = ""
         else:
             self.err = "Invalid user/passwd"
         return res
+
+    def crypt(self, password, salt):
+    	"""Just a wrapper around crypt.crypt"""
+        from crypt import crypt
+        return crypt(password, salt[:2])
+
+    def cryptMD5(self, password, salt, magic='apr1'):
+        """Recreate the apache apr md5 crypt."""
+    	import hashlib
+        if salt[0] == '$':
+            magic, salt = salt.split("$", 2)[1:]
+        if '$' in salt:
+            salt, phash = salt.split("$", 1)
+        if len(salt) > 8:
+            salt = salt[:8]
+
+        m = hashlib.md5("%s$%s$%s"%(password, magic, salt))
+
+        final = hashlib.md5(password + salt + password).digest()
+        
+        # Add as many characters from final as password has
+        m.update((final*(int(len(password)/16)+1))[:len(password)])
+
+        del final
+
+        i = len(password)
+        while i:
+            if i & 1:
+                m.update('\x00')
+            else:
+                m.update(password[:1])
+            i >>= 1
+    
+        final = m.digest()
+    
+        for i in range(1000):
+            m = hashlib.md5()
+    
+            if i & 1:
+                m.update(password)
+            else:
+                m.update(final)
+    
+            if i % 3:
+                m.update(salt)
+    
+            if i % 7:
+                m.update(password)
+    
+            if i & 1:
+                m.update(final)
+            else:
+                m.update(password)
+    
+            final = m.digest()
+
+        phash = ''
+        itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+        for a, b, c in ((0,6,12), (1,7,13), (2,8,14), (3,9,15), (4,10,5)):
+            l = ord(final[a]) << 16 | ord(final[b]) << 8 | ord(final[c])
+            for i in range(4):
+                phash += itoa64[l & 0x3f];
+                l >>= 6
+        l = ord(final[11])
+        for i in range(2):
+            phash += itoa64[l & 0x3f];
+            l >>= 6
+
+        return "$%s$%s$%s" % (magic, salt, phash)
+
+    def cryptSHA1(self, password, salt):
+    	"""Simple unsalted sha1 from hashlib."""
+        import hashlib
+        import base64
+        m = hashlib.sha1(password)
+        phash = base64.b64encode(m.digest())
+        return "{SHA}%s" % phash
 
 class UsersAuth(AuthBase):
     """Implement authentication against users in database"""
