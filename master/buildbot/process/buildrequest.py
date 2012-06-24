@@ -110,10 +110,7 @@ class BuildRequest(object):
         # fetch the buildset properties, and convert to Properties
         buildset_properties = yield master.db.buildsets.getBuildsetProperties(brdict['buildsetid'])
 
-        pr = properties.Properties()
-        for name, (value, source) in buildset_properties.iteritems():
-            pr.setProperty(name, value, source)
-        buildrequest.properties = pr
+        buildrequest.properties = properties.Properties.fromDict(buildset_properties)
 
         # fetch the sourcestamp dictionary
         sslist = yield  master.db.sourcestamps.getSourceStamps(buildset['sourcestampsetid'])
