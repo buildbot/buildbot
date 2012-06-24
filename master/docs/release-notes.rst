@@ -103,8 +103,6 @@ Slave
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* BK support has been removed in this release - see :bb:bug:`2198`.
-
 Features
 ~~~~~~~~
 

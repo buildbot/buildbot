@@ -185,3 +185,7 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.steps.source import Monotone
         assert Monotone
 
+    def test_steps_source_BK(self):
+        from buildbot.steps.source import BK
+        assert BK
+
