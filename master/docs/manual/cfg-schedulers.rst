@@ -683,6 +683,8 @@ scheduler can be triggered from multiple builds. Second, the ability
 to wait for a Triggerable's builds to complete provides a form of
 "subroutine call", where one or more builds can "call" a scheduler
 to perform some work for them, perhaps on other buildslaves.
+The Triggerable-Scheduler supports multiple codebases. The scheduler filters out
+all codebases from Trigger steps that are not configured in the scheduler.
 
 The parameters are just the basics:
 
@@ -692,6 +694,10 @@ The parameters are just the basics:
 
 ``properties``
     See :ref:`Configuring-Schedulers`.
+
+``codebases``
+    See :ref:`Configuring-Schedulers`.
+
 
 This class is only useful in conjunction with the :class:`Trigger` step.
 Here is a fully-worked example::

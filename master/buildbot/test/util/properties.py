@@ -16,7 +16,7 @@
 from zope.interface import implements
 from buildbot.interfaces import IRenderable
 
-class FakeRenderable(object):
+class ConstantRenderable(object):
     implements(IRenderable)
     def __init__(self, value):
         self.value = value

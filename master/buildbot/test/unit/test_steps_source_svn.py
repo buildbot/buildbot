@@ -20,7 +20,7 @@ from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import sourcesteps
 from buildbot.process import buildstep
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
-from buildbot.test.util.properties import FakeRenderable
+from buildbot.test.util.properties import ConstantRenderable
 from buildbot import config
 
 class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
@@ -144,7 +144,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_repourl_renderable(self):
         self.setupStep(
-                svn.SVN(repourl=FakeRenderable('http://svn.local/trunk'),
+                svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk'),
                         mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -174,7 +174,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_repourl_not_updatable(self):
         self.setupStep(
-                svn.SVN(repourl=FakeRenderable('http://svn.local/trunk/app'),
+                svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk/app'),
                         mode='incremental',))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -200,7 +200,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_repourl_not_updatable_svninfo_mismatch(self):
         self.setupStep(
-                svn.SVN(repourl=FakeRenderable('http://svn.local/trunk/app'),
+                svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk/app'),
                     mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
