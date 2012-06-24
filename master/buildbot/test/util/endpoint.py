@@ -13,7 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.test.fake import fakemaster, fakedb
+import mock
+from twisted.internet import defer
+from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
 
 class EndpointMixin(interfaces.InterfaceTests):
@@ -21,10 +23,11 @@ class EndpointMixin(interfaces.InterfaceTests):
 
     endpointClass = None
 
-    def setUpEndpoint(self, needDB=True):
-        self.master = fakemaster.make_master()
-        if needDB:
-            self.db = self.master.db = fakedb.FakeDBConnector(self)
+    def setUpEndpoint(self):
+        self.master = fakemaster.make_master(wantMq=True, wantDb=True,
+                testcase=self)
+        self.db = self.master.db
+        self.mq = self.master.mq
         self.ep = self.endpointClass(self.master)
 
         self.assertIsInstance(self.ep.pathPattern, tuple,
@@ -36,11 +39,23 @@ class EndpointMixin(interfaces.InterfaceTests):
     def tearDownEndpoint(self):
         pass
 
-    # call get/control, with extra checks
+    # call methods, with extra checks
 
     def callGet(self, options, kwargs):
         self.assertEqual(set(kwargs), self.path_args)
-        return self.ep.get(options, kwargs)
+        d = self.ep.get(options, kwargs)
+        self.assertIsInstance(d, defer.Deferred)
+        return d
+
+    def callStartConsuming(self, options, kwargs, expected_filter=None):
+        self.assertEqual(set(kwargs), self.path_args)
+        cb = mock.Mock()
+        qref = self.ep.startConsuming(cb, options, kwargs)
+        self.assertTrue(hasattr(qref, 'stopConsuming'))
+        self.assertIdentical(self.mq.qrefs[0], qref)
+        self.assertIdentical(qref.callback, cb)
+        self.assertEqual(qref.filter, expected_filter)
+
 
     # interface tests
 
@@ -50,8 +65,8 @@ class EndpointMixin(interfaces.InterfaceTests):
             pass
 
     def test_startConsuming_spec(self):
-        @self.assertArgSpecMatches(self.ep.getSubscriptionTopic)
-        def getSubscriptionTopic(self, options, kwargs):
+        @self.assertArgSpecMatches(self.ep.startConsuming)
+        def startConsuming(self, callback, options, kwargs):
             pass
 
     def test_control_spec(self):

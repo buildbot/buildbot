@@ -229,13 +229,13 @@ class BuildRequest(object):
             return
 
         # send a cancellation message
-        key = 'buildrequest.%d.%s.%d.cancelled' % (self.bsid,
-                                        self.buildername, self.id)
+        builderid = -1 # TODO
+        key = ('buildrequest', self.bsid, builderid, self.id, 'cancelled')
         msg = dict(
             brid=self.id,
             bsid=self.bsid,
             buildername=self.buildername,
-            builderid=-1) # TODO
+            builderid=builderid)
         self.master.mq.produce(key, msg)
 
         # then complete it with 'FAILURE'; this is the closest we can get to

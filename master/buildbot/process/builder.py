@@ -436,14 +436,15 @@ class Builder(config.ReconfigurableServiceMixin,
         # send a message for each request
         for br in requests:
             bsid = br.bsid
-            builderid = br.buildername # TODO
+            builderid = -1 # br.buildername - TODO
             brid = br.id
-            key = 'buildrequest.%d.%s.%d.complete' % (bsid, builderid, brid)
+            key = ('buildrequest', str(bsid), str(builderid),
+                                                str(brid), 'complete')
             msg = dict(
                 brid=brid,
                 bsid=bsid,
                 buildername=br.buildername,
-                builderid=-1, # TODO
+                builderid=builderid,
                 complete_at=complete_at_epoch,
                 results=results)
             self.master.mq.produce(key, msg)
@@ -571,8 +572,9 @@ class Builder(config.ReconfigurableServiceMixin,
             masterid = yield self.master.getObjectId()
 
             for brdict in brdicts:
-                key = 'buildrequest.%d.%s.%d.claimed' % (brdict['buildsetid'],
-                        brdict['buildername'], brdict['brid'])
+                key = ('buildrequest', str(brdict['buildsetid']),
+                       str(brdict['buildername']), str(brdict['brid']),
+                       'claimed')
                 msg = dict(
                     bsid=brdict['buildsetid'],
                     brid=brdict['brid'],
@@ -743,7 +745,8 @@ class Builder(config.ReconfigurableServiceMixin,
             bsid = breq.bsid
             buildername = breq.buildername
             brid = breq.id
-            key = 'buildrequest.%s.%s.%s.unclaimed' % (bsid, buildername, brid)
+            key = ('buildrequest', str(bsid), str(buildername),
+                                                str(brid), 'unclaimed')
             msg = dict(brid=brid, bsid=bsid, buildername=buildername,
                     builderid=-1)
             self.master.mq.produce(key, msg)

@@ -13,12 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.application import service
+import itertools
 
-class UpdateComponent(service.Service):
-
-    def __init__(self, master):
-        self.setName('data.update')
-        self.master = master
-
-    # TODO..
+def matchTuple(routingKey, filter):
+    if len(filter) != len(routingKey):
+        return False
+    for k, f in itertools.izip(routingKey, filter):
+        if f is not None and f != k:
+            return False
+    return True

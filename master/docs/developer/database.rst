@@ -525,7 +525,7 @@ schedulers
         classifications once they are no longer needed, using
         :py:meth:`flushChangeClassifications`.
 
-    .. py:method: flushChangeClassifications(objectid, less_than=None)
+    .. py:method:: flushChangeClassifications(objectid, less_than=None)
 
         :param objectid: scheduler owning the flushed changes
         :param less_than: (optional) lowest changeid that should *not* be flushed

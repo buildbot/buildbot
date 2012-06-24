@@ -14,30 +14,49 @@
 # Copyright Buildbot Team Members
 
 import inspect
+from twisted.python import reflect
 from twisted.application import service
 from buildbot.util import pathmatch
-from buildbot.data import update, exceptions, base
+from buildbot.data import exceptions, base
+
+class Updates(object):
+    # empty container object; see _scanModule, below
+    pass
 
 class DataConnector(service.Service):
+
+    submodules = [
+        'buildbot.data.changes',
+    ]
 
     def __init__(self, master):
         self.setName('data')
         self.master = master
-        self.update = update.UpdateComponent(master)
 
         self.matcher = pathmatch.Matcher()
         self._setup()
 
-    def _setup(self):
-        def _scanModule(mod):
-            for sym in dir(mod):
-                obj = getattr(mod, sym)
-                if inspect.isclass(obj) and issubclass(obj, base.Endpoint):
-                    self.matcher[obj.pathPattern] = obj(self.master)
+    def _scanModule(self, mod, _noSetattr=False):
+        self.updates = Updates()
+        for sym in dir(mod):
+            obj = getattr(mod, sym)
+            if inspect.isclass(obj) and issubclass(obj, base.ResourceType):
+                rtype = obj(self.master)
 
-        # scan all of the endpoint modules
-        from buildbot.data import changes
-        _scanModule(changes)
+                # put its update methonds into our 'updates' attribute
+                for name in dir(rtype):
+                    o = getattr(rtype, name)
+                    if hasattr(o, 'isUpdateMethod'):
+                        setattr(self.updates, name, o)
+
+                # load its endpoints
+                for epoint in rtype.getEndpoints():
+                    self.matcher[epoint.pathPattern] = epoint
+
+    def _setup(self):
+        for moduleName in self.submodules:
+            module = reflect.namedModule(moduleName)
+            self._scanModule(module)
 
     def _lookup(self, path):
         try:
@@ -51,12 +70,7 @@ class DataConnector(service.Service):
 
     def startConsuming(self, callback, options, path):
         endpoint, kwargs = self._lookup(path)
-        topic = endpoint.getSubscriptionTopic(options, kwargs)
-        if not topic:
-            raise exceptions.InvalidPathError
-        # TODO: aggregate consumers of the same topics
-        # TODO: double this up with get() somehow
-        return self.master.mq.startConsuming(callback, topic)
+        return endpoint.startConsuming(callback, options, kwargs)
 
     def control(self, action, args, path):
         endpoint, kwargs = self._lookup(path)

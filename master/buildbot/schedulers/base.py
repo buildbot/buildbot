@@ -57,12 +57,6 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         @type codebases: dict with following struct:
             key: '<codebase>'
             value: {'repository':'<repo>', 'branch':'<br>', 'revision:'<rev>'}
-
-        @param consumeChanges: true if this scheduler wishes to be informed
-        about the addition of new changes.  Defaults to False.  This should
-        be passed explicitly from subclasses to indicate their interest in
-        consuming changes.
-        @type consumeChanges: boolean
         """
         service.MultiService.__init__(self)
         self.name = name
@@ -204,12 +198,13 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         """
         assert fileIsImportant is None or callable(fileIsImportant)
 
-        # register for changes with master
+        # register for changes with the data API
         assert not self._change_consumer
-        self._change_consumer = self.master.mq.startConsuming(
+        self._change_consumer = self.master.data.startConsuming(
                 lambda k,m : self._changeCallback(k, m, fileIsImportant,
                                             change_filter, onlyImportant),
-                'change.*.new')
+                {},
+                ('change',))
         return defer.succeed(None)
 
     @defer.inlineCallbacks

@@ -21,7 +21,7 @@ from twisted.internet import defer
 from twisted.web import client
 
 from buildbot.changes import base
-from buildbot.util import epoch2datetime
+from buildbot.util import ascii2unicode
 
 class InvalidResultError(Exception):
     def __init__(self, value="InvalidResultError"):
@@ -86,7 +86,6 @@ class BonsaiParser:
         # it impossible to be 100% sure what to decode it as but latin1 covers
         # the broadest base
             data = data.decode("latin1")
-            data = data.encode("ascii", "replace")
             self.dom = minidom.parseString(data)
             log.msg(data)
         except:
@@ -177,7 +176,7 @@ class BonsaiParser:
     def _getWho(self):
         """Returns the e-mail address of the commiter"""
         # convert unicode string to regular string
-        return str(self.currentCiNode.getAttribute("who"))
+        return self.currentCiNode.getAttribute("who")
 
     def _getDate(self):
         """Returns the date (unix time) of the commit"""
@@ -268,8 +267,8 @@ class BonsaiPoller(base.PollingChangeSource):
             files = [file.filename + ' (revision '+file.revision+')'
                      for file in cinode.files]
             self.lastChange = self.lastPoll
-            yield self.master.addChange(author = cinode.who,
+            yield self.master.data.updates.addChange(author = cinode.who,
                                files = files,
                                comments = cinode.log,
-                               when_timestamp = epoch2datetime(cinode.date),
-                               branch = self.branch)
+                               when_timestamp = cinode.date,
+                               branch = ascii2unicode(self.branch))

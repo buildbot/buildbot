@@ -19,9 +19,8 @@ import os
 from twisted.python import log
 from twisted.internet import defer, utils
 
-from buildbot.util import deferredLocked
+from buildbot.util import deferredLocked, ascii2unicode
 from buildbot.changes import base
-from buildbot.util import epoch2datetime
 
 class GitPoller(base.PollingChangeSource):
     """This source will poll a remote git repo for changes and submit
@@ -52,8 +51,8 @@ class GitPoller(base.PollingChangeSource):
         self.gitbin = gitbin
         self.workdir = workdir
         self.usetimestamps = usetimestamps
-        self.category = category
-        self.project = project
+        self.category = ascii2unicode(category)
+        self.project = ascii2unicode(project)
         self.changeCount = 0
         self.commitInfo  = {}
         self.initLock = defer.DeferredLock()
@@ -184,7 +183,7 @@ class GitPoller(base.PollingChangeSource):
             stripped_output = git_output.strip()
             if self.usetimestamps:
                 try:
-                    stamp = float(stripped_output)
+                    stamp = int(stripped_output)
                 except Exception, e:
                         log.msg('gitpoller: caught exception converting output \'%s\' to timestamp' % stripped_output)
                         raise e
@@ -199,7 +198,11 @@ class GitPoller(base.PollingChangeSource):
         d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=os.environ, errortoo=False )
         def process(git_output):
             fileList = git_output.split()
-            return fileList
+
+            # filenames in git are presumably just like POSIX filenames -
+            # encoding-free bytestrings.  In most cases, they'll UTF-8 and
+            # mostly ASCII, so that's a safe assumption here.
+            return [ f.decode('utf-8', 'replace') for f in fileList ]
         d.addCallback(process)
         return d
             
@@ -248,7 +251,7 @@ class GitPoller(base.PollingChangeSource):
 
         revList.reverse()
         self.changeCount = len(revList)
-            
+
         log.msg('gitpoller: processing %d changes: %s in "%s"'
                 % (self.changeCount, revList, self.workdir) )
 
@@ -269,17 +272,17 @@ class GitPoller(base.PollingChangeSource):
                 raise failures[0]
 
             timestamp, author, files, comments = [ r[1] for r in results ]
-            yield self.master.addChange(
+            yield self.master.data.updates.addChange(
                    author=author,
-                   revision=rev,
+                   revision=unicode(rev),
                    files=files,
                    comments=comments,
-                   when_timestamp=epoch2datetime(timestamp),
-                   branch=self.branch,
+                   when_timestamp=timestamp,
+                   branch=ascii2unicode(self.branch),
                    category=self.category,
                    project=self.project,
-                   repository=self.repourl,
-                   src='git')
+                   repository=ascii2unicode(self.repourl),
+                   src=u'git')
 
     def _process_changes_failure(self, f):
         log.msg('gitpoller: repo poll failed')

@@ -23,11 +23,6 @@ class MQBase(service.Service):
         self.setName('mq-implementation')
         self.master = master
 
-    def produce(self, routing_key, data):
-        raise NotImplementedError
-
-    def startConsuming(self, callback, *topics, **kwargs):
-        raise NotImplementedError
 
 class QueueRef(object):
 

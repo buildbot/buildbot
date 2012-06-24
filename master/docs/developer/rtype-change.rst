@@ -19,6 +19,15 @@ Changes
     :attr string codebase: codebase in this repository
     :attr Link link: link for this change
 
+    ..:
+        TODO: uid
+
+    A change resource represents a change to the source code monitored by Buildbot.
+
+    .. bb:event:: change.$changeid.new
+
+        This message indicates the addition of a new change.
+
     .. bb:rpath:: /change
 
         :opt count: number of changes to return (maximum 50)
@@ -26,9 +35,11 @@ Changes
         This path lists changes, sorted by ID.
         The ``count`` option can be used to limit the number of changes.
 
+        Consuming from this path selects :bb:event:`change.$changeid.new` events.
+
     .. bb:rpath:: /change/:changeid
 
         :pathkey integer changeid: the ID of the change
         :event new: the change has just been added
 
-    A change resource represents a change to the source code monitored by Buildbot.
+        This path selects a specific change, identified by ID.

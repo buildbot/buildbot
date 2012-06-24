@@ -16,7 +16,7 @@
 from twisted.trial import unittest
 from twisted.internet import defer, task
 from buildbot.test.fake import fakedb, fakemaster
-from buildbot.test.util import interfaces, connector_component, dbtype
+from buildbot.test.util import interfaces, connector_component, types
 from buildbot.db import changes
 from buildbot.util import epoch2datetime
 
@@ -85,7 +85,7 @@ class Tests(interfaces.InterfaceTests):
             return self.db.changes.getChange(14)
         d.addCallback(get14)
         def check14(chdict):
-            dbtype.verifyChdict(self, chdict)
+            types.verifyDbDict(self, 'chdict', chdict)
             self.assertEqual(chdict, self.change14_dict)
         d.addCallback(check14)
         return d

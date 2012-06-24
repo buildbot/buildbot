@@ -74,3 +74,5 @@ def patch_all(for_tests=False):
         servicechecks.patch_servicechecks()
         from buildbot.monkeypatches import testcase_patch
         testcase_patch.patch_testcase_patch()
+        from buildbot.monkeypatches import decorators
+        decorators.patch()

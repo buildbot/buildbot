@@ -19,7 +19,7 @@ from twisted.trial import unittest
 from twisted.python import failure
 from twisted.internet import defer, task
 from buildbot import config
-from buildbot.test.fake import fakedb, fakemaster, fakemq
+from buildbot.test.fake import fakedb, fakemaster
 from buildbot.status import master
 from buildbot.process import builder
 from buildbot.db import buildrequests
@@ -39,15 +39,16 @@ class TestBuilderBuildCreation(unittest.TestCase):
         """Set up C{self.bldr}"""
         self.bstatus = mock.Mock()
         self.factory = mock.Mock()
-        self.master = fakemaster.make_master()
+        self.master = fakemaster.make_master(testcase=self,
+                wantMq=True, wantDb=True)
+        self.mq = self.master.mq
+        self.db = self.master.db
         # only include the necessary required config, plus user-requested
         config_args = dict(name="bldr", slavename="slv", builddir="bdir",
                      slavebuilddir="sbdir", factory=self.factory)
         config_args.update(config_kwargs)
         builder_config = config.BuilderConfig(**config_args)
         self.bldr = builder.Builder(builder_config.name, _addServices=False)
-        self.master.db = self.db = fakedb.FakeDBConnector(self)
-        self.master.mq = self.mq = fakemq.FakeMQConnector(self)
         self.bldr.master = self.master
         self.bldr.botmaster = self.master.botmaster
 
@@ -205,7 +206,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        claim_11_msg = ( 'buildrequest.11.bldr.11.claimed', {
+        claim_11_msg = ( ('buildrequest', '11', 'bldr', '11', 'claimed'), {
             'bsid': 11,
             'builderid': -1,
             'brid': 11,
@@ -742,9 +743,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
         self.bldr._msg_buildrequests_unclaimed([br1, br2])
 
         self.assertEqual(sorted(self.master.mq.productions), [
-            ( 'buildrequest.10.bldr.13.unclaimed',
+            ( ('buildrequest', '10', 'bldr', '13', 'unclaimed'),
                 dict(brid=13, bsid=10, builderid=-1, buildername='bldr')),
-            ( 'buildrequest.10.bldr.14.unclaimed',
+            ( ('buildrequest', '10', 'bldr', '14', 'unclaimed'),
                 dict(brid=14, bsid=10, builderid=-1, buildername='bldr')),
         ])
 

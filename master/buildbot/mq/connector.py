@@ -63,7 +63,7 @@ class MQConnector(config.ReconfigurableServiceMixin, service.MultiService):
         # implementation's method
         raise NotImplementedError
 
-    def startConsuming(self, callback, *topics, **kwargs):
+    def startConsuming(self, callback, filter, persistent_name=None):
         # will be patched after configuration to point to the running
         # implementation's method
         raise NotImplementedError

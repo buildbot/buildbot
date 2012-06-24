@@ -122,6 +122,15 @@ package.
 
     If ``obj`` is not None, return its string representation.
 
+.. py:function:: ascii2unicode(str):
+
+    :param str: string
+    :returns: string as unicode, assuming ascii
+
+    This function is intended to implement automatic conversions for user convenience.
+    If given a bytestring, it returns the string decoded as ASCII (and will thus fail for any bytes 0x80 or higher).
+    If given a unicode string, it returns it directly.
+
 .. py:data:: NotABranch
 
     This is a sentinel value used to indicate that no branch is specified.  It

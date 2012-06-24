@@ -56,16 +56,30 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         )))
 
         def check(_):
-            self.failUnlessEqual(len(self.changes_added), 1)
-            c = self.changes_added[0]
-            self.assertEqual(c['author'], "Dustin <dustin@mozilla.com>")
-            self.assertEqual(c['project'], "pr")
-            self.assertEqual(c['branch'], "br/4321")
-            self.assertEqual(c['revision'], "abcdef")
-            self.assertEqual(c['revlink'], "http://buildbot.net")
-            self.assertEqual(c['repository'], "ssh://someuser@somehost:29418/pr")
-            self.assertEqual(c['comments'], "fix 1234")
-            self.assertEqual(c['files'], [ 'unknown' ])
-            self.assertEqual(c['properties']['event.change.subject'], 'fix 1234')
+            self.failUnlessEqual(self.master.data.updates.changesAdded, [{
+                'author': u'Dustin <dustin@mozilla.com>',
+                'branch': u'br/4321',
+                'category': u'patchset-created',
+                'codebase': None,
+                'comments': u'fix 1234',
+                'files': ['unknown'],
+                'project': u'pr',
+                'properties': {
+                    u'event.change.branch': u'br',
+                    u'event.change.number': u'4321',
+                    u'event.change.owner.email': u'dustin@mozilla.com',
+                    u'event.change.owner.name': u'Dustin',
+                    u'event.change.project': u'pr',
+                    u'event.change.subject': u'fix 1234',
+                    u'event.change.url': u'http://buildbot.net',
+                    u'event.patchSet.revision': u'abcdef',
+                    u'event.type': u'patchset-created',
+                },
+                'repository': u'ssh://someuser@somehost:29418/pr',
+                'revision': u'abcdef',
+                'revlink': u'http://buildbot.net',
+                'src': None,
+                'when_timestamp': None,
+            }])
         d.addCallback(check)
         return d

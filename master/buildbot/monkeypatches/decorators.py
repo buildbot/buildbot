@@ -13,25 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-# concrete verifiers for documented resource types
+from twisted.internet import defer
+from twisted.python import util
 
-from buildbot.test.util import typeverifier
+def patch_noargs_decorator(decorator):
+    def new_decorator(func):
+        wrapper = decorator(func)
+        wrapper.func_original = func
+        return wrapper
+    util.mergeFunctionMetadata(decorator, new_decorator)
+    return new_decorator
 
-verifyChdict = typeverifier.TypeVerifier('chdict',
-    attrs = dict(
-        changeid='integer',
-        author='string',
-        files='stringlist',
-        comments='string',
-        revision='string:none',
-        when_timestamp='datetime',
-        branch='string:none',
-        category='string:none',
-        revlink='string:none',
-        properties='sourcedProperties',
-        repository='string',
-        project='string',
-        codebase='string',
-        is_dir='integer',
-        ))
-
+def patch():
+    defer.inlineCallbacks = patch_noargs_decorator(defer.inlineCallbacks)

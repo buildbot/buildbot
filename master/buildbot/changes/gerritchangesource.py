@@ -113,7 +113,7 @@ class GerritChangeSource(base.ChangeSource):
         flatten(properties, "event", event)
         return func(properties,event)
     def addChange(self, chdict):
-        d = self.master.addChange(**chdict)
+        d = self.master.data.updates.addChange(**chdict)
         # eat failures..
         d.addErrback(log.err, 'error adding change from GerritChangeSource')
         return d
@@ -128,7 +128,7 @@ class GerritChangeSource(base.ChangeSource):
                 revision=event["patchSet"]["revision"],
                 revlink=change["url"],
                 comments=change["subject"],
-                files=["unknown"],
+                files=[u"unknown"],
                 category=event["type"],
                 properties=properties))
     def eventReceived_ref_updated(self, properties, event):
@@ -146,7 +146,7 @@ class GerritChangeSource(base.ChangeSource):
                 branch=ref["refName"],
                 revision=ref["newRev"],
                 comments="Gerrit: patchset(s) merged.",
-                files=["unknown"],
+                files=[u"unknown"],
                 category=event["type"],
                 properties=properties))
 

@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.trial import unittest
-from buildbot.test.fake import fakemaster, fakedata, fakemq
+from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
 from buildbot.data import connector
 
@@ -33,34 +33,31 @@ class Tests(interfaces.InterfaceTests):
         def startConsuming(self, callback, options, path):
             pass
 
-    def test_signature_stopConsuming(self):
-        cons = self.data.startConsuming(lambda : None, {}, ('change',))
-        @self.assertArgSpecMatches(cons.stopConsuming)
-        def stopConsuming(self):
-            pass
-
     def test_signature_control(self):
         @self.assertArgSpecMatches(self.data.control)
         def control(self, action, args, path):
             pass
 
+    def test_signature_updates_addChange(self):
+        @self.assertArgSpecMatches(self.data.updates.addChange)
+        def addChange(self, files=None, comments=None, author=None,
+                revision=None, when_timestamp=None, branch=None, category=None,
+                revlink=u'', properties={}, repository=u'', codebase=None,
+                project=u'', src=None):
+            pass
 
-class RealTests(Tests):
-
-    # tests that only "real" implementations will pass
-
-    pass
 
 class TestFakeData(unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
-        self.master.mq = fakemq.FakeMQConnector(self.master)
-        self.data = fakedata.FakeDataConnector(self.master)
+        self.master = fakemaster.make_master(testcase=self,
+                wantMq=True, wantData=True, wantDb=True)
+        self.data = self.master.data
 
-class TestDataConnector(unittest.TestCase, RealTests):
+
+class TestDataConnector(unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
-        self.master.mq = fakemq.FakeMQConnector(self.master)
+        self.master = fakemaster.make_master(testcase=self,
+                wantMq=True)
         self.data = connector.DataConnector(self.master)

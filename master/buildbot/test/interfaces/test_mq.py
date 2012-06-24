@@ -15,8 +15,8 @@
 
 import mock
 from twisted.trial import unittest
-from buildbot.test.fake import fakemaster, fakemq
-from buildbot.test.util import interfaces, topicmatching
+from buildbot.test.fake import fakemaster
+from buildbot.test.util import interfaces, tuplematching
 from buildbot.mq import simple
 
 class Tests(interfaces.InterfaceTests):
@@ -25,7 +25,7 @@ class Tests(interfaces.InterfaceTests):
         raise NotImplementedError
 
     def test_empty_produce(self):
-        self.mq.produce('a.b.c', dict(x=1))
+        self.mq.produce(('a', 'b', 'c'), dict(x=1))
         # ..nothing happens
 
     def test_signature_produce(self):
@@ -35,26 +35,24 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_startConsuming(self):
         @self.assertArgSpecMatches(self.mq.startConsuming)
-        # note that kwargs is really persistent_name=, but Python2's syntax
-        # doesn't allow keyword args and *args to be mixed very well
-        def startConsuming(self, callback, *topics, **kwargs):
+        def startConsuming(self, callback, filter, persistent_name=None):
             pass
 
     def test_signature_stopConsuming(self):
-        cons = self.mq.startConsuming(lambda : None, 'topic')
+        cons = self.mq.startConsuming(lambda : None, ('a',))
         @self.assertArgSpecMatches(cons.stopConsuming)
         def stopConsuming(self):
             pass
 
 
-class RealTests(topicmatching.TopicMatchingMixin, Tests):
+class RealTests(tuplematching.TupleMatchingMixin, Tests):
 
     # tests that only "real" implementations will pass
 
-    # called by the TopicMatchingMixin methods
-    def do_test_match(self, routingKey, shouldMatch, *topics):
+    # called by the TupleMatchingMixin methods
+    def do_test_match(self, routingKey, shouldMatch, filter):
         cb = mock.Mock()
-        self.mq.startConsuming(cb, *topics)
+        self.mq.startConsuming(cb, filter)
         self.mq.produce(routingKey, 'x')
         self.assertEqual(shouldMatch, cb.call_count == 1)
         if shouldMatch:
@@ -62,30 +60,30 @@ class RealTests(topicmatching.TopicMatchingMixin, Tests):
 
     def test_stopConsuming(self):
         cb = mock.Mock()
-        qref = self.mq.startConsuming(cb, 'abc')
-        self.mq.produce('abc', dict(x=1))
+        qref = self.mq.startConsuming(cb, ('abc',))
+        self.mq.produce(('abc',), dict(x=1))
         qref.stopConsuming()
-        self.mq.produce('abc', dict(x=1))
-        cb.assert_called_once_with('abc', dict(x=1))
+        self.mq.produce(('abc',), dict(x=1))
+        cb.assert_called_once_with(('abc',), dict(x=1))
 
     def test_stopConsuming_twice(self):
         cb = mock.Mock()
-        qref = self.mq.startConsuming(cb, 'abc')
+        qref = self.mq.startConsuming(cb, ('abc',))
         qref.stopConsuming()
         qref.stopConsuming()
         # ..nothing bad happens
 
     def test_non_persistent(self):
         cb = mock.Mock()
-        qref = self.mq.startConsuming(cb, 'abc')
+        qref = self.mq.startConsuming(cb, ('abc',))
 
         cb2 = mock.Mock()
-        qref2 = self.mq.startConsuming(cb2, 'abc')
+        qref2 = self.mq.startConsuming(cb2, ('abc',))
 
         qref.stopConsuming()
-        self.mq.produce('abc', '{}')
+        self.mq.produce(('abc',), '{}')
 
-        qref = self.mq.startConsuming(cb, 'abc')
+        qref = self.mq.startConsuming(cb, ('abc',))
         qref.stopConsuming()
         qref2.stopConsuming()
 
@@ -95,12 +93,12 @@ class RealTests(topicmatching.TopicMatchingMixin, Tests):
     def test_persistent(self):
         cb = mock.Mock()
 
-        qref = self.mq.startConsuming(cb, 'abc', persistent_name='ABC')
+        qref = self.mq.startConsuming(cb, ('abc',), persistent_name='ABC')
         qref.stopConsuming()
 
-        self.mq.produce('abc', '{}')
+        self.mq.produce(('abc',), '{}')
 
-        qref = self.mq.startConsuming(cb, 'abc', persistent_name='ABC')
+        qref = self.mq.startConsuming(cb, ('abc',), persistent_name='ABC')
         qref.stopConsuming()
 
         self.assertTrue(cb.called)
@@ -109,8 +107,9 @@ class RealTests(topicmatching.TopicMatchingMixin, Tests):
 class TestFakeMQ(unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
-        self.mq = fakemq.FakeMQConnector(self.master)
+        self.master = fakemaster.make_master(testcase=self, wantMq=True)
+        self.mq = self.master.mq
+        self.mq.verifyMessages = False
 
 class TestSimpleMQ(unittest.TestCase, RealTests):
 
