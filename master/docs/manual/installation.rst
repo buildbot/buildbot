@@ -411,14 +411,12 @@ process does *not* edit your :file:`master.cfg` for you. So something like:
     # for using mysql:
     c['db_url'] = 'mysql://bbuser:<password>@localhost/buildbot'
 
-Once the parameter has been added, invoke ``upgrade-master`` with the
-``--db`` parameter, e.g.,
+Once the parameter has been added, invoke ``upgrade-master``.
+This will extract the DB url from your configuration file.
 
 .. code-block:: bash
 
-    buildbot upgrade-master --db=mysql://bbuser:<password>@localhost/buildbot
-
-The ``--db`` option must match the ``c['db_url']`` exactly.
+    buildbot upgrade-master
 
 See :ref:`Database-Specification` for more options to specify a database.
 
