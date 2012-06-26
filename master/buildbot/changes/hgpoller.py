@@ -38,11 +38,12 @@ class HgPoller(base.PollingChangeSource):
                  workdir=None, pollInterval=10*60,
                  hgbin='hg', usetimestamps=True,
                  category=None, project='',
-                 encoding='utf-8'):
+                 encoding='utf-8', name=None):
 
         self.repourl = repourl
         self.branch = branch
-        self.pollInterval = pollInterval
+        base.PollingChangeSource.__init__(
+            self, name=name, pollInterval=pollInterval)
         self.encoding = encoding
         self.lastChange = time.time()
         self.lastPoll = time.time()
