@@ -96,6 +96,37 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                      for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
+
+    def getChildrenBuildRequests(self, buildername, buildnumber):
+        def thd(conn):
+            reqs_tbl = self.db.model.buildrequests
+            props_tbl = self.db.model.buildset_properties
+            props_aliases = {}
+            join = reqs_tbl
+            properties = dict(triggered_builds_buildnumber=str(buildnumber),
+                              triggered_builds_buildername = '"'+buildername+'"')
+            for p in properties.keys():
+                # alias allows you to join several time the property table
+                # so that we can get several property each on its columns
+                props_aliases[p] = props_tbl.alias("prop_"+p)
+                join = join.outerjoin(props_aliases[p],
+                                      props_aliases[p].c.buildsetid == reqs_tbl.c.buildsetid)
+            q = sa.select([join])
+
+            for p,v in properties.items():
+                q = q.where(props_aliases[p].c.property_name == p)
+                # having the value encoded in json does not help to much
+                # for such filtering. It will just work for simple queries anyway
+                q = q.where(props_aliases[p].c.property_value.like("["+v+",%"))
+
+            q = q.apply_labels()
+            res = conn.execute(q)
+            rv = []
+            for row in res.fetchall():
+                rv.append((row.buildrequests_id, row.buildrequests_buildername))
+            return rv
+        return self.db.pool.do(thd)
+
     @with_master_objectid
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor,
                             _master_objectid=None):

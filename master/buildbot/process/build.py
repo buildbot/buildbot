@@ -488,6 +488,51 @@ class Build(properties.PropertiesMixin):
             lock, access, d = self._acquiringLock
             lock.stopWaitingUntilAvailable(self, access, d)
             d.callback(None)
+        self.stopTriggeredBuilds(reason)
+
+    @defer.deferredGenerator
+    def stopTriggeredBuilds(self, reason):
+        db = self.builder.botmaster.parent.db
+        # get childrens
+        wfd = defer.waitForDeferred(
+            db.buildrequests.getChildrenBuildRequests(self.builder.name, self.build_status.number))
+        yield wfd
+
+        byBuilderName = {}
+        # first sort the br by buildername
+        for brid, buildername in wfd.getResult():
+            if not byBuilderName.has_key(buildername):
+                byBuilderName[buildername] = set()
+            byBuilderName[buildername].add(brid)
+        for buildername,brids in byBuilderName.items():
+            c = interfaces.IControl(self.builder.botmaster.parent)
+            builder_control = c.getBuilder(buildername)
+            # the only API we get is to get control on all pending buildrequests
+            wfd = defer.waitForDeferred(
+                    builder_control.getPendingBuildRequestControls())
+            yield wfd
+            brcontrols = wfd.getResult()
+            cancelled_brid = set()
+            for build_req in brcontrols:
+                if (build_req.brid in brids):
+                    wfd = defer.waitForDeferred(
+                        build_req.cancel(reason=reason,evenIfClaimed=True))
+                    cancelled_brid.add(build_req.brid)
+                    yield wfd
+                    wfd.getResult()
+            for brid in (brids - cancelled_brid):
+                wfd = defer.waitForDeferred(
+                    db.builds.getBuildsForRequest(brid))
+                yield wfd
+                bdicts = wfd.getResult()
+                buildnums = sorted([ bdict['number'] for bdict in bdicts ])
+
+                for buildnum in buildnums:
+                    bs = builder_control.getBuild(buildnum)
+                    if bs:
+                        bs.stopBuild(reason)
+                return
+
 
     def allStepsDone(self):
         if self.result == FAILURE:
