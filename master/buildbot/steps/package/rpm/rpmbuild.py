@@ -20,8 +20,13 @@ from __future__ import with_statement
 import os
 from buildbot.steps.shell import ShellCommand
 from buildbot.process import buildstep
+from buildbot import config
 
 class RpmBuild(ShellCommand):
+    """
+    RpmBuild build step.
+    """
+
     name = "rpmbuilder"
     haltOnFailure = 1
     flunkOnFailure = 1
@@ -40,6 +45,30 @@ class RpmBuild(ShellCommand):
                  autoRelease=False,
                  vcsRevision=False,
                  **kwargs):
+        """
+        Create the RpmBuild object.
+
+        @type specfile: str
+        @param specfile: location of the specfile to build
+        @type topdir: str
+        @param topdir: define the _topdir rpm parameter
+        @type builddir: str
+        @param builddir: define the _builddir rpm parameter
+        @type rpmdir: str
+        @param rpmdir: define the _rpmdir rpm parameter
+        @type sourcedir: str
+        @param sourcedir: define the _sourcedir rpm parameter
+        @type specdir: str
+        @param specdir: define the _specdir rpm parameter
+        @type srcrpmdir: str
+        @param srcrpmdir: define the _srcrpmdir rpm parameter
+        @type dist: str
+        @param dist: define the dist string.
+        @type autoRelease: boolean
+        @param autoRelease: Use auto incrementing release numbers.
+        @type vcsRevision: boolean
+        @param vcsRevision: Use vcs version number as revision number.
+        """
         ShellCommand.__init__(self, **kwargs)
         self.rpmbuild = (
             'rpmbuild --define "_topdir %s" --define "_builddir %s"'
@@ -50,6 +79,9 @@ class RpmBuild(ShellCommand):
         self.specfile = specfile
         self.autoRelease = autoRelease
         self.vcsRevision = vcsRevision
+
+        if not self.specfile:
+            config.error("You must specify a specfile")
 
     def start(self):
         if self.autoRelease:
@@ -80,20 +112,23 @@ class RpmBuild(ShellCommand):
         self.startCommand(cmd)
 
     def createSummary(self, log):
-        rpm_prefixes = ['Provides:', 'Requires(rpmlib):', 'Requires:',
+        rpm_prefixes = ['Provides:', 'Requires(', 'Requires:',
                         'Checking for unpackaged', 'Wrote:',
-                        'Executing(%', '+ ']
+                        'Executing(%', '+ ', 'Processing files:']
         rpm_err_pfx = ['   ', 'RPM build errors:', 'error: ']
 
         rpmcmdlog = []
         rpmerrors = []
 
-        for line in log.readlines():
+        for line in log.getText().splitlines(True):
             for pfx in rpm_prefixes:
-                if pfx in line:
+                if line.startswith(pfx):
                     rpmcmdlog.append(line)
+                    break
             for err in rpm_err_pfx:
-                if err in line:
+                if line.startswith(err):
                     rpmerrors.append(line)
+                    break
         self.addCompleteLog('RPM Command Log', "".join(rpmcmdlog))
-        self.addCompleteLog('RPM Errors', "".join(rpmerrors))
+        if rpmerrors:
+            self.addCompleteLog('RPM Errors', "".join(rpmerrors))

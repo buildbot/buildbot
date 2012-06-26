@@ -413,9 +413,9 @@ between builds, not the absolute time-of-day of each Build, so this
 could easily wind up an *evening* or *every afternoon* scheduler
 depending upon when it was first activated.
 
-.. _Nightly-Scheduler:
-
 .. bb:sched:: Nightly
+
+.. _Nightly-Scheduler:
 
 Nightly Scheduler
 ~~~~~~~~~~~~~~~~~
@@ -448,6 +448,8 @@ The full list of parameters is:
 ``change_filter``
 
 ``onlyImportant``
+
+``codebases``
     See :ref:`Configuring-Schedulers`.  Note that ``fileIsImportant`` and
     ``change_filter`` are only relevant if ``onlyIfChanged`` is
     ``True``.
@@ -683,6 +685,8 @@ scheduler can be triggered from multiple builds. Second, the ability
 to wait for a Triggerable's builds to complete provides a form of
 "subroutine call", where one or more builds can "call" a scheduler
 to perform some work for them, perhaps on other buildslaves.
+The Triggerable-Scheduler supports multiple codebases. The scheduler filters out
+all codebases from Trigger steps that are not configured in the scheduler.
 
 The parameters are just the basics:
 
@@ -691,7 +695,10 @@ The parameters are just the basics:
 ``builderNames``
 
 ``properties``
+
+``codebases``
     See :ref:`Configuring-Schedulers`.
+
 
 This class is only useful in conjunction with the :class:`Trigger` step.
 Here is a fully-worked example::
@@ -739,6 +746,68 @@ Here is a fully-worked example::
     nightly_factory.addStep(trigger.Trigger(schedulerNames=['package-all-platforms'],
                                          waitForFinish=True))
 
+
+.. bb:sched:: NightlyTriggerable
+
+NightlyTriggerable Scheduler
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: buildbot.schedulers.timed.NightlyTriggerable
+
+The :class:`NightlyTriggerable` scheduler is a mix of the :class:`Nightly` and :class:`Triggerable` schedulers.
+This scheduler triggers builds at a particular time of day, week, or year, exactly as the :class:`Nightly` scheduler.
+However, the source stamp set that is used that provided by the last :class:`Trigger` step that targeted this scheduler.
+
+The parameters are just the basics:
+
+``name``
+
+``builderNames``
+
+``properties``
+
+``codebases``
+    See :ref:`Configuring-Schedulers`.
+
+``minute``
+
+``hour``
+
+``dayOfMonth``
+
+``month``
+
+``dayOfWeek``
+    See :bb:sched:`Nightly`.
+
+This class is only useful in conjunction with the :class:`Trigger` step.
+Note that ``waitForFinish`` is ignored by :class:`Trigger` steps targeting this scheduler.
+
+Here is a fully-worked example::
+
+    from buildbot.schedulers import basic, timed
+    from buildbot.process import factory
+    from buildbot.steps import shell, trigger
+
+    checkin = basic.SingleBranchScheduler(name="checkin",
+                branch=None,
+                treeStableTimer=5*60,
+                builderNames=["checkin"])
+    nightly = timed.NightlyTriggerable(name='nightly',
+                builderNames=['nightly'],
+                hour=3,
+                minute=0)
+
+    c['schedulers'] = [checkin, nightly]
+
+    # on checkin, run tests
+    checkin_factory = factory.BuildFactory()
+    checkin_factory.addStep(shell.Test())
+    checkin_factory.addStep(trigger.Trigger(schedulerNames=['nightly'])
+
+    # and every night, package the latest succesful build
+    nightly_factory = factory.BuildFactory()
+    nightly_factory.addStep(shell.ShellCommand(command=['make', 'package']))
 
 .. bb:sched:: ForceScheduler
 
