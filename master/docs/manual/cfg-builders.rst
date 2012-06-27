@@ -106,7 +106,7 @@ Other optional keys may be set on each ``BuilderConfig``:
         c['builders'] = [
           BuilderConfig(name='test', factory=f,
                 slavenames=['slave1', 'slave2', 'slave3', 'slave4'],
-                env=@{'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'@}),
+                env={'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'}),
         ]
 
 .. index:: Builds; merging
