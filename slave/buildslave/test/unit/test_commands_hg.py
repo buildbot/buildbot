@@ -70,7 +70,7 @@ class TestMercurial(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
-            Expect(['path/to/hg', 'identify', '--id', '--debug'],
+            Expect(['path/to/hg', 'parents', '--template', '{node}\\n'],
                 self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False, environ=exp_environ,
                 keepStdout=True)
@@ -122,7 +122,7 @@ class TestMercurial(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
-            Expect(['path/to/hg', 'identify', '--id', '--debug'],
+            Expect(['path/to/hg', 'parents', '--template', '{node}\\n'],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False, environ=exp_environ,
                 keepStdout=True)
@@ -177,7 +177,7 @@ class TestMercurial(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
-            Expect(['path/to/hg', 'identify', '--id', '--debug'],
+            Expect(['path/to/hg', 'parents', '--template', '{node}\\n'],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False, environ=exp_environ,
                 keepStdout=True)
@@ -234,7 +234,7 @@ class TestMercurial(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
-            Expect(['path/to/hg', 'identify', '--id', '--debug'],
+            Expect(['path/to/hg', 'parents', '--template', '{node}\\n'],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False, environ=exp_environ,
                 keepStdout=True)
@@ -313,7 +313,7 @@ class TestMercurial(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
-            Expect(['path/to/hg', 'identify', '--id', '--debug'],
+            Expect(['path/to/hg', 'parents', '--template', '{node}\\n'],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False, environ=exp_environ,
                 keepStdout=True)

@@ -180,7 +180,7 @@ class Mercurial(Source):
         return d
 
     def parseGotRevision(self, _):
-        d = self._dovccmd(['identify', '--id', '--debug'], collectStdout=True)
+        d = self._dovccmd(['parents', '--template', '{node}\\n'], collectStdout=True)
         def _setrev(stdout):
             revision = stdout.strip()
             if len(revision) != 40:

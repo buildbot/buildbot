@@ -179,7 +179,7 @@ class MercurialExtractor(SourceStampExtractor):
     vcexe = "hg"
 
     def getBaseRevision(self):
-        d = self.dovc(["identify", "--id", "--debug"])
+        d = self.dovc(["parents", "--template", "{node}\\n"])
         d.addCallback(self.parseStatus)
         return d
 
