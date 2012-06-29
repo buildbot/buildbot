@@ -76,8 +76,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--clean'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'identify',
-                                    '--id', '--debug'])
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'])
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -122,8 +122,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         timeout=1,
-                        command=['hg', '--verbose', 'identify',
-                                    '--id', '--debug'])
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'])
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -148,8 +148,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                     'http://hg.mozilla.org', '.'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'identify',
-                                    '--id', '--debug'])
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'])
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -178,8 +178,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--clean'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'identify',
-                                    '--id', '--debug'])
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'])
             + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
@@ -216,8 +216,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--clean'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'identify',
-                                    '--id', '--debug'])
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'])
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -242,8 +242,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                     'http://hg.mozilla.org', '.'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'identify',
-                                    '--id', '--debug'])
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'])
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -272,8 +272,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--verbose', 'update', '--clean'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'identify',
-                                    '--id', '--debug'])
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'])
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio', 
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -312,8 +312,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--clean'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'identify',
-                                    '--id', '--debug'])
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'])
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio', 
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -345,8 +345,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--verbose', 'update', '--clean'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'identify',
-                                    '--id', '--debug'])
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'])
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -378,8 +378,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--verbose', 'update', '--clean'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'identify',
-                                    '--id', '--debug'])
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'])
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -415,8 +415,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--rev', 'abcdef01'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'identify',
-                                    '--id', '--debug'])
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'])
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -458,8 +458,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--clean'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'identify',
-                                    '--id', '--debug'])
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'])
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -495,8 +495,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--clean'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'identify',
-                                    '--id', '--debug'])
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'])
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -536,8 +536,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--clean'], env={'abc': '123'})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'identify',
-                                    '--id', '--debug'], env={'abc': '123'})
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'], env={'abc': '123'})
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
@@ -582,8 +582,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         logEnviron=False)
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'identify',
-                                    '--id', '--debug'],
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'],
                         logEnviron=False)
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio',
