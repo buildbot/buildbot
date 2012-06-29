@@ -132,6 +132,89 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
+    def test_mode_full_clean_patch(self):
+        self.setupStep(
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                    mode='full', method='clean', branchType='inrepo'),
+                patch=(1, 'patch'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--config',
+                                 'extensions.purge=', 'purge'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', 'pull',
+                                 'http://hg.mozilla.org'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', 'identify', '--branch'])
+            + ExpectShell.log('stdio',
+                stdout='default')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', 'update',
+                                 '--clean'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', 'import',
+                                 '--no-commit', '-p', '1', '-'],
+                        initialStdin='patch')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', 'parents',
+                                    '--template', '{node}\\n'])
+            + ExpectShell.log('stdio', stdout='\n')
+            + ExpectShell.log('stdio',
+                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+    
+    def test_mode_full_clean_patch_fail(self):
+        self.setupStep(
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                    mode='full', method='clean', branchType='inrepo'),
+                patch=(1, 'patch'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', '--config',
+                                 'extensions.purge=', 'purge'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', 'pull',
+                                 'http://hg.mozilla.org'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', 'identify', '--branch'])
+            + ExpectShell.log('stdio',
+                stdout='default')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', 'update',
+                                 '--clean'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--verbose', 'import',
+                                 '--no-commit', '-p', '1', '-'],
+                        initialStdin='patch')
+            + 1,
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+
     def test_mode_full_clean_no_existing_repo(self):
         self.setupStep(
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',

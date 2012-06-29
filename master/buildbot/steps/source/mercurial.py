@@ -111,6 +111,10 @@ class Mercurial(Source):
             d.addCallback(lambda _: self.full())
         elif self.mode == 'incremental':
             d.addCallback(lambda _: self.incremental())
+
+        if patch:
+            d.addCallback(self.patch, patch)
+
         d.addCallback(self.parseGotRevision)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
@@ -218,14 +222,15 @@ class Mercurial(Source):
         d.addCallback(self._checkBranchChange)
         return d
 
-    def _dovccmd(self, command, collectStdout=False):
+    def _dovccmd(self, command, collectStdout=False, initialStdin=None):
         if not command:
             raise ValueError("No command specified")
         cmd = buildstep.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,
-                                           collectStdout=collectStdout)
+                                           collectStdout=collectStdout,
+                                           initialStdin=initialStdin)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting mercurial command : hg %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
@@ -252,6 +257,11 @@ class Mercurial(Source):
                     "there are %d changes here, assuming the last one is "
                     "the most recent" % len(changes))
         return changes[-1].revision
+
+    def patch(self, _, patch):
+        d = self._dovccmd(['import', '--no-commit', '-p', str(patch[0]), '-'],
+                initialStdin=patch[1])
+        return d
 
     def _getCurrentBranch(self):
         if self.branchType == 'dirname':
