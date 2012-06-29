@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+from operator import attrgetter
+
 from zope.interface import implements
 from twisted.persisted import styles
 from twisted.internet import defer
@@ -110,7 +112,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
                 ssdict.get('patch_subdir'))
             sourcestamp.patch_info = (ssdict['patch_author'],
                                       ssdict['patch_comment'])
-        
+
         if ssdict['changeids']:
             # sort the changeids in order, oldest to newest
             sorted_changeids = sorted(ssdict['changeids'])
@@ -149,15 +151,16 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.repository = repository or ''
         self.codebase = codebase or ''
         if changes:
-            self.changes = tuple(changes)
-        if changes and not _ignoreChanges:
-            # set branch and revision to most recent change
-            self.branch = changes[-1].branch
-            revision = changes[-1].revision
-            if not self.project and hasattr(changes[-1], 'project'):
-                self.project = changes[-1].project
-            if not self.repository and hasattr(changes[-1], 'repository'):
-                self.repository = changes[-1].repository
+            self.changes = changes = list(changes)
+            changes.sort(key=attrgetter('when'))
+            if not _ignoreChanges:
+                # set branch and revision to most recent change
+                self.branch = changes[-1].branch
+                revision = changes[-1].revision
+                if not self.project and hasattr(changes[-1], 'project'):
+                    self.project = changes[-1].project
+                if not self.repository and hasattr(changes[-1], 'repository'):
+                    self.repository = changes[-1].repository
 
         if revision is not None:
             if isinstance(revision, int):
@@ -305,8 +308,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             return defer.succeed(self.sourcestampsetid)
         else:
             return self.addSourceStampToDatabase(master)
-            
-    
+
+
     @util.deferredLocked('_addSourceStampToDatabase_lock')
     def addSourceStampToDatabase(self, master, sourcestampsetid = None):
         # add it to the DB
@@ -318,7 +321,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             patch_body = self.patch[1]
             if len(self.patch) > 2:
               patch_subdir = self.patch[2]
-            
+
         patch_author = None
         patch_comment = None
         if self.patch_info:
@@ -329,7 +332,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
                 return defer.succeed( sourcestampsetid )
             else:
                 return master.db.sourcestampsets.addSourceStampSet()
-            
+
         def set_setid(setid):
             self.sourcestampsetid = setid
             return setid
