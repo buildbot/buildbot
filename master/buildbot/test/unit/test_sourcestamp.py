@@ -177,11 +177,13 @@ class TestBuilderBuildCreation(unittest.TestCase):
     def test_constructor_most_recent_change(self):
         chgs = [
             changes.Change('author', [], 'comments', branch='branch',
-                           revision='2', when=2),
+                           revision='2'),
             changes.Change('author', [], 'comments', branch='branch',
-                           revision='3', when=3),
+                           revision='3'),
             changes.Change('author', [], 'comments', branch='branch',
-                           revision='1', when=1),
+                           revision='1'),
             ]
+        for ch in chgs:  # mock the DB changeid (aka build number) to match rev
+          ch.number = int(ch.revision)
         ss = sourcestamp.SourceStamp(changes=chgs)
         self.assertEquals(ss.revision, '3')

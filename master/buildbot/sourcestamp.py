@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from operator import attrgetter
-
 from zope.interface import implements
 from twisted.persisted import styles
 from twisted.internet import defer
@@ -152,7 +150,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.codebase = codebase or ''
         if changes:
             self.changes = changes = list(changes)
-            changes.sort(key=attrgetter('when'))
+            changes.sort()
             if not _ignoreChanges:
                 # set branch and revision to most recent change
                 self.branch = changes[-1].branch
