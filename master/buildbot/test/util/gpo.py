@@ -37,8 +37,8 @@ class Expect(object):
         return self
 
     def check(self, test, bin, *args):
-        test.assertEqual(bin, self._bin)
-        test.assertEqual(args, self._args)
+        test.assertEqual(bin, self._bin, "wrong command run")
+        test.assertEqual(args, self._args, "wrong args passed")
         return (self._stdout, self._stderr, self._exit)
 
 class GetProcessOutputMixin_v2:
@@ -53,6 +53,7 @@ class GetProcessOutputMixin_v2:
                          "assert all expected commands were run")
 
     def _check_env(self, env):
+        env = env or {}
         for var, value in self._gpo_expect_env.items():
             self.assertEqual(env.get(var), value,
                 'Expected environment to have %s = %r' % (var, value))

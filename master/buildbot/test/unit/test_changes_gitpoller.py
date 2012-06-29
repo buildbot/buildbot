@@ -128,8 +128,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin_v2,
 
     def test_poll(self):
         # Test that environment variables get propagated to subprocesses (See #2116)
-        #os.putenv('TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES', 'TRUE')
-        #self.addGetProcessOutputExpectEnv({'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES': 'TRUE'})
+        self.patch(os.environ, {'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES': 'TRUE'})
+        self.addGetProcessOutputExpectEnv({'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES': 'TRUE'})
 
         # patch out getProcessOutput and getProcessOutputAndValue for the
         # benefit of the _get_changes method
