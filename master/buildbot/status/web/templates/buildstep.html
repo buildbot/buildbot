@@ -58,6 +58,16 @@
 {% endfor %}
 </ul>
 
+{% if statistics %}
+<h2>Statistics</h2>
+<table class="info">
+  <tr><th>Name</th><th>Value</th></tr>
+  {% for stat in statistics %}
+    <tr class="{{ loop.cycle('alt', '') }}"><td>{{ stat.name|e }}</td><td>{{ stat.value|e }}</td></tr>
+  {% endfor %}
+</table>
+{% endif %}
+
 </div>
 
 {% endblock %}
