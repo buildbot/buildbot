@@ -76,7 +76,7 @@ p4change = {
 
 
 class TestP4Poller(changesource.ChangeSourceMixin,
-                   gpo.GetProcessOutputMixin_v2,
+                   gpo.GetProcessOutputMixin,
                    unittest.TestCase):
     def setUp(self):
         self.setUpGetProcessOutput()

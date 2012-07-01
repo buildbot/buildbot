@@ -248,7 +248,7 @@ def split_file(path):
     raise RuntimeError("there shouldn't be any files like %r" % path)
 
 
-class TestSVNPoller(gpo.GetProcessOutputMixin_v2,
+class TestSVNPoller(gpo.GetProcessOutputMixin,
                     changesource.ChangeSourceMixin,
                     unittest.TestCase):
 

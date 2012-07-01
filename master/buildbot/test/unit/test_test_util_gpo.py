@@ -15,12 +15,12 @@
 
 from twisted.trial import reporter, unittest
 from twisted.internet import utils
-from buildbot.test.util.gpo import GetProcessOutputMixin_v2, Expect
+from buildbot.test.util.gpo import GetProcessOutputMixin, Expect
 
 class TestGPOMixin(unittest.TestCase):
 
     def runTestMethod(self, method):
-        class TestCase(GetProcessOutputMixin_v2, unittest.TestCase):
+        class TestCase(GetProcessOutputMixin, unittest.TestCase):
             def setUp(self):
                 self.setUpGetProcessOutput()
             def runTest(self):

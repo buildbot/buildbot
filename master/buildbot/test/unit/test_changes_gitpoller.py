@@ -23,7 +23,7 @@ from buildbot.util import epoch2datetime
 # Test that environment variables get propagated to subprocesses (See #2116)
 os.environ['TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'] = 'TRUE'
 
-class GitOutputParsing(gpo.GetProcessOutputMixin_v2, unittest.TestCase):
+class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
     """Test GitPoller methods for parsing git output"""
     def setUp(self):
         self.poller = gitpoller.GitPoller('git@example.com:foo/baz.git')
@@ -104,7 +104,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin_v2, unittest.TestCase):
 
     # _get_changes is tested in TestGitPoller, below
 
-class TestGitPoller(gpo.GetProcessOutputMixin_v2,
+class TestGitPoller(gpo.GetProcessOutputMixin,
                     changesource.ChangeSourceMixin,
                     unittest.TestCase):
 
