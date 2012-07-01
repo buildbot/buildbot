@@ -25,6 +25,7 @@ from zope.interface import implements
 
 from buildslave import bot
 from buildslave.test.util import misc
+from buildslave.test.fake import FakeBot
 
 from mock import Mock
 
@@ -158,18 +159,13 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         in a call to the master's shutdown method"""
         d = defer.Deferred()
 
-        fakepersp = Mock()
-        called = []
-        def fakeCallRemote(*args):
-            called.append(args)
-            d1 = defer.succeed(None)
-            return d1
-        fakepersp.callRemote = fakeCallRemote
+        fakebot = FakeBot(self.basedir, False, unicode_encoding=None)
 
-        # set up to call shutdown when we are attached, and chain the results onto
+        fakebot.gracefulShutdown = Mock()
+
         # the deferred for the whole test
         def call_shutdown(mind):
-            self.buildslave.bf.perspective = fakepersp
+            self.buildslave.bot = fakebot
             shutdown_d = self.buildslave.gracefulShutdown()
             shutdown_d.addCallbacks(d.callback, d.errback)
 
@@ -183,7 +179,7 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         self.buildslave.startService()
 
         def check(ign):
-            self.assertEquals(called, [('shutdown',)])
+            fakebot.gracefulShutdown.assert_called_with()
         d.addCallback(check)
 
         return d

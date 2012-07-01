@@ -344,13 +344,8 @@ class Bot(pb.Referenceable, service.MultiService):
         return builder.remoteStep.callRemote("complete", failure)
 
     def gracefulShutdown(self):
-        if not self.factory.perspective:
-            log.msg("No active connection, shutting down NOW")
-            reactor.stop()
-            return
-
         log.msg("Telling the master we want to shutdown after any running builds are finished")
-        d = self.factory.perspective.callRemote("shutdown")
+        d = self.callRemote("shutdown")
         def _shutdownfailed(err):
             if err.check(AttributeError):
                 log.msg("Master does not support slave initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
@@ -556,5 +551,8 @@ class BuildSlave(service.MultiService):
 
     def gracefulShutdown(self):
         """Start shutting down"""
-        log.msg("Telling the master we want to shutdown after any running builds are finished")
+        if not self.bot:
+            log.msg("No active connection, shutting down NOW")
+            reactor.stop()
+            return
         return self.bot.gracefulShutdown()
