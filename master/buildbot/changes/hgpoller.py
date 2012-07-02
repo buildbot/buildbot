@@ -156,7 +156,8 @@ class HgPoller(base.PollingChangeSource):
     def _getStateObjectId(self):
         """Return a deferred for object id in state db.
 
-        Being unique among pollers, workdir is used as instance name for db.
+        Being unique among pollers, workdir is used with branch as instance
+        name for db.
         """
         return self.master.db.state.getObjectId(
             '#'.join((self.workdir, self.branch)), self.db_class_name)
