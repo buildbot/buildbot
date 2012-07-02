@@ -92,10 +92,14 @@ class HTPasswdAuth(AuthBase):
         """C{file} is a path to an .htpasswd file."""
         assert os.path.exists(file)
         self.file = file
+        self.apr = None
         
         try:
             from ctypes import CDLL
-            self.apr = CDLL("libaprutil-1.so.0")
+            from ctypes.util import find_library
+            lib = find_library("aprutil-1")
+            if lib:
+                self.apr = CDLL(lib)
         except:
             self.apr = None
 
