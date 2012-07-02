@@ -23,14 +23,16 @@ from buildbot.test.util import changesource, gpo
 from buildbot.test.fake.fakedb import FakeDBConnector
 from buildbot.util import epoch2datetime
 
-# Test that environment variables get propagated to subprocesses (See #2116)
-os.environ['TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'] = 'TRUE'
+ENVIRON_2116_KEY = 'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'
 
 class TestHgPoller(gpo.GetProcessOutputMixin,
                    changesource.ChangeSourceMixin,
                    unittest.TestCase):
 
     def setUp(self):
+        # To test that environment variables get propagated to subprocesses
+        # (See #2116)
+        os.environ[ENVIRON_2116_KEY] = 'TRUE'
         self.setUpGetProcessOutput()
         d = self.setUpChangeSource()
         self.remote_repo = 'ssh://example.com/foo/baz'
@@ -50,6 +52,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         return d
 
     def tearDown(self):
+        del os.environ[ENVIRON_2116_KEY]
         self.tearDownGetProcessOutput()
         return self.tearDownChangeSource()
 
@@ -74,11 +77,9 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         self.repo_ready = False
         # Test that environment variables get propagated to subprocesses
         # (See #2116)
-        os.putenv('TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES', 'TRUE')
-        self.addGetProcessOutputExpectEnv(
-            {'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES': 'TRUE'})
-        self.addGetProcessOutputAndValueExpectEnv(
-            {'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES': 'TRUE'})
+        expected_env = {ENVIRON_2116_KEY: 'TRUE'}
+        self.addGetProcessOutputExpectEnv(expected_env)
+        self.addGetProcessOutputAndValueExpectEnv(expected_env)
 
         # patch out getProcessOutput and getProcessOutputAndValue for
         # expected hg calls
