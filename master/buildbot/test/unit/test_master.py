@@ -56,10 +56,10 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
         d = self.master.addBuildset(scheduler='schname',
                 sourcestampsetid=sourcestampsetid,
                 reason='rsn', properties={},
-                builderNames=['a', 'b'], external_idstring='eid')
+                builderNames=[u'a', u'b'], external_idstring='eid')
         def check((bsid,brids)):
             # addBuildset returned the expected values (these come from fakedb)
-            self.assertEqual((bsid,brids), (200, dict(a=1000,b=1001)))
+            self.assertEqual((bsid,brids), (200, {u'a' : 1000, u'b': 1001 }))
 
             # check that the proper message was produced
             self.assertEqual(sorted(self.master.mq.productions), sorted([

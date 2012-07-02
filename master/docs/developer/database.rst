@@ -312,6 +312,7 @@ buildsets
         :type builderNames: list of strings
         :param external_idstring: external key to identify this buildset; defaults to None
         :type external_idstring: unicode string
+        :param datetime submitted_at: time this buildset was created; defaults to the current time
         :returns: buildset ID and buildrequest IDs, via a Deferred
 
         Add a new Buildset to the database, along with BuildRequests for each
@@ -359,7 +360,7 @@ buildsets
 
     .. py:method:: getBuildsetProperties(buildsetid)
 
-        :param buildsetid: buildset ID
+        :param bsid: buildset ID
         :returns: dictionary mapping property name to ``value, source``, via
             Deferred
 

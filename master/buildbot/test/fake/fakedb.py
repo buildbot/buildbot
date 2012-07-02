@@ -83,11 +83,9 @@ class Row(object):
         return '%s(**%r)' % (self.__class__.__name__, self.values)
 
     def nextId(self):
-        if not hasattr(self.__class__, '_next_id'):
-            self.__class__._next_id = 1000
-        else:
-            self.__class__._next_id += 1
-        return self.__class__._next_id
+        global _next_id
+        id, _next_id = _next_id, _next_id+1
+        return id
 
 
 class BuildRequest(Row):
@@ -658,7 +656,8 @@ class FakeBuildsetsComponent(FakeDBComponent):
         return bsid
 
     def addBuildset(self, sourcestampsetid, reason, properties, builderNames,
-                   external_idstring=None, _reactor=reactor):
+                   external_idstring=None, submitted_at=None,
+                   _reactor=reactor):
         bsid = self._newBsid()
         br_rows = []
         for buildername in builderNames:
@@ -666,8 +665,16 @@ class FakeBuildsetsComponent(FakeDBComponent):
                     BuildRequest(buildsetid=bsid, buildername=buildername))
         self.db.buildrequests.insertTestData(br_rows)
 
+        # calculate submitted at
+        if submitted_at:
+            submitted_at = datetime2epoch(submitted_at)
+        else:
+            submitted_at = _reactor.seconds()
+
         # make up a row and keep its dictionary, with the properties tacked on
-        bsrow = Buildset(sourcestampsetid=sourcestampsetid, reason=reason, external_idstring=external_idstring)
+        bsrow = Buildset(sourcestampsetid=sourcestampsetid, reason=reason,
+                external_idstring=external_idstring,
+                submitted_at=submitted_at)
         self.buildsets[bsid] = bsrow.values.copy()
         self.buildsets[bsid]['properties'] = properties
 
@@ -676,9 +683,12 @@ class FakeBuildsetsComponent(FakeDBComponent):
 
     def completeBuildset(self, bsid, results, complete_at=None,
             _reactor=reactor):
+        if bsid not in self.buildsets or self.buildsets[bsid]['complete']:
+            raise KeyError
         self.buildsets[bsid]['results'] = results
         self.buildsets[bsid]['complete'] = 1
-        self.buildsets[bsid]['complete_at'] = complete_at or _reactor.seconds()
+        self.buildsets[bsid]['complete_at'] = \
+            datetime2epoch(complete_at) if complete_at else _reactor.seconds()
         return defer.succeed(None)
 
     def getBuildset(self, bsid):
@@ -710,12 +720,13 @@ class FakeBuildsetsComponent(FakeDBComponent):
         row['complete'] = bool(row['complete'])
         row['bsid'] = row['id']
         del row['id']
+        del row['properties']
         return row
 
-    def getBuildsetProperties(self, buildsetid):
-        if buildsetid in self.buildsets:
+    def getBuildsetProperties(self, bsid):
+        if bsid in self.buildsets:
             return defer.succeed(
-                    self.buildsets[buildsetid]['properties'])
+                    self.buildsets[bsid]['properties'])
         else:
             return defer.succeed({})
 
@@ -1186,6 +1197,10 @@ class FakeDBConnector(object):
     """
 
     def __init__(self, testcase):
+        # reset the id generator, for stable id's
+        global _next_id
+        _next_id = 1000
+
         self._components = []
         self.changes = comp = FakeChangesComponent(self, testcase)
         self._components.append(comp)

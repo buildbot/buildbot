@@ -30,10 +30,15 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
     def addBuildset(self, sourcestampsetid, reason, properties, builderNames,
-                   external_idstring=None, _reactor=reactor):
+                   external_idstring=None, submitted_at=None,
+                   _reactor=reactor):
+        if submitted_at:
+            submitted_at = datetime2epoch(submitted_at)
+        else:
+            submitted_at = _reactor.seconds()
+
         def thd(conn):
             buildsets_tbl = self.db.model.buildsets
-            submitted_at = _reactor.seconds()
 
             self.check_length(buildsets_tbl.c.reason, reason)
             self.check_length(buildsets_tbl.c.external_idstring,
@@ -133,24 +138,12 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             return [ self._row2dict(row) for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
-    def getBuildsetProperties(self, buildsetid):
-        """
-        Return the properties for a buildset, in the same format they were
-        given to L{addBuildset}.
-
-        Note that this method does not distinguish a nonexistent buildset from
-        a buildset with no properties, and returns C{{}} in either case.
-
-        @param buildsetid: buildset ID
-
-        @returns: dictionary mapping property name to (value, source), via
-        Deferred
-        """
+    def getBuildsetProperties(self, bsid):
         def thd(conn):
             bsp_tbl = self.db.model.buildset_properties
             q = sa.select(
                 [ bsp_tbl.c.property_name, bsp_tbl.c.property_value ],
-                whereclause=(bsp_tbl.c.buildsetid == buildsetid))
+                whereclause=(bsp_tbl.c.buildsetid == bsid))
             l = []
             for row in conn.execute(q):
                 try:

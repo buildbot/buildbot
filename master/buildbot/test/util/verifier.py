@@ -75,6 +75,8 @@ def _dictProblems(value, typename, attrs):
         elif typ == 'enum':
             vals = set(rest.split(','))
             valfn = lambda v : isinstance(v, unicode) and v in vals
+        elif typ == 'boolean':
+            valfn = lambda v : isinstance(v, bool)
         else:
             raise RuntimeError('invalid type %s' % typ)
 
