@@ -35,6 +35,8 @@
 #    OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 #    USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+# modified by dustin to pass pyflakes
+
 """
 The WebSockets protocol (RFC 6455), provided as a resource which wraps a
 factory.
@@ -253,7 +255,7 @@ class WebSocketsProtocol(ProtocolWrapper):
 
         try:
             frames, self.buf = parse_hybi07_frames(self.buf)
-        except WSException, wse:
+        except WSException:
             # Couldn't parse all the frames, something went wrong, let's bail.
             log.err()
             self.loseConnection()
@@ -279,7 +281,8 @@ class WebSocketsProtocol(ProtocolWrapper):
                 # 5.5.2 PINGs must be responded to with PONGs.
                 # 5.5.3 PONGs must contain the data that was sent with the
                 # provoking PING.
-                self.transport.write(make_hybi07_packet(data, opcode=PONG))
+                raise AssertionError, "this doesn't work" # due to unknown symbol below
+                #self.transport.write(make_hybi07_packet(data, opcode=PONG))
 
     def sendFrames(self):
         """
