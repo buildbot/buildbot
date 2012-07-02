@@ -100,6 +100,11 @@ class MasterConfig(object):
         self.status = []
         self.user_managers = []
         self.revlink = default_revlink_matcher
+        self.www = dict(
+            port=None,
+            url='http://localhost:8080/',
+            public_html=None,
+        )
 
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
@@ -109,7 +114,8 @@ class MasterConfig(object):
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projectName", "projectURL",
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
-        "status", "title", "titleURL", "user_managers", "validation", 'mq'
+        "status", "title", "titleURL", "user_managers", "validation", 'mq',
+        'www'
     ])
 
     @classmethod
@@ -201,6 +207,7 @@ class MasterConfig(object):
         config.load_change_sources(filename, config_dict, errors)
         config.load_status(filename, config_dict, errors)
         config.load_user_managers(filename, config_dict, errors)
+        config.load_www(filename, config_dict, errors)
 
         # run some sanity checks
         config.check_single_master(errors)
@@ -524,6 +531,25 @@ class MasterConfig(object):
             return
 
         self.user_managers = user_managers
+
+
+    def load_www(self, filename, config_dict, errors):
+        if 'www' not in config_dict:
+            return
+        www_cfg = config_dict['www']
+        self.www.update(www_cfg)
+
+        # invent an appropriate URL given the port
+        if 'port' in www_cfg and 'url' not in www_cfg:
+            self.www['url'] = 'http://localhost:%d/' % (www_cfg['port'],)
+
+        if not self.www['url'].endswith('/'):
+            self.www['url'] += '/'
+
+        public_html = self.www.get('public_html')
+        if public_html and not os.path.isdir(public_html):
+            errors.addError("public_html directory '%s' does not exist" %
+                    (public_html,))
 
 
     def check_single_master(self, errors):

@@ -175,6 +175,11 @@ described in :ref:`developer-Reconfiguration`.
 
         The list of user managers providers from :bb:cfg:`user_managers`.
 
+    .. py:attribute:: www
+
+        The web server configuration from :bb:cfg:`www`.  The keys ``port`` and
+        ``url`` are always available.
+
     Loading of the configuration file is generally triggered by the master,
     using the following methods:
 

@@ -26,6 +26,9 @@ class Matcher(object):
         self._patterns[path] = value
         self._dirty = True
 
+    def __repr__(self):
+        return '<Matcher %r>' % (self._patterns,)
+
     path_elt_re = re.compile('(.?):([a-z0-9]+)')
     type_fns = dict(i=int)
     def __getitem__(self, path):
