@@ -13,11 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
+import sys
+import twisted
 from twisted.trial import reporter, unittest
 from twisted.internet import utils
 from buildbot.test.util.gpo import GetProcessOutputMixin, Expect
 
 class TestGPOMixin(unittest.TestCase):
+
+    # these tests use self.patch, but the SkipTest exception gets eaten, so
+    # explicitly skip things here.
+    if twisted.version.major <= 9 and sys.version_info[:2] == (2,7):
+        skip = "unittest.TestCase.patch is not available"
 
     def runTestMethod(self, method):
         class TestCase(GetProcessOutputMixin, unittest.TestCase):
