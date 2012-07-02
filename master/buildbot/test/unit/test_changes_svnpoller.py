@@ -18,7 +18,6 @@ from __future__ import with_statement
 import os
 import xml.dom.minidom
 from twisted.internet import defer
-from twisted.python import failure
 from twisted.trial import unittest
 from buildbot.test.util import changesource, gpo, compat
 from buildbot.changes import svnpoller
@@ -258,7 +257,6 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         return self.setUpChangeSource()
 
     def tearDown(self):
-        self.tearDownGetProcessOutput()
         return self.tearDownChangeSource()
 
     def attachSVNPoller(self, *args, **kwargs):
@@ -267,9 +265,8 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         return s
 
     def add_svn_command_result(self, command, result):
-        self.addGetProcessOutputResult(
-                self.gpoSubcommandPattern('svn', command),
-                result)
+        self.expectCommands(
+                gpo.Expect('svn', command).stdout(result))
 
 
     # tests
@@ -285,10 +282,11 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
 
     def do_test_get_prefix(self, base, output, expected):
         s = self.attachSVNPoller(base)
-        self.add_svn_command_result('info', output)
+        self.expectCommands(gpo.Expect('svn', 'info', '--xml', '--non-interactive', base).stdout(output))
         d = s.get_prefix()
         def check(prefix):
             self.failUnlessEqual(prefix, expected)
+            self.assertAllCommandsRan()
         d.addCallback(check)
         return d
 
@@ -375,17 +373,30 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.failUnlessEqual(changes[0]['revision'], '6')
         self.failUnlessEqual(changes[0]['files'], ["version.c"])
 
+    def makeInfoExpect(self):
+        return  gpo.Expect('svn', 'info', '--xml', '--non-interactive', sample_base,
+                '--username=dustin', '--password=bbrocks')
+
+    def makeLogExpect(self):
+        return gpo.Expect('svn', 'log', '--xml', '--verbose', '--non-interactive',
+                '--username=dustin', '--password=bbrocks',
+                '--limit=100', sample_base)
+
     def test_poll(self):
         s = self.attachSVNPoller(sample_base, split_file=split_file,
                 svnuser='dustin', svnpasswd='bbrocks')
 
         d = defer.succeed(None)
 
+
+        self.expectCommands(
+                self.makeInfoExpect().stdout(sample_info_output),
+                self.makeLogExpect().stdout(make_changes_output(1)),
+                self.makeLogExpect().stdout(make_changes_output(1)),
+                self.makeLogExpect().stdout(make_changes_output(2)),
+                self.makeLogExpect().stdout(make_changes_output(4)),
+                )
         # fire it the first time; it should do nothing
-        def setup_first(_):
-            self.add_svn_command_result('info', sample_info_output) # for get_root
-            self.add_svn_command_result('log', make_changes_output(1))
-        d.addCallback(setup_first)
         d.addCallback(lambda _ : s.poll())
         def check_first(_):
             # no changes generated on the first iteration
@@ -394,9 +405,6 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         d.addCallback(check_first)
 
         # now fire it again, nothing changing
-        def setup_second(_):
-            self.add_svn_command_result('log', make_changes_output(1))
-        d.addCallback(setup_second)
         d.addCallback(lambda _ : s.poll())
         def check_second(_):
             self.assertEqual(self.changes_added, [])
@@ -404,9 +412,6 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         d.addCallback(check_second)
 
         # and again, with r2 this time
-        def setup_third(_):
-            self.add_svn_command_result('log', make_changes_output(2))
-        d.addCallback(setup_third)
         d.addCallback(lambda _ : s.poll())
         def check_third(_):
             self.assertEqual(len(self.changes_added), 1)
@@ -422,7 +427,6 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         # and again with both r3 and r4 appearing together
         def setup_fourth(_):
             self.changes_added = []
-            self.add_svn_command_result('log', make_changes_output(4))
         d.addCallback(setup_fourth)
         d.addCallback(lambda _ : s.poll())
         def check_fourth(_):
@@ -440,6 +444,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
             self.failUnlessEqual(c['comments'], "revised_to_2")
             self.failUnlessEqual(c['src'], "svn")
             self.failUnlessEqual(s.last_change, 4)
+            self.assertAllCommandsRan()
         d.addCallback(check_fourth)
 
         return d
@@ -449,13 +454,14 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s = self.attachSVNPoller(sample_base, split_file=split_file,
                 svnuser='dustin', svnpasswd='bbrocks')
 
-        self.add_svn_command_result('info', lambda *args, **kwargs:
-                defer.fail(failure.Failure(RuntimeError())))
+        self.expectCommands(
+                self.makeInfoExpect().stderr("error"))
         d = s.poll()
         @d.addCallback
         def check(_):
             # should have logged the RuntimeError, but not errback'd from poll
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+            self.assertEqual(len(self.flushLoggedErrors(IOError)), 1)
+            self.assertAllCommandsRan()
         return d
 
     @compat.usesFlushLoggedErrors
@@ -464,13 +470,14 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 svnuser='dustin', svnpasswd='bbrocks')
         s._prefix = "abc" # skip the get_prefix stuff
 
-        self.add_svn_command_result('log', lambda *args, **kwargs :
-                defer.fail(failure.Failure(RuntimeError())))
+        self.expectCommands(
+                self.makeLogExpect().stderr("some error"))
         d = s.poll()
         @d.addCallback
         def check(_):
             # should have logged the RuntimeError, but not errback'd from poll
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+            self.assertEqual(len(self.flushLoggedErrors(IOError)), 1)
+            self.assertAllCommandsRan()
         return d
 
     def test_cachepath_empty(self):
