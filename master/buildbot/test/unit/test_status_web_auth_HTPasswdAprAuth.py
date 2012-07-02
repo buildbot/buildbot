@@ -17,21 +17,41 @@ Test Passwords
 desbuildmaster:yifux5rkzvI5w
 desbuildslave:W8SPURMnCs7Tc
 desbuildbot:IzclhyfHAq6Oc
+md5buildmaster:$apr1$pSepI8Wp$eJZcfhnpENrRlUn28wak50
+md5buildslave:$apr1$dtX6FDei$vFB5BlnR9bjQisy7v3ZaC0
+md5buildbot:$apr1$UcfsHmrF$i9fYa4OsPI3AK8UBbN3ju1
+shabuildmaster:{SHA}vpAKSO3uPt6z8KL6cqf5W5Sredk=
+shabuildslave:{SHA}sNA10GbdONwGJ+a8VGRNtEyWd9I=
+shabuildbot:{SHA}TwEDa5Q31ZhI4GLmIbE1VrrAkpk=
 """
 
 
 from twisted.trial import unittest
 
-from buildbot.status.web.auth import HTPasswdAuth
+from buildbot.status.web.auth import HTPasswdAprAuth
 
-class TestHTPasswdAuth(unittest.TestCase):
+class TestHTPasswdAprAuth(unittest.TestCase):
 
-    htpasswd = HTPasswdAuth(__file__)
+    htpasswd = HTPasswdAprAuth(__file__)
 
     def test_authenticate_des(self):
         for key in ('buildmaster','buildslave','buildbot'):                
             if self.htpasswd.authenticate('des'+key, key) == False:
                 self.fail("authenticate failed for '%s'" % ('des'+key))
+
+    def test_authenticate_md5(self):
+        if not self.htpasswd.apr:
+            raise unittest.SkipTest("libaprutil-1 not found")
+        for key in ('buildmaster','buildslave','buildbot'):                
+            if self.htpasswd.authenticate('md5'+key, key) == False:
+                self.fail("authenticate failed for '%s'" % ('md5'+key))
+
+    def test_authenticate_sha(self):
+        if not self.htpasswd.apr:
+            raise unittest.SkipTest("libaprutil-1 not found")
+        for key in ('buildmaster','buildslave','buildbot'):                
+            if self.htpasswd.authenticate('sha'+key, key) == False:
+                self.fail("authenticate failed for '%s'" % ('sha'+key))
 
     def test_authenticate_unknown(self):
         if self.htpasswd.authenticate('foo', 'bar') == True:
