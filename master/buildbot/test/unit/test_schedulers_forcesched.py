@@ -123,6 +123,22 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
         # only one builder forced, so there should only be one brid
         self.assertEqual(len(brids), 1)
+        self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
+            'builderNames': ['a'],
+            'external_idstring': None,
+            'properties': {
+                u'owner': ('user', u'Force Build Form'),
+                u'p1': ('e', u'Force Build Form'),
+                u'p2': ('f', u'Force Build Form'),
+                u'p3': ('g', u'Force Build Form'),
+                u'p4': ('h', u'Force Build Form'),
+                u'reason': ('because', u'Force Build Form'),
+                u'scheduler': ('testsched', u'Scheduler'),
+            },
+            'reason': u"A build was forced by 'user': because",
+            'scheduler': 'testsched',
+            'sourcestampsetid': 100, # TODO: this is from fake db
+        }])
 
         self.db.buildsets.assertBuildset\
             (bsid,
@@ -243,31 +259,29 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                 raise
             defer.returnValue(None) # success
 
-        expect_props = [ 
-            ('owner', ('user', 'Force Build Form')),
-            ('reason', ('because', 'Force Build Form')),
-            ('scheduler', ('testsched', 'Scheduler')),
-        ]
+        expect_props = {
+            'owner' : ('user', 'Force Build Form'),
+            'reason' : ('because', 'Force Build Form'),
+            'scheduler' : ('testsched', 'Scheduler'),
+        }
         
         if expectKind is None:
-            expect_props.append((name, (expect, 'Force Build Form')))
+            expect_props[name] = (expect, 'Force Build Form')
         elif expectKind is dict:
             for k,v in expect.iteritems():
-                expect_props.append((k, (v, 'Force Build Form')))
+                expect_props[k] =  (v, 'Force Build Form')
         else:
             self.fail("expectKind is wrong type!")
 
-        self.db.buildsets.assertBuildset\
-            (bsid,
-             dict(reason="A build was forced by 'user': because",
-                  brids=brids,
-                  external_idstring=None,
-                  properties=sorted(expect_props),
-                  sourcestampsetid=100),
-             {"":
-              dict(branch="", revision="", repository="", codebase='',
-                  project="", sourcestampsetid=100)
-             })
+        self.assertEqual(len(brids), 1) # only forced on 'a'
+        self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
+            'builderNames': ['a'],
+            'external_idstring': None,
+            'properties': expect_props,
+            'reason': u"A build was forced by 'user': because",
+            'scheduler': 'testsched',
+            'sourcestampsetid': 100, # TODO: this is from fake db
+        }])
 
     def test_StringParameter(self):
         self.do_ParameterTest(value="testedvalue", expect="testedvalue",

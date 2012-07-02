@@ -26,7 +26,7 @@ from twisted.application import service
 
 import buildbot
 import buildbot.pbmanager
-from buildbot.util import epoch2datetime, datetime2epoch, ascii2unicode
+from buildbot.util import datetime2epoch, ascii2unicode
 from buildbot.status.master import Status
 from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
@@ -42,7 +42,6 @@ from buildbot.process import debug
 from buildbot.process import metrics
 from buildbot.process import cache
 from buildbot.process.users.manager import UserManagerManager
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import monkeypatches
 from buildbot import config
 
@@ -384,81 +383,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         chdict = yield self.db.changes.getChange(changeid)
         change = yield changes.Change.fromChdict(self, chdict)
         defer.returnValue(change)
-
-    @defer.inlineCallbacks
-    def addBuildset(self, scheduler, **kwargs):
-        """
-        Add a buildset to the buildmaster and act on it.  Interface is
-        identical to
-        L{buildbot.db.buildsets.BuildsetConnectorComponent.addBuildset},
-        including returning a Deferred, but also potentially triggers the
-        resulting builds.  This method also takes a 'scheduler' parameter
-        to name the initiating scheduler.
-        """
-        bsid, brids = yield self.db.buildsets.addBuildset(**kwargs)
-
-        log.msg("added buildset %d to database" % bsid)
-
-        # notify about the component build requests
-        for bn, brid in brids.iteritems():
-            builderid = -1 # TODO
-            msg = dict(
-                brid=brid,
-                bsid=bsid,
-                buildername=bn,
-                builderid=builderid)
-            self.mq.produce(('buildrequest', str(bsid), str(builderid),
-                                str(brid), 'new'), msg)
-
-        # and the buildset itself
-        msg = dict(
-            bsid=bsid,
-            external_idstring=kwargs.get('external_idstring', None),
-            reason=kwargs['reason'],
-            sourcestampsetid=kwargs['sourcestampsetid'],
-            brids=brids,
-            scheduler=scheduler,
-            properties=kwargs.get('properties', {}))
-        self.mq.produce(("buildset", str(bsid), "new"), msg)
-
-        defer.returnValue((bsid,brids))
-
-    @defer.inlineCallbacks
-    def maybeBuildsetComplete(self, bsid, _reactor=reactor):
-        """
-        Instructs the master to check whether the buildset is complete,
-        and notify appropriately if it is.
-
-        Note that buildset completions are only reported on the master
-        on which the last build request completes.
-        """
-        brdicts = yield self.db.buildrequests.getBuildRequests(
-            bsid=bsid, complete=False)
-
-        # if there are incomplete buildrequests, bail out
-        if brdicts:
-            return
-
-        brdicts = yield self.db.buildrequests.getBuildRequests(bsid=bsid)
-
-        # figure out the overall results of the buildset
-        cumulative_results = SUCCESS
-        for brdict in brdicts:
-            if brdict['results'] not in (SUCCESS, WARNINGS):
-                cumulative_results = FAILURE
-
-        # mark it as completed in the database
-        complete_at_epoch = _reactor.seconds()
-        complete_at = epoch2datetime(complete_at_epoch)
-        yield self.db.buildsets.completeBuildset(bsid, cumulative_results,
-                complete_at=complete_at)
-
-        # new-style notification
-        msg = dict(
-            bsid=bsid,
-            complete_at=complete_at_epoch,
-            results=cumulative_results)
-        self.mq.produce(('buildset', str(bsid), 'complete'), msg)
 
 
     ## state maintenance (private)

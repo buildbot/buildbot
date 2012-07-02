@@ -213,7 +213,8 @@ class Periodic(Timed):
                 "periodicBuildTimer must be positive")
         self.periodicBuildTimer = periodicBuildTimer
         self.branch = branch
-        self.reason = "The Periodic scheduler named '%s' triggered this build" % self.name
+        self.reason = (u"The Periodic scheduler named '%s' triggered "
+                       u"this build" % self.name)
 
     def getNextBuildTime(self, lastActuated):
         if lastActuated is None:
@@ -358,7 +359,7 @@ class NightlyTriggerable(NightlyBase):
                 dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, properties=properties, codebases=codebases)
 
         self._lastTrigger = None
-        self.reason = "The NightlyTriggerable scheduler named '%s' triggered this build" % self.name
+        self.reason = u"The NightlyTriggerable scheduler named '%s' triggered this build" % self.name
 
     def startService(self):
         NightlyBase.startService(self)

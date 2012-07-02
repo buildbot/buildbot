@@ -54,7 +54,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.makeScheduler(builderNames=[u'a'])
 
     def test_constructor_codebases_valid(self):
-        codebases = {"codebase1": {"repository":"", "branch":"", "revision":""}}
+        codebases = {"codebase1":
+                    {"repository":u"", "branch":u"", "revision":u""}}
         self.makeScheduler(codebases = codebases)
 
     def test_constructor_codebases_invalid(self):
@@ -74,15 +75,23 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
     def test_addBuildsetForLatest_defaults(self):
         sched = self.makeScheduler(name='testy', builderNames=['x'],
                                         properties=dict(a='b'))
-        d = sched.addBuildsetForLatest(reason='because')
+        d = sched.addBuildsetForLatest(reason=u'because')
         def check((bsid,brids)):
-            self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='because', brids=brids,
-                        external_idstring=None,
-                        properties=[ ('a', ('b', 'Scheduler')),
-                                     ('scheduler', ('testy', 'Scheduler')), ],
-                        sourcestampsetid=100),
-                    {'':
+            self.assertEqual(len(brids), 1)
+            self.assertEqual(bsid, 200)
+            self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
+                'builderNames': ['x'],
+                'external_idstring': None,
+                'properties': {
+                    u'a' : ( 'b', u'Scheduler'),
+                    u'scheduler' : ( 'testy', u'Scheduler'),
+                },
+                'reason': u"because",
+                'scheduler': 'testy',
+                'sourcestampsetid': 100,
+            }])
+            self.db.buildsets.assertBuildset(expected_sourcestamps={
+                    '':
                      dict(branch=None, revision=None, repository='', codebase='',
                          project='', sourcestampsetid=100)
                     })
@@ -193,16 +202,22 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_addBuilsetForLatest_args(self):
         sched = self.makeScheduler(name='xyz', builderNames=['y', 'z'])
-        d = sched.addBuildsetForLatest(reason='cuz', branch='default',
+        d = sched.addBuildsetForLatest(reason=u'cuz', branch='default',
                     project='myp', repository='hgmo',
-                    external_idstring='try_1234')
+                    external_idstring=u'try_1234')
         def check((bsid,brids)):
-            self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='cuz', brids=brids,
-                        external_idstring='try_1234',
-                        properties=[('scheduler', ('xyz', 'Scheduler'))],
-                        sourcestampsetid=100),
-                    {'':
+            self.assertEqual(len(brids), 2)
+            self.assertEqual(bsid, 200)
+            self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
+                'builderNames': ['y', 'z'],
+                'external_idstring': u'try_1234',
+                'properties': { u'scheduler' : ( 'xyz', u'Scheduler') },
+                'reason': u"cuz",
+                'scheduler': 'xyz',
+                'sourcestampsetid': 100,
+            }])
+            self.db.buildsets.assertBuildset(expected_sourcestamps={
+                    '':
                      dict(branch='default', revision=None, repository='hgmo',
                           codebase='', project='myp', sourcestampsetid=100)
                     })
@@ -212,19 +227,25 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
     def test_addBuildsetForLatest_properties(self):
         props = properties.Properties(xxx="yyy")
         sched = self.makeScheduler(name='xyz', builderNames=['y', 'z'])
-        d = sched.addBuildsetForLatest(reason='cuz', branch='default',
-                    project='myp', repository='hgmo',
-                    external_idstring='try_1234', properties=props)
+        d = sched.addBuildsetForLatest(reason=u'cuz', branch=u'default',
+                    project=u'myp', repository=u'hgmo',
+                    external_idstring=u'try_1234', properties=props)
         def check((bsid,brids)):
-            self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='cuz', brids=brids,
-                        external_idstring='try_1234',
-                        properties=[
-                            ('scheduler', ('xyz', 'Scheduler')),
-                            ('xxx', ('yyy', 'TEST')),
-                        ],
-                        sourcestampsetid=100),
-                    {'':
+            self.assertEqual(len(brids), 2)
+            self.assertEqual(bsid, 200)
+            self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
+                'builderNames': ['y', 'z'],
+                'external_idstring': u'try_1234',
+                'properties': {
+                    u'xxx' : ( 'yyy', u'TEST'),
+                    u'scheduler' : ( 'xyz', u'Scheduler'),
+                },
+                'reason': u"cuz",
+                'scheduler': 'xyz',
+                'sourcestampsetid': 100,
+            }])
+            self.db.buildsets.assertBuildset(expected_sourcestamps={
+                    '':
                      dict(branch='default', revision=None, repository='hgmo',
                           codebase='', project='myp', sourcestampsetid=100)
                     })
@@ -233,15 +254,21 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_addBuildsetForLatest_builderNames(self):
         sched = self.makeScheduler(name='xyz', builderNames=['y', 'z'])
-        d = sched.addBuildsetForLatest(reason='cuz', branch='default',
-                    builderNames=['a', 'b'])
+        d = sched.addBuildsetForLatest(reason=u'cuz', branch=u'default',
+                    builderNames=['y', 'z'])
         def check((bsid,brids)):
-            self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='cuz', brids=brids,
-                        external_idstring=None,
-                        properties=[('scheduler', ('xyz', 'Scheduler'))],
-                        sourcestampsetid=100),
-                    {'':
+            self.assertEqual(len(brids), 2)
+            self.assertEqual(bsid, 200)
+            self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
+                'builderNames': ['y', 'z'],
+                'external_idstring': None,
+                'properties': { u'scheduler' : ( 'xyz', u'Scheduler') },
+                'reason': u"cuz",
+                'scheduler': 'xyz',
+                'sourcestampsetid': 100,
+            }])
+            self.db.buildsets.assertBuildset(expected_sourcestamps={
+                    '':
                      dict(branch='default', revision=None, repository='',
                           codebase='', project='', sourcestampsetid=100)
                     })
@@ -255,14 +282,20 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                             repository='svn://...', codebase='',
                             project='world-domination'),
         ])
-        d = sched.addBuildsetForChanges(reason='power', changeids=[13])
+        d = sched.addBuildsetForChanges(reason=u'power', changeids=[13])
         def check((bsid,brids)):
-            self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='power', brids=brids,
-                        external_idstring=None,
-                        properties=[('scheduler', ('n', 'Scheduler'))],
-                        sourcestampsetid=100),
-                    {'':
+            self.assertEqual(len(brids), 1)
+            self.assertEqual(bsid, 200)
+            self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
+                'builderNames': ['b'],
+                'external_idstring': None,
+                'properties': { u'scheduler' : ( 'n', u'Scheduler') },
+                'reason': u"power",
+                'scheduler': 'n',
+                'sourcestampsetid': 100,
+            }])
+            self.db.buildsets.assertBuildset(expected_sourcestamps={
+                    '':
                      dict(branch='trunk', repository='svn://...', codebase='',
                         changeids=set([13]), project='world-domination',
                         revision='9283', sourcestampsetid=100)
@@ -277,18 +310,24 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             fakedb.Change(changeid=14, branch='default', revision='123:abc',
                             repository='', project='', codebase=''),
         ])
-        d = sched.addBuildsetForChanges(reason='downstream', changeids=[14],
+        d = sched.addBuildsetForChanges(reason=u'downstream', changeids=[14],
                             properties=props)
         def check((bsid,brids)):
-            self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='downstream', brids=brids,
-                        external_idstring=None,
-                        properties=[
-                            ('scheduler', ('n', 'Scheduler')),
-                            ('xxx', ('yyy', 'TEST')),
-                        ],
-                        sourcestampsetid=100),
-                    {'':
+            self.assertEqual(len(brids), 1)
+            self.assertEqual(bsid, 200)
+            self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
+                'builderNames': ['c'],
+                'external_idstring': None,
+                'properties': {
+                    u'xxx' : ( 'yyy', u'TEST'),
+                    u'scheduler' : ( 'n', u'Scheduler'),
+                },
+                'reason': u"downstream",
+                'scheduler': 'n',
+                'sourcestampsetid': 100,
+            }])
+            self.db.buildsets.assertBuildset(expected_sourcestamps={
+                    '':
                      dict(branch='default', revision='123:abc', repository='',
                          project='', changeids=set([14]), sourcestampsetid=100,
                          codebase='')
@@ -303,15 +342,21 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                           codebase='', repository='svn://...', 
                           project='world-domination'),
         ])
-        d = sched.addBuildsetForChanges(reason='power', changeids=[13],
+        d = sched.addBuildsetForChanges(reason=u'power', changeids=[13],
                             builderNames=['p'])
         def check((bsid,brids)):
-            self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='power', brids=brids,
-                        external_idstring=None,
-                        properties=[('scheduler', ('n', 'Scheduler'))],
-                        sourcestampsetid=100),
-                    {'':
+            self.assertEqual(len(brids), 1)
+            self.assertEqual(bsid, 200)
+            self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
+                'builderNames': ['p'],
+                'external_idstring': None,
+                'properties': { u'scheduler' : ( 'n', u'Scheduler'), },
+                'reason': u"power",
+                'scheduler': 'n',
+                'sourcestampsetid': 100,
+            }])
+            self.db.buildsets.assertBuildset(expected_sourcestamps={
+                    '':
                      dict(branch='trunk', repository='svn://...', codebase='',
                          changeids=set([13]), project='world-domination',
                          revision='9283', sourcestampsetid=100)
@@ -338,14 +383,20 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
         # note that the changeids are given out of order here; it should still
         # use the most recent
-        d = sched.addBuildsetForChanges(reason='power', changeids=[14, 15, 13])
+        d = sched.addBuildsetForChanges(reason=u'power', changeids=[14, 15, 13])
         def check((bsid,brids)):
-            self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='power', brids=brids,
-                        external_idstring=None,
-                        properties=[('scheduler', ('n', 'Scheduler'))],
-                        sourcestampsetid=100),
-                    {'':
+            self.assertEqual(len(brids), 2)
+            self.assertEqual(bsid, 200)
+            self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
+                'builderNames': ['b', 'c'],
+                'external_idstring': None,
+                'properties': { u'scheduler' : ( 'n', u'Scheduler') },
+                'reason': u"power",
+                'scheduler': 'n',
+                'sourcestampsetid': 100,
+            }])
+            self.db.buildsets.assertBuildset(expected_sourcestamps={
+                    '':
                      dict(branch='trunk', repository='svn://C..', codebase='',
                         changeids=set([13,14,15]), project='world-domination',
                         revision='9285', sourcestampsetid=100)
@@ -369,14 +420,20 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
         # note that the changeids are given out of order here; it should still
         # use the most recent
-        d = sched.addBuildsetForChanges(reason='power', changeids=[14, 15, 13])
+        d = sched.addBuildsetForChanges(reason=u'power', changeids=[14, 15, 13])
         def check((bsid,brids)):
-            self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='power', brids=brids,
-                        external_idstring=None,
-                        properties=[('scheduler', ('n', 'Scheduler'))],
-                        sourcestampsetid=100),
-                    {'':
+            self.assertEqual(len(brids), 2)
+            self.assertEqual(bsid, 200)
+            self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
+                'builderNames': ['b', 'c'],
+                'external_idstring': None,
+                'properties': { u'scheduler' : ( 'n', u'Scheduler') },
+                'reason': u"power",
+                'scheduler': 'n',
+                'sourcestampsetid': 100,
+            }])
+            self.db.buildsets.assertBuildset(expected_sourcestamps={
+                    '':
                      dict(branch='trunk', repository='svn://...', codebase='',
                         changeids=set([13,14,15]), project='world-domination',
                         revision='9285', sourcestampsetid=100)
@@ -426,14 +483,21 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
         # note that the changeids are given out of order here; it should still
         # use the most recent for each codebase
-        d = sched.addBuildsetForChanges(reason='power', changeids=[14, 12, 17, 16, 13, 15])
+        d = sched.addBuildsetForChanges(reason=u'power',
+                changeids=[14, 12, 17, 16, 13, 15])
         def check((bsid,brids)):
-            self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='power', brids=brids,
-                        external_idstring=None,
-                        properties=[('scheduler', ('n', 'Scheduler'))],
-                        sourcestampsetid=100),
-                    {'cbA':
+            self.assertEqual(len(brids), 2)
+            self.assertEqual(bsid, 200)
+            self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
+                'builderNames': ['b', 'c'],
+                'external_idstring': None,
+                'properties': { u'scheduler' : ( 'n', u'Scheduler') },
+                'reason': u"power",
+                'scheduler': 'n',
+                'sourcestampsetid': 100,
+            }])
+            self.db.buildsets.assertBuildset(expected_sourcestamps={
+                    'cbA':
                      dict(branch='develop', repository='svn://A..', codebase='cbA',
                         changeids=set([12,13,14]), project='making-tea',
                         revision='9284', sourcestampsetid=100),
@@ -460,14 +524,20 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                 project='p'),
         ])
         d.addCallback(lambda _ :
-                sched.addBuildsetForSourceStamp(reason='whynot', setid=1091))
+                sched.addBuildsetForSourceStamp(reason=u'whynot', setid=1091))
         def check((bsid,brids)):
-            self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='whynot', brids=brids,
-                        external_idstring=None,
-                        properties=[('scheduler', ('n', 'Scheduler'))],
-                        sourcestampsetid=1091),
-                    {'':
+            self.assertEqual(len(brids), 1)
+            self.assertEqual(bsid, 200)
+            self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
+                'builderNames': ['b'],
+                'external_idstring': None,
+                'properties': { u'scheduler' : ( 'n', u'Scheduler') },
+                'reason': u"whynot",
+                'scheduler': 'n',
+                'sourcestampsetid': 1091,
+            }])
+            self.db.buildsets.assertBuildset(expected_sourcestamps={
+                    '':
                      dict(branch='fixins', revision='abc', repository='r',
                          project='p', codebase='', sourcestampsetid=1091)
                     })
@@ -484,18 +554,24 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                 project='p'),
         ])
         d.addCallback(lambda _ :
-            sched.addBuildsetForSourceStamp(reason='whynot', setid=1091,
+            sched.addBuildsetForSourceStamp(reason=u'whynot', setid=1091,
                                             properties=props))
         def check((bsid,brids)):
-            self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='whynot', brids=brids,
-                        external_idstring=None,
-                        properties=[
-                            ('scheduler', ('n', 'Scheduler')),
-                            ('xxx', ('yyy', 'TEST')),
-                        ],
-                        sourcestampsetid=1091),
-                    {'cb':
+            self.assertEqual(len(brids), 1)
+            self.assertEqual(bsid, 200)
+            self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
+                'builderNames': ['b'],
+                'external_idstring': None,
+                'properties': {
+                    u'scheduler' : ( 'n', u'Scheduler'),
+                    u'xxx' : ( 'yyy', u'TEST' ),
+                },
+                'reason': u"whynot",
+                'scheduler': 'n',
+                'sourcestampsetid': 1091,
+            }])
+            self.db.buildsets.assertBuildset(expected_sourcestamps={
+                    'cb':
                      dict(branch='fixins', revision='abc', repository='r',
                           codebase='cb', project='p', sourcestampsetid=1091)
                     })
@@ -511,15 +587,21 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                 project='p'),
         ])
         d.addCallback(lambda _ :
-            sched.addBuildsetForSourceStamp(reason='whynot', setid = 1091,
+            sched.addBuildsetForSourceStamp(reason=u'whynot', setid = 1091,
                         builderNames=['a', 'b']))
         def check((bsid,brids)):
-            self.db.buildsets.assertBuildset(bsid,
-                    dict(reason='whynot', brids=brids,
-                        external_idstring=None,
-                        properties=[('scheduler', ('n', 'Scheduler'))],
-                        sourcestampsetid=1091),
-                    {'cb':
+            self.assertEqual(len(brids), 2)
+            self.assertEqual(bsid, 200)
+            self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
+                'builderNames': ['a', 'b'],
+                'external_idstring': None,
+                'properties': { u'scheduler' : ( 'n', u'Scheduler') },
+                'reason': u"whynot",
+                'scheduler': 'n',
+                'sourcestampsetid': 1091,
+            }])
+            self.db.buildsets.assertBuildset(expected_sourcestamps={
+                    'cb':
                      dict(branch='fixins', revision='abc', repository='r',
                          codebase='cb', project='p', sourcestampsetid=1091)
                     })

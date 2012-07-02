@@ -26,3 +26,38 @@ def verifyDbDict(testcase, type, value):
         complete_at='datetime:none',
         results='integer:none',
         ))
+
+def verifyData(testcase, type, options, value):
+    testcase.assertEqual(options, {})
+    return verifier.verifyDict(testcase, value, 'buildset', dict(
+        bsid='integer',
+        external_idstring='string:none',
+        reason='string',
+        sourcestampsetid='integer',
+        submitted_at='integer',
+        complete='boolean',
+        complete_at='integer:none',
+        results='integer:none',
+        link='Link',
+        ))
+
+def verifyMessage(testcase, routingKey, message):
+    attrs=dict(
+        bsid='integer',
+        external_idstring='string:none',
+        reason='string',
+        sourcestampsetid='integer',
+        submitted_at='integer',
+        complete='boolean',
+        complete_at='integer:none',
+        results='integer:none')
+
+    # only new buildsets specifify the scheduler
+    if routingKey[-1] == 'new':
+        attrs['scheduler'] = 'string'
+
+    return verifier.verifyMessage(testcase, routingKey, message,
+            'buildset',
+            keyFields=[ 'bsid' ],
+            events=set([ 'new', 'complete' ]),
+            attrs=attrs)

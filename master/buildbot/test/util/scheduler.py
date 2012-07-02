@@ -54,10 +54,6 @@ class SchedulerMixin(object):
         self.mq = self.master.mq
         scheduler.master = self.master
 
-        # temporary
-        self.master.addBuildset = lambda scheduler, **kwargs : \
-                self.master.db.buildsets.addBuildset(**kwargs)
-
         db.insertTestData([
             fakedb.Object(id=objectid, name=scheduler.name,
                 class_name='SomeScheduler'),

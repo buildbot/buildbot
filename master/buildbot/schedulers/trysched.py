@@ -21,7 +21,7 @@ from twisted.protocols import basic
 
 from buildbot import pbutil
 from buildbot.util.maildir import MaildirService
-from buildbot.util import json
+from buildbot.util import json, ascii2unicode
 from buildbot.util import netstrings
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
@@ -202,16 +202,19 @@ class Try_Jobdir(TryBase):
         d.addCallback(addsourcestamp)
 
         def create_buildset(setid):
-            reason = "'try' job"
+            reason = u"'try' job"
             if parsed_job['who']:
-                reason += " by user %s" % parsed_job['who']
+                reason += u" by user %s" % parsed_job['who'].decode('utf-8')
             properties = parsed_job['properties']
             requested_props = Properties()
             requested_props.update(properties, "try build")
             return self.addBuildsetForSourceStamp(
-                ssid=None, setid=setid,
-                reason=reason, external_idstring=parsed_job['jobid'],
-                builderNames=builderNames, properties=requested_props)
+                ssid=None,
+                setid=setid,
+                reason=reason,
+                external_idstring=parsed_job['jobid'].decode('utf-8'),
+                builderNames=builderNames,
+                properties=requested_props)
         d.addCallback(create_buildset)
         return d
 
@@ -233,13 +236,13 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         if not builderNames:
             return
 
-        reason = "'try' job"
+        reason = u"'try' job"
 
         if who:
-            reason += " by user %s" % who
+            reason += " by user %s" % ascii2unicode(who)
 
         if comment:
-            reason += " (%s)" % comment
+            reason += " (%s)" % ascii2unicode(comment)
 
         sourcestampsetid = yield db.sourcestampsets.addSourceStampSet()
 

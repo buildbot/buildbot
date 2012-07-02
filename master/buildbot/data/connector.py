@@ -35,6 +35,7 @@ class Root(base.Endpoint):
 class DataConnector(service.Service):
 
     submodules = [
+        'buildbot.data.buildsets',
         'buildbot.data.changes',
         'buildbot.data.masters',
     ]

@@ -752,42 +752,51 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.t.assertEqual(len(self.buildsets), count,
                     "buildsets are %r" % (self.buildsets,))
 
-    def assertBuildset(self, bsid, expected_buildset, expected_sourcestamps):
+    def assertBuildsetCompletion(self, bsid, complete):
+        actual = self.buildsets[bsid]['complete']
+        self.t.failUnless((actual and complete) or (not actual and not complete))
+
+    def assertBuildset(self, bsid=None, expected_buildset=None,
+            expected_sourcestamps=None):
         """Assert that the buildset and its attached sourcestamp look as
         expected; the ssid parameter of the buildset is omitted.  Properties
         are converted with asList and sorted.  Sourcestamp patches are inlined
         (patch_body, patch_level, patch_subdir), and changeids are represented
         as a set, but omitted if empty.  If bsid is '?', then assert there is
         only one new buildset, and use that."""
-        if bsid == '?':
-            self.assertBuildsets(1)
-            bsid = self.buildsets.keys()[0]
-        else:
-            self.t.assertIn(bsid, self.buildsets)
+        if bsid is not None:
+            if bsid == '?':
+                self.assertBuildsets(1)
+                bsid = self.buildsets.keys()[0]
+            else:
+                self.t.assertIn(bsid, self.buildsets)
 
-        buildset = self.buildsets[bsid].copy()
+            buildset = self.buildsets[bsid].copy()
+
+            if 'id' in buildset:
+                del buildset['id']
+
+            # clear out some columns if the caller doesn't care
+            for col in 'complete complete_at submitted_at results'.split():
+                if col not in expected_buildset:
+                    del buildset[col]
+
+            if buildset['properties']:
+                buildset['properties'] = sorted(buildset['properties'].items())
+
+            # only add brids if we're expecting them (sometimes they're unknown)
+            if 'brids' in expected_buildset:
+                buildset['brids'] = self.allBuildRequests(bsid)
+        else:
+            buildset = None
+            assert expected_buildset is None
 
         dictOfssDict= {}
         for sourcestamp in self.db.sourcestamps.sourcestamps.itervalues():
-            if sourcestamp['sourcestampsetid'] == buildset['sourcestampsetid']:
+            if not buildset or sourcestamp['sourcestampsetid'] == buildset['sourcestampsetid']:
                 ssdict = sourcestamp.copy()
                 ss_repository = ssdict['codebase']
                 dictOfssDict[ss_repository] = ssdict
-
-        if 'id' in buildset:
-            del buildset['id']
-
-        # clear out some columns if the caller doesn't care
-        for col in 'complete complete_at submitted_at results'.split():
-            if col not in expected_buildset:
-                del buildset[col]
-
-        if buildset['properties']:
-            buildset['properties'] = sorted(buildset['properties'].items())
-
-        # only add brids if we're expecting them (sometimes they're unknown)
-        if 'brids' in expected_buildset:
-            buildset['brids'] = self.allBuildRequests(bsid)
 
         for ss in dictOfssDict.itervalues():
             if 'id' in ss:

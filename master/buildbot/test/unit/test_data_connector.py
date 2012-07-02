@@ -54,6 +54,18 @@ class Tests(interfaces.InterfaceTests):
         def setMasterState(self, state=None):
             pass
 
+    def test_signature_updates_addBuildset(self):
+        @self.assertArgSpecMatches(self.data.updates.addBuildset)
+        def addBuildset(self, scheduler=None, sourcestampsetid=None,
+                reason='', properties={}, builderNames=[],
+                external_idstring=None):
+            pass
+
+    def test_signature_updates_maybeBuildsetComplete(self):
+        @self.assertArgSpecMatches(self.data.updates.maybeBuildsetComplete)
+        def maybeBuildsetComplete(self, bsid):
+            pass
+
 
 class TestFakeData(unittest.TestCase, Tests):
 

@@ -76,18 +76,39 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
     def do_test(self, scheduler_name, expect_subscription,
             result, expect_buildset):
+        submitted_at = 100000
+        complete_at = 200000
         sched = self.makeScheduler()
         sched.startService()
 
         # pretend we saw a buildset with a matching name
         self.db.insertTestData([
+            fakedb.SourceStampSet(id=1093),
             fakedb.SourceStamp(id=93, sourcestampsetid=1093, revision='555',
                             branch='master', project='proj', repository='repo',
                             codebase = 'cb'),
-            fakedb.Buildset(id=44, sourcestampsetid=1093),
+            fakedb.Buildset(
+                    id=44,
+                    sourcestampsetid=1093,
+                    submitted_at=submitted_at,
+                    complete=False,
+                    complete_at=None,
+                    external_idstring=None,
+                    reason=u'Because',
+                    results=-1,
+                )
             ])
-        sched.master.mq.callConsumer(('buildset', '44', 'new'),
-                dict(bsid=44, scheduler=scheduler_name))
+        sched.master.mq.callConsumer(('buildset', '44', 'new'), dict(
+            bsid=44,
+            sourcestampsetid=1093,
+            scheduler=unicode(scheduler_name),
+            submitted_at=submitted_at,
+            complete=False,
+            complete_at=None,
+            external_idstring=None,
+            reason=u'Because',
+            results=-1,
+            ))
 
         # check whether scheduler is subscribed to that buildset
         if expect_subscription:
@@ -97,23 +118,21 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         # pretend that the buildset is finished
         self.db.buildsets.fakeBuildsetCompletion(bsid=44, result=result)
-        sched.master.mq.callConsumer(('buildset', '44', 'complete'),
-                dict(bsid=44, result=result))
+        sched.master.mq.callConsumer(('buildset', '44', 'complete'), dict(
+            bsid=44,
+            sourcestampsetid=1093,
+            submitted_at=submitted_at,
+            complete=True,
+            complete_at=complete_at,
+            external_idstring=None,
+            reason=u'Because',
+            results=result,
+            ))
 
         # and check whether a buildset was added in response
         if expect_buildset:
-            self.db.buildsets.assertBuildsets(2)
-            bsids = self.db.buildsets.allBuildsetIds()
-            bsids.remove(44)
-            self.db.buildsets.assertBuildset(bsids[0],
-                    dict(external_idstring=None,
-                         properties=[('scheduler', ('n', 'Scheduler'))],
-                         reason='downstream', sourcestampsetid = 1093),
-                    {'cb':
-                     dict(revision='555', branch='master', project='proj',
-                         repository='repo', codebase='cb',
-                         sourcestampsetid = 1093)
-                    })
+            self.assertEqual(1093,
+                self.master.data.updates.buildsetsAdded[0]['sourcestampsetid'])
         else:
             self.db.buildsets.assertBuildsets(1) # only the one we added above
 
