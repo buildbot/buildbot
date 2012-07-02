@@ -34,36 +34,39 @@ class TestHTPasswdAuth(unittest.TestCase):
 
     htpasswd = HTPasswdAuth(__file__)
 
-    def test_authenticate(self):
-    	algos = ('des',)
-        try:
-            from ctypes import CDLL
-            apr = CDLL("libaprutil-1.so.0")
-            if apr:
-                algos = ('des','md5','sha')
-        except:
-            pass
-   
-        for algo in algos:
-            for key in ('buildmaster','buildslave','buildbot'):
-                if self.htpasswd.authenticate(algo+key, key) == False:
-			raise unittest.FailTest("authenticate faild for '%s'"
-			                        % (algo+key))
+    def test_authenticate_des(self):
+        for key in ('buildmaster','buildslave','buildbot'):                
+            if self.htpasswd.authenticate('des'+key, key) == False:
+                self.fail("authenticate failed for '%s'" % ('des'+key))
+
+    def test_authenticate_md5(self):
+        if not self.htpasswd.apr:
+            raise unittest.SkipTest("libaprutil-1 not found")
+        for key in ('buildmaster','buildslave','buildbot'):                
+            if self.htpasswd.authenticate('md5'+key, key) == False:
+                self.fail("authenticate failed for '%s'" % ('md5'+key))
+
+    def test_authenticate_sha(self):
+        if not self.htpasswd.apr:
+            raise unittest.SkipTest("libaprutil-1 not found")
+        for key in ('buildmaster','buildslave','buildbot'):                
+            if self.htpasswd.authenticate('sha'+key, key) == False:
+                self.fail("authenticate failed for '%s'" % ('sha'+key))
 
     def test_authenticate_unknown(self):
         if self.htpasswd.authenticate('foo', 'bar') == True:
-            raise unittest.FailTest("authenticate succeed for 'foo:bar'")
+            self.fail("authenticate succeed for 'foo:bar'")
 
     def test_authenticate_wopassword(self):
         for algo in ('des','md5','sha'):
             if self.htpasswd.authenticate(algo+'buildmaster', '') == True:
-                raise unittest.FailTest("authenticate succeed for %s w/o password"
+                self.fail("authenticate succeed for %s w/o password"
                                         % (algo+'buildmaster'))
 
     def test_authenticate_wrongpassword(self):
         for algo in ('des','md5','sha'):
             if self.htpasswd.authenticate(algo+'buildmaster', algo) == True:
-                raise unittest.FailTest("authenticate succeed for %s w/ wrong password"
+                self.fail("authenticate succeed for %s w/ wrong password"
                                         % (algo+'buildmaster'))
 
 
