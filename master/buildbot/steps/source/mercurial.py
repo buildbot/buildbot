@@ -208,11 +208,11 @@ class Mercurial(Source):
             else:
                 msg += ' Updating.'
                 log.msg(msg)
-                yield self._update(None)
+                yield self._removeAddedFilesAndUpdate(None)
         else:
             msg += ' Updating.'
             log.msg(msg)
-            yield self._update(None)
+            yield self._removeAddedFilesAndUpdate(None)
 
     def _pullUpdate(self, res):
         command = ['pull' , self.repourl]
@@ -222,7 +222,7 @@ class Mercurial(Source):
         d.addCallback(self._checkBranchChange)
         return d
 
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None):
+    def _dovccmd(self, command, collectStdout=False, initialStdin=None, successfulRC=(0,)):
         if not command:
             raise ValueError("No command specified")
         cmd = buildstep.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command,
@@ -230,7 +230,8 @@ class Mercurial(Source):
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,
                                            collectStdout=collectStdout,
-                                           initialStdin=initialStdin)
+                                           initialStdin=initialStdin,
+                                           successfulRC=successfulRC)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting mercurial command : hg %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
@@ -292,6 +293,43 @@ class Mercurial(Source):
             return True
         d.addCallback(_fail)
         return d
+
+    def _removeAddedFilesAndUpdate(self, _):
+        command = ['locate', 'set:added()']
+        d = self._dovccmd(command, collectStdout=True, successfulRC=(0,1,))
+        def parseAndRemove(stdout):
+            files = []
+            for filename in stdout.splitlines() :
+                filename = self.workdir+'/'+filename
+                files.append(filename)
+            if len(files) == 0:
+                d = defer.succeed(0)
+            else:
+                if self.slaveVersionIsOlderThan('rmdir', '2.14'):
+                    d = self.removeFiles(files)
+                else:
+                    cmd = buildstep.RemoteCommand('rmdir', {'dir': files,
+                                                            'logEnviron':
+                                                            self.logEnviron,})
+                    cmd.useLog(self.stdio_log, False)
+                    d = self.runCommand(cmd)
+                    d.addCallback(lambda _: cmd.rc)
+            return d
+        d.addCallback(parseAndRemove)
+        d.addCallback(self._update)
+        return d
+
+    @defer.inlineCallbacks
+    def removeFiles(self, files):
+        for filename in files:
+            cmd = buildstep.RemoteCommand('rmdir', {'dir': filename,
+                                                    'logEnviron': self.logEnviron,})
+            cmd.useLog(self.stdio_log, False)
+            yield self.runCommand(cmd)
+            if cmd.rc != 0:
+                defer.returnValue(cmd.rc)
+                return
+        defer.returnValue(0)
 
     def _update(self, _):
         command = ['update', '--clean']
