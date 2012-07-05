@@ -97,6 +97,8 @@ Features
 
 * The mercurial hook now supports multple masters.  See :bb:pull:`436`.
 
+* There's a new poller for Mercurial: ``HgPoller``. 
+
 Slave
 -----
 
