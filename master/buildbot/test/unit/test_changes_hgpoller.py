@@ -14,10 +14,8 @@
 # Copyright Buildbot Team Members
 
 import os
-import shutil
 from twisted.trial import unittest
 from twisted.internet import defer
-from exceptions import Exception
 from buildbot.changes import hgpoller
 from buildbot.test.util import changesource, gpo
 from buildbot.test.fake.fakedb import FakeDBConnector

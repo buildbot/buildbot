@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import time
-import tempfile
 import os
 from twisted.python import log
 from twisted.internet import defer, utils
