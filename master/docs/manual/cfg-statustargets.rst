@@ -508,8 +508,10 @@ keyword argument to :class:`Authz`, and specify the action as ``"auth"``. ::
 The class :class:`BasicAuth` implements a basic authentication mechanism using a
 list of user/password tuples provided from the configuration file.  The class
 `HTPasswdAuth` implements an authentication against an :file:`.htpasswd`
-file. The :class:`UsersAuth` works with :ref:`User-Objects` to check for valid
-user credentials.
+file. The `HTPasswdAprAuth` a subcalss of `HTPasswdAuth` use libaprutil for
+authenticating. This adds support for apr1/md5 and sha1 password hashes but
+requires libaprutil at runtime. The :class:`UsersAuth` works with
+:ref:`User-Objects` to check for valid user credentials.
 
 If you need still-more flexibility, pass a function for the authentication
 action.  That function will be called with an authenticated username and some
