@@ -51,7 +51,6 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
 
     def tearDown(self):
         del os.environ[ENVIRON_2116_KEY]
-        self.tearDownGetProcessOutput()
         return self.tearDownChangeSource()
 
     def gpoFullcommandPattern(self, commandName, *expected_args):
@@ -77,38 +76,33 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         # (See #2116)
         expected_env = {ENVIRON_2116_KEY: 'TRUE'}
         self.addGetProcessOutputExpectEnv(expected_env)
-        self.addGetProcessOutputAndValueExpectEnv(expected_env)
-
-        # patch out getProcessOutput and getProcessOutputAndValue for
-        # expected hg calls
-
-        self.addGetProcessOutputAndValueResult(
-                self.gpoSubcommandPattern('hg', 'init'),
-                ("any stdout", "any stderr", 0))
-        self.addGetProcessOutputResult(
-                self.gpoSubcommandPattern('hg', 'pull'), "any output")
-        self.addGetProcessOutputResult(
-                self.gpoFullcommandPattern('hg', 'heads', 'default'), '1')
-        self.addGetProcessOutputResult(
-                self.gpoFullcommandPattern('hg', 'log', '-b', 'default',
-                                           '-r', '0:1'),
-                os.linesep.join(['0:64a5dc2', '1:4423cdb']))
-        self.addGetProcessOutputResult(
-                self.gpoFullcommandPattern('hg', 'log', '-r', '64a5dc2'),
-                os.linesep.join(['1273258009.0 -7200',
-                                 'Joe Test <joetest@example.org>',
-                                 'file1 file2',
-                                 'Multi-line',
-                                 'Comment for rev 0',
-                                 '']))
-
-        self.addGetProcessOutputResult(
-                self.gpoFullcommandPattern('hg', 'log', '-r', '4423cdb'),
-                os.linesep.join(['1273258100.0 -7200',
-                                 'Bob Test <bobtest@example.org>',
-                                 'file1 dir/file2',
-                                 'This is rev 1',
-                                 ]))
+        self.expectCommands(
+            gpo.Expect('hg', 'init', '/some/dir'),
+            gpo.Expect('hg', 'pull', '-b', 'default',
+                                'ssh://example.com/foo/baz'),
+            gpo.Expect('hg', 'heads', 'default', '--template={rev}\n')
+                .stdout("1"),
+            gpo.Expect('hg', 'log', '-b', 'default', '-r', '0:1',
+                                '--template={rev}:{node}\\n')
+                .stdout(os.linesep.join(['0:64a5dc2', '1:4423cdb'])),
+            gpo.Expect('hg', 'log', '-r', '64a5dc2',
+                '--template={date|hgdate}\n{author}\n{files}\n{desc|strip}')
+                .stdout(os.linesep.join([
+                    '1273258009.0 -7200',
+                    'Joe Test <joetest@example.org>',
+                    'file1 file2',
+                    'Multi-line',
+                    'Comment for rev 0',
+                    ''])),
+            gpo.Expect('hg', 'log', '-r', '4423cdb',
+                '--template={date|hgdate}\n{author}\n{files}\n{desc|strip}')
+                .stdout(os.linesep.join([
+                    '1273258100.0 -7200',
+                    'Bob Test <bobtest@example.org>',
+                    'file1 dir/file2',
+                    'This is rev 1',
+                    ''])),
+            )
 
         # do the poll
         d = self.poller.poll()
@@ -156,12 +150,12 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         # If there are several heads on the named branch, the poller musn't
         # climb (good enough for now, ideally it should even go to the common
         # ancestor)
-
-        self.addGetProcessOutputResult(
-                self.gpoSubcommandPattern('hg', 'pull'), "any output")
-        self.addGetProcessOutputResult(
-                self.gpoFullcommandPattern('hg', 'heads', 'default'),
-                os.linesep.join(('5', '6')))
+        self.expectCommands(
+            gpo.Expect('hg', 'pull', '-b', 'default',
+                            'ssh://example.com/foo/baz'),
+            gpo.Expect('hg', 'heads', 'default', '--template={rev}\n')
+                .stdout('5' + os.linesep + '6' + os.linesep),
+        )
 
         yield self.poller._setCurrentRev(3)
 
@@ -172,21 +166,23 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
     @defer.inlineCallbacks
     def test_poll_regular(self):
         # normal operation. There's a previous revision, we get a new one.
-        self.addGetProcessOutputResult(
-                self.gpoSubcommandPattern('hg', 'pull'), "any output")
-        self.addGetProcessOutputResult(
-                self.gpoFullcommandPattern('hg', 'heads', 'default'),
-                '5' + os.linesep)
-        self.addGetProcessOutputResult(
-                self.gpoFullcommandPattern('hg', 'log', '-b', 'default',
-                                           '-r', '5:5'), '5:784bd')
-        self.addGetProcessOutputResult(
-                self.gpoFullcommandPattern('hg', 'log', '-r', '784bd'),
-                os.linesep.join(['1273258009.0 -7200',
-                                 'Joe Test <joetest@example.org>',
-                                 'file1 file2',
-                                 'Comment for rev 5',
-                                 '']))
+        self.expectCommands(
+            gpo.Expect('hg', 'pull', '-b', 'default',
+                            'ssh://example.com/foo/baz'),
+            gpo.Expect('hg', 'heads', 'default', '--template={rev}\n')
+                .stdout('5' + os.linesep),
+            gpo.Expect('hg', 'log', '-b', 'default', '-r', '5:5',
+                            '--template={rev}:{node}\\n')
+                .stdout('5:784bd' + os.linesep),
+            gpo.Expect('hg', 'log', '-r', '784bd',
+                '--template={date|hgdate}\n{author}\n{files}\n{desc|strip}')
+                .stdout(os.linesep.join([
+                        '1273258009.0 -7200',
+                        'Joe Test <joetest@example.org>',
+                        'file1 file2',
+                        'Comment for rev 5',
+                        ''])),
+           )
 
         yield self.poller._setCurrentRev(4)
 
