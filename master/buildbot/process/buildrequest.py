@@ -216,13 +216,16 @@ class BuildRequest(object):
         return self.submittedAt
 
     @defer.inlineCallbacks
-    def cancelBuildRequest(self):
+    def cancelBuildRequest(self, reason="canceled", evenIfClaimed=False):
         # first, try to claim the request; if this fails, then it's too late to
         # cancel the build anyway
         try:
             yield self.master.db.buildrequests.claimBuildRequests([self.id])
         except buildrequests.AlreadyClaimedError:
-            log.msg("build request already claimed; cannot cancel")
+            if evenIfClaimed:
+                yield self.stopAssociatedBuilds(reason)
+            else:
+                log.msg("build request already claimed; cannot cancel")
             return
 
         # then complete it with 'FAILURE'; this is the closest we can get to
@@ -233,6 +236,17 @@ class BuildRequest(object):
 
         # and let the master know that the enclosing buildset may be complete
         yield self.master.maybeBuildsetComplete(self.bsid)
+
+    @defer.inlineCallbacks
+    def stopAssociatedBuilds(self, reason):
+        bdicts = yield self.master.db.builds.getBuildsForRequest(self.id)
+        builder = self.master.getBuilder(self.buildername)
+        buildnums = sorted([ bdict['number'] for bdict in bdicts ])
+
+        for buildnum in buildnums:
+            bs = builder.getBuild(buildnum)
+            if bs:
+                bs.stopBuild(reason)
 
 class BuildRequestControl:
     implements(interfaces.IBuildRequestControl)
@@ -248,6 +262,7 @@ class BuildRequestControl:
     def unsubscribe(self, observer):
         raise NotImplementedError
 
-    def cancel(self):
-        d = self.original_request.cancelBuildRequest()
+    def cancel(self,**kw):
+        d = self.original_request.cancelBuildRequest(**kw)
         d.addErrback(log.err, 'while cancelling build request')
+        return d

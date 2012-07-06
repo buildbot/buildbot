@@ -28,10 +28,15 @@ class Trigger(LoggingBuildStep):
 
     flunkOnFailure = True
 
+    @staticmethod
+    def transferredPropertyName(name):
+        return "triggered_builds_"+name
+
     def __init__(self, schedulerNames=[], sourceStamp = None, sourceStamps = None,
                  updateSourceStamp=None, alwaysUseLatest=False,
-                 waitForFinish=False, set_properties={}, 
-                 copy_properties=[], **kwargs):
+                 waitForFinish=False, set_properties={},
+                 copy_properties=[], transfer_properties=[],
+                 **kwargs):
         if not schedulerNames:
             config.error(
                 "You must specify a scheduler to trigger")
@@ -57,6 +62,12 @@ class Trigger(LoggingBuildStep):
         self.waitForFinish = waitForFinish
         self.set_properties = set_properties
         self.copy_properties = copy_properties
+
+        # those properties are mandatory for cascade stopping
+        for i in ["buildername", "buildnumber"]:
+            if i in transfer_properties:
+                transfer_properties.append(i)
+        self.transfer_properties = transfer_properties
         self.running = False
         self.ended = False
         LoggingBuildStep.__init__(self, **kwargs)
@@ -75,15 +86,21 @@ class Trigger(LoggingBuildStep):
     def createTriggerProperties(self):
         properties = self.build.getProperties()
 
-        # make a new properties object from a dict rendered by the old 
+        # make a new properties object from a dict rendered by the old
         # properties object
         trigger_properties = Properties()
         trigger_properties.update(self.set_properties, "Trigger")
-        for p in self.copy_properties:
-            if p not in properties:
-                continue
-            trigger_properties.setProperty(p, properties[p],
-                        "%s (in triggering build)" % properties.getPropertySource(p))
+        def update_properties(props, sourcemsg, nametransform=lambda s:s):
+            for p in props:
+                if p not in properties:
+                    continue
+                trigger_properties.setProperty(nametransform(p),
+                                               properties[p],
+                                               sourcemsg%properties.getPropertySource(p))
+        update_properties(self.copy_properties, "%s (in triggering build)")
+        update_properties(self.transfer_properties,
+                          "%s (transferred from triggering build)",
+                          Trigger.transferredPropertyName)
         return trigger_properties
 
     # Get all scheduler instances that were configured
