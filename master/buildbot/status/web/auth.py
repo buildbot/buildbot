@@ -130,8 +130,8 @@ class HTPasswdAprAuth(HTPasswdAuth):
     """Path to the .htpasswd file to use."""
 
     def __init__(self, file):
-    	HTPasswdAuth.__init__(self, file)
-        
+        HTPasswdAuth.__init__(self, file)
+
         # Try to load libaprutil throug ctypes
         self.apr = None
         try:
