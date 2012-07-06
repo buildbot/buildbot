@@ -212,7 +212,7 @@ be used to access them.
     revision.  The builders are listed down the left side of the page,
     and the revisions are listed across the top.
     
-    By adding one ore more ``category=`` arguments the grid will be
+    By adding one or more ``category=`` arguments the grid will be
     restricted to revisions in those categories.
     
     A :samp:`width={N}` argument will limit the number of revisions shown to *N*,
@@ -235,20 +235,20 @@ be used to access them.
 
 
 ``/console``
-    EXPERIMENTAL: This provides a developer-oriented display of the the last
+    EXPERIMENTAL: This provides a developer-oriented display of the last
     changes and how they affected the builders.
     
     It allows a developer to quickly see the status of each builder for the
     first build including his or her change. A green box means that the change
     succeeded for all the steps for a given builder. A red box means that
     the changed introduced a new regression on a builder. An orange box
-    means that at least one of the test failed, but it was also failing
-    in the previous build, so it is not possible to see if there was any
+    means that at least one of the tests failed, but it was also failing
+    in the previous build, so it is not possible to see if there were any
     regressions from this change. Finally a yellow box means that the test
     is in progress.
     
     By adding one or more ``builder=`` query arguments, the Console view is
-    restricted to only showing information about the given Builders.Adding a
+    restricted to only showing information about the given Builders. Adding a
     ``repository=`` argument will limit display to a given repository. By
     adding one or more ``branch=`` query arguments, the display is restricted
     to showing information about the given branches. In addition, adding one or
