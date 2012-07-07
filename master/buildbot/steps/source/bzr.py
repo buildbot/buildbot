@@ -44,6 +44,9 @@ class Bzr(Source):
             raise ValueError("you must privide at least one of repourl and"
                              " baseURL")
 
+        if baseURL is not None and defaultBranch is None:
+            raise ValueError("you must provide defaultBranch with baseURL")
+
         assert self.mode in ['incremental', 'full']
 
         if self.mode == 'full':
