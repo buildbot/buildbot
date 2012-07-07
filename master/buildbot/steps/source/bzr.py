@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import os
+
 from twisted.python import log
 from twisted.internet import defer
 
@@ -42,8 +44,8 @@ class Bzr(Source):
             raise ValueError("you must privide at least one of repourl and"
                              " baseURL")
 
-        if self.repourl is None:
-            self.repourl = self.baseURL + defaultBranch
+        if baseURL is not None and defaultBranch is None:
+            raise ValueError("you must provide defaultBranch with baseURL")
 
         assert self.mode in ['incremental', 'full']
 
@@ -51,10 +53,14 @@ class Bzr(Source):
             assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
 
     def startVC(self, branch, revision, patch):
-        self.branch = branch or 'master'
+        if branch:
+            self.branch = branch
         self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = self.addLog("stdio")
+
+        if self.repourl is None:
+            self.repourl = os.path.join(self.baseURL, self.branch)
 
         d = self.checkBzr()
         def checkInstall(bzrInstalled):
