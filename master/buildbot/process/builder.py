@@ -693,11 +693,10 @@ class Builder(config.ReconfigurableServiceMixin,
                 [ self._brdictToBuildRequest(brdict)
                   for brdict in unclaimed_requests ])
 
-        breq_object = unclaimed_request_objects.pop(
-                unclaimed_requests.index(breq))
+        breq_object = unclaimed_request_objects[unclaimed_requests.index(breq)]
 
         # gather the mergeable requests
-        merged_request_objects = [breq_object]
+        merged_request_objects = []
         for other_breq_object in unclaimed_request_objects:
             if (yield defer.maybeDeferred(
                         lambda : mergeRequests_fn(self, breq_object,

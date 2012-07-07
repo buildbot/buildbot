@@ -332,7 +332,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
 
     @defer.inlineCallbacks
-    def addBuildSetForSourceStampDetails(self, reason='', external_idstring=None,
+    def addBuildsetForSourceStampDetails(self, reason='', external_idstring=None,
                         branch=None, repository='', project='', revision=None,
                         builderNames=None, properties=None):
         """
@@ -365,6 +365,50 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                                 external_idstring=external_idstring,
                                 builderNames=builderNames,
                                 properties=properties)
+        defer.returnValue(rv)
+
+
+    @defer.inlineCallbacks
+    def addBuildsetForSourceStampSetDetails(self, reason, sourcestamps, properties):
+        if sourcestamps is None:
+            sourcestamps = {}
+
+        # Define new setid for this set of sourcestamps
+        new_setid = yield self.master.db.sourcestampsets.addSourceStampSet()
+
+        # Merge codebases with the passed list of sourcestamps
+        # This results in a new sourcestamp for each codebase
+        for codebase in self.codebases:
+            ss = self.codebases[codebase].copy()
+             # apply info from passed sourcestamps onto the configured default
+             # sourcestamp attributes for this codebase.
+            ss.update(sourcestamps.get(codebase,{}))
+
+            # at least repository must be set, this is normaly forced except when
+            # codebases is not explicitly set in configuration file.
+            ss_repository = ss.get('repository')
+            if not ss_repository:
+                config.error("The codebases argument is not set but still receiving " +
+                             "non empty codebase values")
+
+            # add sourcestamp to the new setid
+            yield self.master.db.sourcestamps.addSourceStamp(
+                        codebase=codebase,
+                        repository=ss_repository,
+                        branch=ss.get('branch', None),
+                        revision=ss.get('revision', None),
+                        project=ss.get('project', ''),
+                        changeids=[c['number'] for c in getattr(ss, 'changes', [])],
+                        patch_body=ss.get('patch_body', None),
+                        patch_level=ss.get('patch_level', None),
+                        patch_author=ss.get('patch_author', None),
+                        patch_comment=ss.get('patch_comment', None),
+                        sourcestampsetid=new_setid)
+
+        rv = yield self.addBuildsetForSourceStamp(
+                                setid=new_setid, reason=reason,
+                                properties=properties)
+
         defer.returnValue(rv)
 
 

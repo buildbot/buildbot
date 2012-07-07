@@ -391,7 +391,7 @@ bzr
     then a ``bzr diff -r$base..`` to obtain the patch.
 
 Mercurial
-    ``hg identify --debug`` emits the full revision id (as opposed to
+    ``hg parents --template '{node}\n'`` emits the full revision id (as opposed to
     the common 12-char truncated) which is a SHA1 hash of the current 
     revision's contents. This is used as the base revision. 
     ``hg diff`` then provides the patch relative to that

@@ -315,12 +315,17 @@ class BuilderStatus(styles.Versioned):
         except IndexError:
             return None
 
+    def _getBuildBranches(self, build):
+        return set([ ss.branch
+            for ss in build.getSourceStamps() ])
+
     def generateFinishedBuilds(self, branches=[],
                                num_builds=None,
                                max_buildnum=None,
                                finished_before=None,
                                max_search=200):
         got = 0
+        branches = set(branches)
         for Nb in itertools.count(1):
             if Nb > self.nextBuildNumber:
                 break
@@ -338,9 +343,10 @@ class BuilderStatus(styles.Versioned):
                 start, end = build.getTimes()
                 if end >= finished_before:
                     continue
-            if branches:
-                if build.getSourceStamp().branch not in branches:
-                    continue
+            # if we were asked to filter on branches, and none of the
+            # sourcestamps match, skip this build
+            if branches and not branches & self._getBuildBranches(build):
+                continue
             got += 1
             yield build
             if num_builds is not None:
@@ -363,6 +369,7 @@ class BuilderStatus(styles.Versioned):
 
         eventIndex = -1
         e = self.getEvent(eventIndex)
+        branches = set(branches)
         for Nb in range(1, self.nextBuildNumber+1):
             b = self.getBuild(-Nb)
             if not b:
@@ -374,7 +381,9 @@ class BuilderStatus(styles.Versioned):
                 break
             if b.getTimes()[0] < minTime:
                 break
-            if branches and not b.getSourceStamp().branch in branches:
+            # if we were asked to filter on branches, and none of the
+            # sourcestamps match, skip this build
+            if branches and not branches & self._getBuildBranches(b):
                 continue
             if categories and not b.getBuilder().getCategory() in categories:
                 continue

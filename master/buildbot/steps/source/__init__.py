@@ -15,7 +15,7 @@
 
 from buildbot.steps.source.base import Source
 from buildbot.steps.source.oldsource import CVS, \
-    SVN, Git, Darcs, Repo, Bzr, Mercurial, P4, Monotone
+    SVN, Git, Darcs, Repo, Bzr, Mercurial, P4, Monotone, BK
 
 _hush_pyflakes = [ Source, CVS, SVN, \
-     Git, Darcs, Repo, Bzr, Mercurial, P4, Monotone ]
+     Git, Darcs, Repo, Bzr, Mercurial, P4, Monotone, BK ]

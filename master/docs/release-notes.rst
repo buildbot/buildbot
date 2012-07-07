@@ -123,13 +123,17 @@ Features
 
 * The mercurial hook now supports multple masters.  See :bb:pull:`436`.
 
+* There's a new poller for Mercurial: :bb:chsrc:`HgPoller`. 
+
+* The new ``HTPasswdAprAuth`` use libaprutil through ctypes to validate
+  the password against the hash from the .htpasswd file. This adds support for
+  all hash types htpasswd can generate.
+
 Slave
 -----
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-* BK support has been removed in this release - see :bb:bug:`2198`.
 
 Features
 ~~~~~~~~
