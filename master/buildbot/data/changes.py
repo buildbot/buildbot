@@ -32,6 +32,7 @@ class ChangeEndpoint(base.Endpoint):
 class ChangesEndpoint(base.Endpoint):
 
     pathPattern = ( 'change', )
+    rootLinkName = 'changes'
 
     def get(self, options, kwargs):
         try:

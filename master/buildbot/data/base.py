@@ -39,6 +39,7 @@ class ResourceType(object):
 
 class Endpoint(object):
     pathPattern = None
+    rootLinkName = None
 
     def __init__(self, master):
         self.master = master
@@ -63,6 +64,10 @@ class Link(object):
 
     def __repr__(self):
         return "Link(%r)" % (self.path,)
+
+    def __cmp__(self, other):
+        return cmp(self.__class__, other.__class__) \
+                or cmp(self.path, other.path)
 
 
 def updateMethod(func):

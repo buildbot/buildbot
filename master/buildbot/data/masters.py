@@ -33,6 +33,7 @@ class MasterEndpoint(base.Endpoint):
 class MastersEndpoint(base.Endpoint):
 
     pathPattern = ( 'master', )
+    rootLinkName = 'masters'
 
     def get(self, options, kwargs):
         # TODO: options['count']

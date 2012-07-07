@@ -25,9 +25,10 @@ class EndpointMixin(interfaces.InterfaceTests):
 
     def setUpEndpoint(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
-                testcase=self)
+                wantData=True, testcase=self)
         self.db = self.master.db
         self.mq = self.master.mq
+        self.data = self.master.data
         self.ep = self.endpointClass(self.master)
 
         self.assertIsInstance(self.ep.pathPattern, tuple,

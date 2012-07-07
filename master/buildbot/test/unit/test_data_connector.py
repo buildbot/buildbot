@@ -19,6 +19,7 @@ from twisted.internet import defer
 from twisted.python import reflect
 from buildbot.data import connector, base
 from buildbot.test.fake import fakemaster
+from buildbot.test.util import endpoint
 
 class DataConnector(unittest.TestCase):
 
@@ -50,9 +51,16 @@ class DataConnector(unittest.TestCase):
         match = self.data.matcher[('test', '10')]
         self.assertIsInstance(match[0], TestEndpoint)
         self.assertEqual(match[1], dict(testid=10))
+        match = self.data.matcher[('test',)]
+        self.assertIsInstance(match[0], TestsEndpoint)
+        self.assertEqual(match[1], dict())
 
         # and that it found the update method
         self.assertEqual(self.data.updates.testUpdate(), "testUpdate return")
+
+        # and that it added the single root link
+        self.assertEqual(self.data.rootLinks.items(),
+                [ ('tests', base.Link(('test',))) ])
 
     def test_lookup(self):
         ep = self.patchFooPattern()
@@ -94,7 +102,30 @@ class DataConnector(unittest.TestCase):
                                                         {'fooid' : 10})
         return d
 
+class Changes(endpoint.EndpointMixin, unittest.TestCase):
+
+    endpointClass = connector.Root
+
+    def setUp(self):
+        self.setUpEndpoint()
+
+    def tearDown(self):
+        self.tearDownEndpoint()
+
+    def test_get(self):
+        self.data.rootLinks = { 'a': base.Link(('a',)) }
+        d = self.callGet(dict(), dict())
+        @d.addCallback
+        def check(list):
+            self.assertEqual(list, { 'a': base.Link(('a',)) })
+        return d
+
+
 # classes discovered by test_scanModule, above
+
+class TestsEndpoint(base.Endpoint):
+    pathPattern = ('test',)
+    rootLinkName = 'tests'
 
 class TestEndpoint(base.Endpoint):
     pathPattern = ('test', 'i:testid')
@@ -102,7 +133,7 @@ class TestEndpoint(base.Endpoint):
 class TestResourceType(base.ResourceType):
     name = 'tests'
     type = 'test'
-    endpoints = [ TestEndpoint ]
+    endpoints = [ TestsEndpoint, TestEndpoint ]
     keyFields = ( 'testid', )
 
     @base.updateMethod

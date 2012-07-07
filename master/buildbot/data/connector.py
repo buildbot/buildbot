@@ -15,6 +15,7 @@
 
 import inspect
 from twisted.python import reflect
+from twisted.internet import defer
 from twisted.application import service
 from buildbot.util import pathmatch
 from buildbot.data import exceptions, base
@@ -22,6 +23,14 @@ from buildbot.data import exceptions, base
 class Updates(object):
     # empty container object; see _scanModule, below
     pass
+
+
+class Root(base.Endpoint):
+    pathPattern = ('',)
+
+    def get(self, options, kwargs):
+        return defer.succeed(self.master.data.rootLinks)
+
 
 class DataConnector(service.Service):
 
@@ -35,6 +44,7 @@ class DataConnector(service.Service):
         self.master = master
 
         self.matcher = pathmatch.Matcher()
+        self.rootLinks = {} # links from the root of the API
         self._setup()
 
     def _scanModule(self, mod, _noSetattr=False):
@@ -52,9 +62,13 @@ class DataConnector(service.Service):
                 # load its endpoints
                 for epoint in rtype.getEndpoints():
                     self.matcher[epoint.pathPattern] = epoint
+                    if epoint.rootLinkName:
+                        link = base.Link(epoint.pathPattern)
+                        self.rootLinks[epoint.rootLinkName] = link
 
     def _setup(self):
         self.updates = Updates()
+        self.matcher[Root.pathPattern] = Root(self.master)
         for moduleName in self.submodules:
             module = reflect.namedModule(moduleName)
             self._scanModule(module)
