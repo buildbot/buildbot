@@ -350,22 +350,9 @@ class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
     at configure time.
     """
 
-    def test_invalid_params(self):
-        """
-        Test that Interpolate rejects strings with both positional and keyword
-        substitutionss.
-        """
-        self.assertRaises(ValueError, lambda :
-                Interpolate("%s %(foo)s", 1, foo=2))
-    test_invalid_params.skip = "Don't know how to test this."
-
-    def test_positional_string_keyword_args(self):
-        """
-        """
-        self.assertRaisesConfigError("keyword arguments passed to Interpolate "
-                "but uses postional substitutions",
-                lambda: Interpolate("%s", kwarg="test"))
-    test_positional_string_keyword_args.skip = "Don't know how to test this."
+    def test_invalid_args_and_kwargs(self):
+        self.assertRaisesConfigError("Interpolate takes either positional",
+                lambda : Interpolate("%s %(foo)s", 1, foo=2))
 
     def test_invalid_selector(self):
         self.assertRaisesConfigError("invalid Interpolate selector 'garbage'",
