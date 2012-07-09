@@ -103,6 +103,12 @@ Features
 
 * The mercurial hook now supports multple masters.  See :bb:pull:`436`.
 
+* There's a new poller for Mercurial: :bb:chsrc:`HgPoller`. 
+
+* The new ``HTPasswdAprAuth`` use libaprutil through ctypes to validate
+  the password against the hash from the .htpasswd file. This adds support for
+  all hash types htpasswd can generate.
+
 * ``GitPoller`` has been rewritten.
   It now supports multiple branches and can share a directory between multiple pollers.
   It is also more resilient to changes in configuration, or in the underlying repository.
