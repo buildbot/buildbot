@@ -106,7 +106,7 @@ class TestGPOMixin(unittest.TestCase):
             d = utils.getProcessOutput("command", ())
             return d
         result = self.runTestMethod(method)
-        self.assertTestFailure(result, "wrong command run")
+        self.assertTestFailure(result, "unexpected command run")
 
     def test_gpo_wrongArgs(self):
         def method(testcase):
@@ -115,7 +115,34 @@ class TestGPOMixin(unittest.TestCase):
             d.addCallback(lambda _: testcase.assertAllCommandsRan())
             return d
         result = self.runTestMethod(method)
-        self.assertTestFailure(result, "wrong args passed")
+        self.assertTestFailure(result, "unexpected command run")
+
+    def test_gpo_missingPath(self):
+        def method(testcase):
+            testcase.expectCommands(Expect("command", "arg").path("/home"))
+            d = utils.getProcessOutput("command", ("otherarg",))
+            d.addCallback(lambda _: testcase.assertAllCommandsRan())
+            return d
+        result = self.runTestMethod(method)
+        self.assertTestFailure(result, "unexpected command run")
+
+    def test_gpo_wrongPath(self):
+        def method(testcase):
+            testcase.expectCommands(Expect("command", "arg").path("/home"))
+            d = utils.getProcessOutput("command", ("otherarg",), path="/work")
+            d.addCallback(lambda _: testcase.assertAllCommandsRan())
+            return d
+        result = self.runTestMethod(method)
+        self.assertTestFailure(result, "unexpected command run")
+
+    def test_gpo_notCurrentPath(self):
+        def method(testcase):
+            testcase.expectCommands(Expect("command", "arg"))
+            d = utils.getProcessOutput("command", ("otherarg",), path="/work")
+            d.addCallback(lambda _: testcase.assertAllCommandsRan())
+            return d
+        result = self.runTestMethod(method)
+        self.assertTestFailure(result, "unexpected command run")
 
     def test_gpo_errorOutput(self):
         def method(testcase):
@@ -221,7 +248,7 @@ class TestGPOMixin(unittest.TestCase):
             d.addCallback(lambda _: testcase.assertAllCommandsRan())
             return d
         result = self.runTestMethod(method)
-        self.assertTestFailure(result, "wrong command run")
+        self.assertTestFailure(result, "unexpected command run")
 
     def test_gpoav_wrongArgs(self):
         def method(testcase):
@@ -230,7 +257,34 @@ class TestGPOMixin(unittest.TestCase):
             d.addCallback(lambda _: testcase.assertAllCommandsRan())
             return d
         result = self.runTestMethod(method)
-        self.assertTestFailure(result, "wrong args passed")
+        self.assertTestFailure(result, "unexpected command run")
+
+    def test_gpoav_missingPath(self):
+        def method(testcase):
+            testcase.expectCommands(Expect("command", "arg").path("/home"))
+            d = utils.getProcessOutputAndValue("command", ("otherarg",))
+            d.addCallback(lambda _: testcase.assertAllCommandsRan())
+            return d
+        result = self.runTestMethod(method)
+        self.assertTestFailure(result, "unexpected command run")
+
+    def test_gpoav_wrongPath(self):
+        def method(testcase):
+            testcase.expectCommands(Expect("command", "arg").path("/home"))
+            d = utils.getProcessOutputAndValue("command", ("otherarg",), path="/work")
+            d.addCallback(lambda _: testcase.assertAllCommandsRan())
+            return d
+        result = self.runTestMethod(method)
+        self.assertTestFailure(result, "unexpected command run")
+
+    def test_gpoav_notCurrentPath(self):
+        def method(testcase):
+            testcase.expectCommands(Expect("command", "arg"))
+            d = utils.getProcessOutputAndValue("command", ("otherarg",), path="/work")
+            d.addCallback(lambda _: testcase.assertAllCommandsRan())
+            return d
+        result = self.runTestMethod(method)
+        self.assertTestFailure(result, "unexpected command run")
 
     def test_gpoav_errorOutput(self):
         def method(testcase):
