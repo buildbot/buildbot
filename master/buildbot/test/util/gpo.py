@@ -70,9 +70,9 @@ class GetProcessOutputMixin:
                 'Expected environment to have %s = %r' % (var, value))
 
     def patched_getProcessOutput(self, bin, args, env=None,
-            errortoo=False, path=None, **kwargs):
+            errortoo=False, path=None):
         d = self.patched_getProcessOutputAndValue(bin, args, env=env,
-                path=path, **kwargs)
+                path=path)
         @d.addCallback
         def cb(res):
             stdout, stderr, exit = res
@@ -86,7 +86,7 @@ class GetProcessOutputMixin:
         return d
 
     def patched_getProcessOutputAndValue(self, bin, args, env=None,
-            path=None, **kwargs):
+            path=None):
         self._check_env(env)
 
         if not self._expected_commands:

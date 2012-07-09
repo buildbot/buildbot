@@ -316,7 +316,7 @@ class TestGPOMixin(unittest.TestCase):
     def test_gpoav_outputAndError(self):
         def method(testcase):
             testcase.expectCommands(Expect("command").stdout("stdout").stderr("stderr"))
-            d = utils.getProcessOutputAndValue("command", (), errortoo=True)
+            d = utils.getProcessOutputAndValue("command", ())
             d.addCallback(testcase.assertEqual, ("stdout",'stderr',0))
             return d
         result = self.runTestMethod(method)
