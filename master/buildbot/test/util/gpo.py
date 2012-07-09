@@ -41,6 +41,10 @@ class Expect(object):
         test.assertEqual(args, self._args, "wrong args passed")
         return (self._stdout, self._stderr, self._exit)
 
+    def __repr__(self):
+        return "<gpo.Expect(bin=%s, args=%s)>" % (self._bin, self._args)
+
+
 class GetProcessOutputMixin:
 
     def setUpGetProcessOutput(self):
