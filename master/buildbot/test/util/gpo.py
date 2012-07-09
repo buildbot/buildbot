@@ -80,7 +80,7 @@ class GetProcessOutputMixin:
         self._check_env(env)
 
         if not self._expected_commands:
-            self.fail("got command %s %s when no further commands where expected"
+            self.fail("got command %s %s when no further commands were expected"
                     % (bin, args))
 
         expect = self._expected_commands.pop(0)
