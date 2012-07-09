@@ -76,6 +76,9 @@ Changes for Developers
   exceptions and failures raised will be captured and logged and the build shut
   down normally.
 
+* The helper methods ``getState`` and ``setState`` from ``BaseScheduler`` have
+  been factored into ``buildbot.util.state.StateMixin`` for use elsewhere.
+
 Features
 ~~~~~~~~
 

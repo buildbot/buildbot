@@ -20,8 +20,9 @@ from twisted.internet import defer
 from buildbot.process.properties import Properties
 from buildbot.util import ComparableMixin
 from buildbot import config, interfaces
+from buildbot.util.state import StateMixin
 
-class BaseScheduler(service.MultiService, ComparableMixin):
+class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
     """
     Base class for all schedulers; this provides the equipment to manage
     reconfigurations and to handle basic scheduler state.  It also provides
@@ -110,7 +111,6 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         # internal variables
         self._change_subscription = None
         self._change_consumption_lock = defer.DeferredLock()
-        self._objectid = None
 
     ## service handling
 
@@ -125,46 +125,6 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         d.addCallback(lambda _ : service.MultiService.stopService(self))
         return d
 
-    ## state management
-
-    @defer.inlineCallbacks
-    def getState(self, *args, **kwargs):
-        """
-        For use by subclasses; get a named state value from the scheduler's
-        state, defaulting to DEFAULT.
-
-        @param name: name of the value to retrieve
-        @param default: (optional) value to return if C{name} is not present
-        @returns: state value via a Deferred
-        @raises KeyError: if C{name} is not present and no default is given
-        @raises TypeError: if JSON parsing fails
-        """
-        # get the objectid, if not known
-        if self._objectid is None:
-            self._objectid = yield self.master.db.state.getObjectId(self.name,
-                                                    self.__class__.__name__)
-
-        rv = yield self.master.db.state.getState(self._objectid, *args,
-                                                                    **kwargs)
-        defer.returnValue(rv)
-
-    @defer.inlineCallbacks
-    def setState(self, key, value):
-        """
-        For use by subclasses; set a named state value in the scheduler's
-        persistent state.  Note that value must be json-able.
-
-        @param name: the name of the value to change
-        @param value: the value to set - must be a JSONable object
-        @param returns: Deferred
-        @raises TypeError: if JSONification fails
-        """
-        # get the objectid, if not known
-        if self._objectid is None:
-            self._objectid = yield self.master.db.state.getObjectId(self.name,
-                                                self.__class__.__name__)
-
-        yield self.master.db.state.setState(self._objectid, key, value)
 
     ## status queries
 
