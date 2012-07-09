@@ -998,10 +998,11 @@ GitPoller
 If you cannot take advantage of post-receive hooks as provided by
 :file:`contrib/git_buildbot.py` for example, then you can use the :bb:chsrc:`GitPoller`.
 
-The :bb:chsrc:`GitPoller` periodically fetches from a remote git repository and
-processes any changes. It requires its own working directory for operation, which
-can be specified via the ``workdir`` property. By default a temporary directory will
-be used.
+The :bb:chsrc:`GitPoller` periodically fetches from a remote git repository and processes any changes.
+It requires its own working directory for operation.
+The default should be adequate, but it can be overridden via the ``workdir`` property.
+
+.. note:: There can only be a single `GitPoller` pointed at any given repository.
 
 The :bb:chsrc:`GitPoller` requires git-1.7 and later.  It accepts the following
 arguments:
@@ -1011,30 +1012,18 @@ arguments:
     ``git@example.com:foobaz/myrepo.git``
     (see the :command:`git fetch` help for more info on git-url formats)
 
-``branch``
-    the desired branch to fetch, will default to ``'master'``
+``branches``
+    a list of the branches to fetch, will default to ``['master']``
 
-``workdir``
-    the directory where the poller should keep its local repository. will
-    default to :samp:`{tempdir}/gitpoller_work`, which is probably not
-    what you want.  If this is a relative path, it will be interpreted
-    relative to the master's basedir.
+``branch``
+    accepts a single branch name to fetch.
+    Exists for backwards compatability with old configurations.
 
 ``pollinterval``
     interval in seconds between polls, default is 10 minutes
 
 ``gitbin``
     path to the git binary, defaults to just ``'git'``
-
-``fetch_refspec``
-    One or more refspecs to use when fetching updates for the
-    repository. By default, the :bb:chsrc:`GitPoller` will simply fetch
-    all refs. If your repository is large enough that this would be
-    unwise (or active enough on irrelevant branches that it'd be a
-    waste of time to fetch them all), you may wish to specify only a
-    certain refs to be updated. (A single refspec may be passed as a
-    string, or multiple refspecs may be passed as a list or set of
-    strings.)
 
 ``category``
     Set the category to be used for the changes produced by the
@@ -1059,12 +1048,17 @@ arguments:
     applied to file names since git will translate non-ascii file
     names to unreadable escape sequences.
 
+``workdir``
+    the directory where the poller should keep its local repository.
+    The default is :samp:`gitpoller_work`.
+    If this is a relative path, it will be interpreted relative to the master's basedir.
+    Multiple git pollers can share the same directory.
+
 An configuration for the git poller might look like this::
 
     from buildbot.changes.gitpoller import GitPoller
     c['change_source'] = GitPoller('git@example.com:foobaz/myrepo.git',
-                                   branch='great_new_feature',
-                                   workdir='/home/buildbot/gitpoller_workdir')
+                                   branches=['master', 'great_new_feature'])
 
 .. bb:chsrc:: GerritChangeSource
 
