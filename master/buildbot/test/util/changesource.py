@@ -16,6 +16,7 @@
 import mock
 from twisted.internet import defer
 from twisted.trial import unittest
+from buildbot.test.fake.fakemaster import make_master
 
 class ChangeSourceMixin(object):
     """
@@ -43,7 +44,7 @@ class ChangeSourceMixin(object):
                                 "non-ascii string for key '%s': %r" % (k,v))
             self.changes_added.append(kwargs)
             return defer.succeed(mock.Mock())
-        self.master = mock.Mock()
+        self.master = make_master(testcase=self, wantDb=True)
         self.master.addChange = addChange
         return defer.succeed(None)
 

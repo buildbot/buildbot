@@ -96,4 +96,9 @@ class FakeMaster(object):
         return mock.Mock(**kw)
 
 # Leave this alias, in case we want to add more behavior later
-make_master = FakeMaster
+def make_master(wantDb=False, testcase=None, **kwargs):
+    master = FakeMaster(**kwargs)
+    if wantDb:
+        assert testcase is not None, "need testcase for wantDb"
+        master.db = fakedb.FakeDBConnector(testcase)
+    return master

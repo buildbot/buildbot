@@ -68,6 +68,9 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The ``P4Sync`` step, deprecated since 0.8.5, has been removed.  The ``P4`` step remains.
 
+* The ``fetch_spec`` argument to ``GitPoller`` is no longer supported.
+  ``GitPoller`` now only downloads branches that it is polling, so specifies a refspec itself.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -75,6 +78,9 @@ Changes for Developers
   be handled gracefully. If you use inlineCallbacks, this means that unexpected
   exceptions and failures raised will be captured and logged and the build shut
   down normally.
+
+* The helper methods ``getState`` and ``setState`` from ``BaseScheduler`` have
+  been factored into ``buildbot.util.state.StateMixin`` for use elsewhere.
 
 Features
 ~~~~~~~~
@@ -102,6 +108,10 @@ Features
 * The new ``HTPasswdAprAuth`` use libaprutil through ctypes to validate
   the password against the hash from the .htpasswd file. This adds support for
   all hash types htpasswd can generate.
+
+* ``GitPoller`` has been rewritten.
+  It now supports multiple branches and can share a directory between multiple pollers.
+  It is also more resilient to changes in configuration, or in the underlying repository.
 
 Slave
 -----
