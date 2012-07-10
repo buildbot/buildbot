@@ -142,7 +142,7 @@ class Mercurial(Source):
         d = self._sourcedirIsUpdatable()
         def _cmd(updatable):
             if updatable:
-                command = ['pull', self.repourl, '--update']
+                command = ['pull', self.repourl]
             else:
                 command = ['clone', self.repourl, '.', '--noupdate']
             return command
@@ -200,19 +200,14 @@ class Mercurial(Source):
         current_branch = yield self._getCurrentBranch()
         msg = "Working dir is on in-repo branch '%s' and build needs '%s'." % \
               (current_branch, self.update_branch)
-        if current_branch != self.update_branch:
-            if self.clobberOnBranchChange:
+        if current_branch != self.update_branch and self.clobberOnBranchChange:
                 msg += ' Clobbering.'
                 log.msg(msg)
                 yield self.clobber(None)
-            else:
-                msg += ' Updating.'
-                log.msg(msg)
-                yield self._removeAddedFilesAndUpdate(None)
-        else:
-            msg += ' Updating.'
-            log.msg(msg)
-            yield self._removeAddedFilesAndUpdate(None)
+		return
+        msg += ' Updating.'
+        log.msg(msg)
+        yield self._removeAddedFilesAndUpdate(None)
 
     def _pullUpdate(self, res):
         command = ['pull' , self.repourl]
