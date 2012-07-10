@@ -716,8 +716,8 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_www_port(self):
         self.cfg.load_www(self.filename,
-                dict(www=dict(port=8010)), self.errors)
-        self.assertResults(www=dict(port=8010, url='http://localhost:8010/',
+                dict(www=dict(port=9888)), self.errors)
+        self.assertResults(www=dict(port=9888, url='http://localhost:9888/',
                             public_html=None))
 
     def test_load_www_url_no_slash(self):
