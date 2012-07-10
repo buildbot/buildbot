@@ -403,7 +403,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
-                                 'http://hg.mozilla.org/stable', '--update'])
+                                 'http://hg.mozilla.org/stable'])
             + 0,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True))
@@ -476,7 +476,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0, # directory exists
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
-                                 'http://hg.mozilla.org', '--update'])
+                                 'http://hg.mozilla.org'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
@@ -512,7 +512,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0, # directory exists
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
-                                 'http://hg.mozilla.org', '--update'])
+                                 'http://hg.mozilla.org'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
@@ -553,7 +553,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0, # directory exists
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
-                                 'http://hg.mozilla.org', '--update'])
+                                 'http://hg.mozilla.org'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
@@ -599,7 +599,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
-                                 'http://hg.mozilla.org', '--update'])
+                                 'http://hg.mozilla.org'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
@@ -638,7 +638,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
-                                 'http://hg.mozilla.org', '--update'])
+                                 'http://hg.mozilla.org'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
@@ -682,7 +682,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'pull',
-                                 'http://hg.mozilla.org', '--update'])
+                                 'http://hg.mozilla.org'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'identify', '--branch'])
