@@ -204,7 +204,7 @@ class Mercurial(Source):
                 msg += ' Clobbering.'
                 log.msg(msg)
                 yield self.clobber(None)
-		return
+                return
         msg += ' Updating.'
         log.msg(msg)
         yield self._removeAddedFilesAndUpdate(None)
