@@ -27,7 +27,7 @@ def sendchange(config):
     auth = config.get('auth')
     master = config.get('master')
     branch = config.get('branch')
-    category = config.get('category')
+    tags = config.get('tags')
     revision = config.get('revision')
     properties = config.get('properties', {})
     repository = config.get('repository', '')
@@ -41,7 +41,7 @@ def sendchange(config):
     s = sendchange_client.Sender(master, auth, encoding=encoding)
     try:
         yield s.send(branch, revision, comments, files, who=who,
-                category=category, when=when, properties=properties,
+                tags=tags, when=when, properties=properties,
                 repository=repository, vc=vc, project=project, revlink=revlink)
     except:
         print "change not sent:"

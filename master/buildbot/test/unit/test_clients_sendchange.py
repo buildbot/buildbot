@@ -76,7 +76,7 @@ class Sender(unittest.TestCase):
             self.assertProcess('localhost', 1234, 'change', 'changepw', [
                 dict(project='', repository='', who=None, files=['a'],
                     comments='comm', branch='branch', revision='rev',
-                    category=None, when=None, properties={}, revlink='',
+                    tags=None, when=None, properties={}, revlink='',
                     src=None)])
         d.addCallback(check)
         return d
@@ -88,21 +88,21 @@ class Sender(unittest.TestCase):
             self.assertProcess('localhost', 1234, 'me', 'sekrit', [
                 dict(project='', repository='', who=None, files=['a'],
                     comments='comm', branch='branch', revision='rev',
-                    category=None, when=None, properties={}, revlink='',
+                    tags=None, when=None, properties={}, revlink='',
                     src=None)])
         d.addCallback(check)
         return d
 
     def test_send_full(self):
         s = sendchange.Sender('localhost:1234')
-        d = s.send('branch', 'rev', 'comm', ['a'], who='me', category='cats',
+        d = s.send('branch', 'rev', 'comm', ['a'], who='me', tags=['cats'],
                    when=1234, properties={'a':'b'}, repository='r', vc='git',
                    project='p', revlink='rl')
         def check(_):
             self.assertProcess('localhost', 1234, 'change', 'changepw', [
                 dict(project='p', repository='r', who='me', files=['a'],
                     comments='comm', branch='branch', revision='rev',
-                    category='cats', when=1234, properties={'a':'b'},
+                    tags=['cats'], when=1234, properties={'a':'b'},
                     revlink='rl', src='git')])
         d.addCallback(check)
         return d
@@ -115,7 +115,7 @@ class Sender(unittest.TestCase):
             self.assertProcess('localhost', 1234, 'change', 'changepw', [
                 dict(project='', repository='', who=None, files=['a', 'b'],
                     comments='comm', branch='branch', revision='rev',
-                    category=None, when=None, properties={}, revlink='',
+                    tags=None, when=None, properties={}, revlink='',
                     src=None)])
         d.addCallback(check)
         return d
@@ -129,7 +129,7 @@ class Sender(unittest.TestCase):
                     project=u'\N{SKULL AND CROSSBONES}',
                     repository=u'\N{SNOWMAN}',
                     who=u'\N{THAI CHARACTER KHOMUT}',
-                    category=u'\U0001F640',
+                    tags=[u'\U0001F640'],
                     when=1234,
                     properties={u'\N{LATIN SMALL LETTER A WITH MACRON}':'b'},
                     revlink=u'\U0001F517')
@@ -143,7 +143,7 @@ class Sender(unittest.TestCase):
                      comments=u'\N{POSTAL MARK FACE}',
                      branch=u'\N{DEGREE SIGN}',
                      revision=u'\U0001f49e', # REVOLVING HEARTS
-                     category=u'\U0001F640', # WEARY CAT FACE
+                     tags=[u'\U0001F640'], # WEARY CAT FACE
                      when=1234,
                      properties={u'\N{LATIN SMALL LETTER A WITH MACRON}':'b'},
                      revlink=u'\U0001F517', # LINK SYMBOL
@@ -161,7 +161,7 @@ class Sender(unittest.TestCase):
                 project=u'\N{SKULL AND CROSSBONES}'.encode('utf8'),
                 repository=u'\N{SNOWMAN}'.encode('utf8'),
                 who=u'\N{THAI CHARACTER KHOMUT}'.encode('utf8'),
-                category=u'\U0001F640'.encode('utf8'),
+                tags=[u'\U0001F640'.encode('utf8')],
                 when=1234,
                 properties={
                     u'\N{LATIN SMALL LETTER A WITH MACRON}'.encode('utf8')
@@ -177,7 +177,7 @@ class Sender(unittest.TestCase):
                      comments=u'\N{POSTAL MARK FACE}',
                      branch=u'\N{DEGREE SIGN}',
                      revision=u'\U0001f49e', # REVOLVING HEARTS
-                     category=u'\U0001F640', # WEARY CAT FACE
+                     tags=[u'\U0001F640'], # WEARY CAT FACE
                      when=1234,
                      ## NOTE: not decoded!
                      properties={'\xc4\x81':'b'},
@@ -198,7 +198,7 @@ class Sender(unittest.TestCase):
                 project=u'\N{DEGREE SIGN}'.encode('latin1'),
                 repository=u'\N{SECTION SIGN}'.encode('latin1'),
                 who=u'\N{MACRON}'.encode('latin1'),
-                category=u'\N{PILCROW SIGN}'.encode('latin1'),
+                tags=[u'\N{PILCROW SIGN}'.encode('latin1')],
                 when=1234,
                 properties={
                     u'\N{SUPERSCRIPT ONE}'.encode('latin1')
@@ -214,7 +214,7 @@ class Sender(unittest.TestCase):
                      comments=u'\N{BROKEN BAR}',
                      branch=u'\N{YEN SIGN}',
                      revision=u'\N{POUND SIGN}',
-                     category=u'\N{PILCROW SIGN}',
+                     tags=[u'\N{PILCROW SIGN}'],
                      when=1234,
                      ## NOTE: not decoded!
                      properties={'\xb9':'b'},
