@@ -49,7 +49,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
             'changeid': 14,
             'author': u'warner',
             'branch': u'warnerdb',
-            'category': u'devel',
+            'tags': [u'devel'],
             'comments': u'fix whitespace',
             'files': [u'master/buildbot/__init__.py'],
             'is_dir': 0,
@@ -83,7 +83,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
             self.master.db.changes.addChange.assert_called_with(author=None,
                     files=None, comments=None, is_dir=0,
                     revision=None, when_timestamp=None, branch=None, codebase='',
-                    category=None, revlink='', properties={}, repository='', project='', uid=None)
+                    tags=None, revlink='', properties={}, repository='', project='', uid=None)
 
             self.master.db.changes.getChange.assert_called_with(changeid)
             # addChange returned the right value
@@ -97,7 +97,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         # add default arguments
         default_db_kwargs = dict(files=None, comments=None, author=None,
                 is_dir=0, revision=None, when_timestamp=None,
-                branch=None, category=None, revlink='', properties={},
+                branch=None, tags=None, revlink='', properties={},
                 repository='', codebase='', project='', uid=None)
         k = default_db_kwargs
         k.update(exp_db_kwargs)
