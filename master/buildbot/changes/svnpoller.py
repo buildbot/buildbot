@@ -55,7 +55,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     compare_attrs = ["svnurl", "split_file",
                      "svnuser", "svnpasswd", "project",
                      "pollInterval", "histmax",
-                     "svnbin", "category", "cachepath"]
+                     "svnbin", "tags", "cachepath"]
 
     parent = None # filled in when we're added
     last_change = None
@@ -64,7 +64,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     def __init__(self, svnurl, split_file=None,
                  svnuser=None, svnpasswd=None,
                  pollInterval=10*60, histmax=100,
-                 svnbin='svn', revlinktmpl='', category=None, 
+                 svnbin='svn', revlinktmpl='', tags=None, 
                  project='', cachepath=None, pollinterval=-2,
                  extra_args=None, name=None):
 
@@ -90,7 +90,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         self.svnbin = svnbin
         self.histmax = histmax
         self._prefix = None
-        self.category = category
+        self.tags = tags
         self.project = project
 
         self.cachepath = cachepath
@@ -347,7 +347,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                             revision=revision,
                             branch=branch,
                             revlink=revlink,
-                            category=self.category,
+                            tags=self.tags,
                             repository=self.svnurl,
                             project = self.project)
                     changes.append(chdict)

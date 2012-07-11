@@ -54,7 +54,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         fork = ui.configbool('hgbuildbot', 'fork', False)
         # notify also has this setting
         stripcount = int(ui.config('notify','strip') or ui.config('hgbuildbot','strip',3))
-        category = ui.config('hgbuildbot', 'category', None)
+        tags = ui.config('hgbuildbot', 'tags', None)
         project = ui.config('hgbuildbot', 'project', '')
         auth = ui.config('hgbuildbot', 'auth', None)
     else:
@@ -93,7 +93,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         if not fork:
             ui.status("rev %s sent\n" % c['revision'])
         return s.send(c['branch'], c['revision'], c['comments'],
-                      c['files'], c['username'], category=category,
+                      c['files'], c['username'], tags=tags,
                       repository=repository, project=project, vc='hg',
                       properties=c['properties'])
 
