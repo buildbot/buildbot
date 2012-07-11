@@ -400,7 +400,7 @@ changes
     * ``when_timestamp`` (datetime instance; time of the change)
     * ``branch`` (unicode string; branch on which the change took place, or
       ``None`` for the "default branch", whatever that might mean)
-    * ``category`` (unicode string; user-defined category of this change, or
+    * ``tags`` (list of unicode; user-defined tags of this change, or
       ``None``)
     * ``revlink`` (unicode string; link to a web view of this change)
     * ``properties`` (user-specified properties for this change, represented as
@@ -409,7 +409,7 @@ changes
     * ``project`` (unicode string; user-defined project to which this change
       corresponds)
 
-    .. py:method:: addChange(author=None, files=None, comments=None, is_dir=0, links=None, revision=None, when_timestamp=None, branch=None, category=None, revlink='', properties={}, repository='', project='', uid=None)
+    .. py:method:: addChange(author=None, files=None, comments=None, is_dir=0, links=None, revision=None, when_timestamp=None, branch=None, tags=None, revlink='', properties={}, repository='', project='', uid=None)
 
         :param author: the author of this change
         :type author: unicode string
@@ -428,9 +428,9 @@ changes
         :type when_timestamp: datetime instance or None
         :param branch: the branch on which this change took place
         :type branch: unicode string
-        :param category: category for this change (arbitrary use by Buildbot
+        :param tags: tags for this change (arbitrary use by Buildbot
             users)
-        :type category: unicode string
+        :type tags: a list of unicode strings
         :param revlink: link to a web view of this revision
         :type revlink: unicode string
         :param properties: properties to set on this change, where values are
