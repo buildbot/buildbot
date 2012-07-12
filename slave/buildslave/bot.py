@@ -163,7 +163,7 @@ class SlaveBuilder(service.Service):
 
         update = [data, 0]
         updates = [update]
-        d = self.parent.sendUpdates(self, updates)
+        d = self.parent.sendUpdates(self.name, updates)
         d.addCallback(self.ackUpdate)
         d.addErrback(self._ackFailed, "SlaveBuilder.sendUpdate")
 
@@ -189,7 +189,7 @@ class SlaveBuilder(service.Service):
         if not self.running:
             log.msg(" but we weren't running, quitting silently")
             return
-        d = self.parent.sendComplete(self, failure)
+        d = self.parent.sendComplete(self.name, failure)
         d.addCallback(self.ackComplete)
         d.addErrback(self._ackFailed, "sendComplete")
 
@@ -299,10 +299,9 @@ class Bot(pb.Referenceable, service.MultiService):
                 b.unicode_encoding = self.unicode_encoding
                 b.setServiceParent(self)
                 b.setBuilddir(builddir)
-                b.proto = PBSlaveBuilder(b)
                 self.builders[name] = b
-                self.pbbuilders[name] = b.proto
-            retval[name] = b.proto
+                self.pbbuilders[name] = PBSlaveBuilder(b)
+            retval[name] = self.pbbuilders[name]
 
         # disown any builders no longer desired
         to_remove = list(set(self.builders.keys()) - wanted_names)
@@ -364,11 +363,13 @@ class Bot(pb.Referenceable, service.MultiService):
         # if this timeout is too short.
         reactor.callLater(0.2, reactor.stop)
 
-    def sendUpdates(self, builder, updates):
-        return builder.proto.sendUpdates(updates)
+    def sendUpdates(self, buildername, updates):
+        pbbuilder = self.pbbuilders[buildername]
+        return pbbuilder.sendUpdates(updates)
 
-    def sendComplete(self, builder, failure):
-        return builder.proto.sendComplete(failure)
+    def sendComplete(self, buildername, failure):
+        pbbuilder = self.pbbuilders[buildername]
+        return pbbuilder.sendComplete(failure)
 
     def gracefulShutdown(self):
         log.msg("Telling the master we want to shutdown after any running builds are finished")

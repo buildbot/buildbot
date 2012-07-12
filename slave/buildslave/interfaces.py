@@ -72,12 +72,12 @@ class ISlaveCommand(Interface):
 
 class ISlaveProtocol(Interface):
 
-    def sendUpdates(self, builder, updates):
+    def sendUpdates(self, buildername, updates):
         """
         send an update to the master
         """
 
-    def sendComplete(self, builder, failure):
+    def sendComplete(self, buildername, failure):
         """
         send a completion signal to the master, for builds and commands
         """
