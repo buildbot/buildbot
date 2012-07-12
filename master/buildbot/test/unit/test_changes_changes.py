@@ -25,7 +25,7 @@ class Change(unittest.TestCase):
         fakedb.Change(changeid=23, author="dustin", comments="fix whitespace",
             is_dir=0, branch="warnerdb", revision="deadbeef",
             when_timestamp=266738404, revlink='http://warner/0e92a098b',
-            category='devel', repository='git://warner', codebase='mainapp',
+            repository='git://warner', codebase='mainapp',
             project='Buildbot'),
 
         fakedb.ChangeFile(changeid=23, filename='master/README.txt'),
@@ -39,7 +39,6 @@ class Change(unittest.TestCase):
 
     def setUp(self):
         self.change23 = changes.Change(**dict( # using **dict(..) forces kwargs
-            category='devel',
             isdir=0,
             repository=u'git://warner',
             codebase=u'mainapp',
@@ -79,7 +78,6 @@ class Change(unittest.TestCase):
         del dict['at']
         self.assertEqual(dict, {
             'branch': u'warnerdb',
-            'category': u'devel',
             'codebase': u'mainapp',
             'comments': u'fix whitespace',
             'files': [{'name': u'master/README.txt'},
@@ -91,6 +89,7 @@ class Change(unittest.TestCase):
             'rev': u'deadbeef',
             'revision': u'deadbeef',
             'revlink': u'http://warner/0e92a098b',
+            'tags': [],
             'when': 266738404,
             'who': u'dustin'})
 
