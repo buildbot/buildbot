@@ -25,13 +25,17 @@ from zope.interface import implements
 
 from buildslave import bot
 from buildslave.test.util import misc
-from buildslave.test.fake import FakeBot
 
 from mock import Mock
 
 # I don't see any simple way to test the PB equipment without actually setting
 # up a TCP connection.  This just tests that the PB code will connect and can
 # execute a basic ping.  The rest is done without TCP (or PB) in other test modules.
+
+class FakeBot:
+    """Fake slave-side bot."""
+    usePTY = None
+    name = "fakebot"
 
 class MasterPerspective(pb.Avatar):
     def __init__(self, on_keepalive=None):
@@ -159,9 +163,9 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         in a call to the master's shutdown method"""
         d = defer.Deferred()
 
-        fakebot = FakeBot(self.basedir, False, unicode_encoding=None)
+        fakebot = FakeBot()
 
-        fakebot.gracefulShutdown = Mock()
+        fakebot.gracefulShutdown = Mock(return_value = defer.succeed(None))
 
         # the deferred for the whole test
         def call_shutdown(mind):
@@ -175,7 +179,6 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         self.buildslave = bot.BuildSlave("127.0.0.1", port,
                 "testy", "westy", self.basedir,
                 keepalive=0, usePTY=False, umask=022)
-
         self.buildslave.startService()
 
         def check(ign):
