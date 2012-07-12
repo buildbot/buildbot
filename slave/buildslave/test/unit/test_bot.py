@@ -20,12 +20,15 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer, reactor, task
 from twisted.python import failure, log
+from twisted.spread import pb
 
 from buildslave.test.util import command, compat
 from buildslave.test.fake.remote import FakeRemote
 from buildslave.test.fake.runprocess import Expect
 import buildslave
 from buildslave import bot
+
+from mock import Mock
 
 class TestBot(unittest.TestCase):
 
@@ -219,21 +222,6 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
     def test_print(self):
         return self.sb.callRemote("print", "Hello, SlaveBuilder.")
 
-    def test_setMaster(self):
-        # not much to check here - what the SlaveBuilder does with the
-        # master is not part of the interface (and, in fact, it does very little)
-        return self.sb.callRemote("setMaster", mock.Mock())
-
-    def test_shutdown(self):
-        # don't *actually* shut down the reactor - that would be silly
-        stop = mock.Mock()
-        self.patch(reactor, "stop", stop)
-        d = self.sb.callRemote("shutdown")
-        def check(_):
-            self.assertTrue(stop.called)
-        d.addCallback(check)
-        return d
-
     def test_startBuild(self):
         return self.sb.callRemote("startBuild")
 
@@ -335,6 +323,81 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
             self.assertTrue(isinstance(st.actions[1][1], failure.Failure))
         d.addCallback(check)
         return d
+
+class FakeSlaveBuilder:
+    """ Fake SlaveBuilder """
+
+class TestPBSlaveBuilder(unittest.TestCase):
+
+    def setUp(self):
+        self.slavebuilder = FakeSlaveBuilder()
+        self.pbbuilder = bot.PBSlaveBuilder(self.slavebuilder)
+        self.sb = FakeRemote(self.pbbuilder)
+
+    def tearDown(self):
+        pass
+
+    def test_startBuild(self):
+        self.slavebuilder.startBuild = Mock()
+        self.sb.callRemote("startBuild")
+        self.slavebuilder.startBuild.assert_called_with()
+
+    def test_shutdown(self):
+        # don't *actually* shut down the reactor - that would be silly
+        stop = mock.Mock()
+        self.patch(reactor, "stop", stop)
+        d = self.sb.callRemote("shutdown")
+        def check(_):
+            self.assertTrue(stop.called)
+        d.addCallback(check)
+        return d
+
+    def test_setMaster(self):
+        # not much to check here - what the SlaveBuilder does with the
+        # master is not part of the interface (and, in fact, it does very little)
+        return self.sb.callRemote("setMaster", mock.Mock())
+
+    def test_startCommand(self):
+        st = FakeStep()
+        self.slavebuilder.startCommand = Mock()
+
+        self.sb.callRemote("startCommand", FakeRemote(st),
+                                      "13", "shell", dict(
+                                                command=[ 'echo', 'hello' ],
+                                                workdir='workdir',
+                                            ))
+        self.slavebuilder.startCommand.assert_called_with("13", "shell", dict(
+                                                command=[ 'echo', 'hello' ],
+                                                workdir='workdir',
+                                            ) )
+
+    def test_interruptCommand(self):
+        self.slavebuilder.interruptCommand = Mock()
+
+        self.sb.callRemote("interruptCommand", "13", "tl/dr" )
+        self.slavebuilder.interruptCommand.assert_called_with("13", "tl/dr")
+
+    def test_print(self):
+        self.slavebuilder.printMessage = Mock()
+
+        self.sb.callRemote("print", "Hello, SlaveBuilder.")
+        self.slavebuilder.printMessage.assert_called_with("Hello, SlaveBuilder.")
+
+    def test_sendUpdates(self):
+        st = FakeStep()
+        self.pbbuilder.remoteStep = FakeRemote(st)
+
+        self.pbbuilder.remoteStep.callRemote("update", [[{'hdr': 'headers'}, 0]])
+        self.assertEqual(st.actions, [
+                      ['update', [[{'hdr': 'headers'}, 0]]]
+                                  ])
+
+    def test_sendComplete(self):
+        st = FakeStep()
+        self.pbbuilder.remoteStep = FakeRemote(st)
+        f = Mock()
+        self.pbbuilder.remoteStep.callRemote("complete", f)
+        self.assertEqual(st.actions, [['complete', f]])
 
 class TestBotFactory(unittest.TestCase):
 
