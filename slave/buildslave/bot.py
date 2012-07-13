@@ -238,8 +238,8 @@ class PBSlaveBuilder(pb.Referenceable):
     def lostRemoteStep(self, remotestep):
         log.msg("lost remote step")
         self.remoteStep = None
-        if self.stopCommandOnShutdown:
-            self.stopCommand()
+        if self.slavebuilder.stopCommandOnShutdown:
+            self.slavebuilder.stopCommand()
 
     def sendUpdates(self, updates):
         if self.remoteStep:
