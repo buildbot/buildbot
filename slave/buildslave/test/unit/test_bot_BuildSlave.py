@@ -32,6 +32,11 @@ from mock import Mock
 # up a TCP connection.  This just tests that the PB code will connect and can
 # execute a basic ping.  The rest is done without TCP (or PB) in other test modules.
 
+class FakeBot:
+    """Fake slave-side bot."""
+    usePTY = None
+    name = "fakebot"
+
 class MasterPerspective(pb.Avatar):
     def __init__(self, on_keepalive=None):
         self.on_keepalive = on_keepalive
@@ -158,18 +163,13 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         in a call to the master's shutdown method"""
         d = defer.Deferred()
 
-        fakepersp = Mock()
-        called = []
-        def fakeCallRemote(*args):
-            called.append(args)
-            d1 = defer.succeed(None)
-            return d1
-        fakepersp.callRemote = fakeCallRemote
+        fakebot = FakeBot()
 
-        # set up to call shutdown when we are attached, and chain the results onto
+        fakebot.gracefulShutdown = Mock(return_value = defer.succeed(None))
+
         # the deferred for the whole test
         def call_shutdown(mind):
-            self.buildslave.bf.perspective = fakepersp
+            self.buildslave.bot = fakebot
             shutdown_d = self.buildslave.gracefulShutdown()
             shutdown_d.addCallbacks(d.callback, d.errback)
 
@@ -179,11 +179,10 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         self.buildslave = bot.BuildSlave("127.0.0.1", port,
                 "testy", "westy", self.basedir,
                 keepalive=0, usePTY=False, umask=022)
-
         self.buildslave.startService()
 
         def check(ign):
-            self.assertEquals(called, [('shutdown',)])
+            fakebot.gracefulShutdown.assert_called_with()
         d.addCallback(check)
 
         return d
