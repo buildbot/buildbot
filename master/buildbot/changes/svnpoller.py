@@ -35,12 +35,16 @@ def split_file_alwaystrunk(path):
     return (None, path)
 
 def split_file_branches(path):
-    # turn trunk/subdir/file.c into (None, "subdir/file.c")
-    # and branches/1.5.x/subdir/file.c into ("branches/1.5.x", "subdir/file.c")
+    # turn "trunk/subdir/file.c" into (None, "subdir/file.c")
+    # and "trunk/subdir/" into (None, "subdir/")
+    # and "trunk/" into (None, "")
+    # and "branches/1.5.x/subdir/file.c" into ("branches/1.5.x", "subdir/file.c")
+    # and "branches/1.5.x/subdir/" into ("branches/1.5.x", "subdir/")
+    # and "branches/1.5.x/" into ("branches/1.5.x", "")
     pieces = path.split('/')
-    if pieces[0] == 'trunk':
+    if len(pieces) > 1 and pieces[0] == 'trunk':
         return (None, '/'.join(pieces[1:]))
-    elif pieces[0] == 'branches':
+    elif len(pieces) > 2 and pieces[0] == 'branches':
         return ('/'.join(pieces[0:2]), '/'.join(pieces[2:]))
     else:
         return None
@@ -310,6 +314,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 continue
 
             for p in pathlist.getElementsByTagName("path"):
+                kind = p.getAttribute("kind")
                 action = p.getAttribute("action")
                 path = "".join([t.data for t in p.childNodes])
                 # the rest of buildbot is certaily not yet ready to handle
@@ -319,6 +324,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 path = path.encode("ascii")
                 if path.startswith("/"):
                     path = path[1:]
+                if kind == "dir" and not path.endswith("/"):
+                    path += "/"
                 where = self._transform_path(path)
 
                 # if 'where' is None, the file was outside any project that
@@ -326,8 +333,17 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 if where:
                     branch, filename = where
                     if not branch in branches:
-                        branches[branch] = { 'files': []}
-                    branches[branch]['files'].append(filename)
+                        branches[branch] = { 'files': [], 'number_of_directories': 0}
+                    if filename == "":
+                        # root directory of branch
+                        branches[branch]['files'].append(filename)
+                        branches[branch]['number_of_directories'] += 1
+                    elif filename.endswith("/"):
+                        # subdirectory of branch
+                        branches[branch]['files'].append(filename[:-1])
+                        branches[branch]['number_of_directories'] += 1
+                    else:
+                        branches[branch]['files'].append(filename)
 
                     if not branches[branch].has_key('action'):
                         branches[branch]['action'] = action
@@ -335,9 +351,10 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             for branch in branches.keys():
                 action = branches[branch]['action']
                 files  = branches[branch]['files']
+                number_of_directories_changed = branches[branch]['number_of_directories']
                 number_of_files_changed = len(files)
 
-                if action == u'D' and number_of_files_changed == 1 and files[0] == '':
+                if action == u'D' and number_of_directories_changed == 1 and number_of_files_changed == 1 and files[0] == '':
                     log.msg("Ignoring deletion of branch '%s'" % branch)
                 else:
                     chdict = dict(

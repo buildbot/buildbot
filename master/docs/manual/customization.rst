@@ -215,9 +215,9 @@ scheme, the following function will work::
 
     def split_file_branches(path):
         pieces = path.split('/')
-        if pieces[0] == 'trunk':
+        if len(pieces) > 1 and pieces[0] == 'trunk':
             return (None, '/'.join(pieces[1:]))
-        elif pieces[0] == 'branches':
+        elif len(pieces) > 2 and pieces[0] == 'branches':
             return ('/'.join(pieces[0:2]),
                     '/'.join(pieces[2:]))
         else:
