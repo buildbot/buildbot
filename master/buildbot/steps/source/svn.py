@@ -319,7 +319,7 @@ class SVN(Source):
             if len(files) == 0:
                 d = defer.succeed(0)
             else:
-                if not self.slaveVersionIsOlderThan('rmdir', '2.14'):
+                if self.slaveVersionIsOlderThan('rmdir', '2.14'):
                     d = self.removeFiles(files)
                 else:
                     cmd = buildstep.RemoteCommand('rmdir', {'dir': files,

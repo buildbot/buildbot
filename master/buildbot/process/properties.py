@@ -424,11 +424,12 @@ class Interpolate(util.ComparableMixin):
         self.fmtstring = fmtstring 
         self.args = args
         self.kwargs = kwargs 
+        if self.args and self.kwargs:
+            config.error("Interpolate takes either positional or keyword "
+                         "substitutions, not both.")
         if not self.args:
             self.interpolations = {}
             self._parse(fmtstring)
-        if self.args and self.kwargs:
-            raise ValueError('Interpolate takes either positional or keyword substitutions, not both.')
 
     @staticmethod
     def _parse_prop(arg):

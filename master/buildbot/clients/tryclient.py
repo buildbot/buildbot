@@ -179,7 +179,10 @@ class MercurialExtractor(SourceStampExtractor):
     vcexe = "hg"
 
     def getBaseRevision(self):
-        d = self.dovc(["identify", "--id", "--debug"])
+        upstream = ""
+        if self.repository:
+            upstream = "r'%s'" % self.repository
+        d = self.dovc(["log", "--template", "{node}\\n", "-r", "limit(parents(outgoing(%s) and branch(parents())) or parents(), 1)" % upstream])
         d.addCallback(self.parseStatus)
         return d
 
@@ -188,7 +191,7 @@ class MercurialExtractor(SourceStampExtractor):
         self.baserev = m.group(0)
 
     def getPatch(self, res):
-        d = self.dovc(["diff"])
+        d = self.dovc(["diff", "-r", self.baserev])
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 

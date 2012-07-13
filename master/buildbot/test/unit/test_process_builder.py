@@ -548,6 +548,12 @@ class TestBuilderBuildCreation(unittest.TestCase):
                                 brdicts, mergeRequests_fn)
         self.assertEqual(evens, [ brdicts[1] ])
 
+        # check original relative order of requests within brdicts is maintained
+        merged = yield self.bldr._mergeRequests(brdicts[2],
+                                                brdicts, mergeRequests_fn)
+        self.assertEqual(merged, [brdicts[0], brdicts[2]],
+                         'relative order of merged requests was not maintained')
+
     @defer.inlineCallbacks
     def test_mergeRequest_no_other_request(self):
         """ Test if builder test for codebases in requests """
@@ -577,7 +583,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         res = yield self.bldr._mergeRequests(brdicts[0], brdicts,
                                             mergeRequests_fn)
         self.assertEqual(res, [ brdicts[0] ])
-        
+
     @defer.inlineCallbacks
     def test_mergeRequests_codebases_equal(self):
         """ Test if builder test for codebases in requests """
@@ -800,7 +806,7 @@ class TestRebuild(unittest.TestCase):
         self.assertEqual(self.sslist, {1:101})
         self.master.addBuildset.assert_called_with(builderNames=['bldr1'],
                                                           sourcestampsetid=101,
-                                                          reason = 'unit test', 
+                                                          reason = 'unit test',
                                                           properties = {})
 
 
@@ -812,5 +818,5 @@ class TestRebuild(unittest.TestCase):
                                                           sourcestampsetid=101,
                                                           reason = 'unit test',
                                                           properties = {})
-        
-        
+
+
