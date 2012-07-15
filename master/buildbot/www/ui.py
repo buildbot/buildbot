@@ -22,52 +22,16 @@ html = """\
 <html>
     <head>
         <title></title>
-        <link rel="stylesheet" type="text/css"
-              href="%(baseurl)sstatic/css/default.css" />
-        <script src="http://code.jquery.com/jquery-1.7.2.min.js" />
-        <script src="http://ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js" />
-        <script type="text/javascript">
-            bb.baseurl = "%(baseurl)s";
-        </script>
-        <script type="text/javascript">
-$(function() {
-    var ws_url = "%(baseurl)s".replace(/^http:/, "ws:");
-    console.log(ws_url);
-    var ws = new WebSocket(ws_url + "ws");
-    ws.onopen = function() {
-      console.log("onopen");
-      $('#status').text('open');
-      // this must be delaeyed at least until after the onopen has returned, or
-      // on firefox the message isn't sent until it gets flushed.  WebSockets
-      // are still fresh and exciting, eh?
-      window.setTimeout(function() {
-        ws.send(JSON.stringify({req: 'startConsuming',
-                              path: [ 'change' ],
-                              options: {}}));
-        $('#status').text('subscribed');
-      }, 0);
-    };
-    ws.onmessage = function (e) {
-      console.log("onmessage", e.data);
-      $('#message').text(e.data);
-    };
-    ws.onerror = function (e) {
-      console.log("onmessage", e);
-      $('#info').text(e.data);
-    };
-    ws.onclose = function() {
-      console.log("onclose");
-      $('#status').text('closed');
-    };
-});
-        </script>
+        <!-- <link rel="stylesheet" type="text/css" href="%(baseurl)sstatic/css/default.css" /> -->
+        <script src="//ajax.googleapis.com/ajax/libs/dojo/1.7.2/dojo/dojo.js" data-dojo-config="async: true"></script>
+        <script src="/static/js/buildbot.js" data-dojo-config="async: true"></script>
     </head>
   <body class="interface">
 
     <div id="header" class="header">
     </div>
     <hr />
-    <div id="content" class="content">
+    <div>
         MESSAGE:
         <div id="message"></div>
         INFO:
@@ -75,6 +39,11 @@ $(function() {
         STATUS:
         <div id="status"></div>
     </div>
+    <hr />
+
+    <a href="" onclick="return false;">Changes</a>&nbsp;&nbsp;&nbsp;<div id="changes"><div id="changesContent"></div><button id="changesButton">Load changes</button></div>
+    <a href="" onclick="return false;">Builders</a>&nbsp;&nbsp;&nbsp;<div id="builders">Builders info</div>
+    <a href="" onclick="return false;">Buildslaves</a>&nbsp;&nbsp;&nbsp;<div id="buildslaves">Buildslaves info</div>
     </body>
 </html>
 """
