@@ -268,6 +268,10 @@ class Bot(pb.Referenceable, service.MultiService):
         self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding() or 'ascii'
         self.builders = {}
         self.pbbuilders = {}
+        self.persp = None
+
+    def setPersp(self, perspective):
+        self.persp = perspective
 
     def startService(self):
         assert os.path.isdir(self.basedir)
@@ -373,7 +377,7 @@ class Bot(pb.Referenceable, service.MultiService):
 
     def gracefulShutdown(self):
         log.msg("Telling the master we want to shutdown after any running builds are finished")
-        d = self.callRemote("shutdown")
+        d = self.persp.callRemote("shutdown")
         def _shutdownfailed(err):
             if err.check(AttributeError):
                 log.msg("Master does not support slave initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
@@ -382,6 +386,9 @@ class Bot(pb.Referenceable, service.MultiService):
                 log.err(err)
         d.addErrback(_shutdownfailed)
         return d
+
+    def activeConnection(self):
+        return self.persp
 
 class BotFactory(ReconnectingPBClientFactory):
     # 'keepaliveInterval' serves two purposes. The first is to keep the
@@ -513,6 +520,7 @@ class BuildSlave(service.MultiService):
         bf.startLogin(credentials.UsernamePassword(name, passwd), client=bot)
         self.connection = c = internet.TCPClient(buildmaster_host, port, bf)
         c.setServiceParent(self)
+        self.bot.setPersp(bf.perspective)
 
     def startService(self):
         # first, apply all monkeypatches
@@ -579,7 +587,7 @@ class BuildSlave(service.MultiService):
 
     def gracefulShutdown(self):
         """Start shutting down"""
-        if not self.bot:
+        if not self.bot.activeConnection():
             log.msg("No active connection, shutting down NOW")
             reactor.stop()
             return
