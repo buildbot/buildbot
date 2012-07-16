@@ -213,7 +213,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
             if change_filter and not change_filter.filter_change(change):
                 return
             if change.codebase not in self.codebases:
-                log.msg('change contains codebase %s that is not processed by this scheduler' % change.codebase)
+                log.msg('change contains codebase %s that is not processed by scheduler %s' % (change.codebase, self.name))
                 return
             if fileIsImportant:
                 try:
