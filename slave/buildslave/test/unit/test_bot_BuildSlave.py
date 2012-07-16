@@ -170,7 +170,7 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         # the deferred for the whole test
         def call_shutdown(mind):
             self.buildslave.bot = fakebot
-            self.buildslave.bot.persp = mind
+            self.buildslave.bot.activeConnection = Mock(return_value = mind)
             shutdown_d = self.buildslave.gracefulShutdown()
             shutdown_d.addCallbacks(d.callback, d.errback)
 

@@ -387,6 +387,9 @@ class Bot(pb.Referenceable, service.MultiService):
         d.addErrback(_shutdownfailed)
         return d
 
+    def activeConnection(self):
+        return self.persp
+
 class BotFactory(ReconnectingPBClientFactory):
     # 'keepaliveInterval' serves two purposes. The first is to keep the
     # connection alive: it guarantees that there will be at least some
@@ -584,7 +587,7 @@ class BuildSlave(service.MultiService):
 
     def gracefulShutdown(self):
         """Start shutting down"""
-        if not self.bot.persp:
+        if not self.bot.activeConnection():
             log.msg("No active connection, shutting down NOW")
             reactor.stop()
             return
