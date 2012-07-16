@@ -5,7 +5,7 @@ define(
         "dojo/json"
     ],
     function(socket, dom, JSON) {
-        var ws_url = "http://localhost:8080/".replace(/^http:/, "ws:");
+        var ws_url = window.baseurl.replace(/^http:/, "ws:");
         console.log(ws_url);
         var socket = socket(ws_url + "ws");
         

@@ -24,6 +24,8 @@ html = """\
         <title></title>
         <!-- <link rel="stylesheet" type="text/css" href="%(baseurl)sstatic/css/default.css" /> -->
         <script src="//ajax.googleapis.com/ajax/libs/dojo/1.7.2/dojo/dojo.js" data-dojo-config="async: true"></script>
+        <!-- put the baseurl on the window object for now - TODO find a better place! -->
+        <script type="text/javascript">window.baseurl = "%(baseurl)s";</script>
         <script src="/static/js/buildbot.js" data-dojo-config="async: true"></script>
     </head>
   <body class="interface">
