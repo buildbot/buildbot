@@ -20,7 +20,6 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer, reactor, task
 from twisted.python import failure, log
-from twisted.spread import pb
 
 from buildslave.test.util import command, compat
 from buildslave.test.fake.remote import FakeRemote
