@@ -18,6 +18,8 @@ import socket
 import sys
 import signal
 
+from zope.interface import implements
+
 from twisted.spread import pb
 from twisted.python import log
 from twisted.internet import error, reactor, task, defer
@@ -28,11 +30,12 @@ import buildslave
 from buildslave.pbutil import ReconnectingPBClientFactory
 from buildslave.commands import registry, base
 from buildslave import monkeypatches
+from buildslave.interfaces import ISlaveProtocol
 
 class UnknownCommand(pb.Error):
     pass
 
-class SlaveBuilder(pb.Referenceable, service.Service):
+class SlaveBuilder(service.Service):
 
     """This is the local representation of a single Builder: it handles a
     single kind of build (like an all-warnings build). It has a name and a
@@ -41,18 +44,9 @@ class SlaveBuilder(pb.Referenceable, service.Service):
 
     stopCommandOnShutdown = True
 
-    # remote is a ref to the Builder object on the master side, and is set
-    # when they attach. We use it to detect when the connection to the master
-    # is severed.
-    remote = None
-
     # .command points to a SlaveCommand instance, and is set while the step
     # is running. We use it to implement the stopBuild method.
     command = None
-
-    # .remoteStep is a ref to the master-side BuildStep object, and is set
-    # when the step is started
-    remoteStep = None
 
     def __init__(self, name):
         #service.Service.__init__(self) # Service has no __init__ method
@@ -89,32 +83,18 @@ class SlaveBuilder(pb.Referenceable, service.Service):
                 bf = bslave.bf
                 bf.activity()
 
-    def remote_setMaster(self, remote):
-        self.remote = remote
-        self.remote.notifyOnDisconnect(self.lostRemote)
-
-    def remote_print(self, message):
+    def printMessage(self, message):
         log.msg("SlaveBuilder.remote_print(%s): message from master: %s" %
                 (self.name, message))
 
-    def lostRemote(self, remote):
-        log.msg("lost remote")
-        self.remote = None
-
-    def lostRemoteStep(self, remotestep):
-        log.msg("lost remote step")
-        self.remoteStep = None
-        if self.stopCommandOnShutdown:
-            self.stopCommand()
-
     # the following are Commands that can be invoked by the master-side
     # Builder
-    def remote_startBuild(self):
+    def startBuild(self):
         """This is invoked before the first step of any new build is run.  It
         doesn't do much, but masters call it so it's still here."""
         pass
 
-    def remote_startCommand(self, stepref, stepId, command, args):
+    def startCommand(self, stepId, command, args):
         """
         This gets invoked by L{buildbot.process.step.RemoteCommand.start}, as
         part of various master-side BuildSteps, to start various commands
@@ -136,14 +116,12 @@ class SlaveBuilder(pb.Referenceable, service.Service):
         self.command = factory(self, stepId, args)
 
         log.msg(" startCommand:%s [id %s]" % (command,stepId))
-        self.remoteStep = stepref
-        self.remoteStep.notifyOnDisconnect(self.lostRemoteStep)
         d = self.command.doStart()
         d.addCallback(lambda res: None)
         d.addBoth(self.commandComplete)
         return None
 
-    def remote_interruptCommand(self, stepId, why):
+    def interruptCommand(self, stepId, why):
         """Halt the current step."""
         log.msg("asked to interrupt current command: %s" % why)
         self.activity()
@@ -153,7 +131,6 @@ class SlaveBuilder(pb.Referenceable, service.Service):
             log.msg(" .. but none was running")
             return
         self.command.doInterrupt()
-
 
     def stopCommand(self):
         """Make any currently-running command die, with no further status
@@ -179,15 +156,16 @@ class SlaveBuilder(pb.Referenceable, service.Service):
             # service is running or not. If we aren't running, don't send any
             # status messages.
             return
+
         # the update[1]=0 comes from the leftover 'updateNum', which the
         # master still expects to receive. Provide it to avoid significant
         # interoperability issues between new slaves and old masters.
-        if self.remoteStep:
-            update = [data, 0]
-            updates = [update]
-            d = self.remoteStep.callRemote("update", updates)
-            d.addCallback(self.ackUpdate)
-            d.addErrback(self._ackFailed, "SlaveBuilder.sendUpdate")
+
+        update = [data, 0]
+        updates = [update]
+        d = self.parent.sendUpdates(self.name, updates)
+        d.addCallback(self.ackUpdate)
+        d.addErrback(self._ackFailed, "SlaveBuilder.sendUpdate")
 
     def ackUpdate(self, acknum):
         self.activity() # update the "last activity" timer
@@ -199,16 +177,11 @@ class SlaveBuilder(pb.Referenceable, service.Service):
         log.msg("SlaveBuilder._ackFailed:", where)
         log.err(why) # we don't really care
 
-
     # this is fired by the Deferred attached to each Command
     def commandComplete(self, failure):
         if failure:
             log.msg("SlaveBuilder.commandFailed", self.command)
             log.err(failure)
-            # failure, if present, is a failure.Failure. To send it across
-            # the wire, we must turn it into a pb.CopyableFailure.
-            failure = pb.CopyableFailure(failure)
-            failure.unsafeTracebacks = True
         else:
             # failure is None
             log.msg("SlaveBuilder.commandComplete", self.command)
@@ -216,22 +189,75 @@ class SlaveBuilder(pb.Referenceable, service.Service):
         if not self.running:
             log.msg(" but we weren't running, quitting silently")
             return
-        if self.remoteStep:
-            self.remoteStep.dontNotifyOnDisconnect(self.lostRemoteStep)
-            d = self.remoteStep.callRemote("complete", failure)
-            d.addCallback(self.ackComplete)
-            d.addErrback(self._ackFailed, "sendComplete")
-            self.remoteStep = None
+        d = self.parent.sendComplete(self.name, failure)
+        d.addCallback(self.ackComplete)
+        d.addErrback(self._ackFailed, "sendComplete")
 
+class PBSlaveBuilder(pb.Referenceable):
+
+    # remote is a ref to the Builder object on the master side, and is set
+    # when they attach. We use it to detect when the connection to the master
+    # is severed.
+    remote = None
+
+    # .remoteStep is a ref to the master-side BuildStep object, and is set
+    # when the step is started
+    remoteStep = None
+
+    def __init__(self, slavebuilder):
+        self.slavebuilder = slavebuilder
 
     def remote_shutdown(self):
         log.msg("slave shutting down on command from master")
         log.msg("NOTE: master is using deprecated slavebuilder.shutdown method")
         reactor.stop()
 
+    def remote_startBuild(self):
+        self.slavebuilder.startBuild()
+
+    def remote_startCommand(self, stepref, stepId, command, args):
+        #TODO deal with stepref in this class.
+        self.remoteStep = stepref
+        self.remoteStep.notifyOnDisconnect(self.lostRemoteStep)
+        self.slavebuilder.startCommand(stepId, command, args)
+
+    def remote_interruptCommand(self, stepId, why):
+        self.slavebuilder.interruptCommand(stepId, why)
+
+    def remote_print(self, message):
+        self.slavebuilder.printMessage(message)
+
+    def remote_setMaster(self, remote):
+        self.remote = remote
+        self.remote.notifyOnDisconnect(self.lostRemote)
+
+    def lostRemote(self, remote):
+        log.msg("lost remote")
+        self.remote = None
+
+    def lostRemoteStep(self, remotestep):
+        log.msg("lost remote step")
+        self.remoteStep = None
+        if self.slavebuilder.stopCommandOnShutdown:
+            self.slavebuilder.stopCommand()
+
+    def sendUpdates(self, updates):
+        if self.remoteStep:
+            d = self.remoteStep.callRemote("update", updates)
+            return d
+
+    def sendComplete(self, failure):
+        if failure:
+            failure = pb.CopyableFailure(failure)
+            failure.unsafeTracebacks = True
+        if self.remoteStep:
+            d = self.remoteStep.callRemote("complete", failure)
+        self.remoteStep = None
+        return d
 
 class Bot(pb.Referenceable, service.MultiService):
     """I represent the slave-side bot."""
+    implements (ISlaveProtocol)
     usePTY = None
     name = "bot"
 
@@ -241,6 +267,11 @@ class Bot(pb.Referenceable, service.MultiService):
         self.usePTY = usePTY
         self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding() or 'ascii'
         self.builders = {}
+        self.pbbuilders = {}
+        self.persp = None
+
+    def setPersp(self, perspective):
+        self.persp = perspective
 
     def startService(self):
         assert os.path.isdir(self.basedir)
@@ -273,7 +304,8 @@ class Bot(pb.Referenceable, service.MultiService):
                 b.setServiceParent(self)
                 b.setBuilddir(builddir)
                 self.builders[name] = b
-            retval[name] = b
+                self.pbbuilders[name] = PBSlaveBuilder(b)
+            retval[name] = self.pbbuilders[name]
 
         # disown any builders no longer desired
         to_remove = list(set(self.builders.keys()) - wanted_names)
@@ -287,6 +319,8 @@ class Bot(pb.Referenceable, service.MultiService):
         # and *then* remove them from the builder list
         for name in to_remove:
             del self.builders[name]
+            if self.pbbuilders:
+                del self.pbbuilders[name]
 
         # finally warn about any leftover dirs
         for dir in os.listdir(self.basedir):
@@ -332,6 +366,26 @@ class Bot(pb.Referenceable, service.MultiService):
         # resilinet to slaves dropping their connections, so there is no harm
         # if this timeout is too short.
         reactor.callLater(0.2, reactor.stop)
+
+    def sendUpdates(self, buildername, updates):
+        pbbuilder = self.pbbuilders[buildername]
+        return pbbuilder.sendUpdates(updates)
+
+    def sendComplete(self, buildername, failure):
+        pbbuilder = self.pbbuilders[buildername]
+        return pbbuilder.sendComplete(failure)
+
+    def gracefulShutdown(self):
+        log.msg("Telling the master we want to shutdown after any running builds are finished")
+        d = self.persp.callRemote("shutdown")
+        def _shutdownfailed(err):
+            if err.check(AttributeError):
+                log.msg("Master does not support slave initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
+            else:
+                log.msg('callRemote("shutdown") failed')
+                log.err(err)
+        d.addErrback(_shutdownfailed)
+        return d
 
 class BotFactory(ReconnectingPBClientFactory):
     # 'keepaliveInterval' serves two purposes. The first is to keep the
@@ -463,6 +517,7 @@ class BuildSlave(service.MultiService):
         bf.startLogin(credentials.UsernamePassword(name, passwd), client=bot)
         self.connection = c = internet.TCPClient(buildmaster_host, port, bf)
         c.setServiceParent(self)
+        self.bot.setPersp(bf.perspective)
 
     def startService(self):
         # first, apply all monkeypatches
@@ -529,19 +584,8 @@ class BuildSlave(service.MultiService):
 
     def gracefulShutdown(self):
         """Start shutting down"""
-        if not self.bf.perspective:
+        if not self.bot.persp:
             log.msg("No active connection, shutting down NOW")
             reactor.stop()
             return
-
-        log.msg("Telling the master we want to shutdown after any running builds are finished")
-        d = self.bf.perspective.callRemote("shutdown")
-        def _shutdownfailed(err):
-            if err.check(AttributeError):
-                log.msg("Master does not support slave initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
-            else:
-                log.msg('callRemote("shutdown") failed')
-                log.err(err)
-
-        d.addErrback(_shutdownfailed)
-        return d
+        return self.bot.gracefulShutdown()
