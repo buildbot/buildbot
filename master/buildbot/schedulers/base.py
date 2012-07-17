@@ -20,6 +20,7 @@ from twisted.internet import defer
 from buildbot.process.properties import Properties
 from buildbot.util import ComparableMixin
 from buildbot import config, interfaces
+import logging
 
 class BaseScheduler(service.MultiService, ComparableMixin):
     """
@@ -213,7 +214,9 @@ class BaseScheduler(service.MultiService, ComparableMixin):
             if change_filter and not change_filter.filter_change(change):
                 return
             if change.codebase not in self.codebases:
-                log.msg('change contains codebase %s that is not processed by scheduler %s' % (change.codebase, self.name))
+                log.msg('change contains codebase %s that is not processed by'
+                    ' scheduler %s' % (change.codebase, self.name),
+                    logLevel=logging.DEBUG)
                 return
             if fileIsImportant:
                 try:
