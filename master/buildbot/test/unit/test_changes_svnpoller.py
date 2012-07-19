@@ -524,14 +524,56 @@ class TestSplitFile(unittest.TestCase):
     def test_split_file_alwaystrunk(self):
         self.assertEqual(svnpoller.split_file_alwaystrunk('foo'), (None, 'foo'))
 
-    def test_split_file_branches(self):
+    def test_split_file_branches_trunk(self):
+        self.assertEqual(
+                svnpoller.split_file_branches('trunk/'),
+                (None, ''))
+
+    def test_split_file_branches_trunk_subdir(self):
+        self.assertEqual(
+                svnpoller.split_file_branches('trunk/subdir/'),
+                (None, 'subdir/'))
+
+    def test_split_file_branches_trunk_subfile(self):
         self.assertEqual(
                 svnpoller.split_file_branches('trunk/subdir/file.c'),
                 (None, 'subdir/file.c'))
+
+    def test_split_file_branches_trunk_invalid(self):
+        # file named trunk (not a directory):
+        self.assertEqual(
+                svnpoller.split_file_branches('trunk'),
+                None)
+
+    def test_split_file_branches_branch(self):
+        self.assertEqual(
+                svnpoller.split_file_branches('branches/1.5.x/'),
+                ('branches/1.5.x', ''))
+
+    def test_split_file_branches_branch_subdir(self):
+        self.assertEqual(
+                svnpoller.split_file_branches('branches/1.5.x/subdir/'),
+                ('branches/1.5.x', 'subdir/'))
+
+    def test_split_file_branches_branch_subfile(self):
         self.assertEqual(
                 svnpoller.split_file_branches('branches/1.5.x/subdir/file.c'),
                 ('branches/1.5.x', 'subdir/file.c'))
-        # tags are ignored:
+
+    def test_split_file_branches_branch_invalid(self):
+        # file named branches/1.5.x (not a directory):
+        self.assertEqual(
+                svnpoller.split_file_branches('branches/1.5.x'),
+                None)
+
+    def test_split_file_branches_otherdir(self):
+        # other dirs are ignored:
+        self.assertEqual(
+                svnpoller.split_file_branches('tags/testthis/subdir/'),
+                None)
+
+    def test_split_file_branches_otherfile(self):
+        # other files are ignored:
         self.assertEqual(
                 svnpoller.split_file_branches('tags/testthis/subdir/file.c'),
                 None)

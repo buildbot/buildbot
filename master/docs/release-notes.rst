@@ -68,6 +68,9 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The ``P4Sync`` step, deprecated since 0.8.5, has been removed.  The ``P4`` step remains.
 
+* :bb:chsrc:`SVNPoller` now allows the ``split_file`` function to distinguish between
+  files and directories, by making sure directory pathnames end with a right slash.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
