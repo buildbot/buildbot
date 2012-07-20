@@ -244,7 +244,7 @@ class Bot(pb.Referenceable, service.MultiService):
         self.builders = {}
         if not patch_command:
             patch_command = 'patch'
-        self.patch_comment = patch_command
+        self.patch_command = patch_command
 
     def startService(self):
         assert os.path.isdir(self.basedir)
