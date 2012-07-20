@@ -246,7 +246,8 @@ class SendChangeOptions(base.SubcommandOptions):
                            "bzr, git, mtn, p4"),
         ("project", "P", '', "Project specifier"),
         ("branch", "b", None, "Branch specifier"),
-        ("category", "C", None, "Category of repository"),
+        ("category", "C", None, "Category of repository. Deprecated. Please use tags instead."),
+        ("tags", "t", None, "Tag of repository."),
         ("revision", "r", None, "Revision specifier"),
         ("revision_file", None, None, "Filename containing revision spec"),
         ("property", "p", None,
@@ -264,7 +265,8 @@ class SendChangeOptions(base.SubcommandOptions):
         [ 'master', 'master' ],
         [ 'who', 'who' ],
         [ 'branch', 'branch' ],
-        [ 'category', 'category' ],
+        [ 'category', 'category' ], # deprecated.
+        [ 'tags', 'tags' ],
         [ 'vc', 'vc' ],
     ]
 
@@ -322,6 +324,11 @@ class SendChangeOptions(base.SubcommandOptions):
         if not self.get('master'):
             raise usage.UsageError("you must provide the master location")
 
+        if self.get('category') and self.get('tags'):
+            raise usage.UsageError("you must remove category (--category) if you use tags (--tags)")
+        if self.get('category') and not self.get('tags'):
+            # used deprecated --category.
+            self['tags'] = self.get('category')
 
 class TryOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.trycmd.trycmd"

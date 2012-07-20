@@ -26,7 +26,8 @@ class TestBadRows(connector_component.ConnectorComponentMixin,
     # source] tuple.
     def setUp(self):
         d = self.setUpConnectorComponent(
-            table_names=['changes', 'change_properties', 'change_files'])
+            table_names=['changes', 'change_properties', 'change_files',
+                         'change_tags', 'tags'])
         def finish_setup(_):
             self.db.changes = changes.ChangesConnectorComponent(self.db)
         d.addCallback(finish_setup)

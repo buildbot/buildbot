@@ -3,10 +3,6 @@
 <table class="info">
   {% set row_class=cycler('alt','') %}
   <tr class="{{ row_class.next() }}">
-    <td class="left">Category</td>
-    <td><b>{{ c.category }}</b></td>
-  </tr>
-  <tr class="{{ row_class.next() }}">
     <td class="left">Changed by</td>
     <td><b>{{ c.who|email }}</b></td>
   </tr>
@@ -42,6 +38,17 @@
 {% if c.comments %}
 <h3>Comments</h3>
 <pre class="comments">{{ c.comments|changecomment(c.project) }}</pre>
+{% endif %}
+
+{% if c.tags %}
+<h3 class="tags">Tags</h3>
+<ul>
+  {% for t in c.tags -%}
+  <li class="{{ loop.cycle('alt', '') }}">{{ t|e }}</li>
+  {% else %}
+  <li>no tags</li>
+  {% endfor %}
+</ul>
 {% endif %}
 
 <h3 class="files">Changed files</h3>

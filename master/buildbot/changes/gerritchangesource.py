@@ -129,7 +129,7 @@ class GerritChangeSource(base.ChangeSource):
                 revlink=change["url"],
                 comments=change["subject"],
                 files=["unknown"],
-                category=event["type"],
+                tags=[event["type"]],
                 properties=properties))
     def eventReceived_ref_updated(self, properties, event):
         ref = event["refUpdate"]
@@ -147,7 +147,7 @@ class GerritChangeSource(base.ChangeSource):
                 revision=ref["newRev"],
                 comments="Gerrit: patchset(s) merged.",
                 files=["unknown"],
-                category=event["type"],
+                tags=[event["type"]],
                 properties=properties))
 
     def streamProcessStopped(self):

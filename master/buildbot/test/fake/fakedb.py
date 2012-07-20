@@ -107,6 +107,18 @@ class BuildRequestClaim(Row):
     required_columns = ('brid', 'objectid', 'claimed_at')
 
 
+class Tag(Row):
+    table = "tags"
+
+    defaults = dict(
+        id = None,
+        tag = 'test tag',
+    )
+
+    id_column = 'id'
+    required_columns = ('tag',)
+
+
 class Change(Row):
     table = "changes"
 
@@ -119,15 +131,25 @@ class Change(Row):
         revision = 'abcd',
         revlink = 'http://vc/abcd',
         when_timestamp = 1200000,
-        category = 'cat',
         repository = 'repo',
         codebase =  '',
         project = 'proj',
     )
 
-    lists = ('files',)
+    lists = ('files', 'tags')
     dicts = ('properties',)
     id_column = 'changeid'
+
+
+class ChangeTag(Row):
+    table = "change_tags"
+
+    defaults = dict(
+        changeid = None,
+        tagid = None,
+    )
+
+    required_columns = ('changeid', 'tagid')
 
 
 class ChangeFile(Row):
@@ -161,6 +183,16 @@ class ChangeUser(Row):
     )
 
     required_columns = ('changeid',)
+
+class ChangeTags(Row):
+    table = "change_tags"
+
+    defaults = dict(
+        changeid = None,
+        tagid = None,
+    )
+
+    required_columns = ('changeid','tagid')
 
 class Patch(Row):
     table = "patches"
@@ -334,6 +366,10 @@ class FakeChangesComponent(FakeDBComponent):
             if isinstance(row, Change):
                 self.changes[row.changeid] = row
 
+            elif isinstance(row, ChangeTag):
+                ch = self.changes[row.changeid]
+                ch.tags.append(row.tagid)
+
             elif isinstance(row, ChangeFile):
                 ch = self.changes[row.changeid]
                 ch.files.append(row.filename)
@@ -352,7 +388,7 @@ class FakeChangesComponent(FakeDBComponent):
 
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
             revision=None, when_timestamp=None, branch=None,
-            category=None, revlink='', properties={}, repository='',
+            tags=None, revlink='', properties={}, repository='',
             project='', codebase='', uid=None):
         if self.changes:
             changeid = max(self.changes.iterkeys()) + 1
@@ -367,11 +403,11 @@ class FakeChangesComponent(FakeDBComponent):
             revision=revision,
             when_timestamp=datetime2epoch(when_timestamp),
             branch=branch,
-            category=category,
             revlink=revlink,
             repository=repository,
             project=project,
             codebase=codebase)
+        ch.tags = tags
         ch.files = files
         ch.properties = properties
 
@@ -397,7 +433,7 @@ class FakeChangesComponent(FakeDBComponent):
                 revision=row.revision,
                 when_timestamp=epoch2datetime(row.when_timestamp),
                 branch=row.branch,
-                category=row.category,
+                tags=row.tags,
                 revlink=row.revlink,
                 properties=row.properties,
                 repository=row.repository,
@@ -436,7 +472,7 @@ class FakeChangesComponent(FakeDBComponent):
             revision=change.revision,
             when_timestamp=change.when,
             branch=change.branch,
-            category=change.category,
+            tags=change.tags,
             revlink=change.revlink,
             properties=change.properties,
             repository=change.repository,

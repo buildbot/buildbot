@@ -55,7 +55,7 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def test_sendchange_config(self):
         d = sendchange.sendchange(dict(encoding='utf16', who='me',
-            auth=['a', 'b'], master='m', branch='br', category='cat',
+            auth=['a', 'b'], master='m', branch='br', tags=['cat'],
             revision='rr', properties={'a':'b'}, repository='rep',
             project='prj', vc='git', revlink='rl', when=1234.0,
             comments='comm', files=('a', 'b')))
@@ -65,7 +65,7 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
                     self.getStdout(), rc),
                     ('m', ['a','b'], 'utf16', {
                         'branch': 'br',
-                        'category': 'cat',
+                        'tags': ['cat'],
                         'comments': 'comm',
                         'files': ('a', 'b'),
                         'project': 'prj',
@@ -75,6 +75,7 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
                         'revlink': 'rl',
                         'when': 1234.0,
                         'who': 'me',
+                        'tags': ['cat'],
                         'vc': 'git'},
                     'change sent successfully', 0))
         d.addCallback(check)

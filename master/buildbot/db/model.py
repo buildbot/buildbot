@@ -135,6 +135,14 @@ class Model(base.DBConnectorComponent):
             sa.ForeignKey('sourcestampsets.id')),
     )
 
+    #tags
+
+    # This table identifies individual tags.
+    tags = sa.Table('tags', metadata,
+        sa.Column('id',  sa.Integer,     primary_key=True),
+        sa.Column('tag', sa.String(256), nullable=False),
+    )
+
     # changes
 
     # Files touched in changes
@@ -164,6 +172,18 @@ class Model(base.DBConnectorComponent):
             nullable=False)
     )
 
+    # tags associated with this change; this allows to group changes on some
+    # criteria other then builder. For example if the same change has triggered
+    # builds on builders which belong to different categories, the change could
+    # be associated with multiple tags to get it correctly filtered and
+    # displayed.
+    change_tags = sa.Table('change_tags', metadata,
+        sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'),
+            primary_key=True),
+        sa.Column('tagid', sa.Integer, sa.ForeignKey('tags.id'),
+            primary_key=True)
+    )
+
     # Changes to the source code, produced by ChangeSources
     changes = sa.Table('changes', metadata,
         # changeid also serves as 'change number'
@@ -191,9 +211,6 @@ class Model(base.DBConnectorComponent):
         # version-control system, and may be long in the past or even in the
         # future!
         sa.Column('when_timestamp', sa.Integer, nullable=False),
-
-        # an arbitrary string used for filtering changes
-        sa.Column('category', sa.String(256)),
 
         # repository specifies, along with revision and branch, the
         # source tree in which this change was detected.
@@ -363,13 +380,14 @@ class Model(base.DBConnectorComponent):
     sa.Index('buildsets_submitted_at', buildsets.c.submitted_at)
     sa.Index('buildset_properties_buildsetid',
             buildset_properties.c.buildsetid)
+    sa.Index('tags_tag', tags.c.tag, unique=True)
     sa.Index('changes_branch', changes.c.branch)
     sa.Index('changes_revision', changes.c.revision)
     sa.Index('changes_author', changes.c.author)
-    sa.Index('changes_category', changes.c.category)
     sa.Index('changes_when_timestamp', changes.c.when_timestamp)
     sa.Index('change_files_changeid', change_files.c.changeid)
     sa.Index('change_properties_changeid', change_properties.c.changeid)
+    sa.Index('change_tags_tagid', change_tags.c.tagid)
     sa.Index('scheduler_changes_objectid', scheduler_changes.c.objectid)
     sa.Index('scheduler_changes_changeid', scheduler_changes.c.changeid)
     sa.Index('scheduler_changes_unique', scheduler_changes.c.objectid,
@@ -405,6 +423,12 @@ class Model(base.DBConnectorComponent):
         ('buildsets',
             dict(unique=False, column_names=['sourcestampsetid'],
                                name='buildsets_sourcestampsetid_fkey')),
+        ('change_tags',
+            dict(unique=False, column_names=['changeid'],
+                               name='change_tags_changeid')),
+        ('change_tags',
+            dict(unique=False, column_names=['tagid'],
+                               name='change_tags_tagid')),
     ]
 
     #

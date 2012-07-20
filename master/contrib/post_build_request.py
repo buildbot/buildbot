@@ -50,8 +50,8 @@ def buildURL( options ):
     if options.branch:
         urlDict['branch'] = options.branch
 
-    if options.category:
-        urlDict['category'] = options.category
+    if options.tags:
+        urlDict['tags'] = json.dumps(options.tags)
 
     if options.revlink:
         urlDict['revlink'] = options.revlink
@@ -83,9 +83,9 @@ This script is used to submit a change to the buildbot master using the
 using a HTTP POST. The repository and project must be specified.
 
 This can be used to force a build. For example, create a scheduler that
-listens for changes on a category 'release':
+listens for changes with a tag 'release':
 
-releaseFilt    = ChangeFilter(category="release")
+releaseFilt    = ChangeFilter(tags=["release"])
 s=Scheduler(name="Release", change_filter=releaseFilt,
             treeStableTimer=10,
             builderNames=["UB10.4 x86_64 Release"]))
@@ -93,7 +93,7 @@ c['schedulers'].append(s)
 
 Then run this script with the options:
 
---repostitory <REPOSTORY> --project <PROJECT> --category release
+--repostitory <REPOSTORY> --project <PROJECT> --tags release
 """
 
 parser = optparse.OptionParser(description=description,
@@ -136,6 +136,13 @@ parser.add_option("-C", "--category", dest='category', metavar="CAT",
             help=textwrap.dedent("""\
             Category for change. This becomes the Change.category attribute, which
             can be used within the buildmaster to filter changes.
+            Deprecated. Please use --tags instead.
+            """))
+parser.add_option("-t", "--tags", dest='tags', metavar="TAG",
+            help=textwrap.dedent("""\
+            Tag for change. This becomes the Change.tags attribute, which
+            can be used within the buildmaster to filter changes.
+            # TODO: USe multiple --tags.
             """))
 parser.add_option("--revlink", dest='revlink', metavar="REVLINK",
             help=textwrap.dedent("""\

@@ -268,9 +268,10 @@ def insertGaps(g, showEvents, lastEventTime, idleGap=2):
 class WaterfallHelp(HtmlResource):
     pageTitle = "Waterfall Help"
 
-    def __init__(self, categories=None):
+    def __init__(self, categories=None, tags=None):
         HtmlResource.__init__(self)
         self.categories = categories
+        self.tags = tags
 
     def content(self, request, cxt):
         status = self.getStatus(request)
@@ -314,11 +315,11 @@ class ChangeEventSource(object):
         # we want them in newest-to-oldest order
         self.changes.reverse()
 
-    def eventGenerator(self, branches, categories, committers, minTime):
+    def eventGenerator(self, branches, tags, committers, minTime):
         for change in self.changes:
             if branches and change.branch not in branches:
                 continue
-            if categories and change.category not in categories:
+            if tags and change.tags not in tags:
                 continue
             if committers and change.author not in committers:
                 continue
@@ -330,9 +331,10 @@ class WaterfallStatusResource(HtmlResource):
     """This builds the main status page, with the waterfall display, and
     all child pages."""
 
-    def __init__(self, categories=None, num_events=200, num_events_max=None):
+    def __init__(self, categories=None, tags=None, num_events=200, num_events_max=None):
         HtmlResource.__init__(self)
         self.categories = categories
+        self.tags = tags
         self.num_events=num_events
         self.num_events_max=num_events_max
         self.putChild("help", WaterfallHelp(categories))
@@ -538,7 +540,7 @@ class WaterfallStatusResource(HtmlResource):
         showEvents = False
         if request.args.get("show_events", ["false"])[0].lower() == "true":
             showEvents = True
-        filterCategories = request.args.get('category', [])
+        filterTags = request.args.get('tag', [])
         filterBranches = [b for b in request.args.get("branch", []) if b]
         filterBranches = map_branches(filterBranches)
         filterCommitters = [c for c in request.args.get("committer", []) if c]
@@ -599,7 +601,7 @@ class WaterfallStatusResource(HtmlResource):
 
         for s in sources:
             gen = insertGaps(s.eventGenerator(filterBranches,
-                                              filterCategories,
+                                              filterTags,
                                               filterCommitters,
                                               minTime),
                              showEvents,
@@ -810,4 +812,3 @@ class WaterfallStatusResource(HtmlResource):
                     strip[i] = strip[i].td()
 
         return dict(grid=grid, gridlen=gridlen, no_bubble=noBubble, time=lastDate)
-

@@ -49,14 +49,16 @@ def sendchange_cmd(master, revisionData):
         "--vc=%s" % 'svn',
         ]
     if opts.category:
-        cmd.append("--category=%s" % opts.category)
+        # Deprecated. Please use tags instead.
+        cmd.append("--tags=%s" % opts.category)
+    for tag in opts.tags or []:
+        cmd.append("--tags=%s" % tag)
     for path in revisionData['paths']:
         cmd.append(path)
-        
 
     if opts.verbose == True:
         print cmd
-        
+
     return cmd 
 
 def parseChangeXML(raw_xml):
@@ -156,7 +158,12 @@ def build_parser():
     
     parser.add_option(
         "-c", "--category", dest="category", action="store", default="",
-        help="""Store a category name to be associated with sendchange msg."""
+        help="""Store a category name to be associated with sendchange msg. Deprecated. Use --tags instead."""
+        )
+
+    parser.add_option(
+        "-t", "--tags", dest="tags", action="store", default="",
+        help="""Store a tag to be associated with sendchange msg.""" # TODO: USe many times for multiple tags.
         )
 
     parser.add_option(

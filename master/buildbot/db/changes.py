@@ -21,6 +21,7 @@ from buildbot.util import json
 import sqlalchemy as sa
 from twisted.internet import defer, reactor
 from buildbot.db import base
+from buildbot.db import tags
 from buildbot.util import epoch2datetime, datetime2epoch
 
 class ChDict(dict):
@@ -31,7 +32,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
             revision=None, when_timestamp=None, branch=None,
-            category=None, revlink='', properties={}, repository='', codebase='',
+            tags=None, revlink='', properties={}, repository='', codebase='',
             project='', uid=None, _reactor=reactor):
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
@@ -60,7 +61,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             self.check_length(ch_tbl.c.branch, branch)
             self.check_length(ch_tbl.c.revision, revision)
             self.check_length(ch_tbl.c.revlink, revlink)
-            self.check_length(ch_tbl.c.category, category)
             self.check_length(ch_tbl.c.repository, repository)
             self.check_length(ch_tbl.c.project, project)
 
@@ -72,11 +72,17 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 revision=revision,
                 revlink=revlink,
                 when_timestamp=datetime2epoch(when_timestamp),
-                category=category,
                 repository=repository,
                 codebase=codebase,
                 project=project))
             changeid = r.inserted_primary_key[0]
+            if tags:
+                tagids = changes.ChangesConnectorComponent(self.db).resolveTags(tags)
+                tbl = self.db.model.change_tags
+                conn.execute(tbl.insert(), [
+                    dict(changeid=changeid, tagid=t)
+                        for t in tagids
+                    ])
             if files:
                 tbl = self.db.model.change_files
                 for f in files:
@@ -194,8 +200,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
             # and delete from all relevant tables, in dependency order
             for table_name in ('scheduler_changes', 'sourcestamp_changes',
-                               'change_files', 'change_properties', 'changes',
-                               'change_users'):
+                               'change_files', 'change_properties',
+                               'change_users', 'change_tags', 'changes'):
                 remaining = ids_to_delete[:]
                 while remaining:
                     batch, remaining = remaining[:100], remaining[100:]
@@ -209,22 +215,32 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         # given a row from the 'changes' table
         change_files_tbl = self.db.model.change_files
         change_properties_tbl = self.db.model.change_properties
+        change_tags_tbl = self.db.model.change_tags
+        tags_tbl = self.db.model.tags
 
         chdict = ChDict(
                 changeid=ch_row.changeid,
                 author=ch_row.author,
+                tags=[],  # see below
                 files=[], # see below
                 comments=ch_row.comments,
                 is_dir=ch_row.is_dir,
                 revision=ch_row.revision,
                 when_timestamp=epoch2datetime(ch_row.when_timestamp),
                 branch=ch_row.branch,
-                category=ch_row.category,
                 revlink=ch_row.revlink,
                 properties={}, # see below
                 repository=ch_row.repository,
                 codebase=ch_row.codebase,
                 project=ch_row.project)
+
+        query = sa.select(
+                    [tags_tbl.c.tag],
+                ).where(tags_tbl.c.id == change_tags_tbl.c.tagid
+                ).where(change_tags_tbl.c.changeid == ch_row.changeid)
+        rows = conn.execute(query)
+        for r in rows:
+            chdict['tags'].append(r.tag)
 
         query = change_files_tbl.select(
                 whereclause=(change_files_tbl.c.changeid == ch_row.changeid))

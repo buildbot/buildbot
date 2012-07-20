@@ -538,7 +538,7 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
     def test_defaults(self):
         opts = self.parse('-m', 'm', '-W', 'me')
         exp = dict(master='m', auth=('change', 'changepw'), who='me', vc=None,
-                repository='', project='', branch=None, category=None,
+                repository='', project='', branch=None, tags=None,
                 revision=None, revision_file=None, property=None,
                 comments='', logfile=None, when=None, revlink='',
                 encoding='utf8', files=())
@@ -557,17 +557,19 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         opts = self.parse('--property', 'x:http://foo', *self.master_and_who)
         self.assertEquals(opts['properties'], dict(x='http://foo'))
 
+    # TODO: Test old config (without tags) and new config (with tags).
     def test_config_file(self):
         self.options_file['master'] = 'MMM'
         self.options_file['who'] = 'WWW'
         self.options_file['branch'] = 'BBB'
-        self.options_file['category'] = 'CCC'
+        self.options_file['category'] = 'CCC' # deprecated.
         self.options_file['vc'] = 'svn'
         opts = self.parse()
         exp = dict(master='MMM', who='WWW',
                 branch='BBB', category='CCC', vc='svn')
         self.assertOptions(opts, exp)
 
+    # TODO: Test old args (without tags) and new args (with tags).
     def test_short_args(self):
         opts = self.parse(*('-m m -a a:b -W W -R r -P p -b b -s git ' +
             '-C c -r r -p pn:pv -c c -F f -w 123 -l l -e e').split())
