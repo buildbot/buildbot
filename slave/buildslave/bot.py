@@ -235,12 +235,16 @@ class Bot(pb.Referenceable, service.MultiService):
     usePTY = None
     name = "bot"
 
-    def __init__(self, basedir, usePTY, unicode_encoding=None):
+    def __init__(self, basedir, usePTY, unicode_encoding=None,
+                 patch_command=None):
         service.MultiService.__init__(self)
         self.basedir = basedir
         self.usePTY = usePTY
         self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding() or 'ascii'
         self.builders = {}
+        if not patch_command:
+            patch_command = 'patch'
+        self.patch_comment = patch_command
 
     def startService(self):
         assert os.path.isdir(self.basedir)
@@ -435,13 +439,15 @@ class BotFactory(ReconnectingPBClientFactory):
 class BuildSlave(service.MultiService):
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY, keepaliveTimeout=None, umask=None,
-                 maxdelay=300, unicode_encoding=None, allow_shutdown=None):
+                 maxdelay=300, unicode_encoding=None, allow_shutdown=None,
+                 patch_command=None):
 
         # note: keepaliveTimeout is ignored, but preserved here for
         # backward-compatibility
 
         service.MultiService.__init__(self)
-        bot = Bot(basedir, usePTY, unicode_encoding=unicode_encoding)
+        bot = Bot(basedir, usePTY, unicode_encoding=unicode_encoding,
+                  patch_command=patch_command)
         bot.setServiceParent(self)
         self.bot = bot
         if keepalive == 0:
