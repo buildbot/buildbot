@@ -509,6 +509,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
         return d
 
+    # We mock out base.PollingChangeSource.startService, since it calls
+    # reactor.callWhenRunning, which leaves a dirty reactor if a synchronous
+    # deferred is returned from a test method.
     def test_startService(self):
         startService = mock.Mock()
         self.patch(base.PollingChangeSource, "startService", startService)

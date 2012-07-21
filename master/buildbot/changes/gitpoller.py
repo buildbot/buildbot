@@ -195,8 +195,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         revList.reverse()
         self.changeCount = len(revList)
             
-        log.msg('gitpoller: processing %d changes: %s in "%s"'
-                % (self.changeCount, revList, self.workdir) )
+        log.msg('gitpoller: processing %d changes: %s from "%s"'
+                % (self.changeCount, revList, self.repourl) )
 
         for rev in revList:
             dl = defer.DeferredList([
