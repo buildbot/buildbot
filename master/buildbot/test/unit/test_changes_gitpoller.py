@@ -14,9 +14,10 @@
 # Copyright Buildbot Team Members
 
 import os
+import mock
 from twisted.trial import unittest
 from twisted.internet import defer
-from buildbot.changes import gitpoller
+from buildbot.changes import base, gitpoller
 from buildbot.test.util import changesource, config, gpo
 from buildbot.util import epoch2datetime
 
@@ -118,7 +119,6 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     changesource.ChangeSourceMixin,
                     unittest.TestCase):
 
-    POLLERID = 100
     REPOURL = 'git@example.com:foo/baz.git'
     REPOURL_QUOTED = 'git%40example.com%3Afoo%2Fbaz.git'
 
@@ -510,15 +510,19 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         return d
 
     def test_startService(self):
+        startService = mock.Mock()
+        self.patch(base.PollingChangeSource, "startService", startService)
         d = self.poller.startService()
         def check(_):
             self.assertEqual(self.poller.workdir, 'basedir/gitpoller-work')
             self.assertEqual(self.poller.lastRev, {})
-            self.assertTrue(self.poller.running)
+            startService.assert_called_once_with(self.poller)
         d.addCallback(check)
         return d
 
     def test_startService_loadLastRev(self):
+        startService = mock.Mock()
+        self.patch(base.PollingChangeSource, "startService", startService)
         self.master.db.state.fakeState(
             name=self.REPOURL, class_name='GitPoller',
             lastRev={"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"},
@@ -529,9 +533,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(self.poller.lastRev, {
                 "master": "fa3ae8ed68e664d4db24798611b352e3c6509930"
                 })
+            startService.assert_called_once_with(self.poller)
         d.addCallback(check)
         return d
-
 
 
 class TestGitPollerConstructor(unittest.TestCase, config.ConfigErrorsMixin):
