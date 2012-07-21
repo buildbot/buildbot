@@ -62,56 +62,6 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertRaises(config.ConfigErrors,
                             lambda : self.makeScheduler(codebases = codebases))
 
-    def test_getState(self):
-        sched = self.makeScheduler()
-        self.db.state.fakeState('testsched', 'BaseScheduler',
-                fav_color=['red','purple'])
-        d = sched.getState('fav_color')
-        def check(res):
-            self.assertEqual(res, ['red', 'purple'])
-        d.addCallback(check)
-        return d
-
-    def test_getState_default(self):
-        sched = self.makeScheduler()
-        d = sched.getState('fav_color', 'black')
-        def check(res):
-            self.assertEqual(res, 'black')
-        d.addCallback(check)
-        return d
-
-    def test_getState_KeyError(self):
-        sched = self.makeScheduler()
-        self.db.state.fakeState('testsched', 'BaseScheduler',
-                fav_color=['red','purple'])
-        d = sched.getState('fav_book')
-        def cb(_):
-            self.fail("should not succeed")
-        def check_exc(f):
-            f.trap(KeyError)
-            pass
-        d.addCallbacks(cb, check_exc)
-        return d
-
-    def test_setState(self):
-        sched = self.makeScheduler()
-        d = sched.setState('y', 14)
-        def check(_):
-            self.db.state.assertStateByClass('testsched', 'BaseScheduler',
-                    y=14)
-        d.addCallback(check)
-        return d
-
-    def test_setState_existing(self):
-        sched = self.makeScheduler()
-        self.db.state.fakeState('testsched', 'BaseScheduler', x=13)
-        d = sched.setState('x', 14)
-        def check(_):
-            self.db.state.assertStateByClass('testsched', 'BaseScheduler',
-                    x=14)
-        d.addCallback(check)
-        return d
-
     def test_listBuilderNames(self):
         sched = self.makeScheduler(builderNames=['x', 'y'])
         self.assertEqual(sched.listBuilderNames(), ['x', 'y'])

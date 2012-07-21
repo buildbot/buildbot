@@ -79,15 +79,16 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         self.expectCommands(
             gpo.Expect('hg', 'init', '/some/dir'),
             gpo.Expect('hg', 'pull', '-b', 'default',
-                                'ssh://example.com/foo/baz'),
+                                'ssh://example.com/foo/baz')
+                .path('/some/dir'),
             gpo.Expect('hg', 'heads', 'default', '--template={rev}\n')
-                .stdout("1"),
+                .path('/some/dir').stdout("1"),
             gpo.Expect('hg', 'log', '-b', 'default', '-r', '0:1',
                                 '--template={rev}:{node}\\n')
-                .stdout(os.linesep.join(['0:64a5dc2', '1:4423cdb'])),
+                .path('/some/dir').stdout(os.linesep.join(['0:64a5dc2', '1:4423cdb'])),
             gpo.Expect('hg', 'log', '-r', '64a5dc2',
                 '--template={date|hgdate}\n{author}\n{files}\n{desc|strip}')
-                .stdout(os.linesep.join([
+                .path('/some/dir').stdout(os.linesep.join([
                     '1273258009.0 -7200',
                     'Joe Test <joetest@example.org>',
                     'file1 file2',
@@ -96,7 +97,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                     ''])),
             gpo.Expect('hg', 'log', '-r', '4423cdb',
                 '--template={date|hgdate}\n{author}\n{files}\n{desc|strip}')
-                .stdout(os.linesep.join([
+                .path('/some/dir').stdout(os.linesep.join([
                     '1273258100.0 -7200',
                     'Bob Test <bobtest@example.org>',
                     'file1 dir/file2',
@@ -152,9 +153,10 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         # ancestor)
         self.expectCommands(
             gpo.Expect('hg', 'pull', '-b', 'default',
-                            'ssh://example.com/foo/baz'),
+                            'ssh://example.com/foo/baz')
+                .path('/some/dir'),
             gpo.Expect('hg', 'heads', 'default', '--template={rev}\n')
-                .stdout('5' + os.linesep + '6' + os.linesep),
+                .path('/some/dir').stdout('5' + os.linesep + '6' + os.linesep),
         )
 
         yield self.poller._setCurrentRev(3)
@@ -168,15 +170,16 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         # normal operation. There's a previous revision, we get a new one.
         self.expectCommands(
             gpo.Expect('hg', 'pull', '-b', 'default',
-                            'ssh://example.com/foo/baz'),
+                            'ssh://example.com/foo/baz')
+                .path('/some/dir'),
             gpo.Expect('hg', 'heads', 'default', '--template={rev}\n')
-                .stdout('5' + os.linesep),
+                .path('/some/dir').stdout('5' + os.linesep),
             gpo.Expect('hg', 'log', '-b', 'default', '-r', '5:5',
                             '--template={rev}:{node}\\n')
-                .stdout('5:784bd' + os.linesep),
+                .path('/some/dir').stdout('5:784bd' + os.linesep),
             gpo.Expect('hg', 'log', '-r', '784bd',
                 '--template={date|hgdate}\n{author}\n{files}\n{desc|strip}')
-                .stdout(os.linesep.join([
+                .path('/some/dir').stdout(os.linesep.join([
                         '1273258009.0 -7200',
                         'Joe Test <joetest@example.org>',
                         'file1 file2',
