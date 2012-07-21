@@ -231,7 +231,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         d = utils.getProcessOutputAndValue(self.gitbin,
                 [command] + args, path=path, env=os.environ)
         def _convert_nonzero_to_failure(res):
-            "utility method to handle the result of getProcessOutputAndValue"
+            "utility to handle the result of getProcessOutputAndValue"
             (stdout, stderr, code) = res
             if code != 0:
                 raise EnvironmentError('command failed with exit code %d: %s'
