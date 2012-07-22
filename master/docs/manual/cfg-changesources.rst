@@ -856,9 +856,15 @@ multiple branches.
     A function to convert pathnames into ``(branch, relative_pathname)``
     tuples. Use this to explain your repository's branch-naming policy to
     :bb:chsrc:`SVNPoller`. This function must accept a single string (the
-    pathname relative to the repository) and return a two-entry tuple. There
-    are a few utility functions in :mod:`buildbot.changes.svnpoller` that can
-    be used as a :meth:`split_file` function; see below for details.
+    pathname relative to the repository) and return a two-entry tuple.
+    Directory pathnames always end with a right slash to distinguish them from
+    files, like ``trunk/src/``, or ``src/``. There are a few utility functions
+    in :mod:`buildbot.changes.svnpoller` that can be used as a :meth:`split_file`
+    function; see below for details.
+
+    For directories, the relative pathname returned by :meth:`split_file` should
+    end with a right slash but an empty string is also accepted for the root,
+    like ``("branches/1.5.x", "")`` being converted from ``"branches/1.5.x/"``.
 
     The default value always returns ``(None, path)``, which indicates that
     all files are on the trunk.

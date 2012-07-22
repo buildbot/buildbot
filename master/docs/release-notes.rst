@@ -68,8 +68,13 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The ``P4Sync`` step, deprecated since 0.8.5, has been removed.  The ``P4`` step remains.
 
+
 * The ``fetch_spec`` argument to ``GitPoller`` is no longer supported.
   ``GitPoller`` now only downloads branches that it is polling, so specifies a refspec itself.
+
+* The format of the changes produced by :bb:chsrc:`SVNPoller` has changed: directory pathnames end with a forward slash.
+  This allows the ``split_file`` function to distinguish between files and directories.
+  Customized split functions may need to be adjusted accordingly.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
