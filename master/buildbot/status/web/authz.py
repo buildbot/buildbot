@@ -40,12 +40,14 @@ class Authz(object):
             default_action=False,
             auth=None,
             useHttpHeader=False,
+            httpLoginUrl=False,
             **kwargs):
         self.auth = auth
         if auth:
             assert IAuth.providedBy(auth)
 
         self.useHttpHeader = useHttpHeader
+        self.httpLoginUrl = httpLoginUrl
 
         self.config = dict( (a, default_action) for a in self.knownActions )
         for act in self.knownActions:
