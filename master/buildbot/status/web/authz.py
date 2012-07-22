@@ -65,7 +65,7 @@ class Authz(object):
             
     def authenticated(self, request):
         if self.useHttpHeader:
-            return request.getUser() != None
+            return request.getUser() != ''
         return self.session(request) != None
 
     def getUserInfo(self, user):
