@@ -1,0 +1,43 @@
+.container-fluid
+  %ul.breadcrumb
+    %li
+      %a{href:"../"}<> #{ builderName }
+    %span.divider #{"/"}
+    %li.active Build ##{number}
+  .row-fluid
+    .span5
+      .well
+        :if !isFinished()
+           %h3 Build In Progress:
+           :if when_time
+              %p ETA: #{ when_time } [ #{ when } ]
+           %li.form-inline>= currentStep
+             &nbsp;
+             .btn.btn-inverse.btn-mini{data-dojo-attach-point:"stop_build_node"} Stop Build
+        :if isFinished()
+           %h3.form-inline Results:
+              &nbsp
+              .btn.disabled{class:results_class} #{text}
+      .well
+        %h3.form-inline BuildSlave:
+        :if this.slave_url
+           %a{href:slave_url}= slave
+        :if !this.slave_url
+           %span= slave
+      .well
+        %h3.form-inline Reason:
+        %p= reason
+      .well
+        %h3 Steps and Logfiles:
+        %ol
+          :each step in steps
+            %li #{step.name}
+              %ol
+                :each name, url in step.logs
+                  %li
+                    %a{href:url} #{name}
+                :each name, url in step.urls
+                  %li
+                    %a{href:url} #{name}
+    .span7.well
+       %h3 build properties

@@ -13,11 +13,70 @@
 //
 // Copyright Buildbot Team Members
 
-define(["dojo/_base/declare", "lib/ui/base"], function(declare, Base) {
+define(["dojo/_base/declare", "lib/ui/base",
+        "lib/haml!./templates/build.haml"
+       ], function(declare, Base, template) {
     "use strict";
     return declare([Base], {
+	templateFunc : template,
         constructor: function(args){
             declare.safeMixin(this,args);
-        }
+        },
+	loadMoreContext: function(){
+	    var deferred = new dojo.Deferred();
+	    this.builderName = this.path_components[1].toString();
+	    this.number = this.path_components[2].toString();
+	    /* simulate loading of all needed stuff from json API */
+	    setTimeout(dojo.hitch(this, function(){ 
+		this.sourceStamps = [ { changes: { changeid:"changeid1",
+						   revision:"revision1",
+						   committer: "me@anonymous.com",
+						   files: ["path/to/file1",
+							   "path/to/file2"],
+						   comments: "this code should pas CI" }}];
+		this.reason = "change committed";
+		this.blame = ["me@anonymous.com"];
+		this.properties = [ { name:"prop1", value:"value1", source:"fake"} ];
+		this.times = ['two hours ago', 'last hour'];
+		this.when_time = "soon";
+		this.when = "~5min";
+		this.text = "build succeeded";
+		this.results = "SUCCESS"
+		this.slave = "slave1"
+		this.slave_url = "#/slaves/"+this.slave
+		this.steps = [ {name:"build step",
+				text:"make done",
+				results:"SUCCESS",
+				isStarted:true,
+				isFinished:true,
+				statistics:[],
+				times:[0,1],
+				expectations: [],
+				eta:null,
+				urls:{url1:"./url1.html"},
+				step_number: 1,
+				hidden:false,
+				logs:{stdio:"./stdio"}},
+			       {name:"test step",
+				text:"test done",
+				results:"SUCCESS",
+				isStarted:true,
+				isFinished:true,
+				statistics:[],
+				times:[0,1],
+				expectations: [],
+				eta:null,
+				urls:{url1:"url2.html"},
+				step_number: 2,
+				hidden:false,
+				logs:{stdio:"stdio"}}];
+		this.currentStep="test step";
+		this.results_class = "btn-success"
+		deferred.callback({success: true}); }), 100);
+	    return deferred;
+	},
+	isFinished: function() {
+	    return this.number<5;
+	}
     });
 });

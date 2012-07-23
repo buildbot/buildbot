@@ -655,7 +655,9 @@ define(["dojo/_base/xhr"], function(xhr){
       return f;
     }catch(e){
       if ( typeof(console) !== 'undefined' ) { console.log(str); console.error(e); }
-      throw e;
+      return function() {
+	  return "<div><h1> Error in parsing haml!</h1><p><pre>"+Haml.html_escape(str)+"</pre><p><pre>"+Haml.html_escape(e.toString())+"</pre></div>";
+      }
     }
   }
   /* dojo/AMD magic: require( ["lib/haml!./template/mytemplate.haml"], function(template){ ...
