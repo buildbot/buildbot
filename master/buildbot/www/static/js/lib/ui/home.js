@@ -13,9 +13,12 @@
 //
 // Copyright Buildbot Team Members
 
-define(["dojo/_base/declare", "lib/ui/base"], function(declare, Base) {
+define(["dojo/_base/declare", "lib/ui/base",
+        "dojo/text!./templates/home.html"
+       ], function(declare, Base, template) {
     "use strict";
     return declare([Base], {
+	templateString : template,
         constructor: function(args){
             declare.safeMixin(this,args);
         }

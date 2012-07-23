@@ -13,8 +13,8 @@
 //
 // Copyright Buildbot Team Members
 
-define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom", "put-selector/put","dojo/hash", "dojo/io-query"],
-       function(declare, connect, array, dom, put, hash, ioquery) {
+define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom", "put-selector/put","dojo/hash", "dojo/io-query", "dojo/dom-class"],
+       function(declare, connect, array, dom, put, hash, ioquery, domclass) {
     "use strict";
     /* allow chrome to display correctly generic errbacks from dojo */
     console.error = function(err) {
@@ -131,11 +131,11 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 			});
 		    });
 		    if (nav) {
-			nav.classList.add("active");
+			domclass.add(nav, "active");
 		    }
 		} else { /* match */
 		    if (nav) {
-			nav.classList.remove("active");
+			domclass.remove(nav, "active");
 		    }
 		}
 	    }));
