@@ -17,48 +17,23 @@ import os
 from twisted.python import util
 from buildbot.www import resource
 
-html = """\
-<!DOCTYPE html>
-<html>
-    <head>
-        <title></title>
-        <!-- <link rel="stylesheet" type="text/css" href="%(baseurl)sstatic/css/default.css" /> -->
-        <script src="//ajax.googleapis.com/ajax/libs/dojo/1.7.2/dojo/dojo.js" data-dojo-config="async: true"></script>
-        <!-- put the baseurl on the window object for now - TODO find a better place! -->
-        <script type="text/javascript">window.baseurl = "%(baseurl)s";</script>
-        <script src="/static/js/buildbot.js" data-dojo-config="async: true"></script>
-    </head>
-  <body class="interface">
-
-    <div id="header" class="header">
-    </div>
-    <hr />
-    <div>
-        MESSAGE:
-        <div id="message"></div>
-        INFO:
-        <div id="info"></div>
-        STATUS:
-        <div id="status"></div>
-    </div>
-    <hr />
-
-    <a href="" onclick="return false;">Changes</a>&nbsp;&nbsp;&nbsp;<div id="changes"><div id="changesContent"></div><button id="changesButton">Load changes</button></div>
-    <a href="" onclick="return false;">Builders</a>&nbsp;&nbsp;&nbsp;<div id="builders">Builders info</div>
-    <a href="" onclick="return false;">Buildslaves</a>&nbsp;&nbsp;&nbsp;<div id="buildslaves">Buildslaves info</div>
-    </body>
-</html>
-"""
+# read the html base page in a html file
+_html_f = open(util.sibpath(__file__,"ui.html"))
+html = _html_f.read()
+_html_f.close()
 
 class UIResource(resource.Resource):
     isLeaf = True
 
     def __init__(self, master):
+        """ Config can pass a static_url for serving
+        static stuff directly from apache or nginx
+        """
         resource.Resource.__init__(self, master)
-
-        self.jsdir = os.path.join(util.sibpath(__file__, 'static'), 'js')
-
+        
     def render(self, request):
         contents = dict(
-            baseurl = self.baseurl)
+            base_url = self.baseurl,
+            static_url = self.static_url,
+            ws_url = self.baseurl.replace("http:", "ws:"))
         return html % contents

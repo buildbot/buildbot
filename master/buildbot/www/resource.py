@@ -17,12 +17,22 @@ from twisted.web import resource
 
 class Resource(resource.Resource):
 
-    # as a convenience, subclasses have a ``master`` attribute, and a
-    # ``baseurl`` attribute giving Buildbot's base URL
+    # as a convenience, subclasses have a ``master`` attribute, a
+    # ``baseurl`` attribute giving Buildbot's base URL,
+    # and ``static_url`` attribute giving Buildbot's static files URL
 
     @property
     def baseurl(self):
         return self.master.config.www['url']
+
+    @property
+    def static_url(self):
+        """if static_url is not defined, then, we will server
+        the static files via twisted static resource handler."""
+        key = 'static_url'
+        if self.master.config.www.has_key(key):
+            return self.master.config.www[key]
+        return self.baseurl + "static"
 
     def __init__(self, master):
         resource.Resource.__init__(self)
