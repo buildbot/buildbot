@@ -553,6 +553,40 @@ listen for incoming connections only on localhost (or on some firewall-protected
 port). Frontend must require HTTP authentication to access WebStatus pages
 (using any source for credentials, such as htpasswd, PAM, LDAP).
 
+If you allow unauthenticated access through frontend as well, it's possible to
+specify a ``httpLoginLink`` which will be rendered on the WebStatus for
+unauthenticated users as a link named Login. ::
+
+    authz = Authz(useHttpHeader=True, httpLoginLink='https://buildbot/login')
+
+A configuration example with Apache HTTPD as reverse proxy could look like the
+following. ::
+
+    authz = Authz(
+      useHttpHeader=True,
+      httpLoginLink='https://buildbot/login',
+
+      auth = HTPasswdAprAuth('/var/www/htpasswd'),
+
+      forceBuild = 'auth')
+
+Corresponding Apache configuration.
+
+.. code-block:: apache
+   
+    ProxyPass / http://127.0.0.1:8010/
+
+    <Location /login>
+        AuthType Basic
+        AuthName "Buildbot"
+        AuthUserFile /var/www/htpasswd
+        Require valid-user
+
+        RewriteEngine on
+        RewriteCond %{HTTP_REFERER} ^https?://([^/]+)/(.*)$
+        RewriteRule ^.*$ https://%1/%2 [R,L]
+    </Location>
+
 Logging configuration
 #####################
 
