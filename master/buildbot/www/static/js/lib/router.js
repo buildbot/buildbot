@@ -13,8 +13,9 @@
 //
 // Copyright Buildbot Team Members
 
-define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom", "put-selector/put","dojo/hash"],
-       function(declare, connect, array, dom, put, hash) {
+define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom", "put-selector/put","dojo/hash", "dojo/io-query"],
+       function(declare, connect, array, dom, put, hash, ioquery) {
+    "use strict";
     /* allow chrome to display correctly generic errbacks from dojo */
     console.error = function(err) {
 	console.log(err);
@@ -25,12 +26,12 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 	routes: [
 	    /* The routes are hardcoded here for efficiency,
 	       we could describe then in each plugin, but that would mean loading all plugins
-	       before showing the first page 
+	       before showing the first page
 
 	     route is a list of dicts which have following attributes:
 	         path: regexp describing the path that matches this route
 	         name: title of the navbar shortcut for this route
-	         widget: lib/ui/* dijit style widget that will be loaded inside #container div
+	         widget: lib/ui/.* dijit style widget that will be loaded inside #container div
 		 enableif: function that is called to findout whether this path is enabled
 	    */
 	    { path:"", name:"Home", widget:"home"},
@@ -52,45 +53,29 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 	    { path:"builders/([^/]+)/builds/([0-9]+)/steps/([0-9]+)/logs/([^/]+)", widget:"log" },
 	    { path:"slaves/([^/]+)", widget:"buildslave"},
 	    { path:"masters/([^/]+)", widget:"buildmaster"},
-	    { path:"users/([^/]+)", widget:"user"},
+	    { path:"users/([^/]+)", widget:"user"}
 	],
 	constructor: function(args){
             declare.safeMixin(this,args);
 	    this.fill_navbar();
-	    connect.subscribe("/dojo/hashchange", this, this.location_changed)
+	    connect.subscribe("/dojo/hashchange", this, this.location_changed);
 	    this.location_changed();
 	},
 	forEachRoute: function(callback) {
-	    var path = hash()
-	    if (path.charAt(0)=="/") {
+	    var path = hash();
+	    if (path.charAt(0)==="/") {
 		path = path.substr(1); /* ignore first '/' */
 	    }
-	    var args = {};
-	    var reformated_args="";
-	    path = path.split("?")
-	    if (path.length>1) {
-		array.forEach(path[1].split("&"), function(a) {
-		    var name_val = a.split("=");
-		    if (name_val.length == 2) {
-			args[name_val[0]] = name_val[1];
-			reformated_args += name_val[0] +"="+ name_val[1];
-		    }
-		});
-	    }
-	    path = path[0];
-	    if (reformated_args.length>0) {
-		reformated_args = "?"+reformated_args
-	    }
-	    hash("/"+path+reformated_args);
+	    path = path.split("?", 2);
             array.forEach(this.routes, dojo.hitch(this, function(route, index){
 		if (route.enableif && !dojo.hitch(this,route.enableif)()) {
 		    return;
 		}
-		var match = path.match(route.path);
-		if (match && match[0] != path) {
+		var match = path[0].match(route.path);
+		if (match && match[0] !== path[0]) {
 		    match = false;
 		}
-		callback(route, match, args);
+		callback(route, match, path);
 	    }));
 	},
 	fill_navbar: function() {
@@ -103,20 +88,29 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 		}
 	    }));
 	},
-	select_navbar: function() {
-	    var navlist = dom.byId("navlist");
-	    var base_url = this.base_url;
-	    this.forEachRoute( dojo.hitch(this, function(route, match){
-	    }));
-	},
 	location_changed: function() {
 	    var base_url = this.base_url;
 	    var found = false;
-	    this.forEachRoute( dojo.hitch(this, function(route, match, args){
-		var nav = dom.byId("nav_"+route.path)
+	    this.forEachRoute( dojo.hitch(this, function(route, match, path){
+		var nav = dom.byId("nav_"+route.path);
 		if (match) {
 		    var widget = "lib/ui/"+route.widget;
+		    var args = {};
+		    var reformated_args="";
 		    found = true;
+		    /* allows user to pass URL style arguments to the UI
+		       e.g: /builder/builder1?force1.reason=generated%20form&force1.branch=new_branch
+		    */
+		    if (path.length>1) {
+			args = ioquery.queryToObject(path[1]);
+			reformated_args = ioquery.objectToQuery(args);
+		    }
+		    path = path[0];
+		    if (reformated_args.length>0) {
+			reformated_args = "?"+reformated_args;
+		    }
+		    /* make sure we give user feedback in case of malformated args */
+		    hash("/"+path+reformated_args);
 		    require(["dijit/dijit", widget], function(dijit, Widget) {
 			var old = dijit.byId("content");
 			if (old) {
@@ -125,8 +119,12 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 			}
 			var w = new Widget({id:"content",path_components:match, url_args:args});
 			var content = dojo.byId("content");
-			content.innerHTML = "";
-			w.placeAt(content)
+			content.innerHTML = "<div class='when span12'>Loading..</div>";
+
+			dojo.when(w.readyDeferred, function() {
+			    content.innerHTML = "";
+			    w.placeAt(content);
+			});
 		    });
 		    if (nav) {
 			nav.classList.add("active");
