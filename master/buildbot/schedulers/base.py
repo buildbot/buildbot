@@ -340,17 +340,10 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
              # sourcestamp attributes for this codebase.
             ss.update(sourcestamps.get(codebase,{}))
 
-            # at least repository must be set, this is normaly forced except when
-            # codebases is not explicitly set in configuration file.
-            ss_repository = ss.get('repository')
-            if not ss_repository:
-                config.error("The codebases argument is not set but still receiving " +
-                             "non empty codebase values")
-
             # add sourcestamp to the new setid
             yield self.master.db.sourcestamps.addSourceStamp(
                         codebase=codebase,
-                        repository=ss_repository,
+                        repository=ss.get('repository'),
                         branch=ss.get('branch', None),
                         revision=ss.get('revision', None),
                         project=ss.get('project', ''),
