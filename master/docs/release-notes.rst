@@ -97,6 +97,10 @@ Features
 
 * The mercurial hook now supports multple masters.  See :bb:pull:`436`.
 
+* Added a new property ``httpLoginUrl`` to ``buildbot.status.web.authz.Authz``
+  to render a nice Login link in WebStatus for unauthenticated users if
+  ``useHttpHeader`` and ``httpLoginUrl`` are set.
+
 Slave
 -----
 
