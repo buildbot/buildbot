@@ -124,11 +124,13 @@ function checkMouseLeave(element, event) {
           }
 // ]]> 
         </script>
-        <input id='namebox' name='name' type='text' style='color:#999;'
-            onblur='this.value = this.value || this.defaultValue; this.style.color = "#999";'
-            onfocus='this.value=""; this.style.color = "#000";'
-            value='Personalized for...'/>      
-        <input type='submit' value='Go' onclick='reload_page()'/>
+        <form onsubmit='reload_page()'>
+          <input id='namebox' name='name' type='text' style='color:#999;'
+              onblur='this.value = this.value || this.defaultValue; this.style.color = "#999";'
+              onfocus='this.value=""; this.style.color = "#000";'
+              value='Personalized for...'/>
+          <input type='submit' value='Go'/>
+        </form>
       </td>
      </tr>
   </table>
