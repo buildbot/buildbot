@@ -257,6 +257,22 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                     }, {}))
         return self.runStep()
 
+    def test_updateSourceStamp_no_got_revision(self):
+        self.setupStep(trigger.Trigger(schedulerNames=['a'],
+                                       updateSourceStamp=True),
+                       sourcestampsInBuild = [FakeSourceStamp(self.THIS_SSID,
+                                                              self.THIS_SS_SETID,
+                                                              codebase='',
+                                                              repository='x',
+                                                              revision=11111)
+                                              ])
+        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
+        self.expectTriggeredWith(a=({'':{'codebase':'',
+                                         'repository': 'x',
+                                         'revision': 11111} # uses old revision
+                                    }, {}))
+        return self.runStep()
+
     def test_not_updateSourceStamp(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
                                        updateSourceStamp=False),

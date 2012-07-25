@@ -122,11 +122,12 @@ class Trigger(LoggingBuildStep):
             properties = self.build.getProperties()
             got = properties.getProperty('got_revision')
             # be sure property is always a dictionary
-            if got and not isinstance(got, dict):
-                got = {'': got}
-            for codebase in ss_for_trigger:
-                if codebase in got:
-                    ss_for_trigger[codebase]['revision'] = got[codebase]
+            if got:
+                if not isinstance(got, dict):
+                    got = {'': got}
+                for codebase in ss_for_trigger:
+                    if codebase in got:
+                        ss_for_trigger[codebase]['revision'] = got[codebase]
 
         # update sourcestamps from build with passed set of fixed sourcestamps
         # or add fixed sourcestamp to the dictionary
