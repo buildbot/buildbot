@@ -56,6 +56,9 @@ class FakeStatus(object):
 
 class FakeBuilderStatus(object):
 
+    def setCategory(self, category):
+        pass
+
     def setSlavenames(self, names):
         pass
 
