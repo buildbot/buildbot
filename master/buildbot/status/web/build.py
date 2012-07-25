@@ -67,10 +67,8 @@ class ForceBuildActionResource(ActionResource):
                     msg += "could not get builder control"
             else:
                 tup = yield bc.rebuildBuild(b, reason, extraProperties)
-                # check that (bsid, brids) were properly stored
-                if not (isinstance(tup, tuple) and 
-                        isinstance(tup[0], int) and
-                        isinstance(tup[1], dict)):
+                # rebuildBuild returns None on error (?!)
+                if not tup:
                     msg = "rebuilding a build failed "+ str(tup)
             # we're at
             # http://localhost:8080/builders/NAME/builds/5/rebuild?[args]
