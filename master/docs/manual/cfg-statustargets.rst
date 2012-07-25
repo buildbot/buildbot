@@ -565,9 +565,7 @@ following. ::
     authz = Authz(
       useHttpHeader=True,
       httpLoginLink='https://buildbot/login',
-
       auth = HTPasswdAprAuth('/var/www/htpasswd'),
-
       forceBuild = 'auth')
 
 Corresponding Apache configuration.
