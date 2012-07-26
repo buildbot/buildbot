@@ -119,9 +119,13 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 			}
 			var w = new Widget({id:"content",path_components:match, url_args:args});
 			var content = dojo.byId("content");
-			content.innerHTML = "<div class='when span12'>Loading..</div>";
+			content.innerHTML = "";
+			var loading = dojo.byId("loading");
+			loading.style.display = "block";
+			content.innerHTML = "";
 
 			dojo.when(w.readyDeferred, function() {
+			    loading.style.display = "none";
 			    content.innerHTML = "";
 			    w.placeAt(content);
 			});
