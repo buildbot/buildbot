@@ -67,6 +67,9 @@ class V2RootResource(resource.Resource):
         @defer.inlineCallbacks
         def render():
             reqPath = request.postpath
+            # strip an empty string from the end (trailing slash)
+            if reqPath and reqPath[-1] == '':
+                reqPath = reqPath[:-1]
 
             # calculate the request options
             reqOptions = {}
