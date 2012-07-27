@@ -141,7 +141,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         if not self.locks:
             return True
         for lock, access in self.locks:
-            if not lock.isAvailable(access):
+            if not lock.isAvailable(self, access):
                 return False
         return True
 
