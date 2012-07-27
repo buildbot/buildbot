@@ -269,7 +269,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
     def test_buildonly(self):
         step = self.setupStep(pbuilder.DebCowbuilder())
         self.expectCommands(
-            Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.cow/'})       
+            Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.cow/'})
             + Expect.update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
             + 0,
             ExpectShell(workdir='wkdir', usePTY='slave-config',
@@ -288,27 +288,31 @@ class TestUbuPbuilder(steps.BuildStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
+    def test_no_distribution(self):
+        self.assertRaises(config.ConfigErrors, lambda :
+                          pbuilder.UbuPbuilder())
+
     def test_new(self):
-        step = self.setupStep(pbuilder.UbuPbuilder())
+        step = self.setupStep(pbuilder.UbuPbuilder(distribution='oneiric'))
         self.expectCommands(
-            Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
+            Expect('stat', {'file': '/var/cache/pbuilder/oneiric-local-buildbot.tgz'})
             + 1,
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                 command=['sudo', '/usr/sbin/pbuilder', '--create',
-                    '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
-                    '--distribution', 'stable',
+                    '--basetgz', '/var/cache/pbuilder/oneiric-local-buildbot.tgz',
+                    '--distribution', 'oneiric',
                     '--mirror', 'http://archive.ubuntu.com/ubuntu/',
-		    '--components', 'main universe'])
+                    '--components', 'main universe'])
             +0,
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                 command=['pdebuild', '--buildresult', '.',
                     '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
-                    '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
+                    '--basetgz', '/var/cache/pbuilder/oneiric-local-buildbot.tgz'])
             +0)
         self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
         return self.runStep()
 
-class TestDUbuCowbuilder(steps.BuildStepMixin, unittest.TestCase):
+class TestUbuCowbuilder(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
         return self.setUpBuildStep()
@@ -316,22 +320,26 @@ class TestDUbuCowbuilder(steps.BuildStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
+    def test_no_distribution(self):
+        self.assertRaises(config.ConfigErrors, lambda :
+                          pbuilder.UbuCowbuilder())
+
     def test_new(self):
-        step = self.setupStep(pbuilder.UbuCowbuilder())
+        step = self.setupStep(pbuilder.UbuCowbuilder(distribution='oneiric'))
         self.expectCommands(
-            Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.cow/'})
+            Expect('stat', {'file': '/var/cache/pbuilder/oneiric-local-buildbot.cow/'})
             + 1,
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                 command=['sudo', '/usr/sbin/cowbuilder', '--create',
-                    '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/',
-                    '--distribution', 'stable',
+                    '--basepath', '/var/cache/pbuilder/oneiric-local-buildbot.cow/',
+                    '--distribution', 'oneiric',
                     '--mirror', 'http://archive.ubuntu.com/ubuntu/',
-		    '--components', 'main universe'])
+                    '--components', 'main universe'])
             +0,
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                 command=['pdebuild', '--buildresult', '.',
                     '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
-                    '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/'])
+                    '--basepath', '/var/cache/pbuilder/oneiric-local-buildbot.cow/'])
             +0)
         self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
         return self.runStep()

@@ -26,6 +26,7 @@ from twisted.python import log
 from buildbot.steps.shell import WarningCountingShellCommand
 from buildbot.process import buildstep
 from buildbot.process.properties import WithProperties
+from buildbot import config
 
 class DebPbuilder(WarningCountingShellCommand):
     """Build a debian package with pbuilder inside of a chroot."""
@@ -61,7 +62,7 @@ class DebPbuilder(WarningCountingShellCommand):
                  **kwargs):
         """
         Creates the DebPbuilder object.
-        
+
         @type architecture: str
         @param architecture: the name of the architecture to build
         @type distribution: str
@@ -93,7 +94,7 @@ class DebPbuilder(WarningCountingShellCommand):
             self.keyring = keyring
         if components:
             self.components = components
-        
+
         if self.architecture:
             kwargs['architecture'] = self.architecture
         else:
@@ -104,6 +105,9 @@ class DebPbuilder(WarningCountingShellCommand):
             self.basetgz = basetgz % kwargs
         else:
             self.basetgz = self.basetgz % kwargs
+
+        if not self.distribution:
+            config.error("You must specify a distribution.")
 
         self.command = ['pdebuild', '--buildresult', '.', '--pbuilder', self.pbuilder]
         if self.architecture:
@@ -139,7 +143,7 @@ class DebPbuilder(WarningCountingShellCommand):
                 command += ['--components', self.components]
 
             cmd = buildstep.RemoteShellCommand(self.getWorkdir(), command)
-            
+
             stdio_log = stdio_log = self.addLog("pbuilder")
             cmd.useLog(stdio_log, True, "stdio")
             d = self.runCommand(cmd)
@@ -154,7 +158,7 @@ class DebPbuilder(WarningCountingShellCommand):
                 log.msg("basetgz outdated, updating")
                 command = ['sudo', self.pbuilder, '--update',
                            self.baseOption, self.basetgz]
-     
+
                 cmd = buildstep.RemoteShellCommand(self.getWorkdir(), command)
                 stdio_log = stdio_log = self.addLog("pbuilder")
                 cmd.useLog(stdio_log, True, "stdio")
@@ -166,7 +170,7 @@ class DebPbuilder(WarningCountingShellCommand):
         else:
             log.msg("%s is not a file." % self.basetgz)
             self.finished(FAILURE)
-        
+
     def startBuild(self, dummy):
         return WarningCountingShellCommand.start(self)
 
@@ -182,7 +186,7 @@ class DebCowbuilder(DebPbuilder):
 
     description = ["pdebuilding"]
     descriptionDone = ["pdebuild"]
-    
+
     basetgz = "/var/cache/pbuilder/%(distribution)s-%(architecture)s-buildbot.cow/"
 
     pbuilder = '/usr/sbin/cowbuilder'
@@ -190,12 +194,14 @@ class DebCowbuilder(DebPbuilder):
 
 class UbuPbuilder(DebPbuilder):
     """Build a Ubuntu package with pbuilder inside of a chroot."""
+    distribution = None
     mirror = "http://archive.ubuntu.com/ubuntu/"
 
     components = "main universe"
 
 class UbuCowbuilder(DebCowbuilder):
     """Build a Ubuntu package with cowbuilder inside of a chroot."""
+    distribution = None
     mirror = "http://archive.ubuntu.com/ubuntu/"
 
     components = "main universe"
