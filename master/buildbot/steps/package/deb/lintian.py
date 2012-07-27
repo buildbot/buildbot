@@ -17,10 +17,10 @@
 Steps and objects related to lintian
 """
 
-from buildbot.steps.shell import Test
+from buildbot.steps.shell import WarningCountingShellCommand
 from buildbot import config
 
-class DebLintian(Test):
+class DebLintian(WarningCountingShellCommand):
     name = "lintian"
     description = ["Lintian running"]
     descriptionDone = ["Lintian"]
@@ -41,7 +41,7 @@ class DebLintian(Test):
         @type kwargs: dict
         @param kwargs: all other keyword arguments.
         """
-        Test.__init__(self, **kwargs)
+        WarningCountingShellCommand.__init__(self, **kwargs)
         if fileloc:
             self.fileloc = fileloc
         if suppressTags:

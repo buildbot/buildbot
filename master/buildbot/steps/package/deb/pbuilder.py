@@ -134,7 +134,7 @@ class DebPbuilder(WarningCountingShellCommand):
             if self.extrapackages:
                 command += ['--extrapackages', " ".join(self.extrapackages)]
             if self.keyring:
-                command += ['--debootstrapopt', "--keyring=%s"%self.keyring]
+                command += ['--debootstrapopts', "--keyring=%s"%self.keyring]
             if self.components:
                 command += ['--components', self.components]
 
@@ -191,6 +191,8 @@ class DebCowbuilder(DebPbuilder):
 class UbuPbuilder(DebPbuilder):
     """Build a Ubuntu package with pbuilder inside of a chroot."""
     mirror = "http://archive.ubuntu.com/ubuntu/"
+
+    components = "main universe"
 
 class UbuCowbuilder(DebCowbuilder):
     """Build a Ubuntu package with cowbuilder inside of a chroot."""

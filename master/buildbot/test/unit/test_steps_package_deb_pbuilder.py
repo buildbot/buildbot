@@ -191,7 +191,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
                     '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
                     '--distribution', 'stable',
                     '--mirror', 'http://cdn.debian.net/debian/',
-		    '--debootstrapopt', '--keyring=/builbot/buildbot.gpg'])
+		    '--debootstrapopts', '--keyring=/builbot/buildbot.gpg'])
             +0,
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                 command=['pdebuild', '--buildresult', '.',
@@ -297,7 +297,8 @@ class TestUbuPbuilder(steps.BuildStepMixin, unittest.TestCase):
                 command=['sudo', '/usr/sbin/pbuilder', '--create',
                     '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
                     '--distribution', 'stable',
-                    '--mirror', 'http://archive.ubuntu.com/ubuntu/'])
+                    '--mirror', 'http://archive.ubuntu.com/ubuntu/',
+		    '--components', 'main universe'])
             +0,
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                 command=['pdebuild', '--buildresult', '.',
