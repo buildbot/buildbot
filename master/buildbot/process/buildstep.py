@@ -545,7 +545,7 @@ class BuildStep(object, properties.PropertiesMixin):
             return defer.succeed(None)
         log.msg("acquireLocks(step %s, locks %s)" % (self, self.locks))
         for lock, access in self.locks:
-            if not lock.isAvailable(access):
+            if not lock.isAvailable(self, access):
                 self.step_status.setWaitingForLocks(True)
                 log.msg("step %s waiting for lock %s" % (self, lock))
                 d = lock.waitUntilMaybeAvailable(self, access)
