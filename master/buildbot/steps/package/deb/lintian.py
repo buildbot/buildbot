@@ -28,24 +28,33 @@ class DebLintian(Test):
     warningPattern = '.*W: .*'
 
     fileloc = None
+    suppressTags = []
 
-    def __init__(self, fileloc=None, **kwargs):
+    def __init__(self, fileloc=None, suppressTags=None, **kwargs):
         """
         Create the DebLintian object.
         
         @type fileloc: str
         @param fileloc: Location of the .deb or .changes to test.
+        @type suppressTags: list
+        @param suppressTags: List of tags to suppress.
         @type kwargs: dict
         @param kwargs: all other keyword arguments.
         """
         Test.__init__(self, **kwargs)
         if fileloc:
             self.fileloc = fileloc
+        if suppressTags:
+            self.suppressTags = suppressTags
 
         if not self.fileloc:
             config.error("You must specify a fileloc")
 
         self.command = ["lintian", "-v", self.fileloc]
+
+        if self.suppressTags:
+            for tag in self.suppressTags:
+                self.command += ['--suppress-tags', tag]
 
     def createSummary(self, log):
         """

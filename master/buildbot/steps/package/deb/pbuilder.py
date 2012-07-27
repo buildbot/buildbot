@@ -43,15 +43,21 @@ class DebPbuilder(WarningCountingShellCommand):
     basetgz = "/var/cache/pbuilder/%(distribution)s-%(architecture)s-buildbot.tgz"
     mirror = "http://cdn.debian.net/debian/"
     extrapackages = []
+    keyring = None
+    components = None
 
     maxAge = 60*60*24*7
+    pbuilder = '/usr/sbin/pbuilder'
+    baseOption = '--basetgz'
 
     def __init__(self,
                  architecture=None,
                  distribution=None,
                  basetgz=None,
                  mirror=None,
-		 extrapackages=None,
+                 extrapackages=None,
+                 keyring=None,
+                 components=None,
                  **kwargs):
         """
         Creates the DebPbuilder object.
@@ -66,21 +72,32 @@ class DebPbuilder(WarningCountingShellCommand):
         @param mirror: the mirror for building basetgz
         @type extrapackages: list
         @param extrapackages: adds packages specified to buildroot
+        @type keyring: str
+        @param keyring: keyring file to use for verification
+        @type components: str
+        @param components: components to use for chroot creation
         @type kwargs: dict
         @param kwargs: All further keyword arguments.
         """
         WarningCountingShellCommand.__init__(self, **kwargs)
+
         if architecture:
             self.architecture = architecture
         if distribution:
             self.distribution = distribution
         if mirror:
             self.mirror = mirror
+        if extrapackages:
+            self.extrapackages = extrapackages
+        if keyring:
+            self.keyring = keyring
+        if components:
+            self.components = components
         
         if self.architecture:
             kwargs['architecture'] = self.architecture
         else:
-            kwargs['architecture'] = 'ownarch'
+            kwargs['architecture'] = 'local'
         kwargs['distribution'] = self.distribution
 
         if basetgz:
@@ -88,13 +105,10 @@ class DebPbuilder(WarningCountingShellCommand):
         else:
             self.basetgz = self.basetgz % kwargs
 
-        if extrapackages:
-            self.extrapackages = extrapackages
-            
-        self.command = ['pdebuild', '--buildresult', '.']
+        self.command = ['pdebuild', '--buildresult', '.', '--pbuilder', self.pbuilder]
         if self.architecture:
             self.command += ['--architecture', self.architecture]
-        self.command += ['--', '--buildresult', '.', '--basetgz', self.basetgz]
+        self.command += ['--', '--buildresult', '.', self.baseOption, self.basetgz]
         if self.extrapackages:
             self.command += ['--extrapackages', " ".join(self.extrapackages)]
 
@@ -112,13 +126,17 @@ class DebPbuilder(WarningCountingShellCommand):
         if cmd.rc != 0:
             log.msg("basetgz not found, initializing it.")
 
-            command = ['sudo', '/usr/sbin/pbuilder', '--create', '--basetgz',
+            command = ['sudo', self.pbuilder, '--create', self.baseOption,
                        self.basetgz, '--distribution', self.distribution,
                        '--mirror', self.mirror]
             if self.architecture:
                 command += ['--architecture', self.architecture]
             if self.extrapackages:
                 command += ['--extrapackages', " ".join(self.extrapackages)]
+            if self.keyring:
+                command += ['--debootstrapopt', "--keyring=%s"%self.keyring]
+            if self.components:
+                command += ['--components', self.components]
 
             cmd = buildstep.RemoteShellCommand(self.getWorkdir(), command)
             
@@ -134,8 +152,9 @@ class DebPbuilder(WarningCountingShellCommand):
             age = time.time() - s[stat.ST_MTIME]
             if age >= self.maxAge:
                 log.msg("basetgz outdated, updating")
-                command = ['sudo', '/usr/sbin/pbuilder', '--update', '--basetgz', self.basetgz]
-            
+                command = ['sudo', self.pbuilder, '--update',
+                           self.baseOption, self.basetgz]
+     
                 cmd = buildstep.RemoteShellCommand(self.getWorkdir(), command)
                 stdio_log = stdio_log = self.addLog("pbuilder")
                 cmd.useLog(stdio_log, True, "stdio")
@@ -157,3 +176,24 @@ class DebPbuilder(WarningCountingShellCommand):
         if m:
             self.setProperty("deb-changes", m.group(1), "DebPbuilder")
 
+class DebCowbuilder(DebPbuilder):
+    """Build a debian package with cowbuilder inside of a chroot."""
+    name = "cowbuilder"
+
+    description = ["pdebuilding"]
+    descriptionDone = ["pdebuild"]
+    
+    basetgz = "/var/cache/pbuilder/%(distribution)s-%(architecture)s-buildbot.cow/"
+
+    pbuilder = '/usr/sbin/cowbuilder'
+    baseOption = '--basepath'
+
+class UbuPbuilder(DebPbuilder):
+    """Build a Ubuntu package with pbuilder inside of a chroot."""
+    mirror = "http://archive.ubuntu.com/ubuntu/"
+
+class UbuCowbuilder(DebCowbuilder):
+    """Build a Ubuntu package with cowbuilder inside of a chroot."""
+    mirror = "http://archive.ubuntu.com/ubuntu/"
+
+    components = "main universe"

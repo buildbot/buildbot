@@ -18,6 +18,6 @@ Steps specific to the dep package format.
 """
 
 from lintian import DebLintian
-from pbuilder import DebPbuilder
+from pbuilder import DebPbuilder, DebCowbuilder
 
-__all__ = ['DebLintian', 'DebPbuilder']
+__all__ = ['DebLintian', 'DebPbuilder', 'DebCowbuilder']
