@@ -201,7 +201,10 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
     # klass = the parameter class type
     # req = use this request instead of the auto-generated one based on value
     @defer.inlineCallbacks
-    def do_ParameterTest(self, expect, klass,
+    def do_ParameterTest(self,
+                         expect,
+                         klass,
+                         expectKind=None, # None=one prop, Exception=exception, dict=many props
                          owner='user',
                          value=None, req=None,
                          **kwargs):
@@ -224,7 +227,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         try:
             bsid, brids = yield sched.force(owner, 'a', **req)
         except Exception,e:
-            if not isinstance(expect, type):
+            if expectKind is not Exception:
                 # an exception is not expected
                 raise
             if not isinstance(e, expect):
@@ -232,17 +235,26 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                 raise
             defer.returnValue(None) # success
 
+        expect_props = [ 
+            ('owner', ('user', 'Force Build Form')),
+            ('reason', ('because', 'Force Build Form')),
+            ('scheduler', ('testsched', 'Scheduler')),
+        ]
+        
+        if expectKind is None:
+            expect_props.append((name, (expect, 'Force Build Form')))
+        elif expectKind is dict:
+            for k,v in expect.iteritems():
+                expect_props.append((k, (v, 'Force Build Form')))
+        else:
+            self.fail("expectKind is wrong type!")
+
         self.db.buildsets.assertBuildset\
             (bsid,
              dict(reason="A build was forced by 'user': because",
                   brids=brids,
                   external_idstring=None,
-                  properties=sorted([ 
-                               ('owner', ('user', 'Force Build Form')),
-                               (name, (expect, 'Force Build Form')),
-                               ('reason', ('because', 'Force Build Form')),
-                               ('scheduler', ('testsched', 'Scheduler')),
-                               ]),
+                  properties=sorted(expect_props),
                   sourcestampsetid=100),
              {"":
               dict(branch="", revision="", repository="", codebase='',
@@ -285,6 +297,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         for value in ["test","test@buildbot.net","<test@buildbot.net>"]:
             self.do_ParameterTest(value=value,
                     expect=ValidationError,
+                    expectKind=Exception,
                     klass=UserNameParameter(debug=False),
                     name="username", label="Your name:")
 
@@ -295,7 +308,9 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
 
     def test_ChoiceParameterError(self):
-        self.do_ParameterTest(value='t3', expect=ValidationError,
+        self.do_ParameterTest(value='t3',
+                expect=ValidationError,
+                expectKind=Exception,
                 klass=ChoiceStringParameter, choices=['t1','t2'],
                 debug=False)
 
@@ -306,7 +321,9 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
 
     def test_ChoiceParameterMultipleError(self):
-        self.do_ParameterTest(value=['t1','t3'], expect=ValidationError,
+        self.do_ParameterTest(value=['t1','t3'],
+                expect=ValidationError,
+                expectKind=Exception,
                 klass=ChoiceStringParameter, choices=['t1','t2'],
                 multiple=True, debug=False)
 
@@ -342,13 +359,24 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                 StringParameter(name='str'),
                 AnyPropertyParameter(name='')
             ]),
-            IntParameter(name="foo")
+            IntParameter(name="foo"),
+            NestedParameter(name='bar', fields=[
+                NestedParameter(name='', fields=[AnyPropertyParameter(name='a')]),
+                NestedParameter(name='', fields=[AnyPropertyParameter(name='b')])
+            ])
         ]
         self.do_ParameterTest(req=dict(foo='123',
                                        inner_str="bar",
                                        inner_name="hello",
                                        inner_value="world",
-                                       reason="because"),
-                              expect=dict(foo=123, inner=dict(str="bar", hello="world")),
+                                       reason="because",
+                                       bar_a_name="a",
+                                       bar_a_value="7",
+                                       bar_b_name="b",
+                                       bar_b_value="8"),
+                              expect=dict(foo=123,
+                                          inner=dict(str="bar", hello="world"),
+                                          bar={'a':'7', 'b':'8'}),
+                              expectKind=dict,                              
                               klass=NestedParameter, fields=fields, name='')
 

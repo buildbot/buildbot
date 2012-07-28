@@ -204,7 +204,7 @@ class NestedParameter(BaseParameter):
     type = ['nested']
     fields = None
     
-    def __init__(self, name, fields, label=None, **kwargs):
+    def __init__(self, name, fields, **kwargs):
         BaseParameter.__init__(self, fields=fields, name=name, **kwargs)
         
         # fix up the child nodes with the parent (use None for now):
@@ -231,7 +231,14 @@ class NestedParameter(BaseParameter):
         self.collectChildProperties(kwargs=kwargs, properties=properties, **kw)
         
         # default behavior is to set a property
-        properties[self.name] = kwargs[self.fullName]
+        #  -- use setdefault+update in order to collapse 'anonymous' nested
+        #     parameters correctly
+        if self.name:
+            d = properties.setdefault(self.name, {})
+        else:
+            # if there's no name, collapse this nest all the way
+            d = properties
+        d.update(kwargs[self.fullName])
         
 class AnyPropertyParameter(NestedParameter):
     type = NestedParameter.type + ["any"]
@@ -241,7 +248,7 @@ class AnyPropertyParameter(NestedParameter):
             StringParameter(name='name', label="Name:"),
             StringParameter(name='value', label="Value:"),
         ]
-        NestedParameter.__init__(self, name, fields=fields, **kw)
+        NestedParameter.__init__(self, name, label='', fields=fields, **kw)
 
     def getFromKwargs(self, kwargs):
         raise ValidationError("AnyPropertyParameter can only be used by properties")
@@ -274,6 +281,7 @@ class CodebaseParameter(NestedParameter):
     def __init__(self,
                  codebase,
                  name=None,
+                 label=None,
                  
                  branch=DefaultField,
                  revision=DefaultField,
@@ -283,6 +291,8 @@ class CodebaseParameter(NestedParameter):
                  **kwargs):
 
         name = name or codebase
+        if label is None and codebase:
+            label = "Codebase: " + codebase
 
         if branch is DefaultField:
             branch = StringParameter(name='branch', label="Branch:")
@@ -295,8 +305,8 @@ class CodebaseParameter(NestedParameter):
 
         fields = filter(None, [branch, revision, repository, project])
 
-        NestedParameter.__init__(self,
-                                 name=name, codebase=codebase,
+        NestedParameter.__init__(self, name=name, label=label,
+                                 codebase=codebase,
                                  fields=fields, **kwargs)
 
     def updateFromKwargs(self, sourcestamps, kwargs, **kw):
@@ -327,12 +337,12 @@ class ForceScheduler(base.BaseScheduler):
             repository=None,
             project=None,
             
-            properties=[
+            properties=[NestedParameter(name='', fields=[
                 AnyPropertyParameter("property1"),
                 AnyPropertyParameter("property2"),
                 AnyPropertyParameter("property3"),
                 AnyPropertyParameter("property4"),
-            ]):
+            ])]):
 
         self.reason = reason
         self.username = username
@@ -375,7 +385,7 @@ class ForceScheduler(base.BaseScheduler):
         self.forcedProperties.extend(properties)
             
         # this is used to simplify the template
-        self.all_fields = [ username, reason ]
+        self.all_fields = [ NestedParameter(name='', fields=[username, reason]) ]
         self.all_fields.extend(self.forcedProperties)
 
     def startService(self):
