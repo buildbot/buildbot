@@ -103,6 +103,11 @@ class TextLog(Resource):
         self._setContentType(req)
         self.req = req
 
+        if (self.original.isFinished()):
+            req.setHeader("Cache-Control", "max-age=604800")
+        else:
+            req.setHeader("Cache-Control", "no-cache")
+
         if not self.asText:
             self.template = req.site.buildbot_service.templates.get_template("logs.html")                
             
