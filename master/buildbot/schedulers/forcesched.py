@@ -27,6 +27,9 @@ class ValidationError(ValueError):
 DefaultField = object()  # sentinel object to signal default behavior
 
 class BaseParameter(object):
+    """
+    BaseParameter provides a base implementation for property customization
+    """
     name = ""
     parentName = None
     label = ""
@@ -39,6 +42,7 @@ class BaseParameter(object):
 
     @property
     def fullName(self):
+        """A full name, intended to uniquely identify a parameter"""
         # join with '_' if both are set
         if self.parentName and self.name:
             return self.parentName+'_'+self.name
@@ -50,6 +54,22 @@ class BaseParameter(object):
         self.parentName = parent.fullName if parent else None
 
     def __init__(self, name, label=None, regex=None, **kw):
+        """
+        @param name: the name of the field, used during posting values
+                     back to the scheduler. This is not necessarily a UI value,
+                     and there may be restrictions on the characters allowed for
+                     this value. For example, HTML would require this field to
+                     avoid spaces and other punctuation ('-', '.', and '_' allowed)
+        @type name: unicode
+        
+        @param label: (optional) the name of the field, used for UI display.
+        @type label: unicode or None (to use 'name')
+        
+        @param regex: (optional) regex to validate the value with. Not used by
+                      all subclasses
+        @type regex: unicode or regex
+        """
+        
         self.name = name
         self.label = name if label is None else label
         if regex:
@@ -58,6 +78,13 @@ class BaseParameter(object):
         self.__dict__.update(kw)
 
     def getFromKwargs(self, kwargs):
+        """Simple customization point for child classes that do not need the other
+           parameters supplied to updateFromKwargs. Return the value for the property
+           named 'self.name'.
+           
+           The default implementation converts from a list of items, validates using
+           the optional regex field and calls 'parse_from_args' for the final conversion.
+        """
         args = kwargs.get(self.fullName, [])
         if len(args) == 0:
             if self.required:
@@ -87,9 +114,12 @@ class BaseParameter(object):
         return arg
 
     def updateFromKwargs(self, properties, kwargs, **unused):
+        """Primary entry point to turn 'kwargs' into 'properties'"""
         properties[self.name] = self.getFromKwargs(kwargs)
 
     def parse_from_args(self, l):
+        """Secondary customization point, called from getFromKwargs to turn
+           a validated value into a single property value"""
         if self.multiple:
             return map(self.parse_from_arg, l)
         else:
@@ -100,6 +130,7 @@ class BaseParameter(object):
 
 
 class FixedParameter(BaseParameter):
+    """A fixed parameter that cannot be modified by the user."""
     type = ["fixed"]
     hide = True
     default = ""
@@ -109,6 +140,7 @@ class FixedParameter(BaseParameter):
 
 
 class StringParameter(BaseParameter):
+    """A simple string parameter"""
     type = ["text"]
     size = 10
 
@@ -117,6 +149,7 @@ class StringParameter(BaseParameter):
 
 
 class TextParameter(StringParameter):
+    """A generic string parameter that may span multiple lines"""
     type = ["textarea"]
     cols = 80
     rows = 20
@@ -126,12 +159,14 @@ class TextParameter(StringParameter):
 
 
 class IntParameter(StringParameter):
+    """An integer parameter"""
     type = ["int"]
 
     parse_from_arg = int # will throw an exception if parse fail
 
 
 class BooleanParameter(BaseParameter):
+    """A boolean parameter"""
     type = ["bool"]
 
     def getFromKwargs(self, kwargs):
@@ -139,6 +174,7 @@ class BooleanParameter(BaseParameter):
 
 
 class UserNameParameter(StringParameter):
+    """A username parameter to supply the 'owner' of a build"""
     type = ["text"]
     default = ""
     size = 30
@@ -159,6 +195,9 @@ class UserNameParameter(StringParameter):
 
 
 class ChoiceStringParameter(BaseParameter):
+    """A list of strings, allowing the selection of one of the predefined values.
+       The 'strict' parameter controls whether values outside the predefined list
+       of choices are allowed"""
     type = ["list"]
     choices = []
     strict = True
@@ -171,6 +210,7 @@ class ChoiceStringParameter(BaseParameter):
 
 
 class InheritBuildParameter(ChoiceStringParameter):
+    """A parameter that takes its values from another build"""
     type = ChoiceStringParameter.type + ["inherit"]
     name = "inherit"
     compatible_builds = None
@@ -201,6 +241,21 @@ class InheritBuildParameter(ChoiceStringParameter):
 
 
 class NestedParameter(BaseParameter):
+    """A 'parent' parameter for a set of related parameters. This provices a
+       logical grouping for the child parameters.
+       
+       Typically, the 'fullName' of the child parameters mix in the parent's
+       'fullName'. This allows for a field to appear multiple times in a form
+       (for example, two codebases each have a 'branch' field).
+       
+       If the 'name' of the parent is the empty string, then the parent's name
+       does not mix in with the child 'fullName'. This is useful when a field
+       will not appear multiple time in a scheduler but the logical grouping is
+       helpful.
+       
+       The result of a NestedParameter is typically a dictionary, with the key/value
+       being the name/value of the children.
+    """
     type = ['nested']
     fields = None
     
@@ -216,8 +271,8 @@ class NestedParameter(BaseParameter):
             field.setParent(self)        
     
     def collectChildProperties(self, kwargs, properties, **kw):
-        # intended to be called from child classes. This fixes up the child parameters
-        # into a dictionary named for the parent
+        """Collapse the child values into a dictionary. This is intended to be
+           called by child classes to fix up the fullName->name conversions."""
         
         childProperties = {}
         for field in self.fields:
@@ -228,6 +283,8 @@ class NestedParameter(BaseParameter):
         kwargs[self.fullName] = childProperties
 
     def updateFromKwargs(self, kwargs, properties, **kw):
+        """By default, the child values will be collapsed into a dictionary. If
+        the parent is anonymous, this dictionary is the top-level properties."""
         self.collectChildProperties(kwargs=kwargs, properties=properties, **kw)
         
         # default behavior is to set a property
@@ -241,6 +298,8 @@ class NestedParameter(BaseParameter):
         d.update(kwargs[self.fullName])
         
 class AnyPropertyParameter(NestedParameter):
+    """A generic property parameter, where both the name and value of the property
+       must be given."""
     type = NestedParameter.type + ["any"]
 
     def __init__(self, name, **kw):
@@ -275,6 +334,7 @@ class AnyPropertyParameter(NestedParameter):
 
 
 class CodebaseParameter(NestedParameter):
+    """A parameter whose result is a codebase specification instead of a property"""
     type = NestedParameter.type + ["codebase"]
     codebase = ''
     
@@ -289,6 +349,22 @@ class CodebaseParameter(NestedParameter):
                  project=DefaultField,
                  
                  **kwargs):
+        """
+        A set of properties that will be used to generate a codebase dictionary.
+       
+        The branch/revision/repository/project should each be a parameter that
+        will map to the corresponding value in the sourcestamp. Use None to disable
+        the field.
+        
+        @param codebase: name of the codebase; used as key for the sourcestamp set
+        @type codebase: unicode
+              
+        @param name: optional override for the name-currying for the subfields
+        @type codebase: unicode
+        
+        @param label: optional override for the label for this set of parameters
+        @type codebase: unicode
+        """
 
         name = name or codebase
         if label is None and codebase:
@@ -321,7 +397,10 @@ class CodebaseParameter(NestedParameter):
 
 
 class ForceScheduler(base.BaseScheduler):
-    
+    """
+    ForceScheduler implements the backend for a UI to allow customization of
+    builds. For example, a web form be populated to trigger a build.
+    """
     compare_attrs = ( 'name', 'builderNames',
                      'reason', 'username',
                      'forcedProperties' )
@@ -332,17 +411,54 @@ class ForceScheduler(base.BaseScheduler):
 
             codebases=None,
             
+            properties=[
+                NestedParameter(name='', fields=[
+                    AnyPropertyParameter("property1"),
+                    AnyPropertyParameter("property2"),
+                    AnyPropertyParameter("property3"),
+                    AnyPropertyParameter("property4"),
+                ])
+            ],
+    
+            # deprecated; use 'codebase' instead     
             branch=None,
             revision=None,
             repository=None,
-            project=None,
-            
-            properties=[NestedParameter(name='', fields=[
-                AnyPropertyParameter("property1"),
-                AnyPropertyParameter("property2"),
-                AnyPropertyParameter("property3"),
-                AnyPropertyParameter("property4"),
-            ])]):
+            project=None
+        ):
+        """
+        Initialize a ForceScheduler.
+        
+        The UI will provide a set of fields to the user; these fields are
+        driven by a corresponding child class of BaseParameter.
+        
+        Use NestedParameter to provide logical groupings for parameters.
+        
+        The branch/revision/repository/project fields are deprecated and
+        provided only for backwards compatibility. Using a Codebase(name='')
+        will give the equivalent behavior.
+
+        @param name: name of this scheduler (used as a key for state)
+        @type name: unicode
+
+        @param builderNames: list of builders this scheduler may start
+        @type builderNames: list of unicode
+
+        @param username: the "owner" for a build (may not be shown depending
+                         on the Auth configuration for the master)
+        @type reason: BaseParameter or None (to disable this field)
+
+        @param reason: the "reason" for a build
+        @type reason: BaseParameter or None (to disable this field)
+
+        @param codebases: the codebases for a build
+        @type codebases: list of string's or CodebaseParameter's;
+                         None will generate a default, but [] will
+                         remove all codebases
+
+        @param properties: extra properties to configure the build
+        @type properties: list of BaseParameter's
+        """
 
         self.reason = reason
         self.username = username
@@ -382,7 +498,8 @@ class ForceScheduler(base.BaseScheduler):
                                     properties={},
                                     codebases=codebase_dict)
 
-        self.forcedProperties.extend(properties)
+        if properties:
+            self.forcedProperties.extend(properties)
             
         # this is used to simplify the template
         self.all_fields = [ NestedParameter(name='', fields=[username, reason]) ]

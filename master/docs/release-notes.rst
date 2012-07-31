@@ -19,6 +19,24 @@ Deprecations, Removals, and Non-Compatible Changes
 * Buildbot master requires ``python-dateutil`` version 1.5 to support the
   Nightly scheduler.
 
+* ``ForceScheduler`` has been updated to support multiple :ref:`codebases<Attr-Codebase>`.
+  The branch/revision/repository/project are deprecated; if you have customized these
+  values, simply provide them as ``codebases=[CodebaseParameter(name='', ...)]``.
+
+* The POST URL names for ``AnyPropertyParameter`` fields have changed. For example,
+  'property1name' is now 'property1_name', and 'property1value' is now 'property1_value'.
+  Please update any bookmarked or saved URL's that used these fields.
+
+* ``forcesched.BaseParameter`` API has changed quite a bit and is no longer backwards
+  compatible. Updating guidelines:
+  
+  * ``get_from_post`` is renamed to ``getFromKwargs``
+  * ``update_from_post`` is renamed to ``updateFromKwargs``. This function's parameters
+    are now called via named parameters to allow subclasses to ignore values it doesnt use.
+    Subclasses should add ``**unused`` for future compatibility. A new parameter
+    ``sourcestampset`` to provided to allow subclasses to modify the sourcestamp set, and
+    will probably require you to add the ``**unused`` field.
+
 * The configurable callable build.workdir has changed his parameterlist. Instead
   of a single sourcestamp a list of sourcestamps is passed. Each sourcestamp in 
   the list has a different :ref:`codebase<Attr-Codebase>`
@@ -121,6 +139,16 @@ Features
 * Added a new property ``httpLoginUrl`` to ``buildbot.status.web.authz.Authz``
   to render a nice Login link in WebStatus for unauthenticated users if
   ``useHttpHeader`` and ``httpLoginUrl`` are set.
+  
+* ``ForceScheduler`` has been updated:
+
+  * support for multiple :ref:`codebases<Attr-Codebase>` via the ``codebases`` parameter
+  * ``NestedParameter`` to provide a logical grouping of parameters.
+  * ``CodebaseParameter`` to set the branch/revision/repository/project for a codebase
+  * new HTML/CSS customization points. Each parameter is contained in a ``row`` with multiple
+    'class' attributes associated with them (eg, 'force-string' and 'force-nested') as well as a unique
+    id to use with Javascript. Explicit line-breaks have been removed from the HTML generator and
+    are now controlled using CSS. 
 
 Slave
 -----
