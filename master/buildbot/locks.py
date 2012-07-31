@@ -73,8 +73,12 @@ class BaseLock:
         num_excl, num_counting = self._getOwnersCount()
 
         # Find all waiters ahead of the requester in the wait queue
-        w_index = next((idx for idx, waiter in enumerate(self.waiting) \
-            if waiter[0] == requester), len(self.waiting))
+        for idx, waiter in enumerate(self.waiting):
+            if waiter[0] == requester:
+                w_index = idx
+                break
+        else:
+            w_index = len(self.waiting) 
         ahead = self.waiting[:w_index]
 
         if access.mode == 'counting':
