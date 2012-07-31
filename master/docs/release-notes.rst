@@ -144,6 +144,5 @@ git log itself:
 Older Versions
 --------------
 
-Release notes for older versions of Buildbot are available in the
-:bb:src:`master/docs/release-notes/` directory of the source tree, or in the archived
-documentation for those versions at http://buildbot.net/buildbot/docs.
+Release notes for older versions of Buildbot are available in the :bb:src:`master/docs/release-notes/` directory of the source tree.
+Starting with version 0.8.6, they are also available under the appropriate version at http://buildbot.net/buildbot/docs.
