@@ -385,13 +385,18 @@ class CodebaseParameter(NestedParameter):
                                  codebase=codebase,
                                  fields=fields, **kwargs)
 
-    def updateFromKwargs(self, sourcestamps, kwargs, **kw):
+    def createSourcestamp(self, properties, kwargs):
+        # default, just return the things we put together
+        return kwargs.get(self.fullName, None)
+
+    def updateFromKwargs(self, sourcestamps, kwargs, properties, **kw):
         self.collectChildProperties(sourcestamps=sourcestamps,
+                                    properties=properties,
                                     kwargs=kwargs,
                                     **kw)
  
         # convert the "property" to a sourcestamp
-        ss = kwargs.get(self.fullName, None)
+        ss = self.createSourcestamp(properties, kwargs)
         if ss:
             sourcestamps[self.codebase] = ss
 
