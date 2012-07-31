@@ -15,7 +15,7 @@
 
 import sys
 import os
-import re
+from distutils.version import LooseVersion
 
 # apply the same patches the buildmaster does when it starts
 from buildbot import monkeypatches
@@ -30,7 +30,7 @@ except ImportError:
                          "try 'pip install mock'")
     os._exit(1)
 
-if map(int, re.split('[^0-9]', mock.__version__)[:2]) < [0, 8]:
+if LooseVersion(mock.__version__) < LooseVersion("0.8"):
     print >>sys.stderr, ("\nBuildbot tests require mock version 0.8.0 or "
                          "higher; try 'pip install -U mock'")
     os._exit(1)
