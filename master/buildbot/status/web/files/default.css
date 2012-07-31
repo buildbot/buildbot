@@ -568,6 +568,10 @@ form.command_forcebuild > .row {
     padding: .5em 0;
 }
 
+form.command_forcebuild .force-textarea > .label {
+    display: block;
+}
+
 form.command_forcebuild .force-nested > .label {
     font-weight: bold;
     display: list-item;

@@ -88,7 +88,7 @@
        <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.name]}} />
        <span class="label">{{f.label}}</span>
     {% elif 'textarea' in f.type %}
-       <span class="label">{{f.label}}</span><br>
+       <span class="label">{{f.label}}</span>
        <textarea name='{{f.fullName}}' rows={{f.rows}} cols={{f.cols}}>{{default_props[sch.name+"."+f.name]}}</textarea>
     {% elif 'list' in f.type %}
        <span class="label">{{f.label}}</span>
@@ -97,7 +97,7 @@
          {% for c in f.choices %}
          <option {{(c in default_props[sch.name+"."+f.name]) and "selected" or ""}}>{{c}}</option>
          {% endfor %}
-       </select> <br>
+       </select>
        </span>
     {% elif 'nested' in f.type %}
       {% if f.label %}<span class="label">{{f.label}}</span>{% endif %}
