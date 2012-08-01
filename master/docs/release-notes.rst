@@ -122,6 +122,10 @@ Features
   to render a nice Login link in WebStatus for unauthenticated users if
   ``useHttpHeader`` and ``httpLoginUrl`` are set.
 
+* An optional ``startCB`` callback to :bb:status:`GerritStatusPush` can be used
+  to send a message back to the committer.
+  See the linked documentation for details.
+
 Slave
 -----
 
