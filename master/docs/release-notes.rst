@@ -122,6 +122,8 @@ Features
   to render a nice Login link in WebStatus for unauthenticated users if
   ``useHttpHeader`` and ``httpLoginUrl`` are set.
 
+* Added an optional build start callback to ``buildbot.status.status_gerrit.GerritStatusPush``
+
 Slave
 -----
 
