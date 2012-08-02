@@ -138,7 +138,7 @@ class DebPbuilder(WarningCountingShellCommand):
             if self.extrapackages:
                 command += ['--extrapackages', " ".join(self.extrapackages)]
             if self.keyring:
-                command += ['--debootstrapopts', "--keyring=%s"%self.keyring]
+                command += ['--debootstrapopts', "--keyring=%s" % self.keyring]
             if self.components:
                 command += ['--components', self.components]
 
@@ -175,7 +175,7 @@ class DebPbuilder(WarningCountingShellCommand):
         return WarningCountingShellCommand.start(self)
 
     def commandComplete(self, cmd):
-    	out = cmd.logs['stdio'].getText()
+        out = cmd.logs['stdio'].getText()
         m = re.search(r"dpkg-genchanges  >\.\./(.+\.changes)", out)
         if m:
             self.setProperty("deb-changes", m.group(1), "DebPbuilder")

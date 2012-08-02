@@ -2640,20 +2640,21 @@ The step takes the following parameters
 ``srpm``
     The path to the SourceRPM to rebuild.
 
-DEB-Related Steps
------------------
+Debian Build Steps
+------------------
+
+.. bb:step:: DebPbuilder
 
 DebPbuilder
 +++++++++++
 
-The :bb:step:`DebPbuilder` step builds Debian packages within a chroot
-built by pbuilder. It populates the changeroot with a basic system
-and the packages listed as build requirement. The type of chroot to build
-is specified with the ``distribution``, ``distribution`` and
-``mirror`` parameter. To use pbuilder your buildbot must have the right to
-run pbuilder as root throug sudo. ::
+The :bb:step:`DebPbuilder` step builds Debian packages within a chroot built
+by pbuilder. It populates the changeroot with a basic system and the packages
+listed as build requirement. The type of chroot to build is specified with the
+``distribution``, ``distribution`` and ``mirror`` parameter. To use pbuilder
+your buildbot must have the right to run pbuilder as root throug sudo. ::
 
-    from buildbot.steps.package.deb import DepPbuilder
+    from buildbot.steps.package.deb.pbuilder import DepPbuilder
     f.addStep(DepPbuilder())
 
 The step takes the following parameters
@@ -2680,19 +2681,24 @@ The step takes the following parameters
 ``components``
     Repos to activate for chroot building.
 
+.. bb:step:: DebCowbuilder
+   
 DebCowbuilder
 +++++++++++++
 
 The :bb:step:`DebCowbuilder` step is a subclass of :bb:step:`DebPbuilder`,
 which use cowbuilder instead of pbuilder.
 
+.. bb:step:: DebLintian
+
 DebLintian
 ++++++++++
 
 The :bb:step:`DebLintian` step checks a build .deb for bugs and policy
-violations. The packages or changes file to test is specified in ``fileloc`` ::
+violations. The packages or changes file to test is specified in ``fileloc``
 
-    from buildbot.steps.package.deb import DebLintian
+::
+    from buildbot.steps.package.deb.lintian import DebLintian
     f.addStep(DebLintian(fileloc=WithProperties("%(deb-changes)s"):wq
 
 Miscellaneous BuildSteps
