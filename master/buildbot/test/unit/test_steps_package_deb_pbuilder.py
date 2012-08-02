@@ -32,7 +32,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_new(self):
-        step = self.setupStep(pbuilder.DebPbuilder())
+        self.setupStep(pbuilder.DebPbuilder())
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
             + 1,
@@ -51,7 +51,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_update(self):
-        step = self.setupStep(pbuilder.DebPbuilder())
+        self.setupStep(pbuilder.DebPbuilder())
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
             + Expect.update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, 0, 0])
@@ -69,7 +69,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_buildonly(self):
-        step = self.setupStep(pbuilder.DebPbuilder())
+        self.setupStep(pbuilder.DebPbuilder())
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
             + Expect.update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
@@ -83,7 +83,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_architecture(self):
-        step = self.setupStep(pbuilder.DebPbuilder(architecture='amd64'))
+        self.setupStep(pbuilder.DebPbuilder(architecture='amd64'))
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-amd64-buildbot.tgz'})
             + 1,
@@ -104,7 +104,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_distribution(self):
-        step = self.setupStep(pbuilder.DebPbuilder(distribution='woody'))
+        self.setupStep(pbuilder.DebPbuilder(distribution='woody'))
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/woody-local-buildbot.tgz'})
             + 1,
@@ -123,7 +123,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_basetgz(self):
-        step = self.setupStep(pbuilder.DebPbuilder(basetgz='/buildbot/%(distribution)s-%(architecture)s.tgz'))
+        self.setupStep(pbuilder.DebPbuilder(basetgz='/buildbot/%(distribution)s-%(architecture)s.tgz'))
         self.expectCommands(
             Expect('stat', {'file': '/buildbot/stable-local.tgz'})
             + 1,
@@ -142,7 +142,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_mirror(self):
-        step = self.setupStep(pbuilder.DebPbuilder(mirror='http://apt:9999/debian'))
+        self.setupStep(pbuilder.DebPbuilder(mirror='http://apt:9999/debian'))
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
             + 1,
@@ -161,7 +161,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_extrapackages(self):
-        step = self.setupStep(pbuilder.DebPbuilder(extrapackages=['buildbot']))
+        self.setupStep(pbuilder.DebPbuilder(extrapackages=['buildbot']))
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
             + 1,
@@ -182,7 +182,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_keyring(self):
-        step = self.setupStep(pbuilder.DebPbuilder(keyring='/builbot/buildbot.gpg'))
+        self.setupStep(pbuilder.DebPbuilder(keyring='/builbot/buildbot.gpg'))
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
             + 1,
@@ -202,7 +202,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_components(self):
-        step = self.setupStep(pbuilder.DebPbuilder(components='main universe'))
+        self.setupStep(pbuilder.DebPbuilder(components='main universe'))
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
             + 1,
@@ -230,7 +230,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_new(self):
-        step = self.setupStep(pbuilder.DebCowbuilder())
+        self.setupStep(pbuilder.DebCowbuilder())
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.cow/'})
             + 1,
@@ -249,7 +249,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_update(self):
-        step = self.setupStep(pbuilder.DebCowbuilder())
+        self.setupStep(pbuilder.DebCowbuilder())
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.cow/'})
             + Expect.update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, 0, 0])
@@ -267,7 +267,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_buildonly(self):
-        step = self.setupStep(pbuilder.DebCowbuilder())
+        self.setupStep(pbuilder.DebCowbuilder())
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.cow/'})
             + Expect.update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
@@ -293,7 +293,7 @@ class TestUbuPbuilder(steps.BuildStepMixin, unittest.TestCase):
                           pbuilder.UbuPbuilder())
 
     def test_new(self):
-        step = self.setupStep(pbuilder.UbuPbuilder(distribution='oneiric'))
+        self.setupStep(pbuilder.UbuPbuilder(distribution='oneiric'))
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/oneiric-local-buildbot.tgz'})
             + 1,
@@ -325,7 +325,7 @@ class TestUbuCowbuilder(steps.BuildStepMixin, unittest.TestCase):
                           pbuilder.UbuCowbuilder())
 
     def test_new(self):
-        step = self.setupStep(pbuilder.UbuCowbuilder(distribution='oneiric'))
+        self.setupStep(pbuilder.UbuCowbuilder(distribution='oneiric'))
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/oneiric-local-buildbot.cow/'})
             + 1,

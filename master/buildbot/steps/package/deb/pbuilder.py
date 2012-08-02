@@ -25,7 +25,7 @@ from twisted.python import log
 
 from buildbot.steps.shell import WarningCountingShellCommand
 from buildbot.process import buildstep
-from buildbot.process.properties import WithProperties
+from buildbot.process.buildstep import FAILURE
 from buildbot import config
 
 class DebPbuilder(WarningCountingShellCommand):
