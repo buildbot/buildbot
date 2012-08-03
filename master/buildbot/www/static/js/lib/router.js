@@ -60,6 +60,7 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 	    this.fill_navbar();
 	    connect.subscribe("/dojo/hashchange", this, this.location_changed);
 	    this.location_changed();
+	    window.bb = this;
 	},
 	forEachRoute: function(callback) {
 	    var path = hash();
@@ -145,6 +146,46 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 	},
 	isAdmin: function() {
 	    return false;
+	},
+	/* we could use dojox.storage, but we really want to only use html5, and not embed flash crap in our build */
+	localStore: function(key, value) {
+	    if (typeof localStorage === 'undefined') {
+		return;
+	    }
+	    value = dojo.toJson(value);
+	    try { // ua may raise an QUOTA_EXCEEDED_ERR exception
+		localStorage.setItem(key,value);
+	    } catch(e) {
+	    }
+	},
+	localGet: function(key, _default) {
+	    if (typeof localStorage === 'undefined') {
+		return _default;
+	    }
+	    var json = localStorage.getItem(key);
+	    if (json === null)
+		return _default;
+	    return dojo.fromJson(json);
+	},
+	addHistory: function(history_type, title) {
+	    var recent_stuff = this.localGet(history_type, []);
+	    if (typeof recent_stuff === 'undefined' || typeof recent_stuff.push === 'undefined') {
+		recent_stuff = []; /* if it is not a list better reset it! */
+	    }
+	    for (var i = 0; i < recent_stuff.length; i+=1 ) {
+		if (recent_stuff[i].title === title) {
+		    return; /* dont add same stuff again */
+		}
+	    }
+	    if (recent_stuff.length >= 5) {
+		recent_stuff.pop();
+	    }
+	    recent_stuff.unshift({url:"#"+hash(), title:title})
+	    this.localStore(history_type, recent_stuff);
+	},
+	reload: function(){
+	    this.location_changed();
 	}
+
     });
 });
