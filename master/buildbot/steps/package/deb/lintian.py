@@ -17,18 +17,23 @@
 Steps and objects related to lintian
 """
 
-from buildbot.steps.shell import WarningCountingShellCommand
+from buildbot.steps.shell import ShellCommand
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import config
 
-class DebLintian(WarningCountingShellCommand):
+class DebLintian(ShellCommand):
     name = "lintian"
     description = ["Lintian running"]
     descriptionDone = ["Lintian"]
 
-    warningPattern = '.*W: .*'
-
     fileloc = None
     suppressTags = []
+
+    warnCount = 0
+    errCount = 0
+
+    flunkOnFailure=False
+    warnOnFailure=True
 
     def __init__(self, fileloc=None, suppressTags=None, **kwargs):
         """
@@ -41,7 +46,7 @@ class DebLintian(WarningCountingShellCommand):
         @type kwargs: dict
         @param kwargs: all other keyword arguments.
         """
-        WarningCountingShellCommand.__init__(self, **kwargs)
+        ShellCommand.__init__(self, **kwargs)
         if fileloc:
             self.fileloc = fileloc
         if suppressTags:
@@ -65,12 +70,22 @@ class DebLintian(WarningCountingShellCommand):
         warnings = []
         errors = []
         for line in log.readlines():
-            if ' W: ' in line:
+            if 'W: ' in line:
                 warnings.append(line)
-            elif ' E: ' in line:
+            elif 'E: ' in line:
                 errors.append(line)
 
         if warnings:
             self.addCompleteLog('%d Warnings' % len(warnings), "".join(warnings))
+            self.warnCount = len(warnings)
         if errors:
             self.addCompleteLog('%d Errors' % len(errors), "".join(errors))
+            self.errCount = len(errors)
+
+    def evaluateCommand(self, cmd):
+        if ( cmd.rc != 0 or self.errCount):
+            return FAILURE
+        if self.warnCount:
+            return WARNINGS
+        return SUCCESS
+
