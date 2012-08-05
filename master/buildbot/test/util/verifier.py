@@ -60,7 +60,7 @@ def _dictProblems(value, typename, attrs):
             rest = ''
 
         if typ == 'integer':
-            valfn = lambda v : isinstance(v, int)
+            valfn = lambda v : isinstance(v, int) or isinstance(v, long)
         elif typ == 'string':
             # note that we intentionally *enforce* unicode!
             valfn = lambda v : isinstance(v, unicode)
