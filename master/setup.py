@@ -122,6 +122,7 @@ setup_args = {
               "buildbot.changes",
               "buildbot.steps",
               "buildbot.steps.package",
+	      "buildbot.steps.package.deb",
               "buildbot.steps.package.rpm",
               "buildbot.steps.source",
               "buildbot.process",
