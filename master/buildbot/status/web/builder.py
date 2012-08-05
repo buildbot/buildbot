@@ -29,6 +29,7 @@ from buildbot.schedulers.forcesched import InheritBuildParameter
 from buildbot.schedulers.forcesched import ValidationError
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
+import collections
 
 class ForceAllBuildsActionResource(ActionResource):
 
@@ -170,7 +171,7 @@ class ForceBuildActionResource(ActionResource):
 
 def buildForceContext(cxt, req, master, buildername=None):
     force_schedulers = {}
-    default_props = {}
+    default_props = collections.defaultdict(str)
     for sch in master.allSchedulers():
         if isinstance(sch, ForceScheduler) and (buildername is None or(buildername in sch.builderNames)):
             force_schedulers[sch.name] = sch
@@ -185,10 +186,10 @@ def buildForceContext(cxt, req, master, buildername=None):
                         default = p.choices[0]
                 default = req.args.get(pname, [default])[0]
                 if p.type=="bool":
-                    default_props[pname] = default and "checked" or ""
+                    default_props[pname] = "checked" if default else ""
                 else:
                     # filter out unicode chars, and html stuff
-                    if type(default)==unicode:
+                    if isinstance(default, unicode):
                         default = html.escape(default.encode('utf-8','ignore'))
                     default_props[pname] = default
     cxt['force_schedulers'] = force_schedulers
