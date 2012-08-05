@@ -13,7 +13,7 @@
 #
 # Copyright  Team Members
 
-import json
+from buildbot.util import json
 from twisted.python import log
 from twisted.internet import protocol
 from buildbot.www import websocket
