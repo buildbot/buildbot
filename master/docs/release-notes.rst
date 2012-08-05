@@ -94,6 +94,14 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The ``P4Sync`` step, deprecated since 0.8.5, has been removed.  The ``P4`` step remains.
 
+
+* The ``fetch_spec`` argument to ``GitPoller`` is no longer supported.
+  ``GitPoller`` now only downloads branches that it is polling, so specifies a refspec itself.
+
+* The format of the changes produced by :bb:chsrc:`SVNPoller` has changed: directory pathnames end with a forward slash.
+  This allows the ``split_file`` function to distinguish between files and directories.
+  Customized split functions may need to be adjusted accordingly.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -101,6 +109,9 @@ Changes for Developers
   be handled gracefully. If you use inlineCallbacks, this means that unexpected
   exceptions and failures raised will be captured and logged and the build shut
   down normally.
+
+* The helper methods ``getState`` and ``setState`` from ``BaseScheduler`` have
+  been factored into ``buildbot.util.state.StateMixin`` for use elsewhere.
 
 Features
 ~~~~~~~~
@@ -129,6 +140,14 @@ Features
   the password against the hash from the .htpasswd file. This adds support for
   all hash types htpasswd can generate.
 
+* ``GitPoller`` has been rewritten.
+  It now supports multiple branches and can share a directory between multiple pollers.
+  It is also more resilient to changes in configuration, or in the underlying repository.
+
+* Added a new property ``httpLoginUrl`` to ``buildbot.status.web.authz.Authz``
+  to render a nice Login link in WebStatus for unauthenticated users if
+  ``useHttpHeader`` and ``httpLoginUrl`` are set.
+
 Slave
 -----
 
@@ -151,6 +170,5 @@ git log itself:
 Older Versions
 --------------
 
-Release notes for older versions of Buildbot are available in the
-:bb:src:`master/docs/release-notes/` directory of the source tree, or in the archived
-documentation for those versions at http://buildbot.net/buildbot/docs.
+Release notes for older versions of Buildbot are available in the :bb:src:`master/docs/release-notes/` directory of the source tree.
+Starting with version 0.8.6, they are also available under the appropriate version at http://buildbot.net/buildbot/docs.

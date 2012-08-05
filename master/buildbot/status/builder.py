@@ -295,6 +295,10 @@ class BuilderStatus(styles.Versioned):
             b = self.getBuild(-2)
         return b
 
+    def setCategory(self, category):
+        # used during reconfig
+        self.category = category
+
     def getCategory(self):
         return self.category
 

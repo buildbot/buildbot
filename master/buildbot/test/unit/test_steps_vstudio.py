@@ -193,6 +193,10 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
+    def test_default_config(self):
+        vs = vstudio.VisualStudio()
+        self.assertEqual(vs.config, 'release')
+
     def test_simple(self):
         self.setupStep(VCx())
         self.expectCommands(

@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import logging
 from zope.interface import implements
 from twisted.python import failure, log
 from twisted.application import service
@@ -21,8 +22,9 @@ from buildbot.process.properties import Properties
 from buildbot.util import ComparableMixin
 from buildbot.changes import changes
 from buildbot import config, interfaces
+from buildbot.util.state import StateMixin
 
-class BaseScheduler(service.MultiService, ComparableMixin):
+class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
     """
     Base class for all schedulers; this provides the equipment to manage
     reconfigurations and to handle basic scheduler state.  It also provides
@@ -105,7 +107,6 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         # internal variables
         self._change_consumer = None
         self._change_consumption_lock = defer.DeferredLock()
-        self._objectid = None
 
     ## service handling
 
@@ -120,46 +121,6 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         d.addCallback(lambda _ : service.MultiService.stopService(self))
         return d
 
-    ## state management
-
-    @defer.inlineCallbacks
-    def getState(self, *args, **kwargs):
-        """
-        For use by subclasses; get a named state value from the scheduler's
-        state, defaulting to DEFAULT.
-
-        @param name: name of the value to retrieve
-        @param default: (optional) value to return if C{name} is not present
-        @returns: state value via a Deferred
-        @raises KeyError: if C{name} is not present and no default is given
-        @raises TypeError: if JSON parsing fails
-        """
-        # get the objectid, if not known
-        if self._objectid is None:
-            self._objectid = yield self.master.db.state.getObjectId(self.name,
-                                                    self.__class__.__name__)
-
-        rv = yield self.master.db.state.getState(self._objectid, *args,
-                                                                    **kwargs)
-        defer.returnValue(rv)
-
-    @defer.inlineCallbacks
-    def setState(self, key, value):
-        """
-        For use by subclasses; set a named state value in the scheduler's
-        persistent state.  Note that value must be json-able.
-
-        @param name: the name of the value to change
-        @param value: the value to set - must be a JSONable object
-        @param returns: Deferred
-        @raises TypeError: if JSONification fails
-        """
-        # get the objectid, if not known
-        if self._objectid is None:
-            self._objectid = yield self.master.db.state.getObjectId(self.name,
-                                                self.__class__.__name__)
-
-        yield self.master.db.state.setState(self._objectid, key, value)
 
     ## status queries
 
@@ -223,7 +184,9 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         if change_filter and not change_filter.filter_change(change):
             return
         if change.codebase not in self.codebases:
-            log.msg('change contains codebase %s that is not processed by this scheduler' % change.codebase)
+            log.msg('change contains codebase %s that is not processed by'
+                ' scheduler %s' % (change.codebase, self.name),
+                logLevel=logging.DEBUG)
             return
         if fileIsImportant:
             try:
@@ -384,17 +347,10 @@ class BaseScheduler(service.MultiService, ComparableMixin):
              # sourcestamp attributes for this codebase.
             ss.update(sourcestamps.get(codebase,{}))
 
-            # at least repository must be set, this is normaly forced except when
-            # codebases is not explicitly set in configuration file.
-            ss_repository = ss.get('repository')
-            if not ss_repository:
-                config.error("The codebases argument is not set but still receiving " +
-                             "non empty codebase values")
-
             # add sourcestamp to the new setid
             yield self.master.db.sourcestamps.addSourceStamp(
                         codebase=codebase,
-                        repository=ss_repository,
+                        repository=ss.get('repository'),
                         branch=ss.get('branch', None),
                         revision=ss.get('revision', None),
                         project=ss.get('project', ''),

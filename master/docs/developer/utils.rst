@@ -572,3 +572,41 @@ buildbot.util.croniter
 
 This module is a copy of https://github.com/taichino/croniter, and provides
 suport for converting cron-like time specifications into actual times.
+
+buildbot.util.state
+~~~~~~~~~~~~~~~~~~~
+.. py:module:: buildbot.util.state
+
+The classes in the :py:mod:`buildbot.util.subscription` module are used for dealing with object state stored in the database.
+
+.. py:class:: StateMixin
+
+    This class provides helper methods for accessing the object state stored in the database.
+
+    .. py:attribute:: name
+
+         This must be set to the name to be used to identifiy this object in the database.
+
+    .. py:attribute:: master
+
+         This must point to the :py:class:`BuildMaster` object.
+
+    .. py:method:: getState(name, default)
+
+        :param name: name of the value to retrieve
+        :param default: (optional) value to return if `name` is not present
+        :returns: state value via a Deferred
+        :raises KeyError: if `name` is not present and no default is given
+        :raises TypeError: if JSON parsing fails
+
+        Get a named state value from the object's state.
+
+    .. py:method:: getState(name, value)
+
+        :param name: the name of the value to change
+        :param value: the value to set - must be a JSONable object
+        :param returns: Deferred
+        :raises TypeError: if JSONification fails
+
+        Set a named state value in the object's persistent state.
+        Note that value must be json-able.

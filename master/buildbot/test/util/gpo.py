@@ -19,6 +19,7 @@ class Expect(object):
     _stdout = ""
     _stderr = ""
     _exit = 0
+    _path = None
 
     def __init__(self, bin, *args):
         self._bin = bin
@@ -36,10 +37,20 @@ class Expect(object):
         self._exit = exit
         return self
 
-    def check(self, test, bin, *args):
-        test.assertEqual(bin, self._bin, "wrong command run")
-        test.assertEqual(args, self._args, "wrong args passed")
+    def path(self, path):
+        self._path = path
+        return self
+
+    def check(self, test, bin, path, args):
+        test.assertEqual(
+                dict(bin=bin, path=path, args=tuple(args)),
+                dict(bin=self._bin, path=self._path, args=self._args),
+                "unexpected command run")
         return (self._stdout, self._stderr, self._exit)
+
+    def __repr__(self):
+        return "<gpo.Expect(bin=%s, args=%s)>" % (self._bin, self._args)
+
 
 class GetProcessOutputMixin:
 
@@ -58,8 +69,10 @@ class GetProcessOutputMixin:
             self.assertEqual(env.get(var), value,
                 'Expected environment to have %s = %r' % (var, value))
 
-    def patched_getProcessOutput(self, bin, args, env=None, errortoo=False, **kwargs):
-        d = self.patched_getProcessOutputAndValue(bin, args, env=env, **kwargs)
+    def patched_getProcessOutput(self, bin, args, env=None,
+            errortoo=False, path=None):
+        d = self.patched_getProcessOutputAndValue(bin, args, env=env,
+                path=path)
         @d.addCallback
         def cb(res):
             stdout, stderr, exit = res
@@ -72,15 +85,16 @@ class GetProcessOutputMixin:
                     return defer.succeed(stdout)
         return d
 
-    def patched_getProcessOutputAndValue(self, bin, args, env=None, **kwargs):
+    def patched_getProcessOutputAndValue(self, bin, args, env=None,
+            path=None):
         self._check_env(env)
 
         if not self._expected_commands:
-            self.fail("got command %s %s when no further commands where expected"
+            self.fail("got command %s %s when no further commands were expected"
                     % (bin, args))
 
         expect = self._expected_commands.pop(0)
-        return defer.succeed(expect.check(self, bin, *args))
+        return defer.succeed(expect.check(self, bin, path, args))
 
     def _patch_gpo(self):
         if not self._gpo_patched:

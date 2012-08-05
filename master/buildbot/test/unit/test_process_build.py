@@ -100,10 +100,13 @@ class TestBuild(unittest.TestCase):
         r.sources = [FakeSource()]
         r.sources[0].changes = [FakeChange()]
         r.sources[0].revision = "12345"
-        
+
+        self.request = r
+        self.master = FakeMaster()
+
         self.build = Build([r])
         self.builder = Mock()
-        self.builder.botmaster = FakeMaster()
+        self.builder.botmaster = self.master
         self.build.setBuilder(self.builder)
 
     def testRunSuccessfulBuild(self):
@@ -214,6 +217,58 @@ class TestBuild(unittest.TestCase):
         self.assert_( ('startStep', (slavebuilder.remote,), {})
                                 in step.method_calls)
         self.assertEquals(claimCount[0], 1)
+
+    def testBuildLocksOrder(self):
+        """Test that locks are acquired in FIFO order; specifically that
+        counting locks cannot jump ahead of exclusive locks"""
+        eBuild = self.build
+
+        cBuild = Build([self.request])
+        cBuilder = Mock()
+        cBuilder.botmaster = self.master
+        cBuild.setBuilder(cBuilder)
+
+        eSlavebuilder = Mock()
+        cSlavebuilder = Mock()
+
+        slave = eSlavebuilder.slave
+        cSlavebuilder.slave = slave
+
+        l = SlaveLock('lock', 2)
+        claimLog = []
+        realLock = self.master.getLockByID(l).getLock(slave)
+        def claim(owner, access):
+            claimLog.append(owner)
+            return realLock.oldClaim(owner, access)
+        realLock.oldClaim = realLock.claim
+        realLock.claim = claim
+
+        eBuild.setLocks([l.access('exclusive')])
+        cBuild.setLocks([l.access('counting')])
+
+        fakeBuild = Mock()
+        fakeBuildAccess = l.access('counting')
+        realLock.claim(fakeBuild, fakeBuildAccess)
+
+        step = Mock()
+        step.return_value = step
+        step.startStep.return_value = SUCCESS
+        eBuild.setStepFactories([FakeStepFactory(step)])
+        cBuild.setStepFactories([FakeStepFactory(step)])
+
+        e = eBuild.startBuild(FakeBuildStatus(), None, eSlavebuilder)
+        c = cBuild.startBuild(FakeBuildStatus(), None, cSlavebuilder)
+        d = defer.DeferredList([e, c])
+
+        realLock.release(fakeBuild, fakeBuildAccess)
+
+        def check(ign):
+            self.assertEqual(eBuild.result, SUCCESS)
+            self.assertEqual(cBuild.result, SUCCESS)
+            self.assertEquals(claimLog, [fakeBuild, eBuild, cBuild])
+
+        d.addCallback(check)
+        return d
 
     def testBuildWaitingForLocks(self):
         b = self.build

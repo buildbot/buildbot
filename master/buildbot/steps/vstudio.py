@@ -108,7 +108,7 @@ class VisualStudio(ShellCommand):
                 installdir = None,
                 mode = "rebuild",
                 projectfile = None,
-                config = None,
+                config = 'release',
                 useenv = False,
                 project = None,
                 INCLUDE = [],
