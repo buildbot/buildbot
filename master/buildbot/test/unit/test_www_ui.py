@@ -17,7 +17,7 @@ from buildbot.www import ui, service
 from buildbot.test.util import www
 from twisted.trial import unittest
 from twisted.internet import threads, defer
-import time
+
 class Test(www.WwwTestMixin, unittest.TestCase):
     def test_render(self):
         master = self.make_master(url='h:/a/b/')
@@ -31,6 +31,7 @@ class Test(www.WwwTestMixin, unittest.TestCase):
 
 try:
     from ghost import Ghost
+    Ghost = Ghost # for pyflakes
     has_ghost=True
 except ImportError:
     has_ghost=False

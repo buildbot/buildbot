@@ -18,7 +18,6 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.changes import base, gitpoller
-from buildbot.util import epoch2datetime
 from buildbot.test.util import changesource, config, gpo
 
 # Test that environment variables get propagated to subprocesses (See #2116)

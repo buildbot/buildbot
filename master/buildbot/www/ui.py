@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import os
 from twisted.python import util
 from buildbot.www import resource
 

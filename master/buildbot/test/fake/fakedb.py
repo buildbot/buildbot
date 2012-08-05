@@ -54,6 +54,8 @@ class Row(object):
     lists = ()
     dicts = ()
 
+    _next_id = None
+
     def __init__(self, **kwargs):
         self.values = self.defaults.copy()
         self.values.update(kwargs)
@@ -83,8 +85,7 @@ class Row(object):
         return '%s(**%r)' % (self.__class__.__name__, self.values)
 
     def nextId(self):
-        global _next_id
-        id, _next_id = _next_id, _next_id+1
+        id, Row._next_id = Row._next_id, Row._next_id+1
         return id
 
 
@@ -1198,8 +1199,7 @@ class FakeDBConnector(object):
 
     def __init__(self, testcase):
         # reset the id generator, for stable id's
-        global _next_id
-        _next_id = 1000
+        Row._next_id = 1000
 
         self._components = []
         self.changes = comp = FakeChangesComponent(self, testcase)
