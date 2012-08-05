@@ -834,35 +834,20 @@ The scheduler takes the following parameters:
 
     See :ref:`Configuring-Schedulers`.
 
-``branch``
-
-    A :ref:`parameter <ForceScheduler-Parameters>` specifying the branch to
-    build.  The default value is a string parameter.
-
 ``reason``
 
     A :ref:`parameter <ForceScheduler-Parameters>` specifying the reason for
     the build.  The default value is a string parameter with value "force build".
 
-``revision``
-
-    A :ref:`parameter <ForceScheduler-Parameters>` specifying the revision to
-    build.  The default value is a string parameter.
-
-``repository``
-
-    A :ref:`parameter <ForceScheduler-Parameters>` specifying the repository
-    for the build.  The default value is a string parameter.
-
-``project``
-
-    A :ref:`parameter <ForceScheduler-Parameters>` specifying the project for
-    the build.  The default value is a string parameter.
-
 ``username``
 
     A :ref:`parameter <ForceScheduler-Parameters>` specifying the project for
     the build.  The default value is a username parameter,
+
+``codebases``
+
+    A list of strings or :ref:`CodebaseParameter <ForceScheduler-Parameters>` specifying
+    the codebases that should be presented. The default is a single codebase with no name.
 
 ``properties``
 
@@ -1110,6 +1095,35 @@ Example::
         # triggers the tests depending on the property forced_test
         builder1.factory.addStep(Trigger(name="Trigger tests",
                                         schedulerNames=Property("forced_tests")))
+
+CodebaseParameter
+#####################
+
+This is a parameter group to specify a sourcestamp for a given codebase.
+
+``codebase``
+
+    The name of the codebase.
+
+``branch`` (optional; default: StringParameter)
+
+    A :ref:`parameter <ForceScheduler-Parameters>` specifying the branch to
+    build.  The default value is a string parameter.
+
+``revision`` (optional; default: StringParameter)
+
+    A :ref:`parameter <ForceScheduler-Parameters>` specifying the revision to
+    build.  The default value is a string parameter.
+
+``repository`` (optional; default: StringParameter)
+
+    A :ref:`parameter <ForceScheduler-Parameters>` specifying the repository
+    for the build.  The default value is a string parameter.
+
+``project`` (optional; default: StringParameter)
+
+    A :ref:`parameter <ForceScheduler-Parameters>` specifying the project for
+    the build.  The default value is a string parameter.
 
 InheritBuildParameter
 #####################
