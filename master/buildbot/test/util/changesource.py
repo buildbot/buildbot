@@ -13,9 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 from twisted.internet import defer
-from twisted.trial import unittest
 from buildbot.test.fake import fakemaster
 
 class ChangeSourceMixin(object):
@@ -31,17 +29,6 @@ class ChangeSourceMixin(object):
 
     def setUpChangeSource(self):
         "Set up the mixin - returns a deferred."
-        def addChange(**kwargs):
-            # check for 8-bit strings
-            for k,v in kwargs.items():
-                if type(v) == type(""):
-                    try:
-                        v.decode('ascii')
-                    except UnicodeDecodeError:
-                        raise unittest.FailTest(
-                                "non-ascii string for key '%s': %r" % (k,v))
-            self.changes_added.append(kwargs)
-            return defer.succeed(mock.Mock())
         self.master = fakemaster.make_master(wantDb=True, wantData=True,
                                              testcase=self)
         assert not hasattr(self.master, 'addChange') # just checking..
