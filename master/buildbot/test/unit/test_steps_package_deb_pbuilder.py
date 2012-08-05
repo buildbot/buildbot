@@ -170,13 +170,13 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
                     '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
                     '--distribution', 'stable',
                     '--mirror', 'http://cdn.debian.net/debian/',
-		    '--extrapackages', 'buildbot'])
+                    '--extrapackages', 'buildbot'])
             +0,
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                 command=['pdebuild', '--buildresult', '.',
                     '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                     '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
-		    '--extrapackages', 'buildbot'])
+                    '--extrapackages', 'buildbot'])
             +0)
         self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
         return self.runStep()
@@ -191,7 +191,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
                     '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
                     '--distribution', 'stable',
                     '--mirror', 'http://cdn.debian.net/debian/',
-		    '--debootstrapopts', '--keyring=/builbot/buildbot.gpg'])
+                    '--debootstrapopts', '--keyring=/builbot/buildbot.gpg'])
             +0,
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                 command=['pdebuild', '--buildresult', '.',
@@ -211,7 +211,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
                     '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
                     '--distribution', 'stable',
                     '--mirror', 'http://cdn.debian.net/debian/',
-		    '--components', 'main universe'])
+                    '--components', 'main universe'])
             +0,
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                 command=['pdebuild', '--buildresult', '.',
