@@ -26,12 +26,9 @@ class RestRootResource(resource.Resource):
     version_classes = {}
 
     @classmethod
-    def api_version(cls, version):
-        def wrap_class(version_cls):
-            cls.version_classes[version] = version_cls
-            version_cls.apiVersion = version
-            return version_cls
-        return wrap_class
+    def addApiVersion(cls, version, version_cls):
+        cls.version_classes[version] = version_cls
+        version_cls.apiVersion = version
 
     def __init__(self, master):
         resource.Resource.__init__(self, master)
@@ -54,7 +51,6 @@ class RestRootResource(resource.Resource):
 
 # API version 1 was the 0.8.x status_json.py API
 
-@RestRootResource.api_version(2)
 class V2RootResource(resource.Resource):
     # rather than construct the entire possible hierarchy of Rest resources,
     # this is marked as a leaf node, and any remaining path items are parsed
@@ -197,3 +193,5 @@ class V2RootResource(resource.Resource):
         if isinstance(obj, base.Link):
             return "%sapi/v%d/%s" % (self.baseurl, self.apiVersion,
                                     '/'.join(obj.path))
+
+RestRootResource.addApiVersion(2, V2RootResource)
