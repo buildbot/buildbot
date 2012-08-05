@@ -474,7 +474,7 @@ class ForceScheduler(base.BaseScheduler):
             if codebases:
                 raise ValidationError("Must either specify 'codebases' or the 'branch/revision/repository/project' parameters")
             
-            codesbases = [
+            codebases = [
                 CodebaseParameter(codebase='',
                                   branch=branch or DefaultField,
                                   revision=revision or DefaultField,
