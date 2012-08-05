@@ -31,8 +31,10 @@ class EndpointMixin(interfaces.InterfaceTests):
         self.data = self.master.data
         self.ep = self.endpointClass(self.master)
 
-        self.assertIsInstance(self.ep.pathPattern, tuple,
-                "did you forget the ',' in a 1-element pathPattern?")
+        # this usually fails when a single-element pathPattern does not have a
+        # trailing comma
+        self.assertIsInstance(self.ep.pathPattern, tuple)
+
         self.path_args = set([
             arg.split(':', 1)[1] for arg in self.ep.pathPattern
             if ':' in arg ])
