@@ -976,13 +976,19 @@ The parameter types are:
 FixedParameter
 ##############
 
-This parameter type will not be shown on the web form, and always generate a
-property with its default value.  Example::
+::
+    FixedParameter(default="trunk")
 
-    branch = FixedParameter(default="trunk")
+This parameter type will not be shown on the web form, and always generate a
+property with its default value.
 
 StringParameter
 ###############
+
+::
+    StringParameter(name="pull_url",
+        label="optionally give a public git pull url:<br>",
+        default="", size=80)
 
 This parameter type will show a single-line text-entry box, and allow the user
 to enter an arbitrary string.  It adds the following arguments:
@@ -999,17 +1005,22 @@ to enter an arbitrary string.  It adds the following arguments:
 TextParameter
 #############
 
+::
+    StringParameter(name="comments",
+        label="comments to be displayed to the user of the built binary",
+        default="This is a development build", cols=60, rows=5)
+
 This parameter type is similar to StringParameter, except that it is
 represented in the HTML form as a textarea, allowing multi-line input.  It adds
 the StringParameter arguments, this type allows:
 
 ``cols`` (optional; default: 80)
 
-    The number of columns textarea will have
+    The number of columns the textarea will have
 
 ``rows`` (optional; defauflt: 20)
 
-    The number of rows textarea will have
+    The number of rows the textarea will have
 
 This class could be subclassed in order to have more customization e.g.
 
@@ -1024,15 +1035,26 @@ beware of security issues anyway.
 IntParameter
 ############
 
+::
+    BooleanParameter(name="debug_level",
+        label="debug level (1-10)", default=2)
+
 This parameter type accepts an integer value using a text-entry box.
 
 BooleanParameter
 ################
 
+::
+    BooleanParameter(name="force_build_clean",
+        label="force a make clean", default=False)
+
 This type represents a boolean value. It will be presented as a checkbox.
 
 UserNameParameter
 #################
+
+::
+    UserNameParameter(label="your name:<br>", size=80)
 
 This parameter type accepts a username.  If authentication is active, it will
 use the authenticated user instead of displaying a text-entry box.
@@ -1046,7 +1068,9 @@ use the authenticated user instead of displaying a text-entry box.
 ChoiceStringParameter
 #####################
 
-name, label, default, choices=[], strict=True, multiple=False)
+::
+    ChoiceStringParameter(name="branch",
+        choices=["main","devel"], default="main")
 
 This parameter type lets the user choose between several choices (e.g the list
 of branches you are supporting, or the test campaign to run).  If ``multiple``
