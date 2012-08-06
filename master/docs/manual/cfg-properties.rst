@@ -248,11 +248,11 @@ syntaxes in the parentheses.
     If ``propname`` exists, substitute ``replacement``; otherwise,
     substitute an empty string.
 
-``propname:?:sub_if_true:sub_if_false``
+``propname:?:sub_if_exists:sub_if_missing``
 
-``propname:#?:sub_if_exists:sub_if_missing``
-    Ternary substitution, depending on either ``propname`` being ``True`` (with
-    ``:?``, similar to ``:~``) or being present (with ``:#?``, like ``:+``).
+``propname:#?:sub_if_true:sub_if_false``
+    Ternary substitution, depending on either ``propname`` being present (with
+    ``:?``, similar to ``:+``) or being ``True`` (with ``:#?``, like ``:~``).
     Notice that there is a colon immediately following the question mark *and*
     between the two substitution alternatives. The character that follows the
     question mark is used as the delimeter between the two alternatives. In the
