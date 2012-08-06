@@ -22,7 +22,7 @@ Features
 
 * ``Source`` and ``ShellCommand`` steps now have an optional ``descriptionSuffix``, a suffix to the
   ``description``/``descriptionDone`` values. For example this can help distinguish between
-   multiple ``Compile`` steps that are applied to different codebases.
+  multiple ``Compile`` steps that are applied to different codebases.
 
 * The ``Git`` step has a new ``getDescription`` option, which will run `git describe` after checkout
   normally.  See :bb:step:`Git` for details.
@@ -71,11 +71,11 @@ Deprecations, Removals, and Non-Compatible Changes
   values, simply provide them as ``codebases=[CodebaseParameter(name='', ...)]``.
 
     * The POST URL names for ``AnyPropertyParameter`` fields have changed. For example,
-    'property1name' is now 'property1_name', and 'property1value' is now 'property1_value'.
-    Please update any bookmarked or saved URL's that used these fields.
+      'property1name' is now 'property1_name', and 'property1value' is now 'property1_value'.
+      Please update any bookmarked or saved URL's that used these fields.
 
     * ``forcesched.BaseParameter`` API has changed quite a bit and is no longer backwards
-    compatible. Updating guidelines:
+      compatible. Updating guidelines:
 
       * ``get_from_post`` is renamed to ``getFromKwargs``
       * ``update_from_post`` is renamed to ``updateFromKwargs``. This function's parameters
