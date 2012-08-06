@@ -79,7 +79,7 @@
 {% endmacro %}
 
 {% macro force_build_scheduler_parameter(f, authz, request, sch, default_props) %}
-    {% if f and (f.fullName != "username" or not authz.authenticated(request)) %}
+    {% if f and not f.hide and (f.fullName != "username" or not authz.authenticated(request)) %}
     <div class="row{% for subtype in f.type %} force-{{subtype}}{%endfor%}"{% if f.name %} id="force-{{sch.name}}-{{f.fullName}}"{% endif %}>
     {% if 'text' in f.type or 'int' in f.type %}
        <span class="label">{{f.label}}</span>

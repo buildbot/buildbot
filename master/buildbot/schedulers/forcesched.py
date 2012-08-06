@@ -39,6 +39,7 @@ class BaseParameter(object):
     multiple = False
     regex = None
     debug=True
+    hide = False
 
     @property
     def fullName(self):
@@ -387,7 +388,7 @@ class CodebaseParameter(NestedParameter):
 
     def createSourcestamp(self, properties, kwargs):
         # default, just return the things we put together
-        return kwargs.get(self.fullName, None)
+        return kwargs.get(self.fullName, {})
 
     def updateFromKwargs(self, sourcestamps, kwargs, properties, **kw):
         self.collectChildProperties(sourcestamps=sourcestamps,
@@ -397,7 +398,7 @@ class CodebaseParameter(NestedParameter):
  
         # convert the "property" to a sourcestamp
         ss = self.createSourcestamp(properties, kwargs)
-        if ss:
+        if ss is not None:
             sourcestamps[self.codebase] = ss
 
 
@@ -486,6 +487,8 @@ class ForceScheduler(base.BaseScheduler):
         # Use the default single codebase form if none are provided
         if codebases is None:
             codebases =[CodebaseParameter(codebase='')]
+        elif not codebases:
+            raise ValidationError("'codebases' cannot be empty; use CodebaseParameter(codebase='', hide=True) if needed")
         
         codebase_dict = {}
         for codebase in codebases:
