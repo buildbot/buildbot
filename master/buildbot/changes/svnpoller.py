@@ -49,7 +49,7 @@ def split_file_branches(path):
     else:
         return None
 
-def split_file_project_branches(path):
+def split_file_projects_branches(path):
     # turn projectname/trunk/subdir/file.c into SVNFile(project=projectname, branch=trunk, path=subdir/file.c)
     if not "/" in path:
         return None

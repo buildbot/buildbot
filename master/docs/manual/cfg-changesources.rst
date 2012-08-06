@@ -953,14 +953,14 @@ When using this splitter the poller will set the ``project`` attribute of any
 changes to the ``project`` attribute of the poller.
 
 For repositories with the ``{PROJECT}/trunk`` and
-``{PROJECT}/branches/{BRANCH}`` layout, ``split_file_project_branches`` will do
+``{PROJECT}/branches/{BRANCH}`` layout, ``split_file_projects_branches`` will do
 the job::
 
     from buildbot.changes.svnpoller import SVNPoller
-    from buildbot.changes.svnpoller import split_file_project_branches
+    from buildbot.changes.svnpoller import split_file_projects_branches
     c['change_source'] = SVNPoller(
         svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/",
-        split_file=split_file_project_branches)
+        split_file=split_file_projects_branches)
 
 When using this splitter the poller will set the ``project`` attribute of any
 changes to the project determined by the splitter.

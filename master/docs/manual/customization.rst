@@ -202,6 +202,7 @@ function is always given a string that names a file relative to the
 subdirectory pointed to by the :bb:chsrc:`SVNPoller`\'s ``svnurl=`` argument.
 It is expected to return a dictionary with at least the ``path`` key. The
 splitter may optionally set ``branch``, ``project`` and ``repository``.
+For backwards compatibility it may return a tuple of ``(branchname, path)``.
 It may also return ``None`` to indicate that the file is of no interest.
 
 .. note:: the function should return ``branches/3_3`` rather than just ``3_3``
@@ -239,22 +240,25 @@ If you have multiple projects in the same repository your split function can
 attach a project name to the Change to help the Scheduler filter out unwanted
 changes::
 
-    from buildbot.changes.svnpoller import SVNFile, split_file_branches
-    def split_file_project_branches(path):
+    from buildbot.changes.svnpoller import split_file_branches
+    def split_file_projects_branches(path):
         if not "/" in path:
             return None
         project, path = path.split("/", 1)
         f = split_file_branches(path)
         if f:
-            f["project"] = project
+            info = dict(project=project, path=f[1])
+            if f[0]:
+                info['branch'] = f[0]
+            return info
         return f
 
 Again, this is provided by default. To use it you would do this::
 
-    from buildbot.changes.svnpoller import SVNPoller, split_file_project_branches
+    from buildbot.changes.svnpoller import SVNPoller, split_file_projects_branches
     c['change_source'] = SVNPoller(
        svnurl="https://svn.amanda.sourceforge.net/svnroot/amanda/",
-       split_file=split_file_project_branches)
+       split_file=split_file_projects_branches)
 
 Note here that we are monitoring at the root of the repository, and that within
 that repository is a ``amanda`` subdirectory which in turn has ``trunk`` and

@@ -138,6 +138,10 @@ Deprecations, Removals, and Non-Compatible Changes
   This allows the ``split_file`` function to distinguish between files and directories.
   Customized split functions may need to be adjusted accordingly.
 
+* The ``split_file`` function for :bb:chsrc:`SVNPoller` may now return a
+  dictionary instead of a tuple. This allows it to add extra information about
+  a change (such as ``project`` or ``repository``).
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
