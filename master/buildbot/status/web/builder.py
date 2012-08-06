@@ -25,7 +25,7 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     map_branches, path_to_authzfail, ActionResource, \
     getRequestCharset
 from buildbot.schedulers.forcesched import ForceScheduler
-from buildbot.schedulers.forcesched import InheritBuildParameter
+from buildbot.schedulers.forcesched import InheritBuildParameter, NestedParameter
 from buildbot.schedulers.forcesched import ValidationError
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
@@ -168,6 +168,29 @@ class ForceBuildActionResource(ActionResource):
         # send the user back to the builder page
         defer.returnValue((path_to_builder(req, self.builder_status), msg))
 
+def buildForceContextForField(req, default_props, sch, field):
+    pname = "%s.%s"%(sch.name, field.fullName)
+    
+    default = field.default
+    if isinstance(field, InheritBuildParameter):
+        # yes, I know, its bad to overwrite the parameter attribute,
+        # but I dont have any other simple way of doing this atm.
+        field.choices = field.compatible_builds(master.status, buildername)
+        if field.choices:
+            default = field.choices[0]
+            
+    default = req.args.get(pname, [default])[0]
+    if field.type=="bool":
+        default_props[pname] = "checked" if default else ""
+    else:
+        # filter out unicode chars, and html stuff
+        if isinstance(default, unicode):
+            default = html.escape(default.encode('utf-8','ignore'))
+        default_props[pname] = default
+        
+    if isinstance(field, NestedParameter):
+        for subfield in field.fields:
+            buildForceContextForField(req, default_props, sch, subfield)
 
 def buildForceContext(cxt, req, master, buildername=None):
     force_schedulers = {}
@@ -175,23 +198,9 @@ def buildForceContext(cxt, req, master, buildername=None):
     for sch in master.allSchedulers():
         if isinstance(sch, ForceScheduler) and (buildername is None or(buildername in sch.builderNames)):
             force_schedulers[sch.name] = sch
-            for p in sch.all_fields:
-                pname = "%s.%s"%(sch.name, p.name)
-                default = p.default
-                if isinstance(p, InheritBuildParameter):
-                    # yes, I know, its bad to overwrite the parameter attribute,
-                    # but I dont have any other simple way of doing this atm.
-                    p.choices = p.compatible_builds(master.status, buildername)
-                    if p.choices:
-                        default = p.choices[0]
-                default = req.args.get(pname, [default])[0]
-                if p.type=="bool":
-                    default_props[pname] = "checked" if default else ""
-                else:
-                    # filter out unicode chars, and html stuff
-                    if isinstance(default, unicode):
-                        default = html.escape(default.encode('utf-8','ignore'))
-                    default_props[pname] = default
+            for field in sch.all_fields:
+                buildForceContextForField(req, default_props, sch, field)
+                
     cxt['force_schedulers'] = force_schedulers
     cxt['default_props'] = default_props
 
