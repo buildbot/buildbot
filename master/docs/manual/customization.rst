@@ -193,16 +193,16 @@ watch more than just ``amanda/trunk``. We will set it to
 ``amanda`` so that we'll see both the trunk and all the branches.
 Second, we have to tell :bb:chsrc:`SVNPoller` how to split the
 ``({PROJECT-plus-BRANCH})({FILEPATH})`` strings it gets from the repository
-out into ``({BRANCH})`` and ``({FILEPATH})``` pairs.
+out into ``({BRANCH})`` and ``({FILEPATH})```.
 
 We do the latter by providing a ``split_file`` function. This function is
 responsible for splitting something like ``branches/3_3/common-src/amanda.h``
 into ``branch='branches/3_3'`` and ``filepath='common-src/amanda.h'``. The
 function is always given a string that names a file relative to the
 subdirectory pointed to by the :bb:chsrc:`SVNPoller`\'s ``svnurl=`` argument.
-It is expected to return a ``({BRANCHNAME}, {FILEPATH})`` tuple (in which
-``{FILEPATH}`` is relative to the branch indicated), or ``None`` to indicate
-that the file is outside any project of interest.
+It is expected to return a dictionary with at least the ``path`` key. The
+splitter may optionally set ``branch``, ``project`` and ``repository``.
+It may also return ``None`` to indicate that the file is of no interest.
 
 .. note:: the function should return ``branches/3_3`` rather than just ``3_3``
     because the SVN checkout step, will append the branch name to the
@@ -234,6 +234,33 @@ multiple branches, we would use this::
 Changes for all sorts of branches (with names like ``"branches/1.5.x"``, and
 ``None`` to indicate the trunk) will be delivered to the Schedulers.  Each
 Scheduler is then free to use or ignore each branch as it sees fit.
+
+If you have multiple projects in the same repository your split function can
+attach a project name to the Change to help the Scheduler filter out unwanted
+changes::
+
+    from buildbot.changes.svnpoller import SVNFile, split_file_branches
+    def split_file_project_branches(path):
+        if not "/" in path:
+            return None
+        project, path = path.split("/", 1)
+        f = split_file_branches(path)
+        if f:
+            f["project"] = project
+        return f
+
+Again, this is provided by default. To use it you would do this::
+
+    from buildbot.changes.svnpoller import SVNPoller, split_file_project_branches
+    c['change_source'] = SVNPoller(
+       svnurl="https://svn.amanda.sourceforge.net/svnroot/amanda/",
+       split_file=split_file_project_branches)
+
+Note here that we are monitoring at the root of the repository, and that within
+that repository is a ``amanda`` subdirectory which in turn has ``trunk`` and
+``branches``. It is that ``amanda`` subdirectory whose name becomes the
+``project`` field of the Change.
+
 
 BRANCHNAME/PROJECT/FILEPATH repositories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -312,7 +339,13 @@ The following definition for :meth:`my_file_splitter` will do the job::
         projectname = pieces.pop(0)
         if projectname != 'Nevow':
             return None # wrong project
-        return (branch, '/'.join(pieces))
+        return dict(branc=branch, path='/'.join(pieces))
+
+If you later decide you want to get changes for Quotient as well you could
+replace the last 3 lines with simply::
+
+    return dict(project=projectname, branch=branch, path='/'.join(pieces))
+
 
 .. _Writing-Change-Sources:
 
