@@ -367,10 +367,15 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                     if not branches[key].has_key('action'):
                         branches[key]['action'] = action
 
+                    if "codebase" in where:
+                        branches[key]['codebase'] = where["codebase"]
+
             for key in branches.keys():
                 project, repository, branch = key
                 action = branches[key]['action']
                 files  = branches[key]['files']
+                codebase = branches[key].get('codebase', None)
+
                 number_of_directories_changed = branches[key]['number_of_directories']
                 number_of_files_changed = len(files)
 
@@ -386,7 +391,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                             revlink=revlink,
                             category=self.category,
                             repository=repository or self.svnurl,
-                            project=project or self.project)
+                            project=project or self.project,
+                            codebase=codebase)
                     changes.append(chdict)
 
         return changes

@@ -391,6 +391,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
             if f:
                 f["project"] = "overriden-project"
                 f["repository"] = "overriden-repository"
+                f["codebase"] = "overriden-codebase"
             return f
 
         base = ("file:///home/warner/stuff/Projects/BuildBot/trees/" +
@@ -407,12 +408,14 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.failUnlessEqual(changes[0]['revision'], '2')
         self.failUnlessEqual(changes[0]['project'], "overriden-project")
         self.failUnlessEqual(changes[0]['repository'], "overriden-repository")
+        self.failUnlessEqual(changes[0]['codebase'], "overriden-codebase")
 
         self.failUnlessEqual(changes[1]['branch'], "branch")
         self.failUnlessEqual(changes[1]['files'], ["main.c"])
         self.failUnlessEqual(changes[1]['revision'], '3')
         self.failUnlessEqual(changes[1]['project'], "overriden-project")
         self.failUnlessEqual(changes[1]['repository'], "overriden-repository")
+        self.failUnlessEqual(changes[1]['codebase'], "overriden-codebase")
 
     def test_poll(self):
         s = self.attachSVNPoller(sample_base, split_file=split_file,
