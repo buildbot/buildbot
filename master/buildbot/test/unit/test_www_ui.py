@@ -16,7 +16,8 @@
 from buildbot.www import ui, service
 from buildbot.test.util import www
 from twisted.trial import unittest
-from twisted.internet import threads, defer
+from twisted.internet import defer, reactor
+from twisted.python import failure
 
 class Test(www.WwwTestMixin, unittest.TestCase):
     def test_render(self):
@@ -30,9 +31,8 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         return d
 
 try:
-    from ghost import Ghost
-    Ghost = Ghost # for pyflakes
-    has_ghost=True
+    from buildbot.test.util.txghost import Ghost
+    has_ghost= Ghost != None
 except ImportError:
     has_ghost=False
 
@@ -44,6 +44,7 @@ class TestGhostPy(www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
         # hack to prevent twisted.web.http to setup a 1 sec callback at init
         import twisted
+        #twisted.internet.base.DelayedCall.debug = True
         twisted.web.http._logDateTimeUsers = 1
         # lets resolve the tested port unicity later...
         port = 8010
@@ -52,23 +53,23 @@ class TestGhostPy(www.WwwTestMixin, unittest.TestCase):
         self.svc = service.WWWService(self.master)
         yield self.svc.startService()
         yield self.svc.reconfigService(self.master.config)
+        self.ghost = Ghost()
 
     @defer.inlineCallbacks
     def tearDown(self):
+        from  twisted.internet.tcp import Server
+        del self.ghost
         yield self.svc.stopService()
+        # webkit has the bad habbit on not closing the persistent
+        # connections, so we need to hack them away to make trial happy
+        for reader in reactor.getReaders():
+            if isinstance(reader, Server):
+                f = failure.Failure(Exception("test end"))
+                reader.connectionLost(f)
+
+    @defer.inlineCallbacks
     def test_home(self):
-        def threaded():
-            # ghost api is synchronous, but will refuse to run outside of main thread :-(
-            # so we'll probably need to fork ghost, make it twisted aware
-            # and use the qtreactor for those tests
-            code = """
-from ghost import Ghost
-ghost = Ghost()
-ghost.open("%(url)s")
-ghost.wait_for_selector("div.span9")
-base_url, resources = ghost.evaluate("bb_router.base_url")
-assert(base_url== "%(url)s")
-	    """%dict(url=self.url)
-            import os
-            self.failIf(os.system("python -c '"+code+"'"))
-        return threads.deferToThread(threaded)
+        yield self.ghost.open(self.url)
+        yield self.ghost.wait_for_selector("ul.breadcrumb")
+        base_url, resources = self.ghost.evaluate("bb_router.base_url")
+        assert(base_url== self.url)

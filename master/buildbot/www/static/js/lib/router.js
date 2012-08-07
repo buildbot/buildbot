@@ -149,7 +149,7 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 	},
 	/* we could use dojox.storage, but we really want to only use html5, and not embed flash crap in our build */
 	localStore: function(key, value) {
-	    if (typeof localStorage === 'undefined') {
+	    if (localStorage === null || typeof localStorage === 'undefined') {
 		return;
 	    }
 	    value = dojo.toJson(value);
@@ -159,7 +159,7 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 	    }
 	},
 	localGet: function(key, _default) {
-	    if (typeof localStorage === 'undefined') {
+	    if (localStorage === null || typeof localStorage === 'undefined') {
 		return _default;
 	    }
 	    var json = localStorage.getItem(key);
