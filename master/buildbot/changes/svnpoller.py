@@ -300,8 +300,6 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             return
         if isinstance(where, tuple):
             where = dict(branch=where[0], path=where[1])
-        for key in ("project", "repository", "branch", "path"):
-            where.setdefault(key, None)
         return where
 
     def create_changes(self, new_logentries):
@@ -349,34 +347,33 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 # if 'where' is None, the file was outside any project that
                 # we care about and we should ignore it
                 if where:
-                    key = where["project"], where["repository"], where["branch"]
+                    branch = where.get("branch", None)
                     filename = where["path"]
-                    if not key in branches:
-                        branches[key] = { 'files': [], 'number_of_directories': 0}
+                    if not branch in branches:
+                        branches[branch] = { 'files': [], 'number_of_directories': 0}
                     if filename == "":
                         # root directory of branch
-                        branches[key]['files'].append(filename)
-                        branches[key]['number_of_directories'] += 1
+                        branches[branch]['files'].append(filename)
+                        branches[branch]['number_of_directories'] += 1
                     elif filename.endswith("/"):
                         # subdirectory of branch
-                        branches[key]['files'].append(filename[:-1])
-                        branches[key]['number_of_directories'] += 1
+                        branches[branch]['files'].append(filename[:-1])
+                        branches[branch]['number_of_directories'] += 1
                     else:
-                        branches[key]['files'].append(filename)
+                        branches[branch]['files'].append(filename)
 
-                    if not branches[key].has_key('action'):
-                        branches[key]['action'] = action
+                    if not branches[branch].has_key('action'):
+                        branches[branch]['action'] = action
 
-                    if "codebase" in where:
-                        branches[key]['codebase'] = where["codebase"]
+                    for key in ("repository", "project", "codebase"):
+                        if key in where:
+                            branches[branch][key] = where[key]
 
-            for key in branches.keys():
-                project, repository, branch = key
-                action = branches[key]['action']
-                files  = branches[key]['files']
-                codebase = branches[key].get('codebase', None)
+            for branch in branches.keys():
+                action = branches[branch]['action']
+                files  = branches[branch]['files']
 
-                number_of_directories_changed = branches[key]['number_of_directories']
+                number_of_directories_changed = branches[branch]['number_of_directories']
                 number_of_files_changed = len(files)
 
                 if action == u'D' and number_of_directories_changed == 1 and number_of_files_changed == 1 and files[0] == '':
@@ -390,9 +387,9 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                             branch=branch,
                             revlink=revlink,
                             category=self.category,
-                            repository=repository or self.svnurl,
-                            project=project or self.project,
-                            codebase=codebase)
+                            repository=branches[branch].get('repository', self.svnurl),
+                            project=branches[branch].get('project', self.project),
+                            codebase=branches[branch].get('codebase', None))
                     changes.append(chdict)
 
         return changes
