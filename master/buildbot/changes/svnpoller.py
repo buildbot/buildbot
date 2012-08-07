@@ -50,7 +50,7 @@ def split_file_branches(path):
         return None
 
 def split_file_projects_branches(path):
-    # turn projectname/trunk/subdir/file.c into SVNFile(project=projectname, branch=trunk, path=subdir/file.c)
+    # turn projectname/trunk/subdir/file.c into dict(project=projectname, branch=trunk, path=subdir/file.c)
     if not "/" in path:
         return None
     project, path = path.split("/", 1)
