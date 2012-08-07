@@ -22,9 +22,9 @@ Features
 
 * ``Source`` and ``ShellCommand`` steps now have an optional ``descriptionSuffix``, a suffix to the
   ``description``/``descriptionDone`` values. For example this can help distinguish between
-   multiple ``Compile`` steps that are applied to different codebases.
+  multiple ``Compile`` steps that are applied to different codebases.
 
-* The ``Git`` step has a new ``getDescription`` option, which will run `git describe` after checkout
+* The ``Git`` step has a new ``getDescription`` option, which will run ``git describe`` after checkout
   normally.  See :bb:step:`Git` for details.
 
 * A new ternary substitution operator ``:?:`` and ``:#?:`` is available with the ``Interpolate``
@@ -47,7 +47,7 @@ Features
 * Added a new property ``httpLoginUrl`` to ``buildbot.status.web.authz.Authz``
   to render a nice Login link in WebStatus for unauthenticated users if
   ``useHttpHeader`` and ``httpLoginUrl`` are set.
-  
+
 * ``ForceScheduler`` has been updated:
 
   * support for multiple :ref:`codebases<Attr-Codebase>` via the ``codebases`` parameter
@@ -71,13 +71,14 @@ Deprecations, Removals, and Non-Compatible Changes
   values, simply provide them as ``codebases=[CodebaseParameter(name='', ...)]``.
 
     * The POST URL names for ``AnyPropertyParameter`` fields have changed. For example,
-    'property1name' is now 'property1_name', and 'property1value' is now 'property1_value'.
-    Please update any bookmarked or saved URL's that used these fields.
+      'property1name' is now 'property1_name', and 'property1value' is now 'property1_value'.
+      Please update any bookmarked or saved URL's that used these fields.
 
     * ``forcesched.BaseParameter`` API has changed quite a bit and is no longer backwards
-    compatible. Updating guidelines:
+      compatible. Updating guidelines:
 
       * ``get_from_post`` is renamed to ``getFromKwargs``
+
       * ``update_from_post`` is renamed to ``updateFromKwargs``. This function's parameters
         are now called via named parameters to allow subclasses to ignore values it doesnt use.
         Subclasses should add ``**unused`` for future compatibility. A new parameter
