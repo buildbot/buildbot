@@ -21,6 +21,7 @@ from twisted.web import server
 from buildbot.www import resource
 from buildbot.data import base, exceptions as data_exceptions
 from buildbot.util import json
+from buildbot.status.web.status_json import JsonStatusResource
 
 class RestRootResource(resource.Resource):
     version_classes = {}
@@ -50,6 +51,11 @@ class RestRootResource(resource.Resource):
         return json.dumps(dict(api_versions=api_versions))
 
 # API version 1 was the 0.8.x status_json.py API
+
+class V1RootResource(JsonStatusResource):
+    def __init__(self, master):
+        self.master = master
+        JsonStatusResource.__init__(self,master.status)
 
 class V2RootResource(resource.Resource):
     # rather than construct the entire possible hierarchy of Rest resources,
@@ -194,4 +200,5 @@ class V2RootResource(resource.Resource):
             return "%sapi/v%d/%s" % (self.baseurl, self.apiVersion,
                                     '/'.join(obj.path))
 
+RestRootResource.addApiVersion(1, V1RootResource)
 RestRootResource.addApiVersion(2, V2RootResource)

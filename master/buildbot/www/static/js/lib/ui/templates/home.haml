@@ -1,0 +1,31 @@
+.container-fluid
+  %ul.breadcrumb
+    %li
+      %a{href:"#/"}Home
+  .row-fluid
+    .span3
+      .well.sidebar-nav
+        .btn.btn-mini.pull-right{data-dojo-attach-event:"onclick:clearHistory"} Clear History
+        %ul.nav.nav-list
+          %li.nav-header Most recently browsed builds
+          :each b in recent_builds
+            %li
+              %a{href:b.url}#{b.title}
+          %li.nav-header Most recently browsed builders
+          :each b in recent_builders
+            %li
+              %a{href:b.url}#{b.title}
+    .span9
+      .well
+        %h2 Welcome to buildbot
+        Probably we should display information about the current config
+        .row-fluid
+          .span4
+            %ul
+              %li Buildbot version
+              %li Twisted version
+          .span4
+            %ul
+              %li Project Name
+              %li Project Version
+              %li Project Url

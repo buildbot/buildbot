@@ -14,69 +14,91 @@
 // Copyright Buildbot Team Members
 
 define(["dojo/_base/declare", "lib/ui/base",
+	"dgrid/OnDemandGrid","dgrid/extensions/DijitRegistry", "dojo/store/Observable", "dojo/store/Memory",
+	"dojo/_base/array", "dojo/fx/Toggler", "dojo/fx",
         "lib/haml!./templates/build.haml"
-       ], function(declare, Base, template) {
+       ], function(declare, Base, Grid, DijitRegistry, observable, Memory, array, Toggler, fx, template) {
     "use strict";
     return declare([Base], {
 	templateFunc : template,
+	togglers : [],
         constructor: function(args){
             declare.safeMixin(this,args);
         },
+	fullName: function() {
+	    return this.builderName+"/"+this.number;
+	},
 	loadMoreContext: function(){
-	    var deferred = new dojo.Deferred();
 	    this.builderName = this.path_components[1].toString();
 	    this.number = this.path_components[2].toString();
-	    /* simulate loading of all needed stuff from json API */
-	    setTimeout(dojo.hitch(this, function(){ 
-		this.sourceStamps = [ { changes: { changeid:"changeid1",
-						   revision:"revision1",
-						   committer: "me@anonymous.com",
-						   files: ["path/to/file1",
-							   "path/to/file2"],
-						   comments: "this code should pas CI" }}];
-		this.reason = "change committed";
-		this.blame = ["me@anonymous.com"];
-		this.properties = [ { name:"prop1", value:"value1", source:"fake"} ];
-		this.times = ['two hours ago', 'last hour'];
-		this.when_time = "soon";
-		this.when = "~5min";
-		this.text = "build succeeded";
-		this.results = "SUCCESS"
-		this.slave = "slave1"
-		this.slave_url = "#/slaves/"+this.slave
-		this.steps = [ {name:"build step",
-				text:"make done",
-				results:"SUCCESS",
-				isStarted:true,
-				isFinished:true,
-				statistics:[],
-				times:[0,1],
-				expectations: [],
-				eta:null,
-				urls:{url1:"./url1.html"},
-				step_number: 1,
-				hidden:false,
-				logs:{stdio:"./stdio"}},
-			       {name:"test step",
-				text:"test done",
-				results:"SUCCESS",
-				isStarted:true,
-				isFinished:true,
-				statistics:[],
-				times:[0,1],
-				expectations: [],
-				eta:null,
-				urls:{url1:"url2.html"},
-				step_number: 2,
-				hidden:false,
-				logs:{stdio:"stdio"}}];
-		this.currentStep="test step";
-		this.results_class = "btn-success"
-		deferred.callback({success: true}); }), 100);
-	    return deferred;
+	    return this.getApiV1("builders",this.builderName,"builds",this.number).then(
+		dojo.hitch(this, function(b) { /* success */
+		    this.b = b;
+		    window.bb.addHistory("recent_builds", this.fullName());
+		}),
+		dojo.hitch(this, function(err) { /* error */
+		    if (err.status === 404) {
+			this.showError("build: "+this.fullName()+" not found");
+			return 0;
+		    }
+		}));
 	},
 	isFinished: function() {
-	    return this.number<5;
+	    return this.b.times[1]!==null;
+	},
+	postCreate: function(){
+	    if (this.error_msg) {
+		return;
+	    }
+	    /* build the properties grid */
+	    var data=[];
+	    array.forEach(this.b.properties, function(p) {
+		data.push({ name:p[0], value:p[1], source:p[2]});
+	    });
+	    var store = observable(new Memory({data:data,idProperty: "name"}));
+	    var grid = new (declare([Grid,DijitRegistry]))({
+		store: store,
+		cellNavigation:false,
+		tabableHeader: false,
+		columns: {
+		    name: "Name",
+		    value: "Value",
+		    source: "Source"
+		}
+	    }, this.propertiesgrid_node);
+	    grid.refresh();
+	},
+	stepLogsDisplayStyle: function(step) {
+	    if ((step.isFinished && step.results[0]>0) ||
+		step.isStarted && !step.isFinished) {
+		return "";
+	    }
+	    return "display:none";
+	},
+	toggleLogs: function(ev) {
+	    var toggler = null;
+	    array.forEach(this.togglers, function(t) {
+		if (t.node === ev.target.nextSibling) {
+		    toggler = t;
+		}
+	    });
+	    if (toggler === null) {
+		toggler = new Toggler({
+		    node:ev.target.nextSibling,
+		    showFunc: fx.wipeIn,
+		    hideFunc: fx.wipeOut
+		});
+		toggler.hidden = dojo.style(toggler.node, "display")==="none";
+		this.togglers.push(toggler);
+	    }
+	    if (toggler.hidden) {
+		console.log("show");
+		toggler.show();
+	    } else {
+		console.log("hide");
+		toggler.hide();
+	    }
+	    toggler.hidden = !toggler.hidden;
 	}
     });
 });

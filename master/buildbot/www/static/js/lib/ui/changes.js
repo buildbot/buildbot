@@ -16,11 +16,11 @@
 define(["dojo/_base/declare", "lib/ui/base", "dgrid/OnDemandGrid",
 	"dgrid/Selection", "dgrid/Keyboard","dgrid/extensions/ColumnHider",
 	"dojo/store/Observable", "lib/fakeChangeStore",
-        "dojo/text!./templates/changes.html"],
+        "lib/haml!./templates/changes.haml"],
        function(declare, Base, Grid, Selection, Keyboard, Hider, observable, Store, template) {
 	   "use strict";
 	   return declare([Base], {
-	       templateString:template,
+	       templateFunc:template,
                constructor: function(args){
 		   declare.safeMixin(this,args);
                },
