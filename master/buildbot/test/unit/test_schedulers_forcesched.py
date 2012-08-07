@@ -119,8 +119,11 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         property3_name='p3',property3_value='g',
                         property4_name='p4',property4_value='h'
                         )
-        
         bsid,brids = res
+
+        # only one builder forced, so there should only be one brid
+        self.assertEqual(len(brids), 1)
+
         self.db.buildsets.assertBuildset\
             (bsid,
              dict(reason="A build was forced by 'user': because",

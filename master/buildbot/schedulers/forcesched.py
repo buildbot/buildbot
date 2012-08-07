@@ -576,6 +576,7 @@ class ForceScheduler(base.BaseScheduler):
             reason = r,
             sourcestamps = sourcestamps,
             properties = properties,
+            builderNames = [ builder_name ],
             )
 
         defer.returnValue(res)

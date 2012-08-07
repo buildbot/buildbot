@@ -325,7 +325,8 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
 
     @defer.inlineCallbacks
-    def addBuildsetForSourceStampSetDetails(self, reason, sourcestamps, properties):
+    def addBuildsetForSourceStampSetDetails(self, reason, sourcestamps,
+                                            properties, builderNames=None):
         if sourcestamps is None:
             sourcestamps = {}
 
@@ -356,7 +357,8 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
         rv = yield self.addBuildsetForSourceStamp(
                                 setid=new_setid, reason=reason,
-                                properties=properties)
+                                properties=properties,
+                                builderNames=builderNames)
 
         defer.returnValue(rv)
 
