@@ -163,6 +163,11 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                           name='foo', builderNames=['bar'],
                           codebases=[IntParameter('foo')],)
         
+        # codebases cannot be empty
+        self.assertRaises(ValidationError, ForceScheduler,
+                          name='foo', builderNames=['bar'],
+                          codebases=[])
+        
     @defer.inlineCallbacks
     def test_good_codebases(self):
         sched = self.makeScheduler(codebases=['foo', CodebaseParameter('bar')])
