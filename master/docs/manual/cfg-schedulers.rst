@@ -95,12 +95,12 @@ available with all schedulers.
     codebase) will be incorporated by the new build. The buildsteps referencing
     to the codebases that have changes get information about those changes. 
     The buildstep that references to a codebase that does not have changes in
-    the build get the information from the codebases defintion as configured in
+    the build get the information from the codebases definition as configured in
     the scheduler.
 
 ``onlyImportant``
     A boolean that, when ``True``, only adds important changes to the
-    buildset as sepcified in the ``fileIsImportant`` callable. This
+    buildset as specified in the ``fileIsImportant`` callable. This
     means that unimportant changes are ignored the same way a
     ``change_filter`` filters changes. This defaults to
     ``False`` and only applies when ``fileIsImportant`` is
@@ -495,7 +495,7 @@ started every night at 3:00am::
             hour=3,
             minute=0))
 
-This scheduler will perform a build each monday morning at 6:23am and
+This scheduler will perform a build each Monday morning at 6:23am and
 again at 8:23am, but only if someone has committed code in the interim::
 
     c['schedulers'].append(
@@ -877,7 +877,7 @@ file is something like::
                  # need to pass a value ("")
                  revision=FixedParameter(name="revision", default=""),
                  repository=FixedParameter(name="repository", default=""),
-                 project=FixedParameter(name="repository", default=""),
+                 project=FixedParameter(name="project", default=""),
 
                  # in case you dont require authentication this will display
                  # input for user to type his name
@@ -938,7 +938,7 @@ All parameter types have a few common arguments:
 ``name`` (required)
 
     The name of the parameter. For properties, this will correspond to the name
-    of the property that your parameter will set.  THe name is also used
+    of the property that your parameter will set.  The name is also used
     internally as the identifier for in the HTML form.
 
 ``label`` (optional; default is same as name)
@@ -985,7 +985,7 @@ to enter an arbitrary string.  It adds the following arguments:
 
 ``size`` (optional; default: 10)
 
-    The width of the input field (in characteres)
+    The width of the input field (in characters)
 
 TextParameter
 #############
@@ -1003,7 +1003,7 @@ the StringParameter arguments, this type allows:
 
     The number of columns the textarea will have
 
-``rows`` (optional; defauflt: 20)
+``rows`` (optional; default: 20)
 
     The number of rows the textarea will have
 
@@ -1045,7 +1045,7 @@ This parameter type accepts a username.  If authentication is active, it will
 use the authenticated user instead of displaying a text-entry box.
 
 ``size`` (optional; default: 10)
-    The width of the input field (in characteres)
+    The width of the input field (in characters)
 
 ``need_email`` (optional; default True)
     If true, require a full email address rather than arbitrary text.
@@ -1061,7 +1061,7 @@ This parameter type lets the user choose between several choices (e.g the list
 of branches you are supporting, or the test campaign to run).  If ``multiple``
 is false, then its result is a string - one of the choices.  If ``multiple`` is
 true, then the result is a list of strings from the choices.  Its arguments, in
-addition to the common optoins, are:
+addition to the common options, are:
 
 ``choices``
 
