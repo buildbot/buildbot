@@ -765,7 +765,6 @@ hook to get fast notification of new changes.
 Suppose you have a poller configured like this::
 
     c['change_source'] = SVNPoller(
-        name="amanda",
         svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
         split_file=split_file_branches)
 
@@ -779,7 +778,7 @@ And you configure your WebStatus to enable this hook::
 Then you will be able to trigger a poll of the SVN repository by poking the
 ``/change_hook/poller`` URL from a commit hook like this::
 
-    curl http://yourbuildbot/change_hook/poller?poller=amanda
+    curl http://yourbuildbot/change_hook/poller?poller=https%3A%2F%2Famanda.svn.sourceforge.net%2Fsvnroot%2Famanda%2Famanda
 
 If no ``poller`` argument is provided then the hook will trigger polling of all
 polling change sources.
@@ -789,7 +788,7 @@ option::
 
     c['status'].append(html.WebStatus(
         …,
-        change_hook_dialects={'poller': {'allowed': ['amanda']}}
+        change_hook_dialects={'poller': {'allowed': ['https://amanda.svn.sourceforge.net/svnroot/amanda/amanda']}}
     ))
 
 
