@@ -14,8 +14,15 @@ Master
 Features
 ~~~~~~~~
 
+* The :bb:chsrc:`SVNPoller` now supports multiple projects and codebases.  See
+  :bb:pull:`443`.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* The ``split_file`` function for :bb:chsrc:`SVNPoller` may now return a
+  dictionary instead of a tuple. This allows it to add extra information about
+  a change (such as ``project`` or ``repository``).
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
