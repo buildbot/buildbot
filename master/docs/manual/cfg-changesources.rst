@@ -1036,7 +1036,8 @@ arguments:
     (see the :command:`git fetch` help for more info on git-url formats)
 
 ``branches``
-    a list of the branches to fetch, will default to ``['master']``
+    a list of the branches to fetch. If this is None all branches will be
+    polled.
 
 ``branch``
     accepts a single branch name to fetch.
