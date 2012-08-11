@@ -52,7 +52,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         elif branch:
             branches = [branch]
         elif not branches:
-            branches = ['master']
+            branches = None
 
         self.repourl = repourl
         self.branches = branches
@@ -93,23 +93,47 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         status = ""
         if not self.master:
             status = "[STOPPED - check log]"
+        if self.branches:
+            branches = ', '.join(self.branches)
+        else:
+            branches = 'ALL'
+
         str = ('GitPoller watching the remote git repository %s, branches: %s %s'
-                % (self.repourl, ', '.join(self.branches), status))
+                % (self.repourl, ', '.join(branches), status))
         return str
+
+    @defer.inlineCallbacks
+    def getBranches(self):
+        branches = []
+        rows = yield self._dovccmd('ls-remote', [self.repourl])
+        for row in rows.splitlines():
+            if not '\t' in row:
+                # Not a useful line
+                continue
+            sha, ref = row.split("\t")
+            if not ref.startswith("refs/heads/"):
+                continue
+            branch = ref[11:]
+            branches.append(branch)
+        defer.returnValue(branches)
 
     @defer.inlineCallbacks
     def poll(self):
         yield self._dovccmd('init', ['--bare', self.workdir])
 
+        branches = self.branches
+        if not branches:
+            branches = yield self.getBranches()
+
         refspecs = [
                 '+%s:%s'% (branch, self._localBranch(branch))
-                for branch in self.branches
+                for branch in branches
                 ]
         yield self._dovccmd('fetch',
                 [self.repourl] + refspecs, path=self.workdir)
 
         revs = {}
-        for branch in self.branches:
+        for branch in branches:
             try:
                 revs[branch] = rev = yield self._dovccmd('rev-parse',
                         [self._localBranch(branch)], path=self.workdir)
