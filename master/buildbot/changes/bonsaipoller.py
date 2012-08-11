@@ -207,9 +207,9 @@ class BonsaiPoller(base.PollingChangeSource):
                      "module", "branch", "cvsroot"]
 
     def __init__(self, bonsaiURL, module, branch, tree="default",
-                 cvsroot="/cvsroot", pollInterval=30, project='', name=None):
+                 cvsroot="/cvsroot", pollInterval=30, project=''):
 
-        base.PollingChangeSource.__init__(self, name=name, pollInterval=pollInterval)
+        base.PollingChangeSource.__init__(self, name=bonsaiURL, pollInterval=pollInterval)
 
         self.bonsaiURL = bonsaiURL
         self.module = module
