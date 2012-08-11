@@ -140,6 +140,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
     def test_poll_initial(self):
         self.expectCommands(
                 gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+                gpo.Expect('git', 'ls-remote', self.REPOURL)
+                    .stdout('bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\trefs/heads/master'),
                 gpo.Expect('git', 'fetch', self.REPOURL,
                     '+master:refs/buildbot/%s/master' % self.REPOURL_QUOTED)
                     .path('gitpoller-work'),
@@ -177,6 +179,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
     def test_poll_failFetch(self):
         self.expectCommands(
                 gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+                gpo.Expect('git', 'ls-remote', self.REPOURL)
+                    .stdout('bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\trefs/heads/master'),
                 gpo.Expect('git', 'fetch', self.REPOURL,
                     '+master:refs/buildbot/%s/master' % self.REPOURL_QUOTED)
                     .path('gitpoller-work')
@@ -190,6 +194,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
     def test_poll_failRevParse(self):
         self.expectCommands(
                 gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+                gpo.Expect('git', 'ls-remote', self.REPOURL)
+                    .stdout('bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\trefs/heads/master'),
                 gpo.Expect('git', 'fetch', self.REPOURL,
                     '+master:refs/buildbot/%s/master' % self.REPOURL_QUOTED)
                     .path('gitpoller-work'),
@@ -209,6 +215,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
     def test_poll_failLog(self):
         self.expectCommands(
                 gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+                gpo.Expect('git', 'ls-remote', self.REPOURL)
+                    .stdout('bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\trefs/heads/master'),
                 gpo.Expect('git', 'fetch', self.REPOURL,
                     '+master:refs/buildbot/%s/master' % self.REPOURL_QUOTED)
                     .path('gitpoller-work'),
@@ -246,6 +254,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
         self.expectCommands(
                 gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+                gpo.Expect('git', 'ls-remote', self.REPOURL)
+                    .stdout('bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\trefs/heads/master'),
                 gpo.Expect('git', 'fetch', self.REPOURL,
                     '+master:refs/buildbot/%s/master' % self.REPOURL_QUOTED)
                     .path('gitpoller-work')
@@ -403,6 +413,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
         self.expectCommands(
                 gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+                gpo.Expect('git', 'ls-remote', self.REPOURL)
+                    .stdout('bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\trefs/heads/master'),
                 gpo.Expect('git', 'fetch', self.REPOURL,
                     '+master:refs/buildbot/%s/master' % self.REPOURL_QUOTED)
                     .path('gitpoller-work')
@@ -440,6 +452,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         # benefit of the _get_changes method
         self.expectCommands(
                 gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+                gpo.Expect('git', 'ls-remote', self.REPOURL)
+                    .stdout('bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\trefs/heads/master'),
                 gpo.Expect('git', 'fetch', self.REPOURL,
                     '+master:refs/buildbot/%s/master' % self.REPOURL_QUOTED)
                     .path('gitpoller-work')
@@ -553,7 +567,7 @@ class TestGitPollerConstructor(unittest.TestCase, config.ConfigErrorsMixin):
 
     def test_branches_default(self):
         poller = gitpoller.GitPoller("/tmp/git.git")
-        self.assertEqual(poller.branches, ["master"])
+        self.assertEqual(poller.branches, None)
 
     def test_branches_oldBranch(self):
         poller = gitpoller.GitPoller("/tmp/git.git", branch='magic')
