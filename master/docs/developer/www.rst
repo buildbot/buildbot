@@ -1,32 +1,131 @@
 JS based web server
 ===================
 
-One of the goal of buildbot 0.9 is to rework the WebServer to use a more modern design
-and have most of its UI features implemented in JS instead of python/twisted
+One of the goals of buildbot 0.9.x is to rework the WebServer to use a more modern design and have most of its UI features implemented in JavaScript instead of Python.
 
-The rational behind this is that a client side UI releases pressure on the server.
-The web server only concentrates on serving json API, which translate seemlessly
-into data api calls, which are basic db queries. This removes a lot of sources for
-latency issue were long synchronous calculations were made in the server to generate complex
-pages.
+The rationale behind this is that a client side UI relieves pressure on the server while being more responsive for the user.
+The web server only concentrates on serving data via a REST interface to teh :ref:`Data_API`.
+This removes a lot of sources of latency where, in previous versions, long synchronous calculations were made on the server to generate complex pages.
 
-Other big advantage is the possibility for automatic update of status pages, without
-having to poll. The new system is using websocket in order to transfer data api events into
-connected clients.
-
-.. _How-To-Enable:
+Another big advantage is live updates of status pages, without having to poll or reload.
+The new system is using websockets in order to transfer Data API events into connected clients.
 
 How To Enable
 ~~~~~~~~~~~~~
 
-The new ``www`` ui is disabled by default for now, to enable it, simply add following code in you
-``master.cfg``
+The new ``www`` implementation is disabled by default for now. 
+To enable it, simply add following code in your ``master.cfg``
 
 .. code-block:: python
 
      c['www'] = dict(port=8010)
 
-.. _Testing_Setup:
+Server Side Design
+~~~~~~~~~~~~~~~~~~~
+
+The server resource set is divided into 4 main paths:
+
+ * /ui - The top level that serves generic html for the user interface.
+   This html page is a simple skeleton, and a placeholder that is then filled out by JS
+ * /static - static files.
+   The JavaScript framework is actually capable of getting these static files from another path, allowing high-volume installations to serve those files directly via Nginx or Apache.
+   This path is itself divided into several paths:
+
+  * /static/css - The source for CSS files
+  * /static/img - The source for image files
+  * /static/js/lib - The javascript source code of all buildbot js framework
+  * /static/js/lib/ui - The ui javascript files
+  * /static/js/lib/ui/templates - The html/haml templates for the ui
+  * /static/js/external - path for external js libs that needs to be downloaded separatly from buildbot
+
+ * /api - This is the root of the REST interface.
+   Paths below here can be used either for reading status or for controlling Buildbot (start builds, stop builds, reload config, etc).
+   The next component gives the API version.
+
+ * /ws - path for websocket queries.
+   This provides the JSON equivalent for the subscriptions part of the data API
+
+Client Side Design
+~~~~~~~~~~~~~~~~~~
+
+The client side of the web UI is written in JavaScript and based on the Dojo and Dijit framework and concepts.
+
+The best place to learn about Dojo is `its own documentation <http://dojotoolkit.org/documentation/>`_,
+
+Among the classical features one would expect from a JS framework, Dojo provides:
+
+ * An elegant `object-oriented module system <http://dojotoolkit.org/documentation/tutorials/1.7/declare>`_
+ * A `deferred system <http://dojotoolkit.org/documentation/tutorials/1.7/deferreds>`_ similar to the one from Twisted.
+ * A `common api <http://dojotoolkit.org/documentation/tutorials/1.7/intro_dojo_store/>`_ for accessing remote tabular data.
+ * A `build system <http://dojotoolkit.org/documentation/tutorials/1.7/build>`_ that is in charge of compiling all javascript modules into one big minified js file, which is critical to achieve correct load time.
+   It is not used yet by Buildbot.
+
+Dijit is the UI extension of dojo.
+It has a number of utilities to write responsive a dynamic web apps.
+
+For CSS, we use `Twitter's bootstrap <http://twitter.github.com/bootstrap/>`_ as a base CSS framework for the UI.
+For the sake of consistency, please try to fit in bootstrap CSS classes, and avoid defining your own, with your own placement.
+
+Routing
++++++++
+
+All Buildbot pages are technically the same path - ``/ui``.
+The HTML at this location (:bb:file:`master/buildbot/www/ui.html`) is only a placeholder for JS to fill with Dijit widgets.
+The actual content is dictated by the fragment in the URL (the portion following the ``#`` character).
+Using the fragment is a common JS trick to avoid reloading the whole page over http when the user changes the URI, or clicks a link.
+The router, implemented in :bb:file:`master/buildbot/www/static/lib/router.js`, is the component that is responsible for loading the proper content based on the fragment.
+
+The routing table is an array of objects like this:
+
+.. code-block:: js
+
+            routes = [
+                { path:"", name:"Home", widget:"home"},
+                { path:"overview", name:"Overview", widget:"overview"},
+                { path:"builders/([^/]+)", widget:"builder" }]
+
+The keys are:
+
+ * ``path`` - regular expression for matching the fragment.
+ * ``name`` - The name of the navbar shortcut for this path
+ * ``widget`` - The widget to load for this path.
+   Widgets are located in :bb:file:`master/buildbot/www/static/js/lib/ui`.
+
+For example, given the URL ``http://localhost:8010/ui/#/builders/builder1``, the system will load the widget ``builder`` with the special argument ``path_component`` being the result for the regex match, i.e: ``[ "builders/builder1", "builder1"]``.
+The widget can then use those arguments to adapt its template.
+
+The router also has support for query arguments, e.g: ``http://localhost:8010/ui/#/builds?builder=builder1&builder=builder2``
+The arguments are sent to the widget using the ``url_arg`` parameter.
+
+Widgets
++++++++
+
+Each buildbot page is implmented by a Dijit widget, implemented in a module under ``lib/ui``.
+The base class for the widgets is ``lib/ui/base``, templated widget that adds a deferred capability.
+This allows a widget to load some JSON data (inside the ``loadMoreContext`` callback), and fill its context before the template is actually rendered.
+
+Templates
++++++++++
+
+Buildbot's templating is performed on the client side, using `Haml <http://haml.info/>`_
+Haml is a templating engine originally made for ruby on rails, and later ported for use with node.js.
+The language used for Buildbot, differs in the fact that JavaScript syntax is used instead of Ruby for evaluated expressions.
+An excellent tutorial is provided in the `haml-js website <https://github.com/creationix/haml-js/>`_
+
+The version that buildbot uses is slighlty modified, in order to fit Dojo's AMD module definition, and to add some syntactic sugar to import Haml files.
+The Haml files can be loaded using a Dojo plugin, similar to ``dojo/text!``:
+
+.. code-block:: js
+
+        define(["dojo/_base/declare", "lib/ui/base",
+                "lib/haml!./templates/build.haml"
+           ], function(declare, Base, template) {
+                "use strict";
+                return declare([Base], {
+                    templateFunc : template,
+                    ...
+
+haml emacs mode is `available <http://emacswiki.org/emacs/HamlMode>`_
 
 Testing Setup
 ~~~~~~~~~~~~~
@@ -37,136 +136,27 @@ the program.
 
 Ghost.py
 ++++++++
-Ghost.py is a testing library offering fullfeatured browser control. It actually uses python binding
-to webkit browser engine. Buildbot www test framework is instanciating the www server with stubbed data
-api, and testing how the JS code is behaving inside the headless browser. More info on ghost is on the
-`original web server <http://jeanphix.me/Ghost.py/>`_
 
-As buildbot is running inside twisted, and our tests are running with the help of trial, we need to have
-a special version of ghost, we called txghost, for twisted ghost.
+Ghost.py is a testing library offering fullfeatured browser control.
+It actually uses python binding to webkit browser engine.
+Buildbot www test framework is instanciating the www server with stubbed data api, and testing how the JS code is behaving inside the headless browser.
+More info on ghost is on the `original web server <http://jeanphix.me/Ghost.py/>`_
+
+As buildbot is running inside twisted, and our tests are running with the help of trial, we need to have a special version of ghost, we called txghost, for twisted ghost.
 
 This version has the same API as the original documented ghost, but every call is returning deferred.
 
-Note, that as ghost is using webkit, which is based on qt technology, we must use some tricks in order
-to run the qt main loop inside trial reactor
+Note, that as ghost is using webkit, which is based on qt technology, we must use some tricks in order to run the qt main loop inside trial reactor
 
 Developer setup
 +++++++++++++++
 
-Unfortunatly, it looks like pyqt is hard to install on a ``--no-site-packages``. So you need to convert your virtual env to use site packages.
+Unfortunately, PyQt is difficult to install in a virtualenv.
+If you use ``--no-site-packages`` to set up a virtualenv, it will not inherit a globally installed PyQt.
+So you need to convert your virtual env to use site packages.
 
 .. code-block:: bash
 
      virtualenv path/to/your/sandbox
 
-You can then install either pyqt or pyside as part of you distro.
-
-.. _Server-Side-Design:
-
-Server Side Design
-~~~~~~~~~~~~~~~~~~~
-
-The server resource set is divided into 4 main paths:
-
- * /ui - The top level ui that serves main generic html for main ui.
-   This html page is just the common page, and a placeholder that is then filled out by JS
- * /static - serves all the static files. JS framework is actually capable to get those static
-   files from another path, allowing to production configs to serve those files directly
-   via nginx or apache. static is itself divided into several paths:
-
-  * /static/css - The source for css files
-  * /static/img - The source for image files
-  * /static/js/lib - The javascript source code of all buildbot js framework
-  * /static/js/lib/ui - The ui javascript files
-  * /static/js/lib/ui/templates - The html/haml templates for the ui
-  * /static/js/external - path for external js libs that needs to be downloaded separatly from buildbot
-
- * /api - serves all the json queries. Those can be either for reading status and for
-   controlling buildbot (start builds, stop builds, reload config, etc). Provide json equivalent
-   to getters and control parts of the data API.
- * /ws - path for websocket queries. Provide json equivalent for subscriptions part of the data
-   API
-
-.. _Client-Side-Design:
-
-Client Side Design
-~~~~~~~~~~~~~~~~~~
-
-The js client side is based around the dojo and dijit framework and concepts.
-
-Best place to learn dojo concepts is to start by `its own documentation <http://dojotoolkit.org/documentation/>`_,
-
-Among classical feature one would expect from a JS framework, dojo framework introduce:
- * an `elegant object oriented module <http://dojotoolkit.org/documentation/tutorials/1.7/declare>`_
-   system
- * a `deferred system <http://dojotoolkit.org/documentation/tutorials/1.7/deferreds>`_ similar to
-   the one from twisted.
- * a `common api <http://dojotoolkit.org/documentation/tutorials/1.7/intro_dojo_store/>`_ for
-   accessing remote tabular data
- * a `build system <http://dojotoolkit.org/documentation/tutorials/1.7/build>`_ that
-   is in charge of compiling all javascript modules into one big minified js file,
-   which is critical to achieve correct load time.
-
-
-dijit is the ui extension of dojo. It has a number of utilities to write responsive a dynamic web apps.
-
-For css, we use `twisted's bootstrap <http://twitter.github.com/bootstrap/>`_ as a base css framework
-for the UI. For the sake of consistency, please try to fit in bootstrap css classes, and avoid defining
-your own, with your own placement.
-
-lib/router.js
-+++++++++++++
-The main html page is only a placeholder for JS to fill with dijit widgets.
-
-Router.js is the center component that is responsible for loading the proper widgets according
-to the hash part of the URI.
-
-Routing table is an array of dictionaries like:
-
-.. code-block:: js
-
-            routes = [
-	    { path:"", name:"Home", widget:"home"},
-	    { path:"overview", name:"Overview", widget:"overview"},
-	    { path:"builders/([^/]+)", widget:"builder" }]
-
-keys to the dictionaries are:
- * path - regular expression for matching the hash part of the URI (the part after the ``#``
-   which is normally used for anchors). Using hash part is a common JS trick to avoid
-   reload the whole page over http when the user changes the URI, or click to a link.
- * name - The name of the navbar shortcut for this path
- * widget - The widget to load for this path, that is located in ``/js/lib/ui/``
-
-For example, when a user points its browser on ``http://localhost:8010/ui/#/builders/builder1``, the system
-will load the widget ``builder`` with the special argument path_component being the result for the regex match,
-i.e: ``[ "builders/builder1", "builder1"]``. The widget can then use those arguments to adapt its template
-
-The route.js also has support for query arguments, e.g: ``http://localhost:8010/ui/#/builds?builder=builder1&builder=builder2``
-The arguments are sent to the widget using the ``url_arg`` parameter.
-
-lib/ui/base.js
-++++++++++++++
-
-Every buildbot widgets need to inherit from base. base is a templated widget that adds a deferred capability.
-This allows a widget to load some json data (inside the ``loadMoreContext`` callback), and fill its context
-before the template is actually rendered.
-
-lib/haml.js
-+++++++++++
-
-`Haml <http://haml.info/>`_ is a templating engine originally made for ruby on rails, and later ported for use with node.js.
-The version that we use is the javascript version, the langage differs in the fact that js syntax is used instead of ruby
-for evaluated expressions. Excellent tutorial is provided in the `haml-js website <https://github.com/creationix/haml-js/>`_
-
-The version that buildbot uses is slighlty modified, in order to fit in dojo's AMD module definition, and to add some syntax sugar to import haml files:
-
-.. code-block:: js
-
-        define(["dojo/_base/declare", "lib/ui/base",
-	        "lib/haml!./templates/build.haml"
-	       ], function(declare, Base, template) {
-	    "use strict";
-            return declare([Base], {
-		templateFunc : template,
-
-haml emacs mode is `available <http://emacswiki.org/emacs/HamlMode>`_
+You can then install either PyQt or PySide systemwide, and use it within the virtualenv.
