@@ -672,6 +672,10 @@ following keys:
     ``static/``, ``ui/``, and ``api/`` paths are reserved, although more
     reserved paths may be added in future versions.
 
+``static_url``
+    If present, this key gives the URL corresponding to :bb:file:`master/buildbot/www/static`.
+    This parameter allows Buildbot's static data to be served by a "real" web server like Apache or Nginx.
+
 ``rest_minimum_version``
     The minimum supported REST API version.  Any versions less than this value
     will not be available.  This can be used to ensure that no clients are
