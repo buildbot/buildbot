@@ -53,6 +53,11 @@ class FakeStatus(object):
     def builderAdded(self, name, basedir, category=None):
         return FakeBuilderStatus()
 
+    def getBuilderNames(self):
+        return []
+
+    def getSlaveNames(self):
+        return []
 
 class FakeBuilderStatus(object):
 

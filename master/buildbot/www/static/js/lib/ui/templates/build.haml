@@ -1,43 +1,58 @@
 .container-fluid
   %ul.breadcrumb
     %li
-      %a{href:"../"}<> #{ builderName }
+      %a{href:"#/builders"}Builders
     %span.divider #{"/"}
-    %li.active Build ##{number}
+    %li
+      %a{href:"#/builders/"+b.builderName} #{ b.builderName }
+    %span.divider #{"/"}
+    %li.active
+      %a{href:"#/builders/"+b.builderName+"/"+number} Build ##{number}
+    .btn-group.pull-right
+      .btn
+        %i.icon-question-sign{alt:"reason"}>
+        = b.reason
+      .btn
+        %i.icon-hdd{alt:"buildslave"}>
+        %a{href:"#/slaves/"+b.slave}= b.slave
+      :if isFinished()
+        .btn{class:btn_class(b.results)} #{b.text.join(" ")}
+
+  .row-fluid{style:"margin-bottom:15px;margin-top:-15px"}
+    .pull-right
+      %Strong Actions:
+      :if isFinished()
+        %button.btn.btn-info{data-dojo-attach-point:"onclick:doRebuild"}> Promote
+        %button.btn.btn-info{data-dojo-attach-point:"onclick:doRebuild"} Rebuild
   .row-fluid
     .span5
-      .well
-        :if !isFinished()
-           %h3 Build In Progress:
-           :if when_time
-              %p ETA: #{ when_time } [ #{ when } ]
-           %li.form-inline>= currentStep
+      :if !isFinished()
+        .well
+          %h3 Build In Progress:
+          :if b.when_time
+            %p ETA: #{ b.when_time } [ #{ when } ]
+          %li.form-inline> #{b.currentStep.name}, #{b.currentStep.text.join(" ")}
              &nbsp;
-             .btn.btn-inverse.btn-mini{data-dojo-attach-point:"stop_build_node"} Stop Build
-        :if isFinished()
-           %h3.form-inline Results:
-              &nbsp
-              .btn.disabled{class:results_class} #{text}
+             .btn.btn-inverse.btn-mini.pull-left{data-dojo-attach-point:"stop_build_node"} Stop Build
       .well
-        %h3.form-inline BuildSlave:
-        :if this.slave_url
-           %a{href:slave_url}= slave
-        :if !this.slave_url
-           %span= slave
-      .well
-        %h3.form-inline Reason:
-        %p= reason
-      .well
-        %h3 Steps and Logfiles:
-        %ol
-          :each step in steps
-            %li #{step.name}
-              %ol
-                :each name, url in step.logs
-                  %li
-                    %a{href:url} #{name}
-                :each name, url in step.urls
-                  %li
-                    %a{href:url} #{name}
-    .span7.well
-       %h3 build properties
+          %h3 Steps and Logfiles:
+          %ol
+            :each step in b.steps
+              %li
+                .breadcrumb.step-sts{data-dojo-attach-event:"onclick:toggleLogs"}
+                  #{step.name}
+                  :if step.isFinished
+                    .btn.pull-right{class:btn_class(step.results[0])} #{step.text.join(" ")}
+                %ol{style:stepLogsDisplayStyle(step)}
+                  :if step.logs.length === 0
+                    %div= "- no logs -"
+                  :each i, urls in step.logs
+                    %li
+                      %a{href:urls[1]} #{urls[0]}
+                  :each i, urls in step.urls
+                    %li
+                      %a{href:urls[1]} #{urls[0]}
+    .span1
+    .span6.well
+      %h3 build properties
+      .div{data-dojo-attach-point:"propertiesgrid_node"}

@@ -26,6 +26,41 @@ The new ``www`` ui is disabled by default for now, to enable it, simply add foll
 
      c['www'] = dict(port=8010)
 
+.. _Testing_Setup:
+
+Testing Setup
+~~~~~~~~~~~~~
+
+New www ui is coded fully in client side javascript. Heavy interaction with browser feature make it
+difficult to unit test in a strict way. This is why we use a more complex setup to test this part of
+the program.
+
+Ghost.py
+++++++++
+Ghost.py is a testing library offering fullfeatured browser control. It actually uses python binding
+to webkit browser engine. Buildbot www test framework is instanciating the www server with stubbed data
+api, and testing how the JS code is behaving inside the headless browser. More info on ghost is on the
+`original web server <http://jeanphix.me/Ghost.py/>`_
+
+As buildbot is running inside twisted, and our tests are running with the help of trial, we need to have
+a special version of ghost, we called txghost, for twisted ghost.
+
+This version has the same API as the original documented ghost, but every call is returning deferred.
+
+Note, that as ghost is using webkit, which is based on qt technology, we must use some tricks in order
+to run the qt main loop inside trial reactor
+
+Developer setup
++++++++++++++++
+
+Unfortunatly, it looks like pyqt is hard to install on a ``--no-site-packages``. So you need to convert your virtual env to use site packages.
+
+.. code-block:: bash
+
+     virtualenv path/to/your/sandbox
+
+You can then install either pyqt or pyside as part of you distro.
+
 .. _Server-Side-Design:
 
 Server Side Design

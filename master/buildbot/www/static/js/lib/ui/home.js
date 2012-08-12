@@ -14,13 +14,24 @@
 // Copyright Buildbot Team Members
 
 define(["dojo/_base/declare", "lib/ui/base",
-        "dojo/text!./templates/home.html"
+        "lib/haml!./templates/home.haml"
        ], function(declare, Base, template) {
     "use strict";
     return declare([Base], {
-	templateString : template,
+	templateFunc : template,
+	recent_builds: {},
+	recent_builders: {},
         constructor: function(args){
             declare.safeMixin(this,args);
-        }
+        },
+	loadMoreContext: function(){
+	    this.recent_builds = window.bb.localGet("recent_builds",[]);
+	    this.recent_builders = window.bb.localGet("recent_builders",[]);
+	},
+	clearHistory: function() {
+	    window.bb.localStore("recent_builds",[]);
+	    window.bb.localStore("recent_builders",[]);
+	    window.bb.reload();
+	}
     });
 });

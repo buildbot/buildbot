@@ -14,11 +14,12 @@
 // Copyright Buildbot Team Members
 
 define(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_WidgetsInTemplateMixin",
-	"dojo/_base/Deferred",
-	"dojo/text!./templates/unimplemented.html"],
-       function(declare, _Widget, _TemplatedMixin, _WidgetsInTemplateMixin, Deferred, template) {
+	"dojo/_base/Deferred", "dojo/_base/xhr",
+	"lib/haml!./templates/error.haml"],
+       function(declare, _Widget, _TemplatedMixin, _WidgetsInTemplateMixin, Deferred, xhr, template) {
 	   return declare([_Widget, _TemplatedMixin, _WidgetsInTemplateMixin], {
-	       templateString: template,
+	       templateFunc: template,
+	       error_msg : undefined,
                constructor: function(args){
 		   declare.safeMixin(this,args);
 	       },
@@ -46,11 +47,32 @@ define(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_
 		  Maybe return deferred
 		*/
 	       loadMoreContext: function(){
+		   if (this.templateFunc===template) {
+		       this.showError("this functionality is not implemented: "+ this.path_components.toString());
+		   }
+	       },
+	       showError: function(text) {
+		   console.log("should show error:", text);
+		   this.error_msg = text;
+		   this.templateFunc = template; /* restore the error template that was overiden by childrens*/
+	       },
+	       getApiV1: function() {
+		   var a = arguments;
+		   var path=[];
+		   for (var i = 0;i<arguments.length; i+=1) {
+		       path.push(arguments[i]);
+		   }
+		   path = path.join("/");
+		   return xhr.get({handleAs:"json",url:"/api/v1/"+path});
 	       },
 	       postCreate: function(){
 		   if (this.templateString===template) {
 		       this.functionality.innerText=this.path_components.toString();
 		   }
-               }
+               },
+	       btn_class: function(results) {
+		   /* return css class given results */
+		   return ["btn-success", "btn-warnings", "btn-danger", "btn", "btn-inverse", "btn-info"][results];
+	       }
 	   });
        });

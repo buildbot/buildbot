@@ -1,0 +1,14 @@
+.container-fluid
+  %ul.breadcrumb
+    %li
+      %a{href:"#/builders"}Builders
+    %span.divider #{"/"}
+    %li
+      %a.active{href:"#/builders/"+this.builderName} #{this.builderName}
+    .pull-right
+      :if builder.pendingBuilds>0
+        .span #{builder.pendingBuilds} pending build(s)
+        %span.divider #{"|"}
+      %b Status:
+      .label.pull-right{class:builder.state_class} #{builder.state}
+  .buildersgrid{data-dojo-attach-point:"buildersgrid_node"}
