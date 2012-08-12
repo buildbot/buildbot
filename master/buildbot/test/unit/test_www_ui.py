@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import os
 from buildbot.www import ui, service
 from buildbot.test.util import www
 from twisted.trial import unittest
@@ -34,6 +35,9 @@ try:
     Ghost = Ghost # for pyflakes
     has_ghost=True
 except ImportError:
+    # if $REQUIRE_GHOST is set, then fail if it's not found
+    if os.environ.get('REQUIRE_GHOST'):
+        raise
     has_ghost=False
 
 class TestGhostPy(www.WwwTestMixin, unittest.TestCase):
