@@ -45,7 +45,7 @@ class RestRootResource(resource.Resource):
     def render(self, request):
         request.setHeader("content-type", 'application/json')
         min_vers = self.master.config.www.get('rest_minimum_version', 0)
-        api_versions = dict( ('v%d' % v, '%sapi/v%d' % (self.baseurl, v))
+        api_versions = dict( ('v%d' % v, '%sapi/v%d' % (self.base_url, v))
                              for v in self.version_classes
                              if v > min_vers)
         return json.dumps(dict(api_versions=api_versions))
@@ -197,7 +197,7 @@ class V2RootResource(resource.Resource):
 
     def _render_links(self, obj):
         if isinstance(obj, base.Link):
-            return "%sapi/v%d/%s" % (self.baseurl, self.apiVersion,
+            return "%sapi/v%d/%s" % (self.base_url, self.apiVersion,
                                     '/'.join(obj.path))
 
 RestRootResource.addApiVersion(1, V1RootResource)

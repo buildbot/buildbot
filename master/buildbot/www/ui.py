@@ -32,9 +32,9 @@ class UIResource(resource.Resource):
         
     def render(self, request):
         contents = dict(
-            base_url = self.baseurl,
+            base_url = self.base_url,
             static_url = self.static_url,
-            ws_url = self.baseurl.replace("http:", "ws:"))
+            ws_url = self.base_url.replace("http:", "ws:"))
         return html % contents
 
 if __name__ == '__main__':

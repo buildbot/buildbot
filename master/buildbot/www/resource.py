@@ -18,11 +18,11 @@ from twisted.web import resource
 class Resource(resource.Resource):
 
     # as a convenience, subclasses have a ``master`` attribute, a
-    # ``baseurl`` attribute giving Buildbot's base URL,
+    # ``base_url`` attribute giving Buildbot's base URL,
     # and ``static_url`` attribute giving Buildbot's static files URL
 
     @property
-    def baseurl(self):
+    def base_url(self):
         return self.master.config.www['url']
 
     @property
@@ -32,7 +32,7 @@ class Resource(resource.Resource):
         key = 'static_url'
         if self.master.config.www.has_key(key):
             return self.master.config.www[key]
-        return self.baseurl + "static"
+        return self.base_url + "static"
 
     def __init__(self, master):
         resource.Resource.__init__(self)
@@ -45,6 +45,6 @@ class RedirectResource(Resource):
         self.basepath = basepath
 
     def render(self, request):
-        redir = self.baseurl + self.basepath
+        redir = self.base_url + self.basepath
         request.redirect(redir)
         return redir
