@@ -18,11 +18,12 @@ from buildbot.www import service, ui, rest
 from twisted.trial import unittest
 from twisted.web import static
 from buildbot.test.util import www
+from buildbot.test.fake import fakemaster
 
 class Test(www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = mock.Mock()
+        self.master = fakemaster.make_master()
         self.svc = service.WWWService(self.master)
 
     def makeConfig(self, **kwargs):
