@@ -2,6 +2,12 @@
 
 <table class="info">
   {% set row_class=cycler('alt','') %}
+  {% if c.category %}
+  <tr class="{{ row_class.next() }}">
+    <td class="left">Category</td>
+    <td><b>{{ c.category }}</b></td>
+  </tr>
+  {% endif %}
   <tr class="{{ row_class.next() }}">
     <td class="left">Changed by</td>
     <td><b>{{ c.who|email }}</b></td>

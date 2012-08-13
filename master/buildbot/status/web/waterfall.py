@@ -315,9 +315,11 @@ class ChangeEventSource(object):
         # we want them in newest-to-oldest order
         self.changes.reverse()
 
-    def eventGenerator(self, branches, tags, committers, minTime):
+    def eventGenerator(self, branches, categories, tags, committers, minTime):
         for change in self.changes:
             if branches and change.branch not in branches:
+                continue
+            if categories and change.category not in categories:
                 continue
             if tags and change.tags not in tags:
                 continue
@@ -540,6 +542,7 @@ class WaterfallStatusResource(HtmlResource):
         showEvents = False
         if request.args.get("show_events", ["false"])[0].lower() == "true":
             showEvents = True
+        filterCategories = request.args.get('category', [])
         filterTags = request.args.get('tag', [])
         filterBranches = [b for b in request.args.get("branch", []) if b]
         filterBranches = map_branches(filterBranches)
@@ -601,6 +604,7 @@ class WaterfallStatusResource(HtmlResource):
 
         for s in sources:
             gen = insertGaps(s.eventGenerator(filterBranches,
+                                              filterCategories,
                                               filterTags,
                                               filterCommitters,
                                               minTime),
