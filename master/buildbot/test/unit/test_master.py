@@ -43,13 +43,13 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownDirs()
         
-    def test_change_subscription(self):
+    def test_change_subscription_backward_compatibility(self):
         changeid = 918
         chdict = {
             'changeid': 14,
             'author': u'warner',
             'branch': u'warnerdb',
-            'tags': [u'devel'],
+            'category': u'devel',
             'comments': u'fix whitespace',
             'files': [u'master/buildbot/__init__.py'],
             'is_dir': 0,
@@ -83,7 +83,59 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
             self.master.db.changes.addChange.assert_called_with(author=None,
                     files=None, comments=None, is_dir=0,
                     revision=None, when_timestamp=None, branch=None, codebase='',
-                    tags=None, revlink='', properties={}, repository='', project='', uid=None)
+                    category=None, revlink='', properties={}, repository='',
+                    tags=None, project='', uid=None)
+
+            self.master.db.changes.getChange.assert_called_with(changeid)
+            # addChange returned the right value
+            self.failUnless(change is newchange) # fromChdict's return value
+            # and the notification sub was called correctly
+            cb.assert_called_with(newchange)
+        d.addCallback(check)
+        return d
+
+    def test_change_subscription(self):
+        changeid = 918
+        chdict = {
+            'changeid': 14,
+            'author': u'warner',
+            'branch': u'warnerdb',
+            'tags': [u'devel', u'release'],
+            'comments': u'fix whitespace',
+            'files': [u'master/buildbot/__init__.py'],
+            'is_dir': 0,
+            'project': u'Buildbot',
+            'properties': {},
+            'repository': u'git://warner',
+            'revision': u'0e92a098b',
+            'revlink': u'http://warner/0e92a098b',
+            'when_timestamp': epoch2datetime(266738404),
+        }
+        newchange = mock.Mock(name='newchange')
+
+        # patch out everything we're about to call
+        self.master.db = mock.Mock()
+        self.master.db.changes.addChange.return_value = \
+            defer.succeed(changeid)
+        self.master.db.changes.getChange.return_value = \
+            defer.succeed(chdict)
+        self.patch(changes.Change, 'fromChdict',
+                classmethod(lambda cls, master, chdict :
+                                defer.succeed(newchange)))
+
+        cb = mock.Mock()
+        sub = self.master.subscribeToChanges(cb)
+        self.assertIsInstance(sub, subscription.Subscription)
+
+        d = self.master.addChange()
+        def check(change):
+            # master called the right thing in the db component, including with
+            # appropriate default values
+            self.master.db.changes.addChange.assert_called_with(author=None,
+                    files=None, comments=None, is_dir=0,
+                    revision=None, when_timestamp=None, branch=None, codebase='',
+                    category=None, revlink='', properties={}, repository='',
+                    tags=None, project='', uid=None)
 
             self.master.db.changes.getChange.assert_called_with(changeid)
             # addChange returned the right value
@@ -96,8 +148,8 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
     def do_test_addChange_args(self, args=(), kwargs={}, exp_db_kwargs={}):
         # add default arguments
         default_db_kwargs = dict(files=None, comments=None, author=None,
-                is_dir=0, revision=None, when_timestamp=None,
-                branch=None, tags=None, revlink='', properties={},
+                is_dir=0, revision=None, when_timestamp=None, branch=None,
+                category=None, tags=None, revlink='', properties={},
                 repository='', codebase='', project='', uid=None)
         k = default_db_kwargs
         k.update(exp_db_kwargs)

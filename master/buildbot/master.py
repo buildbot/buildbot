@@ -349,8 +349,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     def addChange(self, who=None, files=None, comments=None, author=None,
             isdir=None, is_dir=None, revision=None, when=None,
-            when_timestamp=None, branch=None, tags=None, revlink='',
-            properties={}, repository='', codebase=None, project='', src=None):
+            when_timestamp=None, branch=None, category=None, revlink='',
+            properties={}, repository='', codebase=None, project='',
+            src=None, tags=None):
         """
         Add a change to the buildmaster and act on it.
 
@@ -388,6 +389,10 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         @param branch: the branch on which this change took place
         @type branch: unicode string
+
+        @param category: category for this change (arbitrary use by Buildbot
+        users)
+        @type category: unicode string
 
         @param tags: a list of tags for this change (arbitrary use by Buildbot
         users)
@@ -450,6 +455,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                     'revision': revision,
                     'when_timestamp': when_timestamp,
                     'branch': branch,
+                    'category': category,
                     'tags': tags,
                     'revlink': revlink,
                     'properties': properties,
@@ -471,10 +477,10 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                                           comments=comments, is_dir=is_dir,
                                           revision=revision,
                                           when_timestamp=when_timestamp,
-                                          branch=branch, tags=tags,
+                                          branch=branch, category=category,
                                           revlink=revlink, properties=properties,
                                           repository=repository, codebase=codebase,
-                                          project=project, uid=uid))
+                                          project=project, uid=uid, tags=tags))
 
         # convert the changeid to a Change instance
         d.addCallback(lambda changeid :
