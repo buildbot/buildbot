@@ -18,7 +18,6 @@
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 SLAVE_RUNNER=/usr/bin/buildslave
 
-. /lib/lsb/init-functions
 
 # Source buildslave configuration
 [[ -r /etc/default/buildslave ]] && . /etc/default/buildslave
@@ -31,6 +30,35 @@ SLAVE_RUNNER=/usr/bin/buildslave
 #SLAVE_BASEDIR[1]=""                   # basedir to slave (absolute path)
 #SLAVE_OPTIONS[1]=""                   # buildbot options
 #SLAVE_PREFIXCMD[1]=""                 # prefix command, i.e. nice, linux32, dchroot
+
+
+# Get some LSB-like functions
+if [ -r /lib/lsb/init-functions ]; then
+    . /lib/lsb/init-functions
+else
+    function log_success_msg() {
+        echo "$@"
+    }
+    function log_failure_msg() {
+        echo "$@"
+    }
+    function log_warning_msg() {
+        echo "$@"
+    }
+fi
+
+
+# Some systems don't have seq (e.g. Solaris)
+if type seq >/dev/null 2>&1; then
+    :
+else
+    function seq() {
+        for ((i=1; i<=$1; i+=1)); do
+            echo $i
+        done
+    }
+fi
+
 
 if [[ ! -x ${SLAVE_RUNNER} ]]; then
     log_failure_msg "does not exist or not an executable file: ${SLAVE_RUNNER}"
@@ -115,10 +143,14 @@ function iscallable () { type $1 2>/dev/null | grep -q 'shell function'; }
 function slave_op () {
     op=$1 ; mi=$2
 
+    if [ `uname` = SunOS ];
+        suopt=""
+    else
+        suopt="-s /bin/sh"
+    fi
     ${SLAVE_PREFIXCMD[$mi]} \
-    su -s /bin/sh \
-    -c "$SLAVE_RUNNER $op --quiet ${SLAVE_OPTIONS[$mi]} ${SLAVE_BASEDIR[$mi]}" \
-    - ${SLAVE_USER[$mi]}
+    su $suopt - ${SLAVE_USER[$mi]} \
+    -c "$SLAVE_RUNNER $op --quiet ${SLAVE_OPTIONS[$mi]} ${SLAVE_BASEDIR[$mi]}"
     return $?
 }
 
