@@ -25,19 +25,20 @@ class Sender:
         self.port = int(self.port)
         self.encoding = encoding
 
-    def send(self, branch, revision, comments, files, who=None, tags=None,
+    def send(self, branch, revision, comments, files, who=None, category=None,
              when=None, properties={}, repository='', vc=None, project='',
-             revlink=''):
+             revlink='', tags=None):
         change = {'project': project, 'repository': repository, 'who': who,
                   'files': files, 'comments': comments, 'branch': branch,
-                  'revision': revision, 'tags': tags, 'when': when,
-                  'properties': properties, 'revlink': revlink, 'src': vc}
+                  'revision': revision, 'category': category, 'when': when,
+                  'properties': properties, 'revlink': revlink, 'src': vc,
+                  'tags': tags}
         for key in change:
             if type(change[key]) == str:
                 change[key] = change[key].decode(self.encoding, 'replace')
-        if change.get('tags'):
-            change['tags'] = list(change['tags'])
-            for i, tag in enumerate(change.get('tags', [])):
+        if change.get('tags', None):
+            change['tags'] = list(set(change['tags']))
+            for i, tag in enumerate(change['tags']):
                 if type(tag) == str:
                     change['tags'][i] = tag.decode(self.encoding, 'replace')
         change['files'] = list(change['files'])

@@ -40,6 +40,11 @@ from optparse import OptionParser
 
 master = "localhost:9989"
 
+# When sending the notification, send this category if (and only if)
+# it's set (via --category)
+
+category = None
+
 # When sending the notification, send this tags if (and only if)
 # it's set (via --tags)
 
@@ -162,6 +167,9 @@ def gen_changes(input, branch):
              'branch': unicode(branch, encoding=encoding),
         }
 
+        if category:
+            c['category'] = unicode(category, encoding=encoding)
+
         c['tags'] = []
         for tag in tags:
             c['tags'].append(unicode(tag, encoding=encoding))
@@ -233,6 +241,9 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
         status = f.close()
         if status:
             logging.warning("git diff exited with status %d" % status)
+
+        if category:
+            c['category'] = unicode(category, encoding=encoding)
 
         c['tags'] = []
         for tag in tags:

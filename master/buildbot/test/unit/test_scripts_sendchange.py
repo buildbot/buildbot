@@ -53,9 +53,9 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         self.setUpStdoutAssertions()
 
-    def test_sendchange_config(self):
+    def test_sendchange_config_backward_compatibility(self):
         d = sendchange.sendchange(dict(encoding='utf16', who='me',
-            auth=['a', 'b'], master='m', branch='br', tags=['cat'],
+            auth=['a', 'b'], master='m', branch='br', category='cat',
             revision='rr', properties={'a':'b'}, repository='rep',
             project='prj', vc='git', revlink='rl', when=1234.0,
             comments='comm', files=('a', 'b')))
@@ -65,7 +65,8 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
                     self.getStdout(), rc),
                     ('m', ['a','b'], 'utf16', {
                         'branch': 'br',
-                        'tags': ['cat'],
+                        'category': 'cat',
+                        'tags': None,
                         'comments': 'comm',
                         'files': ('a', 'b'),
                         'project': 'prj',
@@ -75,7 +76,34 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
                         'revlink': 'rl',
                         'when': 1234.0,
                         'who': 'me',
-                        'tags': ['cat'],
+                        'vc': 'git'},
+                    'change sent successfully', 0))
+        d.addCallback(check)
+        return d
+
+    def test_sendchange_config(self):
+        d = sendchange.sendchange(dict(encoding='utf16', who='me',
+            auth=['a', 'b'], master='m', branch='br', tags=['cat', 'dog'],
+            revision='rr', properties={'a':'b'}, repository='rep',
+            project='prj', vc='git', revlink='rl', when=1234.0,
+            comments='comm', files=('a', 'b')))
+        def check(rc):
+            self.assertEqual((self.sender.master, self.sender.auth,
+                    self.sender.encoding, self.sender.send_kwargs,
+                    self.getStdout(), rc),
+                    ('m', ['a','b'], 'utf16', {
+                        'branch': 'br',
+                        'category': None,
+                        'tags': ['cat', 'dog'],
+                        'comments': 'comm',
+                        'files': ('a', 'b'),
+                        'project': 'prj',
+                        'properties': {'a':'b'},
+                        'repository': 'rep',
+                        'revision': 'rr',
+                        'revlink': 'rl',
+                        'when': 1234.0,
+                        'who': 'me',
                         'vc': 'git'},
                     'change sent successfully', 0))
         d.addCallback(check)
