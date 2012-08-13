@@ -29,12 +29,12 @@ class GitPoller(base.PollingChangeSource):
     
     compare_attrs = ["repourl", "branch", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
-                     "tags", "project"]
+                     "category", "tags", "project"]
                      
     def __init__(self, repourl, branch='master', 
                  workdir=None, pollInterval=10*60, 
                  gitbin='git', usetimestamps=True,
-                 tags=None, project=None,
+                 category=None, tags=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
                  encoding='utf-8', name=None):
 
@@ -55,6 +55,7 @@ class GitPoller(base.PollingChangeSource):
         self.gitbin = gitbin
         self.workdir = workdir
         self.usetimestamps = usetimestamps
+        self.category = category
         self.tags = tags
         self.project = project
         self.changeCount = 0
@@ -287,6 +288,7 @@ class GitPoller(base.PollingChangeSource):
                    comments=comments,
                    when_timestamp=epoch2datetime(timestamp),
                    branch=self.branch,
+                   category=self.category,
                    tags=self.tags,
                    project=self.project,
                    repository=self.repourl,
