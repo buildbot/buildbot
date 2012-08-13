@@ -423,12 +423,6 @@ class Model(base.DBConnectorComponent):
         ('buildsets',
             dict(unique=False, column_names=['sourcestampsetid'],
                                name='buildsets_sourcestampsetid_fkey')),
-        ('change_tags',
-            dict(unique=False, column_names=['changeid'],
-                               name='change_tags_changeid')),
-        ('change_tags',
-            dict(unique=False, column_names=['tagid'],
-                               name='change_tags_tagid')),
     ]
 
     #

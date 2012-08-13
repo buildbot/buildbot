@@ -146,16 +146,20 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
     # Validate data migration.
     def do_test_migrated_data(self, conn, tags, change_tags):
         # Check tags records.
-        res = conn.execute(sa.select([self.tags.c.id, self.tags.c.tag]))
+        res = conn.execute(sa.select([
+                                  self.tags.c.id,
+                                  self.tags.c.tag])
+                           .order_by("1", "2"))
         got_tags = res.fetchall()
-        self.assertEqual(got_tags, tags)
+        self.assertEqual(got_tags, sorted(tags))
 
         # Check change_tags records.
         res = conn.execute(sa.select([
                                   self.change_tags.c.changeid,
-                                  self.change_tags.c.tagid]))
+                                  self.change_tags.c.tagid])
+                           .order_by("1", "2"))
         got_change_tags = res.fetchall()
-        self.assertEqual(got_change_tags, change_tags)
+        self.assertEqual(got_change_tags, sorted(change_tags))
 
     # Data migration tests.
 

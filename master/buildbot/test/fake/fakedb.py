@@ -18,7 +18,7 @@ A complete re-implementation of the database connector components, but without
 using a database.  These classes should pass the same tests as are applied to
 the real connector components.
 """
-
+0
 import base64
 from buildbot.util import json, epoch2datetime, datetime2epoch
 from twisted.python import failure
@@ -183,16 +183,6 @@ class ChangeUser(Row):
     )
 
     required_columns = ('changeid',)
-
-class ChangeTags(Row):
-    table = "change_tags"
-
-    defaults = dict(
-        changeid = None,
-        tagid = None,
-    )
-
-    required_columns = ('changeid','tagid')
 
 class Patch(Row):
     table = "patches"
@@ -388,8 +378,8 @@ class FakeChangesComponent(FakeDBComponent):
 
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
             revision=None, when_timestamp=None, branch=None,
-            tags=None, revlink='', properties={}, repository='',
-            project='', codebase='', uid=None):
+            category=None, revlink='', properties={}, repository='',
+            tags=None, project='', codebase='', uid=None):
         if self.changes:
             changeid = max(self.changes.iterkeys()) + 1
         else:
@@ -407,6 +397,14 @@ class FakeChangesComponent(FakeDBComponent):
             repository=repository,
             project=project,
             codebase=codebase)
+
+        if tags is None:
+            tags = []
+        if category:
+            tags.append(category)
+        tags=list(set(tags))
+        tags.sort()
+
         ch.tags = tags
         ch.files = files
         ch.properties = properties
@@ -433,12 +431,17 @@ class FakeChangesComponent(FakeDBComponent):
                 revision=row.revision,
                 when_timestamp=epoch2datetime(row.when_timestamp),
                 branch=row.branch,
-                tags=row.tags,
+                category=None,
+                tags=(row.tags or [])[:],
                 revlink=row.revlink,
                 properties=row.properties,
                 repository=row.repository,
                 codebase=row.codebase,
                 project=row.project)
+
+        chdict['tags'].sort()
+        if chdict['tags']:
+            chdict['category'] = chdict['tags'][0]
 
         return defer.succeed(chdict)
 

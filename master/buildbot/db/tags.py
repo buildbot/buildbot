@@ -24,100 +24,82 @@ from buildbot.db import base
 class TagDict(dict):
     pass
 
-class ChangesConnectorComponent(base.DBConnectorComponent):
+class TagsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
-    def resolveTags(self, tags):
+    def resolveTagsSync(self, conn, tags, numTries=3):
         """
-        This method adds missing tags to the tags table
-        and returns a list of tag ids related to the given
-        list of tags. Note that order is not preserved, i.e.
+        Adds missing tags to the tags table and returns
+        a list of tag IDs for the given list of tags.
+        Note that order is not preserved, i.e.
         tagids[0] does not correspond to the tags[0].
+        This method must be run in a db.pool thread.
+        Use resolveTags for deferred.
         """
 
         if tags is None:
+            return None
+        if len(tags) == 0:
+            return []
+
+        assert tags is not None, "tags must be a not empty list"
+
+        # Make sure we have a unique set of tags.
+        tags = list(set(tags))
+
+        tags_tbl = self.db.model.tags
+        transaction = conn.begin()
+
+        # Let's check what tags we already have in the database.
+        res = conn.execute(
+              sa.select(
+                  [tags_tbl.c.tag]
+              ).where(tags_tbl.c.tag.in_(tags)))
+        existing_tags = [ r.tag for r in res ]
+
+        tags_to_insert = []
+        for tag in tags:
+            if tag not in existing_tags:
+                self.check_length(tags_tbl.c.tag, tag)
+                tags_to_insert.append(dict(tag=tag))
+
+        # Insert missing tags if any.
+        if tags_to_insert:
+           try:
+               conn.execute(tags_tbl.insert(), tags_to_insert)
+           except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+               # It looks like DB Engine does not support transactions.
+               transaction.rollback()
+
+               # Try it all over again, in case there was an overlapping,
+               # identical call to resolveTagsSync, but retry only
+               # requested number of times.
+               remainingTries = numTries - 1
+               if remainingTries <= 0:
+                   raise
+               return self.resolveTagsSync(conn, tags, numTries=remainingTries)
+
+        # Request tagids.
+        res = conn.execute(
+              sa.select(
+                  [tags_tbl.c.id]
+              ).where(tags_tbl.c.tag.in_(tags)))
+        tagids = [ r.id for r in res ]
+
+        transaction.commit()
+        return tagids
+
+    def resolveTags(self, tags):
+        """
+        Deferrs resolveTagsSync to db thread pool and returns a Deferred.
+        """
+        if tags is None:
             return defer.succeed(None)
+        if len(tags) == 0:
+            return defer.succeed([])
 
         def thd(conn):
-            assert tags is not None, "tags must be a list, not None"
-            transaction = conn.begin()
-
-            tags_tbl = self.db.model.tags
-
-            # Let's check what tags we already have in the database.
-            res = conn.execute(
-                  sa.select(
-                      [tags_tbl.c.tag]
-                  ).where(tags_tbl.c.tag.in_(tags)))
-            existing_tags = [ r.tag for r in res ]
-
-            tags_to_insert = []
-            for tag in tags:
-                if tag not in existing_tags:
-                    self.check_length(tags_tbl.c.tag, tag)
-                    tags_to_insert.append(dict(tag=tag))
-
-            # Insert missing tags if any.
-            if tags_to_insert:
-                conn.execute(tags_tbl.insert(), tags_to_insert)
-
-            # Request tagids.
-            res = conn.execute(
-                  sa.select(
-                      [tags_tbl.c.id]
-                  ).where(tags_tbl.c.tag.in_(tags)))
-            tagids = [ r.id for r in res ]
-
-            transaction.commit()
-            return tagids
+            return self.resolveTagsSync(conn, tags)
 
         d = self.db.pool.do(thd)
         return d
-
-    def removeUnusedTags(self, tags):
-        """
-        Called every time tags consumer record gets deleted, this method
-        deletes orphan tags from the tags table.
-        """
-
-        if tags is None or len(tags) == 0:
-            return defer.succeed(None)
-
-        def thd(conn):
-            assert tags is not None and len(tags) > 0
-            transaction = conn.begin()
-            tags_tbl = self.db.model.tags
-
-            # Select the tagids for the given tags.
-            res = conn.execute(
-                  sa.select(
-                      [tags_tbl.c.id]
-                  ).where(tags_tbl.c.tag.in_(tags)))
-            tagids_to_delete = [ r.id for r in res ]
-
-            print 'Tagids to delete: %s' % tagids_to_delete
-
-            if len(tagids_to_delete) > 0:
-                # We start from the given list and remove from it the tags
-                # which are used from somewhere, leaving those safe to delete.
-                for table_name in ('change_tags',
-                                   # add new relevant table name here.
-                                  ):
-                    table = self.db.model.metadata.tables[table_name]
-
-                    # Request tagids.
-                    res = conn.execute(
-                          sa.select(
-                              [table.c.tagid]
-                          ).where(table.c.tagid.in_(tagids_to_delete)))
-                    for r in res:
-                        # This tag is still used, keep it
-                        tagids_to_delete.remove(r.tagid)
-
-            # Delete all unused tags.
-            if len(tagids_to_delete) > 0:
-                conn.execute(tags_tbl.delete(
-                    tags_tbl.c.id.in_(tagids_to_delete)))
-
-            transaction.commit()
-        return self.db.pool.do(thd)

@@ -400,6 +400,8 @@ changes
     * ``when_timestamp`` (datetime instance; time of the change)
     * ``branch`` (unicode string; branch on which the change took place, or
       ``None`` for the "default branch", whatever that might mean)
+    * ``category`` (unicode string; user-defined category of this change, or
+      ``None``)
     * ``tags`` (list of unicode; user-defined tags of this change, or
       ``None``)
     * ``revlink`` (unicode string; link to a web view of this change)
@@ -409,7 +411,7 @@ changes
     * ``project`` (unicode string; user-defined project to which this change
       corresponds)
 
-    .. py:method:: addChange(author=None, files=None, comments=None, is_dir=0, links=None, revision=None, when_timestamp=None, branch=None, tags=None, revlink='', properties={}, repository='', project='', uid=None)
+    .. py:method:: addChange(author=None, files=None, comments=None, is_dir=0, links=None, revision=None, when_timestamp=None, branch=None, category=None, tags=None, revlink='', properties={}, repository='', project='', uid=None)
 
         :param author: the author of this change
         :type author: unicode string
@@ -428,6 +430,9 @@ changes
         :type when_timestamp: datetime instance or None
         :param branch: the branch on which this change took place
         :type branch: unicode string
+        :param category: category for this change (arbitrary use by Buildbot
+            users)
+        :type category: unicode string
         :param tags: tags for this change (arbitrary use by Buildbot
             users)
         :type tags: a list of unicode strings
@@ -724,6 +729,63 @@ state
 
         Set the state value for ``name`` for the object with id ``objectid``,
         overwriting any existing value.
+
+tags
+~~~~~~~
+
+.. py:module:: buildbot.db.tags
+
+.. index:: double: Tags; DB Connector Component
+
+.. py:class:: TagsConnectorComponent
+
+    This class handles tags in the buildbot database.
+
+    An instance of this class is available at ``master.db.tags``.
+
+    .. index:: tagids
+
+    Tags are indexed by *tagid*, and are represented by a *tagdict*, which
+    has the following keys:
+
+    * ``id`` (the ID of this tag)
+    * ``tag` (unicode; this tag string)
+
+    .. py:method:: resolveTags(tags)
+
+        :param tags: a list of tags to resolve
+        :type tags: list of unicode strings
+        :returns: a list of resolved tag IDs via Deferred
+
+        Resolve the given list of tags by adding missing tags to the tags
+        table. Returns a list of tag IDs for the given list of tags.
+        Note that order is not preserved, i.e. tagids[0] does not
+        correspond to the tags[0].
+
+        The ``tags`` argument must be a list of unicode strings; ``None``
+        is not allowed.
+
+    .. py:method:: resolveTagsSync(conn, tags, numTries=3)
+    
+        :param conn: the id of the change instance to fetch
+        :type conn: :class:`Connection
+            <sqlalchemy:sqlalchemy.engine.base.Connection>` object.
+        :param tags: a list of tags to resolve
+        :type tags: list of unicode strings
+        :param numTries: if it fails to add missing tags for any reason,
+            it will retry up to the given number of times
+            before re-thowing an exception. It always tries at least once.
+        :type numTries: int
+        :returns: a list of resolved tag IDs
+
+        Resolve the given list of tags by adding missing tags to the tags
+        table. Returns a list of tag IDs for the given list of tags.
+        Note that order is not preserved, i.e. tagids[0] does not
+        correspond to the tags[0]. This method must be run in a db.pool
+        thread. Use resolveTags for deferred.
+
+        The ``tags`` argument must be a list of unicode strings; ``None``
+        is not allowed.
 
 users
 ~~~~~

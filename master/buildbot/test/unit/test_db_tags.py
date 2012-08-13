@@ -18,11 +18,10 @@ import pprint
 import sqlalchemy as sa
 from twisted.trial import unittest
 from twisted.internet import defer, task
-from buildbot.util import epoch2datetime
 from buildbot.db import tags
 from buildbot.test.util import connector_component
 
-class TestChangesConnectorComponent(
+class TestTagsConnectorComponent(
             connector_component.ConnectorComponentMixin,
             unittest.TestCase):
 
@@ -34,7 +33,7 @@ class TestChangesConnectorComponent(
                  ])
 
         def finish_setup(_):
-            self.db.tags = tags.ChangesConnectorComponent(self.db)
+            self.db.tags = tags.TagsConnectorComponent(self.db)
         d.addCallback(finish_setup)
 
         return d
@@ -57,7 +56,7 @@ class TestChangesConnectorComponent(
                         author='gkistanova',
                         comments='test',
                         is_dir=0,
-                        when_timestamp=epoch2datetime(266738404),
+                        when_timestamp=266738404,
                     )])
 
                 changeid = r.inserted_primary_key[0]
@@ -175,108 +174,4 @@ class TestChangesConnectorComponent(
         d.addCallback(validate_rows)
         return d
 
-    def test_remove_none_unused_tags(self):
-        test_tags = [
-                dict(id=10, tag='tag1'),
-                dict(id=20, tag='tag2'),
-                dict(id=30, tag='tag3'),
-            ]
-        d = self.populate_test_tags(test_tags)
-
-        d.addCallback(lambda _ :
-            self.db.tags.removeUnusedTags(None))
-
-        def get_rows(_):
-            return self.retrieveTags(self.getIds(test_tags))
-        d.addCallback(get_rows)
-
-        def validate_rows(tagids):
-            self.assertEqual(tagids, self.getIds(test_tags))
-        d.addCallback(validate_rows)
-        return d
-
-    def test_remove_all_unused_tags(self):
-        test_tags = [
-                dict(id=10, tag='tag1'),
-                dict(id=20, tag='tag2'),
-                dict(id=30, tag='tag3'),
-            ]
-        d = self.populate_test_tags(test_tags)
-
-        d.addCallback(lambda _ :
-            self.db.tags.removeUnusedTags(self.getTags(test_tags)))
-
-        def get_rows(_):
-            return self.retrieveTags(self.getIds(test_tags))
-        d.addCallback(get_rows)
-
-        def validate_rows(tagids):
-            self.assertEqual(tagids, [])
-        d.addCallback(validate_rows)
-        return d
-
-    def test_remove_not_existing_tags(self):
-        test_tags = [
-                dict(id=10, tag='tag1'),
-                dict(id=20, tag='tag2'),
-                dict(id=30, tag='tag3'),
-            ]
-        d = self.populate_test_tags(test_tags)
-
-        d.addCallback(lambda _ :
-            self.db.tags.removeUnusedTags(['tag10', 'tag11']))
-
-        def get_rows(_):
-            return self.retrieveTags(None)
-        d.addCallback(get_rows)
-
-        def validate_rows(tagids):
-            self.assertEqual(tagids, self.getIds(test_tags))
-        d.addCallback(validate_rows)
-        return d
-
-    def test_remove_existing_tags(self):
-        test_tags = [
-                dict(id=10, tag='tag1'),
-                dict(id=20, tag='tag2'),
-                dict(id=30, tag='tag3'),
-            ]
-        d = self.populate_test_tags(test_tags)
-        d.addCallback(lambda _ :
-            self.populate_test_change_tags(self.getIds(test_tags)))
-
-        d.addCallback(lambda _ :
-            self.db.tags.removeUnusedTags(self.getTags(test_tags)))
-
-        def get_rows(_):
-            return self.retrieveTags(self.getIds(test_tags))
-        d.addCallback(get_rows)
-
-        def validate_rows(tagids):
-            self.assertEqual(tagids, self.getIds(test_tags))
-        d.addCallback(validate_rows)
-        return d
-
-    def test_remove_mix_tags(self):
-        test_tags = [
-                dict(id=10, tag='tag1'),
-                dict(id=20, tag='tag2'),
-                dict(id=30, tag='tag3'),
-            ]
-        used_tagids = [10, 30]
-        d = self.populate_test_tags(test_tags)
-        d.addCallback(lambda _ :
-            self.populate_test_change_tags(used_tagids))
-
-        d.addCallback(lambda _ :
-            self.db.tags.removeUnusedTags(self.getTags(test_tags)))
-
-        def get_rows(_):
-            return self.retrieveTags(self.getIds(test_tags))
-        d.addCallback(get_rows)
-
-        def validate_rows(tagids):
-            self.assertEqual(tagids, used_tagids)
-        d.addCallback(validate_rows)
-        return d
-
+    # Note: We never remove tags, so no tests for tags removal.
