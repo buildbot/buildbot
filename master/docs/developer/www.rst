@@ -13,12 +13,22 @@ The new system is using websockets in order to transfer Data API events into con
 How To Enable
 ~~~~~~~~~~~~~
 
-The new ``www`` implementation is disabled by default for now. 
-To enable it, simply add following code in your ``master.cfg``
+The new ``www`` implementation is disabled by default for now.
+To enable it, simply add following code in your ``master.cfg``:
 
 .. code-block:: python
 
      c['www'] = dict(port=8010)
+
+Unpack the Dojo SDK from the `download page <http://dojotoolkit.org/download/>`_ into ``master/buildbot/www/static/js/external``:
+
+.. code-block:: shell
+
+    mkdir -p master/buildbot/www/static/js/external
+    curl http://download.dojotoolkit.org/release-1.7.3/dojo-release-1.7.3-src.tar.gz | \
+        tar --strip-components 1 -C master/buildbot/www/static/js/external -zxf -
+
+You'll also need ``dojo/dijit/dgrid/put-selector``.
 
 Server Side Design
 ~~~~~~~~~~~~~~~~~~~
