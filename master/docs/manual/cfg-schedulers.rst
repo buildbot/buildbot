@@ -1158,6 +1158,7 @@ Example::
         if builder == None: # this is the case for force_build_all
             return ["cannot generate build list here"]
         # find all successful builds in builder1 and builder2
+        builds = []
         for builder in ["builder1","builder2"]:
             builder_status = status.getBuilder(builder)
             for num in xrange(1,40): # 40 last builds
