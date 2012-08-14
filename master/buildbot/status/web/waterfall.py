@@ -47,6 +47,12 @@ def later(old, new):
         return old
     return new
 
+def match(listA, listB):
+    for a in listA:
+        if a in listB:
+            return True
+    return False
+
 
 class CurrentBox(components.Adapter):
     # this provides the "current activity" box, just above the builder name
@@ -321,7 +327,7 @@ class ChangeEventSource(object):
                 continue
             if categories and change.category not in categories:
                 continue
-            if tags and change.tags not in tags:
+            if tags and not match(tags, change.tags):
                 continue
             if committers and change.author not in committers:
                 continue
@@ -543,7 +549,7 @@ class WaterfallStatusResource(HtmlResource):
         if request.args.get("show_events", ["false"])[0].lower() == "true":
             showEvents = True
         filterCategories = request.args.get('category', [])
-        filterTags = request.args.get('tag', [])
+        filterTags = request.args.get("tag", [])
         filterBranches = [b for b in request.args.get("branch", []) if b]
         filterBranches = map_branches(filterBranches)
         filterCommitters = [c for c in request.args.get("committer", []) if c]

@@ -20,7 +20,7 @@ from twisted.application import internet, service
 from buildbot import config
 from buildbot.db import enginestrategy
 from buildbot.db import pool, model, changes, schedulers, sourcestamps, sourcestampsets
-from buildbot.db import state, buildsets, buildrequests, builds, users
+from buildbot.db import state, buildsets, buildrequests, builds, users, tags
 
 class DatabaseNotReadyError(Exception):
     pass
@@ -63,6 +63,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         self.pool = None # set up in reconfigService
         self.model = model.Model(self)
         self.changes = changes.ChangesConnectorComponent(self)
+        self.tags = tags.TagsConnectorComponent(self)
         self.schedulers = schedulers.SchedulersConnectorComponent(self)
         self.sourcestamps = sourcestamps.SourceStampsConnectorComponent(self)
         self.sourcestampsets = sourcestampsets.SourceStampSetsConnectorComponent(self)

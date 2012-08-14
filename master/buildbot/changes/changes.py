@@ -78,7 +78,7 @@ class Change:
         if change.category:
             if chdict['tags'] is None:
                 chdict['tags'] = []
-            chdict['tags'].append(self.category)
+            chdict['tags'].append(change.category)
         change.tags = list(set(chdict['tags'] or []))
         change.tags.sort()
 

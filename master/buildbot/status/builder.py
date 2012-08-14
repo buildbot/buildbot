@@ -353,12 +353,14 @@ class BuilderStatus(styles.Versioned):
                 if got >= num_builds:
                     return
 
-    def eventGenerator(self, branches=[], categories=[], committers=[], minTime=0):
+    def eventGenerator(self, branches=[], categories=[], tags=[], committers=[], minTime=0):
         """This function creates a generator which will provide all of this
         Builder's status events, starting with the most recent and
         progressing backwards in time. """
 
         # remember the oldest-to-earliest flow here. "next" means earlier.
+
+        # TODO: tags is just a placeholder here.
 
         # TODO: interleave build steps and self.events by timestamp.
         # TODO: um, I think we're already doing that.
