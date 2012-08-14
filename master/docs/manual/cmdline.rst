@@ -18,7 +18,7 @@ which have their own options. One can run these tools in the following way:
    buildbot [global options] command [command options]
    buildslave [global options] command [command options]
 
-The ``buildbot`` command is used on the master, while ``buildlsave`` is used on
+The ``buildbot`` command is used on the master, while ``buildslave`` is used on
 the slave.  Global options are the same for both tools which perform the
 following actions:
 
