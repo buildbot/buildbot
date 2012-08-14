@@ -2517,6 +2517,50 @@ sophisticated ``set_properties``, which takes a dictionary mapping property
 names to values.  You may use :ref:`WithProperties` here to dynamically 
 construct new property values.
 
+.. bb:step:: CheckStep
+
+.. _Check_Steps:
+
+Check Steps
+-----------
+CheckStep is a helper class to implement steps that runs sanity checks
+on the master. E.g:
+
+      * Test bug tracker status (we are not trying to merge a patch
+        correcting a closed bug)
+      * Test code review status
+
+The check steps can run in several contexts:
+
+      * in a build, as a standard step
+      * before a build is created, the force Scheduler will
+        run all the CheckSteps, and return an early error, without
+        creating a buildrequest
+      * an advanced nextBuild can run those checks on the buildrequest queue
+        and prioritize buildrequests that will fail early because of those
+
+In the 2 latter case, the CheckStep is not in the usual builder/build/buildstatus
+environment. This class provide a common set of API for the buildstep case, and the
+check case.
+
+The child classes must implement check(self, properties, sourcestamps)
+This function can only call self.addStdErr/addStdout, in order to report
+progress, and needs to return a tuple (results, text), maybe via deferred
+
+in normal buildstep context, results will be the step's result, and text
+will be copied to description, and setText
+
+for forcesched, or nextBuild use cases, these systems needs to use following
+snippet::
+
+    # assuming we are decorated by inlineCallbacks
+    checkSteps = builder.getBuildFactory().getCheckSteps()
+    for cs in checkSteps:
+         res = yield cs.doCheck(properties, sourcestamps)
+         if res:
+             # code to handle the check failure case, res is a str
+	     # describing the list of issues with this potencial build
+
 RPM-Related Steps
 -----------------
 

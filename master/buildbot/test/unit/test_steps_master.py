@@ -21,7 +21,8 @@ from twisted.trial import unittest
 from buildbot.test.util import steps
 from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION
 from buildbot.steps import master
-from buildbot.process.properties import WithProperties
+from buildbot.process.properties import WithProperties, Properties
+from buildbot.process.buildstep import CheckStep
 
 class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
 
@@ -173,3 +174,60 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                 ])
         self.expectOutcome(result=SUCCESS, status_text=['y', 'z'])
         return self.runStep()
+
+class TestCheckStep(steps.BuildStepMixin, unittest.TestCase):
+    OKTEXT = "build properties are coherent\n"
+    KOTEXT = "a must be equal to b * c + 1\n"
+    class myCheckStep(CheckStep):
+        def check(self, properties, changes):
+            a = properties.getProperty("a", 0)
+            b = properties.getProperty("b", 0)
+            c = properties.getProperty("c", 0)
+            if a != b * c + 1:
+                return (FAILURE, TestCheckStep.KOTEXT)
+            return (SUCCESS, TestCheckStep.OKTEXT)
+
+    def setUp(self):
+        self.setUpBuildStep()
+
+    def tearDown(self):
+        self.tearDownBuildStep()
+
+    def test_build_fail(self):
+        self.setupStep(TestCheckStep.myCheckStep())
+        self.properties.setProperty("a", 1, "TEST")
+        self.properties.setProperty("b", 2, "TEST")
+        self.properties.setProperty("c", 3, "TEST")
+        self.expectOutcome(result=FAILURE, status_text=[TestCheckStep.KOTEXT])
+        return self.runStep()
+
+    def test_build_pass(self):
+        self.setupStep(TestCheckStep.myCheckStep())
+        self.properties.setProperty("a", 7, "TEST")
+        self.properties.setProperty("b", 2, "TEST")
+        self.properties.setProperty("c", 3, "TEST")
+        self.expectOutcome(result=SUCCESS, status_text=[TestCheckStep.OKTEXT])
+        return self.runStep()
+
+    def test_check_fail(self):
+        cs = TestCheckStep.myCheckStep()
+        properties = Properties()
+        properties.setProperty("a", 1, "TEST")
+        properties.setProperty("b", 2, "TEST")
+        properties.setProperty("c", 3, "TEST")
+        d = cs.doCheck(properties, [])
+        def check(res):
+            self.assertEqual(res, TestCheckStep.KOTEXT)
+        d.addCallbacks(check, self.fail)
+        return d
+    def test_check_success(self):
+        cs = TestCheckStep.myCheckStep()
+        properties = Properties()
+        properties.setProperty("a", 7, "TEST")
+        properties.setProperty("b", 2, "TEST")
+        properties.setProperty("c", 3, "TEST")
+        d = cs.doCheck(properties, [])
+        def check(res):
+            self.assertEqual(res, None)
+        d.addCallbacks(check, self.fail)
+        return d
