@@ -143,7 +143,8 @@ umask = %(umask)s
 maxdelay = %(maxdelay)d
 
 s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
-               keepalive, usepty, umask=umask, maxdelay=maxdelay)
+               keepalive, usepty, umask=umask, maxdelay=maxdelay,
+               allow_shutdown=%(allow-shutdown)s)
 s.setServiceParent(application)
 
 """]
@@ -166,6 +167,10 @@ def createSlave(config):
         print "unparseable master location '%s'" % master
         print " expecting something more like localhost:8007 or localhost"
         raise
+
+    asd = config['allow-shutdown']
+    if asd:
+      config['allow-shutdown'] = "'%s'" % asd
 
     if config['no-logrotate']:
         slaveTAC = "".join([slaveTACTemplate[0]] + slaveTACTemplate[2:])
@@ -336,8 +341,11 @@ class SlaveOptions(MakerBase):
          "size at which to rotate twisted log files"],
         ["log-count", "l", "10",
          "limit the number of kept old twisted log files (None for unlimited)"],
+        ["allow-shutdown", "a", None,
+         "Allows the buildslave to initiate a graceful shutdown. One of "
+         "'signal' or 'file'"]
         ]
-    
+
     longdesc = """
     This command creates a buildslave working directory and buildbot.tac
     file. The bot will use the <name> and <passwd> arguments to authenticate
