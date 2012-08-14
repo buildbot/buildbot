@@ -23,6 +23,11 @@ from buildbot.schedulers.forcesched import ChoiceStringParameter, ValidationErro
 from buildbot.schedulers.forcesched import NestedParameter, AnyPropertyParameter
 from buildbot.schedulers.forcesched import CodebaseParameter
 from buildbot.test.util import scheduler
+from buildbot.process import builder, factory
+from buildbot.config import BuilderConfig
+from buildbot.process.buildstep import CheckStep
+from buildbot.steps.shell import ShellCommand
+from buildbot.status.results import SUCCESS, FAILURE
 
 class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
@@ -34,13 +39,20 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownScheduler()
 
-    def makeScheduler(self, name='testsched', builderNames=['a', 'b'],
+    def makeScheduler(self, name='testsched', builderNames=['a', 'b'], factories={},
                             **kw):
         sched = self.attachScheduler(
                 ForceScheduler(name=name, builderNames=builderNames,**kw),
                 self.OBJECTID)
         sched.master.config = config.MasterConfig()
-
+        for n in builderNames:
+            b = builder.Builder(n)
+            if n in factories:
+                f = factories[n]
+            else:
+                f = factory.BuildFactory()
+            b.config = BuilderConfig(n,'dummyslave', factory=f)
+            sched.master.builders[n] = b
         self.assertEquals(sched.name, name)
         
         return sched
@@ -387,4 +399,75 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                                           bar={'a':'7', 'b':'8'}),
                               expectKind=dict,                              
                               klass=NestedParameter, fields=fields, name='')
+
+    @defer.inlineCallbacks
+    def do_CheckStep(self, testFail=False, twochecks=False, testFail2=False,noCheckTest=False):
+        OKTEXT = "build properties are coherent\n"
+        KOTEXT = "a must be equal to b * c + 1\n"
+        KOTEXT2 = "b must be equal to c - 1\n"
+        class myCheckStep(CheckStep):
+            def check(self, properties, changes):
+                a = int(properties.getProperty("a", 0))
+                b = int(properties.getProperty("b", 0))
+                c = int(properties.getProperty("c", 0))
+                if a != b * c + 1:
+                    return (FAILURE, KOTEXT)
+                return (SUCCESS, OKTEXT)
+
+        class myCheckStep2(CheckStep):
+            def check(self, properties, changes):
+                b = int(properties.getProperty("b", 0))
+                c = int(properties.getProperty("c", 0))
+                if b != c - 1:
+                    return (FAILURE, KOTEXT2)
+                return (SUCCESS, OKTEXT)
+        f =  factory.BuildFactory()
+        f.addStep(myCheckStep())
+        if twochecks:
+            f.addStep(myCheckStep2())
+        if noCheckTest:
+            f.addStep(CheckStep())
+        # add a non CheckStep step, that should not cause issue
+        f.addStep(ShellCommand())
+        
+        sched = self.makeScheduler(builderNames=['a'], factories=dict(a=f))
+        error = ""
+        try:
+            res = yield sched.force('user', 'a', branch='a', reason='because',revision='c',
+                            repository='d', project='p',
+                            property1_name='a',property1_value="1" if testFail else "7",
+                            property2_name='b',property2_value="3" if testFail2 else "2",
+                            property3_name='c',property3_value="3",
+                            )
+            bsid,brids = res
+        except ValueError,e:
+            error = str(e)
+        except NotImplementedError,e:
+            error=str(e)
+        if noCheckTest:
+            self.assertIn("your subclass must implement this method", error)
+            return
+        if testFail:
+            self.assertIn(KOTEXT,error)
+        else:
+            self.assertEqual(error,"")
+        if testFail2:
+            # test that the error are actually concatenated
+            self.assertIn(KOTEXT2,error)
+
+    def test_CheckStep_fail(self):
+        return self.do_CheckStep(True)
+
+    def test_CheckStep_pass(self):
+        return self.do_CheckStep(False)
+
+    def test_CheckStep_fail2(self):
+        return self.do_CheckStep(True, True,True)
+
+    def test_CheckStep_fail3(self):
+        return self.do_CheckStep(True, True, False)
+
+    def test_CheckStep_noCheckTest(self):
+        return self.do_CheckStep(noCheckTest=True)
+
 

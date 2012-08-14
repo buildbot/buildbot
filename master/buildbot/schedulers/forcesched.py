@@ -569,6 +569,15 @@ class ForceScheduler(base.BaseScheduler):
         properties.setProperty("reason", reason, "Force Build Form")
         properties.setProperty("owner", owner, "Force Build Form")
 
+        builder = self.master.getBuilder(builder_name)
+        checkSteps = builder.config.factory.getCheckSteps()
+        allChecksErrors = []
+        for cs in checkSteps:
+            res = yield cs.buildStep().doCheck(properties, sourcestamps)
+            if res != None:
+                allChecksErrors.append(res)
+        if len(allChecksErrors) > 0:
+            raise ValueError("Build request was not submitted because of:\n"+"\n".join(allChecksErrors))
         r = ("A build was forced by '%s': %s" % (owner, reason))
 
         # everything is validated, we can create our source stamp, and buildrequest
