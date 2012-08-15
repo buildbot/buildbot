@@ -626,6 +626,10 @@ class BuilderConfig:
         # factory is required
         if factory is None:
             errors.addError("builder '%s' has no factory" % name)
+        from buildbot.process.factory import BuildFactory
+        if factory is not None and not isinstance(factory, BuildFactory):
+            errors.addError(
+                "builder '%s's factory is not a BuildFactory instance" % name)
         self.factory = factory
 
         # slavenames can be a single slave name or a list, and should also

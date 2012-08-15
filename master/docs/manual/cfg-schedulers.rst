@@ -962,7 +962,7 @@ FixedParameter
 ##############
 
 ::
-    FixedParameter(default="trunk")
+    FixedParameter(name="branch", default="trunk"),
 
 This parameter type will not be shown on the web form, and always generate a
 property with its default value.

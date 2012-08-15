@@ -122,7 +122,8 @@ class FeedResource(XmlResource):
         if showCategories:
             builders = [b for b in builders if b.category in showCategories]
 
-        failures_only = request.args.get("failures_only", "false")
+        failures_only = request.args.get("failures_only", ["false"])
+        failures_only = failures_only[0] not in ('false', '0', 'no', 'off')
 
         maxFeeds = 25
 

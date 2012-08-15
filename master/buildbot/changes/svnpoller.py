@@ -82,13 +82,13 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                  pollInterval=10*60, histmax=100,
                  svnbin='svn', revlinktmpl='', category=None, 
                  project='', cachepath=None, pollinterval=-2,
-                 extra_args=None, name=None):
+                 extra_args=None):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
 
-        base.PollingChangeSource.__init__(self, name=name, pollInterval=pollInterval)
+        base.PollingChangeSource.__init__(self, name=svnurl, pollInterval=pollInterval)
 
         if svnurl.endswith("/"):
             svnurl = svnurl[:-1] # strip the trailing slash

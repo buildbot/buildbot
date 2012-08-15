@@ -21,7 +21,7 @@ from twisted.internet import defer
 from buildbot import config
 from buildbot.status import master
 from buildbot.test.fake import fakedb, fakemaster
-from buildbot.process import builder
+from buildbot.process import builder, factory
 from buildbot.db import buildrequests
 from buildbot.util import epoch2datetime
 
@@ -38,7 +38,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
     def makeBuilder(self, patch_random=False, **config_kwargs):
         """Set up C{self.bldr}"""
         self.bstatus = mock.Mock()
-        self.factory = mock.Mock()
+        self.factory = factory.BuildFactory()
         self.master = fakemaster.make_master()
         # only include the necessary required config, plus user-requested
         config_args = dict(name="bldr", slavename="slv", builddir="bdir",
@@ -710,7 +710,7 @@ class TestGetOldestRequestTime(unittest.TestCase):
 
     def makeBuilder(self, name):
         self.bstatus = mock.Mock()
-        self.factory = mock.Mock()
+        self.factory = factory.BuildFactory()
         self.master = fakemaster.make_master()
         self.master.status = master.Status(self.master)
         # only include the necessary required config
@@ -753,7 +753,7 @@ class TestRebuild(unittest.TestCase):
         bstatus_properties.properties = {}
         self.bstatus.getProperties.return_value = bstatus_properties
         self.bstatus.getSourceStamps.return_value = sourcestamps
-        self.factory = mock.Mock()
+        self.factory = factory.BuildFactory()
         self.master = fakemaster.make_master()
         # only include the necessary required config
         builder_config = config.BuilderConfig(
