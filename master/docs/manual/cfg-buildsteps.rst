@@ -2306,7 +2306,7 @@ you can use one of the string download steps.  ::
 ``s``, representing the string to download instead of a ``mastersrc`` argument. ::
 
     from buildbot.steps.transfer import JSONStringDownload
-    buildinfo = { ... }
+    buildinfo = { branch: Property('branch'), got_revision: Property('got_revision') }
     f.append(JSONStringDownload(buildinfo, slavedest="buildinfo.json"))
 
 :bb:step:`JSONStringDownload` is similar, except it takes an ``o`` argument, which must be JSON
@@ -2315,6 +2315,7 @@ serializable, and transfers that as a JSON-encoded string to the slave.
 .. index:: Properties; JSONPropertiesDownload
 
 ::
+
     from buildbot.steps.transfer import JSONPropertiesDownload
     f.append(JSONPropertiesDownload(slavedest="build-properties.json"))
 
