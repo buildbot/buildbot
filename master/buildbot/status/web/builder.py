@@ -180,7 +180,7 @@ def buildForceContextForField(req, default_props, sch, field):
             default = field.choices[0]
             
     default = req.args.get(pname, [default])[0]
-    if field.type=="bool":
+    if "bool" in field.type:
         default_props[pname] = "checked" if default else ""
     else:
         # filter out unicode chars, and html stuff
