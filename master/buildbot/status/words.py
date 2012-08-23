@@ -683,7 +683,7 @@ class IRCContact(base.StatusReceiver):
     def command_HELP(self, args, who):
         args = shlex.split(args)
         if len(args) == 0:
-            self.send("Get help on what? (try 'help <foo>', "
+            self.send("Get help on what? (try 'help <foo>', 'help <foo> <bar>, "
                       "or 'commands' for a command list)")
             return
         command = args[0]
@@ -691,11 +691,19 @@ class IRCContact(base.StatusReceiver):
         if not meth:
             raise UsageError, "no such command '%s'" % command
         usage = getattr(meth, 'usage', None)
+        if isinstance(usage, dict):
+            if len(args) == 1:
+                k = None # command
+            elif len(args) == 2:
+                k = args[1] # command arg
+            else:
+                k = tuple(args[1:]) # command arg subarg ...
+            usage = usage.get(k, None)
         if usage:
             self.send("Usage: %s" % usage)
         else:
-            self.send("No usage info for '%s'" % command)
-    command_HELP.usage = "help <command> - Give help for <command>"
+            self.send("No usage info for " + ' '.join(["'%s'" % arg for arg in args]))
+    command_HELP.usage = "help <command> [<arg> [<subarg> ...]] - Give help for <command> or one of it's arguments"
 
     def command_SOURCE(self, args, who):
         self.send("My source can be found at "

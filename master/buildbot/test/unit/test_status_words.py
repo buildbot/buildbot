@@ -119,6 +119,56 @@ class TestIrcContactChannel(unittest.TestCase):
         self.do_test_command('help', args='foo')
         self.assertIn('No usage info for', self.sent[0])
 
+    def test_command_help_dict_command(self):
+        self.contact.command_FOO = lambda : None
+        self.contact.command_FOO.usage = {
+            None : 'foo - bar'
+        }
+        self.do_test_command('help', args='foo')
+        self.assertIn('Usage: foo - bar', self.sent[0])
+
+    def test_command_help_dict_command_no_usage(self):
+        self.contact.command_FOO = lambda : None
+        self.contact.command_FOO.usage = {}
+        self.do_test_command('help', args='foo')
+        self.assertIn("No usage info for 'foo'", self.sent[0])
+
+    def test_command_help_dict_command_arg(self):
+        self.contact.command_FOO = lambda : None
+        self.contact.command_FOO.usage = {
+            'this' : 'foo this - bar'
+        }
+        self.do_test_command('help', args='foo this')
+        self.assertIn('Usage: foo this - bar', self.sent[0])
+
+    def test_command_help_dict_command_arg_no_usage(self):
+        self.contact.command_FOO = lambda : None
+        self.contact.command_FOO.usage = {
+            # nothing for arg 'this'
+            ('this', 'first') : 'foo this first - bar'
+        }
+        self.do_test_command('help', args='foo this')
+        self.assertIn("No usage info for 'foo' 'this'", self.sent[0])
+
+    def test_command_help_dict_command_arg_subarg(self):
+        self.contact.command_FOO = lambda : None
+        self.contact.command_FOO.usage = {
+            ('this', 'first') : 'foo this first - bar'
+        }
+        self.do_test_command('help', args='foo this first')
+        self.assertIn('Usage: foo this first - bar', self.sent[0])
+
+    def test_command_help_dict_command_arg_subarg_no_usage(self):
+        self.contact.command_FOO = lambda : None
+        self.contact.command_FOO.usage = {
+            None : 'foo - bar',
+            'this' : 'foo this - bar',
+            ('this', 'first') : 'foo this first - bar'
+            # nothing for subarg 'missing'
+        }
+        self.do_test_command('help', args='foo this missing')
+        self.assertIn("No usage info for 'foo' 'this' 'missing'", self.sent[0])
+
     def test_command_help_nosuch(self):
         self.do_test_command('help', args='foo', exp_UsageError=True)
 
