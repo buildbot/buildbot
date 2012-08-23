@@ -20,6 +20,9 @@ Features
 * The :bb:status:`MailNotifier` now takes a callable to calculate the "previous" build for purposes of determining status changes.
   See :bb:pull:`489`.
 
+* The :bb:status:`IRC` bot now supports clean shutdown and immediate shutdown by using the command 'shutdown'.
+  To allow the command to function, you must provide `allowShutdown=True`.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
