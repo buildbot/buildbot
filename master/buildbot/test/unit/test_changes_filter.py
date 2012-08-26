@@ -25,6 +25,7 @@ class Change(State):
     repository = ''
     branch = ''
     category = ''
+    tags = None
 
 class ChangeFilter(unittest.TestCase):
 
@@ -85,6 +86,7 @@ class ChangeFilter(unittest.TestCase):
         self.setfilter(category_re = "^a.*")
         self.yes(Change(category="albert"), "matching CATEGORY returns True")
         self.no(Change(category="boris"), "non-matching CATEGORY returns False")
+        self.no(Change(category=None), "None for CATEGORY returns False")
         self.check()
 
     def test_filter_change_branch_re(self): # regression - see #927
@@ -122,4 +124,106 @@ class ChangeFilter(unittest.TestCase):
                 "none match and fn returns True -> False")
         self.yes(Change(project='p', repository='r', branch='b', category='c', ff=True),
                 "all match and fn returns True -> False")
+        self.check()
+
+    def test_filter_change_tags_fn(self):
+        self.setfilter(tags_fn = lambda t : 'match' in t)
+        self.no(Change(tags=['tag-a', 'tag-b']), "tags_fn returns False")
+        self.yes(Change(tags=['match', 'tag-b']), "tags_fn returns True")
+        self.check()
+
+    def test_filter_change_tags_fn_once(self):
+        self.setfilter(tags_fn = lambda t : isinstance(t, list) and len(t) > 0)
+        self.no(Change(tags={'tag' : 'tag-a'}), "tags_fn returns False")
+        self.yes(Change(tags=['tag-a', 'tag-b']), "tags_fn returns True")
+        self.check()
+
+    def test_filter_change_filt_str_tags(self):
+        self.setfilter(tags = "mytag")
+        self.no(Change(tags=["yourtag", "histag", "hertag"]), "non-matching TAGS returns False")
+        self.yes(Change(tags=["yourtag", "histag", "hertag", "mytag"]), "matching TAGS returns True")
+        self.check()
+
+    def test_filter_change_filt_list_tags(self):
+        self.setfilter(tags = ["tag-a", "tag-b"])
+        self.yes(Change(tags=["tag-a", "tag-c"]), "matching TAGS tag-a returns True")
+        self.yes(Change(tags=["tag-b", "tag-c"]), "matching TAGS tag-b returns True")
+        self.no(Change(tags=["tag-c", "tag-d", "tag-e"]), "non-matching TAGS returns False")
+        self.no(Change(tags=None), "None for TAGS returns False")
+        self.check()
+
+    def test_filter_change_filt_list_None_tags(self):
+        self.setfilter(tags = ["mytag", None])
+        self.yes(Change(tags=["mytag", "random"]), "matching TAGS mytag returns True")
+        self.yes(Change(tags=None), "matching TAGS None returns True")
+        self.no(Change(tags=["misc", "random"]), "non-matching TAGS returns False")
+        self.check()
+
+    def test_filter_change_filt_re_tags(self):
+        self.setfilter(tags_re = "^a.*")
+        self.yes(Change(tags=["albert", "boris"]), "matching TAGS returns True")
+        self.no(Change(tags=["boris", "development", None]), "non-matching TAGS returns False")
+        self.check()
+
+    def test_filter_change_filt_re_compiled_tags(self):
+        self.setfilter(tags_re = re.compile("^b.*", re.I))
+        self.no(Change(tags=["albert", "development"]), "non-matching TAGS returns False")
+        self.yes(Change(tags=["boris", "albert"]), "matching TAGS returns True")
+        self.yes(Change(tags=["Bruce", "albert"]), "matching TAGS returns True, using re.I")
+        self.check()
+
+    def test_filter_change_filt_list_and_re_tags(self):
+        self.setfilter(tags = ["a-tag", "b-tag"], tags_re = "^a.*")
+        self.yes(Change(tags=["a-tag"]), "TAGS a-tag matching list and re returns True")
+        self.no(Change(tags=["c-tag"]), "TAGS c-tag non-matching both list and re returns False")
+        self.no(Change(tags=["b-tag"]), "TAGS b-tag matching list but non-matching re returns False")
+        self.no(Change(tags=["albert"]), "TAGS albert matching re but non-matching list returns False")
+        self.no(Change(tags=None), "None for TAGS returns False")
+        self.check()
+    
+    def test_filter_change_filt_list_and_fn_tags(self):
+        self.setfilter(tags = ["a-tag", "match"], tags_fn = lambda t : 'match' in t or 'fn-match' in t)
+        self.yes(Change(tags=["match"]), "TAGS match matching list and fn returns True")
+        self.no(Change(tags=["c-tag"]), "TAGS c-tag non-matching both list and fn returns False")
+        self.no(Change(tags=["a-tag"]), "TAGS a-tag matching list but non-matching fn returns False")
+        self.no(Change(tags=["fn-match"]), "TAGS fn-match matching fn but non-matching list returns False")
+        self.no(Change(tags=None), "None for TAGS returns False")
+        self.check()
+    
+    def test_filter_change_filt_re_and_fn_tags(self):
+        self.setfilter(tags_re = "^a.*", tags_fn = lambda t : 'a-tag' in t or 'fn-match' in t)
+        self.yes(Change(tags=["a-tag"]), "TAGS a-tag matching re and fn returns True")
+        self.no(Change(tags=["c-tag"]), "TAGS c-tag non-matching both re and fn returns False")
+        self.no(Change(tags=["albert"]), "TAGS albert matching re but non-matching fn returns False")
+        self.no(Change(tags=["fn-match"]), "TAGS fn-match matching fn but non-matching re returns False")
+        self.no(Change(tags=None), "None for TAGS returns False")
+        self.check()
+    
+    def test_filter_change_filt_list_and_re_and_fn_tags(self):
+        self.setfilter(
+            tags    = ["a-tag", "alist-tag", "b-tag", "c-tag"],
+            tags_re = "^a.*",
+            tags_fn = lambda t : 'a-tag' in t or 'afn-tag' in t or 'b-tag' in t or 'fn-match' in t)
+        self.yes(Change(tags=["a-tag"]), "TAGS a-tag matching list, re and fn returns True")
+        self.no(Change(tags=["d-tag"]), "TAGS d-tag non-matching all 3 list, re and fn returns False")
+        self.no(Change(tags=["c-tag"]), "TAGS c-tag matching list but non-matching re and fn returns False")
+        self.no(Change(tags=["albert"]), "TAGS albert matching re but non-matching list and fn returns False")
+        self.no(Change(tags=["fn-match"]), "TAGS fn-match matching fn but non-matching list and re returns False")
+
+        self.no(Change(tags=["alist-tag"]), "TAGS alist-tag matching list and re but non-matching fn returns False")
+        self.no(Change(tags=["b-tag"]), "TAGS b-tag matching list and fn but non-matching re returns False")
+        self.no(Change(tags=["afn-tag"]), "TAGS afn-tag matching re and fn but non-matching list returns False")
+        self.no(Change(tags=None), "None for TAGS returns False")
+        self.check()
+    
+    def test_filter_change_combination_tags(self):
+        self.setfilter(project='p', repository='r', branch='b', category='c', tags=['d'])
+        self.no(Change(project='x', repository='x', branch='x', category='x', tags=['x']),
+                "none match -> False")
+        self.no(Change(project='p', repository='r', branch='b', category='x', tags=['x']),
+                "three match -> False")
+        self.no(Change(project='p', repository='r', branch='b', category='c', tags=['x']),
+                "non-matching tags -> False")
+        self.yes(Change(project='p', repository='r', branch='b', category='c', tags=['d']),
+                "all match -> True")
         self.check()
