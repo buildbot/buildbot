@@ -648,6 +648,26 @@ command line, like this
     specify a number or ``None`` to keep all :file:`twistd.log` files
     around. The default is 10.
 
+.. option:: --allow-shutdown
+    Can also be passed directly to the BuildSlave constructor in buildbot.tac.  If
+    set, it allows the buildslave to initiate a graceful shutdown, meaning that it
+    will ask the master to shut down the slave when the current build, if any, is
+    complete.
+
+    Setting allow_shutdown to ``file`` will cause the buildslave to watch
+    :file:`shutdown.stamp` in basedir for updates to its mtime.  When the mtime changes,
+    the slave will request a graceful shutdown from the master.  The file does not
+    need to exist prior to starting the slave.
+
+    Setting allow_shutdown to ``signal`` will set up a SIGHUP handler to start a
+    graceful shutdown.  When the signal is received, the slave will request a
+    graceful shutdown from the master.
+
+    The default value is ``None``, in which case this feature will be disabled.
+
+    Both master and slave must be at least version 0.8.3 for this feature to work.
+
+
 .. _Other-Buildslave-Configuration:
 
 Other Buildslave Configuration
@@ -665,25 +685,6 @@ Other Buildslave Configuration
     If you need a different encoding, this can be changed in your build slave's
     :file:`buildbot.tac` file by adding a ``unicode_encoding``
     argument  to the BuildSlave constructor.
-
-``allow_shutdown``
-    allow_shutdown can be passed to the BuildSlave constructor in buildbot.tac.  If
-    set, it allows the buildslave to initiate a graceful shutdown, meaning that it
-    will ask the master to shut down the slave when the current build, if any, is
-    complete.
-
-    Setting allow_shutdown to ``file`` will cause the buildslave to watch
-    :file:`shutdown.stamp` in basedir for updates to its mtime.  When the mtime changes,
-    the slave will request a graceful shutdown from the master.  The file does not
-    need to exist prior to starting the slave.
-
-    Setting allow_shutdown to ``signal`` will set up a SIGHUP handler to start a
-    graceful shutdown.  When the signal is received, the slave will request a
-    graceful shutdown from the master.
-
-    The default value is ``None``, in which case this feature will be disabled.
-
-    Both master and slave must be at least version 0.8.3 for this feature to work.
 
 .. code-block:: python
 
