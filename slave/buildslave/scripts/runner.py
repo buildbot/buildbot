@@ -141,9 +141,11 @@ keepalive = %(keepalive)d
 usepty = %(usepty)d
 umask = %(umask)s
 maxdelay = %(maxdelay)d
+patch_command = 'patch'
 
 s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
-               keepalive, usepty, umask=umask, maxdelay=maxdelay)
+               keepalive, usepty, umask=umask, maxdelay=maxdelay,
+               patch_command=patch_command)
 s.setServiceParent(application)
 
 """]

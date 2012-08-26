@@ -564,7 +564,7 @@ class SourceBaseCommand(Command):
         if len(self.patch) >= 3:
             root = self.patch[2]
         command = [
-            utils.getCommand("patch"),
+            utils.getCommand(self.builder.patch_command),
             '-p%d' % patchlevel,
             '--remove-empty-files',
             '--force',
