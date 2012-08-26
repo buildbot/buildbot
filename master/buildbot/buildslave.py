@@ -270,6 +270,11 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         if self.slave_status:
             self.slave_status.recordConnectTime()
 
+        # try to use TCP keepalives
+        try:
+            mind.broker.transport.setTcpKeepAlive(1)
+        except:
+            pass
 
         if self.isConnected():
             # duplicate slave - send it to arbitration

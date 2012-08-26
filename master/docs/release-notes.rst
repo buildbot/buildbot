@@ -14,8 +14,17 @@ Master
 Features
 ~~~~~~~~
 
+* The :bb:chsrc:`SVNPoller` now supports multiple projects and codebases.
+  See :bb:pull:`443`.
+
+* The :bb:status:`MailNotifier` now takes a callable to calculate the "previous" build for purposes of determining status changes.
+  See :bb:pull:`489`.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* The ``split_file`` function for :bb:chsrc:`SVNPoller` may now return a dictionary instead of a tuple.
+  This allows it to add extra information about a change (such as ``project`` or ``repository``).
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

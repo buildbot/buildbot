@@ -160,7 +160,7 @@ Some version control systems have not yet been implemented as master-side
 steps.  If you are interested in continued support for such a version control
 system, please consider helping the Buildbot developers to create such an
 implementation.  In particular, version-control systems with proprietary
-licenses will not be supported without access to the verscion-contorl system
+licenses will not be supported without access to the version-control system
 for development.
 
 Common Parameters
@@ -1884,7 +1884,7 @@ default ``failureOnNoTests`` is False.
 Slave Filesystem Steps
 ----------------------
 
-Here are some buildsteps for manipulating the slaves filesystem.
+Here are some buildsteps for manipulating the slave's filesystem.
 
 .. bb:step:: FileExists
 
@@ -2306,7 +2306,7 @@ you can use one of the string download steps.  ::
 ``s``, representing the string to download instead of a ``mastersrc`` argument. ::
 
     from buildbot.steps.transfer import JSONStringDownload
-    buildinfo = { ... }
+    buildinfo = { branch: Property('branch'), got_revision: Property('got_revision') }
     f.append(JSONStringDownload(buildinfo, slavedest="buildinfo.json"))
 
 :bb:step:`JSONStringDownload` is similar, except it takes an ``o`` argument, which must be JSON
