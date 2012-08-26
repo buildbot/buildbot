@@ -2315,6 +2315,7 @@ serializable, and transfers that as a JSON-encoded string to the slave.
 .. index:: Properties; JSONPropertiesDownload
 
 ::
+
     from buildbot.steps.transfer import JSONPropertiesDownload
     f.append(JSONPropertiesDownload(slavedest="build-properties.json"))
 
@@ -2698,8 +2699,9 @@ The :bb:step:`DebLintian` step checks a build .deb for bugs and policy
 violations. The packages or changes file to test is specified in ``fileloc``
 
 ::
+
     from buildbot.steps.package.deb.lintian import DebLintian
-    f.addStep(DebLintian(fileloc=WithProperties("%(deb-changes)s"):wq
+    f.addStep(DebLintian(fileloc=WithProperties("%(deb-changes)s")))
 
 Miscellaneous BuildSteps
 ------------------------

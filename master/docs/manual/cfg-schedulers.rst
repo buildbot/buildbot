@@ -962,6 +962,7 @@ FixedParameter
 ##############
 
 ::
+
     FixedParameter(name="branch", default="trunk"),
 
 This parameter type will not be shown on the web form, and always generate a
@@ -971,6 +972,7 @@ StringParameter
 ###############
 
 ::
+
     StringParameter(name="pull_url",
         label="optionally give a public git pull url:<br>",
         default="", size=80)
@@ -991,6 +993,7 @@ TextParameter
 #############
 
 ::
+
     StringParameter(name="comments",
         label="comments to be displayed to the user of the built binary",
         default="This is a development build", cols=60, rows=5)
@@ -1021,7 +1024,8 @@ IntParameter
 ############
 
 ::
-    BooleanParameter(name="debug_level",
+
+    IntParameter(name="debug_level",
         label="debug level (1-10)", default=2)
 
 This parameter type accepts an integer value using a text-entry box.
@@ -1030,6 +1034,7 @@ BooleanParameter
 ################
 
 ::
+
     BooleanParameter(name="force_build_clean",
         label="force a make clean", default=False)
 
@@ -1039,6 +1044,7 @@ UserNameParameter
 #################
 
 ::
+
     UserNameParameter(label="your name:<br>", size=80)
 
 This parameter type accepts a username.  If authentication is active, it will
@@ -1054,6 +1060,7 @@ ChoiceStringParameter
 #####################
 
 ::
+
     ChoiceStringParameter(name="branch",
         choices=["main","devel"], default="main")
 
