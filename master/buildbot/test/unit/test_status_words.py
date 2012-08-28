@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
+import mock, os, signal
 from twisted.trial import unittest
 from twisted.application import internet
 from twisted.internet import task, reactor
@@ -36,6 +36,17 @@ class TestIrcContactChannel(unittest.TestCase):
             self.subscribed = False
         self.bot.status.unsubscribe = unsubscribe
 
+        # fake out clean shutdown
+        self.bot.master = mock.Mock(name='IRCStatusBot-instance.master')
+        self.bot.master.botmaster = mock.Mock(name='IRCStatusBot-instance.master.botmaster')
+        self.bot.master.botmaster.shuttingDown = False
+        def cleanShutdown():
+            self.bot.master.botmaster.shuttingDown = True
+        self.bot.master.botmaster.cleanShutdown = cleanShutdown
+        def cancelCleanShutdown():
+            self.bot.master.botmaster.shuttingDown = False
+        self.bot.master.botmaster.cancelCleanShutdown = cancelCleanShutdown
+
         self.contact = words.IRCContact(self.bot, '#buildbot')
 
     def patch_send(self):
@@ -51,7 +62,8 @@ class TestIrcContactChannel(unittest.TestCase):
         self.contact.act = act
 
     def do_test_command(self, command, args='', who='me', clock_ticks=None,
-            exp_usage=True, exp_UsageError=False):
+            exp_usage=True, exp_UsageError=False, allowShutdown=False,
+            shuttingDown=False):
         cmd = getattr(self.contact, 'command_' + command.upper())
 
         if exp_usage:
@@ -61,6 +73,8 @@ class TestIrcContactChannel(unittest.TestCase):
         self.patch(reactor, 'callLater', clock.callLater)
         self.patch_send()
         self.patch_act()
+        self.bot.factory.allowShutdown = allowShutdown
+        self.bot.master.botmaster.shuttingDown = shuttingDown
 
         if exp_UsageError:
             try:
@@ -119,8 +133,100 @@ class TestIrcContactChannel(unittest.TestCase):
         self.do_test_command('help', args='foo')
         self.assertIn('No usage info for', self.sent[0])
 
+    def test_command_help_dict_command(self):
+        self.contact.command_FOO = lambda : None
+        self.contact.command_FOO.usage = {
+            None : 'foo - bar'
+        }
+        self.do_test_command('help', args='foo')
+        self.assertIn('Usage: foo - bar', self.sent[0])
+
+    def test_command_help_dict_command_no_usage(self):
+        self.contact.command_FOO = lambda : None
+        self.contact.command_FOO.usage = {}
+        self.do_test_command('help', args='foo')
+        self.assertIn("No usage info for 'foo'", self.sent[0])
+
+    def test_command_help_dict_command_arg(self):
+        self.contact.command_FOO = lambda : None
+        self.contact.command_FOO.usage = {
+            'this' : 'foo this - bar'
+        }
+        self.do_test_command('help', args='foo this')
+        self.assertIn('Usage: foo this - bar', self.sent[0])
+
+    def test_command_help_dict_command_arg_no_usage(self):
+        self.contact.command_FOO = lambda : None
+        self.contact.command_FOO.usage = {
+            # nothing for arg 'this'
+            ('this', 'first') : 'foo this first - bar'
+        }
+        self.do_test_command('help', args='foo this')
+        self.assertIn("No usage info for 'foo' 'this'", self.sent[0])
+
+    def test_command_help_dict_command_arg_subarg(self):
+        self.contact.command_FOO = lambda : None
+        self.contact.command_FOO.usage = {
+            ('this', 'first') : 'foo this first - bar'
+        }
+        self.do_test_command('help', args='foo this first')
+        self.assertIn('Usage: foo this first - bar', self.sent[0])
+
+    def test_command_help_dict_command_arg_subarg_no_usage(self):
+        self.contact.command_FOO = lambda : None
+        self.contact.command_FOO.usage = {
+            None : 'foo - bar',
+            'this' : 'foo this - bar',
+            ('this', 'first') : 'foo this first - bar'
+            # nothing for subarg 'missing'
+        }
+        self.do_test_command('help', args='foo this missing')
+        self.assertIn("No usage info for 'foo' 'this' 'missing'", self.sent[0])
+
     def test_command_help_nosuch(self):
         self.do_test_command('help', args='foo', exp_UsageError=True)
+
+    def test_command_shutdown(self):
+        self.do_test_command('shutdown', exp_UsageError=True)
+        self.assertEqual(self.bot.factory.allowShutdown, False)
+        self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
+
+    def test_command_shutdown_dissalowed(self):
+        self.do_test_command('shutdown', args='check', exp_UsageError=True)
+        self.assertEqual(self.bot.factory.allowShutdown, False)
+        self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
+
+    def test_command_shutdown_check_running(self):
+        self.do_test_command('shutdown', args='check', allowShutdown=True, shuttingDown=False)
+        self.assertEqual(self.bot.factory.allowShutdown, True)
+        self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
+        self.assertIn('buildbot is running', self.sent[0])
+
+    def test_command_shutdown_check_shutting_down(self):
+        self.do_test_command('shutdown', args='check', allowShutdown=True, shuttingDown=True)
+        self.assertEqual(self.bot.factory.allowShutdown, True)
+        self.assertEqual(self.bot.master.botmaster.shuttingDown, True)
+        self.assertIn('buildbot is shutting down', self.sent[0])
+
+    def test_command_shutdown_start(self):
+        self.do_test_command('shutdown', args='start', allowShutdown=True, shuttingDown=False)
+        self.assertEqual(self.bot.factory.allowShutdown, True)
+        self.assertEqual(self.bot.master.botmaster.shuttingDown, True)
+
+    def test_command_shutdown_stop(self):
+        self.do_test_command('shutdown', args='stop', allowShutdown=True, shuttingDown=True)
+        self.assertEqual(self.bot.factory.allowShutdown, True)
+        self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
+
+    def test_command_shutdown_now(self):
+        self.killargs = None
+        def kill(*args):
+            self.killargs = args
+        self.patch(os, 'kill', kill)
+        self.do_test_command('shutdown', args='now', allowShutdown=True)
+        self.assertEqual(self.bot.factory.allowShutdown, True)
+        self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
+        self.assertEqual(self.killargs, (os.getpid(), signal.SIGTERM))
 
     def test_command_source(self):
         self.do_test_command('source')
