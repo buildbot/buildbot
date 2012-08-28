@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import re, shlex, random
+import re, shlex, random, os, signal
 from string import join, capitalize, lower
 
 from zope.interface import implements
@@ -683,7 +683,7 @@ class IRCContact(base.StatusReceiver):
     def command_HELP(self, args, who):
         args = shlex.split(args)
         if len(args) == 0:
-            self.send("Get help on what? (try 'help <foo>', "
+            self.send("Get help on what? (try 'help <foo>', 'help <foo> <bar>, "
                       "or 'commands' for a command list)")
             return
         command = args[0]
@@ -691,11 +691,19 @@ class IRCContact(base.StatusReceiver):
         if not meth:
             raise UsageError, "no such command '%s'" % command
         usage = getattr(meth, 'usage', None)
+        if isinstance(usage, dict):
+            if len(args) == 1:
+                k = None # command
+            elif len(args) == 2:
+                k = args[1] # command arg
+            else:
+                k = tuple(args[1:]) # command arg subarg ...
+            usage = usage.get(k, None)
         if usage:
             self.send("Usage: %s" % usage)
         else:
-            self.send("No usage info for '%s'" % command)
-    command_HELP.usage = "help <command> - Give help for <command>"
+            self.send("No usage info for " + ' '.join(["'%s'" % arg for arg in args]))
+    command_HELP.usage = "help <command> [<arg> [<subarg> ...]] - Give help for <command> or one of it's arguments"
 
     def command_SOURCE(self, args, who):
         self.send("My source can be found at "
@@ -717,6 +725,43 @@ class IRCContact(base.StatusReceiver):
         reactor.callLater(3.0, self.send, "(>^.^)>")
         reactor.callLater(3.5, self.send, "(7^.^)7")
         reactor.callLater(5.0, self.send, "(>^.^<)")
+
+    def command_SHUTDOWN(self, args, who):
+        if args not in ('check','start','stop','now'):
+            raise UsageError("try 'shutdown check|start|stop|now'")
+
+        if not self.bot.factory.allowShutdown:
+            raise UsageError("shutdown control is not enabled")
+
+        botmaster = self.master.botmaster
+        shuttingDown = botmaster.shuttingDown
+
+        if args == 'check':
+            if shuttingDown:
+                self.send("Status: buildbot is shutting down")
+            else:
+                self.send("Status: buildbot is running")
+        elif args == 'start':
+            if shuttingDown:
+                self.send("Already started")
+            else:
+                self.send("Starting clean shutdown")
+                botmaster.cleanShutdown()
+        elif args == 'stop':
+            if not shuttingDown:
+                self.send("Nothing to stop")
+            else:
+                self.send("Stopping clean shutdown")
+                botmaster.cancelCleanShutdown()
+        elif args == 'now':
+            self.send("Sending signal SIGTERM")
+            os.kill(os.getpid(), signal.SIGTERM)
+    command_SHUTDOWN.usage = {
+        None: "shutdown check|start|stop|now - shutdown the buildbot master",
+        "check": "shutdown check - check if the buildbot master is running or shutting down",
+        "start": "shutdown start - start a clean shutdown",
+        "stop": "shutdown cancel - stop the clean shutdown",
+        "now": "shutdown now - shutdown immediately without waiting for the builders to finish"}
 
     # communication with the user
 
@@ -917,7 +962,7 @@ class IrcStatusFactory(ThrottledClientFactory):
 
     def __init__(self, nickname, password, channels, pm_to_nicks, categories, notify_events,
                  noticeOnChannel=False, useRevisions=False, showBlameList=False,
-                 lostDelay=None, failedDelay=None, useColors=True):
+                 lostDelay=None, failedDelay=None, useColors=True, allowShutdown=False):
         ThrottledClientFactory.__init__(self, lostDelay=lostDelay,
                                         failedDelay=failedDelay)
         self.status = None
@@ -931,6 +976,7 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
         self.useColors = useColors
+        self.allowShutdown = allowShutdown
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -980,15 +1026,19 @@ class IRC(base.StatusReceiverMultiService):
     compare_attrs = ["host", "port", "nick", "password",
                      "channels", "pm_to_nicks", "allowForce", "useSSL",
                      "useRevisions", "categories", "useColors",
-                     "lostDelay", "failedDelay"]
+                     "lostDelay", "failedDelay", "allowShutdown"]
+
+    factory = IrcStatusFactory
 
     def __init__(self, host, nick, channels, pm_to_nicks=[], port=6667,
             allowForce=False, categories=None, password=None, notify_events={},
             noticeOnChannel = False, showBlameList = True, useRevisions=False,
-            useSSL=False, lostDelay=None, failedDelay=None, useColors=True):
+            useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
+            allowShutdown=False):
         base.StatusReceiverMultiService.__init__(self)
 
         assert allowForce in (True, False) # TODO: implement others
+        assert allowShutdown in (True, False)
 
         # need to stash these so we can detect changes later
         self.host = host
@@ -1001,8 +1051,9 @@ class IRC(base.StatusReceiverMultiService):
         self.useRevisions = useRevisions
         self.categories = categories
         self.notify_events = notify_events
+        self.allowShutdown = allowShutdown
 
-        self.f = IrcStatusFactory(self.nick, self.password,
+        self.f = self.factory(self.nick, self.password,
                                   self.channels, self.pm_to_nicks,
                                   self.categories, self.notify_events,
                                   noticeOnChannel = noticeOnChannel,
@@ -1010,7 +1061,8 @@ class IRC(base.StatusReceiverMultiService):
                                   showBlameList = showBlameList,
                                   lostDelay = lostDelay,
                                   failedDelay = failedDelay,
-                                  useColors = useColors)
+                                  useColors = useColors,
+                                  allowShutdown = allowShutdown)
 
         if useSSL:
             # SSL client needs a ClientContextFactory for some SSL mumbo-jumbo
