@@ -200,16 +200,11 @@ class Git(Source):
         return d
 
     def clobber(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def checkRemoval(res):
-            if res != 0:
-                raise RuntimeError("Failed to delete directory")
-            return res
-        d.addCallback(lambda _: checkRemoval(cmd.rc))
-        d.addCallback(lambda _: self._doFull())
+        d = self._doClobber()
+        if self.shallow:
+            d.addCallback(lambda _: self._doShallowClone())
+        else:
+            d.addCallback(lambda _: self._full())
         return d
 
     def fresh(self):
@@ -342,11 +337,6 @@ class Git(Source):
             d.addCallback(renameBranch)
         return d
 
-    def patch(self, _, patch):
-        d = self._dovccmd(['apply', '--index', '-p', str(patch[0])],
-                initialStdin=patch[1])
-        return d
-
     @defer.inlineCallbacks
     def _doFetch(self, _):
         """
@@ -360,15 +350,13 @@ class Git(Source):
         elif self.retryFetch:
             yield self._fetch(None)
         elif self.clobberOnFailure:
-            yield self.clobber()
+            yield self._doClobber()
+            yield self._full()
         else:
             raise buildstep.BuildStepFailed()
 
     def _full(self):
-        if self.shallow:
-            command = ['clone', '--depth', '1', '--branch', self.branch, self.repourl, '.']
-        else:
-            command = ['clone', '--branch', self.branch, self.repourl, '.']
+        command = ['clone', '--branch', self.branch, self.repourl, '.']
         #Fix references
         if self.prog:
             command.append('--progress')
@@ -392,12 +380,40 @@ class Git(Source):
         def clobber(res):
             if res != 0:
                 if self.clobberOnFailure:
-                    return self.clobber()
+                    d = self._doClobber()
+                    d.addCallback(lambda _: self._full())
+                    return d
                 else:
                     raise buildstep.BuildStepFailed()
             else:
                 return res
         d.addCallback(clobber)
+        return d
+
+    def _doClobber(self):
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
+                                                'logEnviron': self.logEnviron,})
+        cmd.useLog(self.stdio_log, False)
+        d = self.runCommand(cmd)
+        def checkRemoval(res):
+            if res != 0:
+                raise RuntimeError("Failed to delete directory")
+            return res
+        d.addCallback(lambda _: checkRemoval(cmd.rc))
+        return d
+
+    def _doShallowClone(self):
+        if self.shallow:
+            command = ['clone', '--depth', '1', '--branch', self.branch, self.repourl, '.']
+        if self.prog:
+            command.append('--progress')
+
+        #Abandon on failure
+        d = self._dovccmd(command)
+        if self.submodules:
+            d.addCallback(lambda _: self._dovccmd(['submodule', 'update',
+                                                   '--init', '--recursive'],
+                                                  not self.clobberOnFailure))
         return d
 
     def computeSourceRevision(self, changes):
@@ -447,4 +463,9 @@ class Git(Source):
                 return True
             return False
         d.addCallback(check)
+        return d
+
+    def patch(self, _, patch):
+        d = self._dovccmd(['apply', '--index', '-p', str(patch[0])],
+                initialStdin=patch[1])
         return d
