@@ -20,6 +20,8 @@ Features
 * The :bb:status:`MailNotifier` now takes a callable to calculate the "previous" build for purposes of determining status changes.
   See :bb:pull:`489`.
 
+* :bb:step:`CopyDirectory` has been added.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
