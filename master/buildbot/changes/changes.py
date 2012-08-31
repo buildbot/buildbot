@@ -62,7 +62,6 @@ class Change:
         change.isdir = chdict['is_dir']
         change.revision = chdict['revision']
         change.branch = chdict['branch']
-        change.category = chdict['category']
         change.revlink = chdict['revlink']
         change.repository = chdict['repository']
         change.codebase = chdict['codebase']
@@ -74,11 +73,13 @@ class Change:
             when = datetime2epoch(when)
         change.when = when
 
-        # keep a sorted list of the unique tags, for easier display
+        # For backward compatibility we convert category
+        # to one of tags.
         if change.category:
             if chdict['tags'] is None:
                 chdict['tags'] = []
             chdict['tags'].append(change.category)
+        # Keep a sorted list of the unique tags, for easier display
         change.tags = list(set(chdict['tags'] or []))
         change.tags.sort()
 
@@ -127,11 +128,13 @@ class Change:
         self.codebase = codebase
         self.project = project
 
-        # keep a sorted list of the unique tags, for easier display
+        # For backward compatibility we convert category
+        # to one of tags.
         if self.category:
             if tags is None:
                 tags = []
             tags.append(self.category)
+        # Keep a sorted list of the unique tags, for easier display
         self.tags = list(set(tags or []))
         self.tags.sort()
 
@@ -273,7 +276,7 @@ class ChangeMaster: # pragma: no cover
                 c.revision = unicode(c.revision)
 
             for attr in ("who", "comments", "revlink", "category", "branch", "revision"):
-                a = getattr(c, attr, None)
+                a = getattr(c, attr)
                 if isinstance(a, str):
                     try:
                         setattr(c, attr, a.decode(old_encoding))
