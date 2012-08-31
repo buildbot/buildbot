@@ -31,8 +31,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
-            revision=None, when_timestamp=None, branch=None, tags=None,
-            category=None, revlink='', properties={}, repository='', codebase='',
+            revision=None, when_timestamp=None, branch=None,
+            tags=None, revlink='', properties={}, repository='', codebase='',
             project='', uid=None, _reactor=reactor):
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
@@ -44,13 +44,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         for pv in properties.values():
             assert pv[1] == 'Change', ("properties must be qualified with"
                                        "source 'Change'")
-
-        # For backward compatibility we convert category
-        # to one of tags.
-        if tags is None:
-            tags = []
-        if category:
-            tags.append(category)
 
         def thd(conn):
             # note that in a read-uncommitted database like SQLite this
@@ -236,7 +229,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 revision=ch_row.revision,
                 when_timestamp=epoch2datetime(ch_row.when_timestamp),
                 branch=ch_row.branch,
-                category=None, # see below
                 revlink=ch_row.revlink,
                 properties={}, # see below
                 repository=ch_row.repository,
@@ -251,9 +243,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         rows = conn.execute(query)
         for r in rows:
             chdict['tags'].append(r.tag)
-        # Populate category for backward compatibility.
-        if chdict['tags']:
-            chdict['category'] = chdict['tags'][0]
 
         query = change_files_tbl.select(
                 whereclause=(change_files_tbl.c.changeid == ch_row.changeid))

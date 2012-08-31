@@ -225,7 +225,7 @@ def import_changes(migrate_engine):
                     revision=c.revision,
                     revlink=c.revlink,
                     when_timestamp=c.when,
-                    category=getattr(c, 'category', None))
+                    category=c.category)
             values = dict([ (k, remove_none(v)) for k, v in values.iteritems() ])
         except UnicodeDecodeError, e:
             raise UnicodeError("Trying to import change data as UTF-8 failed.  Please look at contrib/fix_changes_pickle_encoding.py: %s" % str(e))

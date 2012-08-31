@@ -156,10 +156,7 @@ class TestTagsConnectorComponent(
             return self.db.tags.resolveTags(test_tags)
         d.addCallback(get_rows)
 
-        def validate_rows(tagids):
-            self.assertEqual(tagids, [])
-        d.addCallback(validate_rows)
-        return d
+        return self.assertFailure(d, AssertionError)
 
     def test_none_tags(self):
         test_tags = None
@@ -169,9 +166,6 @@ class TestTagsConnectorComponent(
             return self.db.tags.resolveTags(test_tags)
         d.addCallback(get_rows)
 
-        def validate_rows(tagids):
-            self.assertEqual(tagids, None)
-        d.addCallback(validate_rows)
-        return d
+        return self.assertFailure(d, AssertionError)
 
     # Note: We never remove tags, so no tests for tags removal.

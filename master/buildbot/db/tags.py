@@ -37,12 +37,7 @@ class TagsConnectorComponent(base.DBConnectorComponent):
         Use resolveTags for deferred.
         """
 
-        if tags is None:
-            return None
-        if len(tags) == 0:
-            return []
-
-        assert tags is not None, "tags must be a not empty list"
+        assert tags is not None and len(tags) > 0, "tags must be a not empty list"
 
         # Make sure we have a unique set of tags.
         tags = list(set(tags))
@@ -93,13 +88,5 @@ class TagsConnectorComponent(base.DBConnectorComponent):
         """
         Deferrs resolveTagsSync to db thread pool and returns a Deferred.
         """
-        if tags is None:
-            return defer.succeed(None)
-        if len(tags) == 0:
-            return defer.succeed([])
-
-        def thd(conn):
-            return self.resolveTagsSync(conn, tags)
-
-        d = self.db.pool.do(thd)
+        d = self.db.pool.do(self.resolveTagsSync, tags)
         return d

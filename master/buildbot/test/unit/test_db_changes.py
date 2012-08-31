@@ -65,7 +65,6 @@ class TestChangesConnectorComponent(
         'changeid': 13,
         'author': u'dustin',
         'comments': u'fix spelling',
-        'category': None,
         'is_dir': 0,
         'branch': u'master',
         'revision': u'deadbeef',
@@ -95,7 +94,6 @@ class TestChangesConnectorComponent(
         'changeid': 14,
         'author': u'warner',
         'branch': u'warnerdb',
-        'category': u'devel',
         'comments': u'fix whitespace',
         'files': [u'master/buildbot/__init__.py'],
         'is_dir': 0,
@@ -111,7 +109,7 @@ class TestChangesConnectorComponent(
 
     def change14(self):
         c = Change(**dict(
-         category='devel',
+         tags=['devel'],
          isdir=0,
          repository=u'git://warner',
          codebase=u'mainapp',
@@ -148,7 +146,6 @@ class TestChangesConnectorComponent(
         'changeid': 15,
         'author': u'warner',
         'branch': u'warnerdb',
-        'category': u'alpha',
         'comments': u'fix whitespace',
         'files': [u'master/buildbot/__init__.py'],
         'is_dir': 0,
@@ -180,11 +177,6 @@ class TestChangesConnectorComponent(
         ok = ok and ca.codebase == cb.codebase
         ok = ok and ca.project == cb.project
         ok = ok and sorted(ca.tags) == sorted(cb.tags)
-        # Since we converted category to tags with
-        # loosing information, we cannot simply compare categories.
-        # We need to check if category is in tags instead.
-        if ca.category:
-           ok = ok and ca.category in cb.tags
         if not ok:
             def printable(c):
                 return pprint.pformat(c.__dict__)
@@ -270,7 +262,6 @@ class TestChangesConnectorComponent(
                  revision=u'2d6caa52',
                  when_timestamp=epoch2datetime(266738400),
                  branch=u'master',
-                 category=None,
                  tags=['tag1', 'tag2'],
                  revlink=None,
                  properties={u'platform': (u'linux', 'Change')},
@@ -357,7 +348,6 @@ class TestChangesConnectorComponent(
                  revision=u'2d6caa52',
                  when_timestamp=None,
                  branch=u'master',
-                 category=None,
                  revlink=None,
                  properties={},
                  repository=u'',
@@ -413,7 +403,6 @@ class TestChangesConnectorComponent(
                  revision=u'2d6caa52',
                  when_timestamp=epoch2datetime(1239898353),
                  branch=u'master',
-                 category=None,
                  revlink=None,
                  properties={},
                  repository=u'',
@@ -458,7 +447,7 @@ class TestChangesConnectorComponent(
         d.addCallback(check_change_users)
         return d
 
-    def test_addChange_no_category_no_tags(self):
+    def test_addChange_no_tags(self):
         d = self.db.changes.addChange(
                 author=u'galina',
                 comments=u'empty change',
@@ -492,83 +481,10 @@ class TestChangesConnectorComponent(
         d.addCallback(check_change_tags)
         return d
 
-    def test_addChange_no_category_tags(self):
+    def test_addChange_tags(self):
         d = self.db.changes.addChange(
                 author=u'galina',
                 tags=[u'gamma', u'beta', u'alpha'],
-                comments=u'empty change',
-                branch=u'master',
-                revision=u'deadbeef',
-                when_timestamp=epoch2datetime(266738400))
-        # check all of the relevant columns of the relevant tables
-        def check_change(changeid):
-            def thd(conn):
-                self.assertEqual(changeid, 1)
-                r = conn.execute(self.db.model.changes.select())
-                r = r.fetchall()
-                self.assertEqual(len(r), 1)
-                self.assertEqual(r[0].changeid, changeid)
-            return self.db.pool.do(thd)
-        d.addCallback(check_change)
-        def check_change_tags(_):
-            def thd(conn):
-                tags_tbl = self.db.model.tags
-                change_tags_tbl = self.db.model.change_tags
-                query = sa.select(
-                            [self.db.model.tags.c.tag],
-                        ).where(tags_tbl.c.id == change_tags_tbl.c.tagid
-                        ).where(change_tags_tbl.c.changeid == 1
-                        ).order_by("1")
-                r = conn.execute(query)
-                r = r.fetchall()
-                self.assertEqual(len(r), 3)
-                self.assertEqual(r[0].tag, 'alpha')
-                self.assertEqual(r[1].tag, 'beta')
-                self.assertEqual(r[2].tag, 'gamma')
-            return self.db.pool.do(thd)
-        d.addCallback(check_change_tags)
-        return d
-
-    def test_addChange_category_no_tags(self):
-        d = self.db.changes.addChange(
-                author=u'galina',
-                category=u'gamma',
-                comments=u'empty change',
-                branch=u'master',
-                revision=u'deadbeef',
-                when_timestamp=epoch2datetime(266738400))
-        # check check only related columns of the relevant tables
-        def check_change(changeid):
-            def thd(conn):
-                self.assertEqual(changeid, 1)
-                r = conn.execute(self.db.model.changes.select())
-                r = r.fetchall()
-                self.assertEqual(len(r), 1)
-                self.assertEqual(r[0].changeid, changeid)
-            return self.db.pool.do(thd)
-        d.addCallback(check_change)
-        def check_change_tags(_):
-            def thd(conn):
-                tags_tbl = self.db.model.tags
-                change_tags_tbl = self.db.model.change_tags
-                query = sa.select(
-                            [self.db.model.tags.c.tag],
-                        ).where(tags_tbl.c.id == change_tags_tbl.c.tagid
-                        ).where(change_tags_tbl.c.changeid == 1
-                        ).order_by("1")
-                r = conn.execute(query)
-                r = r.fetchall()
-                self.assertEqual(len(r), 1)
-                self.assertEqual(r[0].tag, 'gamma')
-            return self.db.pool.do(thd)
-        d.addCallback(check_change_tags)
-        return d
-
-    def test_addChange_category_tags(self):
-        d = self.db.changes.addChange(
-                author=u'galina',
-                category=u'gamma',
-                tags=[u'beta', u'alpha'],
                 comments=u'empty change',
                 branch=u'master',
                 revision=u'deadbeef',
