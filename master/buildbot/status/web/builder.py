@@ -168,7 +168,7 @@ class ForceBuildActionResource(ActionResource):
         # send the user back to the builder page
         defer.returnValue((path_to_builder(req, self.builder_status), msg))
 
-def buildForceContextForField(req, default_props, sch, field):
+def buildForceContextForField(req, default_props, sch, field, master, buildername):
     pname = "%s.%s"%(sch.name, field.fullName)
     
     default = field.default
@@ -190,7 +190,7 @@ def buildForceContextForField(req, default_props, sch, field):
         
     if isinstance(field, NestedParameter):
         for subfield in field.fields:
-            buildForceContextForField(req, default_props, sch, subfield)
+            buildForceContextForField(req, default_props, sch, subfield, master, buildername)
 
 def buildForceContext(cxt, req, master, buildername=None):
     force_schedulers = {}
@@ -199,7 +199,7 @@ def buildForceContext(cxt, req, master, buildername=None):
         if isinstance(sch, ForceScheduler) and (buildername is None or(buildername in sch.builderNames)):
             force_schedulers[sch.name] = sch
             for field in sch.all_fields:
-                buildForceContextForField(req, default_props, sch, field)
+                buildForceContextForField(req, default_props, sch, field, master, buildername)
                 
     cxt['force_schedulers'] = force_schedulers
     cxt['default_props'] = default_props
