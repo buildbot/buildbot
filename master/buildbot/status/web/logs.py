@@ -19,7 +19,11 @@ from twisted.python import components
 from twisted.spread import pb
 from twisted.web import server
 from twisted.web.resource import Resource
-from twisted.web.error import NoResource
+
+try:
+    from twisted.web.error import NoResource
+except ImportError:
+    from twisted.web.error import Error as NoResource
 
 from buildbot import interfaces
 from buildbot.status import logfile

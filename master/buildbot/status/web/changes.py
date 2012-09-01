@@ -16,7 +16,11 @@
 
 from zope.interface import implements
 from twisted.python import components
-from twisted.web.error import NoResource
+
+try:
+    from twisted.web.error import NoResource
+except ImportError:
+    from twisted.web.error import Error as NoResource
 
 from buildbot.changes.changes import Change
 from buildbot.status.web.base import HtmlResource, IBox, Box
