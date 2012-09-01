@@ -17,7 +17,12 @@
 import time, urllib
 from twisted.web import html
 from twisted.web.util import Redirect
-from twisted.web.error import NoResource
+
+try:
+    from twisted.web.error import NoResource
+except ImportError:
+    from twisted.web.error import Error as NoResource
+
 from twisted.internet import defer
 
 from buildbot.status.web.base import HtmlResource, abbreviate_age, \
