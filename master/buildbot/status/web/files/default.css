@@ -563,8 +563,14 @@ pre.comments>a:active {
 	color: purple;
 }
 
+form.command_forcebuild {
+    border-top: 1px solid black;
+    padding: .5em;
+    margin: .5em;
+}
+
 form.command_forcebuild > .row {
-    border-top: 1px solid gray;
+    border-top: 1px dotted gray;
     padding: .5em 0;
 }
 
