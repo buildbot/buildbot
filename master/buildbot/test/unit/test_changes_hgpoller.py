@@ -117,7 +117,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(change['author'],
                              'Joe Test <joetest@example.org>')
             self.assertEqual(change['when_timestamp'],
-                             epoch2datetime(1273258009-7200)),
+                             epoch2datetime(1273258009)),
             self.assertEqual(change['files'], ['file1', 'file2'])
             self.assertEqual(change['src'], 'hg')
             self.assertEqual(change['branch'], 'default')
@@ -130,7 +130,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(change['author'],
                              'Bob Test <bobtest@example.org>')
             self.assertEqual(change['when_timestamp'],
-                             epoch2datetime(1273258100-7200)),
+                             epoch2datetime(1273258100)),
             self.assertEqual(change['files'], ['file1', 'dir/file2'])
             self.assertEqual(change['src'], 'hg')
             self.assertEqual(change['branch'], 'default')
