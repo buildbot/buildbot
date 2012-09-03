@@ -66,8 +66,9 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
     name = "shell"
     renderables = buildstep.LoggingBuildStep.renderables + [
-                   'slaveEnvironment', 'remote_kwargs', 'command']
-    
+                   'slaveEnvironment', 'remote_kwargs', 'command',
+                   'description', 'descriptionDone', 'descriptionSuffix']
+
     description = None # set this to a list of short strings to override
     descriptionDone = None # alternate description when the step is complete
     descriptionSuffix = None # extra information to append to suffix
