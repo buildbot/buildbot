@@ -194,7 +194,8 @@ class FeedResource(XmlResource):
             log_lines = []
             for s in build.getSteps():
                 res = s.getResults()[0]
-                if res not in (results.SUCCESS, results.WARNINGS):
+                if res not in (results.SUCCESS, results.WARNINGS,
+                               results.SKIPPED):
                     failed_steps.append(s.getName())
 
                     # Add the last 30 lines of each log.
