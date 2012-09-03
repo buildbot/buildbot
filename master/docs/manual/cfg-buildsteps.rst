@@ -350,8 +350,7 @@ The Git step takes the following arguments:
 
 ``shallow``
    (optional): instructs git to attempt shallow clones (``--depth
-   1``). If the user/scheduler asks for a specific revision, this
-   parameter is ignored. 
+   1``). This option can be used only in full builds with clobber method.
 
 ``progress``
    (optional): passes the (``--progress``) flag to (:command:`git
@@ -378,7 +377,9 @@ The Git step takes the following arguments:
 
    ``clobber``
       It removes the build directory entirely then makes full clone
-      from repo. This can be slow as it need to clone whole repository
+      from repo. This can be slow as it need to clone whole repository. To make 
+      faster clones enable ``shallow`` option. If shallow options is enabled and
+      build request have unknown revision value, then this step fails.
 
    ``fresh``
       This remove all other files except those tracked by Git. First
