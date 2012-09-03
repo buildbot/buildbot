@@ -1126,20 +1126,6 @@ MailNotifier arguments
     (dictionary) A dictionary containing key/value pairs of extra headers to add
     to sent e-mails. Both the keys and the values may be a `WithProperties` instance.
 
-``previousBuildGetter``
-    An optional function to calculate the previous build to the one at hand. A
-    :func:`previousBuildGetter` takes a :class:`BuildStatus` and returns a
-    :class:`BuildStatus`. This function is useful when builders don't process
-    their requests in order of arrival (chronologically) and therefore the order
-    of completion of builds does not reflect the order in which changes (and
-    their respective requests) arrived into the system. In such scenarios,
-    status transitions in the chronological sequence of builds within a builder
-    might not reflect the actual status transition in the topological sequence
-    of changes in the tree. What's more, the latest build (the build at hand)
-    might not always be for the most recent request so it might not make sense
-    to send a "change" or "problem" email about it. Returning None from this
-    function will prevent such emails from going out.
-
 As a help to those writing :func:`messageFormatter` functions, the following
 table describes how to get some useful pieces of information from the various
 status objects:

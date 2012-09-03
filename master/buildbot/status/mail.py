@@ -153,9 +153,6 @@ def defaultMessage(mode, name, build, results, master_status):
     text += "\n"
     return { 'body' : text, 'type' : 'plain' }
 
-def defaultGetPreviousBuild(current_build):
-        return current_build.getPreviousBuild()
-
 class MailNotifier(base.StatusReceiverMultiService):
     """This is a status notifier which sends email to a list of recipients
     upon the completion of each build. It can be configured to only send out
@@ -191,9 +188,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                  lookup=None, extraRecipients=[],
                  sendToInterestedUsers=True, customMesg=None,
                  messageFormatter=defaultMessage, extraHeaders=None,
-                 addPatch=True, useTls=False,
-                 smtpUser=None, smtpPassword=None, smtpPort=25,
-                 previousBuildGetter=defaultGetPreviousBuild):
+                 addPatch=True, useTls=False, 
+                 smtpUser=None, smtpPassword=None, smtpPort=25):
         """
         @type  fromaddr: string
         @param fromaddr: the email address to be used in the 'From' header.
@@ -309,14 +305,6 @@ class MailNotifier(base.StatusReceiverMultiService):
         @type smtpPort: int
         @param smtpPort: The port that will be used when connecting to the
                          relayhost. Defaults to 25.
-
-        @type previousBuildGetter: func
-        @param previousBuildGetter: function taking a BuildStatus instance
-                                    returning a BuildStatus of the build
-                                    previous to the one passed in. This allows
-                                    to implement a relative ordering between
-                                    builds other than the default one, which is
-                                    chronological.
         """
         base.StatusReceiverMultiService.__init__(self)
 
@@ -368,7 +356,6 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.smtpPort = smtpPort
         self.buildSetSummary = buildSetSummary
         self.buildSetSubscription = None
-        self.getPreviousBuild = previousBuildGetter
         self.watched = []
         self.master_status = None
 
@@ -438,7 +425,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                builder.category not in self.categories:
             return False # ignore this build
 
-        prev = self.getPreviousBuild(build)
+        prev = build.getPreviousBuild()
         if "change" in self.mode:
             if prev and prev.getResults() != results:
                 return True
