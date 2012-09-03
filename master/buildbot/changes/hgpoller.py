@@ -100,7 +100,7 @@ class HgPoller(base.PollingChangeSource):
                 stamp = None
             else:
                 try:
-                    stamp = sum(float(d) for d in date.split())
+                    stamp = float(date.split()[0])
                 except:
                     log.msg('hgpoller: caught exception converting output %r '
                             'to timestamp' % date)
