@@ -197,9 +197,9 @@ class _PropertyMap(object):
     Privately-used mapping object to implement WithProperties' substitutions,
     including the rendering of None as ''.
     """
-    colon_minus_re = re.compile(r"([^:]*):-([^:]*)")
-    colon_tilde_re = re.compile(r"([^:]*):~([^:]*)")
-    colon_plus_re = re.compile(r"([^:]*):\+([^:]*)")
+    colon_minus_re = re.compile(r"(.*):-(.*)")
+    colon_tilde_re = re.compile(r"(.*):~(.*)")
+    colon_plus_re = re.compile(r"(.*):\+(.*)")
     
     colon_ternary_re = re.compile(r"""(?P<prop>.*) # the property to match
                                       :            # colon

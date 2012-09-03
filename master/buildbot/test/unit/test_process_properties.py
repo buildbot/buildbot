@@ -249,15 +249,6 @@ class TestPropertyMap(unittest.TestCase):
     def testColonTernaryHashUnset(self):
         return self.doTestSimpleWithProperties('%(prop_nosuch:#?.truish.falsish)s', 'falsish')
 
-    def testColonTernaryHashSetMinus(self):
-        return self.doTestSimpleWithProperties('%(prop_str:#?:-truish:falsish)s', '-truish')
-        
-    def testColonTernaryHashSetTilde(self):
-        return self.doTestSimpleWithProperties('%(prop_str:#?:~truish:falsish)s', '~truish')
-        
-    def testColonTernaryHashSetPlus(self):
-        return self.doTestSimpleWithProperties('%(prop_str:#?:+truish:falsish)s', '+truish')
-        
 
     def testClearTempValues(self):
         d = self.doTestSimpleWithProperties('', '',
