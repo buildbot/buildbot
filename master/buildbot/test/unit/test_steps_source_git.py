@@ -56,7 +56,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_full_clean_timeout(self):
@@ -94,7 +94,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_full_clean_patch(self):
@@ -131,7 +131,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_full_clean_patch_fail(self):
@@ -198,7 +198,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_full_clean_parsefail(self):
@@ -308,7 +308,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_full_clobber_branch(self):
@@ -336,7 +336,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_incremental(self):
@@ -366,7 +366,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_incremental_branch(self):
@@ -399,7 +399,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_full_fresh(self):
@@ -431,7 +431,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_incremental_given_revision(self):
@@ -460,7 +460,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_full_fresh_submodule(self):
@@ -499,7 +499,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_full_clobber_shallow(self):
@@ -527,7 +527,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_incremental_retryFetch(self):
@@ -565,7 +565,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_incremental_retryFetch_branch(self):
@@ -606,7 +606,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_incremental_clobberOnFailure(self):
@@ -645,7 +645,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_incremental_clobberOnFailure_branch(self):
@@ -684,7 +684,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_full_copy(self):
@@ -719,7 +719,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
 
@@ -747,7 +747,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_full_clobber_given_revision(self):
@@ -779,7 +779,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_revparse_failure(self):
@@ -842,7 +842,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_repourl(self):
@@ -878,7 +878,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_full_fresh_clobberOnFailure(self):
@@ -914,7 +914,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_full_no_method(self):
@@ -946,7 +946,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_full_with_env(self):
@@ -983,7 +983,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_full_logEnviron(self):
@@ -1020,7 +1020,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_getDescription(self):
@@ -1061,8 +1061,8 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
-        self.expectProperty('commit-description', 'Tag-1234', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
+        self.expectProperty('commit-description', 'Tag-1234', 'Git')
         return self.runStep()
 
     def test_getDescription_failed(self):
@@ -1106,7 +1106,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 128, # error, but it's suppressed
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         self.expectNoProperty('commit-description')
         return self.runStep()
 
@@ -1156,12 +1156,12 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
         
         if codebase:
             self.expectOutcome(result=SUCCESS, status_text=["update", codebase])
-            self.expectProperty('got_revision', {codebase:'f6ad368298bd941e934a41f3babc827b2aa95a1d'}, 'Source')
-            self.expectProperty('commit-description', {codebase:'Tag-1234'}, 'Source')
+            self.expectProperty('got_revision', {codebase:'f6ad368298bd941e934a41f3babc827b2aa95a1d'}, 'Git')
+            self.expectProperty('commit-description', {codebase:'Tag-1234'}, 'Git')
         else:
             self.expectOutcome(result=SUCCESS, status_text=["update"])
-            self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
-            self.expectProperty('commit-description', 'Tag-1234', 'Source')
+            self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
+            self.expectProperty('commit-description', 'Tag-1234', 'Git')
 
     def test_getDescription_empty_dict(self):
         self.setup_getDescription_test(
