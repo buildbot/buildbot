@@ -43,11 +43,12 @@ class RemoteCommand(pb.Referenceable):
     debug = False
 
     def __init__(self, remote_command, args, ignore_updates=False,
-            collectStdout=False, decodeRC={0:SUCCESS}):
+            collectStdout=False, collectStderr=False, decodeRC={0:SUCCESS}):
         self.logs = {}
         self.delayedLogs = {}
         self._closeWhenFinished = {}
         self.collectStdout = collectStdout
+        self.collectStderr = collectStderr
         self.stdout = ''
 
         self._startTime = None
@@ -206,6 +207,8 @@ class RemoteCommand(pb.Referenceable):
     def addStderr(self, data):
         if 'stdio' in self.logs:
             self.logs['stdio'].addStderr(data)
+        if self.collectStderr:
+            self.stderr += data
 
     def addHeader(self, data):
         if 'stdio' in self.logs:
@@ -354,7 +357,8 @@ class RemoteShellCommand(RemoteCommand):
                  want_stdout=1, want_stderr=1,
                  timeout=20*60, maxTime=None, logfiles={},
                  usePTY="slave-config", logEnviron=True,
-                 collectStdout=False, interruptSignal=None,
+                 collectStdout=False,collectStderr=False,
+                 interruptSignal=None,
                  initialStdin=None, decodeRC={0:SUCCESS}):
 
         self.command = command # stash .command, set it later
@@ -377,7 +381,8 @@ class RemoteShellCommand(RemoteCommand):
         if interruptSignal is not None:
             args['interruptSignal'] = interruptSignal
         RemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout,
-                decodeRC=decodeRC)
+                               collectStderr=collectStderr,
+                               decodeRC=decodeRC)
 
     def _start(self):
         self.args['command'] = self.command
