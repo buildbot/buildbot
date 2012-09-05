@@ -31,7 +31,8 @@ del _hush_pyflakes
 class ShellCommand(buildstep.LoggingBuildStep):
     """I run a single shell command on the buildslave. I return FAILURE if
     the exit code of that command is non-zero, SUCCESS otherwise. To change
-    this behavior, override my .evaluateCommand method.
+    this behavior, override my .evaluateCommand method, or customize
+    decodeRC argument
 
     By default, a failure of this step will mark the whole build as FAILURE.
     To override this, give me an argument of flunkOnFailure=False .
@@ -61,7 +62,6 @@ class ShellCommand(buildstep.LoggingBuildStep):
                         they are written to. Empty or nonexistent logfiles
                         will be omitted. (Also handled by class
                         LoggingBuildStep.)
-
     """
 
     name = "shell"

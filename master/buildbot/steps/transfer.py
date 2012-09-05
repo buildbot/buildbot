@@ -172,7 +172,7 @@ class _DirectoryWriter(_FileWriter):
 
 
 def makeStatusRemoteCommand(step, remote_command, args):
-    self = buildstep.RemoteCommand(remote_command, args,  successfulRC=(None, 0))
+    self = buildstep.RemoteCommand(remote_command, args,  decodeRC={None:SUCCESS, 0:SUCCESS})
     callback = lambda arg: step.step_status.addLog('stdio')
     self.useLogDelayed('stdio', callback, True)
     return self

@@ -276,7 +276,24 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS, status_text=["'echo", "hello'"])
         return self.runStep()
-    
+
+    def test_run_decodeRC(self, rc=1, results=WARNINGS, extra_text = ["warnings"]):
+        self.setupStep(
+                shell.ShellCommand(workdir='build', command="echo hello",
+                decodeRC={1:WARNINGS}))
+        self.expectCommands(
+            ExpectShell(workdir='build', command='echo hello',
+                         usePTY="slave-config")
+            + rc
+        )
+        self.expectOutcome(result=results, status_text=["'echo", "hello'"]+extra_text)
+        return self.runStep()
+
+    def test_run_decodeRC_defaults(self):
+        return  self.test_run_decodeRC(2, FAILURE,extra_text=["failed"])
+
+    def test_run_decodeRC_defaults_0_is_failure(self):
+        return  self.test_run_decodeRC(0, FAILURE,extra_text=["failed"])
 
 
 
