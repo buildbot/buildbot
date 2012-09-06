@@ -96,39 +96,61 @@ class StatusGithubCommit(StatusReceiverMultiService):
 
     #### Events
 
+    def buildStarted(self, builderName, build):
+        revision = build.getProperty('revision')
+        buildNumber = build.getNumber()
+
+        state = 'pending'
+        description = 'Build %s is building' % (buildNumber)
+        buildUrl = self.status.getURLForThing(build)
+
+        self._sendStatusToGithub(revision=revision, state=state,
+                                 description=description,
+                                 targetUrl=buildUrl)
+
+        return self
+
     def buildFinished(self, builderName, build, results):
         builder = build.getBuilder()
 
-        builder_name = builder.getName()
-        build_number = build.getNumber()
+        buildNumber = build.getNumber()
         revision = build.getProperty('got_revision')
 
         (start, end) = build.getTimes()
         elapsed = (end - start)
 
-        build_url = self.status.getURLForThing(build)
+        state = STATUS_TO_GITHUB_STATE_MAP[results]
+        description = 'Build %s finished in %.2f seconds' % (buildNumber,
+                                                             elapsed)
+        buildUrl = self.status.getURLForThing(build)
+        self._sendStatusToGithub(revision=revision, state=state,
+                                 description=description,
+                                 targetUrl=buildUrl)
 
+    def _sendStatusToGithub(self, revision, state, description=None,
+                            targetUrl=None):
         if not revision:
             log.msg('Not sending status to Github because revision is empty')
             return
 
         log.msg('Sending status to Github...')
 
-        state = STATUS_TO_GITHUB_STATE_MAP[results]
-        description = 'Build %s finished in %.2f seconds' % (build_number,
-                                                             elapsed)
-        data = {'state': state, 'description': description}
+        data = {'state': state}
 
-        if build_url:
-            data['target_url'] = build_url
+        if description:
+            data['description'] = description
+
+        if targetUrl:
+            data['target_url'] = targetUrl
 
         payload = json.dumps(data)
 
         agent = Agent(reactor)
-
-        url = self._base_url + revision
+        url = self._base_url + str(revision)
         headers = Headers({'Authorization': [self._auth_header]})
+
         d = agent.request(method='POST', uri=url, headers=headers,
                           bodyProducer=StringProducer(payload))
+        return d
 
 # vim: set ts=4 sts=4 sw=4 et:
