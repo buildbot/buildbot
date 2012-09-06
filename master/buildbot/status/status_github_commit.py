@@ -115,12 +115,12 @@ class StatusGithubCommit(StatusReceiverMultiService):
         log.msg('Sending status to Github...')
 
         state = STATUS_TO_GITHUB_STATE_MAP[results]
-        description = 'Build %s finished in %.2f seconds' % (build_number, elapsed)
+        description = 'Build %s finished in %.2f seconds' % (build_number,
+                                                             elapsed)
         data = {'state': state, 'description': description}
 
         if build_url:
             data['target_url'] = build_url
-
 
         payload = json.dumps(data)
 
