@@ -29,6 +29,8 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
+* Added an optional build start callback to ``buildbot.status.status_gerrit.GerritStatusPush``
+
 Slave
 -----
 
