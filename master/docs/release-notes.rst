@@ -31,6 +31,10 @@ Changes for Developers
 
 * Added an optional build start callback to ``buildbot.status.status_gerrit.GerritStatusPush``
 
+* An optional ``startCB`` callback to :bb:status:`GerritStatusPush` can be used
+  to send a message back to the committer.
+  See the linked documentation for details.
+
 Slave
 -----
 
