@@ -20,6 +20,9 @@ Features
   codebase as required, and the remainder of the build process proceeds
   normally.  See the :ref:`Multiple-Codebase-Builds` for details.
 
+  * The format of the ``got_revision`` property has changed for multi-codebase builds.
+    It is now a dictionary keyed by codebase.
+
 * ``Source`` and ``ShellCommand`` steps now have an optional ``descriptionSuffix``, a suffix to the
   ``description``/``descriptionDone`` values. For example this can help distinguish between
   multiple ``Compile`` steps that are applied to different codebases.

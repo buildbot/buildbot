@@ -2563,7 +2563,7 @@ The step takes the following parameters
 ``vcsRevision``
     If true, use the version-control revision mechanics.  This uses the
     ``got_revision`` property to determine the revision and define
-    ``_revision``.
+    ``_revision``.  Note that this will not work with multi-codebase builds.
 
 .. bb:step:: RpmLint
 
