@@ -177,7 +177,11 @@ class CVS(Source):
 
     def doUpdate(self):
         command = ['-z3', 'update', '-dP']
-        if self.branch:
+        branch = self.branch
+        # special case. 'cvs update -r HEAD -D today' gives no files; see #2351
+        if branch == 'HEAD' and self.revision:
+            branch = None
+        if branch:
             command += ['-r', self.branch]
         if self.revision:
             command += ['-D', self.revision]
