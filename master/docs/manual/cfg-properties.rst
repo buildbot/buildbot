@@ -248,15 +248,16 @@ syntaxes in the parentheses.
     If ``propname`` exists, substitute ``replacement``; otherwise,
     substitute an empty string.
 
-``propname:?:sub_if_exists:sub_if_missing``
+``propname:?|sub_if_exists|sub_if_missing``
 
-``propname:#?:sub_if_true:sub_if_false``
+``propname:#?|sub_if_true|sub_if_false``
     Ternary substitution, depending on either ``propname`` being present (with
     ``:?``, similar to ``:+``) or being ``True`` (with ``:#?``, like ``:~``).
-    Notice that there is a colon immediately following the question mark *and*
+    Notice that there is a pipe immediately following the question mark *and*
     between the two substitution alternatives. The character that follows the
     question mark is used as the delimeter between the two alternatives. In the
-    above examples, it is a colon, but any single character can be used.
+    above examples, it is a pipe, but any single character can be used. Using
+    colon is not advised.
     
     
 Although these are similar to shell substitutions, no other
@@ -266,48 +267,3 @@ above cannot contain more substitutions.
 Note: like python, you can use either positional interpolation *or*
 dictionary-style interpolation, not both. Thus you cannot use a string like
 ``WithProperties("foo-%(revision)s-%s", "branch")``.
-
-.. Index:: single; Properties; WithSource
-
-.. _WithSource:
-
-WithSource
-++++++++++
-
-A build may contain more than one sourcestamp. Buildsteps may need information 
-from a sourcestamp like repository or branch to be able to perform their task.
-The class :class:`WithSource` interpolates the atrributes from a single sourcestamp
-into a string that can be used by a buildstep. 
-
-The simplest use of this class is with positional string interpolation.  Here,
-``%s`` is used as a placeholder, and attribute names are given as subsequent
-arguments::
-
-    from buildbot.steps.shell import ShellCommand
-    from buildbot.process.properties import WithSource
-    f.addStep(ShellCommand(
-              command=["tar", "czf",
-                       WithSource("mailexe","mailer-%s-%s.tar.gz", "branch", "revision"),
-                       "source"]))
-    
-In this example 'mailexe' is the codebase for the mail application. Branch and revision
-are the attibute names inside the sourcestamp that belongs to the application.
-
-.. index:: unsupported format character
-
-The more common pattern is to use python dictionary-style string interpolation
-by using the ``%(propname)s`` syntax. In this form, the property name goes in
-the parentheses, as above.  A common mistake is to omit the trailing "s",
-leading to a rather obscure error from Python ("ValueError: unsupported format
-character")::
-
-   from buildbot.steps.shell import ShellCommand
-   from buildbot.process.properties import WithSource
-   f.addStep(ShellCommand(command=[ 'make', WithSource('mailexe','REVISION=%(revision)s'),
-                                    'dist' ]))
-
-This example will result in a ``make`` command with an argument like
-``REVISION=12098``.
-
-The :ref:`dictionary style<WithProperties-DictStyle>` interpolation supports a number of more advanced
-syntaxes in the parentheses.
