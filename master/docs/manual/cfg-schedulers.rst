@@ -131,7 +131,7 @@ and then add it to a scheduler with the ``change_filter`` parameter::
     sch = SomeSchedulerClass(...,
         change_filter=my_filter)
 
-There are four attributes of changes on which you can filter:
+There are five attributes of changes on which you can filter:
 
 ``project``
     the project string, as defined by the ChangeSource.
@@ -145,6 +145,9 @@ There are four attributes of changes on which you can filter:
 
 ``category``
     the category, again as defined by the ChangeSource.
+
+``codebase``
+    the change's codebase.
 
 For each attribute, the filter can look for a single, specific value::
 
@@ -182,6 +185,8 @@ The entire set of allowed arguments, then, is
 | branch     | branch_re     | branch_fn     |
 +------------+---------------+---------------+
 | category   | category_re   | category_fn   |
++------------+---------------+---------------+
+| codebase   | codebase_re   | codebase_fn   |
 +------------+---------------+---------------+
 | filter_fn                                  |
 +--------------------------------------------+

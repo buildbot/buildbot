@@ -36,7 +36,8 @@ class ChangeFilter(ComparableMixin):
             project=None, project_re=None, project_fn=None,
             repository=None, repository_re=None, repository_fn=None,
             branch=NotABranch, branch_re=None, branch_fn=None,
-            category=None, category_re=None, category_fn=None):
+            category=None, category_re=None, category_fn=None,
+            codebase=None, codebase_re=None, codebase_fn=None):
         def mklist(x):
             if x is not None and type(x) is not types.ListType:
                 return [ x ]
@@ -58,6 +59,7 @@ class ChangeFilter(ComparableMixin):
                 (mklist(repository), mkre(repository_re), repository_fn, "repository"),
                 (mklist_br(branch), mkre(branch_re), branch_fn, "branch"),
                 (mklist(category), mkre(category_re), category_fn, "category"),
+                (mklist(codebase), mkre(codebase_re), codebase_fn, "codebase"),
             ]
 
     def filter_change(self, change):
