@@ -628,9 +628,9 @@ Codebase Generator
 
     c['codebaseGenerator'] = codebaseGenerator
 
-For any incomming change a :ref:`codebase<Attr-Codebase>` is set to ''.
+For any incoming change, the :ref:`codebase<Attr-Codebase>` is set to ''.
 This codebase value is sufficient if all changes come from the same repository (or clones).
-If changes come from different repositories, extra processing will be needed to determine the codebase for the incomming change.
+If changes come from different repositories, extra processing will be needed to determine the codebase for the incoming change.
 This codebase will then be a logical name for the combination of repository and or branch etc.
 
 The `codebaseGenerator` accepts a change dictionary as produced by the :py:class:`buildbot.db.changes.ChangesConnectorComponent <changes connector component>`, with a changeid equal to `None`.
