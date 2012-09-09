@@ -246,7 +246,7 @@ class Bzr(Source):
                 raise buildstep.BuildStepFailed()
 
             log.msg("Got Git revision %s" % (revision, ))
-            self.setProperty('got_revision', revision, 'Source')
+            self.updateSourceProperty('got_revision', revision)
             return 0
         d.addCallback(setrev)
         return d

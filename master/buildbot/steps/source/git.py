@@ -262,7 +262,7 @@ class Git(Source):
         if len(revision) != 40:
             raise buildstep.BuildStepFailed()
         log.msg("Got Git revision %s" % (revision, ))
-        self.setProperty('got_revision', revision, 'Source')
+        self.updateSourceProperty('got_revision', revision)
     
         defer.returnValue(0)
 
@@ -284,7 +284,7 @@ class Git(Source):
         try:
             stdout = yield self._dovccmd(cmd, collectStdout=True)
             desc = stdout.strip()
-            self.setProperty('commit-description', desc, 'Source')
+            self.updateSourceProperty('commit-description', desc)
         except:
             pass
             
