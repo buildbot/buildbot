@@ -247,6 +247,8 @@ class SendChangeOptions(base.SubcommandOptions):
         ("project", "P", '', "Project specifier"),
         ("branch", "b", None, "Branch specifier"),
         ("category", "C", None, "Category of repository"),
+        ("codebase", None, None,
+            "Codebase this change is in (requires 0.8.7 master or later)"),
         ("revision", "r", None, "Revision specifier"),
         ("revision_file", None, None, "Filename containing revision spec"),
         ("property", "p", None,

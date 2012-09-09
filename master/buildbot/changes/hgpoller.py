@@ -36,12 +36,12 @@ class HgPoller(base.PollingChangeSource):
                  workdir=None, pollInterval=10*60,
                  hgbin='hg', usetimestamps=True,
                  category=None, project='',
-                 encoding='utf-8', name=None):
+                 encoding='utf-8'):
 
         self.repourl = repourl
         self.branch = branch
         base.PollingChangeSource.__init__(
-            self, name=name, pollInterval=pollInterval)
+            self, name=repourl, pollInterval=pollInterval)
         self.encoding = encoding
         self.lastChange = time.time()
         self.lastPoll = time.time()
@@ -99,7 +99,7 @@ class HgPoller(base.PollingChangeSource):
                 stamp = None
             else:
                 try:
-                    stamp = sum(float(d) for d in date.split())
+                    stamp = float(date.split()[0])
                 except:
                     log.msg('hgpoller: caught exception converting output %r '
                             'to timestamp' % date)

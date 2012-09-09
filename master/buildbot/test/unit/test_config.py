@@ -24,7 +24,7 @@ from twisted.trial import unittest
 from twisted.application import service
 from twisted.internet import defer
 from buildbot import config, buildslave, interfaces, revlinks
-from buildbot.process import properties
+from buildbot.process import properties, factory
 from buildbot.test.util import dirs, compat
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.changes import base as changes_base
@@ -618,13 +618,13 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_builders(self):
         bldr = config.BuilderConfig(name='x',
-                        factory=mock.Mock(), slavename='x')
+                        factory=factory.BuildFactory(), slavename='x')
         self.cfg.load_builders(self.filename,
                 dict(builders=[bldr]), self.errors)
         self.assertResults(builders=[bldr])
 
     def test_load_builders_dict(self):
-        bldr = dict(name='x', factory=mock.Mock(), slavename='x')
+        bldr = dict(name='x', factory=factory.BuildFactory(), slavename='x')
         self.cfg.load_builders(self.filename,
                 dict(builders=[bldr]), self.errors)
         self.assertIsInstance(self.cfg.builders[0], config.BuilderConfig)
@@ -632,7 +632,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     @compat.usesFlushWarnings
     def test_load_builders_abs_builddir(self):
-        bldr = dict(name='x', factory=mock.Mock(), slavename='x',
+        bldr = dict(name='x', factory=factory.BuildFactory(), slavename='x',
                 builddir=os.path.abspath('.'))
         self.cfg.load_builders(self.filename,
                 dict(builders=[bldr]), self.errors)
@@ -931,7 +931,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
 class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
-    factory = mock.Mock()
+    factory = factory.BuildFactory()
 
     # utils
 
@@ -960,6 +960,12 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             "builder 'a' has no factory",
             lambda : config.BuilderConfig(
                 name='a', slavenames=['a']))
+
+    def test_wrong_type_factory(self):
+        self.assertRaisesConfigError(
+            "builder 'a's factory is not",
+            lambda : config.BuilderConfig(
+                factory=[], name='a', slavenames=['a']))
 
     def test_no_slavenames(self):
         self.assertRaisesConfigError(

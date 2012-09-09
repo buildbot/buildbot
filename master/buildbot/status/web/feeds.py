@@ -42,7 +42,7 @@ import os
 import re
 import time
 from twisted.web import resource
-from buildbot.status.builder import FAILURE
+from buildbot.status import results
 
 class XmlResource(resource.Resource):
     contentType = "text/xml; charset=UTF-8"
@@ -122,7 +122,8 @@ class FeedResource(XmlResource):
         if showCategories:
             builders = [b for b in builders if b.category in showCategories]
 
-        failures_only = request.args.get("failures_only", "false")
+        failures_only = request.args.get("failures_only", ["false"])
+        failures_only = failures_only[0] not in ('false', '0', 'no', 'off')
 
         maxFeeds = 25
 
@@ -130,29 +131,11 @@ class FeedResource(XmlResource):
         # This could clearly be implemented much better if we had
         # access to a global list of builds.
         for b in builders:
-            lastbuild = b.getLastFinishedBuild()
-            if lastbuild is None:
-                continue
-
-            lastnr = lastbuild.getNumber()
-
-            totalbuilds = 0
-            i = lastnr
-            while i >= 0:
-                build = b.getBuild(i)
-                i -= 1
-                if not build:
-                    continue
-
-                results = build.getResults()
-
-                if failures_only == "false" or results == FAILURE:
-                    totalbuilds += 1
-                    builds.append(build)
-
-                # stop for this builder when our total nr. of feeds is reached
-                if totalbuilds >= maxFeeds:
-                    break
+            if failures_only:
+                res = (results.FAILURE,)
+            else:
+                res = None
+            builds.extend(b.generateFinishedBuilds(results=res, max_search=maxFeeds))
 
         # Sort build list by date, youngest first.
         # To keep compatibility with python < 2.4, use this for sorting instead:
@@ -202,16 +185,17 @@ class FeedResource(XmlResource):
                 if ss.changes:
                     pass
                 src_cxts.append(sc)
-            failflag = (build.getResults() != FAILURE)
-            pageTitle = ('Builder "%s" has %s' %
-                (build.getBuilder().getName(), ["failed","succeeded"][failflag],)
-                        )
+            res = build.getResults()
+            pageTitle = ('Builder "%s": %s' %
+                (build.getBuilder().getName(), results.Results[res]))
 
             # Add information about the failing steps.
             failed_steps = []
             log_lines = []
             for s in build.getSteps():
-                if s.getResults()[0] == FAILURE:
+                res = s.getResults()[0]
+                if res not in (results.SUCCESS, results.WARNINGS,
+                               results.SKIPPED):
                     failed_steps.append(s.getName())
 
                     # Add the last 30 lines of each log.

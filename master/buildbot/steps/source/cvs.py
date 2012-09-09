@@ -15,6 +15,7 @@
 
 from email.Utils import formatdate
 import time
+import re
 
 from twisted.python import log
 from twisted.internet import defer
@@ -176,7 +177,11 @@ class CVS(Source):
 
     def doUpdate(self):
         command = ['-z3', 'update', '-dP']
-        if self.branch:
+        branch = self.branch
+        # special case. 'cvs update -r HEAD -D today' gives no files; see #2351
+        if branch == 'HEAD' and self.revision:
+            branch = None
+        if branch:
             command += ['-r', self.branch]
         if self.revision:
             command += ['-D', self.revision]
@@ -242,7 +247,13 @@ class CVS(Source):
         if cmd.rc is not None and cmd.rc != 0:
             defer.returnValue(False)
             return
-        if myFileWriter.buffer.strip() != self.cvsroot:
+
+        # on Windows, the cvsroot may not contain the password, so compare to
+        # both
+        cvsroot_without_pw = re.sub("(:pserver:[^:]*):[^@]*(@.*)",
+                                    r"\1\2", self.cvsroot)
+        if myFileWriter.buffer.strip() not in (self.cvsroot,
+                                               cvsroot_without_pw):
             defer.returnValue(False)
             return
 
@@ -262,7 +273,7 @@ class CVS(Source):
 
     def parseGotRevision(self, res):
         revision = time.strftime("%Y-%m-%d %H:%M:%S +0000", time.gmtime())
-        self.setProperty('got_revision', revision, 'Source')
+        self.updateSourceProperty('got_revision', revision)
         return res
 
     def checkCvs(self):

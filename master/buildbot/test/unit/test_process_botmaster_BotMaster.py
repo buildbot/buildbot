@@ -19,6 +19,7 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from twisted.application import service
 from buildbot.process.botmaster import BotMaster
+from buildbot.process import factory
 from buildbot import config, interfaces
 from buildbot.test.fake import fakemaster
 
@@ -209,7 +210,7 @@ class TestBotMaster(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigServiceBuilders_add_remove(self):
-        bc = config.BuilderConfig(name='bldr', factory=mock.Mock(),
+        bc = config.BuilderConfig(name='bldr', factory=factory.BuildFactory(),
                             slavename='f')
         self.new_config.builders = [ bc ]
 

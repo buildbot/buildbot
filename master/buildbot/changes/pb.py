@@ -85,7 +85,13 @@ class ChangePerspective(NewCredPerspective):
 
         if not files:
             log.msg("No files listed in change... bit strange, but not fatal.")
+
+        if changedict.has_key('links'):
+            log.msg("Found links: "+repr(changedict['links']))
+            del changedict['links']
+
         d = self.master.data.updates.addChange(**changedict)
+
         # set the return value to None, so we don't get users depending on
         # getting a changeid
         d.addCallback(lambda _ : None)

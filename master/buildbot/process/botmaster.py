@@ -307,7 +307,8 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         @param buildername: the name of the builder
         """
-        self.brd.maybeStartBuildsOn([buildername])
+        d = self.brd.maybeStartBuildsOn([buildername])
+        d.addErrback(log.err)
 
     def maybeStartBuildsForSlave(self, slave_name):
         """
@@ -317,14 +318,16 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         @param slave_name: the name of the slave
         """
         builders = self.getBuildersForSlave(slave_name)
-        self.brd.maybeStartBuildsOn([ b.name for b in builders ])
+        d = self.brd.maybeStartBuildsOn([ b.name for b in builders ])
+        d.addErrback(log.err)
 
     def maybeStartBuildsForAllBuilders(self):
         """
         Call this when something suggests that this would be a good time to start some
         builds, but nothing more specific.
         """
-        self.brd.maybeStartBuildsOn(self.builderNames)
+        d = self.brd.maybeStartBuildsOn(self.builderNames)
+        d.addErrback(log.err)
 
 class BuildRequestDistributor(service.Service):
     """

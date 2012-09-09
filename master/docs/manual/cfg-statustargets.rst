@@ -255,7 +255,8 @@ be used to access them.
     more ``category=`` query arguments to the URL will limit the display to
     Builders that were defined with one of the given categories.  With the
     ``project=`` query argument, it's possible to restrict the view to changes
-    from the given project.
+    from the given project.  With the ``codebase=`` query argument, it's possible
+    to restrict the view to changes for the given codebase.
     
     By adding one or more ``name=`` query arguments to the URL, the console view is
     restricted to only showing changes made by the given users.
@@ -765,7 +766,6 @@ hook to get fast notification of new changes.
 Suppose you have a poller configured like this::
 
     c['change_source'] = SVNPoller(
-        name="amanda",
         svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
         split_file=split_file_branches)
 
@@ -779,7 +779,7 @@ And you configure your WebStatus to enable this hook::
 Then you will be able to trigger a poll of the SVN repository by poking the
 ``/change_hook/poller`` URL from a commit hook like this::
 
-    curl http://yourbuildbot/change_hook/poller?poller=amanda
+    curl http://yourbuildbot/change_hook/poller?poller=https%3A%2F%2Famanda.svn.sourceforge.net%2Fsvnroot%2Famanda%2Famanda
 
 If no ``poller`` argument is provided then the hook will trigger polling of all
 polling change sources.
@@ -789,7 +789,7 @@ option::
 
     c['status'].append(html.WebStatus(
         …,
-        change_hook_dialects={'poller': {'allowed': ['amanda']}}
+        change_hook_dialects={'poller': {'allowed': ['https://amanda.svn.sourceforge.net/svnroot/amanda/amanda']}}
     ))
 
 
@@ -1127,6 +1127,20 @@ MailNotifier arguments
     (dictionary) A dictionary containing key/value pairs of extra headers to add
     to sent e-mails. Both the keys and the values may be a `WithProperties` instance.
 
+``previousBuildGetter``
+    An optional function to calculate the previous build to the one at hand. A
+    :func:`previousBuildGetter` takes a :class:`BuildStatus` and returns a
+    :class:`BuildStatus`. This function is useful when builders don't process
+    their requests in order of arrival (chronologically) and therefore the order
+    of completion of builds does not reflect the order in which changes (and
+    their respective requests) arrived into the system. In such scenarios,
+    status transitions in the chronological sequence of builds within a builder
+    might not reflect the actual status transition in the topological sequence
+    of changes in the tree. What's more, the latest build (the build at hand)
+    might not always be for the most recent request so it might not make sense
+    to send a "change" or "problem" email about it. Returning None from this
+    function will prevent such emails from going out.
+
 As a help to those writing :func:`messageFormatter` functions, the following
 table describes how to get some useful pieces of information from the various
 status objects:
@@ -1317,6 +1331,22 @@ Some of the commands currently available:
 :samp:`help {COMMAND}`
     Describe a command. Use :command:`help commands` to get a list of known
     commands.
+
+:samp:`shutdown {ARG}`
+    Control the shutdown process of the buildbot master.
+    Available arguments are:
+
+    ``check``
+        Check if the buildbot master is running or shutting down
+
+    ``start``
+        Start clean shutdown
+
+    ``stop``
+        Stop clean shutdown
+
+    ``now``
+        Shutdown immediately without waiting for the builders to finish
     
 ``source``
     Announce the URL of the Buildbot's home page.
@@ -1461,14 +1491,28 @@ GerritStatusPush
         # message, verified, reviewed
         return message, (result == SUCCESS or -1), 0
 
+    def gerritStartCB(builderName, build, arg):
+        message = "Buildbot started compiling your patchset\n"
+        message += "on configuration: %s\n" % builderName
+
+        if arg:
+            message += "\nFor more details visit:\n"
+            message += status.getURLForThing(build) + "\n"
+
+        return message
+
     c['buildbotURL'] = 'http://buildbot.example.com/'
     c['status'].append(GerritStatusPush('127.0.0.1', 'buildbot',
                                         reviewCB=gerritReviewCB,
-                                        reviewArg=c['buildbotURL']))
+                                        reviewArg=c['buildbotURL'],
+                                        startCB=gerritStartCB,
+                                        startArg=c['buildbotURL']))
 
-GerritStatusPush sends review of the :class:`Change` back to the Gerrit server.
+GerritStatusPush sends review of the :class:`Change` back to the Gerrit server,
+optionally also sending a message when a build is started.
 ``reviewCB`` should return a tuple of message, verified, reviewed. If message
 is ``None``, no review will be sent.
+``startCB`` should return a message.
 
 .. [#] Apparently this is the same way http://buildd.debian.org displays build status
 

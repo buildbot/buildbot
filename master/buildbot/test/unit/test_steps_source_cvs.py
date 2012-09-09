@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import time
 from twisted.trial import unittest
 from buildbot.steps import shell
 from buildbot.steps.source import cvs
@@ -34,6 +35,32 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def tearDown(self):
         return self.tearDownSourceStep()
+
+    def setupStep(self, step, *args, **kwargs):
+        sourcesteps.SourceStepMixin.setupStep(self, step, *args, **kwargs)
+
+        # make parseGotRevision return something consistent, patching the class
+        # instead of the object since a new object is constructed by runTest.
+        def parseGotRevision(self, res):
+            self.updateSourceProperty('got_revision',
+                    '2012-09-09 12:00:39 +0000')
+            return res
+        self.patch(cvs.CVS, 'parseGotRevision', parseGotRevision)
+
+    def test_parseGotRevision(self):
+        def gmtime():
+            return time.struct_time((2012, 9, 9, 12, 9, 33, 6, 253, 0))
+        self.patch(time, 'gmtime', gmtime)
+
+        step = cvs.CVS(cvsroot="x", cvsmodule="m", mode='full', method='clean')
+        props = []
+        def updateSourceProperty(prop, name):
+            props.append((prop, name))
+        step.updateSourceProperty = updateSourceProperty
+
+        self.assertEqual(step.parseGotRevision(10), 10) # passes res along
+        self.assertEqual(props,
+                [('got_revision', '2012-09-09 12:09:33 +0000')])
 
     def test_mode_full_clean(self):
         self.setupStep(
@@ -63,6 +90,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             )
 
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
     def test_mode_full_clean_timeout(self):
@@ -96,6 +124,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             )
 
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
     def test_mode_full_clean_branch(self):
@@ -126,6 +155,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             )
 
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
     def test_mode_full_clean_branch_sourcestamp(self):
@@ -156,6 +186,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             )
 
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
     def test_mode_full_fresh(self):
@@ -186,6 +217,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             )
 
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
     def test_mode_full_clobber(self):
@@ -209,6 +241,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             )
 
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
     def test_mode_full_copy(self):
@@ -242,6 +275,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             )
 
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
 
@@ -277,6 +311,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             )
 
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
     def test_mode_incremental(self):
@@ -292,6 +327,36 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                         slavesrc='Root', workdir='wkdir/CVS',
                         writer=ExpectRemoteRef(shell.StringFileWriter)))
             + Expect.behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
+            + 0,
+            Expect('uploadFile', dict(blocksize=32768, maxsize=None,
+                        slavesrc='Repository', workdir='wkdir/CVS',
+                        writer=ExpectRemoteRef(shell.StringFileWriter)))
+            + Expect.behavior(uploadString('mozilla/browser/'))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['cvs', '-z3', 'update', '-dP'])
+            + 0,
+            )
+
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        return self.runStep()
+
+    def test_mode_incremental_password_windows(self):
+        self.setupStep(
+            cvs.CVS(cvsroot=":pserver:dustin:secrets@cvs-mirror.mozilla.org:/cvsroot",
+                    cvsmodule="mozilla/browser/", mode='incremental',
+                    login=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['cvs', '--version'])
+            + 0,
+            Expect('uploadFile', dict(blocksize=32768, maxsize=None,
+                        slavesrc='Root', workdir='wkdir/CVS',
+                        writer=ExpectRemoteRef(shell.StringFileWriter)))
+            # on Windows, this file does not contain the password, per
+            # http://trac.buildbot.net/ticket/2355
+            + Expect.behavior(uploadString(':pserver:dustin@cvs-mirror.mozilla.org:/cvsroot'))
             + 0,
             Expect('uploadFile', dict(blocksize=32768, maxsize=None,
                         slavesrc='Repository', workdir='wkdir/CVS',
@@ -331,6 +396,37 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             )
 
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        return self.runStep()
+
+    def test_mode_incremental_special_case(self):
+        self.setupStep(
+            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                    cvsmodule="mozilla/browser/", mode='incremental',
+                    branch='HEAD', login=True),
+            args=dict(revision='2012-08-16 16:05:16 +0000'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['cvs', '--version'])
+            + 0,
+            Expect('uploadFile', dict(blocksize=32768, maxsize=None,
+                        slavesrc='Root', workdir='wkdir/CVS',
+                        writer=ExpectRemoteRef(shell.StringFileWriter)))
+            + Expect.behavior(uploadString(':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'))
+            + 0,
+            Expect('uploadFile', dict(blocksize=32768, maxsize=None,
+                        slavesrc='Repository', workdir='wkdir/CVS',
+                        writer=ExpectRemoteRef(shell.StringFileWriter)))
+            + Expect.behavior(uploadString('mozilla/browser/'))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                command=['cvs', '-z3', 'update', '-dP',
+                            # note, no -r HEAD here - that's the special case
+                            '-D', '2012-08-16 16:05:16 +0000'])
+            + 0,
+            )
+
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
     def test_mode_incremental_branch_sourcestamp(self):
@@ -358,6 +454,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             )
 
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
 
@@ -391,6 +488,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             )
 
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
 
@@ -418,6 +516,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
 
@@ -446,6 +545,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
 
@@ -479,6 +579,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
 
@@ -503,6 +604,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
     def test_mode_full_clean_wrong_repo(self):
@@ -527,6 +629,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
     def test_mode_full_no_method(self):
@@ -557,6 +660,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             )
 
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
     def test_mode_incremental_with_options(self):
@@ -582,6 +686,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
     def test_mode_incremental_with_env_logEnviron(self):
@@ -613,6 +718,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             )
 
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
     def test_command_fails(self):

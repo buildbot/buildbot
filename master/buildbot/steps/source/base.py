@@ -133,7 +133,15 @@ class Source(LoggingBuildStep):
         if isinstance(self.descriptionSuffix, str):
             self.descriptionSuffix = [self.descriptionSuffix]
 
-    def setProperty(self, name, value , source):
+    def updateSourceProperty(self, name, value, source=''):
+        """
+        Update a property, indexing the proeprty by codebase if codebase is not
+        ''.  Source steps should generally use this instead of setProperty.
+        """
+        # pick a decent source name
+        if source == '':
+            source = self.__class__.__name__
+
         if self.codebase != '':
             assert not isinstance(self.getProperty(name, None), str), \
              "Sourcestep %s has a codebase, other sourcesteps don't" \
@@ -194,7 +202,7 @@ class Source(LoggingBuildStep):
                     # the revision property is currently None, so set it to something
                     # more interesting
                     if revision is not None:
-                        self.setProperty('revision', str(revision), "Source")
+                        self.updateSourceProperty('revision', str(revision))
 
                 # if patch is None, then do not patch the tree after checkout
 
@@ -219,8 +227,3 @@ class Source(LoggingBuildStep):
 
         self.startVC(branch, revision, patch)
 
-    def commandComplete(self, cmd):
-        if cmd.updates.has_key("got_revision"):
-            got_revision = cmd.updates["got_revision"][-1]
-            if got_revision is not None:
-                self.setProperty("got_revision", str(got_revision), "Source")

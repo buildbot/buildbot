@@ -160,7 +160,7 @@ Some version control systems have not yet been implemented as master-side
 steps.  If you are interested in continued support for such a version control
 system, please consider helping the Buildbot developers to create such an
 implementation.  In particular, version-control systems with proprietary
-licenses will not be supported without access to the verscion-contorl system
+licenses will not be supported without access to the version-control system
 for development.
 
 Common Parameters
@@ -1884,7 +1884,7 @@ default ``failureOnNoTests`` is False.
 Slave Filesystem Steps
 ----------------------
 
-Here are some buildsteps for manipulating the slaves filesystem.
+Here are some buildsteps for manipulating the slave's filesystem.
 
 .. bb:step:: FileExists
 
@@ -1898,6 +1898,29 @@ filename can be specified with a property. ::
     f.addStep(FileExists(file='test_data'))
 
 This step requires slave version 0.8.4 or later.
+
+.. bb:step:: CopyDirectory
+
+CopyDirectory
++++++++++++++++
+
+This command copies a directory on the slave. ::
+
+    from buildbot.steps.slave import CopyDirectory
+    f.addStep(CopyDirectory(src="build/data", dest="tmp/data"))
+
+This step requires slave version 0.8.5 or later.
+
+The CopyDirectory step takes the following arguments:
+
+``timeout``
+    if the copy command fails to produce any output for this many seconds, it
+    is assumed to be locked up and will be killed. This defaults to
+    120 seconds. Pass ``None`` to disable.
+
+``maxTime``
+    if the command takes longer than this many seconds, it will be
+    killed. This is disabled by default.
 
 .. bb:step:: RemoveDirectory
 
@@ -2306,7 +2329,7 @@ you can use one of the string download steps.  ::
 ``s``, representing the string to download instead of a ``mastersrc`` argument. ::
 
     from buildbot.steps.transfer import JSONStringDownload
-    buildinfo = { ... }
+    buildinfo = { branch: Property('branch'), got_revision: Property('got_revision') }
     f.append(JSONStringDownload(buildinfo, slavedest="buildinfo.json"))
 
 :bb:step:`JSONStringDownload` is similar, except it takes an ``o`` argument, which must be JSON
@@ -2315,6 +2338,7 @@ serializable, and transfers that as a JSON-encoded string to the slave.
 .. index:: Properties; JSONPropertiesDownload
 
 ::
+
     from buildbot.steps.transfer import JSONPropertiesDownload
     f.append(JSONPropertiesDownload(slavedest="build-properties.json"))
 
@@ -2562,7 +2586,7 @@ The step takes the following parameters
 ``vcsRevision``
     If true, use the version-control revision mechanics.  This uses the
     ``got_revision`` property to determine the revision and define
-    ``_revision``.
+    ``_revision``.  Note that this will not work with multi-codebase builds.
 
 .. bb:step:: RpmLint
 
@@ -2639,6 +2663,68 @@ The step takes the following parameters
 
 ``srpm``
     The path to the SourceRPM to rebuild.
+
+Debian Build Steps
+------------------
+
+.. bb:step:: DebPbuilder
+
+DebPbuilder
++++++++++++
+
+The :bb:step:`DebPbuilder` step builds Debian packages within a chroot built
+by pbuilder. It populates the changeroot with a basic system and the packages
+listed as build requirement. The type of chroot to build is specified with the
+``distribution``, ``distribution`` and ``mirror`` parameter. To use pbuilder
+your buildbot must have the right to run pbuilder as root throug sudo. ::
+
+    from buildbot.steps.package.deb.pbuilder import DepPbuilder
+    f.addStep(DepPbuilder())
+
+The step takes the following parameters
+
+``architecture``
+    Architecture to build chroot for.
+
+``distribution``
+    Name, or nickname, of the dirstribution. Defaults to 'stable'.
+
+``basetgz``
+    Path of the basetgz to use for building.
+
+``mirror``
+    URL of the mirror used to download the packages from.
+
+``extrapackages``
+    List if packages to install in addition to the base system.
+
+``keyring``
+    Path to a gpg keyring to verify the downloaded packages. This is necessary
+    if you build for a forain distribution.
+
+``components``
+    Repos to activate for chroot building.
+
+.. bb:step:: DebCowbuilder
+   
+DebCowbuilder
++++++++++++++
+
+The :bb:step:`DebCowbuilder` step is a subclass of :bb:step:`DebPbuilder`,
+which use cowbuilder instead of pbuilder.
+
+.. bb:step:: DebLintian
+
+DebLintian
+++++++++++
+
+The :bb:step:`DebLintian` step checks a build .deb for bugs and policy
+violations. The packages or changes file to test is specified in ``fileloc``
+
+::
+
+    from buildbot.steps.package.deb.lintian import DebLintian
+    f.addStep(DebLintian(fileloc=WithProperties("%(deb-changes)s")))
 
 Miscellaneous BuildSteps
 ------------------------

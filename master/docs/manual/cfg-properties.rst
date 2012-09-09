@@ -77,16 +77,15 @@ are available to all steps.
 .. index:: single: Properties; got_revision
 
 ``got_revision``
-    This is set when a :class:`Source` step checks out the source tree, and
-    provides the revision that was actually obtained from the VC system.
-    In general this should be the same as ``revision``, except for
-    trunk builds, where ``got_revision`` indicates what revision was
-    current when the checkout was performed. This can be used to rebuild
-    the same source code later.
-    
+    This property is set when a :class:`Source` step checks out the source tree, and provides the revision that was actually obtained from the VC system.
+    In general this should be the same as ``revision``, except for non-absolute sourcestamps, where ``got_revision`` indicates what revision was current when the checkout was performed.
+    This can be used to rebuild the same source code later.
+
     .. note:: For some VC systems (Darcs in particular), the revision is a
        large string containing newlines, and is not suitable for interpolation
        into a filename.
+
+    For multi-codebase builds (where codebase is not the default `''`), this property is a dictionary, keyed by codebase.
 
 .. index:: single: Properties; buildername
 
@@ -248,15 +247,16 @@ syntaxes in the parentheses.
     If ``propname`` exists, substitute ``replacement``; otherwise,
     substitute an empty string.
 
-``propname:?:sub_if_true:sub_if_false``
+``propname:?|sub_if_exists|sub_if_missing``
 
-``propname:#?:sub_if_exists:sub_if_missing``
-    Ternary substitution, depending on either ``propname`` being ``True`` (with
-    ``:?``, similar to ``:~``) or being present (with ``:#?``, like ``:+``).
-    Notice that there is a colon immediately following the question mark *and*
+``propname:#?|sub_if_true|sub_if_false``
+    Ternary substitution, depending on either ``propname`` being present (with
+    ``:?``, similar to ``:+``) or being ``True`` (with ``:#?``, like ``:~``).
+    Notice that there is a pipe immediately following the question mark *and*
     between the two substitution alternatives. The character that follows the
     question mark is used as the delimeter between the two alternatives. In the
-    above examples, it is a colon, but any single character can be used.
+    above examples, it is a pipe, but any single character can be used. Using
+    colon is not advised.
     
     
 Although these are similar to shell substitutions, no other
@@ -266,48 +266,3 @@ above cannot contain more substitutions.
 Note: like python, you can use either positional interpolation *or*
 dictionary-style interpolation, not both. Thus you cannot use a string like
 ``WithProperties("foo-%(revision)s-%s", "branch")``.
-
-.. Index:: single; Properties; WithSource
-
-.. _WithSource:
-
-WithSource
-++++++++++
-
-A build may contain more than one sourcestamp. Buildsteps may need information 
-from a sourcestamp like repository or branch to be able to perform their task.
-The class :class:`WithSource` interpolates the atrributes from a single sourcestamp
-into a string that can be used by a buildstep. 
-
-The simplest use of this class is with positional string interpolation.  Here,
-``%s`` is used as a placeholder, and attribute names are given as subsequent
-arguments::
-
-    from buildbot.steps.shell import ShellCommand
-    from buildbot.process.properties import WithSource
-    f.addStep(ShellCommand(
-              command=["tar", "czf",
-                       WithSource("mailexe","mailer-%s-%s.tar.gz", "branch", "revision"),
-                       "source"]))
-    
-In this example 'mailexe' is the codebase for the mail application. Branch and revision
-are the attibute names inside the sourcestamp that belongs to the application.
-
-.. index:: unsupported format character
-
-The more common pattern is to use python dictionary-style string interpolation
-by using the ``%(propname)s`` syntax. In this form, the property name goes in
-the parentheses, as above.  A common mistake is to omit the trailing "s",
-leading to a rather obscure error from Python ("ValueError: unsupported format
-character")::
-
-   from buildbot.steps.shell import ShellCommand
-   from buildbot.process.properties import WithSource
-   f.addStep(ShellCommand(command=[ 'make', WithSource('mailexe','REVISION=%(revision)s'),
-                                    'dist' ]))
-
-This example will result in a ``make`` command with an argument like
-``REVISION=12098``.
-
-The :ref:`dictionary style<WithProperties-DictStyle>` interpolation supports a number of more advanced
-syntaxes in the parentheses.

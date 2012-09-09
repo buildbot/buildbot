@@ -193,45 +193,51 @@ class TestMailNotifier(unittest.TestCase):
         
     def test_buildsetFinished_sends_email(self):
         fakeBuildMessage = Mock()
-        mn = MailNotifier('from@example.org', 
-                          buildSetSummary=True, 
+        mn = MailNotifier('from@example.org',
+                          buildSetSummary=True,
                           mode=("failing", "passing", "warnings"),
-                          builders=["Builder"])
-        
+                          builders=["Builder1", "Builder2"])
+
         mn.buildMessage = fakeBuildMessage
-        
-        def fakeGetBuild(number):
-            return build
-        
+
+        builder1 = Mock()
+        builder1.getBuild = lambda number: build1
+        builder1.name = "Builder1"
+
+        build1 = FakeBuildStatus()
+        build1.results = FAILURE
+        build1.finished = True
+        build1.reason = "testReason"
+        build1.getBuilder.return_value = builder1
+
+        builder2 = Mock()
+        builder2.getBuild = lambda number: build2
+        builder2.name = "Builder2"
+
+        build2 = FakeBuildStatus()
+        build2.results = FAILURE
+        build2.finished = True
+        build2.reason = "testReason"
+        build2.getBuilder.return_value = builder1
+
         def fakeGetBuilder(buildername):
-            if buildername == builder.name: 
-                return builder
-            return None
-        
-        def fakeGetBuildRequests(self, bsid):
-            return defer.succeed([{"buildername":"Builder", "brid":1}])
- 
-        builder = Mock()
-        builder.getBuild = fakeGetBuild
-        builder.name = "Builder"
-        
-        build = FakeBuildStatus()
-        build.results = FAILURE
-        build.finished = True
-        build.reason = "testReason"
-        build.getBuilder.return_value = builder
-       
+          return {"Builder1": builder1, "Builder2": builder2}[buildername]
+
+
         self.db = fakedb.FakeDBConnector(self)
         self.db.insertTestData([fakedb.SourceStampSet(id=127),
                                 fakedb.Buildset(id=99, sourcestampsetid=127,
                                                 results=SUCCESS,
                                                 reason="testReason"),
                                 fakedb.BuildRequest(id=11, buildsetid=99,
-                                                    buildername='Builder'),
+                                                    buildername='Builder1'),
                                 fakedb.Build(number=0, brid=11),
+                                fakedb.BuildRequest(id=12, buildsetid=99,
+                                                    buildername='Builder2'),
+                                fakedb.Build(number=0, brid=12),
                                 ])
         mn.master = self # FIXME: Should be FakeMaster
-        
+
         self.status = Mock()
         mn.master_status = Mock()
         mn.master_status.getBuilder = fakeGetBuilder
@@ -245,7 +251,7 @@ class TestMailNotifier(unittest.TestCase):
         def check(_):
             fakeBuildMessage.assert_called_with(
                     "Buildset Complete: testReason",
-                    [build], SUCCESS)
+                    [build1, build2], SUCCESS)
         return d
 
     def test_buildsetFinished_doesnt_send_email(self):

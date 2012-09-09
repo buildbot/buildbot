@@ -332,7 +332,8 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
 
     @defer.inlineCallbacks
-    def addBuildsetForSourceStampSetDetails(self, reason, sourcestamps, properties):
+    def addBuildsetForSourceStampSetDetails(self, reason, sourcestamps,
+                                            properties, builderNames=None):
         if sourcestamps is None:
             sourcestamps = {}
 
@@ -350,7 +351,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
             # add sourcestamp to the new setid
             yield self.master.db.sourcestamps.addSourceStamp(
                         codebase=codebase,
-                        repository=ss.get('repository'),
+                        repository=ss.get('repository', None),
                         branch=ss.get('branch', None),
                         revision=ss.get('revision', None),
                         project=ss.get('project', ''),
@@ -363,7 +364,8 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
         rv = yield self.addBuildsetForSourceStamp(
                                 setid=new_setid, reason=reason,
-                                properties=properties)
+                                properties=properties,
+                                builderNames=builderNames)
 
         defer.returnValue(rv)
 

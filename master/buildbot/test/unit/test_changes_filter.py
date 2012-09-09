@@ -25,6 +25,7 @@ class Change(State):
     repository = ''
     branch = ''
     category = ''
+    codebase = ''
 
 class ChangeFilter(unittest.TestCase):
 
@@ -102,13 +103,16 @@ class ChangeFilter(unittest.TestCase):
         self.check()
 
     def test_filter_change_combination(self):
-        self.setfilter(project='p', repository='r', branch='b', category='c')
+        self.setfilter(project='p', repository='r', branch='b', category='c',
+                       codebase='cb')
         self.no(Change(project='x', repository='x', branch='x', category='x'),
                 "none match -> False")
         self.no(Change(project='p', repository='r', branch='b', category='x'),
                 "three match -> False")
-        self.yes(Change(project='p', repository='r', branch='b', category='c'),
-                "all match -> True")
+        self.no(Change(project='p', repository='r', branch='b', category='c',
+                codebase='x'), "four match -> False")
+        self.yes(Change(project='p', repository='r', branch='b', category='c',
+                codebase='cb'), "all match -> True")
         self.check()
 
     def test_filter_change_combination_filter_fn(self):

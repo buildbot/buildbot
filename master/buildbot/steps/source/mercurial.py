@@ -190,7 +190,7 @@ class Mercurial(Source):
             if len(revision) != 40:
                 raise ValueError("Incorrect revision id")
             log.msg("Got Mercurial revision %s" % (revision, ))
-            self.setProperty('got_revision', revision, 'Source')
+            self.updateSourceProperty('got_revision', revision)
             return 0
         d.addCallback(_setrev)
         return d

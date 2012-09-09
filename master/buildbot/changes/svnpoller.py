@@ -32,7 +32,7 @@ import os, urllib
 # these split_file_* functions are available for use as values to the
 # split_file= argument.
 def split_file_alwaystrunk(path):
-    return (None, path)
+    return dict(path=path)
 
 def split_file_branches(path):
     # turn "trunk/subdir/file.c" into (None, "subdir/file.c")
@@ -49,6 +49,18 @@ def split_file_branches(path):
     else:
         return None
 
+def split_file_projects_branches(path):
+    # turn projectname/trunk/subdir/file.c into dict(project=projectname, branch=trunk, path=subdir/file.c)
+    if not "/" in path:
+        return None
+    project, path = path.split("/", 1)
+    f = split_file_branches(path)
+    if f:
+        info = dict(project=project, path=f[1])
+        if f[0]:
+            info['branch'] = f[0]
+        return info
+    return f
 
 class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     """
@@ -70,13 +82,13 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                  pollInterval=10*60, histmax=100,
                  svnbin='svn', revlinktmpl='', category=None, 
                  project='', cachepath=None, pollinterval=-2,
-                 extra_args=None, name=None):
+                 extra_args=None):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
 
-        base.PollingChangeSource.__init__(self, name=name, pollInterval=pollInterval)
+        base.PollingChangeSource.__init__(self, name=svnurl, pollInterval=pollInterval)
 
         if svnurl.endswith("/"):
             svnurl = svnurl[:-1] # strip the trailing slash
@@ -283,7 +295,11 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         if relative_path.startswith("/"):
             relative_path = relative_path[1:]
         where = self.split_file(relative_path)
-        # 'where' is either None or (branch, final_path)
+        # 'where' is either None, (branch, final_path) or a dict
+        if not where:
+            return
+        if isinstance(where, tuple):
+            where = dict(branch=where[0], path=where[1])
         return where
 
     def create_changes(self, new_logentries):
@@ -327,7 +343,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 # if 'where' is None, the file was outside any project that
                 # we care about and we should ignore it
                 if where:
-                    branch, filename = where
+                    branch = where.get("branch", None)
+                    filename = where["path"]
                     if not branch in branches:
                         branches[branch] = { 'files': [], 'number_of_directories': 0}
                     if filename == "":
@@ -344,9 +361,14 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                     if not branches[branch].has_key('action'):
                         branches[branch]['action'] = action
 
+                    for key in ("repository", "project", "codebase"):
+                        if key in where:
+                            branches[branch][key] = where[key]
+
             for branch in branches.keys():
                 action = branches[branch]['action']
                 files  = branches[branch]['files']
+
                 number_of_directories_changed = branches[branch]['number_of_directories']
                 number_of_files_changed = len(files)
 
@@ -362,8 +384,12 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                         branch=util.ascii2unicode(branch),
                         revlink=revlink,
                         category=self.category,
-                        repository=util.ascii2unicode(self.svnurl),
-                        project=self.project)
+                        repository=util.ascii2unicode(
+                                branches[branch].get('repository', self.svnurl)),
+                        project=util.ascii2unicode(
+                                branches[branch].get('project', self.project)),
+                        codebase=util.ascii2unicode(
+                                branches[branch].get('codebase', None)))
                     changes.append(chdict)
 
         return changes
