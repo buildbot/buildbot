@@ -262,7 +262,7 @@ class CVS(Source):
 
     def parseGotRevision(self, res):
         revision = time.strftime("%Y-%m-%d %H:%M:%S +0000", time.gmtime())
-        self.updateSourceProperty('got_revision', revision, 'Source')
+        self.updateSourceProperty('got_revision', revision)
         return res
 
     def checkCvs(self):
