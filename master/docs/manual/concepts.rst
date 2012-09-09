@@ -758,8 +758,8 @@ the ``got_revision`` property.  A later step could use this
 property to specify the name of a fully-built tarball, dropped in an
 easily-acessible directory for later testing.
 
-.. attention:: 
-    In builds with more than one sourcestamp its value is unpredictable!
+.. note:: 
+    In builds with more than one codebase, the ``got_revision`` property is a dictionary, keyed by codebase.
 
 Some projects want to perform nightly builds as well as bulding in response to
 committed changes.  Such a project would run two schedulers, both pointing to

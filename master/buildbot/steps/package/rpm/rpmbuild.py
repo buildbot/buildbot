@@ -97,8 +97,11 @@ class RpmBuild(ShellCommand):
                 rfile.write(str(rel+1))
 
         if self.vcsRevision:
-            self.rpmbuild = self.rpmbuild + ' --define "_revision %s"' % \
-                self.getProperty('got_revision')
+            revision = self.getProperty('got_revision')
+            # only do this in the case where there's a single codebase
+            if revision and not isinstance(revision, dict):
+                self.rpmbuild = (self.rpmbuild + ' --define "_revision %s"' %
+                                revision)
 
         self.rpmbuild = self.rpmbuild + ' -ba %s' % self.specfile
 

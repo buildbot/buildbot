@@ -77,16 +77,15 @@ are available to all steps.
 .. index:: single: Properties; got_revision
 
 ``got_revision``
-    This is set when a :class:`Source` step checks out the source tree, and
-    provides the revision that was actually obtained from the VC system.
-    In general this should be the same as ``revision``, except for
-    trunk builds, where ``got_revision`` indicates what revision was
-    current when the checkout was performed. This can be used to rebuild
-    the same source code later.
-    
+    This property is set when a :class:`Source` step checks out the source tree, and provides the revision that was actually obtained from the VC system.
+    In general this should be the same as ``revision``, except for non-absolute sourcestamps, where ``got_revision`` indicates what revision was current when the checkout was performed.
+    This can be used to rebuild the same source code later.
+
     .. note:: For some VC systems (Darcs in particular), the revision is a
        large string containing newlines, and is not suitable for interpolation
        into a filename.
+
+    For multi-codebase builds (where codebase is not the default `''`), this property is a dictionary, keyed by codebase.
 
 .. index:: single: Properties; buildername
 

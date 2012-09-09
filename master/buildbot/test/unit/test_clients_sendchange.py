@@ -120,6 +120,18 @@ class Sender(unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def test_send_codebase(self):
+        s = sendchange.Sender('localhost:1234')
+        d = s.send('branch', 'rev', 'comm', ['a'], codebase='mycb')
+        def check(_):
+            self.assertProcess('localhost', 1234, 'change', 'changepw', [
+                dict(project='', repository='', who=None, files=['a'],
+                    comments='comm', branch='branch', revision='rev',
+                    category=None, when=None, properties={}, revlink='',
+                    src=None, codebase='mycb')])
+        d.addCallback(check)
+        return d
+
     def test_send_unicode(self):
         s = sendchange.Sender('localhost:1234')
         d = s.send(u'\N{DEGREE SIGN}',

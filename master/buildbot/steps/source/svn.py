@@ -298,7 +298,7 @@ class SVN(Source):
                 raise buildstep.BuildStepFailed()
 
             log.msg("Got SVN revision %s" % (revision, ))
-            self.setProperty('got_revision', revision, 'Source')
+            self.updateSourceProperty('got_revision', revision)
             return 0
         d.addCallback(lambda _: _setrev(cmd.rc))
         return d

@@ -58,6 +58,34 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
             auth=['a', 'b'], master='m', branch='br', category='cat',
             revision='rr', properties={'a':'b'}, repository='rep',
             project='prj', vc='git', revlink='rl', when=1234.0,
+            comments='comm', files=('a', 'b'), codebase='cb'))
+        def check(rc):
+            self.assertEqual((self.sender.master, self.sender.auth,
+                    self.sender.encoding, self.sender.send_kwargs,
+                    self.getStdout(), rc),
+                    ('m', ['a','b'], 'utf16', {
+                        'branch': 'br',
+                        'category': 'cat',
+                        'codebase': 'cb',
+                        'comments': 'comm',
+                        'files': ('a', 'b'),
+                        'project': 'prj',
+                        'properties': {'a':'b'},
+                        'repository': 'rep',
+                        'revision': 'rr',
+                        'revlink': 'rl',
+                        'when': 1234.0,
+                        'who': 'me',
+                        'vc': 'git'},
+                    'change sent successfully', 0))
+        d.addCallback(check)
+        return d
+
+    def test_sendchange_config_no_codebase(self):
+        d = sendchange.sendchange(dict(encoding='utf16', who='me',
+            auth=['a', 'b'], master='m', branch='br', category='cat',
+            revision='rr', properties={'a':'b'}, repository='rep',
+            project='prj', vc='git', revlink='rl', when=1234.0,
             comments='comm', files=('a', 'b')))
         def check(rc):
             self.assertEqual((self.sender.master, self.sender.auth,
@@ -66,6 +94,7 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
                     ('m', ['a','b'], 'utf16', {
                         'branch': 'br',
                         'category': 'cat',
+                        'codebase': None,
                         'comments': 'comm',
                         'files': ('a', 'b'),
                         'project': 'prj',
