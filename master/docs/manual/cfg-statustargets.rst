@@ -255,7 +255,8 @@ be used to access them.
     more ``category=`` query arguments to the URL will limit the display to
     Builders that were defined with one of the given categories.  With the
     ``project=`` query argument, it's possible to restrict the view to changes
-    from the given project.
+    from the given project.  With the ``codebase=`` query argument, it's possible
+    to restrict the view to changes for the given codebase.
     
     By adding one or more ``name=`` query arguments to the URL, the console view is
     restricted to only showing changes made by the given users.
