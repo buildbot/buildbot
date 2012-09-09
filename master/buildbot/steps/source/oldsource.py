@@ -63,8 +63,7 @@ class _ComputeRepositoryURL(object):
 
 class SlaveSource(Source):
 
-    def __init__(self, mode='update', retry=None,
-                 codebase='', **kwargs):
+    def __init__(self, mode='update', retry=None, **kwargs):
         """
         @type  mode: string
         @param mode: the kind of VC operation that is desired:
@@ -138,6 +137,14 @@ class SlaveSource(Source):
         self.args['timeout'] = self.timeout
         Source.start(self)
 
+    def commandComplete(self, cmd):
+        if not cmd.updates.has_key("got_revision"):
+            return
+        got_revision = cmd.updates["got_revision"][-1]
+        if got_revision is None:
+            return
+
+        self.updateSourceProperty('got_revision', str(got_revision))
 
 
 class BK(SlaveSource):
@@ -709,7 +716,8 @@ class Git(SlaveSource):
         if self.build.hasProperty("event.patchSet.ref"):
             # GerritChangeSource
             self.args['gerrit_branch'] = self.build.getProperty("event.patchSet.ref")
-            self.setProperty("gerrit_branch", self.args['gerrit_branch'])
+            self.updateSourceProperty("gerrit_branch",
+                    self.args['gerrit_branch'])
         else:
             try:
                 # forced build
@@ -717,7 +725,8 @@ class Git(SlaveSource):
                 if len(change) == 2:
                     self.args['gerrit_branch'] = "refs/changes/%2.2d/%d/%d" \
                                                  % (int(change[0]) % 100, int(change[0]), int(change[1]))
-                    self.setProperty("gerrit_branch", self.args['gerrit_branch'])
+                    self.updateSourceProperty("gerrit_branch",
+                            self.args['gerrit_branch'])
             except:
                 pass
 
@@ -818,7 +827,7 @@ class Repo(SlaveSource):
 
         if downloads:
             self.args["repo_downloads"] = downloads
-            self.setProperty("repo_downloads", downloads)
+            self.updateSourceProperty("repo_downloads", downloads)
         return defer.succeed(None)
 
     def startVC(self, branch, revision, patch):
@@ -848,7 +857,8 @@ class Repo(SlaveSource):
         if cmd.updates.has_key("repo_downloaded"):
             repo_downloaded = cmd.updates["repo_downloaded"][-1]
             if repo_downloaded:
-                self.setProperty("repo_downloaded", str(repo_downloaded), "Source")
+                self.updateSourceProperty("repo_downloaded",
+                        str(repo_downloaded))
             else:
                 repo_downloaded = []
         orig_downloads = self.getProperty("repo_downloads") or []

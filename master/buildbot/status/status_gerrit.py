@@ -109,6 +109,12 @@ class GerritStatusPush(StatusReceiverMultiService):
         if build.getProperty("gerrit_branch") is not None: # used only to verify Gerrit source
             project = build.getProperty("project")
             revision = build.getProperty("got_revision")
+
+            # review doesn't really work with multiple revisions, so let's
+            # just assume it's None there
+            if isinstance(revision, dict):
+                revision = None
+
             if project is not None and revision is not None:
                 message, verified, reviewed = self.reviewCB(builderName, build, result, self.status, self.reviewArg)
                 if message is None:
