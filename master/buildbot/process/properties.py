@@ -17,6 +17,7 @@ import collections
 import re
 import warnings
 import weakref
+from types import FunctionType
 from buildbot import config, util
 from buildbot.util import json
 from buildbot.interfaces import IRenderable, IProperties
@@ -679,3 +680,18 @@ class _DictRenderer(object):
         return d
 
 registerAdapter(_DictRenderer, dict, IRenderable)
+
+class _CallableRenderer(object):
+    """
+    Callable IRenderable adaptor. call the function with property in argument
+    """
+
+    implements(IRenderable)
+
+    def __init__(self, value):
+        self.value = value
+
+    def getRenderingFor(self, props):
+        return defer.maybeDeferred(self.value, props)
+
+registerAdapter(_CallableRenderer, FunctionType, IRenderable)
