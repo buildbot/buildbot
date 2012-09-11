@@ -246,18 +246,6 @@ syntaxes in the parentheses.
 ``propname:+replacement``
     If ``propname`` exists, substitute ``replacement``; otherwise,
     substitute an empty string.
-
-``propname:?|sub_if_exists|sub_if_missing``
-
-``propname:#?|sub_if_true|sub_if_false``
-    Ternary substitution, depending on either ``propname`` being present (with
-    ``:?``, similar to ``:+``) or being ``True`` (with ``:#?``, like ``:~``).
-    Notice that there is a pipe immediately following the question mark *and*
-    between the two substitution alternatives. The character that follows the
-    question mark is used as the delimeter between the two alternatives. In the
-    above examples, it is a pipe, but any single character can be used. Using
-    colon is not advised.
-    
     
 Although these are similar to shell substitutions, no other
 substitutions are currently supported, and ``replacement`` in the
