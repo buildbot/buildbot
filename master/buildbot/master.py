@@ -197,7 +197,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
             if hasattr(signal, "SIGUSR1"):
                 def sigusr1(*args):
-                    _reactor.callLater(0, self.clean)
+                    _reactor.callLater(0, self.botmaster.cleanShutdown)
                 signal.signal(signal.SIGUSR1, sigusr1)
 
             # call the parent method
@@ -259,29 +259,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         return d # for tests
 
-    def clean(self):
-        d = self.doClean()
-
-        d.addErrback(log.err, 'while shutting down')
-
-        return d # for tests
-
-    @defer.inlineCallbacks
-    def doClean(self):
-        log.msg("Clean shutdown")
-        failed = False
-        try:
-            yield self.cleanShutdownService()
-        except:
-            log.err(failure.Failure(), 'during clean:')
-            failed = True
-
-        if failed:
-            log.msg("clean shutdown failed")
-        else:
-            log.msg("clean shutdown complete")
-
-
     @defer.inlineCallbacks
     def doReconfig(self):
         log.msg("beginning configuration update")
@@ -332,9 +309,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         return config.ReconfigurableServiceMixin.reconfigService(self,
                                             new_config)
-
-    def cleanShutdownService(self):
-        return self.botmaster.cleanShutdown()
 
     ## informational methods
 
