@@ -26,6 +26,8 @@ class BuildmasterTimeoutError(Exception):
     pass
 class ReconfigError(Exception):
     pass
+class CleanShutdownError(Exception):
+    pass
 
 class TailProcess(protocol.ProcessProtocol):
     def outReceived(self, data):
@@ -103,7 +105,7 @@ class LogWatcher(LineOnlyReceiver):
         if "reconfig aborted" in line or 'reconfig partially applied' in line:
             return self.finished(Failure(ReconfigError()))
         if "Server Shut Down" in line:
-            return self.finished(Failure(ReconfigError()))
+            return self.finished("buildmaster")
         if "configuration update complete" in line:
             return self.finished("buildmaster")
         if "BuildMaster is running" in line:

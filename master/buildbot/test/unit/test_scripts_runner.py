@@ -226,6 +226,9 @@ class TestStopOptions(BaseTestSimpleOptions, unittest.TestCase):
     commandName = 'stop'
     optionsClass = runner.StopOptions
 
+class TestCleanShutdownOptions(BaseTestSimpleOptions, unittest.TestCase):
+    commandName = 'clean'
+    optionsClass = runner.CleanShutdownOptions
 
 class TestResetartOptions(BaseTestSimpleOptions, unittest.TestCase):
     commandName = 'restart'
