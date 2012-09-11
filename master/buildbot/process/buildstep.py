@@ -43,7 +43,7 @@ class RemoteCommand(pb.Referenceable):
     debug = False
 
     def __init__(self, remote_command, args, ignore_updates=False,
-            collectStdout=False, successfulRC=(0,)):
+            collectStdout=False, decodeRC={0:SUCCESS}):
         self.logs = {}
         self.delayedLogs = {}
         self._closeWhenFinished = {}
@@ -55,7 +55,7 @@ class RemoteCommand(pb.Referenceable):
         self.remote_command = remote_command
         self.args = args
         self.ignore_updates = ignore_updates
-        self.successfulRC = successfulRC
+        self.decodeRC = decodeRC
 
     def __repr__(self):
         return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
@@ -271,8 +271,13 @@ class RemoteCommand(pb.Referenceable):
                 loog.finish()
         return maybeFailure
 
+    def results(self):
+        if self.rc in self.decodeRC:
+            return self.decodeRC[self.rc]
+        return FAILURE
+
     def didFail(self):
-        return self.rc not in self.successfulRC
+        return self.results() == FAILURE
 LoggedRemoteCommand = RemoteCommand
 
 
@@ -350,7 +355,7 @@ class RemoteShellCommand(RemoteCommand):
                  timeout=20*60, maxTime=None, logfiles={},
                  usePTY="slave-config", logEnviron=True,
                  collectStdout=False, interruptSignal=None,
-                 initialStdin=None, successfulRC=(0,)):
+                 initialStdin=None, decodeRC={0:SUCCESS}):
 
         self.command = command # stash .command, set it later
         if env is not None:
@@ -372,7 +377,7 @@ class RemoteShellCommand(RemoteCommand):
         if interruptSignal is not None:
             args['interruptSignal'] = interruptSignal
         RemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout,
-                successfulRC=successfulRC)
+                decodeRC=decodeRC)
 
     def _start(self):
         self.args['command'] = self.command
@@ -907,9 +912,7 @@ class LoggingBuildStep(BuildStep):
     def evaluateCommand(self, cmd):
         if self.log_eval_func:
             return self.log_eval_func(cmd, self.step_status)
-        if cmd.didFail():
-            return FAILURE
-        return SUCCESS
+        return cmd.results()
 
     def getText(self, cmd, results):
         if results == SUCCESS:
@@ -954,9 +957,7 @@ class LoggingBuildStep(BuildStep):
 #   log_eval_func=lambda c,s: regex_log_evaluator(c, s, regexs)
 # )
 def regex_log_evaluator(cmd, step_status, regexes):
-    worst = SUCCESS
-    if cmd.didFail():
-        worst = FAILURE
+    worst = cmd.results()
     for err, possible_status in regexes:
         # worst_status returns the worse of the two status' passed to it.
         # we won't be changing "worst" unless possible_status is worse than it,

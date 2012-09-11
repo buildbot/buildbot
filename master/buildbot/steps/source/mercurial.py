@@ -22,6 +22,7 @@ from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.config import ConfigErrors
+from buildbot.status.results import SUCCESS
 
 class Mercurial(Source):
     """ Class for Mercurial with all the smarts """
@@ -217,7 +218,7 @@ class Mercurial(Source):
         d.addCallback(self._checkBranchChange)
         return d
 
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None, successfulRC=(0,)):
+    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC={0:SUCCESS}):
         if not command:
             raise ValueError("No command specified")
         cmd = buildstep.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command,
@@ -226,7 +227,7 @@ class Mercurial(Source):
                                            timeout=self.timeout,
                                            collectStdout=collectStdout,
                                            initialStdin=initialStdin,
-                                           successfulRC=successfulRC)
+                                           decodeRC=decodeRC)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting mercurial command : hg %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
@@ -291,7 +292,7 @@ class Mercurial(Source):
 
     def _removeAddedFilesAndUpdate(self, _):
         command = ['locate', 'set:added()']
-        d = self._dovccmd(command, collectStdout=True, successfulRC=(0,1,))
+        d = self._dovccmd(command, collectStdout=True, decodeRC={0:SUCCESS,1:SUCCESS})
         def parseAndRemove(stdout):
             files = []
             for filename in stdout.splitlines() :
