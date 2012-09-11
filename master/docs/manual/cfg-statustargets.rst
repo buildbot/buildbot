@@ -1125,7 +1125,7 @@ MailNotifier arguments
 
 ``extraHeaders``
     (dictionary) A dictionary containing key/value pairs of extra headers to add
-    to sent e-mails. Both the keys and the values may be a `WithProperties` instance.
+    to sent e-mails. Both the keys and the values may be a `Interpolate` instance.
 
 As a help to those writing :func:`messageFormatter` functions, the following
 table describes how to get some useful pieces of information from the various

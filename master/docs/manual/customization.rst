@@ -510,9 +510,11 @@ repos and workdir, this will work.
 Advanced Property Interpolation
 -------------------------------
 
+TODO
+
 If the simple string substitutions described in :ref:`Properties` are not
 sufficent, more complex substitutions can be achieved with
-:class:`WithProperties` and Python functions.  This only works with
+:class:`Interpolate` and Python functions.  This only works with
 dictionary-style interpolation.
 
 The function should take one argument - a properties object, described below -
@@ -884,7 +886,7 @@ arbitrary object. For example::
             ShellCommand.start(self)
 
 Remember that properties set in a step may not be available until the next step
-begins.  In particular, any :class:`Property` or :class:`WithProperties`
+begins.  In particular, any :class:`Property` or :class:`Interpolate`
 instances for the current step are interpoloated before the ``start`` method
 begins.
 
@@ -922,7 +924,7 @@ build number. ::
 
     class TestWithCodeCoverage(BuildStep):
         command = ["make", "test",
-                   WithProperties("buildnum=%s", "buildnumber")]
+                   Interpolate("buildnum=%(prop:buildnumber)s")]
     
         def createSummary(self, log):
             buildnumber = self.getProperty("buildnumber")
@@ -934,7 +936,7 @@ output by the build process itself::
 
     class TestWithCodeCoverage(BuildStep):
         command = ["make", "test",
-                   WithProperties("buildnum=%s", "buildnumber")]
+                   Interpolate("buildnum=%(prop:buildnumber)s")]
     
         def createSummary(self, log):
             output = StringIO(log.getText())

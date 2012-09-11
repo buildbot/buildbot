@@ -120,7 +120,7 @@ Other optional keys may be set on each ``BuilderConfig``:
 ``properties``
     A builder may be given a dictionary of :ref:`Build-Properties`
     specific for this builder in this parameter. Those values can be used
-    later on like other properties. :ref:`WithProperties`.
+    later on like other properties. :ref:`Interpolate`.
 
 .. index:: Builds; merging
 
