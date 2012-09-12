@@ -152,6 +152,15 @@ class TestChangePerspective(unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def test_addChange_codebase(self):
+        cp = pb.ChangePerspective(self.master, None)
+        d = cp.perspective_addChange(dict(who="bar", files=[], codebase='cb'))
+        def check(_):
+            self.assertEqual(self.added_changes,
+                    [ dict(author="bar", files=[], codebase='cb') ])
+        d.addCallback(check)
+        return d
+
     def test_addChange_prefix(self):
         cp = pb.ChangePerspective(self.master, 'xx/')
         d = cp.perspective_addChange(

@@ -1287,9 +1287,9 @@ Using ShellCommands
 This is a useful base class for just about everything you might want
 to do during a build (except for the initial source checkout). It runs
 a single command in a child shell on the buildslave. All stdout/stderr
-is recorded into a :class:`LogFile`. The step finishes with a status of ``FAILURE``
-if the command's exit code is non-zero, otherwise it has a status of
-``SUCCESS``.
+is recorded into a :class:`LogFile`. The step usually finishes with a
+status of ``FAILURE`` if the command's exit code is non-zero, otherwise
+it has a status of ``SUCCESS``.
 
 The preferred way to specify the command is with a list of argv strings,
 since this allows for spaces in filenames and avoids doing any fragile
@@ -1519,9 +1519,12 @@ The :bb:step:`ShellCommand` arguments are:
     handled as a single string throughout Buildbot -- for example, do not pass
     the contents of a tarball with this parameter.
 
-``successfulRC``
-    This is a list or tuple of the exit codes that should be treated as successful.
-    The default is to treat just 0 as successful.
+``decodeRC``
+    This is a dictionary that decodes exit codes into results value.
+    e.g: ``{0:SUCCESS,1:FAILURE,2:WARNINGS}``, will treat the exit code ``2`` as
+    WARNINGS.
+    The default is to treat just 0 as successful. (``{0:SUCCESS}``)
+    any exit code not present in the dictionary will be treated as ``FAILURE``
 
 .. bb:step:: Configure
 
