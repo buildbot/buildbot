@@ -24,6 +24,10 @@ from buildbot.scripts import base
 def stop(config, signame="TERM", wait=False):
     basedir = config['basedir']
     quiet = config['quiet']
+	graceful = config['graceful']
+
+    if config['graceful']:
+	    signame="USR1"
 
     if not base.isBuildmasterDir(config['basedir']):
         print "not a buildmaster directory"

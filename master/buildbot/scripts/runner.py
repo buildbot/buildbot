@@ -134,6 +134,7 @@ class StopOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.stop.stop"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
+		["graceful", "g", "Graceful shutdown buildmaster"],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot stop [<basedir>]"
@@ -166,15 +167,6 @@ class ReconfigOptions(base.BasedirMixin, base.SubcommandOptions):
         ]
     def getSynopsis(self):
         return "Usage:    buildbot reconfig [<basedir>]"
-
-class CleanShutdownOptions(base.BasedirMixin, base.SubcommandOptions):
-    subcommandFunction = "buildbot.scripts.clean.clean"
-    optFlags = [
-        ['quiet', 'q', "Don't display log messages about clean shutdown"],
-        ]
-    def getSynopsis(self):
-        return "Usage:    buildbot clean [<basedir>]"
-
 
 class DebugClientOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.debugclient.debugclient"
