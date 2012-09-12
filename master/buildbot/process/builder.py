@@ -492,15 +492,14 @@ class Builder(config.ReconfigurableServiceMixin,
 
         # match them up until we're out of options
         while available_slavebuilders and unclaimed_requests:
-            # first, choose a slave (using nextSlave)
-            slavebuilder = yield self._chooseSlave(available_slavebuilders)
-
-            if not slavebuilder:
+            # first, decorate requests with a choosen slave (using nextSlave)
+            choosenSlaves = yield self._chooseSlave(unclaimed_requests, available_slavebuilders)
+            if not choosenSlaves:
                 break
+            unclaimed_requests = filter(lambda brdict:brdict['brid'] in choosenSlaves,
+                                        unclaimed_requests)
 
-            if slavebuilder not in available_slavebuilders:
-                log.msg(("nextSlave chose a nonexistent slave for builder "
-                         "'%s'; cannot start build") % self.name)
+            if not unclaimed_requests:
                 break
 
             # then choose a request (using nextBuild)
@@ -514,6 +513,7 @@ class Builder(config.ReconfigurableServiceMixin,
                          "'%s'; cannot start build") % self.name)
                 break
 
+            slavebuilder = choosenSlaves[brdict['brid']]
             # merge the chosen request with any compatible requests in the
             # queue
             brdicts = yield self._mergeRequests(brdict, unclaimed_requests,
@@ -568,20 +568,32 @@ class Builder(config.ReconfigurableServiceMixin,
 
     # a few utility functions to make the maybeStartBuild a bit shorter and
     # easier to read
-
-    def _chooseSlave(self, available_slavebuilders):
+    @defer.inlineCallbacks
+    def _chooseSlave(self, buildrequests, available_slavebuilders):
         """
-        Choose the next slave, using the C{nextSlave} configuration if
+        Choose the next slaves, using the C{nextSlave} configuration if
         available, and falling back to C{random.choice} otherwise.
 
+        @param buildrequests: list of requests,  we want to find potential slave
+
         @param available_slavebuilders: list of slavebuilders to choose from
-        @returns: SlaveBuilder or None via Deferred
+        @returns: dictionary mapping buildrequests to SlaveBuilder via Deferred
         """
-        if self.config.nextSlave:
-            return defer.maybeDeferred(lambda :
-                    self.config.nextSlave(self, available_slavebuilders))
-        else:
-            return defer.succeed(random.choice(available_slavebuilders))
+        ret = {}
+        for brdict in buildrequests:
+            if self.config.nextSlave:
+                br = yield self._brdictToBuildRequest(brdict)
+                sb = yield defer.maybeDeferred(lambda :
+                        self.config.nextSlave(self, available_slavebuilders, br))
+                if sb not in available_slavebuilders:
+                    log.msg(("nextSlave chose a nonexistent slave for builder "
+                             "'%s'; cannot start build") % self.name)
+                    sb = None
+            else:
+                sb = random.choice(available_slavebuilders)
+            if sb:
+                ret[brdict['brid']] = sb
+        defer.returnValue(ret)
 
     def _chooseBuild(self, buildrequests):
         """

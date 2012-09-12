@@ -68,11 +68,30 @@ Other optional keys may be set on each ``BuilderConfig``:
 
 ``nextSlave``
     If provided, this is a function that controls which slave will be assigned
-    future jobs. The function is passed two arguments, the :class:`Builder`
-    object which is assigning a new job, and a list of :class:`BuildSlave`
-    objects. The function should return one of the :class:`BuildSlave`
+    future jobs. The function is passed three arguments, the :class:`Builder`
+    object which is assigning a new job, a list of :class:`SlaveBuilder` objects,
+    and a candidate :class:`BuildRequest`.
+    The function will be called for each :class:`BuildRequest` that may be started.
+    The function should return one of the :class:`SlaveBuilder`
     objects, or ``None`` if none of the available slaves should be
-    used.
+    used. This function can optionally return a Deferred which should fire with
+    the same results. A common use of this hook is to force a build to use a given
+    slave or a given set of slaves::
+
+        def myNextSlave(builder, slavebuilders, buildrequest):
+            forced_slave = buildrequest.properties.getProperty("forced_slave")
+            if forced_slave == None:
+                return random.choice(slavebuilders)
+            for slave in slavebuilders:
+                if forced_slave == slave.slave.slavename:
+                    return slave
+            return None
+        return myNextSlave
+
+..
+    ^                                                                   ^
+    |  If you change this example code, please update the unit test in  |
+    |  buildbot.test.unit.test_process_builder                          |
 
 ``nextBuild``
     If provided, this is a function that controls which build request will be
@@ -82,6 +101,8 @@ Other optional keys may be set on each ``BuilderConfig``:
     :class:`BuildRequest` objects, or ``None`` if none of the pending
     builds should be started. This function can optionally return a
     Deferred which should fire with the same results.
+    nextBuild is called after nextSlave, with only the list of
+    :class:`BuildRequest` that have a potential slave
 
 ``locks``
     This argument specifies a list of locks that apply to this builder; see

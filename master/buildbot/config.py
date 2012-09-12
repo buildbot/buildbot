@@ -19,6 +19,8 @@ import os
 import re
 import sys
 import warnings
+
+from types import MethodType
 from buildbot.util import safeTranslate
 from buildbot import interfaces
 from buildbot import locks
@@ -674,6 +676,15 @@ class BuilderConfig:
         self.nextSlave = nextSlave
         if nextSlave and not callable(nextSlave):
             errors.addError('nextSlave must be a callable')
+
+        # we support the previous nextSlave API
+        # this is temporary hack until we use a major release
+        # to really make a clean API (we first need data API to land)
+        if nextSlave and (nextSlave.func_code.co_argcount == 2 or
+                          (isinstance(nextSlave,MethodType) and
+                           nextSlave.func_code.co_argcount == 3)):
+            self.nextSlave = lambda x,y,z:nextSlave(x,y)
+
         self.nextBuild = nextBuild
         if nextBuild and not callable(nextBuild):
             errors.addError('nextBuild must be a callable')
