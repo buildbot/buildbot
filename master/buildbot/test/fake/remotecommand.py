@@ -72,7 +72,8 @@ class FakeRemoteCommand(object):
         self.logs[log] = l = FakeLogFile(log, step)
         l.fakeData(header=header, stdout=stdout, stderr=stderr)
 
-
+    def __repr__(self):
+        return "FakeRemoteCommand("+repr(self.remote_command)+","+repr(self.args)+")"
 class FakeRemoteShellCommand(FakeRemoteCommand):
 
     def __init__(self, workdir, command, env=None,
@@ -130,6 +131,8 @@ class FakeLogFile(object):
     def getText(self):
         return ''.join([ c for str,c in self.chunks
                            if str in (STDOUT, STDERR)])
+    def getTextWithHeaders(self):
+        return ''.join([ c for str,c in self.chunks])
 
     def getChunks(self, channels=[], onlyText=False):
         if onlyText:
@@ -269,7 +272,8 @@ class Expect(object):
         """
         for behavior in self.behaviors:
             yield self.runBehavior(behavior[0], behavior[1:], command)
-
+    def __repr__(self):
+        return "Expect("+repr(self.remote_command)+")"
 
 class ExpectShell(Expect):
     """
@@ -286,3 +290,5 @@ class ExpectShell(Expect):
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
         Expect.__init__(self, "shell", args)
+    def __repr__(self):
+        return "ExpectShell("+repr(self.remote_command)+repr(self.args['command'])+")"
