@@ -104,37 +104,22 @@ Source Stamp Attributes
 .. index:: single: Properties; branch
 
 ``branch``
-    This comes from the build's :class:`SourceStamp`, and describes which branch is
-    being checked out. This will be ``None`` (which interpolates into
-    ``Interpolate`` as an empty string) if the build is on the
-    default branch, which is generally the trunk. Otherwise it will be a
-    string like ``branches/beta1.4``. The exact syntax depends upon the VC
-    system being used.
-
-.. index:: single: Properties; revision
-
 ``revision``
-    This also comes from the :class:`SourceStamp`, and is the revision of the source code
-    tree that was requested from the VC system. When a build is requested of a
-    specific revision (as is generally the case when the build is triggered by
-    Changes), this will contain the revision specification. This is always a
-    string, although the syntax depends upon the VC system in use: for SVN it is an
-    integer, for Mercurial it is a short string, for Darcs it is a rather large
-    string, etc.
-
-    If the :guilabel:`force build` button was pressed, the revision will be ``None``,
-    which means to use the most recent revision available.  This is a `trunk
-    build`. This will be interpolated as an empty string.
-
-.. index:: single: Properties; repository
-
 ``repository``
-    The repository of the sourcestamp for this build
-
-.. index:: single: Properties; project
-
 ``project``
-    The project of the sourcestamp for this build
+``codebase``
+    For details of these attributes see :ref:`Source-Stamps`.
+
+``changes``
+    This attribute is a list of dictionaries reperesnting the changes that make up this sourcestamp.
+
+``has_patch``
+``patch_level``
+``patch_body``
+``patch_subdir``
+``patch_author``
+``patch_comment``
+    These attributes are set if the source stamp was created by a :ref:`try scheduler<Try-Schedulers>`.
 
 
 
