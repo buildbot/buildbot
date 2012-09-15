@@ -372,7 +372,7 @@ message.
     :bb:msg:`buildrequest.$bsid.$builderid.$brid.complete` will be sent as
     well, for consistency.
 
-.. bb:msg:: buildrequest.$bsid.$builderid.$brid.complete (TODO - untested)
+.. bb:msg:: buildrequest.$bsid.$builderid.$brid.complete
 
     :var $bsid: the ID of the buildset containing this build request
     :var $builderid: the ID of the builder this request is for (TODO: just a name for now)
@@ -386,6 +386,7 @@ message.
         :ref:`Build-Result-Codes`
 
     This message indicates that the build request is completed.
+    TODO: untested
 
 .. todo::
     user.new

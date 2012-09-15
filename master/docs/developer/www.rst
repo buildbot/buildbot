@@ -22,7 +22,7 @@ To enable it, simply add following code in your ``master.cfg``:
 
 Unpack the Dojo SDK from the `download page <http://dojotoolkit.org/download/>`_ into ``master/buildbot/www/static/js/external``:
 
-.. code-block:: shell
+.. code-block:: sh
 
     mkdir -p master/buildbot/www/static/js/external
     curl http://download.dojotoolkit.org/release-1.7.3/dojo-release-1.7.3-src.tar.gz | \
@@ -80,10 +80,10 @@ Routing
 +++++++
 
 All Buildbot pages are technically the same path - ``/ui``.
-The HTML at this location (:bb:file:`master/buildbot/www/ui.html`) is only a placeholder for JS to fill with Dijit widgets.
+The HTML at this location (:bb:src:`master/buildbot/www/ui.html`) is only a placeholder for JS to fill with Dijit widgets.
 The actual content is dictated by the fragment in the URL (the portion following the ``#`` character).
 Using the fragment is a common JS trick to avoid reloading the whole page over http when the user changes the URI, or clicks a link.
-The router, implemented in :bb:file:`master/buildbot/www/static/lib/router.js`, is the component that is responsible for loading the proper content based on the fragment.
+The router, implemented in :bb:src:`master/buildbot/www/static/lib/router.js`, is the component that is responsible for loading the proper content based on the fragment.
 
 The routing table is an array of objects like this:
 
@@ -99,7 +99,7 @@ The keys are:
  * ``path`` - regular expression for matching the fragment.
  * ``name`` - The name of the navbar shortcut for this path
  * ``widget`` - The widget to load for this path.
-   Widgets are located in :bb:file:`master/buildbot/www/static/js/lib/ui`.
+   Widgets are located in :bb:src:`master/buildbot/www/static/js/lib/ui`.
 
 For example, given the URL ``http://localhost:8010/ui/#/builders/builder1``, the system will load the widget ``builder`` with the special argument ``path_component`` being the result for the regex match, i.e: ``[ "builders/builder1", "builder1"]``.
 The widget can then use those arguments to adapt its template.

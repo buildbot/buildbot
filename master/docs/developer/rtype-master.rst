@@ -29,7 +29,7 @@ Masters
         This path lists masters, sorted by ID.
         The ``count`` option can be used to limit the number of masters.
 
-        Consuming from this path selects :bb:event:`master.$masterid.new` events.
+        Consuming from this path selects :bb:event:`master.$masterid.started` and :bb:event:`master.$masterid.stopped` events.
 
     .. bb:rpath:: /master/:masterid
 

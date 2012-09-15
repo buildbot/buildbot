@@ -10,7 +10,7 @@ Nine
 * Buildbot's tests now require at least Mock-0.8.0.
 
 * Buildbot no longer polls the database for jobs.  The
-  :bb:cfg:`db_poll_interval` configuration parameter and the :bb:cfg:`db` key
+  ``db_poll_interval`` configuration parameter and the :bb:cfg:`db` key
   of the same name are deprecated and will be ignored.
 
 * The interface for adding changes has changed.
