@@ -445,19 +445,19 @@ execution on buildslaves.
 
 The :bb:chsrc:`PBChangeSource` is created with the following arguments.
 
-`port`
+``port``
     which port to listen on. If ``None`` (which is the default), it
     shares the port used for buildslave connections.
 
-`user`
+``user``
     The user account that the client program must use to connect. Defaults to
     ``change``
 
-`passwd`
+``passwd``
     The password for the connection - defaults to ``changepw``.  Do not use
     this default on a publicly exposed port!
 
-`prefix`
+``prefix``
     The prefix to be found and stripped from filenames delivered over the
     connection, defaulting to ``None``. Any filenames which do not start with
     this prefix will be removed. If all the filenames in a given Change are

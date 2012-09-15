@@ -17,6 +17,7 @@ from twisted.internet import defer
 from twisted.python import failure
 from buildbot.status.logfile import STDOUT, STDERR, HEADER
 from cStringIO import StringIO
+from buildbot.status.results import SUCCESS, FAILURE
 
 
 class FakeRemoteCommand(object):
@@ -27,7 +28,7 @@ class FakeRemoteCommand(object):
     active = False
 
     def __init__(self, remote_command, args,
-            ignore_updates=False, collectStdout=False, successfulRC=(0,)):
+            ignore_updates=False, collectStdout=False, decodeRC={0:SUCCESS}):
         # copy the args and set a few defaults
         self.remote_command = remote_command
         self.args = args.copy()
@@ -36,7 +37,7 @@ class FakeRemoteCommand(object):
         self.rc = -999
         self.collectStdout = collectStdout
         self.updates = {}
-        self.successfulRC = successfulRC
+        self.decodeRC = decodeRC
         if collectStdout:
             self.stdout = ''
 
@@ -55,8 +56,13 @@ class FakeRemoteCommand(object):
     def interrupt(self, why):
         raise NotImplementedError
 
+    def results(self):
+        if self.rc in self.decodeRC:
+            return self.decodeRC[self.rc]
+        return FAILURE
+
     def didFail(self):
-        return self.rc not in self.successfulRC
+        return self.results() == FAILURE
 
     def fakeLogData(self, step, log, header='', stdout='', stderr=''):
         # note that this should not be used in the same test as useLog(Delayed)
@@ -70,14 +76,14 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
                  want_stdout=1, want_stderr=1,
                  timeout=20*60, maxTime=None, logfiles={},
                  usePTY="slave-config", logEnviron=True, collectStdout=False,
-                 interruptSignal=None, initialStdin=None, successfulRC=(0,)):
+                 interruptSignal=None, initialStdin=None, decodeRC={0:SUCCESS}):
         args = dict(workdir=workdir, command=command, env=env or {},
                 want_stdout=want_stdout, want_stderr=want_stderr,
                 initial_stdin=initialStdin,
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
         FakeRemoteCommand.__init__(self, "shell", args,
-                collectStdout=collectStdout, successfulRC=successfulRC)
+                collectStdout=collectStdout, decodeRC=decodeRC)
 
 
 class FakeLogFile(object):
