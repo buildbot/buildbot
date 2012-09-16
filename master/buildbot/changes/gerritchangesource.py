@@ -102,12 +102,12 @@ class GerritChangeSource(base.ChangeSource):
             return defer.succeed(None)
 
         # flatten the event dictionary, for easy access with WithProperties
-        def flatten(event, base, d):
-            for k, v in d.items():
+        def flatten(properties, base, event):
+            for k, v in event.items():
                 if type(v) == dict:
-                    flatten(event, base + "." + k, v)
+                    flatten(properties, base + "." + k, v)
                 else: # already there
-                    event[base + "." + k] = v
+                    properties[base + "." + k] = v
 
         properties = {}
         flatten(properties, "event", event)
