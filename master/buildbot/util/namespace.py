@@ -16,7 +16,7 @@
 from buildbot.util import json
 
 pedantic = False
-class _Namespace(dict):
+class Namespace(dict):
     """
     A convenience class that makes a json like dict of (dicts,lists,strings,integers)
     looks like a python object allowing syntax sugar like mydict.key1.key2.key4 = 5
@@ -25,50 +25,41 @@ class _Namespace(dict):
     input should always be json-able but this is checked only in pedentic mode, for
     obvious performance reason
     """
-    def __init__(self,*arg,**kw):
-        if self.__class__!=_Namespace:
-            raise ValueError("You don't want to inherit from Namespace")
-        dict.__init__(self,*arg,**kw)
-# pretty printing
+    __slots__=[]
+    def __init__(self,d):
+        dict.__init__(self,d)
+        for k, v in d.items():
+            # if already a Namespace, this will not match
+            if type(v) in (dict,list):
+                dict.__setitem__(self, k, Namespace(v))
 
+    def __new__(cls, v):
+        if pedantic: # we raise exception if v is not json able
+            json.dumps(v)
+        if type(v) == dict:
+            return dict.__new__(cls, v)
+        elif type(v) == list:
+            return [Namespace(i) for i in v]
+        else:
+            return v
+# pretty printing
     def __repr__(self):
         """ pretty printed __repr__, for debugging"""
         return json.dumps(self, sort_keys=True, indent=4)
 
+# on the fly conversion
+    def __setitem__(self, k, v):
+        dict.__setitem__(self, k, Namespace(v))
+
 # object like accessors
+    __getattr__ = dict.__getitem__
+    __setattr__ = __setitem__
 
-    def __getattr__(self,name):
-        return self[name]
-    def __setattr__(self,name, val):
-        self[name] = val
 
-# dictionary like accessors
-    def __getitem__(self, name):
-        # transform the data on the fly
-        v = dict.__getitem__(self,name)
-        # if already a _Namespace, this will not match
-        if type(v) == dict:
-            v = _Namespace(v)
-            dict.__setitem__(self,name, v)
-        elif type(v) == list:
-            v = [Namespace(i) for i in v]
-            dict.__setitem__(self, name, v)
-        return v
     def __getstate__(self):
         return self
     def __setstate__(self,_dict):
         self.__init__(_dict)
-
-def Namespace(v):
-    """Convenience wrapper to converts any json data to _Namespace"""
-    if pedantic: # we raise exception if v is not json able
-        json.dumps(v)
-    if type(v) == dict:
-        return _Namespace(v)
-    elif type(v) == list:
-        return [Namespace(i) for i in v]
-    else:
-        return v
 
 def documentNamespace(n,parent=None):
     """This prints the available keys and subkeys of the data, and their types,
@@ -82,11 +73,11 @@ def documentNamespace(n,parent=None):
             me = k
         def do_item(me, v):
             t = type(v).__name__
-            if t == "_Namespace":
+            if t == "Namespace":
                 t = "dict"
             s = me + " -> "+t+"\n"
             if isinstance(v,dict):
-                v = _Namespace(v)
+                v = Namespace(v)
                 s += documentNamespace(v, me)
             elif type(v) == list:
                 if len(v)>0:

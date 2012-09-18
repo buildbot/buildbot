@@ -16,18 +16,11 @@
 from twisted.trial import unittest
 from buildbot.util import namespace
 from time import time
+from mock import Mock
 import pickle
+from buildbot.util import json
 
 class Namespace(unittest.TestCase):
-    def assertCrashes(self, func, msg=None):
-        crashed = False
-        try:
-            func()
-        except:
-            crashed = True
-        if not msg:
-            msg = repr(func) + "should raise exception"
-        self.failUnless(crashed, msg)
 
     def test_basic(self):
         n = namespace.Namespace({'a':{'b':{'c':1}}})
@@ -49,14 +42,13 @@ class Namespace(unittest.TestCase):
         self.assertEqual(n.a.b.d, 3)
         n.a.b = namespace.Namespace({'e':4})
         self.assertEqual(n.a.b.e, 4)
-        self.assertCrashes(lambda : n.a.b.d == 3)
+        self.assertRaises(KeyError, lambda : n.a.b.d == 3)
         self.assertEqual(namespace.Namespace(1),1)
         self.assertEqual(namespace.Namespace([1]),[1])
         self.assertEqual(namespace.Namespace("1"),"1")
         self.assertEqual(namespace.Namespace(["1"]),["1"])
 
-        self.assertCrashes(lambda : namespace._Namespace(["1"]))
-        self.assertCrashes(lambda : n["__getitem__"])
+        self.assertRaises(KeyError, lambda : n["__getitem__"])
         n.a['b'] = {'f':5}
         self.assertEqual(n.a.b.f, 5)
 
@@ -74,9 +66,14 @@ class Namespace(unittest.TestCase):
             self.assertEqual(i.a.b.c, i.a.b.c)
 
     def test_cannot_inherit(self):
-        class myNamespace(namespace._Namespace):
+        class myNamespace(namespace.Namespace):
             pass
-        self.assertCrashes(lambda : myNamespace({'a':{'b':{'c':1}}}))
+        self.assertRaises(ValueError,lambda : myNamespace({'a':{'b':{'c':1}}}))
+
+    def test_jsondump(self):
+        s = '[{"a": {"b": {"c": 1}}}, {"a": {"b": {"c": 2}}}]'
+        n = namespace.Namespace(json.loads(s))
+        self.assertEqual(json.dumps(n),s)
 
     def test_prettyprint(self):
         n = namespace.Namespace({'a':[{'b':{'c':1}}]})
@@ -108,69 +105,91 @@ a[i].b.c -> int
         for i in n:
             self.assertEqual(i.a.b.c, i.a.b.c)
     def test_pedantic(self):
-        self.assertCrashes(lambda:namespace.Namespace({'a': set([1,2,3])}))
-        namespace.pedantic = False
+        self.assertRaises(TypeError, lambda:namespace.Namespace({'a': set([1,2,3])}))
+        self.patch(namespace,"pedantic", False)
         # should not crash if pendentic disabled
         n = namespace.Namespace({'a': set([1,2,3])})
-        self.assertCrashes(lambda:repr(n))
+        self.assertRaises(TypeError,lambda:repr(n))
 
-    def do_benchmark(self, D, f1,f2):
+    def do_benchmark(self, D, m, f1,f2):
+        self.patch(namespace,"pedantic", False)
+        numtime = 100
         start = time()
-        for i in xrange(10000):
+        for i in xrange(numtime*100):
             d = dict(D)
             f1(d)
-        t1 =  time()-start
+        t1 =  (time()-start)/100
         start = time()
-        for i in xrange(10000):
+        for i in xrange(numtime*100):
             f1(d)
-        t1bis =  time()-start
+        t1bis =  (time()-start)/100
         start = time()
-        for i in xrange(10000):
+        for i in xrange(numtime):
             d = namespace.Namespace(D)
             f1(d)
         t2 =  time()-start
         start = time()
-        for i in xrange(10000):
+        for i in xrange(numtime):
             f1(d)
         t2bis =  time()-start
         start = time()
-        for i in xrange(10000):
+        for i in xrange(numtime):
             d = namespace.Namespace(D)
             f2(d)
         t3 =  time()-start
         start = time()
-        for i in xrange(10000):
+        for i in xrange(numtime):
             f2(d)
         t3bis =  time()-start
-        print 
+        start = time()
+        for i in xrange(numtime):
+            f2(m)
+        t4bis =  time()-start
+        def fmt(i):
+            return "%d kread/s"%(int(i)/1000)
+        print
         print "create + access"
-        print "pure dict          :",t1
-        print "Namespace as dict  :",t2, "(",int(t2*100/t1),"%)"
-        print "Namespace as object:",t3, "(",int(t3*100/t1),"%)"
+        print "pure dict          :",fmt(numtime/t1)
+        print "Namespace as dict  :",fmt(numtime/t2), "(x",int(t2/t1),")"
+        print "Namespace as object:",fmt(numtime/t3), "(x",int(t3/t1),")"
         print "access only"
-        print "pure dict          :",t1bis
-        print "Namespace as dict  :",t2bis, "(",int(t2bis*100/t1bis),"%)"
-        print "Namespace as object:",t3bis, "(",int(t3bis*100/t1bis),"%)"
+        print "pure dict          :",fmt(numtime/t1bis)
+        print "Namespace as dict  :",fmt(numtime/t2bis), "(x",int(t2bis/t1bis),")"
+        print "Namespace as object:",fmt(numtime/t3bis), "(x",int(t3bis/t1bis),")"
+        print "Mock as object:",fmt(numtime/t4bis), "(x",int(t4bis/t1bis),")"
     def test_benchmark1(self):
-        self.do_benchmark({'a':{'b':{'c':1}}},
+        m = Mock()
+        m.a.b.c = 2
+        self.do_benchmark({'a':{'b':{'c':1}}},m,
                           lambda d:d['a']['b']['c']==2,
                           lambda d:d.a.b.c==2)
     def test_benchmark2(self):
-        self.do_benchmark({'a':[{'b':{'c':1}},{'b':{'d':2}}]},
+        m = Mock()
+        m1 = Mock()
+        m1.b.c=1
+        m2 = Mock()
+        m2.b.d=2
+        m.a = [m1,m2]
+        self.do_benchmark({'a':[{'b':{'c':1}},{'b':{'d':2}}]},m,
                           lambda d:d['a'][0]['b']['c']==2,
                           lambda d:d.a[0].b.c==2)
     def test_benchmark3(self):
         d = {}
+        m = Mock()
         c = d
         f1 = f2 = "lambda d:d"
+        f3= "m"
         for i in xrange(25):
             k = chr(ord('a')+i)
             c[k] = {'z':1}
             c = c[k]
             f1+="['"+k+"']"
             f2+="."+k
+            f3+="."+k
         f1 = eval(f1)
         f2 = eval(f2)
-        self.do_benchmark(d,
+        f3+="=2"
+        exec f3
+        self.do_benchmark(d,m,
                           f1,
                           f2)
