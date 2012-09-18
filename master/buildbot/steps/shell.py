@@ -147,10 +147,11 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
     def _flattenList(self, mainlist, commands):
         for x in commands:
-          if isinstance(x, (str, unicode)):
-             mainlist.append(x)
-          elif x != []:
-             self._flattenList(mainlist, x)
+            if isinstance(x, (list, tuple)):
+                if x != []:
+                    self._flattenList(mainlist, x)
+            else:
+                mainlist.append(x)
 
     def describe(self, done=False):
         desc = self._describe(done)
@@ -197,20 +198,22 @@ class ShellCommand(buildstep.LoggingBuildStep):
                 # WithProperties and Property don't have __len__
                 return ["???"]
 
+            # flatten any nested lists
             tmp = []
-            for x in words:
-                if isinstance(x, (str, unicode)):
-                   tmp.append(x)
-                else:
-                   self._flattenList(tmp, x)
+            self._flattenList(tmp, words)
+            words = tmp
 
-            if len(tmp) < 1:
+            # strip instances and other detritus (which can happen if a
+            # description is requested before rendering)
+            words = [ w for w in words if isinstance(w, (str, unicode)) ]
+
+            if len(words) < 1:
                 return ["???"]
-            if len(tmp) == 1:
-                return ["'%s'" % tmp[0]]
-            if len(tmp) == 2:
-                return ["'%s" % tmp[0], "%s'" % tmp[1]]
-            return ["'%s" % tmp[0], "%s" % tmp[1], "...'"]
+            if len(words) == 1:
+                return ["'%s'" % words[0]]
+            if len(words) == 2:
+                return ["'%s" % words[0], "%s'" % words[1]]
+            return ["'%s" % words[0], "%s" % words[1], "...'"]
 
         except:
             log.err(failure.Failure(), "Error describing step")
