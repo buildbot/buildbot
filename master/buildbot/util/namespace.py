@@ -15,7 +15,8 @@
 
 from buildbot.util import json
 
-class _Namespace:
+pedantic = False
+class _Namespace(dict):
     """
     A convenience class that makes a json like dict of (dicts,lists,strings,integers)
     looks like a python object allowing syntax sugar like mydict.key1.key2.key4 = 5
@@ -27,55 +28,32 @@ class _Namespace:
     def __init__(self,_dict):
         if self.__class__!=_Namespace:
             raise ValueError("You don't want to inherit from Namespace")
-        if not type(_dict)==dict:
+        if not isinstance(_dict,dict):
             raise ValueError("Expecting dict, got %s"%type(_dict))
-        self.__dict__["_dict"] = _dict
+        # :-( we need to copy the values to support a.b.c=4 use case
+        for k,v in _dict.items():
+            self[k] = Namespace(v)
 
 # pretty printing
 
     def __repr__(self):
         """ pretty printed __repr__, for debugging"""
-        return json.dumps(self._dict, sort_keys=True, indent=4)
+        return json.dumps(self, sort_keys=True, indent=4)
 
 # object like accessors
 
     def __getattr__(self,name):
-        if type(name)==str and name.startswith("__"):
-            raise AttributeError(name)
-        if not name in self._dict:
-            raise KeyError("%s not found available keys are:%s" %(name,self._dict.keys()))
-        v = self._dict[name]
-        return Namespace(v)
-
+        return self[name]
     def __setattr__(self,name, val):
-        if isinstance(val, _Namespace):
-            self._dict[name] = val._dict
-        else:
-            self._dict[name] = val
+        self[name] = val
 
 # dictionary like accessors
-    def __getitem__(self, name):
-        return self.__getattr__(name)
     def __setitem__(self, name, val):
-        return self.__setattr__(name, val)
-    def has_key(self, k):
-        return self._dict.has_key(k)
-    def keys(self):
-        return self._dict.keys()
-    def items(self):
-        return map(lambda (k,v):(k,Namespace(v)), self._dict.items())
-    def values(self):
-        return map(lambda v:Namespace(v), self._dict.values())
-    def __nonzero__(self):
-        return len(self._dict)>0
-
-# pickling
+        return dict.__setitem__(self,name,Namespace(val))
     def __getstate__(self):
-        return self._dict
-    def __setstate__(self,d):
-        # accessing self._dict will fallback on self.__setattr__, as constructor
-        # is not called by unpickling
-        self.__dict__["_dict"] = d
+        return self
+    def __setstate__(self,_dict):
+        self.__init__(_dict)
 
 def Namespace(v):
     """Convenience wrapper to converts any json data to _Namespace"""
@@ -93,14 +71,17 @@ def documentNamespace(n,parent=None):
     meant for quick auto-documentation of big json data
     """
     s = ""
-    for k,v in n._dict.items():
+    for k,v in n.items():
         if parent:
             me = parent+"."+k
         else:
             me = k
         def do_item(me, v):
-            s = me + " -> "+type(v).__name__+"\n"
-            if type(v)==dict:
+            t = type(v).__name__
+            if t == "_Namespace":
+                t = "dict"
+            s = me + " -> "+t+"\n"
+            if isinstance(v,dict):
                 v = _Namespace(v)
                 s += documentNamespace(v, me)
             elif type(v) == list:
