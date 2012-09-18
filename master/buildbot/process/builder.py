@@ -545,16 +545,17 @@ class Builder(config.ReconfigurableServiceMixin,
                     [ self._brdictToBuildRequest(brdict)
                       for brdict in brdicts ])
 
-            build_started = yield self._startBuildFor(slavebuilder, breqs)
+            d = self._startBuildFor(slavebuilder, breqs)
+            @defer.inlineCallbacks
+            def asyncRestart(build_started):
+                if not build_started:
+                    # build was not started, so unclaim the build requests
+                    yield self.master.db.buildrequests.unclaimBuildRequests(brids)
 
-            if not build_started:
-                # build was not started, so unclaim the build requests
-                yield self.master.db.buildrequests.unclaimBuildRequests(brids)
-
-                # and try starting builds again.  If we still have a working slave,
-                # then this may re-claim the same buildrequests
-                self.botmaster.maybeStartBuildsForBuilder(self.name)
-
+                    # and try starting builds again.  If we still have a working slave,
+                    # then this may re-claim the same buildrequests
+                    self.botmaster.maybeStartBuildsForBuilder(self.name)
+            d.addCallback(asyncRestart)
             # finally, remove the buildrequests and slavebuilder from the
             # respective queues
             self._breakBrdictRefloops(brdicts)
