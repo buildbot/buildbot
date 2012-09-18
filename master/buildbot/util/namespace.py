@@ -16,7 +16,7 @@
 from buildbot.util import json
 
 pedantic = False
-class _Namespace(dict):
+class __Namespace(dict):
     """
     A convenience class that makes a json like dict of (dicts,lists,strings,integers)
     looks like a python object allowing syntax sugar like mydict.key1.key2.key4 = 5
@@ -25,14 +25,6 @@ class _Namespace(dict):
     input should always be json-able but this is checked only in pedentic mode, for
     obvious performance reason
     """
-    def __init__(self,_dict):
-        if self.__class__!=_Namespace:
-            raise ValueError("You don't want to inherit from Namespace")
-        if not isinstance(_dict,dict):
-            raise ValueError("Expecting dict, got %s"%type(_dict))
-        # :-( we need to copy the values to support a.b.c=4 use case
-        for k,v in _dict.items():
-            self[k] = Namespace(v)
 
 # pretty printing
 
@@ -54,6 +46,16 @@ class _Namespace(dict):
         return self
     def __setstate__(self,_dict):
         self.__init__(_dict)
+def _Namespace(v):
+    if v.__repr__ == __Namespace.__repr__:
+        return
+    # does not work, dict methods cannot be hijacked like this.
+    v.__repr__ = __Namespace.__repr__
+    v.__getattr__ = __Namespace.__getattr__
+    v.__setitem__ = __Namespace.__setitem__
+    v.__getstate__ = __Namespace.__getstate__
+    v.__setstate__ = __Namespace.__setstate__
+    v.__setattr__ = __Namespace.__setattr__
 
 def Namespace(v):
     """Convenience wrapper to converts any json data to _Namespace"""
