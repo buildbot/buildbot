@@ -25,15 +25,10 @@ class _Namespace(dict):
     input should always be json-able but this is checked only in pedentic mode, for
     obvious performance reason
     """
-    def __init__(self,_dict):
+    def __init__(self,*arg,**kw):
         if self.__class__!=_Namespace:
             raise ValueError("You don't want to inherit from Namespace")
-        if not isinstance(_dict,dict):
-            raise ValueError("Expecting dict, got %s"%type(_dict))
-        # :-( we need to copy the values to support a.b.c=4 use case
-        for k,v in _dict.items():
-            self[k] = Namespace(v)
-
+        dict.__init__(self,*arg,**kw)
 # pretty printing
 
     def __repr__(self):
@@ -48,8 +43,17 @@ class _Namespace(dict):
         self[name] = val
 
 # dictionary like accessors
-    def __setitem__(self, name, val):
-        return dict.__setitem__(self,name,Namespace(val))
+    def __getitem__(self, name):
+        # transform the data on the fly
+        v = dict.__getitem__(self,name)
+        # if already a _Namespace, this will not match
+        if type(v) == dict:
+            v = _Namespace(v)
+            dict.__setitem__(self,name, v)
+        elif type(v) == list:
+            v = [Namespace(i) for i in v]
+            dict.__setitem__(self, name, v)
+        return v
     def __getstate__(self):
         return self
     def __setstate__(self,_dict):
@@ -61,8 +65,8 @@ def Namespace(v):
         json.dumps(v)
     if type(v) == dict:
         return _Namespace(v)
-    if type(v) == list:
-        return [ (type(i) == dict) and _Namespace(i) or i for i in v]
+    elif type(v) == list:
+        return [Namespace(i) for i in v]
     else:
         return v
 
