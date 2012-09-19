@@ -40,6 +40,10 @@ The outstanding resource types are:
  * scheduler
  * builder
  * buildrequest
+ * build
+ * step
+ * logfile
+ * buildslave
 
 Other Tasks
 -----------
@@ -100,6 +104,11 @@ Later
 =====
 
 This section can hold tasks that don't need to be done by 0.9.0, but shouldn't be forgotten, and might be implemented sooner if convenient.
+
+Infrastructure
+--------------
+
+* Use some fancy algorithms to delay message transmission until the data is known-good in the database, for cases where the underlying database is asynchronously replicated.
 
 Documentation
 -------------
