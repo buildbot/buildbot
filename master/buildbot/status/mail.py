@@ -616,7 +616,9 @@ class MailNotifier(base.StatusReceiverMultiService):
                      self._shouldAttachLog(name) ):
                     text = log.getText()
                     if not isinstance(text, unicode):
-                        text = text.decode(LOG_ENCODING)
+                        # guess at the encoding, and use replacement symbols
+                        # for anything that's not in that encoding
+                        text = text.decode(LOG_ENCODING, 'replace')
                     a = MIMEText(text.encode(ENCODING),
                                  _charset=ENCODING)
                     a.add_header('Content-Disposition', "attachment",
