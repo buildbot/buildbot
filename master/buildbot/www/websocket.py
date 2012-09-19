@@ -48,8 +48,7 @@ from struct import pack, unpack
 
 from twisted.protocols.policies import ProtocolWrapper, WrappingFactory
 from twisted.python import log
-from twisted.web.error import NoResource
-from twisted.web.resource import IResource
+from twisted.web.resource import IResource, NoResource
 from twisted.web.server import NOT_DONE_YET
 from zope.interface import implements
 
