@@ -28,9 +28,8 @@ sources for properties are:
   number of properties on itself.
 * :bb:cfg:`builders <builders>` -- A builder can set properties on all the
   builds it runs.
-* :ref:`steps <Build-Steps>` -- The steps of a build can set properties that
-  are available to subsequent steps.  In particular, source steps set a number
-  of properties.
+* :ref:`steps <Build-Steps>` -- The steps of a build can set properties that are available to subsequent steps.
+  In particular, source steps set the `got_revision` property.
 
 If the same property is supplied in multiple places, the final appearance takes
 precedence.  For example, a property set in a builder configuration will
@@ -48,31 +47,6 @@ Common Build Properties
 
 The following build properties are set when the build is started, and
 are available to all steps.
-
-.. index:: single: Properties; branch
-
-``branch``
-    This comes from the build's :class:`SourceStamp`, and describes which branch is
-    being checked out. This will be ``None`` (which interpolates into
-    ``WithProperties`` as an empty string) if the build is on the
-    default branch, which is generally the trunk. Otherwise it will be a
-    string like ``branches/beta1.4``. The exact syntax depends upon the VC
-    system being used.
-
-.. index:: single: Properties; revision
-
-``revision``
-    This also comes from the :class:`SourceStamp`, and is the revision of the source code
-    tree that was requested from the VC system. When a build is requested of a
-    specific revision (as is generally the case when the build is triggered by
-    Changes), this will contain the revision specification. This is always a
-    string, although the syntax depends upon the VC system in use: for SVN it is an
-    integer, for Mercurial it is a short string, for Darcs it is a rather large
-    string, etc.
-    
-    If the :guilabel:`force build` button was pressed, the revision will be ``None``,
-    which means to use the most recent revision available.  This is a `trunk
-    build`. This will be interpolated as an empty string.
 
 .. index:: single: Properties; got_revision
 
@@ -113,21 +87,41 @@ are available to all steps.
     If the build was started from a scheduler, then this property will
     contain the name of that scheduler.
 
-.. index:: single: Properties; repository
-
-``repository``
-    The repository of the sourcestamp for this build
-
-.. index:: single: Properties; project
-
-``project``
-    The project of the sourcestamp for this build
-
-.. index:: single: Properties; workdir
 
 ``workdir``
     The absolute path of the base working directory on the slave, of the current
     builder.
+
+.. index:: single: Properties; workdir
+
+For single codebase builds, where the codebase is `''`, the following :ref:`Source-Stamp-Attributes` are also available as properties: ``branch``, ``revision``, ``repository``, and ``project`` .
+
+.. _Source-Stamp-Attributes:
+
+Source Stamp Attributes
+-----------------------
+
+.. index:: single: Properties; branch
+
+``branch``
+``revision``
+``repository``
+``project``
+``codebase``
+    For details of these attributes see :ref:`Concepts`.
+
+``changes``
+    This attribute is a list of dictionaries reperesnting the changes that make up this sourcestamp.
+
+``has_patch``
+``patch_level``
+``patch_body``
+``patch_subdir``
+``patch_author``
+``patch_comment``
+    These attributes are set if the source stamp was created by a :ref:`try scheduler<Try-Schedulers>`.
+
+
 
 Using Properties in Steps
 -------------------------
@@ -183,18 +177,97 @@ The default value can reference other properties, e.g., ::
 
     command=Property('command', default=Property('default-command'))
 
+.. Index:: single; Properties; Interpolate
 
-.. Index:: single; Properties; WithProperties
+.. _Interpolate:
+
+Interpolate
++++++++++++
+
+:class:`Property` can only be used to replace an entire argument: in the
+example above, it replaces an argument to ``echo``.  Often, properties need to
+be interpolated into strings, instead.  The tool for that job is
+:ref:`Interpolate`.
+
+The more common pattern is to use python dictionary-style string interpolation by using the ``%(prop:<propname>)s`` syntax.
+In this form, the property name goes in the parentheses, as above.
+A common mistake is to omit the trailing "s", leading to a rather obscure error from Python ("ValueError: unsupported format character"). ::
+
+   from buildbot.steps.shell import ShellCommand
+   from buildbot.process.properties import Interpolate
+   f.addStep(ShellCommand(command=[ 'make', Interpolate('REVISION=%(prop:got_revision)s'),
+                                    'dist' ]))
+
+This example will result in a ``make`` command with an argument like
+``REVISION=12098``.
+
+.. _Interpolate-DictStyle:
+
+The syntax of dictionary-style interpolation is a selector, followed by a colon, followed by a selector specific key, optionally followed by a colon and a string indicating how to interpret the value produced by the key.
+
+The following selectors are supported.
+
+``prop``
+    The key is the name of a property.
+
+``src``
+    The key is a codebase and source stamp attribute, seperated by a colon.
+
+``kw``
+    The key refers to a keyword argument passed to ``Interpolate``.
+
+The following ways of interpreting the value are available.
+
+``-replacement``
+    If the key exists, substitute its value; otherwise,
+    substitute ``replacement``. ``replacement`` may be empty
+    (``%(prop:propname:-)s``). This is the default.
+
+``~replacement``
+    Like ``-replacement``, but only substitutes the value
+    of the key if it is something Python regards as ``True``.
+    Python considers ``None``, 0, empty lists, and the empty string to be
+    false, so such values will be replaced by ``replacement``.
+
+``+replacement``
+    If the key exists, substitute ``replacement``; otherwise,
+    substitute an empty string.
+
+``?|sub_if_exists|sub_if_missing``
+
+``#?|sub_if_true|sub_if_false``
+    Ternary substitution, depending on either the key being present (with
+    ``?``, similar to ``+``) or being ``True`` (with ``#?``, like ``~``).
+    Notice that there is a pipe immediately following the question mark *and*
+    between the two substitution alternatives. The character that follows the
+    question mark is used as the delimeter between the two alternatives. In the
+    above examples, it is a pipe, but any character other than ``(`` can be used.
+
+
+Although these are similar to shell substitutions, no other substitutions are currently supported.
+
+Example ::
+
+   from buildbot.steps.shell import ShellCommand
+   from buildbot.process.properties import Interpolate
+   f.addStep(ShellCommand(command=[ 'make', Interpolate('REVISION=%(prop:got_revision:-%(src::revision:-unknwon)s)s')
+                                    'dist' ]))
+
+In addition, ``Interpolate`` supports using positional string interpolation.
+Here, ``%s`` is used as a placeholder, and the substitutions (which may themselves be placeholders), are given as subsequent arguments::
+
+.. note: like python, you can use either positional interpolation *or* dictionary-style interpolation, not both.
+Thus you cannot use a string like ``Interpolate("foo-%(src::revision)s-%s", "branch")``.
+
+.. index:: single; Properties; WithProperties
 
 .. _WithProperties:
 
 WithProperties
 ++++++++++++++
 
-:class:`Property` can only be used to replace an entire argument: in the
-example above, it replaces an argument to ``echo``.  Often, properties need to
-be interpolated into strings, instead.  The tool for that job is
-:class:`WithProperties`. 
+This placeholder is deprecated. It is an older version of :ref:`Interpolate`.
+It exists for compatability with older configs.
 
 The simplest use of this class is with positional string interpolation.  Here,
 ``%s`` is used as a placeholder, and property names are given as subsequent
@@ -246,18 +319,6 @@ syntaxes in the parentheses.
 ``propname:+replacement``
     If ``propname`` exists, substitute ``replacement``; otherwise,
     substitute an empty string.
-
-``propname:?|sub_if_exists|sub_if_missing``
-
-``propname:#?|sub_if_true|sub_if_false``
-    Ternary substitution, depending on either ``propname`` being present (with
-    ``:?``, similar to ``:+``) or being ``True`` (with ``:#?``, like ``:~``).
-    Notice that there is a pipe immediately following the question mark *and*
-    between the two substitution alternatives. The character that follows the
-    question mark is used as the delimeter between the two alternatives. In the
-    above examples, it is a pipe, but any single character can be used. Using
-    colon is not advised.
-    
     
 Although these are similar to shell substitutions, no other
 substitutions are currently supported, and ``replacement`` in the
