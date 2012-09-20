@@ -108,7 +108,7 @@ Source Stamp Attributes
 ``repository``
 ``project``
 ``codebase``
-    For details of these attributes see :ref:`Source-Stamps`.
+    For details of these attributes see :ref:`Concepts`.
 
 ``changes``
     This attribute is a list of dictionaries reperesnting the changes that make up this sourcestamp.
@@ -245,6 +245,13 @@ The following ways of interpreting the value are available.
 
 
 Although these are similar to shell substitutions, no other substitutions are currently supported.
+
+Example ::
+
+   from buildbot.steps.shell import ShellCommand
+   from buildbot.process.properties import Interpolate
+   f.addStep(ShellCommand(command=[ 'make', Interpolate('REVISION=%(prop:got_revision:-%(src::revision:-unknwon)s)s')
+                                    'dist' ]))
 
 In addition, ``Interpolate`` supports using positional string interpolation.
 Here, ``%s`` is used as a placeholder, and the substitutions (which may themselves be placeholders), are given as subsequent arguments::
