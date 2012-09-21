@@ -22,7 +22,7 @@ from buildbot.util import json
 from buildbot.interfaces import IRenderable, IProperties
 from twisted.internet import defer
 from twisted.python.components import registerAdapter
-from zope.interface import implements
+from zope.interface import implements, implementer, provider
 
 class Properties(util.ComparableMixin):
     """
@@ -569,6 +569,13 @@ class Property(util.ComparableMixin):
                 return props.render(props.getProperty(self.key))
             else:
                 return props.render(self.default)
+
+def renderer(f):
+    @implementer(IRenderable)
+    @provider(IRenderable)
+    class _renderer(object):
+        getRenderingFor = staticmethod(f)
+    return _renderer
 
 class _DefaultRenderer(object):
     """

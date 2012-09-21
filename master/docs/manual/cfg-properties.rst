@@ -266,6 +266,29 @@ Here, ``%s`` is used as a placeholder, and the substitutions (which may themselv
   dictionary-style interpolation, not both.  Thus you cannot use a string
   like ``Interpolate("foo-%(src::revision)s-%s", "branch")``.
 
+.. index:: single; Properties; Renderer
+
+.. _Renderer:
+
+Renderer
+++++++++
+
+While Interpolate can handle many simple cases, and even some common conditionals, more complex cases are best handled with Python code.
+The ``renderer`` decorator creates a renderable object that will be replaced with the result of the function, called when each build begins.
+The function receives an :class:`~buildbot.interfaces.IProperties` object, which it can use to examine the values of any and all properties.  For example::
+
+    @properties.renderer
+    def makeCommand(props):
+        command = [ 'make' ]
+        cpus = props.getProperty('CPUs')
+        if cpus:
+            command += [ '-j', str(cpus+1) ]
+        else:
+            command += [ '-j', '2' ]
+        command += [ 'all' ]
+        return command
+   f.addStep(ShellCommand(command=makeCommand))
+
 .. index:: single; Properties; WithProperties
 
 .. _WithProperties:
@@ -273,8 +296,10 @@ Here, ``%s`` is used as a placeholder, and the substitutions (which may themselv
 WithProperties
 ++++++++++++++
 
-This placeholder is deprecated. It is an older version of :ref:`Interpolate`.
-It exists for compatability with older configs.
+.. warning::
+
+    This placeholder is deprecated. It is an older version of :ref:`Interpolate`.
+    It exists for compatability with older configs.
 
 The simplest use of this class is with positional string interpolation.  Here,
 ``%s`` is used as a placeholder, and property names are given as subsequent
@@ -334,3 +359,33 @@ above cannot contain more substitutions.
 Note: like python, you can use either positional interpolation *or*
 dictionary-style interpolation, not both. Thus you cannot use a string like
 ``WithProperties("foo-%(revision)s-%s", "branch")``.
+
+Custom Renderables
+++++++++++++++++++
+
+If the options described above are not sufficient, more complex substitutions can be achieved by writting custom renderables.
+
+Renderables are objects providing the :class:`~buildbot.interfaces.IRenderable` interface.
+That interface is simple - objects must provide a `getRenderingFor` method.
+The method should take one argument - an :class:`~buildbot.interfaces.IProperties` provider - and should return a string.
+Pass instances of the class anywhere other renderables are accepted.
+For example::
+
+    class DetermineFoo(object):
+        implements(IRenderable)
+        def getRenderingFor(self, props)
+            if props.hasProperty('bar'):
+                return props['bar']
+            elif props.hasProperty('baz'):
+                return props['baz']
+            return 'qux'
+    ShellCommand(command=['echo', DetermineFoo()])
+
+or, more practically, ::
+
+    class Now(object):
+        implements(IRenderable)
+        def getRenderingFor(self, props)
+            return time.clock()
+    ShellCommand(command=['make', Interpolate('TIME=%(kw:now)', now=Now())])
+

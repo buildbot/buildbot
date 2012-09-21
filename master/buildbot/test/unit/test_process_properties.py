@@ -20,7 +20,7 @@ from twisted.trial import unittest
 from twisted.python import components
 from buildbot.process.properties import Properties, WithProperties
 from buildbot.process.properties import Interpolate
-from buildbot.process.properties import Property, PropertiesMixin
+from buildbot.process.properties import Property, PropertiesMixin, renderer
 from buildbot.interfaces import IRenderable, IProperties
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.properties import ConstantRenderable
@@ -1211,3 +1211,32 @@ class TestRenderalbeAdapters(unittest.TestCase):
         k2.callback("dict")
         r2.callback("lookup")
         return d
+
+class Renderer(unittest.TestCase):
+
+    def setUp(self):
+        self.props = Properties()
+        self.build = FakeBuild(self.props)
+
+
+    def test_renderer(self):
+        self.props.setProperty("x", "X", "test")
+        d = self.build.render(
+            renderer(lambda p : 'x%sx' % p.getProperty('x')))
+        d.addCallback(self.failUnlessEqual, 'xXx')
+        return d
+
+    def test_renderer_deferred(self):
+        self.props.setProperty("x", "X", "test")
+        d = self.build.render(
+            renderer(lambda p : defer.succeed('y%sy' % p.getProperty('x'))))
+        d.addCallback(self.failUnlessEqual, 'yXy')
+        return d
+
+    def test_renderer_fails(self):
+        self.props.setProperty("x", "X", "test")
+        d = self.build.render(
+            renderer(lambda p : defer.fail(RuntimeError("oops"))))
+        self.failUnlessFailure(d, RuntimeError)
+        return d
+
