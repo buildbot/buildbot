@@ -2477,8 +2477,7 @@ The counterpart to the Triggerable described in section
     f.addStep(Trigger(schedulerNames=['build-prep'],
                       waitForFinish=True,
                       updateSourceStamp=True,
-                      set_properties={ 'quick' : False },
-                      copy_properties=[ 'release_code_name' ]))
+                      set_properties={ 'quick' : False })
 
 The ``schedulerNames=`` argument lists the :bb:sched:`Triggerable` schedulers
 that should be triggered when this step is executed.  Note that
@@ -2514,12 +2513,14 @@ can be used for a dictionary containing the keys mentioned above. The arguments
 ``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp`` can be specified
 using properties.
 
-Two parameters allow control of the properties that are passed to the triggered
-scheduler.  To simply copy properties verbatim, list them in the
-``copy_properties`` parameter.  To set properties explicitly, use the more
-sophisticated ``set_properties``, which takes a dictionary mapping property
-names to values.  You may use :ref:`Interpolate` here to dynamically
-construct new property values.
+The ``set_properties`` parameter allows control of the properties that are passed to the triggered scheduler.
+The parameter takes a dictionary mapping property names to values.
+You may use :ref:`Interpolate` here to dynamically construct new property values.
+For the simple case of copying a property, this might look like ::
+
+    set_properties={"my_prop1", Property("my_prop1")}
+
+The ``copy_properties`` parameter, given a list of properties to copy into the new build request, has been deprecated in favor of explicit use of ``set_properties``.
 
 RPM-Related Steps
 -----------------

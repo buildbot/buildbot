@@ -68,6 +68,8 @@ Features
 * The :bb:status:`MailNotifier` now takes a callable to calculate the "previous" build for purposes of determining status changes.
   See :bb:pull:`489`.
 
+* The ``copy_properties`` parameter, given a list of properties to copy into the new build request, has been deprecated in favor of explicit use of ``set_properties``.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
