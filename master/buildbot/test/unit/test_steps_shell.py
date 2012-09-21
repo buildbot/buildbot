@@ -151,6 +151,12 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['???'],)*2)
 
+    def test_describe_unrendered_WithProperties_list(self):
+        step = shell.ShellCommand(
+                command=[ 'x', properties.WithProperties(''), 'y' ])
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (["'x", "y'"],)*2)
+
     @compat.usesFlushLoggedErrors
     def test_describe_fail(self):
         step = shell.ShellCommand(command=object())
