@@ -28,7 +28,7 @@ class FakeRemoteCommand(object):
     active = False
 
     def __init__(self, remote_command, args,
-            ignore_updates=False, collectStdout=False, decodeRC={0:SUCCESS}):
+            ignore_updates=False, collectStdout=False, collectStderr=False, decodeRC={0:SUCCESS}):
         # copy the args and set a few defaults
         self.remote_command = remote_command
         self.args = args.copy()
@@ -36,10 +36,13 @@ class FakeRemoteCommand(object):
         self.delayedLogs = {}
         self.rc = -999
         self.collectStdout = collectStdout
+        self.collectStderr = collectStderr
         self.updates = {}
         self.decodeRC = decodeRC
         if collectStdout:
             self.stdout = ''
+        if collectStderr:
+            self.stderr = ''
 
     def run(self, step, remote):
         # delegate back to the test case
@@ -69,13 +72,15 @@ class FakeRemoteCommand(object):
         self.logs[log] = l = FakeLogFile(log, step)
         l.fakeData(header=header, stdout=stdout, stderr=stderr)
 
-
+    def __repr__(self):
+        return "FakeRemoteCommand("+repr(self.remote_command)+","+repr(self.args)+")"
 class FakeRemoteShellCommand(FakeRemoteCommand):
 
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=20*60, maxTime=None, logfiles={},
                  usePTY="slave-config", logEnviron=True, collectStdout=False,
+                 collectStderr=False,
                  interruptSignal=None, initialStdin=None, decodeRC={0:SUCCESS}):
         args = dict(workdir=workdir, command=command, env=env or {},
                 want_stdout=want_stdout, want_stderr=want_stderr,
@@ -83,7 +88,9 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
         FakeRemoteCommand.__init__(self, "shell", args,
-                collectStdout=collectStdout, decodeRC=decodeRC)
+                                   collectStdout=collectStdout,
+                                   collectStderr=collectStderr,
+                                   decodeRC=decodeRC)
 
 
 class FakeLogFile(object):
@@ -124,6 +131,8 @@ class FakeLogFile(object):
     def getText(self):
         return ''.join([ c for str,c in self.chunks
                            if str in (STDOUT, STDERR)])
+    def getTextWithHeaders(self):
+        return ''.join([ c for str,c in self.chunks])
 
     def getChunks(self, channels=[], onlyText=False):
         if onlyText:
@@ -247,6 +256,8 @@ class Expect(object):
                     command.stdout += streams['stdout']
             if 'stderr' in streams:
                 command.logs[name].addStderr(streams['stderr'])
+                if command.collectStderr:
+                    command.stderr += streams['stderr']
         elif behavior == 'callable':
             return defer.maybeDeferred(lambda : args[0](command))
         else:
@@ -261,7 +272,8 @@ class Expect(object):
         """
         for behavior in self.behaviors:
             yield self.runBehavior(behavior[0], behavior[1:], command)
-
+    def __repr__(self):
+        return "Expect("+repr(self.remote_command)+")"
 
 class ExpectShell(Expect):
     """
@@ -278,3 +290,5 @@ class ExpectShell(Expect):
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
         Expect.__init__(self, "shell", args)
+    def __repr__(self):
+        return "ExpectShell("+repr(self.remote_command)+repr(self.args['command'])+")"
