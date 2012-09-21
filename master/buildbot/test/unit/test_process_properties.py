@@ -1226,6 +1226,23 @@ class Renderer(unittest.TestCase):
         d.addCallback(self.failUnlessEqual, 'xXx')
         return d
 
+    def test_renderer_called(self):
+        # it's tempting to try to call the decorated function.  Don't do that.
+        # It's not a function anymore.
+        d = defer.maybeDeferred(lambda :
+                self.build.render(renderer(lambda p : 'x')('y')))
+        self.failUnlessFailure(d, TypeError)
+        return d
+
+    def test_renderer_decorator(self):
+        self.props.setProperty("x", "X", "test")
+        @renderer
+        def rend(p):
+            return 'x%sx' % p.getProperty('x')
+        d = self.build.render(rend)
+        d.addCallback(self.failUnlessEqual, 'xXx')
+        return d
+
     def test_renderer_deferred(self):
         self.props.setProperty("x", "X", "test")
         d = self.build.render(
@@ -1234,7 +1251,6 @@ class Renderer(unittest.TestCase):
         return d
 
     def test_renderer_fails(self):
-        self.props.setProperty("x", "X", "test")
         d = self.build.render(
             renderer(lambda p : defer.fail(RuntimeError("oops"))))
         self.failUnlessFailure(d, RuntimeError)

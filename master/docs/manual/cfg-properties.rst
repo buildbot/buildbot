@@ -274,7 +274,7 @@ Renderer
 ++++++++
 
 While Interpolate can handle many simple cases, and even some common conditionals, more complex cases are best handled with Python code.
-The ``renderer`` decorator creates a renderable object that will be replaced with the result of the function, called when each build begins.
+The ``renderer`` decorator creates a renderable object that will be replaced with the result of the function, called when the step it's passed to begins.
 The function receives an :class:`~buildbot.interfaces.IProperties` object, which it can use to examine the values of any and all properties.  For example::
 
     @properties.renderer
@@ -288,6 +288,8 @@ The function receives an :class:`~buildbot.interfaces.IProperties` object, which
         command += [ 'all' ]
         return command
    f.addStep(ShellCommand(command=makeCommand))
+
+You can think of ``renderer`` as saying "call this function when the step starts".
 
 .. index:: single; Properties; WithProperties
 
@@ -389,3 +391,11 @@ or, more practically, ::
             return time.clock()
     ShellCommand(command=['make', Interpolate('TIME=%(kw:now)', now=Now())])
 
+This is equivalent to::
+
+    @renderer
+    def now(props):
+        return time.clock()
+    ShellCommand(command=['make', Interpolate('TIME=%(kw:now)', now=now)])
+
+Note that a custom renderable must be instantiated (and its constructor can take whatever arguments you'd like), whereas a renderer can be used directly.

@@ -22,7 +22,7 @@ from buildbot.util import json
 from buildbot.interfaces import IRenderable, IProperties
 from twisted.internet import defer
 from twisted.python.components import registerAdapter
-from zope.interface import implements, provider
+from zope.interface import implements
 
 class Properties(util.ComparableMixin):
     """
@@ -570,13 +570,13 @@ class Property(util.ComparableMixin):
             else:
                 return props.render(self.default)
 
-def renderer(f):
-    class _renderer(object):
-        getRenderingFor = staticmethod(f)
-    # this is equivalent to using @provider as a class decorator, but
-    # py25 does not support class decorators.  Note that the *class* object
-    # is a provider of the interface, not an implementer
-    return provider(IRenderable)(_renderer)
+class _Renderer(object):
+    implements(IRenderable)
+    def __init__(self, fn):
+        self.getRenderingFor = fn
+
+def renderer(fn):
+    return _Renderer(fn)
 
 class _DefaultRenderer(object):
     """
