@@ -953,9 +953,9 @@ given below::
                     text.append(u'</table>')
                     files = cd['files']
                     if files:
-                        text.append(u'<table cellspacing="10"><tr><th align="left">Files</th><th>URL</th></tr>')
+                        text.append(u'<table cellspacing="10"><tr><th align="left">Files</th></tr>')
                         for file in files:
-                            text.append(u'<tr><td>%s:</td><td>%s</td></tr>' % (file['name'], file['url']))
+                            text.append(u'<tr><td>%s:</td></tr>' % file['name'] )
                         text.append(u'</table>')
             text.append(u'<br>')
             # get log for last step 
