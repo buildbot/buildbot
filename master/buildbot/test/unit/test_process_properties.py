@@ -1263,7 +1263,7 @@ class TestProperty(unittest.TestCase):
         return d
 
 
-class TestRenderalbeAdapters(unittest.TestCase):
+class TestRenderableAdapters(unittest.TestCase):
     """
     Tests for list, tuple and dict renderers.
     """
@@ -1307,4 +1307,16 @@ class TestRenderalbeAdapters(unittest.TestCase):
         r1.callback("load")
         k2.callback("dict")
         r2.callback("lookup")
+        return d
+
+    def test_callable(self):
+        def a(b):
+            return b.getProperty("inexistant","OK")
+        d = self.build.render(a)
+        d.addCallback(self.failUnlessEqual, "OK")
+        return d
+
+    def test_callable_lambda(self):
+        d = self.build.render(lambda p:"OK")
+        d.addCallback(self.failUnlessEqual, "OK")
         return d
