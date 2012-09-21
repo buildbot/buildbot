@@ -1376,7 +1376,7 @@ The :bb:step:`ShellCommand` arguments are:
 
     Note that environment values must be strings (or lists that are turned into
     strings).  In particular, numeric properties such as ``buildnumber`` must
-    be substituted using :ref:`WithProperties`.
+    be substituted using :ref:`Interpolate`.
 
 ``want_stdout``
     if ``False``, stdout from the child process is discarded rather than being
@@ -1859,7 +1859,7 @@ The :bb:step:`MTR` step's arguments are:
 
 ``mtr_subdir``
     The subdirectory in which to look for server error log files. Defaults to
-    :file:`mysql-test`, which is usually correct. :ref:`WithProperties` is supported.
+    :file:`mysql-test`, which is usually correct. :ref:`Interpolate` is supported.
 
 .. bb:step:: SubunitShellCommand
 
@@ -2302,7 +2302,7 @@ slave. Instead of having to create a temporary file and then use FileDownload,
 you can use one of the string download steps.  ::
 
     from buildbot.steps.transfer import StringDownload
-    f.append(StringDownload(WithProperties("%(branch)s-%(got_revision)s\n"),
+    f.append(StringDownload(Interpolate("%(src::branch)s-%(prop:got_revision)s\n"),
             slavedest="buildid.txt"))
 
 :bb:step:`StringDownload` works just like :bb:step:`FileDownload` except it takes a single argument,
@@ -2372,7 +2372,7 @@ Variables that don't exist on the master will be replaced by ``""``. ::
 
 Note that environment values must be strings (or lists that are turned into
 strings).  In particular, numeric properties such as ``buildnumber`` must
-be substituted using :ref:`WithProperties`.
+be substituted using :ref:`Interpolate`.
 
 ``interruptSignal``
    (optional) Signal to use to end the process, if the step is interrupted.
@@ -2405,7 +2405,7 @@ This runs ``uname -a`` and captures its stdout, stripped of leading
 and trailing whitespace, in the property ``uname``.  To avoid stripping,
 add ``strip=False``.
 
-The ``property`` argument can be specified as a  :ref:`WithProperties`
+The ``property`` argument can be specified as a  :ref:`Interpolate`
 object, allowing the property name to be built from other property values.
 
 The more advanced usage allows you to specify a function to extract
@@ -2455,7 +2455,7 @@ displayed as :envvar:`TMP` in the Windows GUI. ::
     from buildbot.steps.shell import Compile
 
     f.addStep(SetPropertiesFromEnv(variables=["SOME_JAVA_LIB_HOME", "JAVAC"]))
-    f.addStep(Compile(commands=[WithProperties("%s","JAVAC"), "-cp", WithProperties("%s", "SOME_JAVA_LIB_HOME")))
+    f.addStep(Compile(commands=[Interpolate("%(prop:JAVAC)s"), "-cp", Interpolate("%(prop:SOME_JAVA_LIB_HOME)s")))
 
 Note that this step requires that the Buildslave be at least version 0.8.3.
 For previous versions, no environment variables are available (the slave
@@ -2518,7 +2518,7 @@ Two parameters allow control of the properties that are passed to the triggered
 scheduler.  To simply copy properties verbatim, list them in the
 ``copy_properties`` parameter.  To set properties explicitly, use the more
 sophisticated ``set_properties``, which takes a dictionary mapping property
-names to values.  You may use :ref:`WithProperties` here to dynamically 
+names to values.  You may use :ref:`Interpolate` here to dynamically
 construct new property values.
 
 RPM-Related Steps
@@ -2704,7 +2704,7 @@ violations. The packages or changes file to test is specified in ``fileloc``
 ::
 
     from buildbot.steps.package.deb.lintian import DebLintian
-    f.addStep(DebLintian(fileloc=WithProperties("%(deb-changes)s")))
+    f.addStep(DebLintian(fileloc=Interpolate("%(prop:deb-changes)s")))
 
 Miscellaneous BuildSteps
 ------------------------

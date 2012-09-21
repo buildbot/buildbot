@@ -510,27 +510,30 @@ repos and workdir, this will work.
 Advanced Property Interpolation
 -------------------------------
 
-If the simple string substitutions described in :ref:`Properties` are not
-sufficent, more complex substitutions can be achieved with
-:class:`WithProperties` and Python functions.  This only works with
-dictionary-style interpolation.
+If the simple string substitutions described in :ref:`Properties` are not sufficent, more complex substitutions can be achieved by writting custom renderers.
 
-The function should take one argument - a properties object, described below -
-and should return a string.  Pass the function as a keyword argument to
-:class:`WithProperties`, and use the name of that keyword argument in the
-interpolating string. For example::
+Define a class with method `getRenderingFor`.
+The method should take one argument - a properties object, described below - and should return a string.
+Pass instances of the class anywhere other renderables are accepted.
+For example::
 
-    def determine_foo(props):
-        if props.hasProperty('bar'):
-            return props['bar']
-        elif props.hasProperty('baz'):
-            return props['baz']
-        return 'qux'
-    WithProperties('%(foo)s', foo=determine_foo)
+    class DetermineFoo(object):
+        implements(IRenderable)
+        def getRenderingFor(self, props)
+            if props.hasProperty('bar'):
+                return props['bar']
+            elif props.hasProperty('baz'):
+                return props['baz']
+            return 'qux'
+    ShellCommand(command=['echo', DetermineFoo()])
 
 or, more practically, ::
 
-    WithProperties('%(now)s', now=lambda _: time.clock())
+    class Now(object):
+        implements(IRenderable)
+        def getRenderingFor(self, props)
+            return time.clock()
+    ShellCommand(command=['make', Interpolate('TIME=%(kw:now)', now=Now())])
 
 Properties Objects
 ~~~~~~~~~~~~~~~~~~
@@ -884,7 +887,7 @@ arbitrary object. For example::
             ShellCommand.start(self)
 
 Remember that properties set in a step may not be available until the next step
-begins.  In particular, any :class:`Property` or :class:`WithProperties`
+begins.  In particular, any :class:`Property` or :class:`Interpolate`
 instances for the current step are interpoloated before the ``start`` method
 begins.
 
@@ -922,7 +925,7 @@ build number. ::
 
     class TestWithCodeCoverage(BuildStep):
         command = ["make", "test",
-                   WithProperties("buildnum=%s", "buildnumber")]
+                   Interpolate("buildnum=%(prop:buildnumber)s")]
     
         def createSummary(self, log):
             buildnumber = self.getProperty("buildnumber")
@@ -934,7 +937,7 @@ output by the build process itself::
 
     class TestWithCodeCoverage(BuildStep):
         command = ["make", "test",
-                   WithProperties("buildnum=%s", "buildnumber")]
+                   Interpolate("buildnum=%(prop:buildnumber)s")]
     
         def createSummary(self, log):
             output = StringIO(log.getText())
