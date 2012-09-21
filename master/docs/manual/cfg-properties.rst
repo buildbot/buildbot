@@ -108,9 +108,11 @@ Source Stamp Attributes
 ``repository``
 ``project``
 ``codebase``
-    For details of these attributes see :ref:`Concepts`.
+
+    For details of these attributes see :doc:`/manual/concepts`.
 
 ``changes``
+
     This attribute is a list of dictionaries reperesnting the changes that make up this sourcestamp.
 
 ``has_patch``
@@ -119,8 +121,8 @@ Source Stamp Attributes
 ``patch_subdir``
 ``patch_author``
 ``patch_comment``
-    These attributes are set if the source stamp was created by a :ref:`try scheduler<Try-Schedulers>`.
 
+    These attributes are set if the source stamp was created by a :ref:`try scheduler<Try-Schedulers>`.
 
 
 Using Properties in Steps
@@ -131,7 +133,9 @@ during a build.  This is done by annotating the step definition in
 ``master.cfg`` with placeholders.  When the step is executed, these
 placeholders will be replaced using the current values of the build properties.
 
-.. note:: Properties are defined while a build is in progress; their values are
+.. note::
+
+    Properties are defined while a build is in progress; their values are
     not available when the configuration file is parsed.  This can sometimes
     confuse newcomers to Buildbot!  In particular, the following is a common error::
 
@@ -250,14 +254,17 @@ Example ::
 
    from buildbot.steps.shell import ShellCommand
    from buildbot.process.properties import Interpolate
-   f.addStep(ShellCommand(command=[ 'make', Interpolate('REVISION=%(prop:got_revision:-%(src::revision:-unknwon)s)s')
+   f.addStep(ShellCommand(command=[ 'make', Interpolate('REVISION=%(prop:got_revision:-%(src::revision:-unknown)s)s')
                                     'dist' ]))
 
 In addition, ``Interpolate`` supports using positional string interpolation.
 Here, ``%s`` is used as a placeholder, and the substitutions (which may themselves be placeholders), are given as subsequent arguments::
 
-.. note: like python, you can use either positional interpolation *or* dictionary-style interpolation, not both.
-Thus you cannot use a string like ``Interpolate("foo-%(src::revision)s-%s", "branch")``.
+.. note:
+
+  Like python, you can use either positional interpolation *or*
+  dictionary-style interpolation, not both.  Thus you cannot use a string
+  like ``Interpolate("foo-%(src::revision)s-%s", "branch")``.
 
 .. index:: single; Properties; WithProperties
 
