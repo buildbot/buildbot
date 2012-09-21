@@ -493,8 +493,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.properties.setProperty('c', 'C', 'CC')
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
         self.expectTriggeredWith(a=({},
-                            dict(a=('A', 'AA (in triggering build)'),
-                                 b=('B', 'BB (in triggering build)'))))
+                            dict(a=('A', 'Trigger'),
+                                 b=('B', 'Trigger'))))
         return self.runStep()
 
     def test_interrupt(self):
