@@ -23,7 +23,7 @@ import sys
 import os
 import glob
 
-from distutils.core import setup, Command
+from distutils.core import setup
 from buildbot import version
 
 from distutils.command.install_data import install_data
@@ -195,10 +195,6 @@ else:
         'sqlalchemy-migrate ==0.6.1, ==0.7.0, ==0.7.1, ==0.7.2',
         'python-dateutil==1.5',
     ]
-    if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:
-        setup_args['setup_requires'] = [
-            'setuptools_trial',
-        ]
     setup_args['tests_require'] = [
         'mock',
     ]
