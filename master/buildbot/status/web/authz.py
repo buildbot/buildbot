@@ -168,7 +168,7 @@ class Authz(object):
         def check_authenticate(res):
             if res:
                 cookie, s = self.sessions.new(user, self.auth.getUserInfo(user))
-                request.addCookie(COOKIE_KEY, cookie, s.getExpiration(),path="/")
+                request.addCookie(COOKIE_KEY, cookie, expires=s.getExpiration(),path="/")
                 request.received_cookies = {COOKIE_KEY:cookie}
                 return cookie
             else:
