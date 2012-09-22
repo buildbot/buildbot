@@ -56,4 +56,10 @@ Older Versions
 --------------
 
 Release notes for older versions of Buildbot are available in the :bb:src:`master/docs/release-notes/` directory of the source tree.
-Starting with version 0.8.6, they are also available under the appropriate version at http://buildbot.net/buildbot/docs.
+Newer versions are also available here:
+
+.. toctree::
+    :maxdepth: 1
+
+    0.8.7
+    0.8.6
