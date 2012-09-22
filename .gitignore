@@ -35,4 +35,3 @@ common/googlecode_upload.py
 master/docs/tutorial/_build
 _build
 .tox
-master/setuptools_trial*

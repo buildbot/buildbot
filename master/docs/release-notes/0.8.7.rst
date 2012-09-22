@@ -30,8 +30,9 @@ Features
 * The ``Git`` step has a new ``getDescription`` option, which will run ``git describe`` after checkout
   normally.  See :bb:step:`Git` for details.
 
-* A new ternary substitution operator ``:?:`` and ``:#?:`` is available with the ``Interpolate``
-  and ``WithProperties`` classes.
+* A new interpolation placeholder :ref:`Interpolate`, with more regular syntax, is available.
+
+* A new ternary substitution operator ``:?`` and ``:#?`` is available with the ``Interpolate`` class.
 
 * ``IRenderable.getRenderingFor`` can now return a deferred.
 
@@ -67,6 +68,7 @@ Features
 * The :bb:status:`MailNotifier` now takes a callable to calculate the "previous" build for purposes of determining status changes.
   See :bb:pull:`489`.
 
+* The ``copy_properties`` parameter, given a list of properties to copy into the new build request, has been deprecated in favor of explicit use of ``set_properties``.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -148,6 +150,34 @@ Deprecations, Removals, and Non-Compatible Changes
 * The format of the changes produced by :bb:chsrc:`SVNPoller` has changed: directory pathnames end with a forward slash.
   This allows the ``split_file`` function to distinguish between files and directories.
   Customized split functions may need to be adjusted accordingly.
+
+* :ref:`WithProperties` has been deprecated in favor of :ref:`Interpolate`.
+  `Interpolate` doesn't handle functions as keyword arguments.
+  The following code using ``WithProperties`` ::
+
+    from buildbot.process.properties import WithProperties
+    def determine_foo(props):
+        if props.hasProperty('bar'):
+            return props['bar']
+        elif props.hasProperty('baz'):
+            return props['baz']
+        return 'qux'
+    WithProperties('%(foo)s', foo=determine_foo)
+
+  can be replaced with ::
+
+    from zope.interface import implementer
+    from buildbot.interfaces import IRenderable
+    from buildbot.process.properties import Interpolate
+    @implementer(IRenderable)
+    class determineFoo(object):
+        def getRenderingFor(self, props):
+            if props.hasProperty('bar'):
+                return props['bar']
+            elif props.hasProperty('baz'):
+                return props['baz']
+            return 'qux'
+    Interpolate('%s(kw:foo)s', foo=determineFoo())
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

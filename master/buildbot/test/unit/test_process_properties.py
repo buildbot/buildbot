@@ -20,7 +20,7 @@ from twisted.trial import unittest
 from twisted.python import components
 from buildbot.process.properties import Properties, WithProperties
 from buildbot.process.properties import Interpolate
-from buildbot.process.properties import Property, PropertiesMixin
+from buildbot.process.properties import Property, PropertiesMixin, renderer
 from buildbot.interfaces import IRenderable, IProperties
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.properties import ConstantRenderable
@@ -198,58 +198,6 @@ class TestPropertyMap(unittest.TestCase):
     def testColonPlusUnset(self):
         return self.doTestSimpleWithProperties('%(prop_nosuch:+present)s', '')
 
-
-    def testColonTernarySet(self):
-        return self.doTestSimpleWithProperties('%(prop_str:?:present:missing)s', 'present')
-
-    def testColonTernaryNone(self):
-        return self.doTestSimpleWithProperties('%(prop_none:?:present:missing)s', 'present')
-
-    def testColonTernaryZero(self):
-        return self.doTestSimpleWithProperties('%(prop_zero:?|present|missing)s', 'present')
-
-    def testColonTernaryOne(self):
-        return self.doTestSimpleWithProperties('%(prop_one:?:present:missing)s', 'present')
-
-    def testColonTernaryFalse(self):
-        return self.doTestSimpleWithProperties('%(prop_false:?|present|missing)s', 'present')
-
-    def testColonTernaryTrue(self):
-        return self.doTestSimpleWithProperties('%(prop_true:?:present:missing)s', 'present')
-
-    def testColonTernaryEmpty(self):
-        return self.doTestSimpleWithProperties('%(prop_empty:?ApresentAmissing)s', 'present')
-
-    def testColonTernaryUnset(self):
-        return self.doTestSimpleWithProperties('%(prop_nosuch:?#present#missing)s', 'missing')
-
-
-    def testColonTernaryHashSet(self):
-        return self.doTestSimpleWithProperties('%(prop_str:#?:truish:falsish)s', 'truish')
-        
-    def testColonTernaryHashNone(self):
-        # None is special-cased *differently* for '#?'
-        return self.doTestSimpleWithProperties('%(prop_none:#?|truish|falsish)s', 'falsish')
-
-    def testColonTernaryHashZero(self):
-        return self.doTestSimpleWithProperties('%(prop_zero:#?:truish:falsish)s', 'falsish')
-
-    def testColonTernaryHashOne(self):
-        return self.doTestSimpleWithProperties('%(prop_one:#?:truish:falsish)s', 'truish')
-
-    def testColonTernaryHashFalse(self):
-        return self.doTestSimpleWithProperties('%(prop_false:#?:truish:falsish)s', 'falsish')
-
-    def testColonTernaryHashTrue(self):
-        return self.doTestSimpleWithProperties('%(prop_true:#?|truish|falsish)s', 'truish')
-
-    def testColonTernaryHashEmpty(self):
-        return self.doTestSimpleWithProperties('%(prop_empty:#?:truish:falsish)s', 'falsish')
-
-    def testColonTernaryHashUnset(self):
-        return self.doTestSimpleWithProperties('%(prop_nosuch:#?.truish.falsish)s', 'falsish')
-
-
     def testClearTempValues(self):
         d = self.doTestSimpleWithProperties('', '',
                 prop_temp=lambda b: 'present')
@@ -325,23 +273,6 @@ class TestPropertyMap(unittest.TestCase):
     def testTempValuePlusUnsetSet(self):
         return self.doTestSimpleWithProperties('%(prop_nosuch:+set)s', 'set',
                 prop_nosuch=lambda b: 1)
-
-
-    def testTempValueColonTernaryTrue(self):
-        return self.doTestSimpleWithProperties('%(prop_temp:?:present:missing)s', 'present',
-                prop_temp=lambda b: True)
-
-    def testTempValueColonTernaryFalse(self):
-        return self.doTestSimpleWithProperties('%(prop_temp:?|present|missing)s', 'present',
-                prop_temp=lambda b: False)
-
-    def testTempValueColonTernaryHashTrue(self):
-        return self.doTestSimpleWithProperties('%(prop_temp:#?|truish|falsish)s', 'truish',
-                prop_temp=lambda b: 1)
-
-    def testTempValueColonTernaryHashFalse(self):
-        return self.doTestSimpleWithProperties('%(prop_temp:#?|truish|falsish)s', 'falsish',
-                prop_nosuch=lambda b: 0)
 
 
 class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
@@ -870,15 +801,6 @@ class TestWithProperties(unittest.TestCase):
                              "build-exists-.tar.gz")
         return d
 
-    def testDictColonTernary(self):
-        # test dict-style substitution with WithProperties
-        self.props.setProperty("prop1", "foo", "test")
-        command = WithProperties("build-%(prop1:?:exists:missing)s-%(prop2:?:exists:missing)s.tar.gz")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                             "build-exists-missing.tar.gz")
-        return d
-
     def testEmpty(self):
         # None should render as ''
         self.props.setProperty("empty", None, "test")
@@ -1308,3 +1230,48 @@ class TestRenderalbeAdapters(unittest.TestCase):
         k2.callback("dict")
         r2.callback("lookup")
         return d
+
+class Renderer(unittest.TestCase):
+
+    def setUp(self):
+        self.props = Properties()
+        self.build = FakeBuild(self.props)
+
+
+    def test_renderer(self):
+        self.props.setProperty("x", "X", "test")
+        d = self.build.render(
+            renderer(lambda p : 'x%sx' % p.getProperty('x')))
+        d.addCallback(self.failUnlessEqual, 'xXx')
+        return d
+
+    def test_renderer_called(self):
+        # it's tempting to try to call the decorated function.  Don't do that.
+        # It's not a function anymore.
+        d = defer.maybeDeferred(lambda :
+                self.build.render(renderer(lambda p : 'x')('y')))
+        self.failUnlessFailure(d, TypeError)
+        return d
+
+    def test_renderer_decorator(self):
+        self.props.setProperty("x", "X", "test")
+        @renderer
+        def rend(p):
+            return 'x%sx' % p.getProperty('x')
+        d = self.build.render(rend)
+        d.addCallback(self.failUnlessEqual, 'xXx')
+        return d
+
+    def test_renderer_deferred(self):
+        self.props.setProperty("x", "X", "test")
+        d = self.build.render(
+            renderer(lambda p : defer.succeed('y%sy' % p.getProperty('x'))))
+        d.addCallback(self.failUnlessEqual, 'yXy')
+        return d
+
+    def test_renderer_fails(self):
+        d = self.build.render(
+            renderer(lambda p : defer.fail(RuntimeError("oops"))))
+        self.failUnlessFailure(d, RuntimeError)
+        return d
+

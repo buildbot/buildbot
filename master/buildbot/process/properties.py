@@ -200,17 +200,6 @@ class _PropertyMap(object):
     colon_minus_re = re.compile(r"(.*):-(.*)")
     colon_tilde_re = re.compile(r"(.*):~(.*)")
     colon_plus_re = re.compile(r"(.*):\+(.*)")
-    
-    colon_ternary_re = re.compile(r"""(?P<prop>.*) # the property to match
-                                      :            # colon
-                                      (?P<alt>\#)? # might have the alt marker '#'
-                                      \?           # question mark
-                                      (?P<delim>.) # the delimiter
-                                      (?P<true>.*) # sub-if-true
-                                      (?P=delim)   # the delimiter again
-                                      (?P<false>.*)# sub-if-false
-                                      """, re.VERBOSE)
-
     def __init__(self, properties):
         # use weakref here to avoid a reference loop
         self.properties = weakref.ref(properties)
@@ -251,38 +240,10 @@ class _PropertyMap(object):
             else:
                 return ''
 
-        def colon_ternary(mo):
-            # %(prop:?:T:F)s
-            # if prop exists, use T; otherwise, F
-            # %(prop:#?:T:F)s
-            # if prop is true, use T; otherwise, F
-            groups = mo.groupdict()
-            
-            prop = groups['prop']
-            
-            if prop in self.temp_vals:
-                if groups['alt']:
-                    use_true = self.temp_vals[prop]
-                else:
-                    use_true = True
-            elif properties.has_key(prop):
-                if groups['alt']:
-                    use_true = properties[prop]
-                else:
-                    use_true = True
-            else:
-                use_true = False
-            
-            if use_true:
-                return groups['true']
-            else:
-                return groups['false']
-
         for regexp, fn in [
             ( self.colon_minus_re, colon_minus ),
             ( self.colon_tilde_re, colon_tilde ),
             ( self.colon_plus_re, colon_plus ),
-            ( self.colon_ternary_re, colon_ternary ),
             ]:
             mo = regexp.match(key)
             if mo:
@@ -608,6 +569,14 @@ class Property(util.ComparableMixin):
                 return props.render(props.getProperty(self.key))
             else:
                 return props.render(self.default)
+
+class _Renderer(object):
+    implements(IRenderable)
+    def __init__(self, fn):
+        self.getRenderingFor = fn
+
+def renderer(fn):
+    return _Renderer(fn)
 
 class _DefaultRenderer(object):
     """
