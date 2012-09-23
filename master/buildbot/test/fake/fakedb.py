@@ -788,8 +788,9 @@ class FakeBuildsetsComponent(FakeDBComponent):
             if 'brids' in expected_buildset:
                 buildset['brids'] = self.allBuildRequests(bsid)
         else:
-            buildset = None
-            assert expected_buildset is None
+            # didn't get a buildset, so hopefully we didn't expect one
+            self.assertEqual(None, expected_buildset)
+            return
 
         dictOfssDict= {}
         for sourcestamp in self.db.sourcestamps.sourcestamps.itervalues():
