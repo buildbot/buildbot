@@ -204,7 +204,7 @@ class Try_Jobdir(TryBase):
         def create_buildset(setid):
             reason = u"'try' job"
             if parsed_job['who']:
-                reason += u" by user %s" % parsed_job['who'].decode('utf-8')
+                reason += u" by user %s" % ascii2unicode(parsed_job['who']),
             properties = parsed_job['properties']
             requested_props = Properties()
             requested_props.update(properties, "try build")
@@ -212,7 +212,7 @@ class Try_Jobdir(TryBase):
                 ssid=None,
                 setid=setid,
                 reason=reason,
-                external_idstring=parsed_job['jobid'].decode('utf-8'),
+                external_idstring=ascii2unicode(parsed_job['jobid']),
                 builderNames=builderNames,
                 properties=requested_props)
         d.addCallback(create_buildset)
@@ -239,10 +239,10 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         reason = u"'try' job"
 
         if who:
-            reason += " by user %s" % ascii2unicode(who)
+            reason += u" by user %s" % ascii2unicode(who)
 
         if comment:
-            reason += " (%s)" % ascii2unicode(comment)
+            reason += u" (%s)" % ascii2unicode(comment)
 
         sourcestampsetid = yield db.sourcestampsets.addSourceStampSet()
 
