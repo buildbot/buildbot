@@ -97,7 +97,7 @@ class OldTriggeringMethods(unittest.TestCase):
                 exp_data_kwargs=dict(properties={ u'a' : u'b'}))
 
     def test_addChange_args_properties_tuple(self):
-        # properties should notrbe qualified with a source
+        # properties should not be qualified with a source
         return self.do_test_addChange_args(
                 kwargs=dict(properties={ 'a' : ('b', 'Change') }),
                 exp_data_kwargs=dict(properties={ 'a' : ('b', 'Change') }))
