@@ -7,6 +7,7 @@ Release Notes for Buildbot v0.8.7
     changes can be given a subsection of their own.
 
 The following are the release notes for Buildbot v0.8.7.
+Buildbot v0.8.7 was released on September 22, 2012.
 
 Master
 ------
