@@ -204,7 +204,7 @@ class Try_Jobdir(TryBase):
         def create_buildset(setid):
             reason = u"'try' job"
             if parsed_job['who']:
-                reason += u" by user %s" % ascii2unicode(parsed_job['who']),
+                reason += u" by user %s" % ascii2unicode(parsed_job['who'])
             properties = parsed_job['properties']
             requested_props = Properties()
             requested_props.update(properties, "try build")
