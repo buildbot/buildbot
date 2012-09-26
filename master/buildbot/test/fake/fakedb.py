@@ -628,6 +628,34 @@ class FakeSourceStampsComponent(FakeDBComponent):
                 sslist.append(ssdictcpy)
         return defer.succeed(sslist)
 
+    # assertions
+
+    def assertSourceStamps(self, sourcestampsetid, sourcestamps):
+        """Assert that the given sourcestamp set consist of the given
+        sourcestamps (munged about significantly)."""
+        got = []
+        for ssdict in self.sourcestamps.itervalues():
+            if ssdict['sourcestampsetid'] == sourcestampsetid:
+                ss = self._getSourceStamp(ssdict['id'])
+                del ss['ssid']
+                if not ss['changeids']:
+                    del ss['changeids']
+                else:
+                    ss['changeids'] = sorted(list(ss['changeids']))
+                del ss['sourcestampsetid']
+                got.append(ss)
+
+        exp = [ ss.copy() for ss in sourcestamps ]
+        for ss in exp:
+            for k in ('patch_body', 'patch_level', 'patch_subdir',
+                      'patch_author', 'patch_comment'):
+                ss.setdefault(k, None)
+            if 'changeids' in ss:
+                ss['changeids'] = sorted(list(ss['changeids']))
+
+        self.t.assertEqual(sorted(got), sorted(exp))
+
+
 class FakeBuildsetsComponent(FakeDBComponent):
 
     def setUp(self):
@@ -789,15 +817,14 @@ class FakeBuildsetsComponent(FakeDBComponent):
                 buildset['brids'] = self.allBuildRequests(bsid)
         else:
             # didn't get a buildset, so hopefully we didn't expect one
-            self.assertEqual(None, expected_buildset)
+            self.t.assertEqual(None, expected_buildset)
             return
 
         dictOfssDict= {}
         for sourcestamp in self.db.sourcestamps.sourcestamps.itervalues():
             if not buildset or sourcestamp['sourcestampsetid'] == buildset['sourcestampsetid']:
                 ssdict = sourcestamp.copy()
-                ss_repository = ssdict['codebase']
-                dictOfssDict[ss_repository] = ssdict
+                dictOfssDict[ssdict['codebase']] = ssdict
 
         for ss in dictOfssDict.itervalues():
             if 'id' in ss:

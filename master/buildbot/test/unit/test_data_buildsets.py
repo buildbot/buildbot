@@ -142,8 +142,9 @@ class BuildsetResourceType(unittest.TestCase):
         def check((bsid, brids)):
             self.assertEqual((bsid, brids), expectedReturn)
             # check the correct message was received
-            self.assertEqual(sorted(self.master.mq.productions),
-                    sorted(expectedMessages))
+            self.assertEqual(
+                sorted(self.master.mq.productions),
+                sorted(expectedMessages))
             # and that the correct data was inserted into the db
             self.master.db.buildsets.assertBuildset(bsid, expectedBuildset, {})
         d.addCallback(check)

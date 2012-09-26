@@ -105,7 +105,7 @@ class FakeUpdates(object):
         self.buildsetsAdded[-1].pop('self')
 
         # call through to the db layer, since many scheduler tests expect to
-        # find the buildset in the db later
+        # find the buildset in the db later - TODO fix this!
         bsid, brids = yield self.master.db.buildsets.addBuildset(
                 sourcestampsetid=sourcestampsetid, reason=reason,
                 properties=properties, builderNames=builderNames,
