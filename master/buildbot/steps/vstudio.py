@@ -96,19 +96,21 @@ class VisualStudio(ShellCommand):
 
     projectfile = None
     config = None
+    platform = None
     useenv = False
     project = None
     PATH = []
     INCLUDE = []
     LIB = []
 
-    renderables = [ 'projectfile', 'config', 'project' ]
+    renderables = [ 'projectfile', 'config', 'platform', 'project' ]
 
     def __init__(self,
                 installdir = None,
                 mode = "rebuild",
                 projectfile = None,
-                config = 'release',
+                config = None,
+                platform = None,
                 useenv = False,
                 project = None,
                 INCLUDE = [],
@@ -119,6 +121,7 @@ class VisualStudio(ShellCommand):
         self.mode = mode
         self.projectfile = projectfile
         self.config = config
+        self.platform = platform
         self.useenv = useenv
         self.project = project
         if len(INCLUDE) > 0:
@@ -261,7 +264,7 @@ class VC7(VisualStudio):
         addEnvPath(cmd.args['env'], "LIB", VCInstallDir + '\\SDK\\v1.1\\lib')
 
     def start(self):
-        command = ["devenv.com"]
+        command = ["devenv"]
         command.append(self.projectfile)
         if self.mode == "rebuild":
             command.append("/Rebuild")
@@ -357,3 +360,33 @@ class VC10(VC9):
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 10.0'
 
 VS2010 = VC10
+
+class MsBuild(VC10):
+    def setupEnvironment(self, cmd):
+        VisualStudio.setupEnvironment(self, cmd)
+        cmd.args['env']['VCENV_BAT'] = "\"${VS110COMNTOOLS}..\\..\\VC\\vcvarsall.bat\""
+
+    def describe(self, done=False):
+        s = "building "
+        if done:
+            s = "built "
+        if self.project is not None:
+            s += "%s for %s|%s" % (self.project, self.config, self.platform)
+        else:
+            s += "solution for %s|%s" % (self.config, self.platform)
+        return s.split()
+
+    def start(self):
+        command = ["%VCENV_BAT%"]
+        command.append("x86")
+        command.append("&&")
+        command.append("msbuild")
+        command.append(self.projectfile)
+        command.append("/p:Configuration=%s" % (self.config))
+        command.append("/p:Platform=%s" % (self.platform))
+        if self.project is not None:
+            command.append("/t:%s" % (self.project))
+
+        self.setCommand(command)
+
+        return VisualStudio.start(self)
