@@ -326,6 +326,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         text += "Sincerely,\n"
         text += " The Buildbot\n"
         text += " %s\n" % status.getTitleURL()
+        text += "\n"
+        text += "%s\n" % status.getURLForThing(self.slave_status)
         subject = "Buildbot: buildslave %s was lost" % self.slavename
         return self._mail_missing_message(subject, text)
 

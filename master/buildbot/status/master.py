@@ -160,6 +160,11 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         # IBuildSetStatus
         # IBuildRequestStatus
         # ISlaveStatus
+        if interfaces.ISlaveStatus.providedBy(thing):
+            slave = thing
+            return prefix + "buildslaves/%s" % (
+                    urllib.quote(slave.getName(), safe=''),
+                    )
 
         # IStatusEvent
         if interfaces.IStatusEvent.providedBy(thing):
