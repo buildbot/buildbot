@@ -143,16 +143,17 @@ class ForceBuildActionResource(ActionResource):
                                "forcescheduler arg not found"))
             return
 
-        args = req.args.copy()
-
+        args = {}
         # decode all of the args
         encoding = getRequestCharset(req)
-        for name, argl in args.iteritems():
-            args[name] = [ arg.decode(encoding) for arg in argl ]
-
-        # damn html's ungeneric checkbox implementation...
-        for cb in args.get("checkbox", []):
-            args[cb] = True
+        for name, argl in req.args.iteritems():
+            name = name.decode(encoding)
+            if name == 'checkbox':
+                # damn html's ungeneric checkbox implementation...
+                for cb in argl:
+                    args[cb] = True
+            else:
+                args[name] = [ arg.decode(encoding) for arg in argl ]
 
         builder_name = self.builder_status.getName()
 
