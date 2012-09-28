@@ -77,17 +77,21 @@ class RemoveDirectory(base.Command):
         self.sendStatus({'rc': self.rc})
 
     def removeSingleDir(self, dirname):
+        if runtime.platformType == "win32":
+            dirname = os.path.join(*dirname.split('/'))
         self.dir = os.path.join(self.builder.basedir, dirname)
-        if runtime.platformType != "posix":
-            d = threads.deferToThread(utils.rmdirRecursive, self.dir)
+        if runtime.platformType == "win32":
+            d = self._clobberWin(None)
+        elif runtime.platformType == "posix":
+            d = self._clobber(None)
+        else:
+            d = threads.deferToThread(shutil.rmtree, self.dir)
             def cb(_):
                 return 0 # rc=0
             def eb(f):
                 self.sendStatus({'header' : 'exception from rmdirRecursive\n' + f.getTraceback()})
                 return -1 # rc=-1
             d.addCallbacks(cb, eb)
-        else:
-            d = self._clobber(None)
 
         return d
 
@@ -129,6 +133,30 @@ class RemoveDirectory(base.Command):
         self.command = c
         d = c.start()
         d.addCallback(lambda dummy: self._clobber(dummy, True))
+        return d
+
+    def _clobberWin(self, rc, firstTry=True):
+
+        if not firstTry:
+            if self.command.stderr.find('The directory is not empty.') == -1:
+                log.msg('First rmdir went fine.')
+                # First time was good
+                return defer.succeed(0)
+            log.msg('First rmdir failed, trying again ...')
+
+        command = ['rmdir', '/Q', '/S', self.dir]
+        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
+                         sendRC=False, timeout=self.timeout, maxTime=self.maxTime,
+                         logEnviron=self.logEnviron, usePTY=False, keepStderr=True)
+
+        self.command = c
+
+        d = c.start()
+
+        if firstTry:
+            # Being called for the first time
+            # queue another instance in case we fails
+            d.addCallback(lambda rc: self._clobberWin(rc, False))
         return d
 
 class CopyDirectory(base.Command):
