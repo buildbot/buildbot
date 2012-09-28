@@ -361,7 +361,7 @@ VS2010 = VC10
 class MsBuild(VisualStudio):
     platform = None
 
-    def __init__(self, platform = None, **kwargs):
+    def __init__(self, platform, **kwargs):
         self.platform = platform
         VisualStudio.__init__(self, **kwargs)
 
@@ -370,18 +370,22 @@ class MsBuild(VisualStudio):
         cmd.args['env']['VCENV_BAT'] = "\"${VS110COMNTOOLS}..\\..\\VC\\vcvarsall.bat\""
 
     def describe(self, done=False):
-        rv = list()
+        rv = []
         if done:
-            rv.append("built ")
+            rv.append("built")
         else:
-            rv.append("building ")
+            rv.append("building")
         if self.project is not None:
-            rv.append("%s for %s|%s" % (self.project, self.config, self.platform))
+            rv.append("%s for" % (self.project))
         else:
-            rv.append("solution for %s|%s" % (self.config, self.platform))
+            rv.append("solution for")
+        rv.append("%s|%s" % (self.config, self.platform))
         return rv
 
     def start(self):
+        if self.platform is None:
+            config.error('platform is mandatory. Please specify a string such as "Win32"')
+
         command = ["%VCENV_BAT%",
                    "x86",
                    "&&",
