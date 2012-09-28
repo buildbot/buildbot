@@ -15,11 +15,7 @@
 
 # Visual studio steps
 
-from twisted.python import log
-from twisted.internet import defer
-
 from buildbot.steps.shell import ShellCommand
-from buildbot.process import buildstep
 from buildbot.process.buildstep import LogLineObserver
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 
@@ -86,6 +82,10 @@ class VisualStudio(ShellCommand):
     description = "compiling"
     descriptionDone = "compile"
 
+
+    progressMetrics = ( ShellCommand.progressMetrics +
+                            ('projects', 'files','warnings',))
+
     logobserver = None
 
     installdir = None
@@ -132,21 +132,6 @@ class VisualStudio(ShellCommand):
             self.PATH = PATH
         # always upcall !
         ShellCommand.__init__(self, **kwargs)
-        self.addFactoryArguments(
-            installdir = installdir,
-            mode = mode,
-            projectfile = projectfile,
-            config = config,
-            useenv = useenv,
-            project = project,
-            INCLUDE = INCLUDE,
-            LIB = LIB,
-            PATH = PATH
-        )
-
-    def setupProgress(self):
-        self.progressMetrics += ('projects', 'files', 'warnings',)
-        return ShellCommand.setupProgress(self)
 
     def setupLogfiles(self, cmd, logfiles):
         logwarnings = self.addLog("warnings")
@@ -194,7 +179,7 @@ class VisualStudio(ShellCommand):
         self.step_status.setStatistic('errors', self.logobserver.nbErrors)
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         if self.logobserver.nbErrors > 0:
             return FAILURE
@@ -242,6 +227,8 @@ class VC6(VisualStudio):
             command.append("ALL - " + self.config)
         if self.mode == "rebuild":
             command.append("/REBUILD")
+        elif self.mode == "clean":
+            command.append("/CLEAN")
         else:
             command.append("/BUILD")
         if self.useenv:
@@ -279,6 +266,8 @@ class VC7(VisualStudio):
         command.append(self.projectfile)
         if self.mode == "rebuild":
             command.append("/Rebuild")
+        elif self.mode == "clean":
+            command.append("/Clean")
         else:
             command.append("/Build")
         command.append(self.config)
@@ -306,7 +295,6 @@ class VC8(VC7):
 
         # always upcall !
         VisualStudio.__init__(self, **kwargs)
-        self.addFactoryArguments(arch = arch)
 
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
@@ -346,6 +334,8 @@ class VCExpress9(VC8):
         command.append(self.projectfile)
         if self.mode == "rebuild":
             command.append("/Rebuild")
+        elif self.mode == "clean":
+            command.append("/Clean")
         else:
             command.append("/Build")
         command.append(self.config)
@@ -375,7 +365,6 @@ class MsBuild(VisualStudio):
     def __init__(self, platform = None, **kwargs):
         self.platform = platform
         VisualStudio.__init__(self, **kwargs)
-        self.addFactoryArguments(platform = platform)
 
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
