@@ -89,6 +89,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         self.config = builder_config
 
+        self.builder_status.setDescription(builder_config.description)
         self.builder_status.setCategory(builder_config.category)
         self.builder_status.setSlavenames(self.config.slavenames)
         self.builder_status.setCacheSize(new_config.caches['Builds'])

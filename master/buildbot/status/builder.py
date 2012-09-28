@@ -270,6 +270,10 @@ class BuilderStatus(styles.Versioned):
         # str(self.name) may be a workaround
         return self.name
 
+    def setDescription(self, description):
+        # used during reconfig
+        self.description = description
+
     def getDescription(self):
         return self.description
 
