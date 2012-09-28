@@ -714,6 +714,8 @@ class BuilderConfig:
             rv['properties'] = self.properties
         if self.mergeRequests:
             rv['mergeRequests'] = self.mergeRequests
+        if self.description:
+            rv['description'] = self.description
         return rv
 
 
