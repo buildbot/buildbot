@@ -31,20 +31,21 @@ buildslave:
 
 Python: http://www.python.org
 
-  Buildbot requires python-2.4 or later.  Buildbot versions later than 0.8.6
-  will require Python-2.5, and Python-2.7 is recommended.
+  Buildbot requires python-2.5 or later on the master, although Python-2.7 is
+  recommended.  The slave run on Python-2.4.
 
 Twisted: http://twistedmatrix.com
 
-  Both the buildmaster and the buildslaves require Twisted-8.0.x or
-  later. As always, the most recent version is recommended.
+  Buildbot requires Twisted-9.0.0 or later on the master, and Twisted-8.1.0 on
+  the slave. As always, the most recent version is recommended.
 
-  Twisted is delivered as a collection of subpackages. You'll need at
-  least "Twisted" (the core package), and you'll also want `TwistedMail`_,
-  `TwistedWeb`_, and `TwistedWords`_ (for sending email, serving a web status
-  page, and delivering build status via IRC, respectively). You might
-  also want `TwistedConch`_ (for the encrypted Manhole debug port). Note
-  that Twisted requires ZopeInterface to be installed as well.
+  In some cases, Twisted is delivered as a collection of subpackages. You'll
+  need at least "Twisted" (the core package), and you'll also want
+  `TwistedMail`_, `TwistedWeb`_, and `TwistedWords`_ (for sending email,
+  serving a web status page, and delivering build status via IRC,
+  respectively). You might also want `TwistedConch`_ (for the encrypted Manhole
+  debug port). Note that Twisted requires ZopeInterface to be installed as
+  well.
 
 Of course, your project's build process will impose additional
 requirements on the buildslaves. These hosts must have all the tools
@@ -94,7 +95,6 @@ Jinja2: http://jinja.pocoo.org/
   Jinja2 is a general purpose templating language and is used by Buildbot
   to generate the HTML output.
 
-
 SQLAlchemy: http://www.sqlalchemy.org/
 
   Buildbot requires SQLAlchemy 0.6.0 or higher. SQLAlchemy allows Buildbot to
@@ -107,6 +107,12 @@ SQLAlchemy-Migrate: http://code.google.com/p/sqlalchemy-migrate/
   good, so other versions - newer or older - are unlikely to work correctly.
   Buildbot uses SQLAlchemy-Migrate to manage schema upgrades from version to
   version.
+
+Python-Dateutil: http://labix.org/python-dateutil
+
+  The Nightly scheduler requires Python-Dateutil version 1.5 (the last version
+  to support Python-2.x).  This is a small, pure-python library.  Buildbot will
+  function properly without it if the Nightlys scheduler is not used.
 
 .. _Installing-the-code:
   
@@ -172,6 +178,8 @@ when it tries to load the libaries, then something went wrong.
 Windows users will find these files in other places. You will need to
 make sure that python can find the libraries, and will probably find
 it convenient to have :command:`buildbot` on your :envvar:`PATH`.
+
+.. _Installation-in-a-Virtualenv:
 
 Installation in a Virtualenv
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -403,14 +411,12 @@ process does *not* edit your :file:`master.cfg` for you. So something like:
     # for using mysql:
     c['db_url'] = 'mysql://bbuser:<password>@localhost/buildbot'
 
-Once the parameter has been added, invoke ``upgrade-master`` with the
-``--db`` parameter, e.g.,
+Once the parameter has been added, invoke ``upgrade-master``.
+This will extract the DB url from your configuration file.
 
 .. code-block:: bash
 
-    buildbot upgrade-master --db=mysql://bbuser:<password>@localhost/buildbot
-
-The ``--db`` option must match the ``c['db_url']`` exactly.
+    buildbot upgrade-master
 
 See :ref:`Database-Specification` for more options to specify a database.
 
@@ -642,6 +648,26 @@ command line, like this
     specify a number or ``None`` to keep all :file:`twistd.log` files
     around. The default is 10.
 
+.. option:: --allow-shutdown
+    Can also be passed directly to the BuildSlave constructor in buildbot.tac.  If
+    set, it allows the buildslave to initiate a graceful shutdown, meaning that it
+    will ask the master to shut down the slave when the current build, if any, is
+    complete.
+
+    Setting allow_shutdown to ``file`` will cause the buildslave to watch
+    :file:`shutdown.stamp` in basedir for updates to its mtime.  When the mtime changes,
+    the slave will request a graceful shutdown from the master.  The file does not
+    need to exist prior to starting the slave.
+
+    Setting allow_shutdown to ``signal`` will set up a SIGHUP handler to start a
+    graceful shutdown.  When the signal is received, the slave will request a
+    graceful shutdown from the master.
+
+    The default value is ``None``, in which case this feature will be disabled.
+
+    Both master and slave must be at least version 0.8.3 for this feature to work.
+
+
 .. _Other-Buildslave-Configuration:
 
 Other Buildslave Configuration
@@ -659,25 +685,6 @@ Other Buildslave Configuration
     If you need a different encoding, this can be changed in your build slave's
     :file:`buildbot.tac` file by adding a ``unicode_encoding``
     argument  to the BuildSlave constructor.
-
-``allow_shutdown``
-    allow_shutdown can be passed to the BuildSlave constructor in buildbot.tac.  If
-    set, it allows the buildslave to initiate a graceful shutdown, meaning that it
-    will ask the master to shut down the slave when the current build, if any, is
-    complete.
-
-    Setting allow_shutdown to ``file`` will cause the buildslave to watch
-    :file:`shutdown.stamp` in basedir for updates to its mtime.  When the mtime changes,
-    the slave will request a graceful shutdown from the master.  The file does not
-    need to exist prior to starting the slave.
-
-    Setting allow_shutdown to ``signal`` will set up a SIGHUP handler to start a
-    graceful shutdown.  When the signal is received, the slave will request a
-    graceful shutdown from the master.
-
-    The default value is ``None``, in which case this feature will be disabled.
-
-    Both master and slave must be at least version 0.8.3 for this feature to work.
 
 .. code-block:: python
 

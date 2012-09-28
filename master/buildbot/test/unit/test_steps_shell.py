@@ -129,10 +129,33 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['echoing'], ['echoed']))
 
+    def test_describe_with_suffix(self):
+        step = shell.ShellCommand(command="echo hello", descriptionSuffix="suffix")
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                        (["'echo", "hello'", 'suffix'],)*2)
+
+    def test_describe_custom_with_suffix(self):
+        step = shell.ShellCommand(command="echo hello",
+                                  description=["echoing"], descriptionDone=["echoed"],
+                                  descriptionSuffix="suffix")
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (['echoing', 'suffix'], ['echoed', 'suffix']))
+
+    def test_describe_no_command_with_suffix(self):
+        step = shell.ShellCommand(workdir='build', descriptionSuffix="suffix")
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (['???', 'suffix'],)*2)
+
     def test_describe_unrendered_WithProperties(self):
         step = shell.ShellCommand(command=properties.WithProperties(''))
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['???'],)*2)
+
+    def test_describe_unrendered_WithProperties_list(self):
+        step = shell.ShellCommand(
+                command=[ 'x', properties.WithProperties(''), 'y' ])
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (["'x", "y'"],)*2)
 
     @compat.usesFlushLoggedErrors
     def test_describe_fail(self):
@@ -259,7 +282,24 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS, status_text=["'echo", "hello'"])
         return self.runStep()
-    
+
+    def test_run_decodeRC(self, rc=1, results=WARNINGS, extra_text = ["warnings"]):
+        self.setupStep(
+                shell.ShellCommand(workdir='build', command="echo hello",
+                decodeRC={1:WARNINGS}))
+        self.expectCommands(
+            ExpectShell(workdir='build', command='echo hello',
+                         usePTY="slave-config")
+            + rc
+        )
+        self.expectOutcome(result=results, status_text=["'echo", "hello'"]+extra_text)
+        return self.runStep()
+
+    def test_run_decodeRC_defaults(self):
+        return  self.test_run_decodeRC(2, FAILURE,extra_text=["failed"])
+
+    def test_run_decodeRC_defaults_0_is_failure(self):
+        return  self.test_run_decodeRC(0, FAILURE,extra_text=["failed"])
 
 
 
@@ -521,7 +561,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
 
         # Invoke the expected callbacks for the suppression file upload.  Note
         # that this assumes all of the remote_* are synchronous, but can be
-        # easily adapted to suit if that changes (using deferredGenerator)
+        # easily adapted to suit if that changes (using inlineCallbacks)
         def upload_behavior(command):
             writer = command.args['writer']
             writer.remote_write(supps_file)

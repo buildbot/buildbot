@@ -19,8 +19,9 @@ from twisted.trial import unittest
 from twisted.python import failure
 from twisted.internet import defer
 from buildbot import config
+from buildbot.status import master
 from buildbot.test.fake import fakedb, fakemaster
-from buildbot.process import builder
+from buildbot.process import builder, factory
 from buildbot.db import buildrequests
 from buildbot.util import epoch2datetime
 
@@ -37,14 +38,14 @@ class TestBuilderBuildCreation(unittest.TestCase):
     def makeBuilder(self, patch_random=False, **config_kwargs):
         """Set up C{self.bldr}"""
         self.bstatus = mock.Mock()
-        self.factory = mock.Mock()
+        self.factory = factory.BuildFactory()
         self.master = fakemaster.make_master()
         # only include the necessary required config, plus user-requested
         config_args = dict(name="bldr", slavename="slv", builddir="bdir",
                      slavebuilddir="sbdir", factory=self.factory)
         config_args.update(config_kwargs)
         builder_config = config.BuilderConfig(**config_args)
-        self.bldr = builder.Builder(builder_config.name)
+        self.bldr = builder.Builder(builder_config.name, _addServices=False)
         self.master.db = self.db = fakedb.FakeDBConnector(self)
         self.bldr.master = self.master
         self.bldr.botmaster = self.master.botmaster
@@ -61,9 +62,6 @@ class TestBuilderBuildCreation(unittest.TestCase):
             # last, based on its name
             self.patch(random, "choice",
                     lambda lst : sorted(lst, key=lambda m : m.name)[-1])
-
-        # we don't want the reclaim service running during tests..
-        self.bldr.reclaim_svc.disownServiceParent()
 
         self.bldr.startService()
 
@@ -89,12 +87,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
     # services
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_stopService_flushes(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder())
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder()
 
         # just check that stopService calls this and waits
         # for the deferred to fire
@@ -113,9 +108,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         # finish the maybeStartBuild invocation..
         long_d.callback(None)
 
-        wfd = defer.waitForDeferred(stop_d)
-        yield wfd
-        wfd.getResult()
+        yield stop_d
 
         # and then check that things happened in the right order
         self.assertEqual(events, [ 'long_d', 'stop_d' ])
@@ -137,42 +130,24 @@ class TestBuilderBuildCreation(unittest.TestCase):
         d.addErrback(eb)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_no_buildreqests(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder())
-        yield wfd
-        wfd.getResult()
-
+        yield self.makeBuilder()
         self.setSlaveBuilders({'test-slave11':1})
+        yield self.do_test_maybeStartBuild(exp_claims=[], exp_builds=[])
 
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(exp_claims=[], exp_builds=[]))
-        yield wfd
-        wfd.getResult()
-
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_no_slavebuilders(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder())
-        yield wfd
-        wfd.getResult()
-
+        yield self.makeBuilder()
         rows = [
             fakedb.BuildRequest(id=11, buildsetid=10, buildername="bldr"),
         ]
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[]))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[])
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_limited_by_slaves(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder(mergeRequests=False))
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder(mergeRequests=False)
 
         self.setSlaveBuilders({'test-slave1':1})
         rows = self.base_rows + [
@@ -181,18 +156,12 @@ class TestBuilderBuildCreation(unittest.TestCase):
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr",
                 submitted_at=135000),
         ]
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[10], exp_builds=[('test-slave1', [10])]))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[10], exp_builds=[('test-slave1', [10])])
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_limited_by_available_slaves(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder(mergeRequests=False))
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder(mergeRequests=False)
 
         self.setSlaveBuilders({'test-slave1':0, 'test-slave2':1})
         rows = self.base_rows + [
@@ -201,18 +170,12 @@ class TestBuilderBuildCreation(unittest.TestCase):
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr",
                 submitted_at=135000),
         ]
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[10], exp_builds=[('test-slave2', [10])]))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[10], exp_builds=[('test-slave2', [10])])
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_unlimited(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder(mergeRequests=False, patch_random=True))
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder(mergeRequests=False, patch_random=True)
 
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
@@ -221,144 +184,96 @@ class TestBuilderBuildCreation(unittest.TestCase):
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr",
                 submitted_at=135000),
         ]
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
+        yield self.do_test_maybeStartBuild(rows=rows,
                 exp_claims=[10, 11],
-                exp_builds=[('test-slave2', [10]), ('test-slave1', [11])]))
-        yield wfd
-        wfd.getResult()
+                exp_builds=[('test-slave2', [10]), ('test-slave1', [11])])
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_limited_by_requests(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder(mergeRequests=False, patch_random=True))
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder(mergeRequests=False, patch_random=True)
 
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[11], exp_builds=[('test-slave2', [11])]))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[11], exp_builds=[('test-slave2', [11])])
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_chooseSlave_None(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder())
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder()
 
         self.bldr._chooseSlave = lambda avail : defer.succeed(None)
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[]))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[])
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_chooseSlave_bogus(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder())
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder()
 
         self.bldr._chooseSlave = lambda avail : defer.succeed(mock.Mock())
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[]))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[])
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_chooseSlave_fails(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder())
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder()
 
         self.bldr._chooseSlave = lambda avail : defer.fail(RuntimeError("xx"))
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[], exp_fail=RuntimeError))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[], exp_fail=RuntimeError)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_chooseBuild_None(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder())
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder()
 
         self.bldr._chooseBuild = lambda reqs : defer.succeed(None)
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[]))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[])
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_chooseBuild_bogus(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder())
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder()
 
         self.bldr._chooseBuild = lambda reqs : defer.succeed(mock.Mock())
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[]))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[])
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_chooseBuild_fails(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder(patch_random=True))
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder(patch_random=True)
 
         self.bldr._chooseBuild = lambda reqs : defer.fail(RuntimeError("xx"))
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[], exp_fail=RuntimeError))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[], exp_fail=RuntimeError)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_mergeRequests_fails(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder(patch_random=True))
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder(patch_random=True)
 
         def _mergeRequests(breq, unclaimed_requests, mergeRequests_fn):
             return defer.fail(RuntimeError("xx"))
@@ -367,18 +282,12 @@ class TestBuilderBuildCreation(unittest.TestCase):
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[], exp_fail=RuntimeError))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[], exp_fail=RuntimeError)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_claim_race(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder(patch_random=True))
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder(patch_random=True)
 
         # fake a race condition on the buildrequests table
         old_claimBuildRequests = self.db.buildrequests.claimBuildRequests
@@ -400,32 +309,45 @@ class TestBuilderBuildCreation(unittest.TestCase):
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr",
                 submitted_at=135000),
         ]
-        wfd = defer.waitForDeferred(
-            self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[11], exp_builds=[('test-slave2', [11])]))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[11], exp_builds=[('test-slave2', [11])])
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_maybeStartBuild_builder_stopped(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder())
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder()
 
         # this will cause an exception if maybeStartBuild tries to start
         self.bldr.slaves = None
 
         # so we just hope this does not fail
-        wfd = defer.waitForDeferred(
-            self.bldr.stopService())
-        yield wfd
-        wfd.getResult()
+        yield self.bldr.stopService()
+        yield self.bldr.maybeStartBuild()
 
-        wfd = defer.waitForDeferred(
-            self.bldr.maybeStartBuild())
-        yield wfd
-        wfd.getResult()
+    @defer.inlineCallbacks
+    def test_maybeStartBuild_merge_ordering(self):
+        yield self.makeBuilder(patch_random=True)
+
+        self.setSlaveBuilders({'bldr':1})
+
+        # based on the build in bug #2249
+        rows = [
+            fakedb.SourceStampSet(id=1976),
+            fakedb.SourceStamp(id=1976, sourcestampsetid=1976),
+            fakedb.Buildset(id=1980, reason='scheduler', sourcestampsetid=1976,
+                submitted_at=1332024020.67792),
+            fakedb.BuildRequest(id=42880, buildsetid=1980,
+                submitted_at=1332024020.67792, buildername="bldr"),
+
+            fakedb.SourceStampSet(id=1977),
+            fakedb.SourceStamp(id=1977, sourcestampsetid=1977),
+            fakedb.Buildset(id=1981, reason='scheduler', sourcestampsetid=1977,
+                submitted_at=1332025495.19141),
+            fakedb.BuildRequest(id=42922, buildsetid=1981,
+                buildername="bldr", submitted_at=1332025495.19141),
+        ]
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[42880, 42922],
+                exp_builds=[('bldr', [42880, 42922])])
 
     # _chooseSlave
 
@@ -514,35 +436,22 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
     # _brdictToBuildRequest
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_brdictToBuildRequest(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder())
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder()
 
         # set up all of the data required for a BuildRequest object
-        wfd = defer.waitForDeferred(
-            self.db.insertTestData([
+        yield self.db.insertTestData([
                 fakedb.SourceStampSet(id=234),
                 fakedb.SourceStamp(id=234,sourcestampsetid=234),
                 fakedb.Buildset(id=30, sourcestampsetid=234, reason='foo',
                     submitted_at=1300305712, results=-1),
                 fakedb.BuildRequest(id=19, buildsetid=30, buildername='bldr',
                     priority=13, submitted_at=1300305712, results=-1),
-            ]))
-        yield wfd
-        wfd.getResult()
+            ])
 
-        wfd = defer.waitForDeferred(
-            self.db.buildrequests.getBuildRequest(19))
-        yield wfd
-        brdict = wfd.getResult()
-
-        wfd = defer.waitForDeferred(
-            self.bldr._brdictToBuildRequest(brdict))
-        yield wfd
-        br = wfd.getResult()
+        brdict = yield self.db.buildrequests.getBuildRequest(19)
+        br = yield self.bldr._brdictToBuildRequest(brdict)
 
         # just check that the BuildRequest looks reasonable -
         # test_process_buildrequest checks the whole thing
@@ -556,7 +465,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
     # _getMergeRequestsFn
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def do_test_getMergeRequestsFn(self, builder_param=None,
                     global_param=None, expected=0):
         cble = lambda : None
@@ -565,15 +474,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
         # omit the constructor parameter if None was given
         if builder_param is None:
-            wfd = defer.waitForDeferred(
-                self.makeBuilder())
-            yield wfd
-            wfd.getResult()
+            yield self.makeBuilder()
         else:
-            wfd = defer.waitForDeferred(
-                self.makeBuilder(mergeRequests=builder_param))
-            yield wfd
-            wfd.getResult()
+            yield self.makeBuilder(mergeRequests=builder_param)
 
         self.master.config.mergeRequests = global_param
 
@@ -608,16 +511,12 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
     # _mergeRequests
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_mergeRequests(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder())
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder()
 
         # set up all of the data required for a BuildRequest object
-        wfd = defer.waitForDeferred(
-            self.db.insertTestData([
+        yield self.db.insertTestData([
                 fakedb.SourceStampSet(id=234),
                 fakedb.SourceStamp(id=234, sourcestampsetid=234),
                 fakedb.Buildset(id=30, sourcestampsetid=234, reason='foo',
@@ -628,89 +527,139 @@ class TestBuilderBuildCreation(unittest.TestCase):
                     priority=13, submitted_at=1300305712, results=-1),
                 fakedb.BuildRequest(id=21, buildsetid=30, buildername='bldr',
                     priority=13, submitted_at=1300305712, results=-1),
-            ]))
-        yield wfd
-        wfd.getResult()
+            ])
 
-        wfd = defer.waitForDeferred(
-            defer.gatherResults([
+        brdicts = yield defer.gatherResults([
                 self.db.buildrequests.getBuildRequest(id)
                 for id in (19, 20, 21)
-            ]))
-        yield wfd
-        brdicts = wfd.getResult()
+            ])
 
         def mergeRequests_fn(builder, breq, other):
             # merge evens with evens, odds with odds
             return breq.id % 2 == other.id % 2
 
         # check odds
-        wfd = defer.waitForDeferred(
-            self.bldr._mergeRequests(brdicts[0], brdicts, mergeRequests_fn))
-        yield wfd
-        self.assertEqual(wfd.getResult(), [ brdicts[0], brdicts[2] ])
+        odds = yield self.bldr._mergeRequests(brdicts[0],
+                                brdicts, mergeRequests_fn)
+        self.assertEqual(odds, [ brdicts[0], brdicts[2] ])
 
         # check evens
-        wfd = defer.waitForDeferred(
-            self.bldr._mergeRequests(brdicts[1], brdicts, mergeRequests_fn))
-        yield wfd
-        self.assertEqual(wfd.getResult(), [ brdicts[1] ])
+        evens = yield self.bldr._mergeRequests(brdicts[1],
+                                brdicts, mergeRequests_fn)
+        self.assertEqual(evens, [ brdicts[1] ])
 
-    @defer.deferredGenerator
+        # check original relative order of requests within brdicts is maintained
+        merged = yield self.bldr._mergeRequests(brdicts[2],
+                                                brdicts, mergeRequests_fn)
+        self.assertEqual(merged, [brdicts[0], brdicts[2]],
+                         'relative order of merged requests was not maintained')
+
+    @defer.inlineCallbacks
+    def test_mergeRequest_no_other_request(self):
+        """ Test if builder test for codebases in requests """
+        yield self.makeBuilder()
+
+        # set up all of the data required for a BuildRequest object
+        yield self.db.insertTestData([
+                fakedb.SourceStampSet(id=234),
+                fakedb.SourceStamp(id=234, sourcestampsetid=234, codebase='A'),
+                fakedb.Change(changeid=14, codebase='A'),
+                fakedb.SourceStampChange(sourcestampid=234, changeid=14),
+                fakedb.Buildset(id=30, sourcestampsetid=234, reason='foo',
+                    submitted_at=1300305712, results=-1),
+                fakedb.BuildRequest(id=19, buildsetid=30, buildername='bldr',
+                    priority=13, submitted_at=1300305712, results=-1),
+            ])
+
+        brdicts = yield defer.gatherResults([
+                self.db.buildrequests.getBuildRequest(19)
+            ])
+
+        def mergeRequests_fn(builder, breq, other):
+            # Allow all requests
+            return True
+
+        # check if the request remains the same
+        res = yield self.bldr._mergeRequests(brdicts[0], brdicts,
+                                            mergeRequests_fn)
+        self.assertEqual(res, [ brdicts[0] ])
+
+    @defer.inlineCallbacks
+    def test_mergeRequests_codebases_equal(self):
+        """ Test if builder test for codebases in requests """
+        yield self.makeBuilder()
+
+        # set up all of the data required for a BuildRequest object
+        yield self.db.insertTestData([
+                fakedb.SourceStampSet(id=234),
+                fakedb.SourceStamp(id=234, sourcestampsetid=234, codebase='A'),
+                fakedb.Buildset(id=30, sourcestampsetid=234, reason='foo',
+                    submitted_at=1300305712, results=-1),
+                fakedb.SourceStampSet(id=235),
+                fakedb.SourceStamp(id=235, sourcestampsetid=235, codebase='A'),
+                fakedb.Buildset(id=31, sourcestampsetid=235, reason='foo',
+                    submitted_at=1300305712, results=-1),
+                fakedb.SourceStampSet(id=236),
+                fakedb.SourceStamp(id=236, sourcestampsetid=236, codebase='A'),
+                fakedb.Buildset(id=32, sourcestampsetid=236, reason='foo',
+                    submitted_at=1300305712, results=-1),
+                fakedb.BuildRequest(id=19, buildsetid=30, buildername='bldr',
+                    priority=13, submitted_at=1300305712, results=-1),
+                fakedb.BuildRequest(id=20, buildsetid=31, buildername='bldr',
+                    priority=13, submitted_at=1300305712, results=-1),
+                fakedb.BuildRequest(id=21, buildsetid=32, buildername='bldr',
+                    priority=13, submitted_at=1300305712, results=-1),
+            ])
+
+        brdicts = yield defer.gatherResults([
+                self.db.buildrequests.getBuildRequest(id)
+                for id in (19, 20, 21)
+            ])
+
+        def mergeRequests_fn(builder, breq, other):
+            # Allow all requests to test builder functionality
+            return True
+
+        # check if all are merged
+        res = yield self.bldr._mergeRequests(brdicts[0], brdicts,
+                                             mergeRequests_fn)
+        self.assertEqual(res, [ brdicts[0], brdicts[1], brdicts[2] ])
+
+    @defer.inlineCallbacks
     def test_mergeRequests_no_merging(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder())
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder()
 
         breq = dict(dummy=1)
-        wfd = defer.waitForDeferred(
-            self.bldr._mergeRequests(breq, [ breq, breq ], None))
-        yield wfd
-        merged = wfd.getResult()
+        merged = yield self.bldr._mergeRequests(breq, [ breq, breq ], None)
 
         self.assertEqual(merged, [breq])
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_mergeRequests_singleton_list(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder())
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder()
 
         breq = dict(dummy=1)
         def is_not_called(*args):
             self.fail("should not be called")
         self.bldr._brdictToBuildRequest = is_not_called
 
-        wfd = defer.waitForDeferred(
-            self.bldr._mergeRequests(breq, [ breq ], lambda x,y : None))
-        yield wfd
-        merged = wfd.getResult()
+        merged = yield self.bldr._mergeRequests(breq, [ breq ],
+                                        lambda x,y : None)
 
         self.assertEqual(merged, [breq])
 
     # other methods
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reclaimAllBuilds_empty(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder())
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder()
 
         # just to be sure this doesn't crash
-        wfd = defer.waitForDeferred(
-            self.bldr.reclaimAllBuilds())
-        yield wfd
-        wfd.getResult()
+        yield self.bldr.reclaimAllBuilds()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reclaimAllBuilds(self):
-        wfd = defer.waitForDeferred(
-            self.makeBuilder())
-        yield wfd
-        wfd.getResult()
+        yield self.makeBuilder()
 
         claims = []
         def fakeClaimBRs(*args):
@@ -732,10 +681,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         self.bldr.old_building[old] = None
         self.bldr.building.append(mkbld([10,11,12]))
 
-        wfd = defer.waitForDeferred(
-            self.bldr.reclaimAllBuilds())
-        yield wfd
-        wfd.getResult()
+        yield self.bldr.reclaimAllBuilds()
 
         self.assertEqual(claims, [ (set([10,11,12,15]),) ])
 
@@ -764,18 +710,16 @@ class TestGetOldestRequestTime(unittest.TestCase):
 
     def makeBuilder(self, name):
         self.bstatus = mock.Mock()
-        self.factory = mock.Mock()
+        self.factory = factory.BuildFactory()
         self.master = fakemaster.make_master()
+        self.master.status = master.Status(self.master)
         # only include the necessary required config
         builder_config = config.BuilderConfig(
                         name=name, slavename="slv", builddir="bdir",
                         slavebuilddir="sbdir", factory=self.factory)
-        self.bldr = builder.Builder(builder_config.name)
+        self.bldr = builder.Builder(builder_config.name, _addServices=False)
         self.master.db = self.db = fakedb.FakeDBConnector(self)
         self.bldr.master = self.master
-
-        # we don't want the reclaim service running during tests..
-        self.bldr.reclaim_svc.disownServiceParent()
 
         self.bldr.startService()
 
@@ -800,4 +744,79 @@ class TestGetOldestRequestTime(unittest.TestCase):
             self.assertEqual(rqtime, None)
         d.addCallback(check)
         return d
+
+class TestRebuild(unittest.TestCase):
+
+    def makeBuilder(self, name, sourcestamps):
+        self.bstatus = mock.Mock()
+        bstatus_properties = mock.Mock()
+        bstatus_properties.properties = {}
+        self.bstatus.getProperties.return_value = bstatus_properties
+        self.bstatus.getSourceStamps.return_value = sourcestamps
+        self.factory = factory.BuildFactory()
+        self.master = fakemaster.make_master()
+        # only include the necessary required config
+        builder_config = config.BuilderConfig(
+                        name=name, slavename="slv", builddir="bdir",
+                        slavebuilddir="sbdir", factory=self.factory)
+        self.bldr = builder.Builder(builder_config.name)
+        self.master.db = self.db = fakedb.FakeDBConnector(self)
+        self.bldr.master = self.master
+        self.master.addBuildset = addBuildset = mock.Mock()
+        addBuildset.return_value = (1, [100])
+
+    def do_test_rebuild(self,
+                        sourcestampsetid,
+                        nr_of_sourcestamps):
+
+        # Store combinations of sourcestampId and sourcestampSetId
+        self.sslist = {}
+        self.ssseq = 1
+        def addSourceStampToDatabase(master, sourcestampsetid):
+            self.sslist[self.ssseq] = sourcestampsetid
+            self.ssseq += 1
+            return defer.succeed(sourcestampsetid)
+        def getSourceStampSetId(master):
+            return addSourceStampToDatabase(master, sourcestampsetid = sourcestampsetid)
+
+        sslist = []
+        for x in range(nr_of_sourcestamps):
+            ssx = mock.Mock()
+            ssx.addSourceStampToDatabase = addSourceStampToDatabase
+            ssx.getSourceStampSetId = getSourceStampSetId
+            sslist.append(ssx)
+
+        self.makeBuilder(name='bldr1', sourcestamps = sslist)
+        control = mock.Mock(spec=['master'])
+        control.master = self.master
+        self.bldrctrl = builder.BuilderControl(self.bldr, control)
+
+        d = self.bldrctrl.rebuildBuild(self.bstatus, reason = 'unit test', extraProperties = {})
+
+        return d
+
+    @defer.inlineCallbacks
+    def test_rebuild_with_no_sourcestamps(self):
+        yield self.do_test_rebuild(101, 0)
+        self.assertEqual(self.sslist, {})
+
+    @defer.inlineCallbacks
+    def test_rebuild_with_single_sourcestamp(self):
+        yield self.do_test_rebuild(101, 1)
+        self.assertEqual(self.sslist, {1:101})
+        self.master.addBuildset.assert_called_with(builderNames=['bldr1'],
+                                                          sourcestampsetid=101,
+                                                          reason = 'unit test',
+                                                          properties = {})
+
+
+    @defer.inlineCallbacks
+    def test_rebuild_with_multiple_sourcestamp(self):
+        yield self.do_test_rebuild(101, 3)
+        self.assertEqual(self.sslist, {1:101, 2:101, 3:101})
+        self.master.addBuildset.assert_called_with(builderNames=['bldr1'],
+                                                          sourcestampsetid=101,
+                                                          reason = 'unit test',
+                                                          properties = {})
+
 

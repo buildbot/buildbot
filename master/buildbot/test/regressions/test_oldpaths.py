@@ -145,10 +145,6 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.status.builder import BuildStatus
         assert BuildStatus
 
-    def test_steps_source__ComputeRepositoryURL(self):
-        from buildbot.steps.source import _ComputeRepositoryURL
-        assert _ComputeRepositoryURL
-
     def test_steps_source_Source(self):
         from buildbot.steps.source import Source
         assert Source
@@ -184,10 +180,6 @@ class OldImportPaths(unittest.TestCase):
     def test_steps_source_P4(self):
         from buildbot.steps.source import P4
         assert P4
-
-    def test_steps_source_P4Sync(self):
-        from buildbot.steps.source import P4Sync
-        assert P4Sync
 
     def test_steps_source_Monotone(self):
         from buildbot.steps.source import Monotone

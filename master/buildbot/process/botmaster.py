@@ -146,28 +146,20 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
             self.master.subscribeToBuildRequests(buildRequestAdded)
         service.MultiService.startService(self)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         timer = metrics.Timer("BotMaster.reconfigService")
         timer.start()
 
         # reconfigure slaves
-        wfd = defer.waitForDeferred(
-            self.reconfigServiceSlaves(new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.reconfigServiceSlaves(new_config)
 
         # reconfigure builders
-        wfd = defer.waitForDeferred(
-            self.reconfigServiceBuilders(new_config))
-        yield wfd
-        wfd.getResult()
+        yield self.reconfigServiceBuilders(new_config)
 
-        wfd = defer.waitForDeferred(
-            config.ReconfigurableServiceMixin.reconfigService(self,
-                                                    new_config))
-        yield wfd
-        wfd.getResult()
+        # call up
+        yield config.ReconfigurableServiceMixin.reconfigService(self,
+                                                    new_config)
 
         # try to start a build for every builder; this is necessary at master
         # startup, and a good idea in any other case
@@ -176,7 +168,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         timer.stop()
 
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigServiceSlaves(self, new_config):
 
         timer = metrics.Timer("BotMaster.reconfigServiceSlaves")
@@ -215,18 +207,12 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 slave.master = None
                 slave.botmaster = None
 
-                wfd = defer.waitForDeferred(
-                    defer.maybeDeferred(lambda :
-                        slave.disownServiceParent()))
-                yield wfd
-                wfd.getResult()
+                yield defer.maybeDeferred(lambda :
+                        slave.disownServiceParent())
 
             for n in added_names:
                 slave = new_by_name[n]
                 slave.setServiceParent(self)
-
-                slave.botmaster = self
-                slave.master = self.master
                 self.slaves[n] = slave
 
         metrics.MetricCountEvent.log("num_slaves",
@@ -235,7 +221,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         timer.stop()
 
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigServiceBuilders(self, new_config):
 
         timer = metrics.Timer("BotMaster.reconfigServiceBuilders")
@@ -264,11 +250,8 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 builder.master = None
                 builder.botmaster = None
 
-                wfd = defer.waitForDeferred(
-                    defer.maybeDeferred(lambda :
-                        builder.disownServiceParent()))
-                yield wfd
-                wfd.getResult()
+                yield defer.maybeDeferred(lambda :
+                        builder.disownServiceParent())
 
             for n in added_names:
                 builder = Builder(n)
@@ -316,7 +299,8 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         @param buildername: the name of the builder
         """
-        self.brd.maybeStartBuildsOn([buildername])
+        d = self.brd.maybeStartBuildsOn([buildername])
+        d.addErrback(log.err)
 
     def maybeStartBuildsForSlave(self, slave_name):
         """
@@ -326,14 +310,16 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         @param slave_name: the name of the slave
         """
         builders = self.getBuildersForSlave(slave_name)
-        self.brd.maybeStartBuildsOn([ b.name for b in builders ])
+        d = self.brd.maybeStartBuildsOn([ b.name for b in builders ])
+        d.addErrback(log.err)
 
     def maybeStartBuildsForAllBuilders(self):
         """
         Call this when something suggests that this would be a good time to start some
         builds, but nothing more specific.
         """
-        self.brd.maybeStartBuildsOn(self.builderNames)
+        d = self.brd.maybeStartBuildsOn(self.builderNames)
+        d.addErrback(log.err)
 
 class BuildRequestDistributor(service.Service):
     """
@@ -368,7 +354,7 @@ class BuildRequestDistributor(service.Service):
         d.addBoth(lambda _ : self.activity_lock.release())
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def maybeStartBuildsOn(self, new_builders):
         """
         Try to start any builds that can be started right now.  This function
@@ -387,10 +373,7 @@ class BuildRequestDistributor(service.Service):
 
         # reset the list of pending builders; this is async, so begin
         # by grabbing a lock
-        wfd = defer.waitForDeferred(
-            self.pending_builders_lock.acquire())
-        yield wfd
-        wfd.getResult()
+        yield self.pending_builders_lock.acquire()
 
         try:
             # re-fetch existing_pending, in case it has changed while acquiring
@@ -398,10 +381,8 @@ class BuildRequestDistributor(service.Service):
             existing_pending = set(self._pending_builders)
 
             # then sort the new, expanded set of builders
-            wfd = defer.waitForDeferred(
-                self._sortBuilders(list(existing_pending | new_builders)))
-            yield wfd
-            self._pending_builders = wfd.getResult()
+            self._pending_builders = \
+                yield self._sortBuilders(list(existing_pending | new_builders))
 
             # start the activity loop, if we aren't already working on that.
             if not self.active:
@@ -413,7 +394,7 @@ class BuildRequestDistributor(service.Service):
         # release the lock unconditionally
         self.pending_builders_lock.release()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _defaultSorter(self, master, builders):
         timer = metrics.Timer("BuildRequestDistributor._defaultSorter()")
         timer.start()
@@ -425,11 +406,8 @@ class BuildRequestDistributor(service.Service):
             d.addCallback(lambda time :
                 (((time is None) and None or time),bldr))
             return d
-        wfd = defer.waitForDeferred(
-            defer.gatherResults(
-                [ xform(bldr) for bldr in builders ]))
-        yield wfd
-        xformed = wfd.getResult()
+        xformed = yield defer.gatherResults(
+                [ xform(bldr) for bldr in builders ])
 
         # sort the transformed list synchronously, comparing None to the end of
         # the list
@@ -440,10 +418,11 @@ class BuildRequestDistributor(service.Service):
         xformed.sort(cmp=nonecmp)
 
         # and reverse the transform
-        yield [ xf[1] for xf in xformed ]
+        rv = [ xf[1] for xf in xformed ]
         timer.stop()
+        defer.returnValue(rv)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _sortBuilders(self, buildernames):
         timer = metrics.Timer("BuildRequestDistributor._sortBuilders()")
         timer.start()
@@ -462,20 +441,18 @@ class BuildRequestDistributor(service.Service):
 
         # run it
         try:
-            wfd = defer.waitForDeferred(
-                defer.maybeDeferred(lambda :
-                    sorter(self.master, builders)))
-            yield wfd
-            builders = wfd.getResult()
+            builders = yield defer.maybeDeferred(lambda :
+                    sorter(self.master, builders))
         except:
             log.msg("Exception prioritizing builders; order unspecified")
             log.err(Failure())
 
         # and return the names
-        yield [ b.name for b in builders ]
+        rv = [ b.name for b in builders ]
         timer.stop()
+        defer.returnValue(rv)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _activityLoop(self):
         self.active = True
 
@@ -483,16 +460,10 @@ class BuildRequestDistributor(service.Service):
         timer.start()
 
         while 1:
-            wfd = defer.waitForDeferred(
-                self.activity_lock.acquire())
-            yield wfd
-            wfd.getResult()
+            yield self.activity_lock.acquire()
 
             # lock pending_builders, pop an element from it, and release
-            wfd = defer.waitForDeferred(
-                self.pending_builders_lock.acquire())
-            yield wfd
-            wfd.getResult()
+            yield self.pending_builders_lock.acquire()
 
             # bail out if we shouldn't keep looping
             if not self.running or not self._pending_builders:
@@ -504,10 +475,7 @@ class BuildRequestDistributor(service.Service):
             self.pending_builders_lock.release()
 
             try:
-                wfd = defer.waitForDeferred(
-                    self._callABuilder(bldr_name))
-                yield wfd
-                wfd.getResult()
+                yield self._callABuilder(bldr_name)
             except:
                 log.err(Failure(),
                         "from maybeStartBuild for builder '%s'" % (bldr_name,))

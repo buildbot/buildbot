@@ -18,7 +18,7 @@ from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.python import log
 from buildbot import util
-from buildbot.util.bbcollections import defaultdict
+from collections import defaultdict
 
 class StepProgress:
     """I keep track of how much progress a single BuildStep has made.
@@ -150,9 +150,10 @@ class BuildProgress(pb.Referenceable):
     def setExpectationsFrom(self, exp):
         """Set our expectations from the builder's Expectations object."""
         for name, metrics in exp.steps.items():
-            s = self.steps[name]
-            s.setExpectedTime(exp.times[name])
-            s.setExpectations(exp.steps[name])
+            s = self.steps.get(name)
+            if s:
+                s.setExpectedTime(exp.times[name])
+                s.setExpectations(exp.steps[name])
 
     def newExpectations(self):
         """Call this when one of the steps has changed its expectations.

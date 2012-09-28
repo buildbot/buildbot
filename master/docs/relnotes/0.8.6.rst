@@ -1,12 +1,14 @@
-Release Notes for Buildbot |version|
-====================================
+Release Notes for Buildbot v0.8.6p1
+===================================
 
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
     Most simply need an additional bulleted list item, but more significant
     changes can be given a subsection of their own.
 
-The following are the release notes for Buildbot |version|.
+The following are the release notes for Buildbot v0.8.6p1.
+Buildbot v0.8.6 was released on March 11, 2012.
+Buildbot v0.8.6p1 was released on March 25, 2012.
 
 0.8.6p1
 -------
@@ -120,7 +122,7 @@ Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
 * The interface for runtime access to the master's configuration has changed
-  considerably.  See :doc:`developer/config` for more details.
+  considerably.  See :doc:`/developer/config` for more details.
 
 * The DB connector methods ``completeBuildset``, ``completeBuildRequest``, and
   ``claimBuildRequest`` now take an optional ``complete_at`` parameter to
@@ -189,6 +191,9 @@ Features
 * MailNotifier allows multiple notification modes in the same instance.  See
   :bb:bug:`2205`.
 
+* SVNPoller now allows passing extra arguments via argument ``extra_args``.
+  See :bb:bug:`1766`
+  
 Slave
 -----
 

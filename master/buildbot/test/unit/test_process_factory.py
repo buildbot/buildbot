@@ -14,42 +14,33 @@
 # Copyright Buildbot Team Members
 
 from twisted.trial import unittest
-from mock import Mock
 
-from buildbot.process.factory import BuildFactory, ArgumentsInTheWrongPlace, s
-from buildbot.process.buildstep import BuildStep
+from buildbot.process.factory import BuildFactory
+from buildbot.process.buildstep import BuildStep, _BuildStepFactory
 
 class TestBuildFactory(unittest.TestCase):
 
     def test_init(self):
         step = BuildStep()
         factory = BuildFactory([step])
-        self.assertEqual(factory.steps, [(BuildStep, {})])
-
-    def test_init_deprecated(self):
-        factory = BuildFactory([s(BuildStep)])
-        self.assertEqual(factory.steps, [(BuildStep, {})])
+        self.assertEqual(factory.steps, [_BuildStepFactory(BuildStep)])
 
     def test_addStep(self):
         step = BuildStep()
         factory = BuildFactory()
         factory.addStep(step)
-        self.assertEqual(factory.steps, [(BuildStep, {})])
-
-    def test_addStep_deprecated(self):
-        factory = BuildFactory()
-        factory.addStep(BuildStep)
-        self.assertEqual(factory.steps, [(BuildStep, {})])
+        self.assertEqual(factory.steps, [_BuildStepFactory(BuildStep)])
 
     def test_addStep_notAStep(self):
         factory = BuildFactory()
-        self.assertRaises(ValueError, factory.addStep, Mock())
+        # This fails because object isn't adaptable to IBuildStepFactory
+        self.assertRaises(TypeError, factory.addStep, object())
 
     def test_addStep_ArgumentsInTheWrongPlace(self):
         factory = BuildFactory()
-        self.assertRaises(ArgumentsInTheWrongPlace, factory.addStep, BuildStep(), name="name")
+        self.assertRaises(TypeError, factory.addStep, BuildStep(), name="name")
 
     def test_addSteps(self):
         factory = BuildFactory()
         factory.addSteps([BuildStep(), BuildStep()])
-        self.assertEqual(factory.steps, [(BuildStep, {}), (BuildStep, {})])
+        self.assertEqual(factory.steps, [_BuildStepFactory(BuildStep), _BuildStepFactory(BuildStep)])

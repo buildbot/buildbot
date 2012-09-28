@@ -13,55 +13,64 @@
 #
 # Copyright Buildbot Team Members
 
-import time
-import tempfile
 import os
+import urllib
 from twisted.python import log
 from twisted.internet import defer, utils
 
-from buildbot.util import deferredLocked
 from buildbot.changes import base
 from buildbot.util import epoch2datetime
+from buildbot.util.state import StateMixin
+from buildbot import config
 
-class GitPoller(base.PollingChangeSource):
+class GitPoller(base.PollingChangeSource, StateMixin):
     """This source will poll a remote git repo for changes and submit
     them to the change master."""
     
-    compare_attrs = ["repourl", "branch", "workdir",
+    compare_attrs = ["repourl", "branches", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
                      "category", "project"]
-                     
-    def __init__(self, repourl, branch='master', 
+
+    def __init__(self, repourl, branches=None, branch=None,
                  workdir=None, pollInterval=10*60, 
                  gitbin='git', usetimestamps=True,
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
                  encoding='utf-8'):
+
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
+
+        base.PollingChangeSource.__init__(self, name=repourl,
+                pollInterval=pollInterval)
+
         if project is None: project = ''
 
+        if branch and branches:
+            config.error("GitPoller: can't specify both branch and branches")
+        elif branch:
+            branches = [branch]
+        elif not branches:
+            branches = ['master']
+
         self.repourl = repourl
-        self.branch = branch
-        self.pollInterval = pollInterval
-        self.fetch_refspec = fetch_refspec
+        self.branches = branches
         self.encoding = encoding
-        self.lastChange = time.time()
-        self.lastPoll = time.time()
         self.gitbin = gitbin
         self.workdir = workdir
         self.usetimestamps = usetimestamps
         self.category = category
         self.project = project
         self.changeCount = 0
-        self.commitInfo  = {}
-        self.initLock = defer.DeferredLock()
+        self.lastRev = {}
+
+        if fetch_refspec is not None:
+            config.error("GitPoller: fetch_refspec is no longer supported. "
+                    "Instead, only the given branches are downloaded.")
         
         if self.workdir == None:
-            self.workdir = tempfile.gettempdir() + '/gitpoller_work'
-            log.msg("WARNING: gitpoller using deprecated temporary workdir " +
-                    "'%s'; consider setting workdir=" % self.workdir)
+            self.workdir = 'gitpoller-work'
 
     def startService(self):
         # make our workdir absolute, relative to the master's basedir
@@ -69,124 +78,70 @@ class GitPoller(base.PollingChangeSource):
             self.workdir = os.path.join(self.master.basedir, self.workdir)
             log.msg("gitpoller: using workdir '%s'" % self.workdir)
 
-        # initialize the repository we'll use to get changes; note that
-        # startService is not an event-driven method, so this method will
-        # instead acquire self.initLock immediately when it is called.
-        if not os.path.exists(self.workdir + r'/.git'):
-            d = self.initRepository()
-            d.addErrback(log.err, 'while initializing GitPoller repository')
-        else:
-            log.msg("GitPoller repository already exists")
+        d = self.getState('lastRev', {})
+        def setLastRev(lastRev):
+            self.lastRev = lastRev
+        d.addCallback(setLastRev)
 
-        # call this *after* initRepository, so that the initLock is locked first
-        base.PollingChangeSource.startService(self)
+        d.addCallback(lambda _:
+                base.PollingChangeSource.startService(self))
+        d.addErrback(log.err, 'while initializing GitPoller repository')
 
-    @deferredLocked('initLock')
-    def initRepository(self):
-        d = defer.succeed(None)
-        def make_dir(_):
-            dirpath = os.path.dirname(self.workdir.rstrip(os.sep))
-            if not os.path.exists(dirpath):
-                log.msg('gitpoller: creating parent directories for workdir')
-                os.makedirs(dirpath)
-        d.addCallback(make_dir)
-
-        def git_init(_):
-            log.msg('gitpoller: initializing working dir from %s' % self.repourl)
-            d = utils.getProcessOutputAndValue(self.gitbin,
-                    ['init', self.workdir], env=os.environ)
-            d.addCallback(self._convert_nonzero_to_failure)
-            d.addErrback(self._stop_on_failure)
-            return d
-        d.addCallback(git_init)
-        
-        def git_remote_add(_):
-            d = utils.getProcessOutputAndValue(self.gitbin,
-                    ['remote', 'add', 'origin', self.repourl],
-                    path=self.workdir, env=os.environ)
-            d.addCallback(self._convert_nonzero_to_failure)
-            d.addErrback(self._stop_on_failure)
-            return d
-        d.addCallback(git_remote_add)
-        
-        def git_fetch_origin(_):
-            args = ['fetch', 'origin']
-            self._extend_with_fetch_refspec(args)
-            d = utils.getProcessOutputAndValue(self.gitbin, args,
-                    path=self.workdir, env=os.environ)
-            d.addCallback(self._convert_nonzero_to_failure)
-            d.addErrback(self._stop_on_failure)
-            return d
-        d.addCallback(git_fetch_origin)
-        
-        def set_master(_):
-            log.msg('gitpoller: checking out %s' % self.branch)
-            if self.branch == 'master': # repo is already on branch 'master', so reset
-                d = utils.getProcessOutputAndValue(self.gitbin,
-                        ['reset', '--hard', 'origin/%s' % self.branch],
-                        path=self.workdir, env=os.environ)
-            else:
-                d = utils.getProcessOutputAndValue(self.gitbin,
-                        ['checkout', '-b', self.branch, 'origin/%s' % self.branch],
-                        path=self.workdir, env=os.environ)
-            d.addCallback(self._convert_nonzero_to_failure)
-            d.addErrback(self._stop_on_failure)
-            return d
-        d.addCallback(set_master)
-        def get_rev(_):
-            d = utils.getProcessOutputAndValue(self.gitbin,
-                    ['rev-parse', self.branch],
-                    path=self.workdir, env={})
-            d.addCallback(self._convert_nonzero_to_failure)
-            d.addErrback(self._stop_on_failure)
-            d.addCallback(lambda (out, err, code) : out.strip())
-            return d
-        d.addCallback(get_rev)
-        def print_rev(rev):
-            log.msg("gitpoller: finished initializing working dir from %s at rev %s"
-                    % (self.repourl, rev))
-        d.addCallback(print_rev)
         return d
 
     def describe(self):
         status = ""
         if not self.master:
             status = "[STOPPED - check log]"
-        str = 'GitPoller watching the remote git repository %s, branch: %s %s' \
-                % (self.repourl, self.branch, status)
+        str = ('GitPoller watching the remote git repository %s, branches: %s %s'
+                % (self.repourl, ', '.join(self.branches), status))
         return str
 
-    @deferredLocked('initLock')
+    @defer.inlineCallbacks
     def poll(self):
-        d = self._get_changes()
-        d.addCallback(self._process_changes)
-        d.addErrback(self._process_changes_failure)
-        d.addCallback(self._catch_up)
-        d.addErrback(self._catch_up_failure)
-        return d
+        yield self._dovccmd('init', ['--bare', self.workdir])
+
+        refspecs = [
+                '+%s:%s'% (branch, self._localBranch(branch))
+                for branch in self.branches
+                ]
+        yield self._dovccmd('fetch',
+                [self.repourl] + refspecs, path=self.workdir)
+
+        revs = {}
+        for branch in self.branches:
+            try:
+                revs[branch] = rev = yield self._dovccmd('rev-parse',
+                        [self._localBranch(branch)], path=self.workdir)
+                yield self._process_changes(rev, branch)
+            except:
+                log.err(_why="trying to poll branch %s of %s"
+                                % (branch, self.repourl))
+
+        self.lastRev.update(revs)
+        yield self.setState('lastRev', self.lastRev)
 
     def _get_commit_comments(self, rev):
-        args = ['log', rev, '--no-walk', r'--format=%s%n%b']
-        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=os.environ, errortoo=False )
+        args = [rev, '--no-walk', r'--format=%s%n%b']
+        d = self._dovccmd('log',  args, path=self.workdir)
         def process(git_output):
-            stripped_output = git_output.strip().decode(self.encoding)
-            if len(stripped_output) == 0:
+            git_output = git_output.decode(self.encoding)
+            if len(git_output) == 0:
                 raise EnvironmentError('could not get commit comment for rev')
-            return stripped_output
+            return git_output
         d.addCallback(process)
         return d
 
     def _get_commit_timestamp(self, rev):
         # unix timestamp
-        args = ['log', rev, '--no-walk', r'--format=%ct']
-        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=os.environ, errortoo=False )
+        args = [rev, '--no-walk', r'--format=%ct']
+        d = self._dovccmd('log', args, path=self.workdir)
         def process(git_output):
-            stripped_output = git_output.strip()
             if self.usetimestamps:
                 try:
-                    stamp = float(stripped_output)
+                    stamp = float(git_output)
                 except Exception, e:
-                        log.msg('gitpoller: caught exception converting output \'%s\' to timestamp' % stripped_output)
+                        log.msg('gitpoller: caught exception converting output \'%s\' to timestamp' % git_output)
                         raise e
                 return stamp
             else:
@@ -195,8 +150,8 @@ class GitPoller(base.PollingChangeSource):
         return d
 
     def _get_commit_files(self, rev):
-        args = ['log', rev, '--name-only', '--no-walk', r'--format=%n']
-        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=os.environ, errortoo=False )
+        args = [rev, '--name-only', '--no-walk', r'--format=%n']
+        d = self._dovccmd('log', args, path=self.workdir)
         def process(git_output):
             fileList = git_output.split()
             return fileList
@@ -204,56 +159,44 @@ class GitPoller(base.PollingChangeSource):
         return d
             
     def _get_commit_author(self, rev):
-        args = ['log', rev, '--no-walk', r'--format=%aN <%aE>']
-        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=os.environ, errortoo=False )
+        args = [rev, '--no-walk', r'--format=%aN <%aE>']
+        d = self._dovccmd('log', args, path=self.workdir)
         def process(git_output):
-            stripped_output = git_output.strip().decode(self.encoding)
-            if len(stripped_output) == 0:
+            git_output = git_output.decode(self.encoding)
+            if len(git_output) == 0:
                 raise EnvironmentError('could not get commit author for rev')
-            return stripped_output
+            return git_output
         d.addCallback(process)
         return d
 
-    def _get_changes(self):
-        log.msg('gitpoller: polling git repo at %s' % self.repourl)
+    @defer.inlineCallbacks
+    def _process_changes(self, newRev, branch):
+        """
+        Read changes since last change.
 
-        self.lastPoll = time.time()
-        
-        # get a deferred object that performs the fetch
-        args = ['fetch', 'origin']
-        self._extend_with_fetch_refspec(args)
+        - Read list of commit hashes.
+        - Extract details from each commit.
+        - Add changes to database.
+        """
 
-        # This command always produces data on stderr, but we actually do not care
-        # about the stderr or stdout from this command. We set errortoo=True to
-        # avoid an errback from the deferred. The callback which will be added to this
-        # deferred will not use the response.
-        d = utils.getProcessOutput(self.gitbin, args,
-                    path=self.workdir,
-                    env=os.environ, errortoo=True )
+        lastRev = self.lastRev.get(branch)
+        self.lastRev[branch] = newRev
+        if not lastRev:
+            return
 
-        return d
-
-    @defer.deferredGenerator
-    def _process_changes(self, unused_output):
         # get the change list
-        revListArgs = ['log', '%s..origin/%s' % (self.branch, self.branch), r'--format=%H']
+        revListArgs = ['%s..%s' % (lastRev, newRev), r'--format=%H']
         self.changeCount = 0
-        d = utils.getProcessOutput(self.gitbin, revListArgs, path=self.workdir,
-                                   env=os.environ, errortoo=False )
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        results = wfd.getResult()
+        results = yield self._dovccmd('log', revListArgs, path=self.workdir)
+
 
         # process oldest change first
         revList = results.split()
-        if not revList:
-            return
-
         revList.reverse()
         self.changeCount = len(revList)
             
-        log.msg('gitpoller: processing %d changes: %s in "%s"'
-                % (self.changeCount, revList, self.workdir) )
+        log.msg('gitpoller: processing %d changes: %s from "%s"'
+                % (self.changeCount, revList, self.repourl) )
 
         for rev in revList:
             dl = defer.DeferredList([
@@ -263,9 +206,7 @@ class GitPoller(base.PollingChangeSource):
                 self._get_commit_comments(rev),
             ], consumeErrors=True)
 
-            wfd = defer.waitForDeferred(dl)
-            yield wfd
-            results = wfd.getResult()
+            results = yield dl
 
             # check for failures
             failures = [ r[1] for r in results if not r[0] ]
@@ -274,60 +215,30 @@ class GitPoller(base.PollingChangeSource):
                 raise failures[0]
 
             timestamp, author, files, comments = [ r[1] for r in results ]
-            d = self.master.addChange(
+            yield self.master.addChange(
                    author=author,
                    revision=rev,
                    files=files,
                    comments=comments,
                    when_timestamp=epoch2datetime(timestamp),
-                   branch=self.branch,
+                   branch=branch,
                    category=self.category,
                    project=self.project,
                    repository=self.repourl,
                    src='git')
-            wfd = defer.waitForDeferred(d)
-            yield wfd
-            results = wfd.getResult()
 
-    def _process_changes_failure(self, f):
-        log.msg('gitpoller: repo poll failed')
-        log.err(f)
-        # eat the failure to continue along the defered chain - we still want to catch up
-        return None
-        
-    def _catch_up(self, res):
-        if self.changeCount == 0:
-            log.msg('gitpoller: no changes, no catch_up')
-            return
-        log.msg('gitpoller: catching up tracking branch')
-        args = ['reset', '--hard', 'origin/%s' % (self.branch,)]
-        d = utils.getProcessOutputAndValue(self.gitbin, args, path=self.workdir, env=os.environ)
-        d.addCallback(self._convert_nonzero_to_failure)
+    def _dovccmd(self, command, args, path=None):
+        d = utils.getProcessOutputAndValue(self.gitbin,
+                [command] + args, path=path, env=os.environ)
+        def _convert_nonzero_to_failure(res):
+            "utility to handle the result of getProcessOutputAndValue"
+            (stdout, stderr, code) = res
+            if code != 0:
+                raise EnvironmentError('command failed with exit code %d: %s'
+                        % (code, stderr))
+            return stdout.strip()
+        d.addCallback(_convert_nonzero_to_failure)
         return d
 
-    def _catch_up_failure(self, f):
-        log.err(f)
-        log.msg('gitpoller: please resolve issues in local repo: %s' % self.workdir)
-        # this used to stop the service, but this is (a) unfriendly to tests and (b)
-        # likely to leave the error message lost in a sea of other log messages
-
-    def _convert_nonzero_to_failure(self, res):
-        "utility method to handle the result of getProcessOutputAndValue"
-        (stdout, stderr, code) = res
-        if code != 0:
-            raise EnvironmentError('command failed with exit code %d: %s' % (code, stderr))
-        return (stdout, stderr, code)
-
-    def _stop_on_failure(self, f):
-        "utility method to stop the service when a failure occurs"
-        if self.running:
-            d = defer.maybeDeferred(lambda : self.stopService())
-            d.addErrback(log.err, 'while stopping broken GitPoller service')
-        return f
-
-    def _extend_with_fetch_refspec(self, args):
-        if self.fetch_refspec:
-            if type(self.fetch_refspec) in (list,set):
-                args.extend(self.fetch_refspec)
-            else:
-                args.append(self.fetch_refspec)
+    def _localBranch(self, branch):
+        return "refs/buildbot/%s/%s" % (urllib.quote(self.repourl, ''), branch)

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 
 import os.path, tarfile, tempfile
 try:
@@ -23,7 +25,8 @@ except ImportError:
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.python import log
-from buildbot.process.buildstep import RemoteCommand, BuildStep
+from buildbot.process import buildstep
+from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE, SKIPPED
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.util import json
@@ -168,11 +171,11 @@ class _DirectoryWriter(_FileWriter):
         os.remove(self.tarname)
 
 
-class StatusRemoteCommand(RemoteCommand):
-    def __init__(self, step, remote_command, args):
-        RemoteCommand.__init__(self, remote_command, args)
-        callback = lambda arg: step.step_status.addLog('stdio')
-        self.useLogDelayed('stdio', callback, True)
+def makeStatusRemoteCommand(step, remote_command, args):
+    self = buildstep.RemoteCommand(remote_command, args,  decodeRC={None:SUCCESS, 0:SUCCESS})
+    callback = lambda arg: step.step_status.addLog('stdio')
+    self.useLogDelayed('stdio', callback, True)
+    return self
 
 class _TransferBuildStep(BuildStep):
     """
@@ -210,9 +213,9 @@ class _TransferBuildStep(BuildStep):
         if result == SKIPPED:
             return BuildStep.finished(self, SKIPPED)
 
-        if self.cmd.rc is None or self.cmd.rc == 0:
-            return BuildStep.finished(self, SUCCESS)
-        return BuildStep.finished(self, FAILURE)
+        if self.cmd.didFail():
+            return BuildStep.finished(self, FAILURE)
+        return BuildStep.finished(self, SUCCESS)
 
 
 class FileUpload(_TransferBuildStep):
@@ -226,15 +229,6 @@ class FileUpload(_TransferBuildStep):
                  keepstamp=False, url=None,
                  **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
-        self.addFactoryArguments(slavesrc=slavesrc,
-                                 masterdest=masterdest,
-                                 workdir=workdir,
-                                 maxsize=maxsize,
-                                 blocksize=blocksize,
-                                 mode=mode,
-                                 keepstamp=keepstamp,
-                                 url=url,
-                                 )
 
         self.slavesrc = slavesrc
         self.masterdest = masterdest
@@ -287,7 +281,7 @@ class FileUpload(_TransferBuildStep):
             'keepstamp': self.keepstamp,
             }
 
-        self.cmd = StatusRemoteCommand(self, 'uploadFile', args)
+        self.cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
         d = self.runCommand(self.cmd)
         @d.addErrback
         def cancel(res):
@@ -306,14 +300,6 @@ class DirectoryUpload(_TransferBuildStep):
                  workdir=None, maxsize=None, blocksize=16*1024,
                  compress=None, url=None, **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
-        self.addFactoryArguments(slavesrc=slavesrc,
-                                 masterdest=masterdest,
-                                 workdir=workdir,
-                                 maxsize=maxsize,
-                                 blocksize=blocksize,
-                                 compress=compress,
-                                 url=url,
-                                 )
 
         self.slavesrc = slavesrc
         self.masterdest = masterdest
@@ -360,7 +346,7 @@ class DirectoryUpload(_TransferBuildStep):
             'compress': self.compress
             }
 
-        self.cmd = StatusRemoteCommand(self, 'uploadDirectory', args)
+        self.cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
         d = self.runCommand(self.cmd)
         @d.addErrback
         def cancel(res):
@@ -375,11 +361,9 @@ class DirectoryUpload(_TransferBuildStep):
         if result == SKIPPED:
             return BuildStep.finished(self, SKIPPED)
 
-        if self.cmd.rc is None or self.cmd.rc == 0:
-            return BuildStep.finished(self, SUCCESS)
-        return BuildStep.finished(self, FAILURE)
-
-
+        if self.cmd.didFail():
+            return BuildStep.finished(self, FAILURE)
+        return BuildStep.finished(self, SUCCESS)
 
 
 class _FileReader(pb.Referenceable):
@@ -425,13 +409,6 @@ class FileDownload(_TransferBuildStep):
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
-        self.addFactoryArguments(mastersrc=mastersrc,
-                                 slavedest=slavedest,
-                                 workdir=workdir,
-                                 maxsize=maxsize,
-                                 blocksize=blocksize,
-                                 mode=mode,
-                                 )
 
         self.mastersrc = mastersrc
         self.slavedest = slavedest
@@ -482,7 +459,7 @@ class FileDownload(_TransferBuildStep):
             'mode': self.mode,
             }
 
-        self.cmd = StatusRemoteCommand(self, 'downloadFile', args)
+        self.cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 
@@ -496,13 +473,6 @@ class StringDownload(_TransferBuildStep):
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
-        self.addFactoryArguments(s=s,
-                                 slavedest=slavedest,
-                                 workdir=workdir,
-                                 maxsize=maxsize,
-                                 blocksize=blocksize,
-                                 mode=mode,
-                                 )
 
         self.s = s
         self.slavedest = slavedest
@@ -542,7 +512,7 @@ class StringDownload(_TransferBuildStep):
             'mode': self.mode,
             }
 
-        self.cmd = StatusRemoteCommand(self, 'downloadFile', args)
+        self.cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 
@@ -555,7 +525,6 @@ class JSONStringDownload(StringDownload):
             del buildstep_kwargs['s']
         s = json.dumps(o)
         StringDownload.__init__(self, s=s, slavedest=slavedest, **buildstep_kwargs)
-        self.addFactoryArguments(o=o)
 
 class JSONPropertiesDownload(StringDownload):
 

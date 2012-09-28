@@ -107,16 +107,49 @@ class HTPasswdAuth(AuthBase):
         if not lines:
             self.err = "Invalid user/passwd"
             return False
-        # This is the DES-hash of the password. The first two characters are
-        # the salt used to introduce disorder in the DES algorithm.
         hash = lines[0][1]
-        from crypt import crypt #@UnresolvedImport
-        res = hash == crypt(passwd, hash[0:2])
+        res = self.validatePassword(passwd, hash)
         if res:
             self.err = ""
         else:
             self.err = "Invalid user/passwd"
         return res
+
+    def validatePassword(self, passwd, hash):
+        # This is the DES-hash of the password. The first two characters are
+        # the salt used to introduce disorder in the DES algorithm.
+        from crypt import crypt #@UnresolvedImport
+        return hash == crypt(passwd, hash[0:2])
+
+
+class HTPasswdAprAuth(HTPasswdAuth):
+    implements(IAuth)
+    """Implement authentication against an .htpasswd file based on libaprutil"""
+
+    file = ""
+    """Path to the .htpasswd file to use."""
+
+    def __init__(self, file):
+        HTPasswdAuth.__init__(self, file)
+
+        # Try to load libaprutil throug ctypes
+        self.apr = None
+        try:
+            from ctypes import CDLL
+            from ctypes.util import find_library
+            lib = find_library("aprutil-1")
+            if lib:
+                self.apr = CDLL(lib)
+        except:
+            self.apr = None
+
+    def validatePassword(self, passwd, hash):
+        # Use apr_password_validate from libaprutil if libaprutil is available.
+        # Fallback to DES only checking from HTPasswdAuth
+        if self.apr:
+            return self.apr.apr_password_validate(passwd, hash) == 0
+        else:
+            return HTPasswdAuth.validatePassword(self, passwd, hash)
 
 class UsersAuth(AuthBase):
     """Implement authentication against users in database"""

@@ -16,10 +16,11 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer
-from buildbot import buildslave, config
-from buildbot.test.fake import fakemaster
+from buildbot import buildslave, config, locks
+from buildbot.test.fake import fakemaster, pbmanager
+from buildbot.test.fake.botmaster import FakeBotMaster
 
-class AbstractBuildSlave(unittest.TestCase):
+class TestAbstractBuildSlave(unittest.TestCase):
 
     class ConcreteBuildSlave(buildslave.AbstractBuildSlave):
         pass
@@ -62,31 +63,24 @@ class AbstractBuildSlave(unittest.TestCase):
             self.ConcreteBuildSlave('bot', 'pass',
                     notify_on_missing=['a@b.com', 13]))
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def do_test_reconfigService(self, old, old_port, new, new_port):
         master = self.master = fakemaster.make_master()
         old.master = master
         if old_port:
             self.old_registration = old.registration = \
-                    mock.Mock(name='old_registration')
+                    pbmanager.FakeRegistration(master.pbmanager, old_port, old.slavename)
             old.registered_port = old_port
         old.missing_timer = mock.Mock(name='missing_timer')
         old.startService()
-
-        self.new_registration = mock.Mock(name='new_registration')
-        master.pbmanager.register = mock.Mock(
-                side_effect=lambda *args : self.new_registration)
 
         new_config = mock.Mock()
         new_config.slavePortnum = new_port
         new_config.slaves = [ new ]
 
-        wfd = defer.waitForDeferred(
-            old.reconfigService(new_config))
-        yield wfd
-        wfd.getResult()
+        yield old.reconfigService(new_config)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_attrs(self):
         old = self.ConcreteBuildSlave('bot', 'pass',
                 max_builds=2,
@@ -103,67 +97,65 @@ class AbstractBuildSlave(unittest.TestCase):
 
         old.updateSlave = mock.Mock(side_effect=lambda : defer.succeed(None))
 
-        wfd = defer.waitForDeferred(
-            self.do_test_reconfigService(old, 'tcp:1234', new, 'tcp:1234'))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_reconfigService(old, 'tcp:1234', new, 'tcp:1234')
 
         self.assertEqual(old.max_builds, 3)
         self.assertEqual(old.notify_on_missing, ['her@me.com'])
         self.assertEqual(old.missing_timeout, 121)
         self.assertEqual(old.properties.getProperty('a'), 'c')
         self.assertEqual(old.keepalive_interval, 61)
-        self.assertFalse(self.master.pbmanager.register.called)
+        self.assertEqual(self.master.pbmanager._registrations, [])
         self.assertTrue(old.updateSlave.called)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_has_properties(self):
         old = self.ConcreteBuildSlave('bot', 'pass')
-
-        wfd = defer.waitForDeferred(
-            self.do_test_reconfigService(old, 'tcp:1234', old, 'tcp:1234'))
-        yield wfd
-        wfd.getResult()
-
+        yield self.do_test_reconfigService(old, 'tcp:1234', old, 'tcp:1234')
         self.assertTrue(old.properties.getProperty('slavename'), 'bot')
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_initial_registration(self):
         old = self.ConcreteBuildSlave('bot', 'pass')
+        yield self.do_test_reconfigService(old, None, old, 'tcp:1234')
+        self.assertEqual(self.master.pbmanager._registrations, [('tcp:1234', 'bot', 'pass')])
 
-        wfd = defer.waitForDeferred(
-            self.do_test_reconfigService(old, None, old, 'tcp:1234'))
-        yield wfd
-        wfd.getResult()
-
-        self.assertTrue(self.master.pbmanager.register.called)
-
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_reregister_password(self):
         old = self.ConcreteBuildSlave('bot', 'pass')
         new = self.ConcreteBuildSlave('bot', 'newpass')
 
-        wfd = defer.waitForDeferred(
-            self.do_test_reconfigService(old, 'tcp:1234', new, 'tcp:1234'))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_reconfigService(old, 'tcp:1234', new, 'tcp:1234')
 
         self.assertEqual(old.password, 'newpass')
-        self.assertTrue(self.old_registration.unregister.called)
-        self.assertTrue(self.master.pbmanager.register.called)
+        self.assertEqual(self.master.pbmanager._unregistrations, [('tcp:1234', 'bot')])
+        self.assertEqual(self.master.pbmanager._registrations, [('tcp:1234', 'bot', 'newpass')])
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_reregister_port(self):
         old = self.ConcreteBuildSlave('bot', 'pass')
         new = self.ConcreteBuildSlave('bot', 'pass')
 
-        wfd = defer.waitForDeferred(
-            self.do_test_reconfigService(old, 'tcp:1234', new, 'tcp:5678'))
-        yield wfd
-        wfd.getResult()
+        yield self.do_test_reconfigService(old, 'tcp:1234', new, 'tcp:5678')
 
-        self.assertTrue(self.old_registration.unregister.called)
-        self.assertTrue(self.master.pbmanager.register.called)
+        self.assertEqual(self.master.pbmanager._unregistrations, [('tcp:1234', 'bot')])
+        self.assertEqual(self.master.pbmanager._registrations, [('tcp:5678', 'bot', 'pass')])
+
+    @defer.inlineCallbacks
+    def test_stopService(self):
+        master = self.master = fakemaster.make_master()
+        slave = self.ConcreteBuildSlave('bot', 'pass')
+        slave.master = master
+        slave.startService()
+
+        config = mock.Mock()
+        config.slavePortnum = "tcp:1234"
+        config.slaves = [ slave ]
+
+        yield slave.reconfigService(config)
+        yield slave.stopService()
+
+        self.assertEqual(self.master.pbmanager._unregistrations, [('tcp:1234', 'bot')])
+        self.assertEqual(self.master.pbmanager._registrations, [('tcp:1234', 'bot', 'pass')])
 
     # FIXME: Test that reconfig properly deals with
     #   1) locks
@@ -203,3 +195,33 @@ class AbstractBuildSlave(unittest.TestCase):
         bs.stopMissingTimer()
         self.assertEqual(bs.missing_timer, None)
 
+    def test_setServiceParent_started(self):
+        master = self.master = fakemaster.make_master()
+        botmaster = FakeBotMaster(master)
+        botmaster.startService()
+        bs = self.ConcreteBuildSlave('bot', 'pass')
+        bs.setServiceParent(botmaster)
+        self.assertEqual(bs.botmaster, botmaster)
+        self.assertEqual(bs.master, master)
+
+    def test_setServiceParent_masterLocks(self):
+        """
+        http://trac.buildbot.net/ticket/2278
+        """
+        master = self.master = fakemaster.make_master()
+        botmaster = FakeBotMaster(master)
+        botmaster.startService()
+        lock = locks.MasterLock('masterlock')
+        bs = self.ConcreteBuildSlave('bot', 'pass', locks = [lock])
+        bs.setServiceParent(botmaster)
+
+    def test_setServiceParent_slaveLocks(self):
+        """
+        http://trac.buildbot.net/ticket/2278
+        """
+        master = self.master = fakemaster.make_master()
+        botmaster = FakeBotMaster(master)
+        botmaster.startService()
+        lock = locks.SlaveLock('lock')
+        bs = self.ConcreteBuildSlave('bot', 'pass', locks = [lock])
+        bs.setServiceParent(botmaster)

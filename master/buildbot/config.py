@@ -13,11 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-import re
+from __future__ import with_statement
+
 import os
+import re
 import sys
+import warnings
 from buildbot.util import safeTranslate
-from buildbot.process import properties
 from buildbot import interfaces
 from buildbot import locks
 from buildbot.revlinks import default_revlink_matcher
@@ -49,6 +51,8 @@ def error(error):
 class MasterConfig(object):
 
     def __init__(self):
+        # local import to avoid circular imports
+        from buildbot.process import properties
         # default values for all attributes
 
         # global
@@ -65,6 +69,7 @@ class MasterConfig(object):
         self.logMaxSize = None
         self.properties = properties.Properties()
         self.mergeRequests = None
+        self.codebaseGenerator = None
         self.prioritizeBuilders = None
         self.slavePortnum = None
         self.multiMaster = False
@@ -96,7 +101,7 @@ class MasterConfig(object):
 
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
-        "change_source", "changeCacheSize", "changeHorizon",
+        "change_source", "codebaseGenerator", "changeCacheSize", "changeHorizon",
         'db', "db_poll_interval", "db_url", "debugPassword", "eventHorizon",
         "logCompressionLimit", "logCompressionMethod", "logHorizon",
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
@@ -147,13 +152,14 @@ class MasterConfig(object):
                     errors.addError(error)
                 raise errors
             except:
-                log.err(failure.Failure())
+                log.err(failure.Failure(), 'error while parsing config file:')
                 errors.addError(
                     "error while parsing config file: %s (traceback in logfile)" %
                         (sys.exc_info()[1],),
                 )
                 raise errors
         finally:
+            f.close()
             sys.path[:] = old_sys_path
             _errors = None
 
@@ -264,6 +270,13 @@ class MasterConfig(object):
         else:
             self.mergeRequests = mergeRequests
 
+        codebaseGenerator = config_dict.get('codebaseGenerator')
+        if (codebaseGenerator is not None and
+            not callable(codebaseGenerator)):
+            errors.addError("codebaseGenerator must be a callable accepting a dict and returning a str")
+        else:
+            self.codebaseGenerator = codebaseGenerator
+            
         prioritizeBuilders = config_dict.get('prioritizeBuilders')
         if prioritizeBuilders is not None and not callable(prioritizeBuilders):
             errors.addError("prioritizeBuilders must be a callable")
@@ -348,6 +361,11 @@ class MasterConfig(object):
             if not isinstance(caches, dict):
                 errors.addError("c['caches'] must be a dictionary")
             else:
+                valPairs = caches.items()
+                for (x, y) in valPairs:
+                  if (not isinstance(y, int)):
+                     errors.addError(
+                     "value for cache size '%s' must be an integer" % x)
                 self.caches.update(caches)
 
         if 'buildCacheSize' in config_dict:
@@ -412,6 +430,12 @@ class MasterConfig(object):
             errors.addError("c['builders'] must be a list of builder configs")
             return
 
+        for builder in builders:
+            if os.path.isabs(builder.builddir):
+                warnings.warn("Absolute path '%s' for builder may cause "
+                        "mayhem.  Perhaps you meant to specify slavebuilddir "
+                        "instead.")
+
         self.builders = builders
 
 
@@ -451,7 +475,6 @@ class MasterConfig(object):
                 return
 
         self.change_sources = change_sources
-
 
     def load_status(self, filename, config_dict, errors):
         if 'status' not in config_dict:
@@ -536,15 +559,6 @@ class MasterConfig(object):
                 for l in b.locks:
                     check_lock(l)
 
-            # factories don't necessarily need to implement a .steps attribute
-            # but in practice most do, so we'll check that if it exists
-            if not hasattr(b.factory, 'steps'):
-                continue
-            for s in b.factory.steps:
-                for l in s[1].get('locks', []):
-                    check_lock(l)
-
-
     def check_builders(self, errors):
         # look both for duplicate builder names, and for builders pointing
         # to unknown slaves
@@ -612,6 +626,10 @@ class BuilderConfig:
         # factory is required
         if factory is None:
             errors.addError("builder '%s' has no factory" % name)
+        from buildbot.process.factory import BuildFactory
+        if factory is not None and not isinstance(factory, BuildFactory):
+            errors.addError(
+                "builder '%s's factory is not a BuildFactory instance" % name)
         self.factory = factory
 
         # slavenames can be a single slave name or a list, and should also
@@ -701,7 +719,7 @@ class ReconfigurableServiceMixin:
 
     reconfig_priority = 128
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         if not service.IServiceCollection.providedBy(self):
             return
@@ -715,7 +733,4 @@ class ReconfigurableServiceMixin:
         reconfigurable_services.sort(key=lambda svc : -svc.reconfig_priority)
 
         for svc in reconfigurable_services:
-            d = svc.reconfigService(new_config)
-            wfd = defer.waitForDeferred(d)
-            yield wfd
-            wfd.getResult()
+            yield svc.reconfigService(new_config)

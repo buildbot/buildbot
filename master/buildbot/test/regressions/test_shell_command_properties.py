@@ -36,8 +36,8 @@ class FakeBuildStatus:
     def getProperties(self):
         return Properties()
 
-    def setSourceStamp(self, ss):
-        self.ss = ss
+    def setSourceStamps(self, ss_list):
+        self.ss_list = ss_list
 
     def setReason(self, reason):
         self.reason = reason
@@ -59,15 +59,15 @@ class FakeStepStatus:
 
 
 class FakeBuildRequest:
-    def __init__(self, reason, source, buildername):
+    def __init__(self, reason, sources, buildername):
         self.reason = reason
-        self.source = source
+        self.sources = sources
         self.buildername = buildername
         self.changes = []
         self.properties = Properties()
 
-    def mergeWith(self, others):
-        return self.source
+    def mergeSourceStampsWith(self, others):
+        return [source for source in self.sources.itervalues()]
 
     def mergeReasons(self, others):
         return self.reason
@@ -81,7 +81,7 @@ class TestShellCommandProperties(unittest.TestCase):
 
         ss = SourceStamp()
 
-        req = FakeBuildRequest("Testing", ss, None)
+        req = FakeBuildRequest("Testing", {ss.repository:ss}, None)
 
         b = f.newBuild([req])
         b.build_status = FakeBuildStatus()
@@ -98,7 +98,7 @@ class TestSetProperty(unittest.TestCase):
 
         ss = SourceStamp()
 
-        req = FakeBuildRequest("Testing", ss, None)
+        req = FakeBuildRequest("Testing", {ss.repository:ss}, None)
 
         b = f.newBuild([req])
         b.build_status = FakeBuildStatus()

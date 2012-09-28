@@ -31,7 +31,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
             revision=None, when_timestamp=None, branch=None,
-            category=None, revlink='', properties={}, repository='',
+            category=None, revlink='', properties={}, repository='', codebase='',
             project='', uid=None, _reactor=reactor):
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
@@ -74,6 +74,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 when_timestamp=datetime2epoch(when_timestamp),
                 category=category,
                 repository=repository,
+                codebase=codebase,
                 project=project))
             changeid = r.inserted_primary_key[0]
             if files:
@@ -195,9 +196,12 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             for table_name in ('scheduler_changes', 'sourcestamp_changes',
                                'change_files', 'change_properties', 'changes',
                                'change_users'):
-                table = self.db.model.metadata.tables[table_name]
-                conn.execute(
-                    table.delete(table.c.changeid.in_(ids_to_delete)))
+                remaining = ids_to_delete[:]
+                while remaining:
+                    batch, remaining = remaining[:100], remaining[100:]
+                    table = self.db.model.metadata.tables[table_name]
+                    conn.execute(
+                        table.delete(table.c.changeid.in_(batch)))
         return self.db.pool.do(thd)
 
     def _chdict_from_change_row_thd(self, conn, ch_row):
@@ -219,6 +223,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 revlink=ch_row.revlink,
                 properties={}, # see below
                 repository=ch_row.repository,
+                codebase=ch_row.codebase,
                 project=ch_row.project)
 
         query = change_files_tbl.select(

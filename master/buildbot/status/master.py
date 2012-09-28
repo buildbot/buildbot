@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os, urllib
 from cPickle import load
 from twisted.python import log
@@ -61,27 +63,29 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
         return service.MultiService.startService(self)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         # remove the old listeners, then add the new
         for sr in list(self):
-            wfd = defer.waitForDeferred(
-                defer.maybeDeferred(lambda :
-                    sr.disownServiceParent()))
-            yield wfd
-            wfd.getResult()
-            sr.master = None
+            yield defer.maybeDeferred(lambda :
+                    sr.disownServiceParent())
+
+            # WebStatus instances tend to "hang around" longer than we'd like -
+            # if there's an ongoing HTTP request, or even a connection held
+            # open by keepalive, then users may still be talking to an old
+            # WebStatus.  So WebStatus objects get to keep their `master`
+            # attribute, but all other status objects lose theirs.  And we want
+            # to test this without importing WebStatus, so we use name
+            if not sr.__class__.__name__.endswith('WebStatus'):
+                sr.master = None
 
         for sr in new_config.status:
             sr.master = self.master
             sr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing
-        wfd = defer.waitForDeferred(
-            config.ReconfigurableServiceMixin.reconfigService(self,
-                                                        new_config))
-        yield wfd
-        wfd.getResult()
+        yield config.ReconfigurableServiceMixin.reconfigService(self,
+                                                            new_config)
 
     def stopService(self):
         self._buildset_completion_sub.unsubscribe()
@@ -156,6 +160,11 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         # IBuildSetStatus
         # IBuildRequestStatus
         # ISlaveStatus
+        if interfaces.ISlaveStatus.providedBy(thing):
+            slave = thing
+            return prefix + "buildslaves/%s" % (
+                    urllib.quote(slave.getName(), safe=''),
+                    )
 
         # IStatusEvent
         if interfaces.IStatusEvent.providedBy(thing):
@@ -313,7 +322,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         log.msg("trying to load status pickle from %s" % filename)
         builder_status = None
         try:
-            builder_status = load(open(filename, "rb"))
+            with open(filename, "rb") as f:
+                builder_status = load(f)
             builder_status.master = self.master
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite
@@ -339,6 +349,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         log.msg("added builder %s in category %s" % (name, category))
         # an unpickled object might not have category set from before,
         # so set it here to make sure
+        builder_status.category = category
         builder_status.master = self.master
         builder_status.basedir = os.path.join(self.basedir, basedir)
         builder_status.name = name # it might have been updated

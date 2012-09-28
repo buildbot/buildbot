@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 
 """Push events to an abstract receiver.
 
@@ -29,6 +31,7 @@ try:
 except ImportError:
     import json
 
+from buildbot import config
 from buildbot.status.base import StatusReceiverMultiService
 from buildbot.status.persistent_queue import DiskQueue, IndexedQueue, \
         MemoryQueue, PersistentQueue
@@ -102,7 +105,8 @@ class StatusPush(StatusReceiverMultiService):
         if self.path and os.path.isdir(self.path):
             state_path = os.path.join(self.path, 'state')
             if os.path.isfile(state_path):
-                self.state.update(json.load(open(state_path, 'r')))
+                with open(state_path, 'r') as f:
+                    self.state.update(json.load(f))
 
         if self.queue.nbItems():
             # Last shutdown was not clean, don't wait to send events.
@@ -166,13 +170,9 @@ class StatusPush(StatusReceiverMultiService):
             if not self.queue.nbItems():
                 return
             # Call right now, we're shutting down.
-            @defer.deferredGenerator
+            @defer.inlineCallbacks
             def BlockForEverythingBeingSent():
-                d = self.serverPushCb()
-                if d:
-                    x = defer.waitForDeferred(d)
-                    yield x
-                    x.getResult()
+                yield defer.maybeDeferred(self.serverPushCb())
             return BlockForEverythingBeingSent()
         else:
             # delay should never be 0.  That can cause Buildbot to spin tightly
@@ -199,7 +199,8 @@ class StatusPush(StatusReceiverMultiService):
         self.queue.save()
         if self.path and os.path.isdir(self.path):
             state_path = os.path.join(self.path, 'state')
-            json.dump(self.state, open(state_path, 'w'), sort_keys=True,
+            with open(state_path, 'w') as f:
+                json.dump(self.state, f, sort_keys=True,
                       indent=2)
         # Make sure all Deferreds are called on time and in a sane order.
         defers = filter(None, [d, StatusReceiverMultiService.stopService(self)])
@@ -327,7 +328,7 @@ class HttpStatusPush(StatusPush):
 
     def __init__(self, serverUrl, debug=None, maxMemoryItems=None,
                  maxDiskItems=None, chunkSize=200, maxHttpRequestSize=2**20,
-                 **kwargs):
+                 extra_post_params=None, **kwargs):
         """
         @serverUrl: Base URL to be used to push events notifications.
         @maxMemoryItems: Maximum number of items to keep queued in memory.
@@ -338,8 +339,12 @@ class HttpStatusPush(StatusPush):
         @maxHttpRequestSize: limits the size of encoded data for AE, the default
         is 1MB.
         """
+        if not serverUrl:
+            raise config.ConfigErrors(['HttpStatusPush requires a serverUrl'])
+
         # Parameters.
         self.serverUrl = serverUrl
+        self.extra_post_params = extra_post_params or {}
         self.debug = debug
         self.chunkSize = chunkSize
         self.lastPushWasSuccessful = True
@@ -377,7 +382,9 @@ class HttpStatusPush(StatusPush):
                 packets = json.dumps(items, indent=2, sort_keys=True)
             else:
                 packets = json.dumps(items, separators=(',',':'))
-            data = urllib.urlencode({'packets': packets})
+            params = {'packets': packets}
+            params.update(self.extra_post_params)
+            data = urllib.urlencode(params)
             if (not self.maxHttpRequestSize or
                 len(data) < self.maxHttpRequestSize):
                 return (data, items)

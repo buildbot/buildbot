@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os, time
 from cPickle import dump
 
@@ -63,6 +65,7 @@ class Change:
         change.category = chdict['category']
         change.revlink = chdict['revlink']
         change.repository = chdict['repository']
+        change.codebase = chdict['codebase']
         change.project = chdict['project']
         change.number = chdict['changeid']
 
@@ -82,8 +85,8 @@ class Change:
 
     def __init__(self, who, files, comments, isdir=0,
                  revision=None, when=None, branch=None, category=None,
-                 revlink='', properties={}, repository='', project='',
-                 _fromChdict=False):
+                 revlink='', properties={}, repository='', codebase='', 
+                 project='', _fromChdict=False):
         # skip all this madness if we're being built from the database
         if _fromChdict:
             return
@@ -113,10 +116,11 @@ class Change:
         self.properties = Properties()
         self.properties.update(properties, "Change")
         self.repository = repository
+        self.codebase = codebase
         self.project = project
 
         # keep a sorted list of the files, for easier display
-        self.files = files[:]
+        self.files = (files or [])[:]
         self.files.sort()
 
     def __setstate__(self, dict):
@@ -129,9 +133,14 @@ class Change:
 
     def __str__(self):
         return (u"Change(revision=%r, who=%r, branch=%r, comments=%r, " +
-                u"when=%r, category=%r, project=%r, repository=%r)") % (
+                u"when=%r, category=%r, project=%r, repository=%r, " +
+                u"codebase=%r)") % (
                 self.revision, self.who, self.branch, self.comments,
-                self.when, self.category, self.project, self.repository)
+                self.when, self.category, self.project, self.repository,
+                self.codebase)
+
+    def __cmp__(self, other):
+      return self.number - other.number
 
     def asText(self):
         data = ""
@@ -167,6 +176,7 @@ class Change:
         result['revlink'] = getattr(self, 'revlink', None)
         result['properties'] = self.properties.asList()
         result['repository'] = getattr(self, 'repository', None)
+        result['codebase'] = getattr(self, 'codebase', '')
         result['project'] = getattr(self, 'project', None)
         return result
 
@@ -223,7 +233,8 @@ class ChangeMaster: # pragma: no cover
         filename = os.path.join(self.basedir, "changes.pck")
         tmpfilename = filename + ".tmp"
         try:
-            dump(self, open(tmpfilename, "wb"))
+            with open(tmpfilename, "wb") as f:
+                dump(self, f)
             if runtime.platformType  == 'win32':
                 # windows cannot rename a file on top of an existing one
                 if os.path.exists(filename):

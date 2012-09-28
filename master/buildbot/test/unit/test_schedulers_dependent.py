@@ -85,7 +85,8 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         # pretend we saw a buildset with a matching name
         self.db.insertTestData([
             fakedb.SourceStamp(id=93, sourcestampsetid=1093, revision='555',
-                            branch='master', project='proj', repository='repo'),
+                            branch='master', project='proj', repository='repo',
+                            codebase = 'cb'),
             fakedb.Buildset(id=44, sourcestampsetid=1093),
             ])
         callbacks['buildsets'](bsid=44,
@@ -110,9 +111,10 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
                     dict(external_idstring=None,
                          properties=[('scheduler', ('n', 'Scheduler'))],
                          reason='downstream', sourcestampsetid = 1093),
-                    {'repo':
+                    {'cb':
                      dict(revision='555', branch='master', project='proj',
-                         repository='repo', sourcestampsetid = 1093)
+                         repository='repo', codebase='cb',
+                         sourcestampsetid = 1093)
                     })
         else:
             self.db.buildsets.assertBuildsets(1) # only the one we added above
@@ -129,7 +131,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
     def test_unrelated_buildset(self):
         return self.do_test('unrelated', False, SUCCESS, False)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_getUpstreamBuildsets_missing(self):
         sched = self.makeScheduler()
 
@@ -144,10 +146,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         ])
 
         # check return value (missing 12)
-        wfd = defer.waitForDeferred(
-            sched._getUpstreamBuildsets())
-        yield wfd
-        self.assertEqual(wfd.getResult(),
+        self.assertEqual((yield sched._getUpstreamBuildsets()),
                 [(11, 99, False, -1), (13, 99, False, -1)])
 
         # and check that it wrote the correct value back to the state

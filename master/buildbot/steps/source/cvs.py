@@ -15,12 +15,14 @@
 
 from email.Utils import formatdate
 import time
+import re
 
 from twisted.python import log
 from twisted.internet import defer
 
 from buildbot.process import buildstep
-from buildbot.steps.source import Source
+from buildbot.steps.shell import StringFileWriter
+from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 
 class CVS(Source):
@@ -43,16 +45,9 @@ class CVS(Source):
         self.method = method
         self.srcdir = 'source'
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(cvsroot=cvsroot,
-                                 cvsmodule=cvsmodule,
-                                 mode=mode,
-                                 method=method,
-                                 global_options=global_options,
-                                 extra_options=extra_options,
-                                 login=login,
-                                 )
 
     def startVC(self, branch, revision, patch):
+        self.branch = branch
         self.revision = revision
         self.stdio_log = self.addLog("stdio")
         self.method = self._getMethod()
@@ -74,49 +69,38 @@ class CVS(Source):
         d.addErrback(self.failed)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def incremental(self):
-        wfd = defer.waitForDeferred(self._sourcedirIsUpdatable())
-        yield wfd
-        updatable = wfd.getResult()
+        updatable = yield self._sourcedirIsUpdatable()
         if updatable:
-            d = self.doUpdate()
+            rv = yield self.doUpdate()
         else:
-            d = self.doCheckout(self.workdir)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        yield wfd.getResult()
-        return
+            rv = yield self.clobber()
+        defer.returnValue(rv)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def full(self):
         if self.method == 'clobber':
-            wfd = defer.waitForDeferred(self.clobber())
-            yield wfd
-            yield wfd.getResult()
+            rv = yield self.clobber()
+            defer.returnValue(rv)
             return
 
         elif self.method == 'copy':
-            wfd = defer.waitForDeferred(self.copy())
-            yield wfd
-            yield wfd.getResult()
+            rv = yield self.copy()
+            defer.returnValue(rv)
             return
 
-        wfd = defer.waitForDeferred(self._sourcedirIsUpdatable())
-        yield wfd
-        updatable = wfd.getResult()
+        updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
             log.msg("CVS repo not present, making full checkout")
-            d = self.doCheckout(self.workdir)
+            rv = yield self.doCheckout(self.workdir)
         elif self.method == 'clean':
-            d = self.clean()
+            rv = yield self.clean()
         elif self.method == 'fresh':
-            d = self.fresh()
+            rv = yield self.fresh()
         else:
             raise ValueError("Unknown method, check your configuration")
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        yield wfd.getResult()
+        defer.returnValue(rv)
 
     def clobber(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
@@ -169,30 +153,35 @@ class CVS(Source):
             command += ['--ignore']
         cmd = buildstep.RemoteShellCommand(self.workdir, command,
                                            env=self.env,
-                                           logEnviron=self.logEnviron)
+                                           logEnviron=self.logEnviron,
+                                           timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
-        def evaluate(rc):
-            if rc != 0:
+        def evaluate(cmd):
+            if cmd.didFail():
                 raise buildstep.BuildStepFailed()
-            return rc
-        d.addCallback(lambda _: evaluate(cmd.rc))
+            return cmd.rc
+        d.addCallback(evaluate)
         return d
         
     def doCheckout(self, dir):
-        command = ['-d', self.cvsroot, '-z3', 'checkout', '-d', dir,
-                   self.cvsmodule]
+        command = ['-d', self.cvsroot, '-z3', 'checkout', '-d', dir ]
         command = self.global_options + command + self.extra_options
         if self.branch:
             command += ['-r', self.branch]
         if self.revision:
             command += ['-D', self.revision]
+        command += [ self.cvsmodule ]
         d = self._dovccmd(command, '')
         return d
 
     def doUpdate(self):
         command = ['-z3', 'update', '-dP']
-        if self.branch:
+        branch = self.branch
+        # special case. 'cvs update -r HEAD -D today' gives no files; see #2351
+        if branch == 'HEAD' and self.revision:
+            branch = None
+        if branch:
             command += ['-r', self.branch]
         if self.revision:
             command += ['-D', self.revision]
@@ -229,6 +218,7 @@ class CVS(Source):
         cmd = buildstep.RemoteShellCommand(workdir, ['cvs'] +
                                            command,
                                            env=self.env,
+                                           timeout=self.timeout,
                                            logEnviron=self.logEnviron)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
@@ -240,21 +230,50 @@ class CVS(Source):
         d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
+    @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/CVS',
-                                               'logEnviron': self.logEnviron})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def _fail(tmp):
-            if cmd.rc != 0:
-                return False
-            return True
-        d.addCallback(_fail)
-        return d
+        myFileWriter = StringFileWriter()
+        args = {
+                'workdir': self.build.path_module.join(self.workdir, 'CVS'),
+                'writer': myFileWriter,
+                'maxsize': None,
+                'blocksize': 32*1024,
+                }
+
+        cmd = buildstep.RemoteCommand('uploadFile',
+                dict(slavesrc='Root', **args),
+                ignore_updates=True)
+        yield self.runCommand(cmd)
+        if cmd.rc is not None and cmd.rc != 0:
+            defer.returnValue(False)
+            return
+
+        # on Windows, the cvsroot may not contain the password, so compare to
+        # both
+        cvsroot_without_pw = re.sub("(:pserver:[^:]*):[^@]*(@.*)",
+                                    r"\1\2", self.cvsroot)
+        if myFileWriter.buffer.strip() not in (self.cvsroot,
+                                               cvsroot_without_pw):
+            defer.returnValue(False)
+            return
+
+        myFileWriter.buffer = ""
+        cmd = buildstep.RemoteCommand('uploadFile',
+                dict(slavesrc='Repository', **args),
+                ignore_updates=True)
+        yield self.runCommand(cmd)
+        if cmd.rc is not None and cmd.rc != 0:
+            defer.returnValue(False)
+            return
+        if myFileWriter.buffer.strip() != self.cvsmodule:
+            defer.returnValue(False)
+            return
+
+        defer.returnValue(True)
 
     def parseGotRevision(self, res):
         revision = time.strftime("%Y-%m-%d %H:%M:%S +0000", time.gmtime())
-        self.setProperty('got_revision', revision, 'Source')
+        self.updateSourceProperty('got_revision', revision)
         return res
 
     def checkCvs(self):

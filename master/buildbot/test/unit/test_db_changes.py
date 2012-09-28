@@ -50,7 +50,7 @@ class TestChangesConnectorComponent(
         fakedb.Change(changeid=13, author="dustin", comments="fix spelling",
             is_dir=0, branch="master", revision="deadbeef",
             when_timestamp=266738400, revlink=None, category=None,
-            repository='', project=''),
+            repository='', codebase='', project=''),
 
         fakedb.ChangeFile(changeid=13, filename='master/README.txt'),
         fakedb.ChangeFile(changeid=13, filename='slave/README.txt'),
@@ -63,7 +63,8 @@ class TestChangesConnectorComponent(
         fakedb.Change(changeid=14, author="warner", comments="fix whitespace",
             is_dir=0, branch="warnerdb", revision="0e92a098b",
             when_timestamp=266738404, revlink='http://warner/0e92a098b',
-            category='devel', repository='git://warner', project='Buildbot'),
+            category='devel', repository='git://warner', codebase='mainapp', 
+            project='Buildbot'),
 
         fakedb.ChangeFile(changeid=14, filename='master/buildbot/__init__.py'),
     ]
@@ -79,6 +80,7 @@ class TestChangesConnectorComponent(
         'project': u'Buildbot',
         'properties': {},
         'repository': u'git://warner',
+        'codebase': u'mainapp',
         'revision': u'0e92a098b',
         'revlink': u'http://warner/0e92a098b',
         'when_timestamp': epoch2datetime(266738404),
@@ -89,6 +91,7 @@ class TestChangesConnectorComponent(
          category='devel',
          isdir=0,
          repository=u'git://warner',
+         codebase=u'mainapp',
          who=u'warner',
          when=266738404,
          comments=u'fix whitespace',
@@ -117,6 +120,7 @@ class TestChangesConnectorComponent(
         ok = ok and ca.revlink == cb.revlink
         ok = ok and ca.properties == cb.properties
         ok = ok and ca.repository == cb.repository
+        ok = ok and ca.codebase == cb.codebase
         ok = ok and ca.project == cb.project
         if not ok:
             def printable(c):
@@ -187,6 +191,7 @@ class TestChangesConnectorComponent(
                  revlink=None,
                  properties={u'platform': (u'linux', 'Change')},
                  repository=u'',
+                 codebase=u'',
                  project=u'')
         # check all of the columns of the four relevant tables
         def check_change(changeid):
@@ -204,6 +209,7 @@ class TestChangesConnectorComponent(
                 self.assertEqual(r[0].when_timestamp, 266738400)
                 self.assertEqual(r[0].category, None)
                 self.assertEqual(r[0].repository, '')
+                self.assertEqual(r[0].codebase, '')
                 self.assertEqual(r[0].project, '')
             return self.db.pool.do(thd)
         d.addCallback(check_change)
@@ -256,6 +262,7 @@ class TestChangesConnectorComponent(
                  revlink=None,
                  properties={},
                  repository=u'',
+                 codebase=u'',
                  project=u'',
                  _reactor=clock)
         # check all of the columns of the four relevant tables
@@ -311,6 +318,7 @@ class TestChangesConnectorComponent(
                  revlink=None,
                  properties={},
                  repository=u'',
+                 codebase=u'',
                  project=u'',
                  uid=1))
         # check all of the columns of the five relevant tables
@@ -425,6 +433,33 @@ class TestChangesConnectorComponent(
                     'change_files': [14],
                     'change_properties': [],
                     'changes': [14, 15],
+                })
+            return self.db.pool.do(thd)
+        d.addCallback(check)
+        return d
+
+    def test_pruneChanges_lots(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=n)
+            for n in xrange(1, 151)
+        ])
+
+        d.addCallback(lambda _ : self.db.changes.pruneChanges(1))
+        def check(_):
+            def thd(conn):
+                results = {}
+                for tbl_name in ('scheduler_changes', 'sourcestamp_changes',
+                                 'change_files', 'change_properties',
+                                 'changes'):
+                    tbl = self.db.model.metadata.tables[tbl_name]
+                    r = conn.execute(sa.select([tbl.c.changeid]))
+                    results[tbl_name] = len([ r for r in r.fetchall() ])
+                self.assertEqual(results, {
+                    'scheduler_changes': 0,
+                    'sourcestamp_changes': 0,
+                    'change_files': 0,
+                    'change_properties': 0,
+                    'changes': 1,
                 })
             return self.db.pool.do(thd)
         d.addCallback(check)

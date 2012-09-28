@@ -78,9 +78,41 @@
   {% endif %}
 {% endmacro %}
 
-{% macro force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props) %}
- <form method="post" name="force_build" action="{{ force_url }}" class="command forcebuild">
+{% macro force_build_scheduler_parameter(f, authz, request, sch, default_props) %}
+    {% if f and not f.hide and (f.fullName != "username" or not authz.authenticated(request)) %}
+    <div class="row{% for subtype in f.type %} force-{{subtype}}{%endfor%}"{% if f.name %} id="force-{{sch.name}}-{{f.fullName}}"{% endif %}>
+    {% if 'text' in f.type or 'int' in f.type %}
+       <span class="label">{{f.label}}</span>
+       <input type='text' size='{{f.size}}' name='{{f.fullName}}' value='{{default_props[sch.name+"."+f.fullName]}}' />
+    {% elif 'bool' in f.type%}
+       <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
+       <span class="label">{{f.label}}</span>
+    {% elif 'textarea' in f.type %}
+       <span class="label">{{f.label}}</span>
+       <textarea name='{{f.fullName}}' rows={{f.rows}} cols={{f.cols}}>{{default_props[sch.name+"."+f.fullName]}}</textarea>
+    {% elif 'list' in f.type %}
+       <span class="label">{{f.label}}</span>
+       <span class="select">
+       <select name='{{f.fullName}}' {{ f.multiple and "multiple" or ""}}>
+         {% for c in f.choices %}
+         <option {{(c in default_props[sch.name+"."+f.fullName]) and "selected" or ""}}>{{c}}</option>
+         {% endfor %}
+       </select>
+       </span>
+    {% elif 'nested' in f.type %}
+      {% if f.label %}<span class="label">{{f.label}}</span>{% endif %}
+      {% for subfield in f.fields %}
+        {{ force_build_scheduler_parameter(subfield, authz, request, sch, default_props) }}
+      {% endfor %}
+    {% endif %}
+    </div>
+  {% endif %}
+{% endmacro %}
 
+{% macro force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props) %}
+ <form method="post" name="force_build" action="{{ force_url }}" class="command_forcebuild">
+
+  <h3>{{ sch.name|e }}</h3>
   {% if on_all %}
      <p>To force a build on <strong>all Builders</strong>, fill out the following fields
           and push the 'Force Build' button</p>
@@ -106,51 +138,15 @@
   {% endif %}
   <input type='hidden' name='forcescheduler' value='{{sch.name}}' />
   {% for f in sch.all_fields %}
-    {% if f.name != "username" or not authz.authenticated(request) %}
-    {% if f.type == "text" or f.type == "int"%}
-    <div class="row">
-       <span class="label">{{f.label}}</span>
-       <input type='text' size='{{f.size}}' name='{{f.name}}' value='{{default_props[sch.name+"."+f.name]}}' />
-    </div>
-    {% elif f.type == "bool"%}
-    <div class="row">
-       <input type='checkbox' name='checkbox' value='{{f.name}}' {{default_props[sch.name+"."+f.name]}} />
-       <span class="label">{{f.label}}</span>
-    </div>
-    {% elif f.type == "textarea" %}
-      <div class="row">
-       <span class="label">{{f.label}}</span><br>
-       <textarea name='{{f.name}}' rows={{f.rows}} cols={{f.cols}}>{{default_props[sch.name+"."+f.name]}}</textarea>
-    </div>
-    {% elif f.type == "anyproperty" %}
-    <div class="row">
-      {{ f.label }}
-       <span class="label">Name:</span>
-       <span class="field"><input type="text" name="{{ f.name }}name" /></span>
-       <span class="label">Value:</span>
-       <span class="field"><input type="text" name="{{ f.name }}value" /></span>
-    </div>
-    {% elif f.type == "list" %}
-    <div class="row">
-       <span class="label">{{f.label}}</span><br>
-       <span class="select">
-       <select name='{{f.name}}' {{ f.multiple and "multiple" or ""}}>
-         {% for c in f.choices %}
-         <option {{(c in default_props[sch.name+"."+f.name]) and "selected" or ""}}>{{c}}</option>
-         {% endfor %}
-       </select> <br>
-       </span>
-    </div>
-    {% endif %}
-    {% endif %}
+    {{ force_build_scheduler_parameter(f, authz, request, sch, default_props) }}
   {% endfor %}
 
   <input type="submit" value="Force Build" />
  </form>
 {% endmacro %}
 {% macro force_build(force_url, authz, request, on_all=False, on_selected=False, builders=[], force_schedulers={},default_props={}) %}
- {% for name, sch in force_schedulers.items() %}
-    {{ force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch,default_props=default_props) }}
+  {% for name, sch in force_schedulers.items() %}
+    {{ force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props=default_props) }}
   {% endfor %}
 
 {% endmacro %}

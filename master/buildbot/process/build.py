@@ -65,9 +65,8 @@ class Build(properties.PropertiesMixin):
     def __init__(self, requests):
         self.requests = requests
         self.locks = []
-
         # build a source stamp
-        self.source = requests[0].mergeWith(requests[1:])
+        self.sources = requests[0].mergeSourceStampsWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
 
         self.progress = None
@@ -92,14 +91,19 @@ class Build(properties.PropertiesMixin):
     def setSlaveEnvironment(self, env):
         self.slaveEnvironment = env
 
-    def getSourceStamp(self, repository=None):
-        if repository is None:
-            return self.source
-        assert (repository in self.sources)
-        return self.sources[repository]
+    def getSourceStamp(self, codebase=''):
+        for source in self.sources:
+            if source.codebase == codebase:
+                return source
+        return None
+
+    def getAllSourceStamps(self):
+        return list(self.sources)
 
     def allChanges(self):
-        return self.source.changes
+        for s in self.sources:
+            for c in s.changes:
+                yield c
 
     def allFiles(self):
         # return a list of all source files that were changed
@@ -117,8 +121,9 @@ class Build(properties.PropertiesMixin):
         for c in self.allChanges():
             if c.who not in blamelist:
                 blamelist.append(c.who)
-        if self.source.patch_info: #Add patch author to blamelist
-            blamelist.append(self.source.patch_info[0])
+        for source in self.sources:
+            if source.patch_info: #Add patch author to blamelist
+                blamelist.append(source.patch_info[0])
         blamelist.sort()
         return blamelist
 
@@ -155,8 +160,8 @@ class Build(properties.PropertiesMixin):
         buildmaster = self.builder.botmaster.parent
         props.updateFromProperties(buildmaster.config.properties)
 
-        # from the SourceStamp, which has properties via Change
-        for change in self.source.changes:
+        # from the SourceStamps, which have properties via Change
+        for change in self.allChanges():
             props.updateFromProperties(change.properties)
 
         # and finally, get any properties from requests (this is the path
@@ -167,25 +172,33 @@ class Build(properties.PropertiesMixin):
         # now set some properties of our own, corresponding to the
         # build itself
         props.setProperty("buildnumber", self.build_status.number, "Build")
-        props.setProperty("branch", self.source.branch, "Build")
-        props.setProperty("revision", self.source.revision, "Build")
-        props.setProperty("repository", self.source.repository, "Build")
-        props.setProperty("project", self.source.project, "Build")
+        
+        if self.sources and len(self.sources) == 1:
+            # old interface for backwards compatibility
+            source = self.sources[0]
+            props.setProperty("branch", source.branch, "Build")
+            props.setProperty("revision", source.revision, "Build")
+            props.setProperty("repository", source.repository, "Build")
+            props.setProperty("codebase", source.codebase, "Build")
+            props.setProperty("project", source.project, "Build")
+
         self.builder.setupProperties(props)
 
     def setupSlaveBuilder(self, slavebuilder):
         self.slavebuilder = slavebuilder
+
+        self.path_module = slavebuilder.slave.path_module
 
         # navigate our way back to the L{buildbot.buildslave.BuildSlave}
         # object that came from the config, and get its properties
         buildslave_properties = slavebuilder.slave.properties
         self.getProperties().updateFromProperties(buildslave_properties)
         if slavebuilder.slave.slave_basedir:
-            self.setProperty("workdir",
-                    slavebuilder.slave.path_module.join(
+            self.setProperty("builddir",
+                    self.path_module.join(
                         slavebuilder.slave.slave_basedir,
                         self.builder.config.slavebuilddir),
-                    "slave")
+                    "Slave")
 
         self.slavename = slavebuilder.slave.slavename
         self.build_status.setSlavename(self.slavename)
@@ -217,7 +230,7 @@ class Build(properties.PropertiesMixin):
             lock_list.append((lock, access))
         self.locks = lock_list
         # then narrow SlaveLocks down to the right slave
-        self.locks = [(l.getLock(self.slavebuilder), la)
+        self.locks = [(l.getLock(self.slavebuilder.slave), la)
                        for l, la in self.locks]
         self.remote = slavebuilder.remote
         self.remote.notifyOnDisconnect(self.lostRemote)
@@ -267,7 +280,7 @@ class Build(properties.PropertiesMixin):
             return defer.succeed(None)
         log.msg("acquireLocks(build %s, locks %s)" % (self, self.locks))
         for lock, access in self.locks:
-            if not lock.isAvailable(access):
+            if not lock.isAvailable(self, access):
                 log.msg("Build %s waiting for lock %s" % (self, lock))
                 d = lock.waitUntilMaybeAvailable(self, access)
                 d.addCallback(self.acquireLocks)
@@ -289,18 +302,12 @@ class Build(properties.PropertiesMixin):
         stepnames = {}
         sps = []
 
-        for factory, args in self.stepFactories:
-            args = args.copy()
-            try:
-                step = factory(**args)
-            except:
-                log.msg("error while creating step, factory=%s, args=%s"
-                        % (factory, args))
-                raise
+        for factory in self.stepFactories:
+            step = factory.buildStep()
             step.setBuild(self)
             step.setBuildSlave(self.slavebuilder.slave)
             if callable (self.workdir):
-                step.setDefaultWorkdir (self.workdir (self.source))
+                step.setDefaultWorkdir (self.workdir (self.sources))
             else:
                 step.setDefaultWorkdir (self.workdir)
             name = step.name
@@ -341,7 +348,8 @@ class Build(properties.PropertiesMixin):
                 self.progress.setExpectationsFrom(expectations)
 
         # we are now ready to set up our BuildStatus.
-        self.build_status.setSourceStamp(self.source)
+        # pass all sourcestamps to the buildstatus
+        self.build_status.setSourceStamps(self.sources)
         self.build_status.setReason(self.reason)
         self.build_status.setBlamelist(self.blamelist())
         self.build_status.setProgress(self.progress)

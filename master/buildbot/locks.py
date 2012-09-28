@@ -29,17 +29,16 @@ class BaseLock:
     Class handling claiming and releasing of L{self}, and keeping track of
     current and waiting owners.
 
-    @note: Ideally, we'd like to maintain FIFO order. The place to do that
-           would be the L{isAvailable()} function. However, this function is
-           called by builds/steps both for the first time, and after waking
-           them up by L{self} from the L{self.waiting} queue. There is
-           currently no way of distinguishing between them.
+    We maintain the wait queue in FIFO order, and ensure that counting waiters
+    in the queue behind exclusive waiters cannot acquire the lock. This ensures
+    that exclusive waiters are not starved.
     """
     description = "<BaseLock>"
 
     def __init__(self, name, maxCount=1):
         self.name = name          # Name of the lock
-        self.waiting = []         # Current queue, tuples (LockAccess, deferred)
+        self.waiting = []         # Current queue, tuples (waiter, LockAccess,
+                                  #                        deferred)
         self.owners = []          # Current owners, tuples (owner, LockAccess)
         self.maxCount = maxCount  # maximal number of counting owners
 
@@ -67,26 +66,38 @@ class BaseLock:
         return num_excl, num_counting
 
 
-    def isAvailable(self, access):
+    def isAvailable(self, requester, access):
         """ Return a boolean whether the lock is available for claiming """
-        debuglog("%s isAvailable(%s): self.owners=%r"
-                                            % (self, access, self.owners))
+        debuglog("%s isAvailable(%s, %s): self.owners=%r"
+                                      % (self, requester, access, self.owners))
         num_excl, num_counting = self._getOwnersCount()
+
+        # Find all waiters ahead of the requester in the wait queue
+        for idx, waiter in enumerate(self.waiting):
+            if waiter[0] == requester:
+                w_index = idx
+                break
+        else:
+            w_index = len(self.waiting) 
+        ahead = self.waiting[:w_index]
+
         if access.mode == 'counting':
             # Wants counting access
-            return num_excl == 0 and num_counting < self.maxCount
+            return num_excl == 0 and num_counting + len(ahead) < self.maxCount \
+                    and all([w[1].mode == 'counting' for w in ahead])
         else:
             # Wants exclusive access
-            return num_excl == 0 and num_counting == 0
+            return num_excl == 0 and num_counting == 0 and len(ahead) == 0
 
     def claim(self, owner, access):
         """ Claim the lock (lock must be available) """
         debuglog("%s claim(%s, %s)" % (self, owner, access.mode))
         assert owner is not None
-        assert self.isAvailable(access), "ask for isAvailable() first"
+        assert self.isAvailable(owner, access), "ask for isAvailable() first"
 
         assert isinstance(access, LockAccess)
         assert access.mode in ['counting', 'exclusive']
+        self.waiting = [w for w in self.waiting if w[0] != owner]
         self.owners.append((owner, access))
         debuglog(" %s is claimed '%s'" % (self, access.mode))
 
@@ -101,28 +112,32 @@ class BaseLock:
 
         debuglog("%s release(%s, %s)" % (self, owner, access.mode))
         entry = (owner, access)
-        assert entry in self.owners
+        if not entry in self.owners:
+            debuglog("%s already released" % self)
+            return
         self.owners.remove(entry)
         # who can we wake up?
         # After an exclusive access, we may need to wake up several waiting.
         # Break out of the loop when the first waiting client should not be awakened.
         num_excl, num_counting = self._getOwnersCount()
-        while len(self.waiting) > 0:
-            access, d = self.waiting[0]
-            if access.mode == 'counting':
+        for i, (w_owner, w_access, d) in enumerate(self.waiting):
+            if w_access.mode == 'counting':
                 if num_excl > 0 or num_counting == self.maxCount:
                     break
                 else:
                     num_counting = num_counting + 1
             else:
-                # access.mode == 'exclusive'
+                # w_access.mode == 'exclusive'
                 if num_excl > 0 or num_counting > 0:
                     break
                 else:
                     num_excl = num_excl + 1
 
-            del self.waiting[0]
-            reactor.callLater(0, d.callback, self)
+            # If the waiter has a deferred, wake it up and clear the deferred
+            # from the wait queue entry to indicate that it has been woken.
+            if d:
+                self.waiting[i] = (w_owner, w_access, None)
+                reactor.callLater(0, d.callback, self)
 
         # notify any listeners
         self.release_subs.deliver()
@@ -136,17 +151,23 @@ class BaseLock:
         """
         debuglog("%s waitUntilAvailable(%s)" % (self, owner))
         assert isinstance(access, LockAccess)
-        if self.isAvailable(access):
+        if self.isAvailable(owner, access):
             return defer.succeed(self)
         d = defer.Deferred()
-        self.waiting.append((access, d))
+
+        # Are we already in the wait queue?
+        w = [i for i, w in enumerate(self.waiting) if w[0] == owner]
+        if w:
+            self.waiting[w[0]] = (owner, access, d)
+        else:
+            self.waiting.append((owner, access, d))
         return d
 
     def stopWaitingUntilAvailable(self, owner, access, d):
         debuglog("%s stopWaitingUntilAvailable(%s)" % (self, owner))
         assert isinstance(access, LockAccess)
-        assert (access, d) in self.waiting
-        self.waiting.remove( (access, d) )
+        assert (owner, access, d) in self.waiting
+        self.waiting = [w for w in self.waiting if w[0] != owner]
 
     def isOwner(self, owner, access):
         return (owner, access) in self.owners
@@ -173,8 +194,8 @@ class RealSlaveLock:
     def __repr__(self):
         return self.description
 
-    def getLock(self, slavebuilder):
-        slavename = slavebuilder.slave.slavename
+    def getLock(self, slave):
+        slavename = slave.slavename
         if not self.locks.has_key(slavename):
             maxCount = self.maxCountForSlave.get(slavename,
                                                  self.maxCount)

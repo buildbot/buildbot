@@ -121,6 +121,7 @@ class Change(Row):
         when_timestamp = 1200000,
         category = 'cat',
         repository = 'repo',
+        codebase =  '',
         project = 'proj',
     )
 
@@ -202,6 +203,7 @@ class SourceStamp(Row):
         revision = 'abcd',
         patchid = None,
         repository = 'repo',
+        codebase = '',
         project = 'proj',
         sourcestampsetid = None,
     )
@@ -351,7 +353,7 @@ class FakeChangesComponent(FakeDBComponent):
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
             revision=None, when_timestamp=None, branch=None,
             category=None, revlink='', properties={}, repository='',
-            project='', uid=None):
+            project='', codebase='', uid=None):
         if self.changes:
             changeid = max(self.changes.iterkeys()) + 1
         else:
@@ -368,7 +370,8 @@ class FakeChangesComponent(FakeDBComponent):
             category=category,
             revlink=revlink,
             repository=repository,
-            project=project)
+            project=project,
+            codebase=codebase)
         ch.files = files
         ch.properties = properties
 
@@ -398,6 +401,7 @@ class FakeChangesComponent(FakeDBComponent):
                 revlink=row.revlink,
                 properties=row.properties,
                 repository=row.repository,
+                codebase=row.codebase,
                 project=row.project)
 
         return defer.succeed(chdict)
@@ -438,7 +442,6 @@ class FakeChangesComponent(FakeDBComponent):
             repository=change.repository,
             project=change.project)
         self.changes[changeid] = row
-
 
 class FakeSchedulersComponent(FakeDBComponent):
 
@@ -539,7 +542,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
     # component methods
 
     def addSourceStamp(self, branch, revision, repository, project, sourcestampsetid,
-                          patch_body=None, patch_level=0, patch_author=None,
+                          codebase = '', patch_body=None, patch_level=0, patch_author=None,
                           patch_comment=None, patch_subdir=None, changeids=[]):
         id = len(self.sourcestamps) + 100
         while id in self.sourcestamps:
@@ -561,7 +564,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
         else:
             patchid = None
 
-        self.sourcestamps[id] = dict(id=id, sourcestampsetid=sourcestampsetid, branch=branch, revision=revision,
+        self.sourcestamps[id] = dict(id=id, sourcestampsetid=sourcestampsetid, branch=branch, revision=revision, codebase=codebase,
                 patchid=patchid, repository=repository, project=project,
                 changeids=changeids)
         return defer.succeed(id)
@@ -726,7 +729,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         for sourcestamp in self.db.sourcestamps.sourcestamps.itervalues():
             if sourcestamp['sourcestampsetid'] == buildset['sourcestampsetid']:
                 ssdict = sourcestamp.copy()
-                ss_repository = ssdict['repository']
+                ss_repository = ssdict['codebase']
                 dictOfssDict[ss_repository] = ssdict
 
         if 'id' in buildset:

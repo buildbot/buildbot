@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os
 import shutil
 import cPickle
@@ -37,7 +39,8 @@ class ChangeImportMixin(db.RealDatabaseMixin):
         cm.changes = changes
         if recode_fn:
             recode_fn(cm)
-        cPickle.dump(cm, open(self.changes_pickle, "wb"))
+        with open(self.changes_pickle, "wb") as f:
+            cPickle.dump(cm, f)
 
     def make_change(self, **kwargs):
         return Change(**kwargs)

@@ -68,6 +68,7 @@ Mercurial
  * :bb:chsrc:`PBChangeSource` (listening for connections from
    :file:`buildbot/changes/hgbuildbot.py` run as an in-process 'changegroup'
    hook)
+ * :bb:chsrc:`HgPoller` (polling a remote Mercurial repository)
  * :bb:chsrc:`GoogleCodeAtomPoller` (polling the
    commit feed for a GoogleCode Git repository)
 
@@ -444,19 +445,19 @@ execution on buildslaves.
 
 The :bb:chsrc:`PBChangeSource` is created with the following arguments.
 
-`port`
+``port``
     which port to listen on. If ``None`` (which is the default), it
     shares the port used for buildslave connections.
 
-`user`
+``user``
     The user account that the client program must use to connect. Defaults to
     ``change``
 
-`passwd`
+``passwd``
     The password for the connection - defaults to ``changepw``.  Do not use
     this default on a publicly exposed port!
 
-`prefix`
+``prefix``
     The prefix to be found and stripped from filenames delivered over the
     connection, defaulting to ``None``. Any filenames which do not start with
     this prefix will be removed. If all the filenames in a given Change are
@@ -510,6 +511,16 @@ hostname/portnumber as appropriate for your buildbot:
     [hgbuildbot]
     master = buildmaster.example.org:9987
     # .. other hgbuildbot parameters ..
+
+The ``master`` configuration key allows to have more than one buildmaster
+specification. The buildmasters have to be separated by a whitspace
+or comma (see also 'hg help config'):
+
+.. code-block:: ini
+
+    master = 
+        buildmaster.example.org:9987
+        buildmaster2.example.org:9989
 
 .. note:: Mercurial lets you define multiple ``changegroup`` hooks by
    giving them distinct names, like ``changegroup.foo`` and
@@ -845,9 +856,15 @@ multiple branches.
     A function to convert pathnames into ``(branch, relative_pathname)``
     tuples. Use this to explain your repository's branch-naming policy to
     :bb:chsrc:`SVNPoller`. This function must accept a single string (the
-    pathname relative to the repository) and return a two-entry tuple. There
-    are a few utility functions in :mod:`buildbot.changes.svnpoller` that can
-    be used as a :meth:`split_file` function; see below for details.
+    pathname relative to the repository) and return a two-entry tuple.
+    Directory pathnames always end with a right slash to distinguish them from
+    files, like ``trunk/src/``, or ``src/``. There are a few utility functions
+    in :mod:`buildbot.changes.svnpoller` that can be used as a :meth:`split_file`
+    function; see below for details.
+
+    For directories, the relative pathname returned by :meth:`split_file` should
+    end with a right slash but an empty string is also accepted for the root,
+    like ``("branches/1.5.x", "")`` being converted from ``"branches/1.5.x/"``.
 
     The default value always returns ``(None, path)``, which indicates that
     all files are on the trunk.
@@ -908,6 +925,9 @@ multiple branches.
     If specified, this is a pathname of a cache file that :bb:chsrc:`SVNPoller`
     will use to store its state between restarts of the master.
 
+``extra_args``
+    If specified, the extra arguments will be added to the svn command args.
+    
 Several split file functions are available for common SVN repository layouts.
 For a poller that is only monitoring trunk, the default split file function
 is available explicitly as ``split_file_alwaystrunk``::
@@ -919,8 +939,8 @@ is available explicitly as ``split_file_alwaystrunk``::
         split_file=split_file_alwaystrunk)
 
 
-For repositories with the ``{PROJECT}/trunk`` and
-``{PROJECT}/branches/{BRANCH}`` layout, ``split_file_branches`` will do the
+For repositories with the ``/trunk`` and
+``/branches/{BRANCH}`` layout, ``split_file_branches`` will do the
 job::
 
     from buildbot.changes.svnpoller import SVNPoller
@@ -928,6 +948,22 @@ job::
     c['change_source'] = SVNPoller(
         svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
         split_file=split_file_branches)
+
+When using this splitter the poller will set the ``project`` attribute of any
+changes to the ``project`` attribute of the poller.
+
+For repositories with the ``{PROJECT}/trunk`` and
+``{PROJECT}/branches/{BRANCH}`` layout, ``split_file_projects_branches`` will do
+the job::
+
+    from buildbot.changes.svnpoller import SVNPoller
+    from buildbot.changes.svnpoller import split_file_projects_branches
+    c['change_source'] = SVNPoller(
+        svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/",
+        split_file=split_file_projects_branches)
+
+When using this splitter the poller will set the ``project`` attribute of any
+changes to the project determined by the splitter.
 
 The :bb:chsrc:`SVNPoller` is highly adaptable to various Subversion layouts.
 See :ref:`Customizing-SVNPoller` for details and some common scenarios.
@@ -985,10 +1021,11 @@ GitPoller
 If you cannot take advantage of post-receive hooks as provided by
 :file:`contrib/git_buildbot.py` for example, then you can use the :bb:chsrc:`GitPoller`.
 
-The :bb:chsrc:`GitPoller` periodically fetches from a remote git repository and
-processes any changes. It requires its own working directory for operation, which
-can be specified via the ``workdir`` property. By default a temporary directory will
-be used.
+The :bb:chsrc:`GitPoller` periodically fetches from a remote git repository and processes any changes.
+It requires its own working directory for operation.
+The default should be adequate, but it can be overridden via the ``workdir`` property.
+
+.. note:: There can only be a single `GitPoller` pointed at any given repository.
 
 The :bb:chsrc:`GitPoller` requires git-1.7 and later.  It accepts the following
 arguments:
@@ -998,30 +1035,18 @@ arguments:
     ``git@example.com:foobaz/myrepo.git``
     (see the :command:`git fetch` help for more info on git-url formats)
 
-``branch``
-    the desired branch to fetch, will default to ``'master'``
+``branches``
+    a list of the branches to fetch, will default to ``['master']``
 
-``workdir``
-    the directory where the poller should keep its local repository. will
-    default to :samp:`{tempdir}/gitpoller_work`, which is probably not
-    what you want.  If this is a relative path, it will be interpreted
-    relative to the master's basedir.
+``branch``
+    accepts a single branch name to fetch.
+    Exists for backwards compatability with old configurations.
 
 ``pollinterval``
     interval in seconds between polls, default is 10 minutes
 
 ``gitbin``
     path to the git binary, defaults to just ``'git'``
-
-``fetch_refspec``
-    One or more refspecs to use when fetching updates for the
-    repository. By default, the :bb:chsrc:`GitPoller` will simply fetch
-    all refs. If your repository is large enough that this would be
-    unwise (or active enough on irrelevant branches that it'd be a
-    waste of time to fetch them all), you may wish to specify only a
-    certain refs to be updated. (A single refspec may be passed as a
-    string, or multiple refspecs may be passed as a list or set of
-    strings.)
 
 ``category``
     Set the category to be used for the changes produced by the
@@ -1046,12 +1071,102 @@ arguments:
     applied to file names since git will translate non-ascii file
     names to unreadable escape sequences.
 
+``workdir``
+    the directory where the poller should keep its local repository.
+    The default is :samp:`gitpoller_work`.
+    If this is a relative path, it will be interpreted relative to the master's basedir.
+    Multiple git pollers can share the same directory.
+
 An configuration for the git poller might look like this::
 
     from buildbot.changes.gitpoller import GitPoller
     c['change_source'] = GitPoller('git@example.com:foobaz/myrepo.git',
+                                   branches=['master', 'great_new_feature'])
+
+.. bb:chsrc:: HgPoller
+
+.. _HgPoller:
+
+HgPoller
+~~~~~~~~
+
+If you cannot take advantage of post-receive hooks as provided by
+:file:`buildbot/changes/hgbuildbot.py` for example, then you can use the
+:bb:chsrc:`HgPoller`.
+
+The :bb:chsrc:`HgPoller` periodically pulls a named branch from a remote
+Mercurial repository and processes any changes. It requires its own working
+directory for operation, which must be specified via the ``workdir`` property.
+
+The :bb:chsrc:`HgPoller` requires a working ``hg`` executable, and at least a
+read-only access to the repository it polls (possibly through ssh keys or by
+tweaking the ``hgrc`` of the system user buildbot runs as).
+
+The :bb:chsrc:`HgPoller` will not transmit any change if there are several heads
+on the watched named branch. This is similar (although not identical) to the
+Mercurial executable behaviour. This exceptional condition is usually the result
+of a developer mistake, and usually does not last for long. It is reported in
+logs. If fixed by a later merge, the buildmaster administrator does not have
+anything to do: that merge will be transmitted, together with the intermediate
+ones.
+
+The :bb:chsrc:`HgPoller` accepts the following arguments:
+
+``repourl``
+    the url that describes the remote repository, e.g.
+    ``http://hg.example.com/projects/myrepo``.
+    Any url suitable for ``hg pull`` can be specified.
+
+``branch``
+    the desired branch to pull, will default to ``'default'``
+
+``workdir``
+    the directory where the poller should keep its local repository. It
+    is mandatory for now, although later releases may provide a meaningful
+    default.
+
+    It also serves to identify the poller in the buildmaster internal
+    database. Changing it may result in re-processing all changes so far.
+
+    Several :bb:chsrc:`HgPoller` instances may share the same ``workdir`` for
+    mutualisation of the common history between two different branches, thus
+    easing on local and remote system resources and bandwith.
+
+    If relative, the ``workdir`` will be interpreted from the master directory.
+
+``pollinterval``
+    interval in seconds between polls, default is 10 minutes
+
+``hgbin``
+    path to the Mercurial binary, defaults to just ``'hg'``
+
+``category``
+    Set the category to be used for the changes produced by the
+    :bb:chsrc:`HgPoller`. This will then be set in any changes generated
+    by the :bb:chsrc:`HgPoller`, and can be used in a Change Filter for
+    triggering particular builders.
+
+``project``
+    Set the name of the project to be used for the
+    :bb:chsrc:`HgPoller`. This will then be set in any changes generated
+    by the ``HgPoller``, and can be used in a Change Filter for
+    triggering particular builders.
+
+``usetimestamps``
+    parse each revision's commit timestamp (default is ``True``),
+    or ignore it in favor of the current time (so recently processed
+    commits appear together in the waterfall page)
+
+``encoding``
+    Set encoding will be used to parse author's name and commit
+    message. Default encoding is ``'utf-8'``.
+
+A configuration for the Mercurial poller might look like this::
+
+    from buildbot.changes.hgpoller import HgPoller
+    c['change_source'] = HgPoller('http://hg.example.org/projects/myrepo',
                                    branch='great_new_feature',
-                                   workdir='/home/buildbot/gitpoller_workdir')
+                                   workdir='hg-myrepo')
 
 .. bb:chsrc:: GerritChangeSource
 

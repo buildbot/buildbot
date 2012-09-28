@@ -155,7 +155,7 @@ fully-qualified SVN URL in the following form:
 ``({REPOURL})({PROJECT-plus-BRANCH})({FILEPATH})``. When you create the
 :bb:chsrc:`SVNPoller`, you give it a ``svnurl`` value that includes all of the
 ``{REPOURL}`` and possibly some portion of the
-``{PROJECT-plus-BRANCH}` string. The :bb:chsrc:`SVNPoller`` is responsible
+``{PROJECT-plus-BRANCH}`` string. The :bb:chsrc:`SVNPoller` is responsible
 for producing Changes that contain a branch name and a ``{FILEPATH}``
 (which is relative to the top of a checked-out tree). The details of how these
 strings are split up depend upon how your repository names its branches.
@@ -193,16 +193,17 @@ watch more than just ``amanda/trunk``. We will set it to
 ``amanda`` so that we'll see both the trunk and all the branches.
 Second, we have to tell :bb:chsrc:`SVNPoller` how to split the
 ``({PROJECT-plus-BRANCH})({FILEPATH})`` strings it gets from the repository
-out into ``({BRANCH})`` and ``({FILEPATH})``` pairs.
+out into ``({BRANCH})`` and ``({FILEPATH})```.
 
 We do the latter by providing a ``split_file`` function. This function is
 responsible for splitting something like ``branches/3_3/common-src/amanda.h``
 into ``branch='branches/3_3'`` and ``filepath='common-src/amanda.h'``. The
 function is always given a string that names a file relative to the
 subdirectory pointed to by the :bb:chsrc:`SVNPoller`\'s ``svnurl=`` argument.
-It is expected to return a ``({BRANCHNAME}, {FILEPATH})`` tuple (in which
-``{FILEPATH}`` is relative to the branch indicated), or ``None`` to indicate
-that the file is outside any project of interest.
+It is expected to return a dictionary with at least the ``path`` key. The
+splitter may optionally set ``branch``, ``project`` and ``repository``.
+For backwards compatibility it may return a tuple of ``(branchname, path)``.
+It may also return ``None`` to indicate that the file is of no interest.
 
 .. note:: the function should return ``branches/3_3`` rather than just ``3_3``
     because the SVN checkout step, will append the branch name to the
@@ -215,9 +216,9 @@ scheme, the following function will work::
 
     def split_file_branches(path):
         pieces = path.split('/')
-        if pieces[0] == 'trunk':
+        if len(pieces) > 1 and pieces[0] == 'trunk':
             return (None, '/'.join(pieces[1:]))
-        elif pieces[0] == 'branches':
+        elif len(pieces) > 2 and pieces[0] == 'branches':
             return ('/'.join(pieces[0:2]),
                     '/'.join(pieces[2:]))
         else:
@@ -234,6 +235,36 @@ multiple branches, we would use this::
 Changes for all sorts of branches (with names like ``"branches/1.5.x"``, and
 ``None`` to indicate the trunk) will be delivered to the Schedulers.  Each
 Scheduler is then free to use or ignore each branch as it sees fit.
+
+If you have multiple projects in the same repository your split function can
+attach a project name to the Change to help the Scheduler filter out unwanted
+changes::
+
+    from buildbot.changes.svnpoller import split_file_branches
+    def split_file_projects_branches(path):
+        if not "/" in path:
+            return None
+        project, path = path.split("/", 1)
+        f = split_file_branches(path)
+        if f:
+            info = dict(project=project, path=f[1])
+            if f[0]:
+                info['branch'] = f[0]
+            return info
+        return f
+
+Again, this is provided by default. To use it you would do this::
+
+    from buildbot.changes.svnpoller import SVNPoller, split_file_projects_branches
+    c['change_source'] = SVNPoller(
+       svnurl="https://svn.amanda.sourceforge.net/svnroot/amanda/",
+       split_file=split_file_projects_branches)
+
+Note here that we are monitoring at the root of the repository, and that within
+that repository is a ``amanda`` subdirectory which in turn has ``trunk`` and
+``branches``. It is that ``amanda`` subdirectory whose name becomes the
+``project`` field of the Change.
+
 
 BRANCHNAME/PROJECT/FILEPATH repositories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -312,7 +343,13 @@ The following definition for :meth:`my_file_splitter` will do the job::
         projectname = pieces.pop(0)
         if projectname != 'Nevow':
             return None # wrong project
-        return (branch, '/'.join(pieces))
+        return dict(branc=branch, path='/'.join(pieces))
+
+If you later decide you want to get changes for Quotient as well you could
+replace the last 3 lines with simply::
+
+    return dict(project=projectname, branch=branch, path='/'.join(pieces))
+
 
 .. _Writing-Change-Sources:
 
@@ -470,124 +507,40 @@ parts of the repo URL in the sourcestamp, or lookup in a lookup table
 based on repo URL. As long as there is a permanent 1:1 mapping between
 repos and workdir, this will work.
 
-Advanced Property Interpolation
--------------------------------
-
-If the simple string substitutions described in :ref:`Properties` are not
-sufficent, more complex substitutions can be achieved with
-:class:`WithProperties` and Python functions.  This only works with
-dictionary-style interpolation.
-
-The function should take one argument - a properties object, described below -
-and should return a string.  Pass the function as a keyword argument to
-:class:`WithProperties`, and use the name of that keyword argument in the
-interpolating string. For example::
-
-    def determine_foo(props):
-        if props.hasProperty('bar'):
-            return props['bar']
-        elif props.hasProperty('baz'):
-            return props['baz']
-        return 'qux'
-    WithProperties('%(foo)s', foo=determine_foo)
-
-or, more practically, ::
-
-    WithProperties('%(now)s', now=lambda _: time.clock())
-
-Properties Objects
-~~~~~~~~~~~~~~~~~~
-
-.. class:: buildbot.interfaces.IProperties
-
-   The available methods on a properties object are those described by the
-   ``IProperties`` interface.  Specifically:
-
-
-   .. method:: getProperty(propname, default=None)
-
-      Get a named property, returning the default value if the property is not found.
-
-   .. method:: hasProperty(propname)
-
-      Determine whether the named property exists.
-
-   .. method:: setProperty(propname, value, source)
-
-      Set a property's value, also specifying the source for this value.
-
-   .. method:: getProperties()
-
-      Get a :class:`buildbot.process.properties.Properties` instance.  The
-      interface of this class is not finalized; where possible, use the other
-      ``IProperties`` methods.
-
 Writing New BuildSteps
 ----------------------
 
-While it is a good idea to keep your build process self-contained in
-the source code tree, sometimes it is convenient to put more
-intelligence into your Buildbot configuration. One way to do this is
-to write a custom :class:`BuildStep`. Once written, this Step can be used in
-the :file:`master.cfg` file.
+While it is a good idea to keep your build process self-contained in the source code tree, sometimes it is convenient to put more intelligence into your Buildbot configuration.
+One way to do this is to write a custom :class:`BuildStep`.
+Once written, this Step can be used in the :file:`master.cfg` file.
 
-The best reason for writing a custom :class:`BuildStep` is to better parse the
-results of the command being run. For example, a :class:`BuildStep` that knows
-about JUnit could look at the logfiles to determine which tests had
-been run, how many passed and how many failed, and then report more
-detailed information than a simple ``rc==0`` -based `good/bad`
-decision.
+The best reason for writing a custom :class:`BuildStep` is to better parse the results of the command being run.
+For example, a :class:`BuildStep` that knows about JUnit could look at the logfiles to determine which tests had been run, how many passed and how many failed, and then report more detailed information than a simple ``rc==0`` -based `good/bad` decision.
 
-Buildbot has acquired a large fleet of build steps, and sports a number of
-knobs and hooks to make steps easier to write.  This section may seem a bit
-overwhelming, but most custom steps will only need to apply one or two of the
-techniques outlined here.
+Buildbot has acquired a large fleet of build steps, and sports a number of knobs and hooks to make steps easier to write.
+This section may seem a bit overwhelming, but most custom steps will only need to apply one or two of the techniques outlined here.
 
-For complete documentation of the build step interfaces, see
-:doc:`../developer/cls-buildsteps`.
+For complete documentation of the build step interfaces, see :doc:`../developer/cls-buildsteps`.
 
 .. _Writing-BuildStep-Constructors:
 
 Writing BuildStep Constructors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Build steps act as their own factories, so their constructors are a bit more
-complex than necessary.  In the configuration file, a
-:class:`~buildbot.process.buildstep.BuildStep` object is instantiated, but
-because steps store state locally while executing, this object cannot be used
-during builds.  Instead, the build machinery calls the step's
-:meth:`~buildbot.process.buildstep.BuildStep.getStepFactory` method to get a
-tuple of a callable and keyword arguments that should be used to create a new
-instance.
+Build steps act as their own factories, so their constructors are a bit more complex than necessary.
+In the configuration file, a :class:`~buildbot.process.buildstep.BuildStep` object is instantiated, but because steps store state locally while executing, this object cannot be used during builds.
 
 Consider the use of a :class:`BuildStep` in :file:`master.cfg`::
 
     f.addStep(MyStep(someopt="stuff", anotheropt=1))
 
-This creates a single instance of class ``MyStep``.  However, Buildbot needs a
-new object each time the step is executed.  this is accomplished by storing the
-information required to instantiate a new object in the
-:attr:`~buildbot.process.buildstep.BuildStep.factory` attribute.  When the time
-comes to construct a new :class:`~buildbot.process.build.Build`,
-:class:`~buildbot.process.factory.BuildFactory` consults this attribute (via
-:meth:`~buildbot.process.buildstep.BuildStep.getStepFactory`) and instantiates
-a new step object.
+This creates a single instance of class ``MyStep``.
+However, Buildbot needs a new object each time the step is executed.
+An instance of :class:`~buildbot.process.buildstep.BuildStep` rembers how it was constructed, and can create copies of itself.
+When writing a new step class, then, keep in mind are that you cannot do anything "interesting" in the constructor -- limit yourself to checking and storing arguments.
 
-When writing a new step class, then, keep in mind are that you cannot do
-anything "interesting" in the constructor -- limit yourself to checking and
-storing arguments.  Each constructor in a sequence of :class:`BuildStep`
-subclasses must ensure the following:
-
-* the parent class's constructor is called with all otherwise-unspecified
-  keyword arguments.
-
-* all keyword arguments for the class itself are passed to
-  :meth:`addFactoryArguments`.
-
-Keep a ``**kwargs`` argument on the end of your options, and pass that up to
-the parent class's constructor.  If the class overrides constructor arguments
-for the parent class, those should be updated in ``kwargs``, rather than passed
-directly (which will cause errors during instantiation).
+It is customary to call the parent class's constructor with all otherwise-unspecified keyword arguments.
+Keep a ``**kwargs`` argument on the end of your options, and pass that up to the parent class's constructor.
 
 The whole thing looks like this::
 
@@ -613,36 +566,24 @@ The whole thing looks like this::
             self.frob_how_many = how_many
             self.frob_how = frob_how
     
-            # and record arguments for later
-            self.addFactoryArguments(
-                frob_what=frob_what,
-                frob_how_many=frob_how_many,
-                frob_how=frob_how)
-    
     class FastFrobnify(Frobnify):
         def __init__(self,
                 speed=5,
                 **kwargs)
             Frobnify.__init__(self, **kwargs)
             self.speed = speed
-            self.addFactoryArguments(
-                speed=speed)
 
 Running Commands
 ~~~~~~~~~~~~~~~~
 
-To spawn a command in the buildslave, create a
-:class:`~buildbot.process.buildstep.RemoteCommand` instance in your step's
-``start`` method and run it with
-:meth:`~buildbot.process.buildstep.BuildStep.runCommand`::
+To spawn a command in the buildslave, create a :class:`~buildbot.process.buildstep.RemoteCommand` instance in your step's ``start`` method and run it with :meth:`~buildbot.process.buildstep.BuildStep.runCommand`::
 
     cmd = RemoteCommand(args)
     d = self.runCommand(cmd)
 
 To add a LogFile, use :meth:`~buildbot.process.buildstep.BuildStep.addLog`.
-Make sure the log gets closed when it finishes. When giving a Logfile to a
-:class:`~buildbot.process.buildstep.RemoteShellCommand`, just ask it to close
-the log when the command completes::
+Make sure the log gets closed when it finishes.
+When giving a Logfile to a :class:`~buildbot.process.buildstep.RemoteShellCommand`, just ask it to close the log when the command completes::
 
     log = self.addLog('output')
     cmd.useLog(log, closeWhenFinished=True)
@@ -891,7 +832,7 @@ arbitrary object. For example::
             ShellCommand.start(self)
 
 Remember that properties set in a step may not be available until the next step
-begins.  In particular, any :class:`Property` or :class:`WithProperties`
+begins.  In particular, any :class:`Property` or :class:`Interpolate`
 instances for the current step are interpoloated before the ``start`` method
 begins.
 
@@ -929,7 +870,7 @@ build number. ::
 
     class TestWithCodeCoverage(BuildStep):
         command = ["make", "test",
-                   WithProperties("buildnum=%s", "buildnumber")]
+                   Interpolate("buildnum=%(prop:buildnumber)s")]
     
         def createSummary(self, log):
             buildnumber = self.getProperty("buildnumber")
@@ -941,7 +882,7 @@ output by the build process itself::
 
     class TestWithCodeCoverage(BuildStep):
         command = ["make", "test",
-                   WithProperties("buildnum=%s", "buildnumber")]
+                   Interpolate("buildnum=%(prop:buildnumber)s")]
     
         def createSummary(self, log):
             output = StringIO(log.getText())

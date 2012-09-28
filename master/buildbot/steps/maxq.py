@@ -26,7 +26,6 @@ class MaxQ(ShellCommand):
             config.error("please pass testdir")
         kwargs['command'] = 'run_maxq.py %s' % (testdir,)
         ShellCommand.__init__(self, **kwargs)
-        self.addFactoryArguments(testdir=testdir)
 
     def commandComplete(self, cmd):
         output = cmd.logs['stdio'].getText()
@@ -35,7 +34,7 @@ class MaxQ(ShellCommand):
     def evaluateCommand(self, cmd):
         # treat a nonzero exit status as a failure, if no other failures are
         # detected
-        if not self.failures and cmd.rc != 0:
+        if not self.failures and cmd.didFail():
             self.failures = 1
         if self.failures:
             return FAILURE

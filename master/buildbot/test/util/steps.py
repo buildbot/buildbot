@@ -71,10 +71,8 @@ class BuildStepMixin(object):
 
         @param slave_env: environment from the slave at slave startup
         """
-        # yes, Virginia, "factory" refers both to the tuple and its first
-        # element TODO: fix that up
-        factory, args = step.getStepFactory()
-        step = self.step = factory(**args)
+        factory = interfaces.IBuildStepFactory(step)
+        step = self.step = factory.buildStep()
 
         # step.build
 
@@ -240,10 +238,19 @@ class BuildStepMixin(object):
             self.fail("got command %r when no further commands were expected"
                     % (got,))
 
-        # first check any ExpectedRemoteReference instances
         exp = self.expected_remote_commands.pop(0)
+
+        # handle any incomparable args
+        for arg in exp.incomparable_args:
+            self.failUnless(arg in got[1],
+                    "incomparable arg '%s' not received" % (arg,))
+            del got[1][arg]
+
+        # first check any ExpectedRemoteReference instances
         self.assertEqual((exp.remote_command, exp.args), got)
 
         # let the Expect object show any behaviors that are required
-        return exp.runBehaviors(command)
+        d = exp.runBehaviors(command)
+        d.addCallback(lambda _: command)
+        return d
 

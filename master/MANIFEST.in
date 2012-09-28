@@ -1,4 +1,4 @@
-include MANIFEST.in README NEWS CREDITS COPYING UPGRADING
+include MANIFEST.in README CREDITS COPYING UPGRADING
 
 include docs/examples/*.cfg
 include docs/conf.py
@@ -18,8 +18,10 @@ include docs/manual/_images/icon.blend
 include docs/manual/_images/Makefile
 include docs/bbdocs/*
 include docs/developer/*
+include docs/relnotes/*
 
 include buildbot/scripts/sample.cfg
+include buildbot/scripts/buildbot_tac.tmpl
 include buildbot/status/web/files/*
 include buildbot/status/web/templates/*.html buildbot/status/web/templates/*.xml
 include buildbot/clients/debug.glade

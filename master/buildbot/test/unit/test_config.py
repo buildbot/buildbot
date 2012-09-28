@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import re
 import os
 import textwrap
@@ -22,8 +24,9 @@ from twisted.trial import unittest
 from twisted.application import service
 from twisted.internet import defer
 from buildbot import config, buildslave, interfaces, revlinks
-from buildbot.process import properties
+from buildbot.process import properties, factory
 from buildbot.test.util import dirs, compat
+from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.changes import base as changes_base
 from buildbot.schedulers import base as schedulers_base
 from buildbot.status import base as status_base
@@ -67,32 +70,6 @@ class FakeBuilder(object):
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
-
-
-class ConfigErrorsMixin(object):
-
-    def assertConfigError(self, errors, substr_or_re):
-        if len(errors.errors) > 1:
-            self.fail("too many errors: %s" % (errors.errors,))
-        elif len(errors.errors) < 1:
-            self.fail("expected error did not occur")
-        elif isinstance(substr_or_re, str):
-            if substr_or_re not in errors.errors[0]:
-                self.fail("non-matching error: %s" % (errors.errors,))
-        else:
-            if not substr_or_re.search(errors.errors[0]):
-                self.fail("non-matching error: %s" % (errors.errors,))
-
-    def assertRaisesConfigError(self, substr_or_re, fn):
-        try:
-            fn()
-        except config.ConfigErrors, e:
-            self.assertConfigError(e, substr_or_re)
-        else:
-            self.fail("ConfigErrors not raised")
-
-    def assertNoConfigErrors(self, errors):
-        self.assertEqual(errors.errors, [])
 
 
 class ConfigErrors(unittest.TestCase):
@@ -159,9 +136,11 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def install_config_file(self, config_file, other_files={}):
         config_file = textwrap.dedent(config_file)
-        open(os.path.join(self.basedir, self.filename), "w").write(config_file)
+        with open(os.path.join(self.basedir, self.filename), "w") as f:
+            f.write(config_file)
         for file, contents in other_files.items():
-            open(file, "w").write(contents)
+            with open(file, "w") as f:
+                f.write(contents)
 
 
     # tests
@@ -567,6 +546,12 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 self.errors)
         self.assertResults(caches=dict(Changes=10, Builds=15, foo=1))
 
+    def test_load_caches_entries_test(self):
+        self.cfg.load_caches(self.filename,
+                dict(caches=dict(foo="1")),
+                self.errors)
+        self.assertConfigError(self.errors,
+                               "value for cache size 'foo' must be an integer")
 
     def test_load_schedulers_defaults(self):
         self.cfg.load_schedulers(self.filename, {}, self.errors)
@@ -616,18 +601,27 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_builders(self):
         bldr = config.BuilderConfig(name='x',
-                        factory=mock.Mock(), slavename='x')
+                        factory=factory.BuildFactory(), slavename='x')
         self.cfg.load_builders(self.filename,
                 dict(builders=[bldr]), self.errors)
         self.assertResults(builders=[bldr])
 
     def test_load_builders_dict(self):
-        bldr = dict(name='x', factory=mock.Mock(), slavename='x')
+        bldr = dict(name='x', factory=factory.BuildFactory(), slavename='x')
         self.cfg.load_builders(self.filename,
                 dict(builders=[bldr]), self.errors)
         self.assertIsInstance(self.cfg.builders[0], config.BuilderConfig)
         self.assertEqual(self.cfg.builders[0].name, 'x')
 
+    @compat.usesFlushWarnings
+    def test_load_builders_abs_builddir(self):
+        bldr = dict(name='x', factory=factory.BuildFactory(), slavename='x',
+                builddir=os.path.abspath('.'))
+        self.cfg.load_builders(self.filename,
+                dict(builders=[bldr]), self.errors)
+        self.assertEqual(
+            len(self.flushWarnings([self.cfg.load_builders])),
+            1)
 
     def test_load_slaves_defaults(self):
         self.cfg.load_slaves(self.filename, {}, self.errors)
@@ -721,13 +715,12 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.slaves = [ mock.Mock() ]
         self.cfg.builders = [ b1, b2 ]
 
-    def setup_builder_locks(self, builder_lock=None, dup_builder_lock=False,
-                                  step_lock=None, dup_step_lock=False):
+    def setup_builder_locks(self, builder_lock=None, dup_builder_lock=False):
         def bldr(name):
             b = mock.Mock()
             b.name = name
             b.locks = []
-            b.factory.steps = [ ('cls', dict(locks=[])) ]
+            b.factory.steps = [ ('cls', (), dict(locks=[])) ]
             return b
 
         def lock(name):
@@ -741,11 +734,6 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             b1.locks.append(lock(builder_lock))
             if dup_builder_lock:
                 b2.locks.append(lock(builder_lock))
-        if step_lock:
-            s1, s2 = b1.factory.steps[0][1], b2.factory.steps[0][1]
-            s1['locks'].append(lock(step_lock))
-            if dup_step_lock:
-                s2['locks'].append(lock(step_lock))
 
     # tests
 
@@ -788,23 +776,13 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertNoConfigErrors(self.errors)
 
 
-    def test_check_locks_step_and_builder(self):
-        self.setup_builder_locks(builder_lock='l', step_lock='l')
-        self.cfg.check_locks(self.errors)
-        self.assertConfigError(self.errors, "Two locks share")
-
     def test_check_locks_dup_builder_lock(self):
         self.setup_builder_locks(builder_lock='l', dup_builder_lock=True)
         self.cfg.check_locks(self.errors)
         self.assertConfigError(self.errors, "Two locks share")
 
-    def test_check_locks_dup_step_lock(self):
-        self.setup_builder_locks(step_lock='l', dup_step_lock=True)
-        self.cfg.check_locks(self.errors)
-        self.assertConfigError(self.errors, "Two locks share")
-
     def test_check_locks(self):
-        self.setup_builder_locks(builder_lock='bl', step_lock='sl')
+        self.setup_builder_locks(builder_lock='bl')
         self.cfg.check_locks(self.errors)
         self.assertNoConfigErrors(self.errors)
 
@@ -904,7 +882,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
 class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
-    factory = mock.Mock()
+    factory = factory.BuildFactory()
 
     # utils
 
@@ -933,6 +911,12 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             "builder 'a' has no factory",
             lambda : config.BuilderConfig(
                 name='a', slavenames=['a']))
+
+    def test_wrong_type_factory(self):
+        self.assertRaisesConfigError(
+            "builder 'a's factory is not",
+            lambda : config.BuilderConfig(
+                factory=[], name='a', slavenames=['a']))
 
     def test_no_slavenames(self):
         self.assertRaisesConfigError(
@@ -1054,15 +1038,12 @@ class ReconfigurableServiceMixin(unittest.TestCase):
             self.assertTrue(svc.called)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_service_failure(self):
         svc = FakeService()
         svc.succeed = False
         try:
-            wfd = defer.waitForDeferred(
-                svc.reconfigService(mock.Mock()))
-            yield wfd
-            wfd.getResult()
+            yield svc.reconfigService(mock.Mock())
         except ValueError:
             pass
         else:
@@ -1106,17 +1087,14 @@ class ReconfigurableServiceMixin(unittest.TestCase):
         return d
 
     @compat.usesFlushLoggedErrors
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_multiservice_nested_failure(self):
         svc = FakeMultiService()
         ch1 = FakeService()
         ch1.setServiceParent(svc)
         ch1.succeed = False
         try:
-            wfd = defer.waitForDeferred(
-                svc.reconfigService(mock.Mock()))
-            yield wfd
-            wfd.getResult()
+            yield svc.reconfigService(mock.Mock())
         except ValueError:
             pass
         else:

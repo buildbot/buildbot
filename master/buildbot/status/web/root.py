@@ -22,30 +22,30 @@ from buildbot.util.eventual import eventually
 class RootPage(HtmlResource):
     pageTitle = "Buildbot"
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def content(self, request, cxt):
         status = self.getStatus(request)
 
-        d = self.getAuthz(request).actionAllowed("cleanShutdown", request)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        res = wfd.getResult()
+        res = yield self.getAuthz(request).actionAllowed("cleanShutdown",
+                                                            request)
 
         if request.path == '/shutdown':
             if res:
                 eventually(status.cleanShutdown)
-                yield redirectTo("/", request)
+                defer.returnValue(redirectTo("/", request))
                 return
             else:
-                yield redirectTo(path_to_authzfail(request), request)
+                defer.returnValue(
+                        redirectTo(path_to_authzfail(request), request))
                 return
         elif request.path == '/cancel_shutdown':
             if res:
                 eventually(status.cancelCleanShutdown)
-                yield redirectTo("/", request)
+                defer.returnValue(redirectTo("/", request))
                 return
             else:
-                yield redirectTo(path_to_authzfail(request), request)
+                defer.returnValue(
+                        redirectTo(path_to_authzfail(request), request))
                 return
 
         cxt.update(
@@ -54,5 +54,4 @@ class RootPage(HtmlResource):
                 cancel_shutdown_url = request.childLink("cancel_shutdown"),
                 )
         template = request.site.buildbot_service.templates.get_template("root.html")
-        yield template.render(**cxt)
-        return
+        defer.returnValue(template.render(**cxt))

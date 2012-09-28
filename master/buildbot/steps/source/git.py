@@ -17,8 +17,41 @@ from twisted.python import log
 from twisted.internet import defer
 
 from buildbot.process import buildstep
-from buildbot.steps.source import Source
+from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
+
+def isTrueOrIsExactlyZero(v):
+    # nonzero values are true...
+    if v:
+        return True
+    
+    # ... and True for the number zero, but we have to
+    # explicitly guard against v==False, since
+    # isinstance(False, int) is surprisingly True
+    if isinstance(v, int) and v is not False:
+        return True
+    
+    # all other false-ish values are false
+    return False
+
+git_describe_flags = [
+    # on or off
+    ('all',         lambda v: ['--all'] if v else None),
+    ('always',      lambda v: ['--always'] if v else None),
+    ('contains',    lambda v: ['--contains'] if v else None),
+    ('debug',       lambda v: ['--debug'] if v else None),
+    ('long',        lambda v: ['--long'] if v else None),
+    ('exact-match', lambda v: ['--exact-match'] if v else None),
+    ('tags',        lambda v: ['--tags'] if v else None),
+    # string parameter
+    ('match',       lambda v: ['--match', v] if v else None),
+    # numeric parameter
+    ('abbrev',      lambda v: ['--abbrev=%s' % v] if isTrueOrIsExactlyZero(v) else None),
+    ('candidates',  lambda v: ['--candidates=%s' % v] if isTrueOrIsExactlyZero(v) else None),
+    # optional string parameter
+    ('dirty',       lambda v: ['--dirty'] if (v is True or v=='') else None),
+    ('dirty',       lambda v: ['--dirty=%s' % v] if (v and v is not True) else None),
+]
 
 class Git(Source):
     """ Class for Git with all the smarts """
@@ -27,7 +60,8 @@ class Git(Source):
 
     def __init__(self, repourl=None, branch='HEAD', mode='incremental',
                  method=None, submodules=False, shallow=False, progress=False,
-                 retryFetch=False, clobberOnFailure=False, **kwargs):
+                 retryFetch=False, clobberOnFailure=False, getDescription=False,
+                 **kwargs):
         """
         @type  repourl: string
         @param repourl: the URL which points at the git repository
@@ -57,7 +91,12 @@ class Git(Source):
 
         @type  retryFetch: boolean
         @param retryFetch: Retry fetching before failing source checkout.
+        
+        @type  getDescription: boolean or dict
+        @param getDescription: Use 'git describe' to describe the fetched revision
         """
+        if not getDescription and not isinstance(getDescription, dict):
+            getDescription = False
 
         self.branch    = branch
         self.method    = method
@@ -69,23 +108,14 @@ class Git(Source):
         self.fetchcount = 0
         self.clobberOnFailure = clobberOnFailure
         self.mode = mode
+        self.getDescription = getDescription
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(branch=branch,
-                                 mode=mode,
-                                 method=method,
-                                 progress=progress,
-                                 repourl=repourl,
-                                 submodules=submodules,
-                                 shallow=shallow,
-                                 retryFetch=retryFetch,
-                                 clobberOnFailure=
-                                 clobberOnFailure,
-                                 )
 
         assert self.mode in ['incremental', 'full']
         assert self.repourl is not None
         if self.mode == 'full':
             assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
+        assert isinstance(self.getDescription, (bool, dict))
 
     def startVC(self, branch, revision, patch):
         self.branch = branch or 'HEAD'
@@ -107,86 +137,59 @@ class Git(Source):
         if patch:
             d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
+        d.addCallback(self.parseCommitDescription)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def full(self):
         if self.method == 'clobber':
-            wfd = defer.waitForDeferred(self.clobber())
-            yield wfd
-            wfd.getResult()
+            yield self.clobber()
             return
         elif self.method == 'copy':
-            wfd = defer.waitForDeferred(self.copy())
-            yield wfd
-            wfd.getResult()
+            yield self.copy()
             return
 
-        wfd = defer.waitForDeferred(self._sourcedirIsUpdatable())
-        yield wfd
-        updatable = wfd.getResult()
+        updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
             log.msg("No git repo present, making full clone")
-            d = self._doFull()
+            yield self._doFull()
         elif self.method == 'clean':
-            d = self.clean()
+            yield self.clean()
         elif self.method == 'fresh':
-            d = self.fresh()
+            yield self.fresh()
         else:
             raise ValueError("Unknown method, check your configuration")
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        wfd.getResult()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def incremental(self):
-        wfd = defer.waitForDeferred(
-            self._sourcedirIsUpdatable())
-        yield wfd
-        updatable = wfd.getResult()
+        updatable = yield self._sourcedirIsUpdatable()
 
         # if not updateable, do a full checkout
         if not updatable:
-            wfd = defer.waitForDeferred(
-                    self._doFull())
-            yield wfd
-            yield wfd.getResult() # return value
+            yield self._doFull()
             return
 
         # test for existence of the revision; rc=1 indicates it does not exist
         if self.revision:
-            wfd = defer.waitForDeferred(
-                self._dovccmd(['cat-file', '-e', self.revision], False))
-            yield wfd
-            rc = wfd.getResult()
+            rc = yield self._dovccmd(['cat-file', '-e', self.revision],
+                    abandonOnFailure=False)
         else:
             rc = 1
 
         # if revision exists checkout to that revision
         # else fetch and update
         if rc == 0:
-            wfd = defer.waitForDeferred(
-                    self._dovccmd(['reset', '--hard', self.revision]))
-            yield wfd
-            wfd.getResult()
+            yield self._dovccmd(['reset', '--hard', self.revision])
 
             if self.branch != 'HEAD':
-                wfd = defer.waitForDeferred(
-                    self._dovccmd(['branch', '-M', self.branch], abandonOnFailure=False))
-                yield wfd
-                wfd.getResult()
+                yield self._dovccmd(['branch', '-M', self.branch],
+                        abandonOnFailure=False)
         else:
-            wfd = defer.waitForDeferred(
-                    self._doFetch(None))
-            yield wfd
-            wfd.getResult()
+            yield self._doFetch(None)
 
-        wfd = defer.waitForDeferred(
-                self._updateSubmodule(None))
-        yield wfd
-        wfd.getResult()
+        yield self._updateSubmodule(None)
 
     def clean(self):
         command = ['clean', '-f', '-d']
@@ -252,29 +255,53 @@ class Git(Source):
         d.addCallbacks(self.finished, self.checkDisconnect)
         return d
 
-    def parseGotRevision(self, _):
-        d = self._dovccmd(['rev-parse', 'HEAD'], collectStdout=True)
-        def setrev(stdout):
-            revision = stdout.strip()
-            if len(revision) != 40:
-                raise buildstep.BuildStepFailed()
-            log.msg("Got Git revision %s" % (revision, ))
-            self.setProperty('got_revision', revision, 'Source')
-            return 0
-        d.addCallback(setrev)
-        return d
+    @defer.inlineCallbacks
+    def parseGotRevision(self, _=None):
+        stdout = yield self._dovccmd(['rev-parse', 'HEAD'], collectStdout=True)
+        revision = stdout.strip()
+        if len(revision) != 40:
+            raise buildstep.BuildStepFailed()
+        log.msg("Got Git revision %s" % (revision, ))
+        self.updateSourceProperty('got_revision', revision)
+    
+        defer.returnValue(0)
 
-    def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, extra_args={}):
+    @defer.inlineCallbacks
+    def parseCommitDescription(self, _=None):
+        if self.getDescription==False: # dict() should not return here
+            defer.returnValue(0)
+            return
+        
+        cmd = ['describe']
+        if isinstance(self.getDescription, dict):
+            for opt, arg in git_describe_flags:
+                opt = self.getDescription.get(opt, None)
+                arg = arg(opt)
+                if arg:
+                    cmd.extend(arg)            
+        cmd.append('HEAD')
+        
+        try:
+            stdout = yield self._dovccmd(cmd, collectStdout=True)
+            desc = stdout.strip()
+            self.updateSourceProperty('commit-description', desc)
+        except:
+            pass
+            
+        defer.returnValue(0)
+
+    def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['git'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
+                                           timeout=self.timeout,
                                            collectStdout=collectStdout,
-                                           **extra_args)
+                                           initialStdin=initialStdin)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting git command : git %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
-            if abandonOnFailure and cmd.rc != 0:
+            if abandonOnFailure and cmd.didFail():
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
             if collectStdout:
@@ -316,31 +343,26 @@ class Git(Source):
         return d
 
     def patch(self, _, patch):
-        d = self._dovccmd(['apply', '--index'], extra_args={'initial_stdin': patch})
+        d = self._dovccmd(['apply', '--index', '-p', str(patch[0])],
+                initialStdin=patch[1])
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _doFetch(self, _):
         """
         Handles fallbacks for failure of fetch,
         wrapper for self._fetch
         """
-        wfd = defer.waitForDeferred(self._fetch(None))
-        yield wfd
-        res = wfd.getResult()
+        res = yield self._fetch(None)
         if res == 0:
-            yield res
+            defer.returnValue(res)
             return
         elif self.retryFetch:
-            d = self._fetch(None)
+            yield self._fetch(None)
         elif self.clobberOnFailure:
-            d = self.clobber()
+            yield self.clobber()
         else:
             raise buildstep.BuildStepFailed()
-
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        res = wfd.getResult()
 
     def _full(self):
         if self.shallow:
@@ -389,7 +411,7 @@ class Git(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _fail(tmp):
-            if cmd.rc != 0:
+            if cmd.didFail():
                 return False
             return True
         d.addCallback(_fail)

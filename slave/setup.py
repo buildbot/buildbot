@@ -59,7 +59,7 @@ class our_sdist(sdist):
 
         # ensure that NEWS has a copy of the latest release notes, copied from
         # the master tree, with the proper version substituted
-        src_fn = os.path.join('..', 'master', 'docs', 'release-notes.rst')
+        src_fn = os.path.join('..', 'master', 'docs', 'relnotes/index.rst')
         src = open(src_fn).read()
         src = src.replace('|version|', version)
         dst_fn = os.path.join(base_dir, 'NEWS')
@@ -120,6 +120,9 @@ except ImportError:
 else:
     setup_args['install_requires'] = [
         'twisted >= 8.0.0',
+    ]
+    setup_args['tests_require'] = [
+        'mock',
     ]
 
     if os.getenv('NO_INSTALL_REQS'):

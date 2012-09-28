@@ -65,9 +65,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     # database poll operation.
     WARNING_UNCLAIMED_COUNT = 10000
 
-    def __init__(self, basedir, configFileName="master.cfg"):
+    def __init__(self, basedir, configFileName="master.cfg", umask=None):
         service.MultiService.__init__(self)
         self.setName("buildmaster")
+
+        self.umask = umask
 
         self.basedir = basedir
         assert os.path.isdir(self.basedir)
@@ -140,13 +142,17 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     # setup and reconfig handling
 
     _already_started = False
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def startService(self, _reactor=reactor):
         assert not self._already_started, "can only start the master once"
         self._already_started = True
 
         log.msg("Starting BuildMaster -- buildbot.version: %s" %
                 buildbot.version)
+        
+        # Set umask
+        if self.umask is not None:
+            os.umask(self.umask)
 
         # first, apply all monkeypatches
         monkeypatches.patch_all()
@@ -155,9 +161,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # reactor.stop() for fatal errors
         d = defer.Deferred()
         _reactor.callWhenRunning(d.callback, None)
-        wfd = defer.waitForDeferred(d)
-        yield wfd
-        wfd.getResult()
+        yield d
 
         try:
             # load the configuration file, treating errors as fatal
@@ -179,10 +183,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             # set up services that need access to the config before everything else
             # gets told to reconfig
             try:
-                wfd = defer.waitForDeferred(
-                        self.db.setup())
-                yield wfd
-                wfd.getResult()
+                yield self.db.setup()
             except connector.DatabaseNotReadyError:
                 # (message was already logged)
                 _reactor.stop()
@@ -194,18 +195,12 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 signal.signal(signal.SIGHUP, sighup)
 
             # call the parent method
-            wfd = defer.waitForDeferred(
-                defer.maybeDeferred(lambda :
-                    service.MultiService.startService(self)))
-            yield wfd
-            wfd.getResult()
+            yield defer.maybeDeferred(lambda :
+                    service.MultiService.startService(self))
 
             # give all services a chance to load the new configuration, rather than
             # the base configuration
-            wfd = defer.waitForDeferred(
-                self.reconfigService(self.config))
-            yield wfd
-            wfd.getResult()
+            yield self.reconfigService(self.config)
         except:
             f = failure.Failure()
             log.err(f, 'while starting BuildMaster')
@@ -259,7 +254,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         return d # for tests
 
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def doReconfig(self):
         log.msg("beginning configuration update")
         changes_made = False
@@ -269,10 +264,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                                                     self.configFileName)
             changes_made = True
             self.config = new_config
-            wfd = defer.waitForDeferred(
-                self.reconfigService(new_config))
-            yield wfd
-            wfd.getResult()
+            yield self.reconfigService(new_config)
 
         except config.ConfigErrors, e:
             for msg in e.errors:
@@ -358,7 +350,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     def addChange(self, who=None, files=None, comments=None, author=None,
             isdir=None, is_dir=None, revision=None, when=None,
             when_timestamp=None, branch=None, category=None, revlink='',
-            properties={}, repository='', project='', src=None):
+            properties={}, repository='', codebase=None, project='', src=None):
         """
         Add a change to the buildmaster and act on it.
 
@@ -447,11 +439,32 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         for n in properties:
             properties[n] = (properties[n], 'Change')
 
+        if codebase is None:
+            if self.config.codebaseGenerator is not None:
+                chdict = {
+                    'changeid': None,
+                    'author': author,
+                    'files': files,
+                    'comments': comments,
+                    'is_dir': is_dir,
+                    'revision': revision,
+                    'when_timestamp': when_timestamp,
+                    'branch': branch,
+                    'category': category,
+                    'revlink': revlink,
+                    'properties': properties,
+                    'repository': repository,
+                    'project': project,
+                }
+                codebase = self.config.codebaseGenerator(chdict)
+            else:
+                codebase = ''
+            
         d = defer.succeed(None)
         if src:
             # create user object, returning a corresponding uid
             d.addCallback(lambda _ : users.createUserObject(self, author, src))
-
+         
         # add the Change to the database
         d.addCallback(lambda uid :
                           self.db.changes.addChange(author=author, files=files,
@@ -460,14 +473,14 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                                           when_timestamp=when_timestamp,
                                           branch=branch, category=category,
                                           revlink=revlink, properties=properties,
-                                          repository=repository, project=project,
-                                          uid=uid))
+                                          repository=repository, codebase=codebase,
+                                          project=project, uid=uid))
 
         # convert the changeid to a Change instance
         d.addCallback(lambda changeid :
-                self.db.changes.getChange(changeid))
+            self.db.changes.getChange(changeid))
         d.addCallback(lambda chdict :
-                changes.Change.fromChdict(self, chdict))
+            changes.Change.fromChdict(self, chdict))
 
         def notify(change):
             msg = u"added change %s to database" % change
@@ -524,7 +537,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         """
         return self._new_buildset_subs.subscribe(callback)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def maybeBuildsetComplete(self, bsid):
         """
         Instructs the master to check whether the buildset is complete,
@@ -533,19 +546,14 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         Note that buildset completions are only reported on the master
         on which the last build request completes.
         """
-        wfd = defer.waitForDeferred(
-            self.db.buildrequests.getBuildRequests(bsid=bsid, complete=False))
-        yield wfd
-        brdicts = wfd.getResult()
+        brdicts = yield self.db.buildrequests.getBuildRequests(
+            bsid=bsid, complete=False)
 
         # if there are incomplete buildrequests, bail out
         if brdicts:
             return
 
-        wfd = defer.waitForDeferred(
-            self.db.buildrequests.getBuildRequests(bsid=bsid))
-        yield wfd
-        brdicts = wfd.getResult()
+        brdicts = yield self.db.buildrequests.getBuildRequests(bsid=bsid)
 
         # figure out the overall results of the buildset
         cumulative_results = SUCCESS
@@ -554,10 +562,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 cumulative_results = FAILURE
 
         # mark it as completed in the database
-        wfd = defer.waitForDeferred(
-            self.db.buildsets.completeBuildset(bsid, cumulative_results))
-        yield wfd
-        wfd.getResult()
+        yield self.db.buildsets.completeBuildset(bsid, cumulative_results)
 
         # and deliver to any listeners
         self._buildsetComplete(bsid, cumulative_results)
@@ -617,7 +622,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         return d
 
     _last_processed_change = None
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def pollDatabaseChanges(self):
         # Older versions of Buildbot had each scheduler polling the database
         # independently, and storing a "last_processed" state indicating the
@@ -635,17 +640,12 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # get the last processed change id
         if self._last_processed_change is None:
-            wfd = defer.waitForDeferred(
-                self._getState('last_processed_change'))
-            yield wfd
-            self._last_processed_change = wfd.getResult()
+            self._last_processed_change = \
+                    yield self._getState('last_processed_change')
 
         # if it's still None, assume we've processed up to the latest changeid
         if self._last_processed_change is None:
-            wfd = defer.waitForDeferred(
-                self.db.changes.getLatestChangeid())
-            yield wfd
-            lpc = wfd.getResult()
+            lpc = yield self.db.changes.getLatestChangeid()
             # if there *are* no changes, count the last as '0' so that we don't
             # skip the first change
             if lpc is None:
@@ -660,20 +660,14 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         while True:
             changeid = self._last_processed_change + 1
-            wfd = defer.waitForDeferred(
-                self.db.changes.getChange(changeid))
-            yield wfd
-            chdict = wfd.getResult()
+            chdict = yield self.db.changes.getChange(changeid)
 
             # if there's no such change, we've reached the end and can
             # stop polling
             if not chdict:
                 break
 
-            wfd = defer.waitForDeferred(
-                changes.Change.fromChdict(self, chdict))
-            yield wfd
-            change = wfd.getResult()
+            change = yield changes.Change.fromChdict(self, chdict)
 
             self._change_subs.deliver(change)
 
@@ -682,16 +676,13 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # write back the updated state, if it's changed
         if need_setState:
-            wfd = defer.waitForDeferred(
-                self._setState('last_processed_change',
-                               self._last_processed_change))
-            yield wfd
-            wfd.getResult()
+            yield self._setState('last_processed_change',
+                            self._last_processed_change)
         timer.stop()
 
     _last_unclaimed_brids_set = None
     _last_claim_cleanup = 0
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def pollDatabaseBuildRequests(self):
         # deal with cleaning up unclaimed requests, and (if necessary)
         # requests from a previous instance of this master
@@ -703,10 +694,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         if since_last_cleanup < self.RECLAIM_BUILD_INTERVAL:
             unclaimed_age = (self.RECLAIM_BUILD_INTERVAL
                            * self.UNCLAIMED_BUILD_FACTOR)
-            wfd = defer.waitForDeferred(
-                self.db.buildrequests.unclaimExpiredRequests(unclaimed_age))
-            yield wfd
-            wfd.getResult()
+            yield self.db.buildrequests.unclaimExpiredRequests(unclaimed_age)
 
             self._last_claim_cleanup = reactor.seconds()
 
@@ -723,10 +711,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                     % len(last_unclaimed))
 
         # get the current set of unclaimed buildrequests
-        wfd = defer.waitForDeferred(
-            self.db.buildrequests.getBuildRequests(claimed=False))
-        yield wfd
-        now_unclaimed_brdicts = wfd.getResult()
+        now_unclaimed_brdicts = \
+            yield self.db.buildrequests.getBuildRequests(claimed=False)
         now_unclaimed = set([ brd['brid'] for brd in now_unclaimed_brdicts ])
 
         # and store that for next time

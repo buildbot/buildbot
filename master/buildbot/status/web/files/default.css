@@ -214,14 +214,17 @@ td.DevComment {
 	font-weight: normal;
 	padding: 8px 8px 8px 8px;
 	color: #333333;
+	background-color: #eee;
+	text-align: left;
+}
+
+td.DevBottom {
 	border-bottom-right-radius: 5px;
 	-webkit-border-bottom-right-radius: 5px;
 	-moz-border-radius-bottomright: 5px;
 	border-bottom-left-radius: 5px;
 	-webkit-border-bottom-left-radius: 5px;
 	-moz-border-radius-bottomleft: 5px;
-	background-color: #eee;
-	text-align: left;
 }
 
 td.Alt {
@@ -229,9 +232,9 @@ td.Alt {
 }
 
 .legend {
-	border-radius: 5px;
-	-webkit-border-radius: 5px;
-	-moz-border-radius: 5px;
+	border-radius: 5px !important;
+	-webkit-border-radius: 5px !important;
+	-moz-border-radius: 5px !important;
 	width: 100px;
 	max-width: 100px;
 	text-align: center;
@@ -558,4 +561,28 @@ pre.comments>a:link,pre.comments>a:visited {
 
 pre.comments>a:active {
 	color: purple;
+}
+
+form.command_forcebuild {
+    border-top: 1px solid black;
+    padding: .5em;
+    margin: .5em;
+}
+
+form.command_forcebuild > .row {
+    border-top: 1px dotted gray;
+    padding: .5em 0;
+}
+
+form.command_forcebuild .force-textarea > .label {
+    display: block;
+}
+
+form.command_forcebuild .force-nested > .label {
+    font-weight: bold;
+    display: list-item;
+}
+
+form.command_forcebuild .force-any .force-text {
+    display: inline;
 }

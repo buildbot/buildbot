@@ -16,49 +16,81 @@
 from twisted.internet import defer
 from twisted.python import failure
 from buildbot.status.logfile import STDOUT, STDERR, HEADER
+from cStringIO import StringIO
+from buildbot.status.results import SUCCESS, FAILURE
 
 
-DEFAULT_TIMEOUT="DEFAULT_TIMEOUT"
-DEFAULT_MAXTIME="DEFAULT_MAXTIME"
-DEFAULT_USEPTY="DEFAULT_USEPTY"
+class FakeRemoteCommand(object):
 
-class FakeRemoteCommand:
+    # callers should set this to the running TestCase instance
+    testcase = None
 
-    def __init__(self, remote_command, args, collectStdout=False, ignore_updates=False):
+    active = False
+
+    def __init__(self, remote_command, args,
+            ignore_updates=False, collectStdout=False, collectStderr=False, decodeRC={0:SUCCESS}):
         # copy the args and set a few defaults
         self.remote_command = remote_command
         self.args = args.copy()
         self.logs = {}
+        self.delayedLogs = {}
         self.rc = -999
         self.collectStdout = collectStdout
+        self.collectStderr = collectStderr
         self.updates = {}
+        self.decodeRC = decodeRC
         if collectStdout:
             self.stdout = ''
-
-    def useLog(self, loog, closeWhenFinished=False, logfileName=None):
-        if not logfileName:
-            logfileName = loog.getName()
-        self.logs[logfileName] = loog
+        if collectStderr:
+            self.stderr = ''
 
     def run(self, step, remote):
         # delegate back to the test case
         return self.testcase._remotecommand_run(self, step, remote)
 
+    def useLog(self, log, closeWhenFinished=False, logfileName=None):
+        if not logfileName:
+            logfileName = log.getName()
+        self.logs[logfileName] = log
 
+    def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
+        self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
+
+    def interrupt(self, why):
+        raise NotImplementedError
+
+    def results(self):
+        if self.rc in self.decodeRC:
+            return self.decodeRC[self.rc]
+        return FAILURE
+
+    def didFail(self):
+        return self.results() == FAILURE
+
+    def fakeLogData(self, step, log, header='', stdout='', stderr=''):
+        # note that this should not be used in the same test as useLog(Delayed)
+        self.logs[log] = l = FakeLogFile(log, step)
+        l.fakeData(header=header, stdout=stdout, stderr=stderr)
+
+    def __repr__(self):
+        return "FakeRemoteCommand("+repr(self.remote_command)+","+repr(self.args)+")"
 class FakeRemoteShellCommand(FakeRemoteCommand):
 
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
-                 timeout=DEFAULT_TIMEOUT, maxTime=DEFAULT_MAXTIME, logfiles={},
-                 initial_stdin=None,
-                 usePTY=DEFAULT_USEPTY, logEnviron=True, collectStdout=False):
+                 timeout=20*60, maxTime=None, logfiles={},
+                 usePTY="slave-config", logEnviron=True, collectStdout=False,
+                 collectStderr=False,
+                 interruptSignal=None, initialStdin=None, decodeRC={0:SUCCESS}):
         args = dict(workdir=workdir, command=command, env=env or {},
                 want_stdout=want_stdout, want_stderr=want_stderr,
-                initial_stdin=initial_stdin,
+                initial_stdin=initialStdin,
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
         FakeRemoteCommand.__init__(self, "shell", args,
-                collectStdout=collectStdout)
+                                   collectStdout=collectStdout,
+                                   collectStderr=collectStderr,
+                                   decodeRC=decodeRC)
 
 
 class FakeLogFile(object):
@@ -74,43 +106,57 @@ class FakeLogFile(object):
     def getName(self):
         return self.name
 
-    def addHeader(self, data):
-        self.header += data
-        self.chunks.append((HEADER, data))
+    def addHeader(self, text):
+        self.header += text
+        self.chunks.append((HEADER, text))
 
-    def addStdout(self, data):
-        self.stdout += data
-        self.chunks.append((STDOUT, data))
+    def addStdout(self, text):
+        self.stdout += text
+        self.chunks.append((STDOUT, text))
         if self.name in self.step.logobservers:
             for obs in self.step.logobservers[self.name]:
-                obs.outReceived(data)
+                obs.outReceived(text)
 
-    def addStderr(self, data):
-        self.stderr += data
-        self.chunks.append((STDERR, data))
+    def addStderr(self, text):
+        self.stderr += text
+        self.chunks.append((STDERR, text))
         if self.name in self.step.logobservers:
             for obs in self.step.logobservers[self.name]:
-                obs.errReceived(data)
+                obs.errReceived(text)
 
-    def readlines(self): # TODO: remove channel arg from logfile.py
-        return self.stdout.split('\n')
+    def readlines(self):
+        io = StringIO(self.stdout)
+        return io.readlines()
 
     def getText(self):
-        return self.stdout
+        return ''.join([ c for str,c in self.chunks
+                           if str in (STDOUT, STDERR)])
+    def getTextWithHeaders(self):
+        return ''.join([ c for str,c in self.chunks])
 
     def getChunks(self, channels=[], onlyText=False):
         if onlyText:
             return [ data
                         for (ch, data) in self.chunks
-                        if ch in channels ]
+                        if not channels or ch in channels ]
         else:
             return [ (ch, data)
                         for (ch, data) in self.chunks
-                        if ch in channels ]
+                        if not channels or ch in channels ]
 
     def finish(self):
         pass
 
+    def fakeData(self, header='', stdout='', stderr=''):
+        if header:
+            self.header += header
+            self.chunks.append((HEADER, header))
+        if stdout:
+            self.stdout += stdout
+            self.chunks.append((STDOUT, stdout))
+        if stderr:
+            self.stderr += stderr
+            self.chunks.append((STDERR, stderr))
 
 class ExpectRemoteRef(object):
     """
@@ -149,11 +195,15 @@ class Expect(object):
 
     """
 
-    def __init__(self, remote_command, args):
+    def __init__(self, remote_command, args, incomparable_args=[]):
         """
-        Expect a command named C{remote_command}, with args C{args}.
+
+        Expect a command named C{remote_command}, with args C{args}.  Any args
+        in C{incomparable_args} are not cmopared, but must exist.
+
         """
         self.remote_command = remote_command
+        self.incomparable_args = incomparable_args
         self.args = args
         self.result = None
         self.behaviors = []
@@ -206,6 +256,8 @@ class Expect(object):
                     command.stdout += streams['stdout']
             if 'stderr' in streams:
                 command.logs[name].addStderr(streams['stderr'])
+                if command.collectStderr:
+                    command.stderr += streams['stderr']
         elif behavior == 'callable':
             return defer.maybeDeferred(lambda : args[0](command))
         else:
@@ -213,17 +265,15 @@ class Expect(object):
                         AssertionError('invalid behavior %s' % behavior)))
         return defer.succeed(None)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def runBehaviors(self, command):
         """
         Run all expected behaviors for this command
         """
         for behavior in self.behaviors:
-            wfd = defer.waitForDeferred(
-                    self.runBehavior(behavior[0], behavior[1:], command))
-            yield wfd
-            wfd.getResult()
-
+            yield self.runBehavior(behavior[0], behavior[1:], command)
+    def __repr__(self):
+        return "Expect("+repr(self.remote_command)+")"
 
 class ExpectShell(Expect):
     """
@@ -231,12 +281,14 @@ class ExpectShell(Expect):
     non-default arguments must be specified explicitly (e.g., usePTY).
     """
     def __init__(self, workdir, command, env={},
-                 want_stdout=1, want_stderr=1, initial_stdin=None,
-                 timeout=DEFAULT_TIMEOUT, maxTime=DEFAULT_MAXTIME, logfiles={},
-                 usePTY=DEFAULT_USEPTY, logEnviron=True):
+                 want_stdout=1, want_stderr=1, initialStdin=None,
+                 timeout=20*60, maxTime=None, logfiles={},
+                 usePTY="slave-config", logEnviron=True):
         args = dict(workdir=workdir, command=command, env=env,
                 want_stdout=want_stdout, want_stderr=want_stderr,
-                initial_stdin=initial_stdin,
+                initial_stdin=initialStdin,
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
         Expect.__init__(self, "shell", args)
+    def __repr__(self):
+        return "ExpectShell("+repr(self.remote_command)+repr(self.args['command'])+")"

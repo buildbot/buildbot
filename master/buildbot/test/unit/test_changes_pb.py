@@ -58,7 +58,7 @@ class TestPBChangeSource(
     def test_registration_no_userpass_no_global(self):
         return self._test_registration(None)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _test_registration(self, exp_registration, slavePort=None,
                         **constr_kwargs):
         config = mock.Mock()
@@ -66,20 +66,14 @@ class TestPBChangeSource(
         self.attachChangeSource(pb.PBChangeSource(**constr_kwargs))
 
         self.startChangeSource()
-        wfd = defer.waitForDeferred(
-                self.changesource.reconfigService(config))
-        yield wfd
-        wfd.getResult()
+        yield self.changesource.reconfigService(config)
 
         if exp_registration:
             self.assertRegistered(*exp_registration)
         else:
             self.assertNotRegistered()
 
-        wfd = defer.waitForDeferred(
-                self.stopChangeSource())
-        yield wfd
-        wfd.getResult()
+        yield self.stopChangeSource()
 
         if exp_registration:
             self.assertUnregistered(*exp_registration)
@@ -102,54 +96,39 @@ class TestPBChangeSource(
         cs = pb.PBChangeSource(port=9989)
         self.assertSubstring("PBChangeSource", cs.describe())
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_no_change(self):
         config = mock.Mock()
         self.attachChangeSource(pb.PBChangeSource(port='9876'))
 
         self.startChangeSource()
-        wfd = defer.waitForDeferred(
-                self.changesource.reconfigService(config))
-        yield wfd
-        wfd.getResult()
+        yield self.changesource.reconfigService(config)
 
         self.assertRegistered('9876', 'change', 'changepw')
 
-        wfd = defer.waitForDeferred(
-                self.stopChangeSource())
-        yield wfd
-        wfd.getResult()
+        yield self.stopChangeSource()
 
         self.assertUnregistered('9876', 'change', 'changepw')
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def test_reconfigService_default_changed(self):
         config = mock.Mock()
         config.slavePortnum = '9876'
         self.attachChangeSource(pb.PBChangeSource())
 
         self.startChangeSource()
-        wfd = defer.waitForDeferred(
-                self.changesource.reconfigService(config))
-        yield wfd
-        wfd.getResult()
+        yield self.changesource.reconfigService(config)
 
         self.assertRegistered('9876', 'change', 'changepw')
 
         config.slavePortnum = '1234'
 
-        wfd = defer.waitForDeferred(
-                self.changesource.reconfigService(config))
-        yield wfd
-        wfd.getResult()
+        yield self.changesource.reconfigService(config)
 
         self.assertUnregistered('9876', 'change', 'changepw')
         self.assertRegistered('1234', 'change', 'changepw')
 
-        wfd = defer.waitForDeferred(
-                self.stopChangeSource())
-        yield wfd
-        wfd.getResult()
+        yield self.stopChangeSource()
 
         self.assertUnregistered('1234', 'change', 'changepw')
 
@@ -170,6 +149,15 @@ class TestChangePerspective(unittest.TestCase):
         def check(_):
             self.assertEqual(self.added_changes,
                     [ dict(author="bar", files=['a']) ])
+        d.addCallback(check)
+        return d
+
+    def test_addChange_codebase(self):
+        cp = pb.ChangePerspective(self.master, None)
+        d = cp.perspective_addChange(dict(who="bar", files=[], codebase='cb'))
+        def check(_):
+            self.assertEqual(self.added_changes,
+                    [ dict(author="bar", files=[], codebase='cb') ])
         d.addCallback(check)
         return d
 

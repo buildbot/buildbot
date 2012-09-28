@@ -55,6 +55,11 @@ repository = None
 
 project = None
 
+# When sending the notification, send this codebase.  If this is None, no
+# codebase will be sent.  This can also be set via --project
+
+codebase = None
+
 # Username portion of PB login credentials to send the changes to the master
 username = "change"
 
@@ -171,6 +176,9 @@ def gen_changes(input, branch):
         if project:
             c['project'] = unicode(project, encoding=encoding)
 
+        if codebase:
+            c['codebase'] = unicode(codebase, encoding=encoding)
+
         grab_commit_info(c, m.group(1))
         changes.append(c)
 
@@ -241,6 +249,9 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
 
         if project:
             c['project'] = unicode(project, encoding=encoding)
+
+        if codebase:
+            c['codebase'] = unicode(codebase, encoding=encoding)
 
         if files:
             c['files'] = files
@@ -323,6 +334,8 @@ def parse_options():
                       type="string", help="Git repository URL to send.")
     parser.add_option("-p", "--project", action="store",
                       type="string", help="Project to send.")
+    parser.add_option("--codebase", action="store",
+                      type="string", help="Codebase to send.")
     encoding_help = ("Encoding to use when converting strings to "
                      "unicode. Default is %(encoding)s." % 
                      { "encoding" : encoding })
@@ -376,6 +389,9 @@ try:
 
     if options.project:
         project = options.project
+
+    if options.codebase:
+        codebase = options.codebase
 
     if options.username:
         username = options.username

@@ -19,14 +19,15 @@ from email.Utils import formatdate
 from twisted.python import log
 from twisted.internet import defer
 from zope.interface import implements
-from buildbot.process.buildstep import LoggingBuildStep, RemoteCommand
+from buildbot.process.buildstep import RemoteCommand
 from buildbot.interfaces import BuildSlaveTooOldError, IRenderable
-from buildbot.status.builder import SKIPPED
+from buildbot.steps.source.base import Source
 
 class _ComputeRepositoryURL(object):
     implements(IRenderable)
 
-    def __init__(self, repository):
+    def __init__(self, step, repository):
+        self.step = step
         self.repository = repository
 
     def getRenderingFor(self, props):
@@ -37,7 +38,7 @@ class _ComputeRepositoryURL(object):
 
         build = props.getBuild()
         assert build is not None, "Build should be available *during* a build?"
-        s = build.getSourceStamp()
+        s = build.getSourceStamp(self.step.codebase)
 
         repository = self.repository
 
@@ -45,45 +46,25 @@ class _ComputeRepositoryURL(object):
             return str(s.repository)
         else:
             if callable(repository):
-                return str(props.render(repository(s.repository)))
+                d = props.render(repository(s.repository))
             elif isinstance(repository, dict):
-                return str(props.render(repository.get(s.repository)))
+                d = props.render(repository.get(s.repository))
             elif isinstance(repository, str) or isinstance(repository, unicode):
                 try:
                     return str(repository % s.repository)
                 except TypeError:
                     # that's the backward compatibility case
-                    return props.render(repository)
+                    d = props.render(repository)
             else:
-                return str(props.render(repository))
+                d = props.render(repository)
 
-class Source(LoggingBuildStep):
-    """This is a base class to generate a source tree in the buildslave.
-    Each version control system has a specialized subclass, and is expected
-    to override __init__ and implement computeSourceRevision() and
-    startVC(). The class as a whole builds up the self.args dictionary, then
-    starts a RemoteCommand with those arguments.
-    """
+        d.addCallback(str)
+        return d
 
-    renderables = [ 'workdir', 'description', 'descriptionDone' ]
-    description = None # set this to a list of short strings to override
-    descriptionDone = None # alternate description when the step is complete
+class SlaveSource(Source):
 
-    # if the checkout fails, there's no point in doing anything else
-    haltOnFailure = True
-    flunkOnFailure = True
-    notReally = False
-
-    branch = None # the default branch, should be set in __init__
-
-    def __init__(self, workdir=None, mode='update', alwaysUseLatest=False,
-                 timeout=20*60, retry=None, env=None, logEnviron=True,
-                 description=None, descriptionDone=None, **kwargs):
+    def __init__(self, mode='update', retry=None, **kwargs):
         """
-        @type  workdir: string
-        @param workdir: local directory (relative to the Builder's root)
-                        where the tree should be placed
-
         @type  mode: string
         @param mode: the kind of VC operation that is desired:
            - 'update': specifies that the checkout/update should be
@@ -129,28 +110,6 @@ class Source(LoggingBuildStep):
              including the metadata in the tar file). Not all VC systems
              support export.
 
-        @type  alwaysUseLatest: boolean
-        @param alwaysUseLatest: whether to always update to the most
-        recent available sources for this build.
-
-        Normally the Source step asks its Build for a list of all
-        Changes that are supposed to go into the build, then computes a
-        'source stamp' (revision number or timestamp) that will cause
-        exactly that set of changes to be present in the checked out
-        tree. This is turned into, e.g., 'cvs update -D timestamp', or
-        'svn update -r revnum'. If alwaysUseLatest=True, bypass this
-        computation and always update to the latest available sources
-        for each build.
-
-        The source stamp helps avoid a race condition in which someone
-        commits a change after the master has decided to start a build
-        but before the slave finishes checking out the sources. At best
-        this results in a build which contains more changes than the
-        buildmaster thinks it has (possibly resulting in the wrong
-        person taking the blame for any problems that result), at worst
-        is can result in an incoherent set of sources (splitting a
-        non-atomic commit) which may not build at all.
-
         @type  retry: tuple of ints (delay, repeats) (or None)
         @param retry: if provided, VC update failures are re-attempted up
                       to REPEATS times, with DELAY seconds between each
@@ -159,27 +118,8 @@ class Source(LoggingBuildStep):
                       their build failures are due to transient network
                       failures that could be handled by simply retrying a
                       couple times.
-
-        @type logEnviron: boolean
-        @param logEnviron: If this option is true (the default), then the
-                           step's logfile will describe the environment
-                           variables on the slave. In situations where the
-                           environment is not relevant and is long, it may
-                           be easier to set logEnviron=False.
-
         """
-
-        LoggingBuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(workdir=workdir,
-                                 mode=mode,
-                                 alwaysUseLatest=alwaysUseLatest,
-                                 timeout=timeout,
-                                 retry=retry,
-                                 logEnviron=logEnviron,
-                                 env=env,
-                                 description=description,
-                                 descriptionDone=descriptionDone
-                                 )
+        Source.__init__(self, **kwargs)
 
         assert mode in ("update", "copy", "clobber", "export")
         if retry:
@@ -187,118 +127,27 @@ class Source(LoggingBuildStep):
             assert isinstance(repeats, int)
             assert repeats > 0
         self.args = {'mode': mode,
-                     'timeout': timeout,
                      'retry': retry,
-                     'patch': None, # set during .start
                      }
-        # This will get added to args later, after properties are rendered
-        self.workdir = workdir
-
-        self.alwaysUseLatest = alwaysUseLatest
-
-        self.logEnviron = logEnviron
-        self.env = env
-
-        descriptions_for_mode = {
-            "clobber": "checkout",
-            "export": "exporting"}
-        descriptionDones_for_mode = {
-            "clobber": "checkout",
-            "export": "export"}
-        if description:
-            self.description = description
-        else:
-            self.description = [
-                descriptions_for_mode.get(mode, "updating")]
-        if isinstance(self.description, str):
-            self.description = [self.description]
-
-        if descriptionDone:
-            self.descriptionDone = descriptionDone
-        else:
-            self.descriptionDone = [
-                descriptionDones_for_mode.get(mode, "update")]
-        if isinstance(self.descriptionDone, str):
-            self.descriptionDone = [self.descriptionDone]
-
-    def setStepStatus(self, step_status):
-        LoggingBuildStep.setStepStatus(self, step_status)
-
-    def setDefaultWorkdir(self, workdir):
-        self.workdir = self.workdir or workdir
-
-    def describe(self, done=False):
-        if done:
-            return self.descriptionDone
-        return self.description
-
-    def computeSourceRevision(self, changes):
-        """Each subclass must implement this method to do something more
-        precise than -rHEAD every time. For version control systems that use
-        repository-wide change numbers (SVN, P4), this can simply take the
-        maximum such number from all the changes involved in this build. For
-        systems that do not (CVS), it needs to create a timestamp based upon
-        the latest Change, the Build's treeStableTimer, and an optional
-        self.checkoutDelay value."""
-        return None
-
-    def getRepository(self):
-        """ Identify the unique repository for this step """
-        return None
 
     def start(self):
-        if self.notReally:
-            log.msg("faking %s checkout/update" % self.name)
-            self.step_status.setText(["fake", self.name, "successful"])
-            self.addCompleteLog("log",
-                                "Faked %s checkout/update 'successful'\n" \
-                                % self.name)
-            return SKIPPED
-
-        # Allow workdir to be WithProperties
         self.args['workdir'] = self.workdir
-
-        if not self.alwaysUseLatest:
-            # what source stamp would this build like to use?
-            id = self.getRepository()
-            s = self.build.getSourceStamp(id)
-
-            # if branch is None, then use the Step's "default" branch
-            branch = s.branch or self.branch
-            # if revision is None, use the latest sources (-rHEAD)
-            revision = s.revision
-            if not revision:
-                revision = self.computeSourceRevision(s.changes)
-                # the revision property is currently None, so set it to something
-                # more interesting
-                if revision is not None:
-                    self.setProperty('revision', str(revision), "Source")
-
-            # if patch is None, then do not patch the tree after checkout
-
-            # 'patch' is None or a tuple of (patchlevel, diff, root)
-            # root is optional.
-            patch = s.patch
-            if patch:
-                self.addCompleteLog("patch", patch[1])
-        else:
-            revision = None
-            branch = self.branch
-            patch = None
-
         self.args['logEnviron'] = self.logEnviron
         self.args['env'] = self.env
-        self.startVC(branch, revision, patch)
+        self.args['timeout'] = self.timeout
+        Source.start(self)
 
     def commandComplete(self, cmd):
-        if cmd.updates.has_key("got_revision"):
-            got_revision = cmd.updates["got_revision"][-1]
-            if got_revision is not None:
-                self.setProperty("got_revision", str(got_revision), "Source")
+        if not cmd.updates.has_key("got_revision"):
+            return
+        got_revision = cmd.updates["got_revision"][-1]
+        if got_revision is None:
+            return
+
+        self.updateSourceProperty('got_revision', str(got_revision))
 
 
-
-class BK(Source):
+class BK(SlaveSource):
     """I perform BitKeeper checkout/update operations."""
 
     name = 'bk'
@@ -370,7 +219,7 @@ class BK(Source):
 
 
 
-class CVS(Source):
+class CVS(SlaveSource):
     """I do CVS checkout/update operations.
 
     Note: if you are doing anonymous/pserver CVS operations, you will need
@@ -468,19 +317,9 @@ class CVS(Source):
 
         self.checkoutDelay = checkoutDelay
         self.branch = branch
-        self.cvsroot = _ComputeRepositoryURL(cvsroot)
+        self.cvsroot = _ComputeRepositoryURL(self, cvsroot)
 
-        Source.__init__(self, **kwargs)
-        self.addFactoryArguments(cvsroot=cvsroot,
-                                 cvsmodule=cvsmodule,
-                                 global_options=global_options,
-                                 checkout_options=checkout_options,
-                                 export_options=export_options,
-                                 extra_options=extra_options,
-                                 branch=branch,
-                                 checkoutDelay=checkoutDelay,
-                                 login=login,
-                                 )
+        SlaveSource.__init__(self, **kwargs)
 
         self.args.update({'cvsmodule': cvsmodule,
                           'global_options': global_options,
@@ -562,7 +401,7 @@ class CVS(Source):
         self.startCommand(cmd, warnings)
 
 
-class SVN(Source):
+class SVN(SlaveSource):
     """I perform Subversion checkout/update operations."""
 
     name = 'svn'
@@ -605,8 +444,8 @@ class SVN(Source):
             warn("Please use workdir=, not directory=", DeprecationWarning)
             kwargs['workdir'] = directory
 
-        self.svnurl = svnurl and _ComputeRepositoryURL(svnurl)
-        self.baseURL = _ComputeRepositoryURL(baseURL)
+        self.svnurl = svnurl and _ComputeRepositoryURL(self, svnurl)
+        self.baseURL = _ComputeRepositoryURL(self, baseURL)
         self.branch = defaultBranch
         self.username = username
         self.password = password
@@ -616,19 +455,7 @@ class SVN(Source):
         self.always_purge = always_purge
         self.depth = depth
 
-        Source.__init__(self, **kwargs)
-        self.addFactoryArguments(svnurl=svnurl,
-                                 baseURL=baseURL,
-                                 defaultBranch=defaultBranch,
-                                 directory=directory,
-                                 username=username,
-                                 password=password,
-                                 extra_args=extra_args,
-                                 keep_on_purge=keep_on_purge,
-                                 ignore_ignores=ignore_ignores,
-                                 always_purge=always_purge,
-                                 depth=depth,
-                                 )
+        SlaveSource.__init__(self, **kwargs)
 
         if svnurl and baseURL:
             raise ValueError("you must use either svnurl OR baseURL")
@@ -734,7 +561,7 @@ class SVN(Source):
         self.startCommand(cmd, warnings)
 
 
-class Darcs(Source):
+class Darcs(SlaveSource):
     """Check out a source tree from a Darcs repository at 'repourl'.
 
     Darcs has no concept of file modes. This means the eXecute-bit will be
@@ -769,14 +596,10 @@ class Darcs(Source):
                               C{baseURL} and the result handed to the
                               'darcs pull' command.
         """
-        self.repourl = _ComputeRepositoryURL(repourl)
-        self.baseURL = _ComputeRepositoryURL(baseURL)
+        self.repourl = _ComputeRepositoryURL(self, repourl)
+        self.baseURL = _ComputeRepositoryURL(self, baseURL)
         self.branch = defaultBranch
-        Source.__init__(self, **kwargs)
-        self.addFactoryArguments(repourl=repourl,
-                                 baseURL=baseURL,
-                                 defaultBranch=defaultBranch,
-                                 )
+        SlaveSource.__init__(self, **kwargs)
         assert self.args['mode'] != "export", \
                "Darcs does not have an 'export' mode"
         if repourl and baseURL:
@@ -828,7 +651,7 @@ class Darcs(Source):
         self.startCommand(cmd)
 
 
-class Git(Source):
+class Git(SlaveSource):
     """Check out a source tree from a git repository 'repourl'."""
 
     name = "git"
@@ -868,17 +691,9 @@ class Git(Source):
                          can solve long fetches getting killed due to
                          lack of output, but requires Git 1.7.2+.
         """
-        Source.__init__(self, **kwargs)
-        self.repourl = _ComputeRepositoryURL(repourl)
+        SlaveSource.__init__(self, **kwargs)
+        self.repourl = _ComputeRepositoryURL(self, repourl)
         self.branch = branch
-        self.addFactoryArguments(repourl=repourl,
-                                 branch=branch,
-                                 submodules=submodules,
-                                 ignore_ignores=ignore_ignores,
-                                 reference=reference,
-                                 shallow=shallow,
-                                 progress=progress,
-                                 )
         self.args.update({'submodules': submodules,
                           'ignore_ignores': ignore_ignores,
                           'reference': reference,
@@ -901,7 +716,8 @@ class Git(Source):
         if self.build.hasProperty("event.patchSet.ref"):
             # GerritChangeSource
             self.args['gerrit_branch'] = self.build.getProperty("event.patchSet.ref")
-            self.setProperty("gerrit_branch", self.args['gerrit_branch'])
+            self.updateSourceProperty("gerrit_branch",
+                    self.args['gerrit_branch'])
         else:
             try:
                 # forced build
@@ -909,7 +725,8 @@ class Git(Source):
                 if len(change) == 2:
                     self.args['gerrit_branch'] = "refs/changes/%2.2d/%d/%d" \
                                                  % (int(change[0]) % 100, int(change[0]), int(change[1]))
-                    self.setProperty("gerrit_branch", self.args['gerrit_branch'])
+                    self.updateSourceProperty("gerrit_branch",
+                            self.args['gerrit_branch'])
             except:
                 pass
 
@@ -921,7 +738,7 @@ class Git(Source):
         self.startCommand(cmd)
 
 
-class Repo(Source):
+class Repo(SlaveSource):
     """Check out a source tree from a repo repository described by manifest."""
 
     name = "repo"
@@ -933,6 +750,7 @@ class Repo(Source):
                  manifest_branch="master",
                  manifest_file="default.xml",
                  tarball=None,
+                 jobs=None,
                  **kwargs):
         """
         @type  manifest_url: string
@@ -945,17 +763,13 @@ class Repo(Source):
         @param manifest_file: The manifest to use for sync.
 
         """
-        Source.__init__(self, **kwargs)
-        self.manifest_url = _ComputeRepositoryURL(manifest_url)
-        self.addFactoryArguments(manifest_url=manifest_url,
-                                 manifest_branch=manifest_branch,
-                                 manifest_file=manifest_file,
-                                 tarball=tarball,
-                                 )
+        SlaveSource.__init__(self, **kwargs)
+        self.manifest_url = _ComputeRepositoryURL(self, manifest_url)
         self.args.update({'manifest_branch': manifest_branch,
                           'manifest_file': manifest_file,
                           'tarball': tarball,
-                          'manifest_override_url': None
+                          'manifest_override_url': None,
+                          'jobs': jobs
                           })
 
     def computeSourceRevision(self, changes):
@@ -1013,7 +827,7 @@ class Repo(Source):
 
         if downloads:
             self.args["repo_downloads"] = downloads
-            self.setProperty("repo_downloads", downloads)
+            self.updateSourceProperty("repo_downloads", downloads)
         return defer.succeed(None)
 
     def startVC(self, branch, revision, patch):
@@ -1043,7 +857,8 @@ class Repo(Source):
         if cmd.updates.has_key("repo_downloaded"):
             repo_downloaded = cmd.updates["repo_downloaded"][-1]
             if repo_downloaded:
-                self.setProperty("repo_downloaded", str(repo_downloaded), "Source")
+                self.updateSourceProperty("repo_downloaded",
+                        str(repo_downloaded))
             else:
                 repo_downloaded = []
         orig_downloads = self.getProperty("repo_downloads") or []
@@ -1051,7 +866,7 @@ class Repo(Source):
             self.step_status.setText(["repo download issues"])
 
 
-class Bzr(Source):
+class Bzr(SlaveSource):
     """Check out a source tree from a bzr (Bazaar) repository at 'repourl'.
 
     """
@@ -1091,15 +906,10 @@ class Bzr(Source):
                                 if not using update/copy mode, or if using
                                 update/copy mode with multiple branches.
         """
-        self.repourl = _ComputeRepositoryURL(repourl)
-        self.baseURL = _ComputeRepositoryURL(baseURL)
+        self.repourl = _ComputeRepositoryURL(self, repourl)
+        self.baseURL = _ComputeRepositoryURL(self, baseURL)
         self.branch = defaultBranch
-        Source.__init__(self, **kwargs)
-        self.addFactoryArguments(repourl=repourl,
-                                 baseURL=baseURL,
-                                 defaultBranch=defaultBranch,
-                                 forceSharedRepo=forceSharedRepo
-                                 )
+        SlaveSource.__init__(self, **kwargs)
         self.args.update({'forceSharedRepo': forceSharedRepo})
         if repourl and baseURL:
             raise ValueError("you must provide exactly one of repourl and"
@@ -1137,7 +947,7 @@ class Bzr(Source):
         self.startCommand(cmd)
 
 
-class Mercurial(Source):
+class Mercurial(SlaveSource):
     """Check out a source tree from a mercurial repository 'repourl'."""
 
     name = "hg"
@@ -1179,18 +989,12 @@ class Mercurial(Source):
                                       at each branch change. Otherwise, just
                                       update to the branch.
         """
-        self.repourl = _ComputeRepositoryURL(repourl)
-        self.baseURL = _ComputeRepositoryURL(baseURL)
+        self.repourl = _ComputeRepositoryURL(self, repourl)
+        self.baseURL = _ComputeRepositoryURL(self, baseURL)
         self.branch = defaultBranch
         self.branchType = branchType
         self.clobberOnBranchChange = clobberOnBranchChange
-        Source.__init__(self, **kwargs)
-        self.addFactoryArguments(repourl=repourl,
-                                 baseURL=baseURL,
-                                 defaultBranch=defaultBranch,
-                                 branchType=branchType,
-                                 clobberOnBranchChange=clobberOnBranchChange,
-                                 )
+        SlaveSource.__init__(self, **kwargs)
         if repourl and baseURL:
             raise ValueError("you must provide exactly one of repourl and"
                              " baseURL")
@@ -1237,7 +1041,7 @@ class Mercurial(Source):
         return changes[-1].revision
 
 
-class P4(Source):
+class P4(SlaveSource):
     """ P4 is a class for accessing perforce revision control"""
     name = "p4"
 
@@ -1279,18 +1083,9 @@ class P4(Source):
         @param p4client: The perforce client to use for this buildslave.
         """
 
-        self.p4base = _ComputeRepositoryURL(p4base)
+        self.p4base = _ComputeRepositoryURL(self, p4base)
         self.branch = defaultBranch
-        Source.__init__(self, **kwargs)
-        self.addFactoryArguments(p4base=p4base,
-                                 defaultBranch=defaultBranch,
-                                 p4port=p4port,
-                                 p4user=p4user,
-                                 p4passwd=p4passwd,
-                                 p4extra_views=p4extra_views,
-                                 p4line_end=p4line_end,
-                                 p4client=p4client,
-                                 )
+        SlaveSource.__init__(self, **kwargs)
         self.args['p4port'] = p4port
         self.args['p4user'] = p4user
         self.args['p4passwd'] = p4passwd
@@ -1299,7 +1094,7 @@ class P4(Source):
         self.p4client = p4client
 
     def setBuild(self, build):
-        Source.setBuild(self, build)
+        SlaveSource.setBuild(self, build)
         self.args['p4client'] = self.p4client % {
             'slave': build.slavename,
             'builder': build.builder.name,
@@ -1322,57 +1117,7 @@ class P4(Source):
         cmd = RemoteCommand("p4", args)
         self.startCommand(cmd)
 
-class P4Sync(Source):
-    """
-    DEPRECATED - will be removed in 0.8.5.
-    
-    This is a partial solution for using a P4 source repository. You are
-    required to manually set up each build slave with a useful P4
-    environment, which means setting various per-slave environment variables,
-    and creating a P4 client specification which maps the right files into
-    the slave's working directory. Once you have done that, this step merely
-    performs a 'p4 sync' to update that workspace with the newest files.
-
-    Each slave needs the following environment:
-
-     - PATH: the 'p4' binary must be on the slave's PATH
-     - P4USER: each slave needs a distinct user account
-     - P4CLIENT: each slave needs a distinct client specification
-
-    You should use 'p4 client' (?) to set up a client view spec which maps
-    the desired files into $SLAVEBASE/$BUILDERBASE/source .
-    """
-
-    name = "p4sync"
-
-    def __init__(self, p4port, p4user, p4passwd, p4client, **kwargs):
-        assert kwargs['mode'] == "copy", "P4Sync can only be used in mode=copy"
-        self.branch = None
-        Source.__init__(self, **kwargs)
-        self.addFactoryArguments(p4port=p4port,
-                                 p4user=p4user,
-                                 p4passwd=p4passwd,
-                                 p4client=p4client,
-                                )
-        self.args['p4port'] = p4port
-        self.args['p4user'] = p4user
-        self.args['p4passwd'] = p4passwd
-        self.args['p4client'] = p4client
-
-    def computeSourceRevision(self, changes):
-        if not changes:
-            return None
-        lastChange = max([int(c.revision) for c in changes])
-        return lastChange
-
-    def startVC(self, branch, revision, patch):
-        slavever = self.slaveVersion("p4sync")
-        assert slavever, "slave is too old, does not know about p4"
-        cmd = RemoteCommand("p4sync", self.args)
-        self.startCommand(cmd)
-
-
-class Monotone(Source):
+class Monotone(SlaveSource):
     """Check out a source tree from a monotone repository 'repourl'."""
 
     name = "mtn"
@@ -1394,16 +1139,12 @@ class Monotone(Source):
                          can solve long fetches getting killed due to
                          lack of output.
         """
-        Source.__init__(self, **kwargs)
-        self.repourl = _ComputeRepositoryURL(repourl)
+        SlaveSource.__init__(self, **kwargs)
+        self.repourl = _ComputeRepositoryURL(self, repourl)
         if (not repourl):
             raise ValueError("you must provide a repository uri in 'repourl'")
         if (not branch):
             raise ValueError("you must provide a default branch in 'branch'")
-        self.addFactoryArguments(repourl=repourl,
-                                 branch=branch,
-                                 progress=progress,
-                                 )
         self.args.update({'branch': branch,
                           'progress': progress,
                           })

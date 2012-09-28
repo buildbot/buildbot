@@ -18,11 +18,6 @@ master/docs/buildbot.html
 master/docs/buildbot.info
 master/docs/buildbot.info-1
 master/docs/buildbot.info-2
-master/docs/images/master.png
-master/docs/images/overview.png
-master/docs/images/slavebuilder.png
-master/docs/images/slaves.png
-master/docs/images/status.png
 .stgit-edit.txt
 .project
 .pydevproject
@@ -39,3 +34,4 @@ apidocs/reference.tgz
 common/googlecode_upload.py
 master/docs/tutorial/_build
 _build
+.tox

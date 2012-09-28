@@ -66,10 +66,13 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                  p4base='//', p4bin='p4',
                  split_file=lambda branchfile: (None, branchfile),
                  pollInterval=60 * 10, histmax=None, pollinterval=-2,
-                 encoding='utf8', project=None):
+                 encoding='utf8', project=None, name=None):
+
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
+
+        base.PollingChangeSource.__init__(self, name=name, pollInterval=pollInterval)
 
         if project is None:
             project = ''
@@ -80,7 +83,6 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         self.p4base = p4base
         self.p4bin = p4bin
         self.split_file = split_file
-        self.pollInterval = pollInterval
         self.encoding = encoding
         self.project = project
 
@@ -97,7 +99,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         d = utils.getProcessOutput(self.p4bin, args, env)
         return d
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _poll(self):
         args = []
         if self.p4port:
@@ -112,9 +114,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         else:
             args.extend(['-m', '1', '%s...' % (self.p4base,)])
 
-        wfd = defer.waitForDeferred(self._get_process_output(args))
-        yield wfd
-        result = wfd.getResult()
+        result = yield self._get_process_output(args)
 
         last_change = self.last_change
         changelists = []
@@ -144,9 +144,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             if self.p4passwd:
                 args.extend(['-P', self.p4passwd])
             args.extend(['describe', '-s', str(num)])
-            wfd = defer.waitForDeferred(self._get_process_output(args))
-            yield wfd
-            result = wfd.getResult()
+            result = yield self._get_process_output(args)
 
             # decode the result from its designated encoding
             result = result.decode(self.encoding)
@@ -182,7 +180,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                         branch_files[branch] = [file]
 
             for branch in branch_files:
-                d = self.master.addChange(
+                yield self.master.addChange(
                        author=who,
                        files=branch_files[branch],
                        comments=comments,
@@ -190,8 +188,5 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                        when_timestamp=util.epoch2datetime(when),
                        branch=branch,
                        project=self.project)
-                wfd = defer.waitForDeferred(d)
-                yield wfd
-                wfd.getResult()
 
             self.last_change = num

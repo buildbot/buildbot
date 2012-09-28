@@ -193,6 +193,10 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
+    def test_default_config(self):
+        vs = vstudio.VisualStudio()
+        self.assertEqual(vs.config, 'release')
+
     def test_simple(self):
         self.setupStep(VCx())
         self.expectCommands(
@@ -370,6 +374,21 @@ class TestVC6(steps.BuildStepMixin, unittest.TestCase):
                 status_text=["compile", "0 projects", "0 files"])
         return self.runStep()
 
+    def test_clean(self):
+        self.setupStep(vstudio.VC6(projectfile='pf', config='cfg',
+                                   project='pj', mode='clean'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['msdev', 'pf', '/MAKE',
+                                 'pj - cfg', '/CLEAN'],
+                        env=self.getExpectedEnv(
+                            r'C:\Program Files\Microsoft Visual Studio'))
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["compile", "0 projects", "0 files"])
+        return self.runStep()
+
     def test_noproj_build(self):
         self.setupStep(vstudio.VC6(projectfile='pf', config='cfg',
                                    mode='build'))
@@ -449,6 +468,21 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                     command=['devenv.com', 'pf', '/Rebuild', 'cfg',
+                                 '/Project', 'pj'],
+                    env=self.getExpectedEnv(
+                        r'C:\Program Files\Microsoft Visual Studio .NET 2003'))
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["compile", "0 projects", "0 files"])
+        return self.runStep()
+
+    def test_clean(self):
+        self.setupStep(vstudio.VC7(projectfile='pf', config='cfg',
+                                   project='pj', mode='clean'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                    command=['devenv.com', 'pf', '/Clean', 'cfg',
                                  '/Project', 'pj'],
                     env=self.getExpectedEnv(
                         r'C:\Program Files\Microsoft Visual Studio .NET 2003'))
@@ -568,6 +602,21 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
                 status_text=["compile", "0 projects", "0 files"])
         return self.runStep()
 
+    def test_clean(self):
+        self.setupStep(vstudio.VC8(projectfile='pf', config='cfg',
+                                   project='pj', mode='clean'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['devenv.com', 'pf', '/Clean',
+                                 'cfg', '/Project', 'pj' ],
+                        env=self.getExpectedEnv(
+                            r'C:\Program Files\Microsoft Visual Studio 8'))
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["compile", "0 projects", "0 files"])
+        return self.runStep()
+    
     def test_rendering(self):
         self.setupStep(vstudio.VC8(projectfile='pf', config='cfg',
                                     arch=Property('a')))
@@ -604,6 +653,22 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=['vcexpress', 'pf', '/Rebuild',
+                                 'cfg', '/Project', 'pj' ],
+                        env=self.getExpectedEnv(
+                            # note: still uses version 8 (?!)
+                            r'C:\Program Files\Microsoft Visual Studio 8'))
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["compile", "0 projects", "0 files"])
+        return self.runStep()
+
+    def test_clean(self):
+        self.setupStep(vstudio.VCExpress9(projectfile='pf', config='cfg',
+                                   project='pj', mode='clean'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['vcexpress', 'pf', '/Clean',
                                  'cfg', '/Project', 'pj' ],
                         env=self.getExpectedEnv(
                             # note: still uses version 8 (?!)
@@ -676,6 +741,44 @@ class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                 status_text=["compile", "0 projects", "0 files"])
+        return self.runStep()
+
+
+class TestMsBuild(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_build_project(self):
+        self.setupStep(vstudio.MsBuild(projectfile='pf', config='cfg', platform='Win32', project='pj'))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['%VCENV_BAT%', 'x86', '&&',
+                                 'msbuild', 'pf', '/p:Configuration=cfg', '/p:Platform=Win32',
+                                 '/t:pj'],
+                        env={'VCENV_BAT': '"${VS110COMNTOOLS}..\\..\\VC\\vcvarsall.bat"'})
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           status_text=["built", "pj for", 'cfg|Win32'])
+        return self.runStep()
+
+    def test_build_solution(self):
+        self.setupStep(vstudio.MsBuild(projectfile='pf', config='cfg', platform='x64'))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['%VCENV_BAT%', 'x86', '&&',
+                                 'msbuild', 'pf', '/p:Configuration=cfg', '/p:Platform=x64'],
+                        env={'VCENV_BAT': '"${VS110COMNTOOLS}..\\..\\VC\\vcvarsall.bat"'})
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           status_text=["built", "solution for", 'cfg|x64'])
         return self.runStep()
 
 

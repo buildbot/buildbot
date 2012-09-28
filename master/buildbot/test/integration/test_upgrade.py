@@ -13,12 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os
 import cPickle
 import tarfile
 import shutil
 import textwrap
 from twisted.python import util
+from twisted.persisted import styles
 from twisted.internet import defer
 from twisted.trial import unittest
 import sqlalchemy as sa
@@ -68,15 +71,16 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
     # db URL to use, if not using a real db
     db_url = "sqlite:///state.sqlite"
 
-    @defer.deferredGenerator
+    # these tests take a long time on platforms where sqlite is slow
+    # (e.g., lion, see #2256)
+    timeout = 1200
+
+    @defer.inlineCallbacks
     def setUpUpgradeTest(self):
         # set up the "real" db if desired
         if self.use_real_db:
             # note this changes self.db_url
-            wfd = defer.waitForDeferred(
-                self.setUpRealDatabase(sqlite_memory=False))
-            yield wfd
-            wfd.getResult()
+            yield self.setUpRealDatabase(sqlite_memory=False)
 
         self.basedir = None
 
@@ -92,6 +96,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
             for inf in tf:
                 tf.extract(inf)
                 prefixes.add(inf.name.split('/', 1)[0])
+            tf.close()
             # (note that tf.extractall isn't available in py2.4)
 
             # get the top-level dir from the tarball
@@ -102,23 +107,17 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
                 os.makedirs("basedir")
             self.basedir = os.path.abspath("basedir")
 
-        master = fakemaster.make_master()
+        self.master = master = fakemaster.make_master()
         master.config.db['db_url'] = self.db_url
         self.db = connector.DBConnector(master, self.basedir)
-        wfd = defer.waitForDeferred(
-            self.db.setup(check_version=False))
-        yield wfd
-        wfd.getResult()
+        yield self.db.setup(check_version=False)
 
         querylog.log_from_engine(self.db.pool.engine)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def tearDownUpgradeTest(self):
         if self.use_real_db:
-            wfd = defer.waitForDeferred(
-                self.tearDownRealDatabase())
-            yield wfd
-            wfd.getResult()
+            yield self.tearDownRealDatabase()
 
         if self.basedir:
             shutil.rmtree(self.basedir)
@@ -282,11 +281,11 @@ class UpgradeTestV075(UpgradeTestMixin,
     def fix_pickle_encoding(self, old_encoding):
         """Do the equivalent of master/contrib/fix_pickle_encoding.py"""
         changes_file = os.path.join(self.basedir, "changes.pck")
-        fp = open(changes_file)
-        changemgr = cPickle.load(fp)
-        fp.close()
+        with open(changes_file) as fp:
+            changemgr = cPickle.load(fp)
         changemgr.recode_changes(old_encoding, quiet=True)
-        cPickle.dump(changemgr, open(changes_file, "w"))
+        with open(changes_file, "w") as fp:
+            cPickle.dump(changemgr, fp)
 
     def test_upgrade(self):
         # this tarball contains some unicode changes, encoded as utf8, so it
@@ -383,7 +382,21 @@ class UpgradeTestV082(UpgradeTestMixin, unittest.TestCase):
         ])
 
     def test_upgrade(self):
-        return self.do_test_upgrade()
+        d = self.do_test_upgrade()
+        @d.addCallback
+        def check_pickles(_):
+            # try to unpickle things down to the level of a logfile
+            filename = os.path.join(self.basedir, 'builder', 'builder')
+            with open(filename, "rb") as f:
+                builder_status = cPickle.load(f)
+            builder_status.master = self.master
+            builder_status.basedir = os.path.join(self.basedir, 'builder')
+            b0 = builder_status.loadBuildFromFile(0)
+            logs = b0.getLogs()
+            log = logs[0]
+            text = log.getText()
+            self.assertIn('HEAD is now at', text)
+        return d
 
 
 class UpgradeTestV083(UpgradeTestMixin, unittest.TestCase):
@@ -491,6 +504,99 @@ class UpgradeTestV084(UpgradeTestMixin, unittest.TestCase):
         return self.do_test_upgrade()
 
 
+class UpgradeTestV085(UpgradeTestMixin, unittest.TestCase):
+
+    source_tarball = "v085.tgz"
+
+    def verify_thd(self, conn):
+        "partially verify the contents of the db - run in a thread"
+        model = self.db.model
+
+        tbl = model.buildrequests
+        r = conn.execute(tbl.select(order_by=tbl.c.id))
+        buildreqs = [ (br.id, br.buildsetid,
+                       br.complete, br.results)
+                      for br in r.fetchall() ]
+        self.assertEqual(buildreqs, [(1, 1, 1, 0), (2, 2, 1, 0)])
+
+        br_claims = model.buildrequest_claims
+        objects = model.objects
+        r = conn.execute(sa.select([ br_claims.outerjoin(objects,
+                    br_claims.c.objectid == objects.c.id)]))
+        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.name, brc.class_name)
+                      for brc in r.fetchall() ]
+        self.assertEqual(buildreqs, [
+            (1, 1338226540, u'euclid.r.igoro.us:/A/bbrun',
+                u'buildbot.master.BuildMaster'),
+            (2, 1338226574, u'euclid.r.igoro.us:/A/bbrun',
+                u'buildbot.master.BuildMaster')
+        ])
+
+    def test_upgrade(self):
+        d = self.do_test_upgrade()
+        @d.addCallback
+        def check_pickles(_):
+            # try to unpickle things down to the level of a logfile
+            filename = os.path.join(self.basedir, 'builder', 'builder')
+            with open(filename, "rb") as f:
+                builder_status = cPickle.load(f)
+            builder_status.master = self.master
+            builder_status.basedir = os.path.join(self.basedir, 'builder')
+            b1 = builder_status.loadBuildFromFile(1)
+            logs = b1.getLogs()
+            log = logs[0]
+            text = log.getText()
+            self.assertIn('HEAD is now at', text)
+            b2 = builder_status.loadBuildFromFile(1)
+            self.assertEqual(b2.getReason(),
+                "The web-page 'rebuild' button was pressed by '<unknown>': \n")
+        return d
+
+
+class UpgradeTestV086p1(UpgradeTestMixin, unittest.TestCase):
+
+    source_tarball = "v086p1.tgz"
+
+    def verify_thd(self, conn):
+        "partially verify the contents of the db - run in a thread"
+        model = self.db.model
+
+        tbl = model.buildrequests
+        r = conn.execute(tbl.select(order_by=tbl.c.id))
+        buildreqs = [ (br.id, br.buildsetid,
+                       br.complete, br.results)
+                      for br in r.fetchall() ]
+        self.assertEqual(buildreqs, [(1, 1, 1, 4)]) # note EXCEPTION status
+
+        br_claims = model.buildrequest_claims
+        objects = model.objects
+        r = conn.execute(sa.select([ br_claims.outerjoin(objects,
+                    br_claims.c.objectid == objects.c.id)]))
+        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.name, brc.class_name)
+                      for brc in r.fetchall() ]
+        self.assertEqual(buildreqs, [
+            (1, 1338229046, u'euclid.r.igoro.us:/A/bbrun',
+                u'buildbot.master.BuildMaster'),
+        ])
+
+    def test_upgrade(self):
+        d = self.do_test_upgrade()
+        @d.addCallback
+        def check_pickles(_):
+            # try to unpickle things down to the level of a logfile
+            filename = os.path.join(self.basedir, 'builder', 'builder')
+            with open(filename, "rb") as f:
+                builder_status = cPickle.load(f)
+            builder_status.master = self.master
+            builder_status.basedir = os.path.join(self.basedir, 'builder')
+            b0 = builder_status.loadBuildFromFile(0)
+            logs = b0.getLogs()
+            log = logs[0]
+            text = log.getText()
+            self.assertIn('HEAD is now at', text)
+        return d
+
+
 class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
     def setUp(self):
         d = self.setUpChangeImport()
@@ -594,4 +700,27 @@ class TestPickles(unittest.TestCase):
                 Nsb.""")
         ss = cPickle.loads(pkl)
         self.assertTrue(ss.revision is None)
-        self.assertTrue(hasattr(ss, '_getSourceStampSetId_lock'))
+        self.assertTrue(hasattr(ss, '_addSourceStampToDatabase_lock'))
+
+    def test_sourcestamp_version3(self):
+        pkl = textwrap.dedent("""\
+            (ibuildbot.sourcestamp
+            SourceStamp
+            p1
+            (dp2
+            S'project'
+            p3
+            S''
+            sS'repository'
+            p4
+            S''
+            sS'patch_info'
+            p5
+            NsS'buildbot.sourcestamp.SourceStamp.persistenceVersion'
+            p6
+            I2
+            sS'patch'
+            Nsb.""")
+        ss = cPickle.loads(pkl)
+        styles.doUpgrade()
+        self.assertEqual(ss.codebase, '')

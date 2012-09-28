@@ -85,7 +85,8 @@ class DevBuild:
         self.eta = build.getETA()
         self.details = details
         self.when = build.getTimes()[0]
-        self.source = build.getSourceStamp()
+        #TODO: support multiple sourcestamps
+        self.source = build.getSourceStamps()[0]
 
 
 class ConsoleStatusResource(HtmlResource):
@@ -155,29 +156,23 @@ class ConsoleStatusResource(HtmlResource):
             while build and depth < max_depth and build_count < max_builds:
                 depth += 1
                 build_count += 1
-                sourcestamp = build.getSourceStamp()
+                sourcestamp = build.getSourceStamps()[0]
                 allChanges.extend(sourcestamp.changes[:])
                 build = build.getPreviousBuild()
 
         debugInfo["source_fetch_len"] = len(allChanges)
         return allChanges                
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def getAllChanges(self, request, status, debugInfo):
         master = request.site.buildbot_service.master
 
-        wfd = defer.waitForDeferred(
-                master.db.changes.getRecentChanges(25))
-        yield wfd
-        chdicts = wfd.getResult()
+        chdicts = yield master.db.changes.getRecentChanges(25)
 
         # convert those to Change instances
-        wfd = defer.waitForDeferred(
-            defer.gatherResults([
+        allChanges = yield defer.gatherResults([
                 changes.Change.fromChdict(master, chdict)
-                for chdict in chdicts ]))
-        yield wfd
-        allChanges = wfd.getResult()
+                for chdict in chdicts ])
 
         allChanges.sort(key=self.comparator.getSortingKey())
 
@@ -191,7 +186,7 @@ class ConsoleStatusResource(HtmlResource):
             prevChange = change
         allChanges = newChanges
 
-        yield allChanges
+        defer.returnValue(allChanges)
 
     def getBuildDetails(self, request, builderName, build):
         """Returns an HTML list of failures for a given build."""
@@ -225,8 +220,8 @@ class ConsoleStatusResource(HtmlResource):
                         logs.append(dict(url=logurl, name=logname))
         return details
 
-    def getBuildsForRevision(self, request, builder, builderName, lastRevision,
-                             numBuilds, debugInfo):
+    def getBuildsForRevision(self, request, builder, builderName, codebase,
+                             lastRevision, numBuilds, debugInfo):
         """Return the list of all the builds for a given builder that we will
         need to be able to display the console page. We start by the most recent
         build, and we go down until we find a build that was built prior to the
@@ -239,20 +234,28 @@ class ConsoleStatusResource(HtmlResource):
         number = 0
         while build and number < numBuilds:
             debugInfo["builds_scanned"] += 1
-            number += 1
 
-            # Get the last revision in this build.
-            # We first try "got_revision", but if it does not work, then
-            # we try "revision".
-            got_rev = build.getProperty("got_revision", build.getProperty("revision", -1))
-            if got_rev != -1 and not self.comparator.isValidRevision(got_rev):
-                got_rev = -1
+            got_rev = None
+            sourceStamps = build.getSourceStamps(absolute=True)
 
+            # The console page cannot handle builds that have more than 1 revision
+            if codebase is not None:
+                # Get the last revision in this build for this codebase.
+                for ss in sourceStamps:
+                    if ss.codebase == codebase:
+                        got_rev = ss.revision
+                        break
+            elif len(sourceStamps) == 1:
+                ss = sourceStamps[0]
+                # Get the last revision in this build.
+                got_rev = ss.revision
+                    
             # We ignore all builds that don't have last revisions.
             # TODO(nsylvain): If the build is over, maybe it was a problem
             # with the update source step. We need to find a way to tell the
             # user that his change might have broken the source update.
-            if got_rev != -1:
+            if got_rev is not None:
+                number += 1
                 details = self.getBuildDetails(request, builderName, build)
                 devBuild = DevBuild(got_rev, build, details)
                 builds.append(devBuild)
@@ -281,13 +284,14 @@ class ConsoleStatusResource(HtmlResource):
         changes.sort(key=self.comparator.getSortingKey())
         return changes[-1]
     
-    def getAllBuildsForRevision(self, status, request, lastRevision, numBuilds,
-                                categories, builders, debugInfo):
+    def getAllBuildsForRevision(self, status, request, codebase, lastRevision,
+                                numBuilds, categories, builders, debugInfo):
         """Returns a dictionary of builds we need to inspect to be able to
         display the console page. The key is the builder name, and the value is
         an array of build we care about. We also returns a dictionary of
         builders we care about. The key is it's category.
  
+        codebase is the codebase to get revisions from
         lastRevision is the last revision we want to display in the page.
         categories is a list of categories to display. It is coming from the
             HTTP GET parameters.
@@ -329,6 +333,7 @@ class ConsoleStatusResource(HtmlResource):
             allBuilds[builderName] = self.getBuildsForRevision(request,
                                                                builder,
                                                                builderName,
+                                                               codebase,
                                                                lastRevision,
                                                                numBuilds,
                                                                debugInfo)
@@ -525,14 +530,16 @@ class ConsoleStatusResource(HtmlResource):
                 except DoesNotPassFilter:
                     pass
 
-    def displayPage(self, request, status, builderList, allBuilds, revisions,
-                    categories, repository, project, branch, debugInfo):
+    def displayPage(self, request, status, builderList, allBuilds, codebase,
+                    revisions, categories, repository, project, branch,
+                    debugInfo):
         """Display the console page."""
         # Build the main template directory with all the informations we have.
         subs = dict()
         subs["branch"] = branch or 'trunk'
         subs["repository"] = repository
         subs["project"] = project
+        subs["codebase"] = codebase
         if categories:
             subs["categories"] = ' '.join(categories)
         subs["time"] = time.strftime("%a %d %b %Y %H:%M:%S",
@@ -620,6 +627,8 @@ class ConsoleStatusResource(HtmlResource):
         project = request.args.get("project", [None])[0]
         # Branch used to filter the changes shown.
         branch = request.args.get("branch", [ANYBRANCH])[0]
+        # Codebase used to filter the changes shown.
+        codebase = request.args.get("codebase", [None])[0]
         # List of all the committers name to display on the page.
         devName = request.args.get("name", [])
 
@@ -650,6 +659,8 @@ class ConsoleStatusResource(HtmlResource):
                 revFilter['repository'] = repository
             if project:
                 revFilter['project'] = project
+            if codebase is not None:
+                revFilter['codebase'] = codebase
             revisions = list(self.filterRevisions(allChanges, max_revs=numRevs,
                                                             filter=revFilter))
             debugInfo["revision_final"] = len(revisions)
@@ -664,6 +675,7 @@ class ConsoleStatusResource(HtmlResource):
 
                 (builderList, allBuilds) = self.getAllBuildsForRevision(status,
                                                     request,
+                                                    codebase,
                                                     lastRevision,
                                                     numBuilds,
                                                     categories,
@@ -673,8 +685,9 @@ class ConsoleStatusResource(HtmlResource):
             debugInfo["added_blocks"] = 0
 
             cxt.update(self.displayPage(request, status, builderList,
-                                        allBuilds, revisions, categories,
-                                        repository, project, branch, debugInfo))
+                                        allBuilds, codebase, revisions,
+                                        categories, repository, project,
+                                        branch, debugInfo))
 
             templates = request.site.buildbot_service.templates
             template = templates.get_template("console.html")
