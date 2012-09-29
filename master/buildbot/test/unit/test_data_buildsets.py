@@ -146,7 +146,7 @@ class BuildsetResourceType(unittest.TestCase):
                 sorted(self.master.mq.productions),
                 sorted(expectedMessages))
             # and that the correct data was inserted into the db
-            self.master.db.buildsets.assertBuildset(bsid, expectedBuildset, {})
+            self.master.db.buildsets.assertBuildset(bsid, expectedBuildset)
         d.addCallback(check)
         return d
 

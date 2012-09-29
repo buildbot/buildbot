@@ -33,24 +33,20 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
     def makeScheduler(self, **kwargs):
         sched = self.attachScheduler(
                 triggerable.Triggerable(name='n', builderNames=['b'], **kwargs),
-                self.OBJECTID)
+                self.OBJECTID, overrideBuildsetMethods=True)
 
         return sched
 
-    def assertTriggeredBuildset(self, properties={}, sourcestampsetid=100):
+    def assertTriggeredBuildset(self, properties={}, sourcestamps=None):
         properties.update({ u'scheduler' : ( 'n', u'Scheduler') })
-        self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
-            'builderNames': ['b'],
-            'external_idstring': None,
-            'properties': properties,
-            'reason': u"Triggerable(n)",
-            'scheduler': 'n',
-            'sourcestampsetid': sourcestampsetid,
-        }])
-
-    def flushTriggeredBuildset(self):
-        self.master.db.buildsets.flushBuildsets()
-        self.master.data.updates.buildsetsAdded = []
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForSourceStampSetDetails', dict(
+                builderNames=None, # uses the default
+                properties=properties,
+                reason=u'Triggerable(n)',
+                sourcestamps=sourcestamps)),
+        ])
+        self.addBuildsetCalls = []
 
     def sendCompletionMessage(self, bsid, results=3):
         self.master.mq.callConsumer(('buildset', str(bsid), 'complete'),
@@ -87,17 +83,19 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
               'codebase':'cb' }
         d = sched.trigger({'cb': ss}, set_props=set_props)
 
-        self.assertTriggeredBuildset(properties={ u'pr': ('op', u'test') })
-        self.db.buildsets.assertBuildset(expected_sourcestamps={
+        self.assertTriggeredBuildset(
+            properties={ u'pr': ('op', u'test') },
+            sourcestamps={
                 'cb':
                  dict(branch='br', project='p', repository='r',
-                     codebase='cb', revision='myrev', sourcestampsetid=100)
+                     codebase='cb', revision='myrev'),
                 })
+
         # set up a boolean so that we can know when the deferred fires
         self.fired = False
         def fired((result, brids)):
             self.assertEqual(result, 3) # from sendCompletionMessage
-            self.assertEqual(brids, {u'b':1000})
+            self.assertEqual(brids, {u'b':100})
             self.fired = True
         d.addCallback(fired)
         d.addErrback(log.err)
@@ -119,10 +117,12 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertFalse(self.fired)
 
         # pretend the matching buildset is complete
-        self.sendCompletionMessage(200)
+        self.sendCompletionMessage(500)
 
         # scheduler should have reacted
-        self.assertEqual(sched.master.mq.qrefs, [])
+        self.assertEqual(
+            [ q.filter for q in sched.master.mq.qrefs ],
+            [])
         self.assertTrue(self.fired)
         return d
 
@@ -137,16 +137,26 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                      'repository':'r', 'codebase':'cb' }
 
         # trigger the scheduler the first time
-        d = sched.trigger({'cb':makeSS('myrev1')}) # triggers bsid 200
-        self.assertEqual(len(self.master.data.updates.buildsetsAdded), 1)
+        d = sched.trigger({'cb':makeSS('myrev1')}) # triggers bsid 500
+        self.assertTriggeredBuildset(
+            sourcestamps={
+                'cb':
+                 dict(branch='br', project='p', repository='r',
+                     codebase='cb', revision='myrev1'),
+                })
         d.addCallback(lambda (res, brids) : self.assertEqual(res, 11)
-                and self.assertEqual(brids, {u'b':1000}))
+                and self.assertEqual(brids, {u'b':100}))
 
         # and the second time
-        d = sched.trigger({'cb':makeSS('myrev2')}) # triggers bsid 201
-        self.assertEqual(len(self.master.data.updates.buildsetsAdded), 2)
+        d = sched.trigger({'cb':makeSS('myrev2')}) # triggers bsid 501
+        self.assertTriggeredBuildset(
+            sourcestamps={
+                'cb':
+                 dict(branch='br', project='p', repository='r',
+                     codebase='cb', revision='myrev2'),
+                })
         d.addCallback(lambda (res, brids) : self.assertEqual(res, 22) 
-                and self.assertEqual(brids, {u'b':1002}))
+                and self.assertEqual(brids, {u'b':101}))
 
         # check that the scheduler has subscribed to buildset changes
         self.assertEqual(
@@ -155,54 +165,32 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         # let a few buildsets complete
         self.sendCompletionMessage(29, results=3)
-        self.sendCompletionMessage(201, results=22)
+        self.sendCompletionMessage(501, results=22)
         self.sendCompletionMessage(9, results=3)
-        self.sendCompletionMessage(200, results=11)
+        self.sendCompletionMessage(500, results=11)
 
         # both should have triggered with appropriate results, and the
         # subscription should be cancelled
         self.assertEqual(sched.master.mq.qrefs, [])
 
-    def test_trigger_with_unknown_sourcestamp(self):
+    def test_trigger_with_sourcestamp(self):
         # Test a scheduler with 2 repositories.
         # Trigger the scheduler with a sourcestamp that is unknown to the scheduler
         # Expected Result: 
         #    sourcestamp 1 for repository 1 based on configured sourcestamp
         #    sourcestamp 2 for repository 2 based on configured sourcestamp
-        sched = self.makeScheduler(
-                   codebases = {'cb':{'repository':'r', 'branch': 'branchX'},
-                                'cb2':{'repository':'r2', 'branch': 'branchX'},})
+        sched = self.makeScheduler()
 
         ss = {'repository': 'r3', 'codebase': 'cb3', 'revision': 'fixrev3',
                'branch': 'default', 'project': 'p' }
         sched.trigger(sourcestamps = {'cb3': ss})
 
-        self.assertTriggeredBuildset()
-        self.db.buildsets.assertBuildset(expected_sourcestamps={
-                'cb':
-                dict(branch='branchX', project='', repository='r', codebase='cb',
-                     revision=None, sourcestampsetid=100),
-                'cb2':
-                dict(branch='branchX', project='', repository='r2', codebase='cb2',
-                     revision=None, sourcestampsetid=100),})
+        self.assertTriggeredBuildset(sourcestamps={'cb3':ss})
 
     def test_trigger_without_sourcestamps(self):
         # Test a scheduler with 2 repositories.
-        # Trigger the scheduler without a sourcestamp
-        # Expected Result: 
-        #    sourcestamp 1 for repository 1 based on configured sourcestamp
-        #    sourcestamp 2 for repository 2 based on configured sourcestamp
-        sched = self.makeScheduler(
-                   codebases = {'cb':{'repository':'r', 'branch': 'branchX'},
-                                'cb2':{'repository':'r2', 'branch': 'branchX'},})
-
-        sched.trigger(sourcestamps = None)
-
-        self.assertTriggeredBuildset()
-        self.db.buildsets.assertBuildset(expected_sourcestamps={
-                'cb':
-                dict(branch='branchX', project='', repository='r', codebase='cb',
-                     revision=None, sourcestampsetid=100),
-                'cb2':
-                dict(branch='branchX', project='', repository='r2', codebase='cb2',
-                     revision=None, sourcestampsetid=100),})
+        # Trigger the scheduler without a sourcestamp; this should translate to
+        # a call to addBuildsetForSourceStampSetDetails with no sourcestamps
+        sched = self.makeScheduler()
+        sched.trigger(sourcestamps=None)
+        self.assertTriggeredBuildset(sourcestamps=None)

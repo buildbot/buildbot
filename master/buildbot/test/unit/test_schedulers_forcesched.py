@@ -38,11 +38,11 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                             **kw):
         sched = self.attachScheduler(
                 ForceScheduler(name=name, builderNames=builderNames,**kw),
-                self.OBJECTID)
+                self.OBJECTID, overrideBuildsetMethods=True)
         sched.master.config = config.MasterConfig()
 
         self.assertEquals(sched.name, name)
-        
+
         return sched
 
     # tests
@@ -111,7 +111,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_basicForce(self):
         sched = self.makeScheduler()
-        
+
         res = yield sched.force('user', 'a', branch='a', reason='because',revision='c',
                         repository='d', project='p',
                         property1_name='p1',property1_value='e',
@@ -119,45 +119,26 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         property3_name='p3',property3_value='g',
                         property4_name='p4',property4_value='h'
                         )
-        bsid,brids = res
 
         # only one builder forced, so there should only be one brid
-        self.assertEqual(len(brids), 1)
-        self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
-            'builderNames': ['a'],
-            'external_idstring': None,
-            'properties': {
-                u'owner': ('user', u'Force Build Form'),
-                u'p1': ('e', u'Force Build Form'),
-                u'p2': ('f', u'Force Build Form'),
-                u'p3': ('g', u'Force Build Form'),
-                u'p4': ('h', u'Force Build Form'),
-                u'reason': ('because', u'Force Build Form'),
-                u'scheduler': ('testsched', u'Scheduler'),
-            },
-            'reason': u"A build was forced by 'user': because",
-            'scheduler': 'testsched',
-            'sourcestampsetid': 100, # TODO: this is from fake db
-        }])
-
-        self.db.buildsets.assertBuildset\
-            (bsid,
-             dict(reason="A build was forced by 'user': because",
-                  brids=brids,
-                  external_idstring=None,
-                  properties=[ ('owner', ('user', 'Force Build Form')),
-                               ('p1', ('e', 'Force Build Form')),
-                               ('p2', ('f', 'Force Build Form')),
-                               ('p3', ('g', 'Force Build Form')),
-                               ('p4', ('h', 'Force Build Form')),
-                               ('reason', ('because', 'Force Build Form')),
-                               ('scheduler', ('testsched', 'Scheduler')),
-                               ],
-                  sourcestampsetid=100),
-             {'':
-              dict(branch='a', revision='c', repository='d', codebase='',
-                  project='p', sourcestampsetid=100)
-             })
+        self.assertEqual(res, (500, {'a':100}))
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForSourceStampSetDetails', dict(
+                builderNames=['a'],
+                properties={
+                    u'owner': ('user', u'Force Build Form'),
+                    u'p1': ('e', u'Force Build Form'),
+                    u'p2': ('f', u'Force Build Form'),
+                    u'p3': ('g', u'Force Build Form'),
+                    u'p4': ('h', u'Force Build Form'),
+                    u'reason': ('because', u'Force Build Form'),
+                },
+                reason=u"A build was forced by 'user': because",
+                sourcestamps={
+                    '': dict(branch='a', revision='c',
+                             repository='d', project='p'),
+                })),
+        ])
 
     def test_bad_codebases(self):
         # cant specify both codebases and branch/revision/project/repository:
@@ -173,7 +154,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertRaises(ValidationError, ForceScheduler,
                           name='foo', builderNames=['bar'],
                           codebases=['foo'], repository=StringParameter('name'))
-        
+
         # codebases must be a list of either string or BaseParameter types
         self.assertRaises(ValidationError, ForceScheduler,
                           name='foo', builderNames=['bar'],
@@ -181,12 +162,12 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertRaises(ValidationError, ForceScheduler,
                           name='foo', builderNames=['bar'],
                           codebases=[IntParameter('foo')],)
-        
+
         # codebases cannot be empty
         self.assertRaises(ValidationError, ForceScheduler,
                           name='foo', builderNames=['bar'],
                           codebases=[])
-        
+
     @defer.inlineCallbacks
     def test_good_codebases(self):
         sched = self.makeScheduler(codebases=['foo', CodebaseParameter('bar')])
@@ -198,27 +179,27 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         property3_name='p3',property3_value='g',
                         property4_name='p4',property4_value='h'
                         )
-        
+
         bsid,brids = res
-        self.db.buildsets.assertBuildset\
-            (bsid,
-             dict(reason="A build was forced by 'user': because",
-                  brids=brids,
-                  external_idstring=None,
-                  properties=[ ('owner', ('user', 'Force Build Form')),
-                               ('p1', ('e', 'Force Build Form')),
-                               ('p2', ('f', 'Force Build Form')),
-                               ('p3', ('g', 'Force Build Form')),
-                               ('p4', ('h', 'Force Build Form')),
-                               ('reason', ('because', 'Force Build Form')),
-                               ('scheduler', ('testsched', 'Scheduler')),
-                               ],
-                  sourcestampsetid=100),
-             {'foo': dict(codebase='foo', sourcestampsetid=100,
-                          branch='a', revision='c', repository='d', project='p', ),
-              'bar': dict(codebase='bar', sourcestampsetid=100,
-                          branch='a2', revision='c2', repository='d2', project='p2', ),
-              })
+        expProperties = {
+            u'owner' : ('user', 'Force Build Form'),
+            u'p1' : ('e', 'Force Build Form'),
+            u'p2' : ('f', 'Force Build Form'),
+            u'p3' : ('g', 'Force Build Form'),
+            u'p4' : ('h', 'Force Build Form'),
+            u'reason' : ('because', 'Force Build Form'),
+        }
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForSourceStampSetDetails', dict(
+                builderNames=['a'],
+                properties=expProperties,
+                reason=u"A build was forced by 'user': because",
+                sourcestamps={
+                    'bar': {'branch': 'a2', 'project': 'p2',
+                            'repository': 'd2', 'revision': 'c2'},
+                    'foo': {'branch': 'a', 'project': 'p', 'repository': 'd',
+                            'revision': 'c'}})),
+        ])
 
     # value = the value to be sent with the parameter (ignored if req is set)
     # expect = the expected result (can be an exception type)
@@ -232,20 +213,20 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                          owner='user',
                          value=None, req=None,
                          **kwargs):
-        
+
         name = kwargs.setdefault('name', 'p1')
-        
+
         # construct one if needed
         if isinstance(klass, type):
             prop = klass(**kwargs)
         else:
             prop = klass
-        
+
         self.assertEqual(prop.name, name)
         self.assertEqual(prop.label, kwargs.get('label', prop.name))
-        
+
         sched = self.makeScheduler(properties=[prop])
-        
+
         if not req:
             req = {name:value, 'reason':'because'}
         try:
@@ -262,9 +243,8 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         expect_props = {
             'owner' : ('user', 'Force Build Form'),
             'reason' : ('because', 'Force Build Form'),
-            'scheduler' : ('testsched', 'Scheduler'),
         }
-        
+
         if expectKind is None:
             expect_props[name] = (expect, 'Force Build Form')
         elif expectKind is dict:
@@ -273,15 +253,17 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         else:
             self.fail("expectKind is wrong type!")
 
-        self.assertEqual(len(brids), 1) # only forced on 'a'
-        self.assertEqual(self.master.data.updates.buildsetsAdded, [ {
-            'builderNames': ['a'],
-            'external_idstring': None,
-            'properties': expect_props,
-            'reason': u"A build was forced by 'user': because",
-            'scheduler': 'testsched',
-            'sourcestampsetid': 100, # TODO: this is from fake db
-        }])
+        self.assertEqual((bsid, brids), (500, {'a':100})) # only forced on 'a'
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForSourceStampSetDetails', dict(
+                builderNames=['a'],
+                properties=expect_props,
+                reason=u"A build was forced by 'user': because",
+                sourcestamps={
+                    '': {'branch': '', 'project': '',
+                         'repository': '', 'revision': ''},
+                })),
+        ])
 
     def test_StringParameter(self):
         self.do_ParameterTest(value="testedvalue", expect="testedvalue",
@@ -375,7 +357,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                               klass=NestedParameter, fields=fields)
 
     def test_NestedParameter_nullname(self):
-        # same as above except "p1" and "any" are skipped 
+        # same as above except "p1" and "any" are skipped
         fields = [
             NestedParameter(name="inner", fields=[
                 StringParameter(name='str'),
@@ -399,6 +381,6 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                               expect=dict(foo=123,
                                           inner=dict(str="bar", hello="world"),
                                           bar={'a':'7', 'b':'8'}),
-                              expectKind=dict,                              
+                              expectKind=dict,
                               klass=NestedParameter, fields=fields, name='')
 

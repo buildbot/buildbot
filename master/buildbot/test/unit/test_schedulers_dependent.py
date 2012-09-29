@@ -45,7 +45,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         sched = dependent.Dependent(name='n', builderNames=['b'],
                                     upstream=upstream)
-        self.attachScheduler(sched, OBJECTID)
+        self.attachScheduler(sched, OBJECTID, overrideBuildsetMethods=True)
         return sched
 
     def assertBuildsetSubscriptions(self, bsids=None):
@@ -144,10 +144,16 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         # and check whether a buildset was added in response
         if expect_buildset:
-            self.assertEqual(1093,
-                self.master.data.updates.buildsetsAdded[0]['sourcestampsetid'])
+            self.assertEqual(self.addBuildsetCalls, [
+                ('addBuildsetForSourceStamp', dict(
+                    builderNames=None, # defaults
+                    external_idstring=None,
+                    properties=None,
+                    reason=u'downstream',
+                    setid=1093)),
+            ])
         else:
-            self.db.buildsets.assertBuildsets(1) # only the one we added above
+            self.assertEqual(self.addBuildsetCalls, [])
 
     def test_related_buildset_SUCCESS(self):
         return self.do_test(UPSTREAM_NAME, True, SUCCESS, True)

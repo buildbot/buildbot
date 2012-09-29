@@ -411,5 +411,5 @@ class NightlyTriggerable(NightlyBase):
         if set_props:
             props.updateFromProperties(set_props)
 
-        yield self.addBuildsetForSourceStampSetDetails(reason=self.reason, sourcestamps=sourcestamps,
-                properties=props)
+        yield self.addBuildsetForSourceStampSetDetails(reason=self.reason,
+                sourcestamps=sourcestamps, properties=props)
