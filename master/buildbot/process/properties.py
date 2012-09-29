@@ -200,17 +200,6 @@ class _PropertyMap(object):
     colon_minus_re = re.compile(r"(.*):-(.*)")
     colon_tilde_re = re.compile(r"(.*):~(.*)")
     colon_plus_re = re.compile(r"(.*):\+(.*)")
-    
-    colon_ternary_re = re.compile(r"""(?P<prop>.*) # the property to match
-                                      :            # colon
-                                      (?P<alt>\#)? # might have the alt marker '#'
-                                      \?           # question mark
-                                      (?P<delim>.) # the delimiter
-                                      (?P<true>.*) # sub-if-true
-                                      (?P=delim)   # the delimiter again
-                                      (?P<false>.*)# sub-if-false
-                                      """, re.VERBOSE)
-
     def __init__(self, properties):
         # use weakref here to avoid a reference loop
         self.properties = weakref.ref(properties)
@@ -251,38 +240,10 @@ class _PropertyMap(object):
             else:
                 return ''
 
-        def colon_ternary(mo):
-            # %(prop:?:T:F)s
-            # if prop exists, use T; otherwise, F
-            # %(prop:#?:T:F)s
-            # if prop is true, use T; otherwise, F
-            groups = mo.groupdict()
-            
-            prop = groups['prop']
-            
-            if prop in self.temp_vals:
-                if groups['alt']:
-                    use_true = self.temp_vals[prop]
-                else:
-                    use_true = True
-            elif properties.has_key(prop):
-                if groups['alt']:
-                    use_true = properties[prop]
-                else:
-                    use_true = True
-            else:
-                use_true = False
-            
-            if use_true:
-                return groups['true']
-            else:
-                return groups['false']
-
         for regexp, fn in [
             ( self.colon_minus_re, colon_minus ),
             ( self.colon_tilde_re, colon_tilde ),
             ( self.colon_plus_re, colon_plus ),
-            ( self.colon_ternary_re, colon_ternary ),
             ]:
             mo = regexp.match(key)
             if mo:
@@ -311,7 +272,7 @@ class WithProperties(util.ComparableMixin):
     """
 
     implements(IRenderable)
-    compare_attrs = ('fmtstring', 'args')
+    compare_attrs = ('fmtstring', 'args', 'lambda_subs')
 
     def __init__(self, fmtstring, *args, **lambda_subs):
         self.fmtstring = fmtstring
@@ -340,8 +301,10 @@ class WithProperties(util.ComparableMixin):
 
 
 _notHasKey = object() ## Marker object for _Lookup(..., hasKey=...) default
-class _Lookup(util.ComparableMixin):
+class _Lookup(util.ComparableMixin, object):
     implements(IRenderable)
+
+    compare_attrs = ('value', 'index', 'default', 'defaultWhenFalse', 'hasKey', 'elideNoneAs')
 
     def __init__(self, value, index, default=None,
             defaultWhenFalse=True, hasKey=_notHasKey,
@@ -352,6 +315,20 @@ class _Lookup(util.ComparableMixin):
         self.defaultWhenFalse = defaultWhenFalse
         self.hasKey = hasKey
         self.elideNoneAs = elideNoneAs
+
+    def __repr__(self):
+        return '_Lookup(%r, %r%s%s%s%s)' % (
+                self.value,
+                self.index,
+                ', default=%r' % (self.default,)
+                    if self.default is not None else '',
+                ', defaultWhenFalse=False'
+                    if not self.defaultWhenFalse else '',
+                ', hasKey=%r' % (self.hasKey,)
+                    if self.hasKey is not _notHasKey else '',
+                ', elideNoneAs=%r'% (self.elideNoneAs,)
+                    if self.elideNoneAs is not None else '')
+
 
     @defer.inlineCallbacks
     def getRenderingFor(self, build):
@@ -389,8 +366,11 @@ class _PropertyDict(object):
         return build.getProperties()
 _thePropertyDict = _PropertyDict()
 
-class _SourceStampDict(object):
+class _SourceStampDict(util.ComparableMixin, object):
     implements(IRenderable)
+
+    compare_attrs = ('codebase',)
+
     def __init__(self, codebase):
         self.codebase = codebase
     def getRenderingFor(self, build):
@@ -400,16 +380,20 @@ class _SourceStampDict(object):
         else:
             return {}
 
-
-class _Lazy(object):
+class _Lazy(util.ComparableMixin, object):
     implements(IRenderable)
+
+    compare_attrs = ('value',)
     def __init__(self, value):
         self.value = value
     def getRenderingFor(self, build):
         return self.value
+
+    def __repr__(self):
+        return '_Lazy(%r)' % self.value
  
 
-class Interpolate(util.ComparableMixin): 
+class Interpolate(util.ComparableMixin, object):
     """ 
     This is a marker class, used fairly widely to indicate that we 
     want to interpolate build properties. 
@@ -430,6 +414,12 @@ class Interpolate(util.ComparableMixin):
         if not self.args:
             self.interpolations = {}
             self._parse(fmtstring)
+
+    def __repr__(self):
+        if self.args:
+            return 'Interpolate(%r, *%r)' % (self.fmtstring, self.args)
+        if self.kwargs:
+            return 'Interpolate(%r, **%r)' % (self.fmtstring, self.kwargs)
 
     @staticmethod
     def _parse_prop(arg):
@@ -608,6 +598,20 @@ class Property(util.ComparableMixin):
                 return props.render(props.getProperty(self.key))
             else:
                 return props.render(self.default)
+
+class _Renderer(util.ComparableMixin, object):
+    implements(IRenderable)
+
+    compare_attrs = ('getRenderingFor',)
+
+    def __init__(self, fn):
+        self.getRenderingFor = fn
+
+    def __repr__(self):
+        return 'renderer(%r)' % (self.getRenderingFor,)
+
+def renderer(fn):
+    return _Renderer(fn)
 
 class _DefaultRenderer(object):
     """

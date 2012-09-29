@@ -112,6 +112,7 @@
 {% macro force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props) %}
  <form method="post" name="force_build" action="{{ force_url }}" class="command_forcebuild">
 
+  <h3>{{ sch.name|e }}</h3>
   {% if on_all %}
      <p>To force a build on <strong>all Builders</strong>, fill out the following fields
           and push the 'Force Build' button</p>

@@ -20,7 +20,8 @@ from twisted.trial import unittest
 from twisted.python import components
 from buildbot.process.properties import Properties, WithProperties
 from buildbot.process.properties import Interpolate
-from buildbot.process.properties import Property, PropertiesMixin
+from buildbot.process.properties import _Lazy, _SourceStampDict, _Lookup
+from buildbot.process.properties import Property, PropertiesMixin, renderer
 from buildbot.interfaces import IRenderable, IProperties
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.properties import ConstantRenderable
@@ -198,58 +199,6 @@ class TestPropertyMap(unittest.TestCase):
     def testColonPlusUnset(self):
         return self.doTestSimpleWithProperties('%(prop_nosuch:+present)s', '')
 
-
-    def testColonTernarySet(self):
-        return self.doTestSimpleWithProperties('%(prop_str:?:present:missing)s', 'present')
-
-    def testColonTernaryNone(self):
-        return self.doTestSimpleWithProperties('%(prop_none:?:present:missing)s', 'present')
-
-    def testColonTernaryZero(self):
-        return self.doTestSimpleWithProperties('%(prop_zero:?|present|missing)s', 'present')
-
-    def testColonTernaryOne(self):
-        return self.doTestSimpleWithProperties('%(prop_one:?:present:missing)s', 'present')
-
-    def testColonTernaryFalse(self):
-        return self.doTestSimpleWithProperties('%(prop_false:?|present|missing)s', 'present')
-
-    def testColonTernaryTrue(self):
-        return self.doTestSimpleWithProperties('%(prop_true:?:present:missing)s', 'present')
-
-    def testColonTernaryEmpty(self):
-        return self.doTestSimpleWithProperties('%(prop_empty:?ApresentAmissing)s', 'present')
-
-    def testColonTernaryUnset(self):
-        return self.doTestSimpleWithProperties('%(prop_nosuch:?#present#missing)s', 'missing')
-
-
-    def testColonTernaryHashSet(self):
-        return self.doTestSimpleWithProperties('%(prop_str:#?:truish:falsish)s', 'truish')
-        
-    def testColonTernaryHashNone(self):
-        # None is special-cased *differently* for '#?'
-        return self.doTestSimpleWithProperties('%(prop_none:#?|truish|falsish)s', 'falsish')
-
-    def testColonTernaryHashZero(self):
-        return self.doTestSimpleWithProperties('%(prop_zero:#?:truish:falsish)s', 'falsish')
-
-    def testColonTernaryHashOne(self):
-        return self.doTestSimpleWithProperties('%(prop_one:#?:truish:falsish)s', 'truish')
-
-    def testColonTernaryHashFalse(self):
-        return self.doTestSimpleWithProperties('%(prop_false:#?:truish:falsish)s', 'falsish')
-
-    def testColonTernaryHashTrue(self):
-        return self.doTestSimpleWithProperties('%(prop_true:#?|truish|falsish)s', 'truish')
-
-    def testColonTernaryHashEmpty(self):
-        return self.doTestSimpleWithProperties('%(prop_empty:#?:truish:falsish)s', 'falsish')
-
-    def testColonTernaryHashUnset(self):
-        return self.doTestSimpleWithProperties('%(prop_nosuch:#?.truish.falsish)s', 'falsish')
-
-
     def testClearTempValues(self):
         d = self.doTestSimpleWithProperties('', '',
                 prop_temp=lambda b: 'present')
@@ -325,23 +274,6 @@ class TestPropertyMap(unittest.TestCase):
     def testTempValuePlusUnsetSet(self):
         return self.doTestSimpleWithProperties('%(prop_nosuch:+set)s', 'set',
                 prop_nosuch=lambda b: 1)
-
-
-    def testTempValueColonTernaryTrue(self):
-        return self.doTestSimpleWithProperties('%(prop_temp:?:present:missing)s', 'present',
-                prop_temp=lambda b: True)
-
-    def testTempValueColonTernaryFalse(self):
-        return self.doTestSimpleWithProperties('%(prop_temp:?|present|missing)s', 'present',
-                prop_temp=lambda b: False)
-
-    def testTempValueColonTernaryHashTrue(self):
-        return self.doTestSimpleWithProperties('%(prop_temp:#?|truish|falsish)s', 'truish',
-                prop_temp=lambda b: 1)
-
-    def testTempValueColonTernaryHashFalse(self):
-        return self.doTestSimpleWithProperties('%(prop_temp:#?|truish|falsish)s', 'falsish',
-                prop_nosuch=lambda b: 0)
 
 
 class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
@@ -870,15 +802,6 @@ class TestWithProperties(unittest.TestCase):
                              "build-exists-.tar.gz")
         return d
 
-    def testDictColonTernary(self):
-        # test dict-style substitution with WithProperties
-        self.props.setProperty("prop1", "foo", "test")
-        command = WithProperties("build-%(prop1:?:exists:missing)s-%(prop2:?:exists:missing)s.tar.gz")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                             "build-exists-missing.tar.gz")
-        return d
-
     def testEmpty(self):
         # None should render as ''
         self.props.setProperty("empty", None, "test")
@@ -1308,3 +1231,179 @@ class TestRenderalbeAdapters(unittest.TestCase):
         k2.callback("dict")
         r2.callback("lookup")
         return d
+
+class Renderer(unittest.TestCase):
+
+    def setUp(self):
+        self.props = Properties()
+        self.build = FakeBuild(self.props)
+
+
+    def test_renderer(self):
+        self.props.setProperty("x", "X", "test")
+        d = self.build.render(
+            renderer(lambda p : 'x%sx' % p.getProperty('x')))
+        d.addCallback(self.failUnlessEqual, 'xXx')
+        return d
+
+    def test_renderer_called(self):
+        # it's tempting to try to call the decorated function.  Don't do that.
+        # It's not a function anymore.
+        d = defer.maybeDeferred(lambda :
+                self.build.render(renderer(lambda p : 'x')('y')))
+        self.failUnlessFailure(d, TypeError)
+        return d
+
+    def test_renderer_decorator(self):
+        self.props.setProperty("x", "X", "test")
+        @renderer
+        def rend(p):
+            return 'x%sx' % p.getProperty('x')
+        d = self.build.render(rend)
+        d.addCallback(self.failUnlessEqual, 'xXx')
+        return d
+
+    def test_renderer_deferred(self):
+        self.props.setProperty("x", "X", "test")
+        d = self.build.render(
+            renderer(lambda p : defer.succeed('y%sy' % p.getProperty('x'))))
+        d.addCallback(self.failUnlessEqual, 'yXy')
+        return d
+
+    def test_renderer_fails(self):
+        d = self.build.render(
+            renderer(lambda p : defer.fail(RuntimeError("oops"))))
+        self.failUnlessFailure(d, RuntimeError)
+        return d
+
+class Compare(unittest.TestCase):
+
+    def test_WithProperties_lambda(self):
+        self.failIfEqual(WithProperties("%(key)s", key=lambda p:'val'), WithProperties("%(key)s", key=lambda p:'val'))
+        def rend(p):
+            return "val"
+        self.failUnlessEqual(
+                WithProperties("%(key)s", key=rend),
+                WithProperties("%(key)s", key=rend))
+        self.failIfEqual(
+                WithProperties("%(key)s", key=rend),
+                WithProperties("%(key)s", otherkey=rend))
+
+    def test_WithProperties_positional(self):
+        self.failIfEqual(
+                WithProperties("%s", 'key'),
+                WithProperties("%s", 'otherkey'))
+        self.failUnlessEqual(
+                WithProperties("%s", 'key'),
+                WithProperties("%s", 'key'))
+        self.failIfEqual(
+                WithProperties("%s", 'key'),
+                WithProperties("k%s", 'key'))
+
+    def test_Interpolate_constant(self):
+        self.failIfEqual(
+                Interpolate('some text here'),
+                Interpolate('and other text there'))
+        self.failUnlessEqual(
+                Interpolate('some text here'),
+                Interpolate('some text here'))
+
+    def test_Interpolate_positional(self):
+        self.failIfEqual(
+                Interpolate('%s %s', "test", "text"),
+                Interpolate('%s %s', "other", "text"))
+        self.failUnlessEqual(
+                Interpolate('%s %s', "test", "text"),
+                Interpolate('%s %s', "test", "text"))
+
+    def test_Interpolate_kwarg(self):
+        self.failIfEqual(
+                Interpolate("%(kw:test)s", test=object(), other=2),
+                Interpolate("%(kw:test)s", test=object(), other=2))
+        self.failUnlessEqual(
+                Interpolate('testing: %(kw:test)s', test="test", other=3),
+                Interpolate('testing: %(kw:test)s', test="test", other=3))
+
+    def test_renderer(self):
+        self.failIfEqual(
+                renderer(lambda p:'val'),
+                renderer(lambda p:'val'))
+        def rend(p):
+            return "val"
+        self.failUnlessEqual(
+                renderer(rend),
+                renderer(rend))
+
+    def test_Lookup_simple(self):
+        self.failIfEqual(
+                _Lookup({'test': 5, 'other': 6}, 'other'),
+                _Lookup({'test': 5, 'other': 6}, 'test'))
+        self.failUnlessEqual(
+                _Lookup({'test': 5, 'other': 6}, 'test'),
+                _Lookup({'test': 5, 'other': 6}, 'test'))
+
+    def test_Lookup_default(self):
+        self.failIfEqual(
+                _Lookup({'test': 5, 'other': 6}, 'test', default='default'),
+                _Lookup({'test': 5, 'other': 6}, 'test'))
+        self.failUnlessEqual(
+                _Lookup({'test': 5, 'other': 6}, 'test', default='default'),
+                _Lookup({'test': 5, 'other': 6}, 'test', default='default'))
+
+    def test_Lookup_defaultWhenFalse(self):
+        self.failIfEqual(
+                _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=False),
+                _Lookup({'test': 5, 'other': 6}, 'test'))
+        self.failIfEqual(
+                _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=False),
+                _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=True))
+        self.failUnlessEqual(
+                _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=True),
+                _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=True))
+        self.failUnlessEqual(
+                _Lookup({'test': 5, 'other': 6}, 'test'),
+                _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=True))
+
+    def test_Lookup_hasKey(self):
+        self.failIfEqual(
+                _Lookup({'test': 5, 'other': 6}, 'test', hasKey=None),
+                _Lookup({'test': 5, 'other': 6}, 'test'))
+        self.failIfEqual(
+                _Lookup({'test': 5, 'other': 6}, 'test', hasKey='has-key'),
+                _Lookup({'test': 5, 'other': 6}, 'test'))
+        self.failIfEqual(
+                _Lookup({'test': 5, 'other': 6}, 'test', hasKey='has-key'),
+                _Lookup({'test': 5, 'other': 6}, 'test', hasKey='other-key'))
+        self.failUnlessEqual(
+                _Lookup({'test': 5, 'other': 6}, 'test', hasKey='has-key'),
+                _Lookup({'test': 5, 'other': 6}, 'test', hasKey='has-key'))
+
+    def test_Lookup_elideNoneAs(self):
+        self.failUnlessEqual(
+                _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs=None),
+                _Lookup({'test': 5, 'other': 6}, 'test'))
+        self.failIfEqual(
+                _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs=''),
+                _Lookup({'test': 5, 'other': 6}, 'test'))
+        self.failIfEqual(
+                _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs='got None'),
+                _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs=''))
+        self.failUnlessEqual(
+                _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs='got None'),
+                _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs='got None'))
+
+    def test_Lazy(self):
+        self.failIfEqual(
+                _Lazy(5),
+                _Lazy(6))
+        self.failUnlessEqual(
+                _Lazy(5),
+                _Lazy(5))
+
+    def test_SourceStampDict(self):
+        self.failIfEqual(
+                _SourceStampDict('binary'),
+                _SourceStampDict('library'))
+        self.failUnlessEqual(
+                _SourceStampDict('binary'),
+                _SourceStampDict('binary'))

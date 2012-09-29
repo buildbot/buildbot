@@ -632,11 +632,11 @@ class BuildStep(NonAddressableDataNode):
   def simplified_result(self):
     """Returns a simplified 3 state value, True, False or None."""
     result = self.result
-    if result in (SUCCESS, WARNINGS, SKIPPED):
+    if result in (SUCCESS, WARNINGS):
       return True
     elif result in (FAILURE, EXCEPTION, RETRY):
       return False
-    assert result is None, (result, self.data)
+    assert result in (None, SKIPPED), (result, self.data)
     return None
 
 
@@ -680,7 +680,7 @@ class Build(AddressableDataNode):
   printable_attributes = AddressableDataNode.printable_attributes + [
     'key', 'number', 'steps', 'blame', 'reason', 'revision', 'result',
     'simplified_result', 'start_time', 'end_time', 'duration', 'slave',
-    'properties',
+    'properties', 'completed',
   ]
 
   def __init__(self, parent, key, data):
@@ -722,8 +722,12 @@ class Build(AddressableDataNode):
     return self.data.get('eta', 0)
 
   @property
+  def completed(self):
+    return self.data.get('currentStep') is None
+
+  @property
   def properties(self):
-    return self.data.get('properties', None)
+    return self.data.get('properties', [])
 
   @property
   def reason(self):
@@ -841,7 +845,7 @@ class Builds(AddressableNodeList):
   def cache_keys(self):
     """Grabs the keys (build numbers) from the builder."""
     if not self._has_keys_cached:
-      for i in self.parent.data['cachedBuilds']:
+      for i in self.parent.data.get('cachedBuilds', []):
         i = int(i)
         self._cache.setdefault(i, Build(self, i, None))
         if i not in self._keys:
@@ -933,12 +937,15 @@ class Buildbot(AddressableBaseDataNode):
       url += '?filter=1'
     logging.info('read(%s)' % suburl)
     channel = urllib.urlopen(url)
+    data = channel.read()
     try:
-      return json.load(channel)
-    except ValueError, e:
-      if '<head><title>404 - No Such Resource</title></head>' in e.doc:
+      return json.loads(data)
+    except ValueError:
+      if channel.getcode() >= 400:
+        # Convert it into an HTTPError for easier processing.
         raise urllib2.HTTPError(
-            url, 404, '%s:\n%s' % (url, e.doc), channel.headers, None)
+            url, channel.getcode(), '%s:\n%s' % (url, data), channel.headers,
+            None)
       raise
 
   def _readall(self):
@@ -1110,8 +1117,8 @@ def find_idle_busy_slaves(parser, args, show_idle):
   return 0
 
 
-def last_failure(buildbot, builders=None, slaves=None, steps=None,
-    result=FAILURE, no_cache=False):
+def last_failure(
+    buildbot, builders=None, slaves=None, steps=None, no_cache=False):
   """Generator returning Build object that were the last failure with the
   specific filters.
   """
@@ -1136,15 +1143,20 @@ def last_failure(buildbot, builders=None, slaves=None, steps=None,
 
     found = []
     for build in builder.builds:
-      if build.slave.name not in builder_slaves or  build.slave.name in found:
+      if build.slave.name not in builder_slaves or build.slave.name in found:
         continue
-      found.append(build.slave.name)
+      # Only add the slave for the first completed build but still look for
+      # incomplete builds.
+      if build.completed:
+        found.append(build.slave.name)
+
       if steps:
-        if any(build.steps[step].result == result for step in steps):
+        if any(build.steps[step].simplified_result is False for step in steps):
           yield build
-      elif result is None or build.result == result:
+      elif build.simplified_result is False:
         yield build
-      if len(found) == len(slaves):
+
+      if len(found) == len(builder_slaves):
         # Found all the slaves, quit.
         break
 
@@ -1159,9 +1171,6 @@ def CMDlast_failure(parser, args):
     '-S', '--step', dest='steps', action='append', default=[],
     help='List all slaves that failed on that step on their last build')
   parser.add_option(
-    '-r', '--result', type='int', default=FAILURE,
-    help='Build result to filter on')
-  parser.add_option(
     '-b', '--builder', dest='builders', action='append', default=[],
     help='Builders to filter on')
   parser.add_option(
@@ -1173,12 +1182,11 @@ def CMDlast_failure(parser, args):
   options, args, buildbot = parser.parse_args(args)
   if args:
     parser.error('Unrecognized parameters: %s' % ' '.join(args))
-  if options.steps and options.result is None:
-    options.result = 2
   print_builders = not options.quiet and len(options.builders) != 1
   last_builder = None
-  for build in last_failure(buildbot, builders=options.builders,
-      slaves=options.slaves, steps=options.steps, result=options.result,
+  for build in last_failure(
+      buildbot, builders=options.builders,
+      slaves=options.slaves, steps=options.steps,
       no_cache=options.no_cache):
 
     if print_builders and last_builder != build.builder:
@@ -1191,19 +1199,18 @@ def CMDlast_failure(parser, args):
       else:
         print build.slave.name
     else:
-      out = '%d on %s: result:%s blame:%s' % (
-        build.number, build.slave.name, build.result,
-        ', '.join(build.blame))
+      out = '%d on %s: blame:%s' % (
+          build.number, build.slave.name, ', '.join(build.blame))
       if print_builders:
         out = '  ' + out
       print out
 
       if len(options.steps) != 1:
         for step in build.steps:
-          if step.result not in (0, None):
-            out = '  %s: r=%s %s' % (
-                step.data['name'], step.result,
-                ', '.join(step.data['text'])[:40])
+          if step.simplified_result is False:
+            # Assume the first line is the text name anyway.
+            summary = ', '.join(step.data['text'][1:])[:40]
+            out = '  %s: "%s"' % (step.data['name'], summary)
             if print_builders:
               out = '  ' + out
             print out
@@ -1291,6 +1298,53 @@ def CMDbuilds(parser, args):
           print out
         else:
           print build
+  return 0
+
+
+@need_buildbot
+def CMDcount(parser, args):
+  """Count the number of builds that occured during a specific period.
+  """
+  parser.add_option(
+    '-o', '--over', type='int', help='Number of seconds to look for')
+  parser.add_option(
+    '-b', '--builder', dest='builders', action='append', default=[],
+    help='Builders to filter on')
+  options, args, buildbot = parser.parse_args(args)
+  if args:
+    parser.error('Unrecognized parameters: %s' % ' '.join(args))
+  if not options.over:
+    parser.error(
+        'Specify the number of seconds, e.g. --over 86400 for the last 24 '
+        'hours')
+  builders = options.builders or buildbot.builders.keys
+  counts = {}
+  since = time.time() - options.over
+  for builder in builders:
+    builder = buildbot.builders[builder]
+    counts[builder.name] = 0
+    if not options.quiet:
+      print builder.name
+    for build in builder.builds.iterall():
+      try:
+        start_time = build.start_time
+      except urllib2.HTTPError:
+        # The build was probably trimmed.
+        print >> sys.stderr, (
+            'Failed to fetch build %s/%d' % (builder.name, build.number))
+        continue
+      if start_time >= since:
+        counts[builder.name] += 1
+      else:
+        break
+    if not options.quiet:
+      print '.. %d' % counts[builder.name]
+
+  align_name = max(len(b) for b in counts)
+  align_number = max(len(str(c)) for c in counts.itervalues())
+  for builder in sorted(counts):
+    print '%*s: %*d' % (align_name, builder, align_number, counts[builder])
+  print 'Total: %d' % sum(counts.itervalues())
   return 0
 
 

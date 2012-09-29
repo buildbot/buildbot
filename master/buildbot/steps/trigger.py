@@ -15,7 +15,7 @@
 
 from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process.buildstep import LoggingBuildStep, SUCCESS, FAILURE, EXCEPTION
-from buildbot.process.properties import Properties
+from buildbot.process.properties import Properties, Property
 from twisted.python import log
 from twisted.internet import defer
 from buildbot import config
@@ -55,8 +55,11 @@ class Trigger(LoggingBuildStep):
             self.updateSourceStamp = not (alwaysUseLatest or self.sourceStamps)
         self.alwaysUseLatest = alwaysUseLatest
         self.waitForFinish = waitForFinish
-        self.set_properties = set_properties
-        self.copy_properties = copy_properties
+        properties = {}
+        properties.update(set_properties)
+        for i in copy_properties:
+            properties[i] = Property(i)
+        self.set_properties = properties
         self.running = False
         self.ended = False
         LoggingBuildStep.__init__(self, **kwargs)
@@ -73,17 +76,10 @@ class Trigger(LoggingBuildStep):
 
     # Create the properties that are used for the trigger
     def createTriggerProperties(self):
-        properties = self.build.getProperties()
-
-        # make a new properties object from a dict rendered by the old 
+        # make a new properties object from a dict rendered by the old
         # properties object
         trigger_properties = Properties()
         trigger_properties.update(self.set_properties, "Trigger")
-        for p in self.copy_properties:
-            if p not in properties:
-                continue
-            trigger_properties.setProperty(p, properties[p],
-                        "%s (in triggering build)" % properties.getPropertySource(p))
         return trigger_properties
 
     # Get all scheduler instances that were configured

@@ -23,7 +23,7 @@ import sys
 import os
 import glob
 
-from distutils.core import setup, Command
+from distutils.core import setup
 from buildbot import version
 
 from distutils.command.install_data import install_data
@@ -67,7 +67,7 @@ class our_sdist(sdist):
 
         # ensure that NEWS has a copy of the latest release notes, with the
         # proper version substituted
-        src_fn = os.path.join('docs', 'release-notes.rst')
+        src_fn = os.path.join('docs', 'relnotes/index.rst')
         src = open(src_fn).read()
         src = src.replace('|version|', version)
         dst_fn = os.path.join(base_dir, 'NEWS')
@@ -195,10 +195,6 @@ else:
         'sqlalchemy-migrate ==0.6.1, ==0.7.0, ==0.7.1, ==0.7.2',
         'python-dateutil==1.5',
     ]
-    if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:
-        setup_args['setup_requires'] = [
-            'setuptools_trial',
-        ]
     setup_args['tests_require'] = [
         'mock',
     ]

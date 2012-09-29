@@ -326,6 +326,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         text += "Sincerely,\n"
         text += " The Buildbot\n"
         text += " %s\n" % status.getTitleURL()
+        text += "\n"
+        text += "%s\n" % status.getURLForThing(self.slave_status)
         subject = "Buildbot: buildslave %s was lost" % self.slavename
         return self._mail_missing_message(subject, text)
 
@@ -616,7 +618,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         # first, see if we have a MailNotifier we can use. This gives us a
         # fromaddr and a relayhost.
         buildmaster = self.botmaster.master
-        for st in buildmaster.statusTargets:
+        for st in buildmaster.status:
             if isinstance(st, MailNotifier):
                 break
         else:

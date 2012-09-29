@@ -672,6 +672,73 @@ The step takes the following arguments:
         updated then copied to ``build`` for next steps.
 
 
+.. bb:step:: Repo
+
+Repo
++++++++++++++++++
+
+.. py:class:: buildbot.steps.source.repo.Repo
+
+The :bb:step:`Repo` build step performs a `Repo <http://lwn.net/Articles/304488/>`_
+init and sync.
+
+It is a drop-in replacement for `Repo (Slave-Side)`, which should not be used anymore
+for new and old projects.
+
+The Repo step takes the following arguments:
+
+``manifest_url``
+    (required): the URL at which the Repo's manifests source repository is available.
+
+``manifest_branch``
+    (optional, defaults to ``master``): the manifest repository branch
+    on which repo will take its manifest. Corresponds to the ``-b``
+    argument to the :command:`repo init` command.
+
+``manifest_file``
+    (optional, defaults to ``default.xml``): the manifest
+    filename. Corresponds to the ``-m`` argument to the :command:`repo
+    init` command.
+
+``tarball``
+    (optional, defaults to ``None``): the repo tarball used for
+    fast bootstrap. If not present the tarball will be created
+    automatically after first sync. It is a copy of the ``.repo``
+    directory which contains all the git objects. This feature helps
+    to minimize network usage on very big projects.
+
+``jobs``
+    (optional, defaults to ``None``): Number of projects to fetch
+    simultaneously while syncing. Passed to repo sync subcommand with "-j".
+
+``sync_all_branches``
+    (optional, defaults to if "manifest_override" property exists? -> True else -> False):
+    callback to control the policy of repo sync -c
+
+``update_tarball``
+    (optional, defaults to "one week if we did not sync all branches"):
+    callback to control the policy of updating of the tarball
+    given properties, and boolean indicating whether
+    the last repo sync was on all branches
+    Returns: max age of tarball in seconds, or -1, if we
+    want to skip tarball update
+    The default value should be good tradeof on size of the tarball,
+    and update frequency compared to cost of tarball creation
+
+This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will
+automatically use the :command:`repo download` command of repo to
+download the additionnal changes introduced by a pending changeset.
+
+.. index:: Properties; Gerrit integration
+
+Gerrit integration can be also triggered using forced build with following properties:
+``repo_d``, ``repo_d[0-9]``, ``repo_download``, ``repo_download[0-9]``
+with values in format: ``project/change_number/patchset_number``.
+All of these properties will be translated into a :command:`repo download`.
+This feature allows integrators to build with several pending interdependent changes,
+which at the moment cannot be described properly in Gerrit, and can only be described
+by humans.
+
 .. _Source-Checkout-Slave-Side:
 
 Source Checkout (Slave-Side)
@@ -1206,6 +1273,8 @@ Repo (Slave-Side)
 The :bb:step:`Repo (Slave-Side)` build step performs a `Repo <http://lwn.net/Articles/304488/>`_
 init and sync.
 
+This step is obsolete and should not be used anymore. please use: `Repo` instead
+
 The Repo step takes the following arguments:
 
 ``manifest_url``
@@ -1376,7 +1445,7 @@ The :bb:step:`ShellCommand` arguments are:
 
     Note that environment values must be strings (or lists that are turned into
     strings).  In particular, numeric properties such as ``buildnumber`` must
-    be substituted using :ref:`WithProperties`.
+    be substituted using :ref:`Interpolate`.
 
 ``want_stdout``
     if ``False``, stdout from the child process is discarded rather than being
@@ -1859,7 +1928,7 @@ The :bb:step:`MTR` step's arguments are:
 
 ``mtr_subdir``
     The subdirectory in which to look for server error log files. Defaults to
-    :file:`mysql-test`, which is usually correct. :ref:`WithProperties` is supported.
+    :file:`mysql-test`, which is usually correct. :ref:`Interpolate` is supported.
 
 .. bb:step:: SubunitShellCommand
 
@@ -2325,7 +2394,7 @@ slave. Instead of having to create a temporary file and then use FileDownload,
 you can use one of the string download steps.  ::
 
     from buildbot.steps.transfer import StringDownload
-    f.append(StringDownload(WithProperties("%(branch)s-%(got_revision)s\n"),
+    f.append(StringDownload(Interpolate("%(src::branch)s-%(prop:got_revision)s\n"),
             slavedest="buildid.txt"))
 
 :bb:step:`StringDownload` works just like :bb:step:`FileDownload` except it takes a single argument,
@@ -2395,7 +2464,7 @@ Variables that don't exist on the master will be replaced by ``""``. ::
 
 Note that environment values must be strings (or lists that are turned into
 strings).  In particular, numeric properties such as ``buildnumber`` must
-be substituted using :ref:`WithProperties`.
+be substituted using :ref:`Interpolate`.
 
 ``interruptSignal``
    (optional) Signal to use to end the process, if the step is interrupted.
@@ -2428,7 +2497,7 @@ This runs ``uname -a`` and captures its stdout, stripped of leading
 and trailing whitespace, in the property ``uname``.  To avoid stripping,
 add ``strip=False``.
 
-The ``property`` argument can be specified as a  :ref:`WithProperties`
+The ``property`` argument can be specified as a  :ref:`Interpolate`
 object, allowing the property name to be built from other property values.
 
 The more advanced usage allows you to specify a function to extract
@@ -2478,7 +2547,7 @@ displayed as :envvar:`TMP` in the Windows GUI. ::
     from buildbot.steps.shell import Compile
 
     f.addStep(SetPropertiesFromEnv(variables=["SOME_JAVA_LIB_HOME", "JAVAC"]))
-    f.addStep(Compile(commands=[WithProperties("%s","JAVAC"), "-cp", WithProperties("%s", "SOME_JAVA_LIB_HOME")))
+    f.addStep(Compile(commands=[Interpolate("%(prop:JAVAC)s"), "-cp", Interpolate("%(prop:SOME_JAVA_LIB_HOME)s")))
 
 Note that this step requires that the Buildslave be at least version 0.8.3.
 For previous versions, no environment variables are available (the slave
@@ -2500,8 +2569,7 @@ The counterpart to the Triggerable described in section
     f.addStep(Trigger(schedulerNames=['build-prep'],
                       waitForFinish=True,
                       updateSourceStamp=True,
-                      set_properties={ 'quick' : False },
-                      copy_properties=[ 'release_code_name' ]))
+                      set_properties={ 'quick' : False })
 
 The ``schedulerNames=`` argument lists the :bb:sched:`Triggerable` schedulers
 that should be triggered when this step is executed.  Note that
@@ -2537,12 +2605,14 @@ can be used for a dictionary containing the keys mentioned above. The arguments
 ``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp`` can be specified
 using properties.
 
-Two parameters allow control of the properties that are passed to the triggered
-scheduler.  To simply copy properties verbatim, list them in the
-``copy_properties`` parameter.  To set properties explicitly, use the more
-sophisticated ``set_properties``, which takes a dictionary mapping property
-names to values.  You may use :ref:`WithProperties` here to dynamically 
-construct new property values.
+The ``set_properties`` parameter allows control of the properties that are passed to the triggered scheduler.
+The parameter takes a dictionary mapping property names to values.
+You may use :ref:`Interpolate` here to dynamically construct new property values.
+For the simple case of copying a property, this might look like ::
+
+    set_properties={"my_prop1", Property("my_prop1")}
+
+The ``copy_properties`` parameter, given a list of properties to copy into the new build request, has been deprecated in favor of explicit use of ``set_properties``.
 
 RPM-Related Steps
 -----------------
@@ -2727,7 +2797,7 @@ violations. The packages or changes file to test is specified in ``fileloc``
 ::
 
     from buildbot.steps.package.deb.lintian import DebLintian
-    f.addStep(DebLintian(fileloc=WithProperties("%(deb-changes)s")))
+    f.addStep(DebLintian(fileloc=Interpolate("%(prop:deb-changes)s")))
 
 Miscellaneous BuildSteps
 ------------------------

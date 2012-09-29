@@ -18,6 +18,7 @@ include docs/manual/_images/icon.blend
 include docs/manual/_images/Makefile
 include docs/bbdocs/*
 include docs/developer/*
+include docs/relnotes/*
 
 include buildbot/scripts/sample.cfg
 include buildbot/scripts/buildbot_tac.tmpl

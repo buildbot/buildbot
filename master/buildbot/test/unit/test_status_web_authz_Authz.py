@@ -34,8 +34,8 @@ class StubRequest(object):
 
     def getPassword(self):
         return None
-    def addCookie(self, key, cookie, expiration, path):
-        self.send_cookies.append((key, cookie, expiration, path))
+    def addCookie(self, key, cookie, expires, path):
+        self.send_cookies.append((key, cookie, expires, path))
 
 class StubHttpAuthRequest(object):
     # all we need from a request is username/password
