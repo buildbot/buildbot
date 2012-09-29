@@ -702,7 +702,7 @@ submission of an arbitrary change request. Run :command:`post_build_request.py
 --help` for more information.  The ``base`` dialect must be enabled for this to
 work.
 
-github hook
+GitHub hook
 ###########
 
 The GitHub hook is simple and takes no options. ::

@@ -85,7 +85,7 @@ Git
    :file:`contrib/github_buildbot.py`, which listens for notifications
    from GitHub)
  * :bb:chsrc:`Change Hooks` in WebStatus
- * github change hook (specifically designed for GitHub notifications,
+ * GitHub change hook (specifically designed for GitHub notifications,
    but requiring a publicly-accessible WebStatus)
  * :bb:chsrc:`GitPoller` (polling a remote Git repository)
  * :bb:chsrc:`GoogleCodeAtomPoller` (polling the

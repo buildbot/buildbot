@@ -11,7 +11,7 @@ This chapter describes some of the more common idioms in advanced Buildbot
 configurations.
 
 At the moment, this chapter is an unordered set of suggestions; if you'd like
-to clean it up, fork the project on github and get started!
+to clean it up, fork the project on GitHub and get started!
 
 Programmatic Configuration Generation
 -------------------------------------
