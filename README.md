@@ -49,6 +49,7 @@ The outstanding resource types are:
 * ``addBuildset`` currently sends messages about buildrequests directly.
   It should, instead, coordinate with the buildrequests resource type to do so.
 * Add support for uids to the change resource type
+* Define real masters, that check in periodically, and have individual IDs (blocked on 'Add a ``masters`` table')
 
 # Web #
 
