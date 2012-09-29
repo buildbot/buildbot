@@ -285,7 +285,7 @@ The Mercurial step takes the following arguments:
 ``branchType``
    either 'dirname' (default) or 'inrepo' depending on whether the
    branch name should be appended to the ``repourl`` or the branch
-   is a mercurial named branch and can be found within the ``repourl``.
+   is a Mercurial named branch and can be found within the ``repourl``.
 
 ``clobberOnBranchChange``
    boolean, defaults to ``True``. If set and using inrepos branches,
@@ -1101,7 +1101,7 @@ The Mercurial step takes the following arguments:
 ``branchType``
     either 'dirname' (default) or 'inrepo' depending on whether
     the branch name should be appended to the ``baseURL``
-    or the branch is a mercurial named branch and can be
+    or the branch is a Mercurial named branch and can be
     found within the ``repourl``.
 
 ``clobberOnBranchChange``

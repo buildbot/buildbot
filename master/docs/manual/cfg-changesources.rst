@@ -618,7 +618,7 @@ Compatibility
 
 As twisted needs to hook some signals, and some web servers 
 strictly forbid that, the parameter ``fork`` in the
-``[hgbuildbot]`` section will instruct mercurial to fork before
+``[hgbuildbot]`` section will instruct Mercurial to fork before
 sending the change request. Then as the created process will be of short
 life, it is considered as safe to disable the signal restriction in
 the Apache setting like that ``WSGIRestrictSignal Off``. Refer to the
