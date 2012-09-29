@@ -264,7 +264,7 @@ The :bb:step:`Mercurial` build step performs a `Mercurial <http://selenic.com/me
 (aka ``hg``) checkout or update.
 
 Branches are available in two modes: ``dirname``, where the name of the branch is
-a suffix of the name of the repository, or ``inrepo``, which uses hg's
+a suffix of the name of the repository, or ``inrepo``, which uses Hg's
 named-branches support. Make sure this setting matches your changehook, if you
 have that installed. ::
 
