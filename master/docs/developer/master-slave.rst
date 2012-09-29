@@ -58,7 +58,7 @@ The slave-side Bot object has the following remote methods:
     ``environ``
         copy of the slaves environment
     ``system``
-        OS the slave is running (extracted from Pythons os.name)
+        OS the slave is running (extracted from Python's os.name)
     ``basedir``
         base directory where slave is running
 
