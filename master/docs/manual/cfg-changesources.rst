@@ -98,7 +98,7 @@ Repo/Git
 
 Monotone
  * :bb:chsrc:`PBChangeSource` (listening for connections from
-   :file:`monotone-buildbot.lua`, which is available with monotone)
+   :file:`monotone-buildbot.lua`, which is available with Monotone)
 
 All VC systems can be driven by a :bb:chsrc:`PBChangeSource` and the ``buildbot
 sendchange`` tool run from some form of commit script.  If you write an email
