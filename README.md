@@ -35,6 +35,7 @@ The outstanding resource types are:
 
 * scheduler
 * builder
+* sourcestamp
 * buildrequest
 * build
 * step
