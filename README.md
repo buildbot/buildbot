@@ -35,6 +35,16 @@ It's safe to leave tasks that have significant prerequisites - particularly the 
 The outstanding resource types are:
 
 * scheduler
+
+  * A resource-type module and class, with unit tests
+  * Docs for that resource type
+  * Type validators for the resource type
+  * New endpoints, with unit tests
+  * Docs for the endpoints
+  * Appropriate update methods, with unit tests
+  * Docs for those update methods
+  * Integrate with Buildbot: process classes should use the data API and not the DB or MQ APIs.
+
 * builder
 * sourcestamp
 * buildrequest
