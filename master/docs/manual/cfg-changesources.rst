@@ -87,7 +87,7 @@ Git
  * :bb:chsrc:`Change Hooks` in WebStatus
  * github change hook (specifically designed for GitHub notifications,
    but requiring a publicly-accessible WebStatus)
- * :bb:chsrc:`GitPoller` (polling a remote git repository)
+ * :bb:chsrc:`GitPoller` (polling a remote Git repository)
  * :bb:chsrc:`GoogleCodeAtomPoller` (polling the
    commit feed for a GoogleCode Git repository)
 
@@ -1021,13 +1021,13 @@ GitPoller
 If you cannot take advantage of post-receive hooks as provided by
 :file:`contrib/git_buildbot.py` for example, then you can use the :bb:chsrc:`GitPoller`.
 
-The :bb:chsrc:`GitPoller` periodically fetches from a remote git repository and processes any changes.
+The :bb:chsrc:`GitPoller` periodically fetches from a remote Git repository and processes any changes.
 It requires its own working directory for operation.
 The default should be adequate, but it can be overridden via the ``workdir`` property.
 
 .. note:: There can only be a single `GitPoller` pointed at any given repository.
 
-The :bb:chsrc:`GitPoller` requires git-1.7 and later.  It accepts the following
+The :bb:chsrc:`GitPoller` requires Git-1.7 and later.  It accepts the following
 arguments:
 
 ``repourl``
@@ -1046,7 +1046,7 @@ arguments:
     interval in seconds between polls, default is 10 minutes
 
 ``gitbin``
-    path to the git binary, defaults to just ``'git'``
+    path to the Git binary, defaults to just ``'git'``
 
 ``category``
     Set the category to be used for the changes produced by the
@@ -1068,16 +1068,16 @@ arguments:
 ``encoding``
     Set encoding will be used to parse author's name and commit
     message. Default encoding is ``'utf-8'``. This will not be
-    applied to file names since git will translate non-ascii file
+    applied to file names since Git will translate non-ascii file
     names to unreadable escape sequences.
 
 ``workdir``
     the directory where the poller should keep its local repository.
     The default is :samp:`gitpoller_work`.
     If this is a relative path, it will be interpreted relative to the master's basedir.
-    Multiple git pollers can share the same directory.
+    Multiple Git pollers can share the same directory.
 
-An configuration for the git poller might look like this::
+An configuration for the Git poller might look like this::
 
     from buildbot.changes.gitpoller import GitPoller
     c['change_source'] = GitPoller('git@example.com:foobaz/myrepo.git',

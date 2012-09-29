@@ -269,7 +269,7 @@ be used to access them.
 
     The console view is still in development. At this moment by
     default the view sorts revisions lexically, which can lead to odd
-    behavior with non-integer revisions (e.g., git), or with integer
+    behavior with non-integer revisions (e.g., Git), or with integer
     revisions of different length (e.g., 999 and 1000). It also has
     some issues with displaying multiple braches at the same time. If
     you do have multiple branches, you should use the ``branch=``

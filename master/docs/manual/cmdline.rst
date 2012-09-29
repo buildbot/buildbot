@@ -337,7 +337,7 @@ for each tree you use, so it may be more convenient to use the
 ``try_topfile`` approach instead.
 
 Other VC systems which work on full projects instead of individual
-directories (darcs, Mercurial, git, monotone) do not require
+directories (darcs, Mercurial, Git, monotone) do not require
 :command:`try` to know the top directory, so the :option:`--try-topfile`
 and :option:`--try-topdir` arguments will be ignored.
 

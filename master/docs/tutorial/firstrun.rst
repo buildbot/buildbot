@@ -34,11 +34,11 @@ of your distribution.)
 To make this work, you will need the following installed:
  * Python_ and the development packages for it
  * virtualenv_
- * git_
+ * Git_
 
 .. _Python: http://www.python.org/
 .. _virtualenv: http://pypi.python.org/pypi/virtualenv/
-.. _git: http://git-scm.com/
+.. _Git: http://git-scm.com/
 
 Preferably, use your package installer to install these.
 

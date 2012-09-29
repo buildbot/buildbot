@@ -351,7 +351,7 @@ Then run buildbot's try command as follows::
   buildbot try --connect=pb --master=127.0.0.1:5555 --username=sampleuser --passwd=samplepass --vc=git
 
 This will do "git diff" for you and send the resulting patch to
-the server for build and test against the latest sources from git.
+the server for build and test against the latest sources from Git.
 
 Now go back to the `waterfall <http://localhost:8010/waterfall>`_
 page, click on the runtests link, and scroll down.  You should see that
