@@ -44,9 +44,6 @@ The outstanding resource types are:
 
 ## Other Resource-Type Related Tasks ##
 
-* Improve usage of ``assertBuildset`` in scheduler tests.
-  Right now, many of them fail to assert some details of what they've inserted.
-  This will need to wait until at least the buildrequests resource type is defined.
 * ``addBuildset`` currently sends messages about buildrequests directly.
   It should, instead, coordinate with the buildrequests resource type to do so.
 * Add support for uids to the change resource type
