@@ -487,7 +487,7 @@ The following hooks are useful for sending changes to a :bb:chsrc:`PBChangeSourc
 Mercurial Hook
 ++++++++++++++
 
-Since Mercurial is written in python, the hook script can invoke
+Since Mercurial is written in Python, the hook script can invoke
 Buildbot's :meth:`sendchange` function directly, rather than having to
 spawn an external process. This function delivers the same sort of
 changes as :command:`buildbot sendchange` and the various hook scripts in
@@ -498,7 +498,7 @@ To set this up, first choose a Mercurial repository that represents
 your central `official` source tree. This will be the same
 repository that your buildslaves will eventually pull from. Install
 Buildbot on the machine that hosts this repository, using the same
-version of python as Mercurial is using (so that the Mercurial hook
+version of Python as Mercurial is using (so that the Mercurial hook
 can import code from buildbot). Then add the following to the
 :file:`.hg/hgrc` file in that repository, replacing the buildmaster
 hostname/portnumber as appropriate for your buildbot:

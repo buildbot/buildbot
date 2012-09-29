@@ -792,7 +792,7 @@ command will look for a special directory named :file:`.buildbot`,
 starting from the current directory (where the command was run) and
 crawling upwards, eventually looking in the user's home directory. It
 will look for a file named :file:`options` in this directory, and will
-evaluate it as a python script, looking for certain names to be set.
+evaluate it as a Python script, looking for certain names to be set.
 You can just put simple ``name = 'value'`` pairs in this file to
 set the options.
 

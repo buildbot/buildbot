@@ -25,7 +25,7 @@ Features:
 
 * run builds on a variety of slave platforms
 * arbitrary build process: handles projects using C, Python, whatever
-* minimal host requirements: python and Twisted
+* minimal host requirements: Python and Twisted
 * slaves can be behind a firewall if they can still do checkout
 * status delivery through web page, email, IRC, other protocols
 * track builds in progress, provide estimated completion time

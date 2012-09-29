@@ -772,7 +772,7 @@ sources are coming from.
         problems if the build process does not handle dependencies
         properly (sometimes you must do a *clean build* to make sure
         everything gets compiled), or if source files are deleted but
-        generated files can influence test behavior (e.g. python's
+        generated files can influence test behavior (e.g. Python's
         .pyc files), or when source directories are deleted but
         generated files prevent CVS from removing them. Builds ought
         to be correct regardless of whether they are done *from
@@ -1640,7 +1640,7 @@ false-positives. To use a different regexp, provide a
     f.addStep(Compile(command=["make", "test"],
                       warningPattern="^Warning: "))
 
-The ``warningPattern=`` can also be a pre-compiled python regexp
+The ``warningPattern=`` can also be a pre-compiled Python regexp
 object: this makes it possible to add flags like ``re.I`` (to use
 case-insensitive matching).
 
@@ -2233,7 +2233,7 @@ found in the shell search path.  It can be overridden with the ``trial``
 parameter.  This is useful for Twisted's own unittests, which want to use the
 copy of bin/trial that comes with the sources.
 
-To influence the version of python being used for the tests, or to add flags to
+To influence the version of Python being used for the tests, or to add flags to
 the command, set the ``python`` parameter. This can be a string (like
 ``python2.2``) or a list (like ``['python2.3', '-Wall']``).
 
