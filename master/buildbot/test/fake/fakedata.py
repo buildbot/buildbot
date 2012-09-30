@@ -58,10 +58,18 @@ class FakeUpdates(object):
         self.changesAdded[-1].pop('self')
         return defer.succeed(len(self.changesAdded))
 
-    def setMasterState(self, state=None):
-        self.testcase.assertIsInstance(state, basestring)
-        self.testcase.assertIn(state, ('started', 'stopped'))
-        self.masterStateChanges.append(state)
+    def checkinMaster(self, master_name, masterid):
+        self.testcase.assertIsInstance(master_name, unicode)
+        self.testcase.assertIsInstance(masterid, int)
+        if masterid:
+            self.testcase.assertEqual(masterid, 1)
+        self.masterActive = True
+        return defer.succeed(None)
+
+    def checkoutMaster(self, master_name, masterid):
+        self.testcase.assertIsInstance(master_name, unicode)
+        self.testcase.assertEqual(masterid, 1)
+        self.masterActive = False
         return defer.succeed(None)
 
 

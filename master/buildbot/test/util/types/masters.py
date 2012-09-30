@@ -27,8 +27,9 @@ def verifyData(testcase, type, options, value):
     testcase.assertEqual(options, {})
     return verifier.verifyDict(testcase, value, 'master', dict(
         masterid='integer',
-        name='string',
-        state='enum:started,stopped',
+        master_name='string',
+        active='boolean',
+        last_checkin='integer',
         link='Link',
         ))
 
@@ -39,7 +40,8 @@ def verifyMessage(testcase, routingKey, message):
             events=set(['started', 'stopped']),
             attrs=dict(
                 masterid='integer',
-                name='string',
-                state='enum:started,stopped',
+                master_name='string',
+                active='boolean',
+                # last_checkin is not included
                 ))
 

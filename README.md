@@ -32,16 +32,6 @@ It's safe to leave tasks that have significant prerequisites - particularly the 
 The outstanding resource types are:
 
 * scheduler
-
-  * A resource-type module and class, with unit tests
-  * Docs for that resource type
-  * Type validators for the resource type
-  * New endpoints, with unit tests
-  * Docs for the endpoints
-  * Appropriate update methods, with unit tests
-  * Docs for those update methods
-  * Integrate with Buildbot: process classes should use the data API and not the DB or MQ APIs.
-
 * builder
 * sourcestamp
 * buildrequest
@@ -94,17 +84,17 @@ So, they're listed here.
 Don't include the schema changes needed to implement the status stuff here; those will come when we implement the status stuff.
 
 * Remove ``is_dir`` from the changes table (and ignore/remove it everywhere else)
-* Add ``masters``, ``buidlers``, ``schedulers`` tables
+* Add a ``builders`` table with provisions to indicate which masters are running which builders
+* Add a ``schedulers`` table with provisions for masters to lock a particular scheduler name
+* Add a ``changesources`` table, similar to schedulers
 
- * New table (masters done)
- * Migration script + tests (masters done)
- * DB API module + docs, type verifier, and interface tests (masters done)
- * Fake implementation that passes interface tests (masters done)
- * Modify existing Data API - masters only
-   * message consumption
-   * update methods
-   * replace `master_name` with `masterName`
- * Modify code to use it
+For each of the config-objects tables (masters, builders, schedulesr, changesources):
+
+ * New table
+ * Migration script + tests
+ * DB API module + docs, type verifier, and interface tests
+ * Fake implementation that passes interface tests 
+ * Add TODO for data API implementation
 
 ## DB API Changes ##
 

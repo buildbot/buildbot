@@ -13,21 +13,27 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 from buildbot.data import base
+from buildbot.util import datetime2epoch
+
+def _db2data(master):
+    return dict(masterid=master['id'],
+                master_name=master['master_name'],
+                active=master['active'],
+                last_checkin=datetime2epoch(master['last_checkin']),
+                link=base.Link(('master', str(master['id']))))
 
 class MasterEndpoint(base.Endpoint):
 
     pathPattern = ( 'master', 'i:masterid' )
 
     def get(self, options, kwargs):
-        if kwargs['masterid'] != 1:
-            return defer.succeed(None)
-        return defer.succeed(
-            dict(masterid=1,
-                 name=unicode(self.master.master_name),
-                 state=u'started',
-                 link=base.Link(('master', str(kwargs['masterid'])))))
+        d = self.master.db.masters.getMaster(kwargs['masterid'])
+        @d.addCallback
+        def process(m):
+            return _db2data(m) if m else None
+        return d
 
 
 class MastersEndpoint(base.Endpoint):
@@ -36,13 +42,15 @@ class MastersEndpoint(base.Endpoint):
     rootLinkName = 'masters'
 
     def get(self, options, kwargs):
-        # TODO: options['count']
-        return defer.succeed([
-            dict(masterid=1,
-                 name=unicode(self.master.master_name),
-                 state=u'started',
-                 link=base.Link(('master', str(1))))
-            ])
+        d = self.master.db.masters.getMasters()
+        @d.addCallback
+        def process(masterlist):
+            return [ _db2data(m) for m in masterlist ]
+        return d
+
+    def startConsuming(self, callback, options, kwargs):
+        return self.master.mq.startConsuming(callback,
+                ('master', None, None))
 
 
 class MasterResourceType(base.ResourceType):
@@ -53,12 +61,21 @@ class MasterResourceType(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def setMasterState(self, state=None):
-        assert state in ('started', 'stopped')
-        # get the masterid and name
-        name = unicode(self.master.master_name)
-        masterid = yield self.master.getObjectId()
-        # and produce the event
-        self.produceEvent(
-                dict(masterid=masterid, name=name, state=unicode(state)),
-                str(state))
+    def checkinMaster(self, master_name, masterid, _reactor=reactor):
+        activated = yield self.master.db.masters.setMasterState(
+                masterid=masterid, active=True, _reactor=_reactor)
+        if activated:
+            self.produceEvent(
+                dict(masterid=masterid, master_name=master_name, active=True),
+                'started')
+        yield defer.returnValue(masterid)
+
+    @base.updateMethod
+    @defer.inlineCallbacks
+    def checkoutMaster(self, master_name, masterid):
+        deactivated = yield self.master.db.masters.setMasterState(
+                masterid=masterid, active=False)
+        if deactivated:
+            self.produceEvent(
+                dict(masterid=masterid, master_name=master_name, active=False),
+                'stopped')
