@@ -259,6 +259,23 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.expectProperty('pylint-total', 2)
         return self.runStep()
 
+class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_success(self):
+        self.setupStep(python.PyFlakes())
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
+                        usePTY='slave-config')
+            + 0)
+        self.expectOutcome(result=SUCCESS, status_text=['pyflakes'])
+        return self.runStep()
+
 
 class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
 
