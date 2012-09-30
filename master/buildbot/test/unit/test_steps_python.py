@@ -276,6 +276,20 @@ class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=['pyflakes'])
         return self.runStep()
 
+    def test_undefined(self):
+        self.setupStep(python.PyFlakes())
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                stdout="foo.py:1: undefined name 'bar'\n")
+            + 1)
+        self.expectOutcome(result=FAILURE,
+                           status_text=['pyflakes', 'undefined=1', 'failed'])
+        self.expectProperty('pyflakes-undefined', 1)
+        self.expectProperty('pyflakes-total', 1)
+        return self.runStep()
 
 class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
 
