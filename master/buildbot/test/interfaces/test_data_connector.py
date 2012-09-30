@@ -46,9 +46,14 @@ class Tests(interfaces.InterfaceTests):
                 project=u'', src=None):
             pass
 
-    def test_signature_updates_setMasterState(self):
-        @self.assertArgSpecMatches(self.data.updates.setMasterState)
-        def setMasterState(self, state=None):
+    def test_signature_updates_checkinMaster(self):
+        @self.assertArgSpecMatches(self.data.updates.checkinMaster)
+        def checkinMaster(self, master_name, masterid):
+            pass
+
+    def test_signature_updates_checkoutMaster(self):
+        @self.assertArgSpecMatches(self.data.updates.checkoutMaster)
+        def checkoutMaster(self, master_name, masterid):
             pass
 
 

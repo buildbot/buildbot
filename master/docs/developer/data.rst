@@ -148,12 +148,26 @@ All update methods return a Deferred.
 
 .. py:class:: buildbot.data.changes.MasterResourceType
 
-    .. py:method:: setMasterState(state=None)
+    .. py:method:: checkinMaster(master_name, masterid)
 
-        :param string state: the new state of this master ('started' or 'stopped')
+        :param unicode master_name: the name of this master (generally ``hostname:basedir``)
+        :param integer masterid: this master's master ID
         :returns: Deferred
 
-        Record a change in state for this master.
+        Mark this master as still alive.
+        This method should be called at startup and at least once per minute.
+        The master ID is acquired directly from the database early in the master startup process.
+
+        Other periodic tasks, such as marking masters in active which have not checked in recently, may be performed as well.
+
+    .. py:method:: checkoutMaster(master_name, masterid)
+
+        :param unicode master_name: the name of this master
+        :param integer masterid: this master's master ID
+        :returns: Deferred
+
+        Mark this master as inactive.
+        Masters should call this method before completing an expected shutdown.
 
 Links
 .....
