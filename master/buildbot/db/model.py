@@ -78,8 +78,8 @@ class Model(base.DBConnectorComponent):
     # claim is made by the object referenced by objectid.
     buildrequest_claims = sa.Table('buildrequest_claims', metadata,
         sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
-            index=True, unique=True),
-        sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id'),
+            nullable=False),
+        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
             index=True, nullable=True),
         sa.Column('claimed_at', sa.Integer, nullable=False),
     )
@@ -351,6 +351,22 @@ class Model(base.DBConnectorComponent):
         sa.Column("attr_data", sa.String(128), nullable=False),
     )
 
+    # masters
+
+    masters = sa.Table("masters", metadata,
+        # unique id per master
+        sa.Column('id', sa.Integer, primary_key=True),
+
+        # master's name (generally in the form hostname:basedir)
+        sa.Column('master_name', sa.String(128), nullable=False),
+
+        # true if this master is running
+        sa.Column('active', sa.Integer, nullable=False),
+
+        # updated periodically by a running master, so silently failed masters
+        # can be detected by other masters
+        sa.Column('last_checkin', sa.Integer, nullable=False),
+    )
 
     # indexes
 
@@ -389,6 +405,9 @@ class Model(base.DBConnectorComponent):
     sa.Index('object_identity', objects.c.name, objects.c.class_name,
             unique=True)
     sa.Index('name_per_object', object_state.c.objectid, object_state.c.name,
+            unique=True)
+    sa.Index('master_names', masters.c.master_name, unique=True)
+    sa.Index('buildrequest_claims_brids', buildrequest_claims.c.brid,
             unique=True)
 
     # MySQl creates indexes for foreign keys, and these appear in the

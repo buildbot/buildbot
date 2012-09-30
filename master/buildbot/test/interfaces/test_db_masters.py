@@ -1,0 +1,216 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
+from twisted.trial import unittest
+from twisted.internet import defer, task
+from buildbot.test.fake import fakedb, fakemaster
+from buildbot.test.util import interfaces, connector_component, types
+from buildbot.db import masters
+from buildbot.util import epoch2datetime
+
+SOMETIME = 1348971992
+SOMETIME_DT = epoch2datetime(SOMETIME)
+OTHERTIME = 1008971992
+OTHERTIME_DT = epoch2datetime(OTHERTIME)
+
+class Tests(interfaces.InterfaceTests):
+
+    # common sample data
+
+    master_row = [
+        fakedb.Master(id=7, master_name="some:master",
+                      active=1, last_checkin=1348971992),
+    ]
+
+    # tests
+
+    def test_signature_findMasterId(self):
+        @self.assertArgSpecMatches(self.db.masters.findMasterId)
+        def findMasterId(self, master_name):
+            pass
+
+    def test_signature_setMasterState(self):
+        @self.assertArgSpecMatches(self.db.masters.setMasterState)
+        def setMasterState(self, masterid, active):
+            pass
+
+    def test_signature_getMaster(self):
+        @self.assertArgSpecMatches(self.db.masters.getMaster)
+        def getMaster(self, masterid):
+            pass
+
+    def test_signature_getMasters(self):
+        @self.assertArgSpecMatches(self.db.masters.getMasters)
+        def getMasters(self):
+            pass
+
+    @defer.inlineCallbacks
+    def test_findMasterId_new(self):
+        id = yield self.db.masters.findMasterId('some:master',
+                _reactor=self.clock)
+        masterdict = yield self.db.masters.getMaster(id)
+        self.assertEqual(masterdict,
+                dict(id=id, master_name='some:master', active=False,
+                     last_checkin=SOMETIME_DT))
+
+    @defer.inlineCallbacks
+    def test_findMasterId_exists(self):
+        yield self.insertTestData([
+            fakedb.Master(id=7, master_name='some:master'),
+        ])
+        id = yield self.db.masters.findMasterId('some:master')
+        self.assertEqual(id, 7)
+
+    @defer.inlineCallbacks
+    def test_setMasterState_when_missing(self):
+        activated = \
+            yield self.db.masters.setMasterState(masterid=7, active=True)
+        self.assertFalse(activated)
+
+    @defer.inlineCallbacks
+    def test_setMasterState_true_when_active(self):
+        yield self.insertTestData([
+            fakedb.Master(id=7, master_name='some:master',
+                        active=1, last_checkin=OTHERTIME),
+        ])
+        activated = yield self.db.masters.setMasterState(
+                masterid=7, active=True, _reactor=self.clock)
+        self.assertFalse(activated) # it was already active
+        masterdict = yield self.db.masters.getMaster(7)
+        self.assertEqual(masterdict,
+                dict(id=7, master_name='some:master', active=True,
+                     last_checkin=SOMETIME_DT)) # timestamp updated
+
+    @defer.inlineCallbacks
+    def test_setMasterState_true_when_inactive(self):
+        yield self.insertTestData([
+            fakedb.Master(id=7, master_name='some:master',
+                        active=0, last_checkin=OTHERTIME),
+        ])
+        activated = yield self.db.masters.setMasterState(
+                masterid=7, active=True, _reactor=self.clock)
+        self.assertTrue(activated)
+        masterdict = yield self.db.masters.getMaster(7)
+        self.assertEqual(masterdict,
+                dict(id=7, master_name='some:master', active=True,
+                     last_checkin=SOMETIME_DT))
+
+    @defer.inlineCallbacks
+    def test_setMasterState_false_when_active(self):
+        yield self.insertTestData([
+            fakedb.Master(id=7, master_name='some:master',
+                        active=1, last_checkin=OTHERTIME),
+        ])
+        deactivated = yield self.db.masters.setMasterState(
+                masterid=7, active=False, _reactor=self.clock)
+        self.assertTrue(deactivated)
+        masterdict = yield self.db.masters.getMaster(7)
+        self.assertEqual(masterdict,
+                dict(id=7, master_name='some:master', active=False,
+                     last_checkin=OTHERTIME_DT))
+
+    @defer.inlineCallbacks
+    def test_setMasterState_false_when_inactive(self):
+        yield self.insertTestData([
+            fakedb.Master(id=7, master_name='some:master',
+                        active=0, last_checkin=OTHERTIME),
+        ])
+        deactivated = yield self.db.masters.setMasterState(
+                masterid=7, active=False, _reactor=self.clock)
+        self.assertFalse(deactivated)
+        masterdict = yield self.db.masters.getMaster(7)
+        self.assertEqual(masterdict,
+                dict(id=7, master_name='some:master', active=False,
+                     last_checkin=OTHERTIME_DT))
+
+    @defer.inlineCallbacks
+    def test_getMaster(self):
+        yield self.insertTestData([
+            fakedb.Master(id=7, master_name='some:master',
+                        active=0, last_checkin=SOMETIME),
+        ])
+        masterdict = yield self.db.masters.getMaster(7)
+        types.verifyDbDict(self, 'masterdict', masterdict)
+        self.assertEqual(masterdict, dict(id=7, master_name='some:master',
+                                    active=False, last_checkin=SOMETIME_DT))
+
+    @defer.inlineCallbacks
+    def test_getMaster_missing(self):
+        masterdict = yield self.db.masters.getMaster(7)
+        self.assertEqual(masterdict, None)
+
+    @defer.inlineCallbacks
+    def test_getMasters(self):
+        yield self.insertTestData([
+            fakedb.Master(id=7, master_name='some:master',
+                        active=0, last_checkin=SOMETIME),
+            fakedb.Master(id=8, master_name='other:master',
+                        active=1, last_checkin=OTHERTIME),
+        ])
+        masterlist = yield self.db.masters.getMasters()
+        for masterdict in masterlist:
+            types.verifyDbDict(self, 'masterdict', masterdict)
+        self.assertEqual(sorted(masterlist), sorted([
+            dict(id=7, master_name='some:master',
+                        active=0, last_checkin=SOMETIME_DT),
+            dict(id=8, master_name='other:master',
+                        active=1, last_checkin=OTHERTIME_DT),
+        ]))
+
+
+class RealTests(Tests):
+
+    # tests that only "real" implementations will pass
+
+    @defer.inlineCallbacks
+    def test_findMasterId_race(self):
+        def race_thd(conn):
+            conn.execute(self.db.model.masters.insert(),
+                    id=5, master_name='some:master', active=0,
+                    last_checkin=SOMETIME)
+        id = yield self.db.masters.findMasterId('some:master',
+                                        _race_hook=race_thd)
+        self.assertEqual(id, 5)
+
+
+class TestFakeDB(unittest.TestCase, Tests):
+
+    def setUp(self):
+        self.clock = task.Clock()
+        self.clock.advance(SOMETIME)
+        self.master = fakemaster.make_master()
+        self.db = fakedb.FakeDBConnector(self)
+        self.insertTestData = self.db.insertTestData
+
+
+class TestRealDB(unittest.TestCase,
+        connector_component.ConnectorComponentMixin,
+        RealTests):
+
+    def setUp(self):
+        self.clock = task.Clock()
+        self.clock.advance(SOMETIME)
+
+        d = self.setUpConnectorComponent(
+            table_names=['masters'])
+
+        @d.addCallback
+        def finish_setup(_):
+            self.db.masters = masters.MastersConnectorComponent(self.db)
+        return d
+
+
+    def tearDown(self):
+        return self.tearDownConnectorComponent()
