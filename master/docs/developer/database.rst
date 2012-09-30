@@ -843,6 +843,60 @@ users
 
         Fetch a uid for the given identifier, if one exists.
 
+
+masters
+~~~~~~~
+
+.. py:module:: buildbot.db.masters
+
+.. index:: double: Masters; DB Connector Component
+
+.. py:class:: MastersConnectorComponent
+
+    This class handles tracking the buildmasters in a multi-master configuration.
+    Masters "check in" periodically.
+    Other masters monitor the last checkin times, and mark masters that have not recently checked in as inactive.
+
+    Masters are represented by master dictionaries with the following keys:
+
+    * ``id`` -- the ID of this master
+    * ``master_name`` -- the name of the master (generally of the form ``hostname:basedir``)
+    * ``active`` -- true if this master is running
+    * ``last_checkin`` -- time that this master last checked in (a datetime object)
+
+    .. py:method:: findMasterId(hostname, basedir)
+
+        :param unicode hostname: hostname of this master
+        :param unicode basedir: base directory of this master
+        :returns: master id via Deferred
+
+        Return the master ID for the master with this hostname and basedir.
+        If such a master is already in the database, this returns the ID.
+        If not, the master is added to the database, with ``active=False``, and its ID returned.
+
+    .. py:method:: setMasterState(masterid, active)
+
+        :param integer masterid: the master to check in
+        :param boolean active: whether to markt his master as active or inactive
+        :returns: boolean via Deferred
+
+        Mark the given master as active or inactive, returning true if the state actually changed.
+        If ``active`` is true, the ``last_checkin`` time is updated to the current time.
+
+    .. py:method:: getMaster(masterid)
+
+        :param integer masterid: the master to check in
+        :returns: Master dict or None via Deferred
+
+        Get the indicated master.
+
+    .. py:method:: getMasters()
+
+        :returns: list of Master dicts via Deferred
+
+        Get all masters (in unspecified order).
+
+
 Writing Database Connector Methods
 ----------------------------------
 

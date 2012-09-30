@@ -15,11 +15,12 @@
 
 import sqlalchemy as sa
 from sqlalchemy.ext import compiler
-from sqlalchemy.sql.expression import Executable, ClauseElement
+from sqlalchemy.sql.expression import UpdateBase
 
 # from http://www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct
+# UpdateBase parent class per http://docs.sqlalchemy.org/en/rel_0_7/core/compiler.html#enabling-compiled-autocommit
 
-class InsertFromSelect(Executable, ClauseElement):
+class InsertFromSelect(UpdateBase):
     def __init__(self, table, select):
         self.table = table
         self.select = select
