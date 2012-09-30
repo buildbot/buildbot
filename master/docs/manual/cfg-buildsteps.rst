@@ -1816,13 +1816,13 @@ Here is a similar example using "msbuild"::
     # Build one project in Release mode for Win32
     f.addStep(
         MsBuild(projectfile="trunk.sln", config="Release", platform="Win32",
-	        workdir="trunk",
+                workdir="trunk",
                 project="tools\\protoc"))
 
     # Build the entire solution in Debug mode for x64
     f.addStep(
         MsBuild(projectfile="trunk.sln", config='Debug', platform='x64',
-	        workdir="trunk"))
+                workdir="trunk"))
 
 .. bb:step:: Test
 
