@@ -7,7 +7,6 @@ Right, this is the TODO list for Buildbot-0.9.0.  We'll delete this once it's em
 * Parsing of endpoint options is currently left to the endpoint, which will lead to inconsistencies.
   Add and document some helper methods to ``base.Endpoint`` for parsing e.g., boolean options (supporting on/off, 0/1, true/false, etc.)
 * Optimize the type verification system by dynamically creating verifier functions once.
-* Move `master/buildbot/test/interfaces/*` to `master/buildbot/test/unit`
 
 # Documentation #
 
