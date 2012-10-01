@@ -53,6 +53,7 @@ The outstanding resource types are:
 
 * Paging, filtering, and so on of data API results.
 * Factor ``self.assertEqual(self.master.mq.productions, [ .. ])`` into something that will assert and then flush
+* If several rtypes have `_db2data` functions or similar (so far masters and changes both do), then make that an idiom and document it.
 
 # Web #
 
