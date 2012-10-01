@@ -193,7 +193,7 @@ example above, it replaces an argument to ``echo``.  Often, properties need to
 be interpolated into strings, instead.  The tool for that job is
 :ref:`Interpolate`.
 
-The more common pattern is to use python dictionary-style string interpolation by using the ``%(prop:<propname>)s`` syntax.
+The more common pattern is to use Python dictionary-style string interpolation by using the ``%(prop:<propname>)s`` syntax.
 In this form, the property name goes in the parentheses, as above.
 A common mistake is to omit the trailing "s", leading to a rather obscure error from Python ("ValueError: unsupported format character"). ::
 
@@ -262,7 +262,7 @@ Here, ``%s`` is used as a placeholder, and the substitutions (which may themselv
 
 .. note:
 
-  Like python, you can use either positional interpolation *or*
+  Like Python, you can use either positional interpolation *or*
   dictionary-style interpolation, not both.  Thus you cannot use a string
   like ``Interpolate("foo-%(src::revision)s-%s", "branch")``.
 
@@ -320,7 +320,7 @@ create a tarball with a name like
 
 .. index:: unsupported format character
 
-The more common pattern is to use python dictionary-style string interpolation
+The more common pattern is to use Python dictionary-style string interpolation
 by using the ``%(propname)s`` syntax. In this form, the property name goes in
 the parentheses, as above.  A common mistake is to omit the trailing "s",
 leading to a rather obscure error from Python ("ValueError: unsupported format
@@ -358,7 +358,7 @@ Although these are similar to shell substitutions, no other
 substitutions are currently supported, and ``replacement`` in the
 above cannot contain more substitutions.
 
-Note: like python, you can use either positional interpolation *or*
+Note: like Python, you can use either positional interpolation *or*
 dictionary-style interpolation, not both. Thus you cannot use a string like
 ``WithProperties("foo-%(revision)s-%s", "branch")``.
 
