@@ -135,8 +135,8 @@ class MasterResourceType(unittest.TestCase):
         ])
         self.master.mq.productions = []
 
-        # re-checkin after over 3 minutes, and see #14 deactivated
-        clock.advance(180)
+        # re-checkin after over 10 minutes, and see #14 deactivated
+        clock.advance(600)
         yield self.rtype.checkinMaster(
                 u'myname', masterid=13, _reactor=clock)
         master = yield self.master.db.masters.getMaster(14)
