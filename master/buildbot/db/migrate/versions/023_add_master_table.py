@@ -92,10 +92,6 @@ def upgrade(migrate_engine):
         masterid = r.inserted_primary_key[0]
         idmap[row.id] = masterid
 
-    # an empty map will generate invalid SQL, so put *something* in there..
-    # TODO: elide CASE then
-    if not idmap:
-        idmap[1] = 1
 
     # copy data from old to new, using the mapping
     buildrequest_claims.create()
@@ -103,7 +99,9 @@ def upgrade(migrate_engine):
             [ buildrequest_claims_old.c.brid,
               sa.case(value=buildrequest_claims_old.c.objectid,
                          whens=idmap,
-                         else_=None),
+                         else_=None)
+                # if the idmap is empty, use the default..
+                if idmap else sa.text('NULL'),
               buildrequest_claims_old.c.claimed_at,
             ])
     migrate_engine.execute(sautils.InsertFromSelect(
@@ -116,6 +114,3 @@ def upgrade(migrate_engine):
     sa.Index('master_names', masters.c.master_name, unique=True).create()
     sa.Index('buildrequest_claims_brids', buildrequest_claims.c.brid,
             unique=True).create()
-
-    # TODO: schedulers
-    # TODO: builders
