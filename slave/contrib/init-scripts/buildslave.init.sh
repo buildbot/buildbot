@@ -143,7 +143,7 @@ function iscallable () { type $1 2>/dev/null | grep -q 'shell function'; }
 function slave_op () {
     op=$1 ; mi=$2
 
-    if [ `uname` = SunOS ];
+    if [ `uname` = SunOS ]; then
         suopt=""
     else
         suopt="-s /bin/sh"
