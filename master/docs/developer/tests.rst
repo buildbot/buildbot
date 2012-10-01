@@ -93,7 +93,7 @@ Interface tests have the following form::
             pass # ...
 
 All of the test methods are defined here, segregated into tests that all implementations must pass, and tests that the fake implementation is not expected to pass.
-The ``test_signature_someMethod`` test above illustrates the :py:func:`buildbot.test.util.interfaces.assertArgSpecMatches` decorator, which can be used to compare the argument specification of a callable with a reference implementation conveniently written as a nested function.
+The ``test_signature_someMethod`` test above illustrates the :py:func:`buildbot.test.util.interfaces.assertArgSpecMatches` decorator, which can be used to compare the argument specification of a callable with a reference signature conveniently written as a nested function.
 Wherever possible, prefer to add tests to the ``Tests`` class, even if this means testing one method (e.g,. ``setFoo``) in terms of another (e.g., ``getFoo``).
 
 At the bottom of the test module, a subclass is created for each implementation, implementing the setup methods that were stubbed out in the parent classes::
