@@ -148,11 +148,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.status = Status(self)
         self.status.setServiceParent(self)
 
-        def checkin():
+        def heartbeat():
             if self.masterid is not None:
-                self.data.updates.checkinMaster(master_name=self.master_name,
+                self.data.updates.masterActive(master_name=self.master_name,
                                         masterid=self.masterid)
-        self.masterCheckinService = internet.TimerService(60, checkin)
+        self.masterHeartbeatService = internet.TimerService(60, heartbeat)
 
     # setup and reconfig handling
 
@@ -224,7 +224,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             yield self.reconfigService(self.config)
 
             # mark the master as active now that mq is running
-            yield self.data.updates.checkinMaster(
+            yield self.data.updates.masterActive(
                                     master_name=self.master_name,
                                     masterid=self.masterid)
         except:
@@ -238,7 +238,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     @defer.inlineCallbacks
     def stopService(self):
         if self.masterid is not None:
-            yield self.data.updates.checkoutMaster(
+            yield self.data.updates.masterStopped(
                     master_name=self.master_name, masterid=self.masterid)
 
         log.msg("BuildMsater is stopped")

@@ -330,7 +330,7 @@ class Master(Row):
         id = None,
         master_name = 'some:master',
         active = 1,
-        last_checkin = 9998999,
+        last_active = 9998999,
     )
 
     id_column = 'id'
@@ -1211,7 +1211,7 @@ class FakeMastersComponent(FakeDBComponent):
                         id=row.id,
                         master_name=row.master_name,
                         active=bool(row.active),
-                        last_checkin=epoch2datetime(row.last_checkin))
+                        last_active=epoch2datetime(row.last_active))
 
     def findMasterId(self, master_name, _reactor=reactor):
         for m in self.masters.itervalues():
@@ -1222,7 +1222,7 @@ class FakeMastersComponent(FakeDBComponent):
             id=id,
             master_name=master_name,
             active=False,
-            last_checkin=epoch2datetime(_reactor.seconds()))
+            last_active=epoch2datetime(_reactor.seconds()))
         return defer.succeed(id)
 
     def setMasterState(self, masterid, active, _reactor=reactor):
@@ -1230,7 +1230,7 @@ class FakeMastersComponent(FakeDBComponent):
             was_active = self.masters[masterid]['active']
             self.masters[masterid]['active'] = active
             if active:
-                self.masters[masterid]['last_checkin'] = \
+                self.masters[masterid]['last_active'] = \
                     epoch2datetime(_reactor.seconds())
             return defer.succeed(bool(was_active) != bool(active))
         else:

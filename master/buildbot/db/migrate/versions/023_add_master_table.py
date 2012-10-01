@@ -49,7 +49,7 @@ def upgrade(migrate_engine):
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('master_name', sa.String(128), nullable=False),
         sa.Column('active', sa.Integer, nullable=False),
-        sa.Column('last_checkin', sa.Integer, nullable=False),
+        sa.Column('last_active', sa.Integer, nullable=False),
     )
 
     buildrequest_claims_old = sa.Table("buildrequest_claims_old", metadata,
@@ -88,7 +88,7 @@ def upgrade(migrate_engine):
         r = migrate_engine.execute(masters.insert(),
                 master_name=row.name,
                 active=0,
-                last_checkin=0)
+                last_active=0)
         masterid = r.inserted_primary_key[0]
         idmap[row.id] = masterid
 

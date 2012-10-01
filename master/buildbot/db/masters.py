@@ -42,7 +42,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 r = conn.execute(tbl.insert(), dict(
                     master_name=master_name,
                     active=0, # initially inactive
-                    last_checkin=_reactor.seconds()
+                    last_active=_reactor.seconds()
                     ))
                 return r.inserted_primary_key[0]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
@@ -70,7 +70,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
             q = tbl.update(whereclause=whereclause)
             q = q.values(active=1 if active else 0)
             if active:
-                q = q.values(last_checkin=_reactor.seconds())
+                q = q.values(last_active=_reactor.seconds())
             conn.execute(q)
 
             # return True if there was a change in state
@@ -102,4 +102,4 @@ class MastersConnectorComponent(base.DBConnectorComponent):
     def _masterdictFromRow(self, row):
         return MasterDict(id=row.id, master_name=row.master_name,
                     active=bool(row.active),
-                    last_checkin=epoch2datetime(row.last_checkin))
+                    last_active=epoch2datetime(row.last_active))

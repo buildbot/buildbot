@@ -365,7 +365,7 @@ class Model(base.DBConnectorComponent):
 
         # updated periodically by a running master, so silently failed masters
         # can be detected by other masters
-        sa.Column('last_checkin', sa.Integer, nullable=False),
+        sa.Column('last_active', sa.Integer, nullable=False),
     )
 
     # indexes
