@@ -100,11 +100,13 @@ class MasterResourceType(unittest.TestCase):
     @defer.inlineCallbacks
     def test_checkinMaster(self):
         clock = task.Clock()
-        clock.advance(10)
+        clock.advance(60)
 
         self.master.db.insertTestData([
-            fakedb.Master(id=13, master_name='myname', active=False,
-                            last_checkin=5),
+            fakedb.Master(id=13, master_name='myname', active=0,
+                            last_checkin=0),
+            fakedb.Master(id=14, master_name='other', active=1,
+                            last_checkin=0),
         ])
 
         # initial checkin
@@ -112,7 +114,7 @@ class MasterResourceType(unittest.TestCase):
                 master_name=u'myname', masterid=13, _reactor=clock)
         master = yield self.master.db.masters.getMaster(13)
         self.assertEqual(master, dict(id=13, master_name='myname',
-                    active=True, last_checkin=epoch2datetime(10)))
+                    active=True, last_checkin=epoch2datetime(60)))
         self.assertEqual(self.master.mq.productions, [
             (('master', '13', 'started'),
              dict(masterid=13, master_name='myname', active=True)),
@@ -120,14 +122,27 @@ class MasterResourceType(unittest.TestCase):
         self.master.mq.productions = []
 
         # updated checkin time, re-activation
-        clock.advance(10)
+        clock.advance(60)
         yield self.master.db.masters.markMasterInactive(13)
         yield self.rtype.checkinMaster(
                 u'myname', masterid=13, _reactor=clock)
         master = yield self.master.db.masters.getMaster(13)
         self.assertEqual(master, dict(id=13, master_name='myname',
-                    active=True, last_checkin=epoch2datetime(20)))
+                    active=True, last_checkin=epoch2datetime(120)))
         self.assertEqual(self.master.mq.productions, [
             (('master', '13', 'started'),
              dict(masterid=13, master_name='myname', active=True)),
+        ])
+        self.master.mq.productions = []
+
+        # re-checkin after over 3 minutes, and see #14 deactivated
+        clock.advance(180)
+        yield self.rtype.checkinMaster(
+                u'myname', masterid=13, _reactor=clock)
+        master = yield self.master.db.masters.getMaster(14)
+        self.assertEqual(master, dict(id=14, master_name='other',
+                    active=False, last_checkin=epoch2datetime(0)))
+        self.assertEqual(self.master.mq.productions, [
+            (('master', '14', 'stopped'),
+             dict(masterid=14, master_name='other', active=False)),
         ])
