@@ -17,6 +17,10 @@ from twisted.internet import defer, reactor
 from buildbot.data import base
 from buildbot.util import datetime2epoch, epoch2datetime
 
+# time, in minutes, after which a master that hasn't checked in will be
+# marked as inactive
+EXPIRE_MINUTES = 10
+
 def _db2data(master):
     return dict(masterid=master['id'],
                 master_name=master['master_name'],
@@ -70,9 +74,10 @@ class MasterResourceType(base.ResourceType):
                 'started')
 
         # check for "expired" masters, while we're here.  We're called every
-        # minute. Allowing for a minute of clock skew plus different checkin
-        # times gives a 3-minute expiration timer.
-        too_old = epoch2datetime(_reactor.seconds() - 60*3)
+        # minute, but we want to allow a fwe such periods to pass before we
+        # assume another master is dead, to account for clock skew and busy
+        # masters.
+        too_old = epoch2datetime(_reactor.seconds() - 60*EXPIRE_MINUTES)
         masters = yield self.master.db.masters.getMasters()
         for m in masters:
             if m['last_checkin'] >= too_old:
