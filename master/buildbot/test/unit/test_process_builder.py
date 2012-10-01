@@ -133,7 +133,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
             self.db.buildrequests.assertMyClaims(exp_claims)
             self.assertBuildsStarted(exp_builds)
             if exp_mq is not None:
-                self.assertEqual(self.mq.productions, exp_mq)
+                self.mq.assertProductions(exp_mq)
         d.addCallback(check)
         def eb(f):
             f.trap(exp_fail)
@@ -748,7 +748,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
         self.bldr._msg_buildrequests_unclaimed([br1, br2])
 
-        self.assertEqual(sorted(self.master.mq.productions), [
+        self.master.mq.assertProductions([
             ( ('buildrequest', '10', 'bldr', '13', 'unclaimed'),
                 dict(brid=13, bsid=10, builderid=-1, buildername='bldr')),
             ( ('buildrequest', '10', 'bldr', '14', 'unclaimed'),

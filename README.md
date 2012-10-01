@@ -52,7 +52,6 @@ The outstanding resource types are:
 ## Misc Data API Work ##
 
 * Paging, filtering, and so on of data API results.
-* Factor ``self.assertEqual(self.master.mq.productions, [ .. ])`` into something that will assert and then flush
 
 # Web #
 

@@ -68,6 +68,20 @@ class FakeMQConnector(object):
         self.qrefs.append(qref)
         return qref
 
+    def assertProductions(self, exp, orderMatters=True):
+        """Assert that the given messages have been produced, then flush the
+        list of produced messages.
+
+        If C{orderMatters} is false, then the messages are sorted first; use
+        this in cases where the messages must all be produced, but the order is
+        not specified.
+        """
+        if orderMatters:
+            self.testcase.assertEqual(self.productions, exp)
+        else:
+            self.testcase.assertEqual(sorted(self.productions), sorted(exp))
+        self.productions = []
+
 class FakeQueueRef(object):
 
     def stopConsuming(self):

@@ -62,7 +62,7 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
             self.assertEqual((bsid,brids), (200, {u'a' : 1000, u'b': 1001 }))
 
             # check that the proper message was produced
-            self.assertEqual(sorted(self.master.mq.productions), sorted([
+            self.master.mq.assertProductions([
                 ( ('buildset', '200', 'new'), {
                     'bsid': bsid,
                     'external_idstring': 'eid',
@@ -84,7 +84,7 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
                     'buildername': 'b',
                     'builderid': -1,
                 }),
-            ]))
+            ], orderMatters=False)
         d.addCallback(check)
         return d
 
@@ -102,7 +102,7 @@ class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
         clock.advance(1234)
         self.master.maybeBuildsetComplete(440, _reactor=clock)
 
-        self.assertEqual(self.master.mq.productions, [
+        self.master.mq.assertProductions([
             ( ('buildset', '440', 'complete'), {
                 'bsid': 440,
                 'complete_at': 1234,

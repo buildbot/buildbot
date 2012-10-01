@@ -115,7 +115,7 @@ class ChangeResourceType(unittest.TestCase):
         def check(changeid):
             self.assertEqual(changeid, 500)
             # check the correct message was received
-            self.assertEqual(self.master.mq.productions, [
+            self.master.mq.assertProductions([
                 ( expectedRoutingKey, expectedMessage),
             ])
             # and that the correct data was inserted into the db

@@ -56,7 +56,7 @@ class ResourceType(unittest.TestCase):
         inst = cls(master)
         inst.produceEvent(dict(fooid=10, barid='20'), # note integer vs. string
                          'tested')
-        self.assertEqual(master.mq.productions, [
+        master.mq.assertProductions([
             (('singular', '10', '20', 'tested'), dict(fooid=10, barid='20'))
         ])
 
