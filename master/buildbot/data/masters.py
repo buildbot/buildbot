@@ -15,7 +15,7 @@
 
 from twisted.internet import defer, reactor
 from buildbot.data import base
-from buildbot.util import datetime2epoch
+from buildbot.util import datetime2epoch, epoch2datetime
 
 def _db2data(master):
     return dict(masterid=master['id'],
@@ -68,6 +68,23 @@ class MasterResourceType(base.ResourceType):
             self.produceEvent(
                 dict(masterid=masterid, master_name=master_name, active=True),
                 'started')
+
+        # check for "expired" masters, while we're here.  We're called every
+        # minute. Allowing for a minute of clock skew plus different checkin
+        # times gives a 3-minute expiration timer.
+        too_old = epoch2datetime(_reactor.seconds() - 60*3)
+        masters = yield self.master.db.masters.getMasters()
+        for m in masters:
+            if m['last_checkin'] >= too_old:
+                continue
+
+            # mark the master inactive, and send a message on its behalf
+            yield self.master.db.masters.setMasterState(
+                    masterid=m['id'], active=False, _reactor=_reactor)
+            self.produceEvent(
+                dict(masterid=m['id'], master_name=m['master_name'],
+                     active=False),
+                'stopped')
 
     @base.updateMethod
     @defer.inlineCallbacks
