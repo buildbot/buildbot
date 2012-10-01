@@ -365,7 +365,7 @@ Arguments:
     pure-python modules.
 
 ``python``
-    which python executable to use. This list will form the start of
+    which Python executable to use. This list will form the start of
     the `argv` array that will launch trial. If you use this,
     you should set ``trial`` to an explicit path (like
     :file:`/usr/bin/trial` or :file:`./bin/trial`). The parameter defaults

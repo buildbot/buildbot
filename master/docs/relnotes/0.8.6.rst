@@ -41,7 +41,7 @@ In addition to what's listed below, the 0.8.6p1 release adds the following.
 Master
 ------
 
-* If you are using the github hook, carefully consider the security
+* If you are using the GitHub hook, carefully consider the security
   implications of allowing un-authenticated change requests, which can
   potentially build arbitrary code.  See :bb:bug:`2186`.
 
@@ -210,7 +210,7 @@ Details
 -------
 
 For a more detailed description of the changes made in this version, see the
-git log itself:
+Git log itself::
 
    git log buildbot-0.8.5..buildbot-0.8.6
 

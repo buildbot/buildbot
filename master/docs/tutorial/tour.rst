@@ -295,7 +295,7 @@ Insert the following to enable debugging mode with manhole::
   from buildbot import manhole
   c['manhole'] = manhole.PasswordManhole("tcp:1234:interface=127.0.0.1","admin","passwd")
 
-After restarting the master, you can ssh into the master and get an interactive python shell::
+After restarting the master, you can ssh into the master and get an interactive Python shell::
 
   ssh -p1234 admin@127.0.0.1
   # enter passwd at prompt
@@ -351,7 +351,7 @@ Then run buildbot's try command as follows::
   buildbot try --connect=pb --master=127.0.0.1:5555 --username=sampleuser --passwd=samplepass --vc=git
 
 This will do "git diff" for you and send the resulting patch to
-the server for build and test against the latest sources from git.
+the server for build and test against the latest sources from Git.
 
 Now go back to the `waterfall <http://localhost:8010/waterfall>`_
 page, click on the runtests link, and scroll down.  You should see that
