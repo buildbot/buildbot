@@ -51,6 +51,7 @@ The outstanding resource types are:
 * Paging, filtering, and so on of data API results.
 * Parsing of endpoint options is currently left to the endpoint, which will lead to inconsistencies.
   Add and document some helper methods to ``base.Endpoint`` for parsing e.g., boolean options (supporting on/off, 0/1, true/false, etc.)
+* If several rtypes have `_db2data` functions or similar (so far masters and changes both do), then make that an idiom and document it.
 
 # Web #
 
