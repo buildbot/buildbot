@@ -877,7 +877,7 @@ masters
     .. py:method:: setMasterState(masterid, active)
 
         :param integer masterid: the master to check in
-        :param boolean active: whether to markt his master as active or inactive
+        :param boolean active: whether to mark this master as active or inactive
         :returns: boolean via Deferred
 
         Mark the given master as active or inactive, returning true if the state actually changed.
