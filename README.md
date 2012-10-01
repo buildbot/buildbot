@@ -7,6 +7,7 @@ Right, this is the TODO list for Buildbot-0.9.0.  We'll delete this once it's em
 * Parsing of endpoint options is currently left to the endpoint, which will lead to inconsistencies.
   Add and document some helper methods to ``base.Endpoint`` for parsing e.g., boolean options (supporting on/off, 0/1, true/false, etc.)
 * Optimize the type verification system by dynamically creating verifier functions once.
+* Move `master/buildbot/test/interfaces/*` to `master/buildbot/test/unit`
 
 # Documentation #
 
@@ -14,7 +15,7 @@ Right, this is the TODO list for Buildbot-0.9.0.  We'll delete this once it's em
 * Put update methods in the appropriate resource-type files, rather than in ``data.rst``
 * Move data API how-to guides
 
-# Resource Types #
+# Data API #
 
 For each resource type, we'll need the following (based on "Adding Resource Types" in ``master/docs/developer/data.rst``).  use this list as a template in the list of types below when you begin a new type.
 
@@ -48,6 +49,11 @@ The outstanding resource types are:
   It should, instead, coordinate with the buildrequests resource type to do so.
 * Add support for uids to the change resource type
 * Define real masters, that check in periodically, and have individual IDs (blocked on 'Add a ``masters`` table')
+
+## Misc Data API Work ##
+
+* Paging, filtering, and so on of data API results.
+* Factor ``self.assertEqual(self.master.mq.productions, [ .. ])`` into something that will assert and then flush
 
 # Web #
 
