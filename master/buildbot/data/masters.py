@@ -68,7 +68,6 @@ class MasterResourceType(base.ResourceType):
             self.produceEvent(
                 dict(masterid=masterid, master_name=master_name, active=True),
                 'started')
-        yield defer.returnValue(masterid)
 
     @base.updateMethod
     @defer.inlineCallbacks
