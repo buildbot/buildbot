@@ -20,7 +20,7 @@ def verifyDbDict(testcase, type, value):
         id='integer',
         master_name='string',
         active='boolean',
-        last_checkin='datetime',
+        last_active='datetime',
         ))
 
 def verifyData(testcase, type, options, value):
@@ -29,7 +29,7 @@ def verifyData(testcase, type, options, value):
         masterid='integer',
         master_name='string',
         active='boolean',
-        last_checkin='integer',
+        last_active='integer',
         link='Link',
         ))
 
@@ -42,6 +42,6 @@ def verifyMessage(testcase, routingKey, message):
                 masterid='integer',
                 master_name='string',
                 active='boolean',
-                # last_checkin is not included
+                # last_active is not included
                 ))
 

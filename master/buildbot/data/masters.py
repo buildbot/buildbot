@@ -25,7 +25,7 @@ def _db2data(master):
     return dict(masterid=master['id'],
                 master_name=master['master_name'],
                 active=master['active'],
-                last_checkin=datetime2epoch(master['last_checkin']),
+                last_active=datetime2epoch(master['last_active']),
                 link=base.Link(('master', str(master['id']))))
 
 class MasterEndpoint(base.Endpoint):
@@ -65,7 +65,7 @@ class MasterResourceType(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def checkinMaster(self, master_name, masterid, _reactor=reactor):
+    def masterActive(self, master_name, masterid, _reactor=reactor):
         activated = yield self.master.db.masters.setMasterState(
                 masterid=masterid, active=True, _reactor=_reactor)
         if activated:
@@ -80,7 +80,7 @@ class MasterResourceType(base.ResourceType):
         too_old = epoch2datetime(_reactor.seconds() - 60*EXPIRE_MINUTES)
         masters = yield self.master.db.masters.getMasters()
         for m in masters:
-            if m['last_checkin'] >= too_old:
+            if m['last_active'] >= too_old:
                 continue
 
             # mark the master inactive, and send a message on its behalf
@@ -93,7 +93,7 @@ class MasterResourceType(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def checkoutMaster(self, master_name, masterid):
+    def masterStopped(self, master_name, masterid):
         deactivated = yield self.master.db.masters.setMasterState(
                 masterid=masterid, active=False)
         if deactivated:

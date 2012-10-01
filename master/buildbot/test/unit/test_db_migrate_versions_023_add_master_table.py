@@ -74,8 +74,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             self.assertRaises((sa.exc.IntegrityError,
                                sa.exc.ProgrammingError), lambda :
                 conn.execute(q,
-                    dict(master_name='master', active=1, last_checkin=0),
-                    dict(master_name='master', active=1, last_checkin=1),
+                    dict(master_name='master', active=1, last_active=0),
+                    dict(master_name='master', active=1, last_active=1),
             ))
 
         return self.do_test_migration(22, 23, setup_thd, verify_thd)

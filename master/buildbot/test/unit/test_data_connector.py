@@ -49,14 +49,14 @@ class Tests(interfaces.InterfaceTests):
                 project=u'', src=None):
             pass
 
-    def test_signature_updates_checkinMaster(self):
-        @self.assertArgSpecMatches(self.data.updates.checkinMaster)
-        def checkinMaster(self, master_name, masterid):
+    def test_signature_updates_masterActive(self):
+        @self.assertArgSpecMatches(self.data.updates.masterActive)
+        def masterActive(self, master_name, masterid):
             pass
 
-    def test_signature_updates_checkoutMaster(self):
-        @self.assertArgSpecMatches(self.data.updates.checkoutMaster)
-        def checkoutMaster(self, master_name, masterid):
+    def test_signature_updates_masterStopped(self):
+        @self.assertArgSpecMatches(self.data.updates.masterStopped)
+        def masterStopped(self, master_name, masterid):
             pass
 
 

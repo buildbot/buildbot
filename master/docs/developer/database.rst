@@ -855,14 +855,14 @@ masters
 
     This class handles tracking the buildmasters in a multi-master configuration.
     Masters "check in" periodically.
-    Other masters monitor the last checkin times, and mark masters that have not recently checked in as inactive.
+    Other masters monitor the last activity times, and mark masters that have not recently checked in as inactive.
 
     Masters are represented by master dictionaries with the following keys:
 
     * ``id`` -- the ID of this master
     * ``master_name`` -- the name of the master (generally of the form ``hostname:basedir``)
     * ``active`` -- true if this master is running
-    * ``last_checkin`` -- time that this master last checked in (a datetime object)
+    * ``last_active`` -- time that this master last checked in (a datetime object)
 
     .. py:method:: findMasterId(hostname, basedir)
 
@@ -881,7 +881,7 @@ masters
         :returns: boolean via Deferred
 
         Mark the given master as active or inactive, returning true if the state actually changed.
-        If ``active`` is true, the ``last_checkin`` time is updated to the current time.
+        If ``active`` is true, the ``last_active`` time is updated to the current time.
 
     .. py:method:: getMaster(masterid)
 
