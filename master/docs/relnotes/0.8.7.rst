@@ -37,7 +37,7 @@ Features
 
 * ``IRenderable.getRenderingFor`` can now return a deferred.
 
-* The mercurial hook now supports multple masters.  See :bb:pull:`436`.
+* The Mercurial hook now supports multple masters.  See :bb:pull:`436`.
 
 * There's a new poller for Mercurial: :bb:chsrc:`HgPoller`. 
 
@@ -206,7 +206,7 @@ Details
 -------
 
 For a more detailed description of the changes made in this version, see the
-git log itself:
+Git log itself::
 
    git log v0.8.6..v0.8.7
 

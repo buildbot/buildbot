@@ -368,13 +368,13 @@ Libvirt
 
 `libvirt <http://www.libvirt.org/>`_ is a virtualization API for interacting
 with the virtualization capabilities of recent versions of Linux and other OSes.
-It is LGPL and comes with a stable C API, and python bindings.
+It is LGPL and comes with a stable C API, and Python bindings.
 
 This means we know have an API which when tied to buildbot allows us to have slaves
 that run under Xen, QEMU, KVM, LXC, OpenVZ, User Mode Linux, VirtualBox and VMWare.
 
 The libvirt code in Buildbot was developed against libvirt 0.7.5 on Ubuntu Lucid. It
-is used with KVM to test python code on Karmic VM's, but obviously isn't limited to that.
+is used with KVM to test Python code on Karmic VM's, but obviously isn't limited to that.
 Each build is run on a new VM, images are temporary and thrown away after each build.
 
 Setting up libvirt

@@ -264,7 +264,7 @@ The :bb:step:`Mercurial` build step performs a `Mercurial <http://selenic.com/me
 (aka ``hg``) checkout or update.
 
 Branches are available in two modes: ``dirname``, where the name of the branch is
-a suffix of the name of the repository, or ``inrepo``, which uses hg's
+a suffix of the name of the repository, or ``inrepo``, which uses Hg's
 named-branches support. Make sure this setting matches your changehook, if you
 have that installed. ::
 
@@ -285,7 +285,7 @@ The Mercurial step takes the following arguments:
 ``branchType``
    either 'dirname' (default) or 'inrepo' depending on whether the
    branch name should be appended to the ``repourl`` or the branch
-   is a mercurial named branch and can be found within the ``repourl``.
+   is a Mercurial named branch and can be found within the ``repourl``.
 
 ``clobberOnBranchChange``
    boolean, defaults to ``True``. If set and using inrepos branches,
@@ -345,11 +345,11 @@ The Git step takes the following arguments:
 
 ``submodules``
    (optional): when initializing/updating a Git repository, this
-   decides whether or not buildbot should consider git submodules.
+   decides whether or not buildbot should consider Git submodules.
    Default: ``False``.
 
 ``shallow``
-   (optional): instructs git to attempt shallow clones (``--depth
+   (optional): instructs Git to attempt shallow clones (``--depth
    1``). If the user/scheduler asks for a specific revision, this
    parameter is ignored. 
 
@@ -412,10 +412,10 @@ The Git step takes the following arguments:
 
    * ``getDescription=False``: disables this feature explicitly
    * ``getDescription=True`` or empty ``dict()``: Run `git describe` with no args
-   * ``getDescription={...}``: a dict with keys named the same as the git option.
+   * ``getDescription={...}``: a dict with keys named the same as the Git option.
      Each key's value can be ``False`` or ``None`` to explicitly skip that argument.
      
-     For the following keys, a value of ``True`` appends the same-named git argument:
+     For the following keys, a value of ``True`` appends the same-named Git argument:
      
       * ``all`` : `--all`
       * ``always``: `--always`
@@ -426,7 +426,7 @@ The Git step takes the following arguments:
       * ``tags``: `--tags`
       * ``dirty``: `--dirty`
      
-     For the following keys, an integer or string value (depending on what git expects)
+     For the following keys, an integer or string value (depending on what Git expects)
      will set the argument's parameter appropriately. Examples show the key-value pair:
      
       * ``match=foo``: `--match foo`
@@ -704,7 +704,7 @@ The Repo step takes the following arguments:
     (optional, defaults to ``None``): the repo tarball used for
     fast bootstrap. If not present the tarball will be created
     automatically after first sync. It is a copy of the ``.repo``
-    directory which contains all the git objects. This feature helps
+    directory which contains all the Git objects. This feature helps
     to minimize network usage on very big projects.
 
 ``jobs``
@@ -772,7 +772,7 @@ sources are coming from.
         problems if the build process does not handle dependencies
         properly (sometimes you must do a *clean build* to make sure
         everything gets compiled), or if source files are deleted but
-        generated files can influence test behavior (e.g. python's
+        generated files can influence test behavior (e.g. Python's
         .pyc files), or when source directories are deleted but
         generated files prevent CVS from removing them. Builds ought
         to be correct regardless of whether they are done *from
@@ -1101,7 +1101,7 @@ The Mercurial step takes the following arguments:
 ``branchType``
     either 'dirname' (default) or 'inrepo' depending on whether
     the branch name should be appended to the ``baseURL``
-    or the branch is a mercurial named branch and can be
+    or the branch is a Mercurial named branch and can be
     found within the ``repourl``.
 
 ``clobberOnBranchChange``
@@ -1219,7 +1219,7 @@ The ``Git`` step takes the following arguments:
 
 ``submodules``
     (optional): when initializing/updating a Git repository, this decides whether
-    or not buildbot should consider git submodules.  Default: ``False``.
+    or not buildbot should consider Git submodules.  Default: ``False``.
 
 ``reference``
     (optional): use the specified string as a path to a reference
@@ -1227,7 +1227,7 @@ The ``Git`` step takes the following arguments:
     this path first instead of the main repository, if they exist.
 
 ``shallow``
-    (optional): instructs git to attempt shallow clones (``--depth 1``).  If the
+    (optional): instructs Git to attempt shallow clones (``--depth 1``).  If the
     user/scheduler asks for a specific revision, this parameter is ignored.
 
 ``progress``
@@ -1294,7 +1294,7 @@ The Repo step takes the following arguments:
     (optional, defaults to ``None``): the repo tarball used for
     fast bootstrap. If not present the tarball will be created
     automatically after first sync. It is a copy of the ``.repo``
-    directory which contains all the git objects. This feature helps
+    directory which contains all the Git objects. This feature helps
     to minimize network usage on very big projects.
 
 ``jobs``
@@ -1640,7 +1640,7 @@ false-positives. To use a different regexp, provide a
     f.addStep(Compile(command=["make", "test"],
                       warningPattern="^Warning: "))
 
-The ``warningPattern=`` can also be a pre-compiled python regexp
+The ``warningPattern=`` can also be a pre-compiled Python regexp
 object: this makes it possible to add flags like ``re.I`` (to use
 case-insensitive matching).
 
@@ -1718,14 +1718,17 @@ source code filenames involved).
 .. bb:step:: VC2005
 .. bb:step:: VC2008
 .. bb:step:: VCExpress9
+.. bb:step:: MsBuild
 
 Visual C++
 ++++++++++
 
-This step is meant to handle compilation using Microsoft compilers. 
-VC++ 6-9, VS2003, VS2005, VS2008, and VCExpress9 are supported. This step will take care
-of setting up a clean compilation environment, parse the generated
-output in real time and deliver as detailed as possible information
+These steps are meant to handle compilation using Microsoft compilers.
+VC++ 6-10 (aka Visual Studio 2003-2010 and VCExpress9) are supported via calling
+``devenv``. VS2012 as well as Windows Driver Kit 8 are supported via the new
+``MsBuild`` step. These steps will take care of setting up a clean compilation
+environment, parsing the generated
+output in real time and delivering as detailed as possible information
 about the compilation executed.
 
 All of the classes are in :mod:`buildbot.steps.vstudio`.  The available classes are:
@@ -1735,9 +1738,11 @@ All of the classes are in :mod:`buildbot.steps.vstudio`.  The available classes 
  * ``VC8``
  * ``VC9``
  * ``VS2003``
- * ``VC2005``
- * ``VC2008``
+ * ``VS2005``
+ * ``VS2008``
+ * ``VS2010``
  * ``VCExpress9``
+ * ``MsBuild``
 
 The available constructor arguments are
 
@@ -1781,22 +1786,43 @@ The available constructor arguments are
 
 ``arch``
     That one is only available with the class VS2005 (VC8). It gives the
-    target architecture of the built artifact. It defaults to ``x86``.
+    target architecture of the built artifact. It defaults to ``x86`` and
+    does not apply to ``MsBuild``. Please see ``platform`` below.
 
 ``project``
     This gives the specific project to build from within a
     workspace. It defaults to building all projects. This is useful
     for building cmake generate projects.
 
-Here is an example on how to use this step::
+``platform``
+    This is a madatory argument for MsBuild specifying the target platform
+    such as 'Win32', 'x64' or 'Vista Debug'. The last one is an example of
+    driver targets that appear once Windows Driver Kit 8 is installed.
 
-    from buildbot.steps.VisualStudio import VS2005
+Here is an example on how to drive compilatin with Visual Studio 2010::
 
-    f.addStep(VS2005(
-            projectfile="project.sln", config="release",
+    from buildbot.steps.VisualStudio import VS2010
+
+    f.addStep(
+        VS2010(projectfile="project.sln", config="release",
             arch="x64", mode="build",
-            INCLUDE=[r'D:\WINDDK\Include\wnet'],
-            LIB=[r'D:\WINDDK\lib\wnet\amd64']))
+               INCLUDE=[r'C:\3rd-pary\libmagic\include'],
+               LIB=[r'C:\3rd-party\libmagic\lib-x64']))
+
+Here is a similar example using "msbuild"::
+
+    from buildbot.steps.VisualStudio import MsBuild
+
+    # Build one project in Release mode for Win32
+    f.addStep(
+        MsBuild(projectfile="trunk.sln", config="Release", platform="Win32",
+                workdir="trunk",
+                project="tools\\protoc"))
+
+    # Build the entire solution in Debug mode for x64
+    f.addStep(
+        MsBuild(projectfile="trunk.sln", config='Debug', platform='x64',
+                workdir="trunk"))
 
 .. bb:step:: Test
 
@@ -2207,7 +2233,7 @@ found in the shell search path.  It can be overridden with the ``trial``
 parameter.  This is useful for Twisted's own unittests, which want to use the
 copy of bin/trial that comes with the sources.
 
-To influence the version of python being used for the tests, or to add flags to
+To influence the version of Python being used for the tests, or to add flags to
 the command, set the ``python`` parameter. This can be a string (like
 ``python2.2``) or a list (like ``['python2.3', '-Wall']``).
 
