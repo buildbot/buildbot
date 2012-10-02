@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import sqlalchemy as sa
+
 class DBConnectorComponent(object):
     # A fixed component of the DBConnector, handling one particular aspect of
     # the database.  Instances of subclasses are assigned to attributes of the
@@ -52,6 +54,33 @@ class DBConnectorComponent(object):
             raise RuntimeError(
                 "value for column %s is greater than max of %d characters: %s"
                     % (col, col.type.length, value))
+
+    def findSomethingId(self, tbl, whereclause, insert_values,
+            _race_hook=None):
+        """Find (using C{whereclause}) or add (using C{insert_values) a row to
+        C{table}, and return the resulting ID."""
+        def thd(conn, no_recurse=False):
+            # try to find the master
+            q = sa.select([ tbl.c.id ],
+                    whereclause=whereclause)
+            rows = conn.execute(q).fetchall()
+
+            # found it!
+            if rows:
+                return rows[0].id
+
+            _race_hook and _race_hook(conn)
+
+            try:
+                r = conn.execute(tbl.insert(), insert_values)
+                return r.inserted_primary_key[0]
+            except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                # try it all over again, in case there was an overlapping,
+                # identical call, but only retry once.
+                if no_recurse:
+                    raise
+                return thd(conn, no_recurse=True)
+        return self.db.pool.do(thd)
 
 
 class CachedMethod(object):
