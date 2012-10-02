@@ -102,6 +102,9 @@ For each of the config-objects tables (masters, builders, schedulesr, changesour
 * Switch to use epoch time throughout the DB API.
 * Use None/NULL, not -1, as the "no results yet" sentinel value in buildsets and buildrequests
 * Make `completeBuildSet` return true if the database claims to have updated the row, and use that to narrow the race condition in `maybeBuildsetComplete`
+* Use sa.Text instead of sa.String(LEN), so we have unlimited-length strings.
+  Where indexes -- especially unique indexes -- are required on these columns, add sha1 hash columns and index those.
+  Among other advantages, this will allow MySQL databases to use the vastly superior InnoDB table type.
 
 ## Documentation ##
 
