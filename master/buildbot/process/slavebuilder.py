@@ -174,7 +174,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
 
 class Ping:
     running = False
-    timeout = 1*60
+    timeout = 10*60
     timer = None
 
     def ping(self, remote):
