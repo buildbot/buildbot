@@ -870,7 +870,7 @@ masters
         :param unicode basedir: base directory of this master
         :returns: master id via Deferred
 
-        Return the master ID for the master with this hostname and basedir.
+        Return the master ID for the master with this master name (generally ``hostname:basedir``).
         If such a master is already in the database, this returns the ID.
         If not, the master is added to the database, with ``active=False``, and its ID returned.
 

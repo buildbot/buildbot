@@ -27,10 +27,6 @@ Nine
 
   Please adjust any custom change sources accordingly.
 
-* This upgrade will delete all rows from the ``buildrequest_claims`` table.
-  If you are using this table for analytical purposes outside of Buildbot, please back up its contents before the upgrade, and restore it afterward, translating object IDs to master IDs if necessary.
-  This translation would be very slow and is not required for most users, so it is not done automatically.
-
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
     Most simply need an additional bulleted list item, but more significant
