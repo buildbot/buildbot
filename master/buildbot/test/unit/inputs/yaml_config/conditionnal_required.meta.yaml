@@ -1,0 +1,12 @@
+root:
+        type: dict
+        kids:
+          mode:
+            type: string
+            values: [required,notrequired,forbidden]
+            required: true
+          field1:
+            required: 'self.mode=="required"'
+            forbidden: 'self.mode=="forbidden"'
+            type: string
+            values: [OK]

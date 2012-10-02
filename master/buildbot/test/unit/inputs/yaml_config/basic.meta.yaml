@@ -1,0 +1,6 @@
+root:
+        type: dict
+        kids:
+          field1:
+            type: string
+            values: [OK]

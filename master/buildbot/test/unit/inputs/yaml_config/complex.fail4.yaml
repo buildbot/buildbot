@@ -1,0 +1,10 @@
+slaves:
+-       caps:
+                builder: [build]
+                location: l1
+                speed: fast
+        slaves: [buildbot1build]
+-       caps:
+                location: l1
+                speed: fast
+        slaves: [build3build, build4build, build5build]
