@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import hashlib
 from twisted.trial import unittest
 from twisted.internet import defer, task
 from buildbot.test.fake import fakedb, fakemaster
@@ -177,9 +178,10 @@ class RealTests(Tests):
     @defer.inlineCallbacks
     def test_findMasterId_race(self):
         def race_thd(conn):
+            hash = hashlib.sha1('some:master').hexdigest()
             conn.execute(self.db.model.masters.insert(),
-                    id=5, master_name='some:master', active=0,
-                    last_active=SOMETIME)
+                    id=5, master_name='some:master', master_name_hash=hash,
+                    active=0, last_active=SOMETIME)
         id = yield self.db.masters.findMasterId('some:master',
                                         _race_hook=race_thd)
         self.assertEqual(id, 5)

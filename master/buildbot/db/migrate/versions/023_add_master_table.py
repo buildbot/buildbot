@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import hashlib
 import sqlalchemy as sa
 from buildbot.util import sautils
 
@@ -48,6 +49,7 @@ def upgrade(migrate_engine):
     masters = sa.Table("masters", metadata,
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('master_name', sa.String(128), nullable=False),
+        sa.Column('master_name_hash', sa.String(40), nullable=False),
         sa.Column('active', sa.Integer, nullable=False),
         sa.Column('last_active', sa.Integer, nullable=False),
     )
@@ -87,6 +89,7 @@ def upgrade(migrate_engine):
     for row in r.fetchall():
         r = migrate_engine.execute(masters.insert(),
                 master_name=row.name,
+                master_name_hash=hashlib.sha1(row.name).hexdigest(),
                 active=0,
                 last_active=0)
         masterid = r.inserted_primary_key[0]
@@ -111,6 +114,7 @@ def upgrade(migrate_engine):
     buildrequest_claims_old.drop()
 
     # add the indices
-    sa.Index('master_names', masters.c.master_name, unique=True).create()
+    sa.Index('master_name_hashes', masters.c.master_name_hash,
+            unique=True).create()
     sa.Index('buildrequest_claims_brids', buildrequest_claims.c.brid,
             unique=True).create()

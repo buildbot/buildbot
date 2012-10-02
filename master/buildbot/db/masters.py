@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import hashlib
 import sqlalchemy as sa
 from twisted.internet import reactor
 from buildbot.util import epoch2datetime
@@ -41,6 +42,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
             try:
                 r = conn.execute(tbl.insert(), dict(
                     master_name=master_name,
+                    master_name_hash=hashlib.sha1(master_name).hexdigest(),
                     active=0, # initially inactive
                     last_active=_reactor.seconds()
                     ))
