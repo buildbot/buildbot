@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.spread import pb
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 from twisted.python import log
 
 (ATTACHING, # slave attached, still checking hostinfo/etc
@@ -174,6 +174,8 @@ class AbstractSlaveBuilder(pb.Referenceable):
 
 class Ping:
     running = False
+    timeout = 10*60
+    timer = None
 
     def ping(self, remote):
         assert not self.running
@@ -185,16 +187,24 @@ class Ping:
         self.d = defer.Deferred()
         # TODO: add a distinct 'ping' command on the slave.. using 'print'
         # for this purpose is kind of silly.
+        def pingTimeouted(self):
+            log.msg("ping timeouted: failure")
+            self._ping_failed(1,"timeout")
+
+        self.timer = reactor.callLater(self.timeout, pingTimeouted)
         remote.callRemote("print", "ping").addCallbacks(self._pong,
                                                         self._ping_failed,
                                                         errbackArgs=(remote,))
         return self.d
-
     def _pong(self, res):
+        if self.timer.active():
+            self.timer.cancel()
         log.msg("ping finished: success")
         self.d.callback(True)
 
     def _ping_failed(self, res, remote):
+        if self.timer.active():
+            self.timer.cancel()
         log.msg("ping finished: failure")
         # the slave has some sort of internal error, disconnect them. If we
         # don't, we'll requeue a build and ping them again right away,

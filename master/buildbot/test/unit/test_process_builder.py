@@ -52,10 +52,10 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
         # patch into the _startBuildsFor method
         self.builds_started = []
-        def _startBuildFor(slavebuilder, buildrequests):
-            self.builds_started.append((slavebuilder, buildrequests))
-            return defer.succeed(True)
-        self.bldr._startBuildFor = _startBuildFor
+        def _prepareBuildFor(task):
+            self.builds_started.append((task.slavebuilder, task.buildrequests))
+            return defer.succeed(False)
+        self.bldr._prepareBuildFor = _prepareBuildFor
 
         if patch_random:
             # patch 'random.choice' to always take the slave that sorts

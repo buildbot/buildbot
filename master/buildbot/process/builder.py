@@ -30,6 +30,24 @@ from buildbot.process import buildrequest, slavebuilder
 from buildbot.process.slavebuilder import BUILDING
 from buildbot.db import buildrequests
 
+class _StartBuildTask():
+    """ a class to hold StartBuildTask status, and cleanup methods"""
+    def __init__(self, slavebuilder, buildrequests):
+        self.slavebuilder = slavebuilder
+        self.buildrequests = buildrequests
+        self.cleanups = []
+        self.build = None
+
+    @defer.inlineCallbacks
+    def run_cleanups(self):
+        fn = None
+        try:
+            while self:
+                fn = self.pop()
+                yield defer.maybeDeferred(fn)
+        except:
+            log.err(failure.Failure(), "while running %r" % (fn,))
+
 class Builder(config.ReconfigurableServiceMixin,
               pb.Referenceable,
               service.MultiService):
@@ -256,38 +274,28 @@ class Builder(config.ReconfigurableServiceMixin,
             self.builder_status.setBigState("idle")
 
     @defer.inlineCallbacks
-    def _startBuildFor(self, slavebuilder, buildrequests):
-        """Start a build on the given slave.
-        @param build: the L{base.Build} to start
-        @param sb: the L{SlaveBuilder} which will host this build
+    def _prepareBuildFor(self, task):
+        """Prepare a build on the given slave.
+        Do all what is needed for preparing the build, that does not require
+        slave communication. Those, we'll do out of the locked BRD activity loop
+        @param task: the object holding start build status, and cleanup list
 
         @return: (via Deferred) boolean indicating that the build was
-        succesfully started.
+        succesfully prepared, and that the process can continue.
         """
-
-        # as of the Python versions supported now, try/finally can't be used
-        # with a generator expression.  So instead, we push cleanup functions
-        # into a list so that, at any point, we can abort this operation.
-        cleanups = []
-        def run_cleanups():
-            try:
-                while cleanups:
-                    fn = cleanups.pop()
-                    fn()
-            except:
-                log.err(failure.Failure(), "while running %r" % (run_cleanups,))
 
         # the last cleanup we want to perform is to update the big
         # status based on any other cleanup
+        cleanups = task.cleanups
         cleanups.append(lambda : self.updateBigStatus())
 
-        build = self.config.factory.newBuild(buildrequests)
+        task.build = build = self.config.factory.newBuild(task.buildrequests)
         build.setBuilder(self)
-        log.msg("starting build %s using slave %s" % (build, slavebuilder))
+        log.msg("starting build %s using slave %s" % (build, task.slavebuilder))
 
         # set up locks
         build.setLocks(self.config.locks)
-        cleanups.append(lambda : slavebuilder.slave.releaseLocks())
+        cleanups.append(lambda : task.slavebuilder.slave.releaseLocks())
 
         if len(self.config.env) > 0:
             build.setSlaveEnvironment(self.config.env)
@@ -300,7 +308,7 @@ class Builder(config.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
         try:
-            ready = yield slavebuilder.prepare(self.builder_status, build)
+            ready = yield task.slavebuilder.prepare(self.builder_status, build)
         except:
             log.err(failure.Failure(), 'while preparing slavebuilder:')
             ready = False
@@ -309,45 +317,46 @@ class Builder(config.ReconfigurableServiceMixin,
         # If it returns false then we don't start a new build.
         if not ready:
             log.msg("slave %s can't build %s after all; re-queueing the "
-                    "request" % (build, slavebuilder))
-            run_cleanups()
+                    "request" % (build, task.slavebuilder))
+            task.run_cleanups()
             defer.returnValue(False)
             return
+        defer.returnValue(True)
 
+    @defer.inlineCallbacks
+    def _startBuildFor(self, task):
         # ping the slave to make sure they're still there. If they've
         # fallen off the map (due to a NAT timeout or something), this
         # will fail in a couple of minutes, depending upon the TCP
         # timeout.
         #
-        # TODO: This can unnecessarily suspend the starting of a build, in
-        # situations where the slave is live but is pushing lots of data to
-        # us in a build.
+        build = task.build
         log.msg("starting build %s.. pinging the slave %s"
-                % (build, slavebuilder))
+                % (build, task.slavebuilder))
         try:
-            ping_success = yield slavebuilder.ping()
+            ping_success = yield task.slavebuilder.ping()
         except:
             log.err(failure.Failure(), 'while pinging slave before build:')
             ping_success = False
 
         if not ping_success:
             log.msg("slave ping failed; re-queueing the request")
-            run_cleanups()
+            task.run_cleanups()
             defer.returnValue(False)
             return
 
         # The buildslave is ready to go. slavebuilder.buildStarted() sets its
         # state to BUILDING (so we won't try to use it for any other builds).
         # This gets set back to IDLE by the Build itself when it finishes.
-        slavebuilder.buildStarted()
-        cleanups.append(lambda : slavebuilder.buildFinished())
+        task.slavebuilder.buildStarted()
+        task.cleanups.append(lambda : task.slavebuilder.buildFinished())
 
         # tell the remote that it's starting a build, too
         try:
-            yield slavebuilder.remote.callRemote("startBuild")
+            yield task.slavebuilder.remote.callRemote("startBuild")
         except:
             log.err(failure.Failure(), 'while calling remote startBuild:')
-            run_cleanups()
+            task.run_cleanups()
             defer.returnValue(False)
             return
 
@@ -362,7 +371,7 @@ class Builder(config.ReconfigurableServiceMixin,
                 bids.append(bid)
         except:
             log.err(failure.Failure(), 'while adding rows to build table:')
-            run_cleanups()
+            task.run_cleanups()
             defer.returnValue(False)
             return
 
@@ -375,8 +384,8 @@ class Builder(config.ReconfigurableServiceMixin,
         # will start the actual build process.  This is done with a fresh
         # Deferred since _startBuildFor should not wait until the build is
         # finished.
-        d = build.startBuild(bs, self.expectations, slavebuilder)
-        d.addCallback(self.buildFinished, slavebuilder, bids)
+        d = build.startBuild(bs, self.expectations, task.slavebuilder)
+        d.addCallback(self.buildFinished, task.slavebuilder, bids)
         # this shouldn't happen. if it does, the slave will be wedged
         d.addErrback(log.err)
 
@@ -545,15 +554,21 @@ class Builder(config.ReconfigurableServiceMixin,
                     [ self._brdictToBuildRequest(brdict)
                       for brdict in brdicts ])
 
-            build_started = yield self._startBuildFor(slavebuilder, breqs)
+            task = _StartBuildTask(slavebuilder, breqs)
+            # cleanups are run in LIFO mode!
 
-            if not build_started:
-                # build was not started, so unclaim the build requests
-                yield self.master.db.buildrequests.unclaimBuildRequests(brids)
+            # last cleanup we do is try starting builds again. If we still have a working slave,
+            # then this may re-claim the same buildrequests
+            task.cleanups.append(lambda: self.botmaster.maybeStartBuildsForBuilder(self.name))
+            # build was not started, so unclaim the build requests
+            task.cleanups.append(lambda: self.master.db.buildrequests.unclaimBuildRequests(brids))
 
-                # and try starting builds again.  If we still have a working slave,
-                # then this may re-claim the same buildrequests
-                self.botmaster.maybeStartBuildsForBuilder(self.name)
+            successfully_prepared = yield self._prepareBuildFor(task)
+
+            # note that we dont wait for the deferred, as it might stuck the loop for
+            # a while in case of a busy slave
+            if successfully_prepared:
+                self._startBuildFor(task)
 
             # finally, remove the buildrequests and slavebuilder from the
             # respective queues
