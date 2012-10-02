@@ -90,8 +90,9 @@ Don't include the schema changes needed to implement the status stuff here; thos
 
  * New table (DONE)
  * Migration script (DONE) + tests (DONE)
- * DB API module + docs, type verifier, and interface tests
- * Fake implementation that passes interface tests
+ * DB API module + docs, type verifier, and interface tests (DONE)
+ * Master deactivation should delete from ``scheduler_masters`` (carefully, with masterid)
+ * Fake implementation that passes interface tests (DONE)
  * Add TODO for data API implementation
 
 * Add a ``changesources`` table, similar to schedulers
@@ -120,6 +121,7 @@ For each of the config-objects tables (masters, builders, schedulesr, changesour
 ## Miscellaneous ##
 
 * Factor the mutiple select-or-insert methods (e.g., for masters) into a common utility method.
+* Look carefully at race conditions around masters being marked inactive
 
 # Later #
 

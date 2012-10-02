@@ -499,6 +499,10 @@ schedulers
 
 .. index:: double: Schedulers; DB Connector Component
 
+.. py:exception:: AlreadyClaimedError
+
+    Raised when a scheduler request is already claimed by another master.
+
 .. py:class:: SchedulersConnectorComponent
 
     This class manages the state of the Buildbot schedulers.  This state includes
@@ -506,14 +510,20 @@ schedulers
 
     An instance of this class is available at ``master.db.changes``.
 
-    .. index:: objectid
+    Schedulers are identified by their schedulerid, which can be objtained from :py:meth:`findSchedulerId`.
 
-    Schedulers are identified by a their objectid - see
-    :py:class:`StateConnectorComponent`.
+    Schedulers are represented by dictionaries with the following keys:
+
+        * ``id`` - scheduler's ID
+        * ``name`` - scheduler's name
+        * ``masterid`` - ID of the master currently running this scheduler, or None if it is inactive
+
+    Note that this class is conservative in determining what schedulers are inactive: a scheduler linked to an inactive master is still considered active.
+    This situation should never occur, however; links to a master should be deleted when it is marked inactive.
 
     .. py:method:: classifyChanges(objectid, classifications)
 
-        :param objectid: scheduler classifying the changes
+        :param schedulerid: ID of the scheduler classifying the changes
         :param classifications: mapping of changeid to boolean, where the boolean
             is true if the change is important, and false if it is unimportant
         :type classifications: dictionary
@@ -528,7 +538,7 @@ schedulers
 
     .. py:method:: flushChangeClassifications(objectid, less_than=None)
 
-        :param objectid: scheduler owning the flushed changes
+        :param schedulerid: ID of the scheduler owning the flushed changes
         :param less_than: (optional) lowest changeid that should *not* be flushed
         :returns: Deferred
 
@@ -537,8 +547,8 @@ schedulers
 
     .. py:method:: getChangeClassifications(objectid[, branch])
 
-        :param objectid: scheduler to look up changes for
-        :type objectid: integer
+        :param schedulerid: ID of scheduler to look up changes for
+        :type schedulerid: integer
         :param branch: (optional) limit to changes with this branch
         :type branch: string or None (for default branch)
         :returns: dictionary via Deferred
@@ -551,6 +561,41 @@ schedulers
         given.  Note that specifying ``branch=None`` requests changes for the
         default branch, and is not the same as omitting the ``branch`` argument
         altogether.
+
+    .. py:method:: findSchedulerId(name)
+
+        :param name: scheduler name
+        :returns: scheduler ID via Deferred
+
+        Return the scheduler ID for the scheduler with this name.
+        If such a scheduler is already in the database, this returns the ID.
+        If not, the scheduler is added to the database and its ID returned.
+
+    .. py:method:: setSchedulerMaster(schedulerid, masterid)
+
+        :param schedulerid: scheduler to set the master for
+        :param masterid: new master for this scheduler, or None
+        :returns: Deferred
+
+        Set, or unset if ``masterid`` is None, the active master for this scheduler.
+        If no master is currently set, or the current master is not active, this method will complete without error.
+        If the current master is active, this method will raise :py:exc:`SchedulerAlreadyClaimedError`.
+
+    .. py:method:: getScheduler(schedulerid)
+
+        :param schedulerid: scheduler ID
+        :returns: scheduler dictionary or None via Deferred
+
+        Get the scheduler dictionary for the given scheduler.
+
+    .. py:method:: getSchedulers(active=None)
+
+        :param boolean active: if specified, filter for active or inactive schedulers
+        :returns: list of scheduler dictionaries in unspecified order
+
+        Get a list of all known schedulers.
+        If ``active``, schedulers are filtered according to whether they are active (true) or inactive (false).
+
 
 sourcestamps
 ~~~~~~~~~~~~
