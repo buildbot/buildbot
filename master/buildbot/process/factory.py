@@ -43,6 +43,7 @@ class BuildFactory(util.ComparableMixin):
 
     def __init__(self, steps=None):
         self.steps = []
+        self.checksteps = []
         if steps:
             self.addSteps(steps)
 
@@ -58,7 +59,15 @@ class BuildFactory(util.ComparableMixin):
         b.setStepFactories(self.steps)
         return b
 
+    def getCheckSteps(self):
+        """Returns the list of check
+        steps we have in this factory.
+        """
+        return self.checksteps
+
     def addStep(self, step):
+        if hasattr(step,"isCheck") and step.isCheck:
+            self.checksteps.append(interfaces.IBuildStepFactory(step))
         self.steps.append(interfaces.IBuildStepFactory(step))
 
     def addSteps(self, steps):

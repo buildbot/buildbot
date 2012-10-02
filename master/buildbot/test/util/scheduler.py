@@ -27,10 +27,13 @@ class FakeMaster(object):
         self.bset_completion_subscr_cb = None
         self.caches = mock.Mock(name="caches")
         self.caches.get_cache = self.get_cache
+        self.builders = {}
 
     def addBuildset(self, **kwargs):
         return self.db.buildsets.addBuildset(**kwargs)
 
+    def getBuilder(self, name):
+        return self.builders[name]
     # subscriptions
     # note that only one subscription of each type is supported
 

@@ -953,6 +953,64 @@ class LoggingBuildStep(BuildStep):
         self.step_status.setText(self.getText(cmd, results))
         self.step_status.setText2(self.maybeGetText2(cmd, results))
 
+class CheckStep(BuildStep):
+    """ CheckStep is a helper class to implement steps that runs sanity checks
+    See doc in cfg-buildsteps.rst for more info
+    """
+    isCheck = True
+    def __init__(self,**kwargs):
+        BuildStep.__init__(self, **kwargs)
+
+    def addStdout(self, string):
+        if self.stdio_log == None:
+            log.msg(str(self.__class__)+":"+string)
+        else:
+            self.stdio_log.addStderr(string)
+
+    def addStderr(self, string):
+        if self.stdio_log == None:
+            self.err += string
+        else:
+            self.stdio_log.addStderr(string)
+
+    def start(self):
+        self.stdio_log = self.addLog("stdio")
+        d = defer.maybeDeferred(self.check, self.getProperties(),
+                                self.build.getAllSourceStamps())
+        def checkDone((results, text)):
+            self.step_status.setText([text])
+            self.descriptionDone = [text]
+            self.finished(results)
+        d.addCallback(checkDone)
+        d.addErrback(self.failed)
+        return d
+
+    def doCheck(self, properties, sourcestamps):
+        self.out = ""
+        self.err = ""
+        self.stdio_log = None
+
+        d = defer.maybeDeferred(self.check, properties, sourcestamps)
+
+        def doCheckFail(err):
+            return (EXCEPTION, str(err))
+
+        def doCheckPostProcess((results, text)):
+            if results not in [FAILURE,EXCEPTION]:
+                return None
+            else:
+                self.addStderr(text)
+                return self.err
+
+        d.addCallback(doCheckPostProcess)
+        d.addErrback(doCheckFail)
+        return d
+
+    def check(self, properties, sourcestamps):
+        """ Run the actual test.
+        @return: (results, text ) (via deferred)
+        """
+        raise NotImplementedError("your subclass must implement this method")
 
 # Parses the logs for a list of regexs. Meant to be invoked like:
 # regexes = ((re.compile(...), FAILURE), (re.compile(...), WARNINGS))
