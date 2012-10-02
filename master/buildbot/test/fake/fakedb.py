@@ -230,16 +230,39 @@ class SourceStamp(Row):
     id_column = 'id'
 
 
+class Scheduler(Row):
+    table = "schedulers"
+
+    defaults = dict(
+        id = None,
+        name = 'schname',
+        name_hash = None,
+    )
+
+    id_column = 'id'
+    hash_pairs = [ ( 'name', 'name_hash' ) ]
+
+
+class SchedulerMaster(Row):
+    table = "scheduler_masters"
+
+    defaults = dict(
+        schedulerid = None,
+        masterid = None,
+    )
+
+    required_columns = ( 'schedulerid', 'masterid' )
+
 class SchedulerChange(Row):
     table = "scheduler_changes"
 
     defaults = dict(
-        objectid = None,
+        schedulerid = None,
         changeid = None,
         important = 1,
     )
 
-    required_columns = ( 'objectid', 'changeid' )
+    required_columns = ( 'schedulerid', 'changeid' )
 
 
 class Buildset(Row):

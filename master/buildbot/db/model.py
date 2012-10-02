@@ -282,13 +282,35 @@ class Model(base.DBConnectorComponent):
 
     # schedulers
 
+    # The schedulers table gives a unique identifier to each scheduler.  It
+    # also links to other tables used to ensure only one master runs each
+    # scheduler, and to track changes that a scheduler may trigger a build for
+    # later.
+    schedulers = sa.Table('schedulers', metadata,
+        sa.Column("id", sa.Integer, primary_key=True),
+
+        # name for this scheduler, as given in the configuration, plus a hash
+        # of that name used for a unique index
+        sa.Column('name', sa.Text, nullable=False),
+        sa.Column('name_hash', sa.String(40), nullable=False),
+    )
+
+    # This links schedulers to the master where they are running.  A scheduler
+    # linked to a master that is inactive can be unlinked by any master.
+    scheduler_masters = sa.Table('scheduler_masters', metadata,
+        sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.id'),
+            nullable=False),
+        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+            nullable=False),
+    )
+
     # This table references "classified" changes that have not yet been
     # "processed".  That is, the scheduler has looked at these changes and
     # determined that something should be done, but that hasn't happened yet.
     # Rows are deleted from this table as soon as the scheduler is done with
     # the change.
     scheduler_changes = sa.Table('scheduler_changes', metadata,
-        sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id')),
+        sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.id')),
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid')),
         # true (nonzero) if this change is important to this scheduler
         sa.Column('important', sa.Integer),
@@ -388,9 +410,15 @@ class Model(base.DBConnectorComponent):
     sa.Index('changes_when_timestamp', changes.c.when_timestamp)
     sa.Index('change_files_changeid', change_files.c.changeid)
     sa.Index('change_properties_changeid', change_properties.c.changeid)
-    sa.Index('scheduler_changes_objectid', scheduler_changes.c.objectid)
+    sa.Index('scheduler_name_hash', schedulers.c.name_hash, unique=True)
+    sa.Index('scheduler_masters_schedulerid', scheduler_masters.c.schedulerid,
+            unique=True)
+    sa.Index('scheduler_masters_identity',
+            scheduler_masters.c.schedulerid, scheduler_masters.c.masterid,
+            unique=True)
+    sa.Index('scheduler_changes_schedulerid', scheduler_changes.c.schedulerid)
     sa.Index('scheduler_changes_changeid', scheduler_changes.c.changeid)
-    sa.Index('scheduler_changes_unique', scheduler_changes.c.objectid,
+    sa.Index('scheduler_changes_unique', scheduler_changes.c.schedulerid,
             scheduler_changes.c.changeid, unique=True)
     sa.Index('sourcestamp_changes_sourcestampid',
             sourcestamp_changes.c.sourcestampid)

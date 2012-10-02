@@ -87,6 +87,13 @@ Don't include the schema changes needed to implement the status stuff here; thos
 * Remove ``is_dir`` from the changes table (and ignore/remove it everywhere else)
 * Add a ``builders`` table with provisions to indicate which masters are running which builders
 * Add a ``schedulers`` table with provisions for masters to lock a particular scheduler name
+
+ * New table (DONE)
+ * Migration script (DONE) + tests (DONE)
+ * DB API module + docs, type verifier, and interface tests
+ * Fake implementation that passes interface tests
+ * Add TODO for data API implementation
+
 * Add a ``changesources`` table, similar to schedulers
 
 For each of the config-objects tables (masters, builders, schedulesr, changesources):
