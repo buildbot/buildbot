@@ -63,8 +63,8 @@ class ChangeHookResource(resource.Resource):
         except ValueError, err:
             request.setResponseCode(400, err.args[0])
             return err.args[0]
-        except Exception:
-            log.err(None, "Exception processing web hook.")
+        except Exception, e:
+            log.err(e, "processing changes from web hook")
             msg = "Error processing changes."
             request.setResponseCode(500, msg)
             return msg
@@ -78,7 +78,8 @@ class ChangeHookResource(resource.Resource):
         def ok(_):
             request.setResponseCode(202)
             request.finish()
-        def err(_):
+        def err(why):
+            log.err(why, "adding changes from web hook")
             request.setResponseCode(500)
             request.finish()
         d.addCallbacks(ok, err)
