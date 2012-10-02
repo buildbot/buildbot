@@ -91,7 +91,7 @@ Don't include the schema changes needed to implement the status stuff here; thos
  * New table (DONE)
  * Migration script (DONE) + tests (DONE)
  * DB API module + docs, type verifier, and interface tests (DONE)
- * Master deactivation should delete from ``scheduler_masters`` (carefully, with masterid)
+ * Master deactivation should delete from ``scheduler_masters`` (carefully, with masterid) (DONE)
  * Fake implementation that passes interface tests (DONE)
  * Add TODO for data API implementation
 

@@ -926,6 +926,7 @@ masters
 
         Mark the given master as active or inactive, returning true if the state actually changed.
         If ``active`` is true, the ``last_active`` time is updated to the current time.
+        If ``active`` is false, then any links to this master, such as schedulers, will be deleted.
 
     .. py:method:: getMaster(masterid)
 
