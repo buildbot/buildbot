@@ -22,6 +22,7 @@ the real connector components.
 import copy
 import random
 import base64
+import hashlib
 from buildbot.util import json, epoch2datetime, datetime2epoch
 from twisted.python import failure
 from twisted.internet import defer, reactor
@@ -53,6 +54,7 @@ class Row(object):
     required_columns = ()
     lists = ()
     dicts = ()
+    hash_pairs = []
 
     _next_id = None
 
@@ -74,6 +76,11 @@ class Row(object):
         for k, v in self.values.iteritems():
             if isinstance(v, str):
                 self.values[k] = unicode(v)
+        # calculate any necessary hashes
+        for src_col, hash_col in self.hash_pairs:
+            self.values[hash_col] = \
+                hashlib.sha1(self.values[src_col]).hexdigest()
+
         # make the values appear as attributes
         self.__dict__.update(self.values)
 
@@ -329,11 +336,13 @@ class Master(Row):
     defaults = dict(
         id = None,
         master_name = 'some:master',
+        master_name_hash = None,
         active = 1,
         last_active = 9998999,
     )
 
     id_column = 'id'
+    hash_pairs = [ ( 'master_name', 'master_name_hash' ) ]
 
 # Fake DB Components
 
