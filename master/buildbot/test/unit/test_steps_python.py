@@ -259,6 +259,98 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.expectProperty('pylint-total', 2)
         return self.runStep()
 
+class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_success(self):
+        self.setupStep(python.PyFlakes())
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
+                        usePTY='slave-config')
+            + 0)
+        self.expectOutcome(result=SUCCESS, status_text=['pyflakes'])
+        return self.runStep()
+
+    def test_unused(self):
+        self.setupStep(python.PyFlakes())
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                stdout="foo.py:1: 'bar' imported but unused\n")
+            + 1)
+        self.expectOutcome(result=WARNINGS,
+                           status_text=['pyflakes', 'unused=1', 'warnings'])
+        self.expectProperty('pyflakes-unused', 1)
+        self.expectProperty('pyflakes-total', 1)
+        return self.runStep()
+
+    def test_undefined(self):
+        self.setupStep(python.PyFlakes())
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                stdout="foo.py:1: undefined name 'bar'\n")
+            + 1)
+        self.expectOutcome(result=FAILURE,
+                           status_text=['pyflakes', 'undefined=1', 'failed'])
+        self.expectProperty('pyflakes-undefined', 1)
+        self.expectProperty('pyflakes-total', 1)
+        return self.runStep()
+
+    def test_redefs(self):
+        self.setupStep(python.PyFlakes())
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                stdout="foo.py:2: redefinition of unused 'foo' from line 1\n")
+            + 1)
+        self.expectOutcome(result=WARNINGS,
+                           status_text=['pyflakes', 'redefs=1', 'warnings'])
+        self.expectProperty('pyflakes-redefs', 1)
+        self.expectProperty('pyflakes-total', 1)
+        return self.runStep()
+
+    def test_importstar(self):
+        self.setupStep(python.PyFlakes())
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                stdout="foo.py:1: 'from module import *' used; unable to detect undefined names\n")
+            + 1)
+        self.expectOutcome(result=WARNINGS,
+                           status_text=['pyflakes', 'import*=1', 'warnings'])
+        self.expectProperty('pyflakes-import*', 1)
+        self.expectProperty('pyflakes-total', 1)
+        return self.runStep()
+
+    def test_misc(self):
+        self.setupStep(python.PyFlakes())
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                stdout="foo.py:2: redefinition of function 'bar' from line 1\n")
+            + 1)
+        self.expectOutcome(result=WARNINGS,
+                           status_text=['pyflakes', 'misc=1', 'warnings'])
+        self.expectProperty('pyflakes-misc', 1)
+        self.expectProperty('pyflakes-total', 1)
+        return self.runStep()
+
 
 class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
 
