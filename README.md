@@ -31,7 +31,7 @@ It's safe to leave tasks that have significant prerequisites - particularly the 
 
 The outstanding resource types are:
 
-* scheduler
+* scheduler (underlying DB API complete)
 * builder
 * sourcestamp
 * buildrequest
@@ -86,15 +86,6 @@ Don't include the schema changes needed to implement the status stuff here; thos
 
 * Remove ``is_dir`` from the changes table (and ignore/remove it everywhere else)
 * Add a ``builders`` table with provisions to indicate which masters are running which builders
-* Add a ``schedulers`` table with provisions for masters to lock a particular scheduler name
-
- * New table (DONE)
- * Migration script (DONE) + tests (DONE)
- * DB API module + docs, type verifier, and interface tests (DONE)
- * Master deactivation should delete from ``scheduler_masters`` (carefully, with masterid) (DONE)
- * Fake implementation that passes interface tests (DONE)
- * Add TODO for data API implementation
-
 * Add a ``changesources`` table, similar to schedulers
 
 For each of the config-objects tables (masters, builders, schedulesr, changesources):
