@@ -65,11 +65,6 @@ class Namespace(unittest.TestCase):
         for i in n:
             self.assertEqual(i.a.b.c, i.a.b.c)
 
-    def test_cannot_inherit(self):
-        class myNamespace(namespace.Namespace):
-            pass
-        self.assertRaises(ValueError,lambda : myNamespace({'a':{'b':{'c':1}}}))
-
     def test_jsondump(self):
         s = '[{"a": {"b": {"c": 1}}}, {"a": {"b": {"c": 2}}}]'
         n = namespace.Namespace(json.loads(s))
