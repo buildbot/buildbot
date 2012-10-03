@@ -370,10 +370,23 @@ The Git step takes the following arguments:
    checkout step.
 
 ``mode``
+
+  (optional): defaults to ``'incremental'``.
+  Specifies whether to clean the build tree or not.
+
+    ``incremental``
+      The source is update, but any built files are left untouched.
+
+    ``full``
+      The build tree is clean of any built files.
+      The exact method for doing this is controlled by the ``method`` argument.
+
+
 ``method``
 
-   Git's incremental mode does not require a method.  The full mode has
-   four methods defined:
+   (optional): defaults to ``fresh`` when mode is ``full``.
+   Git's incremental mode does not require a method.
+   The full mode has four methods defined:
 
 
    ``clobber``
