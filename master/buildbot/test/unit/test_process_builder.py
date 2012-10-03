@@ -20,6 +20,7 @@ from twisted.python import failure
 from twisted.internet import defer
 from buildbot import config
 from buildbot.status import master
+from buildbot.process import properties
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import builder, factory
 from buildbot.db import buildrequests
@@ -203,19 +204,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
     def test_maybeStartBuild_chooseSlave_None(self):
         yield self.makeBuilder()
 
-        self.bldr._chooseSlave = lambda avail : defer.succeed(None)
-        self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
-        rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
-        ]
-        yield self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[])
-
-    @defer.inlineCallbacks
-    def test_maybeStartBuild_chooseSlave_bogus(self):
-        yield self.makeBuilder()
-
-        self.bldr._chooseSlave = lambda avail : defer.succeed(mock.Mock())
+        self.bldr._chooseSlave = lambda brs, avail : defer.succeed(None)
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
@@ -227,7 +216,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
     def test_maybeStartBuild_chooseSlave_fails(self):
         yield self.makeBuilder()
 
-        self.bldr._chooseSlave = lambda avail : defer.fail(RuntimeError("xx"))
+        self.bldr._chooseSlave = lambda brs, avail : defer.fail(RuntimeError("xx"))
         self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
@@ -351,13 +340,25 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
     # _chooseSlave
 
-    def do_test_chooseSlave(self, nextSlave, exp_choice=None, exp_fail=None):
-        slavebuilders = [ mock.Mock(name='sb%d' % i) for i in range(4) ]
+    def do_test_chooseSlave(self, nextSlave, exp_choice=None, exp_fail=None, properties=None):
+        def mkrq(n):
+            brdict = dict(brobj=mock.Mock(name='br%d' % n,
+                                          properties=properties))
+            brdict['brobj'].brdict = brdict
+            brdict['brid'] = n
+            return brdict
+        requests = [ mkrq(i) for i in range(4) ]
+        slavebuilders = [ mock.Mock(name='sb%d' % i,
+                                    slave=mock.Mock(slavename='s%d' % i))
+                          for i in range(4) ]
 
         d = self.makeBuilder(nextSlave=nextSlave)
-        d.addCallback(lambda _ : self.bldr._chooseSlave(slavebuilders))
+        d.addCallback(lambda _ : self.bldr._chooseSlave(requests, slavebuilders))
         def check(sb):
-            self.assertIdentical(sb, slavebuilders[exp_choice])
+            if exp_choice>=0:
+                self.assertIdentical(sb[0], slavebuilders[exp_choice])
+            else:
+                self.failUnless(sb == {})
         def failed(f):
             f.trap(exp_fail)
         d.addCallbacks(check, failed)
@@ -379,6 +380,18 @@ class TestBuilderBuildCreation(unittest.TestCase):
             return defer.succeed(lst[1])
         return self.do_test_chooseSlave(nextSlave, exp_choice=1)
 
+    def test_chooseSlave_nextSlave_bogus(self):
+        def nextSlave(bldr, lst):
+            self.assertIdentical(bldr, self.bldr)
+            return defer.succeed(mock.Mock())
+        return self.do_test_chooseSlave(nextSlave, exp_choice=-1)
+
+    def test_chooseSlave_nextSlave_None(self):
+        def nextSlave(bldr, lst):
+            self.assertIdentical(bldr, self.bldr)
+            return defer.succeed(None)
+        return self.do_test_chooseSlave(nextSlave, exp_choice=-1)
+
     def test_chooseSlave_nextSlave_exception(self):
         def nextSlave(bldr, lst):
             raise RuntimeError
@@ -388,6 +401,50 @@ class TestBuilderBuildCreation(unittest.TestCase):
         def nextSlave(bldr, lst):
             return defer.fail(failure.Failure(RuntimeError()))
         return self.do_test_chooseSlave(nextSlave, exp_fail=RuntimeError)
+
+    def test_chooseSlave_nextSlave_withbr(self):
+        def nextSlave(bldr, lst, br):
+            self.assertIdentical(bldr, self.bldr)
+            # make sure we get a br object
+            self.assertIdentical(br,br.brdict['brobj'])
+            return lst[1]
+        return self.do_test_chooseSlave(nextSlave, exp_choice=1)
+
+    def nextSlave_as_a_method(self, bldr, lst, br):
+        # make sure 'self' is correct object
+        self.assertIdentical(bldr, self.bldr)
+        # make sure we get a br object
+        self.assertIdentical(br,br.brdict['brobj'])
+        return lst[1]
+    def test_chooseSlave_nextSlave_method(self):
+        return self.do_test_chooseSlave(self.nextSlave_as_a_method, exp_choice=1)
+
+    def nextSlave_as_a_method_old_api(self, bldr, lst):
+        # make sure 'self' is correct object
+        self.assertIdentical(bldr, self.bldr)
+        return lst[1]
+    def test_chooseSlave_nextSlave_method_old_api(self):
+        return self.do_test_chooseSlave(self.nextSlave_as_a_method_old_api, exp_choice=1)
+
+    def doc_next_slave_example(self):
+        # this is the code that is shown in the manual as an example for nextSlave
+        def myNextSlave(builder, slavebuilders, buildrequest):
+            forced_slave = buildrequest.properties.getProperty("forced_slave")
+            if forced_slave == None:
+                return random.choice(slavebuilders)
+            for slave in slavebuilders:
+                if forced_slave == slave.slave.slavename:
+                    return slave
+            return None
+        return myNextSlave
+    def test_chooseSlave_nextSlave_doc_example(self):
+        self.patch(random, "choice", lambda lst : lst[2])
+        return self.do_test_chooseSlave(self.doc_next_slave_example(), exp_choice=3,
+                                        properties=properties.Properties(forced_slave="s3"))
+    def test_chooseSlave_nextSlave_doc_example_no_prop(self):
+        self.patch(random, "choice", lambda lst : lst[2])
+        return self.do_test_chooseSlave(self.doc_next_slave_example(), exp_choice=2,
+                                        properties=properties.Properties())
 
     # _chooseBuild
 
