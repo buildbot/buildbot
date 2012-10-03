@@ -326,6 +326,50 @@ BuildStep
 
         See :ref:`Adding-LogObservers` for more information on log observers.
 
+    .. py:method:: uploadArtifact(slavepath, storepath, storageName, **kw)
+
+        :param slavepath: path of the artifact on the slave (can be a file or a directory),
+            relative to workdir
+        :param storepath: destination path of the artifact on the storage server, relative to
+            buildDir configured the Create*ArtifactStorage step of the same build.
+        :param kw: optional StorageManager backend parameters
+
+        can be used by composite steps for uploading artifacts, return deferred that is
+        called when transfer is done
+
+    .. py:method:: downloadArtifact(slavepath, storepath, storageName, **kw)
+
+        :param slavepath: path of the artifact on the slave (can be a file or a directory),
+            relative to workdir
+        :param storepath: path of the artifact on the storage server, relative to
+            buildDir configured the Create*ArtifactStorage step of the same build.
+        :param kw: optional StorageManager backend parameters
+
+        can be used by composite steps for downloading artifacts, return deferred that is
+        called when transfer is done
+
+    .. py:method:: uploadArtifactBlob(blob, storepath, storageName="local", **kw)
+
+        :param blob: (string (or bytes??)) data to store
+        :param storepath: destination path of the artifact on the storage server, relative to
+            buildDir configured the Create*ArtifactStorage step of the same build.
+        :param kw: optional StorageManager backend parameters
+
+        can be used by composite steps for uploading artifacts, return deferred that is
+        called when transfer is done
+
+        a storage name ``"local"`` can be used to store the blob in the master's filesystem
+        near the pickles. This api is now used as a backend for addHtmlLog()
+
+    .. py:method:: downloadArtifactBlob(storepath, storageName, **kw)
+
+        :param storepath: path of the artifact on the storage server, relative to
+            buildDir configured the Create*ArtifactStorage step of the same build.
+        :param kw: optional StorageManager backend parameters
+
+        can be used by composite steps for downloading artifacts, return deferred that is
+        called when transfer is done, with the downloaded blob as string (or bytes??)
+
 LoggingBuildStep
 ----------------
 
