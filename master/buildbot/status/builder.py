@@ -23,6 +23,7 @@ from zope.interface import implements
 from twisted.python import log, runtime
 from twisted.persisted import styles
 from buildbot import interfaces, util
+from buildbot.util import pickle_prereqs
 from buildbot.util.lru import LRUCache
 from buildbot.status.event import Event
 from buildbot.status.build import BuildStatus
@@ -172,9 +173,11 @@ class BuilderStatus(styles.Versioned):
         try:
             log.msg("Loading builder %s's build %d from on-disk pickle"
                 % (self.name, number))
+            pickle_prereqs.patch()
             with open(filename, "rb") as f:
                 build = load(f)
             build.setProcessObjects(self, self.master)
+            pickle_prereqs.unpatch()
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite
             # this pickle, too.  We determine this by looking at the list of

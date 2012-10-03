@@ -130,7 +130,7 @@ def make_master(wantMq=False, wantDb=False, wantData=False,
         master.mq = fakemq.FakeMQConnector(master, testcase)
     if wantDb:
         assert testcase is not None, "need testcase for wantDb"
-        master.db = fakedb.FakeDBConnector(testcase)
+        master.db = fakedb.FakeDBConnector(master, testcase)
     if wantData:
         master.data = fakedata.FakeDataConnector(master, testcase)
     return master
@@ -143,7 +143,7 @@ def make_master_for_uitest(port):
     yield tcp.stopListening()
     url = 'http://localhost:'+str(port)+"/"
     master = FakeMaster()
-    master.db = fakedb.FakeDBConnector(mock.Mock())
+    master.db = fakedb.FakeDBConnector(master, mock.Mock())
     master.mq = mqconnector.MQConnector(master)
     master.config.mq = dict(type='simple')
     master.mq.setup()

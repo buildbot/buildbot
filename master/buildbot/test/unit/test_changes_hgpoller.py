@@ -18,7 +18,6 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.changes import hgpoller
 from buildbot.test.util import changesource, gpo
-from buildbot.test.fake.fakedb import FakeDBConnector
 
 ENVIRON_2116_KEY = 'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'
 
@@ -41,10 +40,9 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                                             workdir='/some/dir')
             self.poller.master = self.master
             self.poller._isRepositoryReady = _isRepositoryReady
-        def create_db(_):
-            db = self.master.db = FakeDBConnector(self)
-            return db.setup()
         d.addCallback(create_poller)
+        def create_db(_):
+            return self.master.db.setup()
         d.addCallback(create_db)
         return d
 

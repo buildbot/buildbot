@@ -15,7 +15,7 @@
 
 from twisted.internet import defer
 from buildbot.util import tuplematch
-from buildbot.test.util import types
+from buildbot.test.util import validation
 
 class FakeMQConnector(object):
 
@@ -40,7 +40,7 @@ class FakeMQConnector(object):
     def produce(self, routingKey, data):
         self.testcase.assertIsInstance(routingKey, tuple)
         if self.verifyMessages:
-            types.verifyMessage(self.testcase, routingKey, data)
+            validation.verifyMessage(self.testcase, routingKey, data)
         if [ k for k in routingKey if not isinstance(k, str) ]:
             raise AssertionError("%s is not all strings" % (routingKey,))
         self.productions.append((routingKey, data))
@@ -48,7 +48,7 @@ class FakeMQConnector(object):
 
     def callConsumer(self, routingKey, msg):
         if self.verifyMessages:
-            types.verifyMessage(self.testcase, routingKey, msg)
+            validation.verifyMessage(self.testcase, routingKey, msg)
         matched = False
         for q in self.qrefs:
             if tuplematch.matchTuple(routingKey, q.filter):

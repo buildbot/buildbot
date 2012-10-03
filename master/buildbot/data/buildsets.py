@@ -13,19 +13,47 @@
 #
 # Copyright Buildbot Team Members
 
+import copy
 from twisted.python import log
 from twisted.internet import defer, reactor
 from buildbot.util import datetime2epoch, epoch2datetime
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot.data import base
 
-class BuildsetEndpoint(base.Endpoint):
+class Db2DataMixin(object):
+
+    @defer.inlineCallbacks
+    def db2data(self, bsdict):
+        if not bsdict:
+            defer.returnValue(None)
+
+        buildset = bsdict.copy()
+
+        # gather the actual sourcestamps, in parallel
+        sourcestamps = []
+        @defer.inlineCallbacks
+        def getSs(ssid):
+            ss = yield self.master.data.get({}, ('sourcestamp', str(ssid)))
+            sourcestamps.append(ss)
+        yield defer.DeferredList([ getSs(id)
+                                   for id in buildset['sourcestamps'] ],
+                fireOnOneErrback=True, consumeErrors=True)
+        buildset['sourcestamps'] = sourcestamps
+
+        # minor modifications
+        buildset['submitted_at'] = datetime2epoch(buildset['submitted_at'])
+        buildset['complete_at'] = datetime2epoch(buildset['complete_at'])
+        buildset['link'] = base.Link(('buildset', str(buildset['bsid'])))
+
+        defer.returnValue(buildset)
+
+class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
 
     pathPattern = ( 'buildset', 'i:bsid' )
 
     def get(self, options, kwargs):
         d = self.master.db.buildsets.getBuildset(kwargs['bsid'])
-        d.addCallback(_addLink)
+        d.addCallback(self.db2data)
         return d
 
     def startConsuming(self, callback, options, kwargs):
@@ -33,7 +61,7 @@ class BuildsetEndpoint(base.Endpoint):
                 ('buildset', str(kwargs['bsid']), 'complete'))
 
 
-class BuildsetsEndpoint(base.Endpoint):
+class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
 
     pathPattern = ( 'buildset', )
     rootLinkName = 'buildset'
@@ -44,14 +72,18 @@ class BuildsetsEndpoint(base.Endpoint):
             complete = bool(options['complete']) # TODO: booleans from strings?
         d = self.master.db.buildsets.getBuildsets(complete=complete)
         @d.addCallback
-        def addLinks(list):
-            return [ _addLink(bs) for bs in list ]
+        def db2data(list):
+            d = defer.DeferredList([ self.db2data(bs) for bs in list ],
+                    fireOnOneErrback=True, consumeErrors=True)
+            @d.addCallback
+            def getResults(res):
+                return [ r[1] for r in res ]
+            return d
         return d
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
                 ('buildset', None, 'new'))
-
 
 
 class BuildsetResourceType(base.ResourceType):
@@ -62,15 +94,26 @@ class BuildsetResourceType(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addBuildset(self, scheduler=None, sourcestampsetid=None, reason=u'',
+    def addBuildset(self, scheduler=None, sourcestamps=[], reason=u'',
             properties={}, builderNames=[], external_idstring=None,
             _reactor=reactor):
         submitted_at = int(_reactor.seconds())
         bsid, brids = yield self.master.db.buildsets.addBuildset(
-                sourcestampsetid=sourcestampsetid, reason=reason,
+                sourcestamps=sourcestamps, reason=reason,
                 properties=properties, builderNames=builderNames,
                 external_idstring=external_idstring,
                 submitted_at=epoch2datetime(submitted_at))
+
+        # get each of the sourcestamps for this buildset (sequentially)
+        bsdict = yield self.master.db.buildsets.getBuildset(bsid)
+        sourcestamps = [
+            copy.deepcopy((yield self.master.data.get({},
+                                            ('sourcestamp', str(ssid)))))
+            for ssid in bsdict['sourcestamps'] ]
+
+        # strip the links from those sourcestamps
+        for ss in sourcestamps:
+            del ss['link']
 
         # notify about the component build requests
         # TODO: needs to be refactored when buildrequests are in the DB
@@ -89,12 +132,12 @@ class BuildsetResourceType(base.ResourceType):
             bsid=bsid,
             external_idstring=external_idstring,
             reason=reason,
-            sourcestampsetid=sourcestampsetid,
             submitted_at=submitted_at,
             complete=False,
             complete_at=None,
             results=None,
-            scheduler=scheduler)
+            scheduler=scheduler,
+            sourcestamps=sourcestamps)
             # TODO: properties=properties)
         self.master.mq.produce(("buildset", str(bsid), "new"), msg)
 
@@ -145,11 +188,23 @@ class BuildsetResourceType(base.ResourceType):
         yield self.master.db.buildsets.completeBuildset(bsid,
                 cumulative_results, complete_at=complete_at)
 
+        # get the sourcestamps for the message
+        # get each of the sourcestamps for this buildset (sequentially)
+        bsdict = yield self.master.db.buildsets.getBuildset(bsid)
+        sourcestamps = [
+            copy.deepcopy((yield self.master.data.get({},
+                                            ('sourcestamp', str(ssid)))))
+            for ssid in bsdict['sourcestamps'] ]
+
+        # strip the links from those sourcestamps
+        for ss in sourcestamps:
+            del ss['link']
+
         msg = dict(
             bsid=bsid,
             external_idstring=bsdict['external_idstring'],
             reason=bsdict['reason'],
-            sourcestampsetid=bsdict['sourcestampsetid'],
+            sourcestamps=sourcestamps,
             submitted_at=datetime2epoch(bsdict['submitted_at']),
             complete=True,
             complete_at=complete_at_epoch,
@@ -158,10 +213,3 @@ class BuildsetResourceType(base.ResourceType):
         self.master.mq.produce(('buildset', str(bsid), 'complete'), msg)
 
 
-def _addLink(bsdict):
-    if bsdict:
-        bsdict = bsdict.copy()
-        bsdict['submitted_at'] = datetime2epoch(bsdict['submitted_at'])
-        bsdict['complete_at'] = datetime2epoch(bsdict['complete_at'])
-        bsdict['link'] = base.Link(('buildset', str(bsdict['bsid'])))
-    return bsdict

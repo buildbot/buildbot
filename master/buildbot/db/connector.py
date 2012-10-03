@@ -20,7 +20,7 @@ from twisted.application import internet, service
 from buildbot import config
 from buildbot.db import enginestrategy, exceptions
 from buildbot.db import pool, model, changes, schedulers, sourcestamps
-from buildbot.db import sourcestampsets, state, buildsets, buildrequests
+from buildbot.db import state, buildsets, buildrequests
 from buildbot.db import builds, users, masters, builders
 
 upgrade_message = textwrap.dedent("""\
@@ -63,7 +63,6 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         self.changes = changes.ChangesConnectorComponent(self)
         self.schedulers = schedulers.SchedulersConnectorComponent(self)
         self.sourcestamps = sourcestamps.SourceStampsConnectorComponent(self)
-        self.sourcestampsets = sourcestampsets.SourceStampSetsConnectorComponent(self)
         self.buildsets = buildsets.BuildsetsConnectorComponent(self)
         self.buildrequests = buildrequests.BuildRequestsConnectorComponent(self)
         self.state = state.StateConnectorComponent(self)

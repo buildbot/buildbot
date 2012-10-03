@@ -16,9 +16,10 @@
 from twisted.internet import defer
 from buildbot.status.web.base import HtmlResource
 from buildbot.status.web.base import build_get_class, path_to_builder, path_to_build
-from buildbot.sourcestamp import SourceStamp
 
 class ANYBRANCH: pass # a flag value, used below
+
+class SourceStamp: pass # class has been removed
 
 class GridStatusMixin(object):
     def getPageTitle(self, request):
@@ -123,12 +124,12 @@ class GridStatusMixin(object):
             build = build.getPreviousBuild()
         return
 
+    @defer.inlineCallbacks
     def getRecentSourcestamps(self, status, numBuilds, categories, branch):
         """
         get a list of the most recent NUMBUILDS SourceStamp tuples, sorted
         by the earliest start we've seen for them
         """
-        # TODO: use baseweb's getLastNBuilds?
         sourcestamps = { } # { ss-tuple : earliest time }
         for bn in status.getBuilderNames():
             builder = status.getBuilder(bn)
@@ -169,7 +170,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
 
         # and the data we want to render
         status = self.getStatus(request)
-        stamps = self.getRecentSourcestamps(status, numBuilds, categories, branch)
+        stamps = yield self.getRecentSourcestamps(status, numBuilds, categories, branch)
 
         cxt['refresh'] = self.get_reload_time(request)
 
@@ -238,7 +239,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
 
         # and the data we want to render
         status = self.getStatus(request)
-        stamps = self.getRecentSourcestamps(status, numBuilds, categories, branch)
+        stamps = yield self.getRecentSourcestamps(status, numBuilds, categories, branch)
 
         cxt.update({'categories': categories,
                     'branch': branch,

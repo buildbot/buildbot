@@ -46,7 +46,7 @@ class Triggerable(base.BaseScheduler):
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of
         # this process.
-        d = self.addBuildsetForSourceStampSetDetails(self.reason,
+        d = self.addBuildsetForSourceStampsWithDefaults(self.reason,
                                                 sourcestamps, props)
         def setup_waiter((bsid,brids)):
             d = defer.Deferred()

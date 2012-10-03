@@ -39,10 +39,11 @@ class Root(base.Endpoint):
 class DataConnector(service.Service):
 
     submodules = [
+        'buildbot.data.builders',
         'buildbot.data.buildsets',
         'buildbot.data.changes',
         'buildbot.data.masters',
-        'buildbot.data.builders',
+        'buildbot.data.sourcestamps',
     ]
 
     def __init__(self, master):

@@ -21,7 +21,7 @@ from zope.interface import implements
 from twisted.python import log, runtime, components
 from twisted.persisted import styles
 from twisted.internet import reactor, defer
-from buildbot import interfaces, util, sourcestamp
+from buildbot import interfaces, util
 from buildbot.process import properties
 from buildbot.status.buildstep import BuildStepStatus
 
@@ -97,22 +97,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         return all_got_revisions
 
     def getSourceStamps(self, absolute=False):
-        sourcestamps = []
-        if not absolute:
-            sourcestamps.extend(self.sources)
-        else:
-            all_got_revisions = self.getAllGotRevisions() or {}
-            # always make a new instance
-            for ss in self.sources:
-                if ss.codebase in all_got_revisions:
-                    got_revision = all_got_revisions[ss.codebase]
-                    sourcestamps.append(ss.getAbsoluteSourceStamp(got_revision))
-                else:
-                    # No absolute revision information available
-                    # Probably build has been stopped before ending all sourcesteps
-                    # Return a clone with original revision
-                    sourcestamps.append(ss.clone())
-        return sourcestamps
+        return {}
 
     def getReason(self):
         return self.reason
@@ -393,6 +378,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             # the old .sourceStamp attribute wasn't actually very useful
             maxChangeNumber, patch = self.sourceStamp
             changes = getattr(self, 'changes', [])
+            from buildbot import sourcestamp
             source = sourcestamp.SourceStamp(branch=None,
                                              revision=None,
                                              patch=patch,

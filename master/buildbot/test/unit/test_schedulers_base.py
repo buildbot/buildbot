@@ -28,6 +28,7 @@ from buildbot.test.fake import fakedb
 class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     OBJECTID = 19
+    exp_bsid_brids = (123, { 'b' : 456 })
 
     def setUp(self):
         self.setUpScheduler()
@@ -41,39 +42,12 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                 base.BaseScheduler(name=name, builderNames=builderNames,
                                    properties=properties, codebases=codebases),
                 self.OBJECTID)
+        self.master.data.updates.addBuildset = mock.Mock(
+                name='data.addBuildset',
+                side_effect=lambda *args, **kwargs :
+                                defer.succeed(self.exp_bsid_brids))
 
         return sched
-
-    def checkBuildsetAdded(self, res, builderNames=[], external_idstring=u'',
-            properties={}, reason=u'', scheduler=u'', sourcestamps=[]):
-        """A callback for addBuildsetForXxx, checking that the results are as
-        expected.  The parameters give the expected values.
-        """
-        got_bsid, got_brids = res
-        bs = self.master.data.updates.buildsetsAdded[0]
-
-        got, exp = {}, {}
-        got['numBuildrequests'] = len(got_brids)
-        exp['numBuildrequests'] = len(builderNames)
-        got['bsid'] = got_bsid
-        exp['bsid'] = 200 + len(self.master.data.updates.buildsetsAdded) - 1
-        got['builderNames'] = sorted(bs['builderNames'])
-        exp['builderNames'] = sorted(builderNames)
-        got['external_idstring'] = bs['external_idstring']
-        exp['external_idstring'] = external_idstring
-        got['properties'] = bs['properties']
-        exp['properties'] = properties.copy()
-        exp['properties']['scheduler'] = (scheduler, u'Scheduler')
-        got['reason'] = bs['reason']
-        exp['reason'] = reason
-        got['scheduler'] = bs['scheduler']
-        exp['scheduler'] = scheduler
-
-        # TODO: refactor once sourcestamps are in the data API
-        self.master.db.sourcestamps.assertSourceStamps(
-                bs['sourcestampsetid'], sourcestamps)
-
-        self.assertEqual(got, exp)
 
     # tests
 
@@ -102,22 +76,6 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
     def test_getPendingBuildTimes(self):
         sched = self.makeScheduler()
         self.assertEqual(sched.getPendingBuildTimes(), [])
-
-    def test_addBuildsetForLatest_defaults(self):
-        sched = self.makeScheduler(name='testy', builderNames=['x'],
-                                        properties=dict(a='b'))
-        d = sched.addBuildsetForLatest(reason=u'because')
-        d.addCallback(self.checkBuildsetAdded,
-                builderNames=['x'],
-                external_idstring=None,
-                properties={ u'a': ('b', u'Scheduler') },
-                reason=u'because',
-                scheduler=u'testy',
-                sourcestamps=[
-                    dict(branch=None, revision=None, repository='',
-                            codebase='', project=''),
-                ])
-        return d
 
     def test_startConsumingChanges_fileIsImportant_check(self):
         sched = self.makeScheduler()
@@ -221,179 +179,108 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                 dict(fileIsImportant=lambda c : True, onlyImportant=True),
                 True)
 
-    def test_addBuilsetForLatest_args(self):
-        sched = self.makeScheduler(name='xyz', builderNames=['y', 'z'])
-        d = sched.addBuildsetForLatest(reason=u'cuz', branch='default',
-                    project='myp', repository='hgmo',
-                    external_idstring=u'try_1234')
-        d.addCallback(self.checkBuildsetAdded,
-                builderNames=['y', 'z'],
-                external_idstring=u'try_1234',
-                reason=u'cuz',
-                scheduler=u'xyz',
-                sourcestamps=[
-                    dict(branch='default', revision=None, repository='hgmo',
-                            codebase='', project='myp'),
+    @defer.inlineCallbacks
+    def test_addBuildsetForSourceStampsWithDefaults(self):
+        codebases = { 'cbA':dict(
+                            repository='svn://A..', 
+                            branch='stable', 
+                            revision='13579'),
+                      'cbB':dict(
+                            repository='svn://B..', 
+                            branch='stable', 
+                            revision='24680')
+                    }
+        sched = self.makeScheduler(name='n', builderNames=['b'],
+            codebases=codebases)
+        bsid, brids = yield sched.addBuildsetForSourceStampsWithDefaults(
+                reason=u'power', sourcestamps=[
+                    {'codebase': 'cbA', 'branch': 'AA'},
+                    {'codebase': 'cbB', 'revision': 'BB'},
                 ])
-        return d
+        self.assertEqual((bsid, brids), self.exp_bsid_brids)
+        self.master.data.updates.addBuildset.assert_called_with(
+            sourcestamps=[
+                {'repository': 'svn://B..', 'branch': 'stable',
+                    'revision': 'BB', 'codebase': 'cbB'},
+                {'repository': 'svn://A..', 'branch': 'AA',
+                    'revision': '13579', 'codebase': 'cbA'},
+            ],
+            reason=u'power',
+            scheduler=u'n',
+            external_idstring=None,
+            builderNames=['b'],
+            properties={
+                u'scheduler': ('n', u'Scheduler'),
+            })
 
-    def test_addBuildsetForLatest_properties(self):
-        props = properties.Properties(xxx="yyy")
-        sched = self.makeScheduler(name='xyz', builderNames=['y', 'z'])
-        d = sched.addBuildsetForLatest(reason=u'cuz', branch=u'default',
-                    project=u'myp', repository=u'hgmo',
-                    external_idstring=u'try_1234', properties=props)
-        d.addCallback(self.checkBuildsetAdded,
-                builderNames=['y', 'z'],
-                external_idstring=u'try_1234',
-                properties = { u'xxx' : ( 'yyy', u'TEST') },
-                reason=u'cuz',
-                scheduler=u'xyz',
-                sourcestamps=[
-                    dict(branch='default', revision=None, repository='hgmo',
-                            codebase='', project='myp'),
-                ])
-        return d
-
-    def test_addBuildsetForLatest_builderNames(self):
-        sched = self.makeScheduler(name='xyz', builderNames=['y', 'z'])
-        d = sched.addBuildsetForLatest(reason=u'cuz', branch=u'default',
-                    builderNames=['y', 'z'])
-        d.addCallback(self.checkBuildsetAdded,
-                builderNames=['y', 'z'],
-                external_idstring=None,
-                reason=u'cuz',
-                scheduler=u'xyz',
-                sourcestamps=[
-                    dict(branch='default', revision=None, repository='',
-                        codebase='', project=''),
-                ])
-        return d
-
+    @defer.inlineCallbacks
     def test_addBuildsetForChanges_one_change(self):
         sched = self.makeScheduler(name='n', builderNames=['b'])
         self.db.insertTestData([
-            fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                            repository='svn://...', codebase='',
-                            project='world-domination'),
+            fakedb.Change(changeid=13, sourcestampid=234),
         ])
-        d = sched.addBuildsetForChanges(reason=u'power', changeids=[13])
-        d.addCallback(self.checkBuildsetAdded,
+        bsid, brids = yield sched.addBuildsetForChanges(reason=u'power',
+                                                        changeids=[13])
+        self.assertEqual((bsid, brids), self.exp_bsid_brids)
+        self.master.data.updates.addBuildset.assert_called_with(
                 builderNames=['b'],
                 external_idstring=None,
+                properties={
+                    u'scheduler' : ( 'n', u'Scheduler'),
+                },
                 reason=u'power',
                 scheduler=u'n',
-                sourcestamps=[
-                    dict(branch='trunk', repository='svn://...', codebase='',
-                        changeids=set([13]), project='world-domination',
-                        revision='9283'),
-                ])
-        return d
+                sourcestamps=[234])
 
+    @defer.inlineCallbacks
     def test_addBuildsetForChanges_properties(self):
-        props = properties.Properties(xxx="yyy")
         sched = self.makeScheduler(name='n', builderNames=['c'])
         self.db.insertTestData([
-            fakedb.Change(changeid=14, branch='default', revision='123:abc',
-                            repository='', project='', codebase=''),
+            fakedb.Change(changeid=14, sourcestampid=234),
         ])
-        d = sched.addBuildsetForChanges(reason=u'downstream', changeids=[14],
-                            properties=props)
-        d.addCallback(self.checkBuildsetAdded,
+        bsid, brids = yield sched.addBuildsetForChanges(reason=u'downstream',
+                                                        changeids=[14])
+        self.assertEqual((bsid, brids), self.exp_bsid_brids)
+        self.master.data.updates.addBuildset.assert_called_with(
                 builderNames=['c'],
                 external_idstring=None,
-                properties={ u'xxx' : ( 'yyy', u'TEST') },
+                properties={
+                    u'scheduler' : ( 'n', u'Scheduler'),
+                },
                 reason=u'downstream',
                 scheduler=u'n',
-                sourcestamps=[
-                    dict(branch='default', revision='123:abc', repository='',
-                        project='', changeids=set([14]), codebase=''),
-                ])
-        return d
+                sourcestamps=[234])
 
-    def test_addBuildsetForChanges_one_change_builderNames(self):
-        sched = self.makeScheduler(name='n', builderNames=['b'])
-        self.db.insertTestData([
-            fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                          codebase='', repository='svn://...', 
-                          project='world-domination'),
-        ])
-        d = sched.addBuildsetForChanges(reason=u'power', changeids=[13],
-                            builderNames=['p'])
-        d.addCallback(self.checkBuildsetAdded,
-                builderNames=['p'],
-                external_idstring=None,
-                reason=u'power',
-                scheduler=u'n',
-                sourcestamps=[
-                    dict(branch='trunk', repository='svn://...', codebase='',
-                        changeids=set([13]), project='world-domination',
-                        revision='9283'),
-                ])
-        return d
-
-    def test_addBuildsetForChanges_multiple_changes_no_codebaseGenerator(self):
+    @defer.inlineCallbacks
+    def test_addBuildsetForChanges_multiple_changes_same_codebase(self):
         # This is a test for backwards compatibility
         # Changes from different repositories come together in one build
-        sched = self.makeScheduler(name='n', builderNames=['b', 'c'])
+        sched = self.makeScheduler(name='n', builderNames=['b', 'c'],
+                codebases={'cb':{'repository':'http://repo'}})
         # No codebaseGenerator means all changes have codebase == ''
         self.db.insertTestData([
-            fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                            repository='svn://A..', project='knitting',
-                            codebase=''),
-            fakedb.Change(changeid=14, branch='devel', revision='9284',
-                            repository='svn://B..', project='making-tea',
-                            codebase=''),
-            fakedb.Change(changeid=15, branch='trunk', revision='9285',
-                            repository='svn://C..', project='world-domination',
-                            codebase=''),
+            fakedb.Change(changeid=13, codebase='cb', sourcestampid=12),
+            fakedb.Change(changeid=14, codebase='cb', sourcestampid=11),
+            fakedb.Change(changeid=15, codebase='cb', sourcestampid=10),
         ])
 
         # note that the changeids are given out of order here; it should still
         # use the most recent
-        d = sched.addBuildsetForChanges(reason=u'power', changeids=[14, 15, 13])
-        d.addCallback(self.checkBuildsetAdded,
+        bsid, brids = yield sched.addBuildsetForChanges(reason=u'power',
+                                        changeids=[14, 15, 13])
+        self.assertEqual((bsid, brids), self.exp_bsid_brids)
+        self.master.data.updates.addBuildset.assert_called_with(
                 builderNames=['b', 'c'],
                 external_idstring=None,
+                properties={
+                    u'scheduler' : ( 'n', u'Scheduler'),
+                },
                 reason=u'power',
                 scheduler=u'n',
-                sourcestamps=[
-                    dict(branch='trunk', repository='svn://C..', codebase='',
-                        changeids=set([13,14,15]), project='world-domination',
-                        revision='9285'),
-                ])
-        return d
+                sourcestamps=[10]) # sourcestampid from greatest changeid
 
-    def test_addBuildsetForChanges_multiple_changes_single_codebase(self):
-        sched = self.makeScheduler(name='n', builderNames=['b', 'c'])
-        self.db.insertTestData([
-            fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                            repository='svn://...', project='knitting',
-                            codebase=''),
-            fakedb.Change(changeid=14, branch='devel', revision='9284',
-                            repository='svn://...', project='making-tea',
-                            codebase=''),
-            fakedb.Change(changeid=15, branch='trunk', revision='9285',
-                            repository='svn://...', project='world-domination',
-                            codebase=''),
-        ])
-
-        # note that the changeids are given out of order here; it should still
-        # use the most recent
-        d = sched.addBuildsetForChanges(reason=u'power', changeids=[14, 15, 13])
-        d.addCallback(self.checkBuildsetAdded,
-                builderNames=['b', 'c'],
-                external_idstring=None,
-                reason=u'power',
-                scheduler=u'n',
-                sourcestamps=[
-                    dict(branch='trunk', repository='svn://...', codebase='',
-                        changeids=set([13,14,15]), project='world-domination',
-                        revision='9285'),
-                ])
-        return d
-
-    def test_addBuildsetForChanges_codebases_set_multiple_changed_codebases(self):
+    @defer.inlineCallbacks
+    def test_addBuildsetForChanges_codebases_set_multiple_codebases(self):
         codebases = { 'cbA':dict(
                             repository='svn://A..', 
                             branch='stable', 
@@ -413,115 +300,85 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='n', builderNames=['b', 'c'], 
                                    codebases=codebases)
         self.db.insertTestData([
-            fakedb.Change(changeid=12, branch='trunk', revision='9282',
-                            repository='svn://A..', project='playing',
-                            codebase='cbA'),
-            fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                            repository='svn://A..', project='knitting',
-                            codebase='cbA'),
-            fakedb.Change(changeid=14, branch='develop', revision='9284',
-                            repository='svn://A..', project='making-tea',
-                            codebase='cbA'),
-            fakedb.Change(changeid=15, branch='trunk', revision='8085',
-                            repository='svn://B..', project='boxing',
-                            codebase='cbB'),
-            fakedb.Change(changeid=16, branch='develop', revision='8086',
-                            repository='svn://B..', project='playing soccer',
-                            codebase='cbB'),
-            fakedb.Change(changeid=17, branch='develop', revision='8087',
-                            repository='svn://B..', project='swimming',
-                            codebase='cbB'),
+            fakedb.Change(changeid=12, codebase='cbA', sourcestampid=912),
+            fakedb.Change(changeid=13, codebase='cbA', sourcestampid=913),
+            fakedb.Change(changeid=14, codebase='cbA', sourcestampid=914),
+            fakedb.Change(changeid=15, codebase='cbB', sourcestampid=915),
+            fakedb.Change(changeid=16, codebase='cbB', sourcestampid=916),
+            fakedb.Change(changeid=17, codebase='cbB', sourcestampid=917),
+            # note: no changes for cbC or cbD
         ])
 
         # note that the changeids are given out of order here; it should still
         # use the most recent for each codebase
-        d = sched.addBuildsetForChanges(reason=u'power',
-                changeids=[14, 12, 17, 16, 13, 15])
-        d.addCallback(self.checkBuildsetAdded,
+        bsid, brids = yield sched.addBuildsetForChanges(reason=u'power',
+                                        changeids=[14, 12, 17, 16, 13, 15])
+        self.assertEqual((bsid, brids), self.exp_bsid_brids)
+        self.master.data.updates.addBuildset.assert_called_with(
                 builderNames=['b', 'c'],
                 external_idstring=None,
                 reason=u'power',
                 scheduler=u'n',
-                sourcestamps=[
-                     dict(branch='develop', repository='svn://A..',
-                         codebase='cbA', changeids=set([12,13,14]),
-                         project='making-tea', revision='9284'),
-                     dict(branch='develop', repository='svn://B..',
-                         codebase='cbB', changeids=set([15,16,17]),
-                         project='swimming', revision='8087'),
+                properties={
+                    u'scheduler' : ( 'n', u'Scheduler'),
+                },
+                sourcestamps=[ 917, # NOTE: order here is dict-hash dependent..
                      dict(branch='stable', repository='svn://C..',
                          codebase='cbC', project='', revision='12345'),
+                     914,
                      dict(branch=None, repository='svn://D..', codebase='cbD',
                          project='', revision=None),
                 ])
-        return d
 
+    @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp(self):
         sched = self.makeScheduler(name='n', builderNames=['b'])
-        d = self.db.insertTestData([
-            fakedb.SourceStampSet(id=1091),
-            fakedb.SourceStamp(id=91, sourcestampsetid=1091, branch='fixins',
-                revision='abc', patchid=None, repository='r',
-                project='p'),
-        ])
-        d.addCallback(lambda _ :
-                sched.addBuildsetForSourceStamp(reason=u'whynot', setid=1091))
-        d.addCallback(self.checkBuildsetAdded,
+        bsid, brids = yield sched.addBuildsetForSourceStamps(reason=u'whynot',
+                    sourcestamps=[91, {'sourcestamp':True}])
+        self.assertEqual((bsid, brids), self.exp_bsid_brids)
+        self.master.data.updates.addBuildset.assert_called_with(
                 builderNames=['b'],
                 external_idstring=None,
                 reason=u'whynot',
                 scheduler=u'n',
-                sourcestamps=[
-                    dict(branch='fixins', revision='abc', repository='r',
-                        project='p', codebase=''),
-                ])
-        return d
+                properties={
+                    'scheduler': ('n', 'Scheduler'),
+                },
+                sourcestamps=[91, {'sourcestamp':True}])
 
+    @defer.inlineCallbacks
+    def test_addBuildsetForSourceStamp_explicit_builderNames(self):
+        sched = self.makeScheduler(name='n', builderNames=['b'])
+        bsid, brids = yield sched.addBuildsetForSourceStamps(reason=u'whynot',
+                    sourcestamps=[91, {'sourcestamp':True}],
+                    builderNames=['x', 'y'])
+        self.assertEqual((bsid, brids), self.exp_bsid_brids)
+        self.master.data.updates.addBuildset.assert_called_with(
+                builderNames=['x', 'y'],
+                external_idstring=None,
+                reason=u'whynot',
+                scheduler=u'n',
+                properties={
+                    'scheduler': ('n', 'Scheduler'),
+                },
+                sourcestamps=[91, {'sourcestamp':True}])
+
+    @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_properties(self):
         props = properties.Properties(xxx="yyy")
         sched = self.makeScheduler(name='n', builderNames=['b'])
-        d = self.db.insertTestData([
-            fakedb.SourceStampSet(id=1091),
-            fakedb.SourceStamp(id=91, sourcestampsetid=1091, branch='fixins',
-                revision='abc', patchid=None, repository='r', codebase='cb',
-                project='p'),
-        ])
-        d.addCallback(lambda _ :
-            sched.addBuildsetForSourceStamp(reason=u'whynot', setid=1091,
-                                            properties=props))
-        d.addCallback(self.checkBuildsetAdded,
+        bsid, brids = yield sched.addBuildsetForSourceStamps(reason=u'whynot',
+                sourcestamps=[91], properties=props)
+        self.assertEqual((bsid, brids), self.exp_bsid_brids)
+        self.master.data.updates.addBuildset.assert_called_with(
                 builderNames=['b'],
                 external_idstring=None,
-                properties={ u'xxx' : ( 'yyy', u'TEST' ) },
+                properties={
+                    u'xxx' : ( 'yyy', u'TEST' ),
+                    u'scheduler' : ( u'n', u'Scheduler' )},
                 reason=u'whynot',
                 scheduler=u'n',
-                sourcestamps=[
-                    dict(branch='fixins', revision='abc', repository='r',
-                        codebase='cb', project='p'),
-                ])
-        return d
-
-    def test_addBuildsetForSourceStamp_builderNames(self):
-        sched = self.makeScheduler(name='n', builderNames=['k'])
-        d = self.db.insertTestData([
-            fakedb.SourceStampSet(id=1091),
-            fakedb.SourceStamp(id=91, sourcestampsetid=1091, branch='fixins',
-                revision='abc', patchid=None, repository='r', codebase='cb',
-                project='p'),
-        ])
-        d.addCallback(lambda _ :
-            sched.addBuildsetForSourceStamp(reason=u'whynot', setid = 1091,
-                        builderNames=['a', 'b']))
-        d.addCallback(self.checkBuildsetAdded,
-                builderNames=['a', 'b'],
-                external_idstring=None,
-                reason=u'whynot',
-                scheduler=u'n',
-                sourcestamps=[
-                    dict(branch='fixins', revision='abc', repository='r',
-                        codebase='cb', project='p'),
-                ])
-        return d
+                sourcestamps=[91])
 
     def test_findNewSchedulerInstance(self):
         sched = self.makeScheduler(name='n', builderNames=['k'])

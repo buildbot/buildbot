@@ -15,9 +15,9 @@
 
 import mock
 from twisted.trial import unittest
-from twisted.internet import defer
+from twisted.internet import defer, task
 from buildbot.data import changes, exceptions
-from buildbot.test.util import types, endpoint
+from buildbot.test.util import validation, endpoint
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process.users import users
 
@@ -28,9 +28,10 @@ class Change(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         self.setUpEndpoint()
         self.db.insertTestData([
+            fakedb.SourceStamp(id=234),
             fakedb.Change(changeid=13, branch=u'trunk', revision=u'9283',
                             repository=u'svn://...', codebase=u'cbsvn',
-                            project=u'world-domination'),
+                            project=u'world-domination', sourcestampid=234),
         ])
 
 
@@ -42,7 +43,7 @@ class Change(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(changeid=13))
         @d.addCallback
         def check(change):
-            types.verifyData(self, 'change', {}, change)
+            validation.verifyData(self, 'change', {}, change)
             self.assertEqual(change['project'], 'world-domination')
         return d
 
@@ -62,12 +63,14 @@ class Changes(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         self.setUpEndpoint()
         self.db.insertTestData([
+            fakedb.SourceStamp(id=133),
             fakedb.Change(changeid=13, branch=u'trunk', revision=u'9283',
                             repository=u'svn://...', codebase=u'cbsvn',
-                            project=u'world-domination'),
+                            project=u'world-domination', sourcestampid=133),
+            fakedb.SourceStamp(id=144),
             fakedb.Change(changeid=14, branch=u'devel', revision=u'9284',
                             repository=u'svn://...', codebase=u'cbsvn',
-                            project=u'world-domination'),
+                            project=u'world-domination', sourcestampid=144),
         ])
 
 
@@ -78,9 +81,9 @@ class Changes(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict())
         @d.addCallback
         def check(changes):
-            types.verifyData(self, 'change', {}, changes[0])
+            validation.verifyData(self, 'change', {}, changes[0])
             self.assertEqual(changes[0]['changeid'], 13)
-            types.verifyData(self, 'change', {}, changes[1])
+            validation.verifyData(self, 'change', {}, changes[1])
             self.assertEqual(changes[1]['changeid'], 14)
         return d
 
@@ -89,7 +92,7 @@ class Changes(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(changes):
             self.assertEqual(len(changes), 1)
-            types.verifyData(self, 'change', {}, changes[0])
+            validation.verifyData(self, 'change', {}, changes[0])
             self.assertEqual(changes[0]['changeid'], 13)
         return d
     def test_get_paging(self):
@@ -97,7 +100,7 @@ class Changes(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(changes):
             self.assertEqual(len(changes), 1)
-            types.verifyData(self, 'change', {}, changes[0])
+            validation.verifyData(self, 'change', {}, changes[0])
             self.assertEqual(changes[0]['changeid'], 14)
         return d
 
@@ -114,9 +117,9 @@ class Changes(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(sort=[('changeid',1)]), dict())
         @d.addCallback
         def check(changes):
-            types.verifyData(self, 'change', {}, changes[1])
+            validation.verifyData(self, 'change', {}, changes[1])
             self.assertEqual(changes[1]['changeid'], 13)
-            types.verifyData(self, 'change', {}, changes[0])
+            validation.verifyData(self, 'change', {}, changes[0])
             self.assertEqual(changes[0]['changeid'], 14)
         return d
 
@@ -129,13 +132,15 @@ class ChangeResourceType(unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
-                                                testcase=self)
+                                            wantData=True, testcase=self)
         self.rtype = changes.ChangeResourceType(self.master)
 
     def do_test_addChange(self, kwargs,
             expectedRoutingKey, expectedMessage, expectedRow,
             expectedChangeUsers=[]):
-        d = self.rtype.addChange(**kwargs)
+        clock = task.Clock()
+        clock.advance(10000000)
+        d = self.rtype.addChange(_reactor=clock, **kwargs)
         def check(changeid):
             self.assertEqual(changeid, 500)
             # check the correct message was received
@@ -172,6 +177,16 @@ class ChangeResourceType(unittest.TestCase):
             'revision': u'0e92a098b',
             'revlink': u'http://warner/0e92a098b',
             'when_timestamp': 256738404,
+            'sourcestamp': {
+                'branch': u'warnerdb',
+                'codebase': u'',
+                'patch': None,
+                'project': u'Buildbot',
+                'repository': u'git://warner',
+                'revision': u'0e92a098b',
+                'created_at': 10000000,
+                'ssid': 100,
+            },
             # uid
         }
         expectedRow = fakedb.Change(
@@ -186,6 +201,7 @@ class ChangeResourceType(unittest.TestCase):
             repository='git://warner',
             codebase='',
             project='Buildbot',
+            sourcestampid=100,
         )
         return self.do_test_addChange(kwargs,
                 expectedRoutingKey, expectedMessage, expectedRow)
@@ -216,6 +232,16 @@ class ChangeResourceType(unittest.TestCase):
             'revision': u'0e92a098b',
             'revlink': u'http://warner/0e92a098b',
             'when_timestamp': 256738404,
+            'sourcestamp': {
+                'branch': u'warnerdb',
+                'codebase': u'cb',
+                'patch': None,
+                'project': u'Buildbot',
+                'repository': u'git://warner',
+                'revision': u'0e92a098b',
+                'created_at': 10000000,
+                'ssid': 100,
+            },
             # uid
         }
         expectedRow = fakedb.Change(
@@ -230,6 +256,7 @@ class ChangeResourceType(unittest.TestCase):
             repository='git://warner',
             codebase='cb',
             project='Buildbot',
+            sourcestampid=100,
         )
         d = self.do_test_addChange(kwargs,
                 expectedRoutingKey, expectedMessage, expectedRow,
@@ -266,6 +293,16 @@ class ChangeResourceType(unittest.TestCase):
             'revision': u'0e92a098b',
             'revlink': u'http://warner/0e92a098b',
             'when_timestamp': 256738404,
+            'sourcestamp': {
+                'branch': u'warnerdb',
+                'codebase': u'cb-devel',
+                'patch': None,
+                'project': u'Buildbot',
+                'repository': u'git://warner',
+                'revision': u'0e92a098b',
+                'created_at': 10000000,
+                'ssid': 100,
+            },
             # uid
         }
         expectedRow = fakedb.Change(
@@ -280,6 +317,7 @@ class ChangeResourceType(unittest.TestCase):
             repository='git://warner',
             codebase='cb-devel',
             project='Buildbot',
+            sourcestampid=100,
         )
         return self.do_test_addChange(kwargs,
                 expectedRoutingKey, expectedMessage, expectedRow)

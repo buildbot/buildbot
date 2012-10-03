@@ -481,7 +481,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             assert f is fakefile
             return parseJob(f)
         sched.parseJob = parseJob_
-        return sched.handleJobFile('fakefile', fakefile)
+        return defer.maybeDeferred(lambda :
+                sched.handleJobFile('fakefile', fakefile))
 
     def makeSampleParsedJob(self, **overrides):
         pj = dict(baserev='1234', branch='trunk',

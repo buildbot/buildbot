@@ -40,8 +40,7 @@ class Change(unittest.TestCase):
     ]
 
     def setUp(self):
-        self.master = fakemaster.make_master()
-        self.db = fakedb.FakeDBConnector(self)
+        self.master = fakemaster.make_master(testcase=self, wantDb=True)
         self.change23 = changes.Change(**dict( # using **dict(..) forces kwargs
             category='devel',
             isdir=0,
@@ -61,8 +60,8 @@ class Change(unittest.TestCase):
     @defer.inlineCallbacks
     def test_fromChdict(self):
         # get a real honest-to-goodness chdict from the fake db
-        yield self.db.insertTestData(self.change23_rows)
-        chdict = yield self.db.changes.getChange(23)
+        yield self.master.db.insertTestData(self.change23_rows)
+        chdict = yield self.master.db.changes.getChange(23)
 
         exp = self.change23
         got = yield changes.Change.fromChdict(self.master, chdict)

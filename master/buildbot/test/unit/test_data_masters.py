@@ -18,7 +18,7 @@ from twisted.trial import unittest
 from twisted.internet import task, defer
 from buildbot.data import masters, builders
 from buildbot.util import epoch2datetime
-from buildbot.test.util import types, endpoint
+from buildbot.test.util import validation, endpoint
 from buildbot.test.fake import fakemaster, fakedb
 
 SOMETIME = 1349016870
@@ -50,7 +50,7 @@ class Master(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(masterid=14))
         @d.addCallback
         def check(master):
-            types.verifyData(self, 'master', {}, master)
+            validation.verifyData(self, 'master', {}, master)
             self.assertEqual(master['name'], 'other:master')
         return d
 
@@ -59,7 +59,7 @@ class Master(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(masterid=13, builderid=23))
         @d.addCallback
         def check(master):
-            types.verifyData(self, 'master', {}, master)
+            validation.verifyData(self, 'master', {}, master)
             self.assertEqual(master['name'], 'some:master')
         return d
 
@@ -113,7 +113,7 @@ class Masters(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict())
         @d.addCallback
         def check(masters):
-            [ types.verifyData(self, 'master', {}, m) for m in masters ]
+            [ validation.verifyData(self, 'master', {}, m) for m in masters ]
             self.assertEqual(sorted([m['masterid'] for m in masters]),
                              [13, 14])
         return d
@@ -122,7 +122,7 @@ class Masters(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(builderid=22))
         @d.addCallback
         def check(masters):
-            [ types.verifyData(self, 'master', {}, m) for m in masters ]
+            [ validation.verifyData(self, 'master', {}, m) for m in masters ]
             self.assertEqual(sorted([m['masterid'] for m in masters]),
                              [13])
         return d

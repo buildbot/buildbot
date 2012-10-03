@@ -34,6 +34,25 @@ Nine
 * All of the schedulers DB API methods now accept a schedulerid, rather than an objectid.
   If you have custom code using these methods, check your code and make the necessary adjustments.
 
+* The ``addBuildsetForSourceStamp`` method has become ``addBuildsetForSourceStamps``, and its signature has changed.
+  The ``addBuildsetForSourceStampSetDetails`` method has become ``addBuildsetForSourceStampsWithDefaults``, and its signature has changed.
+  The ``addBuildsetForSourceStampDetails`` method has been removed.
+  The ``addBuildsetForLatest`` method has been removed.
+  It is equivalent to ``addBuildsetForSourceStampDetails`` with ``sourcestamps=None``.
+  These methods are not yet documented, and their interface is not stable.
+  Consult the source code for details on the changes.
+
+* The :py:class:`~buildbot.sourcestamp.SourceStamp` class is no longer used.
+  It remains in the codebase to support loading data from pickles on upgrade, but should not be used in running code.
+
+* The :py:class:`~buildbot.process.buildrequest.BuildRequest` class no longer has full ``source`` or ``sources`` attributes.
+  Use the data API to get this information (which is associated with the buildset, not the build request) instead.
+
+* The undocumented ``BuilderControl`` method ``submitBuildRequest`` has been removed.
+
+* The debug client no longer supports requesting builds (the ``requestBuild`` method has been removed).
+  If you have been using this method in production, consider instead creating a new change source, using the :bb:sched:`ForceScheduler`, or using one of the try schedulers.
+
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
     Most simply need an additional bulleted list item, but more significant
