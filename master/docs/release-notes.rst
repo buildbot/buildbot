@@ -8,6 +8,15 @@ Release Notes for Buildbot |version|
 
 The following are the release notes for Buildbot |version|.
 
+0.8.7p1
+-------
+
+In addition to what's listed below, the 0.8.7p1 release adds the following.
+
+* The ``Git`` step properly deals with the case when ther is a file called ``FETCH_HEAD``
+  in the checkout.
+
+
 Master
 ------
 
