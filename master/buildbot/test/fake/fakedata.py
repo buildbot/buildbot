@@ -58,16 +58,16 @@ class FakeUpdates(object):
         self.changesAdded[-1].pop('self')
         return defer.succeed(len(self.changesAdded))
 
-    def masterActive(self, master_name, masterid):
-        self.testcase.assertIsInstance(master_name, unicode)
+    def masterActive(self, name, masterid):
+        self.testcase.assertIsInstance(name, unicode)
         self.testcase.assertIsInstance(masterid, int)
         if masterid:
             self.testcase.assertEqual(masterid, 1)
         self.masterActive = True
         return defer.succeed(None)
 
-    def masterStopped(self, master_name, masterid):
-        self.testcase.assertIsInstance(master_name, unicode)
+    def masterStopped(self, name, masterid):
+        self.testcase.assertIsInstance(name, unicode)
         self.testcase.assertEqual(masterid, 1)
         self.masterActive = False
         return defer.succeed(None)

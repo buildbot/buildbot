@@ -29,9 +29,9 @@ class Master(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.master.master_name = "myname"
+        self.master.name = "myname"
         self.db.insertTestData([
-            fakedb.Master(id=13, master_name='some:master', active=False,
+            fakedb.Master(id=13, name='some:master', active=False,
                             last_active=SOMETIME),
         ])
 
@@ -45,7 +45,7 @@ class Master(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(master):
             types.verifyData(self, 'master', {}, master)
-            self.assertEqual(master['master_name'], 'some:master')
+            self.assertEqual(master['name'], 'some:master')
         return d
 
 
@@ -63,11 +63,11 @@ class Masters(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.master.master_name = "myname"
+        self.master.name = "myname"
         self.db.insertTestData([
-            fakedb.Master(id=13, master_name='some:master', active=False,
+            fakedb.Master(id=13, name='some:master', active=False,
                             last_active=SOMETIME),
-            fakedb.Master(id=14, master_name='other:master', active=True,
+            fakedb.Master(id=14, name='other:master', active=True,
                             last_active=OTHERTIME),
         ])
 
@@ -103,21 +103,21 @@ class MasterResourceType(unittest.TestCase):
         clock.advance(60)
 
         self.master.db.insertTestData([
-            fakedb.Master(id=13, master_name='myname', active=0,
+            fakedb.Master(id=13, name='myname', active=0,
                             last_active=0),
-            fakedb.Master(id=14, master_name='other', active=1,
+            fakedb.Master(id=14, name='other', active=1,
                             last_active=0),
         ])
 
         # initial checkin
         yield self.rtype.masterActive(
-                master_name=u'myname', masterid=13, _reactor=clock)
+                name=u'myname', masterid=13, _reactor=clock)
         master = yield self.master.db.masters.getMaster(13)
-        self.assertEqual(master, dict(id=13, master_name='myname',
+        self.assertEqual(master, dict(id=13, name='myname',
                     active=True, last_active=epoch2datetime(60)))
         self.assertEqual(self.master.mq.productions, [
             (('master', '13', 'started'),
-             dict(masterid=13, master_name='myname', active=True)),
+             dict(masterid=13, name='myname', active=True)),
         ])
         self.master.mq.productions = []
 
@@ -127,11 +127,11 @@ class MasterResourceType(unittest.TestCase):
         yield self.rtype.masterActive(
                 u'myname', masterid=13, _reactor=clock)
         master = yield self.master.db.masters.getMaster(13)
-        self.assertEqual(master, dict(id=13, master_name='myname',
+        self.assertEqual(master, dict(id=13, name='myname',
                     active=True, last_active=epoch2datetime(120)))
         self.assertEqual(self.master.mq.productions, [
             (('master', '13', 'started'),
-             dict(masterid=13, master_name='myname', active=True)),
+             dict(masterid=13, name='myname', active=True)),
         ])
         self.master.mq.productions = []
 
@@ -140,9 +140,9 @@ class MasterResourceType(unittest.TestCase):
         yield self.rtype.masterActive(
                 u'myname', masterid=13, _reactor=clock)
         master = yield self.master.db.masters.getMaster(14)
-        self.assertEqual(master, dict(id=14, master_name='other',
+        self.assertEqual(master, dict(id=14, name='other',
                     active=False, last_active=epoch2datetime(0)))
         self.assertEqual(self.master.mq.productions, [
             (('master', '14', 'stopped'),
-             dict(masterid=14, master_name='other', active=False)),
+             dict(masterid=14, name='other', active=False)),
         ])

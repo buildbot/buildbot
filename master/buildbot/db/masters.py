@@ -24,13 +24,13 @@ class MasterDict(dict):
 
 class MastersConnectorComponent(base.DBConnectorComponent):
 
-    def findMasterId(self, master_name, _race_hook=None, _reactor=reactor):
+    def findMasterId(self, name, _race_hook=None, _reactor=reactor):
         def thd(conn, no_recurse=False):
             tbl = self.db.model.masters
 
             # try to find the master
             q = sa.select([ tbl.c.id ],
-                    whereclause=(tbl.c.master_name == master_name))
+                    whereclause=(tbl.c.name == name))
             rows = conn.execute(q).fetchall()
 
             # found it!
@@ -41,8 +41,8 @@ class MastersConnectorComponent(base.DBConnectorComponent):
 
             try:
                 r = conn.execute(tbl.insert(), dict(
-                    master_name=master_name,
-                    master_name_hash=hashlib.sha1(master_name).hexdigest(),
+                    name=name,
+                    name_hash=hashlib.sha1(name).hexdigest(),
                     active=0, # initially inactive
                     last_active=_reactor.seconds()
                     ))
@@ -102,6 +102,6 @@ class MastersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def _masterdictFromRow(self, row):
-        return MasterDict(id=row.id, master_name=row.master_name,
+        return MasterDict(id=row.id, name=row.name,
                     active=bool(row.active),
                     last_active=epoch2datetime(row.last_active))

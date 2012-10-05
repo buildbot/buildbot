@@ -58,8 +58,8 @@ class TestBuildsetsConnectorComponent(
             self.insertTestData([
                 fakedb.SourceStampSet(id=234),
                 fakedb.SourceStamp(id=234, sourcestampsetid=234),
-                fakedb.Master(id=self.MASTER_ID, master_name="fake master"),
-                fakedb.Master(id=self.OTHER_MASTER_ID, master_name="other"),
+                fakedb.Master(id=self.MASTER_ID, name="fake master"),
+                fakedb.Master(id=self.OTHER_MASTER_ID, name="other"),
                 fakedb.Buildset(id=self.BSID, sourcestampsetid=234),
             ]))
 

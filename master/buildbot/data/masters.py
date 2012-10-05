@@ -23,7 +23,7 @@ EXPIRE_MINUTES = 10
 
 def _db2data(master):
     return dict(masterid=master['id'],
-                master_name=master['master_name'],
+                name=master['name'],
                 active=master['active'],
                 last_active=datetime2epoch(master['last_active']),
                 link=base.Link(('master', str(master['id']))))
@@ -65,12 +65,12 @@ class MasterResourceType(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def masterActive(self, master_name, masterid, _reactor=reactor):
+    def masterActive(self, name, masterid, _reactor=reactor):
         activated = yield self.master.db.masters.setMasterState(
                 masterid=masterid, active=True, _reactor=_reactor)
         if activated:
             self.produceEvent(
-                dict(masterid=masterid, master_name=master_name, active=True),
+                dict(masterid=masterid, name=name, active=True),
                 'started')
 
         # check for "expired" masters, while we're here.  We're called every
@@ -87,16 +87,16 @@ class MasterResourceType(base.ResourceType):
             yield self.master.db.masters.setMasterState(
                     masterid=m['id'], active=False, _reactor=_reactor)
             self.produceEvent(
-                dict(masterid=m['id'], master_name=m['master_name'],
+                dict(masterid=m['id'], name=m['name'],
                      active=False),
                 'stopped')
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def masterStopped(self, master_name, masterid):
+    def masterStopped(self, name, masterid):
         deactivated = yield self.master.db.masters.setMasterState(
                 masterid=masterid, active=False)
         if deactivated:
             self.produceEvent(
-                dict(masterid=masterid, master_name=master_name, active=False),
+                dict(masterid=masterid, name=name, active=False),
                 'stopped')

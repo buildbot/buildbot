@@ -335,14 +335,14 @@ class Master(Row):
 
     defaults = dict(
         id = None,
-        master_name = 'some:master',
-        master_name_hash = None,
+        name = 'some:master',
+        name_hash = None,
         active = 1,
         last_active = 9998999,
     )
 
     id_column = 'id'
-    hash_pairs = [ ( 'master_name', 'master_name_hash' ) ]
+    hash_pairs = [ ( 'name', 'name_hash' ) ]
 
 # Fake DB Components
 
@@ -1218,18 +1218,18 @@ class FakeMastersComponent(FakeDBComponent):
             if isinstance(row, Master):
                 self.masters[row.id] = dict(
                         id=row.id,
-                        master_name=row.master_name,
+                        name=row.name,
                         active=bool(row.active),
                         last_active=epoch2datetime(row.last_active))
 
-    def findMasterId(self, master_name, _reactor=reactor):
+    def findMasterId(self, name, _reactor=reactor):
         for m in self.masters.itervalues():
-            if m['master_name'] == master_name:
+            if m['name'] == name:
                 return defer.succeed(m['id'])
         id = len(self.masters) + 1
         self.masters[id] = dict(
             id=id,
-            master_name=master_name,
+            name=name,
             active=False,
             last_active=epoch2datetime(_reactor.seconds()))
         return defer.succeed(id)

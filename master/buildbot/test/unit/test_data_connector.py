@@ -51,12 +51,12 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_updates_masterActive(self):
         @self.assertArgSpecMatches(self.data.updates.masterActive)
-        def masterActive(self, master_name, masterid):
+        def masterActive(self, name, masterid):
             pass
 
     def test_signature_updates_masterStopped(self):
         @self.assertArgSpecMatches(self.data.updates.masterStopped)
-        def masterStopped(self, master_name, masterid):
+        def masterStopped(self, name, masterid):
             pass
 
 

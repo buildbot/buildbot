@@ -148,9 +148,9 @@ All update methods return a Deferred.
 
 .. py:class:: buildbot.data.changes.MasterResourceType
 
-    .. py:method:: masterActive(master_name, masterid)
+    .. py:method:: masterActive(name, masterid)
 
-        :param unicode master_name: the name of this master (generally ``hostname:basedir``)
+        :param unicode name: the name of this master (generally ``hostname:basedir``)
         :param integer masterid: this master's master ID
         :returns: Deferred
 
@@ -160,9 +160,9 @@ All update methods return a Deferred.
 
         Other periodic tasks, such as marking masters in active which have not checked in recently, may be performed as well.
 
-    .. py:method:: masterStopped(master_name, masterid)
+    .. py:method:: masterStopped(name, masterid)
 
-        :param unicode master_name: the name of this master
+        :param unicode name: the name of this master
         :param integer masterid: this master's master ID
         :returns: Deferred
 

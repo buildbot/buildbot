@@ -100,9 +100,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             self.hostname = socket.getfqdn()
 
         # public attributes
-        self.master_name = ("%s:%s" % (self.hostname,
+        self.name = ("%s:%s" % (self.hostname,
                 os.path.abspath(self.basedir or '.')))
-        self.master_name = self.master_name.decode('ascii', 'replace')
+        self.name = self.name.decode('ascii', 'replace')
         self.masterid = None
 
     def create_child_services(self):
@@ -150,7 +150,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         def heartbeat():
             if self.masterid is not None:
-                self.data.updates.masterActive(master_name=self.master_name,
+                self.data.updates.masterActive(name=self.name,
                                         masterid=self.masterid)
         self.masterHeartbeatService = internet.TimerService(60, heartbeat)
 
@@ -213,7 +213,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
             # get the masterid so other services can use it in startup/reconfig
             self.masterid = yield self.db.masters.findMasterId(
-                                    master_name=self.master_name)
+                                    name=self.name)
 
             # call the parent method
             yield defer.maybeDeferred(lambda :
@@ -225,7 +225,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
             # mark the master as active now that mq is running
             yield self.data.updates.masterActive(
-                                    master_name=self.master_name,
+                                    name=self.name,
                                     masterid=self.masterid)
         except:
             f = failure.Failure()
@@ -239,7 +239,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     def stopService(self):
         if self.masterid is not None:
             yield self.data.updates.masterStopped(
-                    master_name=self.master_name, masterid=self.masterid)
+                    name=self.name, masterid=self.masterid)
 
         log.msg("BuildMsater is stopped")
         self._master_initialized = False
@@ -495,7 +495,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # failing that, get it from the DB; multiple calls to this function
         # at the same time will not hurt
 
-        d = self.db.state.getObjectId(self.master_name,
+        d = self.db.state.getObjectId(self.name,
                 "buildbot.master.BuildMaster")
         def keep(id):
             self._object_id = id

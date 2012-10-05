@@ -18,7 +18,7 @@ from buildbot.test.util import verifier
 def verifyDbDict(testcase, type, value):
     return verifier.verifyDict(testcase, value, 'masterdict', dict(
         id='integer',
-        master_name='string',
+        name='string',
         active='boolean',
         last_active='datetime',
         ))
@@ -27,7 +27,7 @@ def verifyData(testcase, type, options, value):
     testcase.assertEqual(options, {})
     return verifier.verifyDict(testcase, value, 'master', dict(
         masterid='integer',
-        master_name='string',
+        name='string',
         active='boolean',
         last_active='integer',
         link='Link',
@@ -40,7 +40,7 @@ def verifyMessage(testcase, routingKey, message):
             events=set(['started', 'stopped']),
             attrs=dict(
                 masterid='integer',
-                master_name='string',
+                name='string',
                 active='boolean',
                 # last_active is not included
                 ))

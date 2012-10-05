@@ -860,14 +860,13 @@ masters
     Masters are represented by master dictionaries with the following keys:
 
     * ``id`` -- the ID of this master
-    * ``master_name`` -- the name of the master (generally of the form ``hostname:basedir``)
+    * ``name`` -- the name of the master (generally of the form ``hostname:basedir``)
     * ``active`` -- true if this master is running
     * ``last_active`` -- time that this master last checked in (a datetime object)
 
-    .. py:method:: findMasterId(hostname, basedir)
+    .. py:method:: findMasterId(name)
 
-        :param unicode hostname: hostname of this master
-        :param unicode basedir: base directory of this master
+        :param unicode name: name of this master
         :returns: master id via Deferred
 
         Return the master ID for the master with this master name (generally ``hostname:basedir``).

@@ -74,8 +74,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             self.assertRaises((sa.exc.IntegrityError,
                                sa.exc.ProgrammingError), lambda :
                 conn.execute(q,
-                    dict(master_name='master', active=1, last_active=0),
-                    dict(master_name='master', active=1, last_active=1),
+                    dict(name='master', active=1, last_active=0),
+                    dict(name='master', active=1, last_active=1),
             ))
 
         return self.do_test_migration(22, 23, setup_thd, verify_thd)
@@ -117,9 +117,9 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
             # two masters (although we don't know which ids they will get)
             res = conn.execute(sa.select([ masters.c.id,
-                                           masters.c.master_name ]))
+                                           masters.c.name ]))
             rows = res.fetchall()
-            masterids = dict((row.master_name, row.id) for row in rows)
+            masterids = dict((row.name, row.id) for row in rows)
             self.assertEqual(sorted(masterids.keys()),
                     [ 'master:/one', 'master:/two' ])
             mOne = masterids['master:/one']

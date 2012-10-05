@@ -368,7 +368,7 @@ class UpgradeTestV082(UpgradeTestMixin, unittest.TestCase):
                     br_claims.c.masterid == masters.c.id)]))
         # the int() is required here because sqlalchemy stores floats in an
         # INTEGER column(!)
-        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.master_name)
+        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.name)
                       for brc in r.fetchall() ]
         objname = 'euclid:/home/dustin/code/buildbot/t/buildbot/sand27/master'
         self.assertEqual(buildreqs, [
@@ -435,7 +435,7 @@ class UpgradeTestV083(UpgradeTestMixin, unittest.TestCase):
                     br_claims.c.masterid == masters.c.id)]))
         # the int() is required here because sqlalchemy stores floats in an
         # INTEGER column(!)
-        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.master_name)
+        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.name)
                       for brc in r.fetchall() ]
         objname = 'euclid:/home/dustin/code/buildbot/t/buildbot/sand27/master'
         self.assertEqual(buildreqs, [
@@ -488,7 +488,7 @@ class UpgradeTestV084(UpgradeTestMixin, unittest.TestCase):
                     br_claims.c.masterid == masters.c.id)]))
         # the int() is required here because sqlalchemy stores floats in an
         # INTEGER column(!)
-        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.master_name)
+        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.name)
                       for brc in r.fetchall() ]
         objname = 'euclid:/home/dustin/code/buildbot/t/buildbot/sand27/master'
         self.assertEqual(buildreqs, [
@@ -523,7 +523,7 @@ class UpgradeTestV085(UpgradeTestMixin, unittest.TestCase):
         masters = model.masters
         r = conn.execute(sa.select([ br_claims.outerjoin(masters,
                     br_claims.c.masterid == masters.c.id)]))
-        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.master_name)
+        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.name)
                       for brc in r.fetchall() ]
         self.assertEqual(buildreqs, [
             (1, 1338226540, u'euclid.r.igoro.us:/A/bbrun'),
@@ -570,7 +570,7 @@ class UpgradeTestV086p1(UpgradeTestMixin, unittest.TestCase):
         masters = model.masters
         r = conn.execute(sa.select([ br_claims.outerjoin(masters,
                     br_claims.c.masterid == masters.c.id)]))
-        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.master_name)
+        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.name)
                       for brc in r.fetchall() ]
         self.assertEqual(buildreqs, [
             (1, 1338229046, u'euclid.r.igoro.us:/A/bbrun'),

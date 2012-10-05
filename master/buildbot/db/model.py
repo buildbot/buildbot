@@ -358,9 +358,9 @@ class Model(base.DBConnectorComponent):
         sa.Column('id', sa.Integer, primary_key=True),
 
         # master's name (generally in the form hostname:basedir)
-        sa.Column('master_name', sa.Text, nullable=False),
-        # sha1 of master_name; used for a unique index
-        sa.Column('master_name_hash', sa.String(40), nullable=False),
+        sa.Column('name', sa.Text, nullable=False),
+        # sha1 of name; used for a unique index
+        sa.Column('name_hash', sa.String(40), nullable=False),
 
         # true if this master is running
         sa.Column('active', sa.Integer, nullable=False),
@@ -408,7 +408,7 @@ class Model(base.DBConnectorComponent):
             unique=True)
     sa.Index('name_per_object', object_state.c.objectid, object_state.c.name,
             unique=True)
-    sa.Index('master_name_hashes', masters.c.master_name_hash, unique=True)
+    sa.Index('master_name_hashes', masters.c.name_hash, unique=True)
     sa.Index('buildrequest_claims_brids', buildrequest_claims.c.brid,
             unique=True)
 
