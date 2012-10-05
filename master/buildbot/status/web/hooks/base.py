@@ -56,6 +56,8 @@ def getChanges(request, options=None):
             
         revision = firstOrNothing(args.get('revision'))
         when     = firstOrNothing(args.get('when'))
+        if when is not None:
+            when = float(when)
         author = firstOrNothing(args.get('author'))
         if not author:
             author = firstOrNothing(args.get('who'))
