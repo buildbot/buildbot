@@ -96,16 +96,16 @@ class TestChangeHookConfigured(unittest.TestCase):
         self.request.args = { "category" : ["mycat"],
                        "files" : [json.dumps(['file1', 'file2'])],
                        "repository" : ["myrepo"],
-                       "when" : [1234],
+                       "when" : ["1234"],
                        "author" : ["Santa Claus"],
-                       "number" : [2],
+                       "number" : ["2"],
                        "comments" : ["a comment"],
                        "project" : ["a project"],
                        "at" : ["sometime"],
                        "branch" : ["a branch"],
                        "revlink" : ["a revlink"],
                        "properties" : [json.dumps( { "prop1" : "val1", "prop2" : "val2" })],
-                       "revision" : [99] }
+                       "revision" : ["99"] }
         d = self.request.test_render(self.changeHook)
         def check_changes(r):
             self.assertEquals(len(self.request.addedChanges), 1)
@@ -115,7 +115,7 @@ class TestChangeHookConfigured(unittest.TestCase):
             self.assertEquals(change["when"], 1234)
             self.assertEquals(change["author"], "Santa Claus")
             self.assertEquals(change["src"], None)
-            self.assertEquals(change["revision"], 99)
+            self.assertEquals(change["revision"], "99")
             self.assertEquals(change["comments"], "a comment")
             self.assertEquals(change["project"], "a project")
             self.assertEquals(change["branch"], "a branch")
