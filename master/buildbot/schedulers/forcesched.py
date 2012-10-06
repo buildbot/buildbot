@@ -569,7 +569,7 @@ class ForceScheduler(base.BaseScheduler):
         properties.setProperty("reason", reason, "Force Build Form")
         properties.setProperty("owner", owner, "Force Build Form")
 
-        r = ("A build was forced by '%s': %s" % (owner, reason))
+        r = (u"A build was forced by '%s': %s" % (owner, reason))
 
         # everything is validated, we can create our source stamp, and buildrequest
         res = yield self.addBuildsetForSourceStampSetDetails(

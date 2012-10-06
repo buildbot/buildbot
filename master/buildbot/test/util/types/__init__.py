@@ -24,7 +24,7 @@ def _call(name, *args):
 
 _messageVerifiers = {
     'change' : 'changes.verifyMessage',
-    'buildset' : None,
+    'buildset' : 'buildsets.verifyMessage',
     'buildrequest' : None,
     'master' : 'masters.verifyMessage',
 }
@@ -32,6 +32,7 @@ def verifyMessage(testcase, routingKey, message):
     return _call(_messageVerifiers[routingKey[0]], testcase, routingKey, message)
 
 _dbVerifiers = {
+    'bsdict' : 'buildsets.verifyDbDict',
     'chdict' : 'changes.verifyDbDict',
     'bsdict' : 'buildsets.verifyDbDict',
 }
@@ -39,6 +40,7 @@ def verifyDbDict(testcase, type, value):
     return _call(_dbVerifiers[type], testcase, type, value)
 
 _dataVerifiers = {
+    'buildset' : 'buildsets.verifyData',
     'change' : 'changes.verifyData',
     'master' : 'masters.verifyData',
 }

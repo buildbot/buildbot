@@ -19,7 +19,17 @@ class InterfaceTests(object):
 
     # assertions
 
-    def assertArgSpecMatches(self, actual):
+    def assertArgSpecMatches(self, actual, template=None):
+        """Usage::
+
+            @self.assertArgSpecMatches(obj.methodUnderTest)
+            def methodTemplate(self, arg1, arg2):
+                pass
+
+        or, more useful when you will be faking out C{methodUnderTest}:
+
+            self.assertArgSpecMatches(obj.methodUnderTest, self.fakeMethod)
+        """
         def filter(spec):
             # the tricky thing here is to align args and defaults, since the
             # defaults correspond to the *last* n elements of args.  To make
@@ -55,4 +65,7 @@ class InterfaceTests(object):
                     inspect.formatargspec(*actual_argspec))
                 self.fail(msg)
             return template  # just in case it's useful
-        return wrap
+        if template:
+            wrap(template)
+        else:
+            return wrap

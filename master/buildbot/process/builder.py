@@ -450,14 +450,14 @@ class Builder(config.ReconfigurableServiceMixin,
                 results=results)
             self.master.mq.produce(key, msg)
 
-        # now inform the master that we may have completed a number of
-        # buildsets -- one for each build request with a unique bsid
+        # check for completed buildsets -- one call for each build request with
+        # a unique bsid
         seen_bsids = set()
         for br in requests:
             if br.bsid in seen_bsids:
                 continue
             seen_bsids.add(br.bsid)
-            yield self.master.maybeBuildsetComplete(br.bsid)
+            yield self.master.data.updates.maybeBuildsetComplete(br.bsid)
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]

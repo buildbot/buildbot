@@ -40,9 +40,11 @@ class Dependent(base.BaseScheduler):
         self._subscription_lock = defer.DeferredLock()
 
     def startService(self):
-        self._buildset_new_consumer = self.master.mq.startConsuming(
+        self._buildset_new_consumer = self.master.data.startConsuming(
                     self._buildset_new_cb,
-                    ('buildset', None, 'new'))
+                    {}, ('buildset',))
+        # TODO: refactor to subscribe only to interesting buildsets, and
+        # subscribe to them directly, via the data API
         self._buildset_complete_consumer = self.master.mq.startConsuming(
                     self._buildset_complete_cb,
                     ('buildset', None, 'complete'))
@@ -86,7 +88,7 @@ class Dependent(base.BaseScheduler):
             # build a dependent build if the status is appropriate
             if sub_results in (SUCCESS, WARNINGS):
                 yield self.addBuildsetForSourceStamp(setid=sub_sssetid,
-                                               reason='downstream')
+                                               reason=u'downstream')
 
             sub_bsids.append(sub_bsid)
 

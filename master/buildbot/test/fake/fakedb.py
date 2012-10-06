@@ -628,6 +628,34 @@ class FakeSourceStampsComponent(FakeDBComponent):
                 sslist.append(ssdictcpy)
         return defer.succeed(sslist)
 
+    # assertions
+
+    def assertSourceStamps(self, sourcestampsetid, sourcestamps):
+        """Assert that the given sourcestamp set consist of the given
+        sourcestamps (munged about significantly)."""
+        got = []
+        for ssdict in self.sourcestamps.itervalues():
+            if ssdict['sourcestampsetid'] == sourcestampsetid:
+                ss = self._getSourceStamp(ssdict['id'])
+                del ss['ssid']
+                if not ss['changeids']:
+                    del ss['changeids']
+                else:
+                    ss['changeids'] = sorted(list(ss['changeids']))
+                del ss['sourcestampsetid']
+                got.append(ss)
+
+        exp = [ ss.copy() for ss in sourcestamps ]
+        for ss in exp:
+            for k in ('patch_body', 'patch_level', 'patch_subdir',
+                      'patch_author', 'patch_comment'):
+                ss.setdefault(k, None)
+            if 'changeids' in ss:
+                ss['changeids'] = sorted(list(ss['changeids']))
+
+        self.t.assertEqual(sorted(got), sorted(exp))
+
+
 class FakeBuildsetsComponent(FakeDBComponent):
 
     def setUp(self):
@@ -738,44 +766,21 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.buildsets[bsid]['results'] = result
         self.completed_bsids.add(bsid)
 
-    def flushBuildsets(self):
-        """
-        Flush the set of buildsets, for example after C{assertBuildset}
-        """
-        self.buildsets = {}
-        self.completed_bsids = set()
-
     # assertions
 
-    def assertBuildsets(self, count):
-        """Assert that exactly COUNT buildsets were added"""
-        self.t.assertEqual(len(self.buildsets), count,
-                    "buildsets are %r" % (self.buildsets,))
+    def assertBuildsetCompletion(self, bsid, complete):
+        """Assert that the completion state of buildset BSID is COMPLETE"""
+        actual = self.buildsets[bsid]['complete']
+        self.t.failUnless((actual and complete) or (not actual and not complete))
 
-    def assertBuildset(self, bsid, expected_buildset, expected_sourcestamps):
-        """Assert that the buildset and its attached sourcestamp look as
-        expected; the ssid parameter of the buildset is omitted.  Properties
-        are converted with asList and sorted.  Sourcestamp patches are inlined
-        (patch_body, patch_level, patch_subdir), and changeids are represented
-        as a set, but omitted if empty.  If bsid is '?', then assert there is
-        only one new buildset, and use that."""
-        if bsid == '?':
-            self.assertBuildsets(1)
-            bsid = self.buildsets.keys()[0]
-        else:
-            self.t.assertIn(bsid, self.buildsets)
-
+    def assertBuildset(self, bsid=None, expected_buildset=None):
+        """Assert that the given buildset looks as expected; the ssid parameter
+        of the buildset is omitted.  Properties are converted with asList and
+        sorted.  Attributes complete, complete_at, submitted_at, and results
+        are ignored if not specified."""
+        self.t.assertIn(bsid, self.buildsets)
         buildset = self.buildsets[bsid].copy()
-
-        dictOfssDict= {}
-        for sourcestamp in self.db.sourcestamps.sourcestamps.itervalues():
-            if sourcestamp['sourcestampsetid'] == buildset['sourcestampsetid']:
-                ssdict = sourcestamp.copy()
-                ss_repository = ssdict['codebase']
-                dictOfssDict[ss_repository] = ssdict
-
-        if 'id' in buildset:
-            del buildset['id']
+        del buildset['id']
 
         # clear out some columns if the caller doesn't care
         for col in 'complete complete_at submitted_at results'.split():
@@ -785,37 +790,8 @@ class FakeBuildsetsComponent(FakeDBComponent):
         if buildset['properties']:
             buildset['properties'] = sorted(buildset['properties'].items())
 
-        # only add brids if we're expecting them (sometimes they're unknown)
-        if 'brids' in expected_buildset:
-            buildset['brids'] = self.allBuildRequests(bsid)
-
-        for ss in dictOfssDict.itervalues():
-            if 'id' in ss:
-                del ss['id']
-            if not ss['changeids']:
-                del ss['changeids']
-
-            # incorporate patch info if we have it
-            if 'patchid' in ss and ss['patchid']:
-                ss.update(self.db.sourcestamps.patches[ss['patchid']])
-            del ss['patchid']
-
-        self.t.assertEqual(
-            dict(buildset=buildset, sourcestamps=dictOfssDict),
-            dict(buildset=expected_buildset, sourcestamps=expected_sourcestamps))
+        self.t.assertEqual(buildset, expected_buildset)
         return bsid
-
-    def allBuildsetIds(self):
-        return self.buildsets.keys()
-
-    def allBuildRequests(self, bsid=None):
-        if bsid is not None:
-            is_same_bsid = lambda br: br.buildsetid==bsid
-        else:
-            is_same_bsid = lambda br: True
-        return dict([ (br.buildername, br.id)
-              for br in self.db.buildrequests.reqs.values()
-              if is_same_bsid(br) ])
 
 
 class FakeStateComponent(FakeDBComponent):

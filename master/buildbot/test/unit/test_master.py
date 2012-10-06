@@ -17,99 +17,14 @@ import re
 import os
 import mock
 import signal
-from twisted.internet import defer, reactor, task
+from twisted.internet import defer, reactor
 from twisted.trial import unittest
 from twisted.python import log
 from buildbot import master, monkeypatches, config
 from buildbot.db import exceptions
 from buildbot.test.util import dirs, compat
 from buildbot.test.fake import fakedb, fakemq, fakedata
-from buildbot.status.results import SUCCESS
 from buildbot.changes.changes import Change
-
-class GlobalMessages(dirs.DirsMixin, unittest.TestCase):
-
-    """These tests coerce the master into performing some action that should be
-    accompanied by some messages, and then verifies that the messages were sent
-    appropriately.  Like most tests in this file, this requires faking out a
-    *lot* of Buildbot."""
-
-    def setUp(self):
-        basedir = os.path.abspath('basedir')
-        d = self.setUpDirs(basedir)
-        def set_master(_):
-            self.master = master.BuildMaster(basedir)
-            self.master.db = fakedb.FakeDBConnector(self)
-            self.master.mq = fakemq.FakeMQConnector(self.master, self)
-        d.addCallback(set_master)
-        return d
-
-    def tearDown(self):
-        return self.tearDownDirs()
-
-    # master.$masterid.{started,stopped} are checked in
-    # StartupAndReconfig.test_startup_ok, below
-
-    def test_buildset_messages(self):
-        sourcestampsetid=111
-
-        d = self.master.addBuildset(scheduler='schname',
-                sourcestampsetid=sourcestampsetid,
-                reason='rsn', properties={},
-                builderNames=[u'a', u'b'], external_idstring='eid')
-        def check((bsid,brids)):
-            # addBuildset returned the expected values (these come from fakedb)
-            self.assertEqual((bsid,brids), (200, {u'a' : 1000, u'b': 1001 }))
-
-            # check that the proper message was produced
-            self.master.mq.assertProductions([
-                ( ('buildset', '200', 'new'), {
-                    'bsid': bsid,
-                    'external_idstring': 'eid',
-                    'reason': 'rsn',
-                    'sourcestampsetid': sourcestampsetid,
-                    'brids': dict(a=1000, b=1001),
-                    'properties': {},
-                    'scheduler': 'schname',
-                }),
-                ( ('buildrequest', '200', '-1', '1000', 'new'), {
-                    'brid': 1000,
-                    'bsid': 200,
-                    'buildername': 'a',
-                    'builderid': -1,
-                }),
-                ( ('buildrequest', '200', '-1', '1001', 'new'), {
-                    'brid': 1001,
-                    'bsid': 200,
-                    'buildername': 'b',
-                    'builderid': -1,
-                }),
-            ], orderMatters=False)
-        d.addCallback(check)
-        return d
-
-    def test_buildset_completion_messages(self):
-        self.master.db.insertTestData([
-            fakedb.SourceStamp(id=999),
-            fakedb.BuildRequest(id=300, buildsetid=440, complete=True,
-                results=SUCCESS),
-            fakedb.BuildRequest(id=301, buildsetid=440, complete=True,
-                results=SUCCESS),
-            fakedb.Buildset(id=440, sourcestampsetid=999),
-        ])
-
-        clock = task.Clock()
-        clock.advance(1234)
-        self.master.maybeBuildsetComplete(440, _reactor=clock)
-
-        self.master.mq.assertProductions([
-            ( ('buildset', '440', 'complete'), {
-                'bsid': 440,
-                'complete_at': 1234,
-                'results': SUCCESS,
-            }),
-        ])
-
 
 class OldTriggeringMethods(unittest.TestCase):
 
@@ -176,14 +91,13 @@ class OldTriggeringMethods(unittest.TestCase):
                 exp_data_kwargs=dict(when_timestamp=892293875))
 
     def test_addChange_args_properties(self):
-        # properties should be qualified with a source
+        # properties should not be qualified with a source
         return self.do_test_addChange_args(
                 kwargs=dict(properties={ 'a' : 'b' }),
-                exp_data_kwargs=dict(properties={ 'a' : 'b'}))
+                exp_data_kwargs=dict(properties={ u'a' : u'b'}))
 
     def test_addChange_args_properties_tuple(self):
-        # properties should be qualified with a source, even if they
-        # already look like they have a source
+        # properties should not be qualified with a source
         return self.do_test_addChange_args(
                 kwargs=dict(properties={ 'a' : ('b', 'Change') }),
                 exp_data_kwargs=dict(properties={ 'a' : ('b', 'Change') }))

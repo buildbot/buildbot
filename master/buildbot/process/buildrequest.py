@@ -241,8 +241,8 @@ class BuildRequest(object):
         yield self.master.db.buildrequests.completeBuildRequests([self.id],
                                                                 FAILURE)
 
-        # and let the master know that the enclosing buildset may be complete
-        yield self.master.maybeBuildsetComplete(self.bsid)
+        # and see if the enclosing buildset may be complete
+        yield self.master.data.updates.maybeBuildsetComplete(self.bsid)
 
 class BuildRequestControl:
     implements(interfaces.IBuildRequestControl)
