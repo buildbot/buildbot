@@ -61,6 +61,7 @@ def upgrade(migrate_engine):
     )
 
     scheduler_masters = sa.Table('scheduler_masters', metadata,
+        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
         sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.id'),
             nullable=False),
         sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
