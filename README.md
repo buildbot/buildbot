@@ -159,6 +159,8 @@ Tasks:
 * Add a call to enumerate builds *previous* to a given build, using flexible criteria.
   Something like ``/build/1234/previous?lib:branch=foo&builder=bar&count=3`` to get the three builds before 1234 with branch ``foo`` in the ``lib`` codebase, on builder ``bar``.
   This is to address http://trac.buildbot.net/ticket/2431.
+* Represent buildset properties (perhaps by adding a 'propertyset' rtype, flexible enough to serve for buildsets and builds).
+  Same for builds.
 
 ## Status Rewrites ##
 
