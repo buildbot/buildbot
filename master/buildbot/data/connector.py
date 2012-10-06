@@ -61,11 +61,14 @@ class DataConnector(service.Service):
                         setattr(self.updates, name, o)
 
                 # load its endpoints
-                for epoint in rtype.getEndpoints():
-                    self.matcher[epoint.pathPattern] = epoint
-                    if epoint.rootLinkName:
-                        link = base.Link(epoint.pathPattern)
-                        self.rootLinks[epoint.rootLinkName] = link
+                for ep in rtype.getEndpoints():
+                    # don't use inherited values for these parameters
+                    pathPattern = ep.__class__.__dict__.get('pathPattern')
+                    rootLinkName = ep.__class__.__dict__.get('rootLinkName')
+                    self.matcher[pathPattern] = ep
+                    if rootLinkName:
+                        link = base.Link(pathPattern)
+                        self.rootLinks[rootLinkName] = link
 
     def _setup(self):
         self.updates = Updates()
