@@ -22,7 +22,7 @@ class Matcher(object):
         self._dirty = True
 
     def __setitem__(self, path, value):
-        assert path not in self._patterns, "duplicate path"
+        assert path not in self._patterns, "duplicate path %s" % (path,)
         self._patterns[path] = value
         self._dirty = True
 

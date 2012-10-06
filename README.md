@@ -136,6 +136,7 @@ Tasks:
   Messages should be sent when this occurs.
 * Add support for uids to the change resource type
 * Consider importing build pickles into the new DB.
+* Implement compression in log chunks - implement ``compressLog`` to re-split logs into larger chunks and compress them; implement decompression, and handle the csae where chunks overlap during the compression process
 
 ### Misc Data API Work ###
 
@@ -247,6 +248,8 @@ These are just "things that need doing", where we don't have much idea *how* yet
 * Use sa.Text instead of sa.String(LEN), so we have unlimited-length strings.
   Where indexes -- especially unique indexes -- are required on these columns, add sha1 hash columns and index those.
   Among other advantages, this will allow MySQL databases to use the vastly superior InnoDB table type.
+* Rather than naming builders, build requests should use a foreign key to reference the builders table. :runner:
+* Convert master, builder, and scheduler names to identifiers, removing use of hashes :runner:
 
 ### Documentation ###
 

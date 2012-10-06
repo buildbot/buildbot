@@ -64,15 +64,7 @@ Builds
 
         This path lists builds performed for the identified builder, sorted by number.
 
-    .. bb:rpath:: /builder/:builderid/build/:buildid
-
-        :pathkey integer builderid: the ID of the builder
-        :pathkey integer buildid: the ID of the build
-
-        This path selects a specific build, identified by its build ID.
-        If the build is not associated with the builder, this path returns nothing.
-
-    .. bb:rpath:: /builder/:builderid/build/number/:number
+    .. bb:rpath:: /builder/:builderid/build/:number
 
         :pathkey integer builderid: the ID of the builder
         :pathkey integer number: the build number within that builder
@@ -90,7 +82,7 @@ Update Methods
 
 All update methods are available as attributes of ``master.data.updates``.
 
-.. py:class:: buildbot.data.changes.BuildsResourceType
+.. py:class:: buildbot.data.builds.BuildsResourceType
 
     .. py:method:: newBuild(builderid, buildrequestid, slaveid)
 
@@ -105,4 +97,13 @@ All update methods are available as attributes of ``master.data.updates``.
     .. py:method:: setBuildStateStrings(buildid, state_strings)
 
         :param integer buildid: the build to modify
-        :param list state_strings:
+        :param list state_strings: new state strings for this build
+
+        Replace the existing state strings for a build with a new list.
+
+    .. py:method:: finishBuild(buildid, results)
+
+        :param integer buildid: the build to modify
+        :param integer results: the build's results
+
+        Mark the build as finished at the current time, with the given results.

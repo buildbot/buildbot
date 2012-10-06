@@ -46,8 +46,7 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
 
     pathPatterns = [
         ( 'build', 'i:buildid' ),
-        ( 'builder', 'i:builderid', 'build', 'i:buildid' ),
-        ( 'builder', 'i:builderid', 'build', 'number' 'i:number' ),
+        ( 'builder', 'i:builderid', 'build', 'i:number' ),
     ]
 
     @defer.inlineCallbacks
@@ -58,9 +57,6 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
             bldr = kwargs['builderid']
             num = kwargs['number']
             dbdict = yield self.master.db.builds.getBuildByNumber(bldr, num)
-        if 'builderid' in kwargs:
-            if not dbdict or dbdict['builderid'] != kwargs['builderid']:
-                return
         defer.returnValue((yield self.db2data(dbdict))
                                 if dbdict else None)
 
@@ -80,7 +76,7 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
                                 builderid=kwargs.get('builderid'),
                                 buildrequestid=kwargs.get('buildrequestid'))
         defer.returnValue(
-                [ (yield self.db2data(schdict)) for schdict in builds ])
+                [ (yield self.db2data(dbdict)) for dbdict in builds ])
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,

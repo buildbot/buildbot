@@ -1,0 +1,189 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
+from twisted.internet import defer
+from buildbot.data import base
+
+class EndpointMixin(object):
+
+    def db2data(self, dbdict):
+        data = {
+            'logid': dbdict['id'],
+            'name': dbdict['name'],
+            'stepid': dbdict['stepid'],
+            'step_link': base.Link(('step', str(dbdict['stepid']))),
+            'complete': dbdict['complete'],
+            'num_lines': dbdict['num_lines'],
+            'type': dbdict['type'],
+            'link': base.Link(('log', str(dbdict['id']))),
+        }
+        return defer.succeed(data)
+
+    @defer.inlineCallbacks
+    def getStepid(self, kwargs):
+        if 'stepid' in kwargs:
+            defer.returnValue(kwargs['stepid'])
+        else:
+            # need to look in the context of a step, specified by build or
+            # builder or whatever
+            if 'buildid' in kwargs:
+                buildid = kwargs['buildid']
+            else:
+                build = yield self.master.db.builds.getBuildByNumber(
+                    builderid=kwargs['builderid'],
+                    number=kwargs['build_number'])
+                if not build:
+                    return
+                buildid = build['id']
+
+            dbdict = yield self.master.db.steps.getStepByBuild(buildid=buildid,
+                    number=kwargs.get('step_number'),
+                    name=kwargs.get('step_name'))
+            if not dbdict:
+                return
+            defer.returnValue(dbdict['id'])
+
+
+class LogEndpoint(EndpointMixin, base.Endpoint):
+
+    pathPatterns = [
+        ( 'log', 'i:logid' ),
+        ( 'step', 'i:stepid', 'log', 's:log_name' ),
+        ( 'build', 'i:buildid', 'step', 's:step_name', 'log', 's:log_name' ),
+        ( 'build', 'i:buildid', 'step', 'number', 'i:step_number',
+            'log', 's:log_name' ),
+        ( 'builder', 'i:builderid', 'build', 'i:build_number',
+            'step', 's:step_name', 'log', 's:log_name' ),
+        ( 'builder', 'i:builderid', 'build', 'i:build_number',
+            'step', 'number', 'i:step_number', 'log', 's:log_name' ),
+    ]
+
+    @defer.inlineCallbacks
+    def get(self, options, kwargs):
+        if 'logid' in kwargs:
+            dbdict = yield self.master.db.logs.getLog(kwargs['logid'])
+            defer.returnValue((yield self.db2data(dbdict))
+                                if dbdict else None)
+            return
+
+        stepid = yield self.getStepid(kwargs)
+        if stepid is None:
+            return
+
+        dbdict = yield self.master.db.logs.getLogByName(stepid,
+                                            kwargs.get('log_name'))
+        defer.returnValue((yield self.db2data(dbdict))
+                            if dbdict else None)
+
+
+class LogContentEndpoint(EndpointMixin, base.Endpoint):
+
+    pathPatterns = [
+        ( 'log', 'i:logid', 'content' ),
+        ( 'step', 'i:stepid', 'log', 's:log_name', 'content' ),
+        ( 'build', 'i:buildid', 'step', 's:step_name', 'log', 's:log_name',
+            'content' ),
+        ( 'build', 'i:buildid', 'step', 'number', 'i:step_number',
+            'log', 's:log_name', 'content' ),
+        ( 'builder', 'i:builderid', 'build', 'i:build_number',
+            'step', 's:step_name', 'log', 's:log_name', 'content' ),
+        ( 'builder', 'i:builderid', 'build', 'i:build_number',
+            'step', 'number', 'i:step_number', 'log', 's:log_name',
+            'content' ),
+    ]
+
+    @defer.inlineCallbacks
+    def get(self, options, kwargs):
+        # calculate the logid
+        if 'logid' in kwargs:
+            logid = kwargs['logid']
+            dbdict = None
+        else:
+            stepid = yield self.getStepid(kwargs)
+            if stepid is None:
+                return
+            dbdict = yield self.master.db.logs.getLogByName(stepid,
+                                                kwargs.get('log_name'))
+            if not dbdict:
+                return
+            logid = dbdict['id']
+
+        firstline = options.get('firstline', 0)
+        lastline = options.get('lastline', None)
+
+        # get the number of lines, if necessary
+        if lastline is None:
+            if not dbdict:
+                dbdict = yield self.master.db.logs.getLog(logid)
+            if not dbdict:
+                return
+            lastline = max(0, dbdict['num_lines'] - 1)
+
+        # bounds checks
+        if firstline < 0 or lastline < 0 or firstline > lastline:
+            return
+
+        logLines = yield self.master.db.logs.getLogLines(
+                                logid, firstline, lastline)
+        defer.returnValue({
+            'logid': logid,
+            'firstline': firstline,
+            'content': logLines})
+
+
+class LogsEndpoint(EndpointMixin, base.Endpoint):
+
+    pathPatterns = [
+        ( 'step', 'i:stepid', 'log' ),
+        ( 'build', 'i:buildid', 'step', 's:step_name', 'log' ),
+        ( 'build', 'i:buildid', 'step', 'number', 'i:step_number', 'log' ),
+        ( 'builder', 'i:builderid', 'build', 'i:build_number',
+            'step', 's:step_name', 'log' ),
+        ( 'builder', 'i:builderid', 'build', 'i:build_number',
+            'step', 'number', 'i:step_number', 'log' ),
+    ]
+
+    @defer.inlineCallbacks
+    def get(self, options, kwargs):
+        stepid = yield self.getStepid(kwargs)
+        if not stepid:
+            defer.returnValue([])
+            return
+        logs = yield self.master.db.logs.getLogs(stepid=stepid)
+        defer.returnValue([ (yield self.db2data(dbdict)) for dbdict in logs ])
+
+
+class LogsResourceType(base.ResourceType):
+
+    type = "step"
+    endpoints = [ LogEndpoint, LogContentEndpoint, LogsEndpoint ]
+    keyFields = [ 'stepid', 'logid' ]
+
+    @base.updateMethod
+    def newLog(self, stepid, name, type):
+        return self.master.db.logs.addLog(
+                stepid=stepid, name=name, type=type)
+
+    @base.updateMethod
+    def finishLog(self, logid):
+        return self.master.db.logs.finishLog(logid=logid)
+
+    @base.updateMethod
+    def compressLog(self, logid):
+        return self.master.db.logs.compressLog(logid=logid)
+
+    @base.updateMethod
+    def appendLog(self, logid, content):
+        return self.master.db.logs.appendLog(logid=logid, content=content)

@@ -55,11 +55,6 @@ class Build(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(build, None)
 
     @defer.inlineCallbacks
-    def test_get_missing_builder_id(self):
-        build = yield self.callGet(dict(), dict(builderid=999, buildid=14))
-        self.assertEqual(build, None)
-
-    @defer.inlineCallbacks
     def test_get_missing_builder_number(self):
         build = yield self.callGet(dict(), dict(builderid=999, number=4))
         self.assertEqual(build, None)
