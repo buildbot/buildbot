@@ -71,6 +71,11 @@ class Tests(interfaces.InterfaceTests):
         def maybeBuildsetComplete(self, bsid):
             pass
 
+    def test_signature_updates_updateBuilderList(self):
+        @self.assertArgSpecMatches(self.data.updates.updateBuilderList)
+        def updateBuilderList(self, masterid, builderNames):
+            pass
+
 
 class TestFakeData(unittest.TestCase, Tests):
 

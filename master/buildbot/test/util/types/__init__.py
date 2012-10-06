@@ -27,6 +27,7 @@ _messageVerifiers = {
     'buildset' : 'buildsets.verifyMessage',
     'buildrequest' : None,
     'master' : 'masters.verifyMessage',
+    'builder' : 'builders.verifyMessage',
 }
 def verifyMessage(testcase, routingKey, message):
     return _call(_messageVerifiers[routingKey[0]], testcase, routingKey, message)
@@ -45,6 +46,7 @@ _dataVerifiers = {
     'buildset' : 'buildsets.verifyData',
     'change' : 'changes.verifyData',
     'master' : 'masters.verifyData',
+    'builder' : 'builders.verifyData',
 }
 def verifyData(testcase, type, options, value):
     return _call(_dataVerifiers[type], testcase, type, options, value)

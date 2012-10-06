@@ -50,6 +50,16 @@ When a master becomes inactive (either on its own, or having failed its heartbea
 
 It should be possible to list the master on which a scheduler is running at e.g., `/scheduler/:schedulerid/master`
 
+### Builders ###
+
+
+
+### Buildrequests ###
+
+Buildrequests include a `builderid` field which will need to be determined from the builders table.
+It should probably be an error to schedule a build on a builder that does not exist, as that build will not be executed.
+It's OK to schedule a build on a builder that's not implemented by a running master, though.
+
 ## Other Resource-Type Related Tasks ##
 
 * ``addBuildset`` currently sends messages about buildrequests directly.

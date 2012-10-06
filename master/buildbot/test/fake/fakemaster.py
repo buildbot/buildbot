@@ -93,6 +93,7 @@ class FakeMaster(object):
         self.status = FakeStatus()
         self.status.master = self
         self.name = 'fake:/master'
+        self.masterid = master_id
 
     def getObjectId(self):
         return defer.succeed(self._master_id)

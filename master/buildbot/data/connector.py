@@ -38,6 +38,7 @@ class DataConnector(service.Service):
         'buildbot.data.buildsets',
         'buildbot.data.changes',
         'buildbot.data.masters',
+        'buildbot.data.builders',
     ]
 
     def __init__(self, master):

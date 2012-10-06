@@ -268,6 +268,10 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         self.builderNames = self.builders.keys()
 
+        yield self.master.data.updates.updateBuilderList(
+                self.master.masterid,
+                [ util.ascii2unicode(n) for n in self.builderNames ])
+
         metrics.MetricCountEvent.log("num_builders",
                 len(self.builders), absolute=True)
 

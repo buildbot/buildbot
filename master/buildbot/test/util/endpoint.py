@@ -21,7 +21,12 @@ from buildbot.test.util import interfaces
 class EndpointMixin(interfaces.InterfaceTests):
     # test mixin for testing Endpoint subclasses
 
+    # class being tested
     endpointClass = None
+
+    # if necessary, the corresponding resource type - this wil
+    # be instantiated at self.data.rtypes[rtype.type] and self.rtype
+    resourceTypeClass = None
 
     def setUpEndpoint(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
@@ -30,6 +35,10 @@ class EndpointMixin(interfaces.InterfaceTests):
         self.mq = self.master.mq
         self.data = self.master.data
         self.ep = self.endpointClass(self.master)
+
+        if self.resourceTypeClass:
+            rtype = self.rtype = self.resourceTypeClass(self.master)
+            self.data.rtypes = { rtype.type : rtype }
 
         # this usually fails when a single-element pathPattern does not have a
         # trailing comma

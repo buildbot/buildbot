@@ -205,6 +205,17 @@ All update methods return a Deferred.
         It checks the given buildset to see if all of its buildrequests are finished.
         If so, it updates the status of the buildset and send the appropriate messages.
 
+.. py:class:: buildbot.data.changes.BuilderResourceType
+
+    .. py:method:: updateBuilderList(masterid, builderNames)
+
+        :param integer masterid: this master's master ID
+        :param list builderNames: list of names of currently-configured builders (unicode strings)
+        :returns: Deferred
+
+        Record the given builders as the currently-configured set of builders on this master.
+        Masters should call this every time the list of configured builders changes.
+
 Links
 .....
 
@@ -489,5 +500,6 @@ All strings in the data model are unicode strings.
     rtype-buildset
     rtype-change
     rtype-master
+    rtype-builder
 
 .. [#apiv1] The JSON API defined by ``status_json.py`` in Buildbot-0.8.x is considered version 1, although its root path was ``json``, not ``api/v1``.

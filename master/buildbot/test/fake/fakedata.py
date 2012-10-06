@@ -122,6 +122,14 @@ class FakeUpdates(object):
         self.maybeBuildsetCompleteCalls += 1
         return defer.succeed(None)
 
+    def updateBuilderList(self, masterid, builderNames):
+        self.testcase.assertEqual(masterid, self.master.masterid)
+        for n in builderNames:
+            self.testcase.assertIsInstance(n, unicode)
+        self.builderNames = builderNames
+        return defer.succeed(None)
+
+
 class FakeDataConnector(object):
     # FakeDataConnector delegates to the real DataConnector so it can get all
     # of the proper getter and consumer behavior; it overrides all of the
