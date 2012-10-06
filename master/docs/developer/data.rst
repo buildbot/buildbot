@@ -130,8 +130,8 @@ All update methods return a Deferred.
         :param unicode branch: the branch on which this change took place
         :param unicode category: category for this change
         :param string revlink: link to a web view of this revision
-        :param properties: properties to set on this change
-        :type properties: dictionary with unicode keys and simple values (JSON-able).  Note that the property source is *not* included in this dictionary.
+        :param properties: properties to set on this change.  Note that the property source is *not* included in this dictionary.
+        :type properties: dictionary with unicode keys and simple values (JSON-able).
         :param unicode repository: the repository in which this change took place
         :param unicode project: the project this change is a part of
         :param unicode src: source of the change (vcs or other)
@@ -154,6 +154,37 @@ All update methods return a Deferred.
         :returns: Deferred
 
         Record a change in state for this master.
+
+.. py:class:: buildbot.data.changes.BuildsetResourceType
+
+    .. py:method:: addBuildset(scheduler=None, sourcestampsetid=None, reason='', properties={}, builderNames=[], external_idstring=None)
+
+        :param string scheduler: the name of the scheduler creating this buildset
+        :param integer sourcestampsetid: the source stamp set to be built
+        :param unicode reason: the reason for this build
+        :param unicode reason: the reason for this build
+        :param properties: properties to set on this buildset
+        :type properties: dictionary with unicode keys and (source, property value) values
+        :param list builderNames: names of the builders for which build requests should be created
+        :param unicode external_idstring: arbitrary identifier to recognize this buildset later
+        :returns: (buildset id, dictionary mapping builder names to build request ids) via Deferred
+
+        .. warning:
+
+            The ``scheduler`` parameter will be replaced with a ``schedulerid`` parameter in future releases.
+            The ``builderNames`` parameter will be replaced with a ``builderIds`` parameter in future releases.
+
+        Create a new buildset and corresponding buildrequests based on the given parameters.
+        This is the low-level interface for scheduling builds.
+
+    .. py:method:: maybeBuildsetComplete(bsid)
+
+        :param integer bsid: buildset that may be complete
+        :returns: Deferred
+
+        This method should be called when a build request is finished.
+        It checks the given buildset to see if all of its buildrequests are finished.
+        If so, it updates the status of the buildset and send the appropriate messages.
 
 Links
 .....
@@ -428,6 +459,7 @@ All strings in the data model are unicode strings.
 .. toctree::
     :maxdepth: 1
 
+    rtype-buildset
     rtype-change
     rtype-master
 

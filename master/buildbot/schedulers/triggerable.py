@@ -31,7 +31,7 @@ class Triggerable(base.BaseScheduler):
                                     **kwargs)
         self._waiters = {}
         self._buildset_complete_consumer = None
-        self.reason = "Triggerable(%s)" % name
+        self.reason = u"Triggerable(%s)" % name
 
     def trigger(self, sourcestamps = None, set_props=None):
         """Trigger this scheduler with the optional given list of sourcestamps
@@ -91,4 +91,4 @@ class Triggerable(base.BaseScheduler):
         self._updateWaiters()
 
         # fire the callback to indicate that the triggered build is complete
-        d.callback((msg['result'], brids))
+        d.callback((msg['results'], brids))

@@ -334,6 +334,15 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
     @defer.inlineCallbacks
     def addBuildsetForSourceStampSetDetails(self, reason, sourcestamps,
                                             properties, builderNames=None):
+        """Create a sourcestamp set based on sourcestamps, then wrap it in a
+        buildset.
+
+        Sourcestamps is a dictionary keyed by codebase, giving the required
+        parameters.  Any other defaults will be filled in from the scheduler's
+        configuration.  If sourcestamps is None, only the defaults will be
+        used.
+        """
+
         if sourcestamps is None:
             sourcestamps = {}
 
@@ -460,9 +469,8 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
                 # no sourcestamp and no sets
                 yield None
 
-        rv = yield self.master.addBuildset(scheduler=self.name,
-                sourcestampsetid=setid, reason=reason,
+        rv = yield self.master.data.updates.addBuildset(
+                scheduler=self, sourcestampsetid=setid, reason=reason,
                 properties=properties_dict, builderNames=builderNames,
                 external_idstring=external_idstring)
         defer.returnValue(rv)
-
