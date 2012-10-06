@@ -344,7 +344,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
             # claim brid 10 for some other master
             assert 10 in brids
             self.db.buildrequests.fakeClaimBuildRequest(10, 136000,
-                    objectid=9999) # some other objectid
+                    masterid=9999) # some other masterid
             # ..and fail
             return defer.fail(buildrequests.AlreadyClaimedError())
         self.db.buildrequests.claimBuildRequests = claimBuildRequests
@@ -768,13 +768,13 @@ class TestGetOldestRequestTime(unittest.TestCase):
                         buildername='bldr1', buildsetid=11),
             fakedb.BuildRequest(id=222, submitted_at=2000,
                         buildername='bldr1', buildsetid=11),
-            fakedb.BuildRequestClaim(brid=222, objectid=master_id,
+            fakedb.BuildRequestClaim(brid=222, masterid=master_id,
                         claimed_at=2001),
             fakedb.BuildRequest(id=333, submitted_at=3000,
                         buildername='bldr1', buildsetid=11),
             fakedb.BuildRequest(id=444, submitted_at=2500,
                         buildername='bldr2', buildsetid=11),
-            fakedb.BuildRequestClaim(brid=444, objectid=master_id,
+            fakedb.BuildRequestClaim(brid=444, masterid=master_id,
                         claimed_at=2501),
         ]
 

@@ -92,7 +92,7 @@ class FakeMaster(object):
         self.botmaster.parent = self
         self.status = FakeStatus()
         self.status.master = self
-        self.master_name = 'fake:/master'
+        self.name = 'fake:/master'
 
     def getObjectId(self):
         return defer.succeed(self._master_id)

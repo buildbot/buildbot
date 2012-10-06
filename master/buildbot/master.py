@@ -22,7 +22,7 @@ import datetime
 from zope.interface import implements
 from twisted.python import log, components, failure
 from twisted.internet import defer, reactor, task
-from twisted.application import service
+from twisted.application import service, internet
 
 import buildbot
 import buildbot.pbmanager
@@ -98,8 +98,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         except AttributeError:
             self.hostname = socket.getfqdn()
 
-        self.master_name = "%s:%s" % (self.hostname,
-                os.path.abspath(self.basedir or '.'))
+        # public attributes
+        self.name = ("%s:%s" % (self.hostname,
+                os.path.abspath(self.basedir or '.')))
+        self.name = self.name.decode('ascii', 'replace')
+        self.masterid = None
 
     def create_child_services(self):
         # note that these are order-dependent.  If you get the order wrong,
@@ -143,6 +146,12 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         self.status = Status(self)
         self.status.setServiceParent(self)
+
+        def heartbeat():
+            if self.masterid is not None:
+                self.data.updates.masterActive(name=self.name,
+                                        masterid=self.masterid)
+        self.masterHeartbeatService = internet.TimerService(60, heartbeat)
 
     # setup and reconfig handling
 
@@ -201,6 +210,10 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                     _reactor.callLater(0, self.reconfig)
                 signal.signal(signal.SIGHUP, sighup)
 
+            # get the masterid so other services can use it in startup/reconfig
+            self.masterid = yield self.db.masters.findMasterId(
+                                    name=self.name)
+
             # call the parent method
             yield defer.maybeDeferred(lambda :
                     service.MultiService.startService(self))
@@ -209,19 +222,24 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             # than the base configuration
             yield self.reconfigService(self.config)
 
+            # mark the master as active now that mq is running
+            yield self.data.updates.masterActive(
+                                    name=self.name,
+                                    masterid=self.masterid)
         except:
             f = failure.Failure()
             log.err(f, 'while starting BuildMaster')
             _reactor.stop()
 
         self._master_initialized = True
-
-        self._setMasterState('started')
         log.msg("BuildMaster is running")
 
-
+    @defer.inlineCallbacks
     def stopService(self):
-        self._setMasterState('stopped')
+        if self.masterid is not None:
+            yield self.data.updates.masterStopped(
+                    name=self.name, masterid=self.masterid)
+
         log.msg("BuildMsater is stopped")
         self._master_initialized = False
 
@@ -401,7 +419,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # failing that, get it from the DB; multiple calls to this function
         # at the same time will not hurt
 
-        d = self.db.state.getObjectId(self.master_name,
+        d = self.db.state.getObjectId(self.name,
                 "buildbot.master.BuildMaster")
         def keep(id):
             self._object_id = id
@@ -425,14 +443,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         d.addCallback(set)
         return d
 
-    # master messages
-
-    def _setMasterState(self, state):
-        # for early termination and a few other cases, don't explode
-        if not self._master_initialized:
-            return
-        d = self.data.updates.setMasterState(state=state)
-        d.addErrback(log.err, "while sending master message")
 
 class Control:
     implements(interfaces.IControl)

@@ -35,6 +35,7 @@ _dbVerifiers = {
     'bsdict' : 'buildsets.verifyDbDict',
     'chdict' : 'changes.verifyDbDict',
     'bsdict' : 'buildsets.verifyDbDict',
+    'masterdict' : 'masters.verifyDbDict',
 }
 def verifyDbDict(testcase, type, value):
     return _call(_dbVerifiers[type], testcase, type, value)

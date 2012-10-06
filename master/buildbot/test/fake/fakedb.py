@@ -22,6 +22,7 @@ the real connector components.
 import copy
 import random
 import base64
+import hashlib
 from buildbot.util import json, epoch2datetime, datetime2epoch
 from twisted.python import failure
 from twisted.internet import defer, reactor
@@ -53,6 +54,7 @@ class Row(object):
     required_columns = ()
     lists = ()
     dicts = ()
+    hash_pairs = []
 
     _next_id = None
 
@@ -74,6 +76,11 @@ class Row(object):
         for k, v in self.values.iteritems():
             if isinstance(v, str):
                 self.values[k] = unicode(v)
+        # calculate any necessary hashes
+        for src_col, hash_col in self.hash_pairs:
+            self.values[hash_col] = \
+                hashlib.sha1(self.values[src_col]).hexdigest()
+
         # make the values appear as attributes
         self.__dict__.update(self.values)
 
@@ -112,11 +119,11 @@ class BuildRequestClaim(Row):
 
     defaults = dict(
         brid = None,
-        objectid = None,
+        masterid = None,
         claimed_at = None
     )
 
-    required_columns = ('brid', 'objectid', 'claimed_at')
+    required_columns = ('brid', 'masterid', 'claimed_at')
 
 
 class Change(Row):
@@ -322,6 +329,20 @@ class Build(Row):
         finish_time = None)
 
     id_column = 'id'
+
+class Master(Row):
+    table = "masters"
+
+    defaults = dict(
+        id = None,
+        name = 'some:master',
+        name_hash = None,
+        active = 1,
+        last_active = 9998999,
+    )
+
+    id_column = 'id'
+    hash_pairs = [ ( 'name', 'name_hash' ) ]
 
 # Fake DB Components
 
@@ -939,7 +960,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         # now that we've thrown any necessary exceptions, get started
         for brid in brids:
             self.claims[brid] = BuildRequestClaim(brid=brid,
-                objectid=self.MASTER_ID, claimed_at=claimed_at)
+                masterid=self.MASTER_ID, claimed_at=claimed_at)
         return defer.succeed(None)
 
     def reclaimBuildRequests(self, brids):
@@ -951,7 +972,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         # now that we've thrown any necessary exceptions, get started
         for brid in brids:
             self.claims[brid] = BuildRequestClaim(brid=brid,
-                objectid=self.MASTER_ID, claimed_at=self._reactor.seconds())
+                masterid=self.MASTER_ID, claimed_at=self._reactor.seconds())
         return defer.succeed(None)
 
     # Code copied from buildrequests.BuildRequestConnectorComponent
@@ -962,7 +983,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         if claim_row:
             claimed = True
             claimed_at = claim_row.claimed_at
-            mine = claim_row.objectid == self.MASTER_ID
+            mine = claim_row.masterid == self.MASTER_ID
 
         submitted_at = epoch2datetime(row.submitted_at)
         complete_at = epoch2datetime(row.complete_at)
@@ -975,11 +996,11 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
     # fake methods
 
-    def fakeClaimBuildRequest(self, brid, claimed_at=None, objectid=None):
-        if objectid is None:
-            objectid = self.MASTER_ID
+    def fakeClaimBuildRequest(self, brid, claimed_at=None, masterid=None):
+        if masterid is None:
+            masterid = self.MASTER_ID
         self.claims[brid] = BuildRequestClaim(brid=brid,
-            objectid=objectid, claimed_at=self._reactor.seconds())
+            masterid=masterid, claimed_at=self._reactor.seconds())
 
     def fakeUnclaimBuildRequest(self, brid):
         del self.claims[brid]
@@ -989,7 +1010,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
     def assertMyClaims(self, claimed_brids):
         self.t.assertEqual(
                 [ id for (id, brc) in self.claims.iteritems()
-                  if brc.objectid == self.MASTER_ID ],
+                  if brc.masterid == self.MASTER_ID ],
                 claimed_brids)
 
 
@@ -1163,6 +1184,57 @@ class FakeUsersComponent(FakeDBComponent):
                 return defer.succeed(uid)
         return defer.succeed(None)
 
+class FakeMastersComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.masters = {}
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, Master):
+                self.masters[row.id] = dict(
+                        id=row.id,
+                        name=row.name,
+                        active=bool(row.active),
+                        last_active=epoch2datetime(row.last_active))
+
+    def findMasterId(self, name, _reactor=reactor):
+        for m in self.masters.itervalues():
+            if m['name'] == name:
+                return defer.succeed(m['id'])
+        id = len(self.masters) + 1
+        self.masters[id] = dict(
+            id=id,
+            name=name,
+            active=False,
+            last_active=epoch2datetime(_reactor.seconds()))
+        return defer.succeed(id)
+
+    def setMasterState(self, masterid, active, _reactor=reactor):
+        if masterid in self.masters:
+            was_active = self.masters[masterid]['active']
+            self.masters[masterid]['active'] = active
+            if active:
+                self.masters[masterid]['last_active'] = \
+                    epoch2datetime(_reactor.seconds())
+            return defer.succeed(bool(was_active) != bool(active))
+        else:
+            return defer.succeed(False)
+
+    def markMasterInactive(self, masterid):
+        if masterid in self.masters:
+            self.masters[masterid]['active'] = False
+        return defer.succeed(None)
+
+    def getMaster(self, masterid):
+        if masterid in self.masters:
+            return defer.succeed(self.masters[masterid])
+        return defer.succeed(None)
+
+    def getMasters(self):
+        return defer.succeed(self.masters.values())
+
+
 class FakeDBConnector(object):
     """
     A stand-in for C{master.db} that operates without an actual database
@@ -1195,6 +1267,8 @@ class FakeDBConnector(object):
         self.builds = comp = FakeBuildsComponent(self, testcase)
         self._components.append(comp)
         self.users = comp = FakeUsersComponent(self, testcase)
+        self._components.append(comp)
+        self.masters = comp = FakeMastersComponent(self, testcase)
         self._components.append(comp)
 
     def setup(self):

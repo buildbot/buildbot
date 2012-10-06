@@ -29,23 +29,10 @@ class NotClaimedError(Exception):
 class BrDict(dict):
     pass
 
-# private decorator to add a _master_objectid keyword argument, querying from
-# the master
-def with_master_objectid(fn):
-    def wrap(self, *args, **kwargs):
-        d = self.db.master.getObjectId()
-        d.addCallback(lambda master_objectid :
-                fn(self, _master_objectid=master_objectid, *args, **kwargs))
-        return d
-    wrap.__name__ = fn.__name__
-    wrap.__doc__ = fn.__doc__
-    return wrap
-
 class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
-    @with_master_objectid
-    def getBuildRequest(self, brid, _master_objectid=None):
+    def getBuildRequest(self, brid):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -57,14 +44,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             rv = None
             if row:
-                rv = self._brdictFromRow(row, _master_objectid)
+                rv = self._brdictFromRow(row, self.db.master.masterid)
             res.close()
             return rv
         return self.db.pool.do(thd)
 
-    @with_master_objectid
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
-            bsid=None, _master_objectid=None):
+            bsid=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -77,7 +63,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                         (reqs_tbl.c.complete == 0))
                 elif claimed == "mine":
                     q = q.where(
-                        (claims_tbl.c.objectid == _master_objectid))
+                        (claims_tbl.c.masterid == self.db.master.masterid))
                 else:
                     q = q.where(
                         (claims_tbl.c.claimed_at != None))
@@ -92,13 +78,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 q = q.where(reqs_tbl.c.buildsetid == bsid)
             res = conn.execute(q)
 
-            return [ self._brdictFromRow(row, _master_objectid)
+            return [ self._brdictFromRow(row, self.db.master.masterid)
                      for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
-    @with_master_objectid
-    def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor,
-                            _master_objectid=None):
+    def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
         if claimed_at is not None:
             claimed_at = datetime2epoch(claimed_at)
         else:
@@ -110,9 +94,10 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             try:
                 q = tbl.insert()
-                conn.execute(q, [ dict(brid=id, objectid=_master_objectid,
+                conn.execute(q, [
+                    dict(brid=id, masterid=self.db.master.masterid,
                                     claimed_at=claimed_at)
-                                  for id in brids ])
+                    for id in brids ])
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 transaction.rollback()
                 raise AlreadyClaimedError
@@ -121,9 +106,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    @with_master_objectid
-    def reclaimBuildRequests(self, brids, _reactor=reactor,
-                            _master_objectid=None):
+    def reclaimBuildRequests(self, brids, _reactor=reactor):
         def thd(conn):
             transaction = conn.begin()
             tbl = self.db.model.buildrequest_claims
@@ -139,7 +122,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     break # success!
 
                 q = tbl.update(tbl.c.brid.in_(batch)
-                                & (tbl.c.objectid==_master_objectid))
+                                & (tbl.c.masterid==self.db.master.masterid))
                 res = conn.execute(q, claimed_at=claimed_at)
 
                 # if fewer rows were updated than expected, then something
@@ -151,8 +134,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
         return self.db.pool.do(thd)
 
-    @with_master_objectid
-    def unclaimBuildRequests(self, brids, _master_objectid=None):
+    def unclaimBuildRequests(self, brids):
         def thd(conn):
             transaction = conn.begin()
             claims_tbl = self.db.model.buildrequest_claims
@@ -168,8 +150,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
                 try:
                     q = claims_tbl.delete(
-                            (claims_tbl.c.brid.in_(batch))
-                            & (claims_tbl.c.objectid == _master_objectid))
+                        (claims_tbl.c.brid.in_(batch))
+                        & (claims_tbl.c.masterid == self.db.master.masterid))
                     conn.execute(q)
                 except:
                     transaction.rollback()
@@ -178,9 +160,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
         return self.db.pool.do(thd)
 
-    @with_master_objectid
     def completeBuildRequests(self, brids, results, complete_at=None,
-                            _reactor=reactor, _master_objectid=None):
+                            _reactor=reactor):
         if complete_at is not None:
             complete_at = datetime2epoch(complete_at)
         else:
@@ -243,13 +224,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         d.addCallback(log_nonzero_count)
         return d
 
-    def _brdictFromRow(self, row, master_objectid):
+    def _brdictFromRow(self, row, master_masterid):
         claimed = mine = False
         claimed_at = None
         if row.claimed_at is not None:
             claimed_at = row.claimed_at
             claimed = True
-            mine = row.objectid == master_objectid
+            mine = row.masterid == master_masterid
 
         def mkdt(epoch):
             if epoch:
