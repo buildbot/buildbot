@@ -39,6 +39,7 @@ class ResourceType(object):
 
 class Endpoint(object):
     pathPattern = None
+    pathPatterns = []
     rootLinkName = None
 
     def __init__(self, master):
