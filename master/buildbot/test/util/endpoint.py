@@ -33,11 +33,14 @@ class EndpointMixin(interfaces.InterfaceTests):
 
         # this usually fails when a single-element pathPattern does not have a
         # trailing comma
-        self.assertIsInstance(self.ep.pathPattern, tuple)
+        patterns = [ self.ep.pathPattern ] + self.ep.pathPatterns
+        for pp in patterns:
+            if pp is not None:
+                self.assertIsInstance(pp, tuple)
 
-        self.path_args = set([
-            arg.split(':', 1)[1] for arg in self.ep.pathPattern
-            if ':' in arg ])
+        self.pathArgs = [
+            set([ arg.split(':', 1)[1] for arg in pp if ':' in arg ])
+            for pp in patterns if pp is not None ]
 
     def tearDownEndpoint(self):
         pass
@@ -45,13 +48,13 @@ class EndpointMixin(interfaces.InterfaceTests):
     # call methods, with extra checks
 
     def callGet(self, options, kwargs):
-        self.assertEqual(set(kwargs), self.path_args)
+        self.assertIn(set(kwargs), self.pathArgs)
         d = self.ep.get(options, kwargs)
         self.assertIsInstance(d, defer.Deferred)
         return d
 
     def callStartConsuming(self, options, kwargs, expected_filter=None):
-        self.assertEqual(set(kwargs), self.path_args)
+        self.assertIn(set(kwargs), self.pathArgs)
         cb = mock.Mock()
         qref = self.ep.startConsuming(cb, options, kwargs)
         self.assertTrue(hasattr(qref, 'stopConsuming'))

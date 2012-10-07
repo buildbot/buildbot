@@ -63,11 +63,16 @@ class DataConnector(service.Service):
                 # load its endpoints
                 for ep in rtype.getEndpoints():
                     # don't use inherited values for these parameters
-                    pathPattern = ep.__class__.__dict__.get('pathPattern')
-                    rootLinkName = ep.__class__.__dict__.get('rootLinkName')
-                    self.matcher[pathPattern] = ep
+                    clsdict = ep.__class__.__dict__
+                    pathPattern = clsdict.get('pathPattern')
+                    pathPatterns = clsdict.get('pathPatterns', [])
+                    patterns = [ pathPattern ] + pathPatterns
+                    rootLinkName = clsdict.get('rootLinkName')
+                    for pp in patterns:
+                        if pp is not None:
+                            self.matcher[pp] = ep
                     if rootLinkName:
-                        link = base.Link(pathPattern)
+                        link = base.Link(patterns[0])
                         self.rootLinks[rootLinkName] = link
 
     def _setup(self):

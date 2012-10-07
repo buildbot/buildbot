@@ -364,11 +364,19 @@ See that module's description for details.
 
         The path pattern which incoming paths must match to select this endpoint.
 
+    .. py:attribute:: pathPatterns
+
+        :type: list of tuples
+
+        List of path patterns which incoming paths must match to select this endpoint.
+        This is useful where the same endpoint class services multiple paths.
+        If specified, ``pathPattern`` is prepended to this list.
+
     .. py:attribute:: rootLinkName
 
         :type: string
 
-        If set, then the path for this endpoint will be included as a link in the root of the API.
+        If set, then the first path pattern for this endpoint will be included as a link in the root of the API.
         This should be set for any endpoints that begin an explorable tree.
 
     .. py:method:: get(options, kwargs)
