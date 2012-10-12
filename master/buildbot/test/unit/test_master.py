@@ -213,6 +213,9 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
         reactor = self.make_reactor()
 
         d = self.master.startService(_reactor=reactor)
+        @d.addCallback
+        def check_started(_):
+            self.assertTrue(self.master.data.updates.masterActive)
         d.addCallback(lambda _ : self.master.stopService())
 
         @d.addCallback
@@ -221,8 +224,7 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
             self.assertLogged("BuildMaster is running")
 
             # check started/stopped messages
-            self.assertEqual(self.master.data.updates.masterStateChanges,
-                    ['started', 'stopped'])
+            self.assertFalse(self.master.data.updates.masterActive)
         return d
 
     def test_reconfig(self):

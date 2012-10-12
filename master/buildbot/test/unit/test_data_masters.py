@@ -14,9 +14,14 @@
 # Copyright Buildbot Team Members
 
 from twisted.trial import unittest
+from twisted.internet import task, defer
 from buildbot.data import masters
+from buildbot.util import epoch2datetime
 from buildbot.test.util import types, endpoint
-from buildbot.test.fake import fakemaster
+from buildbot.test.fake import fakemaster, fakedb
+
+SOMETIME = 1349016870
+OTHERTIME = 1249016870
 
 class Master(endpoint.EndpointMixin, unittest.TestCase):
 
@@ -24,7 +29,11 @@ class Master(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.master.master_name = "myname"
+        self.master.name = "myname"
+        self.db.insertTestData([
+            fakedb.Master(id=13, name='some:master', active=False,
+                            last_active=SOMETIME),
+        ])
 
 
     def tearDown(self):
@@ -32,11 +41,11 @@ class Master(endpoint.EndpointMixin, unittest.TestCase):
 
 
     def test_get_existing(self):
-        d = self.callGet(dict(), dict(masterid=1))
+        d = self.callGet(dict(), dict(masterid=13))
         @d.addCallback
         def check(master):
             types.verifyData(self, 'master', {}, master)
-            self.assertEqual(master['name'], 'myname')
+            self.assertEqual(master['name'], 'some:master')
         return d
 
 
@@ -54,7 +63,13 @@ class Masters(endpoint.EndpointMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpEndpoint()
-        self.master.master_name = "myname"
+        self.master.name = "myname"
+        self.db.insertTestData([
+            fakedb.Master(id=13, name='some:master', active=False,
+                            last_active=SOMETIME),
+            fakedb.Master(id=14, name='other:master', active=True,
+                            last_active=OTHERTIME),
+        ])
 
 
     def tearDown(self):
@@ -65,9 +80,14 @@ class Masters(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict())
         @d.addCallback
         def check(masters):
-            types.verifyData(self, 'master', {}, masters[0])
-            self.assertEqual(masters[0]['masterid'], 1)
+            [ types.verifyData(self, 'master', {}, m) for m in masters ]
+            self.assertEqual(sorted([m['masterid'] for m in masters]),
+                             [13, 14])
         return d
+
+    def test_startConsuming(self):
+        self.callStartConsuming({}, {},
+                expected_filter=('master', None, None))
 
 
 class MasterResourceType(unittest.TestCase):
@@ -77,5 +97,52 @@ class MasterResourceType(unittest.TestCase):
                                                 testcase=self)
         self.rtype = masters.MasterResourceType(self.master)
 
-    def test_setMasterState(self):
-        self.rtype.setMasterState('stopped')
+    @defer.inlineCallbacks
+    def test_masterActive(self):
+        clock = task.Clock()
+        clock.advance(60)
+
+        self.master.db.insertTestData([
+            fakedb.Master(id=13, name='myname', active=0,
+                            last_active=0),
+            fakedb.Master(id=14, name='other', active=1,
+                            last_active=0),
+        ])
+
+        # initial checkin
+        yield self.rtype.masterActive(
+                name=u'myname', masterid=13, _reactor=clock)
+        master = yield self.master.db.masters.getMaster(13)
+        self.assertEqual(master, dict(id=13, name='myname',
+                    active=True, last_active=epoch2datetime(60)))
+        self.assertEqual(self.master.mq.productions, [
+            (('master', '13', 'started'),
+             dict(masterid=13, name='myname', active=True)),
+        ])
+        self.master.mq.productions = []
+
+        # updated checkin time, re-activation
+        clock.advance(60)
+        yield self.master.db.masters.markMasterInactive(13)
+        yield self.rtype.masterActive(
+                u'myname', masterid=13, _reactor=clock)
+        master = yield self.master.db.masters.getMaster(13)
+        self.assertEqual(master, dict(id=13, name='myname',
+                    active=True, last_active=epoch2datetime(120)))
+        self.assertEqual(self.master.mq.productions, [
+            (('master', '13', 'started'),
+             dict(masterid=13, name='myname', active=True)),
+        ])
+        self.master.mq.productions = []
+
+        # re-checkin after over 10 minutes, and see #14 deactivated
+        clock.advance(600)
+        yield self.rtype.masterActive(
+                u'myname', masterid=13, _reactor=clock)
+        master = yield self.master.db.masters.getMaster(14)
+        self.assertEqual(master, dict(id=14, name='other',
+                    active=False, last_active=epoch2datetime(0)))
+        self.assertEqual(self.master.mq.productions, [
+            (('master', '14', 'stopped'),
+             dict(masterid=14, name='other', active=False)),
+        ])
