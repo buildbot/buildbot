@@ -65,8 +65,7 @@ def upgrade(migrate_engine):
             nullable=False),
         sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
             index=True, nullable=True),
-        sa.Column('claimed_at', sa.Integer, nullable=False),
-        extend_existing=True
+        sa.Column('claimed_at', sa.Integer, nullable=False)
     )
 
     # create the new table
