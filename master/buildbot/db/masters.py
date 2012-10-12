@@ -68,7 +68,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 return False # can't change a row that doesn't exist..
             was_active = bool(rows[0].active)
 
-            # set the state (unconditionally, just to be safe)
+            # set the state
             q = tbl.update(whereclause=whereclause)
             q = q.values(active=1 if active else 0)
             if active:
