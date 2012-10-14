@@ -210,7 +210,10 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                     _reactor.callLater(0, self.reconfig)
                 signal.signal(signal.SIGHUP, sighup)
 
-            # get the masterid so other services can use it in startup/reconfig
+            # get the masterid so other services can use it in
+            # startup/reconfig.  This goes directly to the DB since the data
+            # API isn't initialized yet, and anyway, this method is aware of
+            # the DB API since it just called its setup function
             self.masterid = yield self.db.masters.findMasterId(
                                     name=self.name)
 
