@@ -84,12 +84,13 @@ class MasterResourceType(base.ResourceType):
                 continue
 
             # mark the master inactive, and send a message on its behalf
-            yield self.master.db.masters.setMasterState(
+            deactivated = yield self.master.db.masters.setMasterState(
                     masterid=m['id'], active=False, _reactor=_reactor)
-            self.produceEvent(
-                dict(masterid=m['id'], name=m['name'],
-                     active=False),
-                'stopped')
+            if deactivated:
+                self.produceEvent(
+                    dict(masterid=m['id'], name=m['name'],
+                        active=False),
+                    'stopped')
 
     @base.updateMethod
     @defer.inlineCallbacks

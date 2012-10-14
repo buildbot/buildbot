@@ -107,6 +107,8 @@ class MasterResourceType(unittest.TestCase):
                             last_active=0),
             fakedb.Master(id=14, name='other', active=1,
                             last_active=0),
+            fakedb.Master(id=15, name='other', active=1,
+                            last_active=0),
         ])
 
         # initial checkin
@@ -135,8 +137,10 @@ class MasterResourceType(unittest.TestCase):
         ])
         self.master.mq.productions = []
 
-        # re-checkin after over 10 minutes, and see #14 deactivated
+        # re-checkin after over 10 minutes, and see #14 deactivated; #15
+        # gets deactivated by another master, so it's not included here
         clock.advance(600)
+        yield self.master.db.masters.markMasterInactive(15)
         yield self.rtype.masterActive(
                 u'myname', masterid=13, _reactor=clock)
         master = yield self.master.db.masters.getMaster(14)
