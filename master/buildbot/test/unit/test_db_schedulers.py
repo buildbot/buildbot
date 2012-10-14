@@ -225,7 +225,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getSchedulers(self):
         @self.assertArgSpecMatches(self.db.schedulers.getSchedulers)
-        def getSchedulers(self, active=None):
+        def getSchedulers(self, active=None, masterid=None):
             pass
 
     @defer.inlineCallbacks
@@ -241,6 +241,17 @@ class Tests(interfaces.InterfaceTests):
             dict(id=25, name='schname2', masterid=None),
         ]))
 
+    @defer.inlineCallbacks
+    def test_getSchedulers_masterid(self):
+        yield self.insertTestData([
+            self.scheduler24, self.master13, self.scheduler24master,
+            self.scheduler25,
+            ])
+        schlist = yield self.db.schedulers.getSchedulers(masterid=13)
+        [ types.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+        self.assertEqual(sorted(schlist), sorted([
+            dict(id=24, name='schname', masterid=13),
+        ]))
 
     @defer.inlineCallbacks
     def test_getSchedulers_active(self):
@@ -249,6 +260,19 @@ class Tests(interfaces.InterfaceTests):
             self.scheduler25
             ])
         schlist = yield self.db.schedulers.getSchedulers(active=True)
+        [ types.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+        self.assertEqual(sorted(schlist), sorted([
+            dict(id=24, name='schname', masterid=13),
+        ]))
+
+    @defer.inlineCallbacks
+    def test_getSchedulers_active_masterid(self):
+        yield self.insertTestData([
+            self.scheduler24, self.master13, self.scheduler24master,
+            self.scheduler25
+            ])
+        schlist = yield self.db.schedulers.getSchedulers(
+                                            active=True, masterid=13)
         [ types.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
         self.assertEqual(sorted(schlist), sorted([
             dict(id=24, name='schname', masterid=13),
@@ -265,6 +289,17 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(sorted(schlist), sorted([
             dict(id=25, name='schname2', masterid=None),
         ]))
+
+    @defer.inlineCallbacks
+    def test_getSchedulers_inactive_masterid(self):
+        yield self.insertTestData([
+            self.scheduler24, self.master13, self.scheduler24master,
+            self.scheduler25
+            ])
+        schlist = yield self.db.schedulers.getSchedulers(
+                active=False, masterid=13)
+        [ types.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+        self.assertEqual(sorted(schlist), [])
 
 
 class RealTests(Tests):

@@ -120,10 +120,14 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
          if sch:
              yield defer.returnValue(sch[0])
 
-    def getSchedulers(self, active=None, _schedulerid=None):
+    def getSchedulers(self, active=None, masterid=None, _schedulerid=None):
         def thd(conn):
             sch_tbl = self.db.model.schedulers
             sch_mst_tbl = self.db.model.scheduler_masters
+
+            # handle the trivial case of masterid=xx and active=False
+            if masterid is not None and active is not None and not active:
+                return []
 
             join = sch_tbl.outerjoin(sch_mst_tbl,
                 (sch_tbl.c.id == sch_mst_tbl.c.schedulerid))
@@ -133,8 +137,10 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             if _schedulerid:
                 wc = (sch_tbl.c.id == _schedulerid)
             else:
-                # otherwise, filter witha ctive, if necessary
-                if active:
+                # otherwise, filter with active, if necessary
+                if masterid is not None:
+                    wc = (sch_mst_tbl.c.masterid == masterid)
+                elif active:
                     wc = (sch_mst_tbl.c.masterid != None)
                 elif active is not None:
                     wc = (sch_mst_tbl.c.masterid == None)

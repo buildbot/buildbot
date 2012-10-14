@@ -577,7 +577,7 @@ class FakeSchedulersComponent(FakeDBComponent):
         else:
             return None
 
-    def getSchedulers(self, active=None):
+    def getSchedulers(self, active=None, masterid=None):
         d = defer.DeferredList([
             self.getScheduler(id) for id in self.schedulers
         ])
@@ -585,6 +585,10 @@ class FakeSchedulersComponent(FakeDBComponent):
         def filter(results):
             # filter off the DeferredList results (we know it's good)
             results = [ r[1] for r in results ]
+            # filter for masterid
+            if masterid is not None:
+                results = [ r for r in results
+                            if r['masterid'] == masterid ]
             # filter for active or inactive if necessary
             if active:
                 results = [ r for r in results

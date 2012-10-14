@@ -588,13 +588,15 @@ schedulers
 
         Get the scheduler dictionary for the given scheduler.
 
-    .. py:method:: getSchedulers(active=None)
+    .. py:method:: getSchedulers(active=None, masterid=None)
 
         :param boolean active: if specified, filter for active or inactive schedulers
+        :param integer masterid: if specified, only return schedulers attached associated with this master
         :returns: list of scheduler dictionaries in unspecified order
 
-        Get a list of all known schedulers.
+        Get a list of schedulers.
         If ``active``, schedulers are filtered according to whether they are active (true) or inactive (false).
+        If ``masterid`` is given, the list is restricted to schedulers associated with that master.
 
 
 sourcestamps
