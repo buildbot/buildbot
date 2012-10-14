@@ -15,7 +15,7 @@
 
 from twisted.python import log
 from twisted.internet import defer, reactor
-from buildbot.util import datetime2epoch, epoch2datetime, ascii2unicode
+from buildbot.util import datetime2epoch, epoch2datetime
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot.data import base
 
@@ -93,7 +93,7 @@ class BuildsetResourceType(base.ResourceType):
             complete=False,
             complete_at=None,
             results=None,
-            scheduler=ascii2unicode(scheduler.name))
+            scheduler=scheduler)
             # TODO: properties=properties)
         self.master.mq.produce(("buildset", str(bsid), "new"), msg)
 

@@ -183,7 +183,7 @@ class BuildsetResourceType(unittest.TestCase):
             implements(interfaces.IScheduler)
             name = 'fakesched'
 
-        kwargs = dict(scheduler=FakeSched(), reason=u'because',
+        kwargs = dict(scheduler=u'fakesched', reason=u'because',
                     sourcestampsetid=234, external_idstring=u'extid',
                     builderNames=['a', 'b'])
         expectedReturn = (200, dict(a=1000, b=1001))
@@ -204,7 +204,7 @@ class BuildsetResourceType(unittest.TestCase):
             implements(interfaces.IScheduler)
             name = 'fakesched'
 
-        kwargs = dict(scheduler=FakeSched(), reason=u'because',
+        kwargs = dict(scheduler=u'fakesched', reason=u'because',
                             sourcestampsetid=234, external_idstring=u'extid')
         expectedReturn = (200, {})
         expectedMessages = [
