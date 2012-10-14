@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot import interfaces
 from buildbot.util import json
 import types
 from twisted.internet import defer
@@ -100,8 +99,7 @@ class FakeUpdates(object):
     def addBuildset(self, scheduler=None, sourcestampsetid=None, reason='',
             properties={}, builderNames=[], external_idstring=None):
         # assert types
-        self.testcase.failUnless(interfaces.IScheduler.providedBy(scheduler))
-        scheduler = scheduler.name
+        self.testcase.assertIsInstance(scheduler, unicode)
         self.testcase.assertIsInstance(sourcestampsetid, int)
         self.testcase.assertIsInstance(reason, unicode)
         self.assertProperties(sourced=True, properties=properties)

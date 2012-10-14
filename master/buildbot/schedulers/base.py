@@ -21,7 +21,7 @@ from twisted.internet import defer
 from buildbot.process.properties import Properties
 from buildbot.util import ComparableMixin
 from buildbot.changes import changes
-from buildbot import config, interfaces
+from buildbot import config, interfaces, util
 from buildbot.util.state import StateMixin
 
 class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
@@ -61,7 +61,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
             value: {'repository':'<repo>', 'branch':'<br>', 'revision:'<rev>'}
         """
         service.MultiService.__init__(self)
-        self.name = name
+        self.name = util.ascii2unicode(name)
         "name of this scheduler; used to identify replacements on reconfig"
 
         ok = True
@@ -470,7 +470,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
                 yield None
 
         rv = yield self.master.data.updates.addBuildset(
-                scheduler=self, sourcestampsetid=setid, reason=reason,
+                scheduler=self.name, sourcestampsetid=setid, reason=reason,
                 properties=properties_dict, builderNames=builderNames,
                 external_idstring=external_idstring)
         defer.returnValue(rv)
