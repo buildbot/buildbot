@@ -40,6 +40,12 @@ The outstanding resource types are:
 * logfile
 * buildslave
 
+### Schedulers ###
+
+There is no scheduler resource type yet, although schedulers are in place in the database API so that other tables can refer to a scheduler ID.
+Support needs to be added for schedulers on a particular master to "claim" the name for themselves, deactivate themselves if already running on another master, and periodically poll for the opportunity to pick up the role.
+This gives us automatic failover for schedulers in a multi-master configuration, and also means that all masters can run with identical configurations, which may make configuration management easier.
+
 ## Other Resource-Type Related Tasks ##
 
 * ``addBuildset`` currently sends messages about buildrequests directly.
