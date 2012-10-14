@@ -514,7 +514,7 @@ Alternatively, the ``repourl`` argument can be used to create the :bb:step:`SVN`
 ``method``
 
    SVN's incremental mode does not require a method.  The full mode
-   has four methods defined:
+   has five methods defined:
 
    ``clobber``
       It removes the working directory for each build then makes full checkout.
