@@ -147,10 +147,12 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.status = Status(self)
         self.status.setServiceParent(self)
 
+        @defer.inlineCallbacks
         def heartbeat():
             if self.masterid is not None:
-                self.data.updates.masterActive(name=self.name,
+                yield self.data.updates.masterActive(name=self.name,
                                         masterid=self.masterid)
+            yield self.data.updates.expireMasters()
         self.masterHeartbeatService = internet.TimerService(60, heartbeat)
 
     # setup and reconfig handling

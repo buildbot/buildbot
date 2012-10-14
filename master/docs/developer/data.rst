@@ -158,7 +158,12 @@ All update methods return a Deferred.
         This method should be called at startup and at least once per minute.
         The master ID is acquired directly from the database early in the master startup process.
 
-        Other periodic tasks, such as marking masters in active which have not checked in recently, may be performed as well.
+    .. py:method:: expireMasters()
+
+        :returns: Deferred
+
+        Scan the database for masters that have not checked in for ten minutes.
+        This method should be called about once per minute.
 
     .. py:method:: masterStopped(name, masterid)
 

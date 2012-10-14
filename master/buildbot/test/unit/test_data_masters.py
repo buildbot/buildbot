@@ -107,7 +107,7 @@ class MasterResourceType(unittest.TestCase):
                             last_active=0),
             fakedb.Master(id=14, name='other', active=1,
                             last_active=0),
-            fakedb.Master(id=15, name='other', active=1,
+            fakedb.Master(id=15, name='other2', active=1,
                             last_active=0),
         ])
 
@@ -137,12 +137,23 @@ class MasterResourceType(unittest.TestCase):
         ])
         self.master.mq.productions = []
 
-        # re-checkin after over 10 minutes, and see #14 deactivated; #15
-        # gets deactivated by another master, so it's not included here
+    @defer.inlineCallbacks
+    def test_expireMasters(self):
+        clock = task.Clock()
+        clock.advance(60)
+
+        self.master.db.insertTestData([
+            fakedb.Master(id=14, name='other', active=1,
+                            last_active=0),
+            fakedb.Master(id=15, name='other', active=1,
+                            last_active=0),
+        ])
+
+        # check after 10 minutes, and see #14 deactivated; #15 gets deactivated
+        # by another master, so it's not included here
         clock.advance(600)
         yield self.master.db.masters.markMasterInactive(15)
-        yield self.rtype.masterActive(
-                u'myname', masterid=13, _reactor=clock)
+        yield self.rtype.expireMasters(_reactor=clock)
         master = yield self.master.db.masters.getMaster(14)
         self.assertEqual(master, dict(id=14, name='other',
                     active=False, last_active=epoch2datetime(0)))

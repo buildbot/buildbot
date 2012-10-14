@@ -73,10 +73,9 @@ class MasterResourceType(base.ResourceType):
                 dict(masterid=masterid, name=name, active=True),
                 'started')
 
-        # check for "expired" masters, while we're here.  We're called every
-        # minute, but we want to allow a fwe such periods to pass before we
-        # assume another master is dead, to account for clock skew and busy
-        # masters.
+    @base.updateMethod
+    @defer.inlineCallbacks
+    def expireMasters(self, _reactor):
         too_old = epoch2datetime(_reactor.seconds() - 60*EXPIRE_MINUTES)
         masters = yield self.master.db.masters.getMasters()
         for m in masters:
