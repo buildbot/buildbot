@@ -96,7 +96,7 @@ described in :ref:`developer-Reconfiguration`.
 
     .. py:attribute:: codebaseGenerator
     
-        A callable, or None, used to determine the codebase from an incomming 
+        A callable, or None, used to determine the codebase from an incoming 
         :py:class:`~buildbot.changes.changes.Change`,
         from :bb:cfg:`codebaseGenerator`
         
@@ -117,7 +117,7 @@ described in :ref:`developer-Reconfiguration`.
 
     .. py:attribute:: manhole
 
-        The manhole instance to ues, or None; from :bb:cfg:`manhole`.
+        The manhole instance to use, or None; from :bb:cfg:`manhole`.
 
     The remaining attributes contain compound configuration structures, usually
     dictionaries:
@@ -264,9 +264,9 @@ configuration - change sources, slaves, schedulers, build steps, and so on.
     :raises: :py:exc:`ConfigErrors` if called at build-time
 
     This function reports a configuration error. If a config file is being loaded,
-    then the function merely records ther error, and allows he rest of the configuration
+    then the function merely records the error, and allows the rest of the configuration
     to be loaded. At any other time, it raises :py:exc:`ConfigErrors`.  This is done
-    so all config erros can be reported, rather than just the first.
+    so all config errors can be reported, rather than just the first.
 
 .. py:exception:: ConfigErrors([errors])
 
@@ -292,7 +292,7 @@ configuration - change sources, slaves, schedulers, build steps, and so on.
 Reconfiguration
 ===============
 
-When the buildmaster receives a signal to beging a reconfig, it re-reads the
+When the buildmaster receives a signal to begin a reconfig, it re-reads the
 configuration file, generating a new :py:class:`MasterConfig` instance, and
 then notifies all of its child services via the reconfig mechanism described
 below.  The master ensures that at most one reconfiguration is taking place at

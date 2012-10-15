@@ -11,4 +11,4 @@ IRenderable
 
         :param iprops: the :class:`~buildbot.interfaces.IProperties` provider supplying the properties of the build.
 
-        Reeturns the interpretation of the given properties, optionally in a Deferred.
+        Returns the interpretation of the given properties, optionally in a Deferred.

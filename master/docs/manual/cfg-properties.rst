@@ -146,7 +146,7 @@ placeholders will be replaced using the current values of the build properties.
     the ``if`` statement is executed.  However, Python will not detect this as
     an error - you will just never see the step added to the factory.
 
-You can use build properties in most step paramaters.  Please file bugs for any
+You can use build properties in most step parameters.  Please file bugs for any
 parameters which do not accept properties.
 
 .. index:: single: Properties; Property
@@ -215,7 +215,7 @@ The following selectors are supported.
     The key is the name of a property.
 
 ``src``
-    The key is a codebase and source stamp attribute, seperated by a colon.
+    The key is a codebase and source stamp attribute, separated by a colon.
 
 ``kw``
     The key refers to a keyword argument passed to ``Interpolate``.
@@ -244,7 +244,7 @@ The following ways of interpreting the value are available.
     ``?``, similar to ``+``) or being ``True`` (with ``#?``, like ``~``).
     Notice that there is a pipe immediately following the question mark *and*
     between the two substitution alternatives. The character that follows the
-    question mark is used as the delimeter between the two alternatives. In the
+    question mark is used as the delimiter between the two alternatives. In the
     above examples, it is a pipe, but any character other than ``(`` can be used.
 
 
@@ -301,7 +301,7 @@ WithProperties
 .. warning::
 
     This placeholder is deprecated. It is an older version of :ref:`Interpolate`.
-    It exists for compatability with older configs.
+    It exists for compatibility with older configs.
 
 The simplest use of this class is with positional string interpolation.  Here,
 ``%s`` is used as a placeholder, and property names are given as subsequent
@@ -365,7 +365,7 @@ dictionary-style interpolation, not both. Thus you cannot use a string like
 Custom Renderables
 ++++++++++++++++++
 
-If the options described above are not sufficient, more complex substitutions can be achieved by writting custom renderables.
+If the options described above are not sufficient, more complex substitutions can be achieved by writing custom renderables.
 
 Renderables are objects providing the :class:`~buildbot.interfaces.IRenderable` interface.
 That interface is simple - objects must provide a `getRenderingFor` method.

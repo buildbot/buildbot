@@ -343,7 +343,7 @@ The following definition for :meth:`my_file_splitter` will do the job::
         projectname = pieces.pop(0)
         if projectname != 'Nevow':
             return None # wrong project
-        return dict(branc=branch, path='/'.join(pieces))
+        return dict(branch=branch, path='/'.join(pieces))
 
 If you later decide you want to get changes for Quotient as well you could
 replace the last 3 lines with simply::
@@ -356,7 +356,7 @@ replace the last 3 lines with simply::
 Writing Change Sources
 ----------------------
 
-For some version-control systems, making Bulidbot aware of new changes can be a
+For some version-control systems, making Buildbot aware of new changes can be a
 challenge.  If the pre-supplied classes in :ref:`Change-Sources` are not
 sufficient, then you will need to write your own.
 
@@ -475,12 +475,12 @@ with the :class:`SourceStamp` for the build, and should return the appropriate
 workdir.  Note that the value must be returned immediately - Deferreds are not
 supported.
 
-This can be useful, for exmaple, in scenarios with multiple repositories
+This can be useful, for example, in scenarios with multiple repositories
 submitting changes to BuildBot. In this case you likely will want to have a
 dedicated workdir per repository, since otherwise a sourcing step with mode =
 "update" will fail as a workdir with a working copy of repository A can't be
 "updated" for changes from a repository B. Here is an example how you can
-achive workdir-per-repo::
+achieve workdir-per-repo::
 
         def workdir(source_stamp):
             return hashlib.md5 (source_stamp.repository).hexdigest()[:8]
@@ -536,7 +536,7 @@ Consider the use of a :class:`BuildStep` in :file:`master.cfg`::
 
 This creates a single instance of class ``MyStep``.
 However, Buildbot needs a new object each time the step is executed.
-An instance of :class:`~buildbot.process.buildstep.BuildStep` rembers how it was constructed, and can create copies of itself.
+An instance of :class:`~buildbot.process.buildstep.BuildStep` remembers how it was constructed, and can create copies of itself.
 When writing a new step class, then, keep in mind are that you cannot do anything "interesting" in the constructor -- limit yourself to checking and storing arguments.
 
 It is customary to call the parent class's constructor with all otherwise-unspecified keyword arguments.
@@ -833,7 +833,7 @@ arbitrary object. For example::
 
 Remember that properties set in a step may not be available until the next step
 begins.  In particular, any :class:`Property` or :class:`Interpolate`
-instances for the current step are interpoloated before the ``start`` method
+instances for the current step are interpolated before the ``start`` method
 begins.
 
 .. index:: links, BuildStep URLs, addURL

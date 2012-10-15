@@ -23,7 +23,7 @@ The master has several child services:
     A :py:class:`buildbot.process.metrics.MetricLogObserver` instance that
     handles tracking and reporting on master metrics.
 
-``msater.caches``
+``master.caches``
     A :py:class:`buildbot.process.caches.CacheManager` instance that provides
     access to object caches.
 
