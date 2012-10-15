@@ -2529,7 +2529,7 @@ The parameter takes a dictionary mapping property names to values.
 You may use :ref:`Interpolate` here to dynamically construct new property values.
 For the simple case of copying a property, this might look like ::
 
-    set_properties={"my_prop1", Property("my_prop1")}
+    set_properties={"my_prop1" : Property("my_prop1")}
 
 The ``copy_properties`` parameter, given a list of properties to copy into the new build request, has been deprecated in favor of explicit use of ``set_properties``.
 
