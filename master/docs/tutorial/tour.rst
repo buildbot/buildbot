@@ -81,7 +81,7 @@ is complete.
 Now, if you go back to
 `the waterfall page <http://localhost:8010/waterfall>`_,
 you will see that the project's name is whatever you may have changed it to and when you click on the 
-the URL of the project name at the bottom of the page it should take you to the link you put in the configuration.
+URL of the project name at the bottom of the page it should take you to the link you put in the configuration.
 
 Configuration Errors
 --------------------

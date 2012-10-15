@@ -29,7 +29,7 @@ configuration file, its use looks like::
 ``slavenames``
     These arguments specify the buildslave or buildslaves that will be used by
     this Builder.  All slaves names must appear in the :bb:cfg:`slaves`
-    configuration parameter. Each buildslave can accomodate multiple
+    configuration parameter. Each buildslave can accommodate multiple
     builders.  The ``slavenames`` parameter can be a list of names,
     while ``slavename`` can specify only one slave.
 

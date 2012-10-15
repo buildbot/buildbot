@@ -17,10 +17,10 @@ configure it properly.
 Source Stamps
 -------------
 
-Source code comes from *respositories*, provided by version control systems.
+Source code comes from *repositories*, provided by version control systems.
 Repositories are generally identified by URLs, e.g., ``git://github.com/buildbot/buildbot.git``.
 
-In these days of distribtued version control systems, the same *codebase* may appear in mutiple repositories.
+In these days of distributed version control systems, the same *codebase* may appear in multiple repositories.
 For example, ``https://github.com/mozilla/mozilla-central`` and ``http://hg.mozilla.org/mozilla-release`` both contain the Firefox codebase, although not exactly the same code.
 
 Many *projects* are built from multiple codebases.
@@ -235,9 +235,9 @@ In such cases, it can be used to control which builds are scheduled for a given 
 Repository
 ~~~~~~~~~~
 
-This attibute specifies the repository in which this change occurred.
+This attribute specifies the repository in which this change occurred.
 In the case of DVCS's, this information may be required to check out the committed source code.
-However, using the repository from a change has security risks: if Buildbot is configured to blidly trust this information, then it may easily be tricked into building arbitrary source code, potentially compromising the buildslaves and the integrity of subsequent builds.
+However, using the repository from a change has security risks: if Buildbot is configured to blindly trust this information, then it may easily be tricked into building arbitrary source code, potentially compromising the buildslaves and the integrity of subsequent builds.
 
 .. _Attr-Codebase:
 
@@ -559,7 +559,7 @@ pages and in each :class:`Build`\'s *blamelist*.
 To do more with the User than just refer to them, this username needs to be
 mapped into an address of some sort. The responsibility for this mapping is
 left up to the status module which needs the address.  In the future, the
-responsbility for managing users will be transferred to User Objects.
+responsibility for managing users will be transferred to User Objects.
 
 The ``who`` fields in ``git`` Changes are used to create :ref:`User-Objects`,
 which allows for more control and flexibility in how Buildbot manages users.
@@ -756,12 +756,12 @@ of functionality.  Here are some examples:
 Most Source steps record the revision that they checked out in
 the ``got_revision`` property.  A later step could use this
 property to specify the name of a fully-built tarball, dropped in an
-easily-acessible directory for later testing.
+easily-accessible directory for later testing.
 
 .. note:: 
     In builds with more than one codebase, the ``got_revision`` property is a dictionary, keyed by codebase.
 
-Some projects want to perform nightly builds as well as bulding in response to
+Some projects want to perform nightly builds as well as building in response to
 committed changes.  Such a project would run two schedulers, both pointing to
 the same set of builders, but could provide an ``is_nightly`` property so
 that steps can distinguish the nightly builds, perhaps to run more
@@ -781,9 +781,9 @@ What if an end-product is composed of code from several codebases?
 Changes may arrive from different repositories within the tree-stable-timer period.
 Buildbot will not only use the source-trees that contain changes but also needs the remaining source-trees to build the complete product.
 
-For this reason a :ref:`Scheduler<Scheduling-Builds>` can be configured to base a build on a set of several source-trees that can (partly) be overidden by the information from incoming :class:`Change`\s.
+For this reason a :ref:`Scheduler<Scheduling-Builds>` can be configured to base a build on a set of several source-trees that can (partly) be overridden by the information from incoming :class:`Change`\s.
 
-As descibed :ref:`above <Source-Stamps>`, the source for each codebase is identified by a source stamp, containing its repository, branch and revision.
+As described :ref:`above <Source-Stamps>`, the source for each codebase is identified by a source stamp, containing its repository, branch and revision.
 A full build set will specify a source stamp set describing the source to use for each codebase.
 
 Configuring all of this takes a coordinated approach.  A complete multiple repository configuration consists of:

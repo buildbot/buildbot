@@ -3,7 +3,7 @@
 Change Sources
 --------------
 
-A Version Control System mantains a source tree, and tells the
+A Version Control System maintains a source tree, and tells the
 buildmaster when it changes. The first step of each :class:`Build` is typically
 to acquire a copy of some version of this tree.
 
@@ -118,7 +118,7 @@ Configuring Change Sources
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The :bb:cfg:`change_source` configuration key holds all active
-change sources for the confguration.
+change sources for the configuration.
 
 Most configurations have a single :class:`ChangeSource`, watching only a single
 tree, e.g., ::
@@ -1040,7 +1040,7 @@ arguments:
 
 ``branch``
     accepts a single branch name to fetch.
-    Exists for backwards compatability with old configurations.
+    Exists for backwards compatibility with old configurations.
 
 ``pollinterval``
     interval in seconds between polls, default is 10 minutes
@@ -1130,7 +1130,7 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
 
     Several :bb:chsrc:`HgPoller` instances may share the same ``workdir`` for
     mutualisation of the common history between two different branches, thus
-    easing on local and remote system resources and bandwith.
+    easing on local and remote system resources and bandwidth.
 
     If relative, the ``workdir`` will be interpreted from the master directory.
 

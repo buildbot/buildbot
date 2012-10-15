@@ -98,7 +98,7 @@ Arguments common to all :class:`BuildStep` subclasses:
     A step can be configured to only run under certain conditions.  To do this, set
     the step's ``doStepIf`` to a boolean value, or to a function that returns a
     boolean value or Deferred.  If the value or function result is false, then the step will
-    return ``SKIPPED`` without doing anything.  Oherwise, the step will be executed
+    return ``SKIPPED`` without doing anything.  Otherwise, the step will be executed
     normally.  If you set ``doStepIf`` to a function, that function should
     accept one parameter, which will be the :class:`Step` object itself.
 
@@ -774,15 +774,15 @@ sources are coming from.
     The name of this parameter might varies depending on the Source step you
     are running. The concept explained here is common to all steps and
     applies to ``repourl`` as well as for ``baseURL`` (when
-    aplicable). Buildbot, now being aware of the repository name via the
+    applicable). Buildbot, now being aware of the repository name via the
     change source, might in some cases not need the repository url. There
     are multiple way to pass it through to this step, those correspond to
     the type of the parameter given to this step:
 
     ``None``
-        In the case where no paraneter is specified, the repository url will be
+        In the case where no parameter is specified, the repository url will be
         taken exactly from the Change attribute. You are looking for that one if
-        your ChangeSource step has all informations about how to reach the
+        your ChangeSource step has all information about how to reach the
         Change.
 
     string
@@ -793,7 +793,7 @@ sources are coming from.
     format string
         If the parameter is a string containing ``%s``, then this the
         repository attribute from the :class:`Change` will be place in place of the
-        ``%s``. This is usefull when the change source knows where the
+        ``%s``. This is useful when the change source knows where the
         repository resides locally, but don't know the scheme used to access
         it. For instance ``ssh://server/%s`` makes sense if the the
         repository attribute is the local path of the repository.
@@ -962,7 +962,7 @@ should preferentially create the ``SVN`` step with the
 
     If set to "empty" updates will not pull in any files or subdirectories not
     already present. If set to "files", updates will pull in any files not already
-    present, but not directories. If set to "immediates", updates willl pull in any
+    present, but not directories. If set to "immediates", updates will pull in any
     files or subdirectories not already present, the new subdirectories will have
     depth: empty. If set to "infinity", updates will pull in any files or
     subdirectories not already present; the new subdirectories will have
@@ -1284,7 +1284,7 @@ The Monotone step takes the following arguments:
 ShellCommand
 ------------
 
-Most interesting steps involve exectuing a process of some sort on the
+Most interesting steps involve executing a process of some sort on the
 buildslave.  The :bb:step:`ShellCommand` class handles this activity.
 
 Several subclasses of :bb:step:`ShellCommand` are provided as starting points for
@@ -1620,7 +1620,7 @@ only one number is given it matches only on that line.
 
 The default warningPattern regexp only matches the warning text, so line
 numbers and file names are ignored. To enable line number and file name
-matching, privide a different regexp and provide a function (callable) as the
+matching, provide a different regexp and provide a function (callable) as the
 argument of ``warningExtractor=``. The function is called with three
 arguments: the :class:`BuildStep` object, the line in the log file with the warning,
 and the ``SRE_Match`` object of the regexp search for ``warningPattern``. It
@@ -1942,7 +1942,7 @@ This step requires slave version 0.8.5 or later.
 Python BuildSteps
 -----------------
 
-Here are some :class:`BuildStep`\s that are specifcally useful for projects
+Here are some :class:`BuildStep`\s that are specifically useful for projects
 implemented in Python.
 
 .. bb:step:: BuildEPYDoc
@@ -2018,7 +2018,7 @@ Sphinx
 
 .. py:class:: buildbot.steps.python.Sphinx
 
-`Shinx <http://sphinx.pocoo.org/>`_ is  the Python Documentation
+`Sphinx <http://sphinx.pocoo.org/>`_ is  the Python Documentation
 Generator. It uses `RestructuredText <http://docutils.sourceforge.net/rst.html>`_
 as input format.
 
@@ -2043,14 +2043,14 @@ This step takes the following arguments:
    (optional) Indicates the builder to use.
 
 ``sphinx``
-   (optional, defaulting to :program:`shinx-build`) Indicates the
+   (optional, defaulting to :program:`sphinx-build`) Indicates the
    executable to run.
 
 ``tags``
    (optional) List of ``tags`` to pass to :program:`sphinx-build`
 
 ``defines``
-   (optional) Dictionnary of defines to overwrite values of the
+   (optional) Dictionary of defines to overwrite values of the
    :file:`conf.py` file.
 
 ``mode``
@@ -2253,7 +2253,7 @@ on the buildmaster.
 
 The ``url=`` argument allows you to specify an url that will be
 displayed in the HTML status. The title of the url will be the name of
-the item transfered (directory for :class:`DirectoryUpload` or file
+the item transferred (directory for :class:`DirectoryUpload` or file
 for :class:`FileUpload`). This allows the user to add a link to the
 uploaded item if that one is uploaded to an accessible place.
 
@@ -2294,7 +2294,7 @@ The optional ``compress`` argument can be given as ``'gz'`` or
 ``'bz2'`` to compress the datastream.
 
 .. note:: The permissions on the copied files will be the same on the
-          master as originately on the slave, see :option:`buildslave
+          master as originally on the slave, see :option:`buildslave
           create-slave --umask` to change the default one.
 
 .. bb:step:: StringDownload
@@ -2616,7 +2616,7 @@ MockBuildSRPM Step
 ++++++++++++++++++
 
 The :bb:step:`MockBuildSRPM` step builds a SourceRPM based on a spec file and
-optionaly a source directory::
+optionally a source directory::
 
     from buildbot.steps.package.rpm import MockBuildSRPM
     f.addStep(MockBuildSRPM(root='default', spec='mypkg.spec'))
@@ -2668,7 +2668,7 @@ The :bb:step:`DebPbuilder` step builds Debian packages within a chroot built
 by pbuilder. It populates the changeroot with a basic system and the packages
 listed as build requirement. The type of chroot to build is specified with the
 ``distribution``, ``distribution`` and ``mirror`` parameter. To use pbuilder
-your buildbot must have the right to run pbuilder as root throug sudo. ::
+your buildbot must have the right to run pbuilder as root through sudo. ::
 
     from buildbot.steps.package.deb.pbuilder import DepPbuilder
     f.addStep(DepPbuilder())
@@ -2679,7 +2679,7 @@ The step takes the following parameters
     Architecture to build chroot for.
 
 ``distribution``
-    Name, or nickname, of the dirstribution. Defaults to 'stable'.
+    Name, or nickname, of the distribution. Defaults to 'stable'.
 
 ``basetgz``
     Path of the basetgz to use for building.
@@ -2692,7 +2692,7 @@ The step takes the following parameters
 
 ``keyring``
     Path to a gpg keyring to verify the downloaded packages. This is necessary
-    if you build for a forain distribution.
+    if you build for a foreign distribution.
 
 ``components``
     Repos to activate for chroot building.

@@ -57,7 +57,7 @@ monitor. There are three sub-classes implemented:
 Metric Handlers
 ---------------
 
-:class:`MetricsHandler` objects are responsble for collecting
+:class:`MetricsHandler` objects are responsible for collecting
 :class:`MetricEvent`\s of a specific type and keeping track of their
 values for future reporting. There are :class:`MetricsHandler` classes
 corresponding to each of the :class:`MetricEvent` types. 

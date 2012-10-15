@@ -401,9 +401,9 @@ Mercurial
 
 Perforce
     :command:`try` does a ``p4 changes -m1 ...`` to determine the latest
-    changelist and implicitly assumes that the local tree is synched to this
+    changelist and implicitly assumes that the local tree is synced to this
     revision. This is followed by a ``p4 diff -du`` to obtain the patch.
-    A p4 patch differs sligtly from a normal diff. It contains full depot
+    A p4 patch differs slightly from a normal diff. It contains full depot
     paths and must be converted to paths relative to the branch top. To convert
     the following restriction is imposed. The p4base (see :bb:chsrc:`P4Source`)
     is assumed to be ``//depot``
@@ -853,7 +853,7 @@ the command-line option name.
     system being used.
 
 ``try_branch``
-    Equivlanent to :option:`--branch`, this indicates that the current tree is on a
+    Equivalent to :option:`--branch`, this indicates that the current tree is on a
     non-trunk branch.
 
 ``try_topdir``

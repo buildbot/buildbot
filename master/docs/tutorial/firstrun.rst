@@ -48,7 +48,7 @@ easy_install will need to download other projects from the Internet.
 .. note::
 
     Buildbot does not require root access.  Run the commands in this tutorial
-    as a normal, unpriviledged user.
+    as a normal, unprivileged user.
 
 Let's dive in by typing at the terminal::
 
