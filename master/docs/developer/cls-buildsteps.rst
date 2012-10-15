@@ -123,7 +123,7 @@ BuildStep
 
         If the step is tracking progress, this is a :class:`~buildbot.status.progress.StepProgress` instance performing that task.
 
-    Exeuction of the step itself is governed by the following methods and attributes.
+    Execution of the step itself is governed by the following methods and attributes.
 
     .. py:method:: startStep(remote)
 
@@ -402,7 +402,7 @@ LoggingBuildStep
         This hook should decide what result the step should have.
         The default implementation invokes ``log_eval_func`` if it exists, and looks at :attr:`~buildbot.process.buildstep.RemoteCommand.rc` to distinguish :data:`~buildbot.status.results.SUCCESS` from :data:`~buildbot.status.results.FAILURE`.
 
-    The remaining methods provide an embarassment of ways to set the summary of the step that appears in the various status interfaces.
+    The remaining methods provide an embarrassment of ways to set the summary of the step that appears in the various status interfaces.
     The easiest way to affect this output is to override :meth:`~BuildStep.describe`.
     If that is not flexible enough, override :meth:`getText` and/or :meth:`getText2`.
 
@@ -413,7 +413,7 @@ LoggingBuildStep
         :returns: a list of short strings
 
         This method is the primary means of describing the step.
-        The default implementation calls :meth:`~BuildStep.describe`, which is usally the easiest method to override, and then appends a string describing the step status if it was not successful.
+        The default implementation calls :meth:`~BuildStep.describe`, which is usually the easiest method to override, and then appends a string describing the step status if it was not successful.
 
     .. py:method:: getText2(command, results)
 

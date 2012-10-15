@@ -271,7 +271,7 @@ be used to access them.
     default the view sorts revisions lexically, which can lead to odd
     behavior with non-integer revisions (e.g., Git), or with integer
     revisions of different length (e.g., 999 and 1000). It also has
-    some issues with displaying multiple braches at the same time. If
+    some issues with displaying multiple branches at the same time. If
     you do have multiple branches, you should use the ``branch=``
     query argument.  The ``order_console_by_time`` option may help
     sorting revisions, although it depends on the date being set
@@ -291,7 +291,7 @@ be used to access them.
 
 ``/json``
     This view provides quick access to Buildbot status information in a form that
-    is easiliy digested from other programs, including JavaScript.  See
+    is easily digested from other programs, including JavaScript.  See
     ``/json/help`` for detailed interactive documentation of the output formats
     for this view.
 
@@ -480,7 +480,7 @@ specify ``False`` (the default) to prohibit that action or ``True`` to enable
 it.  Or you can specify a callable.  Each such callable will take a username as
 its first argument.  The remaining arguments vary depending on the type of
 authorization request.  For ``forceBuild``, the second argument is the builder
-stsatus.
+status.
 
 Authentication
 ##############
@@ -509,7 +509,7 @@ keyword argument to :class:`Authz`, and specify the action as ``"auth"``. ::
 The class :class:`BasicAuth` implements a basic authentication mechanism using a
 list of user/password tuples provided from the configuration file.  The class
 `HTPasswdAuth` implements an authentication against an :file:`.htpasswd`
-file. The `HTPasswdAprAuth` a subcalss of `HTPasswdAuth` use libaprutil for
+file. The `HTPasswdAprAuth` a subclass of `HTPasswdAuth` use libaprutil for
 authenticating. This adds support for apr1/md5 and sha1 password hashes but
 requires libaprutil at runtime. The :class:`UsersAuth` works with
 :ref:`User-Objects` to check for valid user credentials.
@@ -1215,7 +1215,7 @@ Source information (only valid if ss is not ``None``)
 
     The ``Change`` methods :meth:`asText` and :meth:`asDict` can be used to format the
     information above.  :meth:`asText` returns a list of strings and :meth:`asDict` returns
-    a dictonary suitable for html/mail rendering.
+    a dictionary suitable for html/mail rendering.
     
 Log information ::
     
@@ -1357,7 +1357,7 @@ Some of the commands currently available:
 Additionally, the config file may specify default notification options
 as shown in the example earlier.
 
-If the ``allowForce=True`` option was used, some addtional commands
+If the ``allowForce=True`` option was used, some additional commands
 will be available:
 
 .. index:: Properties; from forced build
@@ -1442,7 +1442,7 @@ StatusPush
 :class:`StatusPush` batches events normally processed and sends it to the
 :func:`serverPushCb` callback every ``bufferDelay`` seconds. The callback
 should pop items from the queue and then queue the next callback.
-If no items were poped from ``self.queue``, ``retryDelay`` seconds will be
+If no items were popped from ``self.queue``, ``retryDelay`` seconds will be
 waited instead.
 
 .. bb:status:: HttpStatusPush

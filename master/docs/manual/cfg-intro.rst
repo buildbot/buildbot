@@ -193,7 +193,7 @@ which get queued after the reconfig) will use the new process.
 
     * Any modules imported by the configuration file are not automatically reloaded.
       Python modules such as http://pypi.python.org/pypi/lazy-reload may help
-      here, but reloading modules is fraught with subtlties and difficult-to-decipher
+      here, but reloading modules is fraught with subtleties and difficult-to-decipher
       failure cases.
 
     * During the reconfiguration, active internal objects are divorced from the service
@@ -206,7 +206,7 @@ which get queued after the reconfig) will use the new process.
       occurs, it is best to restart the master.
 
     * For more advanced configurations, it is impossible for Buildbot to tell if the
-      configuration for a :class:`Builder` or :class:`Scheduler` has chanaged, and thus the :class:`Builder` or
+      configuration for a :class:`Builder` or :class:`Scheduler` has changed, and thus the :class:`Builder` or
       :class:`Scheduler` will always be reloaded.  This occurs most commonly when a callable
       is passed as a configuration parameter.
 

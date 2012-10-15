@@ -172,7 +172,7 @@ To test this, shift to a different directory (like :file:`/tmp`), and run:
 
 If it shows you the versions of Buildbot and Twisted, the install went
 ok. If it says "no such command" or it gets an ``ImportError``
-when it tries to load the libaries, then something went wrong.
+when it tries to load the libraries, then something went wrong.
 ``pydoc buildbot`` is another useful diagnostic tool.
 
 Windows users will find these files in other places. You will need to
