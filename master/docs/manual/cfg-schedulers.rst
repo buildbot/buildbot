@@ -657,7 +657,7 @@ with it.
 To use the username/password form of authentication, create a
 :class:`Try_Userpass` instance instead. It takes the same
 ``builderNames`` argument as the :class:`Try_Jobdir` form, but
-accepts an addtional ``port`` argument (to specify the TCP port to
+accepts an additional ``port`` argument (to specify the TCP port to
 listen on) and a ``userpass`` list of username/password pairs to
 accept. Remember to use good passwords for this: the security of the
 buildslave accounts depends upon it::
@@ -810,7 +810,7 @@ Here is a fully-worked example::
     checkin_factory.addStep(shell.Test())
     checkin_factory.addStep(trigger.Trigger(schedulerNames=['nightly'])
 
-    # and every night, package the latest succesful build
+    # and every night, package the latest successful build
     nightly_factory = factory.BuildFactory()
     nightly_factory.addStep(shell.ShellCommand(command=['make', 'package']))
 

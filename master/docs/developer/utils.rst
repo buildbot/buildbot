@@ -467,7 +467,7 @@ apply that to a non-network situation.
         :param data: a portion of netstring-formatted data
         :raises: :py:exc:`twisted.protocols.basic.NetstringParseError`
 
-        Add arbitrariliy-sized ``data`` to the incoming-data buffer.  Any
+        Add arbitrarily-sized ``data`` to the incoming-data buffer.  Any
         complete netstrings will trigger a call to the
         :py:meth:`stringReceived` method.
 
@@ -523,7 +523,7 @@ buildbot.util.croniter
 ~~~~~~~~~~~~~~~~~~~~~~
 
 This module is a copy of https://github.com/taichino/croniter, and provides
-suport for converting cron-like time specifications into actual times.
+support for converting cron-like time specifications into actual times.
 
 buildbot.util.state
 ~~~~~~~~~~~~~~~~~~~
@@ -537,7 +537,7 @@ The classes in the :py:mod:`buildbot.util.subscription` module are used for deal
 
     .. py:attribute:: name
 
-         This must be set to the name to be used to identifiy this object in the database.
+         This must be set to the name to be used to identify this object in the database.
 
     .. py:attribute:: master
 

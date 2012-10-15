@@ -201,7 +201,7 @@ For testing things that themselves depend on time, consider using
 :class:`twisted.internet.tasks.Clock`.  This may mean passing a clock instance to
 the code under test, and propagating that instance as necessary to ensure that
 all of the code using :meth:`callLater` uses it.  Refactoring code for
-testability is difficult, but wortwhile.
+testability is difficult, but worthwhile.
 
 For testing things that do not depend on time, but for which you cannot detect
 the "end" of an operation: add a way to detect the end of the operation!

@@ -6,7 +6,7 @@ Database
 As of version 0.8.0, Buildbot has used a database as part of its storage
 backend.  This section describes the database connector classes, which allow
 other parts of Buildbot to access the database.  It also describes how to
-modify the database schema and the connector classes themsleves.
+modify the database schema and the connector classes themselves.
 
 .. note::
 
@@ -162,7 +162,7 @@ buildrequests
         :raises: :py:exc:`AlreadyClaimedError`
 
         Re-claim the given build requests, updating the timestamp, but checking
-        that the requsts are owned by this master.  The resulting deferred will
+        that the requests are owned by this master.  The resulting deferred will
         fire normally on success, or fail with :py:exc:`AlreadyClaimedError` if
         *any* of the build requests are already claimed by another master
         instance, or don't exist.  In this case, none of the reclaims will take
@@ -967,7 +967,7 @@ Database Schema
 .. py:module:: buildbot.db.model
 
 Database connector methods access the database through SQLAlchemy, which
-requires access to Python objects represenging the database tables.  That is
+requires access to Python objects representing the database tables.  That is
 handled through the model.
 
 .. py:class:: Model
@@ -1057,7 +1057,7 @@ Tests
 It goes without saying that any new connector methods must be fully tested!
 
 You will also want to add an in-memory implementation of the methods to the
-fake classes in ``master/budilbot/test/fake/fakedb.py``.  Non-DB Buildbot code
+fake classes in ``master/buildbot/test/fake/fakedb.py``.  Non-DB Buildbot code
 is tested using these fake implementations in order to isolate that code from
 the database code.
 
@@ -1082,7 +1082,7 @@ be complex and require caution so as not to lose information.
 
 Create a new script in :bb:src:`master/buildbot/db/migrate/versions`, following
 the numbering scheme already present.  The script should have an ``update``
-method, which takes an engine as a parameter, and ugprades the database, both
+method, which takes an engine as a parameter, and upgrades the database, both
 changing the schema and performing any required data migrations.  The engine
 passed to this parameter is "enhanced" by SQLAlchemy-Migrate, with methods to
 handle adding, altering, and dropping columns.  See the SQLAlchemy-Migrate
@@ -1172,5 +1172,5 @@ query specifying id's that are IN a subquery will not work.  The workaround is
 to run the subquery directly, and then execute a DELETE query for each returned
 id.
 
-If this weakness has a significant peformance impact, it would be acceptable to
+If this weakness has a significant performance impact, it would be acceptable to
 conditionalize use of the subquery on the database dialect.
