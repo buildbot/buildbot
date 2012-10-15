@@ -30,6 +30,14 @@ def _dictProblems(value, typename, attrs):
                 return False
         return True
 
+    def intlist(value):
+        if not isinstance(value, list):
+            return False
+        for x in value:
+            if not isinstance(x, (int, long)):
+                return False
+        return True
+
     def sourcedProperties(value):
         if not isinstance(value, dict):
             return False
@@ -66,6 +74,8 @@ def _dictProblems(value, typename, attrs):
             valfn = lambda v : isinstance(v, unicode)
         elif typ == 'stringlist':
             valfn = stringlist
+        elif typ == 'intlist':
+            valfn = intlist
         elif typ == 'sourcedProperties':
             valfn = sourcedProperties
         elif typ == 'Link':

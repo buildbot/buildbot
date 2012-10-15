@@ -15,6 +15,13 @@
 
 from buildbot.test.util import verifier
 
+def verifyDbDict(testcase, type, value):
+    return verifier.verifyDict(testcase, value, 'builderdict', dict(
+        id='integer',
+        name='string',
+        masterids='intlist',
+        ))
+
 def verifyData(testcase, type, options, value):
     testcase.assertEqual(options, {})
     return verifier.verifyDict(testcase, value, 'builder', dict(

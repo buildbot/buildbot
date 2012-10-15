@@ -105,7 +105,6 @@ So, they're listed here.
 Don't include the schema changes needed to implement the status stuff here; those will come when we implement the status stuff.
 
 * Remove ``is_dir`` from the changes table (and ignore/remove it everywhere else)
-* Add a ``builders`` table with provisions to indicate which masters are running which builders
 * Add a ``changesources`` table, similar to schedulers
 
 For each of the config-objects tables (masters, builders, schedulesr, changesources):
