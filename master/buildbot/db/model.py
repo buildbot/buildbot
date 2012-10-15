@@ -320,6 +320,27 @@ class Model(base.DBConnectorComponent):
         sa.Column('important', sa.Integer),
     )
 
+    # builders
+
+    builders = sa.Table('builders', metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        # builder's name
+        sa.Column('name', sa.Text, nullable=False),
+        # sha1 of name; used for a unique index
+        sa.Column('name_hash', sa.String(40), nullable=False),
+    )
+
+    # This links builders to the master where they are running.  A builder
+    # linked to a master that is inactive can be unlinked by any master.  Note
+    # that builders can run on multiple masters at the same time.
+    builder_masters = sa.Table('builder_masters', metadata,
+        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+        sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id'),
+            nullable=False),
+        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+            nullable=False),
+    )
+
     # objects
 
     # This table uniquely identifies objects that need to maintain state across
@@ -419,6 +440,12 @@ class Model(base.DBConnectorComponent):
     sa.Index('scheduler_changes_changeid', scheduler_changes.c.changeid)
     sa.Index('scheduler_changes_unique', scheduler_changes.c.schedulerid,
             scheduler_changes.c.changeid, unique=True)
+    sa.Index('builder_name_hash', builders.c.name_hash, unique=True)
+    sa.Index('builder_masters_builderid', builder_masters.c.builderid)
+    sa.Index('builder_masters_masterid', builder_masters.c.masterid)
+    sa.Index('builder_masters_identity',
+            builder_masters.c.builderid, builder_masters.c.masterid,
+            unique=True)
     sa.Index('sourcestamp_changes_sourcestampid',
             sourcestamp_changes.c.sourcestampid)
     sa.Index('sourcestamps_sourcestampsetid', sourcestamps.c.sourcestampsetid,
