@@ -177,7 +177,7 @@ Amazon Web Services Elastic Compute Cloud ("AWS EC2")
 
 `EC2 <http://aws.amazon.com/ec2/>`_ is a web service that allows you to
 start virtual machines in an Amazon data center. Please see their website for
-details, incuding costs. Using the AWS EC2 latent buildslaves involves getting
+details, including costs. Using the AWS EC2 latent buildslaves involves getting
 an EC2 account with AWS and setting up payment; customizing one or more EC2
 machine images ("AMIs") on your desired operating system(s) and publishing
 them (privately if needed); and configuring the buildbot master to know how to

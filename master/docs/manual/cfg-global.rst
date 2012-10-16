@@ -255,7 +255,7 @@ The :bb:cfg:`changeHorizon` key determines how many changes the master will keep
 This parameter defaults to 0, which means keep all changes indefinitely.
 
 The :bb:cfg:`buildHorizon` specifies the minimum number of builds for each builder which should be kept on disk.
-The :bb:cfg:`eventHorizon` specifies the minumum number of events to keep--events mostly describe connections and disconnections of slaves, and are seldom helpful to developers.
+The :bb:cfg:`eventHorizon` specifies the minimum number of events to keep--events mostly describe connections and disconnections of slaves, and are seldom helpful to developers.
 The :bb:cfg:`logHorizon` gives the minimum number of builds for which logs should be maintained; this parameter must be less than or equal to :bb:cfg:`buildHorizon`.
 Builds older than :bb:cfg:`logHorizon` but not older than :bb:cfg:`buildHorizon` will maintain their overall status and the status of each step, but the logfiles will be deleted.
 
@@ -421,7 +421,7 @@ Debug Options
 ~~~~~~~~~~~~~
 
 If you set :bb:cfg:`debugPassword`, then you can connect to the buildmaster with the diagnostic tool launched by :samp:`buildbot debugclient {MASTER}:{PORT}`.
-From this tool, you can reload the config file, manually force builds, and inject changes, which may be useful for testing your buildmaster without actually commiting changes to your repository (or before you have the Change Sources configured.)
+From this tool, you can reload the config file, manually force builds, and inject changes, which may be useful for testing your buildmaster without actually committing changes to your repository (or before you have the Change Sources configured.)
 
 The debug tool uses the same port number as the slaves, :bb:cfg:`slavePortnum`, and you may configure its authentication credentials as follows::
 
@@ -614,7 +614,7 @@ The callable takes the revision id and repository argument, and should return an
 Note that the revision id may not always be in the form you expect, so code defensively.
 In particular, a revision of "??" may be supplied when no other information is available.
 
-Note that :class:`SourceStamp`\s that are not created from version-control changes (e.g., those created by a Nightly or Periodic scheduler) may have an empty repository string, if the respository is not known to the scheduler.
+Note that :class:`SourceStamp`\s that are not created from version-control changes (e.g., those created by a Nightly or Periodic scheduler) may have an empty repository string, if the repository is not known to the scheduler.
 
 Revision Link Helpers
 +++++++++++++++++++++
