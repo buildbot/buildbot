@@ -17,18 +17,20 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.data import builders
 from buildbot.test.util import types, endpoint
-from buildbot.test.fake import fakemaster
+from buildbot.test.fake import fakemaster, fakedb
 
 class Builder(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = builders.BuilderEndpoint
-    resourceTypeClass = builders.BuildersResourceType
 
     def setUp(self):
         self.setUpEndpoint()
-        # TODO: use insertTestData instead
-        self.rtype.builderIds = { 1 : u'buildera', 2 : u'builderb' }
-        self.rtype.builders = self.rtype.builderIds.keys()
+        return self.db.insertTestData([
+            fakedb.Builder(id=1, name=u'buildera'),
+            fakedb.Builder(id=2, name=u'builderb'),
+            fakedb.Master(id=13),
+            fakedb.BuilderMaster(id=1, builderid=2, masterid=13),
+        ])
 
     def tearDown(self):
         self.tearDownEndpoint()
@@ -40,6 +42,8 @@ class Builder(endpoint.EndpointMixin, unittest.TestCase):
             types.verifyData(self, 'builder', {}, builder)
             self.assertEqual(builder['name'], u'builderb')
         return d
+
+    # TODO: test get with masterid that exists or doesn't exist
 
     def test_get_missing(self):
         d = self.callGet(dict(), dict(builderid=99))
@@ -67,12 +71,15 @@ class Builder(endpoint.EndpointMixin, unittest.TestCase):
 class Builders(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = builders.BuildersEndpoint
-    resourceTypeClass = builders.BuildersResourceType
 
     def setUp(self):
         self.setUpEndpoint()
-        self.rtype.builderIds = { 1 : u'buildera', 2 : u'builderb' }
-        self.rtype.builders = self.rtype.builderIds.values()
+        return self.db.insertTestData([
+            fakedb.Builder(id=1, name=u'buildera'),
+            fakedb.Builder(id=2, name=u'builderb'),
+            fakedb.Master(id=13),
+            fakedb.BuilderMaster(id=1, builderid=2, masterid=13),
+        ])
 
 
     def tearDown(self):
@@ -88,6 +95,23 @@ class Builders(endpoint.EndpointMixin, unittest.TestCase):
                              [1, 2])
         return d
 
+    def test_get_masterid(self):
+        d = self.callGet(dict(), dict(masterid=13))
+        @d.addCallback
+        def check(builders):
+            [ types.verifyData(self, 'builder', {}, b) for b in builders ]
+            self.assertEqual(sorted([b['builderid'] for b in builders]),
+                             [2])
+        return d
+
+    def test_get_masterid_missing(self):
+        d = self.callGet(dict(), dict(masterid=14))
+        @d.addCallback
+        def check(builders):
+            self.assertEqual(sorted([b['builderid'] for b in builders]),
+                             [])
+        return d
+
     def test_startConsuming(self):
         self.callStartConsuming({}, {},
                 expected_filter=('builder', None, 'new'))
@@ -99,8 +123,37 @@ class BuilderResourceType(unittest.TestCase):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
                                                 testcase=self)
         self.rtype = builders.BuildersResourceType(self.master)
+        return self.master.db.insertTestData([
+            fakedb.Master(id=13),
+            fakedb.Master(id=14),
+        ])
 
     @defer.inlineCallbacks
     def test_updateBuilderList(self):
-        # TODO: this method doesn't do anything yet, so very little to test..
-        yield self.rtype.updateBuilderList(13, [ u'somebuidler' ])
+        # add one builder master
+        yield self.rtype.updateBuilderList(13, [ u'somebuilder' ])
+        self.assertEqual(sorted((yield self.master.db.builders.getBuilders())),
+        sorted([
+            dict(id=1, masterids=[13], name='somebuilder'),
+        ]))
+        # add another
+        yield self.rtype.updateBuilderList(13, [ u'somebuilder', u'another' ])
+        self.assertEqual(sorted((yield self.master.db.builders.getBuilders())),
+        sorted([
+            dict(id=1, masterids=[13], name='somebuilder'),
+            dict(id=2, masterids=[13], name='another'),
+        ]))
+        # add one for another master
+        yield self.rtype.updateBuilderList(14, [ u'another' ])
+        self.assertEqual(sorted((yield self.master.db.builders.getBuilders())),
+        sorted([
+            dict(id=1, masterids=[13], name='somebuilder'),
+            dict(id=2, masterids=[13, 14], name='another'),
+        ]))
+        # remove both for the first master
+        yield self.rtype.updateBuilderList(13, [ ])
+        self.assertEqual(sorted((yield self.master.db.builders.getBuilders())),
+        sorted([
+            dict(id=1, masterids=[], name='somebuilder'),
+            dict(id=2, masterids=[14], name='another'),
+        ]))

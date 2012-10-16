@@ -38,4 +38,4 @@ Builders
         :pathkey integer builderid: the ID of the builder
 
         This path selects a specific builder, identified by ID.
-        The ``:masterid`` field is ignored, since ``:builderid`` uniquely identifies the builder.
+        If the given builder is not running on the given master, this path returns nothing.

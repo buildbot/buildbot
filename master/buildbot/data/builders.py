@@ -21,14 +21,20 @@ class BuilderEndpoint(base.Endpoint):
     pathPatterns = [ ( 'builder', 'i:builderid' ),
                      ( 'master', 'i:masterid', 'builder', 'i:builderid' ) ]
 
+    @defer.inlineCallbacks
     def get(self, options, kwargs):
-        rtype = self.master.data.rtypes['builder']
         builderid = kwargs['builderid']
-        if builderid not in rtype.builderIds:
-            return defer.succeed(None)
-        return defer.succeed(
+        bdict = yield self.master.db.builders.getBuilder(builderid)
+        if not bdict:
+            yield defer.returnValue(None)
+            return
+        if 'masterid' in kwargs:
+            if kwargs['masterid'] not in bdict['masterids']:
+                yield defer.returnValue(None)
+                return
+        yield defer.returnValue(
             dict(builderid=builderid,
-                 name=rtype.builderIds[builderid],
+                 name=bdict['name'],
                  link=base.Link(('builder', str(kwargs['builderid'])))))
 
 
@@ -38,17 +44,15 @@ class BuildersEndpoint(base.Endpoint):
     pathPatterns = [ ( 'builder', ),
                      ( 'master', 'i:masterid', 'builder' ) ]
 
+    @defer.inlineCallbacks
     def get(self, options, kwargs):
-        rtype = self.master.data.rtypes['builder']
-        names = set(rtype.builders)
-        with_ids = [ (id, name) for id, name in rtype.builderIds.iteritems()
-                     if name in names ]
-        with_ids.sort()
-        return defer.succeed([
-            dict(builderid=id,
-                 name=name,
-                 link=base.Link(('builder', str(id))))
-            for id, name in with_ids ])
+        bdicts = yield self.master.db.builders.getBuilders(
+                masterid=kwargs.get('masterid', None))
+        yield defer.returnValue([
+            dict(builderid=bd['id'],
+                 name=bd['name'],
+                 link=base.Link(('builder', str(bd['id']))))
+            for bd in bdicts ])
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
@@ -65,20 +69,26 @@ class BuildersResourceType(base.ResourceType):
 
     def __init__(self, master):
         base.ResourceType.__init__(self, master)
-        self.builderIds = {} # name : id
-        self.builders = [] # list of names
-        self.masterid = None
 
     @base.updateMethod
     @defer.inlineCallbacks
     def updateBuilderList(self, masterid, builderNames):
-        self.masterid = masterid
-        for name in builderNames:
-            if name not in self.builderIds:
-                builderid = len(self.builderIds)+1
-                self.builderIds[builderid] = name
-                self.produceEvent(
-                        dict(builderid=builderid, name=name),
-                        'new')
-        self.builders = builderNames
-        yield defer.returnValue(None)
+        # get the "current" list of builders for this master, so we know what
+        # changes to make.  Race conditions here aren't a great worry, as this
+        # is the only master inserting or deleting these records.
+        builders = yield self.master.db.builders.getBuilders(masterid=masterid)
+
+        # figure out what to remove and remove it
+        builderNames_set = set(builderNames)
+        for bldr in builders:
+            if bldr['name'] not in builderNames_set:
+                yield self.master.db.builders.removeBuilderMaster(
+                        masterid=masterid, builderid=bldr['id'])
+            else:
+                builderNames_set.remove(bldr['name'])
+
+        # now whatever's left in builderNames_set is new
+        for name in builderNames_set:
+            builderid = yield self.master.db.builders.findBuilderId(name)
+            yield self.master.db.builders.addBuilderMaster(
+                        masterid=masterid, builderid=builderid)
