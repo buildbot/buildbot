@@ -27,10 +27,11 @@ from buildbot.status import builder
 
 class SourceStampExtractor:
 
-    def __init__(self, treetop, branch, repository):
+    def __init__(self, treetop, branch, repository, baserev):
         self.treetop = treetop
         self.repository = repository
         self.branch = branch
+        self.baserev = baserev
         self.exe = which(self.vcexe)[0]
 
     def dovc(self, cmd):
@@ -50,8 +51,11 @@ class SourceStampExtractor:
 
     def get(self):
         """Return a Deferred that fires with a SourceStamp instance."""
-        d = self.getBaseRevision()
-        d.addCallback(self.getPatch)
+        if not self.baserev:
+            d = self.getBaseRevision()
+            d.addCallback(self.getPatch)
+        else:
+            d = self.getPatch(None)
         d.addCallback(self.done)
         return d
     def readPatch(self, diff, patchlevel):
@@ -309,7 +313,7 @@ class MonotoneExtractor(SourceStampExtractor):
         return d
 
 
-def getSourceStamp(vctype, treetop, branch=None, repository=None):
+def getSourceStamp(vctype, treetop, branch=None, repository=None, baserev=None):
     if vctype == "cvs":
         cls = CVSExtractor
     elif vctype == "svn":
@@ -328,7 +332,7 @@ def getSourceStamp(vctype, treetop, branch=None, repository=None):
         cls = MonotoneExtractor
     else:
         raise KeyError("unknown vctype '%s'" % vctype)
-    return cls(treetop, branch, repository).get()
+    return cls(treetop, branch, repository, baserev).get()
 
 
 def ns(s):
@@ -494,7 +498,8 @@ class Try(pb.Referenceable):
                     treedir = getTopdir(topfile)
             else:
                 treedir = os.getcwd()
-            d = getSourceStamp(vc, treedir, branch, self.getopt("repository"))
+            d = getSourceStamp(vc, treedir, branch, self.getopt("repository"),
+                self.getopt("baserev"))
         d.addCallback(self._createJob_1)
         return d
 
