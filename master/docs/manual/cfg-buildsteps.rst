@@ -2508,10 +2508,7 @@ be substituted using :ref:`Interpolate`.
 
 .. index:: Build Artifact Storage
 
-.. bb:step:: CreateMasterArtifactStorage
-.. bb:step:: CreateScpHttpArtifactStorage
-.. bb:step:: UploadArtifact
-.. bb:step:: DownloadArtifact
+.. _Build_Artifact_Storage:
 
 Storing Build Artifacts
 -----------------------
@@ -2522,16 +2519,23 @@ Artifacts can be stored in several storage managers, depending on your project s
 and needs. Regardless of the storage manager that you use, the steps used to manipulate
 artifacts are the same.
 
-.. py:class:: buildbot.steps.artifacts.CreateMasterArtifactStorage
+.. py:class:: buildbot.steps.artifacts.IArtifactStorage
 
-This step configure the build to output its artifacts in the master's local filesystem.
+This is the interface that any custom ArtifactStorage must implement.
+
+MasterArtifactStorage
++++++++++++++++++++++
+
+.. py:class:: buildbot.steps.artifacts.MasterArtifactStorage
+
+This object configure the artifact steps to output their artifacts in the master's local filesystem.
 It will use the slave to master tcp connection to transfer the artifacts (via the UploadDir
 and DownloadDir slave commands)
 
 This is the most simple to configure artifact storage, but also the least scalable.
 It should be avoided in multi-master configurations.
 
-The CreateMasterArtifactStorage step takes the following arguments:
+The :class:`MasterArtifactStorage` class takes the following arguments:
 
 ``storageName``
         identifier for storage name
@@ -2546,13 +2550,15 @@ The CreateMasterArtifactStorage step takes the following arguments:
 ``userURL``
         WebStatus will be serving the artifacts via http, but if you want
         configure your reverse proxy to serve those static files, you will get better
-        performance. This url will be urljoin()ed to the buildDir, and
-        added as a step's url to CreateMasterArtifactStorage step, and all further
-        UploadArtifact steps.
+        performance. This url will be urljoin()ed to the buildDir and
+        added as a step's url all further :bb:step:`UploadArtifact` steps.
 
-.. py:class:: buildbot.steps.artifacts.CreateScpHttpArtifactStorage
+ScpHttpArtifactStorage
+++++++++++++++++++++++
 
-This step configure the build to output its artifacts in a scp/http server.
+.. py:class:: buildbot.steps.artifacts.ScpHttpArtifactStorage
+
+This object configure the artifacts steos to output their artifacts in a scp/http server.
 Artifacts are uploaded to the server via scp secure transfer, and downloaded
 via http for performance. The ssh creditential are not handled, and slave's
 ssh public keys must be installed in ssh server outside of the scope of buildbot.
@@ -2563,7 +2569,8 @@ implementation.
 
 Thus it is at the moment only supported on Posix systems
 
-The CreateScpHttpArtifactStorage step takes the following arguments:
+
+The :class:`ScpHttpArtifactStorage` class takes the following arguments:
 
 ``storageName``
         identifier for storage name
@@ -2585,24 +2592,29 @@ The CreateScpHttpArtifactStorage step takes the following arguments:
         point of view
 
 ``buildDir``
-        storagedir relative directory where artifact are uploaded
+        storagedir relative directory where artifact are uploaded.
+        This parameter is "rendered" for every artifact step in the step's property context.
         defaults to ``Interpolate("%(prop:buildername)s/%(prop:buildnumber)s")``
 
 ``userURL``
-        The url to access buildDir via http. This url will be urljoin()ed to the buildDir, and
-        added as a step's url to CreateMasterArtifactStorage step, and all further
-        UploadArtifact steps.
+        The url to access buildDir via http.
+        This url will be urljoin()ed to the buildDir and
+        added as a step's url all further :bb:step:`UploadArtifact` steps.
+
+.. bb:step:: UploadArtifact
+
+UploadArtifact
+++++++++++++++
 
 .. py:class:: buildbot.steps.artifacts.UploadArtifact
 
 This is a generic step that will trigger uploading artifacts to the storage server.
-The actual implementation for uploading is depending on the Storage backend configured
-in a previous Create*ArtifactStorage step.
+The actual implementation for uploading is depending on the Storage backend passed as an argument.
 
-The UploadArtifact step takes the following arguments:
+The :bb:step:`UploadArtifact` step takes the following arguments (all renderables):
 
 ``storageName``
-        identifier for storage name previously configured in a Create*ArtifactStorage step.
+        identifier for storage name previously configured in c["storage"] global config
 
 ``workdir``
         workdir parameter inherited from BaseStep class
@@ -2612,23 +2624,26 @@ The UploadArtifact step takes the following arguments:
 
 ``storepath``
         destination path of the artifact on the storage server, relative to buildDir configured
-        the Create*ArtifactStorage step of the same build.
+        the storage object.
+
+.. bb:step:: DownloadArtifact
+
+DownloadArtifact
+++++++++++++++++
 
 .. py:class:: buildbot.steps.artifacts.DownloadArtifact
 
 This is a generic step that will trigger downloading artifacts from the storage server.
 
 The most obvious usecase is for downloading artifacts produced by a build builder in a test
-builder. In this case, the test builder still need to configure a previous Create*ArtifactStorage
-step that will point to the storage path of the parent build.
+builder.
 
-The actual implementation for downloading is depending on the Storage backend configured
-in a previous Create*ArtifactStorage step.
+The actual implementation for downloading is depending on the Storage backend used
 
-The UploadArtifact step takes the following arguments:
+The :bb:step:`DownloadArtifact` step takes the following arguments:
 
 ``storageName``
-        identifier for storage name previously configured in a Create*ArtifactStorage step.
+        identifier for storage name previously configured in c["storage"] global config
 
 ``workdir``
         workdir parameter inherited from BaseStep class

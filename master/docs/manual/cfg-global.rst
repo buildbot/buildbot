@@ -300,6 +300,23 @@ The available caches are:
 
     c['buildCacheSize'] = 15
 
+.. bb:cfg:: artifactStorage
+
+.. index:: artifact; storage
+
+Artifact Storage Global Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+You need to define the list of ArtifactStorage you want to use in your config in the
+config variable ``storage``. e.g.::
+
+    from buildbot.steps.artifacts import MasterArtifactStorage
+    c["storage"] = [ MasterArtifactStorage(storageName="default", storageDir="/data/buildbot-storage/") ]
+
+at least one ``"default"`` storage needs to be defined, and will be the default backend for upload steps, and
+exception logs.
+
+See the :ref:`Build_Artifact_Storage` documentation for ArtifactStorage backends choice.
+
 .. bb:cfg:: mergeRequests
 
 .. index:: Builds; merging

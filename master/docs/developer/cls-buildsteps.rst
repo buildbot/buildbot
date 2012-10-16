@@ -331,7 +331,7 @@ BuildStep
         :param slavepath: path of the artifact on the slave (can be a file or a directory),
             relative to workdir
         :param storepath: destination path of the artifact on the storage server, relative to
-            buildDir configured the Create*ArtifactStorage step of the same build.
+            buildDir configured the IArtifactStorage named ``storageName`` in global config.
         :param kw: optional StorageManager backend parameters
 
         can be used by composite steps for uploading artifacts, return deferred that is
@@ -342,7 +342,7 @@ BuildStep
         :param slavepath: path of the artifact on the slave (can be a file or a directory),
             relative to workdir
         :param storepath: path of the artifact on the storage server, relative to
-            buildDir configured the Create*ArtifactStorage step of the same build.
+            buildDir configured the IArtifactStorage named ``storageName`` in global config.
         :param kw: optional StorageManager backend parameters
 
         can be used by composite steps for downloading artifacts, return deferred that is
@@ -352,7 +352,7 @@ BuildStep
 
         :param blob: (string (or bytes??)) data to store
         :param storepath: destination path of the artifact on the storage server, relative to
-            buildDir configured the Create*ArtifactStorage step of the same build.
+            buildDir configured the IArtifactStorage named ``storageName`` in global config.
         :param kw: optional StorageManager backend parameters
 
         can be used by composite steps for uploading artifacts, return deferred that is
@@ -364,7 +364,7 @@ BuildStep
     .. py:method:: downloadArtifactBlob(storepath, storageName, **kw)
 
         :param storepath: path of the artifact on the storage server, relative to
-            buildDir configured the Create*ArtifactStorage step of the same build.
+            buildDir configured the IArtifactStorage named ``storageName`` in global config.
         :param kw: optional StorageManager backend parameters
 
         can be used by composite steps for downloading artifacts, return deferred that is
