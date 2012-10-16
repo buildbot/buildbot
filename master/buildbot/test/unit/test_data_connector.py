@@ -121,6 +121,9 @@ class DataConnector(unittest.TestCase):
         match = self.data.matcher[('test',)]
         self.assertIsInstance(match[0], TestsEndpoint)
         self.assertEqual(match[1], dict())
+        match = self.data.matcher[('test','foo')]
+        self.assertIsInstance(match[0], TestsEndpointSubclass)
+        self.assertEqual(match[1], dict())
 
         # and that it found the update method
         self.assertEqual(self.data.updates.testUpdate(), "testUpdate return")
@@ -175,13 +178,19 @@ class TestsEndpoint(base.Endpoint):
     pathPattern = ('test',)
     rootLinkName = 'tests'
 
+class TestsEndpointParentClass(base.Endpoint):
+    rootLinkName = 'shouldnt-see-this'
+
+class TestsEndpointSubclass(TestsEndpointParentClass):
+    pathPattern = ('test', 'foo')
+
 class TestEndpoint(base.Endpoint):
     pathPattern = ('test', 'i:testid')
 
 class TestResourceType(base.ResourceType):
     name = 'tests'
     type = 'test'
-    endpoints = [ TestsEndpoint, TestEndpoint ]
+    endpoints = [ TestsEndpoint, TestEndpoint, TestsEndpointSubclass ]
     keyFields = ( 'testid', )
 
     @base.updateMethod
