@@ -27,7 +27,7 @@ from twisted.python.reflect import accumulateClassList
 from buildbot import interfaces, locks, util, config
 from buildbot.status import progress
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
-     EXCEPTION, RETRY, worst_status
+     EXCEPTION, RETRY, USERCANCEL, worst_status
 from buildbot.process import metrics, properties
 
 class BuildStepFailed(Exception):
@@ -926,6 +926,8 @@ class LoggingBuildStep(BuildStep):
             return self.describe(True) + ["warnings"]
         elif results == EXCEPTION:
             return self.describe(True) + ["exception"]
+        elif results == USERCANCEL:
+            return self.describe(True) + ["usercancel"]
         else:
             return self.describe(True) + ["failed"]
 
