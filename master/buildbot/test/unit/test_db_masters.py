@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import hashlib
 from twisted.trial import unittest
 from twisted.internet import defer, task
 from buildbot.test.fake import fakedb, fakemaster
@@ -174,17 +173,7 @@ class Tests(interfaces.InterfaceTests):
 class RealTests(Tests):
 
     # tests that only "real" implementations will pass
-
-    @defer.inlineCallbacks
-    def test_findMasterId_race(self):
-        def race_thd(conn):
-            hash = hashlib.sha1('some:master').hexdigest()
-            conn.execute(self.db.model.masters.insert(),
-                    id=5, name='some:master', name_hash=hash,
-                    active=0, last_active=SOMETIME)
-        id = yield self.db.masters.findMasterId('some:master',
-                                        _race_hook=race_thd)
-        self.assertEqual(id, 5)
+    pass
 
 
 class TestFakeDB(unittest.TestCase, Tests):

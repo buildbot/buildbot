@@ -24,36 +24,17 @@ class MasterDict(dict):
 
 class MastersConnectorComponent(base.DBConnectorComponent):
 
-    def findMasterId(self, name, _race_hook=None, _reactor=reactor):
-        def thd(conn, no_recurse=False):
-            tbl = self.db.model.masters
-
-            # try to find the master
-            q = sa.select([ tbl.c.id ],
-                    whereclause=(tbl.c.name == name))
-            rows = conn.execute(q).fetchall()
-
-            # found it!
-            if rows:
-                return rows[0].id
-
-            _race_hook and _race_hook(conn)
-
-            try:
-                r = conn.execute(tbl.insert(), dict(
+    def findMasterId(self, name, _reactor=reactor):
+        tbl=self.db.model.masters
+        return self.findSomethingId(
+                tbl=tbl,
+                whereclause=(tbl.c.name == name),
+                insert_values=dict(
                     name=name,
                     name_hash=hashlib.sha1(name).hexdigest(),
                     active=0, # initially inactive
                     last_active=_reactor.seconds()
                     ))
-                return r.inserted_primary_key[0]
-            except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-                # try it all over again, in case there was an overlapping,
-                # identical call, but only retry once.
-                if no_recurse:
-                    raise
-                return thd(conn, no_recurse=True)
-        return self.db.pool.do(thd)
 
     def setMasterState(self, masterid, active, _reactor=reactor):
         def thd(conn):
