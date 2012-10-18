@@ -63,16 +63,18 @@ class DBConnectorComponent(object):
             # try to find the master
             q = sa.select([ tbl.c.id ],
                     whereclause=whereclause)
-            rows = conn.execute(q).fetchall()
+            r = conn.execute(q)
+            row = r.fetchone()
+            r.close()
 
             # found it!
-            if rows:
-                return rows[0].id
+            if row:
+                return row.id
 
             _race_hook and _race_hook(conn)
 
             try:
-                r = conn.execute(tbl.insert(), insert_values)
+                r = conn.execute(tbl.insert(), [ insert_values ])
                 return r.inserted_primary_key[0]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 # try it all over again, in case there was an overlapping,
