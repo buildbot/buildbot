@@ -18,8 +18,7 @@ Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "u
 
 def worst_status(a, b):
     # SUCCESS > WARNINGS > FAILURE > EXCEPTION > RETRY > USERCANCEL
-    # Retry needs to be considered the worst so that conusmers don't have to
-    # worry about other failures undermining the USERCANCEL.
+    # USERCANCEL needs to be considered the worst.
     for s in (USERCANCEL, RETRY, EXCEPTION, FAILURE, WARNINGS, SKIPPED, SUCCESS):
         if s in (a, b):
             return s
