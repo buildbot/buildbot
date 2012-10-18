@@ -22,7 +22,7 @@ Defining a Build Factory
 ------------------------
 
 A :class:`BuildFactory` defines the steps that every build will follow.  Think of it as
-a glorified script.  For example, a build factory which consists of a CVS checkout
+a glorified script.  For example, a build factory which consists of an SVN checkout
 followed by a ``make build`` would be configured as follows::
 
     from buildbot.steps import svn, shell
