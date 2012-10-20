@@ -118,6 +118,10 @@ class DataConnector(unittest.TestCase):
         match = self.data.matcher[('test', '10')]
         self.assertIsInstance(match[0], TestEndpoint)
         self.assertEqual(match[1], dict(testid=10))
+        match = self.data.matcher[('test', '10', 'p1')]
+        self.assertIsInstance(match[0], TestEndpoint)
+        match = self.data.matcher[('test', '10', 'p2')]
+        self.assertIsInstance(match[0], TestEndpoint)
         match = self.data.matcher[('test',)]
         self.assertIsInstance(match[0], TestsEndpoint)
         self.assertEqual(match[1], dict())
@@ -186,6 +190,7 @@ class TestsEndpointSubclass(TestsEndpointParentClass):
 
 class TestEndpoint(base.Endpoint):
     pathPattern = ('test', 'i:testid')
+    pathPatterns = [ ('test', 'i:testid', 'p1'), ('test', 'i:testid', 'p2') ]
 
 class TestResourceType(base.ResourceType):
     name = 'tests'
