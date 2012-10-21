@@ -46,6 +46,10 @@ There is no scheduler resource type yet, although schedulers are in place in the
 Support needs to be added for schedulers on a particular master to "claim" the name for themselves, deactivate themselves if already running on another master, and periodically poll for the opportunity to pick up the role.
 This gives us automatic failover for schedulers in a multi-master configuration, and also means that all masters can run with identical configurations, which may make configuration management easier.
 
+When a master becomes inactive (either on its own, or having failed its heartbeat check), its schedulers should be marked inactive by the data API and suitable messages sent.
+
+It should be possible to list the master on which a scheduler is running at e.g., `/scheduler/:schedulerid/master`
+
 ## Other Resource-Type Related Tasks ##
 
 * ``addBuildset`` currently sends messages about buildrequests directly.
