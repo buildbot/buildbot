@@ -49,7 +49,7 @@ Charset.add_charset('utf-8', Charset.SHORTEST, None, 'utf-8')
 from buildbot import interfaces, util, config
 from buildbot.process.users import users
 from buildbot.status import base
-from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION, Results
+from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION, USERCANCEL, Results
 
 VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
 
@@ -94,6 +94,8 @@ def defaultMessage(mode, name, build, results, master_status):
             text += "The Buildbot has detected a passing build"
     elif results == EXCEPTION:
         text += "The Buildbot has detected a build exception"
+    elif results == USERCANCEL:
+        text += "The Build was cancelled by the user"
 
     projects = []
     if ss_list:
@@ -144,6 +146,8 @@ def defaultMessage(mode, name, build, results, master_status):
         text += "Build succeeded!\n"
     elif results == WARNINGS:
         text += "Build Had Warnings%s\n" % t
+    elif results == USERCANCEL:
+        text += "Build was cancelled by %s\n" % build.getResponsibleUsers()
     else:
         text += "BUILD FAILED%s\n" % t
 
@@ -332,7 +336,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.fromaddr = fromaddr
         if isinstance(mode, basestring):
             if mode == "all":
-                mode = ("failing", "passing", "warnings", "exception")
+                mode = ("failing", "passing", "warnings", "exception", "usercancel")
             elif mode == "warnings":
                 mode = ("failing", "warnings")
             else:
@@ -450,6 +454,8 @@ class MailNotifier(base.StatusReceiverMultiService):
         if "warnings" in self.mode and results == WARNINGS:
             return True
         if "exception" in self.mode and results == EXCEPTION:
+            return True
+        if "usercancel" in self.mode and results == USERCANCEL:
             return True
 
         return False
