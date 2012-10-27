@@ -28,7 +28,7 @@ from buildbot import version
 from buildbot.interfaces import IStatusReceiver
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status import base
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, RETRY
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, RETRY, USERCANCEL
 from buildbot.process.properties import Properties
 
 # twisted.internet.ssl requires PyOpenSSL, so be resilient if it's missing
@@ -399,11 +399,12 @@ class IRCContact(base.StatusReceiver):
         self.send(r)
 
     results_descriptions = {
-        SUCCESS:   ("Success",   'GREEN'),
-        WARNINGS:  ("Warnings",  'YELLOW'),
-        FAILURE:   ("Failure",   'RED'),
-        EXCEPTION: ("Exception", 'PURPLE'),
-        RETRY:     ("Retry",     'AQUA_LIGHT'),
+        SUCCESS:    ("Success",   'GREEN'),
+        WARNINGS:   ("Warnings",  'YELLOW'),
+        FAILURE:    ("Failure",   'RED'),
+        EXCEPTION:  ("Exception", 'PURPLE'),
+        RETRY:      ("Retry",     'AQUA_LIGHT'),
+        USERCANCEL: ("UserCancel", 'PINK'),
         }
 
     def getResultsDescriptionAndColor(self, results):

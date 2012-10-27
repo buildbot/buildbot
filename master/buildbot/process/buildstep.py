@@ -570,7 +570,7 @@ class BuildStep(object, properties.PropertiesMixin):
 
     def _startStep_2(self, res):
         if self.stopped:
-            self.finished(EXCEPTION)
+            self.finished(USERCANCEL)
             return
 
         if self.progress:
@@ -645,10 +645,16 @@ class BuildStep(object, properties.PropertiesMixin):
             # At the same time we must respect RETRY status because it's used
             # to retry interrupted build due to some other issues for example
             # due to slave lost
-            results = EXCEPTION
-            self.step_status.setText(self.describe(True) +
-                                 ["interrupted"])
-            self.step_status.setText2(["interrupted"])
+            if results == USERCANCEL:
+              self.step_status.setText(self.describe(True) +
+                                   ["usercancel"])
+              self.step_status.setText2(["usercancel"])
+            else:
+              results = EXCEPTION
+              self.step_status.setText(self.describe(True) +
+                                   ["interrupted"])
+              self.step_status.setText2(["interrupted"])
+
         self._finishFinished(results)
 
     def _finishFinished(self, results):
@@ -893,13 +899,13 @@ class LoggingBuildStep(BuildStep):
         # 'reason' can be a Failure, or text
         BuildStep.interrupt(self, reason)
         if self.step_status.isWaitingForLocks():
-            self.addCompleteLog('interrupt while waiting for locks', str(reason))
+            self.addCompleteLog('usercancel while waiting for locks', str(reason))
         else:
-            self.addCompleteLog('interrupt', str(reason))
+            self.addCompleteLog('usercancel', str(reason))
 
         if self.cmd:
             d = self.cmd.interrupt(reason)
-            d.addErrback(log.err, 'while interrupting command')
+            d.addErrback(log.err, 'while cancelling command')
 
     def checkDisconnect(self, f):
         f.trap(error.ConnectionLost)
