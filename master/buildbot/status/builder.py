@@ -62,9 +62,10 @@ class BuilderStatus(styles.Versioned):
     currentBigState = "offline" # or idle/waiting/interlocked/building
     basedir = None # filled in by our parent
 
-    def __init__(self, buildername, category, master):
+    def __init__(self, buildername, category, master, description):
         self.name = buildername
         self.category = category
+        self.description = description
         self.master = master
 
         self.slavenames = []
@@ -268,6 +269,13 @@ class BuilderStatus(styles.Versioned):
         # if builderstatus page does show not up without any reason then 
         # str(self.name) may be a workaround
         return self.name
+
+    def setDescription(self, description):
+        # used during reconfig
+        self.description = description
+
+    def getDescription(self):
+        return self.description
 
     def getState(self):
         return (self.currentBigState, self.currentBuilds)

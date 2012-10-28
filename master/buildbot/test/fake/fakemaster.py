@@ -50,11 +50,14 @@ class FakeBotMaster(object):
 
 class FakeStatus(object):
 
-    def builderAdded(self, name, basedir, category=None):
+    def builderAdded(self, name, basedir, category=None, description=None):
         return FakeBuilderStatus()
 
 
 class FakeBuilderStatus(object):
+
+    def setDescription(self, description):
+        pass
 
     def setCategory(self, category):
         pass
