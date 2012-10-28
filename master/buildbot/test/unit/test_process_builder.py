@@ -19,7 +19,6 @@ from twisted.trial import unittest
 from twisted.python import failure
 from twisted.internet import defer
 from buildbot import config
-from buildbot.status import master
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import builder, factory
 from buildbot.db import buildrequests
