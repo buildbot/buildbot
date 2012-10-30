@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.data import builders
@@ -43,8 +44,6 @@ class Builder(endpoint.EndpointMixin, unittest.TestCase):
             self.assertEqual(builder['name'], u'builderb')
         return d
 
-    # TODO: test get with masterid that exists or doesn't exist
-
     def test_get_missing(self):
         d = self.callGet(dict(), dict(builderid=99))
         @d.addCallback
@@ -58,6 +57,13 @@ class Builder(endpoint.EndpointMixin, unittest.TestCase):
         def check(builder):
             types.verifyData(self, 'builder', {}, builder)
             self.assertEqual(builder['name'], u'builderb')
+        return d
+
+    def test_get_existing_with_different_master(self):
+        d = self.callGet(dict(), dict(masterid=14, builderid=2))
+        @d.addCallback
+        def check(builder):
+            self.assertEqual(builder, None)
         return d
 
     def test_get_missing_with_master(self):
@@ -157,3 +163,11 @@ class BuilderResourceType(unittest.TestCase):
             dict(id=1, masterids=[], name='somebuilder'),
             dict(id=2, masterids=[14], name='another'),
         ]))
+
+    @defer.inlineCallbacks
+    def test_masterDeactivated(self):
+        # this method just calls updateBuilderList, so test that.
+        self.rtype.updateBuilderList = mock.Mock(
+                spec=self.rtype.updateBuilderList)
+        yield self.rtype._masterDeactivated(10)
+        self.rtype.updateBuilderList.assert_called_with(10, [])

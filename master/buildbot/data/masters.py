@@ -30,27 +30,42 @@ def _db2data(master):
 
 class MasterEndpoint(base.Endpoint):
 
-    pathPattern = ( 'master', 'i:masterid' )
+    pathPatterns = [ ( 'master', 'i:masterid' ),
+                     ( 'builder', 'i:builderid', 'master', 'i:masterid' ) ]
 
+    @defer.inlineCallbacks
     def get(self, options, kwargs):
-        d = self.master.db.masters.getMaster(kwargs['masterid'])
-        @d.addCallback
-        def process(m):
-            return _db2data(m) if m else None
-        return d
+        # if a builder is given, only return the master if it's associated with
+        # this builder
+        if 'builderid' in kwargs:
+            builder = yield self.master.db.builders.getBuilder(
+                    builderid=kwargs['builderid'])
+            if not builder or kwargs['masterid'] not in builder['masterids']:
+                yield defer.returnValue(None)
+                return
+        m = yield self.master.db.masters.getMaster(kwargs['masterid'])
+        yield defer.returnValue(_db2data(m) if m else None)
 
 
 class MastersEndpoint(base.Endpoint):
 
-    pathPattern = ( 'master', )
+    pathPatterns = [ ( 'master', ),
+                     ( 'builder', 'i:builderid', 'master', ) ]
     rootLinkName = 'masters'
 
+    @defer.inlineCallbacks
     def get(self, options, kwargs):
-        d = self.master.db.masters.getMasters()
-        @d.addCallback
-        def process(masterlist):
-            return [ _db2data(m) for m in masterlist ]
-        return d
+        masterlist = yield self.master.db.masters.getMasters()
+        # filter by builder if requested
+        if 'builderid' in kwargs:
+            builder = yield self.master.db.builders.getBuilder(
+                    builderid=kwargs['builderid'])
+            if builder:
+                masterids = set(builder['masterids'])
+                masterlist = [ m for m in masterlist if m['id'] in masterids ]
+            else:
+                masterlist = []
+        yield defer.returnValue([ _db2data(m) for m in masterlist ])
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
@@ -86,10 +101,7 @@ class MasterResourceType(base.ResourceType):
             deactivated = yield self.master.db.masters.setMasterState(
                     masterid=m['id'], active=False, _reactor=_reactor)
             if deactivated:
-                self.produceEvent(
-                    dict(masterid=m['id'], name=m['name'],
-                        active=False),
-                    'stopped')
+                self._masterDeactivated(m['id'], m['name'])
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -97,6 +109,13 @@ class MasterResourceType(base.ResourceType):
         deactivated = yield self.master.db.masters.setMasterState(
                 masterid=masterid, active=False)
         if deactivated:
-            self.produceEvent(
-                dict(masterid=masterid, name=name, active=False),
-                'stopped')
+            self._masterDeactivated(masterid, name)
+
+    @defer.inlineCallbacks
+    def _masterDeactivated(self, masterid, name):
+        # common code for deactivating a master
+        yield self.master.data.rtypes.builder._masterDeactivated(
+                                                    masterid=masterid)
+        self.produceEvent(
+            dict(masterid=masterid, name=name, active=False),
+            'stopped')

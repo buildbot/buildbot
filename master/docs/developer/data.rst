@@ -180,6 +180,7 @@ All update methods return a Deferred.
 
         Mark this master as inactive.
         Masters should call this method before completing an expected shutdown.
+        This method will take care of deactivating or removing configuration resources like builders and schedulers as well.
 
 .. py:class:: buildbot.data.changes.BuildsetResourceType
 

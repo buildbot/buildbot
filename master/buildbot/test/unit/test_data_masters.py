@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 from twisted.trial import unittest
 from twisted.internet import task, defer
-from buildbot.data import masters
+from buildbot.data import masters, builders
 from buildbot.util import epoch2datetime
 from buildbot.test.util import types, endpoint
 from buildbot.test.fake import fakemaster, fakedb
@@ -33,6 +34,11 @@ class Master(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Master(id=13, name='some:master', active=False,
                             last_active=SOMETIME),
+            fakedb.Master(id=14, name='other:master', active=False,
+                            last_active=SOMETIME),
+            fakedb.Builder(id=23, name='bldr1'),
+            fakedb.BuilderMaster(builderid=23, masterid=13),
+            fakedb.Builder(id=24, name='bldr2'),
         ])
 
 
@@ -41,11 +47,36 @@ class Master(endpoint.EndpointMixin, unittest.TestCase):
 
 
     def test_get_existing(self):
-        d = self.callGet(dict(), dict(masterid=13))
+        d = self.callGet(dict(), dict(masterid=14))
+        @d.addCallback
+        def check(master):
+            types.verifyData(self, 'master', {}, master)
+            self.assertEqual(master['name'], 'other:master')
+        return d
+
+
+    def test_get_builderid_existing(self):
+        d = self.callGet(dict(), dict(masterid=13, builderid=23))
         @d.addCallback
         def check(master):
             types.verifyData(self, 'master', {}, master)
             self.assertEqual(master['name'], 'some:master')
+        return d
+
+
+    def test_get_builderid_no_match(self):
+        d = self.callGet(dict(), dict(masterid=13, builderid=24))
+        @d.addCallback
+        def check(master):
+            self.assertEqual(master, None)
+        return d
+
+
+    def test_get_builderid_missing(self):
+        d = self.callGet(dict(), dict(masterid=13, builderid=25))
+        @d.addCallback
+        def check(master):
+            self.assertEqual(master, None)
         return d
 
 
@@ -69,6 +100,8 @@ class Masters(endpoint.EndpointMixin, unittest.TestCase):
                             last_active=SOMETIME),
             fakedb.Master(id=14, name='other:master', active=True,
                             last_active=OTHERTIME),
+            fakedb.Builder(id=22),
+            fakedb.BuilderMaster(masterid=13, builderid=22),
         ])
 
 
@@ -85,6 +118,22 @@ class Masters(endpoint.EndpointMixin, unittest.TestCase):
                              [13, 14])
         return d
 
+    def test_get_builderid(self):
+        d = self.callGet(dict(), dict(builderid=22))
+        @d.addCallback
+        def check(masters):
+            [ types.verifyData(self, 'master', {}, m) for m in masters ]
+            self.assertEqual(sorted([m['masterid'] for m in masters]),
+                             [13])
+        return d
+
+    def test_get_builderid_missing(self):
+        d = self.callGet(dict(), dict(builderid=23))
+        @d.addCallback
+        def check(masters):
+            self.assertEqual(masters, [])
+        return d
+
     def test_startConsuming(self):
         self.callStartConsuming({}, {},
                 expected_filter=('master', None, None))
@@ -94,7 +143,13 @@ class MasterResourceType(unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
-                                                testcase=self)
+                                            wantData=True, testcase=self)
+        # mock out builders' _masterDeactivated
+        self.master.data.rtypes.builder = mock.Mock(
+                                    spec=builders.BuildersResourceType)
+        self.master.data.rtypes.builder._masterDeactivated.side_effect = \
+                            lambda masterid : defer.succeed(None)
+
         self.rtype = masters.MasterResourceType(self.master)
 
     @defer.inlineCallbacks
@@ -190,3 +245,5 @@ class MasterResourceType(unittest.TestCase):
             (('master', '14', 'stopped'),
              dict(masterid=14, name='other', active=False)),
         ])
+        self.master.data.rtypes.builder._masterDeactivated. \
+                assert_called_with(masterid=14)

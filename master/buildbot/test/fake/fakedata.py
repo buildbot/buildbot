@@ -142,6 +142,7 @@ class FakeDataConnector(object):
         # get, startConsuming, and control are delegated to a real connector,
         # after some additional assertions
         self.realConnector = connector.DataConnector(master)
+        self.rtypes = self.realConnector.rtypes
 
     def get(self, options, path):
         if not isinstance(path, tuple):

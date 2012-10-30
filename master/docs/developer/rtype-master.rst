@@ -29,3 +29,17 @@ Masters
         :pathkey integer masterid: the ID of the master
 
         This path selects a specific master, identified by ID.
+
+    .. bb:rpath:: /builder/:builderid/master
+
+        :pathkey integer builderid: the ID of the builder
+
+        This path enumerates the active masters where this builder is configured.
+
+    .. bb:rpath:: /builder/:builderid/master/:masterid
+
+        :pathkey integer builderid: the ID of the builder
+        :pathkey integer masterid: the ID of the master
+
+        This path selects a specific master, identified by ID.
+        The ``:builderid`` field is ignored, since ``:masterid`` uniquely identifies the master.

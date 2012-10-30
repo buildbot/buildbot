@@ -92,3 +92,9 @@ class BuildersResourceType(base.ResourceType):
             builderid = yield self.master.db.builders.findBuilderId(name)
             yield self.master.db.builders.addBuilderMaster(
                         masterid=masterid, builderid=builderid)
+
+    @defer.inlineCallbacks
+    def _masterDeactivated(self, masterid):
+        # called from the masters rtype to indicate that the given master is
+        # deactivated
+        yield self.updateBuilderList(masterid, [])
