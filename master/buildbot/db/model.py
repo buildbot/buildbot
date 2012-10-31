@@ -296,7 +296,11 @@ class Model(base.DBConnectorComponent):
     )
 
     # This links schedulers to the master where they are running.  A scheduler
-    # linked to a master that is inactive can be unlinked by any master.
+    # linked to a master that is inactive can be unlinked by any master.  This
+    # is a separate table so that we can "claim" schedulers on a master by
+    # inserting; this has better support in database servers for ensuring that
+    # exactly one claim succeeds.  The ID column is present for external users;
+    # see bug #1053.
     scheduler_masters = sa.Table('scheduler_masters', metadata,
         sa.Column('id', sa.Integer, primary_key=True, nullable=False),
         sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.id'),
