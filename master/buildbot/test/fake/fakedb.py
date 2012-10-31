@@ -26,7 +26,7 @@ import hashlib
 from buildbot.util import json, epoch2datetime, datetime2epoch
 from twisted.python import failure
 from twisted.internet import defer, reactor
-from buildbot.db import buildrequests
+from buildbot.db import buildrequests, schedulers
 
 # Fake DB Rows
 
@@ -230,16 +230,39 @@ class SourceStamp(Row):
     id_column = 'id'
 
 
+class Scheduler(Row):
+    table = "schedulers"
+
+    defaults = dict(
+        id = None,
+        name = 'schname',
+        name_hash = None,
+    )
+
+    id_column = 'id'
+    hash_pairs = [ ( 'name', 'name_hash' ) ]
+
+
+class SchedulerMaster(Row):
+    table = "scheduler_masters"
+
+    defaults = dict(
+        schedulerid = None,
+        masterid = None,
+    )
+
+    required_columns = ( 'schedulerid', 'masterid' )
+
 class SchedulerChange(Row):
     table = "scheduler_changes"
 
     defaults = dict(
-        objectid = None,
+        schedulerid = None,
         changeid = None,
         important = 1,
     )
 
-    required_columns = ( 'objectid', 'changeid' )
+    required_columns = ( 'schedulerid', 'changeid' )
 
 
 class Buildset(Row):
@@ -346,9 +369,6 @@ class Master(Row):
 
 # Fake DB Components
 
-# TODO: test these using the same test methods as are used against the real
-# database
-
 class FakeDBComponent(object):
 
     def __init__(self, db, testcase):
@@ -366,21 +386,24 @@ class FakeChangesComponent(FakeDBComponent):
         for row in rows:
             if isinstance(row, Change):
                 # copy this since we'll be modifying it (e.g., adding files)
-                self.changes[row.changeid] = copy.deepcopy(row)
+                ch = self.changes[row.changeid] = copy.deepcopy(row.values)
+                ch['files'] = []
+                ch['properties'] = {}
+                ch['uids'] = []
 
             elif isinstance(row, ChangeFile):
                 ch = self.changes[row.changeid]
-                ch.files.append(row.filename)
+                ch['files'].append(row.filename)
 
             elif isinstance(row, ChangeProperty):
                 ch = self.changes[row.changeid]
                 n, vs = row.property_name, row.property_value
                 v, s = json.loads(vs)
-                ch.properties[n] = (v, s)
+                ch['properties'][n] = (v, s)
 
             elif isinstance(row, ChangeUser):
                 ch = self.changes[row.changeid]
-                ch.uids.append(row.uid)
+                ch['uids'].append(row.uid)
 
     # component methods
 
@@ -393,7 +416,7 @@ class FakeChangesComponent(FakeDBComponent):
         else:
             changeid = 500
 
-        self.changes[changeid] = ch = Change(
+        self.changes[changeid] = ch = dict(
             changeid=changeid,
             author=author,
             comments=comments,
@@ -405,12 +428,13 @@ class FakeChangesComponent(FakeDBComponent):
             revlink=revlink,
             repository=repository,
             project=project,
-            codebase=codebase)
-        ch.files = files
-        ch.properties = properties
+            codebase=codebase,
+            uids=[],
+            files=files,
+            properties=properties)
 
         if uid:
-            ch.uids.append(uid)
+            ch['uids'].append(uid)
 
         return defer.succeed(changeid)
 
@@ -429,7 +453,7 @@ class FakeChangesComponent(FakeDBComponent):
 
     def getChangeUids(self, changeid):
         try:
-            ch_uids = self.changes[changeid].uids
+            ch_uids = self.changes[changeid]['uids']
         except KeyError:
             ch_uids = []
         return defer.succeed(ch_uids)
@@ -441,29 +465,22 @@ class FakeChangesComponent(FakeDBComponent):
         return defer.succeed(chdicts)
 
     def _chdict(self, row):
-        return dict(
-                changeid=row.changeid,
-                author=row.author,
-                files=row.files,
-                comments=row.comments,
-                is_dir=row.is_dir,
-                revision=row.revision,
-                when_timestamp=epoch2datetime(row.when_timestamp),
-                branch=row.branch,
-                category=row.category,
-                revlink=row.revlink,
-                properties=row.properties,
-                repository=row.repository,
-                codebase=row.codebase,
-                project=row.project)
+        chdict = row.copy()
+        del chdict['uids']
+        chdict['when_timestamp'] = epoch2datetime(chdict['when_timestamp'])
+        return chdict
 
     # assertions
 
     def assertChange(self, changeid, row):
-        self.t.assertEqual(self.changes[changeid], row)
+        row_only = self.changes[changeid].copy()
+        del row_only['files']
+        del row_only['properties']
+        del row_only['uids']
+        self.t.assertEqual(row_only, row.values)
 
     def assertChangeUsers(self, changeid, expectedUids):
-        self.t.assertEqual(self.changes[changeid].uids, expectedUids)
+        self.t.assertEqual(self.changes[changeid]['uids'], expectedUids)
 
     # fake methods
 
@@ -496,33 +513,39 @@ class FakeChangesComponent(FakeDBComponent):
 class FakeSchedulersComponent(FakeDBComponent):
 
     def setUp(self):
+        self.schedulers = {}
+        self.scheduler_masters = {}
         self.states = {}
         self.classifications = {}
 
     def insertTestData(self, rows):
         for row in rows:
             if isinstance(row, SchedulerChange):
-                cls = self.classifications.setdefault(row.objectid, {})
+                cls = self.classifications.setdefault(row.schedulerid, {})
                 cls[row.changeid] = row.important
+            if isinstance(row, Scheduler):
+                self.schedulers[row.id] = row.name
+            if isinstance(row, SchedulerMaster):
+                self.scheduler_masters[row.schedulerid] = row.masterid
 
     # component methods
 
-    def classifyChanges(self, objectid, classifications):
-        self.classifications.setdefault(objectid, {}).update(classifications)
+    def classifyChanges(self, schedulerid, classifications):
+        self.classifications.setdefault(schedulerid, {}).update(classifications)
         return defer.succeed(None)
 
-    def flushChangeClassifications(self, objectid, less_than=None):
+    def flushChangeClassifications(self, schedulerid, less_than=None):
         if less_than is not None:
-            classifications = self.classifications.setdefault(objectid, {})
+            classifications = self.classifications.setdefault(schedulerid, {})
             for changeid in classifications.keys():
                 if changeid < less_than:
                     del classifications[changeid]
         else:
-            self.classifications[objectid] = {}
+            self.classifications[schedulerid] = {}
         return defer.succeed(None)
 
-    def getChangeClassifications(self, objectid, branch=-1):
-        classifications = self.classifications.setdefault(objectid, {})
+    def getChangeClassifications(self, schedulerid, branch=-1):
+        classifications = self.classifications.setdefault(schedulerid, {})
         if branch is not -1:
             # filter out the classifications for the requested branch
             change_branches = dict(
@@ -533,17 +556,66 @@ class FakeSchedulersComponent(FakeDBComponent):
                     if k in change_branches and change_branches[k] == branch )
         return defer.succeed(classifications)
 
+    def findSchedulerId(self, name):
+        for sch_id, sch_name in self.schedulers.iteritems():
+            if sch_name == name:
+                return defer.succeed(sch_id)
+        new_id = (max(self.schedulers) + 1) if self.schedulers else 1
+        self.schedulers[new_id] = name
+        return defer.succeed(new_id)
+
+    def getScheduler(self, schedulerid):
+        if schedulerid in self.schedulers:
+            rv = dict(
+                id=schedulerid,
+                name=self.schedulers[schedulerid],
+                masterid=None)
+            # only set masterid if the relevant scheduler master exists and
+            # is active
+            rv['masterid'] = self.scheduler_masters.get(schedulerid)
+            return defer.succeed(rv)
+        else:
+            return None
+
+    def getSchedulers(self, active=None, masterid=None):
+        d = defer.DeferredList([
+            self.getScheduler(id) for id in self.schedulers
+        ])
+        @d.addCallback
+        def filter(results):
+            # filter off the DeferredList results (we know it's good)
+            results = [ r[1] for r in results ]
+            # filter for masterid
+            if masterid is not None:
+                results = [ r for r in results
+                            if r['masterid'] == masterid ]
+            # filter for active or inactive if necessary
+            if active:
+                results = [ r for r in results
+                            if r['masterid'] is not None ]
+            elif active is not None:
+                results = [ r for r in results
+                            if r['masterid'] is None ]
+            return results
+        return d
+
+    def setSchedulerMaster(self, schedulerid, masterid):
+        current_masterid = self.scheduler_masters.get(schedulerid)
+        if current_masterid and masterid is not None:
+            raise schedulers.SchedulerAlreadyClaimedError
+        self.scheduler_masters[schedulerid] = masterid
+
     # fake methods
 
-    def fakeClassifications(self, objectid, classifications):
+    def fakeClassifications(self, schedulerid, classifications):
         """Set the set of classifications for a scheduler"""
-        self.classifications[objectid] = classifications
+        self.classifications[schedulerid] = classifications
 
     # assertions
 
-    def assertClassifications(self, objectid, classifications):
+    def assertClassifications(self, schedulerid, classifications):
         self.t.assertEqual(
-                self.classifications.get(objectid, {}),
+                self.classifications.get(schedulerid, {}),
                 classifications)
 
 
@@ -966,7 +1038,6 @@ class FakeBuildRequestsComponent(FakeDBComponent):
     def reclaimBuildRequests(self, brids):
         for brid in brids:
             if brid not in self.claims:
-                print "trying to reclaim brid %d, but it's not claimed" % brid
                 return defer.fail(
                         failure.Failure(buildrequests.AlreadyClaimedError))
         # now that we've thrown any necessary exceptions, get started

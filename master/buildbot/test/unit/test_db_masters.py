@@ -173,7 +173,25 @@ class Tests(interfaces.InterfaceTests):
 class RealTests(Tests):
 
     # tests that only "real" implementations will pass
-    pass
+
+    @defer.inlineCallbacks
+    def test_setMasterState_false_deletes_links(self):
+        yield self.insertTestData([
+            fakedb.Master(id=7, name='some:master',
+                        active=1, last_active=OTHERTIME),
+            fakedb.Scheduler(id=21),
+            fakedb.SchedulerMaster(schedulerid=21, masterid=7),
+        ])
+        deactivated = yield self.db.masters.setMasterState(
+                masterid=7, active=False, _reactor=self.clock)
+        self.assertTrue(deactivated)
+
+        # check that the scheduler_masters row was deleted
+        def thd(conn):
+            tbl = self.db.model.scheduler_masters
+            self.assertEqual(conn.execute(tbl.select()).fetchall(), [])
+        yield self.db.pool.do(thd)
+
 
 
 class TestFakeDB(unittest.TestCase, Tests):
@@ -195,7 +213,7 @@ class TestRealDB(unittest.TestCase,
         self.clock.advance(SOMETIME)
 
         d = self.setUpConnectorComponent(
-            table_names=['masters'])
+            table_names=['masters', 'schedulers', 'scheduler_masters'])
 
         @d.addCallback
         def finish_setup(_):

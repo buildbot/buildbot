@@ -31,7 +31,7 @@ It's safe to leave tasks that have significant prerequisites - particularly the 
 
 The outstanding resource types are:
 
-* scheduler
+* scheduler (underlying DB API complete)
 * builder
 * sourcestamp
 * buildrequest
@@ -39,6 +39,16 @@ The outstanding resource types are:
 * step
 * logfile
 * buildslave
+
+### Schedulers ###
+
+There is no scheduler resource type yet, although schedulers are in place in the database API so that other tables can refer to a scheduler ID.
+Support needs to be added for schedulers on a particular master to "claim" the name for themselves, deactivate themselves if already running on another master, and periodically poll for the opportunity to pick up the role.
+This gives us automatic failover for schedulers in a multi-master configuration, and also means that all masters can run with identical configurations, which may make configuration management easier.
+
+When a master becomes inactive (either on its own, or having failed its heartbeat check), its schedulers should be marked inactive by the data API and suitable messages sent.
+
+It should be possible to list the master on which a scheduler is running at e.g., `/scheduler/:schedulerid/master`
 
 ## Other Resource-Type Related Tasks ##
 
@@ -86,7 +96,6 @@ Don't include the schema changes needed to implement the status stuff here; thos
 
 * Remove ``is_dir`` from the changes table (and ignore/remove it everywhere else)
 * Add a ``builders`` table with provisions to indicate which masters are running which builders
-* Add a ``schedulers`` table with provisions for masters to lock a particular scheduler name
 * Add a ``changesources`` table, similar to schedulers
 
 For each of the config-objects tables (masters, builders, schedulesr, changesources):
@@ -113,6 +122,7 @@ For each of the config-objects tables (masters, builders, schedulesr, changesour
 ## Miscellaneous ##
 
 * Factor the mutiple select-or-insert methods (e.g., for masters) into a common utility method.
+* Look carefully at race conditions around masters being marked inactive
 
 # Later #
 
