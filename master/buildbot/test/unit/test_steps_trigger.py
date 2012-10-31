@@ -13,24 +13,29 @@
 #
 # Copyright Buildbot Team Members
 
+from zope.interface import implements
+
 from twisted.trial import unittest
 from twisted.python import failure
 from twisted.internet import defer, reactor
-from buildbot import config
+from buildbot import config, interfaces
 from buildbot.process import properties
-from buildbot.schedulers import triggerable
 from buildbot.status import master
 from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION
 from buildbot.steps import trigger
 from buildbot.test.util import steps, compat
 from buildbot.test.fake import fakemaster, fakedb
 
-class FakeTriggerable(triggerable.Triggerable):
+class FakeTriggerable(object):
+    implements(interfaces.ITriggerableScheduler)
 
     triggered_with = None
     result = SUCCESS
     brids = {}
     exception = False
+
+    def __init__(self, name):
+        self.name = name
 
     def trigger(self, sourcestamps = None, set_props=None):
         self.triggered_with = (sourcestamps, set_props.properties)
@@ -84,8 +89,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         m.status = master.Status(m)
         m.config.buildbotURL = "baseurl/"
 
-        self.scheduler_a = a = FakeTriggerable(name='a', builderNames=['A'])
-        self.scheduler_b = b = FakeTriggerable(name='b', builderNames=['B'])
+        self.scheduler_a = a = FakeTriggerable(name='a')
+        self.scheduler_b = b = FakeTriggerable(name='b')
         def allSchedulers():
             return [ a, b ]
         m.allSchedulers = allSchedulers
