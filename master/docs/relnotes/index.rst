@@ -27,6 +27,13 @@ Nine
 
   Please adjust any custom change sources accordingly.
 
+* This upgrade will delete all rows from the ``buildrequest_claims`` table.
+  If you are using this table for analytical purposes outside of Buildbot, please back up its contents before the upgrade, and restore it afterward, translating object IDs to scheduler IDs if necessary.
+  This translation would be very slow and is not required for most users, so it is not done automatically.
+
+* All of the schedulers DB API methods now accept a schedulerid, rather than an objectid.
+  If you have custom code using these methods, check your code and make the necessary adjustments.
+
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
     Most simply need an additional bulleted list item, but more significant
