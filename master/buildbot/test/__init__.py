@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
-import os
-
 # apply the same patches the buildmaster does when it starts
 from buildbot import monkeypatches
 monkeypatches.patch_all(for_tests=True)
