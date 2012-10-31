@@ -49,7 +49,7 @@ class FakeTriggerable(object):
 
 class FakeSourceStamp(object):
 
-    def __init__(self, _ssid, _setid, **kwargs):
+    def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
     def asDict(self, includePatch = True):
@@ -61,9 +61,6 @@ BRID_TO_BID  = lambda brid: brid+3000
 BRID_TO_BUILD_NUMBER = lambda brid: brid+4000
 
 class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
-
-    THIS_SSID = 6
-    THIS_SS_SETID = 66
 
     def setUp(self):
         return self.setUpBuildStep()
@@ -248,9 +245,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_updateSourceStamp(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
                                        updateSourceStamp=True),
-                       sourcestampsInBuild = [FakeSourceStamp(self.THIS_SSID,
-                                                              self.THIS_SS_SETID,
-                                                              codebase='',
+                       sourcestampsInBuild = [FakeSourceStamp(codebase='',
                                                               repository='x',
                                                               revision=11111)
                                               ])
@@ -265,9 +260,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_updateSourceStamp_no_got_revision(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
                                        updateSourceStamp=True),
-                       sourcestampsInBuild = [FakeSourceStamp(self.THIS_SSID,
-                                                              self.THIS_SS_SETID,
-                                                              codebase='',
+                       sourcestampsInBuild = [FakeSourceStamp(codebase='',
                                                               repository='x',
                                                               revision=11111)
                                               ])
@@ -281,11 +274,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_not_updateSourceStamp(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
                                        updateSourceStamp=False),
-                       sourcestampsInBuild = [FakeSourceStamp(self.THIS_SSID,
-                                                             self.THIS_SS_SETID,
-                                                             codebase='',
-                                                             repository='x',
-                                                             revision=11111)
+                       sourcestampsInBuild = [FakeSourceStamp(codebase='',
+                                                              repository='x',
+                                                              revision=11111)
                                               ])
         self.properties.setProperty('got_revision', 23456, 'Source')
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
@@ -299,13 +290,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
                                        updateSourceStamp=True),
                        sourcestampsInBuild = [
-                                              FakeSourceStamp(self.THIS_SSID,
-                                                              self.THIS_SS_SETID,
-                                                              codebase='cb1',
+                                              FakeSourceStamp(codebase='cb1',
                                                               revision='12345'),
-                                              FakeSourceStamp(self.THIS_SSID,
-                                                              self.THIS_SS_SETID,
-                                                              codebase='cb2',
+                                              FakeSourceStamp(codebase='cb2',
                                                               revision='12345')
                                               ])
         self.properties.setProperty('got_revision',
@@ -322,11 +309,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_updateSourceStamp_prop_false(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
                                updateSourceStamp=properties.Property('usess')),
-                       sourcestampsInBuild = [FakeSourceStamp(self.THIS_SSID,
-                                                             self.THIS_SS_SETID,
-                                                             codebase='',
-                                                             repository='x',
-                                                             revision=11111)
+                       sourcestampsInBuild = [FakeSourceStamp(codebase='',
+                                                              repository='x',
+                                                              revision=11111)
                                              ])
         self.properties.setProperty('got_revision', 23456, 'Source')
         self.properties.setProperty('usess', False, 'me')
@@ -341,11 +326,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_updateSourceStamp_prop_true(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
                                updateSourceStamp=properties.Property('usess')),
-                       sourcestampsInBuild = [FakeSourceStamp(self.THIS_SSID,
-                                                             self.THIS_SS_SETID,
-                                                             codebase='',
-                                                             repository='x',
-                                                             revision=11111)
+                       sourcestampsInBuild = [FakeSourceStamp(codebase='',
+                                                              repository='x',
+                                                              revision=11111)
                                              ])
         self.properties.setProperty('got_revision', 23456, 'Source')
         self.properties.setProperty('usess', True, 'me')
@@ -360,11 +343,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_alwaysUseLatest(self):
         self.setupStep(trigger.Trigger(schedulerNames=['b'],
                                        alwaysUseLatest=True),
-                       sourcestampsInBuild = [FakeSourceStamp(self.THIS_SSID,
-                                                             self.THIS_SS_SETID,
-                                                             codebase='',
-                                                             repository='x',
-                                                             revision=11111)
+                       sourcestampsInBuild = [FakeSourceStamp(codebase='',
+                                                              repository='x',
+                                                              revision=11111)
                                              ])
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
         # Do not pass setid
@@ -377,11 +358,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_alwaysUseLatest_prop_false(self):
         self.setupStep(trigger.Trigger(schedulerNames=['b'],
                                        alwaysUseLatest=properties.Property('aul')),
-                       sourcestampsInBuild = [FakeSourceStamp(self.THIS_SSID,
-                                                             self.THIS_SS_SETID,
-                                                             codebase='',
-                                                             repository='x',
-                                                             revision=11111)
+                       sourcestampsInBuild = [FakeSourceStamp(codebase='',
+                                                              repository='x',
+                                                              revision=11111)
                                               ])
         self.properties.setProperty('aul', False, 'me')
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
@@ -395,11 +374,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_alwaysUseLatest_prop_true(self):
         self.setupStep(trigger.Trigger(schedulerNames=['b'],
                                        alwaysUseLatest=properties.Property('aul')),
-                       sourcestampsInBuild = [FakeSourceStamp(self.THIS_SSID,
-                                                             self.THIS_SS_SETID,
-                                                             codebase='',
-                                                             repository='x',
-                                                             revision=11111)
+                       sourcestampsInBuild = [FakeSourceStamp(codebase='',
+                                                              repository='x',
+                                                              revision=11111)
                                               ])
         self.properties.setProperty('aul', True, 'me')
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
