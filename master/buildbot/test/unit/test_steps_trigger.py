@@ -68,8 +68,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
-    def setupStep(self, step, sourcestampsInBuild=None, *args, **kwargs):
+    def setupStep(self, step, sourcestampsInBuild=None, gotRevisionsInBuild=None, *args, **kwargs):
         sourcestamps = sourcestampsInBuild or []
+        got_revisions = gotRevisionsInBuild or {}
 
         steps.BuildStepMixin.setupStep(self, step, *args, **kwargs)
 
@@ -107,9 +108,11 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         ])
 
         def getAllSourceStamps():
-            return self.build_sources
+            return sourcestamps
         self.build.getAllSourceStamps = getAllSourceStamps
-        self.build_sources = sourcestamps
+        def getAllGotRevisions():
+            return got_revisions
+        self.build.build_status.getAllGotRevisions = getAllGotRevisions
 
         self.exp_add_sourcestamp = None
         self.exp_a_trigger = None
@@ -245,8 +248,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                        sourcestampsInBuild = [FakeSourceStamp(codebase='',
                                                               repository='x',
                                                               revision=11111)
-                                              ])
-        self.properties.setProperty('got_revision', 23456, 'Source')
+                                              ],
+                       gotRevisionsInBuild = {'': 23456},
+                       )
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
         self.expectTriggeredWith(a=({'':{'codebase':'',
                                          'repository': 'x',
@@ -274,8 +278,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                        sourcestampsInBuild = [FakeSourceStamp(codebase='',
                                                               repository='x',
                                                               revision=11111)
-                                              ])
-        self.properties.setProperty('got_revision', 23456, 'Source')
+                                              ],
+                       gotRevisionsInBuild = {'': 23456},
+                       )
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
         self.expectTriggeredWith(a=({'':{'codebase':'',
                                           'repository': 'x',
@@ -291,9 +296,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                                               revision='12345'),
                                               FakeSourceStamp(codebase='cb2',
                                                               revision='12345')
-                                              ])
-        self.properties.setProperty('got_revision',
-                                    {'cb1': 23456, 'cb2': 34567}, 'Source')
+                                              ],
+                       gotRevisionsInBuild = {'cb1': 23456, 'cb2': 34567},
+                       )
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
         self.expectTriggeredWith(a=({'cb1': {'codebase':'cb1',
                                              'revision':23456},
@@ -302,15 +307,15 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                     }, {}))
         return self.runStep()
 
-
     def test_updateSourceStamp_prop_false(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
                                updateSourceStamp=properties.Property('usess')),
                        sourcestampsInBuild = [FakeSourceStamp(codebase='',
                                                               repository='x',
                                                               revision=11111)
-                                             ])
-        self.properties.setProperty('got_revision', 23456, 'Source')
+                                             ],
+                       gotRevisionsInBuild = {'': 23456},
+                       )
         self.properties.setProperty('usess', False, 'me')
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
         # didn't use got_revision
@@ -326,8 +331,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                        sourcestampsInBuild = [FakeSourceStamp(codebase='',
                                                               repository='x',
                                                               revision=11111)
-                                             ])
-        self.properties.setProperty('got_revision', 23456, 'Source')
+                                             ],
+                       gotRevisionsInBuild = {'': 23456},
+                       )
         self.properties.setProperty('usess', True, 'me')
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
         # didn't use got_revision

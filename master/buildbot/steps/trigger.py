@@ -123,16 +123,10 @@ class Trigger(LoggingBuildStep):
 
         # overrule revision in sourcestamps with got revision
         if self.updateSourceStamp:
-            properties = self.build.getProperties()
-            got = properties.getProperty('got_revision')
-            # be sure property is always a dictionary
-            if got:
-                if not isinstance(got, dict):
-                    got = {'': got}
-                for codebase in ss_for_trigger:
-                    if codebase in got:
-                        ss_for_trigger[codebase]['revision'] = got[codebase]
-
+            got = self.build.build_status.getAllGotRevisions()
+            for codebase in ss_for_trigger:
+                if codebase in got:
+                    ss_for_trigger[codebase]['revision'] = got[codebase]
 
         return ss_for_trigger
 
