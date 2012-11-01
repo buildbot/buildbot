@@ -346,10 +346,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                              ])
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
         # Do not pass setid
-        self.expectTriggeredWith(b=({'': { 'codebase':'',
-                                           'repository': 'x',
-                                           'revision': None}
-                                    }, {}))
+        self.expectTriggeredWith(b=({}, {}))
         return self.runStep()
 
     def test_alwaysUseLatest_prop_false(self):
@@ -378,10 +375,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.properties.setProperty('aul', True, 'me')
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
         # didn't use latest
-        self.expectTriggeredWith(b=({'': { 'codebase':'',
-                                           'repository': 'x',
-                                           'revision': None}
-                                    }, {}))
+        self.expectTriggeredWith(b=({}, {}))
         return self.runStep()
 
     def test_sourceStamp(self):

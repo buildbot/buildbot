@@ -17,6 +17,9 @@ In addition to what's listed below, the 0.8.7p1 release adds the following.
 * The ``Trigger`` step uses the provdied list of source stamps exactly, if given, instead of adding them to the sourcestamps of the current build.
   In 0.8.7, they were combined with the source stamps for the current build.
 
+* The ``Trigger`` step again completely ignores the source stamp of the current build, if ``alwaysUseLatest`` is set.
+  In 0.8.7, this was mistakenly changed to only ignore the specified revision of the source stamp.
+
 Master
 ------
 

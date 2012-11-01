@@ -112,17 +112,17 @@ class Trigger(LoggingBuildStep):
                 ss_for_trigger[codebase] = ss
             return ss_for_trigger
 
+        if self.alwaysUseLatest:
+            return {}
+
         # start with the sourcestamps from current build
         ss_for_trigger = {}
         objs_from_build = self.build.getAllSourceStamps()
         for ss in objs_from_build:
             ss_for_trigger[ss.codebase] = ss.asDict()
-            if self.alwaysUseLatest:
-                # Reset revision so latest version will be requested from vcs
-                ss_for_trigger[ss.codebase]['revision'] = None
 
         # overrule revision in sourcestamps with got revision
-        if self.updateSourceStamp and not self.alwaysUseLatest:
+        if self.updateSourceStamp:
             properties = self.build.getProperties()
             got = properties.getProperty('got_revision')
             # be sure property is always a dictionary
