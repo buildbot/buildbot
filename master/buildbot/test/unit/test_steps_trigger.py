@@ -68,13 +68,10 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
-    def setupStep(self, *args, **kwargs):
-        sourcestamps = []
-        if 'sourcestampsInBuild' in kwargs:
-            sourcestamps = kwargs['sourcestampsInBuild']
-            del kwargs['sourcestampsInBuild']
+    def setupStep(self, step, sourcestampsInBuild=None, *args, **kwargs):
+        sourcestamps = sourcestampsInBuild or []
 
-        steps.BuildStepMixin.setupStep(self, *args, **kwargs)
+        steps.BuildStepMixin.setupStep(self, step, *args, **kwargs)
 
         # This step reaches deeply into a number of parts of Buildbot.  That
         # should be fixed!
