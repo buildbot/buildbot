@@ -29,11 +29,11 @@ class Tests(interfaces.InterfaceTests):
     change6 = fakedb.Change(changeid=6, branch='sql')
 
     scheduler24 = fakedb.Scheduler(id=24, name='schname')
-    master13 = fakedb.Master(id=13, name='m1', active=True)
+    master13 = fakedb.Master(id=13, name='m1', active=1)
     scheduler24master = fakedb.SchedulerMaster(schedulerid=24, masterid=13)
 
     scheduler25 = fakedb.Scheduler(id=25, name='schname2')
-    master14 = fakedb.Master(id=14, name='m2', active=False)
+    master14 = fakedb.Master(id=14, name='m2', active=0)
     scheduler25master = fakedb.SchedulerMaster(schedulerid=25, masterid=14)
 
     # tests

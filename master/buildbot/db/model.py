@@ -456,6 +456,8 @@ class Model(base.DBConnectorComponent):
             dict(unique=False, column_names=['patchid'], name='patchid')),
         ('sourcestamp_changes',
             dict(unique=False, column_names=['changeid'], name='changeid')),
+        ('scheduler_masters',
+            dict(unique=False, column_names=['masterid'], name='masterid')),
         ('buildsets',
             dict(unique=False, column_names=['sourcestampsetid'],
                                name='buildsets_sourcestampsetid_fkey')),
