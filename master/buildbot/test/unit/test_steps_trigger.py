@@ -401,6 +401,18 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.expectTriggeredWith(b=({'cb1':ss1, 'cb2':ss2}, {}))
         return self.runStep()
 
+    def test_set_of_sourceStamps_override_build(self):
+        ss1 = dict(codebase='cb1', repository='r1', revision=9876, branch='dev')
+        ss2 = dict(codebase='cb2',repository='r2', revision=5432, branch='dev')
+        ss3 = FakeSourceStamp(codebase='cb3', repository='r3', revision=1234, branch='dev')
+        ss4 = FakeSourceStamp(codebase='cb4',repository='r4', revision=2345, branch='dev')
+        self.setupStep(trigger.Trigger(schedulerNames=['b'],
+            sourceStamps=[ss1,ss2]), sourcestampsInBuild=[ss3, ss4])
+        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
+        self.expectTriggeredWith(b=({'cb1':ss1, 'cb2':ss2}, {}))
+        return self.runStep()
+
+
     def test_sourceStamp_prop(self):
         self.setupStep(trigger.Trigger(schedulerNames=['b'],
             sourceStamp=dict(revision=properties.Property('rev'),

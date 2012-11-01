@@ -104,6 +104,14 @@ class Trigger(LoggingBuildStep):
         return (triggered_schedulers, invalid_schedulers)
 
     def prepareSourcestampListForTrigger(self):
+        if self.sourceStamps:
+            ss_for_trigger = {}
+            for ss in self.sourceStamps:
+                codebase = ss.get('codebase','')
+                assert codebase not in ss_for_trigger, "codebase specified multiple times"
+                ss_for_trigger[codebase] = ss
+            return ss_for_trigger
+
         # start with the sourcestamps from current build
         ss_for_trigger = {}
         objs_from_build = self.build.getAllSourceStamps()
@@ -125,14 +133,6 @@ class Trigger(LoggingBuildStep):
                     if codebase in got:
                         ss_for_trigger[codebase]['revision'] = got[codebase]
 
-        # update sourcestamps from build with passed set of fixed sourcestamps
-        # or add fixed sourcestamp to the dictionary
-        for ss in self.sourceStamps:
-            codebase = ss.get('codebase','')
-            if codebase in ss_for_trigger:
-                ss_for_trigger[codebase].update(ss)
-            else:
-                ss_for_trigger[codebase] = ss
 
         return ss_for_trigger
 

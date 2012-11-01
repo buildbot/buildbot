@@ -7,6 +7,15 @@ Release Notes for Buildbot |version|
     changes can be given a subsection of their own.
 
 The following are the release notes for Buildbot |version|.
+Buildbot 0.8.7 was released on September 22, 2012.
+
+0.8.7p1
+-------
+
+In addition to what's listed below, the 0.8.7p1 release adds the following.
+
+* The ``Trigger`` step uses the provdied list of source stamps exactly, if given, instead of adding them to the sourcestamps of the current build.
+  In 0.8.7, they were combined with the source stamps for the current build.
 
 Master
 ------
