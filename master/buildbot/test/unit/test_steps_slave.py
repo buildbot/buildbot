@@ -46,6 +46,8 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.expectProperty('four', 4, source='them')
         self.expectProperty('five', 5, source='them')
         self.expectProperty('six', '6', source='me')
+        self.expectLogfile("properties",
+                "one = '1'\nsix = '6'")
         return self.runStep()
 
     def test_case_folding(self):
@@ -56,6 +58,8 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS,
                 status_text=["SetPropertiesFromEnv"])
         self.expectProperty('eNv', 'EE', source='me')
+        self.expectLogfile("properties",
+                "eNv = 'EE'")
         return self.runStep()
 
 
