@@ -33,8 +33,8 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
     def test_simple(self):
         self.setupStep(slave.SetPropertiesFromEnv(
                 variables=["one", "two", "three", "five", "six"],
-                source="me"),
-            slave_env={ "one": 1, "two": None, "six": 6, "FIVE" : 555 })
+                source="me"))
+        self.buildslave.slave_environ = { "one": 1, "two": None, "six": 6, "FIVE" : 555 }
         self.properties.setProperty("four", 4, "them")
         self.properties.setProperty("five", 5, "them")
         self.properties.setProperty("six", 99, "them")
@@ -50,8 +50,8 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
 
     def test_case_folding(self):
         self.setupStep(slave.SetPropertiesFromEnv(
-                variables=["eNv"], source="me"),
-            slave_env={ "ENV": 'EE' })
+                variables=["eNv"], source="me"))
+        self.buildslave.slave_environ = { "ENV": 'EE' }
         self.buildslave.slave_system = 'win32'
         self.expectOutcome(result=SUCCESS,
                 status_text=["SetPropertiesFromEnv"])

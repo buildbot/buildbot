@@ -41,7 +41,7 @@ class SetPropertiesFromEnv(buildstep.BuildStep):
         fold_to_uppercase = (self.buildslave.slave_system == 'win32')
 
         properties = self.build.getProperties()
-        environ = self.build.slaveEnvironment
+        environ = self.buildslave.slave_environ
         variables = self.variables
         if isinstance(variables, str):
             variables = [self.variables]
