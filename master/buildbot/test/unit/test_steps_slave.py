@@ -34,18 +34,18 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(slave.SetPropertiesFromEnv(
                 variables=["one", "two", "three", "five", "six"],
                 source="me"))
-        self.buildslave.slave_environ = { "one": 1, "two": None, "six": 6, "FIVE" : 555 }
+        self.buildslave.slave_environ = { "one": "1", "two": None, "six": "6", "FIVE" : "555" }
         self.properties.setProperty("four", 4, "them")
         self.properties.setProperty("five", 5, "them")
         self.properties.setProperty("six", 99, "them")
         self.expectOutcome(result=SUCCESS,
                 status_text=["SetPropertiesFromEnv"])
-        self.expectProperty('one', 1, source='me')
+        self.expectProperty('one', "1", source='me')
         self.expectNoProperty('two')
         self.expectNoProperty('three')
         self.expectProperty('four', 4, source='them')
         self.expectProperty('five', 5, source='them')
-        self.expectProperty('six', 6, source='me')
+        self.expectProperty('six', '6', source='me')
         return self.runStep()
 
     def test_case_folding(self):
