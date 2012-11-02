@@ -7,7 +7,16 @@ Release Notes for Buildbot |version|
     changes can be given a subsection of their own.
 
 The following are the release notes for Buildbot |version|.
-Buildbot |version| was released on September 22, 2012.
+Buildbot 0.8.7 was released on September 22, 2012.
+Buildbot |version| was released on |date|.
+
+0.8.7p1
+-------
+
+In addition to what's listed below, the 0.8.7p1 release adds the following.
+
+* The ``SetPropertiesFromEnv`` step now correctly gets environment variables from the slave, rather than those set on the master.
+  Also, it logs the changes made to properties.
 
 Master
 ------

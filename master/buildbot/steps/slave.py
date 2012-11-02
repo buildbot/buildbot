@@ -41,8 +41,9 @@ class SetPropertiesFromEnv(buildstep.BuildStep):
         fold_to_uppercase = (self.buildslave.slave_system == 'win32')
 
         properties = self.build.getProperties()
-        environ = self.build.slaveEnvironment
+        environ = self.buildslave.slave_environ
         variables = self.variables
+        log = []
         if isinstance(variables, str):
             variables = [self.variables]
         for variable in variables:
@@ -54,6 +55,8 @@ class SetPropertiesFromEnv(buildstep.BuildStep):
                 # note that the property is not uppercased
                 properties.setProperty(variable, value, self.source,
                                        runtime=True)
+                log.append("%s = %r" % (variable, value))
+        self.addCompleteLog("properties", "\n".join(log))
         self.finished(SUCCESS)
 
 class FileExists(buildstep.BuildStep):
