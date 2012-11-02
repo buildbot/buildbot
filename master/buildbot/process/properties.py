@@ -444,10 +444,10 @@ class Interpolate(util.ComparableMixin, object):
             except ValueError:
                 config.error("Must specify both codebase and attribute for src Interpolation '%s'" % arg)
                 codebase = attr = repl = None
-        if not Interpolate.identifier_re.match(codebase):
+        if codebase and not Interpolate.identifier_re.match(codebase):
             config.error("Codebase must be alphanumeric for src Interpolation '%s'" % arg)
             codebase = attr = repl = None
-        if not Interpolate.identifier_re.match(attr):
+        if attr and not Interpolate.identifier_re.match(attr):
             config.error("Attribute must be alphanumeric for src Interpolation '%s'" % arg)
             codebase = attr = repl = None
         return _SourceStampDict(codebase), attr, repl
