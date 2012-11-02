@@ -365,10 +365,12 @@ class Git(Source):
             raise buildstep.BuildStepFailed()
 
     def _full(self):
+        args = []
+        if self.branch != 'HEAD':
+            args += ['--branch', self.branch]
         if self.shallow:
-            command = ['clone', '--depth', '1', '--branch', self.branch, self.repourl, '.']
-        else:
-            command = ['clone', '--branch', self.branch, self.repourl, '.']
+            args += ['--depth', '1']
+        command = ['clone'] + args + [self.repourl, '.']
         #Fix references
         if self.prog:
             command.append('--progress')

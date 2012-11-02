@@ -17,6 +17,9 @@ In addition to what's listed below, the 0.8.7p1 release adds the following.
 * The ``SetPropertiesFromEnv`` step now correctly gets environment variables from the slave, rather than those set on the master.
   Also, it logs the changes made to properties.
 
+* The master-side ``Git`` source step now doesn't try to clone a branch called ``HEAD``.
+  This is what ``git`` does by default, and specifying it explicitly doesn't work as expected.
+
 Master
 ------
 
