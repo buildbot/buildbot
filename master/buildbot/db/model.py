@@ -302,9 +302,8 @@ class Model(base.DBConnectorComponent):
     # exactly one claim succeeds.  The ID column is present for external users;
     # see bug #1053.
     scheduler_masters = sa.Table('scheduler_masters', metadata,
-        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
         sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.id'),
-            nullable=False),
+            nullable=False, primary_key=True),
         sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
             nullable=False),
     )
@@ -416,11 +415,6 @@ class Model(base.DBConnectorComponent):
     sa.Index('change_files_changeid', change_files.c.changeid)
     sa.Index('change_properties_changeid', change_properties.c.changeid)
     sa.Index('scheduler_name_hash', schedulers.c.name_hash, unique=True)
-    sa.Index('scheduler_masters_schedulerid', scheduler_masters.c.schedulerid,
-            unique=True)
-    sa.Index('scheduler_masters_identity',
-            scheduler_masters.c.schedulerid, scheduler_masters.c.masterid,
-            unique=True)
     sa.Index('scheduler_changes_schedulerid', scheduler_changes.c.schedulerid)
     sa.Index('scheduler_changes_changeid', scheduler_changes.c.changeid)
     sa.Index('scheduler_changes_unique', scheduler_changes.c.schedulerid,
