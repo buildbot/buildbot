@@ -54,6 +54,7 @@ class DataConnector(service.Service):
             obj = getattr(mod, sym)
             if inspect.isclass(obj) and issubclass(obj, base.ResourceType):
                 rtype = obj(self.master)
+                setattr(self, rtype.type, rtype)
 
                 # put its update methonds into our 'updates' attribute
                 for name in dir(rtype):

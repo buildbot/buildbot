@@ -141,6 +141,9 @@ class DataConnector(unittest.TestCase):
         self.assertEqual(self.data.rootLinks.items(),
                 [ ('tests', base.Link(('test',))) ])
 
+        # and that it added an attribute
+        self.assertIsInstance(self.data.test, TestResourceType)
+
     def test_lookup(self):
         ep = self.patchFooPattern()
         self.assertEqual(self.data._lookup(('foo', '1', 'bar')),
