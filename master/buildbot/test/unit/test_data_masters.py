@@ -138,6 +138,35 @@ class MasterResourceType(unittest.TestCase):
         self.master.mq.productions = []
 
     @defer.inlineCallbacks
+    def test_masterStopped(self):
+        clock = task.Clock()
+        clock.advance(60)
+
+        self.master.db.insertTestData([
+            fakedb.Master(id=13, name=u'aname', active=1,
+                            last_active=clock.seconds()),
+        ])
+
+        yield self.rtype.masterStopped(name=u'aname', masterid=13)
+        self.assertEqual(self.master.mq.productions, [
+            (('master', '13', 'stopped'),
+             dict(masterid=13, name='aname', active=False)),
+        ])
+
+    @defer.inlineCallbacks
+    def test_masterStopped_already(self):
+        clock = task.Clock()
+        clock.advance(60)
+
+        self.master.db.insertTestData([
+            fakedb.Master(id=13, name=u'aname', active=0,
+                            last_active=0),
+        ])
+
+        yield self.rtype.masterStopped(name=u'aname', masterid=13)
+        self.assertEqual(self.master.mq.productions, [])
+
+    @defer.inlineCallbacks
     def test_expireMasters(self):
         clock = task.Clock()
         clock.advance(60)
