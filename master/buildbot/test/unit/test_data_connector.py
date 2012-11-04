@@ -142,7 +142,7 @@ class DataConnector(unittest.TestCase):
                 [ ('tests', base.Link(('test',))) ])
 
         # and that it added an attribute
-        self.assertIsInstance(self.data.test, TestResourceType)
+        self.assertIsInstance(self.data.rtypes.test, TestResourceType)
 
     def test_lookup(self):
         ep = self.patchFooPattern()
@@ -201,7 +201,6 @@ class TestEndpoint(base.Endpoint):
     pathPatterns = [ ('test', 'i:testid', 'p1'), ('test', 'i:testid', 'p2') ]
 
 class TestResourceType(base.ResourceType):
-    name = 'tests'
     type = 'test'
     endpoints = [ TestsEndpoint, TestEndpoint, TestsEndpointSubclass ]
     keyFields = ( 'testid', )

@@ -107,9 +107,11 @@ Within the buildmaster process, the root of the data API is available at `self.m
         Depending on the path, it will return a single resource or a list of resources.
         If a single resource is not specified, it returns ``None``.
 
-    The connector also has an attribute named for each resource type.
-    These attributes allow resource types to access one another for purposes of coordination.
-    They are *not* intended for external access -- all external access to the data API should be via the methods above or update methods.
+    .. py:attribute:: rtypes
+
+        This object has an attribute named for each resource type, named after the singular form (e.g., `self.master.data.builder`).
+        These attributes allow resource types to access one another for purposes of coordination.
+        They are *not* intended for external access -- all external access to the data API should be via the methods above or update methods.
 
 
 Updates
