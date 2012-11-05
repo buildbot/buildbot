@@ -31,6 +31,9 @@ class RunMaster(dirs.DirsMixin, unittest.TestCase):
             'from buildbot.test.integration.test_master \\\n'
             'import BuildmasterConfig\n')
 
+    def tearDown(self):
+        return self.tearDownDirs()
+
     @defer.inlineCallbacks
     def do_test_master(self):
         # create the master and set its config
@@ -51,6 +54,10 @@ class RunMaster(dirs.DirsMixin, unittest.TestCase):
 
         # stop the service
         yield m.stopService()
+
+        # and shutdown the db threadpool, as is normally done at reactor stop
+        m.db.pool.shutdown()
+
         # (trial will verify all reactor-based timers have been cleared, etc.)
 
     # run this test twice, to make sure the first time shut everything down
