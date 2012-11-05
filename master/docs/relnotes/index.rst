@@ -84,6 +84,9 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * Buildbot master now requires at least Python-2.5 and Twisted-9.0.0.
 
+* Passing a :py:class:`~buildbot.process.buildstep.BuildStep` subclass (rather than instance) to :py:meth:`~buildbot.process.factory.BuildFactory.addStep` is no longer supported.
+  The ``addStep`` method now takes exactly one argument.
+
 * Buildbot master requires ``python-dateutil`` version 1.5 to support the
   Nightly scheduler.
 
