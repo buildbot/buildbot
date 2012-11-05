@@ -45,9 +45,15 @@ class RunMaster(dirs.DirsMixin, unittest.TestCase):
         yield m.db.setup(check_version=False)
         yield m.db.model.upgrade()
 
-        # start the service
+        # stub out m.db.setup since it was already called above
+        m.db.setup = lambda : None
+
+        # mock reactor.stop (which trial *really* doesn't
+        # like test code to call!)
         mock_reactor = mock.Mock(spec=reactor)
         mock_reactor.callWhenRunning = reactor.callWhenRunning
+
+        # start the service
         yield m.startService(_reactor=mock_reactor)
         self.failIf(mock_reactor.stop.called,
             "startService tried to stop the reactor; check logs")
