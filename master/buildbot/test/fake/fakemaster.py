@@ -50,7 +50,7 @@ class FakeBotMaster(object):
 
 class FakeStatus(object):
 
-    def builderAdded(self, name, basedir, category=None):
+    def builderAdded(self, name, basedir, category=None, description=None):
         return FakeBuilderStatus()
 
     def getBuilderNames(self):
@@ -61,8 +61,17 @@ class FakeStatus(object):
 
 class FakeBuilderStatus(object):
 
+    def setDescription(self, description):
+        self._description = description
+
+    def getDescription(self):
+        return self._description
+
     def setCategory(self, category):
-        pass
+        self._category = category
+
+    def getCategory(self):
+        return self._category
 
     def setSlavenames(self, names):
         pass

@@ -254,6 +254,10 @@ Builder Configuration
 
         The builder's mergeRequests callable.
 
+    .. py:attribute:: description
+
+        The builder's description, displayed in the web status.
+
 Error Handling
 ==============
 

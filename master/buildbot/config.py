@@ -655,7 +655,7 @@ class BuilderConfig:
     def __init__(self, name=None, slavename=None, slavenames=None,
             builddir=None, slavebuilddir=None, factory=None, category=None,
             nextSlave=None, nextBuild=None, locks=None, env=None,
-            properties=None, mergeRequests=None):
+            properties=None, mergeRequests=None, description=None):
 
         errors = ConfigErrors([])
 
@@ -729,6 +729,8 @@ class BuilderConfig:
         self.properties = properties or {}
         self.mergeRequests = mergeRequests
 
+        self.description = description
+
         if errors:
             raise errors
 
@@ -757,6 +759,8 @@ class BuilderConfig:
             rv['properties'] = self.properties
         if self.mergeRequests:
             rv['mergeRequests'] = self.mergeRequests
+        if self.description:
+            rv['description'] = self.description
         return rv
 
 

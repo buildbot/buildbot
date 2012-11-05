@@ -242,6 +242,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     @defer.inlineCallbacks
     def stopService(self):
+        yield service.MultiService.stopService(self)
         if self.masterid is not None:
             yield self.data.updates.masterStopped(
                     name=self.name, masterid=self.masterid)

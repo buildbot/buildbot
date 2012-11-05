@@ -169,7 +169,6 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
         self.patch_loadConfig_fail()
 
         d = self.master.startService(_reactor=reactor)
-        d.addCallback(lambda _ : self.master.stopService())
 
         @d.addCallback
         def check(_):
@@ -185,7 +184,6 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
         self.db.setup = db_setup
 
         d = self.master.startService(_reactor=reactor)
-        d.addCallback(lambda _ : self.master.stopService())
 
         @d.addCallback
         def check(_):
@@ -201,7 +199,6 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
         self.db.setup = db_setup
 
         d = self.master.startService(_reactor=reactor)
-        d.addCallback(lambda _ : self.master.stopService())
 
         @d.addCallback
         def check(_):
