@@ -112,7 +112,7 @@ c['builders'].append(
       slavenames=["local1"],
       factory=f1))
 c['status'] = []
-c['status'].append(html.WebStatus(http_port=8010))
+c['status'].append(html.WebStatus(http_port=0))
 c['title'] = "test"
 c['titleURL'] = "test"
 c['buildbotURL'] = "http://localhost:8010/"
