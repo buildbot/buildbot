@@ -32,7 +32,7 @@ class RunMaster(dirs.DirsMixin, unittest.TestCase):
             'import BuildmasterConfig\n')
 
     @defer.inlineCallbacks
-    def test_master1(self):
+    def do_test_master(self):
         # create the master and set its config
         m = BuildMaster(self.basedir, self.configfile)
         m.config = config.MasterConfig.loadConfig(
@@ -56,7 +56,11 @@ class RunMaster(dirs.DirsMixin, unittest.TestCase):
     # run this test twice, to make sure the first time shut everything down
     # correctly; if this second test fails, but the first succeeds, then
     # something is not cleaning up correctly in stopService.
-    test_master2 = test_master1
+    def test_master1(self):
+        return self.do_test_master()
+
+    def test_master2(self):
+        return self.do_test_master()
 
 # master configuration
 
@@ -76,7 +80,7 @@ from buildbot.steps.shell import ShellCommand
 from buildbot.config import BuilderConfig
 from buildbot.status import html
 c['slaves'] = [BuildSlave ("local1", "localpw")]
-c['slavePortnum'] = 9989
+c['slavePortnum'] = 0
 c['change_source'] = []
 c['change_source'] = PBChangeSource()
 c['schedulers'] = []
