@@ -120,7 +120,7 @@ class Builders(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_startConsuming(self):
         self.callStartConsuming({}, {},
-                expected_filter=('builder', None, 'new'))
+                expected_filter=('builder', None, None))
 
 
 class BuilderResourceType(unittest.TestCase):
@@ -139,30 +139,45 @@ class BuilderResourceType(unittest.TestCase):
         # add one builder master
         yield self.rtype.updateBuilderList(13, [ u'somebuilder' ])
         self.assertEqual(sorted((yield self.master.db.builders.getBuilders())),
-        sorted([
-            dict(id=1, masterids=[13], name='somebuilder'),
+            sorted([
+                dict(id=1, masterids=[13], name='somebuilder'),
         ]))
+        self.master.mq.assertProductions([(('builder', '1', 'started'),
+              {'builderid': 1, 'masterid': 13, 'name': u'somebuilder'})])
+
         # add another
         yield self.rtype.updateBuilderList(13, [ u'somebuilder', u'another' ])
         self.assertEqual(sorted((yield self.master.db.builders.getBuilders())),
-        sorted([
-            dict(id=1, masterids=[13], name='somebuilder'),
-            dict(id=2, masterids=[13], name='another'),
+            sorted([
+                dict(id=1, masterids=[13], name='somebuilder'),
+                dict(id=2, masterids=[13], name='another'),
         ]))
+        self.master.mq.assertProductions([(('builder', '2', 'started'),
+              {'builderid': 2, 'masterid': 13, 'name': u'another'})])
+
         # add one for another master
         yield self.rtype.updateBuilderList(14, [ u'another' ])
         self.assertEqual(sorted((yield self.master.db.builders.getBuilders())),
-        sorted([
-            dict(id=1, masterids=[13], name='somebuilder'),
-            dict(id=2, masterids=[13, 14], name='another'),
+            sorted([
+                dict(id=1, masterids=[13], name='somebuilder'),
+                dict(id=2, masterids=[13, 14], name='another'),
         ]))
+        self.master.mq.assertProductions([(('builder', '2', 'started'),
+              {'builderid': 2, 'masterid': 14, 'name': u'another'})])
+
         # remove both for the first master
         yield self.rtype.updateBuilderList(13, [ ])
         self.assertEqual(sorted((yield self.master.db.builders.getBuilders())),
-        sorted([
-            dict(id=1, masterids=[], name='somebuilder'),
-            dict(id=2, masterids=[14], name='another'),
+            sorted([
+                dict(id=1, masterids=[], name='somebuilder'),
+                dict(id=2, masterids=[14], name='another'),
         ]))
+        self.master.mq.assertProductions([
+            (('builder', '1', 'stopped'),
+              {'builderid': 1, 'masterid': 13, 'name': u'somebuilder'}),
+            (('builder', '2', 'stopped'),
+              {'builderid': 2, 'masterid': 13, 'name': u'another'}),
+        ])
 
     @defer.inlineCallbacks
     def test_masterDeactivated(self):

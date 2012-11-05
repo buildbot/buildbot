@@ -5,20 +5,24 @@ Builders
 
     :attr integer builderid: the ID of this builder
     :attr unicode name: builder name
+    :attr integer masterid: the ID of the master this builder is running on (only for messages; see below)
     :attr Link link: link for this builder
 
     This resource type describes a builder.
 
-    .. bb:event:: builder.$builderid.new
+    .. bb:event:: builder.$builderid.started
 
-        A new builder has been added to the configuration.
+        The builder has started on the master specified by the message's ``masterid``.
+
+    .. bb:event:: builder.$builderid.stopped
+
+        The builder has stopped on the master specified by the message's ``masterid``.
 
     .. bb:rpath:: /builder
 
         This path lists builders, sorted by ID.
-        The resulting builder objects omit the ``masters`` key.
 
-        Subscribing to this path will select all :bb:event:`builder.$builderid.new` messages.
+        Subscribing to this path will select all :bb:event:`builder.$builderid.started` and :bb:event:`builder.$builderid.stopped` messages.
 
     .. bb:rpath:: /builder/:builderid
 

@@ -56,7 +56,7 @@ class BuildersEndpoint(base.Endpoint):
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                ('builder', None, 'new'))
+                ('builder', None, None))
 
 
 class BuildersResourceType(base.ResourceType):
@@ -82,8 +82,12 @@ class BuildersResourceType(base.ResourceType):
         builderNames_set = set(builderNames)
         for bldr in builders:
             if bldr['name'] not in builderNames_set:
+                builderid = bldr['id']
                 yield self.master.db.builders.removeBuilderMaster(
-                        masterid=masterid, builderid=bldr['id'])
+                        masterid=masterid, builderid=builderid)
+                self.master.mq.produce(('builder', str(builderid), 'stopped'),
+                        dict(builderid=builderid, masterid=masterid,
+                            name=bldr['name']))
             else:
                 builderNames_set.remove(bldr['name'])
 
@@ -92,6 +96,8 @@ class BuildersResourceType(base.ResourceType):
             builderid = yield self.master.db.builders.findBuilderId(name)
             yield self.master.db.builders.addBuilderMaster(
                         masterid=masterid, builderid=builderid)
+            self.master.mq.produce(('builder', str(builderid), 'started'),
+                    dict(builderid=builderid, masterid=masterid, name=name))
 
     @defer.inlineCallbacks
     def _masterDeactivated(self, masterid):

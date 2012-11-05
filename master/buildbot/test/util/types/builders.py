@@ -34,8 +34,9 @@ def verifyMessage(testcase, routingKey, message):
     return verifier.verifyMessage(testcase, routingKey, message,
             'builder',
             keyFields=[ 'builderid' ],
-            events=set(['new']),
+            events=set(['started', 'stopped']),
             attrs=dict(
                 builderid='integer',
+                masterid='integer',
                 name='string',
                 ))
