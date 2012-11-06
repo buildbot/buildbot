@@ -23,7 +23,7 @@ from twisted.internet import reactor, defer, error
 
 from buildbot import interfaces, locks
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
-  RETRY, SKIPPED, USERCANCEL, worst_status
+  RETRY, SKIPPED, CANCELLED, worst_status
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
 from buildbot.process import metrics, properties
@@ -437,7 +437,7 @@ class Build(properties.PropertiesMixin):
                 possible_overall_result = WARNINGS
             if step.flunkOnWarnings:
                 possible_overall_result = FAILURE
-        elif result in (EXCEPTION, RETRY):
+        elif result in (EXCEPTION, RETRY, CANCELLED):
             terminate = True
 
         # if we skipped this step, then don't adjust the build status
@@ -482,7 +482,7 @@ class Build(properties.PropertiesMixin):
         if self.currentStep:
             self.currentStep.interrupt(reason)
 
-        self.result = USERCANCEL
+        self.result = CANCELLED
 
         if self._acquiringLock:
             lock, access, d = self._acquiringLock
@@ -498,7 +498,7 @@ class Build(properties.PropertiesMixin):
             text = ["exception"]
         elif self.result == RETRY:
             text = ["retry"]
-        elif self.result == USERCANCEL:
+        elif self.result == CANCELLED:
             text = ["usercancel"]
         else:
             text = ["build", "successful"]

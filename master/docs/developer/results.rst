@@ -38,7 +38,7 @@ external tools, so the values are fixed.
     Value: 4; color: purple; a run that should be retried, usually due to a
     slave disconnection.
 
-.. py:data:: USERCANCEL
+.. py:data:: CANCELLED
 
     Value: 5; color: pink; a run that was cancelled by the user.
 
