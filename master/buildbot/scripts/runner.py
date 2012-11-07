@@ -34,6 +34,7 @@ class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.upgrade_master.upgradeMaster"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
+        ["develop", "d", "link to buildbot dir rather than copy, and dont perform javascript optimization (only work on unix)"],
         ["replace", "r", "Replace any modified files without confirmation."],
         ]
     optParameters = [
@@ -76,6 +77,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
          "Re-use an existing directory (will not overwrite master.cfg file)"],
         ["relocatable", "r",
          "Create a relocatable buildbot.tac"],
+        ["develop", "d", "link to buildbot dir rather than copy, and dont perform javascript optimization (only work on unix)"],
         ["no-logrotate", "n",
          "Do not permit buildmaster rotate logs by itself"]
         ]
@@ -129,6 +131,14 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
             raise usage.UsageError("log-count parameter needs to be an int "+
                                    " or None")
 
+class UpdateJSOptions(base.BasedirMixin, base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.update_js.updateJSFunc"
+    optFlags = [
+        ["quiet", "q", "Do not emit the commands being run"],
+        ["develop", "d", "link to buildbot dir rather than copy, and dont perform javascript optimization (only work on unix)"],
+        ]
+    def getSynopsis(self):
+        return "Usage:    buildbot update_js [<basedir>]"
 
 class StopOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.stop.stop"
@@ -639,6 +649,8 @@ class Options(usage.Options):
          "Create and populate a directory for a new buildmaster"],
         ['upgrade-master', None, UpgradeMasterOptions,
          "Upgrade an existing buildmaster directory for the current version"],
+        ['updatejs', None, UpdateJSOptions,
+         "update the js directory from buildbot sources, and minify the js"],
         ['start', None, StartOptions,
          "Start a buildmaster"],
         ['stop', None, StopOptions,

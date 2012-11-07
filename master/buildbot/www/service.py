@@ -13,11 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
+import os, shutil
+from twisted.internet import defer, threads
 from twisted.python import  util
 from twisted.application import strports, service
 from twisted.web import server, static
 from buildbot import config
+from buildbot.util import json
 from buildbot.www import ui, resource, rest, ws
 
 class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
@@ -32,7 +34,7 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         self.site = None
         self.site_public_html = None
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         www = new_config.www
 
@@ -49,11 +51,8 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
 
         if www['port'] != self.port:
             if self.port_service:
-                wfd = defer.waitForDeferred(
-                    defer.maybeDeferred(lambda :
-                        self.port_service.disownServiceParent()))
-                yield wfd
-                wfd.getResult()
+                yield defer.maybeDeferred(lambda :
+                        self.port_service.disownServiceParent())
                 self.port_service = None
 
             self.port = www['port']
@@ -64,19 +63,26 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
                 self.port_service = strports.service(port, self.site)
                 self.port_service.setServiceParent(self)
 
-        wfd = defer.waitForDeferred(
-                config.ReconfigurableServiceMixin.reconfigService(self,
-                                                            new_config))
-        yield wfd
-        wfd.getResult()
+        yield config.ReconfigurableServiceMixin.reconfigService(self,
+                                                                new_config)
 
     def setup_site(self, new_config):
 
         public_html = self.site_public_html = new_config.www.get('public_html')
-        if public_html:
-            root = static.File(public_html)
-        else:
-            root = static.Data('placeholder', 'text/plain')
+
+        extra_js = new_config.www.get('extra_js', [])
+        extra_routes = []
+        for js in extra_js:
+            js = os.path.join(public_html, "static", "js", os.path.basename(js))
+            if not os.path.isdir(js):
+                raise ValueError("missing js files in %s: please do buildbot upgrade_master"
+                                 " or update_js"%(js,))
+            if os.path.exists(os.path.join(js, "routes.js")):
+                extra_routes.append(os.path.basename(js)+"/routes")
+
+        new_config.www["extra_routes"] = json.dumps(extra_routes)
+
+        root = static.File(public_html)
 
         # redirect the root to UI
         root.putChild('', resource.RedirectResource(self.master, 'ui/'))
@@ -90,8 +96,5 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         # /ws
         root.putChild('ws', ws.WsResource(self.master))
 
-        # /static
-        staticdir = util.sibpath(__file__, 'static')
-        root.putChild('static', static.File(staticdir))
-
         self.site = server.Site(root)
+
