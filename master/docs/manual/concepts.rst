@@ -807,6 +807,10 @@ Configuring all of this takes a coordinated approach.  A complete multiple repos
         Each of the source steps has a ``codebase`` attribute which is used to select an appropriate source stamp from the source stamp set for a build.
         This information comes from the arrived changes or from the scheduler's configured default values.
 
+        .. note::
+
+            Each :ref:`source step<Source-Checkout>` has to have its own ``workdir`` set in order for the checkout to be done for each codebase in its own directory.
+
 .. warning::
 
     Defining a :bb:cfg:`codebaseGenerator` that returns non-empty (not ``''``) codebases will change the behavior of all the schedulers.
