@@ -6,9 +6,6 @@ define(
     function(declare, Memory) {
 	return declare([Memory], {
 	    fields: ["field1"],
-            constructor: function(args){
-		declare.safeMixin(this,args);
-	    },
             autoUpdate: function(args){
 	        this.interval = setInterval(dojo.hitch(this, this.addSomeData), 1000); //simulate adding some data every second
 	    },
@@ -24,7 +21,7 @@ define(
 		    var l = Math.floor(Math.random()*20);
 		    var v = "";
 		    for (var j=0; j<l; j+=1) {
-			v +=randomfeed[Math.floor(Math.random()*randomfeed.length)];
+			v += randomfeed.charAt(Math.floor(Math.random()*randomfeed.length));
 		    }
 		    o[this.fields[i]] = v;
 		}
