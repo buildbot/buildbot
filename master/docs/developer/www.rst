@@ -20,15 +20,11 @@ To enable it, simply add following code in your ``master.cfg``:
 
      c['www'] = dict(port=8010)
 
-Unpack the Dojo SDK from the `download page <http://dojotoolkit.org/download/>`_ into ``master/buildbot/www/static/js/external``:
+Then run this command inside master.cfg directory::
 
-.. code-block:: sh
+          buildbot updatejs -d
 
-    mkdir -p master/buildbot/www/static/js/external
-    curl http://download.dojotoolkit.org/release-1.7.3/dojo-release-1.7.3-src.tar.gz | \
-        tar --strip-components 1 -C master/buildbot/www/static/js/external -zxf -
-
-You'll also need ``dojo/dijit/dgrid/put-selector``.
+This will automatically download js dependancies, and install the JS framework in developer mode
 
 Server Side Design
 ~~~~~~~~~~~~~~~~~~~
@@ -39,6 +35,8 @@ The server resource set is divided into 4 main paths:
    This html page is a simple skeleton, and a placeholder that is then filled out by JS
  * /static - static files.
    The JavaScript framework is actually capable of getting these static files from another path, allowing high-volume installations to serve those files directly via Nginx or Apache.
+   Those files are anyway served in public_html path, and are copied or symlinked by the create-master/upgrade-master/updatejs scripts.
+
    This path is itself divided into several paths:
 
   * /static/css - The source for CSS files
@@ -46,7 +44,6 @@ The server resource set is divided into 4 main paths:
   * /static/js/lib - The javascript source code of all buildbot js framework
   * /static/js/lib/ui - The ui javascript files
   * /static/js/lib/ui/templates - The html/haml templates for the ui
-  * /static/js/external - path for external js libs that needs to be downloaded separatly from buildbot
 
  * /api - This is the root of the REST interface.
    Paths below here can be used either for reading status or for controlling Buildbot (start builds, stop builds, reload config, etc).
@@ -122,18 +119,15 @@ Haml is a templating engine originally made for ruby on rails, and later ported 
 The language used for Buildbot, differs in the fact that JavaScript syntax is used instead of Ruby for evaluated expressions.
 An excellent tutorial is provided in the `haml-js website <https://github.com/creationix/haml-js/>`_
 
-The version that buildbot uses is slighlty modified, in order to fit Dojo's AMD module definition, and to add some syntactic sugar to import Haml files.
-The Haml files can be loaded using a Dojo plugin, similar to ``dojo/text!``:
+We use `hamlcc website <https://github.com/tardyp/hamlcc/>`_ to actually use the haml templates.
+This tool compiles an haml file into a js function that can be easily embedded into a dojo build
+in order to avoid having buildbot depend on haml and hamlcc, we store the js version of the files
+Once you have installed node.js, and npm, using your distro packages, it is very easily installed
+with npm::
 
-.. code-block:: js
+   sudo npm install -g hamlcc
 
-        define(["dojo/_base/declare", "lib/ui/base",
-                "lib/haml!./templates/build.haml"
-           ], function(declare, Base, template) {
-                "use strict";
-                return declare([Base], {
-                    templateFunc : template,
-                    ...
+hamlcc also include a very useful hamlint tool in order to pre-check its code inside the editor
 
 haml emacs mode is `available <http://emacswiki.org/emacs/HamlMode>`_
 

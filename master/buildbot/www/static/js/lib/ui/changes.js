@@ -13,11 +13,11 @@
 //
 // Copyright Buildbot Team Members
 
-define(["dojo/_base/declare", "lib/ui/base", "dgrid/OnDemandGrid",
+define(["dojo/_base/declare","dojo/_base/array", "lib/ui/base", "dgrid/OnDemandGrid",
 	"dgrid/Selection", "dgrid/Keyboard","dgrid/extensions/ColumnHider",
 	"dojo/store/Observable", "lib/fakeChangeStore",
-        "lib/haml!./templates/changes.haml"],
-       function(declare, Base, Grid, Selection, Keyboard, Hider, observable, Store, template) {
+        "./templates/changes.haml"],
+       function(declare, arrayUtil, Base, Grid, Selection, Keyboard, Hider, observable, Store, template) {
 	   "use strict";
 	   return declare([Base], {
 	       templateFunc:template,
@@ -26,6 +26,7 @@ define(["dojo/_base/declare", "lib/ui/base", "dgrid/OnDemandGrid",
                },
 	       postCreate: function(){
 		   this.store = observable(new Store());
+		   this.store.autoUpdate();
 		   var maingrid = new (declare([Grid, Selection, Keyboard, Hider]))({
                        loadingMessage: "loading...",
 		       store: this.store,

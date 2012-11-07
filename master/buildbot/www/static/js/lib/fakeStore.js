@@ -8,7 +8,9 @@ define(
 	    fields: ["field1"],
             constructor: function(args){
 		declare.safeMixin(this,args);
-		this.interval = setInterval(dojo.hitch(this, this.addSomeData), 1000); //simulate adding some data every second
+	    },
+            autoUpdate: function(args){
+	        this.interval = setInterval(dojo.hitch(this, this.addSomeData), 1000); //simulate adding some data every second
 	    },
 	    addSomeData: function() {
 		var randomfeed = "sdlkjs alkdj alsdjl ksdj lsajldkjaslkdj asdlkja iwjedo ajlskj lhsl";

@@ -15,7 +15,7 @@
 
 define(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_WidgetsInTemplateMixin",
 	"dojo/_base/Deferred", "dojo/_base/xhr",
-	"lib/haml!./templates/error.haml"],
+	"./templates/error.haml"],
        function(declare, _Widget, _TemplatedMixin, _WidgetsInTemplateMixin, Deferred, xhr, template) {
 	   return declare([_Widget, _TemplatedMixin, _WidgetsInTemplateMixin], {
 	       templateFunc: template,
@@ -63,7 +63,7 @@ define(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_
 		       path.push(arguments[i]);
 		   }
 		   path = path.join("/");
-		   return xhr.get({handleAs:"json",url:"/api/v1/"+path});
+		   return xhr.get({handleAs:"json",url:window.bb.base_url+"/api/v1/"+path});
 	       },
 	       postCreate: function(){
 		   if (this.templateString===template) {

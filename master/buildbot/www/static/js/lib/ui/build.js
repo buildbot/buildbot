@@ -16,7 +16,7 @@
 define(["dojo/_base/declare", "lib/ui/base",
 	"dgrid/OnDemandGrid","dgrid/extensions/DijitRegistry", "dojo/store/Observable", "dojo/store/Memory",
 	"dojo/_base/array", "dojo/fx/Toggler", "dojo/fx",
-        "lib/haml!./templates/build.haml"
+        "./templates/build.haml"
        ], function(declare, Base, Grid, DijitRegistry, observable, Memory, array, Toggler, fx, template) {
     "use strict";
     return declare([Base], {
