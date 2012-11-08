@@ -454,7 +454,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             buildername = breq['buildername']
             builder = self.master_status.getBuilder(buildername)
             d = self.master.db.builds.getBuildsForRequest(breq['brid'])
-            d.addCallback(lambda builddictlist: (builddictlist, builder))
+            d.addCallback(lambda builddictlist, _builder: builder : (builddictlist, _builder))
             dl.append(d)
         d = defer.gatherResults(dl)
         d.addCallback(self._gotBuilds, buildset)
