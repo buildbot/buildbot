@@ -925,17 +925,19 @@ given below::
                         )
             text.append(u'<tr><td>Build Reason:</td><td>%s</td></tr>' % build.getReason())
             source = u""
-            ss = build.getSourceStamp()
-            if ss.branch:
-                source += u"[branch %s] " % ss.branch
-            if ss.revision:
-                source +=  ss.revision
-            else:
-                source += u"HEAD"
-            if ss.patch:
-                source += u" (plus patch)"
-            if ss.patch_info: # add patch comment
-                source += u" (%s)" % ss.patch_info[1]
+            for ss in build.getSourceStamps():
+                if ss.codebase:
+                    source += u'%s: ' % ss.codebase
+                if ss.branch:
+                    source += u"[branch %s] " % ss.branch
+                if ss.revision:
+                    source +=  ss.revision
+                else:
+                    source += u"HEAD"
+                if ss.patch:
+                    source += u" (plus patch)"
+                if ss.patch_info: # add patch comment
+                    source += u" (%s)" % ss.patch_info[1]
             text.append(u"<tr><td>Build Source Stamp:</td><td><b>%s</b></td></tr>" % source)
             text.append(u"<tr><td>Blamelist:</td><td>%s</td></tr>" % ",".join(build.getResponsibleUsers()))
             text.append(u'</table>')
@@ -1170,10 +1172,9 @@ List of responsible users
 
 Source information (only valid if ss is not ``None``)
 
-    ::
+    A build has a set of sourcestamps::
         
-        ss = build.getSourceStamp()
-        if ss:
+        for ss in build.getSourceStamp():
             branch = ss.branch
             revision = ss.revision
             patch = ss.patch
