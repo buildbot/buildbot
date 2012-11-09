@@ -93,7 +93,7 @@ class HgPoller(base.PollingChangeSource):
                                    env=os.environ, errortoo=False )
         def process(output):
             # fortunately, Mercurial issues all filenames one one line
-            date, author, files, comments = output.decode(self.encoding, errors="replace").split(
+            date, author, files, comments = output.decode(self.encoding, "replace").split(
                 os.linesep, 3)
 
             if not self.usetimestamps:
