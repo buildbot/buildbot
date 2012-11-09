@@ -2668,8 +2668,8 @@ listed as build requirement. The type of chroot to build is specified with the
 ``distribution``, ``distribution`` and ``mirror`` parameter. To use pbuilder
 your buildbot must have the right to run pbuilder as root through sudo. ::
 
-    from buildbot.steps.package.deb.pbuilder import DepPbuilder
-    f.addStep(DepPbuilder())
+    from buildbot.steps.package.deb.pbuilder import DebPbuilder
+    f.addStep(DebPbuilder())
 
 The step takes the following parameters
 
