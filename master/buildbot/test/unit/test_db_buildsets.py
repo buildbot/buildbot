@@ -55,6 +55,12 @@ class Tests(interfaces.InterfaceTests):
         def getBuildsets(self, complete=None):
             pass
 
+    def test_signature_getRecentBuildsets(self):
+        @self.assertArgSpecMatches(self.db.buildsets.getRecentBuildsets)
+        def getBuildsets(self, count, branch=None, repository=None,
+                complete=None):
+            pass
+
     def test_signature_getBuildsetProperties(self):
         @self.assertArgSpecMatches(self.db.buildsets.getBuildsetProperties)
         def getBuildsetProperties(self, bsid):
@@ -321,6 +327,98 @@ class Tests(interfaces.InterfaceTests):
                 ( 92, 1, 298297876, 7) ]))
         d.addCallback(check)
         return d
+
+    def insert_test_getRecentBuildsets_data(self):
+        return self.insertTestData([
+            fakedb.Change(changeid=91, branch='branch_a', repository='repo_a'),
+            fakedb.SourceStamp(id=91, branch='branch_a', repository='repo_a',
+                               sourcestampsetid=91),
+            fakedb.SourceStampChange(sourcestampid=91, changeid=91),
+            fakedb.SourceStampSet(id=91),
+
+            fakedb.Buildset(id=91, sourcestampsetid=91, complete=0,
+                    complete_at=298297875, results=-1, submitted_at=266761875,
+                    external_idstring='extid', reason='rsn1'),
+            fakedb.Buildset(id=92, sourcestampsetid=91, complete=1,
+                    complete_at=298297876, results=7, submitted_at=266761876,
+                    external_idstring='extid', reason='rsn2'),
+
+            # buildset unrelated to the change
+            fakedb.SourceStampSet(id=1),
+            fakedb.Buildset(id=93, sourcestampsetid=1, complete=1,
+                    complete_at=298297877, results=7, submitted_at=266761877,
+                    external_idstring='extid', reason='rsn2'),
+        ])
+
+    def test_getRecentBuildsets_all(self):
+        d = self.insert_test_getRecentBuildsets_data()
+        d.addCallback(lambda _ :
+                self.db.buildsets.getRecentBuildsets(2, branch='branch_a',
+                                                     repository='repo_a'))
+        def check(bsdictlist):
+            self.assertEqual(bsdictlist, [
+              dict(external_idstring='extid', reason='rsn1', sourcestampsetid=91,
+                submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15,
+                                               tzinfo=UTC),
+                complete_at=datetime.datetime(1979, 6, 15, 12, 31, 15,
+                                               tzinfo=UTC),
+                complete=False, results=-1, bsid=91),
+              dict(external_idstring='extid', reason='rsn2', sourcestampsetid=91,
+                submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 16,
+                                               tzinfo=UTC),
+                complete_at=datetime.datetime(1979, 6, 15, 12, 31, 16,
+                                               tzinfo=UTC),
+                complete=True, results=7, bsid=92),
+            ])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentBuildsets_one(self):
+        d = self.insert_test_getRecentBuildsets_data()
+        d.addCallback(lambda _ :
+                self.db.buildsets.getRecentBuildsets(1, branch='branch_a',
+                                                     repository='repo_a'))
+        def check(bsdictlist):
+            self.assertEqual(bsdictlist, [
+              dict(external_idstring='extid', reason='rsn2', sourcestampsetid=91,
+                submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 16,
+                                               tzinfo=UTC),
+                complete_at=datetime.datetime(1979, 6, 15, 12, 31, 16,
+                                               tzinfo=UTC),
+                complete=True, results=7, bsid=92),
+            ])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentBuildsets_zero(self):
+        d = self.insert_test_getRecentBuildsets_data()
+        d.addCallback(lambda _ :
+                self.db.buildsets.getRecentBuildsets(0, branch='branch_a',
+                                                     repository='repo_a'))
+        def check(bsdictlist):
+            self.assertEqual(bsdictlist, [])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentBuildsets_noBranchMatch(self):
+        d = self.insert_test_getRecentBuildsets_data()
+        d.addCallback(lambda _ :
+                self.db.buildsets.getRecentBuildsets(2, branch='bad_branch',
+                                                     repository='repo_a'))
+        def check(bsdictlist):
+            self.assertEqual(bsdictlist, [])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentBuildsets_noRepoMatch(self):
+          d = self.insert_test_getRecentBuildsets_data()
+          d.addCallback(lambda _ :
+                  self.db.buildsets.getRecentBuildsets(2, branch='branch_a',
+                                                       repository='bad_repo'))
+          def check(bsdictlist):
+              self.assertEqual(bsdictlist, [])
+          d.addCallback(check)
+          return d
 
 
 class RealTests(Tests):

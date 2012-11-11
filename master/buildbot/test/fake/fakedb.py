@@ -831,6 +831,36 @@ class FakeBuildsetsComponent(FakeDBComponent):
                 rv.append(self._row2dict(bs))
         return defer.succeed(rv)
 
+    @defer.inlineCallbacks
+    def getRecentBuildsets(self, count, branch=None, repository=None,
+                                    complete=None):
+        if not count:
+            yield defer.returnValue([])
+            return
+        rv = []
+        for bs in (yield self.getBuildsets(complete=complete)):
+            if branch or repository:
+                ok = True
+                ssteps = (yield self.db.sourcestamps.getSourceStamps(
+                        bs['sourcestampsetid']))
+                if not ssteps:
+                    # no sourcestamps -> no match
+                    ok = False
+                for ss in ssteps:
+                    if branch and ss['branch'] != branch:
+                        ok = False
+                    if repository and ss['repository'] != repository:
+                        ok = False
+            else:
+                ok = True
+
+            if ok:
+                rv.append(bs)
+
+        rv.sort(key=lambda bs : -bs['bsid'])
+
+        yield defer.returnValue(list(reversed(rv[:count])))
+
     def _row2dict(self, row):
         row = row.copy()
         if row['complete_at']:

@@ -36,6 +36,8 @@ class RunMaster(dirs.DirsMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def do_test_master(self):
+        raise unittest.SkipTest("see #2395")
+
         # create the master and set its config
         m = BuildMaster(self.basedir, self.configfile)
         m.config = config.MasterConfig.loadConfig(
@@ -112,7 +114,7 @@ c['builders'].append(
       slavenames=["local1"],
       factory=f1))
 c['status'] = []
-c['status'].append(html.WebStatus(http_port=8010))
+c['status'].append(html.WebStatus(http_port=0))
 c['title'] = "test"
 c['titleURL'] = "test"
 c['buildbotURL'] = "http://localhost:8010/"
