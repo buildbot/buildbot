@@ -15,9 +15,10 @@
 
 define(["dojo/_base/declare", "lib/ui/base",
 	"dgrid/OnDemandGrid", "dojo/store/Observable", "dojo/store/Memory",
+	"./dgridext/AutoHeight",
 	"dojo/_base/array",
         "./templates/builders.haml"
-       ], function(declare, Base, Grid, observable, Memory, array, template) {
+       ], function(declare, Base, Grid, observable, Memory, AutoHeight, array, template) {
     "use strict";
     return declare([Base], {
 	templateFunc : template,
@@ -38,7 +39,7 @@ define(["dojo/_base/declare", "lib/ui/base",
 		}
 	    }
 	    var store = observable(new Memory({data:data,idProperty: "builderName"}));
-	    var grid = new (declare([Grid]))({
+	    var grid = new (declare([Grid,AutoHeight]))({
 		store: store,
 		cellNavigation:false,
 		tabableHeader: false,

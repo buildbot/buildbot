@@ -36,4 +36,8 @@ class UIResource(resource.Resource):
             static_url = self.static_url,
             ws_url = self.base_url.replace("http:", "ws:"),
             extra_routes = self.extra_routes)
+        # IE8 ignore doctype html in corporate intranets
+        # this additionnal header removes this behavior and put
+        # IE8 in compatibility mode
+        request.setHeader("X-UA-Compatible" ,"IE=edge")
         return html % contents

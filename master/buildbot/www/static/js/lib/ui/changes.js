@@ -15,9 +15,10 @@
 
 define(["dojo/_base/declare","dojo/_base/array", "lib/ui/base", "dgrid/OnDemandGrid",
 	"dgrid/Selection", "dgrid/Keyboard","dgrid/extensions/ColumnHider",
+	"lib/ui/dgridext/AutoHeight","lib/ui/dgridext/StyledColumns",
 	"dojo/store/Observable", "lib/fakeChangeStore",
         "./templates/changes.haml"],
-       function(declare, arrayUtil, Base, Grid, Selection, Keyboard, Hider, observable, Store, template) {
+       function(declare, arrayUtil, Base, Grid, Selection, Keyboard, Hider, AutoHeight, StyledColumns, observable, Store, template) {
 	   "use strict";
 	   return declare([Base], {
 	       templateFunc:template,
@@ -27,7 +28,7 @@ define(["dojo/_base/declare","dojo/_base/array", "lib/ui/base", "dgrid/OnDemandG
 	       postCreate: function(){
 		   this.store = observable(new Store());
 		   this.store.autoUpdate();
-		   var maingrid = new (declare([Grid, Selection, Keyboard, Hider]))({
+		   var maingrid = new (declare([Grid, Selection, Keyboard, Hider,AutoHeight,StyledColumns]))({
                        loadingMessage: "loading...",
 		       store: this.store,
 		       minRowsPerPage: 15,

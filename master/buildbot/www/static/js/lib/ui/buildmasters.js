@@ -13,11 +13,24 @@
 //
 // Copyright Buildbot Team Members
 
-define(["dojo/_base/declare", "lib/ui/base"], function(declare, Base) {
+define(["dojo/_base/declare", "lib/ui/base",
+        "./templates/buildmasters.haml"
+       ], function(declare, Base, template) {
     "use strict";
     return declare([Base], {
-        constructor: function(args){
-            declare.safeMixin(this,args);
-        }
+	templateFunc : template,
+	postCreate: function(){
+	    this.createGrid({
+		apiPath : "master",
+		idProperty: "masterid",
+		columns: {
+		    "masterid": { label:"#",style:"width:30px"},
+		    "name": { label:"Name"},
+		    "link":   { label:"Json Link", type:"url"},
+		    "last_active": { label:"Last Active", type:"date"},
+		    "active": { label:"Active",type:"bool"}
+		    }
+	    }, this.buildmastersgrid_node);
+	}
     });
 });
