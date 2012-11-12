@@ -90,9 +90,9 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
     def getAllGotRevisions(self):
         all_got_revisions = self.properties.getProperty('got_revision', {})
-        # For backwards compatibility all_got_revisions is a string if codebases
+        # For backwards compatibility all_got_revisions not a dict if codebases
         # are not used. Convert to the default internal type (dict)
-        if isinstance(all_got_revisions, str):
+        if not isinstance(all_got_revisions, dict):
             all_got_revisions = {'': all_got_revisions}
         return all_got_revisions
 
@@ -419,7 +419,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             self.sources = [self.source]
             del self.source
         self.wasUpgraded = True
-        
+
     def checkLogfiles(self):
         # check that all logfiles exist, and remove references to any that
         # have been deleted (e.g., by purge())
