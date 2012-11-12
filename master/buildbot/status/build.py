@@ -90,7 +90,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
     def getAllGotRevisions(self):
         all_got_revisions = self.properties.getProperty('got_revision', {})
-        # For backwards compatibility all_got_revisions not a dict if codebases
+        # For backwards compatibility all_got_revisions is not a dict if codebases
         # are not used. Convert to the default internal type (dict)
         if not isinstance(all_got_revisions, dict):
             all_got_revisions = {'': all_got_revisions}
