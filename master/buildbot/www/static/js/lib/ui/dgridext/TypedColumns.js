@@ -1,5 +1,5 @@
-define(["dojo/_base/declare", "dojo/_base/lang", "dojo/_base/array"],
-function(declare, lang, array){
+define(["dojo/_base/declare", "dojo/_base/lang", "dojo/_base/array","moment"],
+function(declare, lang, array, moment){
     /* implement basic types for columns to display them in a nice way
      */
     return declare(null, {
@@ -25,12 +25,11 @@ function(declare, lang, array){
 	},
 	_configColumn_date: function(column, columnId, rowColumns, prefix){
 	    column.formatter = function(s) {
-		var d = new Date(0);
-		d.setUTCSeconds(s);
-		return d.toLocaleDateString()+" "+ d.toLocaleTimeString();
+		var d = moment.unix(s);
+		return "<abbr title='"+ d.format('LLLL')+"'>"+d.fromNow()+"</abbr>" ;
 	    };
 	    if (column.style === undefined){
-		column.style="width:250px;";
+		column.style="width:110px;";
 	    }
 	},
 	_configColumn_url: function(column, columnId, rowColumns, prefix){

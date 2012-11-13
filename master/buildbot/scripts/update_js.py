@@ -27,7 +27,8 @@ js_deps = [("http://download.dojotoolkit.org/release-1.8.1/dojo-release-1.8.1-sr
            ("https://github.com/kriszyp/put-selector/archive/v0.3.2.zip",
             "put-selector-0.3.2/","put-selector"),
            ("https://github.com/SitePen/dgrid/archive/v0.3.3.zip",
-            "dgrid-0.3.3/","dgrid")
+            "dgrid-0.3.3/","dgrid"),
+           ("https://github.com/timrwood/moment/archive/1.7.2.zip","moment-1.7.2/min/moment.min.js","moment.js")
            ]
 def syncStatic(config,www, workdir, olddir):
     """Synchronize the static directory"""
@@ -80,8 +81,12 @@ def downloadJSDeps(config, workdir):
             o.close()
         z = zipfile.ZipFile(fn)
         for member in z.infolist():
+            if not member.filename.startswith(archivedir):
+                continue
             isdir =  member.external_attr & 16
-            dest = os.path.join(workdir, "js", archivedest, member.filename[len(archivedir):])
+            dest = os.path.join(workdir, "js", archivedest)
+            if member.filename[len(archivedir):]:
+                dest = os.path.join(dest, member.filename[len(archivedir):])
             if isdir:
                 if not os.path.exists(dest):
                     os.makedirs(dest)
@@ -93,7 +98,7 @@ def downloadJSDeps(config, workdir):
                 o.close()
 build_js = """
 dependencies = (function(){
-    var _packages = "dojox dijit put-selector lib dgrid xstyle %(extra_pkg)s".split(" ");
+    var _packages = "dojox dijit put-selector lib dgrid xstyle moment %(extra_pkg)s".split(" ");
     var packages = [];
     for (var i = 0;i<_packages.length; i+=1) {
 	if (_packages[i].length >1) {
