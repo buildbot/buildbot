@@ -673,7 +673,8 @@ following keys:
     reserved paths may be added in future versions.
     Please note that ``static/`` directory within ``public_html`` is used to contain
     static files of the web ui, including JS. The JS part will be synchronized at each
-    buildbot reconfig so that you can develop JS inside the buildbot source tree.
+    buildbot upgrade-master. Thus this needs to be writeable at upgrade-master time.
+    There is also a developer mode that setups symlinks to the source code instead of copying the files.
 
 ``extra_js``
     List of extra JS AMD style packages to include in the static/js directory.

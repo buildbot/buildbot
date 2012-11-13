@@ -26,7 +26,7 @@ from buildbot.db import connector
 from buildbot.master import BuildMaster
 from buildbot.util import in_reactor
 from buildbot.scripts import base
-from update_js import updateJS
+from buildbot.scripts.update_js import updateJS
 
 def checkBasedir(config):
     if not config['quiet']:

@@ -24,10 +24,11 @@ _html_f.close()
 class UIResource(resource.Resource):
     isLeaf = True
 
-    def __init__(self, master):
+    def __init__(self, master, extra_routes):
         """ Config can pass a static_url for serving
         static stuff directly from apache or nginx
         """
+        self.extra_routes = extra_routes
         resource.Resource.__init__(self, master)
 
     def render(self, request):

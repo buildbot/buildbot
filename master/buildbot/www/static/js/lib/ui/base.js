@@ -65,10 +65,10 @@ define(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_
 		   return path;
 	       },
 	       getApiV1: function() {
-		   return xhr.get({handleAs:"json",url:window.bb.base_url+"/api/v1/"+this.createAPIPath(arguments)});
+		   return xhr.get({handleAs:"json",url:window.bb.base_url+"api/v1/"+this.createAPIPath(arguments)});
 	       },
 	       getApiV2: function() {
-		   return xhr.get({handleAs:"json",url:window.bb.base_url+"/api/v2/"+this.createAPIPath(arguments)});
+		   return xhr.get({handleAs:"json",url:window.bb.base_url+"api/v2/"+this.createAPIPath(arguments)});
 	       },
 	       postCreate: function(){
 		   if (this.templateString===template) {

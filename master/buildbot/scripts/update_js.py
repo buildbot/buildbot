@@ -124,9 +124,27 @@ dependencies = (function(){
 console.log(JSON.stringify(dependencies,null, " "))
 """
 def minifyJS(config, www, workdir):
+    skip_minify = False
+    if os.system("java -version"):
+        print "you need a working version of java for dojo build system to work"
+        skip_minify = True
+
+    if platform.system() != "Windows" and os.system("node -v"):
+        print "you need a working version of node.js in your path for dojo build system to work"
+        skip_minify = True
+
     if config['develop']:
+        skip_minify = True
+
+    # Todo: need to find out the best way to distribute minified code in buildbot's sdist.
+    # we'll sort this out once we have more code and requirements for the whole sdist picture
+    # Perhaps its even only needed for large scale buildbot where we can require installation of
+    # node and java in the master, and where people dont care about sdists.
+    if skip_minify:
         os.symlink("js", os.path.join(workdir, "js.built"))
         return
+
+    # create the build.js config file that dojo build system is needing
     o = open(os.path.join(workdir,"js","build.js"), "w")
     extra_js = www.get('extra_js', [])
     o.write(build_js% dict(extra_pkg=" ".join([os.path.basename(js) for js in extra_js]),
@@ -134,6 +152,8 @@ def minifyJS(config, www, workdir):
                            releaseDir = os.path.join(workdir,"jsrelease")))
     o.close()
     os.chdir(os.path.join(workdir,"js"))
+
+    # Those scripts are part of the dojo tarball that we previously downloaded
     if platform.system() == "Windows":
         os.system("util/buildscripts/build.bat --bin java -p build.js --release")
     else:

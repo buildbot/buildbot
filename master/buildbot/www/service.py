@@ -40,7 +40,7 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
 
         need_new_site = False
         if self.site:
-            if www.get('public_html') != self.site_public_html:
+            if www.get('public_html') != self.site_public_html or www.get('extra_js',[]) != self.site_extra_js:
                 need_new_site = True
         else:
             if www['port']:
@@ -67,10 +67,8 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
                                                                 new_config)
 
     def setup_site(self, new_config):
-
         public_html = self.site_public_html = new_config.www.get('public_html')
-
-        extra_js = new_config.www.get('extra_js', [])
+        extra_js = self.site_extra_js = new_config.www.get('extra_js', [])
         extra_routes = []
         for js in extra_js:
             js = os.path.join(public_html, "static", "js", os.path.basename(js))
@@ -80,7 +78,6 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
             if os.path.exists(os.path.join(js, "routes.js")):
                 extra_routes.append(os.path.basename(js)+"/routes")
 
-        new_config.www["extra_routes"] = json.dumps(extra_routes)
 
         root = static.File(public_html)
 
@@ -88,7 +85,7 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         root.putChild('', resource.RedirectResource(self.master, 'ui/'))
 
         # /ui
-        root.putChild('ui', ui.UIResource(self.master))
+        root.putChild('ui', ui.UIResource(self.master, extra_routes))
 
         # /api
         root.putChild('api', rest.RestRootResource(self.master))

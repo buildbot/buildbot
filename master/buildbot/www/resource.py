@@ -34,10 +34,6 @@ class Resource(resource.Resource):
             return self.master.config.www[key]
         return self.base_url + "static"
 
-    @property
-    def extra_routes(self):
-        return self.master.config.www['extra_routes']
-
     def __init__(self, master):
         resource.Resource.__init__(self)
         self.master = master
