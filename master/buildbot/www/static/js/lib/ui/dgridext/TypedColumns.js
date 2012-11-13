@@ -1,5 +1,5 @@
-define(["dojo/_base/declare"],
-function(declare, array){
+define(["dojo/_base/declare", "dojo/_base/lang", "dojo/_base/array"],
+function(declare, lang, array){
     /* implement basic types for columns to display them in a nice way
      */
     return declare(null, {
@@ -36,6 +36,34 @@ function(declare, array){
 	_configColumn_url: function(column, columnId, rowColumns, prefix){
 	    column.formatter = function(s) {
 		return "<a href='"+s+"'>"+s;
+	    };
+	},
+	_configColumn_revision: function(column, columnId, rowColumns, prefix){
+	    column.get = function(o) { return o;};
+	    column.formatter = function(o) {
+		return "<a href='"+o.revlink+"'>"+o.revision;
+	    };
+	},
+	_configColumn_filelist: function(column, columnId, rowColumns, prefix){
+	    column.formatter = function(f) {
+		var r = "<ul>";
+		array.map(f, function(file) {
+		    r += "<li>"+file+"</li>";
+		});
+		return r+"<ul>";
+	    };
+	},
+	_configColumn_user: function(column, columnId, rowColumns, prefix){
+	    column.formatter = function(s) {
+		if (s) {
+		    var Name = lang.trim(s.split("<")[0]);
+		    var id = Name;
+		    if (s.split("<").length>1) {
+			id = lang.trim(s.split("<")[1].split(">")[0]);
+		    }
+		    return "<a href='#user?id="+id+"'>"+Name;
+		}
+		return "unknown";
 	    };
 	}
     });
