@@ -30,7 +30,7 @@ class RTypes(object):
 
 
 class Root(base.Endpoint):
-    pathPattern = ('',)
+    pathPattern = ()
 
     def get(self, options, kwargs):
         return defer.succeed(self.master.data.rootLinks)
