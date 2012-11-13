@@ -17,6 +17,7 @@ from twisted.internet import defer
 from twisted.python import log
 from buildbot.data import base, exceptions
 from buildbot.process import metrics
+from buildbot.process.users import users
 from buildbot.util import datetime2epoch, epoch2datetime
 
 class ChangeEndpoint(base.Endpoint):
@@ -72,7 +73,7 @@ class ChangeResourceType(base.ResourceType):
 
         if src:
             # create user object, returning a corresponding uid
-            uid = yield self.master.users.createUserObject(self.master,
+            uid = yield users.createUserObject(self.master,
                     author, src)
         else:
             uid = None

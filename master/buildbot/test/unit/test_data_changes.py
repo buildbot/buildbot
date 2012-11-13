@@ -20,6 +20,7 @@ from buildbot.data import changes, exceptions
 from buildbot.util import epoch2datetime
 from buildbot.test.util import types, endpoint
 from buildbot.test.fake import fakedb, fakemaster
+from buildbot.process.users import users
 
 class Change(endpoint.EndpointMixin, unittest.TestCase):
 
@@ -167,8 +168,9 @@ class ChangeResourceType(unittest.TestCase):
                 expectedRoutingKey, expectedMessage, expectedRow)
 
     def test_addChange_src_codebase(self):
-        self.master.users = mock.Mock(name='master.users') # FIXME real fake
-        self.master.users.createUserObject.return_value = defer.succeed(123)
+        createUserObject = mock.Mock(spec=users.createUserObject)
+        createUserObject.return_value = defer.succeed(123)
+        self.patch(users, 'createUserObject', createUserObject)
         kwargs = dict(author=u'warner', branch=u'warnerdb',
                 category=u'devel', comments=u'fix whitespace',
                 files=[u'master/buildbot/__init__.py'],
@@ -211,8 +213,8 @@ class ChangeResourceType(unittest.TestCase):
                 expectedChangeUsers=[123])
         @d.addCallback
         def check(_):
-            self.master.users.createUserObject.assert_called_once_with(
-                                                self.master, 'warner', 'git')
+            createUserObject.assert_called_once_with(
+                    self.master, 'warner', 'git')
         return d
 
     def test_addChange_src_codebaseGenerator(self):
