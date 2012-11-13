@@ -80,6 +80,21 @@ define(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_
 		   return ["btn-success", "btn-warnings", "btn-danger", "btn", "btn-inverse", "btn-info"][results];
 	       },
 	       createGrid: function(options, node) {
+		   var self = this;
+		   require ([
+		       "dojo/store/Observable", "dojo/store/Memory"],
+			    function(observable, Memory) {
+				/* TODO: should return an observable store API result, that uses the ws api
+				   Now, we simply turn the result in Memory store.
+				*/
+				self.getApiV2(options.apiPath).then(function(results) {
+				    var store = observable(new Memory({data:results,idProperty: options.idProperty}));
+				    options.store = store;
+				    self.createBaseGrid(options, node);
+				});
+			    });
+	       },
+	       createBaseGrid: function(options, node) {
 		   /* options: same options as dgrid +
 		      - apiPath: path to list style buildbot api, where to get the data
 		      - idProperty: property that will serve as identifier for queries
@@ -87,25 +102,18 @@ define(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_
 		   var self = this;
 		   /* helper for creating a grid with good defaults */
 		   require ([
-		       "dgrid/OnDemandGrid", "dojo/store/Observable", "dojo/store/Memory",
-		       "dgrid/extensions/ColumnResizer",
+		       "dgrid/OnDemandGrid",
+		       "dgrid/extensions/ColumnResizer","dgrid/extensions/DijitRegistry",
 		       "dgrid/Selection", "dgrid/Keyboard","dgrid/extensions/ColumnHider",
 		       "lib/ui/dgridext/AutoHeight","lib/ui/dgridext/StyledColumns",
 		       "lib/ui/dgridext/TypedColumns",
 		       "dojo/_base/array"
-		       ], function(Grid, observable, Memory, ColumnResizer, Selection, Keyboard, ColumnHider, AutoHeight, StyledColumns, TypedColumns, array) {
-			   /* TODO: should return an observable store API result, that uses the ws api
-			      Now, we simply turn the result in Memory store.
-			    */
-			   self.getApiV2(options.apiPath).then(function(results) {
-			       var store = observable(new Memory({data:results,idProperty: options.idProperty}));
-			       options.store = store;
-			       var grid = new (declare([Grid,ColumnResizer,Selection, Keyboard, ColumnHider,
+		       ], function(Grid, ColumnResizer,DijitRegistry, Selection, Keyboard, ColumnHider, AutoHeight, StyledColumns, TypedColumns, array) {
+			       var grid = new (declare([Grid,ColumnResizer,DijitRegistry,Selection, Keyboard, ColumnHider,
 							AutoHeight, StyledColumns,TypedColumns]))(options,
-													 node);
+												  node);
 			       grid.refresh();
 			   });
-		       });
 	       }
 	   });
        });

@@ -14,10 +14,10 @@
 // Copyright Buildbot Team Members
 
 define(["dojo/_base/declare", "lib/ui/base",
-	"dgrid/OnDemandGrid", "dojo/store/Observable", "dojo/store/Memory",
+	"dojo/store/Observable", "dojo/store/Memory",
 	"dojo/_base/array",
         "./templates/builder.haml"
-], function(declare, Base, Grid, observable, Memory, array, template) {
+], function(declare, Base, observable, Memory, array, template) {
     "use strict";
     return declare([Base], {
 	templateFunc:template,
@@ -56,10 +56,11 @@ define(["dojo/_base/declare", "lib/ui/base",
 		}
 	    }
 	    var store = observable(new Memory({data:data,idProperty: "number"}));
-	    var grid = new (declare([Grid]))({
+	    this.createBaseGrid({
 		store: store,
 		cellNavigation:false,
 		tabableHeader: false,
+		contentMaxHeight:700,
 		columns: {
 		    number: {label:"number",
 			     get: function(o){return o;},
@@ -79,7 +80,6 @@ define(["dojo/_base/declare", "lib/ui/base",
 			  }
 		}
 	    }, this.buildersgrid_node);
-	    grid.refresh();
 	}
     });
 });
