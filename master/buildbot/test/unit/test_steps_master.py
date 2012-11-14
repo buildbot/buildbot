@@ -147,6 +147,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
         def _restore_env(res):
             del os.environ['WORLD']
+            del os.environ['LIST']
             return res
         d = self.runStep()
         d.addBoth(_restore_env)
