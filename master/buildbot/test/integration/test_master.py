@@ -36,8 +36,6 @@ class RunMaster(dirs.DirsMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def do_test_master(self):
-        raise unittest.SkipTest("see #2395")
-
         # create the master and set its config
         m = BuildMaster(self.basedir, self.configfile)
         m.config = config.MasterConfig.loadConfig(
