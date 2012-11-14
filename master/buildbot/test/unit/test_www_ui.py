@@ -13,17 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-import os
-from buildbot.www import ui, service
+from buildbot.www import ui
 from buildbot.test.util import www
 from twisted.trial import unittest
-from twisted.internet import defer, reactor
-from twisted.python import failure
 
 class Test(www.WwwTestMixin, unittest.TestCase):
     def test_render(self):
         master = self.make_master(url='h:/a/b/')
-        rsrc = ui.UIResource(master)
+        rsrc = ui.UIResource(master, extra_routes=[])
 
         d = self.render_resource(rsrc, [''])
         @d.addCallback
@@ -31,49 +28,7 @@ class Test(www.WwwTestMixin, unittest.TestCase):
             self.assertIn('base_url:"h:/a/b/"', rv)
         return d
 
-try:
-    from buildbot.test.util.txghost import Ghost
-    has_ghost= Ghost != None
-except ImportError:
-    # if $REQUIRE_GHOST is set, then fail if it's not found
-    if os.environ.get('REQUIRE_GHOST'):
-        raise
-    has_ghost=False
-
-class TestGhostPy(www.WwwTestMixin, unittest.TestCase):
-    if not has_ghost:
-        skip = "Need Ghost.py to run most of www_ui tests"
-
-    @defer.inlineCallbacks
-    def setUp(self):
-        # hack to prevent twisted.web.http to setup a 1 sec callback at init
-        import twisted
-        #twisted.internet.base.DelayedCall.debug = True
-        twisted.web.http._logDateTimeUsers = 1
-        # lets resolve the tested port unicity later...
-        port = 8010
-        self.url = 'http://localhost:'+str(port)+"/"
-        self.master = self.make_master(url=self.url, port=port)
-        self.svc = service.WWWService(self.master)
-        yield self.svc.startService()
-        yield self.svc.reconfigService(self.master.config)
-        self.ghost = Ghost()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        from  twisted.internet.tcp import Server
-        del self.ghost
-        yield self.svc.stopService()
-        # webkit has the bad habbit on not closing the persistent
-        # connections, so we need to hack them away to make trial happy
-        for reader in reactor.getReaders():
-            if isinstance(reader, Server):
-                f = failure.Failure(Exception("test end"))
-                reader.connectionLost(f)
-
-    @defer.inlineCallbacks
+class TestGhostPy(www.WwwTestMixin,www.WwwGhostTestMixin, unittest.TestCase):
     def test_home(self):
-        yield self.ghost.open(self.url)
-        yield self.ghost.wait_for_selector("ul.breadcrumb")
-        base_url, resources = self.ghost.evaluate("bb_router.base_url")
-        assert(base_url== self.url)
+        return self.doPageLoadTest("/",
+                                   ( "tests.assertEqual(bb_router.base_url, '%(url)s')"%self.__dict__,))
