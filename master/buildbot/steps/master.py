@@ -121,7 +121,10 @@ class MasterShellCommand(BuildStep):
             newenv = {}
             for key in env.keys():
                 if env[key] is not None:
-                    newenv[key] = p.sub(subst, env[key])
+                    if isinstance(env[key], basestring):
+                        newenv[key] = p.sub(subst, env[key])
+                    elif isinstance(env[key], (list, tuple)):
+                        newenv[key] = ":".join([p.sub(subst, k) for k in env[key]])
             env = newenv
         stdio_log.addHeader(" env: %r\n" % (env,))
 
