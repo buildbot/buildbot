@@ -387,7 +387,7 @@ class BuildRequestDistributor(service.Service):
             # start the activity loop, if we aren't already working on that.
             if not self.active:
                 self._activityLoop()
-        except:
+        except Exception:
             log.err(Failure(),
                     "while attempting to start builds on %s" % self.name)
 
@@ -443,7 +443,7 @@ class BuildRequestDistributor(service.Service):
         try:
             builders = yield defer.maybeDeferred(lambda :
                     sorter(self.master, builders))
-        except:
+        except Exception:
             log.msg("Exception prioritizing builders; order unspecified")
             log.err(Failure())
 
@@ -476,7 +476,7 @@ class BuildRequestDistributor(service.Service):
 
             try:
                 yield self._callABuilder(bldr_name)
-            except:
+            except Exception:
                 log.err(Failure(),
                         "from maybeStartBuild for builder '%s'" % (bldr_name,))
 
