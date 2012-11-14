@@ -832,7 +832,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         return defer.succeed(rv)
 
     @defer.inlineCallbacks
-    def getRecentBuildsets(self, count, branch=None, repository=None,
+    def getRecentBuildsets(self, count=None, branch=None, repository=None,
                                     complete=None):
         if not count:
             yield defer.returnValue([])

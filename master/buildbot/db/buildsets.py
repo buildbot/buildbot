@@ -138,7 +138,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             return [ self._row2dict(row) for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
-    def getRecentBuildsets(self, count, branch=None, repository=None,
+    def getRecentBuildsets(self, count=None, branch=None, repository=None,
                            complete=None):
         def thd(conn):
             bs_tbl = self.db.model.buildsets

@@ -358,10 +358,10 @@ buildsets
 
         Get a list of bsdicts matching the given criteria.
 
-    .. py:method:: getRecentBuildsets(count, branch=None, repository=None,
+    .. py:method:: getRecentBuildsets(count=None, branch=None, repository=None,
                            complete=None):
 
-        :param count: maximum number of buildsets to retrieve.
+        :param count: maximum number of buildsets to retrieve (required).
         :type branch: integer
         :param branch: optional branch name. If specified, only buildsets
             affecting such branch will be returned.

@@ -57,7 +57,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getRecentBuildsets(self):
         @self.assertArgSpecMatches(self.db.buildsets.getRecentBuildsets)
-        def getBuildsets(self, count, branch=None, repository=None,
+        def getBuildsets(self, count=None, branch=None, repository=None,
                 complete=None):
             pass
 
