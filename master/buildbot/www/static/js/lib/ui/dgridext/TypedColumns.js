@@ -25,8 +25,12 @@ function(declare, lang, array, moment){
 	},
 	_configColumn_date: function(column, columnId, rowColumns, prefix){
 	    column.formatter = function(s) {
-		var d = moment.unix(s);
-		return "<abbr title='"+ d.format('LLLL')+"'>"+d.fromNow()+"</abbr>" ;
+		if (s) {
+		    var d = moment.unix(s);
+		    return "<abbr title='"+ d.format('LLLL')+"'>"+d.fromNow()+"</abbr>" ;
+		}else {
+		    return "n/a";
+		}
 	    };
 	    if (column.style === undefined){
 		column.style="width:110px;";
