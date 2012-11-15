@@ -175,9 +175,9 @@ def updateJS(config, master_cfg=None):
         from upgrade_master import loadConfig # avoid recursive import
         master_cfg = loadConfig(config)
     if not master_cfg:
-        defer.returnValue(1)
-        return
-    www = master_cfg.www
+        www = {}
+    else:
+        www = master_cfg.www
     workdir = os.path.join(config['basedir'], "public_html", "static.new")
     olddir = os.path.join(config['basedir'], "public_html", "static.old")
     static = os.path.join(config['basedir'], "public_html", "static")
