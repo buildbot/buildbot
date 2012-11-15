@@ -331,6 +331,8 @@ class Mercurial(Source):
         command = ['update', '--clean']
         if self.revision:
             command += ['--rev', self.revision]
+        elif self.branchType == 'inrepo':
+            command += ['--rev', self.update_branch]
         d = self._dovccmd(command)
         return d
 
