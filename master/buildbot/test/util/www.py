@@ -119,8 +119,14 @@ if has_ghost:
         has_ghost=False
         no_ghost_message = ("Need PUBLIC_HTML_PATH environment variable which points on 'updatejs'"
                             " installed directory")
-        # if $REQUIRE_GHOST is set, then fail if it's not found
-        if os.environ.get('REQUIRE_GHOST'):
+    PUBLIC_HTML_PATH = os.path.abspath(PUBLIC_HTML_PATH)
+    if (not os.path.isdir(PUBLIC_HTML_PATH) or
+        not os.path.isfile(os.path.join(PUBLIC_HTML_PATH,"static","js.built","dojo","dojo.js"))):
+        has_ghost=False
+        no_ghost_message = ("Needs PUBLIC_HTML_PATH environment variable which points on 'updatejs'"
+                            " installed directory, but got" + PUBLIC_HTML_PATH)
+
+if not has_ghost and os.environ.get('REQUIRE_GHOST'):
             raise Exception(no_ghost_message)
 
 
