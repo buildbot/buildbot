@@ -73,7 +73,8 @@ class Tests(interfaces.InterfaceTests):
     def test_addBuilderMaster(self):
         yield self.insertTestData([
             fakedb.Builder(id=7),
-            fakedb.Master(id=9),
+            fakedb.Master(id=9, name='abc'),
+            fakedb.Master(id=10, name='def'),
             fakedb.BuilderMaster(builderid=7, masterid=10),
         ])
         yield self.db.builders.addBuilderMaster(builderid=7, masterid=9)
