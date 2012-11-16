@@ -52,7 +52,7 @@ It should be possible to list the master on which a scheduler is running at e.g.
 
 ### Builders ###
 
-
+* Add identifiers for builders (url-component safe strings), and allow use of those in place of integer IDs in data API paths.
 
 ### Buildrequests ###
 
