@@ -24,6 +24,10 @@ class Updates(object):
     # empty container object; see _scanModule, below
     pass
 
+class RTypes(object):
+    # empty container object; see _scanModule, below
+    pass
+
 
 class Root(base.Endpoint):
     pathPattern = ('',)
@@ -38,6 +42,7 @@ class DataConnector(service.Service):
         'buildbot.data.buildsets',
         'buildbot.data.changes',
         'buildbot.data.masters',
+        'buildbot.data.builders',
     ]
 
     def __init__(self, master):
@@ -53,6 +58,7 @@ class DataConnector(service.Service):
             obj = getattr(mod, sym)
             if inspect.isclass(obj) and issubclass(obj, base.ResourceType):
                 rtype = obj(self.master)
+                setattr(self.rtypes, rtype.type, rtype)
 
                 # put its update methonds into our 'updates' attribute
                 for name in dir(rtype):
@@ -77,6 +83,7 @@ class DataConnector(service.Service):
 
     def _setup(self):
         self.updates = Updates()
+        self.rtypes = RTypes()
         self.matcher[Root.pathPattern] = Root(self.master)
         for moduleName in self.submodules:
             module = reflect.namedModule(moduleName)

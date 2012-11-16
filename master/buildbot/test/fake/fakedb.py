@@ -367,6 +367,30 @@ class Master(Row):
     id_column = 'id'
     hash_pairs = [ ( 'name', 'name_hash' ) ]
 
+class Builder(Row):
+    table = "builders"
+
+    defaults = dict(
+        id = None,
+        name = 'some:builder',
+        name_hash = None,
+    )
+
+    id_column = 'id'
+    hash_pairs = [ ( 'name', 'name_hash' ) ]
+
+class BuilderMaster(Row):
+    table = "builder_masters"
+
+    defaults = dict(
+        id = None,
+        builderid = None,
+        masterid = None
+    )
+
+    id_column = 'id'
+    required_columns = ( 'builderid', 'masterid' )
+
 # Fake DB Components
 
 class FakeDBComponent(object):
@@ -1322,11 +1346,6 @@ class FakeMastersComponent(FakeDBComponent):
         else:
             return defer.succeed(False)
 
-    def markMasterInactive(self, masterid):
-        if masterid in self.masters:
-            self.masters[masterid]['active'] = False
-        return defer.succeed(None)
-
     def getMaster(self, masterid):
         if masterid in self.masters:
             return defer.succeed(self.masters[masterid])
@@ -1334,6 +1353,75 @@ class FakeMastersComponent(FakeDBComponent):
 
     def getMasters(self):
         return defer.succeed(self.masters.values())
+
+    # test helpers
+
+    def markMasterInactive(self, masterid):
+        if masterid in self.masters:
+            self.masters[masterid]['active'] = False
+        return defer.succeed(None)
+
+
+class FakeBuildersComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.builders = {}
+        self.builder_masters = {}
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, Builder):
+                self.builders[row.id] = dict(
+                        id=row.id,
+                        name=row.name)
+            if isinstance(row, BuilderMaster):
+                self.builder_masters[row.id] = \
+                        (row.builderid, row.masterid)
+
+    def findBuilderId(self, name, _reactor=reactor):
+        for m in self.builders.itervalues():
+            if m['name'] == name:
+                return defer.succeed(m['id'])
+        id = len(self.builders) + 1
+        self.builders[id] = dict(
+            id=id,
+            name=name)
+        return defer.succeed(id)
+
+    def addBuilderMaster(self, builderid=None, masterid=None):
+        self.insertTestData([
+            BuilderMaster(builderid=builderid, masterid=masterid),
+        ])
+        return defer.succeed(None)
+
+    def removeBuilderMaster(self, builderid=None, masterid=None):
+        for id, tup in self.builder_masters.iteritems():
+            if tup == (builderid, masterid):
+                del self.builder_masters[id]
+                break
+        return defer.succeed(None)
+
+    def getBuilder(self, builderid):
+        if builderid in self.builders:
+            masterids = [ bm[1] for bm in self.builder_masters.itervalues()
+                        if bm[0] == builderid ]
+            bldr = self.builders[builderid].copy()
+            bldr['masterids'] = sorted(masterids)
+            return defer.succeed(bldr)
+        return defer.succeed(None)
+
+    def getBuilders(self, masterid=None):
+        rv = []
+        for builderid, bldr in self.builders.iteritems():
+            masterids = [ bm[1] for bm in self.builder_masters.itervalues()
+                        if bm[0] == builderid ]
+            bldr = bldr.copy()
+            bldr['masterids'] = sorted(masterids)
+            rv.append(bldr)
+        if masterid is not None:
+            rv = [ bd for bd in rv
+                   if masterid in bd['masterids'] ]
+        return defer.succeed(rv)
 
 
 class FakeDBConnector(object):
@@ -1370,6 +1458,8 @@ class FakeDBConnector(object):
         self.users = comp = FakeUsersComponent(self, testcase)
         self._components.append(comp)
         self.masters = comp = FakeMastersComponent(self, testcase)
+        self._components.append(comp)
+        self.builders = comp = FakeBuildersComponent(self, testcase)
         self._components.append(comp)
 
     def setup(self):

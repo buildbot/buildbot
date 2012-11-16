@@ -71,6 +71,11 @@ class Tests(interfaces.InterfaceTests):
         def maybeBuildsetComplete(self, bsid):
             pass
 
+    def test_signature_updates_updateBuilderList(self):
+        @self.assertArgSpecMatches(self.data.updates.updateBuilderList)
+        def updateBuilderList(self, masterid, builderNames):
+            pass
+
 
 class TestFakeData(unittest.TestCase, Tests):
 
@@ -136,6 +141,9 @@ class DataConnector(unittest.TestCase):
         self.assertEqual(self.data.rootLinks.items(),
                 [ ('tests', base.Link(('test',))) ])
 
+        # and that it added an attribute
+        self.assertIsInstance(self.data.rtypes.test, TestResourceType)
+
     def test_lookup(self):
         ep = self.patchFooPattern()
         self.assertEqual(self.data._lookup(('foo', '1', 'bar')),
@@ -193,7 +201,6 @@ class TestEndpoint(base.Endpoint):
     pathPatterns = [ ('test', 'i:testid', 'p1'), ('test', 'i:testid', 'p2') ]
 
 class TestResourceType(base.ResourceType):
-    name = 'tests'
     type = 'test'
     endpoints = [ TestsEndpoint, TestEndpoint, TestsEndpointSubclass ]
     keyFields = ( 'testid', )

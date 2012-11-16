@@ -47,6 +47,9 @@ class MQConnector(config.ReconfigurableServiceMixin, service.MultiService):
         # set up the impl as a child service
         self.impl.setServiceParent(self)
 
+        # configure it (early)
+        self.impl.reconfigService(self.master.config)
+
         # copy the methods onto this object for ease of access
         self.produce = self.impl.produce
         self.startConsuming = self.impl.startConsuming
