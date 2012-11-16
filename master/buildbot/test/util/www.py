@@ -199,3 +199,16 @@ class WwwGhostTestMixin(object):
         for js in js_assertions:
             result, _ = self.ghost.evaluate(doh_boilerplate%dict(js=js))
             self.assertEqual(result, "OK")
+
+    @defer.inlineCallbacks
+    def doDohPageLoadRunnerTests(self, doh_tests="dojo/tests/colors"):
+        self.ghost.wait_timeout = 200
+        yield self.ghost.open(urljoin(self.url,"static/js.built/lib/tests/runner.html"))
+        result_selector = "#testListContainer table tfoot tr.inProgress"
+        self.ghost.inject_script("require(['dojo', 'doh', 'dojo/window'], function(dojo,doh){ require(['"+doh_tests+"'], function(){doh.run()})});")
+        result_selector = "#testListContainer table tfoot tr.inProgress"
+        yield self.ghost.wait_for_selector(result_selector)
+        result, _ = self.ghost.evaluate("dojo.map(dojo.query('"+result_selector+" .failure'),function(a){return a.textContent;});")
+        self.assertEqual(result, ['0','0'])
+        result, _ = self.ghost.evaluate("dojo.map(dojo.query('"+result_selector+" td'),function(a){return a.textContent;});")
+        print "\n",str(result[1]).strip(),
