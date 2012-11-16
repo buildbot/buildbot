@@ -50,6 +50,16 @@ When a master becomes inactive (either on its own, or having failed its heartbea
 
 It should be possible to list the master on which a scheduler is running at e.g., `/scheduler/:schedulerid/master`
 
+### Builders ###
+
+
+
+### Buildrequests ###
+
+Buildrequests include a `builderid` field which will need to be determined from the builders table.
+It should probably be an error to schedule a build on a builder that does not exist, as that build will not be executed.
+It's OK to schedule a build on a builder that's not implemented by a running master, though.
+
 ## Other Resource-Type Related Tasks ##
 
 * ``addBuildset`` currently sends messages about buildrequests directly.
@@ -95,7 +105,6 @@ So, they're listed here.
 Don't include the schema changes needed to implement the status stuff here; those will come when we implement the status stuff.
 
 * Remove ``is_dir`` from the changes table (and ignore/remove it everywhere else)
-* Add a ``builders`` table with provisions to indicate which masters are running which builders
 * Add a ``changesources`` table, similar to schedulers
 
 For each of the config-objects tables (masters, builders, schedulesr, changesources):

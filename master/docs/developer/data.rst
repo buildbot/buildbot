@@ -107,6 +107,13 @@ Within the buildmaster process, the root of the data API is available at `self.m
         Depending on the path, it will return a single resource or a list of resources.
         If a single resource is not specified, it returns ``None``.
 
+    .. py:attribute:: rtypes
+
+        This object has an attribute named for each resource type, named after the singular form (e.g., `self.master.data.builder`).
+        These attributes allow resource types to access one another for purposes of coordination.
+        They are *not* intended for external access -- all external access to the data API should be via the methods above or update methods.
+
+
 Updates
 .......
 
@@ -173,6 +180,7 @@ All update methods return a Deferred.
 
         Mark this master as inactive.
         Masters should call this method before completing an expected shutdown.
+        This method will take care of deactivating or removing configuration resources like builders and schedulers as well.
 
 .. py:class:: buildbot.data.changes.BuildsetResourceType
 
@@ -204,6 +212,17 @@ All update methods return a Deferred.
         This method should be called when a build request is finished.
         It checks the given buildset to see if all of its buildrequests are finished.
         If so, it updates the status of the buildset and send the appropriate messages.
+
+.. py:class:: buildbot.data.changes.BuilderResourceType
+
+    .. py:method:: updateBuilderList(masterid, builderNames)
+
+        :param integer masterid: this master's master ID
+        :param list builderNames: list of names of currently-configured builders (unicode strings)
+        :returns: Deferred
+
+        Record the given builders as the currently-configured set of builders on this master.
+        Masters should call this every time the list of configured builders changes.
 
 Links
 .....
@@ -489,5 +508,6 @@ All strings in the data model are unicode strings.
     rtype-buildset
     rtype-change
     rtype-master
+    rtype-builder
 
 .. [#apiv1] The JSON API defined by ``status_json.py`` in Buildbot-0.8.x is considered version 1, although its root path was ``json``, not ``api/v1``.
