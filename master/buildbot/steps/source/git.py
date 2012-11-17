@@ -181,7 +181,7 @@ class Git(Source):
         # if revision exists checkout to that revision
         # else fetch and update
         if rc == 0:
-            yield self._dovccmd(['reset', '--hard', self.revision])
+            yield self._dovccmd(['reset', '--hard', self.revision, '--'])
 
             if self.branch != 'HEAD':
                 yield self._dovccmd(['branch', '-M', self.branch],
@@ -326,7 +326,7 @@ class Git(Source):
                 rev = self.revision
             else:
                 rev = 'FETCH_HEAD'
-            command = ['reset', '--hard', rev]
+            command = ['reset', '--hard', rev, '--']
             abandonOnFailure = not self.retryFetch and not self.clobberOnFailure
             return self._dovccmd(command, abandonOnFailure)
         d.addCallback(checkout)
@@ -379,7 +379,7 @@ class Git(Source):
         # If revision specified checkout that revision
         if self.revision:
             d.addCallback(lambda _: self._dovccmd(['reset', '--hard',
-                                                   self.revision],
+                                                   self.revision, '--'],
                                                   not self.clobberOnFailure))
         # init and update submodules, recurisively. If there's not recursion
         # it will not do it.

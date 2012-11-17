@@ -47,7 +47,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -84,7 +84,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         timeout=1,
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         timeout=1,
@@ -118,7 +118,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'apply', '--index', '-p', '1'],
@@ -155,7 +155,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'apply', '--index', '-p', '1'],
@@ -186,7 +186,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'test-branch'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'branch', '-M', 'test-branch'])
@@ -221,7 +221,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + ExpectShell.log('stdio',
                 stderr="fatal: Could not parse object " 
                     "'b08076bc71c7813038f2cefedff9c5b678d225a8'.\n")
@@ -354,7 +354,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -384,7 +384,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'test-branch'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'branch', '-M', 'test-branch'])
@@ -420,7 +420,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -449,7 +449,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['git', 'cat-file', '-e', 'abcdef01'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'abcdef01'])
+                        command=['git', 'reset', '--hard', 'abcdef01', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -481,7 +481,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'submodule', 'update', '--recursive'])
@@ -545,7 +545,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -553,7 +553,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -583,7 +583,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'test-branch'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -591,7 +591,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'test-branch'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'branch', '-M', 'test-branch'])
@@ -624,7 +624,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
                                        logEnviron=True))
@@ -662,7 +662,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'test-branch'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True))
@@ -703,7 +703,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'HEAD'])
             + 0,
             ExpectShell(workdir='source',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
                              'logEnviron': True})
@@ -764,7 +764,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '.', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'abcdef01'])
+                        command=['git', 'reset', '--hard', 'abcdef01', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -795,7 +795,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '.', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'abcdef01'])
+                        command=['git', 'reset', '--hard', 'abcdef01', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -860,7 +860,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '.', '--progress'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'abcdef01'])
+                        command=['git', 'reset', '--hard', 'abcdef01', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -926,7 +926,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -961,7 +961,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                         env={'abc': '123'})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'],
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'],
                         env={'abc': '123'})
             + 0,
             ExpectShell(workdir='wkdir',
@@ -998,7 +998,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                         logEnviron=False)
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'],
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'],
                         logEnviron=False)
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1034,7 +1034,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -1079,7 +1079,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'HEAD'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'reset', '--hard', 'FETCH_HEAD'])
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])

@@ -92,25 +92,25 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
     def test_get_commit_author(self):
         authorStr = 'Sammy Jankis <email@example.com>'
         return self._perform_git_output_test(self.poller._get_commit_author,
-                ['log', self.dummyRevStr, '--no-walk', '--format=%aN <%aE>'],
+                ['log', '--no-walk', '--format=%aN <%aE>', self.dummyRevStr, '--'],
                 authorStr, authorStr)
         
     def test_get_commit_comments(self):
         commentStr = 'this is a commit message\n\nthat is multiline'
         return self._perform_git_output_test(self.poller._get_commit_comments,
-                ['log', self.dummyRevStr, '--no-walk', '--format=%s%n%b'],
+                ['log', '--no-walk', '--format=%s%n%b', self.dummyRevStr, '--'],
                 commentStr, commentStr)
         
     def test_get_commit_files(self):
         filesStr = 'file1\nfile2'
         return self._perform_git_output_test(self.poller._get_commit_files,
-                ['log', self.dummyRevStr, '--name-only', '--no-walk', '--format=%n'],
+                ['log', '--name-only', '--no-walk', '--format=%n', self.dummyRevStr, '--'],
                 filesStr, filesStr.split(), emptyRaisesException=False)
         
     def test_get_commit_timestamp(self):
         stampStr = '1273258009'
         return self._perform_git_output_test(self.poller._get_commit_timestamp,
-                ['log', self.dummyRevStr, '--no-walk', '--format=%ct'],
+                ['log', '--no-walk', '--format=%ct', self.dummyRevStr, '--'],
                 stampStr, float(stampStr))
 
     # _get_changes is tested in TestGitPoller, below
@@ -217,8 +217,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     .path('gitpoller-work')
                     .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
                 gpo.Expect('git', 'log',
+                    '--format=%H',
                     'fa3ae8ed68e664d4db24798611b352e3c6509930..4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                    '--format=%H')
+                    '--')
                     .path('gitpoller-work')
                     .exit(1),
                 )
@@ -255,8 +256,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     .path('gitpoller-work')
                     .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
                 gpo.Expect('git', 'log',
+                    '--format=%H',
                     '4423cdbcbb89c14e50dd5f4152415afd686c5241..4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                    '--format=%H')
+                    '--')
                     .path('gitpoller-work')
                     .stdout(''),
                 )
@@ -318,8 +320,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     .path('gitpoller-work')
                     .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
                 gpo.Expect('git', 'log',
+                    '--format=%H',
                     'fa3ae8ed68e664d4db24798611b352e3c6509930..4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                    '--format=%H')
+                    '--')
                     .path('gitpoller-work')
                     .stdout('\n'.join([
                         '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
@@ -329,8 +332,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     .path('gitpoller-work')
                     .stdout('9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
                 gpo.Expect('git', 'log',
+                    '--format=%H',
                     'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5..9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
-                    '--format=%H')
+                    '--')
                     .path('gitpoller-work')
                     .stdout( '\n'.join([
                         '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
@@ -412,8 +416,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     .path('gitpoller-work')
                     .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
                 gpo.Expect('git', 'log',
+                    '--format=%H',
                     '4423cdbcbb89c14e50dd5f4152415afd686c5241..4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                    '--format=%H')
+                    '--')
                     .path('gitpoller-work')
                     .stdout(''),
                 )
@@ -449,8 +454,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     .path('gitpoller-work')
                     .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
                 gpo.Expect('git', 'log',
+                    '--format=%H',
                     'fa3ae8ed68e664d4db24798611b352e3c6509930..4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                    '--format=%H')
+                    '--')
                     .path('gitpoller-work')
                     .stdout('\n'.join([
                         '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',

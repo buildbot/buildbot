@@ -122,7 +122,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         yield self.setState('lastRev', self.lastRev)
 
     def _get_commit_comments(self, rev):
-        args = [rev, '--no-walk', r'--format=%s%n%b']
+        args = ['--no-walk', r'--format=%s%n%b', rev, '--']
         d = self._dovccmd('log',  args, path=self.workdir)
         def process(git_output):
             git_output = git_output.decode(self.encoding)
@@ -134,7 +134,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
     def _get_commit_timestamp(self, rev):
         # unix timestamp
-        args = [rev, '--no-walk', r'--format=%ct']
+        args = ['--no-walk', r'--format=%ct', rev, '--']
         d = self._dovccmd('log', args, path=self.workdir)
         def process(git_output):
             if self.usetimestamps:
@@ -150,7 +150,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         return d
 
     def _get_commit_files(self, rev):
-        args = [rev, '--name-only', '--no-walk', r'--format=%n']
+        args = ['--name-only', '--no-walk', r'--format=%n', rev, '--']
         d = self._dovccmd('log', args, path=self.workdir)
         def process(git_output):
             fileList = git_output.split()
@@ -159,7 +159,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         return d
             
     def _get_commit_author(self, rev):
-        args = [rev, '--no-walk', r'--format=%aN <%aE>']
+        args = ['--no-walk', r'--format=%aN <%aE>', rev, '--']
         d = self._dovccmd('log', args, path=self.workdir)
         def process(git_output):
             git_output = git_output.decode(self.encoding)
@@ -185,7 +185,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             return
 
         # get the change list
-        revListArgs = ['%s..%s' % (lastRev, newRev), r'--format=%H']
+        revListArgs = [r'--format=%H', '%s..%s' % (lastRev, newRev), '--']
         self.changeCount = 0
         results = yield self._dovccmd('log', revListArgs, path=self.workdir)
 

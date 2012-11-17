@@ -20,6 +20,10 @@ In addition to what's listed below, the 0.8.7p1 release adds the following.
 * The master-side ``Git`` source step now doesn't try to clone a branch called ``HEAD``.
   This is what ``git`` does by default, and specifying it explicitly doesn't work as expected.
 
+* The ``Git`` step properly deals with the case when ther is a file called ``FETCH_HEAD``
+  in the checkout.
+
+
 Master
 ------
 
