@@ -336,10 +336,8 @@ The Git step takes the following arguments:
    (required): the URL of the upstream Git repository.
 
 ``branch``
-   (optional): this specifies the name of the branch to use when a
-   Build does not provide one of its own. If this this parameter is
-   not specified, and the Build does not provide a branch, the
-   ``master`` branch will be used.
+   (optional): this specifies the name of the branch to use when a Build does not provide one of its own.
+   If this this parameter is not specified, and the Build does not provide a branch, the default branch of the remote repository will be used.
 
 ``submodules``
    (optional): when initializing/updating a Git repository, this
