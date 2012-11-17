@@ -73,6 +73,7 @@ Other optional keys may be set on each ``BuilderConfig``:
     objects. The function should return one of the :class:`BuildSlave`
     objects, or ``None`` if none of the available slaves should be
     used.
+    The function can optionally return a Deferred, which should fire with the same results.
 
 ``nextBuild``
     If provided, this is a function that controls which build request will be
