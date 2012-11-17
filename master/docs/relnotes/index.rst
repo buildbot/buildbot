@@ -19,6 +19,8 @@ Features
 
 * :bb:step:`CopyDirectory` has been added.
 
+* The ``nextSlave`` builder configuration argument can return a Deferred.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
