@@ -72,7 +72,8 @@ class DataConnector(service.Service):
                     clsdict = ep.__class__.__dict__
                     pathPattern = clsdict.get('pathPattern')
                     pathPatterns = clsdict.get('pathPatterns', [])
-                    patterns = [ pathPattern ] + pathPatterns
+                    patterns = [ pathPattern ] if pathPattern else []
+                    patterns.extend(pathPatterns)
                     rootLinkName = clsdict.get('rootLinkName')
                     for pp in patterns:
                         if pp is not None:

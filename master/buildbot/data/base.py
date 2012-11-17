@@ -61,6 +61,7 @@ class Link(object):
     __slots__ = [ 'path' ]
 
     def __init__(self, path):
+        assert isinstance(path, tuple)
         self.path = path
 
     def __repr__(self):
