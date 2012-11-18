@@ -15,7 +15,7 @@
 
 define(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_WidgetsInTemplateMixin",
 	"dojo/_base/Deferred", "dojo/_base/xhr",
-	"lib/haml!./templates/error.haml"],
+	"./templates/error.haml"],
        function(declare, _Widget, _TemplatedMixin, _WidgetsInTemplateMixin, Deferred, xhr, template) {
 	   return declare([_Widget, _TemplatedMixin, _WidgetsInTemplateMixin], {
 	       templateFunc: template,
@@ -56,14 +56,19 @@ define(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_
 		   this.error_msg = text;
 		   this.templateFunc = template; /* restore the error template that was overiden by childrens*/
 	       },
-	       getApiV1: function() {
-		   var a = arguments;
+	       createAPIPath: function(a) {
 		   var path=[];
-		   for (var i = 0;i<arguments.length; i+=1) {
-		       path.push(arguments[i]);
+		   for (var i = 0;i<a.length; i+=1) {
+		       path.push(a[i]);
 		   }
 		   path = path.join("/");
-		   return xhr.get({handleAs:"json",url:"/api/v1/"+path});
+		   return path;
+	       },
+	       getApiV1: function() {
+		   return xhr.get({handleAs:"json",url:window.bb.base_url+"api/v1/"+this.createAPIPath(arguments)});
+	       },
+	       getApiV2: function() {
+		   return xhr.get({handleAs:"json",url:window.bb.base_url+"api/v2/"+this.createAPIPath(arguments)});
 	       },
 	       postCreate: function(){
 		   if (this.templateString===template) {
@@ -73,6 +78,42 @@ define(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_
 	       btn_class: function(results) {
 		   /* return css class given results */
 		   return ["btn-success", "btn-warnings", "btn-danger", "btn", "btn-inverse", "btn-info"][results];
+	       },
+	       createGrid: function(options, node) {
+		   var self = this;
+		   require ([
+		       "dojo/store/Observable", "dojo/store/Memory"],
+			    function(observable, Memory) {
+				/* TODO: should return an observable store API result, that uses the ws api
+				   Now, we simply turn the result in Memory store.
+				*/
+				self.getApiV2(options.apiPath).then(function(results) {
+				    var store = observable(new Memory({data:results,idProperty: options.idProperty}));
+				    options.store = store;
+				    self.createBaseGrid(options, node);
+				});
+			    });
+	       },
+	       createBaseGrid: function(options, node) {
+		   /* options: same options as dgrid +
+		      - apiPath: path to list style buildbot api, where to get the data
+		      - idProperty: property that will serve as identifier for queries
+		   */
+		   var self = this;
+		   /* helper for creating a grid with good defaults */
+		   require ([
+		       "dgrid/OnDemandGrid",
+		       "dgrid/extensions/ColumnResizer","dgrid/extensions/DijitRegistry",
+		       "dgrid/Selection", "dgrid/Keyboard","dgrid/extensions/ColumnHider",
+		       "lib/ui/dgridext/AutoHeight","lib/ui/dgridext/StyledColumns",
+		       "lib/ui/dgridext/TypedColumns",
+		       "dojo/_base/array"
+		       ], function(Grid, ColumnResizer,DijitRegistry, Selection, Keyboard, ColumnHider, AutoHeight, StyledColumns, TypedColumns, array) {
+			       var grid = new (declare([Grid,ColumnResizer,DijitRegistry,Selection, Keyboard, ColumnHider,
+							AutoHeight, StyledColumns,TypedColumns]))(options,
+												  node);
+			       grid.refresh();
+			   });
 	       }
 	   });
        });

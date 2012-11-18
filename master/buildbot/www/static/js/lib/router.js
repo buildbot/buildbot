@@ -13,8 +13,8 @@
 //
 // Copyright Buildbot Team Members
 
-define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom", "put-selector/put","dojo/hash", "dojo/io-query", "dojo/dom-class"],
-       function(declare, connect, array, dom, put, hash, ioquery, domclass) {
+define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom", "put-selector/put","dojo/hash", "dojo/io-query", "dojo/dom-class", "dojo/window"],
+       function(declare, connect, array, dom, put, hash, ioquery, domclass, win) {
     "use strict";
     /* allow chrome to display correctly generic errbacks from dojo */
     console.error = function(err) {
@@ -113,22 +113,21 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 		    /* make sure we give user feedback in case of malformated args */
 		    hash("/"+path+reformated_args);
 		    require(["dijit/dijit", widget], function(dijit, Widget) {
-			var old = dijit.byId("content");
-			if (old) {
-			    old.destroy();
-			    dijit.registry.remove("content");
-			}
-			var w = new Widget({id:"content",path_components:match, url_args:args});
-			var content = dojo.byId("content");
-			content.innerHTML = "";
+			var w = new Widget({path_components:match, url_args:args});
 			var loading = dojo.byId("loading");
 			loading.style.display = "block";
-			content.innerHTML = "";
-
+			loading.style.left = (((win.getBox().w+loading.offsetWidth)/2))+"px";
 			dojo.when(w.readyDeferred, function() {
-			    loading.style.display = "none";
+			    var old = window.bb.curWidget;
+                            if (old) {
+				old.destroy();
+				dijit.registry.remove(old.id);
+                            }
+			    var content = dojo.byId("content");
 			    content.innerHTML = "";
+			    loading.style.display = "none";
 			    w.placeAt(content);
+			    window.bb.curWidget = w;
 			});
 		    });
 		    if (nav) {
@@ -163,8 +162,9 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 		return _default;
 	    }
 	    var json = localStorage.getItem(key);
-	    if (json === null)
+	    if (json === null){
 		return _default;
+	    }
 	    return dojo.fromJson(json);
 	},
 	addHistory: function(history_type, title) {
@@ -180,7 +180,7 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 	    if (recent_stuff.length >= 5) {
 		recent_stuff.pop();
 	    }
-	    recent_stuff.unshift({url:"#"+hash(), title:title})
+	    recent_stuff.unshift({url:"#"+hash(), title:title});
 	    this.localStore(history_type, recent_stuff);
 	},
 	reload: function(){

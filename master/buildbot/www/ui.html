@@ -90,17 +90,15 @@
       The router global object will take care of dynamically load the correct content widgets
       and fill out the navbar
     -->
-    <script src="%(static_url)s/js/external/dojo/dojo.js" data-dojo-config="async: true"></script>
+    <script src="%(static_url)s/js.built/dojo/dojo.js" data-dojo-config="async: true"></script>
     <script>
-      console.log("hello")
       require({
-      packages: [{name: "lib", location: "%(static_url)s/js/lib"}]
       }, ["lib/router" ], function(router) {
-      console.log("world")
       bb_router = router( {
           ws_url: "%(ws_url)s",
           static_url:"%(static_url)s",
-          base_url:"%(base_url)s"}
+          base_url:"%(base_url)s",
+          extra_routes:"%(extra_routes)s"}
       );
       });
     </script>

@@ -56,11 +56,10 @@ body, html {
 height:100%
 }
 #loading{
-height:80%;
+position:fixed;
+top:100px;
 }
 #loading_anim{
-top:40%;
-left:50%;
 position:relative;
 width:62px;
 height:77px}
@@ -234,3 +233,4 @@ background-color:#000000}
 background-color:#FFFFFF}
 
 }
+

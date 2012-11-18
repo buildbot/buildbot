@@ -545,10 +545,14 @@ class MasterConfig(object):
 
         if not self.www['url'].endswith('/'):
             self.www['url'] += '/'
-
+        if "extra_js" in self.www and not type(self.www['extra_js'])==list:
+            raise TypeError("BuildmasterConfig['www']['extra_js'] param must be a list of path")
         public_html = self.www.get('public_html')
-        if public_html and not os.path.isdir(public_html):
-            errors.addError("public_html directory '%s' does not exist" %
+        if not public_html:
+            public_html = self.www["public_html"] = os.path.join(os.path.dirname(filename),
+                                                                 "public_html")
+        if not os.path.isdir(public_html):
+            errors.addError("www needs an existing public_html directory config, instead of %s" %
                     (public_html,))
 
 

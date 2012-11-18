@@ -666,11 +666,21 @@ following keys:
     This is probably not what you want!
 
 ``public_html``
-    An optional root directory for files that will be served by the web server.
+    The root directory for files that will be served by the web server.
     Note that the ``public_html`` directory will only be searched for URLs that
     do not match Buildbot's built-in resources -- in particular, the
-    ``static/``, ``ui/``, and ``api/`` paths are reserved, although more
+    ``ui/``, ``ws``, and ``api/`` paths are reserved, although more
     reserved paths may be added in future versions.
+    Please note that ``static/`` directory within ``public_html`` is used to contain
+    static files of the web ui, including JS. The JS part will be synchronized at each
+    buildbot upgrade-master. Thus this needs to be writeable at upgrade-master time.
+    There is also a developer mode that setups symlinks to the source code instead of copying the files.
+
+``extra_js``
+    List of extra JS AMD style packages to include in the static/js directory.
+    Each AMD packages is searched for a routes.js file containing additionnal routes, for
+    adding extra features to the UI.
+    See developer documentation for more info.
 
 ``static_url``
     If present, this key gives the URL corresponding to :bb:src:`master/buildbot/www/static`.
