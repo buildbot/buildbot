@@ -132,7 +132,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
                                    " or None")
 
 class UpdateJSOptions(base.BasedirMixin, base.SubcommandOptions):
-    subcommandFunction = "buildbot.scripts.update_js.updateJSFunc"
+    subcommandFunction = "buildbot.scripts.update_js.updateJS"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
         ["develop", "d", "link to buildbot dir rather than copy, and dont perform javascript optimization (only work on unix)"],
