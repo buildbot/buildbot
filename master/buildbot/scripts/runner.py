@@ -34,7 +34,8 @@ class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.upgrade_master.upgradeMaster"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
-        ["develop", "d", "link to buildbot dir rather than copy, and dont perform javascript optimization (only work on unix)"],
+        ["develop", "d", "link to buildbot dir rather than copy, with no "
+                         "JS optimization (UNIX only)"],
         ["replace", "r", "Replace any modified files without confirmation."],
         ]
     optParameters = [
@@ -77,7 +78,8 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
          "Re-use an existing directory (will not overwrite master.cfg file)"],
         ["relocatable", "r",
          "Create a relocatable buildbot.tac"],
-        ["develop", "d", "link to buildbot dir rather than copy, and dont perform javascript optimization (only work on unix)"],
+        ["develop", "d", "link to buildbot dir rather than copy, with no "
+                         "JS optimization (UNIX only)"],
         ["no-logrotate", "n",
          "Do not permit buildmaster rotate logs by itself"]
         ]
@@ -135,7 +137,8 @@ class UpdateJSOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.update_js.updateJS"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
-        ["develop", "d", "link to buildbot dir rather than copy, and dont perform javascript optimization (only work on unix)"],
+        ["develop", "d", "link to buildbot dir rather than copy, with no "
+                         "JS optimization (UNIX only)"],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot update_js [<basedir>]"
