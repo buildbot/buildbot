@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!-- html Code derived from doh's runner.html, included in buildbot has a way to circuvent integration issues with ghost
+The original code is under 3 clauses BSD which is compatible with GPLv2 of buildbot.
+-->
+<html style="height:100%;">
+  <head>
+    <title>The buildbot Unit Test Harness</title>
+
+    <script type="text/javascript" src="../../dojo/dojo.js" data-dojo-config="async: true,useCustomLogger:true"></script>
+  </head>
+  <table id="testLayout" cellpadding="0" cellspacing="0" style="margin: 0;">
+    <tr valign="top" height="10">
+      <td colspan="2"><div id="progressOuter"></div></td>
+    </tr>
+    <tr valign="top" style="border: 0; padding: 0; margin: 0;">
+      <td style="border: 0; padding: 0; margin: 0; height:100%;">
+	<div id="testListContainer">
+	  <table cellpadding="0" cellspacing="0" border="0"
+		 width="100%" id="testList" style="margin: 0;">
+	    <thead>
+	      <tr id="testListHeader" style="border: 0; padding: 0; margin: 0;" >
+		<th> </th>
+		<th width="20">
+		  <input type="checkbox" checked="1"
+			 onclick="doh.toggleRunAll();"/>
+		</th>
+		<th width="*" style="text-align: left;">test</th>
+		<th width="50">time</th>
+	      </tr>
+	    </thead>
+	    <tbody valign="top">
+	      <tr id="groupTemplate" style="display: none;">
+		<td style="font-family: Arial; width: 15px;">&#9658;</td>
+		<td>
+		  <input type="checkbox" checked="1"/>
+		</td>
+		<td>group name</td>
+		<td>10ms</td>
+	      </tr>
+	      <tr id="testTemplate" style="display: none;">
+		<td> </td>
+		<td> </td>
+		<td style="padding-left: 20px;">test name</td>
+		<td>10ms</td>
+	      </tr>
+	    </tbody>
+	  </table>
+	</div>
+      </td>
+      <td style="height: 100%;">
+	<div class="tabBody"
+	     style="z-index: 1;">
+	  <pre id="logBody"></pre>
+	  <div id="perfTestsBody" style="background-color: white;"></div>
+	</div>
+      </td>
+    </tr>
+  </table>
+  <body style="height: 100%;">
+  </body>
+</html>
+

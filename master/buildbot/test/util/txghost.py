@@ -329,7 +329,16 @@ class Ghost(object):
         """
         return (self.main_frame.evaluateJavaScript("%s" % script),
             self._release_last_resources())
-
+    def inject_script(self, script):
+        self.evaluate(
+        """(function(){e = document.createElement("script");
+        e.type = "text/javascript";
+        e.textContent = JSON.parse("%s")
+        e.charset = "utf-8";
+        document.getElementsByTagName("head")[0].appendChild(e);
+        })()
+        """%(json.dumps(script).replace('"','\\"'))
+        )
     def evaluate_js_file(self, path, encoding='utf-8'):
         """Evaluates javascript file at given path in current frame.
         Raises native IOException in case of invalid file.

@@ -32,3 +32,6 @@ class TestGhostPy(www.WwwTestMixin,www.WwwGhostTestMixin, unittest.TestCase):
     def test_home(self):
         return self.doPageLoadTest("/",
                                    ( "tests.assertEqual(bb_router.base_url, '%(url)s')"%self.__dict__,))
+    def test_doh_dojo_tests_colors(self):
+        """simple test to make sure our doh tester work. tests an already working dojo unit test"""
+        return self.doDohPageLoadRunnerTests()
