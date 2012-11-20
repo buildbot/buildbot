@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-import os, sys, time
+import os, sys
 from buildbot.scripts import base
 from twisted.internet import reactor, protocol
 from twisted.python.runtime import platformType
