@@ -25,7 +25,7 @@ from buildbot.db import connector, model
 from buildbot.test.util import dirs, misc, compat
 
 def mkconfig(**kwargs):
-    config = dict(quiet=False, replace=False, basedir='test')
+    config = dict(quiet=False, replace=False, basedir='test', skip_updatejs=True)
     config.update(kwargs)
     return config
 

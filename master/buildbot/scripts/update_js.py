@@ -147,10 +147,7 @@ def minifyJS(config, www, workdir):
     # Perhaps its even only needed for large scale buildbot where we can require installation of
     # node and java in the master, and where people dont care about sdists.
     if skip_minify:
-        dest = os.path.join(workdir, "js.built")
-        if not os.path.isdir(dest):
-            print "js.built does not exist; cannot proceed"
-            return False
+        # link js to js.built, so that the non minified code is used
         os.symlink("js", os.path.join(workdir, "js.built"))
         return True
 
@@ -176,6 +173,8 @@ def minifyJS(config, www, workdir):
     return True
 
 def updateJS(config, master_cfg=None):
+    if 'skip_updatejs' in config:
+        return 0
     if not master_cfg:
         from upgrade_master import loadConfig # avoid recursive import
         master_cfg = loadConfig(config)

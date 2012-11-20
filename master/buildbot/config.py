@@ -552,7 +552,7 @@ class MasterConfig(object):
             public_html = self.www["public_html"] = os.path.join(os.path.dirname(filename),
                                                                  "public_html")
         if not os.path.isdir(public_html):
-            msg = "www['public_html'] must be an existing, writable " \
+            msg = "www['public_html'] must be an existing " \
                   "directory; got '%s'" % (public_html,)
             errors.addError(msg)
 

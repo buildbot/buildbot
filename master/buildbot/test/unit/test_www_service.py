@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import mock
+import os
 from buildbot.www import service, ui, rest
 from twisted.trial import unittest
 from twisted.web import static
@@ -27,7 +28,8 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         self.svc = service.WWWService(self.master)
 
     def makeConfig(self, **kwargs):
-        w = dict(url='h:/', port=None)
+        pwd = os.getcwd()
+        w = dict(url='h:/', port=None, public_html=pwd)
         w.update(kwargs)
         new_config = mock.Mock()
         new_config.www = w
@@ -92,8 +94,6 @@ class Test(www.WwwTestMixin, unittest.TestCase):
                 ui.UIResource)
         self.assertIsInstance(root.getChildWithDefault('api', req),
                 rest.RestRootResource)
-        self.assertIsInstance(root.getChildWithDefault('static', req),
-                static.File)
 
         # ..and that the / URI redirects properly
         req = self.make_request([''])

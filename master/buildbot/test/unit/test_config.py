@@ -715,16 +715,18 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                             public_html=None))
 
     def test_load_www_port(self):
+        pwd = os.getcwd()
         self.cfg.load_www(self.filename,
-                dict(www=dict(port=9888)), self.errors)
+                dict(www=dict(port=9888, public_html=pwd)), self.errors)
         self.assertResults(www=dict(port=9888, url='http://localhost:9888/',
-                            public_html=None))
+                            public_html=pwd))
 
     def test_load_www_url_no_slash(self):
+        pwd = os.getcwd()
         self.cfg.load_www(self.filename,
-                dict(www=dict(url='http://foo', port=20)), self.errors)
+                dict(www=dict(url='http://foo', port=20, public_html=pwd)), self.errors)
         self.assertResults(www=dict(port=20, url='http://foo/',
-                            public_html=None))
+                            public_html=pwd))
 
     def test_load_www_public_html(self):
         pwd = os.getcwd()
@@ -737,7 +739,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_www(self.filename,
                 dict(www=dict(public_html=r'/does/not\exist/no')),
                 self.errors)
-        self.assertConfigError(self.errors, 'public_html directory')
+        self.assertConfigError(self.errors, 'must be an existing directory')
 
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
