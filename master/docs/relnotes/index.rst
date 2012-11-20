@@ -23,13 +23,9 @@ In addition to what's listed below, the 0.8.7p1 release adds the following.
 * The ``Git`` step properly deals with the case when ther is a file called ``FETCH_HEAD``
   in the checkout.
 
-
-0.8.7p1
--------
-
-In addition to what's listed below, the 0.8.7p1 release adds the following.
-
 * Buildbot no longer forks when told not to daemonize.
+
+* Buildbot's startup is now more robust. See :bb:bug:`1992`.
 
 
 Master
