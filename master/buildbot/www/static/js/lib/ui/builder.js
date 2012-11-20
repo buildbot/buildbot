@@ -14,10 +14,10 @@
 // Copyright Buildbot Team Members
 
 define(["dojo/_base/declare", "lib/ui/base",
-	"dgrid/OnDemandGrid", "dojo/store/Observable", "dojo/store/Memory",
+	"dojo/store/Observable", "dojo/store/Memory",
 	"dojo/_base/array",
-        "lib/haml!./templates/builder.haml"
-], function(declare, Base, Grid, observable, Memory, array, template) {
+        "./templates/builder.haml"
+], function(declare, Base, observable, Memory, array, template) {
     "use strict";
     return declare([Base], {
 	templateFunc:template,
@@ -56,10 +56,11 @@ define(["dojo/_base/declare", "lib/ui/base",
 		}
 	    }
 	    var store = observable(new Memory({data:data,idProperty: "number"}));
-	    var grid = new (declare([Grid]))({
+	    this.createBaseGrid({
 		store: store,
 		cellNavigation:false,
 		tabableHeader: false,
+		contentMaxHeight:700,
 		columns: {
 		    number: {label:"number",
 			     get: function(o){return o;},
@@ -70,6 +71,12 @@ define(["dojo/_base/declare", "lib/ui/base",
 		    reason: "Reason",
 		    slave: "Slave",
 		    owner: "Owner",
+		    started: {label:"Started",
+			      get: function(o){return o.times[0];},
+			      type:"date"},
+		    ended: {label:"Finished",
+			      get: function(o){return o.times[1];},
+			      type:"date"},
 		    text: {label:"results",
 			   get: function(o){return o;},
 			   formatter: function(data){
@@ -79,7 +86,6 @@ define(["dojo/_base/declare", "lib/ui/base",
 			  }
 		}
 	    }, this.buildersgrid_node);
-	    grid.refresh();
 	}
     });
 });

@@ -37,6 +37,12 @@ def include(d, e):
     
     return (d, [f for f in glob.glob('%s/%s'%(d, e)) if os.path.isfile(f)])
 
+def include_statics(d):
+    r = []
+    for root, ds, fs in os.walk(d):
+        r.append((root, [ os.path.join(root, f) for f in fs]))
+    return r
+
 class install_data_twisted(install_data):
     """make sure data files are installed in package.
     this is evil.
@@ -119,6 +125,7 @@ setup_args = {
 
     'packages': ["buildbot",
               "buildbot.status", "buildbot.status.web","buildbot.status.web.hooks",
+              "buildbot.www",
               "buildbot.changes",
               "buildbot.steps",
               "buildbot.steps.package",
@@ -164,7 +171,7 @@ setup_args = {
                     "buildbot/scripts/sample.cfg",
                     "buildbot/scripts/buildbot_tac.tmpl",
                 ]),
-                ],
+                ] + include_statics("buildbot/www/static"),
     'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
                  'sdist': our_sdist},

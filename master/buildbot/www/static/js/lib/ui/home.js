@@ -14,7 +14,7 @@
 // Copyright Buildbot Team Members
 
 define(["dojo/_base/declare", "lib/ui/base",
-        "lib/haml!./templates/home.haml"
+        "./templates/home.haml"
        ], function(declare, Base, template) {
     "use strict";
     return declare([Base], {

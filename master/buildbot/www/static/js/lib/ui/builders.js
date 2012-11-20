@@ -14,10 +14,10 @@
 // Copyright Buildbot Team Members
 
 define(["dojo/_base/declare", "lib/ui/base",
-	"dgrid/OnDemandGrid", "dojo/store/Observable", "dojo/store/Memory",
+	"dojo/store/Observable", "dojo/store/Memory",
 	"dojo/_base/array",
-        "lib/haml!./templates/builders.haml"
-       ], function(declare, Base, Grid, observable, Memory, array, template) {
+        "./templates/builders.haml"
+       ], function(declare, Base, observable, Memory, array, template) {
     "use strict";
     return declare([Base], {
 	templateFunc : template,
@@ -38,14 +38,15 @@ define(["dojo/_base/declare", "lib/ui/base",
 		}
 	    }
 	    var store = observable(new Memory({data:data,idProperty: "builderName"}));
-	    var grid = new (declare([Grid]))({
+	    this.createBaseGrid({
 		store: store,
 		cellNavigation:false,
 		tabableHeader: false,
+		contentMaxHeight:700,
 		columns: {
 		    builderName: {label:"BuilderName", formatter: function(b)
 				  {
-				      return "<a href='/#/builders/"+b+"'>"+b+"</a>";
+				      return "<a href='#/builders/"+b+"'>"+b+"</a>";
 				  }},
 		    slaves: {label:"Slaves", formatter: function(s)
 			     {
@@ -58,7 +59,7 @@ define(["dojo/_base/declare", "lib/ui/base",
 				    formatter: function(data)
 				    {
 					return array.map(data.currentBuilds, function(s) {
-					    return "<a href='/#/builders/"+data.builderName+"/builds/"+s+"'>"+s+"</a>";
+					    return "<a href='#/builders/"+data.builderName+"/builds/"+s+"'>"+s+"</a>";
 					}).join(",");
 				    }},
 		    state: {label:"Status",
@@ -73,7 +74,6 @@ define(["dojo/_base/declare", "lib/ui/base",
 			   }
 		    }
 	    }, this.buildersgrid_node);
-	    grid.refresh();
 	}
     });
 });

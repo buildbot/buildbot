@@ -75,6 +75,33 @@ This creates a new directory and populates it with files that allow it to be use
 You will usually want to use the :option:`-r` option to create a relocatable :file:`buildbot.tac`.
 This allows you to move the master directory without editing this file.
 
+.. bb:cmdline:: upgrade-master
+
+upgrade-master
+++++++++++++++
+
+.. code-block:: none
+
+    buildbot upgrade-master {BASEDIR}
+
+This upgrades a previously created buildmaster's base directory for a new version of buildbot master source code.
+This will copy the web server static files, and potencially upgrade the db.
+
+.. bb:cmdline:: updatejs
+
+updatejs
+++++++++
+
+.. code-block:: none
+
+    buildbot updatejs [-d] {BASEDIR}
+
+This update the javascript files for a new buildbot master source code. It performs downloading of the js dependancies, and
+minification of the js source code.
+
+Note: in order to have minification of customized JS code working, you need java and node installed.
+The release tarballs of buildbot > 0.9 already contains minified version of JS code.
+
 .. bb:cmdline:: start (buildbot)
 
 start

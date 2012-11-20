@@ -24,10 +24,10 @@ import os
 import time
 import codecs
 import json
-import logging
 import subprocess
 from functools import wraps
 from twisted.internet import defer, reactor
+from twisted.python import log
 
 try:
     import sip
@@ -56,16 +56,6 @@ default_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.2 " +\
     "(KHTML, like Gecko) Chrome/15.0.874.121 Safari/535.2"
 
 
-logging.basicConfig()
-logger = logging.getLogger('ghost')
-
-
-class Logger(logging.Logger):
-    @staticmethod
-    def log(message, sender="Ghost", level="info"):
-        if not hasattr(logger, level):
-            raise Exception('invalid log level')
-        getattr(logger, level)("%s: %s", sender, message)
 
 
 class GhostWebPage(QtWebKit.QWebPage):
@@ -80,14 +70,12 @@ class GhostWebPage(QtWebKit.QWebPage):
         """Prints client console message in current output stream."""
         super(GhostWebPage, self).javaScriptConsoleMessage(message, line,
             source)
-        log_type = "error" if "Error" in message else "info"
-        Logger.log("%s(%d): %s" % (source or '<unknown>', line, message),
-        sender="Frame", level=log_type)
+        log.msg("%s(%d): %s" % (source or '<unknown>', line, message),system="Ghost:console")
 
     def javaScriptAlert(self, frame, message):
         """Notifies ghost for alert, then pass."""
         Ghost._alert = message
-        Logger.log("alert('%s')" % message, sender="Frame")
+        log.msg("alert('%s')" % message,system="Ghost:Alert")
 
     def javaScriptConfirm(self, frame, message):
         """Checks if ghost is waiting for confirm, then returns the right
@@ -98,7 +86,7 @@ class GhostWebPage(QtWebKit.QWebPage):
                 message)
         confirmation, callback = Ghost._confirm_expected
         Ghost._confirm_expected = None
-        Logger.log("confirm('%s')" % message, sender="Frame")
+        log.msg("confirm('%s')" % message,system="Ghost:Confirm")
         if callback is not None:
             return callback()
         return confirmation
@@ -111,12 +99,11 @@ class GhostWebPage(QtWebKit.QWebPage):
             raise Exception('You must specified a value for prompt "%s"' %
                 message)
         result_value, callback = Ghost._prompt_expected
-        Logger.log("prompt('%s')" % message, sender="Frame")
+        log.msg("prompt('%s')" % message,system="Ghost:Prompt")
         if callback is not None:
             result_value = callback()
         if result_value == '':
-            Logger.log("'%s' prompt filled with empty string" % message,
-                level='warning')
+            log.msg("'%s' prompt filled with empty string" % message,system="Ghost:Prompt")
         Ghost._prompt_expected = None
         if result is None:
             # PySide
@@ -171,7 +158,7 @@ class HttpResource(object):
             self.content = unicode(buffer.readAll(),"ascii","ignore")
         self.http_status = reply.attribute(
             QNetworkRequest.HttpStatusCodeAttribute)
-        Logger.log("Resource loaded: %s %s" % (self.url, self.http_status))
+        log.msg("Resource loaded: %s %s" % (self.url, self.http_status),system="Ghost:Http")
         self.headers = {}
         for header in reply.rawHeaderList():
             self.headers[unicode(header)] = unicode(reply.rawHeader(header))
@@ -196,7 +183,7 @@ class Ghost(object):
     _app = None
 
     def __init__(self, user_agent=default_user_agent, wait_timeout=8,
-            wait_callback=None, log_level=logging.WARNING, display=False,
+            wait_callback=None, display=False,
             viewport_size=(800, 600), cache_dir='/tmp/ghost.py'):
         self.http_resources = []
 
@@ -246,7 +233,6 @@ class Ghost(object):
 
         self.main_frame = self.page.mainFrame()
 
-        logger.setLevel(log_level)
 
         if self.display:
             self.webview = QtWebKit.QWebView()
@@ -343,7 +329,16 @@ class Ghost(object):
         """
         return (self.main_frame.evaluateJavaScript("%s" % script),
             self._release_last_resources())
-
+    def inject_script(self, script):
+        self.evaluate(
+        """(function(){e = document.createElement("script");
+        e.type = "text/javascript";
+        e.textContent = JSON.parse("%s")
+        e.charset = "utf-8";
+        document.getElementsByTagName("head")[0].appendChild(e);
+        })()
+        """%(json.dumps(script).replace('"','\\"'))
+        )
     def evaluate_js_file(self, path, encoding='utf-8'):
         """Evaluates javascript file at given path in current frame.
         Raises native IOException in case of invalid file.

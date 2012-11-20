@@ -78,22 +78,54 @@ It's OK to schedule a build on a builder that's not implemented by a running mas
 ## Infrastructure ##
 
 * Build the router.js config dynamically on the master, either at startup or in upgrade-master.
+  => For now, this is done using extra_js parameter of the www config
 * Dynamically download or proxy external resources, so they're not included in the Buildbot source or the tarball.
   This download can occur either at startup, or in upgrade-master.
+  => Done with buildbot updatejs, which is also part of upgarde-master/create-master
+
 * Minify and concatenate JS source at startup or upgrade-master.
   http://opensource.perlig.de/rjsmin/ may help here; it has a compatible license and is a single file.
+  => dojo is supporting this with its build system. For now this build sytem is very powerful, and allow to select which modules
+     are needed, and do several layers but it needs nodejs and java. There are work in order to remove the java needs that will probably
+     land before nine in dojo's mainline. http://bugs.dojotoolkit.org/ticket/14684
 * Add cache headers to the HTTP server, based on information encoded in the resource types regarding immutability and speed of change.
+* haml-js is used as a templating system. haml-js has been selected over other templating system for its big simplicity + power combination.
+  2 Problems with haml-js run in browser:
+   * it is not compatible with IE8, because it is using ECMAScript 4 features
+   * it is difficult to integrate with dojo build system, and embeded the templates into the concatenated js file.
+  To workaround this problem, the translation from haml template to js program is done at server side, at the updatejs time. This leverage a dependancy
+  on node, and installing hamlcc via npm. long term solution is probably to translate haml-js in python, or reuse a haml python implementation to produce js code
+  instead of python
 
 ## Javascript ##
 
 * Standardize on interCaps spellings for identifiers (method and variable names).
+
+## Javascript Testing ##
+
+Testing javascript and json api interaction is tricky. Few design principles:
+* Stubbing the data api in JS is considered wrong path, as we'll have to always make sure consistency between the stub and real implementation
+* Run JS inside trial environment is difficult. txghost.py method has been experimented, and has several drawbacks.
+  - ghost is based on webkit which in turn is based on qt. The qtreactor had licence issue and is not well supported in twisted. So there is a
+    hack in txghost trying to run the qt event loop at the same time as the twisted event loop.
+  - better solution would be to run ghost in its own process, and have minimal RPC to control it. RPC between twisted and qt looks complicated.
+  - installing pyqt/webkit inside virtualenv is tricky. You need to manually copy some of the .so libraries inside the sandbox
+* better option has been discussed:
+  - let the JS test suite be entirely JS driven, and not python trial driven + JS assertion, like originally though
+  - JS tests can control data api, and trigger fake events via a special testing data api.
+  - JS developer can run its test without trial knowledge. Only points the browser to doh's runner.html page, and run the tests:
+    e.g.: http://nine.buildbot.net/nine/static/js/util/doh/runner.html?test=lib/tests/all
+  - Need a js test mode that has to be enabled in master.cfg, in order to prevent prod's db to be corrupted by tests if malicious people launch them
+  - Test mode will add some data api to inject pre-crafted events in the data flow.
 
 ## Vague Ideas ##
 
 These are just "things that need doing", where we don't have much idea *how* yet:
 
 * i18n/l10n support so contributors can easily translate the web UI
+  => dojo has support for i18n/l10n and accessibility
 * Use TastyPie as a model for a generic REST API library
+  => We decided to use data as a basis for REST API, we just need a translation layer for data <-> json REST, implemented in rest.py
 
 # Database Updates #
 
