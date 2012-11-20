@@ -136,10 +136,10 @@ class WwwGhostTestMixin(object):
 
     @defer.inlineCallbacks
     def setUp(self):
-        # hack to prevent twisted.web.http to setup a 1 sec callback at init
+        ## workaround twisted bug  http://twistedmatrix.com/trac/ticket/2386
         import twisted
-	#twisted.internet.base.DelayedCall.debug = True
         twisted.web.http._logDateTimeUsers = 1
+        ## we cannot use self.patch, as _logDateTimeUsers is not present in all versions of twisted
         portFound = False
         port = 18010
         while not portFound:
