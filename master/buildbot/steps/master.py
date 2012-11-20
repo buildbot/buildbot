@@ -113,6 +113,14 @@ class MasterShellCommand(BuildStep):
         else:
             assert isinstance(self.env, dict)
             env = self.env
+            for key, v in self.env.iteritems():
+                if isinstance(v, list):
+                    # Need to do os.pathsep translation.  We could either do that
+                    # by replacing all incoming ':'s with os.pathsep, or by
+                    # accepting lists.  I like lists better.
+                    # If it's not a string, treat it as a sequence to be
+                    # turned in to a string.
+                    self.env[key] = os.pathsep.join(self.env[key])
 
             # do substitution on variable values matching pattern: ${name}
             p = re.compile('\${([0-9a-zA-Z_]*)}')
@@ -121,10 +129,7 @@ class MasterShellCommand(BuildStep):
             newenv = {}
             for key in env.keys():
                 if env[key] is not None:
-                    if isinstance(env[key], basestring):
-                        newenv[key] = p.sub(subst, env[key])
-                    elif isinstance(env[key], (list, tuple)):
-                        newenv[key] = ":".join([p.sub(subst, k) for k in env[key]])
+                    newenv[key] = p.sub(subst, env[key])
             env = newenv
         stdio_log.addHeader(" env: %r\n" % (env,))
 
