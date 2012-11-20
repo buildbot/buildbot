@@ -143,7 +143,9 @@ def createMaster(config):
     makeSampleConfig(config)
     makePublicHtml(config)
     makeTemplatesDir(config)
-    yield updateJS(config)
+    if updateJS(config) != 0:
+        defer.returnValue(1)
+        return
     yield createDB(config)
 
     if not config['quiet']:

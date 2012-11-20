@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import sys
 import os, shutil
 import urllib2
 import zipfile
@@ -130,15 +131,15 @@ console.log(JSON.stringify(dependencies,null, " "))
 """
 def minifyJS(config, www, workdir):
     skip_minify = False
-    if os.system("java -version"):
+    if config['develop']:
+        skip_minify = True
+
+    elif os.system("java -version"):
         print "you need a working version of java for dojo build system to work"
         skip_minify = True
 
-    if platform.system() != "Windows" and os.system("node -v"):
+    elif platform.system() != "Windows" and os.system("node -v"):
         print "you need a working version of node.js in your path for dojo build system to work"
-        skip_minify = True
-
-    if config['develop']:
         skip_minify = True
 
     # Todo: need to find out the best way to distribute minified code in buildbot's sdist.
@@ -146,8 +147,12 @@ def minifyJS(config, www, workdir):
     # Perhaps its even only needed for large scale buildbot where we can require installation of
     # node and java in the master, and where people dont care about sdists.
     if skip_minify:
+        dest = os.path.join(workdir, "js.built")
+        if not os.path.isdir(dest):
+            print "js.built does not exist; cannot proceed"
+            return False
         os.symlink("js", os.path.join(workdir, "js.built"))
-        return
+        return True
 
     # create the build.js config file that dojo build system is needing
     o = open(os.path.join(workdir,"js","build.js"), "w")
@@ -159,17 +164,17 @@ def minifyJS(config, www, workdir):
     os.chdir(os.path.join(workdir,"js"))
 
     # Those scripts are part of the dojo tarball that we previously downloaded
+    if not config['quiet']:
+        print "optimizing the javascript UI for better performance in %s" % (config['basedir'],)
     if platform.system() == "Windows":
         os.system("util/buildscripts/build.bat --bin java -p build.js --release")
     else:
         os.system("sh util/buildscripts/build.sh --bin node -p build.js --release")
     os.rename(os.path.join(workdir,"jsrelease", "dojo"),os.path.join(workdir,"js.built"))
     shutil.rmtree(os.path.join(workdir,"jsrelease"))
-    if not config['quiet']:
-        print "optimizing the javascript UI for better performance in %s" % (config['basedir'],)
-    pass
 
-@defer.inlineCallbacks
+    return True
+
 def updateJS(config, master_cfg=None):
     if not master_cfg:
         from upgrade_master import loadConfig # avoid recursive import
@@ -181,17 +186,14 @@ def updateJS(config, master_cfg=None):
     workdir = os.path.join(config['basedir'], "public_html", "static.new")
     olddir = os.path.join(config['basedir'], "public_html", "static.old")
     static = os.path.join(config['basedir'], "public_html", "static")
-    yield threads.deferToThread(lambda :syncStatic(config, www, workdir, olddir))
-    yield threads.deferToThread(lambda :downloadJSDeps(config, workdir))
-    yield threads.deferToThread(lambda :minifyJS(config, www, workdir))
+    syncStatic(config, www, workdir, olddir)
+    downloadJSDeps(config, workdir)
+    if not minifyJS(config, www, workdir):
+        return 1
     if os.path.exists(static):
         os.rename(static, olddir)
     os.rename(workdir, static)
     if not config['quiet']:
         print "javascript UI configured in %s" % (config['basedir'],)
 
-    defer.returnValue(0)
-
-@in_reactor
-def updateJSFunc(config):
-    return updateJS(config)
+    return 0
