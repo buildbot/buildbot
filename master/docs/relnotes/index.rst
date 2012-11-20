@@ -20,6 +20,9 @@ In addition to what's listed below, the 0.8.7p1 release adds the following.
 * The ``Trigger`` step again completely ignores the source stamp of the current build, if ``alwaysUseLatest`` is set.
   In 0.8.7, this was mistakenly changed to only ignore the specified revision of the source stamp.
 
+* The ``Triggerable`` scheduler is again properly passing changes through to the scheduled builds.
+  See :bb:bug:`2376`.
+
 Master
 ------
 
