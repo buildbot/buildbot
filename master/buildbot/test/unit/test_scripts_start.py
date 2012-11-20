@@ -16,6 +16,8 @@
 from __future__ import with_statement
 
 import os, sys
+import twisted
+from twisted.python import versions
 from twisted.internet.utils import getProcessOutputAndValue
 from twisted.trial import unittest
 from buildbot.scripts import start
@@ -95,6 +97,9 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
             self.assertEqual((rc, err), (0, ''))
             self.assertSubstring('BuildMaster is running', out)
         return d
+
+    if twisted.version <= versions.Version('twisted', 9, 0, 0):
+        test_start = test_start_quiet.skip = "Skipping due to suprious PotentialZombieWarning."
 
     # the remainder of this script does obscene things:
     #  - forks
