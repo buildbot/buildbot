@@ -19,7 +19,7 @@ import os, sys
 from twisted.internet.utils import getProcessOutputAndValue
 from twisted.trial import unittest
 from buildbot.scripts import start
-from buildbot.test.util import dirs, misc
+from buildbot.test.util import dirs, misc, compat
 
 def mkconfig(**kwargs):
     config = {
@@ -77,6 +77,23 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         def cb(res):
             self.assertEquals(res, ('', '', 0))
             print res
+        return d
+
+    def test_start_quiet(self):
+        d = self.runStart(quiet=True)
+        @d.addCallback
+        def cb(res):
+            self.assertEquals(res, ('', '', 0))
+            print res
+        return d
+
+    @compat.skipUnlessPlatformIs('posix')
+    def test_start(self):
+        d = self.runStart()
+        @d.addCallback
+        def cb((out, err, rc)):
+            self.assertEqual((rc, err), (0, ''))
+            self.assertSubstring('BuildMaster is running', out)
         return d
 
     # the remainder of this script does obscene things:
