@@ -13,13 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
 import os, shutil
 import urllib2
 import zipfile
 import platform
-from twisted.internet import defer, threads
-from buildbot.util import in_reactor
 
 js_deps = [("http://download.dojotoolkit.org/release-1.8.1/dojo-release-1.8.1-src.zip",
             "dojo-release-1.8.1-src/", "."),

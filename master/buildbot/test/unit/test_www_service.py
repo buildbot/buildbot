@@ -17,7 +17,6 @@ import mock
 import os
 from buildbot.www import service, ui, rest
 from twisted.trial import unittest
-from twisted.web import static
 from buildbot.test.util import www
 from buildbot.test.fake import fakemaster
 

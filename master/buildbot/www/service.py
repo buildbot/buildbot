@@ -13,13 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-import os, shutil
-from twisted.internet import defer, threads
-from twisted.python import  util
+import os
+from twisted.internet import defer
 from twisted.application import strports, service
 from twisted.web import server, static
 from buildbot import config
-from buildbot.util import json
 from buildbot.www import ui, resource, rest, ws
 
 class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
