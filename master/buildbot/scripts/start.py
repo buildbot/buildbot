@@ -59,6 +59,22 @@ stop it, fix the config file, and restart.
         self.rc = 1
         reactor.stop()
 
+def launchNoDaemon(config):
+    os.chdir(config['basedir'])
+    sys.path.insert(0, os.path.abspath(config['basedir']))
+
+    argv = ["twistd",
+            "--no_save",
+            '--nodaemon',
+            "--logfile=twistd.log", # windows doesn't use the same default
+            "--python=buildbot.tac"]
+    sys.argv = argv
+
+    # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use
+    # _twistw.run . Twisted-2.5.0 and later use twistd.run, even for
+    # windows.
+    from twisted.scripts import twistd
+    twistd.run()
 
 def launch(config):
     os.chdir(config['basedir'])
@@ -85,6 +101,10 @@ def start(config):
     if not base.isBuildmasterDir(config['basedir']):
         print "not a buildmaster directory"
         return 1
+
+    if config['nodaemon']:
+        launchNoDaemon(config)
+        return 0
 
     if config['quiet']:
         launch(config)

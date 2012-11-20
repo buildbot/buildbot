@@ -8,6 +8,14 @@ Release Notes for Buildbot |version|
 
 The following are the release notes for Buildbot |version|.
 
+0.8.7p1
+-------
+
+In addition to what's listed below, the 0.8.7p1 release adds the following.
+
+* Buildbot no longer forks when told not to daemonize.
+
+
 Master
 ------
 
