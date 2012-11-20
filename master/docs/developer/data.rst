@@ -69,10 +69,10 @@ Within the buildmaster process, the root of the data API is available at `self.m
     The ``path`` arguments to these methods should always be tuples.  Integer arguments can be presented as either integers or strings that can be parsed by ``int``; all other arguments must be strings.
     Integer arguments can be presented as either integers or strings that can be parsed by ``int``; all other arguments must be strings.
 
-    .. py:method:: get(options, path)
+    .. py:method:: get(options, kwargs)
 
         :param options: dictionary containing model-specific options
-        :param path: a tuple describing the resource to get
+        :param kwargs : a dictionary describing the resource to get, extracted from the path
         :raises: :py:exc:~buildbot.data.exceptions.InvalidPathError
         :returns: a resource or list via Deferred, or None
 
@@ -84,28 +84,27 @@ Within the buildmaster process, the root of the data API is available at `self.m
 
         The return value is composed of simple Python objects - lists, dicts, strings, numbers, and None, along with :py:class:`~buildbot.data.base.Link` instances giving paths to other resources.
 
-    .. py:method:: startConsuming(callback, options, path)
+    .. py:method:: startConsuming(callback, options, kwargs)
 
         :param callback: a function to call for each message
         :param options: dictionary containing model-specific options
-        :param path: a tuple describing the resource to subscribe to
+        :param kwargs : a dictionary describing the resource to control, extracted from the path
         :raises: :py:exc:~buildbot.data.exceptions.InvalidPathError
 
         This method implements the subscriptions section.
         The callback interface is the same as that of :py:meth:`~buildbot.mq.connector.MQConnector.startConsuming`.
         The ``path`` argument is automatically translated into an appropriate topic.
 
-    .. py:method:: control(action, args, path)
+    .. py:method:: control(action, args, kwargs)
 
         :param action: a short string naming the action to perform
         :param args: dictionary containing arguments for the action
-        :param path: a tuple describing the resource to act on
+        :param kwargs : a dictionary describing the resource to control, extracted from the path
         :raises: :py:exc:~buildbot.data.exceptions.InvalidPathError
         :returns: a resource or list via Deferred, or None
 
-        This method implements the getter section.
-        Depending on the path, it will return a single resource or a list of resources.
-        If a single resource is not specified, it returns ``None``.
+        This method implements the control section.
+        Depending on the path, it may return a new created resource.
 
     .. py:attribute:: rtypes
 
