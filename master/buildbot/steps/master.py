@@ -127,8 +127,11 @@ class MasterShellCommand(BuildStep):
             def subst(match):
                 return os.environ.get(match.group(1), "")
             newenv = {}
-            for key in env.keys():
-                if env[key] is not None:
+            for key, v in env.iteritems():
+                if v is not None:
+                    if not isinstance(v, basestring):
+                        raise RuntimeError("'env' values must be strings or "
+                                "lists; key '%s' is incorrect" % (key,))
                     newenv[key] = p.sub(subst, env[key])
             env = newenv
         stdio_log.addHeader(" env: %r\n" % (env,))
