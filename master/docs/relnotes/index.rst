@@ -20,13 +20,21 @@ In addition to what's listed below, the 0.8.7p1 release adds the following.
 * The master-side ``Git`` source step now doesn't try to clone a branch called ``HEAD``.
   This is what ``git`` does by default, and specifying it explicitly doesn't work as expected.
 
-* The ``Git`` step properly deals with the case when ther is a file called ``FETCH_HEAD``
+* The ``Git`` step properly deals with the case when there is a file called ``FETCH_HEAD``
   in the checkout.
 
 * Buildbot no longer forks when told not to daemonize.
 
 * Buildbot's startup is now more robust. See :bb:bug:`1992`.
 
+* The ``Trigger`` step uses the provided list of source stamps exactly, if given, instead of adding them to the sourcestamps of the current build.
+  In 0.8.7, they were combined with the source stamps for the current build.
+
+* The ``Trigger`` step again completely ignores the source stamp of the current build, if ``alwaysUseLatest`` is set.
+  In 0.8.7, this was mistakenly changed to only ignore the specified revision of the source stamp.
+
+* The ``Triggerable`` scheduler is again properly passing changes through to the scheduled builds.
+  See :bb:bug:`2376`.
 
 Master
 ------

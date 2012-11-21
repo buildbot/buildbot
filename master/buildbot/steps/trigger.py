@@ -104,35 +104,29 @@ class Trigger(LoggingBuildStep):
         return (triggered_schedulers, invalid_schedulers)
 
     def prepareSourcestampListForTrigger(self):
+        if self.sourceStamps:
+            ss_for_trigger = {}
+            for ss in self.sourceStamps:
+                codebase = ss.get('codebase','')
+                assert codebase not in ss_for_trigger, "codebase specified multiple times"
+                ss_for_trigger[codebase] = ss
+            return ss_for_trigger
+
+        if self.alwaysUseLatest:
+            return {}
+
         # start with the sourcestamps from current build
         ss_for_trigger = {}
         objs_from_build = self.build.getAllSourceStamps()
         for ss in objs_from_build:
             ss_for_trigger[ss.codebase] = ss.asDict()
-            if self.alwaysUseLatest:
-                # Reset revision so latest version will be requested from vcs
-                ss_for_trigger[ss.codebase]['revision'] = None
 
         # overrule revision in sourcestamps with got revision
-        if self.updateSourceStamp and not self.alwaysUseLatest:
-            properties = self.build.getProperties()
-            got = properties.getProperty('got_revision')
-            # be sure property is always a dictionary
-            if got:
-                if not isinstance(got, dict):
-                    got = {'': got}
-                for codebase in ss_for_trigger:
-                    if codebase in got:
-                        ss_for_trigger[codebase]['revision'] = got[codebase]
-
-        # update sourcestamps from build with passed set of fixed sourcestamps
-        # or add fixed sourcestamp to the dictionary
-        for ss in self.sourceStamps:
-            codebase = ss.get('codebase','')
-            if codebase in ss_for_trigger:
-                ss_for_trigger[codebase].update(ss)
-            else:
-                ss_for_trigger[codebase] = ss
+        if self.updateSourceStamp:
+            got = self.build.build_status.getAllGotRevisions()
+            for codebase in ss_for_trigger:
+                if codebase in got:
+                    ss_for_trigger[codebase]['revision'] = got[codebase]
 
         return ss_for_trigger
 
