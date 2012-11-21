@@ -36,6 +36,21 @@ In addition to what's listed below, the 0.8.7p1 release adds the following.
 * The ``Triggerable`` scheduler is again properly passing changes through to the scheduled builds.
   See :bb:bug:`2376`.
 
+* Web change hooks log errors, allowing debugging.
+
+* The ``base`` change hook now properly decodes the provided date.
+
+* ``CVSMailDir`` has been fixed.
+
+* Importing ``buildbot.test`` no longer causes python to exit, if ``mock`` insn't installed.
+  The fixes ``pydoc -k`` when buildbot is installed.
+
+* ``Mercurial`` properly updates to the correct branch, when using ``inrepo`` branches.
+
+* Buildbot now doesn't fail on invalid UTF-8 in a number of places.
+
+* Many documenation updates and fixes.
+
 Master
 ------
 
