@@ -348,7 +348,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
                         branch=ss.get('branch', None),
                         revision=ss.get('revision', None),
                         project=ss.get('project', ''),
-                        changeids=[c['number'] for c in getattr(ss, 'changes', [])],
+                        changeids=[c['number'] for c in ss.get('changes', [])],
                         patch_body=ss.get('patch_body', None),
                         patch_level=ss.get('patch_level', None),
                         patch_author=ss.get('patch_author', None),

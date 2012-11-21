@@ -79,7 +79,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
-                                 '--clean'])
+                                 '--clean', '--rev', 'default'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
@@ -128,7 +128,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['hg', '--verbose', 'update',
-                                 '--clean'])
+                                 '--clean', '--rev', 'default'])
             + 0,
             ExpectShell(workdir='wkdir',
                         timeout=1,
@@ -172,7 +172,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
-                                 '--clean'])
+                                 '--clean', '--rev', 'default'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'import',
@@ -220,7 +220,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
-                                 '--clean'])
+                                 '--clean', '--rev', 'default'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'import',
@@ -274,7 +274,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
-                                 '--clean'])
+                                 '--clean', '--rev', 'default'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
@@ -315,7 +315,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
-                                 '--clean'])
+                                 '--clean', '--rev', 'default'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
@@ -450,7 +450,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--verbose', 'locate', 'set:added()'])
             + 1,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'update', '--clean'])
+                        command=['hg', '--verbose', 'update', '--clean',
+                                 '--rev', 'default'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
@@ -486,7 +487,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--verbose', 'locate', 'set:added()'])
             + 1,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'update', '--clean'])
+                        command=['hg', '--verbose', 'update', '--clean',
+                                 '--rev', 'default'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
@@ -526,7 +528,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'update', '--clean'])
+                        command=['hg', '--verbose', 'update', '--clean',
+                                 '--rev', 'default'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
@@ -570,7 +573,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'update', '--clean'])
+                        command=['hg', '--verbose', 'update', '--clean',
+                                 '--rev', 'default'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
@@ -653,7 +657,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
-                                 '--clean'])
+                                 '--clean', '--rev', 'stable'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
@@ -693,7 +697,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
-                                 '--clean'])
+                                 '--clean', '--rev', 'stable'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
@@ -737,8 +741,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         env={'abc': '123'})
             + 1,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'update',
-                                 '--clean'], env={'abc': '123'})
+                        command=['hg', '--verbose', 'update', '--clean',
+                                 '--rev', 'default'], env={'abc': '123'})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
@@ -787,7 +791,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update',
-                                 '--clean'],
+                                 '--clean', '--rev', 'default'],
                         logEnviron=False)
             + 0,
             ExpectShell(workdir='wkdir',
