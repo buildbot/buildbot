@@ -57,6 +57,14 @@ class V1RootResource(JsonStatusResource):
         self.master = master
         JsonStatusResource.__init__(self,master.status)
 
+URL_ENCODED = "application/x-www-form-urlencoded"
+JSON_ENCODED = "application/json"
+JSONRPC_CODES = dict(parse_error= -32700,
+                     invalid_request= -32600,
+                     method_not_found= -32601,
+                     invalid_params= -32602,
+                     internal_error= -32603)
+
 class V2RootResource(resource.Resource):
     # rather than construct the entire possible hierarchy of Rest resources,
     # this is marked as a leaf node, and any remaining path items are parsed
@@ -64,34 +72,93 @@ class V2RootResource(resource.Resource):
     isLeaf = True
 
     knownArgs = set(['as_text', 'filter', 'compact', 'callback'])
+    def decodeUrlEncoding(self, request):
+        # calculate the request options
+        reqOptions = {}
+        for option in set(request.args) - self.knownArgs:
+            reqOptions[option] = request.args[option][0]
+        return reqOptions
+    def decodeJsonRPC2(self, request):
+        """ In the case of json encoding, we choose jsonrpc2 as the encoding:
+        http://www.jsonrpc.org/specification
+        instead of just inventing our own. This allow easier re-use of client side code
+        This implementation is rather simple, and is not supporting all the features of jsonrpc:
+        -> params as list is not supported
+        -> rpc call batch is not supported
+        -> jsonrpc2 notifications are not supported (i.e. you always get an answer)
+       """
+        datastr = request.content.read()
+        data = json.loads(datastr)
+        if type(data) == list:
+            raise ValueError("jsonrpc call batch is not supported")
+        if type(data) != dict:
+            raise ValueError("json root object must be a dictionary: "+datastr)
 
+        def check(name, _type, _val=None):
+            if not name in data or type(data[name]) != _type:
+                raise ValueError("need '%s' to be present and be a %s"%(name, str(_type)))
+            if _val != None and data[name] != _val:
+                raise ValueError("need '%s' value to be '%s'"%(name, str(_val)))
+        check("jsonrpc", str, "2.0")
+        check("method", str)
+        check("id", str)
+        check("params", dict) # params can be a list in jsonrpc, but we dont support it.
+        return data["params"], data["method"], data["id"]
     def render(self, request):
         @defer.inlineCallbacks
         def render():
             reqPath = request.postpath
+            jsonRpcId = None
             # strip an empty string from the end (trailing slash)
             if reqPath and reqPath[-1] == '':
                 reqPath = reqPath[:-1]
 
-            # calculate the request options
-            reqOptions = {}
-            for option in set(request.args) - self.knownArgs:
-                reqOptions[option] = request.args[option][0]
-
-            def write_error(msg):
-                request.setResponseCode(404)
+            def write_error_default(msg, errcode=404, jsonrpccode=None):
+                request.setResponseCode(errcode)
                 # prefer text/plain here, since this is most likely user error
                 request.setHeader('content-type', 'text/plain')
                 request.write(json.dumps(dict(error=msg)))
 
+            def write_error_jsonrpc(msg, errcode=400, jsonrpccode=JSONRPC_CODES["internal_error"]):
+                request.setResponseCode(errcode)
+                request.setHeader('content-type', JSON_ENCODED)
+                request.write(json.dumps(dict(jsonrpc="2.0",
+                                              error=dict(code=jsonrpccode,
+                                                         message=msg),
+                                              id=jsonRpcId
+                                              )))
+            write_error = write_error_default
+            contenttype = request.getHeader('content-type', URL_ENCODED)
+
+            if contenttype.startswith(JSON_ENCODED):
+                write_error = write_error_jsonrpc
+                try:
+                    reqOptions, action, jsonRpcId = self.decodeJsonRPC2(request)
+                except ValueError,e:
+                    write_error(str(e), jsonrpccode=JSONRPC_CODES["invalid_request"])
+                    return
+            else:
+                reqOptions = self.decodeUrlEncoding(request)
+                if request.method == "POST":
+                    if not "action" in reqOptions:
+                        write_error("need an action parameter for POST", errcode=400)
+                        return
+                    action = reqOptions["action"]
+                    del reqOptions["action"]
             # get the value
             try:
-                data = yield self.master.data.get(reqOptions, tuple(reqPath))
+                if request.method == "POST":
+                    data = yield self.master.data.control(action, reqOptions, tuple(reqPath))
+                else:
+                    data = yield self.master.data.get(reqOptions, tuple(reqPath))
             except data_exceptions.InvalidPathError:
-                write_error("invalid path")
+                write_error("invalid path", errcode=404)
                 return
             except data_exceptions.InvalidOptionException:
                 write_error("invalid option")
+                return
+            except data_exceptions.InvalidActionException:
+                write_error("invalid method", errcode=501,jsonrpccode=JSONRPC_CODES["method_not_found"])
                 return
 
             if data is None:
@@ -108,7 +175,7 @@ class V2RootResource(resource.Resource):
             if as_text:
                 request.setHeader("content-type", 'text/plain')
             else:
-                request.setHeader("content-type", 'application/json')
+                request.setHeader("content-type", JSON_ENCODED)
                 request.setHeader("content-disposition",
                             "attachment; filename=\"%s.json\"" % request.path)
 
@@ -124,6 +191,10 @@ class V2RootResource(resource.Resource):
             # filter and render the data
             if filter:
                 data = self._filterEmpty(data)
+
+            # if we are talking jsonrpc, we embed the result in standard encapsulation
+            if not jsonRpcId is None:
+                data = {"jsonrpc": "2.0", "result": data, "id": jsonRpcId}
 
             if compact:
                 data = json.dumps(data, default=self._render_links,

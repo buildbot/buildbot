@@ -23,3 +23,6 @@ class InvalidPathError(DataException):
 class InvalidOptionException(DataException):
     "An option was invalid"
     pass
+class InvalidActionException(DataException):
+    "Action is not supported"
+    pass

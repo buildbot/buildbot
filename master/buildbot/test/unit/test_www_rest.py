@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from cStringIO import StringIO
 from buildbot.www import rest
 from buildbot.test.util import www
+from buildbot.util import json
 from buildbot.data import exceptions
 from twisted.trial import unittest
 from twisted.internet import defer
@@ -61,6 +63,16 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
                 rv['path'] = path
                 return defer.succeed(rv)
         self.master.data.get = get
+        def control(action, args, path):
+            if path == ('not', 'found'):
+                return defer.fail(exceptions.InvalidPathError())
+            elif action == "notfound":
+                return defer.fail(exceptions.InvalidActionException())
+            else:
+                rv = dict(orig_args=args.copy(),
+                          path = path)
+                return defer.succeed(rv)
+        self.master.data.control = control
         self.rsrc = rest.V2RootResource(self.master)
 
     def test_not_found(self):
@@ -128,3 +140,105 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
             self.assertRequest(content='mycb({"path":["cb"]});',
                                responseCode=200)
         return d
+    def test_control_not_found(self):
+        d = self.render_control_resource(self.rsrc, ['not', 'found'],{"action":["test"]},
+                                         jsonRpc=False)
+        @d.addCallback
+        def check(_):
+            self.assertRequest(
+                contentJson=dict(error='invalid path'),
+                contentType='text/plain',
+                responseCode=404)
+        return d
+
+    def test_control_no_action(self):
+        d = self.render_control_resource(self.rsrc, ['not', 'found'], jsonRpc=False)
+        @d.addCallback
+        def check(_):
+            self.assertRequest(
+                contentJson=dict(error='need an action parameter for POST'),
+                contentType='text/plain',
+                responseCode=400)
+        return d
+
+    def test_control_urlencoded(self):
+        d = self.render_control_resource(self.rsrc, ['path'],{"action":["test"],"param1":["foo"]}, jsonRpc=False)
+        @d.addCallback
+        def check(_):
+            self.assertRequest(
+                contentJson={'orig_args': {'param1': 'foo'}, 'path': ['path']},
+                contentType='application/json',
+                responseCode=200)
+        return d
+
+    def test_controljs_not_found(self):
+        d = self.render_control_resource(self.rsrc, ['not', 'found'],action="test",
+                                         jsonRpc=True)
+        @d.addCallback
+        def check(_):
+            self.assertRequest(
+                errorJsonRPC={'code': -32603, 'message': 'invalid path'},
+                contentType='application/json',
+                responseCode=404)
+        return d
+
+    def test_controljs_badaction(self):
+        d = self.render_control_resource(self.rsrc, ['path'],{"param1":["foo"]},
+                                         jsonRpc=True)
+        @d.addCallback
+        def check(_):
+            self.assertRequest(
+                errorJsonRPC={'code': -32601, 'message': 'invalid method'},
+                contentType='application/json',
+                responseCode=501)
+        return d
+    def dotest_controljs_malformedjson(self, _json, error, noIdCheck=False, httpcode=400):
+        request = self.make_request(['path'])
+        request.content = StringIO(json.dumps(_json))
+        request.input_headers = {'content-type': 'application/json'}
+        d = self.render_control_resource(self.rsrc,
+                                         request = request,
+                                         jsonRpc=not noIdCheck)
+        @d.addCallback
+        def check(_):
+            self.assertRequest(
+                errorJsonRPC=error,
+                contentType='application/json',
+                responseCode=httpcode)
+        return d
+    def test_controljs_malformedjson1(self):
+        return self.dotest_controljs_malformedjson(
+            [ "list_not_supported"],
+            {'code': -32600, 'message': 'jsonrpc call batch is not supported'}
+            ,noIdCheck=True)
+
+    def test_controljs_malformedjson_no_dict(self):
+        return self.dotest_controljs_malformedjson(
+            "str_not_supported",
+            {'code': -32600, 'message': 'json root object must be a dictionary: "str_not_supported"'}
+            ,noIdCheck=True)
+    def test_controljs_malformedjson_nojsonrpc(self):
+        return self.dotest_controljs_malformedjson(
+            { "method": "action", "params": {"arg":"args"}, "id": "_id"},
+            {'code': -32600, 'message': "need 'jsonrpc' to be present and be a <type 'str'>"}
+            ,noIdCheck=True)
+    def test_controljs_malformedjson_no_method(self):
+        return self.dotest_controljs_malformedjson(
+            { "jsonrpc": "2.0", "params": {"arg":"args"}, "id": "_id"},
+            {'code': -32600, 'message': "need 'method' to be present and be a <type 'str'>"}
+            ,noIdCheck=True)
+    def test_controljs_malformedjson_no_param(self):
+        return self.dotest_controljs_malformedjson(
+            { "jsonrpc": "2.0", "method": "action",  "id": "_id"},
+            {'code': -32600, 'message': "need 'params' to be present and be a <type 'dict'>"}
+            ,noIdCheck=True)
+    def test_controljs_malformedjson_bad_param(self):
+        return self.dotest_controljs_malformedjson(
+            { "jsonrpc": "2.0", "method":"action", "params": ["args"], "id": "_id"},
+            {'code': -32600, 'message': "need 'params' to be present and be a <type 'dict'>"}
+            ,noIdCheck=True)
+    def test_controljs_malformedjson_no_id(self):
+        return self.dotest_controljs_malformedjson(
+            { "jsonrpc": "2.0", "method": "action",  "params": {"arg":"args"} },
+            {'code': -32600, 'message': "need 'id' to be present and be a <type 'str'>"}
+            ,noIdCheck=True)

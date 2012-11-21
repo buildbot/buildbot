@@ -23,6 +23,8 @@ from twisted.web import server
 from buildbot.www import service
 from buildbot.test.fake import fakemaster
 from twisted.python import failure
+from cStringIO import StringIO
+from uuid import uuid1
 
 class FakeRequest(object):
     written = ''
@@ -35,6 +37,7 @@ class FakeRequest(object):
 
     def __init__(self, postpath=None, args={}):
         self.headers = {}
+        self.input_headers = {}
         self.prepath = []
         self.postpath = postpath or []
         self.deferred = defer.Deferred()
@@ -55,7 +58,8 @@ class FakeRequest(object):
 
     def setHeader(self, hdr, value):
         self.headers.setdefault(hdr, []).append(value)
-
+    def getHeader(self, key, default=None):
+        return self.input_headers.get(key, default)
     def processingFailed(self, f):
         self.deferred.errback(f)
 
@@ -83,8 +87,35 @@ class WwwTestMixin(object):
             return defer.succeed(rv)
         return request.deferred
 
+    def render_control_resource(self, rsrc, postpath=None, args={}, action="notfound",
+                                request=None, jsonRpc=True):
+        # pass *either* a request or postpath (and optionally args)
+        _id = str(uuid1())
+        if not request:
+            request = self.make_request(postpath=postpath, args=args)
+            request.method = "POST"
+            if jsonRpc:
+                request.content = StringIO(json.dumps(
+                    { "jsonrpc": "2.0", "method": action, "params": args, "id": _id}))
+                request.input_headers = {'content-type': 'application/json'}
+        rv = rsrc.render(request)
+        if rv != server.NOT_DONE_YET:
+            d = defer.succeed(rv)
+        else:
+            d = request.deferred
+        @d.addCallback
+        def check(_json):
+            if jsonRpc:
+                res = json.loads(_json)
+                self.assertIn("jsonrpc",res)
+                self.assertIn("id",res)
+                self.assertEqual(res["jsonrpc"], "2.0")
+                self.assertEqual(res["id"], _id)
+            return json
+        return d
+
     def assertRequest(self, content=None, contentJson=None, contentType=None,
-            responseCode=None, contentDisposition=None):
+            responseCode=None, contentDisposition=None, errorJsonRPC=None):
         got, exp = {}, {}
         if content is not None:
             got['content'] = self.request.written
@@ -92,6 +123,11 @@ class WwwTestMixin(object):
         if contentJson is not None:
             got['contentJson'] = json.loads(self.request.written)
             exp['contentJson'] = contentJson
+        if errorJsonRPC is not None:
+            jsonrpc = json.loads(self.request.written)
+            self.assertIn("error", jsonrpc)
+            got['errorJsonRPC'] = jsonrpc["error"]
+            exp['errorJsonRPC'] = errorJsonRPC
         if contentType is not None:
             got['contentType'] =  self.request.headers['content-type']
             exp['contentType'] = [ contentType ]
