@@ -8,6 +8,7 @@ Release Notes for Buildbot |version|
 
 The following are the release notes for Buildbot |version|.
 Buildbot 0.8.7 was released on September 22, 2012.
+Buildbot 0.8.7p1 was released on November 21, 2012.
 
 0.8.7p1
 -------
