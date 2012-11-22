@@ -23,7 +23,6 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.changes import pb
 from buildbot.test.util import changesource, pbmanager
-from buildbot.util import epoch2datetime
 
 class TestPBChangeSource(
             changesource.ChangeSourceMixin,
@@ -191,7 +190,7 @@ class TestChangePerspective(unittest.TestCase):
                 )
         def check(_):
             self.assertEqual(self.added_changes,
-                    [ dict(when_timestamp=None, files=[]) ])
+                    [ dict(when=None, files=[]) ])
         d.addCallback(check)
         return d
 
@@ -250,7 +249,7 @@ class TestChangePerspective(unittest.TestCase):
         def check(_):
             self.assertEqual(self.added_changes,
                     [ dict(is_dir=1, author='me', files=[],
-                        when_timestamp=epoch2datetime(1234)) ])
+                        when=1234) ])
         d.addCallback(check)
         return d
 

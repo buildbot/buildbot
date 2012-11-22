@@ -19,7 +19,6 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.changes import base, gitpoller
 from buildbot.test.util import changesource, config, gpo
-from buildbot.util import epoch2datetime
 
 # Test that environment variables get propagated to subprocesses (See #2116)
 os.environ['TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'] = 'TRUE'
@@ -374,23 +373,20 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(len(self.changes_added), 3)
 
             self.assertEqual(self.changes_added[0]['author'], 'by:4423cdbc')
-            self.assertEqual(self.changes_added[0]['when_timestamp'],
-                                        epoch2datetime(1273258009))
+            self.assertEqual(self.changes_added[0]['when'], 1273258009)
             self.assertEqual(self.changes_added[0]['comments'], 'hello!')
             self.assertEqual(self.changes_added[0]['branch'], 'master')
             self.assertEqual(self.changes_added[0]['files'], [ '/etc/442' ])
             self.assertEqual(self.changes_added[0]['src'], 'git')
 
             self.assertEqual(self.changes_added[1]['author'], 'by:64a5dc2a')
-            self.assertEqual(self.changes_added[1]['when_timestamp'],
-                                        epoch2datetime(1273258009))
+            self.assertEqual(self.changes_added[1]['when'], 1273258009)
             self.assertEqual(self.changes_added[1]['comments'], 'hello!')
             self.assertEqual(self.changes_added[1]['files'], [ '/etc/64a' ])
             self.assertEqual(self.changes_added[1]['src'], 'git')
 
             self.assertEqual(self.changes_added[2]['author'], 'by:9118f4ab')
-            self.assertEqual(self.changes_added[2]['when_timestamp'],
-                                        epoch2datetime(1273258009))
+            self.assertEqual(self.changes_added[2]['when'], 1273258009)
             self.assertEqual(self.changes_added[2]['comments'], 'hello!')
             self.assertEqual(self.changes_added[2]['files'], [ '/etc/911' ])
             self.assertEqual(self.changes_added[2]['src'], 'git')
@@ -492,15 +488,13 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 })
             self.assertEqual(len(self.changes_added), 2)
             self.assertEqual(self.changes_added[0]['author'], 'by:4423cdbc')
-            self.assertEqual(self.changes_added[0]['when_timestamp'],
-                                        epoch2datetime(1273258009))
+            self.assertEqual(self.changes_added[0]['when'], 1273258009)
             self.assertEqual(self.changes_added[0]['comments'], 'hello!')
             self.assertEqual(self.changes_added[0]['branch'], 'master')
             self.assertEqual(self.changes_added[0]['files'], [ '/etc/442' ])
             self.assertEqual(self.changes_added[0]['src'], 'git')
             self.assertEqual(self.changes_added[1]['author'], 'by:64a5dc2a')
-            self.assertEqual(self.changes_added[1]['when_timestamp'],
-                                        epoch2datetime(1273258009))
+            self.assertEqual(self.changes_added[1]['when'], 1273258009)
             self.assertEqual(self.changes_added[1]['comments'], 'hello!')
             self.assertEqual(self.changes_added[1]['files'], [ '/etc/64a' ])
             self.assertEqual(self.changes_added[1]['src'], 'git')

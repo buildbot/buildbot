@@ -19,7 +19,6 @@ from twisted.python import log
 from twisted.internet import defer, utils
 
 from buildbot.changes import base
-from buildbot.util import epoch2datetime
 from buildbot.util.state import StateMixin
 from buildbot import config
 
@@ -220,7 +219,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                    revision=rev,
                    files=files,
                    comments=comments,
-                   when_timestamp=epoch2datetime(timestamp),
+                   when=timestamp,
                    branch=branch,
                    category=self.category,
                    project=self.project,

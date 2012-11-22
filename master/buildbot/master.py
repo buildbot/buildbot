@@ -432,9 +432,16 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         author = handle_deprec("who", who, "author", author)
         is_dir = handle_deprec("isdir", isdir, "is_dir", is_dir,
                                 default=0)
-        when_timestamp = handle_deprec("when", when,
-                                "when_timestamp", when_timestamp,
-                                converter=epoch2datetime)
+        if when_timestamp is not None:
+            if when is None:
+                log.msg("WARNING: change source is using deprecated "
+                        "addChange parameter 'when_timestamp'")
+            else:
+                raise TypeError("Cannot provide 'when' and 'when_timestamp'"
+                                "to addChange")
+        else:
+            if when is not None:
+                when_timestamp = epoch2datetime(when)
 
         # add a source to each property
         for n in properties:
