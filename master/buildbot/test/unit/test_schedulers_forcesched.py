@@ -112,7 +112,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
     def test_basicForce(self):
         sched = self.makeScheduler()
         
-        res = yield sched.force('user', 'a', branch='a', reason='because',revision='c',
+        res = yield sched.force('user', builderNames=['a'], branch='a', reason='because',revision='c',
                         repository='d', project='p',
                         property1_name='p1',property1_value='e',
                         property2_name='p2',property2_value='f',
@@ -134,6 +134,61 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                                ('p2', ('f', 'Force Build Form')),
                                ('p3', ('g', 'Force Build Form')),
                                ('p4', ('h', 'Force Build Form')),
+                               ('reason', ('because', 'Force Build Form')),
+                               ('scheduler', ('testsched', 'Scheduler')),
+                               ],
+                  sourcestampsetid=100),
+             {'':
+              dict(branch='a', revision='c', repository='d', codebase='',
+                  project='p', sourcestampsetid=100)
+             })
+
+    @defer.inlineCallbacks
+    def test_force_allBuilders(self):
+        sched = self.makeScheduler()
+
+        res = yield sched.force('user', branch='a', reason='because',revision='c',
+                        repository='d', project='p',
+                        )
+        bsid,brids = res
+
+        self.assertEqual(len(brids), 2)
+
+        self.db.buildsets.assertBuildset\
+            (bsid,
+             dict(reason="A build was forced by 'user': because",
+                  brids=brids,
+                  builders = ['a', 'b'],
+                  external_idstring=None,
+                  properties=[ ('owner', ('user', 'Force Build Form')),
+                               ('reason', ('because', 'Force Build Form')),
+                               ('scheduler', ('testsched', 'Scheduler')),
+                               ],
+                  sourcestampsetid=100),
+             {'':
+              dict(branch='a', revision='c', repository='d', codebase='',
+                  project='p', sourcestampsetid=100)
+             })
+
+    @defer.inlineCallbacks
+    def test_force_someBuilders(self):
+        sched = self.makeScheduler(builderNames=['a','b','c'])
+
+        res = yield sched.force('user', builderNames=['a','b'],
+                        branch='a', reason='because',revision='c',
+                        repository='d', project='p',
+                        )
+        bsid,brids = res
+
+        self.assertEqual(len(brids), 2)
+
+        self.db.buildsets.assertBuildset\
+            (bsid,
+             dict(reason="A build was forced by 'user': because",
+                  brids=brids,
+                  builders = ['a', 'b'],
+                  external_idstring=None,
+                  properties=[ ('owner', ('user', 'Force Build Form')),
                                ('reason', ('because', 'Force Build Form')),
                                ('scheduler', ('testsched', 'Scheduler')),
                                ],
@@ -174,7 +229,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_good_codebases(self):
         sched = self.makeScheduler(codebases=['foo', CodebaseParameter('bar')])
-        res = yield sched.force('user', 'a', reason='because',
+        res = yield sched.force('user', builderNames=['a'], reason='because',
                         foo_branch='a', foo_revision='c', foo_repository='d', foo_project='p',
                         bar_branch='a2', bar_revision='c2', bar_repository='d2', bar_project='p2',
                         property1_name='p1',property1_value='e',
@@ -233,7 +288,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         if not req:
             req = {name:value, 'reason':'because'}
         try:
-            bsid, brids = yield sched.force(owner, 'a', **req)
+            bsid, brids = yield sched.force(owner, builderNames=['a'], **req)
         except Exception,e:
             if expectKind is not Exception:
                 # an exception is not expected
