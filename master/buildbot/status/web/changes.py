@@ -63,7 +63,8 @@ class ChangeBox(components.Adapter):
         template = req.site.buildbot_service.templates.get_template("change_macros.html")
         text = template.module.box_contents(url=url,
                                             who=self.original.getShortAuthor(),
-                                            pageTitle=self.original.comments)
+                                            pageTitle=self.original.comments,
+                                            revision=self.original.revision)
         return Box([text], class_="Change")
 components.registerAdapter(ChangeBox, Change, IBox)
 
