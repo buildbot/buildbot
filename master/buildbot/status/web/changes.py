@@ -64,7 +64,8 @@ class ChangeBox(components.Adapter):
         text = template.module.box_contents(url=url,
                                             who=self.original.getShortAuthor(),
                                             pageTitle=self.original.comments,
-                                            revision=self.original.revision)
+                                            revision=self.original.revision,
+                                            project=self.original.project)
         return Box([text], class_="Change")
 components.registerAdapter(ChangeBox, Change, IBox)
 
