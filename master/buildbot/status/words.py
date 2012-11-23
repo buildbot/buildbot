@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import re, shlex, random, os, signal
+import re, shlex, random
 from string import join, capitalize, lower
 
 from zope.interface import implements
@@ -754,8 +754,8 @@ class IRCContact(base.StatusReceiver):
                 self.send("Stopping clean shutdown")
                 botmaster.cancelCleanShutdown()
         elif args == 'now':
-            self.send("Sending signal SIGTERM")
-            os.kill(os.getpid(), signal.SIGTERM)
+            self.send("Stopping buildbot")
+            reactor.stop()
     command_SHUTDOWN.usage = {
         None: "shutdown check|start|stop|now - shutdown the buildbot master",
         "check": "shutdown check - check if the buildbot master is running or shutting down",
