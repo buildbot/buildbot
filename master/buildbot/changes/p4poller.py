@@ -185,7 +185,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                        files=branch_files[branch],
                        comments=comments,
                        revision=str(num),
-                       when_timestamp=util.epoch2datetime(when),
+                       when=when,
                        branch=branch,
                        project=self.project)
 

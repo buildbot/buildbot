@@ -21,7 +21,6 @@ from twisted.internet import defer, utils
 from buildbot import config
 from buildbot.util import deferredLocked
 from buildbot.changes import base
-from buildbot.util import epoch2datetime
 
 class HgPoller(base.PollingChangeSource):
     """This source will poll a remote hg repo for changes and submit
@@ -268,7 +267,7 @@ class HgPoller(base.PollingChangeSource):
                    revision=node,
                    files=files,
                    comments=comments,
-                   when_timestamp=epoch2datetime(timestamp),
+                   when=timestamp,
                    branch=self.branch,
                    category=self.category,
                    project=self.project,

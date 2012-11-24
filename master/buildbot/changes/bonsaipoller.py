@@ -21,7 +21,6 @@ from twisted.internet import defer
 from twisted.web import client
 
 from buildbot.changes import base
-from buildbot.util import epoch2datetime
 
 class InvalidResultError(Exception):
     def __init__(self, value="InvalidResultError"):
@@ -273,5 +272,5 @@ class BonsaiPoller(base.PollingChangeSource):
             yield self.master.addChange(author = cinode.who,
                                files = files,
                                comments = cinode.log,
-                               when_timestamp = epoch2datetime(cinode.date),
+                               when = cinode.date,
                                branch = self.branch)

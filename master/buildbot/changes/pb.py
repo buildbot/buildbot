@@ -19,7 +19,6 @@ from twisted.internet import defer
 
 from buildbot.pbutil import NewCredPerspective
 from buildbot.changes import base
-from buildbot.util import epoch2datetime
 from buildbot import config
 
 class ChangePerspective(NewCredPerspective):
@@ -46,9 +45,9 @@ class ChangePerspective(NewCredPerspective):
             changedict['files'] = []
 
         # rename arguments to new names.  Note that the client still uses the
-        # "old" names (who, when, and isdir), as they are not deprecated yet,
+        # "old" names (who, and isdir), as they are not deprecated yet,
         # although the master will accept the new names (author,
-        # when_timestamp, and is_dir).  After a few revisions have passed, we
+        # and is_dir).  After a few revisions have passed, we
         # can switch the client to use the new names.
         if 'isdir' in changedict:
             changedict['is_dir'] = changedict['isdir']
@@ -56,12 +55,6 @@ class ChangePerspective(NewCredPerspective):
         if 'who' in changedict:
             changedict['author'] = changedict['who']
             del changedict['who']
-        if 'when' in changedict:
-            when = None
-            if changedict['when'] is not None:
-                when = epoch2datetime(changedict['when'])
-            changedict['when_timestamp'] = when
-            del changedict['when']
 
         # turn any bytestring keys into unicode, assuming utf8 but just
         # replacing unknown characters.  Ideally client would send us unicode

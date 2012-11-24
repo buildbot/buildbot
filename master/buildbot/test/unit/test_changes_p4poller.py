@@ -17,7 +17,6 @@ import time
 from twisted.trial import unittest
 from buildbot.changes.p4poller import P4Source, get_simple_split, P4PollerError
 from buildbot.test.util import changesource, gpo
-from buildbot.util import epoch2datetime
 
 first_p4changes = \
 """Change 1 on 2006/04/13 by slamb@testclient 'first rev'
@@ -92,7 +91,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
     def makeTime(self, timestring):
         datefmt = '%Y/%m/%d %H:%M:%S'
         when = time.mktime(time.strptime(timestring, datefmt))
-        return epoch2datetime(when)
+        return when
 
     # tests
 
@@ -140,7 +139,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                      project='',
                      comments=change_2_log,
                      revision='2',
-                     when_timestamp=self.makeTime("2006/04/13 21:46:23"),
+                     when=self.makeTime("2006/04/13 21:46:23"),
                      branch='trunk'))
 
             # These two can happen in either order, since they're from the same
@@ -155,7 +154,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                      project='',
                      comments=change_3_log, # converted to unicode correctly
                      revision='3',
-                     when_timestamp=self.makeTime("2006/04/13 21:51:39"),
+                     when=self.makeTime("2006/04/13 21:51:39"),
                      branch='branch_b'))
             self.assertEquals(self.changes_added[2],
                 dict(author='bob',
@@ -163,7 +162,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                      project='',
                      comments=change_3_log, # converted to unicode correctly
                      revision='3',
-                     when_timestamp=self.makeTime("2006/04/13 21:51:39"),
+                     when=self.makeTime("2006/04/13 21:51:39"),
                      branch='branch_c'))
             self.assertAllCommandsRan()
         d.addCallback(check_second_check)
