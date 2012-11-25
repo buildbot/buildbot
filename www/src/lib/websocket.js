@@ -7,17 +7,17 @@ define(
     function(socket, dom, JSON) {
         var ws_url = bb_router.ws_url;
         var socket = socket(ws_url + "ws");
-        
+
         function setText(div, content){
             node = dom.byId(div);
             node.innerHTML = content;
         };
-        
+
         function appendText(div, content){
             node = dom.byId(div);
             node.innerHTML = content + "<br/>" + node.innerHTML;
         };
-        
+
         return {
             startWebsocket : function() {
                 socket.on("open", function(event){

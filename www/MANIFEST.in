@@ -1,0 +1,2 @@
+recursive-include built *
+include built/file-list.txt

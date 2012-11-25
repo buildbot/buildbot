@@ -1,7 +1,7 @@
 define(
     [
         "dojo/store/Memory",
-        "dojo/store/JsonRest", 
+        "dojo/store/JsonRest",
         "dojo/store/Cache",
         "dojo/json"
     ],
@@ -18,7 +18,7 @@ define(
                 return data;
             },
             loadMultipleChanges: function(count){
-                data = store.query({}, 
+                data = store.query({},
                                    {start:latestReq,
                                     count:count});
                 latestReq += count;
@@ -27,6 +27,6 @@ define(
             loadAllChanges: function(){
                 data = store.query();
                 return data;
-            },
+            }
         }
     });
