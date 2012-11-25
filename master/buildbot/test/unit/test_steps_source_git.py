@@ -16,10 +16,10 @@
 from twisted.trial import unittest
 from buildbot.steps.source import git
 from buildbot.status.results import SUCCESS, FAILURE
-from buildbot.test.util import sourcesteps
+from buildbot.test.util import config, sourcesteps
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
 
-class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
+class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
 
     def setUp(self):
         return self.setUpSourceStep()
@@ -751,7 +751,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_mode_full_copy_shallow(self):
-        self.assertRaises(AssertionError, lambda :
+        self.assertRaisesConfigError("shallow only possible with mode 'full' and method 'clobber'", lambda :
                 git.Git(repourl='http://github.com/buildbot/buildbot.git',
                         mode='full', method='copy', shallow=True))
 
@@ -878,7 +878,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_repourl(self):
-        self.assertRaises(AssertionError, lambda :
+        self.assertRaisesConfigError("must provide repourl", lambda :
                 git.Git(mode="full"))
 
     def test_mode_full_fresh_revision(self):

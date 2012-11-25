@@ -16,6 +16,7 @@
 from twisted.python import log
 from twisted.internet import defer
 
+from buildbot import config
 from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
@@ -111,13 +112,17 @@ class Git(Source):
         self.getDescription = getDescription
         Source.__init__(self, **kwargs)
 
-        assert self.mode in ['incremental', 'full']
-        assert self.repourl is not None
-        if self.mode == 'full':
-            assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
-        if self.shallow:
-            assert self.mode == 'full' and self.method == 'clobber'
-        assert isinstance(self.getDescription, (bool, dict))
+        if self.mode not in ['incremental', 'full']:
+            config.error("Git: mode must be 'incremental' or 'full'.")
+        if not self.repourl:
+            config.error("Git: must provide repourl.")
+        if (self.mode == 'full' and
+                self.method not in ['clean', 'fresh', 'clobber', 'copy', None]):
+            config.error("Git: invalid method for mode 'full'.")
+        if self.shallow and (self.mode != 'full' or self.method != 'clobber'):
+            config.error("Git: shallow only possible with mode 'full' and method 'clobber'.")
+        if not isinstance(self.getDescription, (bool, dict)):
+            config.error("Git: getDescription must be a boolean or a dict.")
 
     def startVC(self, branch, revision, patch):
         self.branch = branch or 'HEAD'
