@@ -39,10 +39,10 @@ class TestPBManager(unittest.TestCase):
         return defer.succeed(persp)
 
     def test_repr(self):
-        reg = self.pbm.register('tcp:99891', "x", "y", self.perspectiveFactory)
-        self.assertEqual(`self.pbm.dispatchers['tcp:99891']`,
-                '<pbmanager.Dispatcher for x on tcp:99891>')
-        self.assertEqual(`reg`, '<pbmanager.Registration for x on tcp:99891>')
+        reg = self.pbm.register('tcp:19989', "x", "y", self.perspectiveFactory)
+        self.assertEqual(`self.pbm.dispatchers['tcp:19989']`,
+                '<pbmanager.Dispatcher for x on tcp:19989>')
+        self.assertEqual(`reg`, '<pbmanager.Registration for x on tcp:19989>')
 
     def test_register_unregister(self):
         portstr = "tcp:0:interface=127.0.0.1"
