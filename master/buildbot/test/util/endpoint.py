@@ -71,6 +71,11 @@ class EndpointMixin(interfaces.InterfaceTests):
         self.assertIdentical(qref.callback, cb)
         self.assertEqual(qref.filter, expected_filter)
 
+    def callControl(self, action, args, kwargs):
+        self.assertIn(set(kwargs), self.pathArgs)
+        d = self.ep.control(action, args, kwargs)
+        self.assertIsInstance(d, defer.Deferred)
+        return d
 
     # interface tests
 

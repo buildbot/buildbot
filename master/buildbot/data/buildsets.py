@@ -36,6 +36,7 @@ class BuildsetEndpoint(base.Endpoint):
 class BuildsetsEndpoint(base.Endpoint):
 
     pathPattern = ( 'buildset', )
+    rootLinkName = 'buildset'
 
     def get(self, options, kwargs):
         complete = None

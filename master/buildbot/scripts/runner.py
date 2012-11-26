@@ -642,6 +642,14 @@ class UserOptions(base.SubcommandOptions):
             if info:
                 raise usage.UsageError("cannot use --info with 'remove' "
                                        "or 'get'")
+class UiTestOption(base.BasedirMixin, base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.uitestserver.uitestserver"
+    optParameters  = [
+        ['port', 'p', "0", "force port number"],
+        ]
+    def getSynopsis(self):
+        return "Usage:   buildbot ui-test-server [options]"
+
 
 
 class Options(usage.Options):
@@ -679,7 +687,9 @@ class Options(usage.Options):
         ['checkconfig', None, CheckConfigOptions,
          "test the validity of a master.cfg config file"],
         ['user', None, UserOptions,
-         "Manage users in buildbot's database"]
+         "Manage users in buildbot's database"],
+        ['ui-test-server', None, UiTestOption,
+         "Start a fake master to test the www UI"]
         ]
 
     def opt_version(self):

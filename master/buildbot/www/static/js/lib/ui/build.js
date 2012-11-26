@@ -31,7 +31,7 @@ define(["dojo/_base/declare", "lib/ui/base",
 	loadMoreContext: function(){
 	    this.builderName = this.path_components[1].toString();
 	    this.number = this.path_components[2].toString();
-	    return this.getApiV1("builders",this.builderName,"builds",this.number).then(
+	    return this.api.getApiV1("builders",this.builderName,"builds",this.number).then(
 		dojo.hitch(this, function(b) { /* success */
 		    this.b = b;
 		    window.bb.addHistory("recent_builds", this.fullName());

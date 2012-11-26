@@ -72,7 +72,7 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
             js = os.path.join(public_html, "static", "js", os.path.basename(js))
             if not os.path.isdir(js):
                 raise ValueError("missing js files in %s: please do buildbot upgrade_master"
-                                 " or update_js"%(js,))
+                                 " or updatejs"%(js,))
             if os.path.exists(os.path.join(js, "routes.js")):
                 extra_routes.append(os.path.basename(js)+"/routes")
 

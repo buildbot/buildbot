@@ -14,9 +14,13 @@
 # Copyright Buildbot Team Members
 
 import weakref
-from twisted.internet import defer
+from twisted.internet import defer, reactor
+from twisted.internet.protocol import ServerFactory
+from buildbot.mq import connector as mqconnector
+from buildbot.data import connector as dataconnector
 from buildbot.test.fake import fakedb, fakemq, fakedata
 from buildbot.test.fake import pbmanager
+from buildbot.www import service
 from buildbot import config
 import mock
 
@@ -130,3 +134,23 @@ def make_master(wantMq=False, wantDb=False, wantData=False,
     if wantData:
         master.data = fakedata.FakeDataConnector(master, testcase)
     return master
+
+# this config has real mq, real data, real www, but fakedb, and no build engine for ui test
+@defer.inlineCallbacks
+def make_master_for_uitest(port, public_html):
+    tcp = reactor.listenTCP(port, ServerFactory())
+    port = tcp._realPortNumber
+    yield tcp.stopListening()
+    url = 'http://localhost:'+str(port)+"/"
+    master = FakeMaster()
+    master.db = fakedb.FakeDBConnector(mock.Mock())
+    master.mq = mqconnector.MQConnector(master)
+    class testHookedDataConnector(dataconnector.DataConnector):
+        submodules = dataconnector.DataConnector.submodules + ['buildbot.data.testhooks']
+
+    master.data = testHookedDataConnector(master)
+    master.config.www = dict(url=url, port=port, public_html=public_html)
+    master.www = service.WWWService(master)
+    yield master.www.startService()
+    yield master.www.reconfigService(master.config)
+    defer.returnValue(master)
