@@ -25,7 +25,7 @@ define(["dojo/_base/declare", "lib/ui/base",
             declare.safeMixin(this,args);
         },
 	loadMoreContext: function(){
-	    return this.getApiV1("builders").then(dojo.hitch(this, function(builders) {
+	    return this.api.getApiV1("builders").then(dojo.hitch(this, function(builders) {
 		this.builders = builders;
 	    }));
 	},

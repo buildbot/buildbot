@@ -26,11 +26,11 @@ define(["dojo/_base/declare", "lib/ui/base",
         },
 	loadMoreContext: function(){
 	    this.builderName = this.path_components[1].toString();
-	    return this.getApiV1("builders",this.builderName).then(
+	    return this.api.getApiV1("builders",this.builderName).then(
 		dojo.hitch(this, function(builder) {
 		    this.builder = builder;
 		    window.bb.addHistory("recent_builders", this.builderName);
-		    return this.getApiV1("builders",this.builderName,"builds","_all").then(dojo.hitch(this, function(builds) {
+		    return this.api.getApiV1("builders",this.builderName,"builds","_all").then(dojo.hitch(this, function(builds) {
 			this.builds = builds;
 		    }));
 	    }),

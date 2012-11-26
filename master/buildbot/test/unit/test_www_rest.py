@@ -68,6 +68,8 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
                 return defer.fail(exceptions.InvalidPathError())
             elif action == "notfound":
                 return defer.fail(exceptions.InvalidActionException())
+            elif action == "notfounderror":
+                return defer.fail(exceptions.InvalidActionException("notfounderror not found"))
             else:
                 rv = dict(orig_args=args.copy(),
                           path = path)
@@ -189,6 +191,17 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         def check(_):
             self.assertRequest(
                 errorJsonRPC={'code': -32601, 'message': 'invalid method'},
+                contentType='application/json',
+                responseCode=501)
+        return d
+    def test_controljs_badaction2(self):
+        d = self.render_control_resource(self.rsrc, ['path'],
+                                         {"param1":["foo"]},action="notfounderror",
+                                         jsonRpc=True)
+        @d.addCallback
+        def check(_):
+            self.assertRequest(
+                errorJsonRPC={'code': -32601, 'message': 'notfounderror not found'},
                 contentType='application/json',
                 responseCode=501)
         return d

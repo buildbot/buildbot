@@ -114,7 +114,7 @@ Testing javascript and json api interaction is tricky. Few design principles:
   - let the JS test suite be entirely JS driven, and not python trial driven + JS assertion, like originally though
   - JS tests can control data api, and trigger fake events via a special testing data api.
   - JS developer can run its test without trial knowledge. Only points the browser to doh's runner.html page, and run the tests:
-    e.g.: http://nine.buildbot.net/nine/static/js/util/doh/runner.html?test=lib/tests/all
+    e.g.: http://nine.buildbot.net/nine/static/js/lib/tests/runner.html#all
   - Need a js test mode that has to be enabled in master.cfg, in order to prevent prod's db to be corrupted by tests if malicious people launch them
   - Test mode will add some data api to inject pre-crafted events in the data flow.
 
@@ -126,6 +126,8 @@ These are just "things that need doing", where we don't have much idea *how* yet
   => dojo has support for i18n/l10n and accessibility
 * Use TastyPie as a model for a generic REST API library
   => We decided to use data as a basis for REST API, we just need a translation layer for data <-> json REST, implemented in rest.py
+
+* Need to download bootstrap from upstream instead of having a hardcopy in our source code.
 
 # Database Updates #
 

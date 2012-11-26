@@ -128,7 +128,7 @@ class V2RootResource(resource.Resource):
                                               id=jsonRpcId
                                               )))
             write_error = write_error_default
-            contenttype = request.getHeader('content-type', URL_ENCODED)
+            contenttype = request.getHeader('content-type') or URL_ENCODED
 
             if contenttype.startswith(JSON_ENCODED):
                 write_error = write_error_jsonrpc
@@ -151,16 +151,19 @@ class V2RootResource(resource.Resource):
                     data = yield self.master.data.control(action, reqOptions, tuple(reqPath))
                 else:
                     data = yield self.master.data.get(reqOptions, tuple(reqPath))
-            except data_exceptions.InvalidPathError:
-                write_error("invalid path", errcode=404)
+            except data_exceptions.InvalidPathError,e:
+                write_error(str(e) or "invalid path", errcode=404)
                 return
-            except data_exceptions.InvalidOptionException:
-                write_error("invalid option")
+            except data_exceptions.InvalidOptionException,e:
+                write_error(str(e) or "invalid option")
                 return
-            except data_exceptions.InvalidActionException:
-                write_error("invalid method", errcode=501,jsonrpccode=JSONRPC_CODES["method_not_found"])
+            except data_exceptions.InvalidActionException,e:
+                write_error(str(e) or "invalid method", errcode=501,jsonrpccode=JSONRPC_CODES["method_not_found"])
                 return
-
+            except Exception, e:
+                write_error(repr(e), errcode=500,jsonrpccode=JSONRPC_CODES["internal_error"])
+                log.err(e) # make sure we log unknown exception
+                return
             if data is None:
                 write_error("no data")
                 return

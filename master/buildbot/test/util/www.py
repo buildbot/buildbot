@@ -17,12 +17,9 @@ import os
 from urlparse import urljoin
 from buildbot.util import json
 from twisted.internet import defer, reactor
-from twisted.internet.error import CannotListenError
-from twisted.internet.protocol import ServerFactory
 from twisted.web import server
-from buildbot.www import service
 from buildbot.test.fake import fakemaster
-from twisted.python import failure
+from twisted.python import failure, log
 from cStringIO import StringIO
 from uuid import uuid1
 
@@ -175,76 +172,34 @@ class WwwGhostTestMixin(object):
         ## workaround twisted bug  http://twistedmatrix.com/trac/ticket/2386
         import twisted
         twisted.web.http._logDateTimeUsers = 1
+        twisted.internet.base.DelayedCall.debug = True
         ## we cannot use self.patch, as _logDateTimeUsers is not present in all versions of twisted
-        portFound = False
-        port = 18010
-        while not portFound:
-            try:
-                tcp = reactor.listenTCP(port, ServerFactory())
-                portFound = True
-                yield tcp.stopListening()
-            except CannotListenError:
-                port+=1
-        self.url = 'http://localhost:'+str(port)+"/"
-        self.master = self.make_master(url=self.url, port=port, public_html= PUBLIC_HTML_PATH)
-        self.svc = service.WWWService(self.master)
-        yield self.svc.startService()
-        yield self.svc.reconfigService(self.master.config)
+        self.master = yield fakemaster.make_master_for_uitest(0, PUBLIC_HTML_PATH)
+        self.url = self.master.config.www["url"]
+        log.msg("listening on "+self.url)
         self.ghost = Ghost()
 
     @defer.inlineCallbacks
     def tearDown(self):
         from  twisted.internet.tcp import Server
         del self.ghost
-        yield self.svc.stopService()
         # webkit has the bad habbit on not closing the persistent
         # connections, so we need to hack them away to make trial happy
         for reader in reactor.getReaders():
             if isinstance(reader, Server):
                 f = failure.Failure(Exception("test end"))
                 reader.connectionLost(f)
+        yield self.master.www.stopService()
 
     @defer.inlineCallbacks
-    def doPageLoadTest(self, ui_path, js_assertions, selector_to_wait = "#content div"):
-        """ start ghost on the given path, and make a bunch of js assertions"""
-        yield self.ghost.open(urljoin(self.url,ui_path))
-        yield self.ghost.wait_for_selector(selector_to_wait)
-        # import test framework in the global namespace
-        # This is a kind of tricky hack in order to load doh without the _browserRunner module
-        # at the end of runner.js, there is a legacy hack to load also _browserRunner, which
-        # does much more than we need, including hooking console.log
-        runner = open(os.path.join(PUBLIC_HTML_PATH, "static","js","util","doh","runner.js")).read()
-        runner = "\n".join(runner.splitlines()[:-4])
-        runner = runner.replace('define("doh/runner",', "require(")
-        runner = runner.replace('return doh;',
-                                """var div = document.createElement("div");
-                                div.innerHTML = "<div id=doh_loaded></div>";
-                                document.body.appendChild(div);
-                                return doh;""")
-        self.ghost.evaluate(runner)
-        yield self.ghost.wait_for_selector("#doh_loaded")
-        doh_boilerplate = """
-             (function() {
-             try {
-             %(js)s
-             } catch(err) {
-                return String(err);
-             } return "OK";
-             })()
-             """
-        for js in js_assertions:
-            result, _ = self.ghost.evaluate(doh_boilerplate%dict(js=js))
-            self.assertEqual(result, "OK")
-
-    @defer.inlineCallbacks
-    def doDohPageLoadRunnerTests(self, doh_tests="dojo/tests/colors"):
+    def doDohPageLoadRunnerTests(self, doh_tests="../../dojo/tests/colors"):
         self.ghost.wait_timeout = 200
-        yield self.ghost.open(urljoin(self.url,"static/js.built/lib/tests/runner.html"))
-        result_selector = "#testListContainer table tfoot tr.inProgress"
-        self.ghost.inject_script("require(['dojo', 'doh', 'dojo/window'], function(dojo,doh){ require(['"+doh_tests+"'], function(){doh.run()})});")
+        yield self.ghost.open(urljoin(self.url,"static/js.built/lib/tests/runner.html#"+doh_tests))
         result_selector = "#testListContainer table tfoot tr.inProgress"
         yield self.ghost.wait_for_selector(result_selector)
         result, _ = self.ghost.evaluate("dojo.map(dojo.query('"+result_selector+" .failure'),function(a){return a.textContent;});")
-        self.assertEqual(result, ['0','0'])
+        errors, failures = map(int,result)
+        self.assertEqual(errors, 0,"there is at least one testsuite error")
+        self.assertEqual(failures, 0,"there is at least one testsuite failure")
         result, _ = self.ghost.evaluate("dojo.map(dojo.query('"+result_selector+" td'),function(a){return a.textContent;});")
         print "\n",str(result[1]).strip(),

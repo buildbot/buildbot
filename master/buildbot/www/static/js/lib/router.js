@@ -98,6 +98,7 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 		    var widget = "lib/ui/"+route.widget;
 		    var args = {};
 		    var reformated_args="";
+		    var test;
 		    found = true;
 		    /* allows user to pass URL style arguments to the UI
 		       e.g: /builder/builder1?force1.reason=generated%20form&force1.branch=new_branch
@@ -109,6 +110,10 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 		    path = path[0];
 		    if (reformated_args.length>0) {
 			reformated_args = "?"+reformated_args;
+		    }
+		    if(args.hasOwnProperty("test")) {
+			test = args.test;
+			delete args.test;
 		    }
 		    /* make sure we give user feedback in case of malformated args */
 		    hash("/"+path+reformated_args);
@@ -128,6 +133,9 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 			    loading.style.display = "none";
 			    w.placeAt(content);
 			    window.bb.curWidget = w;
+			    if(test) {
+				require(["doh/main",test],function(doh) {doh.run();});
+			    }
 			});
 		    });
 		    if (nav) {
