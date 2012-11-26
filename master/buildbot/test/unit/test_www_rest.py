@@ -225,7 +225,7 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
     def test_controljs_malformedjsonparse(self):
         return self.dotest_controljs_malformedjson(
             "{]",
-            {'code': -32700, 'message': "jsonrpc parse error: ValueError('Expecting property name: line 1 column 1 (char 1)',)"}
+            {'code': -32700, 'message': "jsonrpc parse error: Expecting property name: line 1 column 1 (char 1)"}
             ,noIdCheck=True, autoEncode=False)
     def test_controljs_malformedjsonlist(self):
         return self.dotest_controljs_malformedjson(

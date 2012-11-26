@@ -99,7 +99,7 @@ class V2RootResource(resource.Resource):
         try:
             data = json.loads(datastr)
         except Exception,e:
-            updateError("jsonrpc parse error: %s"%(repr(e)), JSONRPC_CODES["parse_error"])
+            updateError("jsonrpc parse error: %s"%(str(e)), JSONRPC_CODES["parse_error"])
         if type(data) == list:
             updateError("jsonrpc call batch is not supported", JSONRPC_CODES["internal_error"])
         if type(data) != dict:
