@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "dojo/_base/lang", "dojo/_base/array","moment"],
+define(["dojo/_base/declare", "dojo/_base/lang", "dojo/_base/array","moment/moment"],
 function(declare, lang, array, moment){
     /* implement basic types for columns to display them in a nice way
      */

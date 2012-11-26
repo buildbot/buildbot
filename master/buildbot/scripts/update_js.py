@@ -26,7 +26,7 @@ js_deps = [("http://download.dojotoolkit.org/release-1.8.1/dojo-release-1.8.1-sr
             "put-selector-0.3.2/","put-selector"),
            ("https://github.com/SitePen/dgrid/archive/v0.3.3.zip",
             "dgrid-0.3.3/","dgrid"),
-           ("https://github.com/timrwood/moment/archive/1.7.2.zip","moment-1.7.2/min/moment.min.js","moment.js")
+           ("https://github.com/timrwood/moment/archive/1.7.2.zip","moment-1.7.2/","moment")
            ]
 def syncStatic(config,www, workdir, olddir):
     """Synchronize the static directory"""
@@ -103,6 +103,7 @@ dependencies = (function(){
 	    packages.push([ _packages[i], "../"+_packages[i]]);
 	    }
         }
+    packages.push([ "doh","../util/doh"]);
     return {
         basePath: "%(basePath)s",
         releaseDir: "%(releaseDir)s",
@@ -118,7 +119,15 @@ dependencies = (function(){
 		{
 			name: "../lib/router.js",
 			dependencies: [
-				"lib.router"
+				"lib.router",
+				"lib.ui.home",
+				"lib.ui.builds",
+				"lib.ui.builder",
+				"lib.ui.builders",
+				"doh.main",
+				"doh.runner",
+				"doh._browserRunner"
+
 			]
 		}
         ]
@@ -157,6 +166,7 @@ def minifyJS(config, www, workdir):
     o.close()
     os.chdir(os.path.join(workdir,"js"))
 
+    os.system("sed 's|define..moment|define(\"moment/moment|' -i moment/moment.js")
     # Those scripts are part of the dojo tarball that we previously downloaded
     if not config['quiet']:
         print "optimizing the javascript UI for better performance in %s" % (config['basedir'],)
