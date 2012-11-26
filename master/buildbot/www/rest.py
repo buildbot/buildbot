@@ -78,7 +78,7 @@ class V2RootResource(resource.Resource):
         for option in set(request.args) - self.knownArgs:
             reqOptions[option] = request.args[option][0]
         return reqOptions
-    def decodeJsonRPC2(self, request):
+    def decodeJsonRPC2(self, request, reply):
         """ In the case of json encoding, we choose jsonrpc2 as the encoding:
         http://www.jsonrpc.org/specification
         instead of just inventing our own. This allow easier re-use of client side code
@@ -88,27 +88,41 @@ class V2RootResource(resource.Resource):
         -> jsonrpc2 notifications are not supported (i.e. you always get an answer)
        """
         datastr = request.content.read()
-        data = json.loads(datastr)
-        if type(data) == list:
-            raise ValueError("jsonrpc call batch is not supported")
-        if type(data) != dict:
-            raise ValueError("json root object must be a dictionary: "+datastr)
+        def updateError(msg, jsonrpccode,e=None):
+            reply.update(dict(error=dict(code=jsonrpccode,
+                                   message=msg)))
+            if e:
+                raise e
+            else:
+                raise ValueError(msg)
 
-        def check(name, _type, _val=None):
-            if not name in data or type(data[name]) != _type:
-                raise ValueError("need '%s' to be present and be a %s"%(name, str(_type)))
+        try:
+            data = json.loads(datastr)
+        except Exception,e:
+            updateError("jsonrpc parse error: %s"%(repr(e)), JSONRPC_CODES["parse_error"])
+        if type(data) == list:
+            updateError("jsonrpc call batch is not supported", JSONRPC_CODES["internal_error"])
+        if type(data) != dict:
+            updateError("json root object must be a dictionary: "+datastr, JSONRPC_CODES["parse_error"])
+
+        def check(name, _types, _val=None):
+            if not name in data:
+                updateError("need '%s' to be present"%(name), JSONRPC_CODES["invalid_request"])
+            if not type(data[name]) in _types:
+                updateError("need '%s' to be of type %s:%s"%(name, " or ".join(map(str,_types)), json.dumps(data[name])), JSONRPC_CODES["invalid_request"])
             if _val != None and data[name] != _val:
-                raise ValueError("need '%s' value to be '%s'"%(name, str(_val)))
-        check("jsonrpc", str, "2.0")
-        check("method", str)
-        check("id", str)
-        check("params", dict) # params can be a list in jsonrpc, but we dont support it.
-        return data["params"], data["method"], data["id"]
+                updateError("need '%s' value to be '%s'"%(name, str(_val)), JSONRPC_CODES["invalid_request"])
+        check("jsonrpc", (str,unicode), "2.0")
+        check("method", (str,unicode))
+        check("id", (str,unicode))
+        check("params", (dict,)) # params can be a list in jsonrpc, but we dont support it.
+        reply["id"] = data["id"]
+        return data["params"], data["method"]
     def render(self, request):
         @defer.inlineCallbacks
         def render():
             reqPath = request.postpath
-            jsonRpcId = None
+            jsonRpcReply = dict(jsonrpc="2.0",id=None)
             # strip an empty string from the end (trailing slash)
             if reqPath and reqPath[-1] == '':
                 reqPath = reqPath[:-1]
@@ -122,18 +136,17 @@ class V2RootResource(resource.Resource):
             def write_error_jsonrpc(msg, errcode=400, jsonrpccode=JSONRPC_CODES["internal_error"]):
                 request.setResponseCode(errcode)
                 request.setHeader('content-type', JSON_ENCODED)
-                request.write(json.dumps(dict(jsonrpc="2.0",
-                                              error=dict(code=jsonrpccode,
-                                                         message=msg),
-                                              id=jsonRpcId
-                                              )))
+                if not "error" in jsonRpcReply: #already filled in by caller
+                    jsonRpcReply.update(dict(error=dict(code=jsonrpccode,
+                                                        message=msg)))
+                request.write(json.dumps(jsonRpcReply))
             write_error = write_error_default
             contenttype = request.getHeader('content-type') or URL_ENCODED
 
             if contenttype.startswith(JSON_ENCODED):
                 write_error = write_error_jsonrpc
                 try:
-                    reqOptions, action, jsonRpcId = self.decodeJsonRPC2(request)
+                    reqOptions, action = self.decodeJsonRPC2(request,jsonRpcReply)
                 except ValueError,e:
                     write_error(str(e), jsonrpccode=JSONRPC_CODES["invalid_request"])
                     return
@@ -196,8 +209,9 @@ class V2RootResource(resource.Resource):
                 data = self._filterEmpty(data)
 
             # if we are talking jsonrpc, we embed the result in standard encapsulation
-            if not jsonRpcId is None:
-                data = {"jsonrpc": "2.0", "result": data, "id": jsonRpcId}
+            if jsonRpcReply['id'] is not None:
+                jsonRpcReply.update({"result": data})
+                data = jsonRpcReply
 
             if compact:
                 data = json.dumps(data, default=self._render_links,

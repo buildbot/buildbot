@@ -205,9 +205,12 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
                 contentType='application/json',
                 responseCode=501)
         return d
-    def dotest_controljs_malformedjson(self, _json, error, noIdCheck=False, httpcode=400):
+    def dotest_controljs_malformedjson(self, _json, error, noIdCheck=False, httpcode=400,
+                                       autoEncode=True):
         request = self.make_request(['path'])
-        request.content = StringIO(json.dumps(_json))
+        if autoEncode:
+            _json = json.dumps(_json)
+        request.content = StringIO(_json)
         request.input_headers = {'content-type': 'application/json'}
         d = self.render_control_resource(self.rsrc,
                                          request = request,
@@ -219,39 +222,50 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
                 contentType='application/json',
                 responseCode=httpcode)
         return d
-    def test_controljs_malformedjson1(self):
+    def test_controljs_malformedjsonparse(self):
+        return self.dotest_controljs_malformedjson(
+            "{]",
+            {'code': -32700, 'message': "jsonrpc parse error: ValueError('Expecting property name: line 1 column 1 (char 1)',)"}
+            ,noIdCheck=True, autoEncode=False)
+    def test_controljs_malformedjsonlist(self):
         return self.dotest_controljs_malformedjson(
             [ "list_not_supported"],
-            {'code': -32600, 'message': 'jsonrpc call batch is not supported'}
+            {'code': -32603, 'message': 'jsonrpc call batch is not supported'}
             ,noIdCheck=True)
 
     def test_controljs_malformedjson_no_dict(self):
         return self.dotest_controljs_malformedjson(
             "str_not_supported",
-            {'code': -32600, 'message': 'json root object must be a dictionary: "str_not_supported"'}
+            {'code': -32700, 'message': 'json root object must be a dictionary: "str_not_supported"'}
             ,noIdCheck=True)
     def test_controljs_malformedjson_nojsonrpc(self):
         return self.dotest_controljs_malformedjson(
             { "method": "action", "params": {"arg":"args"}, "id": "_id"},
-            {'code': -32600, 'message': "need 'jsonrpc' to be present and be a <type 'str'>"}
+            {'code': -32600, 'message': "need 'jsonrpc' to be present"}
             ,noIdCheck=True)
     def test_controljs_malformedjson_no_method(self):
         return self.dotest_controljs_malformedjson(
             { "jsonrpc": "2.0", "params": {"arg":"args"}, "id": "_id"},
-            {'code': -32600, 'message': "need 'method' to be present and be a <type 'str'>"}
+            {'code': -32600, 'message': "need 'method' to be present"}
+            ,noIdCheck=True)
+    def test_controljs_malformedjson_bad_method(self):
+        return self.dotest_controljs_malformedjson(
+            { "jsonrpc": "2.0", "params": {"arg":"args"}, "method":1,"id": "_id"},
+            {'code': -32600,
+             'message': "need 'method' to be of type <type 'str'> or <type 'unicode'>:1"}
             ,noIdCheck=True)
     def test_controljs_malformedjson_no_param(self):
         return self.dotest_controljs_malformedjson(
             { "jsonrpc": "2.0", "method": "action",  "id": "_id"},
-            {'code': -32600, 'message': "need 'params' to be present and be a <type 'dict'>"}
+            {'code': -32600, 'message': "need 'params' to be present"}
             ,noIdCheck=True)
     def test_controljs_malformedjson_bad_param(self):
         return self.dotest_controljs_malformedjson(
             { "jsonrpc": "2.0", "method":"action", "params": ["args"], "id": "_id"},
-            {'code': -32600, 'message': "need 'params' to be present and be a <type 'dict'>"}
+            {'code': -32600, 'message': "need 'params' to be of type <type 'dict'>:[\"args\"]"}
             ,noIdCheck=True)
     def test_controljs_malformedjson_no_id(self):
         return self.dotest_controljs_malformedjson(
             { "jsonrpc": "2.0", "method": "action",  "params": {"arg":"args"} },
-            {'code': -32600, 'message': "need 'id' to be present and be a <type 'str'>"}
+            {'code': -32600, 'message': "need 'id' to be present"}
             ,noIdCheck=True)
