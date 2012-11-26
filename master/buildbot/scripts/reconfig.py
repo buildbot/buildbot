@@ -51,10 +51,15 @@ class Reconfigurator:
         self.sent_signal = False
         reactor.callLater(0.2, self.sighup)
 
-        lw = LogWatcher(os.path.join(basedir, "twistd.log"))
+        lw = LogWatcher()
+        self.process = reactor.spawnProcess(lw.pp, "/usr/bin/tail",
+                                      ("tail", "-f", "-n", "0", "twistd.log"),
+                                      env=os.environ,
+                                      )
         d = lw.start()
         d.addCallbacks(self.success, self.failure)
-        d.addBoth(lambda _ : self.rc)
+        d.addBoth(lambda _: self.process.signalProcess("KILL"))
+        d.addBoth(lambda _: self.rc)
         return d
 
     def sighup(self):

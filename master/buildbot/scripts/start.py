@@ -16,26 +16,25 @@
 
 import os, sys
 from buildbot.scripts import base
-from twisted.internet import reactor, protocol
-from twisted.python.runtime import platformType
+from twisted.internet import defer, reactor, protocol
 from buildbot.scripts.logwatcher import LogWatcher
 from buildbot.scripts.logwatcher import BuildmasterTimeoutError
 from buildbot.scripts.logwatcher import ReconfigError
+from buildbot.util import in_reactor
 
 class Follower:
-    def follow(self, basedir):
-        self.rc = 0
+    def __init__(self):
+        self.lw = LogWatcher()
+
+    def follow(self):
         print "Following twistd.log until startup finished.."
-        lw = LogWatcher(os.path.join(basedir, "twistd.log"))
-        d = lw.start()
+        d = self.lw.start()
         d.addCallbacks(self._success, self._failure)
-        reactor.run()
-        return self.rc
+        return d
 
     def _success(self, _):
         print "The buildmaster appears to have (re)started correctly."
-        self.rc = 0
-        reactor.stop()
+        return 0
 
     def _failure(self, why):
         if why.check(BuildmasterTimeoutError):
@@ -56,8 +55,7 @@ Unable to confirm that the buildmaster started correctly. You may need to
 stop it, fix the config file, and restart.
 """
             print why
-        self.rc = 1
-        reactor.stop()
+        return 1
 
 def launchNoDaemon(config):
     os.chdir(config['basedir'])
@@ -76,25 +74,41 @@ def launchNoDaemon(config):
     from twisted.scripts import twistd
     twistd.run()
 
+@in_reactor
 def launch(config):
     os.chdir(config['basedir'])
     sys.path.insert(0, os.path.abspath(config['basedir']))
+
+    # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use
+    # _twistw.run . Twisted-2.5.0 and later use twistd.run, even for
+    # windows.
+    script = [ "from twisted.scripts import twistd", "twistd.run()"]
+    if not config['quiet']:
+        script = [ "from buildbot._startupLogger import installLogger",
+                "installLogger()" ] + script
 
     # see if we can launch the application without actually having to
     # spawn twistd, since spawning processes correctly is a real hassle
     # on windows.
     argv = [sys.executable,
             "-c",
-            # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use
-            # _twistw.run . Twisted-2.5.0 and later use twistd.run, even for
-            # windows.
-            "from twisted.scripts import twistd; twistd.run()",
+            " ; ".join(script),
             "--no_save",
             "--logfile=twistd.log", # windows doesn't use the same default
             "--python=buildbot.tac"]
 
-    # ProcessProtocol just ignores all output
-    reactor.spawnProcess(protocol.ProcessProtocol(), sys.executable, argv, env=os.environ)
+    if config['quiet']:
+        # ProcessProtocol just ignores all output
+        pp = protocol.ProcessProtocol()
+        d = defer.succeed(0)
+    else:
+        follower = Follower()
+        d = follower.follow()
+        pp = follower.lw.pp
+
+    reactor.spawnProcess(pp, sys.executable, argv, env=os.environ)
+
+    return d
 
 def start(config):
     if not base.isBuildmasterDir(config['basedir']):
@@ -105,12 +119,5 @@ def start(config):
         launchNoDaemon(config)
         return 0
 
-    launch(config)
-
-    # We don't have tail on windows
-    if platformType == "win32" or config['quiet']:
-        return 0
-
-    # this is the parent
-    rc = Follower().follow(config['basedir'])
+    rc = launch(config)
     return rc
