@@ -1,40 +1,40 @@
 [submodule "www/src/dojo"]
 	path = www/src/dojo
-	url = https://github.com/dojo/dojo.git
+	url = http://github.com/dojo/dojo.git
 
 [submodule "www/src/dijit"]
 	path = www/src/dijit
-	url = https://github.com/dojo/dijit.git
+	url = http://github.com/dojo/dijit.git
 
 [submodule "www/src/dojox"]
 	path = www/src/dojox
-	url = https://github.com/dojo/dojox.git
+	url = http://github.com/dojo/dojox.git
 
 [submodule "www/src/xstyle"]
 	path = www/src/xstyle
-	url = https://github.com/kriszyp/xstyle
+	url = http://github.com/kriszyp/xstyle
 
 [submodule "www/src/put-selector"]
 	path = www/src/put-selector
-	url = https://github.com/kriszyp/put-selector
+	url = http://github.com/kriszyp/put-selector
 
 [submodule "www/src/dgrid"]
 	path = www/src/dgrid
-	url = https://github.com/SitePen/dgrid
+	url = http://github.com/SitePen/dgrid
 
 [submodule "www/src/moment"]
 	path = www/src/moment
-	url = git@github.com:djmitche/moment.git
+	url = http://github.com/djmitche/moment.git
 
 [submodule "www/src/util"]
 	path = www/src/util
-	url = https://github.com/dojo/util.git
+	url = http://github.com/dojo/util.git
 [submodule "www/src/hamlcc"]
 	path = www/src/hamlcc
-	url = git://github.com/tardyp/hamlcc.git
+	url = http://github.com/tardyp/hamlcc.git
 [submodule "www/src/haml"]
 	path = www/src/haml
-	url = git://github.com/creationix/haml-js.git
+	url = http://github.com/creationix/haml-js.git
 [submodule "www/src/uglify-js"]
 	path = www/src/uglify-js
-	url = git://github.com/mishoo/UglifyJS.git
+	url = http://github.com/mishoo/UglifyJS.git
