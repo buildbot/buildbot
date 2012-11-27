@@ -13,19 +13,9 @@ built files.
 Libraries
 =========
 
-The following libraries are included in the source tree, and bundled into the
-built package using the Dojo builder.  Each lists the git URL as well as the
-branch or tag checked out.  Where HEAD is specified, the version is considered
-unimportant; in these cases, consult the SHA1 in the git repository.
-
-https://github.com/dojo/dojo.git - 1.8.1
-https://github.com/dojo/dijit.git - 1.8.1
-https://github.com/dojo/dojox.git - 1.8.1
-https://github.com/dojo/util.git - 1.8.1
-https://github.com/kriszyp/xstyle - HEAD
-https://github.com/kriszyp/put-selector - HEAD
-https://github.com/SitePen/dgrid - HEAD
-https://github.com/djmitche/moment - HEAD
+Several libraries are included in the source tree using git submodules, and
+bundled into the built package using the Dojo builder.  Use 'git submodules'
+to list the origin, revision, and tag for each.
 
 Notes
 -----

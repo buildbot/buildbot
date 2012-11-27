@@ -29,3 +29,12 @@
 [submodule "www/src/util"]
 	path = www/src/util
 	url = https://github.com/dojo/util.git
+[submodule "www/src/hamlcc"]
+	path = www/src/hamlcc
+	url = git://github.com/tardyp/hamlcc.git
+[submodule "www/src/haml"]
+	path = www/src/haml
+	url = git://github.com/creationix/haml-js.git
+[submodule "www/src/uglify-js"]
+	path = www/src/uglify-js
+	url = git://github.com/mishoo/UglifyJS.git
