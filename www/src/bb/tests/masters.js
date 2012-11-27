@@ -14,4 +14,6 @@
 // Copyright Buildbot Team Members
 
 define(["dojo/main", "doh/main", "bb/tests/utils"], function(dojo, doh, utils){
+    utils.registerBBTests(doh, "/masters", "masters",[
+    ]);
 });

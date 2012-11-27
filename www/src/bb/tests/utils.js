@@ -13,7 +13,7 @@
 //
 // Copyright Buildbot Team Members
 
-define(["dojo/_base/declare", "bb/jsonapi"],function(declare,jsonapi) {
+define(["dojo/_base/declare", "bb/jsonapi", "doh/main"],function(declare,jsonapi, doh) {
     /* get the dojo script tag element */
     var baseurl= dojo.query("script[data-dojo-config]")[0].src;
     /* remove the 3 last path in the URL */
@@ -21,11 +21,34 @@ define(["dojo/_base/declare", "bb/jsonapi"],function(declare,jsonapi) {
 	baseurl = baseurl.substr(0, baseurl.lastIndexOf("/"));
     }
     baseurl+="/";
-    return declare([],{
+    function testBrockenLink(t, tag) {
+	/* we need to use the special doh's deferred for this to work */
+	var d = new doh.Deferred();
+	var ctx = {errors : []};
+	var alltags = dojo.query(tag);
+	ctx.toLoad = alltags.length;
+	function didLoad(){
+	    ctx.toLoad-=1;
+	    if (ctx.toLoad===0) {
+		d.callback(true);
+	    }
+	}
+	alltags.connect("onerror", function(){
+	    ctx.errors.push(this.src+" is broken link");
+	    didLoad();
+	});
+	alltags.connect("onload", didLoad);
+	alltags.forEach(function(x){x.src=x.src+"?reload";}); /* reload the images now we've setup the hooks */
+	d.addCallback(function(x) {
+	    t.assertEqual(ctx.errors.length, 0, ctx.errors.join("\n"));
+	});
+	return d;
+    }
+    var utils = {
 	getBaseUrl : function() {
 	    return baseurl;
 	},
-	goToBuildbotHash: function(doh, hash, test) {
+	registerBBTests: function(doh, hash, testname, tests) {
 	    var topdog;
 	    var _test;
 	    try{
@@ -36,14 +59,21 @@ define(["dojo/_base/declare", "bb/jsonapi"],function(declare,jsonapi) {
 	    }
 	    if (topdog) {
 		if (hash.indexOf("?")>0) {
-		    _test = "&test="+test;
+		    _test = "&test="+testname;
 		}else{
-		    _test = "?test="+test;
+		    _test = "?test="+testname;
 		}
-		doh.register(test, require.toUrl(this.getBaseUrl()+"ui/#"+hash+_test));
+		doh.register(testname, require.toUrl(this.getBaseUrl()+"ui/#"+hash+_test));
+	    } else {
+		doh.register("sanity", [
+		    function baseurl(t) { t.assertEqual(window.bb_router.base_url, utils.getBaseUrl());},
+		    function brockenimg(t) { return testBrockenLink(t,"img");}
+		]);
+		doh.register(testname, tests);
 	    }
 	    /* if we return true, the test is supposed to declare the real tests */
 	    return !topdog;
 	}
-	})();/* note the singleton */
+    };
+    return utils;
 });

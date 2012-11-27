@@ -31,7 +31,7 @@ def _uitestserver(config):
         reactor.stop()
         raise defer.returnValue(1)
     master = yield fakemaster.make_master_for_uitest(int(config['port']), public_html)
-    webbrowser.open(master.config.www['url']+"bb/tests/runner.html")
+    webbrowser.open(master.config.www['url']+"static/bb/tests/runner.html")
 
 def uitestserver(config):
     def async():
