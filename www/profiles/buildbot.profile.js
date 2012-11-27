@@ -47,7 +47,7 @@ var profile = {
 
     // The default selector engine is not included by default in a dojo.js build in order to make mobile builds
     // smaller. We add it back here to avoid that extra HTTP request. There is also a "lite" selector available; if
-    // you use that, you will need to set the `selectorEngine` property in `lib/run.js`, too. (The "lite" engine is
+    // you use that, you will need to set the `selectorEngine` property in `bb/run.js`, too. (The "lite" engine is
     // only suitable if you are not supporting IE7 and earlier.)
     selectorEngine: 'acme',
 
@@ -99,7 +99,7 @@ var profile = {
         // find doh in util
         { name: 'doh', location: 'util/doh' },
         // buildbot's code
-        'lib',
+        'bb',
         // extensions
         'dgrid',
         'put-selector',

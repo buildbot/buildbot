@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<!-- html Code derived from doh's runner.html
+The original code is under 3 clauses BSD which is compatible with GPLv2 of buildbot.
+-->
+<html lang="en" style="height:100%;">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Buildbot UI Test Suite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="author" content="buildbot team"/>
+
+    <script type="text/javascript" src="../../dojo/dojo.js" data-dojo-config="async: true,useCustomLogger:true"></script>
+    <script>
+      require(["bb/tests/runner"], function(){});
+    </script>
+    <style type="text/css">
+      @import "../../dojo/resources/dojo.css";
+      @import "../../../css/bootstrap.css";
+			.inProgress {
+				background-color: #d9edf7;
+			}
+
+			.table tbody tr.failure td{
+				background-color: #f2dede;;
+			}
+    </style>
+  </head>
+  <body style="height: 100%;">
+    <div class="navbar navbar-inverse">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="brand" href="#all"><img src="../../../img/favicon.ico"/> Buildbot</a>
+	  <div class="nav-collapse pull-right">
+	    <input type="checkbox" id="audio" name="audio"/>
+	    <label for="audio">sounds?</label>
+	  </div>
+          <div class="nav-collapse">
+            <ul class="nav" id="navlist">
+	      <li class="active"><a href=""> Buildbot UI Test Suite </a></li>
+	      <li><a href="../../../../ui/">Home</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+	</div>
+      </div>
+    </div>
+    <div class="container-fluid">
+      <div class="row-fluid">
+	<div class="progress" id="progressOuter" onclick="doh._jumpToSuite(arguments[0]);"></div>
+      </div>
+      <div class="row-fluid">
+	<div class="span3">
+	  <span id="toggleButtons" onclick="doh.togglePaused();">
+	    <button class="btn" id="play"><i class="icon-play"></i></button>
+	    <button class="btn" id="pause" style="display: none;"><i class="icon-pause"></i></button>
+	  </span>
+	  <span id="runningStatus">
+	    <span id="pausedMsg">Stopped</span>
+	    <span id="playingMsg" style="display: none;">Tests Running</span>
+	  </span>
+	</div>
+	<div class="span9">
+	  <div class="navbar">
+	    <div class="navbar-inner">
+              <ul class="nav" id="navtabs">
+	      <li><a onclick="doh._switchtab(0);">Test Page</a></li>
+	      <li class="active"><a onclick="doh._switchtab(1);">Log</a></li>
+	      <li><a onclick="doh._switchtab(2);">Performance Tests Results</a></li>
+	      </ul>
+	    </div>
+	  </div>
+	</div>
+      </div>
+      <div class="row-fluid">
+	<div class="span3"  id="testListContainer">
+	    <table class="table table-bordered"
+		   id="testList" onclick="doh._jumpToLog(arguments[0]);">
+	      <thead>
+		<tr id="testListHeader">
+		  <th>&nbsp;</th>
+		  <th width="20">
+		    <input type="checkbox" checked='1' 
+			   onclick="doh.toggleRunAll();"/>
+		  </th>
+		  <th width="*" style="text-align: left;">test</th>
+		  <th width="50">time</th>
+		</tr>
+	      </thead>
+	      <tbody valign="top">
+		<tr id="groupTemplate" style="display: none;">
+		  <td style="font-family: Arial; width: 15px;">&#9658;</td>
+		  <td>
+		    <input type="checkbox" checked='1'/>
+		  </td>
+		  <td>group name</td>
+		  <td>10ms</td>
+		</tr>
+		<tr id="testTemplate" style="display: none;">
+		  <td>&nbsp;</td>
+		  <td>&nbsp;</td>
+		  <td style="padding-left: 20px;">test name</td>
+		  <td>10ms</td>
+		</tr>
+	      </tbody>
+	    </table>
+	</div>
+	<div class="span9" style="height:800px">
+	  <div style="position: relative; width: 100%; height: 100%; top: 0px; left: 0px;">
+	    <div class="tabBody"
+		 style="z-index: 1;">
+	      <pre id="logBody"></pre>
+	      <div id="perfTestsBody" style="background-color: white;"></div>
+	    </div>
+	    <iframe width="1024" height="768" id="testBody" class="tabBody"
+		    style="z-index: -1;display:none"></iframe>
+	  </div>
+	</div>
+      </div>
+      <span id="hiddenAudio"></span>
+    </div>
+  </body>
+</html>

@@ -22,7 +22,7 @@ rm -rf "$DISTDIR"
 echo " Done"
 
 echo "Rebuilding Buildbot HAML templates..."
-for haml in `find "$SRCDIR/lib" -name '*.haml'`; do
+for haml in `find "$SRCDIR/bb" -name '*.haml'`; do
     echo "$haml"
     NODE_PATH="$SRCDIR" node "$BASEDIR/src/hamlcc/lib/hamlcc.js" $haml
 done
