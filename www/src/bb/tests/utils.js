@@ -73,6 +73,54 @@ define(["dojo/_base/declare", "bb/jsonapi", "doh/main"],function(declare,jsonapi
 	    }
 	    /* if we return true, the test is supposed to declare the real tests */
 	    return !topdog;
+	},
+	assertDomText : function(t, expected, query) {
+		    var e = dojo.query(query);
+		    t.assertEqual(1, e.length, "query needs only one result: "+query);
+		    t.assertEqual(expected, e[0].innerText," query's text is not as expected:"+query);
+	},
+	playTestScenario: function(scenario) {
+	    var d = new doh.Deferred();
+	    jsonapi.control(["testhooks"], "playScenario", { scenario:scenario}).then(function(res) {
+		d.callback(res);
+	    });
+	    return d;
+	},
+	/* play the scenario, and wait for any dom change triggered by tested code
+	   on a given css query */
+	playTestScenarioWaitForDomChange: function(scenario, query) {
+	    function get_query_html() {
+		var r ="";
+		dojo.query(query).forEach(function(e){r+= e.innerHTML;});
+		return r;
+	    }
+	    var orig_html = get_query_html();
+	    var d = new doh.Deferred();
+	    dojo.when(this.playTestScenario(scenario), function(res){
+		/* poll for dom change for 500 msecs,
+		   doh times out at 1000msec
+		 */
+		var retries = 50;
+		var t = window.setInterval(function() {
+		    retries -= 1;
+		    if (retries <= 0 || get_query_html() !== orig_html) {
+			window.clearInterval(t);
+			d.callback(res);
+		    }
+		}, 10);
+	    });
+	    return d;
+	},
+	when : function(d, f) {
+	    if (d.addCallback) {
+		d.addCallback(f);
+		return d;
+	    } else {
+		var _d = new doh.Deferred();
+		_d.addCallback(f);
+		_d.callback(d);
+		return _d;
+	    }
 	}
     };
     return utils;
