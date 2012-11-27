@@ -16,8 +16,8 @@
 define(["dojo/_base/declare", "bb/jsonapi"],function(declare,jsonapi) {
     /* get the dojo script tag element */
     var baseurl= dojo.query("script[data-dojo-config]")[0].src;
-    /* remove the 4 last path in the URL */
-    for (var i=0;i<4;i+=1) {
+    /* remove the 3 last path in the URL */
+    for (var i=0;i<3;i+=1) {
 	baseurl = baseurl.substr(0, baseurl.lastIndexOf("/"));
     }
     baseurl+="/";

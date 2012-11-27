@@ -15,7 +15,28 @@
 
 import os
 import sys
+from twisted.python import util
 
 name = "Buildbot UI"
-path = os.path.join(sys.prefix, 'share', 'buildbot', 'built')
-version = open(os.path.join(path, 'buildbot-version.txt')).read().strip()
+
+# several cases here:
+# we are in a pre-built environment: we give the bot master path to the pre-built files
+# we are in a python setup.py develop mode: we give the bot master path to the src files
+paths = [ os.path.join(sys.prefix, 'share', 'buildbot', 'built'),
+          util.sibpath(__file__,"src") ]
+
+for static_dir in paths:
+    if os.path.isdir(static_dir):
+        def read_file(fn, default=None):
+            fn = os.path.join(static_dir, fn)
+            if not os.path.exists(fn) and default is not None:
+                return default
+            f = open(fn,"r")
+            data = f.read()
+            f.close()
+            return data
+        version = read_file('buildbot-version.txt', default="developer").strip()
+        index_html = read_file("index.html")
+        break
+
+__all__ = [name, version, static_dir, index_html]
