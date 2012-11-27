@@ -37,3 +37,5 @@ _build
 .tox
 master/setuptools_trial*
 master/buildbot/www/static/js/default/
+www/built
+*.haml.js

@@ -18,7 +18,7 @@ from twisted.internet import defer
 from twisted.application import strports, service
 from twisted.web import server, static
 from buildbot import config
-from buildbot.www import ui, resource, rest, ws
+from buildbot.www import ui, resource, rest, ws, static_dir
 
 class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
 
@@ -66,18 +66,20 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
 
     def setup_site(self, new_config):
         public_html = self.site_public_html = new_config.www.get('public_html')
+        root = static.File(public_html)
+        static_node = static.File(static_dir)
+        root.putChild('static', static_node)
         extra_js = self.site_extra_js = new_config.www.get('extra_js', [])
         extra_routes = []
-        for js in extra_js:
-            js = os.path.join(public_html, "static", "js", os.path.basename(js))
-            if not os.path.isdir(js):
+        for ejs in extra_js:
+            ejs = os.path.join(public_html, "static", "js", os.path.basename(ejs))
+            if not os.path.isdir(ejs):
                 raise ValueError("missing js files in %s: please do buildbot upgrade_master"
-                                 " or updatejs"%(js,))
-            if os.path.exists(os.path.join(js, "routes.js")):
-                extra_routes.append(os.path.basename(js)+"/routes")
+                                 " or updatejs"%(ejs,))
+            static_node.putChild(os.path.basename(ejs),static.File(ejs))
+            if os.path.exists(os.path.join(ejs, "routes.js")):
+                extra_routes.append(os.path.basename(ejs)+"/routes")
 
-
-        root = static.File(public_html)
 
         # redirect the root to UI
         root.putChild('', resource.RedirectResource(self.master, 'ui/'))

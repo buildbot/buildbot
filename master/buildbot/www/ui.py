@@ -13,13 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import util
-from buildbot.www import resource
-
-# read the html base page in a html file
-_html_f = open(util.sibpath(__file__,"ui.html"))
-html = _html_f.read()
-_html_f.close()
+from buildbot.www import resource, index_html
 
 class UIResource(resource.Resource):
     isLeaf = True
@@ -39,6 +33,6 @@ class UIResource(resource.Resource):
             extra_routes = self.extra_routes)
         # IE8 ignore doctype html in corporate intranets
         # this additionnal header removes this behavior and put
-        # IE8 in compatibility mode
+        # IE8 in super-standard mode
         request.setHeader("X-UA-Compatible" ,"IE=edge")
-        return html % contents
+        return index_html % contents
