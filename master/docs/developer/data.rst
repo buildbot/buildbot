@@ -72,8 +72,8 @@ Within the buildmaster process, the root of the data API is available at `self.m
     .. py:method:: get(options, kwargs)
 
         :param options: dictionary containing model-specific options
-        :param kwargs : a dictionary describing the resource to get, extracted from the path
-        :raises: :py:exc:~buildbot.data.exceptions.InvalidPathError
+        :param kwargs: a dictionary describing the resource to get, extracted from the path
+        :raises: :py:exc:`~buildbot.data.exceptions.InvalidPathError`
         :returns: a resource or list via Deferred, or None
 
         This method implements the getter section.
@@ -88,8 +88,8 @@ Within the buildmaster process, the root of the data API is available at `self.m
 
         :param callback: a function to call for each message
         :param options: dictionary containing model-specific options
-        :param kwargs : a dictionary describing the resource to control, extracted from the path
-        :raises: :py:exc:~buildbot.data.exceptions.InvalidPathError
+        :param kwargs: a dictionary describing the resource to control, extracted from the path
+        :raises: :py:exc:`~buildbot.data.exceptions.InvalidPathError`
 
         This method implements the subscriptions section.
         The callback interface is the same as that of :py:meth:`~buildbot.mq.connector.MQConnector.startConsuming`.
@@ -99,8 +99,8 @@ Within the buildmaster process, the root of the data API is available at `self.m
 
         :param action: a short string naming the action to perform
         :param args: dictionary containing arguments for the action
-        :param kwargs : a dictionary describing the resource to control, extracted from the path
-        :raises: :py:exc:~buildbot.data.exceptions.InvalidPathError
+        :param kwargs: a dictionary describing the resource to control, extracted from the path
+        :raises: :py:exc:`~buildbot.data.exceptions.InvalidPathError`
         :returns: a resource or list via Deferred, or None
 
         This method implements the control section.
