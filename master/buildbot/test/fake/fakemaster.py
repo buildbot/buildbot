@@ -145,12 +145,15 @@ def make_master_for_uitest(port, public_html):
     master = FakeMaster()
     master.db = fakedb.FakeDBConnector(mock.Mock())
     master.mq = mqconnector.MQConnector(master)
+    master.config.mq = dict(type='simple')
+    master.mq.setup()
     class testHookedDataConnector(dataconnector.DataConnector):
         submodules = dataconnector.DataConnector.submodules + ['buildbot.data.testhooks']
 
     master.data = testHookedDataConnector(master)
     master.config.www = dict(url=url, port=port, public_html=public_html)
     master.www = service.WWWService(master)
+    master.data.updates.playTestScenario("buildbot.test.scenarios.base.BaseScenario.populateBaseDb")
     yield master.www.startService()
     yield master.www.reconfigService(master.config)
     defer.returnValue(master)

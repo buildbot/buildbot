@@ -108,13 +108,13 @@ class V2RootResource(resource.Resource):
         def check(name, _types, _val=None):
             if not name in data:
                 updateError("need '%s' to be present"%(name), JSONRPC_CODES["invalid_request"])
-            if not type(data[name]) in _types:
+            if _types and not type(data[name]) in _types:
                 updateError("need '%s' to be of type %s:%s"%(name, " or ".join(map(str,_types)), json.dumps(data[name])), JSONRPC_CODES["invalid_request"])
             if _val != None and data[name] != _val:
                 updateError("need '%s' value to be '%s'"%(name, str(_val)), JSONRPC_CODES["invalid_request"])
         check("jsonrpc", (str,unicode), "2.0")
         check("method", (str,unicode))
-        check("id", (str,unicode))
+        check("id", None)
         check("params", (dict,)) # params can be a list in jsonrpc, but we dont support it.
         reply["id"] = data["id"]
         return data["params"], data["method"]
@@ -177,7 +177,7 @@ class V2RootResource(resource.Resource):
                 write_error(repr(e), errcode=500,jsonrpccode=JSONRPC_CODES["internal_error"])
                 log.err(e) # make sure we log unknown exception
                 return
-            if data is None:
+            if data is None and request.method=="GET":
                 write_error("no data")
                 return
 

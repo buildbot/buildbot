@@ -134,7 +134,11 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
 			    w.placeAt(content);
 			    window.bb.curWidget = w;
 			    if(test) {
-				require(["doh/main",test],function(doh) {doh.run();});
+				if (window.doh) { /* doh already loaded! We need to cleanup the iframe */
+				    location.reload();
+				    return;
+				}
+				require(["doh/main","bb/tests/"+test],function(doh) {doh.run();});
 			    }
 			});
 		    });
