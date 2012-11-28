@@ -141,7 +141,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                 master.MasterShellCommand(command=cmd,
                                 env={'HELLO': ['${WORLD}', '${LIST}']}))
         if runtime.platformType == 'win32':
-            self.expectLogfile('stdio', "hello:world\r\n")
+            self.expectLogfile('stdio', "hello;world\r\n")
         else:
             self.expectLogfile('stdio', "hello:world\n")
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
