@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import re, inspect
+from twisted.python import reflect
 from twisted.internet import defer
 from buildbot.data import base, exceptions
 
@@ -23,9 +24,7 @@ from buildbot.data import base, exceptions
 class TestHooksEndpoint(base.ControlParamsCheckMixin,base.Endpoint):
     rootLinkName = 'testhooks'
     pathPatterns = [ ( 'testhooks',) ]
-    action_specs = dict(enableFakeDb=dict(),
-                        disableFakeDb=dict(),
-                        playScenario=dict(scenario=dict(re=re.compile("[a-z\.]+"),
+    action_specs = dict(playScenario=dict(scenario=dict(re=re.compile("[a-z\.]+"),
                                                         type=str,
                                                         required=True)))
     def safeControl(self, action, args, kwargs):
@@ -43,18 +42,17 @@ class TestHooksResourceType(base.ResourceType):
     endpoints = [ TestHooksEndpoint]
     @base.updateMethod
     def playTestScenario(self, scenario):
-        if not self.isFakeDbEnabled():
-            raise exceptions.InvalidActionException("FakeDb disabled!")
         scenario = scenario.split(".")
-        if len(scenario <3):
+        if len(scenario) <3:
             raise exceptions.InvalidOptionException("invalid scenario path")
         mod = ".".join(scenario[:-2])
         sym = scenario[-2]
         meth = scenario[-1]
-        if not sym in dir(mod):
+        module = reflect.namedModule(mod)
+        if not sym in dir(module):
             raise exceptions.InvalidOptionException("no class %s in module %s"%(sym,
                                                                                 mod))
-        obj = getattr(mod, sym)
+        obj = getattr(module, sym)
         if not(inspect.isclass(obj) and issubclass(obj, TestHooksScenario)):
             raise exceptions.InvalidOptionException(
                 "class %s is not subclass of TestHooksScenario"%(meth,

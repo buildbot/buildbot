@@ -14,9 +14,13 @@
 // Copyright Buildbot Team Members
 
 define(["dojo/main", "doh/main", "bb/tests/utils"], function(dojo, doh, utils){
-    if (utils.goToBuildbotHash(doh, "/", "bb/tests/home")) {
-	doh.register("bb/tests/home", [
-	    function(t) { t.assertEqual(window.bb_router.base_url, utils.getBaseUrl());}
-	    ]);
+    utils.registerBBTests(doh, "/", "home",[
+	function resetDb(t) {
+	    var d = new doh.Deferred();
+	    dojo.when(utils.playTestScenario("buildbot.test.scenarios.base.BaseScenario.populateBaseDb"), function() {
+		d.callback(true);
+	    });
+	    return d;
 	}
+    ]);
 });
