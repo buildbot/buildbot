@@ -279,7 +279,7 @@ class Mercurial(Source):
             return 'fresh'
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg',
+        cmd = buildstep.RemoteCommand('stat', {'file': self.build.path_module.join(self.workdir, '.hg'),
                                                'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)

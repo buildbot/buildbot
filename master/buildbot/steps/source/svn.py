@@ -255,7 +255,7 @@ class SVN(Source):
     @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
         # first, perform a stat to ensure that this is really an svn directory
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.svn',
+        cmd = buildstep.RemoteCommand('stat', {'file': self.build.path_module.join(self.workdir, '.svn'),
                                                'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
