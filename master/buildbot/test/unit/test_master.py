@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import re
 import os
 import mock
 import signal
@@ -23,7 +22,7 @@ from twisted.python import log
 from buildbot import master, monkeypatches, config
 from buildbot.util import subscription
 from buildbot.db import connector
-from buildbot.test.util import dirs, compat, misc
+from buildbot.test.util import dirs, compat, misc, logging
 from buildbot.test.fake import fakedb
 from buildbot.util import epoch2datetime
 from buildbot.changes import changes
@@ -212,9 +211,10 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         # assert the notification sub was called correctly
         cb.assert_called_with(938593, 999)
 
-class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
+class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpLogging()
         self.basedir = os.path.abspath('basedir')
         d = self.setUpDirs(self.basedir)
         @d.addCallback
@@ -233,11 +233,6 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
             self.master = master.BuildMaster(self.basedir)
             self.db = self.master.db = fakedb.FakeDBConnector(self)
 
-        @d.addCallback
-        def patch_log_msg(_):
-            msg = mock.Mock(side_effect=log.msg)
-            self.patch(log, 'msg', msg)
-
         return d
 
     def tearDown(self):
@@ -247,13 +242,6 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
         r = mock.Mock()
         r.callWhenRunning = reactor.callWhenRunning
         return r
-
-    def assertLogged(self, regexp):
-        r = re.compile(regexp)
-        for args, kwargs in log.msg.call_args_list:
-            if args and r.search(args[0]):
-                return
-        self.fail("%r not matched in log output" % regexp)
 
     def patch_loadConfig_fail(self):
         @classmethod
