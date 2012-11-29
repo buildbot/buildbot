@@ -81,8 +81,8 @@ class Test(www.WwwTestMixin, unittest.TestCase):
             self.assertEqual(self.svc.port, None)
         return d
 
-    def test_setup_site(self):
-        self.svc.setup_site(self.makeConfig())
+    def test_setupSite(self):
+        self.svc.setupSite(self.makeConfig())
         site = self.svc.site
 
         # check that it has the right kind of resources attached to its

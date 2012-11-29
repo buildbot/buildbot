@@ -133,16 +133,6 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
             raise usage.UsageError("log-count parameter needs to be an int "+
                                    " or None")
 
-class UpdateJSOptions(base.BasedirMixin, base.SubcommandOptions):
-    subcommandFunction = "buildbot.scripts.update_js.updateJS"
-    optFlags = [
-        ["quiet", "q", "Do not emit the commands being run"],
-        ["develop", "d", "link to buildbot dir rather than copy, with no "
-                         "JS optimization (UNIX only)"],
-        ]
-    def getSynopsis(self):
-        return "Usage:    buildbot update_js [<basedir>]"
-
 class StopOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.stop.stop"
     optFlags = [
@@ -660,8 +650,6 @@ class Options(usage.Options):
          "Create and populate a directory for a new buildmaster"],
         ['upgrade-master', None, UpgradeMasterOptions,
          "Upgrade an existing buildmaster directory for the current version"],
-        ['updatejs', None, UpdateJSOptions,
-         "update the js directory from buildbot sources, and minify the js"],
         ['start', None, StartOptions,
          "Start a buildmaster"],
         ['stop', None, StopOptions,

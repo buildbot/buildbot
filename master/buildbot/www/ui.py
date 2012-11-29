@@ -13,16 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.www import resource, index_html
+from buildbot.www import resource
 
 class UIResource(resource.Resource):
     isLeaf = True
 
-    def __init__(self, master, extra_routes):
+    def __init__(self, master, extra_routes, index_html):
         """ Config can pass a static_url for serving
         static stuff directly from apache or nginx
         """
         self.extra_routes = extra_routes
+        self.index_html = index_html
         resource.Resource.__init__(self, master)
 
     def render(self, request):
@@ -35,4 +36,4 @@ class UIResource(resource.Resource):
         # this additionnal header removes this behavior and put
         # IE8 in super-standard mode
         request.setHeader("X-UA-Compatible" ,"IE=edge")
-        return index_html % contents
+        return self.index_html % contents

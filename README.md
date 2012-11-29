@@ -79,7 +79,7 @@ It's OK to schedule a build on a builder that's not implemented by a running mas
 
 * Remaining parts of buildbot-www package (after which much of this section is complete):
 
-  * Replace `update_js` with use of entry points to find buildbot-www package
+  * remove `extra_js` support (replaced by extra python packages)
   * support multiple entry points for easy user extensions
   * ensure tests run either from `built/` or `src/` of buildbot-www
   * verify licensing on all bundled projects

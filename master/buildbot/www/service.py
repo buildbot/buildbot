@@ -14,11 +14,12 @@
 # Copyright Buildbot Team Members
 
 import os
+import pkg_resources
 from twisted.internet import defer
 from twisted.application import strports, service
 from twisted.web import server, static
 from buildbot import config
-from buildbot.www import ui, resource, rest, ws, static_dir
+from buildbot.www import ui, resource, rest, ws
 
 class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
 
@@ -45,7 +46,7 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
                 need_new_site = True
 
         if need_new_site:
-            self.setup_site(new_config)
+            self.setupSite(new_config)
 
         if www['port'] != self.port:
             if self.port_service:
@@ -64,10 +65,21 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         yield config.ReconfigurableServiceMixin.reconfigService(self,
                                                                 new_config)
 
-    def setup_site(self, new_config):
+
+    def setupSite(self, new_config):
+        # use pkg_resources to find buildbot_www; this will eventually allow
+        # multiple entry points and join them together via some magic (TODO)
+        # TODO: run this at config time and detect the error there
+        entry_points = list(pkg_resources.iter_entry_points('buildbot.www'))
+        if len(entry_points) < 1:
+            raise RuntimeError("could not find buildbot-www; is it installed?")
+        elif len(entry_points) > 1:
+            raise RuntimeError("only one buildbot.www entry point is supported")
+        ep = entry_points[0].load()
+
         public_html = self.site_public_html = new_config.www.get('public_html')
         root = static.File(public_html)
-        static_node = static.File(static_dir)
+        static_node = static.File(ep.static_dir)
         root.putChild('static', static_node)
         extra_js = self.site_extra_js = new_config.www.get('extra_js', [])
         extra_routes = []
@@ -85,7 +97,7 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         root.putChild('', resource.RedirectResource(self.master, 'ui/'))
 
         # /ui
-        root.putChild('ui', ui.UIResource(self.master, extra_routes))
+        root.putChild('ui', ui.UIResource(self.master, extra_routes, ep.index_html))
 
         # /api
         root.putChild('api', rest.RestRootResource(self.master))

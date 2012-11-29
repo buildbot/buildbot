@@ -15,28 +15,49 @@
 
 import os
 import sys
-from twisted.python import util
 
-name = "Buildbot UI"
+def sibpath(*elts):
+    return os.path.join(os.path.dirname(__file__), *elts)
 
-# several cases here:
-# we are in a pre-built environment: we give the bot master path to the pre-built files
-# we are in a python setup.py develop mode: we give the bot master path to the src files
-paths = [ os.path.join(sys.prefix, 'share', 'buildbot', 'built'),
-          util.sibpath(__file__,"src") ]
+# (see comments in setup.py about contexts)
+#
+# this script never runs in the SDIST state, so if src/ is missing,
+# then we're INSTALLED
+src_exists = os.path.isdir(sibpath('src'))
+built_exists = os.path.isdir(sibpath('built'))
+if src_exists:
+    if not built_exists:
+        context = 'SRC'
+    else:
+        context = 'BUILT'
+else:
+    context = 'INSTALLED'
 
-for static_dir in paths:
-    if os.path.isdir(static_dir):
-        def read_file(fn, default=None):
-            fn = os.path.join(static_dir, fn)
-            if not os.path.exists(fn) and default is not None:
-                return default
-            f = open(fn,"r")
-            data = f.read()
-            f.close()
-            return data
-        version = read_file('buildbot-version.txt', default="developer").strip()
-        index_html = read_file("index.html")
-        break
+class EntryPoint(object):
+    def __init__(self):
+        self.name = "Buildbot UI"
 
-__all__ = [name, version, static_dir, index_html]
+        # the rest depends on the context we're executing in
+        if context == 'SRC':
+            self.version = 'source'
+            self.static_dir = os.path.abspath(sibpath('src'))
+        elif context == 'BUILT':
+            self.version = 'source'
+            self.static_dir = os.path.abspath(sibpath('built'))
+        else: # context == 'INSTALLED'
+            instdir = os.path.join(sys.prefix, 'share', 'buildbot', 'built')
+            verfile = os.path.join(instdir, 'buildbot-version.txt')
+            self.version = open(verfile).read().strip()
+            self.static_dir = instdir
+
+        # as a sanity-check, ensure that the haml templates are built.  This
+        # should only fail in SRC context, but it can't hurt to check
+        # everywhere
+        if not os.path.exists(os.path.join(self.static_dir,
+                                    "bb", "ui", "templates", "home.haml.js")):
+            raise ImportError("HAML files are not built; run ./build.sh --haml-only")
+
+        self.index_html = open(os.path.join(self.static_dir, 'index.html')).read()
+
+# create the interface for the setuptools entry point
+ep = EntryPoint()

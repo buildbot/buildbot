@@ -20,7 +20,7 @@ from twisted.trial import unittest
 class Test(www.WwwTestMixin, unittest.TestCase):
     def test_render(self):
         master = self.make_master(url='h:/a/b/')
-        rsrc = ui.UIResource(master, extra_routes=[])
+        rsrc = ui.UIResource(master, extra_routes=[], index_html='base_url:"h:/a/b/"')
 
         d = self.render_resource(rsrc, [''])
         @d.addCallback

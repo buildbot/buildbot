@@ -25,7 +25,6 @@ from buildbot.test.util import dirs, misc
 
 def mkconfig(**kwargs):
     config = dict(force=False, relocatable=False, config='master.cfg',
-                  skip_updatejs = True,
             db='sqlite:///state.sqlite', basedir=os.path.abspath('basedir'),
             quiet=False, **{'no-logrotate':False, 'log-size':'10000000',
                 'log-count':'10'})

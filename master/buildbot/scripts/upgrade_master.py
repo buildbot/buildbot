@@ -26,7 +26,6 @@ from buildbot.db import connector
 from buildbot.master import BuildMaster
 from buildbot.util import in_reactor
 from buildbot.scripts import base
-from buildbot.scripts.update_js import updateJS
 
 def checkBasedir(config):
     if not config['quiet']:
@@ -167,7 +166,6 @@ def upgradeMaster(config, _noMonkey=False):
         return
 
     upgradeFiles(config)
-    yield updateJS(config, master_cfg)
     yield upgradeDatabase(config, master_cfg)
 
     if not config['quiet']:

@@ -17,11 +17,7 @@ VERSION=$(cd $BASEDIR/../master; python -c 'import buildbot; print buildbot.vers
 
 echo "Building buildbot-www $VERSION with $PROFILE to $DISTDIR."
 
-echo -n "Cleaning old files..."
-rm -rf "$DISTDIR"
-echo " Done"
-
-echo "Rebuilding Buildbot HAML templates..."
+echo "Rebuilding Buildbot HAML templates within $SRCDIR..."
 for haml in `find "$SRCDIR/bb" -name '*.haml'`; do
     echo "$haml"
     NODE_PATH="$SRCDIR" node "$BASEDIR/src/hamlcc/lib/hamlcc.js" $haml
@@ -32,6 +28,10 @@ if [ "$1" = "--haml-only" ]; then
 else
     echo "NOTE: use ./build.sh --haml-only to stop here"
 fi
+
+echo -n "Cleaning old files..."
+rm -rf "$DISTDIR"
+echo " Done"
 
 echo "Running $TOOLSDIR/build.sh..."
 ( cd "$TOOLSDIR" && ./build.sh --profile "$PROFILE" --releaseDir "$DISTDIR") || exit 1

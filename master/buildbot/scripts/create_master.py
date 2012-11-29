@@ -24,7 +24,6 @@ from buildbot.db import connector
 from buildbot.master import BuildMaster
 from buildbot import config as config_module
 from buildbot import monkeypatches
-from buildbot.scripts.update_js import updateJS
 
 def makeBasedir(config):
     if os.path.exists(config['basedir']):
@@ -143,9 +142,6 @@ def createMaster(config):
     makeSampleConfig(config)
     makePublicHtml(config)
     makeTemplatesDir(config)
-    if updateJS(config) != 0:
-        defer.returnValue(1)
-        return
     yield createDB(config)
 
     if not config['quiet']:
