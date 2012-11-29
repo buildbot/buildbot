@@ -21,7 +21,7 @@ define(["dojo/_base/declare", "bb/jsonapi", "doh/main"],function(declare,jsonapi
 	baseurl = baseurl.substr(0, baseurl.lastIndexOf("/"));
     }
     baseurl+="/";
-    function testBrockenLink(t, tag) {
+    function testBrokenLink(t, tag) {
 	/* we need to use the special doh's deferred for this to work */
 	var d = new doh.Deferred();
 	var ctx = {errors : []};
@@ -67,7 +67,7 @@ define(["dojo/_base/declare", "bb/jsonapi", "doh/main"],function(declare,jsonapi
 	    } else {
 		doh.register("sanity", [
 		    function baseurl(t) { t.assertEqual(window.bb_router.base_url, utils.getBaseUrl());},
-		    function brockenimg(t) { return testBrockenLink(t,"img");}
+		    function brokenimg(t) { return testBrokenLink(t,"img");}
 		]);
 		doh.register(testname, tests);
 	    }
