@@ -1,44 +1,19 @@
 #!/usr/bin/env python
-# Copyright (c) 2012 The Chromium Authors. All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met:
-#
-#    * Redistributions of source code must retain the above copyright
-# notice, this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above
-# copyright notice, this list of conditions and the following disclaimer
-# in the documentation and/or other materials provided with the
-# distribution.
-#    * Neither the name of Google Inc. nor the names of its
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-# NOTE: This file is NOT under GPL.  See above.
+# Copyright (c) 2011 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file at
+# http://src.chromium.org/viewvc/chrome/trunk/src/LICENSE
+# This file is NOT under GPL.
 
 """Queries buildbot through the json interface.
 """
 
 __author__ = 'maruel@chromium.org'
-__version__ = '1.2'
+__version__ = '1.1'
 
 import code
 import datetime
 import functools
-import json
 import logging
 import optparse
 import time
@@ -46,13 +21,9 @@ import urllib
 import urllib2
 import sys
 
-try:
-  from natsort import natsorted
-except ImportError:
-  # natsorted is a simple helper to sort "naturally", e.g. "vm40" is sorted
-  # after "vm7". Defaults to normal sorting.
-  natsorted = sorted
+from find_json import json
 
+import natsort
 
 # These values are buildbot constants used for Build and BuildStep.
 # This line was copied from master/buildbot/status/builder.py.
@@ -68,19 +39,17 @@ class Node(object):
   Provides base functionality for any node in the graph, independent if it has
   children or not or if its content can be addressed through an url or needs to
   be fetched as part of another node.
-
-  self.printable_attributes is only used for self documentation and for str()
-  implementation.
   """
-  printable_attributes = []
+  # Mostly for help purposes. Used by __str__().
+  children = []
 
   def __init__(self, parent, url):
-    self.printable_attributes = self.printable_attributes[:]
+    self.children = self.children[:]
     if url:
-      self.printable_attributes.append('url')
+      self.children.append('url')
       url = url.rstrip('/')
     if parent is not None:
-      self.printable_attributes.append('parent')
+      self.children.append('parent')
     self.url = url
     self.parent = parent
 
@@ -92,14 +61,11 @@ class Node(object):
     key = getattr(self, 'key', None)
     if key is not None:
       return '<%s key=%s>' % (self.__class__.__name__, key)
-    cached_keys = getattr(self, 'cached_keys', None)
-    if cached_keys is not None:
-      return '<%s keys=%s>' % (self.__class__.__name__, cached_keys)
     return super(Node, self).__repr__()
 
   def to_string(self, maximum=100):
     out = ['%s:' % self.__class__.__name__]
-    assert not 'printable_attributes' in self.printable_attributes
+    assert not 'children' in self.children
 
     def limit(txt):
       txt = str(txt)
@@ -108,11 +74,12 @@ class Node(object):
           txt = txt[:maximum] + '...'
       return txt
 
-    for k in sorted(self.printable_attributes):
+    for k in self.children:
       if k == 'parent':
         # Avoid infinite recursion.
         continue
-      out.append(limit('  %s: %r' % (k, getattr(self, k))))
+      value = '\n    '.join(limit(getattr(self, k)).splitlines())
+      out.append('  %s: %s' % (k, value))
     return '\n'.join(out)
 
   def refresh(self):
@@ -137,7 +104,7 @@ class AddressableBaseDataNode(Node):  # pylint: disable=W0223
 
   The node is directly addressable. It also often can be fetched by the parent.
   """
-  printable_attributes = Node.printable_attributes + ['data']
+  children = Node.children + ['data', 'cached_data']
 
   def __init__(self, parent, url, data):
     super(AddressableBaseDataNode, self).__init__(parent, url)
@@ -212,7 +179,7 @@ class VirtualNodeList(Node):
   Adds partial supports for keys and iterator functionality. 'key' can be a
   string or a int. Not to be used directly.
   """
-  printable_attributes = Node.printable_attributes + ['keys']
+  children = Node.children + ['keys', 'cached_children']
 
   def __init__(self, parent, url):
     super(VirtualNodeList, self).__init__(parent, url)
@@ -249,10 +216,6 @@ class VirtualNodeList(Node):
     raise NotImplementedError()
 
   @property
-  def cached_keys(self):  # pragma: no cover
-    raise NotImplementedError()
-
-  @property
   def keys(self):  # pragma: no cover
     """Returns the keys for every children."""
     raise NotImplementedError()
@@ -278,10 +241,6 @@ class NodeList(VirtualNodeList):  # pylint: disable=W0223
   def __init__(self, parent, url):
     super(NodeList, self).__init__(parent, url)
     self._keys = []
-
-  @property
-  def cached_keys(self):
-    return self._keys
 
   @property
   def keys(self):
@@ -319,14 +278,12 @@ class NonAddressableNodeList(VirtualNodeList):  # pylint: disable=W0223
     return self.parent.data.get(self.subkey, None)
 
   @property
-  def cached_keys(self):
-    if self.parent.cached_data is None:
-      return None
-    return range(len(self.parent.data.get(self.subkey, [])))
-
-  @property
   def data(self):
     return self.parent.data[self.subkey]
+
+  @property
+  def keys(self):  # pragma: no cover
+    raise NotImplementedError()
 
   def cache(self):
     self.parent.cache()
@@ -377,10 +334,6 @@ class AddressableNodeList(NodeList):
     for item in self._cache.itervalues():
       if item.cached_data is not None:
         yield item
-
-  @property
-  def cached_keys(self):
-    return self._cache.keys()
 
   def __getitem__(self, key):
     """Enables 'obj[i]'."""
@@ -482,10 +435,6 @@ class SubViewNodeList(VirtualNodeList):  # pylint: disable=W0223
             yield child
 
   @property
-  def cached_keys(self):
-    return (self.parent.cached_data or {}).get(self.subkey, [])
-
-  @property
   def keys(self):
     self.cache_keys()
     return self.parent.data.get(self.subkey, [])
@@ -523,9 +472,8 @@ class SubViewNodeList(VirtualNodeList):  # pylint: disable=W0223
 
 
 class Slave(AddressableDataNode):
-  printable_attributes = AddressableDataNode.printable_attributes + [
-    'name', 'key', 'connected', 'version',
-  ]
+  children = AddressableDataNode.children + [
+      'name', 'key', 'connected', 'version']
 
   def __init__(self, parent, name, data):
     super(Slave, self).__init__(parent, name, data)
@@ -536,19 +484,20 @@ class Slave(AddressableDataNode):
 
   @property
   def connected(self):
-    return self.data.get('connected', False)
+    return self.data['connected']
 
   @property
   def version(self):
-    return self.data.get('version')
+    return self.data['version']
 
 
 class Slaves(AddressableNodeList):
   _child_cls = Slave
-  printable_attributes = AddressableNodeList.printable_attributes + ['names']
+  children = AddressableNodeList.children + ['names']
 
   def __init__(self, parent):
     super(Slaves, self).__init__(parent, 'slaves')
+    self.children.append('names')
 
   @property
   def names(self):
@@ -558,7 +507,7 @@ class Slaves(AddressableNodeList):
 class BuilderSlaves(SubViewNodeList):
   """Similar to Slaves but only list slaves connected to a specific builder.
   """
-  printable_attributes = SubViewNodeList.printable_attributes + ['names']
+  children = SubViewNodeList.children + ['names']
 
   def __init__(self, parent):
     super(BuilderSlaves, self).__init__(
@@ -570,11 +519,8 @@ class BuilderSlaves(SubViewNodeList):
 
 
 class BuildStep(NonAddressableDataNode):
-  printable_attributes = NonAddressableDataNode.printable_attributes + [
-    'name', 'number', 'start_time', 'end_time', 'duration', 'is_started',
-    'is_finished', 'is_running',
-    'result', 'simplified_result',
-  ]
+  children = NonAddressableDataNode.children + [
+      'name', 'number', 'result', 'simplified_result']
 
   def __init__(self, parent, number):
     """It's already pre-loaded by definition since the data is retrieve via the
@@ -585,36 +531,8 @@ class BuildStep(NonAddressableDataNode):
     self.number = number
 
   @property
-  def start_time(self):
-    if self.data.get('times'):
-      return int(round(self.data['times'][0]))
-
-  @property
-  def end_time(self):
-    times = self.data.get('times')
-    if times and len(times) == 2 and times[1]:
-      return int(round(times[1]))
-
-  @property
-  def duration(self):
-    if self.start_time:
-      return (self.end_time or int(round(time.time()))) - self.start_time
-
-  @property
   def name(self):
     return self.data['name']
-
-  @property
-  def is_started(self):
-    return self.data.get('isStarted', False)
-
-  @property
-  def is_finished(self):
-    return self.data.get('isFinished', False)
-
-  @property
-  def is_running(self):
-    return self.is_started and not self.is_finished
 
   @property
   def result(self):
@@ -632,19 +550,17 @@ class BuildStep(NonAddressableDataNode):
   def simplified_result(self):
     """Returns a simplified 3 state value, True, False or None."""
     result = self.result
-    if result in (SUCCESS, WARNINGS):
+    if result in (SUCCESS, WARNINGS, SKIPPED):
       return True
-    elif result in (FAILURE, EXCEPTION, RETRY):
+    elif result in (FAILURE, EXCEPTION):
       return False
-    assert result in (None, SKIPPED), (result, self.data)
+    assert result is None
     return None
 
 
 class BuildSteps(NonAddressableNodeList):
   """Duplicates keys to support lookup by both step number and step name."""
-  printable_attributes = NonAddressableNodeList.printable_attributes + [
-    'failed',
-  ]
+  children = NonAddressableNodeList.children + ['failed']
   _child_cls = BuildStep
 
   def __init__(self, parent):
@@ -655,8 +571,10 @@ class BuildSteps(NonAddressableNodeList):
 
   @property
   def keys(self):
-    """Returns the steps name in order."""
-    return [i['name'] for i in (self.data or [])]
+    """Returns the indexes of the steps.
+
+    It could return the build names but then it wouldn't be ordered."""
+    return range(len(self.data or []))
 
   @property
   def failed(self):
@@ -677,11 +595,9 @@ class BuildSteps(NonAddressableNodeList):
 
 
 class Build(AddressableDataNode):
-  printable_attributes = AddressableDataNode.printable_attributes + [
-    'key', 'number', 'steps', 'blame', 'reason', 'revision', 'result',
-    'simplified_result', 'start_time', 'end_time', 'duration', 'slave',
-    'properties', 'completed',
-  ]
+  children = AddressableDataNode.children + [
+      'key', 'number', 'steps', 'blame', 'reason', 'revision', 'result',
+      'simplified_result', 'slave', 'properties']
 
   def __init__(self, parent, key, data):
     super(Build, self).__init__(parent, str(key), data)
@@ -691,7 +607,7 @@ class Build(AddressableDataNode):
 
   @property
   def blame(self):
-    return self.data.get('blame', [])
+    return self.data.get('blame')
 
   @property
   def builder(self):
@@ -702,32 +618,12 @@ class Build(AddressableDataNode):
     return self.parent.parent.parent.parent.builders[self.data['builderName']]
 
   @property
-  def start_time(self):
-    if self.data.get('times'):
-      return int(round(self.data['times'][0]))
-
-  @property
-  def end_time(self):
-    times = self.data.get('times')
-    if times and len(times) == 2 and times[1]:
-      return int(round(times[1]))
-
-  @property
-  def duration(self):
-    if self.start_time:
-      return (self.end_time or int(round(time.time()))) - self.start_time
-
-  @property
   def eta(self):
     return self.data.get('eta', 0)
 
   @property
-  def completed(self):
-    return self.data.get('currentStep') is None
-
-  @property
   def properties(self):
-    return self.data.get('properties', [])
+    return self.data['properties']
 
   @property
   def reason(self):
@@ -746,7 +642,7 @@ class Build(AddressableDataNode):
 
   @property
   def revision(self):
-    return self.data.get('sourceStamp', {}).get('revision')
+    return self.data['sourceStamp'].get('revision')
 
   @property
   def simplified_result(self):
@@ -754,9 +650,9 @@ class Build(AddressableDataNode):
     result = self.result
     if result in (SUCCESS, WARNINGS, SKIPPED):
       return True
-    elif result in (FAILURE, EXCEPTION, RETRY):
+    elif result in (FAILURE, EXCEPTION):
       return False
-    assert result is None, (result, self.data)
+    assert result is None
     return None
 
   @property
@@ -798,8 +694,7 @@ class Builds(AddressableNodeList):
     super(Builds, self).__init__(parent, 'builds')
 
   def __getitem__(self, key):
-    """Adds supports for negative reference and enables retrieving non-cached
-    builds.
+    """Adds supports for negative reference.
 
     e.g. -1 is the last build, -2 is the previous build before the last one.
     """
@@ -807,45 +702,24 @@ class Builds(AddressableNodeList):
     if key < 0:
       # Convert negative to positive build number.
       self.cache_keys()
-      # Since the negative value can be outside of the cache keys range, use the
-      # highest key value and calculate from it.
-      key = max(self._keys) + key + 1
-
-    if not key in self._cache:
-      # Create an empty object.
-      self._create_obj(key, None)
-    return self._cache[key]
+      key = self._keys[key]
+    return super(Builds, self).__getitem__(key)
 
   def __iter__(self):
-    """Returns cached Build objects in reversed order.
+    """Returns in reversed order.
 
     The most recent build is returned first and then in reverse chronological
     order, up to the oldest cached build by the server. Older builds can be
     accessed but will trigger significantly more I/O so they are not included by
     default in the iteration.
-
-    To access the older builds, use self.iterall() instead.
     """
     self.cache()
     return reversed(self._cache.values())
 
-  def iterall(self):
-    """Returns Build objects in decreasing order unbounded up to build 0.
-
-    The most recent build is returned first and then in reverse chronological
-    order. Older builds can be accessed and will trigger significantly more I/O
-    so use this carefully.
-    """
-    # Only cache keys here.
-    self.cache_keys()
-    if self._keys:
-      for i in xrange(max(self._keys), -1, -1):
-        yield self[i]
-
   def cache_keys(self):
     """Grabs the keys (build numbers) from the builder."""
     if not self._has_keys_cached:
-      for i in self.parent.data.get('cachedBuilds', []):
+      for i in self.parent.data['cachedBuilds']:
         i = int(i)
         self._cache.setdefault(i, Build(self, i, None))
         if i not in self._keys:
@@ -862,9 +736,8 @@ class Builds(AddressableNodeList):
 
 
 class Builder(AddressableDataNode):
-  printable_attributes = AddressableDataNode.printable_attributes + [
-    'name', 'key', 'builds', 'slaves', 'pending_builds', 'current_builds',
-  ]
+  children = AddressableDataNode.children + [
+      'name', 'key', 'builds', 'slaves', 'pending_builds', 'current_builds']
 
   def __init__(self, parent, name, data):
     super(Builder, self).__init__(parent, name, data)
@@ -896,9 +769,8 @@ class Buildbot(AddressableBaseDataNode):
   """
   # Throttle fetches to not kill the server.
   auto_throttle = None
-  printable_attributes = AddressableDataNode.printable_attributes + [
-    'slaves', 'builders', 'last_fetch',
-  ]
+  children = AddressableDataNode.children + [
+      'slaves', 'builders', 'last_fetch']
 
   def __init__(self, url):
     super(Buildbot, self).__init__(None, url.rstrip('/') + '/json', None)
@@ -937,15 +809,12 @@ class Buildbot(AddressableBaseDataNode):
       url += '?filter=1'
     logging.info('read(%s)' % suburl)
     channel = urllib.urlopen(url)
-    data = channel.read()
     try:
-      return json.loads(data)
-    except ValueError:
-      if channel.getcode() >= 400:
-        # Convert it into an HTTPError for easier processing.
+      return json.load(channel)
+    except ValueError, e:
+      if '<head><title>404 - No Such Resource</title></head>' in e.doc:
         raise urllib2.HTTPError(
-            url, channel.getcode(), '%s:\n%s' % (url, data), channel.headers,
-            None)
+            url, 404, '%s:\n%s' % (url, e.doc), channel.headers, None)
       raise
 
   def _readall(self):
@@ -1009,7 +878,7 @@ def CMDpending(parser, args):
           print '  revision: %s' % pending['source']['revision']
         for change in pending['source']['changes']:
           print '  change:'
-          print '    comment: %r' % unicode(change['comments'][:50])
+          print '    comment: %r' % change['comments'][:50]
           print '    who:     %s' % change['who']
   return 0
 
@@ -1049,11 +918,12 @@ def CMDinteractive(parser, args):
     parser.error('Unrecognized parameters: %s' % ' '.join(args))
   prompt = (
       'Buildbot interactive console for "%s".\n'
-      'Hint: Start with typing: \'buildbot.printable_attributes\' or '
+      'Hint: Start with typing: \'buildbot.children\' or '
       '\'print str(buildbot)\' to explore.') % buildbot.url[:-len('/json')]
   local_vars = {
       'buildbot': buildbot,
       'b': buildbot,
+      'natsort': natsort,
   }
   code.interact(prompt, None, local_vars)
 
@@ -1068,18 +938,6 @@ def CMDidle(parser, args):
 def CMDbusy(parser, args):
   """Lists idle slaves."""
   return find_idle_busy_slaves(parser, args, False)
-
-
-@need_buildbot
-def CMDdisconnected(parser, args):
-  """Lists disconnected slaves."""
-  _, args, buildbot = parser.parse_args(args)
-  if args:
-    parser.error('Unrecognized parameters: %s' % ' '.join(args))
-  for slave in buildbot.slaves:
-    if not slave.connected:
-      print slave.name
-  return 0
 
 
 def find_idle_busy_slaves(parser, args, show_idle):
@@ -1105,9 +963,9 @@ def find_idle_busy_slaves(parser, args, show_idle):
       slaves = builder.slaves.names
     busy_slaves = [build.slave.name for build in builder.current_builds]
     if show_idle:
-      slaves = natsorted(set(slaves) - set(busy_slaves))
+      slaves = natsort.natsorted(set(slaves) - set(busy_slaves))
     else:
-      slaves = natsorted(set(slaves) & set(busy_slaves))
+      slaves = natsort.natsorted(set(slaves) & set(busy_slaves))
     if options.quiet:
       for slave in slaves:
         print slave
@@ -1117,8 +975,8 @@ def find_idle_busy_slaves(parser, args, show_idle):
   return 0
 
 
-def last_failure(
-    buildbot, builders=None, slaves=None, steps=None, no_cache=False):
+def last_failure(buildbot, builders=None, slaves=None, steps=None,
+    result=FAILURE, no_cache=False):
   """Generator returning Build object that were the last failure with the
   specific filters.
   """
@@ -1143,20 +1001,15 @@ def last_failure(
 
     found = []
     for build in builder.builds:
-      if build.slave.name not in builder_slaves or build.slave.name in found:
+      if build.slave.name not in builder_slaves or  build.slave.name in found:
         continue
-      # Only add the slave for the first completed build but still look for
-      # incomplete builds.
-      if build.completed:
-        found.append(build.slave.name)
-
+      found.append(build.slave.name)
       if steps:
-        if any(build.steps[step].simplified_result is False for step in steps):
+        if any(build.steps[step].result == result for step in steps):
           yield build
-      elif build.simplified_result is False:
+      elif result is None or build.result == result:
         yield build
-
-      if len(found) == len(builder_slaves):
+      if len(found) == len(slaves):
         # Found all the slaves, quit.
         break
 
@@ -1171,6 +1024,9 @@ def CMDlast_failure(parser, args):
     '-S', '--step', dest='steps', action='append', default=[],
     help='List all slaves that failed on that step on their last build')
   parser.add_option(
+    '-r', '--result', type='int', default=FAILURE,
+    help='Build result to filter on')
+  parser.add_option(
     '-b', '--builder', dest='builders', action='append', default=[],
     help='Builders to filter on')
   parser.add_option(
@@ -1182,11 +1038,12 @@ def CMDlast_failure(parser, args):
   options, args, buildbot = parser.parse_args(args)
   if args:
     parser.error('Unrecognized parameters: %s' % ' '.join(args))
+  if options.steps and options.result is None:
+    options.result = 2
   print_builders = not options.quiet and len(options.builders) != 1
   last_builder = None
-  for build in last_failure(
-      buildbot, builders=options.builders,
-      slaves=options.slaves, steps=options.steps,
+  for build in last_failure(buildbot, builders=options.builders,
+      slaves=options.slaves, steps=options.steps, result=options.result,
       no_cache=options.no_cache):
 
     if print_builders and last_builder != build.builder:
@@ -1199,18 +1056,19 @@ def CMDlast_failure(parser, args):
       else:
         print build.slave.name
     else:
-      out = '%d on %s: blame:%s' % (
-          build.number, build.slave.name, ', '.join(build.blame))
+      out = '%d on %s: result:%s blame:%s' % (
+        build.number, build.slave.name, build.result,
+        ', '.join(build.blame))
       if print_builders:
         out = '  ' + out
       print out
 
       if len(options.steps) != 1:
         for step in build.steps:
-          if step.simplified_result is False:
-            # Assume the first line is the text name anyway.
-            summary = ', '.join(step.data['text'][1:])[:40]
-            out = '  %s: "%s"' % (step.data['name'], summary)
+          if step.result not in (0, None):
+            out = '  %s: r=%s %s' % (
+                step.data['name'], step.result,
+                ', '.join(step.data['text'])[:40])
             if print_builders:
               out = '  ' + out
             print out
@@ -1223,24 +1081,11 @@ def CMDcurrent(parser, args):
   parser.add_option(
     '-b', '--builder', dest='builders', action='append', default=[],
     help='Builders to filter on')
-  parser.add_option(
-    '--blame', action='store_true', help='Only print the blame list')
   options, args, buildbot = parser.parse_args(args)
   if args:
     parser.error('Unrecognized parameters: %s' % ' '.join(args))
   if not options.builders:
     options.builders = buildbot.builders.keys
-
-  if options.blame:
-    blame = set()
-    for builder in options.builders:
-      for build in buildbot.builders[builder].current_builds:
-        if build.blame:
-          for blamed in build.blame:
-            blame.add(blamed)
-    print '\n'.join(blame)
-    return 0
-
   for builder in options.builders:
     builder = buildbot.builders[builder]
     if not options.quiet and builder.current_builds:
@@ -1249,102 +1094,13 @@ def CMDcurrent(parser, args):
       if options.quiet:
         print build.slave.name
       else:
-        out = '%4d: slave=%10s' % (build.number, build.slave.name)
-        out += '  duration=%5d' % (build.duration or 0)
+        out = '%d: slave=%s' % (build.number, build.slave.name)
         if build.eta:
-          out += '  eta=%5.0f' % build.eta
-        else:
-          out += '           '
+          out += '  eta=%.0f' % build.eta
         if build.blame:
           out += '  blame=' + ', '.join(build.blame)
         print out
 
-  return 0
-
-
-@need_buildbot
-def CMDbuilds(parser, args):
-  """Lists all builds.
-
-  Example: to find all builds on a single slave, run with -b bar -s foo
-  """
-  parser.add_option(
-    '-r', '--result', type='int', help='Build result to filter on')
-  parser.add_option(
-    '-b', '--builder', dest='builders', action='append', default=[],
-    help='Builders to filter on')
-  parser.add_option(
-    '-s', '--slave', dest='slaves', action='append', default=[],
-    help='Slaves to filter on')
-  parser.add_option(
-    '-n', '--no_cache', action='store_true',
-    help='Don\'t load all builds at once')
-  options, args, buildbot = parser.parse_args(args)
-  if args:
-    parser.error('Unrecognized parameters: %s' % ' '.join(args))
-  builders = options.builders or buildbot.builders.keys
-  for builder in builders:
-    builder = buildbot.builders[builder]
-    for build in builder.builds:
-      if not options.slaves or build.slave.name in options.slaves:
-        if options.quiet:
-          out = ''
-          if options.builders:
-            out += '%s/' % builder.name
-          if len(options.slaves) != 1:
-            out += '%s/' % build.slave.name
-          out += '%d  revision:%s  result:%s  blame:%s' % (
-              build.number, build.revision, build.result, ','.join(build.blame))
-          print out
-        else:
-          print build
-  return 0
-
-
-@need_buildbot
-def CMDcount(parser, args):
-  """Count the number of builds that occured during a specific period.
-  """
-  parser.add_option(
-    '-o', '--over', type='int', help='Number of seconds to look for')
-  parser.add_option(
-    '-b', '--builder', dest='builders', action='append', default=[],
-    help='Builders to filter on')
-  options, args, buildbot = parser.parse_args(args)
-  if args:
-    parser.error('Unrecognized parameters: %s' % ' '.join(args))
-  if not options.over:
-    parser.error(
-        'Specify the number of seconds, e.g. --over 86400 for the last 24 '
-        'hours')
-  builders = options.builders or buildbot.builders.keys
-  counts = {}
-  since = time.time() - options.over
-  for builder in builders:
-    builder = buildbot.builders[builder]
-    counts[builder.name] = 0
-    if not options.quiet:
-      print builder.name
-    for build in builder.builds.iterall():
-      try:
-        start_time = build.start_time
-      except urllib2.HTTPError:
-        # The build was probably trimmed.
-        print >> sys.stderr, (
-            'Failed to fetch build %s/%d' % (builder.name, build.number))
-        continue
-      if start_time >= since:
-        counts[builder.name] += 1
-      else:
-        break
-    if not options.quiet:
-      print '.. %d' % counts[builder.name]
-
-  align_name = max(len(b) for b in counts)
-  align_number = max(len(str(c)) for c in counts.itervalues())
-  for builder in sorted(counts):
-    print '%*s: %*d' % (align_name, builder, align_number, counts[builder])
-  print 'Total: %d' % sum(counts.itervalues())
   return 0
 
 

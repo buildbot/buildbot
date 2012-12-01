@@ -1,47 +1,17 @@
-Release Notes for Buildbot v0.8.6p1
-===================================
+Release Notes for Buildbot v0.8.6
+=================================
 
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
     Most simply need an additional bulleted list item, but more significant
     changes can be given a subsection of their own.
 
-The following are the release notes for Buildbot v0.8.6p1.
-Buildbot v0.8.6 was released on March 11, 2012.
-Buildbot v0.8.6p1 was released on March 25, 2012.
-
-0.8.6p1
--------
-
-In addition to what's listed below, the 0.8.6p1 release adds the following.
-
-* Builders are no longer displayed in the order they were configured.  This was
-  never intended behavior, and will become impossible in the distributed
-  architecture planned for Buildbot-0.9.x.  As of 0.8.6p1, builders are sorted
-  naturally: lexically, but with numeric segments sorted numerically.
-
-* Slave properties in the configuration are now handled correctly.
-
-* The web interface buttons to cancel individual builds now appear when
-  configured.
-
-* The ForceScheduler's properties are correctly updated on reconfig -
-  :bb:bug:`2248`.
-
-* If a slave is lost while waiting for locks, it is properly cleaned up -
-  :bb:bug:`2247`.
-
-* Crashes when adding new steps to a factory in a reconfig are fixed -
-  :bb:bug:`2252`.
-
-* MailNotifier AttributeErrors are fixed - :bb:bug:`2254`.
-
-* Cleanup from failed builds is improved - :bb:bug:`2253`.
+The following are the release notes for Buildbot v0.8.6.
 
 Master
 ------
 
-* If you are using the GitHub hook, carefully consider the security
+* If you are using the github hook, carefully consider the security
   implications of allowing un-authenticated change requests, which can
   potentially build arbitrary code.  See :bb:bug:`2186`.
 
@@ -122,7 +92,7 @@ Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
 * The interface for runtime access to the master's configuration has changed
-  considerably.  See :doc:`/developer/config` for more details.
+  considerably.  See :doc:`developer/config` for more details.
 
 * The DB connector methods ``completeBuildset``, ``completeBuildRequest``, and
   ``claimBuildRequest`` now take an optional ``complete_at`` parameter to
@@ -191,9 +161,6 @@ Features
 * MailNotifier allows multiple notification modes in the same instance.  See
   :bb:bug:`2205`.
 
-* SVNPoller now allows passing extra arguments via argument ``extra_args``.
-  See :bb:bug:`1766`
-  
 Slave
 -----
 
@@ -210,7 +177,7 @@ Details
 -------
 
 For a more detailed description of the changes made in this version, see the
-Git log itself::
+git log itself:
 
    git log buildbot-0.8.5..buildbot-0.8.6
 

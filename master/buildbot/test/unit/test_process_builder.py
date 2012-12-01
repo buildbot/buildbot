@@ -20,21 +20,31 @@ from twisted.python import failure
 from twisted.internet import defer
 from buildbot import config
 from buildbot.test.fake import fakedb, fakemaster
-from buildbot.process import builder, factory
+from buildbot.process import builder
 from buildbot.db import buildrequests
 from buildbot.util import epoch2datetime
 
-class BuilderMixin(object):
-    def makeBuilder(self, name="bldr", patch_random=False, **config_kwargs):
+class TestBuilderBuildCreation(unittest.TestCase):
+
+    def setUp(self):
+        # a collection of rows that would otherwise clutter up every test
+        self.base_rows = [
+            fakedb.SourceStampSet(id=21),
+            fakedb.SourceStamp(id=21, sourcestampsetid=21),
+            fakedb.Buildset(id=11, reason='because', sourcestampsetid=21),
+        ]
+
+    def makeBuilder(self, patch_random=False, **config_kwargs):
         """Set up C{self.bldr}"""
-        self.factory = factory.BuildFactory()
+        self.bstatus = mock.Mock()
+        self.factory = mock.Mock()
         self.master = fakemaster.make_master()
         # only include the necessary required config, plus user-requested
-        config_args = dict(name=name, slavename="slv", builddir="bdir",
+        config_args = dict(name="bldr", slavename="slv", builddir="bdir",
                      slavebuilddir="sbdir", factory=self.factory)
         config_args.update(config_kwargs)
-        self.builder_config = config.BuilderConfig(**config_args)
-        self.bldr = builder.Builder(self.builder_config.name, _addServices=False)
+        builder_config = config.BuilderConfig(**config_args)
+        self.bldr = builder.Builder(builder_config.name)
         self.master.db = self.db = fakedb.FakeDBConnector(self)
         self.bldr.master = self.master
         self.bldr.botmaster = self.master.botmaster
@@ -52,33 +62,14 @@ class BuilderMixin(object):
             self.patch(random, "choice",
                     lambda lst : sorted(lst, key=lambda m : m.name)[-1])
 
+        # we don't want the reclaim service running during tests..
+        self.bldr.reclaim_svc.disownServiceParent()
+
         self.bldr.startService()
 
         mastercfg = config.MasterConfig()
-        mastercfg.builders = [ self.builder_config ]
+        mastercfg.builders = [ builder_config ]
         return self.bldr.reconfigService(mastercfg)
-
-class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
-
-    def setUp(self):
-        # a collection of rows that would otherwise clutter up every test
-        self.base_rows = [
-            fakedb.SourceStampSet(id=21),
-            fakedb.SourceStamp(id=21, sourcestampsetid=21),
-            fakedb.Buildset(id=11, reason='because', sourcestampsetid=21),
-        ]
-
-    def makeBuilder(self, patch_random=False, **config_kwargs):
-        d = BuilderMixin.makeBuilder(self, patch_random=patch_random, **config_kwargs)
-        @d.addCallback
-        def patch_startBuildsFor(_):
-            # patch into the _startBuildsFor method
-            self.builds_started = []
-            def _startBuildFor(slavebuilder, buildrequests):
-                self.builds_started.append((slavebuilder, buildrequests))
-                return defer.succeed(True)
-            self.bldr._startBuildFor = _startBuildFor
-        return d
 
     def assertBuildsStarted(self, exp):
         # munge builds_started into a list of (slave, [brids])
@@ -334,32 +325,6 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
         yield self.bldr.stopService()
         yield self.bldr.maybeStartBuild()
 
-    @defer.inlineCallbacks
-    def test_maybeStartBuild_merge_ordering(self):
-        yield self.makeBuilder(patch_random=True)
-
-        self.setSlaveBuilders({'bldr':1})
-
-        # based on the build in bug #2249
-        rows = [
-            fakedb.SourceStampSet(id=1976),
-            fakedb.SourceStamp(id=1976, sourcestampsetid=1976),
-            fakedb.Buildset(id=1980, reason='scheduler', sourcestampsetid=1976,
-                submitted_at=1332024020.67792),
-            fakedb.BuildRequest(id=42880, buildsetid=1980,
-                submitted_at=1332024020.67792, buildername="bldr"),
-
-            fakedb.SourceStampSet(id=1977),
-            fakedb.SourceStamp(id=1977, sourcestampsetid=1977),
-            fakedb.Buildset(id=1981, reason='scheduler', sourcestampsetid=1977,
-                submitted_at=1332025495.19141),
-            fakedb.BuildRequest(id=42922, buildsetid=1981,
-                buildername="bldr", submitted_at=1332025495.19141),
-        ]
-        yield self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[42880, 42922],
-                exp_builds=[('bldr', [42880, 42922])])
-
     # _chooseSlave
 
     def do_test_chooseSlave(self, nextSlave, exp_choice=None, exp_fail=None):
@@ -559,12 +524,6 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
                                 brdicts, mergeRequests_fn)
         self.assertEqual(evens, [ brdicts[1] ])
 
-        # check original relative order of requests within brdicts is maintained
-        merged = yield self.bldr._mergeRequests(brdicts[2],
-                                                brdicts, mergeRequests_fn)
-        self.assertEqual(merged, [brdicts[0], brdicts[2]],
-                         'relative order of merged requests was not maintained')
-
     @defer.inlineCallbacks
     def test_mergeRequest_no_other_request(self):
         """ Test if builder test for codebases in requests """
@@ -594,7 +553,7 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
         res = yield self.bldr._mergeRequests(brdicts[0], brdicts,
                                             mergeRequests_fn)
         self.assertEqual(res, [ brdicts[0] ])
-
+        
     @defer.inlineCallbacks
     def test_mergeRequests_codebases_equal(self):
         """ Test if builder test for codebases in requests """
@@ -696,7 +655,7 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
 
         self.assertEqual(claims, [ (set([10,11,12,15]),) ])
 
-class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
+class TestGetOldestRequestTime(unittest.TestCase):
 
     def setUp(self):
         # a collection of rows that would otherwise clutter up every test
@@ -719,6 +678,27 @@ class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
                         claimed_at=2501),
         ]
 
+    def makeBuilder(self, name):
+        self.bstatus = mock.Mock()
+        self.factory = mock.Mock()
+        self.master = fakemaster.make_master()
+        # only include the necessary required config
+        builder_config = config.BuilderConfig(
+                        name=name, slavename="slv", builddir="bdir",
+                        slavebuilddir="sbdir", factory=self.factory)
+        self.bldr = builder.Builder(builder_config.name)
+        self.master.db = self.db = fakedb.FakeDBConnector(self)
+        self.bldr.master = self.master
+
+        # we don't want the reclaim service running during tests..
+        self.bldr.reclaim_svc.disownServiceParent()
+
+        self.bldr.startService()
+
+        mastercfg = config.MasterConfig()
+        mastercfg.builders = [ builder_config ]
+        return self.bldr.reconfigService(mastercfg)
+
     def test_gort_unclaimed(self):
         d = self.makeBuilder(name='bldr1')
         d.addCallback(lambda _ : self.db.insertTestData(self.base_rows))
@@ -737,89 +717,3 @@ class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
-class TestRebuild(BuilderMixin, unittest.TestCase):
-
-    def makeBuilder(self, name, sourcestamps):
-        d = BuilderMixin.makeBuilder(self, name=name)
-        @d.addCallback
-        def setupBstatus(_):
-            self.bstatus = mock.Mock()
-            bstatus_properties = mock.Mock()
-            bstatus_properties.properties = {}
-            self.bstatus.getProperties.return_value = bstatus_properties
-            self.bstatus.getSourceStamps.return_value = sourcestamps
-            self.master.addBuildset = addBuildset = mock.Mock()
-            addBuildset.return_value = (1, [100])
-        return d
-
-    @defer.inlineCallbacks
-    def do_test_rebuild(self,
-                        sourcestampsetid,
-                        nr_of_sourcestamps):
-
-        # Store combinations of sourcestampId and sourcestampSetId
-        self.sslist = {}
-        self.ssseq = 1
-        def addSourceStampToDatabase(master, sourcestampsetid):
-            self.sslist[self.ssseq] = sourcestampsetid
-            self.ssseq += 1
-            return defer.succeed(sourcestampsetid)
-        def getSourceStampSetId(master):
-            return addSourceStampToDatabase(master, sourcestampsetid = sourcestampsetid)
-
-        sslist = []
-        for x in range(nr_of_sourcestamps):
-            ssx = mock.Mock()
-            ssx.addSourceStampToDatabase = addSourceStampToDatabase
-            ssx.getSourceStampSetId = getSourceStampSetId
-            sslist.append(ssx)
-
-        yield self.makeBuilder(name='bldr1', sourcestamps = sslist)
-        control = mock.Mock(spec=['master'])
-        control.master = self.master
-        self.bldrctrl = builder.BuilderControl(self.bldr, control)
-
-        yield self.bldrctrl.rebuildBuild(self.bstatus, reason = 'unit test', extraProperties = {})
-
-    @defer.inlineCallbacks
-    def test_rebuild_with_no_sourcestamps(self):
-        yield self.do_test_rebuild(101, 0)
-        self.assertEqual(self.sslist, {})
-
-    @defer.inlineCallbacks
-    def test_rebuild_with_single_sourcestamp(self):
-        yield self.do_test_rebuild(101, 1)
-        self.assertEqual(self.sslist, {1:101})
-        self.master.addBuildset.assert_called_with(builderNames=['bldr1'],
-                                                          sourcestampsetid=101,
-                                                          reason = 'unit test',
-                                                          properties = {})
-
-
-    @defer.inlineCallbacks
-    def test_rebuild_with_multiple_sourcestamp(self):
-        yield self.do_test_rebuild(101, 3)
-        self.assertEqual(self.sslist, {1:101, 2:101, 3:101})
-        self.master.addBuildset.assert_called_with(builderNames=['bldr1'],
-                                                          sourcestampsetid=101,
-                                                          reason = 'unit test',
-                                                          properties = {})
-
-
-class TestReconfig(BuilderMixin, unittest.TestCase):
-    """Tests that a reconfig properly updates all attributes"""
-
-    @defer.inlineCallbacks
-    def test_reconfig(self):
-        yield self.makeBuilder(description="Old", category="OldCat")
-        self.builder_config.description = "New"
-        self.builder_config.category = "NewCat"
-
-        mastercfg = config.MasterConfig()
-        mastercfg.builders = [ self.builder_config ]
-        yield self.bldr.reconfigService(mastercfg)
-        self.assertEqual(
-                dict(description=self.bldr.builder_status.getDescription(),
-                    category=self.bldr.builder_status.getCategory()),
-                dict(description="New",
-                    category="NewCat"))

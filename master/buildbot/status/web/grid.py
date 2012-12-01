@@ -78,7 +78,7 @@ class GridStatusMixin(object):
         if state == "idle" and upcoming:
             state = "waiting"
 
-        n_pending = len((yield builder.getPendingBuildRequestStatuses()))
+        n_pending = len(builder.getPendingBuildRequestStatuses())
 
         cxt = { 'url': path_to_builder(request, builder),
                 'name': builder.getName(),
@@ -103,8 +103,7 @@ class GridStatusMixin(object):
         num = 0
         while build and num < numBuilds:
             start = build.getTimes()[0]
-            #TODO: support multiple sourcestamps
-            ss = build.getSourceStamps(absolute=True)[0]
+            ss = build.getSourceStamp(absolute=True)
 
             okay_build = True
 
@@ -135,8 +134,7 @@ class GridStatusMixin(object):
             if categories and builder.category not in categories:
                 continue
             for build in self.getRecentBuilds(builder, numBuilds, branch):
-                #TODO: support multiple sourcestamps
-                ss = build.getSourceStamps(absolute=True)[0]
+                ss = build.getSourceStamp(absolute=True)
                 key= self.getSourceStampKey(ss)
                 start = build.getTimes()[0]
                 if key not in sourcestamps or sourcestamps[key][1] > start:
@@ -192,20 +190,17 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
                 continue
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):
-                #TODO: support multiple sourcestamps
-                if len(build.getSourceStamps()) == 1:
-                    ss = build.getSourceStamps(absolute=True)[0]
-                    key= self.getSourceStampKey(ss)
-                    for i in range(len(stamps)):
-                        if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
-                            builds[i] = build
+                ss = build.getSourceStamp(absolute=True)
+                key= self.getSourceStampKey(ss)
+                for i in range(len(stamps)):
+                    if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
+                        builds[i] = build
 
-            b = yield self.builder_cxt(request, builder)
+            b = self.builder_cxt(request, builder)
 
             b['builds'] = []
             for build in builds:
                 b['builds'].append(self.build_cxt(request, build))
-
             cxt['builders'].append(b)
 
         template = request.site.buildbot_service.templates.get_template("grid.html")
@@ -264,13 +259,11 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
                 continue
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):
-                #TODO: support multiple sourcestamps
-                if len(build.getSourceStamps()) == 1:
-                    ss = build.getSourceStamps(absolute=True)[0]
-                    key = self.getSourceStampKey(ss)
-                    for i in range(len(stamps)):
-                        if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
-                            builds[i] = build
+                ss = build.getSourceStamp(absolute=True)
+                key = self.getSourceStampKey(ss)
+                for i in range(len(stamps)):
+                    if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
+                        builds[i] = build
 
             b = yield self.builder_cxt(request, builder)
             builders.append(b)
@@ -278,4 +271,5 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
             builder_builds.append(map(lambda b: self.build_cxt(request, b), builds))
 
         template = request.site.buildbot_service.templates.get_template('grid_transposed.html')
-        defer.returnValue(template.render(**cxt))
+        yield template.render(**cxt)
+

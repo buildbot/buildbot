@@ -205,7 +205,12 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         ))
 
         d = self.run_command()
-        self.assertFailure(d, RuntimeError)
+        def cb(_):
+            self.fail("shouldn't get here")
+        def eb(f):
+            f.trap(RuntimeError) # expected
+        d.addCallbacks(cb, eb)
+
         def check(_):
             self.assertUpdates([
                     {'header': 'sending %s' % self.datafile},
@@ -353,7 +358,11 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
         ))
 
         d = self.run_command()
-        self.assertFailure(d, RuntimeError)
+        def cb(_):
+            self.fail("shouldn't get here")
+        def eb(f):
+            f.trap(RuntimeError) # expected
+        d.addCallbacks(cb, eb)
 
         def check(_):
             self.assertUpdates([

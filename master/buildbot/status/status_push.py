@@ -31,7 +31,6 @@ try:
 except ImportError:
     import json
 
-from buildbot import config
 from buildbot.status.base import StatusReceiverMultiService
 from buildbot.status.persistent_queue import DiskQueue, IndexedQueue, \
         MemoryQueue, PersistentQueue
@@ -328,7 +327,7 @@ class HttpStatusPush(StatusPush):
 
     def __init__(self, serverUrl, debug=None, maxMemoryItems=None,
                  maxDiskItems=None, chunkSize=200, maxHttpRequestSize=2**20,
-                 extra_post_params=None, **kwargs):
+                 **kwargs):
         """
         @serverUrl: Base URL to be used to push events notifications.
         @maxMemoryItems: Maximum number of items to keep queued in memory.
@@ -339,12 +338,8 @@ class HttpStatusPush(StatusPush):
         @maxHttpRequestSize: limits the size of encoded data for AE, the default
         is 1MB.
         """
-        if not serverUrl:
-            raise config.ConfigErrors(['HttpStatusPush requires a serverUrl'])
-
         # Parameters.
         self.serverUrl = serverUrl
-        self.extra_post_params = extra_post_params or {}
         self.debug = debug
         self.chunkSize = chunkSize
         self.lastPushWasSuccessful = True
@@ -382,9 +377,7 @@ class HttpStatusPush(StatusPush):
                 packets = json.dumps(items, indent=2, sort_keys=True)
             else:
                 packets = json.dumps(items, separators=(',',':'))
-            params = {'packets': packets}
-            params.update(self.extra_post_params)
-            data = urllib.urlencode(params)
+            data = urllib.urlencode({'packets': packets})
             if (not self.maxHttpRequestSize or
                 len(data) < self.maxHttpRequestSize):
                 return (data, items)

@@ -17,7 +17,6 @@
 
 from buildbot.steps.shell import ShellCommand
 from buildbot.process.buildstep import LogLineObserver
-from buildbot import config
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 
 import re
@@ -109,7 +108,7 @@ class VisualStudio(ShellCommand):
                 installdir = None,
                 mode = "rebuild",
                 projectfile = None,
-                config = 'release',
+                config = None,
                 useenv = False,
                 project = None,
                 INCLUDE = [],
@@ -132,6 +131,17 @@ class VisualStudio(ShellCommand):
             self.PATH = PATH
         # always upcall !
         ShellCommand.__init__(self, **kwargs)
+        self.addFactoryArguments(
+            installdir = installdir,
+            mode = mode,
+            projectfile = projectfile,
+            config = config,
+            useenv = useenv,
+            project = project,
+            INCLUDE = INCLUDE,
+            LIB = LIB,
+            PATH = PATH
+        )
 
     def setupLogfiles(self, cmd, logfiles):
         logwarnings = self.addLog("warnings")
@@ -179,7 +189,7 @@ class VisualStudio(ShellCommand):
         self.step_status.setStatistic('errors', self.logobserver.nbErrors)
 
     def evaluateCommand(self, cmd):
-        if cmd.didFail():
+        if cmd.rc != 0:
             return FAILURE
         if self.logobserver.nbErrors > 0:
             return FAILURE
@@ -227,8 +237,6 @@ class VC6(VisualStudio):
             command.append("ALL - " + self.config)
         if self.mode == "rebuild":
             command.append("/REBUILD")
-        elif self.mode == "clean":
-            command.append("/CLEAN")
         else:
             command.append("/BUILD")
         if self.useenv:
@@ -266,8 +274,6 @@ class VC7(VisualStudio):
         command.append(self.projectfile)
         if self.mode == "rebuild":
             command.append("/Rebuild")
-        elif self.mode == "clean":
-            command.append("/Clean")
         else:
             command.append("/Build")
         command.append(self.config)
@@ -295,6 +301,7 @@ class VC8(VC7):
 
         # always upcall !
         VisualStudio.__init__(self, **kwargs)
+        self.addFactoryArguments(arch = arch)
 
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
@@ -334,8 +341,6 @@ class VCExpress9(VC8):
         command.append(self.projectfile)
         if self.mode == "rebuild":
             command.append("/Rebuild")
-        elif self.mode == "clean":
-            command.append("/Clean")
         else:
             command.append("/Build")
         command.append(self.config)
@@ -358,45 +363,3 @@ class VC10(VC9):
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 10.0'
 
 VS2010 = VC10
-
-class MsBuild(VisualStudio):
-    platform = None
-
-    def __init__(self, platform, **kwargs):
-        self.platform = platform
-        VisualStudio.__init__(self, **kwargs)
-
-    def setupEnvironment(self, cmd):
-        VisualStudio.setupEnvironment(self, cmd)
-        cmd.args['env']['VCENV_BAT'] = "\"${VS110COMNTOOLS}..\\..\\VC\\vcvarsall.bat\""
-
-    def describe(self, done=False):
-        rv = []
-        if done:
-            rv.append("built")
-        else:
-            rv.append("building")
-        if self.project is not None:
-            rv.append("%s for" % (self.project))
-        else:
-            rv.append("solution for")
-        rv.append("%s|%s" % (self.config, self.platform))
-        return rv
-
-    def start(self):
-        if self.platform is None:
-            config.error('platform is mandatory. Please specify a string such as "Win32"')
-
-        command = ["%VCENV_BAT%",
-                   "x86",
-                   "&&",
-                   "msbuild",
-                   self.projectfile,
-                   "/p:Configuration=%s" % (self.config),
-                   "/p:Platform=%s" % (self.platform)]
-        if self.project is not None:
-            command.append("/t:%s" % (self.project))
-
-        self.setCommand(command)
-
-        return VisualStudio.start(self)

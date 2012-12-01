@@ -23,9 +23,8 @@ class Dependent(base.BaseScheduler):
 
     compare_attrs = base.BaseScheduler.compare_attrs + ('upstream_name',)
 
-    def __init__(self, name, upstream, builderNames, properties={}, **kwargs):
-        base.BaseScheduler.__init__(self, name, builderNames, properties,
-                                    **kwargs)
+    def __init__(self, name, upstream, builderNames, properties={}):
+        base.BaseScheduler.__init__(self, name, builderNames, properties)
         if not interfaces.IScheduler.providedBy(upstream):
             config.error(
                 "upstream must be another Scheduler instance")

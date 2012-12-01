@@ -66,6 +66,7 @@ class PBManager(service.MultiService):
             return disp.disownServiceParent()
         return defer.succeed(None)
 
+
 class Registration(object):
     def __init__(self, pbmanager, portstr, username):
         self.portstr = portstr
@@ -74,10 +75,6 @@ class Registration(object):
         "username of this registration"
 
         self.pbmanager = pbmanager
-
-    def __repr__(self):
-        return "<pbmanager.Registration for %s on %s>" % \
-                            (self.username, self.portstr)
 
     def unregister(self):
         """
@@ -112,10 +109,6 @@ class Dispatcher(service.Service):
         self.serverFactory = pb.PBServerFactory(self.portal)
         self.serverFactory.unsafeTracebacks = True
         self.port = strports.listen(portstr, self.serverFactory)
-
-    def __repr__(self):
-        return "<pbmanager.Dispatcher for %s on %s>" % \
-                            (", ".join(self.users.keys()), self.portstr)
 
     def stopService(self):
         # stop listening on the port when shut down

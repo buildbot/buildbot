@@ -57,8 +57,11 @@ server and retrieve information about every build the buildbot knows
 about, as well as find out what the buildbot is currently working on.
 
 The first page you will see is the *Welcome Page*, which contains
-links to all the other useful pages. By default, this page is served from the
-:file:`status/web/templates/root.html` file in buildbot's library area.
+links to all the other useful pages. By default, this page is served from
+the :file:`status/web/templates/root.html` file in buildbot's library area.
+If you'd like to override this page or the other templates found there,
+copy the files you're interested in into a :file:`templates/` directory in
+the buildmaster's base directory.
 
 One of the most complex resource provided by :class:`WebStatus` is the
 *Waterfall Display*, which shows a time-based chart of events. This
@@ -83,28 +86,11 @@ in great detail below.
 Configuration
 +++++++++++++
 
-The simplest possible configuration for WebStatus is::
-
-    from buildbot.status.html import WebStatus
-    c['status'].append(WebStatus(8080))
-
-Buildbot uses a templating system for the web interface. The source
+Buildbot now uses a templating system for the web interface. The source
 of these templates can be found in the :file:`status/web/templates/` directory
 in buildbot's library area. You can override these templates by creating
 alternate versions in a :file:`templates/` directory within the buildmaster's
 base directory.
-
-If that isn't enough you can also provide additional Jinja2 template loaders::
-
-    import jinja2
-    myloaders = [
-        jinja2.FileSystemLoader("/tmp/mypath"),
-        ]
-
-    c['status'].append(html.WebStatus(
-        …,
-        jinja_loaders = myloaders,
-    ))
 
 The first time a buildmaster is created, the :file:`public_html/`
 directory is populated with some sample files, which you will probably
@@ -112,10 +98,13 @@ want to customize for your own project. These files are all static:
 the buildbot does not modify them in any way as it serves them to HTTP
 clients.
 
-Templates in :file:`templates/` take precedence over static files in
-:file:`public_html/`.
+Note that templates in :file:`templates/` take precedence over static files in
+:file:`public_html/`. ::
 
-The initial :file:`robots.txt` file has Disallow lines for all of
+    from buildbot.status.html import WebStatus
+    c['status'].append(WebStatus(8080))
+
+Note that the initial :file:`robots.txt` file has Disallow lines for all of
 the dynamically-generated buildbot pages, to discourage web spiders
 and search engines from consuming a lot of CPU time as they crawl
 through the entire history of your buildbot. If you are running the
@@ -212,7 +201,7 @@ be used to access them.
     revision.  The builders are listed down the left side of the page,
     and the revisions are listed across the top.
     
-    By adding one or more ``category=`` arguments the grid will be
+    By adding one ore more ``category=`` arguments the grid will be
     restricted to revisions in those categories.
     
     A :samp:`width={N}` argument will limit the number of revisions shown to *N*,
@@ -235,28 +224,27 @@ be used to access them.
 
 
 ``/console``
-    EXPERIMENTAL: This provides a developer-oriented display of the last
+    EXPERIMENTAL: This provides a developer-oriented display of the the last
     changes and how they affected the builders.
     
     It allows a developer to quickly see the status of each builder for the
     first build including his or her change. A green box means that the change
     succeeded for all the steps for a given builder. A red box means that
     the changed introduced a new regression on a builder. An orange box
-    means that at least one of the tests failed, but it was also failing
-    in the previous build, so it is not possible to see if there were any
+    means that at least one of the test failed, but it was also failing
+    in the previous build, so it is not possible to see if there was any
     regressions from this change. Finally a yellow box means that the test
     is in progress.
     
     By adding one or more ``builder=`` query arguments, the Console view is
-    restricted to only showing information about the given Builders. Adding a
+    restricted to only showing information about the given Builders.Adding a
     ``repository=`` argument will limit display to a given repository. By
     adding one or more ``branch=`` query arguments, the display is restricted
     to showing information about the given branches. In addition, adding one or
     more ``category=`` query arguments to the URL will limit the display to
     Builders that were defined with one of the given categories.  With the
     ``project=`` query argument, it's possible to restrict the view to changes
-    from the given project.  With the ``codebase=`` query argument, it's possible
-    to restrict the view to changes for the given codebase.
+    from the given project.
     
     By adding one or more ``name=`` query arguments to the URL, the console view is
     restricted to only showing changes made by the given users.
@@ -269,9 +257,9 @@ be used to access them.
 
     The console view is still in development. At this moment by
     default the view sorts revisions lexically, which can lead to odd
-    behavior with non-integer revisions (e.g., Git), or with integer
+    behavior with non-integer revisions (e.g., git), or with integer
     revisions of different length (e.g., 999 and 1000). It also has
-    some issues with displaying multiple branches at the same time. If
+    some issues with displaying multiple braches at the same time. If
     you do have multiple branches, you should use the ``branch=``
     query argument.  The ``order_console_by_time`` option may help
     sorting revisions, although it depends on the date being set
@@ -291,7 +279,7 @@ be used to access them.
 
 ``/json``
     This view provides quick access to Buildbot status information in a form that
-    is easily digested from other programs, including JavaScript.  See
+    is easiliy digested from other programs, including JavaScript.  See
     ``/json/help`` for detailed interactive documentation of the output formats
     for this view.
 
@@ -480,7 +468,7 @@ specify ``False`` (the default) to prohibit that action or ``True`` to enable
 it.  Or you can specify a callable.  Each such callable will take a username as
 its first argument.  The remaining arguments vary depending on the type of
 authorization request.  For ``forceBuild``, the second argument is the builder
-status.
+stsatus.
 
 Authentication
 ##############
@@ -509,10 +497,8 @@ keyword argument to :class:`Authz`, and specify the action as ``"auth"``. ::
 The class :class:`BasicAuth` implements a basic authentication mechanism using a
 list of user/password tuples provided from the configuration file.  The class
 `HTPasswdAuth` implements an authentication against an :file:`.htpasswd`
-file. The `HTPasswdAprAuth` a subclass of `HTPasswdAuth` use libaprutil for
-authenticating. This adds support for apr1/md5 and sha1 password hashes but
-requires libaprutil at runtime. The :class:`UsersAuth` works with
-:ref:`User-Objects` to check for valid user credentials.
+file. The :class:`UsersAuth` works with :ref:`User-Objects` to check for valid
+user credentials.
 
 If you need still-more flexibility, pass a function for the authentication
 action.  That function will be called with an authenticated username and some
@@ -555,38 +541,6 @@ using other way than through frontend. Usually this means that WebStatus should
 listen for incoming connections only on localhost (or on some firewall-protected
 port). Frontend must require HTTP authentication to access WebStatus pages
 (using any source for credentials, such as htpasswd, PAM, LDAP).
-
-If you allow unauthenticated access through frontend as well, it's possible to
-specify a ``httpLoginLink`` which will be rendered on the WebStatus for
-unauthenticated users as a link named Login. ::
-
-    authz = Authz(useHttpHeader=True, httpLoginLink='https://buildbot/login')
-
-A configuration example with Apache HTTPD as reverse proxy could look like the
-following. ::
-
-    authz = Authz(
-      useHttpHeader=True,
-      httpLoginLink='https://buildbot/login',
-      auth = HTPasswdAprAuth('/var/www/htpasswd'),
-      forceBuild = 'auth')
-
-Corresponding Apache configuration.
-
-.. code-block:: apache
-   
-    ProxyPass / http://127.0.0.1:8010/
-
-    <Location /login>
-        AuthType Basic
-        AuthName "Buildbot"
-        AuthUserFile /var/www/htpasswd
-        Require valid-user
-
-        RewriteEngine on
-        RewriteCond %{HTTP_REFERER} ^https?://([^/]+)/(.*)$
-        RewriteRule ^.*$ https://%1/%2 [R,L]
-    </Location>
 
 Logging configuration
 #####################
@@ -702,7 +656,7 @@ submission of an arbitrary change request. Run :command:`post_build_request.py
 --help` for more information.  The ``base`` dialect must be enabled for this to
 work.
 
-GitHub hook
+github hook
 ###########
 
 The GitHub hook is simple and takes no options. ::
@@ -754,44 +708,6 @@ that periodically poll the Google Code commit feed for changes.
    ``'branch'`` option::
 
       change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX', 'branch': 'master'}}
-
-Poller hook
-###########
-
-The poller hook allows you to use GET requests to trigger polling. One
-advantage of this is your buildbot instance can (at start up) poll to get
-changes that happened while it was down, but then you can still use a commit
-hook to get fast notification of new changes.
-
-Suppose you have a poller configured like this::
-
-    c['change_source'] = SVNPoller(
-        svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
-        split_file=split_file_branches)
-
-And you configure your WebStatus to enable this hook::
-
-    c['status'].append(html.WebStatus(
-        …,
-        change_hook_dialects={'poller': True}
-    ))
-
-Then you will be able to trigger a poll of the SVN repository by poking the
-``/change_hook/poller`` URL from a commit hook like this::
-
-    curl http://yourbuildbot/change_hook/poller?poller=https%3A%2F%2Famanda.svn.sourceforge.net%2Fsvnroot%2Famanda%2Famanda
-
-If no ``poller`` argument is provided then the hook will trigger polling of all
-polling change sources.
-
-You can restrict which pollers the webhook has access to using the ``allowed``
-option::
-
-    c['status'].append(html.WebStatus(
-        …,
-        change_hook_dialects={'poller': {'allowed': ['https://amanda.svn.sourceforge.net/svnroot/amanda/amanda']}}
-    ))
-
 
 .. bb:status:: MailNotifier
 
@@ -925,19 +841,17 @@ given below::
                         )
             text.append(u'<tr><td>Build Reason:</td><td>%s</td></tr>' % build.getReason())
             source = u""
-            for ss in build.getSourceStamps():
-                if ss.codebase:
-                    source += u'%s: ' % ss.codebase
-                if ss.branch:
-                    source += u"[branch %s] " % ss.branch
-                if ss.revision:
-                    source +=  ss.revision
-                else:
-                    source += u"HEAD"
-                if ss.patch:
-                    source += u" (plus patch)"
-                if ss.patch_info: # add patch comment
-                    source += u" (%s)" % ss.patch_info[1]
+            ss = build.getSourceStamp()
+            if ss.branch:
+                source += u"[branch %s] " % ss.branch
+            if ss.revision:
+                source +=  ss.revision
+            else:
+                source += u"HEAD"
+            if ss.patch:
+                source += u" (plus patch)"
+            if ss.patch_info: # add patch comment
+                source += u" (%s)" % ss.patch_info[1]
             text.append(u"<tr><td>Build Source Stamp:</td><td><b>%s</b></td></tr>" % source)
             text.append(u"<tr><td>Blamelist:</td><td>%s</td></tr>" % ",".join(build.getResponsibleUsers()))
             text.append(u'</table>')
@@ -955,9 +869,9 @@ given below::
                     text.append(u'</table>')
                     files = cd['files']
                     if files:
-                        text.append(u'<table cellspacing="10"><tr><th align="left">Files</th></tr>')
+                        text.append(u'<table cellspacing="10"><tr><th align="left">Files</th><th>URL</th></tr>')
                         for file in files:
-                            text.append(u'<tr><td>%s:</td></tr>' % file['name'] )
+                            text.append(u'<tr><td>%s:</td><td>%s</td></tr>' % (file['name'], file['url']))
                         text.append(u'</table>')
             text.append(u'<br>')
             # get log for last step 
@@ -1035,12 +949,6 @@ MailNotifier arguments
     ``warnings``
         Send mail about builds which generate warnings.
 
-    ``exception``
-        Send mail about builds which generate exceptions.
-
-    ``all``
-        Always send mail about builds.
-        
     Defaults to (``failing``, ``passing``, ``warnings``).
 
 ``builders``
@@ -1127,21 +1035,7 @@ MailNotifier arguments
 
 ``extraHeaders``
     (dictionary) A dictionary containing key/value pairs of extra headers to add
-    to sent e-mails. Both the keys and the values may be a `Interpolate` instance.
-
-``previousBuildGetter``
-    An optional function to calculate the previous build to the one at hand. A
-    :func:`previousBuildGetter` takes a :class:`BuildStatus` and returns a
-    :class:`BuildStatus`. This function is useful when builders don't process
-    their requests in order of arrival (chronologically) and therefore the order
-    of completion of builds does not reflect the order in which changes (and
-    their respective requests) arrived into the system. In such scenarios,
-    status transitions in the chronological sequence of builds within a builder
-    might not reflect the actual status transition in the topological sequence
-    of changes in the tree. What's more, the latest build (the build at hand)
-    might not always be for the most recent request so it might not make sense
-    to send a "change" or "problem" email about it. Returning None from this
-    function will prevent such emails from going out.
+    to sent e-mails. Both the keys and the values may be a `WithProperties` instance.
 
 As a help to those writing :func:`messageFormatter` functions, the following
 table describes how to get some useful pieces of information from the various
@@ -1154,8 +1048,7 @@ Name of the project
     :meth:`master_status.getProjectName()`
 
 MailNotifier mode
-    ``mode`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``,
-        ``exception``, ``all``)
+    ``mode`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``)
 
 Builder result as a string ::
     
@@ -1186,9 +1079,10 @@ List of responsible users
 
 Source information (only valid if ss is not ``None``)
 
-    A build has a set of sourcestamps::
+    ::
         
-        for ss in build.getSourceStamp():
+        ss = build.getSourceStamp()
+        if ss:
             branch = ss.branch
             revision = ss.revision
             patch = ss.patch
@@ -1216,7 +1110,7 @@ Source information (only valid if ss is not ``None``)
 
     The ``Change`` methods :meth:`asText` and :meth:`asDict` can be used to format the
     information above.  :meth:`asText` returns a list of strings and :meth:`asDict` returns
-    a dictionary suitable for html/mail rendering.
+    a dictonary suitable for html/mail rendering.
     
 Log information ::
     
@@ -1332,22 +1226,6 @@ Some of the commands currently available:
 :samp:`help {COMMAND}`
     Describe a command. Use :command:`help commands` to get a list of known
     commands.
-
-:samp:`shutdown {ARG}`
-    Control the shutdown process of the buildbot master.
-    Available arguments are:
-
-    ``check``
-        Check if the buildbot master is running or shutting down
-
-    ``start``
-        Start clean shutdown
-
-    ``stop``
-        Stop clean shutdown
-
-    ``now``
-        Shutdown immediately without waiting for the builders to finish
     
 ``source``
     Announce the URL of the Buildbot's home page.
@@ -1358,7 +1236,7 @@ Some of the commands currently available:
 Additionally, the config file may specify default notification options
 as shown in the example earlier.
 
-If the ``allowForce=True`` option was used, some additional commands
+If the ``allowForce=True`` option was used, some addtional commands
 will be available:
 
 .. index:: Properties; from forced build
@@ -1443,7 +1321,7 @@ StatusPush
 :class:`StatusPush` batches events normally processed and sends it to the
 :func:`serverPushCb` callback every ``bufferDelay`` seconds. The callback
 should pop items from the queue and then queue the next callback.
-If no items were popped from ``self.queue``, ``retryDelay`` seconds will be
+If no items were poped from ``self.queue``, ``retryDelay`` seconds will be
 waited instead.
 
 .. bb:status:: HttpStatusPush
@@ -1492,28 +1370,14 @@ GerritStatusPush
         # message, verified, reviewed
         return message, (result == SUCCESS or -1), 0
 
-    def gerritStartCB(builderName, build, arg):
-        message = "Buildbot started compiling your patchset\n"
-        message += "on configuration: %s\n" % builderName
-
-        if arg:
-            message += "\nFor more details visit:\n"
-            message += status.getURLForThing(build) + "\n"
-
-        return message
-
     c['buildbotURL'] = 'http://buildbot.example.com/'
     c['status'].append(GerritStatusPush('127.0.0.1', 'buildbot',
                                         reviewCB=gerritReviewCB,
-                                        reviewArg=c['buildbotURL'],
-                                        startCB=gerritStartCB,
-                                        startArg=c['buildbotURL']))
+                                        reviewArg=c['buildbotURL']))
 
-GerritStatusPush sends review of the :class:`Change` back to the Gerrit server,
-optionally also sending a message when a build is started.
+GerritStatusPush sends review of the :class:`Change` back to the Gerrit server.
 ``reviewCB`` should return a tuple of message, verified, reviewed. If message
 is ``None``, no review will be sent.
-``startCB`` should return a message.
 
 .. [#] Apparently this is the same way http://buildd.debian.org displays build status
 

@@ -19,7 +19,7 @@ Table Of Contents
    tutorial/index
    manual/index
    developer/index
-   relnotes/index
+   release-notes
 
 Indices and Tables
 ==================

@@ -31,8 +31,7 @@ del _hush_pyflakes
 class ShellCommand(buildstep.LoggingBuildStep):
     """I run a single shell command on the buildslave. I return FAILURE if
     the exit code of that command is non-zero, SUCCESS otherwise. To change
-    this behavior, override my .evaluateCommand method, or customize
-    decodeRC argument
+    this behavior, override my .evaluateCommand method.
 
     By default, a failure of this step will mark the whole build as FAILURE.
     To override this, give me an argument of flunkOnFailure=False .
@@ -62,17 +61,13 @@ class ShellCommand(buildstep.LoggingBuildStep):
                         they are written to. Empty or nonexistent logfiles
                         will be omitted. (Also handled by class
                         LoggingBuildStep.)
+
     """
 
     name = "shell"
-    renderables = buildstep.LoggingBuildStep.renderables + [
-                   'slaveEnvironment', 'remote_kwargs', 'command',
-                   'description', 'descriptionDone', 'descriptionSuffix']
-
+    renderables = [ 'description', 'descriptionDone', 'slaveEnvironment', 'remote_kwargs', 'command', 'logfiles' ]
     description = None # set this to a list of short strings to override
     descriptionDone = None # alternate description when the step is complete
-    descriptionSuffix = None # extra information to append to suffix
-
     command = None # set this to a command, or set in kwargs
     # logfiles={} # you can also set 'logfiles' to a dictionary, and it
     #               will be merged with any logfiles= argument passed in
@@ -83,7 +78,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
     flunkOnFailure = True
 
     def __init__(self, workdir=None,
-                 description=None, descriptionDone=None, descriptionSuffix=None,
+                 description=None, descriptionDone=None,
                  command=None,
                  usePTY="slave-config",
                  **kwargs):
@@ -100,12 +95,6 @@ class ShellCommand(buildstep.LoggingBuildStep):
             self.descriptionDone = descriptionDone
         if isinstance(self.descriptionDone, str):
             self.descriptionDone = [self.descriptionDone]
-
-        if descriptionSuffix:
-            self.descriptionSuffix = descriptionSuffix
-        if isinstance(self.descriptionSuffix, str):
-            self.descriptionSuffix = [self.descriptionSuffix]
-
         if command:
             self.setCommand(command)
 
@@ -116,11 +105,17 @@ class ShellCommand(buildstep.LoggingBuildStep):
                 buildstep_kwargs[k] = kwargs[k]
                 del kwargs[k]
         buildstep.LoggingBuildStep.__init__(self, **buildstep_kwargs)
+        self.addFactoryArguments(workdir=workdir,
+                                 description=description,
+                                 descriptionDone=descriptionDone,
+                                 command=command)
 
         # everything left over goes to the RemoteShellCommand
         kwargs['workdir'] = workdir # including a copy of 'workdir'
         kwargs['usePTY'] = usePTY
         self.remote_kwargs = kwargs
+        # we need to stash the RemoteShellCommand's args too
+        self.addFactoryArguments(**kwargs)
 
     def setBuild(self, build):
         buildstep.LoggingBuildStep.setBuild(self, build)
@@ -147,20 +142,12 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
     def _flattenList(self, mainlist, commands):
         for x in commands:
-            if isinstance(x, (list, tuple)):
-                if x != []:
-                    self._flattenList(mainlist, x)
-            else:
-                mainlist.append(x)
+          if isinstance(x, (str, unicode)):
+             mainlist.append(x)
+          elif x != []:
+             self._flattenList(mainlist, x)
 
     def describe(self, done=False):
-        desc = self._describe(done)
-        if self.descriptionSuffix:
-            desc = desc[:]
-            desc.extend(self.descriptionSuffix)
-        return desc
-
-    def _describe(self, done=False):
         """Return a list of short strings to describe this step, for the
         status display. This uses the first few words of the shell command.
         You can replace this by setting .description in your subclass, or by
@@ -198,22 +185,20 @@ class ShellCommand(buildstep.LoggingBuildStep):
                 # WithProperties and Property don't have __len__
                 return ["???"]
 
-            # flatten any nested lists
             tmp = []
-            self._flattenList(tmp, words)
-            words = tmp
+            for x in words:
+                if isinstance(x, (str, unicode)):
+                   tmp.append(x)
+                else:
+                   self._flattenList(tmp, x)
 
-            # strip instances and other detritus (which can happen if a
-            # description is requested before rendering)
-            words = [ w for w in words if isinstance(w, (str, unicode)) ]
-
-            if len(words) < 1:
+            if len(tmp) < 1:
                 return ["???"]
-            if len(words) == 1:
-                return ["'%s'" % words[0]]
-            if len(words) == 2:
-                return ["'%s" % words[0], "%s'" % words[1]]
-            return ["'%s" % words[0], "%s" % words[1], "...'"]
+            if len(tmp) == 1:
+                return ["'%s'" % tmp[0]]
+            if len(tmp) == 2:
+                return ["'%s" % tmp[0], "%s'" % tmp[1]]
+            return ["'%s" % tmp[0], "%s" % tmp[1], "...'"]
 
         except:
             log.err(failure.Failure(), "Error describing step")
@@ -291,7 +276,7 @@ class TreeSize(ShellCommand):
             self.setProperty("tree-size-KiB", self.kib, "treesize")
 
     def evaluateCommand(self, cmd):
-        if cmd.didFail():
+        if cmd.rc != 0:
             return FAILURE
         if self.kib is None:
             return WARNINGS # not sure how 'du' could fail, but whatever
@@ -318,11 +303,15 @@ class SetProperty(ShellCommand):
 
         ShellCommand.__init__(self, **kwargs)
 
+        self.addFactoryArguments(property=self.property)
+        self.addFactoryArguments(extract_fn=self.extract_fn)
+        self.addFactoryArguments(strip=self.strip)
+
         self.property_changes = {}
 
     def commandComplete(self, cmd):
         if self.property:
-            if cmd.didFail():
+            if cmd.rc != 0:
                 return
             result = cmd.logs['stdio'].getText()
             if self.strip: result = result.strip()
@@ -416,6 +405,12 @@ class WarningCountingShellCommand(ShellCommand):
         # And upcall to let the base class do its work
         ShellCommand.__init__(self, **kwargs)
 
+        self.addFactoryArguments(warningPattern=warningPattern,
+                                 directoryEnterPattern=directoryEnterPattern,
+                                 directoryLeavePattern=directoryLeavePattern,
+                                 warningExtractor=warningExtractor,
+                                 maxWarnCount=maxWarnCount,
+                                 suppressionFile=suppressionFile)
         self.suppressions = []
         self.directoryStack = []
 
@@ -589,7 +584,7 @@ class WarningCountingShellCommand(ShellCommand):
 
 
     def evaluateCommand(self, cmd):
-        if ( cmd.didFail() or
+        if ( cmd.rc != 0 or
            ( self.maxWarnCount != None and self.warnCount > self.maxWarnCount ) ):
             return FAILURE
         if self.warnCount:
@@ -665,7 +660,7 @@ class PerlModuleTest(Test):
         passed = 0
         failed = 0
         rc = SUCCESS
-        if cmd.didFail():
+        if cmd.rc > 0:
             rc = FAILURE
 
         # New version of Test::Harness?

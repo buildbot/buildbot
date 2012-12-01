@@ -392,10 +392,13 @@ class LogFile:
             else:
                 yield leftover
 
-    def readlines(self):
+    def readlines(self, channel=STDOUT):
         """Return an iterator that produces newline-terminated lines,
         excluding header chunks."""
-        alltext = "".join(self.getChunks([STDOUT], onlyText=True))
+        # TODO: make this memory-efficient, by turning it into a generator
+        # that retrieves chunks as necessary, like a pull-driven version of
+        # twisted.protocols.basic.LineReceiver
+        alltext = "".join(self.getChunks([channel], onlyText=True))
         io = StringIO(alltext)
         return io.readlines()
 
@@ -677,8 +680,6 @@ class HTMLLogFile:
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['step']
-        if d.has_key('master'):
-            del d['master']
         return d
 
 

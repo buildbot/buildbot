@@ -187,7 +187,6 @@ class FakeStep(object):
 
 class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
-    @defer.deferredGenerator
     def setUp(self):
         self.basedir = os.path.abspath("basedir")
         if os.path.exists(self.basedir):
@@ -198,10 +197,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         self.bot.startService()
 
         # get a SlaveBuilder object from the bot and wrap it as a fake remote
-        wfd = defer.waitForDeferred(
-                self.bot.remote_setBuilderList([('sb', 'sb')]))
-        yield wfd
-        builders = wfd.getResult()
+        builders = self.bot.remote_setBuilderList([('sb', 'sb')])
         self.sb = FakeRemote(builders['sb'])
 
         self.setUpCommand()

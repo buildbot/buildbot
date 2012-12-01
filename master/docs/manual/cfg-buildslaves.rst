@@ -154,19 +154,7 @@ very useful for some situations.
 
 The buildslaves that are started on-demand are called "latent" buildslaves.
 As of this writing, buildbot ships with an abstract base class for building
-latent buildslaves, and a concrete implementation for AWS EC2 and for libvirt.
-
-Common Options
-++++++++++++++
-
-The following options are available for all latent buildslaves.
-
-``build_wait_timeout``
-    This option allows you to specify how long a latent slave should wait after
-    a build for another build before it shuts down. It defaults to 10 minutes.
-    If this is set to 0 then the slave will be shut down immediately. If it is
-    less than 0 it will never automatically shutdown.
-
+latent buildslaves, and a concrete implementation for AWS EC2.
 
 .. index::
    AWS EC2
@@ -177,7 +165,7 @@ Amazon Web Services Elastic Compute Cloud ("AWS EC2")
 
 `EC2 <http://aws.amazon.com/ec2/>`_ is a web service that allows you to
 start virtual machines in an Amazon data center. Please see their website for
-details, including costs. Using the AWS EC2 latent buildslaves involves getting
+details, incuding costs. Using the AWS EC2 latent buildslaves involves getting
 an EC2 account with AWS and setting up payment; customizing one or more EC2
 machine images ("AMIs") on your desired operating system(s) and publishing
 them (privately if needed); and configuring the buildbot master to know how to
@@ -356,6 +344,10 @@ to wait for an EC2 instance to attach before considering the attempt to have
 failed, and email addresses to alert, respectively.  ``missing_timeout``
 defaults to 20 minutes.
 
+The ``build_wait_timeout`` allows you to specify how long an :class:`EC2LatentBuildSlave`
+should wait after a build for another build before it shuts down the EC2
+instance.  It defaults to 10 minutes.
+
 ``keypair_name`` and ``security_name`` allow you to specify different names for
 these AWS EC2 values.  They both default to ``latent_buildbot_slave``.
 
@@ -368,13 +360,13 @@ Libvirt
 
 `libvirt <http://www.libvirt.org/>`_ is a virtualization API for interacting
 with the virtualization capabilities of recent versions of Linux and other OSes.
-It is LGPL and comes with a stable C API, and Python bindings.
+It is LGPL and comes with a stable C API, and python bindings.
 
 This means we know have an API which when tied to buildbot allows us to have slaves
 that run under Xen, QEMU, KVM, LXC, OpenVZ, User Mode Linux, VirtualBox and VMWare.
 
 The libvirt code in Buildbot was developed against libvirt 0.7.5 on Ubuntu Lucid. It
-is used with KVM to test Python code on Karmic VM's, but obviously isn't limited to that.
+is used with KVM to test python code on Karmic VM's, but obviously isn't limited to that.
 Each build is run on a new VM, images are temporary and thrown away after each build.
 
 Setting up libvirt

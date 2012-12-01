@@ -18,7 +18,7 @@ which have their own options. One can run these tools in the following way:
    buildbot [global options] command [command options]
    buildslave [global options] command [command options]
 
-The ``buildbot`` command is used on the master, while ``buildslave`` is used on
+The ``buildbot`` command is used on the master, while ``buildlsave`` is used on
 the slave.  Global options are the same for both tools which perform the
 following actions:
 
@@ -55,76 +55,53 @@ Some of its subcommands are intended for buildmaster admins, while
 some are for developers who are editing the code that the buildbot is
 monitoring.
 
+.. bb:cmdline:: create-master
+.. bb:cmdline:: start (buildbot)
+.. bb:cmdline:: stop (buildbot)
+.. bb:cmdline:: sighup
+
 Administrator Tools
 ~~~~~~~~~~~~~~~~~~~
 
 The following :command:`buildbot` sub-commands are intended for
 buildmaster administrators:
 
-.. bb:cmdline:: create-master
+``create-master``
 
-create-master
-+++++++++++++
+    This creates a new directory and populates it with files that allow it
+    to be used as a buildmaster's base directory.
+
+    You will usually want to use the :option:`-r` option to create a relocatable
+    :file:`buildbot.tac`.  This allows you to move the master directory without
+    editing this file.
 
 .. code-block:: none
 
     buildbot create-master -r {BASEDIR}
 
-This creates a new directory and populates it with files that allow it to be used as a buildmaster's base directory.
+``start``
 
-You will usually want to use the :option:`-r` option to create a relocatable :file:`buildbot.tac`.
-This allows you to move the master directory without editing this file.
+    This starts a buildmaster which was already created in the given base
+    directory. The daemon is launched in the background, with events logged
+    to a file named :file:`twistd.log`.
 
-.. bb:cmdline:: start (buildbot)
+``stop``
 
-start
-+++++
-
-.. code-block:: none
-
-    buildbot start [--nodaemon] {BASEDIR}
-
-This starts a buildmaster which was already created in the given base directory.
-The daemon is launched in the background, with events logged to a file named :file:`twistd.log`.
-
-The :option:`--nodaemon` option instructs Buildbot to skip daemonizing.
-The process will start in the foreground.
-It will only return to the command-line when it is stopped.
-
-.. bb:cmdline:: restart (buildbot)
-
-restart
-+++++++
-
-.. code-block:: none
-
-    buildbot restart [--nodaemon] {BASEDIR}
-
-Restart the buildmaster.
-This is equivalent to ``stop`` followed by ``start``
-The :option:`--nodaemon` option has the same meaning as for ``start``.
-
-.. bb:cmdline:: stop (buildbot)
-
-stop
-++++
+    This terminates the daemon (either buildmaster or buildslave) running
+    in the given directory.
 
 .. code-block:: none
 
     buildbot stop {BASEDIR}
 
-This terminates the daemon (either buildmaster or buildslave) running in the given directory.
+``sighup``
 
-.. bb:cmdline:: sighup
-
-sighup
-++++++
+    This sends a SIGHUP to the buildmaster running in the given directory,
+    which causes it to re-read its :file:`master.cfg` file.
 
 .. code-block:: none
 
     buildbot sighup {BASEDIR}
-
-This sends a SIGHUP to the buildmaster running in the given directory, which causes it to re-read its :file:`master.cfg` file.
 
 Developer Tools
 ~~~~~~~~~~~~~~~
@@ -235,22 +212,12 @@ most of the time you will use an explicit path like
 :file:`.buildbot/options` as ``try_host``, ``try_username``,
 ``try_password``, and ``try_jobdir``.
 
-The SSH approach also provides a :option:`--buildbotbin` argument to
-allow specification of the buildbot binary to run on the
-buildmaster. This is useful in the case where buildbot is installed in
-a :ref:`virtualenv <Installation-in-a-Virtualenv>` on the buildmaster
-host, or in other circumstances where the buildbot command is not on
-the path of the user given by :option:`--username`. The
-:option:`--buildbotbin` argument can be provided in
-:file:`.buildbot/options` as ``try_buildbotbin``
-
-Finally, the SSH approach needs to connect to a :class:`PBListener`
-status port, so it can retrieve and report the results of the build
-(the PB approach uses the existing connection to retrieve status
-information, so this step is not necessary). This requires a
-:option:`--masterstatus` argument, or a ``try_masterstatus`` entry in
-:file:`.buildbot/options`, in the form of a :samp:`{HOSTNAME}:{PORT}`
-string.
+In addition, the SSH approach needs to connect to a :class:`PBListener` status
+port, so it can retrieve and report the results of the build (the PB
+approach uses the existing connection to retrieve status information,
+so this step is not necessary). This requires a :option:`--masterstatus`
+argument, or a ``try_masterstatus`` entry in :file:`.buildbot/options`,
+in the form of a :samp:`{HOSTNAME}:{PORT}` string.
 
 The following command line arguments are deprecated, but retained for
 backward compatibility:
@@ -337,7 +304,7 @@ for each tree you use, so it may be more convenient to use the
 ``try_topfile`` approach instead.
 
 Other VC systems which work on full projects instead of individual
-directories (Darcs, Mercurial, Git, Monotone) do not require
+directories (darcs, mercurial, git, monotone) do not require
 :command:`try` to know the top directory, so the :option:`--try-topfile`
 and :option:`--try-topdir` arguments will be ignored.
 
@@ -391,7 +358,7 @@ bzr
     then a ``bzr diff -r$base..`` to obtain the patch.
 
 Mercurial
-    ``hg parents --template '{node}\n'`` emits the full revision id (as opposed to
+    ``hg identify --debug`` emits the full revision id (as opposed to
     the common 12-char truncated) which is a SHA1 hash of the current 
     revision's contents. This is used as the base revision. 
     ``hg diff`` then provides the patch relative to that
@@ -401,9 +368,9 @@ Mercurial
 
 Perforce
     :command:`try` does a ``p4 changes -m1 ...`` to determine the latest
-    changelist and implicitly assumes that the local tree is synced to this
+    changelist and implicitly assumes that the local tree is synched to this
     revision. This is followed by a ``p4 diff -du`` to obtain the patch.
-    A p4 patch differs slightly from a normal diff. It contains full depot
+    A p4 patch differs sligtly from a normal diff. It contains full depot
     paths and must be converted to paths relative to the branch top. To convert
     the following restriction is imposed. The p4base (see :bb:chsrc:`P4Source`)
     is assumed to be ``//depot``
@@ -685,7 +652,7 @@ see :ref:`Concepts-Users`.
 --op
     There are four supported values for the :option:`op` argument:
     :option:`add`, :option:`update`, :option:`remove`, and
-    :option:`get`. Each are described in full in the following sections.
+    :option:`show`. Each are described in full in the following sections.
 
 --bb_username
     Used with the :option:`update` option, this sets the user's username
@@ -766,11 +733,11 @@ For :option:`remove`:
             --username={USER} --passwd={USERPW} \
             --ids={ID1},{ID2},...
 
-For :option:`get`:
+For :option:`show`:
 
 .. code-block:: none
 
-    buildbot user --master={MASTERHOST} --op=get \
+    buildbot user --master={MASTERHOST} --op=show \
             --username={USER} --passwd={USERPW} \
             --ids={ID1},{ID2},...
 
@@ -792,7 +759,7 @@ command will look for a special directory named :file:`.buildbot`,
 starting from the current directory (where the command was run) and
 crawling upwards, eventually looking in the user's home directory. It
 will look for a file named :file:`options` in this directory, and will
-evaluate it as a Python script, looking for certain names to be set.
+evaluate it as a python script, looking for certain names to be set.
 You can just put simple ``name = 'value'`` pairs in this file to
 set the options.
 
@@ -853,7 +820,7 @@ the command-line option name.
     system being used.
 
 ``try_branch``
-    Equivalent to :option:`--branch`, this indicates that the current tree is on a
+    Equivlanent to :option:`--branch`, this indicates that the current tree is on a
     non-trunk branch.
 
 ``try_topdir``
@@ -907,9 +874,8 @@ be used as a buildslave's base directory. You must provide several
 arguments, which are used to create the initial :file:`buildbot.tac`
 file.
 
-The :option:`-r` option is advisable here, just like for ``create-master``.
-
-.. code-block:: none
+The :option:`-r` option is advisable here, just like for
+``create-master``. ::
 
     buildslave create-slave -r {BASEDIR} {MASTERHOST}:{PORT} {SLAVENAME} {PASSWORD}
 
@@ -922,38 +888,16 @@ start
 
 This starts a buildslave which was already created in the given base
 directory. The daemon is launched in the background, with events logged
-to a file named :file:`twistd.log`.
+to a file named :file:`twistd.log`. ::
 
-.. code-block:: none
-
-    buildslave start [--nodaemon] BASEDIR
-
-The :option:`--nodaemon` option instructs Buildbot to skip daemonizing. The
-process will start in the foreground.  It will only return to the command-line
-when it is stopped.
-
-.. bb:cmdline:: restart (buildslave)
-
-restart
-~~~~~~~
-
-.. code-block:: none
-
-    buildslave restart [--nodaemon] BASEDIR
-
-This restarts a buildslave which is already running.
-It is equivalent to a ``stop`` followed by a ``start``.
-
-The :option:`--nodaemon` option has the same meaning as for ``start``.
+    buildbot start BASEDIR
 
 .. bb:cmdline:: stop (buildslave)
 
 stop
 ~~~~
 
-This terminates the daemon buildslave running in the given directory.
-
-.. code-block:: none
+This terminates the daemon buildslave running in the given directory. ::
 
     buildbot stop BASEDIR
 

@@ -13,7 +13,7 @@ detail in :ref:`master-slave-updates`.
 RemoteCommand
 ~~~~~~~~~~~~~
 
-.. py:class:: RemoteCommand(remote_command, args, collectStdout=False, ignore_updates=False, decodeRC=dict(0))
+.. py:class:: RemoteCommand(remote_command, args, collectStdout=False, ignore_updates=False)
 
     :param remote_command: command to run on the slave
     :type remote_command: string
@@ -21,8 +21,6 @@ RemoteCommand
     :type args: dictionary
     :param collectStdout: if True, collect the command's stdout
     :param ignore_updates: true to ignore remote updates
-    :param decodeRC: dictionary associating ``rc`` values to buildsteps results constants
-    	   	     (e.g. ``SUCCESS``, ``FAILURE``, ``WARNINGS``)
 
     This class handles running commands, consisting of a command name and
     a dictionary of arguments.  If true, ``ignore_updates`` will suppress any
@@ -62,18 +60,6 @@ RemoteCommand
         it returns will fire when the interrupt request is received by the
         slave; this may be a long time before the command itself completes, at
         which time the Deferred returned from :meth:`run` will fire.
-
-    .. py:method:: results()
-
-        :returns: results constant
-
-        This method checks the ``rc`` against the decodeRC dictionary, and returns results constant
-
-    .. py:method:: didFail()
-
-        :returns: bool
-
-        This method returns True if the results() function returns FAILURE
 
     The following methods are invoked from the slave.  They should not be
     called directly.

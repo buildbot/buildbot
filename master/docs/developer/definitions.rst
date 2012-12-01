@@ -31,7 +31,6 @@ Mercurial   changeset   sha1 hash   different repos
 Darcs       ?           none [2]    different repos
 Bazaar      ?           ?           ?
 Perforce    ?           ?           ?
-BitKeeper   changeset   ?           different repos
 =========== =========== =========== ===================
 
 * [1] note that CVS only tracks patches to individual files.  Buildbot tries to

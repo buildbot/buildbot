@@ -19,7 +19,6 @@ import os, weakref
 from zope.interface import implements
 from twisted.python import log
 from twisted.application import strports, service
-from twisted.internet import defer
 from twisted.web import server, distrib, static
 from twisted.spread import pb
 from twisted.web.util import Redirect
@@ -149,7 +148,7 @@ class WebStatus(service.MultiService):
                  order_console_by_time=False, changecommentlink=None,
                  revlink=None, projects=None, repositories=None,
                  authz=None, logRotateLength=None, maxRotatedFiles=None,
-                 change_hook_dialects = {}, provide_feeds=None, jinja_loaders=None):
+                 change_hook_dialects = {}, provide_feeds=None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -267,10 +266,6 @@ class WebStatus(service.MultiService):
                               Otherwise, a dictionary of strings of
                               the type of feeds provided.  Current
                               possibilities are "atom", "json", and "rss"
-
-        @type  jinja_loaders: None or list
-        @param jinja_loaders: If not empty, a list of additional Jinja2 loader
-                              objects to search for templates.
         """
 
         service.MultiService.__init__(self)
@@ -319,10 +314,6 @@ class WebStatus(service.MultiService):
         # If we were given a site object, go ahead and use it. (if not, we add one later)
         self.site = site
 
-        # keep track of our child services
-        self.http_svc = None
-        self.distrib_svc = None
-
         # store the log settings until we create the site object
         self.logRotateLength = logRotateLength
         self.maxRotatedFiles = maxRotatedFiles        
@@ -352,8 +343,6 @@ class WebStatus(service.MultiService):
             self.provide_feeds = ["atom", "json", "rss"]
         else:
             self.provide_feeds = provide_feeds
-
-        self.jinja_loaders = jinja_loaders
 
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
         #self.putChild("", IndexOrWaterfallRedirection())
@@ -388,6 +377,8 @@ class WebStatus(service.MultiService):
                 (self.http_port, self.distrib_port, hex(id(self))))
 
     def setServiceParent(self, parent):
+        service.MultiService.setServiceParent(self, parent)
+
         # this class keeps a *separate* link to the buildmaster, rather than
         # just using self.parent, so that when we are "disowned" (and thus
         # parent=None), any remaining HTTP clients of this WebStatus will still
@@ -413,7 +404,7 @@ class WebStatus(service.MultiService):
         else:
             revlink = self.master.config.revlink
         self.templates = createJinjaEnv(revlink, self.changecommentlink,
-                                        self.repositories, self.projects, self.jinja_loaders)
+                                        self.repositories, self.projects)
 
         if not self.site:
             
@@ -444,16 +435,14 @@ class WebStatus(service.MultiService):
         self.site.buildbot_service = self
 
         if self.http_port is not None:
-            self.http_svc = s = strports.service(self.http_port, self.site)
+            s = strports.service(self.http_port, self.site)
             s.setServiceParent(self)
         if self.distrib_port is not None:
             f = pb.PBServerFactory(distrib.ResourcePublisher(self.site))
-            self.distrib_svc = s = strports.service(self.distrib_port, f)
+            s = strports.service(self.distrib_port, f)
             s.setServiceParent(self)
 
         self.setupSite()
-
-        service.MultiService.setServiceParent(self, parent)
 
     def setupSite(self):
         # this is responsible for creating the root resource. It isn't done
@@ -495,7 +484,6 @@ class WebStatus(service.MultiService):
     def registerChannel(self, channel):
         self.channels[channel] = 1 # weakrefs
 
-    @defer.inlineCallbacks
     def stopService(self):
         for channel in self.channels:
             try:
@@ -504,16 +492,7 @@ class WebStatus(service.MultiService):
                 log.msg("WebStatus.stopService: error while disconnecting"
                         " leftover clients")
                 log.err()
-        yield service.MultiService.stopService(self)
-
-        # having shut them down, now remove our child services so they don't
-        # start up again if we're re-started
-        if self.http_svc:
-            yield self.http_svc.disownServiceParent()
-            self.http_svc = None
-        if self.distrib_svc:
-            yield self.distrib_svc.disownServiceParent()
-            self.distrib_svc = None
+        return service.MultiService.stopService(self)
 
     def getStatus(self):
         return self.master.getStatus()

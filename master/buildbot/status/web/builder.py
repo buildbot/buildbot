@@ -22,51 +22,12 @@ from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_slave, path_to_builder, path_to_change, \
     path_to_root, ICurrentBox, build_get_class, \
-    map_branches, path_to_authzfail, ActionResource, \
-    getRequestCharset
-from buildbot.schedulers.forcesched import ForceScheduler
-from buildbot.schedulers.forcesched import InheritBuildParameter, NestedParameter
-from buildbot.schedulers.forcesched import ValidationError
+    map_branches, path_to_authzfail, ActionResource
+from buildbot.schedulers.forcesched import ForceScheduler, InheritBuildParameter
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
-import collections
 
-class ForceAction(ActionResource):
-    @defer.inlineCallbacks
-    def force(self, req, builderNames):
-        master = self.getBuildmaster(req)
-        owner = self.getAuthz(req).getUsernameFull(req)
-        schedulername = req.args.get("forcescheduler", ["<unknown>"])[0]
-        if schedulername == "<unknown>":
-            defer.returnValue((path_to_builder(req, self.builder_status),
-                               "forcescheduler arg not found"))
-            return
-
-        args = {}
-        # decode all of the args
-        encoding = getRequestCharset(req)
-        for name, argl in req.args.iteritems():
-           if name == "checkbox":
-               # damn html's ungeneric checkbox implementation...
-               for cb in argl:
-                   args[cb.decode(encoding)] = True
-           else:
-               args[name] = [ arg.decode(encoding) for arg in argl ]
-
-        for sch in master.allSchedulers():
-            if schedulername == sch.name:
-                try:
-                    yield sch.force(owner, builderNames, **args)
-                    msg = ""
-                except ValidationError, e:
-                    msg = html.escape(e.message.encode('ascii','ignore'))
-                break
-
-        # send the user back to the builder page
-        defer.returnValue(msg)
-
-
-class ForceAllBuildsActionResource(ForceAction):
+class ForceAllBuildsActionResource(ActionResource):
 
     def __init__(self, status, selectedOrAll):
         self.status = status
@@ -82,15 +43,19 @@ class ForceAllBuildsActionResource(ForceAction):
             defer.returnValue(path_to_authzfail(req))
             return
 
+        builders = None
         if self.selectedOrAll == 'all':
-            builderNames = None
+            builders = self.status.getBuilderNames()
         elif self.selectedOrAll == 'selected':
-            builderNames = [b for b in req.args.get("selected", []) if b]
+            builders = [b for b in req.args.get("selected", []) if b]
 
-        msg = yield self.force(req, builderNames)
-
+        for bname in builders:
+            builder_status = self.status.getBuilder(bname)
+            ar = ForceBuildActionResource(builder_status)
+            d = ar.performAction(req)
+            d.addErrback(log.err, "(ignored) while trying to force build")
         # back to the welcome page
-        defer.returnValue((path_to_root(req) + "builders", msg))
+        defer.returnValue(path_to_root(req))
 
 class StopAllBuildsActionResource(ActionResource):
 
@@ -150,7 +115,7 @@ class PingBuilderActionResource(ActionResource):
         # send the user back to the builder page
         defer.returnValue(path_to_builder(req, self.builder_status))
 
-class ForceBuildActionResource(ForceAction):
+class ForceBuildActionResource(ActionResource):
 
     def __init__(self, builder_status):
         self.builder_status = builder_status
@@ -166,46 +131,50 @@ class ForceBuildActionResource(ForceAction):
             defer.returnValue(path_to_authzfail(req))
             return
 
-        builderName = self.builder_status.getName()
-
-        msg = yield self.force(req, [builderName])
+        master = self.getBuildmaster(req)
+        owner = self.getAuthz(req).getUsernameFull(req)
+        schedulername = req.args.get("forcescheduler", ["<unknown>"])[0]
+        if schedulername == "<unknown>":
+            defer.returnValue((path_to_builder(req, self.builder_status),
+                               "forcescheduler arg not found"))
+            return
+        for sch in master.allSchedulers():
+            if schedulername == sch.name:
+                try:
+                    yield sch.forceWithWebRequest(owner,
+                            self.builder_status.getName(), req)
+                    msg = ""
+                except Exception, e:
+                    msg = html.escape(e.message.encode('ascii','ignore'))
+                break
 
         # send the user back to the builder page
         defer.returnValue((path_to_builder(req, self.builder_status), msg))
 
-def buildForceContextForField(req, default_props, sch, field, master, buildername):
-    pname = "%s.%s"%(sch.name, field.fullName)
-    
-    default = field.default
-    if isinstance(field, InheritBuildParameter):
-        # yes, I know, its bad to overwrite the parameter attribute,
-        # but I dont have any other simple way of doing this atm.
-        field.choices = field.compatible_builds(master.status, buildername)
-        if field.choices:
-            default = field.choices[0]
-            
-    default = req.args.get(pname, [default])[0]
-    if "bool" in field.type:
-        default_props[pname] = "checked" if default else ""
-    else:
-        # filter out unicode chars, and html stuff
-        if isinstance(default, unicode):
-            default = html.escape(default.encode('utf-8','ignore'))
-        default_props[pname] = default
-        
-    if isinstance(field, NestedParameter):
-        for subfield in field.fields:
-            buildForceContextForField(req, default_props, sch, subfield, master, buildername)
 
 def buildForceContext(cxt, req, master, buildername=None):
     force_schedulers = {}
-    default_props = collections.defaultdict(str)
+    default_props = {}
     for sch in master.allSchedulers():
         if isinstance(sch, ForceScheduler) and (buildername is None or(buildername in sch.builderNames)):
             force_schedulers[sch.name] = sch
-            for field in sch.all_fields:
-                buildForceContextForField(req, default_props, sch, field, master, buildername)
-                
+            for p in sch.all_fields:
+                pname = "%s.%s"%(sch.name, p.name)
+                default = p.default
+                if isinstance(p, InheritBuildParameter):
+                    # yes, I know, its bad to overwrite the parameter attribute,
+                    # but I dont have any other simple way of doing this atm.
+                    p.choices = p.compatible_builds(master.status, buildername)
+                    if p.choices:
+                        default = p.choices[0]
+                default = req.args.get(pname, [default])[0]
+                if p.type=="bool":
+                    default_props[pname] = default and "checked" or ""
+                else:
+                    # filter out unicode chars, and html stuff
+                    if type(default)==unicode:
+                        default = html.escape(default.encode('ascii','ignore'))
+                    default_props[pname] = default
     cxt['force_schedulers'] = force_schedulers
     cxt['default_props'] = default_props
 
@@ -251,7 +220,6 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         b = self.builder_status
 
         cxt['name'] = b.getName()
-        cxt['description'] = b.getDescription()
         req.setHeader('Cache-Control', 'no-cache')
         slaves = b.getSlaves()
         connected_slaves = [s for s in slaves if s.isConnected()]
@@ -503,12 +471,9 @@ class BuildersResource(HtmlResource):
     @defer.inlineCallbacks
     def content(self, req, cxt):
         status = self.getStatus(req)
-        encoding = getRequestCharset(req)
 
         builders = req.args.get("builder", status.getBuilderNames())
-        branches = [ b.decode(encoding)
-                for b in req.args.get("branch", [])
-                if b ]
+        branches = [b for b in req.args.get("branch", []) if b]
 
         # get counts of pending builds for each builder
         brstatus_ds = []
@@ -539,11 +504,7 @@ class BuildersResource(HtmlResource):
             if builds:
                 b = builds[0]
                 bld['build_url'] = (bld['link'] + "/builds/%d" % b.getNumber())
-                label = None
-                all_got_revisions = b.getAllGotRevisions()
-                # If len = 1 then try if revision can be used as label.
-                if len(all_got_revisions) == 1:
-                    label = all_got_revisions[all_got_revisions.keys()[0]]
+                label = b.getProperty("got_revision")
                 if not label or len(str(label)) > 20:
                     label = "#%d" % b.getNumber()
 
