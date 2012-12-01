@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import os
-
 from twisted.python import log
 from twisted.internet import defer
 
@@ -29,13 +27,19 @@ class Bzr(Source):
 
     def __init__(self, repourl=None, baseURL=None, mode='incremental',
                  method=None, defaultBranch=None, **kwargs):
-
+        
         self.repourl = repourl
         self.baseURL = baseURL
         self.branch = defaultBranch
         self.mode = mode
         self.method = method
         Source.__init__(self, **kwargs)
+        self.addFactoryArguments(repourl=repourl,
+                                 mode=mode,
+                                 method=method,
+                                 baseURL=baseURL,
+                                 defaultBranch=defaultBranch,
+                                 )
         if repourl and baseURL:
             raise ValueError("you must provide exactly one of repourl and"
                              " baseURL")
@@ -44,8 +48,8 @@ class Bzr(Source):
             raise ValueError("you must privide at least one of repourl and"
                              " baseURL")
 
-        if baseURL is not None and defaultBranch is None:
-            raise ValueError("you must provide defaultBranch with baseURL")
+        if self.repourl is None:
+            self.repourl = self.baseURL + defaultBranch
 
         assert self.mode in ['incremental', 'full']
 
@@ -53,14 +57,10 @@ class Bzr(Source):
             assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
 
     def startVC(self, branch, revision, patch):
-        if branch:
-            self.branch = branch
+        self.branch = branch or 'master'
         self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = self.addLog("stdio")
-
-        if self.repourl is None:
-            self.repourl = os.path.join(self.baseURL, self.branch)
 
         d = self.checkBzr()
         def checkInstall(bzrInstalled):
@@ -186,7 +186,7 @@ class Bzr(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _fail(tmp):
-            if cmd.didFail():
+            if cmd.rc != 0:
                 return False
             return True
         d.addCallback(_fail)
@@ -202,12 +202,11 @@ class Bzr(Source):
         cmd = buildstep.RemoteShellCommand(self.workdir, ['bzr'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
-                                           timeout=self.timeout,
                                            collectStdout=collectStdout)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
-            if abandonOnFailure and cmd.didFail():
+            if abandonOnFailure and cmd.rc != 0:
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
             if collectStdout:
@@ -240,14 +239,14 @@ class Bzr(Source):
         def setrev(stdout):
             revision = stdout.strip("'")
             try:
-                int(revision)
+                revision = int(revision)
             except ValueError:
                 log.msg("Invalid revision number")
                 raise buildstep.BuildStepFailed()
 
             log.msg("Got Git revision %s" % (revision, ))
-            self.updateSourceProperty('got_revision', revision)
+            self.setProperty('got_revision', revision, 'Source')
             return 0
         d.addCallback(setrev)
         return d
-
+    

@@ -36,8 +36,7 @@ except IOError:
     VERSION_MATCH = re.compile(r'\d+\.\d+\.\d+(\w|-)*')
 
     try:
-        dir  = os.path.dirname(os.path.abspath(__file__))
-        p = Popen(['git', 'describe', '--tags', '--always'], cwd=dir, stdout=PIPE, stderr=STDOUT)
+        p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT)
         out = p.communicate()[0]
 
         if (not p.returncode) and out:

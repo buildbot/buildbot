@@ -50,6 +50,7 @@ class RevlinkMultiplexer(object):
     def __init__(self, *revlinks):
         self.revlinks = revlinks
     def __call__(self, rev, repo):
+        print repo
         for revlink in self.revlinks:
             url = revlink(rev, repo)
             if url:

@@ -29,11 +29,11 @@ class createJobfile(unittest.TestCase):
     # version 1 is deprecated and not produced by the try client
 
     def test_createJobfile_v2_one_builder(self):
-        jobid = '123-456'
+        bsid = '123-456'
         branch = 'branch'
         baserev = 'baserev'
-        patch_level = 0
-        patch_body = 'diff...'
+        patchlevel = 0
+        diff = 'diff...'
         repository = 'repo'
         project = 'proj'
         who = None
@@ -41,19 +41,19 @@ class createJobfile(unittest.TestCase):
         builderNames = ['runtests']
         properties = {}
         job = tryclient.createJobfile(
-            jobid, branch, baserev, patch_level, patch_body, repository,
-            project, who, comment, builderNames, properties)
+            bsid, branch, baserev, patchlevel, diff, repository, project, who,
+            comment, builderNames, properties)
         jobstr = self.makeNetstring(
-            '2', jobid, branch, baserev, str(patch_level), patch_body,
-            repository, project, builderNames[0])
+            '2', bsid, branch, baserev, str(patchlevel), diff, repository,
+            project, builderNames[0])
         self.assertEqual(job, jobstr)
 
     def test_createJobfile_v2_two_builders(self):
-        jobid = '123-456'
+        bsid = '123-456'
         branch = 'branch'
         baserev = 'baserev'
-        patch_level = 0
-        patch_body = 'diff...'
+        patchlevel = 0
+        diff = 'diff...'
         repository = 'repo'
         project = 'proj'
         who = None
@@ -61,19 +61,19 @@ class createJobfile(unittest.TestCase):
         builderNames = ['runtests', 'moretests']
         properties = {}
         job = tryclient.createJobfile(
-            jobid, branch, baserev, patch_level, patch_body, repository,
-            project, who, comment, builderNames, properties)
+            bsid, branch, baserev, patchlevel, diff, repository, project, who,
+            comment, builderNames, properties)
         jobstr = self.makeNetstring(
-            '2', jobid, branch, baserev, str(patch_level), patch_body,
-            repository, project, builderNames[0], builderNames[1])
+            '2', bsid, branch, baserev, str(patchlevel), diff, repository,
+            project, builderNames[0], builderNames[1])
         self.assertEqual(job, jobstr)
 
     def test_createJobfile_v3(self):
-        jobid = '123-456'
+        bsid = '123-456'
         branch = 'branch'
         baserev = 'baserev'
-        patch_level = 0
-        patch_body = 'diff...'
+        patchlevel = 0
+        diff = 'diff...'
         repository = 'repo'
         project = 'proj'
         who = 'someuser'
@@ -81,19 +81,19 @@ class createJobfile(unittest.TestCase):
         builderNames = ['runtests']
         properties = {}
         job = tryclient.createJobfile(
-            jobid, branch, baserev, patch_level, patch_body, repository,
-            project, who, comment, builderNames, properties)
+            bsid, branch, baserev, patchlevel, diff, repository, project, who,
+            comment, builderNames, properties)
         jobstr = self.makeNetstring(
-            '3', jobid, branch, baserev, str(patch_level), patch_body,
-            repository, project, who, builderNames[0])
+            '3', bsid, branch, baserev, str(patchlevel), diff, repository,
+            project, who, builderNames[0])
         self.assertEqual(job, jobstr)
 
     def test_createJobfile_v4(self):
-        jobid = '123-456'
+        bsid = '123-456'
         branch = 'branch'
         baserev = 'baserev'
-        patch_level = 0
-        patch_body = 'diff...'
+        patchlevel = 0
+        diff = 'diff...'
         repository = 'repo'
         project = 'proj'
         who = 'someuser'
@@ -101,19 +101,19 @@ class createJobfile(unittest.TestCase):
         builderNames = ['runtests']
         properties = {}
         job = tryclient.createJobfile(
-            jobid, branch, baserev, patch_level, patch_body, repository,
-            project, who, comment, builderNames, properties)
+            bsid, branch, baserev, patchlevel, diff, repository, project, who,
+            comment, builderNames, properties)
         jobstr = self.makeNetstring(
-            '4', jobid, branch, baserev, str(patch_level), patch_body,
-            repository, project, who, comment, builderNames[0])
+            '4', bsid, branch, baserev, str(patchlevel), diff, repository,
+            project, who, comment, builderNames[0])
         self.assertEqual(job, jobstr)
 
     def test_createJobfile_v5(self):
-        jobid = '123-456'
+        bsid = '123-456'
         branch = 'branch'
         baserev = 'baserev'
-        patch_level = 0
-        patch_body = 'diff...'
+        patchlevel = 0
+        diff = 'diff...'
         repository = 'repo'
         project = 'proj'
         who = 'someuser'
@@ -121,13 +121,13 @@ class createJobfile(unittest.TestCase):
         builderNames = ['runtests']
         properties = {'foo': 'bar'}
         job = tryclient.createJobfile(
-            jobid, branch, baserev, patch_level, patch_body, repository,
-            project, who, comment, builderNames, properties)
+            bsid, branch, baserev, patchlevel, diff, repository, project, who,
+            comment, builderNames, properties)
         jobstr = self.makeNetstring(
             '5',
             json.dumps({
-                'jobid': jobid, 'branch': branch, 'baserev': baserev,
-                'patch_level': patch_level, 'patch_body': patch_body,
+                'bsid': bsid, 'branch': branch, 'baserev': baserev,
+                'patchlevel': '%d' % patchlevel, 'diff': diff,
                 'repository': repository, 'project': project, 'who': who,
                 'comment': comment, 'builderNames': builderNames,
                 'properties': properties,

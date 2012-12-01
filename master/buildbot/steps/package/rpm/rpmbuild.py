@@ -20,13 +20,8 @@ from __future__ import with_statement
 import os
 from buildbot.steps.shell import ShellCommand
 from buildbot.process import buildstep
-from buildbot import config
 
 class RpmBuild(ShellCommand):
-    """
-    RpmBuild build step.
-    """
-
     name = "rpmbuilder"
     haltOnFailure = 1
     flunkOnFailure = 1
@@ -45,31 +40,17 @@ class RpmBuild(ShellCommand):
                  autoRelease=False,
                  vcsRevision=False,
                  **kwargs):
-        """
-        Create the RpmBuild object.
-
-        @type specfile: str
-        @param specfile: location of the specfile to build
-        @type topdir: str
-        @param topdir: define the _topdir rpm parameter
-        @type builddir: str
-        @param builddir: define the _builddir rpm parameter
-        @type rpmdir: str
-        @param rpmdir: define the _rpmdir rpm parameter
-        @type sourcedir: str
-        @param sourcedir: define the _sourcedir rpm parameter
-        @type specdir: str
-        @param specdir: define the _specdir rpm parameter
-        @type srcrpmdir: str
-        @param srcrpmdir: define the _srcrpmdir rpm parameter
-        @type dist: str
-        @param dist: define the dist string.
-        @type autoRelease: boolean
-        @param autoRelease: Use auto incrementing release numbers.
-        @type vcsRevision: boolean
-        @param vcsRevision: Use vcs version number as revision number.
-        """
         ShellCommand.__init__(self, **kwargs)
+        self.addFactoryArguments(topdir=topdir,
+                                 builddir=builddir,
+                                 rpmdir=rpmdir,
+                                 sourcedir=sourcedir,
+                                 specdir=specdir,
+                                 srcrpmdir=srcrpmdir,
+                                 specfile=specfile,
+                                 dist=dist,
+                                 autoRelease=autoRelease,
+                                 vcsRevision=vcsRevision)
         self.rpmbuild = (
             'rpmbuild --define "_topdir %s" --define "_builddir %s"'
             ' --define "_rpmdir %s" --define "_sourcedir %s"'
@@ -79,9 +60,6 @@ class RpmBuild(ShellCommand):
         self.specfile = specfile
         self.autoRelease = autoRelease
         self.vcsRevision = vcsRevision
-
-        if not self.specfile:
-            config.error("You must specify a specfile")
 
     def start(self):
         if self.autoRelease:
@@ -97,11 +75,8 @@ class RpmBuild(ShellCommand):
                 rfile.write(str(rel+1))
 
         if self.vcsRevision:
-            revision = self.getProperty('got_revision')
-            # only do this in the case where there's a single codebase
-            if revision and not isinstance(revision, dict):
-                self.rpmbuild = (self.rpmbuild + ' --define "_revision %s"' %
-                                revision)
+            self.rpmbuild = self.rpmbuild + ' --define "_revision %s"' % \
+                self.getProperty('got_revision')
 
         self.rpmbuild = self.rpmbuild + ' -ba %s' % self.specfile
 
@@ -115,23 +90,20 @@ class RpmBuild(ShellCommand):
         self.startCommand(cmd)
 
     def createSummary(self, log):
-        rpm_prefixes = ['Provides:', 'Requires(', 'Requires:',
+        rpm_prefixes = ['Provides:', 'Requires(rpmlib):', 'Requires:',
                         'Checking for unpackaged', 'Wrote:',
-                        'Executing(%', '+ ', 'Processing files:']
+                        'Executing(%', '+ ']
         rpm_err_pfx = ['   ', 'RPM build errors:', 'error: ']
 
         rpmcmdlog = []
         rpmerrors = []
 
-        for line in log.getText().splitlines(True):
+        for line in log.readlines():
             for pfx in rpm_prefixes:
-                if line.startswith(pfx):
+                if pfx in line:
                     rpmcmdlog.append(line)
-                    break
             for err in rpm_err_pfx:
-                if line.startswith(err):
+                if err in line:
                     rpmerrors.append(line)
-                    break
         self.addCompleteLog('RPM Command Log', "".join(rpmcmdlog))
-        if rpmerrors:
-            self.addCompleteLog('RPM Errors', "".join(rpmerrors))
+        self.addCompleteLog('RPM Errors', "".join(rpmerrors))

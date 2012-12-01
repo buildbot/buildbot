@@ -218,6 +218,7 @@ class CVSMaildirSource(MaildirSource):
             raise ValueError('Expected cvsmode 1.11 or 1.12. got: %s' % cvsmode)
         
         log.msg("CVSMaildirSource processing filelist: %s" % fileList)
+        links = []
         while(fileList):
             m = singleFileRE.match(fileList)
             if m:
@@ -239,7 +240,7 @@ class CVSMaildirSource(MaildirSource):
                             isdir=isdir, when=when, branch=branch,
                             revision=rev, category=category,
                             repository=cvsroot, project=project,
-                            properties=self.properties))
+                            links=links, properties=self.properties))
 
 # svn "commit-email.pl" handler.  The format is very similar to freshcvs mail;
 # here's a sample:

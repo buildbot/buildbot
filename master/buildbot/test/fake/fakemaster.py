@@ -16,7 +16,6 @@
 import weakref
 from twisted.internet import defer
 from buildbot.test.fake import fakedb
-from buildbot.test.fake import pbmanager
 from buildbot import config
 import mock
 
@@ -37,48 +36,7 @@ class FakeCache(object):
         return d
 
 
-class FakeCaches(object):
-
-    def get_cache(self, name, miss_fn):
-        return FakeCache(name, miss_fn)
-
-
-class FakeBotMaster(object):
-
-    pass
-
-
-class FakeStatus(object):
-
-    def builderAdded(self, name, basedir, category=None, description=None):
-        return FakeBuilderStatus()
-
-
-class FakeBuilderStatus(object):
-
-    def setDescription(self, description):
-        self._description = description
-
-    def getDescription(self):
-        return self._description
-
-    def setCategory(self, category):
-        self._category = category
-
-    def getCategory(self):
-        return self._category
-
-    def setSlavenames(self, names):
-        pass
-
-    def setCacheSize(self, size):
-        pass
-
-    def setBigState(self, state):
-        pass
-
-
-class FakeMaster(object):
+def make_master(master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
     """
     Create a fake Master instance: a Mock with some convenience
     implementations:
@@ -86,31 +44,15 @@ class FakeMaster(object):
     - Non-caching implementation for C{self.caches}
     """
 
-    def __init__(self, master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
-        self._master_id = master_id
-        self.config = config.MasterConfig()
-        self.caches = FakeCaches()
-        self.pbmanager = pbmanager.FakePBManager()
-        self.basedir = 'basedir'
-        self.botmaster = FakeBotMaster()
-        self.botmaster.parent = self
-        self.status = FakeStatus()
-        self.status.master = self
+    fakemaster = mock.Mock(name="fakemaster")
 
-    def getObjectId(self):
-        return defer.succeed(self._master_id)
+    # set up caches
+    fakemaster.caches.get_cache = FakeCache
 
-    def subscribeToBuildRequests(self, callback):
-        pass
+    # and a getObjectId method
+    fakemaster.getObjectId = (lambda : defer.succeed(master_id))
 
-    # work around http://code.google.com/p/mock/issues/detail?id=105
-    def _get_child_mock(self, **kw):
-        return mock.Mock(**kw)
+    # and some config - this class's constructor is good enough to trust
+    fakemaster.config = config.MasterConfig()
 
-# Leave this alias, in case we want to add more behavior later
-def make_master(wantDb=False, testcase=None, **kwargs):
-    master = FakeMaster(**kwargs)
-    if wantDb:
-        assert testcase is not None, "need testcase for wantDb"
-        master.db = fakedb.FakeDBConnector(testcase)
-    return master
+    return fakemaster

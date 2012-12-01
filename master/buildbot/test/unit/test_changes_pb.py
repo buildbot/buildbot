@@ -77,7 +77,6 @@ class TestPBChangeSource(
 
         if exp_registration:
             self.assertUnregistered(*exp_registration)
-        self.assertEqual(self.changesource.registration, None)
 
     def test_perspective(self):
         self.attachChangeSource(pb.PBChangeSource('alice', 'sekrit', port='8888'))
@@ -150,15 +149,6 @@ class TestChangePerspective(unittest.TestCase):
         def check(_):
             self.assertEqual(self.added_changes,
                     [ dict(author="bar", files=['a']) ])
-        d.addCallback(check)
-        return d
-
-    def test_addChange_codebase(self):
-        cp = pb.ChangePerspective(self.master, None)
-        d = cp.perspective_addChange(dict(who="bar", files=[], codebase='cb'))
-        def check(_):
-            self.assertEqual(self.added_changes,
-                    [ dict(author="bar", files=[], codebase='cb') ])
         d.addCallback(check)
         return d
 

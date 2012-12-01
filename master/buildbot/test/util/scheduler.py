@@ -132,7 +132,6 @@ class SchedulerMixin(object):
         properties={}
         repository=''
         project=''
-        codebase=''
 
     def makeFakeChange(self, **kwargs):
         """Utility method to make a fake Change object with the given

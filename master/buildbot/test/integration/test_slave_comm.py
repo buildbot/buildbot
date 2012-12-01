@@ -21,9 +21,8 @@ from twisted.trial import unittest
 from twisted.python import log
 import buildbot
 from buildbot.test.util import compat
-from buildbot.process import botmaster, builder, factory
+from buildbot.process import botmaster, builder
 from buildbot import pbmanager, buildslave, config
-from buildbot.status import master
 from buildbot.test.fake import fakemaster
 
 class FakeSlaveBuilder(pb.Referenceable):
@@ -116,8 +115,6 @@ class TestSlaveComm(unittest.TestCase):
         self.botmaster = botmaster.BotMaster(self.master)
         self.botmaster.startService()
 
-        self.master.status = master.Status(self.master)
-
         self.buildslave = None
         self.port = None
         self.slavebuildslave = None
@@ -149,7 +146,7 @@ class TestSlaveComm(unittest.TestCase):
         new_config.slavePortnum = "tcp:0:interface=127.0.0.1"
         new_config.slaves = [ self.buildslave ]
         new_config.builders = [ config.BuilderConfig(name='bldr',
-                slavename='testslave', factory=factory.BuildFactory()) ]
+                slavename='testslave', factory=mock.Mock()) ]
 
         yield self.botmaster.reconfigService(new_config)
 

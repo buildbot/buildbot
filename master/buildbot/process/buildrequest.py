@@ -91,7 +91,7 @@ class BuildRequest(object):
         return cache.get(brdict['brid'], brdict=brdict, master=master)
 
     @classmethod
-    @defer.inlineCallbacks
+    @defer.deferredGenerator
     def _make_br(cls, brid, brdict, master):
         buildrequest = cls()
         buildrequest.id = brid
@@ -103,17 +103,29 @@ class BuildRequest(object):
         buildrequest.master = master
 
         # fetch the buildset to get the reason
-        buildset = yield master.db.buildsets.getBuildset(brdict['buildsetid'])
+        wfd = defer.waitForDeferred(
+            master.db.buildsets.getBuildset(brdict['buildsetid']))
+        yield wfd
+        buildset = wfd.getResult()
         assert buildset # schema should guarantee this
         buildrequest.reason = buildset['reason']
 
         # fetch the buildset properties, and convert to Properties
-        buildset_properties = yield master.db.buildsets.getBuildsetProperties(brdict['buildsetid'])
+        wfd = defer.waitForDeferred(
+            master.db.buildsets.getBuildsetProperties(brdict['buildsetid']))
+        yield wfd
+        buildset_properties = wfd.getResult()
 
-        buildrequest.properties = properties.Properties.fromDict(buildset_properties)
+        pr = properties.Properties()
+        for name, (value, source) in buildset_properties.iteritems():
+            pr.setProperty(name, value, source)
+        buildrequest.properties = pr
 
         # fetch the sourcestamp dictionary
-        sslist = yield  master.db.sourcestamps.getSourceStamps(buildset['sourcestampsetid'])
+        wfd = defer.waitForDeferred(
+            master.db.sourcestamps.getSourceStamps(buildset['sourcestampsetid']))
+        yield wfd
+        sslist = wfd.getResult()
         assert len(sslist) > 0, "Empty sourcestampset: db schema enforces set to exist but cannot enforce a non empty set"
 
         # and turn it into a SourceStamps
@@ -127,12 +139,15 @@ class BuildRequest(object):
             d.addCallback(store_source)
             dlist.append(d)
 
-        yield defer.gatherResults(dlist)
-
+        dl = defer.gatherResults(dlist)
+        wfd = defer.waitForDeferred(dl)
+        yield wfd
+        wfd.getResult()
+  
         if buildrequest.sources:
             buildrequest.source = buildrequest.sources.values()[0]
 
-        defer.returnValue(buildrequest)
+        yield buildrequest # return value
 
     def requestsHaveSameCodebases(self, other):
         self_codebases = set(self.sources.iterkeys())
@@ -215,12 +230,15 @@ class BuildRequest(object):
     def getSubmitTime(self):
         return self.submittedAt
 
-    @defer.inlineCallbacks
+    @defer.deferredGenerator
     def cancelBuildRequest(self):
         # first, try to claim the request; if this fails, then it's too late to
         # cancel the build anyway
         try:
-            yield self.master.db.buildrequests.claimBuildRequests([self.id])
+            wfd = defer.waitForDeferred(
+                self.master.db.buildrequests.claimBuildRequests([self.id]))
+            yield wfd
+            wfd.getResult()
         except buildrequests.AlreadyClaimedError:
             log.msg("build request already claimed; cannot cancel")
             return
@@ -228,11 +246,17 @@ class BuildRequest(object):
         # then complete it with 'FAILURE'; this is the closest we can get to
         # cancelling a request without running into trouble with dangling
         # references.
-        yield self.master.db.buildrequests.completeBuildRequests([self.id],
-                                                                FAILURE)
+        wfd = defer.waitForDeferred(
+            self.master.db.buildrequests.completeBuildRequests([self.id],
+                                                                FAILURE))
+        yield wfd
+        wfd.getResult()
 
         # and let the master know that the enclosing buildset may be complete
-        yield self.master.maybeBuildsetComplete(self.bsid)
+        wfd = defer.waitForDeferred(
+                self.master.maybeBuildsetComplete(self.bsid))
+        yield wfd
+        wfd.getResult()
 
 class BuildRequestControl:
     implements(interfaces.IBuildRequestControl)

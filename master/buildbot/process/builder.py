@@ -37,7 +37,7 @@ class Builder(config.ReconfigurableServiceMixin,
     # reconfigure builders before slaves
     reconfig_priority = 196
 
-    def __init__(self, name, _addServices=True):
+    def __init__(self, name):
         service.MultiService.__init__(self)
         self.name = name
 
@@ -61,15 +61,8 @@ class Builder(config.ReconfigurableServiceMixin,
         self.config = None
         self.builder_status = None
 
-        if _addServices:
-            self.reclaim_svc = internet.TimerService(10*60,
-                                            self.reclaimAllBuilds)
-            self.reclaim_svc.setServiceParent(self)
-
-            # update big status every 30 minutes, working around #1980
-            self.updateStatusService = internet.TimerService(30*60,
-                                            self.updateBigStatus)
-            self.updateStatusService.setServiceParent(self)
+        self.reclaim_svc = internet.TimerService(10*60, self.reclaimAllBuilds)
+        self.reclaim_svc.setServiceParent(self)
 
     def reconfigService(self, new_config):
         # find this builder in the config
@@ -84,15 +77,11 @@ class Builder(config.ReconfigurableServiceMixin,
             self.builder_status = self.master.status.builderAdded(
                     builder_config.name,
                     builder_config.builddir,
-                    builder_config.category,
-                    builder_config.description)
+                    builder_config.category)
 
         self.config = builder_config
 
-        self.builder_status.setDescription(builder_config.description)
-        self.builder_status.setCategory(builder_config.category)
         self.builder_status.setSlavenames(self.config.slavenames)
-        self.builder_status.setCacheSize(new_config.caches['Builds'])
 
         return defer.succeed(None)
 
@@ -248,8 +237,6 @@ class Builder(config.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
     def updateBigStatus(self):
-        if not self.builder_status:
-            return
         if not self.slaves:
             self.builder_status.setBigState("offline")
         elif self.building or self.old_building:
@@ -272,12 +259,9 @@ class Builder(config.ReconfigurableServiceMixin,
         # into a list so that, at any point, we can abort this operation.
         cleanups = []
         def run_cleanups():
-            try:
-                while cleanups:
-                    fn = cleanups.pop()
-                    fn()
-            except:
-                log.err(failure.Failure(), "while running %r" % (run_cleanups,))
+            while cleanups:
+                fn = cleanups.pop()
+                fn()
 
         # the last cleanup we want to perform is to update the big
         # status based on any other cleanup
@@ -644,10 +628,11 @@ class Builder(config.ReconfigurableServiceMixin,
                 [ self._brdictToBuildRequest(brdict)
                   for brdict in unclaimed_requests ])
 
-        breq_object = unclaimed_request_objects[unclaimed_requests.index(breq)]
+        breq_object = unclaimed_request_objects.pop(
+                unclaimed_requests.index(breq))
 
         # gather the mergeable requests
-        merged_request_objects = []
+        merged_request_objects = [breq_object]
         for other_breq_object in unclaimed_request_objects:
             if (yield defer.maybeDeferred(
                         lambda : mergeRequests_fn(self, breq_object,
@@ -694,26 +679,25 @@ class Builder(config.ReconfigurableServiceMixin,
 class BuilderControl:
     implements(interfaces.IBuilderControl)
 
-    def __init__(self, builder, control):
+    def __init__(self, builder, master):
         self.original = builder
-        self.control = control
+        self.master = master
 
     def submitBuildRequest(self, ss, reason, props=None):
-        d = ss.getSourceStampSetId(self.control.master)
+        d = ss.getSourceStampSetId(self.master.master)
         def add_buildset(sourcestampsetid):
-            return self.control.master.addBuildset(
+            return self.master.master.addBuildset(
                     builderNames=[self.original.name],
                     sourcestampsetid=sourcestampsetid, reason=reason, properties=props)
         d.addCallback(add_buildset)
         def get_brs((bsid,brids)):
             brs = BuildRequestStatus(self.original.name,
                                      brids[self.original.name],
-                                     self.control.master.status)
+                                     self.master.master.status)
             return brs
         d.addCallback(get_brs)
         return d
 
-    @defer.inlineCallbacks
     def rebuildBuild(self, bs, reason="<rebuild, no reason given>", extraProperties=None):
         if not bs.isFinished():
             return
@@ -726,25 +710,14 @@ class BuilderControl:
             properties.updateFromProperties(extraProperties)
 
         properties_dict = dict((k,(v,s)) for (k,v,s) in properties.asList())
-        ssList = bs.getSourceStamps(absolute=True)
-        
-        if ssList:
-            sourcestampsetid = yield  ssList[0].getSourceStampSetId(self.control.master)
-            dl = []
-            for ss in ssList[1:]:
-                # add defered to the list
-                dl.append(ss.addSourceStampToDatabase(self.control.master, sourcestampsetid))
-            yield defer.gatherResults(dl)
-
-            bsid, brids = yield self.control.master.addBuildset(
+        ss = bs.getSourceStamp(absolute=True)
+        d = ss.getSourceStampSetId(self.master.master)
+        def add_buildset(sourcestampsetid):
+            return self.master.master.addBuildset(
                     builderNames=[self.original.name],
-                    sourcestampsetid=sourcestampsetid, 
-                    reason=reason, 
-                    properties=properties_dict)
-            defer.returnValue((bsid, brids))
-        else:
-            log.msg('Cannot start rebuild, rebuild has no sourcestamps for a new build')
-            defer.returnValue(None)
+                    sourcestampsetid=sourcestampsetid, reason=reason, properties=properties_dict)
+        d.addCallback(add_buildset)
+        return d
 
     @defer.inlineCallbacks
     def getPendingBuildRequestControls(self):
@@ -757,7 +730,7 @@ class BuilderControl:
         buildrequests = [ ]
         for brdict in brdicts:
             br = yield buildrequest.BuildRequest.fromBrdict(
-                    self.control.master, brdict)
+                    self.master.master, brdict)
             buildrequests.append(br)
 
         # and return the corresponding control objects
@@ -783,3 +756,4 @@ class BuilderControl:
             if not success:
                 return False
         return True
+

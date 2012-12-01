@@ -16,7 +16,7 @@
 
 from zope.interface import implements
 from twisted.python import components
-from twisted.web.resource import NoResource
+from twisted.web.error import NoResource
 
 from buildbot.changes.changes import Change
 from buildbot.status.web.base import HtmlResource, IBox, Box
@@ -63,9 +63,7 @@ class ChangeBox(components.Adapter):
         template = req.site.buildbot_service.templates.get_template("change_macros.html")
         text = template.module.box_contents(url=url,
                                             who=self.original.getShortAuthor(),
-                                            pageTitle=self.original.comments,
-                                            revision=self.original.revision,
-                                            project=self.original.project)
+                                            pageTitle=self.original.comments)
         return Box([text], class_="Change")
 components.registerAdapter(ChangeBox, Change, IBox)
 

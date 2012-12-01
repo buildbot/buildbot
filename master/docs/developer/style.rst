@@ -9,7 +9,7 @@ the formatting of symbol names.
 
 The single exception in naming of functions and methods. Because Buildbot uses
 Twisted so heavily, and Twisted uses interCaps, Buildbot methods should do the
-same. That is, you should spell methods and functions with the first character
+same. That is, methods and functions should be spelled with the first character
 in lower-case, and the first letter of subsequent words capitalized, e.g.,
 ``compareToOther`` or ``getChangesGreaterThan``. This point is not applied very
 consistently in Buildbot, but let's try to be consistent in new code. 
@@ -30,8 +30,8 @@ Just about anything might block - even getters and setters!
 Helpful Twisted Classes
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Twisted has some useful, but little-known classes.  
-Brief descriptions follow, but you should consult the API documentation or source code
+Twisted has some useful, but little-known classes.  They are listed here with
+brief descriptions, but you should consult the API documentation or source code
 for the full details.
 
 :class:`twisted.internet.task.LoopingCall`
@@ -39,8 +39,8 @@ for the full details.
 
 :class:`twisted.application.internet.TimerService`
     Similar to ``t.i.t.LoopingCall``, but implemented as a service that will
-    automatically start and stop the function calls when the service starts and
-    stops.
+    automatically start and stop the function calls when the service is started and
+    stopped.
 
 Sequences of Operations
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -134,12 +134,12 @@ The key points to notice here:
 * Use the decorator form of ``inlineCallbacks``
 * In most cases, the result of a ``yield`` expression should be assigned to a
   variable.  It can be used in a larger expression, but remember that Python
-  requires that you enclose the expression in its own set of parentheses.
+  requires that it be enclosed in its own set of parentheses.
 * Python does not permit returning a value from a generator, so statements like
   ``return xval + y`` are invalid.  Instead, yield the result of
-  ``defer.returnValue``.  Although this function does cause an immediate
-  function exit, for clarity follow it with a bare ``return``, as in
-  the example, unless it is the last statement in a function.
+  ``defer.returnValue``.  Remember that this expression does *not* alter
+  control flow, so in many cases this statement will be followed by a bare
+  ``return``, as in the example.
 
 The great advantage of ``inlineCallbacks`` is that it allows you to use all
 of the usual Pythonic control structures in their natural form. In particular,
@@ -148,28 +148,13 @@ losing any readability.
 
 Note that code using ``deferredGenerator`` is no longer acceptable in Buildbot.
 
-Locking
-.......
-
-Remember that asynchronous programming does not free you from the need to worry
-about concurrency issues.  Particularly if you are executing a sequence of
-operations, each time you wait for a Deferred, arbitrary other actions can take
-place.
-
-In general, you should try to perform actions atomically, but for the rare
-situations that require synchronization, the following might be useful:
-
-* :py:class:`twisted.internet.defer.DeferredLock`
-* :py:func:`buildbot.util.misc.deferredLocked`
-* :py:func:`buildbot.util.misc.SerializedInvocation`
-
 Joining Sequences
 ~~~~~~~~~~~~~~~~~
 
 It's often the case that you'll want to perform multiple operations in
 parallel, and re-join the results at the end. For this purpose, you'll want to
-use a `DeferredList <http://twistedmatrix.com/documents/current/api/twisted.internet.defer.DeferredList.html>`_
-::
+use a `DeferredList
+<http://twistedmatrix.com/documents/current/api/twisted.internet.defer.DeferredList.html>`_::
 
     def getRevInfo(revname):
         results = {}
@@ -192,5 +177,179 @@ use a `DeferredList <http://twistedmatrix.com/documents/current/api/twisted.inte
         return d
 
 Here the deferred list will wait for both ``rev_parse_d`` and ``log_d`` to
-fire, or for one of them to fail. You may attach  Callbacks and errbacks to a
+fire, or for one of them to fail.  Callbacks and errbacks can be attached to a
 ``DeferredList`` just as for a deferred.
+
+Writing Buildbot Tests
+----------------------
+
+In general, we are trying to ensure that new tests are *good*.  So what makes
+a good test?
+
+.. _Tests-Independent-of-Time:
+
+Independent of Time
+~~~~~~~~~~~~~~~~~~~
+
+Tests that depend on wall time will fail. As a bonus, they run very slowly. Do
+not use :meth:`reactor.callLater` to wait "long enough" for something to happen.
+
+For testing things that themselves depend on time, consider using
+:class:`twisted.internet.tasks.Clock`.  This may mean passing a clock instance to
+the code under test, and propagating that instance as necessary to ensure that
+all of the code using :meth:`callLater` uses it.  Refactoring code for
+testability is difficult, but wortwhile.
+
+For testing things that do not depend on time, but for which you cannot detect
+the "end" of an operation: add a way to detect the end of the operation!
+
+Clean Code
+~~~~~~~~~~
+
+Make your tests readable. This is no place to skimp on comments! Others will
+attempt to learn about the expected behavior of your class by reading the
+tests. As a side note, if you use a :class:`Deferred` chain in your test, write
+the callbacks as nested functions, rather than using object methods with funny
+names::
+
+    def testSomething(self):
+        d = doThisFirst()
+        def andThisNext(res):
+            pass # ...
+        d.addCallback(andThisNext)
+        return d
+
+This isolates the entire test into one indented block. It is OK to add methods
+for common functionality, but give them real names and explain in detail what
+they do.
+
+Good Name
+~~~~~~~~~
+
+Your test module should be named after the package or class it tests, replacing
+``.`` with ``_`` and omitting the ``buildbot_``. For example,
+:file:`test_status_web_authz_Authz.py` tests the :class:`Authz` class in
+:file:`buildbot/status/web/authz.py`. Modules with only one class, or a few
+trivial classes, can be tested in a single test module. For more complex
+situations, prefer to use multiple test modules.
+
+Test method names should follow the pattern :samp:`test_{METHOD}_{CONDITION}`
+where *METHOD* is the method being tested, and *CONDITION* is the
+condition under which it's tested. Since we can't always test a single
+method, this is not a hard-and-fast rule.
+
+Assert Only One Thing
+~~~~~~~~~~~~~~~~~~~~~
+
+Each test should have a single assertion. This may require a little bit of work
+to get several related pieces of information into a single Python object for
+comparison. The problem with multiple assertions is that, if the first
+assertion fails, the remainder are not tested.  The test results then do not
+tell the entire story.
+
+If you need to make two unrelated assertions, you should be running two tests.
+
+Use Mocks and Stubs
+~~~~~~~~~~~~~~~~~~~
+
+Mocks assert that they are called correctly. Stubs provide a predictable base
+on which to run the code under test. See
+`Mock Object <http://en.wikipedia.org/wiki/Mock_object>`_ and
+`Method Stub <http://en.wikipedia.org/wiki/Method_stub>`_.
+
+Mock objects can be constructed easily using the aptly-named
+`mock <http://www.voidspace.org.uk/python/mock/>`_ module, which is a
+requirement for Buildbot's tests.
+
+One of the difficulties with Buildbot is that interfaces are unstable and
+poorly documented, which makes it difficult to design stubs.  A common
+repository for stubs, however, will allow any interface changes to be reflected
+in only one place in the test code.
+
+Small Tests
+~~~~~~~~~~~
+
+The shorter each test is, the better. Test as little code as possible in each test.
+
+It is fine, and in fact encouraged, to write the code under test in such a way
+as to facilitate this. As an illustrative example, if you are testing a new
+Step subclass, but your tests require instantiating a BuildMaster, you're
+probably doing something wrong! (Note that this rule is almost universally
+violated in the existing buildbot tests).
+
+This also applies to test modules.  Several short, easily-digested test modules
+are preferred over a 1000-line monster.
+
+Isolation
+~~~~~~~~~
+
+Each test should be maximally independent of other tests. Do not leave files
+laying around after your test has finished, and do not assume that some other
+test has run beforehand. It's fine to use caching techniques to avoid repeated,
+lengthy setup times.
+
+Be Correct
+~~~~~~~~~~
+
+Tests should be as robust as possible, which at a basic level means using the
+available frameworks correctly. All deferreds should have callbacks and be
+chained properly. Error conditions should be checked properly. Race conditions
+should not exist (see :ref:`Tests-Independent-of-Time`, above).
+
+Be Helpful
+~~~~~~~~~~
+
+Note that tests will pass most of the time, but the moment when they are most
+useful is when they fail.
+
+When the test fails, it should produce output that is helpful to the person
+chasing it down. This is particularly important when the tests are run
+remotely, in which case the person chasing down the bug does not have access to
+the system on which the test fails. A test which fails sporadically with no
+more information than "AssertionFailed?" is a prime candidate for deletion if
+the error isn't obvious. Making the error obvious also includes adding comments
+describing the ways a test might fail.
+
+Mixins
+~~~~~~
+
+Do not define setUp and tearDown directly in a mixin. This is the path to
+madness. Instead, define a :func:`myMixinNameSetUp` and
+:func:`myMixinNameTearDown`, and call them explicitly from the subclass's
+:meth:`setUp` and :meth:`tearDown`. This makes it perfectly clear what is being
+set up and torn down from a simple analysis of the test case.
+
+Keeping State
+~~~~~~~~~~~~~
+
+Python does not allow assignment to anything but the innermost local scope or
+the global scope with the ``global`` keyword.  This presents a problem when
+creating nested functions::
+
+    def test_localVariable(self):
+        cb_called = False
+        def cb():
+            cb_called = True
+        cb()
+        self.assertTrue(cb_called) # will fail!
+
+The ``cb_called = True`` assigns to a *different variable* than
+``cb_called = False``.  In production code, it's usually best to work around
+such problems, but in tests this is often the clearest way to express the
+behavior under test.
+
+The solution is to change something in a common mutable object.  While a simple
+list can serve as such a mutable object, this leads to code that is hard to
+read.  Instead, use :class:`State`::
+
+    from buildbot.test.state import State
+    
+    def test_localVariable(self):
+        state = State(cb_called=False)
+        def cb():
+            state.cb_called = True
+        cb()
+        self.assertTrue(state.cb_called) # passes
+
+This is almost as readable as the first example, but it actually works. 
+

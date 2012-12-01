@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import mock
-import posixpath
 from twisted.python import components
 from buildbot.process import properties
 from buildbot import interfaces
@@ -35,7 +34,6 @@ class FakeBuild(mock.Mock, properties.PropertiesMixin):
     def __init__(self, *args, **kwargs):
         mock.Mock.__init__(self, *args, **kwargs)
         self.build_status = FakeBuildStatus()
-        self.path_module = posixpath
         pr = self.build_status.properties = properties.Properties()
         pr.build = self
 

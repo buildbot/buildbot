@@ -47,8 +47,8 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     # read config parameters
     baseurl = ui.config('hgbuildbot', 'baseurl',
                             ui.config('web', 'baseurl', ''))
-    masters = ui.configlist('hgbuildbot', 'master')
-    if masters:
+    master = ui.config('hgbuildbot', 'master')
+    if master:
         branchtype = ui.config('hgbuildbot', 'branchtype', 'inrepo')
         branch = ui.config('hgbuildbot', 'branch')
         fork = ui.configbool('hgbuildbot', 'fork', False)
@@ -88,8 +88,11 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         auth = 'change:changepw'
     auth = auth.split(':', 1)
 
+    s = sendchange.Sender(master, auth=auth)
+    d = defer.Deferred()
+    reactor.callLater(0, d.callback, None)
     # process changesets
-    def _send(res, s, c):
+    def _send(res, c):
         if not fork:
             ui.status("rev %s sent\n" % c['revision'])
         return s.send(c['branch'], c['revision'], c['comments'],
@@ -107,35 +110,30 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     repository = strip(repo.root, stripcount)
     repository = baseurl + repository
 
-    for master in masters:
-        s = sendchange.Sender(master, auth=auth)
-        d = defer.Deferred()
-        reactor.callLater(0, d.callback, None)
-
-        for rev in xrange(start, end):
-            # send changeset
-            node = repo.changelog.node(rev)
-            manifest, user, (time, timezone), files, desc, extra = repo.changelog.read(node)
-            parents = filter(lambda p: not p == nullid, repo.changelog.parents(node))
-            if branchtype == 'inrepo':
-                branch = extra['branch']
-            is_merge = len(parents) > 1
-            # merges don't always contain files, but at least one file is required by buildbot
-            if is_merge and not files:
-                files = ["merge"]
-            properties = {'is_merge': is_merge}
-            if branch:
-                branch = fromlocal(branch)
-            change = {
-                'master': master,
-                'username': fromlocal(user),
-                'revision': hex(node),
-                'comments': fromlocal(desc),
-                'files': files,
-                'branch': branch,
-                'properties':properties
-            }
-            d.addCallback(_send, s, change)
+    for rev in xrange(start, end):
+        # send changeset
+        node = repo.changelog.node(rev)
+        manifest, user, (time, timezone), files, desc, extra = repo.changelog.read(node)
+        parents = filter(lambda p: not p == nullid, repo.changelog.parents(node))
+        if branchtype == 'inrepo':
+            branch = extra['branch']
+        is_merge = len(parents) > 1
+        # merges don't always contain files, but at least one file is required by buildbot
+        if is_merge and not files:
+            files = ["merge"]
+        properties = {'is_merge': is_merge}
+        if branch:
+            branch = fromlocal(branch)
+        change = {
+            'master': master,
+            'username': fromlocal(user),
+            'revision': hex(node),
+            'comments': fromlocal(desc),
+            'files': files,
+            'branch': branch,
+            'properties':properties
+        }
+        d.addCallback(_send, change)
 
     def _printSuccess(res):
         ui.status(s.getSuccessString(res) + '\n')

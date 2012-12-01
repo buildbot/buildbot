@@ -32,13 +32,13 @@ systems.  (The preferred method would be to install buildbot from packages
 of your distribution.)
 
 To make this work, you will need the following installed:
- * Python_ and the development packages for it
+ * python_ and the development packages for it
  * virtualenv_
- * Git_
+ * git_
 
-.. _Python: http://www.python.org/
+.. _python: http://www.python.org/
 .. _virtualenv: http://pypi.python.org/pypi/virtualenv/
-.. _Git: http://git-scm.com/
+.. _git: http://git-scm.com/
 
 Preferably, use your package installer to install these.
 
@@ -48,7 +48,7 @@ easy_install will need to download other projects from the Internet.
 .. note::
 
     Buildbot does not require root access.  Run the commands in this tutorial
-    as a normal, unprivileged user.
+    as a normal, unpriviledged user.
 
 Let's dive in by typing at the terminal::
 

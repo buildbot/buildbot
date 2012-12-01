@@ -69,42 +69,14 @@ available with all schedulers.
     unimportant, then it will not cause builds to start, but will be
     remembered and shown in status displays.
 
-``codebases``
-    When the scheduler processes data from more than 1 repository at the
-    same time then a corresponding codebase definition should be passed for each
-    repository. A codebase definition is a dictionary with one or more of the 
-    following keys: repository, branch, revision. The codebase definitions have
-    also to be passed as dictionary.
-
-    .. code-block:: python
-
-        codebases = {'codebase1': {'repository':'....',
-                                   'branch':'default',
-                                   'revision': None},
-                     'codebase2': {'repository':'....'} }
-
-    .. IMPORTANT:: ``codebases`` behaves also like a change_filter on codebase.
-        The scheduler will only process changes  when their codebases are found
-        in ``codebases``. By default ``codebases`` is set to ``{'':{}}`` which
-        means that only changes with codebase '' (default value for codebase)
-        will be accepted by the scheduler.
-
-    Buildsteps can have a reference to one of the codebases. The step will only
-    get information (revision, branch etc.)  that is related to that codebase.
-    When a scheduler is triggered by new changes, these changes (having a
-    codebase) will be incorporated by the new build. The buildsteps referencing
-    to the codebases that have changes get information about those changes. 
-    The buildstep that references to a codebase that does not have changes in
-    the build get the information from the codebases definition as configured in
-    the scheduler.
-
 ``onlyImportant``
     A boolean that, when ``True``, only adds important changes to the
-    buildset as specified in the ``fileIsImportant`` callable. This
+    buildset as sepcified in the ``fileIsImportant`` callable. This
     means that unimportant changes are ignored the same way a
     ``change_filter`` filters changes. This defaults to
     ``False`` and only applies when ``fileIsImportant`` is
     given.
+
 
 
 The remaining subsections represent a catalog of the available Scheduler types.
@@ -131,7 +103,7 @@ and then add it to a scheduler with the ``change_filter`` parameter::
     sch = SomeSchedulerClass(...,
         change_filter=my_filter)
 
-There are five attributes of changes on which you can filter:
+There are four attributes of changes on which you can filter:
 
 ``project``
     the project string, as defined by the ChangeSource.
@@ -145,9 +117,6 @@ There are five attributes of changes on which you can filter:
 
 ``category``
     the category, again as defined by the ChangeSource.
-
-``codebase``
-    the change's codebase.
 
 For each attribute, the filter can look for a single, specific value::
 
@@ -185,8 +154,6 @@ The entire set of allowed arguments, then, is
 | branch     | branch_re     | branch_fn     |
 +------------+---------------+---------------+
 | category   | category_re   | category_fn   |
-+------------+---------------+---------------+
-| codebase   | codebase_re   | codebase_fn   |
 +------------+---------------+---------------+
 | filter_fn                                  |
 +--------------------------------------------+
@@ -418,9 +385,9 @@ between builds, not the absolute time-of-day of each Build, so this
 could easily wind up an *evening* or *every afternoon* scheduler
 depending upon when it was first activated.
 
-.. bb:sched:: Nightly
-
 .. _Nightly-Scheduler:
+
+.. bb:sched:: Nightly
 
 Nightly Scheduler
 ~~~~~~~~~~~~~~~~~
@@ -453,8 +420,6 @@ The full list of parameters is:
 ``change_filter``
 
 ``onlyImportant``
-
-``codebases``
     See :ref:`Configuring-Schedulers`.  Note that ``fileIsImportant`` and
     ``change_filter`` are only relevant if ``onlyIfChanged`` is
     ``True``.
@@ -500,7 +465,7 @@ started every night at 3:00am::
             hour=3,
             minute=0))
 
-This scheduler will perform a build each Monday morning at 6:23am and
+This scheduler will perform a build each monday morning at 6:23am and
 again at 8:23am, but only if someone has committed code in the interim::
 
     c['schedulers'].append(
@@ -648,7 +613,7 @@ with it.
 
     Patches in the jobdir are encoded using netstrings, which place an
     arbitrary upper limit on patch size of 99999 bytes.  If your submitted try
-    jobs are rejected with `BadJobfile`, try increasing this limit with a
+    jobs are rejected with `BadJobFile`, try increasing this limit with a
     snippet like this in your `master.cfg`::
 
         from twisted.protocols.basic import NetstringReceiver
@@ -657,7 +622,7 @@ with it.
 To use the username/password form of authentication, create a
 :class:`Try_Userpass` instance instead. It takes the same
 ``builderNames`` argument as the :class:`Try_Jobdir` form, but
-accepts an additional ``port`` argument (to specify the TCP port to
+accepts an addtional ``port`` argument (to specify the TCP port to
 listen on) and a ``userpass`` list of username/password pairs to
 accept. Remember to use good passwords for this: the security of the
 buildslave accounts depends upon it::
@@ -690,8 +655,6 @@ scheduler can be triggered from multiple builds. Second, the ability
 to wait for a Triggerable's builds to complete provides a form of
 "subroutine call", where one or more builds can "call" a scheduler
 to perform some work for them, perhaps on other buildslaves.
-The Triggerable-Scheduler supports multiple codebases. The scheduler filters out
-all codebases from Trigger steps that are not configured in the scheduler.
 
 The parameters are just the basics:
 
@@ -700,10 +663,7 @@ The parameters are just the basics:
 ``builderNames``
 
 ``properties``
-
-``codebases``
     See :ref:`Configuring-Schedulers`.
-
 
 This class is only useful in conjunction with the :class:`Trigger` step.
 Here is a fully-worked example::
@@ -752,68 +712,6 @@ Here is a fully-worked example::
                                          waitForFinish=True))
 
 
-.. bb:sched:: NightlyTriggerable
-
-NightlyTriggerable Scheduler
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. py:class:: buildbot.schedulers.timed.NightlyTriggerable
-
-The :class:`NightlyTriggerable` scheduler is a mix of the :class:`Nightly` and :class:`Triggerable` schedulers.
-This scheduler triggers builds at a particular time of day, week, or year, exactly as the :class:`Nightly` scheduler.
-However, the source stamp set that is used that provided by the last :class:`Trigger` step that targeted this scheduler.
-
-The parameters are just the basics:
-
-``name``
-
-``builderNames``
-
-``properties``
-
-``codebases``
-    See :ref:`Configuring-Schedulers`.
-
-``minute``
-
-``hour``
-
-``dayOfMonth``
-
-``month``
-
-``dayOfWeek``
-    See :bb:sched:`Nightly`.
-
-This class is only useful in conjunction with the :class:`Trigger` step.
-Note that ``waitForFinish`` is ignored by :class:`Trigger` steps targeting this scheduler.
-
-Here is a fully-worked example::
-
-    from buildbot.schedulers import basic, timed
-    from buildbot.process import factory
-    from buildbot.steps import shell, trigger
-
-    checkin = basic.SingleBranchScheduler(name="checkin",
-                branch=None,
-                treeStableTimer=5*60,
-                builderNames=["checkin"])
-    nightly = timed.NightlyTriggerable(name='nightly',
-                builderNames=['nightly'],
-                hour=3,
-                minute=0)
-
-    c['schedulers'] = [checkin, nightly]
-
-    # on checkin, run tests
-    checkin_factory = factory.BuildFactory()
-    checkin_factory.addStep(shell.Test())
-    checkin_factory.addStep(trigger.Trigger(schedulerNames=['nightly'])
-
-    # and every night, package the latest successful build
-    nightly_factory = factory.BuildFactory()
-    nightly_factory.addStep(shell.ShellCommand(command=['make', 'package']))
-
 .. bb:sched:: ForceScheduler
 
 .. index:: Forced Builds
@@ -839,20 +737,35 @@ The scheduler takes the following parameters:
 
     See :ref:`Configuring-Schedulers`.
 
+``branch``
+
+    A :ref:`parameter <ForceScheduler-Parameters>` specifying the branch to
+    build.  The default value is a string parameter.
+
 ``reason``
 
     A :ref:`parameter <ForceScheduler-Parameters>` specifying the reason for
     the build.  The default value is a string parameter with value "force build".
 
+``revision``
+
+    A :ref:`parameter <ForceScheduler-Parameters>` specifying the revision to
+    build.  The default value is a string parameter.
+
+``repository``
+
+    A :ref:`parameter <ForceScheduler-Parameters>` specifying the repository
+    for the build.  The default value is a string parameter.
+
+``project``
+
+    A :ref:`parameter <ForceScheduler-Parameters>` specifying the project for
+    the build.  The default value is a string parameter.
+
 ``username``
 
     A :ref:`parameter <ForceScheduler-Parameters>` specifying the project for
     the build.  The default value is a username parameter,
-
-``codebases``
-
-    A list of strings or :ref:`CodebaseParameter <ForceScheduler-Parameters>` specifying
-    the codebases that should be presented. The default is a single codebase with no name.
 
 ``properties``
 
@@ -882,21 +795,21 @@ file is something like::
                  # need to pass a value ("")
                  revision=FixedParameter(name="revision", default=""),
                  repository=FixedParameter(name="repository", default=""),
-                 project=FixedParameter(name="project", default=""),
+                 project=FixedParameter(name="repository", default=""),
 
                  # in case you dont require authentication this will display
                  # input for user to type his name
                  username=UserNameParameter(label="your name:<br>", size=80),
 
-                 # A completely customized property list.  The name of the
-                 # property is the name of the parameter
+                 # A completly customized property list.  The name of the
+                 property is the name of the parameter
                  properties=[
 
                     BooleanParameter(name="force_build_clean",
                                 label="force a make clean", default=False),
 
                     StringParameter(name="pull_url",
-                        label="optionally give a public Git pull url:<br>",
+                        label="optionally give a public git pull url:<br>",
                         default="", size=80)
                  ]
                  )
@@ -943,7 +856,7 @@ All parameter types have a few common arguments:
 ``name`` (required)
 
     The name of the parameter. For properties, this will correspond to the name
-    of the property that your parameter will set.  The name is also used
+    of the property that your parameter will set.  THe name is also used
     internally as the identifier for in the HTML form.
 
 ``label`` (optional; default is same as name)
@@ -966,21 +879,13 @@ The parameter types are:
 FixedParameter
 ##############
 
-::
-
-    FixedParameter(name="branch", default="trunk"),
-
 This parameter type will not be shown on the web form, and always generate a
-property with its default value.
+property with its default value.  Example::
+
+    branch = FixedParameter(default="trunk")
 
 StringParameter
 ###############
-
-::
-
-    StringParameter(name="pull_url",
-        label="optionally give a public Git pull url:<br>",
-        default="", size=80)
 
 This parameter type will show a single-line text-entry box, and allow the user
 to enter an arbitrary string.  It adds the following arguments:
@@ -992,16 +897,10 @@ to enter an arbitrary string.  It adds the following arguments:
 
 ``size`` (optional; default: 10)
 
-    The width of the input field (in characters)
+    The width of the input field (in characteres)
 
 TextParameter
 #############
-
-::
-
-    StringParameter(name="comments",
-        label="comments to be displayed to the user of the built binary",
-        default="This is a development build", cols=60, rows=5)
 
 This parameter type is similar to StringParameter, except that it is
 represented in the HTML form as a textarea, allowing multi-line input.  It adds
@@ -1009,15 +908,15 @@ the StringParameter arguments, this type allows:
 
 ``cols`` (optional; default: 80)
 
-    The number of columns the textarea will have
+    The number of columns textarea will have
 
-``rows`` (optional; default: 20)
+``rows`` (optional; defauflt: 20)
 
-    The number of rows the textarea will have
+    The number of rows textarea will have
 
 This class could be subclassed in order to have more customization e.g.
 
-    * developer could send a list of Git branches to pull from
+    * developer could send a list of git branches to pull from
 
     * developer could send a list of gerrit changes to cherry-pick,
 
@@ -1028,35 +927,21 @@ beware of security issues anyway.
 IntParameter
 ############
 
-::
-
-    IntParameter(name="debug_level",
-        label="debug level (1-10)", default=2)
-
 This parameter type accepts an integer value using a text-entry box.
 
 BooleanParameter
 ################
-
-::
-
-    BooleanParameter(name="force_build_clean",
-        label="force a make clean", default=False)
 
 This type represents a boolean value. It will be presented as a checkbox.
 
 UserNameParameter
 #################
 
-::
-
-    UserNameParameter(label="your name:<br>", size=80)
-
 This parameter type accepts a username.  If authentication is active, it will
 use the authenticated user instead of displaying a text-entry box.
 
 ``size`` (optional; default: 10)
-    The width of the input field (in characters)
+    The width of the input field (in characteres)
 
 ``need_email`` (optional; default True)
     If true, require a full email address rather than arbitrary text.
@@ -1064,16 +949,13 @@ use the authenticated user instead of displaying a text-entry box.
 ChoiceStringParameter
 #####################
 
-::
-
-    ChoiceStringParameter(name="branch",
-        choices=["main","devel"], default="main")
+name, label, default, choices=[], strict=True, multiple=False)
 
 This parameter type lets the user choose between several choices (e.g the list
 of branches you are supporting, or the test campaign to run).  If ``multiple``
 is false, then its result is a string - one of the choices.  If ``multiple`` is
 true, then the result is a list of strings from the choices.  Its arguments, in
-addition to the common options, are:
+addition to the common optoins, are:
 
 ``choices``
 
@@ -1108,35 +990,6 @@ Example::
         builder1.factory.addStep(Trigger(name="Trigger tests",
                                         schedulerNames=Property("forced_tests")))
 
-CodebaseParameter
-#####################
-
-This is a parameter group to specify a sourcestamp for a given codebase.
-
-``codebase``
-
-    The name of the codebase.
-
-``branch`` (optional; default: StringParameter)
-
-    A :ref:`parameter <ForceScheduler-Parameters>` specifying the branch to
-    build.  The default value is a string parameter.
-
-``revision`` (optional; default: StringParameter)
-
-    A :ref:`parameter <ForceScheduler-Parameters>` specifying the revision to
-    build.  The default value is a string parameter.
-
-``repository`` (optional; default: StringParameter)
-
-    A :ref:`parameter <ForceScheduler-Parameters>` specifying the repository
-    for the build.  The default value is a string parameter.
-
-``project`` (optional; default: StringParameter)
-
-    A :ref:`parameter <ForceScheduler-Parameters>` specifying the project for
-    the build.  The default value is a string parameter.
-
 InheritBuildParameter
 #####################
 
@@ -1158,7 +1011,6 @@ Example::
         if builder == None: # this is the case for force_build_all
             return ["cannot generate build list here"]
         # find all successful builds in builder1 and builder2
-        builds = []
         for builder in ["builder1","builder2"]:
             builder_status = status.getBuilder(builder)
             for num in xrange(1,40): # 40 last builds

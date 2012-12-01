@@ -22,7 +22,7 @@ from twisted.persisted import styles
 from twisted.internet import defer
 from twisted.application import service
 from zope.interface import implements
-from buildbot import config, interfaces, util
+from buildbot import interfaces, config
 from buildbot.util import bbcollections
 from buildbot.util.eventual import eventually
 from buildbot.changes import changes
@@ -35,6 +35,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         service.MultiService.__init__(self)
         self.master = master
         self.botmaster = master.botmaster
+        self.db = None
         self.basedir = master.basedir
         self.watchers = []
         # No default limit to the log size
@@ -69,15 +70,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         for sr in list(self):
             yield defer.maybeDeferred(lambda :
                     sr.disownServiceParent())
-
-            # WebStatus instances tend to "hang around" longer than we'd like -
-            # if there's an ongoing HTTP request, or even a connection held
-            # open by keepalive, then users may still be talking to an old
-            # WebStatus.  So WebStatus objects get to keep their `master`
-            # attribute, but all other status objects lose theirs.  And we want
-            # to test this without importing WebStatus, so we use name
-            if not sr.__class__.__name__.endswith('WebStatus'):
-                sr.master = None
+            sr.master = None
 
         for sr in new_config.status:
             sr.master = self.master
@@ -160,11 +153,6 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         # IBuildSetStatus
         # IBuildRequestStatus
         # ISlaveStatus
-        if interfaces.ISlaveStatus.providedBy(thing):
-            slave = thing
-            return prefix + "buildslaves/%s" % (
-                    urllib.quote(slave.getName(), safe=''),
-                    )
 
         # IStatusEvent
         if interfaces.IStatusEvent.providedBy(thing):
@@ -209,7 +197,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
     def getBuilderNames(self, categories=None):
         if categories == None:
-            return util.naturalSort(self.botmaster.builderNames) # don't let them break it
+            return sorted(self.botmaster.builderNames) # don't let them break it
         
         l = []
         # respect addition order
@@ -217,7 +205,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             bldr = self.botmaster.builders[name]
             if bldr.config.category in categories:
                 l.append(name)
-        return util.naturalSort(l)
+        return sorted(l)
 
     def getBuilder(self, name):
         """
@@ -314,7 +302,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         if t:
             builder_status.subscribe(t)
 
-    def builderAdded(self, name, basedir, category=None, description=None):
+    def builderAdded(self, name, basedir, category=None):
         """
         @rtype: L{BuilderStatus}
         """
@@ -344,14 +332,11 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             log.msg("error follows:")
             log.err()
         if not builder_status:
-            builder_status = builder.BuilderStatus(name, category, self.master,
-                                                   description)
+            builder_status = builder.BuilderStatus(name, category, self.master)
             builder_status.addPointEvent(["builder", "created"])
         log.msg("added builder %s in category %s" % (name, category))
         # an unpickled object might not have category set from before,
         # so set it here to make sure
-        builder_status.category = category
-        builder_status.description = description
         builder_status.master = self.master
         builder_status.basedir = os.path.join(self.basedir, basedir)
         builder_status.name = name # it might have been updated

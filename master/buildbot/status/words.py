@@ -19,9 +19,9 @@ from string import join, capitalize, lower
 from zope.interface import implements
 from twisted.internet import protocol, reactor
 from twisted.words.protocols import irc
-from twisted.python import usage, log
+from twisted.python import log, failure
 from twisted.application import internet
-from twisted.internet import defer, task
+from twisted.internet import task
 
 from buildbot import interfaces, util
 from buildbot import version
@@ -29,6 +29,7 @@ from buildbot.interfaces import IStatusReceiver
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status import base
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, RETRY
+from buildbot.scripts.runner import ForceOptions
 from buildbot.process.properties import Properties
 
 # twisted.internet.ssl requires PyOpenSSL, so be resilient if it's missing
@@ -66,30 +67,6 @@ def maybeColorize(text, color, useColors):
 class UsageError(ValueError):
     def __init__(self, string = "Invalid usage", *more):
         ValueError.__init__(self, string, *more)
-
-class ForceOptions(usage.Options):
-    optParameters = [
-        ["builder", None, None, "which Builder to start"],
-        ["branch", None, None, "which branch to build"],
-        ["revision", None, None, "which revision to build"],
-        ["reason", None, None, "the reason for starting the build"],
-        ["props", None, None,
-         "A set of properties made available in the build environment, "
-         "format is --properties=prop1=value1,prop2=value2,.. "
-         "option can be specified multiple times."],
-        ]
-
-    def parseArgs(self, *args):
-        args = list(args)
-        if len(args) > 0:
-            if self['builder'] is not None:
-                raise UsageError("--builder provided in two ways")
-            self['builder'] = args.pop(0)
-        if len(args) > 0:
-            if self['reason'] is not None:
-                raise UsageError("--reason provided in two ways")
-            self['reason'] = " ".join(args)
-
 
 class IrcBuildRequest:
     hasStarted = False
@@ -683,7 +660,7 @@ class IRCContact(base.StatusReceiver):
     def command_HELP(self, args, who):
         args = shlex.split(args)
         if len(args) == 0:
-            self.send("Get help on what? (try 'help <foo>', 'help <foo> <bar>, "
+            self.send("Get help on what? (try 'help <foo>', "
                       "or 'commands' for a command list)")
             return
         command = args[0]
@@ -691,19 +668,11 @@ class IRCContact(base.StatusReceiver):
         if not meth:
             raise UsageError, "no such command '%s'" % command
         usage = getattr(meth, 'usage', None)
-        if isinstance(usage, dict):
-            if len(args) == 1:
-                k = None # command
-            elif len(args) == 2:
-                k = args[1] # command arg
-            else:
-                k = tuple(args[1:]) # command arg subarg ...
-            usage = usage.get(k, None)
         if usage:
             self.send("Usage: %s" % usage)
         else:
-            self.send("No usage info for " + ' '.join(["'%s'" % arg for arg in args]))
-    command_HELP.usage = "help <command> [<arg> [<subarg> ...]] - Give help for <command> or one of it's arguments"
+            self.send("No usage info for '%s'" % command)
+    command_HELP.usage = "help <command> - Give help for <command>"
 
     def command_SOURCE(self, args, who):
         self.send("My source can be found at "
@@ -726,43 +695,6 @@ class IRCContact(base.StatusReceiver):
         reactor.callLater(3.5, self.send, "(7^.^)7")
         reactor.callLater(5.0, self.send, "(>^.^<)")
 
-    def command_SHUTDOWN(self, args, who):
-        if args not in ('check','start','stop','now'):
-            raise UsageError("try 'shutdown check|start|stop|now'")
-
-        if not self.bot.factory.allowShutdown:
-            raise UsageError("shutdown control is not enabled")
-
-        botmaster = self.master.botmaster
-        shuttingDown = botmaster.shuttingDown
-
-        if args == 'check':
-            if shuttingDown:
-                self.send("Status: buildbot is shutting down")
-            else:
-                self.send("Status: buildbot is running")
-        elif args == 'start':
-            if shuttingDown:
-                self.send("Already started")
-            else:
-                self.send("Starting clean shutdown")
-                botmaster.cleanShutdown()
-        elif args == 'stop':
-            if not shuttingDown:
-                self.send("Nothing to stop")
-            else:
-                self.send("Stopping clean shutdown")
-                botmaster.cancelCleanShutdown()
-        elif args == 'now':
-            self.send("Stopping buildbot")
-            reactor.stop()
-    command_SHUTDOWN.usage = {
-        None: "shutdown check|start|stop|now - shutdown the buildbot master",
-        "check": "shutdown check - check if the buildbot master is running or shutting down",
-        "start": "shutdown start - start a clean shutdown",
-        "stop": "shutdown cancel - stop the clean shutdown",
-        "now": "shutdown now - shutdown immediately without waiting for the builders to finish"}
-
     # communication with the user
 
     def send(self, message):
@@ -771,7 +703,7 @@ class IRCContact(base.StatusReceiver):
 
     def act(self, action):
         if not self.muted:
-            self.bot.describe(self.dest, action.encode("ascii", "replace"))
+            self.bot.me(self.dest, action.encode("ascii", "replace"))
 
     # main dispatchers for incoming messages
 
@@ -788,8 +720,7 @@ class IRCContact(base.StatusReceiver):
         # single user.
         message = message.lstrip()
         if self.silly.has_key(message):
-            self.doSilly(message)
-            return defer.succeed(None)
+            return self.doSilly(message)
 
         parts = message.split(' ', 1)
         if len(parts) == 1:
@@ -800,28 +731,31 @@ class IRCContact(base.StatusReceiver):
         meth = self.getCommandMethod(cmd)
         if not meth and message[-1] == '!':
             self.send("What you say!")
-            return defer.succeed(None)
+            return
 
-        if meth:
-            d = defer.maybeDeferred(meth, args.strip(), who)
-            @d.addErrback
-            def usageError(f):
-                f.trap(UsageError)
-                self.send(str(f.value))
-            @d.addErrback
-            def logErr(f):
-                log.err(f)
-                self.send("Something bad happened (see logs)")
-            d.addErrback(log.err)
-            return d
-        return defer.succeed(None)
+        error = None
+        try:
+            if meth:
+                meth(args.strip(), who)
+        except UsageError, e:
+            self.send(str(e))
+        except:
+            f = failure.Failure()
+            log.err(f)
+            error = "Something bad happened (see logs)"
+
+        if error:
+            try:
+                self.send(error)
+            except:
+                log.err()
 
     def handleAction(self, data, user):
         # this is sent when somebody performs an action that mentions the
         # buildbot (like '/me kicks buildbot'). 'user' is the name/nick/id of
         # the person who performed the action, so if their action provokes a
         # response, they can be named.  This is 100% silly.
-        if not data.endswith("s "+ self.bot.nickname):
+        if not data.endswith("s buildbot"):
             return
         words = data.split()
         verb = words[-2]
@@ -872,7 +806,6 @@ class IrcStatusBot(irc.IRCClient):
             self.msg(dest, message)
 
     def getContact(self, name):
-        name = name.lower() # nicknames and channel names are case insensitive
         if name in self.contacts:
             return self.contacts[name]
         new_contact = self.contactClass(self, name)
@@ -888,6 +821,7 @@ class IrcStatusBot(irc.IRCClient):
     def privmsg(self, user, channel, message):
         user = user.split('!', 1)[0] # rest is ~user@hostname
         # channel is '#twisted' or 'buildbot' (for private messages)
+        channel = channel.lower()
         if channel == self.nickname:
             # private message
             contact = self.getContact(user)
@@ -904,7 +838,7 @@ class IrcStatusBot(irc.IRCClient):
         user = user.split('!', 1)[0] # rest is ~user@hostname
         # somebody did an action (/me actions) in the broadcast channel
         contact = self.getContact(channel)
-        if self.nickname in data:
+        if "buildbot" in data:
             contact.handleAction(data, user)
 
     def signedOn(self):
@@ -962,7 +896,7 @@ class IrcStatusFactory(ThrottledClientFactory):
 
     def __init__(self, nickname, password, channels, pm_to_nicks, categories, notify_events,
                  noticeOnChannel=False, useRevisions=False, showBlameList=False,
-                 lostDelay=None, failedDelay=None, useColors=True, allowShutdown=False):
+                 lostDelay=None, failedDelay=None, useColors=True):
         ThrottledClientFactory.__init__(self, lostDelay=lostDelay,
                                         failedDelay=failedDelay)
         self.status = None
@@ -976,7 +910,6 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
         self.useColors = useColors
-        self.allowShutdown = allowShutdown
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -1026,17 +959,15 @@ class IRC(base.StatusReceiverMultiService):
     compare_attrs = ["host", "port", "nick", "password",
                      "channels", "pm_to_nicks", "allowForce", "useSSL",
                      "useRevisions", "categories", "useColors",
-                     "lostDelay", "failedDelay", "allowShutdown"]
+                     "lostDelay", "failedDelay"]
 
     def __init__(self, host, nick, channels, pm_to_nicks=[], port=6667,
             allowForce=False, categories=None, password=None, notify_events={},
             noticeOnChannel = False, showBlameList = True, useRevisions=False,
-            useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
-            allowShutdown=False):
+            useSSL=False, lostDelay=None, failedDelay=None, useColors=True):
         base.StatusReceiverMultiService.__init__(self)
 
         assert allowForce in (True, False) # TODO: implement others
-        assert allowShutdown in (True, False)
 
         # need to stash these so we can detect changes later
         self.host = host
@@ -1049,7 +980,6 @@ class IRC(base.StatusReceiverMultiService):
         self.useRevisions = useRevisions
         self.categories = categories
         self.notify_events = notify_events
-        self.allowShutdown = allowShutdown
 
         self.f = IrcStatusFactory(self.nick, self.password,
                                   self.channels, self.pm_to_nicks,
@@ -1059,8 +989,7 @@ class IRC(base.StatusReceiverMultiService):
                                   showBlameList = showBlameList,
                                   lostDelay = lostDelay,
                                   failedDelay = failedDelay,
-                                  useColors = useColors,
-                                  allowShutdown = allowShutdown)
+                                  useColors = useColors)
 
         if useSSL:
             # SSL client needs a ClientContextFactory for some SSL mumbo-jumbo

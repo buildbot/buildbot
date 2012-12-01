@@ -98,19 +98,21 @@ Arguments common to all :class:`BuildStep` subclasses:
     A step can be configured to only run under certain conditions.  To do this, set
     the step's ``doStepIf`` to a boolean value, or to a function that returns a
     boolean value or Deferred.  If the value or function result is false, then the step will
-    return ``SKIPPED`` without doing anything.  Otherwise, the step will be executed
+    return ``SKIPPED`` without doing anything.  Oherwise, the step will be executed
     normally.  If you set ``doStepIf`` to a function, that function should
     accept one parameter, which will be the :class:`Step` object itself.
 
 .. index:: Buildstep Parameter; hideStepIf
 
 ``hideStepIf``
-    A step can be optionally hidden from the waterfall and build details web pages.
-    To do this, set the step's ``hideStepIf`` to a boolean value, or to a function that takes two parameters -- the results and the :class:`BuildStep` -- and returns a boolean value. 
-    Steps are always shown while they execute, however after the step as finished, this parameter is evaluated (if a function) and if the value is True, the step is hidden. 
+    A step can be optionally hidden from the waterfall and build details web pages.  To do
+    this, set the step's ``hideStepIf`` to a boolean value, or to a function that takes one
+    parameter, the :class:`BuildStepStatus` and returns a boolean value.  Steps are always
+    shown while they execute, however after the step as finished, this parameter
+    is evaluated (if a function) and if the value is True, the step is hidden.
     For example, in order to hide the step if the step has been skipped, ::
 
-        factory.addStep(Foo(..., hideStepIf=lambda results, s: results==SKIPPED))
+        factory.addStep(Foo(..., hideStepIf=lambda s, result: result==SKIPPED))
 
 .. index:: Buildstep Parameter; locks
 
@@ -158,7 +160,7 @@ Some version control systems have not yet been implemented as master-side
 steps.  If you are interested in continued support for such a version control
 system, please consider helping the Buildbot developers to create such an
 implementation.  In particular, version-control systems with proprietary
-licenses will not be supported without access to the version-control system
+licenses will not be supported without access to the verscion-contorl system
 for development.
 
 Common Parameters
@@ -226,13 +228,6 @@ parameters are mostly to specify where exactly the sources are coming from.
     web, or have the :class:`WebStatus` change hooks enabled; as the buildslave
     will download code from an arbitrary repository.
 
-``codebase``
-    This specifies which codebase the source step should use to select the right
-    source stamp. The default codebase value is ''. The codebase must correspond
-    to a codebase assigned by the :bb:cfg:`codebaseGenerator`. If there is no
-    codebaseGenerator defined in the master then codebase doesn't need to be set,
-    the default value will then match all changes. 
-    
 ``timeout``
     Specifies the timeout for slave-side operations, in seconds.  If
     your repositories are particularly large, then you may need to
@@ -262,7 +257,7 @@ The :bb:step:`Mercurial` build step performs a `Mercurial <http://selenic.com/me
 (aka ``hg``) checkout or update.
 
 Branches are available in two modes: ``dirname``, where the name of the branch is
-a suffix of the name of the repository, or ``inrepo``, which uses Hg's
+a suffix of the name of the repository, or ``inrepo``, which uses hg's
 named-branches support. Make sure this setting matches your changehook, if you
 have that installed. ::
 
@@ -283,7 +278,7 @@ The Mercurial step takes the following arguments:
 ``branchType``
    either 'dirname' (default) or 'inrepo' depending on whether the
    branch name should be appended to the ``repourl`` or the branch
-   is a Mercurial named branch and can be found within the ``repourl``.
+   is a mercurial named branch and can be found within the ``repourl``.
 
 ``clobberOnBranchChange``
    boolean, defaults to ``True``. If set and using inrepos branches,
@@ -336,17 +331,20 @@ The Git step takes the following arguments:
    (required): the URL of the upstream Git repository.
 
 ``branch``
-   (optional): this specifies the name of the branch to use when a Build does not provide one of its own.
-   If this this parameter is not specified, and the Build does not provide a branch, the default branch of the remote repository will be used.
+   (optional): this specifies the name of the branch to use when a
+   Build does not provide one of its own. If this this parameter is
+   not specified, and the Build does not provide a branch, the
+   ``master`` branch will be used.
 
 ``submodules``
    (optional): when initializing/updating a Git repository, this
-   decides whether or not buildbot should consider Git submodules.
+   decides whether or not buildbot should consider git submodules.
    Default: ``False``.
 
 ``shallow``
-   (optional): instructs git to attempt shallow clones (``--depth 1``).
-   This option can be used only in full builds with clobber method.
+   (optional): instructs git to attempt shallow clones (``--depth
+   1``). If the user/scheduler asks for a specific revision, this
+   parameter is ignored. 
 
 ``progress``
    (optional): passes the (``--progress``) flag to (:command:`git
@@ -365,30 +363,15 @@ The Git step takes the following arguments:
    checkout step.
 
 ``mode``
-
-  (optional): defaults to ``'incremental'``.
-  Specifies whether to clean the build tree or not.
-
-    ``incremental``
-      The source is update, but any built files are left untouched.
-
-    ``full``
-      The build tree is clean of any built files.
-      The exact method for doing this is controlled by the ``method`` argument.
-
-
 ``method``
 
-   (optional): defaults to ``fresh`` when mode is ``full``.
-   Git's incremental mode does not require a method.
-   The full mode has four methods defined:
+   Git's incremental mode does not require a method.  The full mode has
+   four methods defined:
 
 
    ``clobber``
       It removes the build directory entirely then makes full clone
-      from repo. This can be slow as it need to clone whole repository. To make 
-      faster clones enable ``shallow`` option. If shallow options is enabled and
-      build request have unknown revision value, then this step fails.
+      from repo. This can be slow as it need to clone whole repository
 
    ``fresh``
       This remove all other files except those tracked by Git. First
@@ -412,38 +395,6 @@ The Git step takes the following arguments:
       performs all the incremental checkout behavior in ``source``
       directory.
 
-``getDescription``
-
-   (optional) After checkout, invoke a `git describe` on the revision and save
-   the result in a property; the property's name is either ``commit-description``
-   or ``commit-description-foo``, depending on whether the ``codebase``
-   argument was also provided. The argument should either be a ``bool`` or ``dict``,
-   and will change how `git describe` is called:
-
-   * ``getDescription=False``: disables this feature explicitly
-   * ``getDescription=True`` or empty ``dict()``: Run `git describe` with no args
-   * ``getDescription={...}``: a dict with keys named the same as the Git option.
-     Each key's value can be ``False`` or ``None`` to explicitly skip that argument.
-     
-     For the following keys, a value of ``True`` appends the same-named Git argument:
-     
-      * ``all`` : `--all`
-      * ``always``: `--always`
-      * ``contains``: `--contains`
-      * ``debug``: `--debug`
-      * ``long``: `--long``
-      * ``exact-match``: `--exact-match`
-      * ``tags``: `--tags`
-      * ``dirty``: `--dirty`
-     
-     For the following keys, an integer or string value (depending on what Git expects)
-     will set the argument's parameter appropriately. Examples show the key-value pair:
-     
-      * ``match=foo``: `--match foo`
-      * ``abbrev=7``: `--abbrev=7`
-      * ``candidates=7``: `--candidates=7`
-      * ``dirty=foo``: `--dirty=foo`
-    
 .. bb:step:: SVN
 
 .. _Step-SVN:
@@ -458,36 +409,59 @@ checkout or update. There are two
 basic ways of setting up the checkout step, depending upon whether you
 are using multiple branches or not.
 
-The :bb:step:`SVN` step should be created with the
+The most versatile way to create the :bb:step:`SVN` step is with the
 ``repourl`` argument:
 
 ``repourl``
    (required): this specifies the ``URL`` argument that will be
    given to the :command:`svn checkout` command. It dictates both where
    the repository is located and which sub-tree should be
-   extracted. One way to specify the branch is to use ``Interpolate``. For
-   example, if you wanted to check out the trunk repository, you could use
-   ``repourl=Interpolate("http://svn.example.com/repos/%(src::branch)s")``
-   Alternatively, if you are using a remote Subversion repository
-   which is accessible through HTTP at a URL of ``http://svn.example.com/repos``,
-   and you wanted to check out the ``trunk/calc`` sub-tree, you would directly
+   extracted. In this respect, it is like a combination of the CVS
+   ``cvsroot`` and ``cvsmodule`` arguments. For example, if you
+   are using a remote Subversion repository which is accessible
+   through HTTP at a URL of ``http://svn.example.com/repos``, and
+   you wanted to check out the ``trunk/calc`` sub-tree, you would
    use ``repourl="http://svn.example.com/repos/trunk/calc"`` as an
    argument to your :bb:step:`SVN` step.
 
-If you are building from multiple branches, then you should create
-the :bb:step:`SVN` step with the ``repourl`` and provide branch
-information with ``Interpolate``::
-
-   from buildbot.steps.source.svn import SVN
-   factory.append(SVN(mode='incremental',
-                  repourl=Interpolate('svn://svn.example.org/svn/%(src::branch)s/myproject')))
-
-Alternatively, the ``repourl`` argument can be used to create the :bb:step:`SVN` step without
-``Interpolate``::
+The ``repourl`` argument can be considered as a universal means to
+create the :bb:step:`SVN` step as it ignores the branch information in the
+:class:`SourceStamp`. ::
 
    from buildbot.steps.source.svn import SVN
    factory.append(SVN(mode='full',
                   repourl='svn://svn.example.org/svn/myproject/trunk'))
+
+Alternatively, if you are building from multiple branches, then you
+should preferentially create the :bb:step:`SVN` step with the
+``baseURL`` and ``defaultBranch`` arguments instead:
+
+``baseURL``
+   (required): this specifies the base repository URL, to which a
+   branch name will be appended. Alternatively, ``baseURL`` can
+   contain a ``%%BRANCH%%`` placeholder, which will be replaced with
+   the branch name. ``baseURL`` should probably end in a slash.
+
+   For flexibility, ``baseURL`` may contain a ``%%BRANCH%%``
+   placeholder, which will be replaced either by the branch in the
+   SourceStamp or the default specified in ``defaultBranch``. ::
+
+        from buildbot.steps.source.svn import SVN
+        factory.append(SVN(mode='incremental',
+                        baseURL='svn://svn.example.org/svn/%%BRANCH%%/myproject',
+                        defaultBranch='trunk'))
+
+``defaultBranch``
+   (optional): this specifies the name of the branch to use when a
+   Build does not provide one of its own. This is a string that will
+   be appended to ``baseURL`` to create the URL that will be passed to
+   the :command:`svn checkout` command. If you use ``baseURL``
+   without specifying ``defaultBranch`` every :class:`SourceStamp`
+   must come with a valid (not None) ``branch``.
+
+   It is possible to mix to have a mix of :bb:step:`SVN` steps that use
+   either the ``repourl` or ``baseURL`` arguments but not both at
+   the same time.
 
 ``username``
    (optional): if specified, this will be passed to the ``svn``
@@ -524,7 +498,7 @@ Alternatively, the ``repourl`` argument can be used to create the :bb:step:`SVN`
 ``method``
 
    SVN's incremental mode does not require a method.  The full mode
-   has five methods defined:
+   has four methods defined:
 
    ``clobber``
       It removes the working directory for each build then makes full checkout.
@@ -636,7 +610,7 @@ Darcs, but it uses a strictly linear sequence of revisions (one
 history per branch) like Arch. Branches are put in subdirectories.
 This makes it look very much like Mercurial. ::
 
-   from buildbot.steps.source.bzr import Bzr
+   from buildbot.steps.source.cvs import Bzr
    factory.append(Bzr(mode='incremental',
                   repourl='lp:~knielsen/maria/tmp-buildbot-test'))
 
@@ -682,73 +656,6 @@ The step takes the following arguments:
         updated then copied to ``build`` for next steps.
 
 
-.. bb:step:: Repo
-
-Repo
-+++++++++++++++++
-
-.. py:class:: buildbot.steps.source.repo.Repo
-
-The :bb:step:`Repo` build step performs a `Repo <http://lwn.net/Articles/304488/>`_
-init and sync.
-
-It is a drop-in replacement for `Repo (Slave-Side)`, which should not be used anymore
-for new and old projects.
-
-The Repo step takes the following arguments:
-
-``manifest_url``
-    (required): the URL at which the Repo's manifests source repository is available.
-
-``manifest_branch``
-    (optional, defaults to ``master``): the manifest repository branch
-    on which repo will take its manifest. Corresponds to the ``-b``
-    argument to the :command:`repo init` command.
-
-``manifest_file``
-    (optional, defaults to ``default.xml``): the manifest
-    filename. Corresponds to the ``-m`` argument to the :command:`repo
-    init` command.
-
-``tarball``
-    (optional, defaults to ``None``): the repo tarball used for
-    fast bootstrap. If not present the tarball will be created
-    automatically after first sync. It is a copy of the ``.repo``
-    directory which contains all the Git objects. This feature helps
-    to minimize network usage on very big projects.
-
-``jobs``
-    (optional, defaults to ``None``): Number of projects to fetch
-    simultaneously while syncing. Passed to repo sync subcommand with "-j".
-
-``sync_all_branches``
-    (optional, defaults to if "manifest_override" property exists? -> True else -> False):
-    callback to control the policy of repo sync -c
-
-``update_tarball``
-    (optional, defaults to "one week if we did not sync all branches"):
-    callback to control the policy of updating of the tarball
-    given properties, and boolean indicating whether
-    the last repo sync was on all branches
-    Returns: max age of tarball in seconds, or -1, if we
-    want to skip tarball update
-    The default value should be good trade off on size of the tarball,
-    and update frequency compared to cost of tarball creation
-
-This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will
-automatically use the :command:`repo download` command of repo to
-download the additionnal changes introduced by a pending changeset.
-
-.. index:: Properties; Gerrit integration
-
-Gerrit integration can be also triggered using forced build with following properties:
-``repo_d``, ``repo_d[0-9]``, ``repo_download``, ``repo_download[0-9]``
-with values in format: ``project/change_number/patchset_number``.
-All of these properties will be translated into a :command:`repo download`.
-This feature allows integrators to build with several pending interdependent changes,
-which at the moment cannot be described properly in Gerrit, and can only be described
-by humans.
-
 .. _Source-Checkout-Slave-Side:
 
 Source Checkout (Slave-Side)
@@ -782,7 +689,7 @@ sources are coming from.
         problems if the build process does not handle dependencies
         properly (sometimes you must do a *clean build* to make sure
         everything gets compiled), or if source files are deleted but
-        generated files can influence test behavior (e.g. Python's
+        generated files can influence test behavior (e.g. python's
         .pyc files), or when source directories are deleted but
         generated files prevent CVS from removing them. Builds ought
         to be correct regardless of whether they are done *from
@@ -840,15 +747,15 @@ sources are coming from.
     The name of this parameter might varies depending on the Source step you
     are running. The concept explained here is common to all steps and
     applies to ``repourl`` as well as for ``baseURL`` (when
-    applicable). Buildbot, now being aware of the repository name via the
+    aplicable). Buildbot, now being aware of the repository name via the
     change source, might in some cases not need the repository url. There
     are multiple way to pass it through to this step, those correspond to
     the type of the parameter given to this step:
 
     ``None``
-        In the case where no parameter is specified, the repository url will be
+        In the case where no paraneter is specified, the repository url will be
         taken exactly from the Change attribute. You are looking for that one if
-        your ChangeSource step has all information about how to reach the
+        your ChangeSource step has all informations about how to reach the
         Change.
 
     string
@@ -859,7 +766,7 @@ sources are coming from.
     format string
         If the parameter is a string containing ``%s``, then this the
         repository attribute from the :class:`Change` will be place in place of the
-        ``%s``. This is useful when the change source knows where the
+        ``%s``. This is usefull when the change source knows where the
         repository resides locally, but don't know the scheme used to access
         it. For instance ``ssh://server/%s`` makes sense if the the
         repository attribute is the local path of the repository.
@@ -1028,7 +935,7 @@ should preferentially create the ``SVN`` step with the
 
     If set to "empty" updates will not pull in any files or subdirectories not
     already present. If set to "files", updates will pull in any files not already
-    present, but not directories. If set to "immediates", updates will pull in any
+    present, but not directories. If set to "immediates", updates willl pull in any
     files or subdirectories not already present, the new subdirectories will have
     depth: empty. If set to "infinity", updates will pull in any files or
     subdirectories not already present; the new subdirectories will have
@@ -1111,7 +1018,7 @@ The Mercurial step takes the following arguments:
 ``branchType``
     either 'dirname' (default) or 'inrepo' depending on whether
     the branch name should be appended to the ``baseURL``
-    or the branch is a Mercurial named branch and can be
+    or the branch is a mercurial named branch and can be
     found within the ``repourl``.
 
 ``clobberOnBranchChange``
@@ -1229,7 +1136,7 @@ The ``Git`` step takes the following arguments:
 
 ``submodules``
     (optional): when initializing/updating a Git repository, this decides whether
-    or not buildbot should consider Git submodules.  Default: ``False``.
+    or not buildbot should consider git submodules.  Default: ``False``.
 
 ``reference``
     (optional): use the specified string as a path to a reference
@@ -1237,7 +1144,7 @@ The ``Git`` step takes the following arguments:
     this path first instead of the main repository, if they exist.
 
 ``shallow``
-    (optional): instructs Git to attempt shallow clones (``--depth 1``).  If the
+    (optional): instructs git to attempt shallow clones (``--depth 1``).  If the
     user/scheduler asks for a specific revision, this parameter is ignored.
 
 ``progress``
@@ -1254,25 +1161,6 @@ introduced by a pending changeset.
 Gerrit integration can be also triggered using forced build with ``gerrit_change``
 property with value in format: ``change_number/patchset_number``.
 
-.. bb:step:: BK (Slave-Side)
-
-BitKeeper (Slave-Side)
-++++++++++++++++++++++
-
-The :bb:step:`BK <BK (Slave-Side)>` build step performs a `BitKeeper <http://www.bitkeeper.com/>`_
-checkout or update.
-
-The BitKeeper step takes the following arguments:
-
-``repourl``
-    (required unless ``baseURL`` is provided): the URL at which the
-    BitKeeper source repository is available.
-
-``baseURL``
-    (required unless ``repourl`` is provided): the base repository URL,
-    to which a branch name will be appended. It should probably end in a
-    slash.
-
 .. bb:step:: Repo (Slave-Side)
 
 Repo (Slave-Side)
@@ -1282,8 +1170,6 @@ Repo (Slave-Side)
 
 The :bb:step:`Repo (Slave-Side)` build step performs a `Repo <http://lwn.net/Articles/304488/>`_
 init and sync.
-
-This step is obsolete and should not be used anymore. please use: `Repo` instead
 
 The Repo step takes the following arguments:
 
@@ -1304,12 +1190,8 @@ The Repo step takes the following arguments:
     (optional, defaults to ``None``): the repo tarball used for
     fast bootstrap. If not present the tarball will be created
     automatically after first sync. It is a copy of the ``.repo``
-    directory which contains all the Git objects. This feature helps
+    directory which contains all the git objects. This feature helps
     to minimize network usage on very big projects.
-
-``jobs``
-    (optional, defaults to ``None``): Number of projects to fetch
-    simultaneously while syncing. Passed to repo sync subcommand with "-j".
 
 This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will
 automatically use the :command:`repo download` command of repo to
@@ -1352,7 +1234,7 @@ The Monotone step takes the following arguments:
 ShellCommand
 ------------
 
-Most interesting steps involve executing a process of some sort on the
+Most interesting steps involve exectuing a process of some sort on the
 buildslave.  The :bb:step:`ShellCommand` class handles this activity.
 
 Several subclasses of :bb:step:`ShellCommand` are provided as starting points for
@@ -1366,9 +1248,9 @@ Using ShellCommands
 This is a useful base class for just about everything you might want
 to do during a build (except for the initial source checkout). It runs
 a single command in a child shell on the buildslave. All stdout/stderr
-is recorded into a :class:`LogFile`. The step usually finishes with a
-status of ``FAILURE`` if the command's exit code is non-zero, otherwise
-it has a status of ``SUCCESS``.
+is recorded into a :class:`LogFile`. The step finishes with a status of ``FAILURE``
+if the command's exit code is non-zero, otherwise it has a status of
+``SUCCESS``.
 
 The preferred way to specify the command is with a list of argv strings,
 since this allows for spaces in filenames and avoids doing any fragile
@@ -1455,7 +1337,7 @@ The :bb:step:`ShellCommand` arguments are:
 
     Note that environment values must be strings (or lists that are turned into
     strings).  In particular, numeric properties such as ``buildnumber`` must
-    be substituted using :ref:`Interpolate`.
+    be substituted using :ref:`WithProperties`.
 
 ``want_stdout``
     if ``False``, stdout from the child process is discarded rather than being
@@ -1570,17 +1452,6 @@ The :bb:step:`ShellCommand` arguments are:
                                description=["testing"],
                                descriptionDone=["tests"]))
 
-``descriptionSuffix``
-    This is an optional suffix appended to the end of the description (ie,
-    after ``description`` and ``descriptionDone``). This can be used to distinguish
-    between build steps that would display the same descriptions in the waterfall.
-    This parameter may be set to list of short strings, a single string, or ``None``.
-    
-    For example, a builder might use the ``Compile`` step to build two different
-    codebases. The ``descriptionSuffix`` could be set to `projectFoo` and `projectBar`,
-    respectively for each step, which will result in the full descriptions
-    `compiling projectFoo` and `compiling projectBar` to be shown in the waterfall.
-
 ``logEnviron``
     If this option is ``True`` (the default), then the step's logfile will describe the
     environment variables on the slave.  In situations where the environment is not
@@ -1591,19 +1462,6 @@ The :bb:step:`ShellCommand` arguments are:
     etc.), what signal should be sent to the process, specified by name. By
     default this is "KILL" (9). Specify "TERM" (15) to give the process a
     chance to cleanup.  This functionality requires a 0.8.6 slave or newer.
-
-``initialStdin``
-    If the command expects input on stdin, that can be supplied a a string with
-    this parameter.  This value should not be excessively large, as it is
-    handled as a single string throughout Buildbot -- for example, do not pass
-    the contents of a tarball with this parameter.
-
-``decodeRC``
-    This is a dictionary that decodes exit codes into results value.
-    e.g: ``{0:SUCCESS,1:FAILURE,2:WARNINGS}``, will treat the exit code ``2`` as
-    WARNINGS.
-    The default is to treat just 0 as successful. (``{0:SUCCESS}``)
-    any exit code not present in the dictionary will be treated as ``FAILURE``
 
 .. bb:step:: Configure
 
@@ -1650,7 +1508,7 @@ false-positives. To use a different regexp, provide a
     f.addStep(Compile(command=["make", "test"],
                       warningPattern="^Warning: "))
 
-The ``warningPattern=`` can also be a pre-compiled Python regexp
+The ``warningPattern=`` can also be a pre-compiled python regexp
 object: this makes it possible to add flags like ``re.I`` (to use
 case-insensitive matching).
 
@@ -1688,7 +1546,7 @@ only one number is given it matches only on that line.
 
 The default warningPattern regexp only matches the warning text, so line
 numbers and file names are ignored. To enable line number and file name
-matching, provide a different regexp and provide a function (callable) as the
+matching, privide a different regexp and provide a function (callable) as the
 argument of ``warningExtractor=``. The function is called with three
 arguments: the :class:`BuildStep` object, the line in the log file with the warning,
 and the ``SRE_Match`` object of the regexp search for ``warningPattern``. It
@@ -1728,17 +1586,14 @@ source code filenames involved).
 .. bb:step:: VC2005
 .. bb:step:: VC2008
 .. bb:step:: VCExpress9
-.. bb:step:: MsBuild
 
 Visual C++
 ++++++++++
 
-These steps are meant to handle compilation using Microsoft compilers.
-VC++ 6-10 (aka Visual Studio 2003-2010 and VCExpress9) are supported via calling
-``devenv``. VS2012 as well as Windows Driver Kit 8 are supported via the new
-``MsBuild`` step. These steps will take care of setting up a clean compilation
-environment, parsing the generated
-output in real time and delivering as detailed as possible information
+This step is meant to handle compilation using Microsoft compilers. 
+VC++ 6-9, VS2003, VS2005, VS2008, and VCExpress9 are supported. This step will take care
+of setting up a clean compilation environment, parse the generated
+output in real time and deliver as detailed as possible information
 about the compilation executed.
 
 All of the classes are in :mod:`buildbot.steps.vstudio`.  The available classes are:
@@ -1748,20 +1603,16 @@ All of the classes are in :mod:`buildbot.steps.vstudio`.  The available classes 
  * ``VC8``
  * ``VC9``
  * ``VS2003``
- * ``VS2005``
- * ``VS2008``
- * ``VS2010``
+ * ``VC2005``
+ * ``VC2008``
  * ``VCExpress9``
- * ``MsBuild``
 
 The available constructor arguments are
 
 ``mode``
     The mode default to ``rebuild``, which means that first all the
     remaining object files will be cleaned by the compiler. The alternate
-    values are ``build``, where only the updated files will be recompiled,
-    and ``clean``, where the current build files are removed and no
-    compilation occurs.
+    value is ``build``, where only the updated files will be recompiled.
 
 ``projectfile``
     This is a mandatory argument which specifies the project file to be used
@@ -1796,43 +1647,22 @@ The available constructor arguments are
 
 ``arch``
     That one is only available with the class VS2005 (VC8). It gives the
-    target architecture of the built artifact. It defaults to ``x86`` and
-    does not apply to ``MsBuild``. Please see ``platform`` below.
+    target architecture of the built artifact. It defaults to ``x86``.
 
 ``project``
     This gives the specific project to build from within a
     workspace. It defaults to building all projects. This is useful
     for building cmake generate projects.
 
-``platform``
-    This is a mandatory argument for MsBuild specifying the target platform
-    such as 'Win32', 'x64' or 'Vista Debug'. The last one is an example of
-    driver targets that appear once Windows Driver Kit 8 is installed.
+Here is an example on how to use this step::
 
-Here is an example on how to drive compilation with Visual Studio 2010::
+    from buildbot.steps.VisualStudio import VS2005
 
-    from buildbot.steps.VisualStudio import VS2010
-
-    f.addStep(
-        VS2010(projectfile="project.sln", config="release",
+    f.addStep(VS2005(
+            projectfile="project.sln", config="release",
             arch="x64", mode="build",
-               INCLUDE=[r'C:\3rd-pary\libmagic\include'],
-               LIB=[r'C:\3rd-party\libmagic\lib-x64']))
-
-Here is a similar example using "msbuild"::
-
-    from buildbot.steps.VisualStudio import MsBuild
-
-    # Build one project in Release mode for Win32
-    f.addStep(
-        MsBuild(projectfile="trunk.sln", config="Release", platform="Win32",
-                workdir="trunk",
-                project="tools\\protoc"))
-
-    # Build the entire solution in Debug mode for x64
-    f.addStep(
-        MsBuild(projectfile="trunk.sln", config='Debug', platform='x64',
-                workdir="trunk"))
+            INCLUDE=[r'D:\WINDDK\Include\wnet'],
+            LIB=[r'D:\WINDDK\lib\wnet\amd64']))
 
 .. bb:step:: Test
 
@@ -1964,7 +1794,7 @@ The :bb:step:`MTR` step's arguments are:
 
 ``mtr_subdir``
     The subdirectory in which to look for server error log files. Defaults to
-    :file:`mysql-test`, which is usually correct. :ref:`Interpolate` is supported.
+    :file:`mysql-test`, which is usually correct. :ref:`WithProperties` is supported.
 
 .. bb:step:: SubunitShellCommand
 
@@ -1992,7 +1822,7 @@ default ``failureOnNoTests`` is False.
 Slave Filesystem Steps
 ----------------------
 
-Here are some buildsteps for manipulating the slave's filesystem.
+Here are some buildsteps for manipulating the slaves filesystem.
 
 .. bb:step:: FileExists
 
@@ -2006,29 +1836,6 @@ filename can be specified with a property. ::
     f.addStep(FileExists(file='test_data'))
 
 This step requires slave version 0.8.4 or later.
-
-.. bb:step:: CopyDirectory
-
-CopyDirectory
-+++++++++++++++
-
-This command copies a directory on the slave. ::
-
-    from buildbot.steps.slave import CopyDirectory
-    f.addStep(CopyDirectory(src="build/data", dest="tmp/data"))
-
-This step requires slave version 0.8.5 or later.
-
-The CopyDirectory step takes the following arguments:
-
-``timeout``
-    if the copy command fails to produce any output for this many seconds, it
-    is assumed to be locked up and will be killed. This defaults to
-    120 seconds. Pass ``None`` to disable.
-
-``maxTime``
-    if the command takes longer than this many seconds, it will be
-    killed. This is disabled by default.
 
 .. bb:step:: RemoveDirectory
 
@@ -2059,7 +1866,7 @@ This step requires slave version 0.8.5 or later.
 Python BuildSteps
 -----------------
 
-Here are some :class:`BuildStep`\s that are specifically useful for projects
+Here are some :class:`BuildStep`\s that are specifcally useful for projects
 implemented in Python.
 
 .. bb:step:: BuildEPYDoc
@@ -2135,7 +1942,7 @@ Sphinx
 
 .. py:class:: buildbot.steps.python.Sphinx
 
-`Sphinx <http://sphinx.pocoo.org/>`_ is  the Python Documentation
+`Shinx <http://sphinx.pocoo.org/>`_ is  the Python Documentation
 Generator. It uses `RestructuredText <http://docutils.sourceforge.net/rst.html>`_
 as input format.
 
@@ -2160,14 +1967,14 @@ This step takes the following arguments:
    (optional) Indicates the builder to use.
 
 ``sphinx``
-   (optional, defaulting to :program:`sphinx-build`) Indicates the
+   (optional, defaulting to :program:`shinx-build`) Indicates the
    executable to run.
 
 ``tags``
    (optional) List of ``tags`` to pass to :program:`sphinx-build`
 
 ``defines``
-   (optional) Dictionary of defines to overwrite values of the
+   (optional) Dictionnary of defines to overwrite values of the
    :file:`conf.py` file.
 
 ``mode``
@@ -2243,7 +2050,7 @@ found in the shell search path.  It can be overridden with the ``trial``
 parameter.  This is useful for Twisted's own unittests, which want to use the
 copy of bin/trial that comes with the sources.
 
-To influence the version of Python being used for the tests, or to add flags to
+To influence the version of python being used for the tests, or to add flags to
 the command, set the ``python`` parameter. This can be a string (like
 ``python2.2``) or a list (like ``['python2.3', '-Wall']``).
 
@@ -2370,7 +2177,7 @@ on the buildmaster.
 
 The ``url=`` argument allows you to specify an url that will be
 displayed in the HTML status. The title of the url will be the name of
-the item transferred (directory for :class:`DirectoryUpload` or file
+the item transfered (directory for :class:`DirectoryUpload` or file
 for :class:`FileUpload`). This allows the user to add a link to the
 uploaded item if that one is uploaded to an accessible place.
 
@@ -2411,7 +2218,7 @@ The optional ``compress`` argument can be given as ``'gz'`` or
 ``'bz2'`` to compress the datastream.
 
 .. note:: The permissions on the copied files will be the same on the
-          master as originally on the slave, see :option:`buildslave
+          master as originately on the slave, see :option:`buildslave
           create-slave --umask` to change the default one.
 
 .. bb:step:: StringDownload
@@ -2430,14 +2237,14 @@ slave. Instead of having to create a temporary file and then use FileDownload,
 you can use one of the string download steps.  ::
 
     from buildbot.steps.transfer import StringDownload
-    f.append(StringDownload(Interpolate("%(src::branch)s-%(prop:got_revision)s\n"),
+    f.append(StringDownload(WithProperties("%(branch)s-%(got_revision)s\n"),
             slavedest="buildid.txt"))
 
 :bb:step:`StringDownload` works just like :bb:step:`FileDownload` except it takes a single argument,
 ``s``, representing the string to download instead of a ``mastersrc`` argument. ::
 
     from buildbot.steps.transfer import JSONStringDownload
-    buildinfo = { branch: Property('branch'), got_revision: Property('got_revision') }
+    buildinfo = { ... }
     f.append(JSONStringDownload(buildinfo, slavedest="buildinfo.json"))
 
 :bb:step:`JSONStringDownload` is similar, except it takes an ``o`` argument, which must be JSON
@@ -2446,7 +2253,6 @@ serializable, and transfers that as a JSON-encoded string to the slave.
 .. index:: Properties; JSONPropertiesDownload
 
 ::
-
     from buildbot.steps.transfer import JSONPropertiesDownload
     f.append(JSONPropertiesDownload(slavedest="build-properties.json"))
 
@@ -2500,10 +2306,7 @@ Variables that don't exist on the master will be replaced by ``""``. ::
 
 Note that environment values must be strings (or lists that are turned into
 strings).  In particular, numeric properties such as ``buildnumber`` must
-be substituted using :ref:`Interpolate`.
-
-``interruptSignal``
-   (optional) Signal to use to end the process, if the step is interrupted.
+be substituted using :ref:`WithProperties`.
 
 .. index:: Properties; from steps
 
@@ -2533,7 +2336,7 @@ This runs ``uname -a`` and captures its stdout, stripped of leading
 and trailing whitespace, in the property ``uname``.  To avoid stripping,
 add ``strip=False``.
 
-The ``property`` argument can be specified as a  :ref:`Interpolate`
+The ``property`` argument can be specified as a  :ref:`WithProperties`
 object, allowing the property name to be built from other property values.
 
 The more advanced usage allows you to specify a function to extract
@@ -2583,7 +2386,7 @@ displayed as :envvar:`TMP` in the Windows GUI. ::
     from buildbot.steps.shell import Compile
 
     f.addStep(SetPropertiesFromEnv(variables=["SOME_JAVA_LIB_HOME", "JAVAC"]))
-    f.addStep(Compile(commands=[Interpolate("%(prop:JAVAC)s"), "-cp", Interpolate("%(prop:SOME_JAVA_LIB_HOME)s")))
+    f.addStep(Compile(commands=[WithProperties("%s","JAVAC"), "-cp", WithProperties("%s", "SOME_JAVA_LIB_HOME")))
 
 Note that this step requires that the Buildslave be at least version 0.8.3.
 For previous versions, no environment variables are available (the slave
@@ -2605,7 +2408,8 @@ The counterpart to the Triggerable described in section
     f.addStep(Trigger(schedulerNames=['build-prep'],
                       waitForFinish=True,
                       updateSourceStamp=True,
-                      set_properties={ 'quick' : False })
+                      set_properties={ 'quick' : False },
+                      copy_properties=[ 'release_code_name' ]))
 
 The ``schedulerNames=`` argument lists the :bb:sched:`Triggerable` schedulers
 that should be triggered when this step is executed.  Note that
@@ -2619,48 +2423,39 @@ are added to the waterfall and the build detail web pages for each
 triggered build. If this argument is ``False`` (the default) or not given,
 then the buildstep succeeds immediately after triggering the schedulers.
 
-The SourceStamps to use for the triggered build are controlled by the arguments
-``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamps``.  If
+The SourceStamp to use for the triggered build is controlled by the arguments
+``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp``.  If
 ``updateSourceStamp`` is ``True`` (the default), then step updates the
-:class:`SourceStamp`s given to the :bb:sched:`Triggerable` schedulers to include
+:class:`SourceStamp` given to the :bb:sched:`Triggerable` schedulers to include
 ``got_revision`` (the revision actually used in this build) as ``revision``
 (the revision to use in the triggered builds). This is useful to ensure that
-all of the builds use exactly the same :class:`SourceStamp`s, even if other
+all of the builds use exactly the same :class:`SourceStamp`, even if other
 :class:`Change`\s have occurred while the build was running. If
 ``updateSourceStamp`` is False (and neither of the other arguments are
-specified), then the exact same SourceStamps are used. If ``alwaysUseLatest`` is
-True, then no SourceStamps are given, corresponding to using the latest revisions
-of the repositories specified in the Source steps. This is useful if the triggered
-builds use to a different source repository.  The argument ``sourceStamps`` 
-accepts a list of dictionaries containing the keys ``branch``, ``revision``,
-``repository``, ``project``, and optionally ``patch_level``,
-``patch_body``, ``patch_subdir``, ``patch_author`` and ``patch_comment``
-and creates the corresponding SourceStamps.
-If only one sourceStamp has to be specified then the argument ``sourceStamp``
-can be used for a dictionary containing the keys mentioned above. The arguments
-``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp`` can be specified
-using properties.
+specified), then the exact same SourceStamp is used. If ``alwaysUseLatest`` is
+True, then no SourceStamp is given, corresponding to using the latest revision
+of the repository specified in the Source step. This is useful if the triggered
+builds use to a different source repository.  :class:`SourceStamp` accepts a
+dictionary containing the keys ``branch``, ``revision``, ``branch``,
+``repository``, ``project``, and optionally ``patch_level``, ``patch_level``
+and ``patch_subdir`` and creates the corresponding SourceStamp.  All of
+``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp`` can be
+specified using properties.
 
-The ``set_properties`` parameter allows control of the properties that are passed to the triggered scheduler.
-The parameter takes a dictionary mapping property names to values.
-You may use :ref:`Interpolate` here to dynamically construct new property values.
-For the simple case of copying a property, this might look like ::
-
-    set_properties={"my_prop1" : Property("my_prop1")}
-
-The ``copy_properties`` parameter, given a list of properties to copy into the new build request, has been deprecated in favor of explicit use of ``set_properties``.
+Two parameters allow control of the properties that are passed to the triggered
+scheduler.  To simply copy properties verbatim, list them in the
+``copy_properties`` parameter.  To set properties explicitly, use the more
+sophisticated ``set_properties``, which takes a dictionary mapping property
+names to values.  You may use :ref:`WithProperties` here to dynamically
+construct new property values.
 
 RPM-Related Steps
 -----------------
 
-These steps work with RPMs and spec files.
-
 .. bb:step:: RpmBuild
 
-RpmBuild
-++++++++
-
-The :bb:step:`RpmBuild` step builds RPMs based on a spec file::
+These steps work with RPMs and spec files.  The :bb:step:`RpmBuild` step builds
+RPMs based on a spec file::
 
     from buildbot.steps.package.rpm import RpmBuild
     f.addStep(RpmBuild(specfile="proj.spec",
@@ -2695,145 +2490,7 @@ The step takes the following parameters
 ``vcsRevision``
     If true, use the version-control revision mechanics.  This uses the
     ``got_revision`` property to determine the revision and define
-    ``_revision``.  Note that this will not work with multi-codebase builds.
-
-.. bb:step:: RpmLint
-
-RpmLint
-+++++++
-
-The :bb:step:`RpmLint` step checks for common problems in RPM packages or
-spec files::
-
-    from buildbot.steps.package.rpm import RpmLint
-    f.addStep(RpmLint())
-
-The step takes the following parameters
-
-``fileloc``
-    The file or directory to check. In case of a directory, it is recursively
-    searched for RPMs and spec files to check.
-
-``config``
-    Path to a rpmlint config file. This is passed as the user configuration
-    file if present.
-
-Mock Steps
-++++++++++
-
-Mock (http://fedoraproject.org/wiki/Projects/Mock) creates chroots and builds
-packages in them. It populates the changeroot with a basic system
-and the packages listed as build requirement. The type of chroot to build
-is specified with the ``root`` parameter. To use mock your buildbot user must
-be added to the ``mock`` group.
-
-.. bb:step:: MockBuildSRPM
-
-MockBuildSRPM Step
-++++++++++++++++++
-
-The :bb:step:`MockBuildSRPM` step builds a SourceRPM based on a spec file and
-optionally a source directory::
-
-    from buildbot.steps.package.rpm import MockBuildSRPM
-    f.addStep(MockBuildSRPM(root='default', spec='mypkg.spec'))
-
-The step takes the following parameters
-
-``root``
-    Use chroot configuration defined in ``/etc/mock/<root>.cfg``.
-
-``resultdir``
-    The directory where the logfiles and the SourceRPM are written to.
-
-``spec``
-    Build the SourceRPM from this spec file.
-
-``sources``
-    Path to the directory containing the sources, defaulting to ``.``.
-
-.. bb:step:: MockRebuild
-
-MockRebuild Step
-++++++++++++++++
-
-The :bb:step:`MockRebuild` step rebuilds a SourceRPM package::
-
-    from buildbot.steps.package.rpm import MockRebuild
-    f.addStep(MockRebuild(root='default', spec='mypkg-1.0-1.src.rpm'))
-
-The step takes the following parameters
-
-``root``
-    Uses chroot configuration defined in ``/etc/mock/<root>.cfg``.
-
-``resultdir``
-    The directory where the logfiles and the SourceRPM are written to.
-
-``srpm``
-    The path to the SourceRPM to rebuild.
-
-Debian Build Steps
-------------------
-
-.. bb:step:: DebPbuilder
-
-DebPbuilder
-+++++++++++
-
-The :bb:step:`DebPbuilder` step builds Debian packages within a chroot built
-by pbuilder. It populates the changeroot with a basic system and the packages
-listed as build requirement. The type of chroot to build is specified with the
-``distribution``, ``distribution`` and ``mirror`` parameter. To use pbuilder
-your buildbot must have the right to run pbuilder as root through sudo. ::
-
-    from buildbot.steps.package.deb.pbuilder import DebPbuilder
-    f.addStep(DebPbuilder())
-
-The step takes the following parameters
-
-``architecture``
-    Architecture to build chroot for.
-
-``distribution``
-    Name, or nickname, of the distribution. Defaults to 'stable'.
-
-``basetgz``
-    Path of the basetgz to use for building.
-
-``mirror``
-    URL of the mirror used to download the packages from.
-
-``extrapackages``
-    List if packages to install in addition to the base system.
-
-``keyring``
-    Path to a gpg keyring to verify the downloaded packages. This is necessary
-    if you build for a foreign distribution.
-
-``components``
-    Repos to activate for chroot building.
-
-.. bb:step:: DebCowbuilder
-   
-DebCowbuilder
-+++++++++++++
-
-The :bb:step:`DebCowbuilder` step is a subclass of :bb:step:`DebPbuilder`,
-which use cowbuilder instead of pbuilder.
-
-.. bb:step:: DebLintian
-
-DebLintian
-++++++++++
-
-The :bb:step:`DebLintian` step checks a build .deb for bugs and policy
-violations. The packages or changes file to test is specified in ``fileloc``
-
-::
-
-    from buildbot.steps.package.deb.lintian import DebLintian
-    f.addStep(DebLintian(fileloc=Interpolate("%(prop:deb-changes)s")))
+    ``_revision``.
 
 Miscellaneous BuildSteps
 ------------------------

@@ -175,9 +175,6 @@ class BuildStepStatus(styles.Versioned):
         """
         return self.statistics.get(name, default)
 
-    def getStatistics(self):
-        return self.statistics.copy()
-
     # subscription interface
 
     def subscribe(self, receiver, updateInterval=10):

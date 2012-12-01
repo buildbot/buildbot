@@ -71,6 +71,6 @@
 {% endif %} 
 {%- endmacro %} 
 
-{% macro box_contents(who, url, pageTitle, revision, project) -%}
+{% macro box_contents(who, url, pageTitle) -%}
 <a href="{{ url }}" title="{{ pageTitle|e }}">{{ who|user }}</a>
 {%- endmacro %}

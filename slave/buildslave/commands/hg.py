@@ -269,8 +269,8 @@ class Mercurial(SourceBaseCommand):
 
     def parseGotRevision(self):
         hg = self.getCommand('hg')
-        # we use 'hg parents' to find out what we wound up with
-        command = [hg, "parents", "--template", "{node}\\n"] # get full rev id
+        # we use 'hg identify' to find out what we wound up with
+        command = [hg, "identify", "--id", "--debug"] # get full rev id
         c = runprocess.RunProcess(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env, timeout=self.timeout,

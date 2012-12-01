@@ -87,11 +87,6 @@ class ChangePerspective(NewCredPerspective):
 
         if not files:
             log.msg("No files listed in change... bit strange, but not fatal.")
-
-        if changedict.has_key('links'):
-            log.msg("Found links: "+repr(changedict['links']))
-            del changedict['links']
-
         d = self.master.addChange(**changedict)
         # since this is a remote method, we can't return a Change instance, so
         # this just sets the return value to None:
@@ -150,9 +145,7 @@ class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
     def _unregister(self):
         self.registered_port = None
         if self.registration:
-            reg = self.registration
-            self.registration = None
-            return reg.unregister()
+            return self.registration.unregister()
         else:
             return defer.succeed(None)
 

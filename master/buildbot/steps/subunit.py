@@ -24,6 +24,7 @@ class SubunitShellCommand(ShellCommand):
     def __init__(self, failureOnNoTests=False, *args, **kwargs):
         ShellCommand.__init__(self, *args, **kwargs)
         self.failureOnNoTests = failureOnNoTests
+        self.addFactoryArguments(failureOnNoTests=failureOnNoTests)
 
         # importing here gets around an import loop
         from buildbot.process import subunitlogobserver
@@ -81,7 +82,7 @@ class SubunitShellCommand(ShellCommand):
         self.text2 = [text2]
         
     def evaluateCommand(self, cmd):
-        if cmd.didFail():
+        if cmd.rc != 0:
             return FAILURE
         return self.results
 

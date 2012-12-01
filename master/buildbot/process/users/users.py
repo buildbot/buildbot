@@ -27,6 +27,7 @@ except ImportError:
 srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr']
 salt_len = 8
 
+@defer.inlineCallbacks
 def createUserObject(master, author, src=None):
     """
     Take a Change author and source and translate them into a User Object,
@@ -45,7 +46,7 @@ def createUserObject(master, author, src=None):
 
     if not src:
         log.msg("No vcs information found, unable to create User Object")
-        return defer.succeed(None)
+        return
 
     if src in srcs:
         log.msg("checking for User Object from %s Change for: %s" % (src,
@@ -53,12 +54,14 @@ def createUserObject(master, author, src=None):
         usdict = dict(identifier=author, attr_type=src, attr_data=author)
     else:
         log.msg("Unrecognized source argument: %s" % src)
-        return defer.succeed(None)
+        return
 
-    return master.db.users.findUserByAttr(
+    uid = yield  master.db.users.findUserByAttr(
             identifier=usdict['identifier'],
             attr_type=usdict['attr_type'],
             attr_data=usdict['attr_data'])
+
+    defer.returnValue(uid)
 
 def getUserContact(master, contact_type=None, uid=None):
     """

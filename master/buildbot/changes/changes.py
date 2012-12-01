@@ -139,9 +139,6 @@ class Change:
                 self.when, self.category, self.project, self.repository,
                 self.codebase)
 
-    def __cmp__(self, other):
-      return self.number - other.number
-
     def asText(self):
         data = ""
         data += self.getFileContents()

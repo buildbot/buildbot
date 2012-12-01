@@ -48,13 +48,24 @@ class Basic(unittest.TestCase):
             rp = conn.execute("EAT COOKIES")
             return rp.scalar()
         d = self.pool.do(fail)
-        return self.assertFailure(d, sa.exc.OperationalError)
+        def eb(f):
+            pass
+        def cb(r):
+            self.fail("no exception propagated")
+        d.addCallbacks(cb, eb)
+        return d
 
     def test_do_exception(self):
         def raise_something(conn):
             raise RuntimeError("oh noes")
         d = self.pool.do(raise_something)
-        return self.assertFailure(d, RuntimeError)
+        def eb(f):
+            f.trap(RuntimeError) # make sure it gets the *right* exception
+            pass
+        def cb(r):
+            self.fail("no exception propagated")
+        d.addCallbacks(cb, eb)
+        return d
 
     def test_do_with_engine(self):
         def add(engine, addend1, addend2):
@@ -71,7 +82,12 @@ class Basic(unittest.TestCase):
             rp = engine.execute("EAT COOKIES")
             return rp.scalar()
         d = self.pool.do_with_engine(fail)
-        return self.assertFailure(d, sa.exc.OperationalError)
+        def eb(f):
+            pass
+        def cb(r):
+            self.fail("no exception propagated")
+        d.addCallbacks(cb, eb)
+        return d
 
     def test_persistence_across_invocations(self):
         # NOTE: this assumes that both methods are called with the same

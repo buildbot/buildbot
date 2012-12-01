@@ -16,7 +16,6 @@
 import mock
 from buildbot.test.util import steps
 
-import os
 
 class SourceStepMixin(steps.BuildStepMixin):
     """
@@ -55,7 +54,7 @@ class SourceStepMixin(steps.BuildStepMixin):
         ss.patch = patch
         ss.patch_info = None
         ss.changes = []
-        self.build.pathmodule = os.path
+
         self.build.getSourceStamp = lambda x=None: ss
         return step
 

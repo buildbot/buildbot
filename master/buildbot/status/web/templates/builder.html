@@ -8,10 +8,6 @@
 
 <p>(<a href="{{ path_to_root }}waterfall?show={{ name }}">view in waterfall</a>)</p>
 
-{% if description %}
-  <div class="BuilderDescription">{{ description }}</div>
-{% endif %}
-
 <div class="column">
 
 {% if current %}
@@ -47,7 +43,7 @@
     
     {% if b.num_changes < 4 %}
         {% for c in b.changes %}{{ c.revision|shortrev(c.repo) }}
-        (<a href="{{ c.url }}">{{ c.who|email }}</a>){% if not loop.last %},{% endif %}
+        (<a href="{{ c.url }}">{{ c.who }}</a>){% if not loop.last %},{% endif %}
         {% endfor %}
     {% else %}
         ({{ b.num_changes }} changes)

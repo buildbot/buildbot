@@ -196,12 +196,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             for table_name in ('scheduler_changes', 'sourcestamp_changes',
                                'change_files', 'change_properties', 'changes',
                                'change_users'):
-                remaining = ids_to_delete[:]
-                while remaining:
-                    batch, remaining = remaining[:100], remaining[100:]
-                    table = self.db.model.metadata.tables[table_name]
-                    conn.execute(
-                        table.delete(table.c.changeid.in_(batch)))
+                table = self.db.model.metadata.tables[table_name]
+                conn.execute(
+                    table.delete(table.c.changeid.in_(ids_to_delete)))
         return self.db.pool.do(thd)
 
     def _chdict_from_change_row_thd(self, conn, ch_row):
