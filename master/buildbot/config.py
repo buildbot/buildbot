@@ -15,11 +15,11 @@
 
 from __future__ import with_statement
 
-import re
 import os
+import re
 import sys
+import warnings
 from buildbot.util import safeTranslate
-from buildbot.process import properties
 from buildbot import interfaces
 from buildbot import locks
 from buildbot.revlinks import default_revlink_matcher
@@ -51,6 +51,8 @@ def error(error):
 class MasterConfig(object):
 
     def __init__(self):
+        # local import to avoid circular imports
+        from buildbot.process import properties
         # default values for all attributes
 
         # global
@@ -359,6 +361,11 @@ class MasterConfig(object):
             if not isinstance(caches, dict):
                 errors.addError("c['caches'] must be a dictionary")
             else:
+                valPairs = caches.items()
+                for (x, y) in valPairs:
+                  if (not isinstance(y, int)):
+                     errors.addError(
+                     "value for cache size '%s' must be an integer" % x)
                 self.caches.update(caches)
 
         if 'buildCacheSize' in config_dict:
@@ -422,6 +429,12 @@ class MasterConfig(object):
         except RuntimeError:
             errors.addError("c['builders'] must be a list of builder configs")
             return
+
+        for builder in builders:
+            if os.path.isabs(builder.builddir):
+                warnings.warn("Absolute path '%s' for builder may cause "
+                        "mayhem.  Perhaps you meant to specify slavebuilddir "
+                        "instead.")
 
         self.builders = builders
 
@@ -546,15 +559,6 @@ class MasterConfig(object):
                 for l in b.locks:
                     check_lock(l)
 
-            # factories don't necessarily need to implement a .steps attribute
-            # but in practice most do, so we'll check that if it exists
-            if not hasattr(b.factory, 'steps'):
-                continue
-            for s in b.factory.steps:
-                for l in s[1].get('locks', []):
-                    check_lock(l)
-
-
     def check_builders(self, errors):
         # look both for duplicate builder names, and for builders pointing
         # to unknown slaves
@@ -606,7 +610,7 @@ class BuilderConfig:
     def __init__(self, name=None, slavename=None, slavenames=None,
             builddir=None, slavebuilddir=None, factory=None, category=None,
             nextSlave=None, nextBuild=None, locks=None, env=None,
-            properties=None, mergeRequests=None):
+            properties=None, mergeRequests=None, description=None):
 
         errors = ConfigErrors([])
 
@@ -622,6 +626,10 @@ class BuilderConfig:
         # factory is required
         if factory is None:
             errors.addError("builder '%s' has no factory" % name)
+        from buildbot.process.factory import BuildFactory
+        if factory is not None and not isinstance(factory, BuildFactory):
+            errors.addError(
+                "builder '%s's factory is not a BuildFactory instance" % name)
         self.factory = factory
 
         # slavenames can be a single slave name or a list, and should also
@@ -676,6 +684,8 @@ class BuilderConfig:
         self.properties = properties or {}
         self.mergeRequests = mergeRequests
 
+        self.description = description
+
         if errors:
             raise errors
 
@@ -704,6 +714,8 @@ class BuilderConfig:
             rv['properties'] = self.properties
         if self.mergeRequests:
             rv['mergeRequests'] = self.mergeRequests
+        if self.description:
+            rv['description'] = self.description
         return rv
 
 

@@ -124,9 +124,8 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         return d
 
     def test_findUser_existing(self):
-        d = self.insertTestData(self.user1_rows)
-        d = self.insertTestData(self.user2_rows)
-        d = self.insertTestData(self.user3_rows)
+        d = self.insertTestData(
+                self.user1_rows + self.user2_rows + self.user3_rows)
         d.addCallback(lambda _ : self.db.users.findUserByAttr(
                                   identifier='lye',
                                   attr_type='git',
@@ -194,13 +193,8 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
                                   identifier='soap',
                                   attr_type='telepathIO(tm)',
                                   attr_data='hmm,lye'))
-        def cb(_):
-            self.fail("shouldn't get here")
-        def eb(f):
-            f.trap(sa.exc.IntegrityError, sa.exc.ProgrammingError)
-            pass # expected
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, sa.exc.IntegrityError,
+                                     sa.exc.ProgrammingError)
 
     def test_getUser(self):
         d = self.insertTestData(self.user1_rows)

@@ -28,10 +28,10 @@ from buildbot.status.buildstep import BuildStepStatus
 class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     implements(interfaces.IBuildStatus, interfaces.IStatusEvent)
 
-    persistenceVersion = 3
+    persistenceVersion = 4
     persistenceForgets = ( 'wasUpgraded', )
 
-    source = None
+    sources = None
     reason = None
     changes = []
     blamelist = []
@@ -88,10 +88,31 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             return None
         return self.builder.getBuild(self.number-1)
 
-    def getSourceStamp(self, absolute=False):
-        if not absolute or not self.properties.has_key('got_revision'):
-            return self.source
-        return self.source.getAbsoluteSourceStamp(self.properties['got_revision'])
+    def getAllGotRevisions(self):
+        all_got_revisions = self.properties.getProperty('got_revision', {})
+        # For backwards compatibility all_got_revisions is a string if codebases
+        # are not used. Convert to the default internal type (dict)
+        if not isinstance(all_got_revisions, dict):
+            all_got_revisions = {'': all_got_revisions}
+        return all_got_revisions
+
+    def getSourceStamps(self, absolute=False):
+        sourcestamps = []
+        if not absolute:
+            sourcestamps.extend(self.sources)
+        else:
+            all_got_revisions = self.getAllGotRevisions() or {}
+            # always make a new instance
+            for ss in self.sources:
+                if ss.codebase in all_got_revisions:
+                    got_revision = all_got_revisions[ss.codebase]
+                    sourcestamps.append(ss.getAbsoluteSourceStamp(got_revision))
+                else:
+                    # No absolute revision information available
+                    # Probably build has been stopped before ending all sourcesteps
+                    # Return a clone with original revision
+                    sourcestamps.append(ss.clone())
+        return sourcestamps
 
     def getReason(self):
         return self.reason
@@ -190,9 +211,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         return self.testResults
 
     def getLogs(self):
-        # TODO: steps should contribute significant logs instead of this
-        # hack, which returns every log from every step. The logs should get
-        # names like "compile" and "test" instead of "compile.output"
         logs = []
         for s in self.steps:
             for loog in s.getLogs():
@@ -243,9 +261,11 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     def addTestResult(self, result):
         self.testResults[result.getName()] = result
 
-    def setSourceStamp(self, sourceStamp):
-        self.source = sourceStamp
-        self.changes = self.source.changes
+    def setSourceStamps(self, sourceStamps):
+        self.sources = sourceStamps
+        self.changes = []
+        for source in self.sources:
+            self.changes.extend(source.changes)
 
     def setReason(self, reason):
         self.reason = reason
@@ -368,7 +388,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.master = master
         for step in self.steps:
             step.setProcessObjects(self, master)
-
     def upgradeToVersion1(self):
         if hasattr(self, "sourceStamp"):
             # the old .sourceStamp attribute wasn't actually very useful
@@ -394,6 +413,13 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.properties.update(propdict, "Upgrade from previous version")
         self.wasUpgraded = True
 
+    def upgradeToVersion4(self):
+        # buildstatus contains list of sourcestamps, convert single to list
+        if hasattr(self, "source"):
+            self.sources = [self.source]
+            del self.source
+        self.wasUpgraded = True
+        
     def checkLogfiles(self):
         # check that all logfiles exist, and remove references to any that
         # have been deleted (e.g., by purge())
@@ -427,7 +453,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         # Constant
         result['builderName'] = self.builder.name
         result['number'] = self.getNumber()
-        result['sourceStamp'] = self.getSourceStamp().asDict()
+        result['sourceStamps'] = [ss.asDict() for ss in self.getSourceStamps()]
         result['reason'] = self.getReason()
         result['blame'] = self.getResponsibleUsers()
 

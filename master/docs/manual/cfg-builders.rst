@@ -29,7 +29,7 @@ configuration file, its use looks like::
 ``slavenames``
     These arguments specify the buildslave or buildslaves that will be used by
     this Builder.  All slaves names must appear in the :bb:cfg:`slaves`
-    configuration parameter. Each buildslave can accomodate multiple
+    configuration parameter. Each buildslave can accommodate multiple
     builders.  The ``slavenames`` parameter can be a list of names,
     while ``slavename`` can specify only one slave.
 
@@ -73,6 +73,7 @@ Other optional keys may be set on each ``BuilderConfig``:
     objects. The function should return one of the :class:`BuildSlave`
     objects, or ``None`` if none of the available slaves should be
     used.
+    The function can optionally return a Deferred, which should fire with the same results.
 
 ``nextBuild``
     If provided, this is a function that controls which build request will be
@@ -106,7 +107,7 @@ Other optional keys may be set on each ``BuilderConfig``:
         c['builders'] = [
           BuilderConfig(name='test', factory=f,
                 slavenames=['slave1', 'slave2', 'slave3', 'slave4'],
-                env=@{'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'@}),
+                env={'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'}),
         ]
 
 .. index:: Builds; merging
@@ -120,7 +121,11 @@ Other optional keys may be set on each ``BuilderConfig``:
 ``properties``
     A builder may be given a dictionary of :ref:`Build-Properties`
     specific for this builder in this parameter. Those values can be used
-    later on like other properties. :ref:`WithProperties`.
+    later on like other properties. :ref:`Interpolate`.
+
+``description``
+    A builder may be given an arbitrary description, which will show up in the
+    web status on the builder's page.
 
 .. index:: Builds; merging
 

@@ -181,11 +181,11 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.steps.source import P4
         assert P4
 
-    def test_steps_source_P4Sync(self):
-        from buildbot.steps.source import P4Sync
-        assert P4Sync
-
     def test_steps_source_Monotone(self):
         from buildbot.steps.source import Monotone
         assert Monotone
+
+    def test_steps_source_BK(self):
+        from buildbot.steps.source import BK
+        assert BK
 

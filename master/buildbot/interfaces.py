@@ -33,10 +33,6 @@ class BuildSlaveTooOldError(Exception):
 class LatentBuildSlaveFailedToSubstantiate(Exception):
     pass
 
-# other exceptions
-class BuildbotNotRunningError(Exception):
-    pass
-
 class IChangeSource(Interface):
     """
     Service which feeds Change objects to the changemaster. When files or
@@ -224,10 +220,6 @@ class IBuildSetStatus(Interface):
         @returns: list of names via Deferred"""
     def isFinished():
         pass
-    def waitUntilSuccess():
-        """Return a Deferred that fires (with this IBuildSetStatus object)
-        when the outcome of the BuildSet is known, i.e., upon the first
-        failure, or after all builds complete successfully."""
     def waitUntilFinished():
         """Return a Deferred that fires (with this IBuildSetStatus object)
         when all builds have finished."""
@@ -307,6 +299,9 @@ class IBuilderStatus(Interface):
 
     def getCategory():
         """Return the category of this builder (a string)."""
+
+    def getDescription():
+        """Return the description of this builder (a string)."""
 
     def getState():
         # TODO: this isn't nearly as meaningful as it used to be
@@ -459,8 +454,8 @@ class IBuildStatus(Interface):
         'forced', and 'periodic' are the most likely values. 'try' will be
         added in the future."""
 
-    def getSourceStamp():
-        """Return a SourceStamp object which can be used to re-create
+    def getSourceStamps():
+        """Return a list of SourceStamp objects which can be used to re-create
         the source tree that this build used.
 
         This method will return None if the source information is no longer
@@ -1127,7 +1122,7 @@ class IRenderable(Interface):
     """
 
     def getRenderingFor(iprops):
-        """Return the interpolation with the given properties
+        """Return a deferred that fires with interpolation with the given properties
 
         @param iprops: the L{IProperties} provider supplying the properties.
         """
@@ -1208,3 +1203,17 @@ class IProperties(Interface):
 
 class IScheduler(Interface):
     pass
+
+class ITriggerableScheduler(Interface):
+    """
+    A scheduler that can be triggered by buildsteps.
+    """
+
+    def trigger(sourcestamps, set_props=None):
+        """Trigger a build with the given source stamp and properties.
+        """
+
+class IBuildStepFactory(Interface):
+    def buildStep():
+        """
+        """

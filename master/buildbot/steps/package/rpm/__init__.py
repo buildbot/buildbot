@@ -20,7 +20,8 @@ Steps specific to the rpm format.
 from buildbot.steps.package.rpm.rpmbuild import RpmBuild
 from buildbot.steps.package.rpm.rpmspec import RpmSpec
 from buildbot.steps.package.rpm.rpmlint import RpmLint
+from buildbot.steps.package.rpm.mock import MockBuildSRPM, MockRebuild
 
-__all__ = ['RpmBuild', 'RpmSpec', 'RpmLint']
+__all__ = ['RpmBuild', 'RpmSpec', 'RpmLint', 'MockBuildSRPM', 'MockRebuild']
 
 

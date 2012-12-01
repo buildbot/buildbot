@@ -30,12 +30,12 @@ class StubRequest(object):
         self.received_cookies = {}
         self.send_cookies = []
     def getUser(self):
-        return None
+        return ''
 
     def getPassword(self):
         return None
-    def addCookie(self, key, cookie, expiration, path):
-        self.send_cookies.append((key, cookie, expiration, path))
+    def addCookie(self, key, cookie, expires, path):
+        self.send_cookies.append((key, cookie, expires, path))
 
 class StubHttpAuthRequest(object):
     # all we need from a request is username/password
@@ -204,7 +204,7 @@ class TestAuthz(unittest.TestCase):
 
     def test_getUsername_http_missing(self):
         z = Authz(useHttpHeader = True)
-        assert z.getUsername(StubRequest('foo', 'bar')) == None
+        assert z.getUsername(StubRequest('foo', 'bar')) == ''
 
     def test_getPassword_http_missing(self):
         z = Authz(useHttpHeader = True)

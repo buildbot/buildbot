@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
-import os
-
 # apply the same patches the buildmaster does when it starts
 from buildbot import monkeypatches
 monkeypatches.patch_all(for_tests=True)
@@ -25,6 +22,5 @@ try:
     import mock
     mock = mock
 except ImportError:
-    print >>sys.stderr, ("\nBuildbot tests require the 'mock' module; "
-                         "try 'pip install mock'")
-    os._exit(1)
+    raise ImportError("Buildbot tests require the 'mock' module; "
+            "try 'pip install mock'")

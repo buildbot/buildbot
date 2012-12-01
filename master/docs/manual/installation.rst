@@ -31,7 +31,7 @@ buildslave:
 
 Python: http://www.python.org
 
-  Buildbot requires python-2.5 or later on the master, although Python-2.7 is
+  Buildbot requires Python-2.5 or later on the master, although Python-2.7 is
   recommended.  The slave run on Python-2.4.
 
 Twisted: http://twistedmatrix.com
@@ -80,13 +80,13 @@ sqlite3: http://www.sqlite.org
 
 pysqlite: http://pypi.python.org/pypi/pysqlite
 
-  The SQLite Python package is required for python-2.5 and earlier (it is already
-  included in python-2.5 and later, but the version in python-2.5 has nasty bugs)
+  The SQLite Python package is required for Python-2.5 and earlier (it is already
+  included in Python-2.5 and later, but the version in Python-2.5 has nasty bugs)
 
 simplejson: http://pypi.python.org/pypi/simplejson
 
-  The simplejson package is required for python-2.5 and earlier (it is already
-  included as json in python-2.6 and later)
+  The simplejson package is required for Python-2.5 and earlier (it is already
+  included as json in Python-2.6 and later)
 
 Jinja2: http://jinja.pocoo.org/
 
@@ -144,7 +144,7 @@ and for the slave:
 Installation From Tarballs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Buildbot and Buildslave are installed using the standard python
+Buildbot and Buildslave are installed using the standard Python
 `distutils <http://docs.python.org/library/distutils.html>`_ process. For either
 component, after unpacking the tarball, the process is:
 
@@ -172,12 +172,14 @@ To test this, shift to a different directory (like :file:`/tmp`), and run:
 
 If it shows you the versions of Buildbot and Twisted, the install went
 ok. If it says "no such command" or it gets an ``ImportError``
-when it tries to load the libaries, then something went wrong.
+when it tries to load the libraries, then something went wrong.
 ``pydoc buildbot`` is another useful diagnostic tool.
 
 Windows users will find these files in other places. You will need to
-make sure that python can find the libraries, and will probably find
+make sure that Python can find the libraries, and will probably find
 it convenient to have :command:`buildbot` on your :envvar:`PATH`.
+
+.. _Installation-in-a-Virtualenv:
 
 Installation in a Virtualenv
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -409,14 +411,12 @@ process does *not* edit your :file:`master.cfg` for you. So something like:
     # for using mysql:
     c['db_url'] = 'mysql://bbuser:<password>@localhost/buildbot'
 
-Once the parameter has been added, invoke ``upgrade-master`` with the
-``--db`` parameter, e.g.,
+Once the parameter has been added, invoke ``upgrade-master``.
+This will extract the DB url from your configuration file.
 
 .. code-block:: bash
 
-    buildbot upgrade-master --db=mysql://bbuser:<password>@localhost/buildbot
-
-The ``--db`` option must match the ``c['db_url']`` exactly.
+    buildbot upgrade-master
 
 See :ref:`Database-Specification` for more options to specify a database.
 
@@ -648,26 +648,8 @@ command line, like this
     specify a number or ``None`` to keep all :file:`twistd.log` files
     around. The default is 10.
 
-.. _Other-Buildslave-Configuration:
-
-Other Buildslave Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-``unicode_encoding``
-    This represents the encoding that buildbot should use when converting unicode
-    commandline arguments into byte strings in order to pass to the operating
-    system when spawning new processes.
-    
-    The default value is what python's :func:`sys.getfilesystemencoding()` returns, which
-    on Windows is 'mbcs', on Mac OSX is 'utf-8', and on Unix depends on your locale
-    settings.
-    
-    If you need a different encoding, this can be changed in your build slave's
-    :file:`buildbot.tac` file by adding a ``unicode_encoding``
-    argument  to the BuildSlave constructor.
-
-``allow_shutdown``
-    allow_shutdown can be passed to the BuildSlave constructor in buildbot.tac.  If
+.. option:: --allow-shutdown
+    Can also be passed directly to the BuildSlave constructor in buildbot.tac.  If
     set, it allows the buildslave to initiate a graceful shutdown, meaning that it
     will ask the master to shut down the slave when the current build, if any, is
     complete.
@@ -684,6 +666,25 @@ Other Buildslave Configuration
     The default value is ``None``, in which case this feature will be disabled.
 
     Both master and slave must be at least version 0.8.3 for this feature to work.
+
+
+.. _Other-Buildslave-Configuration:
+
+Other Buildslave Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``unicode_encoding``
+    This represents the encoding that buildbot should use when converting unicode
+    commandline arguments into byte strings in order to pass to the operating
+    system when spawning new processes.
+    
+    The default value is what Python's :func:`sys.getfilesystemencoding()` returns, which
+    on Windows is 'mbcs', on Mac OSX is 'utf-8', and on Unix depends on your locale
+    settings.
+    
+    If you need a different encoding, this can be changed in your build slave's
+    :file:`buildbot.tac` file by adding a ``unicode_encoding``
+    argument  to the BuildSlave constructor.
 
 .. code-block:: python
 
@@ -961,9 +962,9 @@ Cron jobs are typically run with a minimal shell (:file:`/bin/sh`, not
 commands. You may want to use explicit paths, because the :envvar:`PATH`
 is usually quite short and doesn't include anything set by your
 shell's startup scripts (:file:`.profile`, :file:`.bashrc`, etc). If
-you've installed buildbot (or other python libraries) to an unusual
+you've installed buildbot (or other Python libraries) to an unusual
 location, you may need to add a :envvar:`PYTHONPATH` specification (note
-that python will do tilde-expansion on :envvar:`PYTHONPATH` elements by
+that Python will do tilde-expansion on :envvar:`PYTHONPATH` elements by
 itself). Sometimes it is safer to fully-specify everything:
 
 .. code-block:: none

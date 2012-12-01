@@ -17,7 +17,7 @@ import mock
 from twisted.trial import unittest
 
 from buildbot.steps.source import Source
-from buildbot.test.util import sourcesteps
+from buildbot.test.util import steps, sourcesteps
 
 class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
 
@@ -65,3 +65,73 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
         step.startStep(mock.Mock())
 
         self.assertEqual(step.startVC.call_args, (('branch', None, None), {}))
+
+    def test_start_no_codebase(self):
+        step = self.setupStep(Source())
+        step.branch = 'branch'
+        step.startVC = mock.Mock()
+        step.build.getSourceStamp = mock.Mock()
+        step.build.getSourceStamp.return_value = None
+
+        self.assertEqual(step.describe(), ['updating'])
+        self.assertEqual(step.name, Source.name)
+
+        step.startStep(mock.Mock())
+        self.assertEqual(step.build.getSourceStamp.call_args[0], ('',))
+        
+        self.assertEqual(step.description, ['updating'])
+
+    def test_start_with_codebase(self):
+        step = self.setupStep(Source(codebase='codebase'))
+        step.branch = 'branch'
+        step.startVC = mock.Mock()
+        step.build.getSourceStamp = mock.Mock()
+        step.build.getSourceStamp.return_value = None
+
+        self.assertEqual(step.describe(), ['updating', 'codebase'])
+        self.assertEqual(step.name, Source.name + " codebase")
+
+        step.startStep(mock.Mock())
+        self.assertEqual(step.build.getSourceStamp.call_args[0], ('codebase',))        
+
+        self.assertEqual(step.describe(True), ['update', 'codebase'])
+        
+    def test_start_with_codebase_and_descriptionSuffix(self):
+        step = self.setupStep(Source(codebase='my-code',
+                                     descriptionSuffix='suffix'))
+        step.branch = 'branch'
+        step.startVC = mock.Mock()
+        step.build.getSourceStamp = mock.Mock()
+        step.build.getSourceStamp.return_value = None
+
+        self.assertEqual(step.describe(), ['updating', 'suffix'])
+        self.assertEqual(step.name, Source.name + " my-code")
+
+        step.startStep(mock.Mock())
+        self.assertEqual(step.build.getSourceStamp.call_args[0], ('my-code',))        
+        
+        self.assertEqual(step.describe(True), ['update', 'suffix'])
+
+
+class TestSourceDescription(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_constructor_args_strings(self):
+        step = Source(workdir='build',
+                      description='svn update (running)',
+                      descriptionDone='svn update')
+        self.assertEqual(step.description, ['svn update (running)'])
+        self.assertEqual(step.descriptionDone, ['svn update'])
+
+    def test_constructor_args_lists(self):
+        step = Source(workdir='build',
+                      description=['svn', 'update', '(running)'],
+                      descriptionDone=['svn', 'update'])
+        self.assertEqual(step.description, ['svn', 'update', '(running)'])
+        self.assertEqual(step.descriptionDone, ['svn', 'update'])
+

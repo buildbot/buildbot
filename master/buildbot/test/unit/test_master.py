@@ -223,7 +223,7 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
             self.patch(master.BuildMaster, 'create_child_services',
                     lambda self : None)
 
-            # patch out a few other annoying things the msater likes to do
+            # patch out a few other annoying things the master likes to do
             self.patch(monkeypatches, 'patch_all', lambda : None)
             self.patch(signal, 'signal', lambda sig, hdlr : None)
             self.patch(master, 'Status', lambda master : mock.Mock()) # XXX temporary
@@ -269,7 +269,6 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
         self.patch_loadConfig_fail()
 
         d = self.master.startService(_reactor=reactor)
-        d.addCallback(lambda _ : self.master.stopService())
 
         @d.addCallback
         def check(_):
@@ -285,7 +284,6 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
         self.db.setup = db_setup
 
         d = self.master.startService(_reactor=reactor)
-        d.addCallback(lambda _ : self.master.stopService())
 
         @d.addCallback
         def check(_):
@@ -301,7 +299,6 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
         self.db.setup = db_setup
 
         d = self.master.startService(_reactor=reactor)
-        d.addCallback(lambda _ : self.master.stopService())
 
         @d.addCallback
         def check(_):

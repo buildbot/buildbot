@@ -27,11 +27,16 @@ class Sender:
 
     def send(self, branch, revision, comments, files, who=None, category=None,
              when=None, properties={}, repository='', vc=None, project='',
-             revlink=''):
+             revlink='', codebase=None):
         change = {'project': project, 'repository': repository, 'who': who,
                   'files': files, 'comments': comments, 'branch': branch,
                   'revision': revision, 'category': category, 'when': when,
                   'properties': properties, 'revlink': revlink, 'src': vc}
+
+        # codebase is only sent if set; this won't work with masters older than
+        # 0.8.7
+        if codebase:
+            change['codebase'] = codebase
 
         for key in change:
             if type(change[key]) == str:

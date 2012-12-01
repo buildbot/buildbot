@@ -40,12 +40,14 @@ class Authz(object):
             default_action=False,
             auth=None,
             useHttpHeader=False,
+            httpLoginUrl=False,
             **kwargs):
         self.auth = auth
         if auth:
             assert IAuth.providedBy(auth)
 
         self.useHttpHeader = useHttpHeader
+        self.httpLoginUrl = httpLoginUrl
 
         self.config = dict( (a, default_action) for a in self.knownActions )
         for act in self.knownActions:
@@ -65,7 +67,7 @@ class Authz(object):
             
     def authenticated(self, request):
         if self.useHttpHeader:
-            return request.getUser() != None
+            return request.getUser() != ''
         return self.session(request) != None
 
     def getUserInfo(self, user):
@@ -166,7 +168,7 @@ class Authz(object):
         def check_authenticate(res):
             if res:
                 cookie, s = self.sessions.new(user, self.auth.getUserInfo(user))
-                request.addCookie(COOKIE_KEY, cookie, s.getExpiration(),path="/")
+                request.addCookie(COOKIE_KEY, cookie, expires=s.getExpiration(),path="/")
                 request.received_cookies = {COOKIE_KEY:cookie}
                 return cookie
             else:

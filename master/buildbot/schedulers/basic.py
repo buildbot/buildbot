@@ -16,7 +16,8 @@
 from twisted.internet import defer, reactor
 from twisted.python import log
 from buildbot import util, config
-from buildbot.util import bbcollections, NotABranch
+from buildbot.util import NotABranch
+from collections import defaultdict
 from buildbot.changes import filter, changes
 from buildbot.schedulers import base, dependent
 
@@ -38,7 +39,7 @@ class BaseBasicScheduler(base.BaseScheduler):
     def __init__(self, name, shouldntBeSet=NotSet, treeStableTimer=None,
                 builderNames=None, branch=NotABranch, branches=NotABranch,
                 fileIsImportant=None, properties={}, categories=None,
-                change_filter=None, onlyImportant=False):
+                change_filter=None, onlyImportant=False, **kwargs):
         if shouldntBeSet is not self.NotSet:
             config.error(
                 "pass arguments to schedulers using keyword arguments")
@@ -47,7 +48,7 @@ class BaseBasicScheduler(base.BaseScheduler):
                 "fileIsImportant must be a callable")
 
         # initialize parent classes
-        base.BaseScheduler.__init__(self, name, builderNames, properties)
+        base.BaseScheduler.__init__(self, name, builderNames, properties, **kwargs)
 
         self.treeStableTimer = treeStableTimer
         self.fileIsImportant = fileIsImportant
@@ -58,7 +59,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         # the IDelayedCall used to wake up when this scheduler's
         # treeStableTimer expires.
-        self._stable_timers = bbcollections.defaultdict(lambda : None)
+        self._stable_timers = defaultdict(lambda : None)
         self._stable_timers_lock = defer.DeferredLock()
 
     def getChangeFilter(self, branch, branches, change_filter, categories):
@@ -95,14 +96,12 @@ class BaseBasicScheduler(base.BaseScheduler):
     def stopService(self):
         # the base stopService will unsubscribe from new changes
         d = base.BaseScheduler.stopService(self)
-        d.addCallback(lambda _ :
-                self._stable_timers_lock.acquire())
+        @util.deferredLocked(self._stable_timers_lock)
         def cancel_timers(_):
             for timer in self._stable_timers.values():
                 if timer:
                     timer.cancel()
-            self._stable_timers = {}
-            self._stable_timers_lock.release()
+            self._stable_timers.clear()
         d.addCallback(cancel_timers)
         return d
 
@@ -193,6 +192,11 @@ class BaseBasicScheduler(base.BaseScheduler):
         max_changeid = changeids[-1] # (changeids are sorted)
         yield self.master.db.schedulers.flushChangeClassifications(
                             self.objectid, less_than=max_changeid+1)
+
+    def getPendingBuildTimes(self):
+        # This isn't locked, since the caller expects and immediate value,
+        # and in any case, this is only an estimate.
+        return [timer.getTime() for timer in self._stable_timers.values() if timer and timer.active()]
 
 class SingleBranchScheduler(BaseBasicScheduler):
     def getChangeFilter(self, branch, branches, change_filter, categories):

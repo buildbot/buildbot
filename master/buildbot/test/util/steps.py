@@ -16,7 +16,7 @@
 import mock
 from buildbot import interfaces
 from buildbot.process import buildstep
-from buildbot.test.fake import remotecommand, fakebuild
+from buildbot.test.fake import remotecommand, fakebuild, slave
 
 
 class BuildStepMixin(object):
@@ -71,10 +71,8 @@ class BuildStepMixin(object):
 
         @param slave_env: environment from the slave at slave startup
         """
-        # yes, Virginia, "factory" refers both to the tuple and its first
-        # element TODO: fix that up
-        factory, args = step.getStepFactory()
-        step = self.step = factory(**args)
+        factory = interfaces.IBuildStepFactory(step)
+        step = self.step = factory.buildStep()
 
         # step.build
 
@@ -98,7 +96,7 @@ class BuildStepMixin(object):
 
         # step.buildslave
 
-        self.buildslave = step.buildslave = mock.Mock(name="buildslave")
+        self.buildslave = step.buildslave = slave.FakeSlave()
 
         # step.step_status
 
@@ -252,5 +250,7 @@ class BuildStepMixin(object):
         self.assertEqual((exp.remote_command, exp.args), got)
 
         # let the Expect object show any behaviors that are required
-        return exp.runBehaviors(command)
+        d = exp.runBehaviors(command)
+        d.addCallback(lambda _: command)
+        return d
 

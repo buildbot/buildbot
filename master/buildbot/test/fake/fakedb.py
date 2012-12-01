@@ -121,7 +121,7 @@ class Change(Row):
         when_timestamp = 1200000,
         category = 'cat',
         repository = 'repo',
-        codebase =  'cb',
+        codebase =  '',
         project = 'proj',
     )
 
@@ -746,6 +746,9 @@ class FakeBuildsetsComponent(FakeDBComponent):
         # only add brids if we're expecting them (sometimes they're unknown)
         if 'brids' in expected_buildset:
             buildset['brids'] = self.allBuildRequests(bsid)
+
+        if 'builders' in expected_buildset:
+            buildset['builders'] = self.allBuildRequests(bsid).keys()
 
         for ss in dictOfssDict.itervalues():
             if 'id' in ss:

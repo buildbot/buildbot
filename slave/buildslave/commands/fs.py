@@ -169,7 +169,7 @@ class CopyDirectory(base.Command):
                 # I don't think this happens, but just in case..
                 log.msg("cp target '%s' already exists -- cp will not do what you think!" % todir)
 
-            command = ['cp', '-R', '-P', '-p', fromdir, todir]
+            command = ['cp', '-R', '-P', '-p', '-v', fromdir, todir]
             c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                              sendRC=False, timeout=self.timeout, maxTime=self.maxTime,
                              logEnviron=self.logEnviron, usePTY=False)

@@ -58,7 +58,7 @@ class BuildEPYDoc(ShellCommand):
         self.errors = errors
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         if self.warnings or self.errors:
             return WARNINGS
@@ -74,6 +74,13 @@ class PyFlakes(ShellCommand):
     flunkingIssues = ["undefined"] # any pyflakes lines like this cause FAILURE
 
     MESSAGES = ("unused", "undefined", "redefs", "import*", "misc")
+
+    def __init__(self, *args, **kwargs):
+        # PyFlakes return 1 for both warnings and errors. We
+        # categorize this initially as WARNINGS so that
+        # evaluateCommand below can inspect the results more closely.
+        kwargs['decodeRC'] = {0: SUCCESS, 1: WARNINGS}
+        ShellCommand.__init__(self, *args, **kwargs)
 
     def createSummary(self, log):
         counts = {}
@@ -118,7 +125,7 @@ class PyFlakes(ShellCommand):
 
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         for m in self.flunkingIssues:
             if self.getProperty("pyflakes-%s" % m):
@@ -259,17 +266,6 @@ class Sphinx(ShellCommand):
 
         command.extend([sphinx_sourcedir, sphinx_builddir])
         self.setCommand(command)
-
-        self.addFactoryArguments(
-            sphinx = sphinx,
-            sphinx_sourcedir = sphinx_sourcedir,
-            sphinx_builddir = sphinx_builddir,
-            sphinx_builder = sphinx_builder,
-            tags = tags,
-            defines = defines,
-            mode = mode,
-        )
-
 
     def createSummary(self, log):
 

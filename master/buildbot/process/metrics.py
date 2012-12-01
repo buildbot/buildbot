@@ -40,7 +40,7 @@ from twisted.internet.task import LoopingCall
 from twisted.internet import reactor
 from twisted.application import service
 from buildbot import util, config
-from buildbot.util.bbcollections import defaultdict
+from collections import defaultdict
 
 import gc, os, sys
 # Make use of the resource module if we can

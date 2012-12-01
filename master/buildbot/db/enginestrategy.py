@@ -27,7 +27,7 @@ import os
 import sqlalchemy as sa
 from twisted.python import log
 from sqlalchemy.engine import strategies, url
-from sqlalchemy.pool import NullPool, Pool
+from sqlalchemy.pool import NullPool
 from buildbot.util import sautils
 
 # from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html
@@ -81,6 +81,18 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         """Special setup for sqlite engines"""
         # try to enable WAL logging
         if u.database:
+            def connect_listener(connection, record):
+                connection.execute("pragma checkpoint_fullfsync = off")
+
+            if sautils.sa_version() < (0,7,0):
+                class CheckpointFullfsyncDisabler(object):
+                    pass
+                disabler = CheckpointFullfsyncDisabler()
+                disabler.connect = connect_listener
+                engine.pool.add_listener(disabler)
+            else:
+                sa.event.listen(engine.pool, 'connect', connect_listener)
+
             log.msg("setting database journal mode to 'wal'")
             try:
                 engine.execute("pragma journal_mode = wal")
@@ -115,6 +127,10 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         else:
             u.query['charset'] = 'utf8'
 
+        return u, kwargs, None
+
+    def set_up_mysql_engine(self, u, engine):
+        """Special setup for mysql engines"""
         # add the reconnecting PoolListener that will detect a
         # disconnected connection and automatically start a new
         # one.  This provides a measure of additional safety over
@@ -137,11 +153,9 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
                 pass
             rcl = ReconnectingListener()
             rcl.checkout = checkout_listener
-            kwargs['listeners'] = [ rcl ]
+            engine.pool.add_listener(rcl)
         else:
-            sa.event.listen(Pool, 'checkout', checkout_listener)
-
-        return u, kwargs, None
+            sa.event.listen(engine.pool, 'checkout', checkout_listener)
 
     def create(self, name_or_url, **kwargs):
         if 'basedir' not in kwargs:
@@ -176,6 +190,8 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
 
         if u.drivername.startswith('sqlite'):
             self.set_up_sqlite_engine(u, engine)
+        elif u.drivername.startswith('mysql'):
+            self.set_up_mysql_engine(u, engine)
 
         return engine
 

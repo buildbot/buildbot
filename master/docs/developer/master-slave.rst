@@ -58,7 +58,7 @@ The slave-side Bot object has the following remote methods:
     ``environ``
         copy of the slaves environment
     ``system``
-        OS the slave is running (extracted from pythons os.name)
+        OS the slave is running (extracted from Python's os.name)
     ``basedir``
         base directory where slave is running
 
@@ -215,7 +215,7 @@ Runs a shell command on the slave.  This command takes the following arguments:
     A dictionary of environment variables to augment or replace the
     existing environment on the slave.  In this dictionary, ``PYTHONPATH``
     is treated specially: it should be a list of path components, rather
-    than a string, and will be prepended to the existing python path.
+    than a string, and will be prepended to the existing Python path.
 
 ``initial_stdin``
 
@@ -379,7 +379,7 @@ following arguments:
 
 ``mode``
 
-    Acess mode for the new file.
+    Access mode for the new file.
 
 The reader object's ``read(maxsize)`` method will be called with a maximum
 size, which will return no more than that number of bytes as a bytestring.  At
@@ -393,7 +393,7 @@ mkdir
 .....
 
 This command will create a directory on the slave.  It will also create any
-intervening directories required.  It takes the following arugment:
+intervening directories required.  It takes the following argument:
 
 ``dir``
 

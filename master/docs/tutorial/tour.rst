@@ -48,6 +48,7 @@ Now, look for the section marked *PROJECT IDENTITY* which reads::
   c['titleURL'] = "http://divmod.org/trac/wiki/DivmodPyflakes"
 
 If you want, you can change either of these links to anything you want to see what happens when you change them. 
+
 After making a change go into the terminal and type::
 
   buildbot reconfig master
@@ -80,7 +81,7 @@ is complete.
 Now, if you go back to
 `the waterfall page <http://localhost:8010/waterfall>`_,
 you will see that the project's name is whatever you may have changed it to and when you click on the 
-the URL of the project name at the bottom of the page it should take you to the link you put in the configuration.
+URL of the project name at the bottom of the page it should take you to the link you put in the configuration.
 
 Configuration Errors
 --------------------
@@ -137,15 +138,17 @@ By now you're probably thinking: "All this time spent and still not done a
 single build ? What was the name of this project again ?"
 
 On the `waterfall <http://localhost:8010/waterfall>`_. page, click on the
-runtests link, and scroll down.  You will see some new options that allow you
-to force a build:
+runtests link.  You'll see a builder page, and in the upper-right corner is a
+box where you can login.  The default username and password are both
+"pyflakes".  Once you've logged in, you will see some new options that allow
+you to force a build:
 
 .. image:: _images/force-build.png
    :alt: force a build.
 
-Type in your name and a reason, then click *Force Build*.  After that, click
-on
-`view in waterfall <http://localhost:8010/waterfall?show=runtests>`_.
+Click *Force Build* - there's no need to fill in any of the fields in this
+case.  Next, click on `view in waterfall
+<http://localhost:8010/waterfall?show=runtests>`_.
 
 You will now see:
 
@@ -238,6 +241,34 @@ You can also see the new builds in the web interface.
 .. image:: _images/irc-testrun.png
    :alt: a successful test run from IRC happened.
 
+Setting Authorized Web Users
+----------------------------
+
+Further down, look for the WebStatus configuration::
+
+   c['status'] = []
+
+   from buildbot.status import html
+   from buildbot.status.web import authz, auth
+
+   authz_cfg=authz.Authz(
+       # change any of these to True to enable; see the manual for more
+       # options
+       auth=auth.BasicAuth([("pyflakes","pyflakes")]),
+       gracefulShutdown = False,
+       forceBuild = 'auth', # use this to test your slave once it is set up
+       forceAllBuilds = False,
+       pingBuilder = False,
+       stopBuild = False,
+       stopAllBuilds = False,
+       cancelPendingBuild = False,
+   )
+   c['status'].append(html.WebStatus(http_port=8010, authz=authz_cfg))
+
+The ``auth.BasicAuth()`` define authorized users and their passwords.  You can
+change these or add new ones.  See :bb:status:`WebStatus` for more about the
+WebStatus configuration.
+
 Debugging with Manhole
 ----------------------
 
@@ -264,7 +295,7 @@ Insert the following to enable debugging mode with manhole::
   from buildbot import manhole
   c['manhole'] = manhole.PasswordManhole("tcp:1234:interface=127.0.0.1","admin","passwd")
 
-After restarting the master, you can ssh into the master and get an interactive python shell::
+After restarting the master, you can ssh into the master and get an interactive Python shell::
 
   ssh -p1234 admin@127.0.0.1
   # enter passwd at prompt
@@ -278,7 +309,7 @@ After restarting the master, you can ssh into the master and get an interactive 
     If you see this, the temporary solution is to install the previous version
     of pyasn1::
 
-        pip instasll pyasn1-0.0.13b
+        pip install pyasn1-0.0.13b
 
 If you wanted to check which slaves are connected and what builders those slaves are assigned to you could do::
 
@@ -320,7 +351,7 @@ Then run buildbot's try command as follows::
   buildbot try --connect=pb --master=127.0.0.1:5555 --username=sampleuser --passwd=samplepass --vc=git
 
 This will do "git diff" for you and send the resulting patch to
-the server for build and test against the latest sources from git.
+the server for build and test against the latest sources from Git.
 
 Now go back to the `waterfall <http://localhost:8010/waterfall>`_
 page, click on the runtests link, and scroll down.  You should see that

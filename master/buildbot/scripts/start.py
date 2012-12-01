@@ -14,30 +14,30 @@
 # Copyright Buildbot Team Members
 
 
-import os, sys, time
+import os, sys
+from buildbot.scripts import base
+from twisted.internet import reactor, protocol
+from twisted.python.runtime import platformType
+from buildbot.scripts.logwatcher import LogWatcher
+from buildbot.scripts.logwatcher import BuildmasterTimeoutError
+from buildbot.scripts.logwatcher import ReconfigError
 
 class Follower:
-    def follow(self):
-        from twisted.internet import reactor
-        from buildbot.scripts.logwatcher import LogWatcher
+    def follow(self, basedir):
         self.rc = 0
         print "Following twistd.log until startup finished.."
-        lw = LogWatcher("twistd.log")
+        lw = LogWatcher(os.path.join(basedir, "twistd.log"))
         d = lw.start()
         d.addCallbacks(self._success, self._failure)
         reactor.run()
         return self.rc
 
     def _success(self, _):
-        from twisted.internet import reactor
         print "The buildmaster appears to have (re)started correctly."
         self.rc = 0
         reactor.stop()
 
     def _failure(self, why):
-        from twisted.internet import reactor
-        from buildbot.scripts.logwatcher import BuildmasterTimeoutError
-        from buildbot.scripts.logwatcher import ReconfigError
         if why.check(BuildmasterTimeoutError):
             print """
 The buildmaster took more than 10 seconds to start, so we were unable to
@@ -59,41 +59,13 @@ stop it, fix the config file, and restart.
         self.rc = 1
         reactor.stop()
 
-
-def start(config):
+def launchNoDaemon(config):
     os.chdir(config['basedir'])
-    if not os.path.exists("buildbot.tac"):
-        print "This doesn't look like a buildbot base directory:"
-        print "No buildbot.tac file."
-        print "Giving up!"
-        sys.exit(1)
-    if config['quiet']:
-        return launch(config)
+    sys.path.insert(0, os.path.abspath(config['basedir']))
 
-    # we probably can't do this os.fork under windows
-    from twisted.python.runtime import platformType
-    if platformType == "win32":
-        return launch(config)
-
-    # fork a child to launch the daemon, while the parent process tails the
-    # logfile
-    if os.fork():
-        # this is the parent
-        rc = Follower().follow()
-        sys.exit(rc)
-    # this is the child: give the logfile-watching parent a chance to start
-    # watching it before we start the daemon
-    time.sleep(0.2)
-    launch(config)
-
-def launch(config):
-    sys.path.insert(0, os.path.abspath(os.getcwd()))
-
-    # see if we can launch the application without actually having to
-    # spawn twistd, since spawning processes correctly is a real hassle
-    # on windows.
     argv = ["twistd",
             "--no_save",
+            '--nodaemon',
             "--logfile=twistd.log", # windows doesn't use the same default
             "--python=buildbot.tac"]
     sys.argv = argv
@@ -104,3 +76,41 @@ def launch(config):
     from twisted.scripts import twistd
     twistd.run()
 
+def launch(config):
+    os.chdir(config['basedir'])
+    sys.path.insert(0, os.path.abspath(config['basedir']))
+
+    # see if we can launch the application without actually having to
+    # spawn twistd, since spawning processes correctly is a real hassle
+    # on windows.
+    argv = [sys.executable,
+            "-c",
+            # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use
+            # _twistw.run . Twisted-2.5.0 and later use twistd.run, even for
+            # windows.
+            "from twisted.scripts import twistd; twistd.run()",
+            "--no_save",
+            "--logfile=twistd.log", # windows doesn't use the same default
+            "--python=buildbot.tac"]
+
+    # ProcessProtocol just ignores all output
+    reactor.spawnProcess(protocol.ProcessProtocol(), sys.executable, argv, env=os.environ)
+
+def start(config):
+    if not base.isBuildmasterDir(config['basedir']):
+        print "not a buildmaster directory"
+        return 1
+
+    if config['nodaemon']:
+        launchNoDaemon(config)
+        return 0
+
+    launch(config)
+
+    # We don't have tail on windows
+    if platformType == "win32" or config['quiet']:
+        return 0
+
+    # this is the parent
+    rc = Follower().follow(config['basedir'])
+    return rc

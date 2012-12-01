@@ -18,8 +18,7 @@ from zope.interface import implements
 from twisted.python import components
 from twisted.spread import pb
 from twisted.web import server
-from twisted.web.resource import Resource
-from twisted.web.error import NoResource
+from twisted.web.resource import Resource, NoResource
 
 from buildbot import interfaces
 from buildbot.status import logfile
@@ -102,6 +101,11 @@ class TextLog(Resource):
     def render_GET(self, req):
         self._setContentType(req)
         self.req = req
+
+        if (self.original.isFinished()):
+            req.setHeader("Cache-Control", "max-age=604800")
+        else:
+            req.setHeader("Cache-Control", "no-cache")
 
         if not self.asText:
             self.template = req.site.buildbot_service.templates.get_template("logs.html")                

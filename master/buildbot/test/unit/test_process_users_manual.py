@@ -276,24 +276,12 @@ class TestCommandlineUserManager(unittest.TestCase, ManualUsersMixin):
 
     def test_no_userpass(self):
         d = defer.maybeDeferred(lambda : manual.CommandlineUserManager())
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, AssertionError)
 
     def test_no_port(self):
         d = defer.maybeDeferred(lambda : manual.CommandlineUserManager(username="x",
                                                                   passwd="y"))
-        def cb(_):
-            self.fail("shouldn't succeed")
-        def eb(f):
-            f.trap(AssertionError)
-            pass # A-OK
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, AssertionError)
 
     def test_service(self):
         # patch out the pbmanager's 'register' command both to be sure

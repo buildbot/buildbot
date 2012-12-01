@@ -91,11 +91,14 @@ class Build(properties.PropertiesMixin):
     def setSlaveEnvironment(self, env):
         self.slaveEnvironment = env
 
-    def getSourceStamp(self, codebase):
+    def getSourceStamp(self, codebase=''):
         for source in self.sources:
             if source.codebase == codebase:
                 return source
         return None
+
+    def getAllSourceStamps(self):
+        return list(self.sources)
 
     def allChanges(self):
         for s in self.sources:
@@ -184,16 +187,18 @@ class Build(properties.PropertiesMixin):
     def setupSlaveBuilder(self, slavebuilder):
         self.slavebuilder = slavebuilder
 
+        self.path_module = slavebuilder.slave.path_module
+
         # navigate our way back to the L{buildbot.buildslave.BuildSlave}
         # object that came from the config, and get its properties
         buildslave_properties = slavebuilder.slave.properties
         self.getProperties().updateFromProperties(buildslave_properties)
         if slavebuilder.slave.slave_basedir:
-            self.setProperty("workdir",
-                    slavebuilder.slave.path_module.join(
+            self.setProperty("builddir",
+                    self.path_module.join(
                         slavebuilder.slave.slave_basedir,
                         self.builder.config.slavebuilddir),
-                    "slave")
+                    "Slave")
 
         self.slavename = slavebuilder.slave.slavename
         self.build_status.setSlavename(self.slavename)
@@ -225,7 +230,7 @@ class Build(properties.PropertiesMixin):
             lock_list.append((lock, access))
         self.locks = lock_list
         # then narrow SlaveLocks down to the right slave
-        self.locks = [(l.getLock(self.slavebuilder), la)
+        self.locks = [(l.getLock(self.slavebuilder.slave), la)
                        for l, la in self.locks]
         self.remote = slavebuilder.remote
         self.remote.notifyOnDisconnect(self.lostRemote)
@@ -275,7 +280,7 @@ class Build(properties.PropertiesMixin):
             return defer.succeed(None)
         log.msg("acquireLocks(build %s, locks %s)" % (self, self.locks))
         for lock, access in self.locks:
-            if not lock.isAvailable(access):
+            if not lock.isAvailable(self, access):
                 log.msg("Build %s waiting for lock %s" % (self, lock))
                 d = lock.waitUntilMaybeAvailable(self, access)
                 d.addCallback(self.acquireLocks)
@@ -297,15 +302,8 @@ class Build(properties.PropertiesMixin):
         stepnames = {}
         sps = []
 
-        for factory, args in self.stepFactories:
-            args = args.copy()
-            try:
-                step = factory(**args)
-            except:
-                log.msg("error while creating step, factory=%s, args=%s"
-                        % (factory, args))
-                raise
-           
+        for factory in self.stepFactories:
+            step = factory.buildStep()
             step.setBuild(self)
             step.setBuildSlave(self.slavebuilder.slave)
             if callable (self.workdir):
@@ -350,10 +348,8 @@ class Build(properties.PropertiesMixin):
                 self.progress.setExpectationsFrom(expectations)
 
         # we are now ready to set up our BuildStatus.
-        # at the moment that schedulers start to deliver sourcestamps per codebase
-        # buildstatus should support multiple sourcestamps.
-        # until now schedulers deliver exactly one sourcestamp
-        self.build_status.setSourceStamp(self.sources[0])
+        # pass all sourcestamps to the buildstatus
+        self.build_status.setSourceStamps(self.sources)
         self.build_status.setReason(self.reason)
         self.build_status.setBlamelist(self.blamelist())
         self.build_status.setProgress(self.progress)
@@ -460,6 +456,14 @@ class Build(properties.PropertiesMixin):
             # this should cause the step to finish.
             log.msg(" stopping currentStep", self.currentStep)
             self.currentStep.interrupt(Failure(error.ConnectionLost()))
+        else:
+            self.result = RETRY
+            self.text = ["lost", "remote"]
+            self.stopped = True
+            if self._acquiringLock:
+                lock, access, d = self._acquiringLock
+                lock.stopWaitingUntilAvailable(self, access, d)
+                d.callback(None)
 
     def stopBuild(self, reason="<no reason given>"):
         # the idea here is to let the user cancel a build because, e.g.,
@@ -492,6 +496,8 @@ class Build(properties.PropertiesMixin):
             text = ["warnings"]
         elif self.result == EXCEPTION:
             text = ["exception"]
+        elif self.result == RETRY:
+            text = ["retry"]
         else:
             text = ["build", "successful"]
         text.extend(self.text)
@@ -500,7 +506,12 @@ class Build(properties.PropertiesMixin):
     def buildException(self, why):
         log.msg("%s.buildException" % self)
         log.err(why)
-        self.buildFinished(["build", "exception"], EXCEPTION)
+        # try to finish the build, but since we've already faced an exception,
+        # this may not work well.
+        try:
+            self.buildFinished(["build", "exception"], EXCEPTION)
+        except:
+            log.err(Failure(), 'while finishing a build with an exception')
 
     def buildFinished(self, text, results):
         """This method must be called when the last Step has completed. It
@@ -517,6 +528,7 @@ class Build(properties.PropertiesMixin):
         self.finished = True
         if self.remote:
             self.remote.dontNotifyOnDisconnect(self.lostRemote)
+            self.remote = None
         self.results = results
 
         log.msg(" %s: build finished" % self)

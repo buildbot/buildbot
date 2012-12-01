@@ -438,6 +438,33 @@ class TestChangesConnectorComponent(
         d.addCallback(check)
         return d
 
+    def test_pruneChanges_lots(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=n)
+            for n in xrange(1, 151)
+        ])
+
+        d.addCallback(lambda _ : self.db.changes.pruneChanges(1))
+        def check(_):
+            def thd(conn):
+                results = {}
+                for tbl_name in ('scheduler_changes', 'sourcestamp_changes',
+                                 'change_files', 'change_properties',
+                                 'changes'):
+                    tbl = self.db.model.metadata.tables[tbl_name]
+                    r = conn.execute(sa.select([tbl.c.changeid]))
+                    results[tbl_name] = len([ r for r in r.fetchall() ])
+                self.assertEqual(results, {
+                    'scheduler_changes': 0,
+                    'sourcestamp_changes': 0,
+                    'change_files': 0,
+                    'change_properties': 0,
+                    'changes': 1,
+                })
+            return self.db.pool.do(thd)
+        d.addCallback(check)
+        return d
+
     def test_pruneChanges_None(self):
         d = self.insertTestData(self.change13_rows)
 
