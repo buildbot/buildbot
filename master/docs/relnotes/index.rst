@@ -8,6 +8,8 @@ Release Notes for Buildbot |version|
 
 The following are the release notes for Buildbot |version|.
 
+* The ``MasterShellCommand`` step now correctly handles environment variables passed as list.
+
 Master
 ------
 
