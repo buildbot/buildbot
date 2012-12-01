@@ -53,6 +53,7 @@ class IHTMLLog(Interface):
 css_classes = {SUCCESS: "success",
                WARNINGS: "warnings",
                FAILURE: "failure",
+               FAILURE-AGAIN: "failure-again",
                SKIPPED: "skipped",
                EXCEPTION: "exception",
                RETRY: "retry",
