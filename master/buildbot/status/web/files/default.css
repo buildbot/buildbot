@@ -366,6 +366,12 @@ div.BuildWaterfall {
 	border-color: #A77272;
 }
 
+.failure-again {
+	color: #000;
+	background-color: #eA9;
+	border-color: #A77272;
+}
+
 .warnings {
 	color: #FFFFFF;
 	background-color: #fa3;
