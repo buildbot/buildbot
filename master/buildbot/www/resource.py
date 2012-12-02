@@ -25,15 +25,6 @@ class Resource(resource.Resource):
     def base_url(self):
         return self.master.config.www['url']
 
-    @property
-    def static_url(self):
-        """if static_url is not defined, then, we will server
-        the static files via twisted static resource handler."""
-        key = 'static_url'
-        if self.master.config.www.has_key(key):
-            return self.master.config.www[key]
-        return self.base_url + "static"
-
     def __init__(self, master):
         resource.Resource.__init__(self)
         self.master = master

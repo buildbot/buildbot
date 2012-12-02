@@ -103,7 +103,6 @@ class MasterConfig(object):
         self.www = dict(
             port=None,
             url='http://localhost:8080/',
-            public_html=None,
         )
 
     _known_config_keys = set([
@@ -545,16 +544,6 @@ class MasterConfig(object):
 
         if not self.www['url'].endswith('/'):
             self.www['url'] += '/'
-        if "extra_js" in self.www and not isinstance(self.www['extra_js'], list):
-            raise TypeError("BuildmasterConfig['www']['extra_js'] param must be a list of paths")
-        public_html = self.www.get('public_html')
-        if not public_html:
-            public_html = self.www["public_html"] = os.path.join(os.path.dirname(filename),
-                                                                 "public_html")
-        if not os.path.isdir(public_html):
-            msg = "www['public_html'] must be an existing " \
-                  "directory; got '%s'" % (public_html,)
-            errors.addError(msg)
 
 
     def check_single_master(self, errors):

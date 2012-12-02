@@ -33,3 +33,5 @@ include contrib/* contrib/windows/* contrib/os-x/* contrib/css/* contrib/libvirt
 include contrib/blockertest/*
 include contrib/trac/* contrib/trac/bbwatcher/* contrib/trac/bbwatcher/templates/*
 include contrib/init-scripts/*
+
+include master/buildbot/www/index.html

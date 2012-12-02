@@ -5,8 +5,7 @@ define(
         "dojo/json"
     ],
     function(socket, dom, JSON) {
-        var ws_url = bb_router.ws_url;
-        var socket = socket(ws_url + "ws");
+        var socket = socket(dojoConfig.bb.wsUrl);
 
         function setText(div, content){
             node = dom.byId(div);

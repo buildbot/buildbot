@@ -13,27 +13,63 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.www import resource
+import json
+from twisted.web import static
+from twisted.python import util
+import buildbot
 
-class UIResource(resource.Resource):
-    isLeaf = True
+class UIResource(static.Data):
 
-    def __init__(self, master, extra_routes, index_html):
-        """ Config can pass a static_url for serving
-        static stuff directly from apache or nginx
-        """
-        self.extra_routes = extra_routes
-        self.index_html = index_html
-        resource.Resource.__init__(self, master)
+    def __init__(self, master, apps):
+        data = self.buildIndexHtml(master, apps)
+        static.Data.__init__(self, data, 'text/html')
 
-    def render(self, request):
-        contents = dict(
-            base_url = self.base_url,
-            static_url = self.static_url,
-            ws_url = self.base_url.replace("http:", "ws:"),
-            extra_routes = self.extra_routes)
-        # IE8 ignore doctype html in corporate intranets
-        # this additionnal header removes this behavior and put
-        # IE8 in super-standard mode
+    def buildIndexHtml(self, master, apps):
+        # calculate the package dict, with location, for each app's packages,
+        # and also gather up routes
+        packages = []
+        routes = []
+        for name, app in apps.iteritems():
+            for pkg in app.packages:
+                if isinstance(pkg, dict):
+                    pkg = pkg.copy()
+                else:
+                    pkg = { 'name' : pkg }
+                pkg['location'] = ('app/%s/%s'
+                        % (name, pkg.get('location', pkg['name'])))
+                packages.append(pkg)
+            routes.extend(app.routes)
+
+        # keep some application metadata, too
+        appInfo = [ { 'name' : name,
+                      'description': app.description,
+                      'version' : app.version }
+                    for name, app in apps.iteritems() ]
+
+        # remove a trailing slash from the base URL
+        baseUrl = master.config.www['url'].rstrip('/')
+
+        dojoConfig = {
+            'async' : 1,
+            'tlmSiblingOfDojo' : 0,
+            'baseUrl' : baseUrl,
+            'packages' : packages,
+            'bb' : {
+                'wsUrl' : baseUrl.replace('http:', 'ws:') + '/ws',
+                'appInfo' : appInfo,
+                'routes' : routes,
+            },
+        }
+        subs = {
+            'baseUrl': baseUrl,
+            'buildbotVersion' : buildbot.version,
+            'dojoConfigJson': json.dumps(dojoConfig, indent=4),
+        }
+        return open(util.sibpath(__file__, 'index.html')).read() % subs
+
+    def render_GET(self, request):
+        # IE8 ignores doctype html in corporate intranets.
+        # this additionnal header removes this behavior and puts
+        # IE8 in "super-standard" mode.
         request.setHeader("X-UA-Compatible" ,"IE=edge")
-        return self.index_html % contents
+        return static.Data.render_GET(self, request)

@@ -8,8 +8,8 @@
     <meta name="author" content="buildbot team"/>
 
     <!-- styles -->
-    <link rel="stylesheet" type="text/css" href="%(static_url)s/bb/resources/css/bootstrap.css" />
-    <link rel="stylesheet" type="text/css" href="%(static_url)s/bb/resources/css/default.css" />
+    <link rel="stylesheet" type="text/css" href="%(baseUrl)s/app/base/bb/resources/css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="%(baseUrl)s/app/base/bb/resources/css/default.css" />
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
@@ -17,11 +17,11 @@
     <![endif]-->
 
     <!-- fav and touch icons -->
-    <link rel="shortcut icon" href="%(static_url)s/bb/resources/img/favicon.ico"/>
-    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="%(static_url)s/ico/apple-touch-icon-144-precomposed.png"/>
-    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="%(static_url)s/ico/apple-touch-icon-114-precomposed.png"/>
-    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="%(static_url)s/ico/apple-touch-icon-72-precomposed.png"/>
-    <link rel="apple-touch-icon-precomposed" href="%(static_url)s/ico/apple-touch-icon-57-precomposed.png"/>
+    <link rel="shortcut icon" href="%(baseUrl)s/app/base/bb/resources/img/favicon.ico"/>
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="%(baseUrl)s/app/base/ico/apple-touch-icon-144-precomposed.png"/>
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="%(baseUrl)s/app/base/ico/apple-touch-icon-114-precomposed.png"/>
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="%(baseUrl)s/app/base/ico/apple-touch-icon-72-precomposed.png"/>
+    <link rel="apple-touch-icon-precomposed" href="%(baseUrl)s/app/base/ico/apple-touch-icon-57-precomposed.png"/>
   </head>
 
   <body>
@@ -34,7 +34,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a class="brand" href="#"><img src="%(static_url)s/bb/resources/img/favicon.ico"/> Buildbot</a>
+          <a class="brand" href="#"><img src="%(baseUrl)s/app/base/bb/resources/img/favicon.ico"/> Buildbot</a>
           <div class="btn-group pull-right">
             <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
               <i class="icon-user"></i> Anonymous
@@ -79,7 +79,7 @@
 
     <hr/>
     <footer>
-      <p>© Buildbot 2012</p>
+      <p>Buildbot-%(buildbotVersion)s - © Buildbot Team Members</p>
     </footer>
 
 
@@ -90,17 +90,8 @@
       The router global object will take care of dynamically load the correct content widgets
       and fill out the navbar
     -->
-    <script src="%(static_url)s/dojo/dojo.js" data-dojo-config="async: true"></script>
-    <script>
-      require({
-      }, ["bb/router" ], function(router) {
-      bb_router = router( {
-          ws_url: "%(ws_url)s",
-          static_url:"%(static_url)s",
-          base_url:"%(base_url)s",
-          extra_routes:"%(extra_routes)s"}
-      );
-      });
-    </script>
+    <script>var dojoConfig = %(dojoConfigJson)s;</script>
+    <script src="%(baseUrl)s/app/base/dojo/dojo.js"></script>
+    <script>require(["bb/router"], function(router) { router(); });</script>
   </body>
 </html>

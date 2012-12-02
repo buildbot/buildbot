@@ -6,7 +6,7 @@ BASEDIR=$(cd $(dirname $0) && pwd)
 SRCDIR="$BASEDIR/src"
 TOOLSDIR="$SRCDIR/util/buildscripts"
 DISTDIR="$BASEDIR/built"
-PROFILE="$BASEDIR/profiles/buildbot.profile.js"
+PROFILE="$BASEDIR/buildbot.profile.js"
 
 if [ ! -d "$TOOLSDIR" ]; then
     echo "Can't find Dojo build tools -- did you initialise submodules? (git submodule update --init --recursive)"
@@ -33,12 +33,14 @@ echo -n "Cleaning old files..."
 rm -rf "$DISTDIR"
 echo " Done"
 
+echo -n "Creating profile..."
+# it doesn't really matter *what* Python we use here.
+# Dojo hackers: if you're looking for the build profile, it's in www/buildbot_www.py!
+( cd "$BASEDIR"; python -c "import buildbot_www; print buildbot_www.getProfile()" ) > "$PROFILE"
+echo " Done"
+
 echo "Running $TOOLSDIR/build.sh..."
 ( cd "$TOOLSDIR" && ./build.sh --profile "$PROFILE" --releaseDir "$DISTDIR") || exit 1
-
-echo -n "Copying index.html..."
-cp "$SRCDIR/index.html" "$DISTDIR/index.html"
-echo " Done"
 
 echo -n "Removing uncompressed/consoleStripped files..."
 find "$DISTDIR" \( -name '*.uncompressed.js' -o -name '*.consoleStripped.js' \) -exec rm \{} \;

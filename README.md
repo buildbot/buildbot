@@ -79,48 +79,31 @@ It's OK to schedule a build on a builder that's not implemented by a running mas
 
 * Remaining parts of buildbot-www package (after which much of this section is complete):
 
-  * remove `extra_js` support (replaced by extra python packages)
-  * support multiple entry points for easy user extensions
-  * ensure tests run either from `built/` or `src/` of buildbot-www
-  * verify licensing on all bundled projects
-  * documentation
-
-* Build the router.js config dynamically on the master, either at startup or in upgrade-master.
-
-  * For now, this is done using `extra_js` parameter of the www config
-
-* Dynamically download or proxy external resources, so they're not included in the Buildbot source or the tarball.
-  This download can occur either at startup, or in upgrade-master.
-  => Done with buildbot updatejs, which is also part of upgarde-master/create-master
-
-* Minify and concatenate JS source at startup or upgrade-master.
-  http://opensource.perlig.de/rjsmin/ may help here; it has a compatible license and is a single file.
-
-  * dojo is supporting this with its build system. For now this build sytem is
-    very powerful, and allow to select which modules are needed, and do several
-    layers but it needs nodejs and java. There are work in order to remove the
-    java needs that will probably land before nine in dojo's mainline.
-    http://bugs.dojotoolkit.org/ticket/14684
+  * fix `public_html` requirements (no longer needs to be writeable)
+  * read a list of routes from apps
 
 * Add cache headers to the HTTP server, based on information encoded in the resource types regarding immutability and speed of change.
-* haml-js is used as a templating system. haml-js has been selected over other templating system for its big simplicity + power combination.
-  2 Problems with haml-js run in browser:
 
-   * it is not compatible with IE8, because it is using ECMAScript 4 features
-   * it is difficult to integrate with dojo build system, and embeded the templates into the concatenated js file.
+* documentation
 
-  To workaround this problem, the translation from haml template to js program is done at server side, at the updatejs time. This leverage a dependancy
-  on node, and installing hamlcc via npm. long term solution is probably to translate haml-js in python, or reuse a haml python implementation to produce js code
-  instead of python
+  * incorporate/link from www/README.txt
+  * fix user docs - no more `extra_js`, no more updateJS, etc.
+  * developer docs:
+
+    * WWW service organization
+    * Application attributes
+    * dojoConfig values
 
 ## Javascript ##
 
 * Standardize on interCaps spellings for identifiers (method and variable names).
+* Convert tabs to spaces
 
 ## Javascript Testing ##
 
 Testing javascript and json api interaction is tricky. Few design principles:
 * Stubbing the data api in JS is considered wrong path, as we'll have to always make sure consistency between the stub and real implementation
+* ensure tests run either from `built/` or `src/` of buildbot-www; both need to be tested
 * Run JS inside trial environment is difficult. txghost.py method has been experimented, and has several drawbacks.
   - ghost is based on webkit which in turn is based on qt. The qtreactor had licence issue and is not well supported in twisted. So there is a
     hack in txghost trying to run the qt event loop at the same time as the twisted event loop.

@@ -13,13 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-import os
 import pkg_resources
 from twisted.internet import defer
 from twisted.application import strports, service
-from twisted.web import server, static
+from twisted.web import server, static, resource
 from buildbot import config
-from buildbot.www import ui, resource, rest, ws
+from buildbot.www import ui, rest, ws
 
 class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
 
@@ -31,7 +30,23 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         self.port = None
         self.port_service = None
         self.site = None
-        self.site_public_html = None
+
+        # load the apps early, in case something goes wrong in Python land
+        epAndApps = [ (ep, ep.load())
+                for ep in pkg_resources.iter_entry_points('buildbot.www') ]
+
+        # look for duplicate names
+        names = set([ ep.name for ep, app in epAndApps ])
+        seen = set()
+        dupes = set(n for n in names if n in seen or seen.add(n))
+        if dupes:
+            raise RuntimeError("duplicate buildbot.www entry points: %s"
+                                % (dupes,))
+
+        self.apps = dict((ep.name, app) for (ep, app) in epAndApps)
+
+        if 'base' not in self.apps:
+            raise RuntimeError("could not find buildbot-www; is it installed?")
 
     @defer.inlineCallbacks
     def reconfigService(self, new_config):
@@ -39,8 +54,9 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
 
         need_new_site = False
         if self.site:
-            if www.get('public_html') != self.site_public_html or www.get('extra_js',[]) != self.site_extra_js:
-                need_new_site = True
+            # if config params have changed, set need_new_site to True.
+            # There are none right now.
+            need_new_site = False
         else:
             if www['port']:
                 need_new_site = True
@@ -67,37 +83,16 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
 
 
     def setupSite(self, new_config):
-        # use pkg_resources to find buildbot_www; this will eventually allow
-        # multiple entry points and join them together via some magic (TODO)
-        # TODO: run this at config time and detect the error there
-        entry_points = list(pkg_resources.iter_entry_points('buildbot.www'))
-        if len(entry_points) < 1:
-            raise RuntimeError("could not find buildbot-www; is it installed?")
-        elif len(entry_points) > 1:
-            raise RuntimeError("only one buildbot.www entry point is supported")
-        ep = entry_points[0].load()
+        root = resource.Resource()
 
-        public_html = self.site_public_html = new_config.www.get('public_html')
-        root = static.File(public_html)
-        static_node = static.File(ep.static_dir)
-        root.putChild('static', static_node)
-        extra_js = self.site_extra_js = new_config.www.get('extra_js', [])
-        extra_routes = []
-        for ejs in extra_js:
-            ejs = os.path.join(public_html, "static", "js", os.path.basename(ejs))
-            if not os.path.isdir(ejs):
-                raise ValueError("missing js files in %s: please do buildbot upgrade_master"
-                                 " or updatejs"%(ejs,))
-            static_node.putChild(os.path.basename(ejs),static.File(ejs))
-            if os.path.exists(os.path.join(ejs, "routes.js")):
-                extra_routes.append(os.path.basename(ejs)+"/routes")
+        # render the UI HTML at the root
+        root.putChild('', ui.UIResource(self.master, self.apps))
 
-
-        # redirect the root to UI
-        root.putChild('', resource.RedirectResource(self.master, 'ui/'))
-
-        # /ui
-        root.putChild('ui', ui.UIResource(self.master, extra_routes, ep.index_html))
+        # serve JS from /base and /app/$name
+        appComponent = static.Data('app', 'text/plain')
+        root.putChild('app', appComponent)
+        for name, app in self.apps.iteritems():
+            appComponent.putChild(name, static.File(app.static_dir))
 
         # /api
         root.putChild('api', rest.RestRootResource(self.master))
@@ -107,3 +102,32 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
 
         self.site = server.Site(root)
 
+# TODO: move this to docs:
+"""
+
+The WWW service is composed of a JavaScript API, a WebSocket implementation,
+and one or more JavaScript "applications".  One of the applications must be the
+"base" application; the others can extend this base application in various
+ways.
+
+The base application is provided by the ``buildbot-www`` package.  Buildbot
+assumes that the ``buildbot-www`` package is at the same version as the
+``buildbot`` package -- no amount of inter-version compatibility is guaranteed.
+
+Overall, the URL space under the base URL looks like this:
+
+* ``/`` -- the HTML document tying everything together
+* ``/app/{app}`` -- root of ``{app}``'s ``static_dir``
+* ``/api/v{N}`` -- the root of the REST API, versioned numerically
+* ``/ws`` -- the websocket endpoint to subscribe to messages from the mq system
+
+"""
+
+# TODO: doc dojoConfig values
+
+#         route is a list of dicts which have following attributes:
+#             path: regexp describing the path that matches this route
+#             name: title of the navbar shortcut for this route
+#             widget: bb/ui/.* dijit style widget that will be loaded inside #container div
+#             enableif: list of conditions required for this link to be enabled; options are
+#                   admin - if the user is an admin
