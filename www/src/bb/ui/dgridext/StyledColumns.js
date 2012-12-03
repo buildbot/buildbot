@@ -5,11 +5,11 @@ function(declare, array){
        much more practicle to decide it in the grid column declaration
      */
     return declare(null, {
-	_configColumn: function(column, columnId, rowColumns, prefix){
-	    if (column.style) {
-		this.styleColumn(columnId, column.style);
-	    }
-	    return this.inherited(arguments);
-	}
+        _configColumn: function(column, columnId, rowColumns, prefix){
+            if (column.style) {
+                this.styleColumn(columnId, column.style);
+            }
+            return this.inherited(arguments);
+        }
     });
 });

@@ -15,5 +15,15 @@
 
 define(["dojo/main", "doh/main", "bb/tests/utils"], function(dojo, doh, utils){
     utils.registerBBTests(doh, "/changes", "changes",[
+        function addChanges(t) {
+            var query = "#dgrid_0-row-24 td.field-revision";
+            return utils.when(
+                utils.playTestScenarioWaitForDomChange(
+                    "buildbot.test.scenarios.base.BaseScenario.addChanges",
+                    query),
+                function() {
+                    utils.assertDomText(t,"0e92a098b10", query);
+                });
+        }
     ]);
 });

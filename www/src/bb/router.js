@@ -36,7 +36,7 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
                 path = path.substr(1); /* ignore first '/' */
             }
             path = path.split("?", 2);
-            array.forEach(dojoConfig.bb.routes, dojo.hitch(this, function(route, index){
+            array.forEach(dojo.config.bb.routes, dojo.hitch(this, function(route, index){
                 if (route.enableif && !this.checkEnableIf(route)) {
                     return;
                 }
@@ -50,7 +50,7 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
         checkEnableIf: function(route) {
             var ok = true;
             array.forEach(route.enableif, dojo.hitch(this, function(ei) {
-                if (ei == 'admin') {
+                if (ei === 'admin') {
                     ok = ok && this.isAdmin();
                 } else {
                     ok = false;
@@ -60,7 +60,7 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
         },
         fill_navbar: function() {
             var navlist = dom.byId("navlist");
-            var baseUrl = dojoConfig.baseUrl;
+            var baseUrl = dojo.config.baseUrl;
             this.forEachRoute( dojo.hitch(this, function(route, match){
                 if (route.hasOwnProperty("name")){
                     var klass = "";
@@ -110,6 +110,7 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
                             content.innerHTML = "";
                             loading.style.display = "none";
                             w.placeAt(content);
+                            w.startup();
                             window.bb.curWidget = w;
                             if(test) {
                                 if (window.doh) { /* doh already loaded! We need to cleanup the iframe */
@@ -176,6 +177,7 @@ define(["dojo/_base/declare", "dojo/_base/connect","dojo/_base/array","dojo/dom"
         reload: function(){
             this.location_changed();
         }
+
 
     });
 });
