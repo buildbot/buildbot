@@ -50,7 +50,7 @@ global_defaults = dict(
     multiMaster=False,
     debugPassword=None,
     manhole=None,
-    www=dict(port=None, url='http://localhost:8080/', public_html=None),
+    www=dict(port=None, url='http://localhost:8080/'),
 )
 
 
@@ -711,35 +711,17 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_www_default(self):
         self.cfg.load_www(self.filename, {}, self.errors)
-        self.assertResults(www=dict(port=None, url='http://localhost:8080/',
-                            public_html=None))
+        self.assertResults(www=dict(port=None, url='http://localhost:8080/'))
 
     def test_load_www_port(self):
-        pwd = os.getcwd()
         self.cfg.load_www(self.filename,
-                dict(www=dict(port=9888, public_html=pwd)), self.errors)
-        self.assertResults(www=dict(port=9888, url='http://localhost:9888/',
-                            public_html=pwd))
+                dict(www=dict(port=9888)), self.errors)
+        self.assertResults(www=dict(port=9888, url='http://localhost:9888/'))
 
     def test_load_www_url_no_slash(self):
-        pwd = os.getcwd()
         self.cfg.load_www(self.filename,
-                dict(www=dict(url='http://foo', port=20, public_html=pwd)), self.errors)
-        self.assertResults(www=dict(port=20, url='http://foo/',
-                            public_html=pwd))
-
-    def test_load_www_public_html(self):
-        pwd = os.getcwd()
-        self.cfg.load_www(self.filename,
-                dict(www=dict(public_html=pwd)), self.errors)
-        self.assertResults(www=dict(port=None, url='http://localhost:8080/',
-                           public_html=pwd))
-
-    def test_load_www_public_html_does_not_exist(self):
-        self.cfg.load_www(self.filename,
-                dict(www=dict(public_html=r'/does/not\exist/no')),
-                self.errors)
-        self.assertConfigError(self.errors, 'must be an existing directory')
+                dict(www=dict(url='http://foo', port=20)), self.errors)
+        self.assertResults(www=dict(port=20, url='http://foo/'))
 
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):

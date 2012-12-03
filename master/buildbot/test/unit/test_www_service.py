@@ -89,12 +89,7 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         # root
         root = site.resource
         req = mock.Mock()
-        self.assertIsInstance(root.getChildWithDefault('ui', req),
+        self.assertIsInstance(root.getChildWithDefault('', req),
                 ui.UIResource)
         self.assertIsInstance(root.getChildWithDefault('api', req),
                 rest.RestRootResource)
-
-        # ..and that the / URI redirects properly
-        req = self.make_request([''])
-        self.render_resource(site.getResourceFor(req), request=req)
-        self.assertEqual(self.request.redirected_to, 'h:/ui/')
