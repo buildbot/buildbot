@@ -13,20 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import reactor
-
 from buildbot.changes import base
 from buildbot.util import json
 from buildbot import util
 from twisted.python import log
-from twisted.internet import defer
+from twisted.internet import reactor, defer, error
 from twisted.internet.protocol import ProcessProtocol
+import re
 
 class GerritChangeSource(base.ChangeSource):
     """This source will maintain a connection to gerrit ssh server
     that will provide us gerrit events in json format."""
 
-    compare_attrs = ["gerritserver", "gerritport"]
+    compare_attrs = ["gerritserver", "gerritport", "project_re", "events",]
 
     STREAM_GOOD_CONNECTION_TIME = 120
     "(seconds) connections longer than this are considered good, and reset the backoff timer"
@@ -40,7 +39,18 @@ class GerritChangeSource(base.ChangeSource):
     STREAM_BACKOFF_MAX = 60
     "(seconds) maximum time to wait before retrying a failed connection"
 
-    def __init__(self, gerritserver, username, gerritport=29418, identity_file=None):
+    # KNOWN_GERRIT_EVENTS dict:
+    #   key is the gerrit event type
+    #   value is the flattened property path to its Git project
+    # eventReceived_ functions must be defined for all KNOWN_GERRIT_EVENTS.keys()
+    KNOWN_GERRIT_EVENTS = {
+        'patchset-created' : 'change',
+        'ref-updated'      : 'refUpdate',
+    }
+    "(dict) known gerrit event types with supporting info"
+
+    def __init__(self, gerritserver, username, gerritport=29418, identity_file=None,
+        project_re=None, events=None):
         """
         @type  gerritserver: string
         @param gerritserver: the dns or ip that host the gerrit ssh server,
@@ -52,10 +62,36 @@ class GerritChangeSource(base.ChangeSource):
         @param username: the username to use to connect to gerrit,
 
         @type  identity_file: string
-        @param identity_file: identity file to for authentication (optional).
+        @param identity_file: identity file to for authentication (optional),
 
+        @type  project_re: string
+        @param project_re: Python re search() pattern to select git project(s) (optional),
+
+        @type  events: list of strings
+        @param events: Gerrit event types ['patchset-created', 'ref-updated'] to select (optional).
         """
         # TODO: delete API comment when documented
+
+        # NOTE for optional parameter project_re:
+        # If project_re is defined and the value is a meaningful Python regular expression, an
+        # additional acceptance test is applied to the Git project of each incoming Gerrit event:
+        # - If re.search(project_re,project) is true, the source Change will be entered into
+        #   buildbot in the usual way.
+        # - If re.search(project_re,project) is false, the event will be silently ignored.  It
+        #   won't even show up in the Waterfall display.
+        # If project_re is left undefined (default), all otherwise-qualifying Gerrit events will
+        # be accepted, regardless of Git project.
+
+        # NOTE for optional parameter events:
+        # If events is defined, it must be a list of strings, where each string must match one of
+        # the KNOWN_GERRIT_EVENTS.keys() defined above- 'patchset-created', 'ref-updated', etc.
+        # Then, the Gerrit event type of each incoming Gerrit event will be tested:
+        # - If the incoming event type is found in the given events list, the source Change will
+        #   be entered into buildbot in the usual way.
+        # - If the incoming event type is not found in the list, the event will be silently ignored.
+        #   It won't even show up in the Waterfall display.
+        # If events is left undefined (default), all otherwise-qualifying Gerrit events will be
+        # accepted.
 
         self.gerritserver = gerritserver
         self.gerritport = gerritport
@@ -64,6 +100,26 @@ class GerritChangeSource(base.ChangeSource):
         self.process = None
         self.wantProcess = False
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
+
+        if project_re and project_re != "":
+            self.project_re = re.compile(project_re)
+        else:
+            self.project_re = None
+
+        if events:
+            if (type(events) != type([])) or (len(events) == 0):
+                raise ValueError('events: not a list, or list is empty')
+            for t in events:
+                if (not t) or (t not in self.KNOWN_GERRIT_EVENTS.keys()):
+                    raise ValueError('events: invalid event type "%s"' % (t,))
+            self.events = []
+            for t in self.KNOWN_GERRIT_EVENTS.keys():
+                if t in events:
+                    self.events.append(t)
+            if len(self.events) == 0:
+                raise ValueError('events: no valid event types found')
+        else:
+            self.events = None
 
     class LocalPP(ProcessProtocol):
         def __init__(self, change_source):
@@ -84,6 +140,7 @@ class GerritChangeSource(base.ChangeSource):
             log.msg("gerrit stderr: %s" % (data,))
 
         def processEnded(self, status_object):
+            log.msg("gerrit: processEnded")
             self.change_source.streamProcessStopped()
 
     def lineReceived(self, line):
@@ -101,6 +158,11 @@ class GerritChangeSource(base.ChangeSource):
             log.msg("unsupported event %s" % (event["type"],))
             return defer.succeed(None)
 
+        # filter events by gerrit event type
+        if self.events and event["type"] not in self.events:
+            log.msg("ignoring event %s" % (event["type"],))
+            return defer.succeed(None)
+
         # flatten the event dictionary, for easy access with WithProperties
         def flatten(event, base, d):
             for k, v in d.items():
@@ -111,12 +173,37 @@ class GerritChangeSource(base.ChangeSource):
 
         properties = {}
         flatten(properties, "event", event)
-        return func(properties,event)
+
+        # filter events by their Git project (project_re)
+        def select_project(properties, project_re, event_type):
+            # if project_re was undefined, accept the event
+            if not project_re:
+                return True
+            k = "event.%s.project" % (self.KNOWN_GERRIT_EVENTS[event_type],)
+            v = properties.get(k)
+            if v:
+                if project_re.search(v):
+                    # if project_re matches *.project property value, accept the event
+                    return True
+                else:
+                    # otherwise, ignore the event
+                    log.msg("ignoring project %s" % (v,))
+                    return False
+            # if the expected *.project property was not found at all, accept the event
+            log.msg("accepting event %s without %s" % (event_type,k,))
+            return True
+
+        if select_project(properties, self.project_re, event["type"]):
+            return func(properties, event)
+        else:
+            return defer.succeed(None)
+
     def addChange(self, chdict):
         d = self.master.addChange(**chdict)
         # eat failures..
         d.addErrback(log.err, 'error adding change from GerritChangeSource')
         return d
+
     def eventReceived_patchset_created(self, properties, event):
         change = event["change"]
         return self.addChange(dict(
@@ -131,6 +218,7 @@ class GerritChangeSource(base.ChangeSource):
                 files=["unknown"],
                 category=event["type"],
                 properties=properties))
+
     def eventReceived_ref_updated(self, properties, event):
         ref = event["refUpdate"]
         author = "gerrit"
@@ -151,6 +239,7 @@ class GerritChangeSource(base.ChangeSource):
                 properties=properties))
 
     def streamProcessStopped(self):
+        log.msg("gerrit: streamProcessStopped")
         self.process = None
 
         # if the service is stopped, don't try to restart the process
@@ -183,13 +272,19 @@ class GerritChangeSource(base.ChangeSource):
           [ "ssh" ] + args + [ "gerrit", "stream-events" ])
 
     def startService(self):
+        log.msg("gerrit: startService")
         self.wantProcess = True
         self.startStreamProcess()
 
     def stopService(self):
+        log.msg("gerrit: stopService")
         self.wantProcess = False
         if self.process:
-            self.process.signalProcess("KILL")
+            try:
+                self.process.signalProcess("KILL")
+            except error.ProcessExitedAlready:
+                pass
+            self.process = None
         # TODO: if this occurs while the process is restarting, some exceptions may
         # be logged, although things will settle down normally
         return base.ChangeSource.stopService(self)
@@ -198,7 +293,21 @@ class GerritChangeSource(base.ChangeSource):
         status = ""
         if not self.process:
             status = "[NOT CONNECTED - check log]"
-        str = ('GerritChangeSource watching the remote Gerrit repository %s@%s %s' %
-                            (self.username, self.gerritserver, status))
+        conditions = ""
+        if self.events:
+            conditions = 'events [ '
+            for e in self.events:
+                conditions = conditions + e + ', '
+            conditions = conditions + '] '
+        if self.project_re:
+            if len(conditions) > 0:
+                conditions = conditions + 'with '
+            conditions = conditions + 'projects matching "' + self.project_re.pattern + '" '
+        if len(conditions) > 0:
+            conditions = conditions + 'from'
+        else:
+            conditions = 'the'
+        str = ('GerritChangeSource watching %s remote Gerrit repository %s@%s %s' %
+                            (conditions, self.username, self.gerritserver, status))
         return str
 
