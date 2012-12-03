@@ -747,7 +747,7 @@ class Repo(SlaveSource):
 
     def __init__(self,
                  manifest_url=None,
-                 manifest_branch="master",
+                 manifest_branch=None,
                  manifest_file="default.xml",
                  tarball=None,
                  jobs=None,
@@ -765,7 +765,8 @@ class Repo(SlaveSource):
         """
         SlaveSource.__init__(self, **kwargs)
         self.manifest_url = _ComputeRepositoryURL(self, manifest_url)
-        self.args.update({'manifest_branch': manifest_branch,
+        self.branch = manifest_branch
+        self.args.update({
                           'manifest_file': manifest_file,
                           'tarball': tarball,
                           'manifest_override_url': None,
@@ -809,12 +810,18 @@ class Repo(SlaveSource):
         downloads = self.build.getProperty("repo_downloads", [])
 
         # download patches based on GerritChangeSource events
+        found_event_change_branch = False
         for change in self.build.allChanges():
             if (change.properties.has_key("event.type") and
                 change.properties["event.type"] == "patchset-created"):
                 downloads.append("%s %s/%s"% (change.properties["event.change.project"],
                                                  change.properties["event.change.number"],
                                                  change.properties["event.patchSet.number"]))
+                if (change.properties.has_key("event.change.branch") and
+                    change.properties["event.change.branch"]):
+                    if not found_event_change_branch:
+                        self.args['manifest_branch'] = change.properties["event.change.branch"]
+                        found_event_change_branch = True
 
         # download patches based on web site forced build properties:
         # "repo_d", "repo_d0", .., "repo_d9"
@@ -832,6 +839,7 @@ class Repo(SlaveSource):
 
     def startVC(self, branch, revision, patch):
         self.args['manifest_url'] = self.manifest_url
+        self.args['manifest_branch'] = branch
 
         # manifest override
         self.args['manifest_override_url'] = None
