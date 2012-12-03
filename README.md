@@ -77,22 +77,7 @@ It's OK to schedule a build on a builder that's not implemented by a running mas
 
 ## Infrastructure ##
 
-* Remaining parts of buildbot-www package (after which much of this section is complete):
-
-  * fix `public_html` requirements (no longer needs to be writeable)
-  * read a list of routes from apps
-
 * Add cache headers to the HTTP server, based on information encoded in the resource types regarding immutability and speed of change.
-
-* documentation
-
-  * incorporate/link from www/README.txt
-  * fix user docs - no more `extra_js`, no more updateJS, etc.
-  * developer docs:
-
-    * WWW service organization
-    * Application attributes
-    * dojoConfig values
 
 ## Javascript ##
 

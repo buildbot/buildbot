@@ -58,6 +58,7 @@ class UIResource(static.Data):
                 'wsUrl' : baseUrl.replace('http:', 'ws:') + '/ws',
                 'appInfo' : appInfo,
                 'routes' : routes,
+                'buildbotVersion' : buildbot.version,
             },
         }
         subs = {

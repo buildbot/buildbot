@@ -1,3 +1,5 @@
+.. _Messaging_and_Queues:
+
 Messaging and Queues
 ====================
 

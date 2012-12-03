@@ -101,33 +101,3 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         root.putChild('ws', ws.WsResource(self.master))
 
         self.site = server.Site(root)
-
-# TODO: move this to docs:
-"""
-
-The WWW service is composed of a JavaScript API, a WebSocket implementation,
-and one or more JavaScript "applications".  One of the applications must be the
-"base" application; the others can extend this base application in various
-ways.
-
-The base application is provided by the ``buildbot-www`` package.  Buildbot
-assumes that the ``buildbot-www`` package is at the same version as the
-``buildbot`` package -- no amount of inter-version compatibility is guaranteed.
-
-Overall, the URL space under the base URL looks like this:
-
-* ``/`` -- the HTML document tying everything together
-* ``/app/{app}`` -- root of ``{app}``'s ``static_dir``
-* ``/api/v{N}`` -- the root of the REST API, versioned numerically
-* ``/ws`` -- the websocket endpoint to subscribe to messages from the mq system
-
-"""
-
-# TODO: doc dojoConfig values
-
-#         route is a list of dicts which have following attributes:
-#             path: regexp describing the path that matches this route
-#             name: title of the navbar shortcut for this route
-#             widget: bb/ui/.* dijit style widget that will be loaded inside #container div
-#             enableif: list of conditions required for this link to be enabled; options are
-#                   admin - if the user is an admin
