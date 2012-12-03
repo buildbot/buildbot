@@ -213,9 +213,10 @@ def buildForceContext(cxt, req, master, buildername=None):
 class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     addSlash = True
 
-    def __init__(self, builder_status):
+    def __init__(self, builder_status, numbuilds=20):
         HtmlResource.__init__(self)
         self.builder_status = builder_status
+        self.numbuilds = numbuilds
 
     def getPageTitle(self, request):
         return "Buildbot: %s" % self.builder_status.getName()
@@ -287,7 +288,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 'properties' : properties,
                 })
 
-        numbuilds = int(req.args.get('numbuilds', ['5'])[0])
+        numbuilds = int(req.args.get('numbuilds', [self.numbuilds])[0])
         recent = cxt['recent'] = []
         for build in b.generateFinishedBuilds(num_builds=int(numbuilds)):
             recent.append(self.get_line_values(req, build, False))
@@ -500,6 +501,10 @@ class BuildersResource(HtmlResource):
     pageTitle = "Builders"
     addSlash = True
 
+    def __init__(self, numbuilds=20):
+        HtmlResource.__init__(self)
+        self.numbuilds = numbuilds
+
     @defer.inlineCallbacks
     def content(self, req, cxt):
         status = self.getStatus(req)
@@ -572,7 +577,7 @@ class BuildersResource(HtmlResource):
         s = self.getStatus(req)
         if path in s.getBuilderNames():
             builder_status = s.getBuilder(path)
-            return StatusResourceBuilder(builder_status)
+            return StatusResourceBuilder(builder_status, self.numbuilds)
         if path == "_all":
             return StatusResourceAllBuilders(self.getStatus(req))
         if path == "_selected":
