@@ -32,7 +32,8 @@ define(["dojo/_base/declare", "bb/ui/base",
                     "revision": { label:"Revision", type:"revision"},
                     "when_timestamp": { label:"Date",type:"date"},
                     "files": { label:"Files",type:"filelist"}
-                    }
+                    },
+                sort:[{attribute:"changeid",descending:1}]
             }, this.maingrid_node);
         }
     });

@@ -66,7 +66,7 @@ define(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_
                },
                btn_class: function(results) {
                    /* return css class given results */
-                   return ["btn-success", "btn-warnings", "btn-danger", "btn", "btn-inverse", "btn-info"][results];
+                   return ["success", "warnings", "alert", "", "inverse", "info"][results];
                },
                createGrid: function(options, node) {
                    var self = this;

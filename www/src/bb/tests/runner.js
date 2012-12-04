@@ -24,7 +24,7 @@ define(["dojo/main","doh/runner","doh/_browserRunner","dojo/hash","dojo/topic"],
                };
            });
            doh._switchtab = function(i) {
-               var lis = dojo.query("#navtabs li");
+               var lis = dojo.query("#navtabs dd");
                dojo.forEach(lis, function(li){
                    li.className="";
                });
@@ -32,23 +32,25 @@ define(["dojo/main","doh/runner","doh/_browserRunner","dojo/hash","dojo/topic"],
                old[i]();
            };
            doh._updateGlobalProgressBar = function(p, success, group){
-               /* custom updateProgress for bootstrap */
+               /* custom updateProgress for foundation */
                var outerContainer = dojo.byId("progressOuter");
                var gdiv = outerContainer.childNodes[doh._runedSuite - 1];
                if(!gdiv){
-                   gdiv = document.createElement('div');
+                   gdiv = document.createElement('span');
                    outerContainer.appendChild(gdiv);
-                   gdiv.className = 'bar bar-success';
+                   gdiv.className = 'meter success';
                    gdiv.setAttribute('_target', group);
                }
                if(!success && !gdiv._failure){
                    gdiv._failure = true;
-                   gdiv.className='bar bar-danger';
+                   gdiv.className='meter alert';
+                   gdiv.style.background="#C60F13";
                    if(group){
                        gdiv.setAttribute('title', 'failed group ' + group);
                    }
                }
                var tp = parseInt(p * 10000,10) / 100;
+               gdiv.style.display="inline-block";
                gdiv.style.width = (tp - doh._currentGlobalProgressBarWidth) + "%";
                return gdiv._failure;
            };

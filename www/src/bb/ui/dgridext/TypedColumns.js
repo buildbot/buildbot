@@ -13,10 +13,10 @@ function(declare, lang, array, moment){
         _configColumn_bool: function(column, columnId, rowColumns, prefix){
             column.formatter = function(s) {
                 if (s) {
-                    return "<div class='btn btn-mini btn-success' style='height:100%;width:30px;'>Yes</div>";
+                    return "<div class='button tiny success' style='width:100%;'>Yes</div>";
                 }
                 else {
-                    return "<div class='btn btn-mini btn-danger' style='height:100%;width:30px'>No</div>";
+                    return "<div class='button tiny alert' style=';width:100%'>No</div>";
                 }
             };
             if (column.style === undefined){
@@ -50,9 +50,19 @@ function(declare, lang, array, moment){
         _configColumn_filelist: function(column, columnId, rowColumns, prefix){
             column.formatter = function(f) {
                 var r = "<ul>";
+                var remaining = "";
+                var nlines=0;
                 array.map(f, function(file) {
-                    r += "<li>"+file+"</li>";
+                    nlines+=1;
+                    if (nlines<5) {
+                        r += "<li>"+file+"</li>";
+                    } else {
+                        remaining += file +" - ";
+                    }
                 });
+                if (nlines>5){
+                        r += "<li><abbr title='"+remaining+"'>... "+(nlines-5)+" more files</abbr></li>";
+                }
                 return r+"<ul>";
             };
         },

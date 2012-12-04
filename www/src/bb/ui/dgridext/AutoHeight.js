@@ -43,8 +43,9 @@ function(declare, array, has){
                         });
                         var height = bounds.bottom - bounds.top;
                         if (max && height > max) {
-                            self.contentNode.parentNode.style['overflow-y'] = "auto";
+                            self.contentNode.parentNode.style['overflow'] = "auto";
                             dom.style.height = max+"px";
+                            self.updateHeight=function(){};
                         } else {
                             dom.style.height = height+"px";
                         }

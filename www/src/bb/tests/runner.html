@@ -14,15 +14,13 @@ The original code is under 3 clauses BSD which is compatible with GPLv2 of build
       require(["bb/tests/runner"], function(){});
     </script>
     <style type="text/css">
-      @import "../../dojo/resources/dojo.css";
-      @import "../resources/css/bootstrap.css";
-			.inProgress {
-				background-color: #d9edf7;
-			}
-
-			.table tbody tr.failure td{
-				background-color: #f2dede;;
-			}
+      @import "../resources/css/default.css";
+      .inProgress {
+      background-color: #d9edf7;
+      }
+      table tbody tr.failure td{
+      background-color: #f2cece;;
+      }
       #testListContainer {
       overflow: auto;
 
@@ -30,96 +28,85 @@ The original code is under 3 clauses BSD which is compatible with GPLv2 of build
     </style>
   </head>
   <body style="height: 100%;">
-    <div class="navbar navbar-inverse">
-      <div class="navbar-inner">
-        <div class="container-fluid">
-          <a class="brand" href="#all"><img src="../resources/img/favicon.ico"/> Buildbot</a>
-	  <div class="nav-collapse pull-right">
-	    <input type="checkbox" id="audio" name="audio"/>
-	    <label for="audio">sounds?</label>
-	  </div>
-          <div class="nav-collapse">
-            <ul class="nav" id="navlist">
-	      <li class="active"><a href=""> Buildbot UI Test Suite </a></li>
-	      <li><a href="../../../../">Home</a></li>
+    <nav class="fullwidth top-bar home-border">
+          <ul>
+            <li class="name"><h1><a class="brand" href="#"><img src="../resources/img/favicon.ico"/> Buildbot</a></h1></li>
+            <li class="toggle-topbar"><a href="#"></a></li>
+          </ul>
+          <section>
+            <ul class="left" id="navlist">
+              <li class="active"><a href=""> Buildbot UI Test Suite </a></li>
+              <li><a href="../../../../">Home</a></li>
             </ul>
-          </div><!--/.nav-collapse -->
-	</div>
-      </div>
+          </section>
+        </nav>
+    <div class="row fullwidth">
+      <div class="progress success" id="progressOuter" onclick="doh._jumpToSuite(arguments[0]);"></div>
     </div>
-    <div class="container-fluid">
-      <div class="row-fluid">
-	<div class="progress" id="progressOuter" onclick="doh._jumpToSuite(arguments[0]);"></div>
+      <div class="row fullwidth">
+        <div class="three columns">
+          <span id="toggleButtons" onclick="doh.togglePaused();">
+            <button class="button tiny radius" id="play"><i class="icon-play"></i></button>
+            <button class="button tiny radius" id="pause" style="display: none;"><i class="icon-pause"></i></button>
+          </span>
+          <span id="runningStatus">
+            <span id="pausedMsg">Stopped</span>
+            <span id="playingMsg" style="display: none;">Tests Running</span>
+          </span>
+        </div>
+        <div class="nine columns">
+          <dl class="tabs" id="navtabs">
+            <dd><a onclick="doh._switchtab(0);">Test Page</a></dd>
+            <dd class="active"><a onclick="doh._switchtab(1);">Log</a></dd>
+              <dd><a onclick="doh._switchtab(2);">Performance Tests Results</a></dd>
+          </dl>
+        </div>
       </div>
-      <div class="row-fluid">
-	<div class="span3">
-	  <span id="toggleButtons" onclick="doh.togglePaused();">
-	    <button class="btn" id="play"><i class="icon-play"></i></button>
-	    <button class="btn" id="pause" style="display: none;"><i class="icon-pause"></i></button>
-	  </span>
-	  <span id="runningStatus">
-	    <span id="pausedMsg">Stopped</span>
-	    <span id="playingMsg" style="display: none;">Tests Running</span>
-	  </span>
-	</div>
-	<div class="span9">
-	  <div class="navbar">
-	    <div class="navbar-inner">
-              <ul class="nav" id="navtabs">
-	      <li><a onclick="doh._switchtab(0);">Test Page</a></li>
-	      <li class="active"><a onclick="doh._switchtab(1);">Log</a></li>
-	      <li><a onclick="doh._switchtab(2);">Performance Tests Results</a></li>
-	      </ul>
-	    </div>
-	  </div>
-	</div>
-      </div>
-      <div class="row-fluid">
-	<div class="span3"  id="testListContainer">
-	    <table class="table table-bordered"
-		   id="testList" onclick="doh._jumpToLog(arguments[0]);">
-	      <thead>
-		<tr id="testListHeader">
-		  <th>&nbsp;</th>
-		  <th width="20">
-		    <input type="checkbox" checked='1' 
-			   onclick="doh.toggleRunAll();"/>
-		  </th>
-		  <th width="*" style="text-align: left;">test</th>
-		  <th width="50">time</th>
-		</tr>
-	      </thead>
-	      <tbody valign="top">
-		<tr id="groupTemplate" style="display: none;">
-		  <td style="font-family: Arial; width: 15px;">&#9658;</td>
-		  <td>
-		    <input type="checkbox" checked='1'/>
-		  </td>
-		  <td>group name</td>
-		  <td>10ms</td>
-		</tr>
-		<tr id="testTemplate" style="display: none;">
-		  <td>&nbsp;</td>
-		  <td>&nbsp;</td>
-		  <td style="padding-left: 20px;">test name</td>
-		  <td>10ms</td>
-		</tr>
-	      </tbody>
-	    </table>
-	</div>
-	<div class="span9" style="height:800px">
-	  <div style="position: relative; width: 100%; height: 100%; top: 0px; left: 0px;">
-	    <div class="tabBody"
-		 style="z-index: 1;">
-	      <pre id="logBody"></pre>
-	      <div id="perfTestsBody" style="background-color: white;"></div>
-	    </div>
-	    <iframe width="1024" height="768" id="testBody" class="tabBody"
-		    style="z-index: -1;display:none"></iframe>
-	  </div>
-	</div>
+      <div class="row fullwidth">
+        <div class="three columns"  id="testListContainer">
+            <table class="twelve table"
+                   id="testList" onclick="doh._jumpToLog(arguments[0]);">
+              <thead>
+                <tr id="testListHeader">
+                  <th>&nbsp;</th>
+                  <th width="20">
+                    <input type="checkbox" checked='1' 
+                           onclick="doh.toggleRunAll();"/>
+                  </th>
+                  <th width="*" style="text-align: left;">Test</th>
+                  <th width="50">Time</th>
+                </tr>
+              </thead>
+              <tbody valign="top">
+                <tr id="groupTemplate" style="display: none;">
+                  <td style="font-family: Arial; width: 15px;">&#9658;</td>
+                  <td>
+                    <input type="checkbox" checked='1'/>
+                  </td>
+                  <td>Group Name</td>
+                  <td>10ms</td>
+                </tr>
+                <tr id="testTemplate" style="display: none;">
+                  <td>&nbsp;</td>
+                  <td>&nbsp;</td>
+                  <td style="padding-left: 20px;">test name</td>
+                  <td>10ms</td>
+                </tr>
+              </tbody>
+            </table>
+        </div>
+        <div class="nine columns" style="height:800px">
+          <div style="position: relative; width: 100%; height: 100%; top: 0px; left: 0px;">
+            <div class="tabBody"
+                 style="z-index: 1;">
+              <pre id="logBody"></pre>
+              <div id="perfTestsBody" style="background-color: white;"></div>
+            </div>
+            <iframe width="1024" height="768" id="testBody" class="tabBody"
+                    style="z-index: -1;display:none"></iframe>
+          </div>
+        </div>
       </div>
       <span id="hiddenAudio"></span>
-    </div>
   </body>
 </html>

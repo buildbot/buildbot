@@ -1,15 +1,14 @@
 -#lint-input {builder:{pendingBuilds:1},state:"building"}
-.container-fluid
-  %ul.breadcrumb
+.row.fullwidth
+  %ul.breadcrumbs
     %li
       %a{href:"#/builders"}Builders
-    %span.divider #{"/"}
     %li
-      %a.active{href:"#/builders/"+this.builderName} #{this.builderName}
-    .pull-right
+      %a.current{href:"#/builders/"+this.builderName} #{this.builderName}
+    .right
       :if builder.pendingBuilds>0
         .span #{builder.pendingBuilds} pending build(s)
         %span.divider #{"|"}
       %b Status:
-      .label.pull-right{class:builder.state_class} #{builder.state}
+      .label.right{class:builder.state_class} #{builder.state}
   .buildersgrid{data-dojo-attach-point:"buildersgrid_node"}

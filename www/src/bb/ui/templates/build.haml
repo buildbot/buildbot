@@ -4,51 +4,51 @@
 -# btn_class:function(){},
 -# isFinished:function(){}
 -# }
-.container-fluid
-  %ul.breadcrumb
-    %li
-      %a{href:"#/builders"}Builders
-    %span.divider #{"/"}
-    %li
-      %a{href:"#/builders/"+b.builderName} #{ b.builderName }
-    %span.divider #{"/"}
-    %li.active
-      %a{href:"#/builders/"+b.builderName+"/"+number} Build ##{number}
-    .btn-group.pull-right
-      .btn
-        %i.icon-question-sign{alt:"reason"}>
-        = b.reason
-      .btn
-        %i.icon-hdd{alt:"buildslave"}>
-        %a{href:"#/slaves/"+b.slave}= b.slave
-      :if isFinished()
-        .btn{class:btn_class(b.results)} #{b.text.join(" ")}
-
-  .row-fluid{style:"margin-bottom:15px;margin-top:-15px"}
-    .pull-right
-      %Strong Actions:
-      :if isFinished()
-        %button.btn.btn-info{data-dojo-attach-point:"onclick:doRebuild"}> Promote
-        %button.btn.btn-info{data-dojo-attach-point:"onclick:doRebuild"} Rebuild
-  .row-fluid
-    .span5
+%div
+    .row.fullwidth
+      .twelve.columns
+          %ul.breadcrumbs
+            %li
+              %a{href:"#/builders"}Builders
+            %li
+              %a{href:"#/builders/"+b.builderName} #{ b.builderName }
+            %li.current
+              %a{href:"#/builders/"+b.builderName+"/"+number} Build ##{number}
+            .button-group.right
+              .button.small
+                %i.icon-question-sign{alt:"reason"}>
+                = b.reason
+              %a.button.small{href:"#/slaves/"+b.slave}
+                %i.icon-hdd{alt:"buildslave"}>
+                = b.slave
+              :if isFinished()
+                .button.small{class:btn_class(b.results)} #{b.text.join(" ")}
+  .row.fullwidth{style:"margin-bottom:15px;margin-top:-10px"}
+      .twelve.columns
+        .right
+          %strong Actions:
+          :if isFinished()
+            .button.small{data-dojo-attach-point:"onclick:doRebuild"}> Promote
+            .button.small{data-dojo-attach-point:"onclick:doRebuild"} Rebuild
+  .row.fullwidth
+    .five.columns
       :if !isFinished()
-        .well
+        .panel
           %h3 Build In Progress:
           :if b.when_time
             %p ETA: #{ b.when_time } [ #{ when } ]
           %li.form-inline> #{b.currentStep.name}, #{b.currentStep.text.join(" ")}
              &nbsp;
-             .btn.btn-inverse.btn-mini.pull-left{data-dojo-attach-point:"stop_build_node"} Stop Build
-      .well
+             .button.small.left.alert{data-dojo-attach-point:"stop_build_node"} Stop Build
+      .panel
           %h3 Steps and Logfiles:
           %ol
             :each step in b.steps
               %li
-                .breadcrumb.step-sts{data-dojo-attach-event:"onclick:toggleLogs"}
+                .breadcrumbs.step-sts{data-dojo-attach-event:"onclick:toggleLogs"}
                   #{step.name}
                   :if step.isFinished
-                    .btn.pull-right{class:btn_class(step.results[0])} #{step.text.join(" ")}
+                    .button.small.right{class:btn_class(step.results[0])} #{step.text.join(" ")}
                 %ol{style:stepLogsDisplayStyle(step)}
                   :if step.logs.length === 0
                     %div= "- no logs -"
@@ -58,7 +58,6 @@
                   :each i, urls in step.urls
                     %li
                       %a{href:urls[1]} #{urls[0]}
-    .span1
-    .span6.well
+    .six.columns.panel
       %h3 build properties
       .div{data-dojo-attach-point:"propertiesgrid_node"}

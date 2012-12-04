@@ -1,13 +1,15 @@
-.container-fluid
+.row.fullwidth
   :css
     .mainchangegrid .field-id {
     width: 30px;
     }
-  %ul.breadcrumb
-    %li
-      %a{href:"#/changes"}Changes
-  .row-fluid
-    .span12
-      %h2 Last changes coming into the system
-  .row-fluid
-      .mainchangegrid{data-dojo-attach-point:"maingrid_node"}
+  .twelve.columns
+    %ul.breadcrumbs
+      %li
+        %a{href:"#/changes"}Changes
+    .row.fullwidth
+      .six.columns
+        %h4 Last changes coming into the system
+    .row.fullwidth
+      .twelve.columns
+        .mainchangegrid{data-dojo-attach-point:"maingrid_node"}

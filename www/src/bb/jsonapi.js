@@ -20,7 +20,7 @@
 define(["dojo/_base/declare", "dojo/_base/Deferred", "dojo/request/xhr","dojo/json",
         "dojo/_base/lang"],
        function(declare, Deferred, xhr, json, lang){
-           var api_url = dojo.baseUrl + "/../../../../api/";
+           var api_url = dojo.baseUrl + "api/";
            var jsonrpc_curid = 0;
            return {
                createAPIPath: function(a) {
