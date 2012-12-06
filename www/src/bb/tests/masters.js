@@ -28,14 +28,17 @@ define(["dojo/main", "doh/main", "bb/tests/utils"], function(dojo, doh, utils){
             utils.assertDomText(t,api,              "#dgrid_0-row-14 a[href='"+api+"']");
         },
         function stopMaster(t) {
-            var query = "#dgrid_0-row-14 td.field-active";
-            return utils.when(
-                utils.playTestScenarioWaitForDomChange(
-                    "buildbot.test.scenarios.base.BaseScenario.stopMaster",
-                    query),
-                function() {
-                    utils.assertDomText(t,"No", query);
-                });
+            if(window.WebSocket) { /* dont test if browser has no WebSocket support
+                                      this is the case of webkit/ghost :-( */
+                var query = "#dgrid_0-row-14 td.field-active";
+                return utils.when(
+                    utils.playTestScenarioWaitForDomChange(
+                        "buildbot.test.scenarios.base.BaseScenario.stopMaster",
+                        query),
+                    function() {
+                        utils.assertDomText(t,"No", query);
+                    });
+            }
         }
     ]);
 });

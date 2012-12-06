@@ -502,6 +502,23 @@ changes
             earlier than the time at which it is merged into a repository
             monitored by Buildbot.
 
+    .. py:method:: getChanges(opts={})
+
+        :param opts: data query options
+        :returns: list of dictionaries via Deferred
+
+        Get a list of the changes, represented as
+        dictionaries; changes are sorted, and paged using generic data query options
+
+    .. py:method:: getChangesCount(opts={})
+
+        :param opts: data query options
+        :returns: list of dictionaries via Deferred
+
+        Get the number changes, that the query option would return if no
+        paging option where set
+
+
     .. py:method:: getLatestChangeid()
 
         :returns: changeid via Deferred
@@ -954,11 +971,12 @@ masters
 
         Get the indicated master.
 
-    .. py:method:: getMasters()
+    .. py:method:: getMasters(opts={})
 
         :returns: list of Master dicts via Deferred
 
-        Get all masters (in unspecified order).
+        Get a list of the masters, represented as dictionaries; masters are sorted
+        and paged using generic data query options
 
 
 builders

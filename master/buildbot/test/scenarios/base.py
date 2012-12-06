@@ -42,7 +42,7 @@ class BaseScenario(testhooks.TestHooksScenario):
         return self.master.data.updates.masterStopped(name=u'master', masterid=14)
     @defer.inlineCallbacks
     def addChanges(self):
-        for rev in xrange(1,2000):
+        for rev in xrange(1,200):
             yield self.master.data.updates.addChange(
                 author=u'warner', branch=u'warnerdb',
                 category=u'devel', comments=u'fix whitespace',

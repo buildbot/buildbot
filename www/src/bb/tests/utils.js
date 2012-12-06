@@ -33,8 +33,12 @@ define(["dojo/_base/declare", "bb/jsonapi", "doh/main"],function(declare,jsonapi
                 d.callback(true);
             }
         }
-        alltags.connect("onerror", function(){
-            ctx.errors.push(this.src+" is broken link");
+        alltags.connect("onerror", function(e){
+            console.log("unable to load "+e.target.src);
+            if (e.target.src.search(".ico.reload")<0) {
+                /* ghost does not like .ico file ? */
+                ctx.errors.push(this.src+" is broken link");
+            }
             didLoad();
         });
         alltags.connect("onload", didLoad);

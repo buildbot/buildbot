@@ -53,7 +53,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getMasters(self):
         @self.assertArgSpecMatches(self.db.masters.getMasters)
-        def getMasters(self):
+        def getMasters(self, opts={}):
             pass
 
     @defer.inlineCallbacks
@@ -152,23 +152,35 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(masterdict, None)
 
     @defer.inlineCallbacks
-    def test_getMasters(self):
+    def dogetMasters(self, opts=dict(sort=[('masterid',0)]), expectedids=[0,1]):
         yield self.insertTestData([
             fakedb.Master(id=7, name='some:master',
                         active=0, last_active=SOMETIME),
             fakedb.Master(id=8, name='other:master',
                         active=1, last_active=OTHERTIME),
         ])
-        masterlist = yield self.db.masters.getMasters()
+        masterlist = yield self.db.masters.getMasters(opts)
         for masterdict in masterlist:
             types.verifyDbDict(self, 'masterdict', masterdict)
-        self.assertEqual(sorted(masterlist), sorted([
+        expected_all = [
             dict(id=7, name='some:master',
                         active=0, last_active=SOMETIME_DT),
             dict(id=8, name='other:master',
-                        active=1, last_active=OTHERTIME_DT),
-        ]))
+                        active=1, last_active=OTHERTIME_DT) ]
+        expected = [ expected_all[i] for i in expectedids]
+        self.assertEqual(masterlist, expected)
 
+    def test_getMasters(self):
+        return self.dogetMasters()
+
+    def test_getMasters_sort(self):
+        return self.dogetMasters(opts=dict(sort=[('masterid',1)]), expectedids=[1,0])
+
+    def test_getMasters_paging(self):
+        return self.dogetMasters(opts=dict(sort=[('masterid',1)],start=1), expectedids=[0])
+
+    def test_getMasters_paging2(self):
+        return self.dogetMasters(opts=dict(sort=[('masterid',1)],count=1), expectedids=[1])
 
 class RealTests(Tests):
 

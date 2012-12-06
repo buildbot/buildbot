@@ -23,6 +23,7 @@ import copy
 import random
 import base64
 import hashlib
+from operator import itemgetter
 from buildbot.util import json, epoch2datetime, datetime2epoch
 from twisted.python import failure
 from twisted.internet import defer, reactor
@@ -394,12 +395,24 @@ class BuilderMaster(Row):
 # Fake DB Components
 
 class FakeDBComponent(object):
+    data2db = { }
 
     def __init__(self, db, testcase):
         self.db = db
         self.t = testcase
         self.setUp()
 
+    def applyDataOptions(self, l, opts):
+        if 'sort' in opts:
+            for k,r in reversed(opts['sort']):
+                if k in self.data2db:
+                    k = self.data2db[k]
+                l.sort(key=itemgetter(k), reverse = r)
+        if 'start' in opts and opts['start'] != 0:
+            l = l[int(opts['start']):]
+        if 'count' in opts and opts['count'] != 0:
+            l = l[:int(opts['count'])]
+        return l
 
 class FakeChangesComponent(FakeDBComponent):
 
@@ -485,8 +498,13 @@ class FakeChangesComponent(FakeDBComponent):
     def getRecentChanges(self, count):
         ids = sorted(self.changes.keys())
         chdicts = [ self._chdict(self.changes[id]) for id in ids[-count:] ]
-        random.shuffle(chdicts) # since order is not documented
         return defer.succeed(chdicts)
+
+    def getChanges(self, opts={}):
+        chdicts = [ self._chdict(v) for v in self.changes.values() ]
+        return defer.succeed(self.applyDataOptions(chdicts,opts))
+    def getChangesCount(self, opts={}):
+        return len(self.changes)
 
     def _chdict(self, row):
         chdict = row.copy()
@@ -1311,6 +1329,7 @@ class FakeUsersComponent(FakeDBComponent):
 
 class FakeMastersComponent(FakeDBComponent):
 
+    data2db = { "masterid":"id", "link":"id"}
     def setUp(self):
         self.masters = {}
 
@@ -1351,8 +1370,8 @@ class FakeMastersComponent(FakeDBComponent):
             return defer.succeed(self.masters[masterid])
         return defer.succeed(None)
 
-    def getMasters(self):
-        return defer.succeed(self.masters.values())
+    def getMasters(self, opts = {}):
+        return defer.succeed(self.applyDataOptions(self.masters.values(), opts))
 
     # test helpers
 

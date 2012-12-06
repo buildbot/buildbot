@@ -158,6 +158,38 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         d.addCallback(get_changes)
         return d
 
+    def getChanges(self, opts={}):
+        def thd(conn):
+            # get the changeids from the 'changes' table
+            changes_tbl = self.db.model.changes
+            q = sa.select([changes_tbl.c.changeid],
+                          **self.dataOptionsToSelectOptions(opts))
+            rp = conn.execute(q)
+            changeids = [ row.changeid for row in rp ]
+            rp.close()
+            return list(changeids)
+        d = self.db.pool.do(thd)
+
+        # then turn those into changes, using the cache
+        def get_changes(changeids):
+            return defer.gatherResults([ self.getChange(changeid)
+                                         for changeid in changeids ])
+        d.addCallback(get_changes)
+        return d
+
+    def getChangesCount(self, opts):
+        def thd(conn):
+            changes_tbl = self.db.model.changes
+            q = sa.select([changes_tbl.c.changeid]).count()
+            rp = conn.execute(q)
+            r = 0
+            for row in rp:
+                r = row[0]
+            rp.close()
+            return int(r)
+        d = self.db.pool.do(thd)
+        return d
+
     def getLatestChangeid(self):
         def thd(conn):
             changes_tbl = self.db.model.changes

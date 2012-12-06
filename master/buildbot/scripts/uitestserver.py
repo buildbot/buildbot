@@ -15,23 +15,14 @@
 
 
 import webbrowser,os
-from buildbot.scripts import base
 from twisted.internet import reactor, defer
 from buildbot.test.fake import fakemaster
 
 @defer.inlineCallbacks
 def _uitestserver(config):
-    if not base.isBuildmasterDir(config['basedir']):
-        print "not a buildmaster directory"
-        reactor.stop()
-        raise defer.returnValue(1)
-    public_html = os.path.join(config['basedir'],"public_html")
-    if not os.path.isdir(public_html):
-        print "buildmaster directory, must contain configured public_html directory"
-        reactor.stop()
-        raise defer.returnValue(1)
-    master = yield fakemaster.make_master_for_uitest(int(config['port']), public_html)
-    webbrowser.open(master.config.www['url']+"app/base/bb/tests/runner.html")
+    master = yield fakemaster.make_master_for_uitest(int(config['port']))
+    if "DISPLAY" in os.environ:
+        webbrowser.open(master.config.www['url']+"app/base/bb/tests/runner.html")
 
 def uitestserver(config):
     def async():

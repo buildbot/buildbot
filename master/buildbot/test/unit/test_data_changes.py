@@ -91,11 +91,35 @@ class Changes(endpoint.EndpointMixin, unittest.TestCase):
         def check(changes):
             self.assertEqual(len(changes), 1)
             types.verifyData(self, 'change', {}, changes[0])
+            self.assertEqual(changes[0]['changeid'], 13)
+        return d
+    def test_get_paging(self):
+        d = self.callGet(dict(count='1',start=1), dict())
+        @d.addCallback
+        def check(changes):
+            self.assertEqual(len(changes), 1)
+            types.verifyData(self, 'change', {}, changes[0])
+            self.assertEqual(changes[0]['changeid'], 14)
         return d
 
     def test_get_invalid_count(self):
         d = self.callGet(dict(count='ten'), dict())
         self.assertFailure(d, exceptions.InvalidOptionException)
+
+    def test_get_invalid_count2(self):
+        d = self.callGet(dict(count=50000), dict())
+        self.assertFailure(d, exceptions.InvalidOptionException)
+
+    def test_get_sorted(self):
+        # invert the default order
+        d = self.callGet(dict(sort=[('changeid',1)]), dict())
+        @d.addCallback
+        def check(changes):
+            types.verifyData(self, 'change', {}, changes[1])
+            self.assertEqual(changes[1]['changeid'], 13)
+            types.verifyData(self, 'change', {}, changes[0])
+            self.assertEqual(changes[0]['changeid'], 14)
+        return d
 
     def test_startConsuming(self):
         self.callStartConsuming({}, {},

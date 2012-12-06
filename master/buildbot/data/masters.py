@@ -47,15 +47,15 @@ class MasterEndpoint(base.Endpoint):
         yield defer.returnValue(_db2data(m) if m else None)
 
 
-class MastersEndpoint(base.Endpoint):
+class MastersEndpoint(base.GetParamsCheckMixin, base.Endpoint):
 
     pathPatterns = [ ( 'master', ),
                      ( 'builder', 'i:builderid', 'master', ) ]
     rootLinkName = 'masters'
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
-        masterlist = yield self.master.db.masters.getMasters()
+    def safeGet(self, options, kwargs):
+        masterlist = yield self.master.db.masters.getMasters(options)
         # filter by builder if requested
         if 'builderid' in kwargs:
             builder = yield self.master.db.builders.getBuilder(

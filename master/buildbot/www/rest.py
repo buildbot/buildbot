@@ -73,8 +73,8 @@ class V2RootResource(resource.Resource):
 
     knownArgs = set(['as_text', 'filter', 'compact', 'callback'])
     def decodeUrlEncoding(self, request):
-        # calculate the request options
-        reqOptions = {"start":0,"count":100}
+        # calculate the request options. paging defaults
+        reqOptions = {"start":0,"count":50}
         for option in set(request.args) - self.knownArgs:
             reqOptions[option] = request.args[option][0]
         _range = request.getHeader('X-Range') or request.getHeader('Range') or ""
@@ -199,7 +199,6 @@ class V2RootResource(resource.Resource):
             if data is None and request.method=="GET":
                 write_error("no data")
                 return
-
             # format the output based on request parameters
             as_text = self._booleanArg(request, 'as_text', False)
             filter = self._booleanArg(request, 'filter', as_text)

@@ -44,10 +44,10 @@ define(
             reconnect:function() {
                 var ws_url = dojo.config.bb.wsUrl;
                 var self = this;
-                if (WebSocket) {
+                if (window.WebSocket) {
                     /* we dont have a longpoll server side implementation,
                        so no need to use dojox.socket */
-                    self.socket = new WebSocket(ws_url);
+                    self.socket = new window.WebSocket(ws_url);
                     on(self.socket,"open", function(event){
                         self.reconnect_timeout = 100;
                     });

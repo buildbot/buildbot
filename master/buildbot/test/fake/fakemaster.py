@@ -137,7 +137,7 @@ def make_master(wantMq=False, wantDb=False, wantData=False,
 
 # this config has real mq, real data, real www, but fakedb, and no build engine for ui test
 @defer.inlineCallbacks
-def make_master_for_uitest(port, public_html):
+def make_master_for_uitest(port):
     tcp = reactor.listenTCP(port, ServerFactory())
     port = tcp._realPortNumber
     yield tcp.stopListening()
@@ -151,7 +151,7 @@ def make_master_for_uitest(port, public_html):
         submodules = dataconnector.DataConnector.submodules + ['buildbot.data.testhooks']
 
     master.data = testHookedDataConnector(master)
-    master.config.www = dict(url=url, port=port, public_html=public_html)
+    master.config.www = dict(url=url, port=port)
     master.www = service.WWWService(master)
     master.data.updates.playTestScenario("buildbot.test.scenarios.base.BaseScenario.populateBaseDb")
     yield master.www.startService()

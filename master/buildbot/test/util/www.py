@@ -146,19 +146,6 @@ except ImportError:
     if os.environ.get('REQUIRE_GHOST'):
         raise
 
-if has_ghost:
-    PUBLIC_HTML_PATH = os.environ.get('PUBLIC_HTML_PATH')
-    if not PUBLIC_HTML_PATH:
-        has_ghost=False
-        no_ghost_message = ("Need PUBLIC_HTML_PATH environment variable which points on 'updatejs'"
-                            " installed directory")
-    PUBLIC_HTML_PATH = os.path.abspath(PUBLIC_HTML_PATH)
-    if (not os.path.isdir(PUBLIC_HTML_PATH) or
-        not os.path.isfile(os.path.join(PUBLIC_HTML_PATH,"static","js.built","dojo","dojo.js"))):
-        has_ghost=False
-        no_ghost_message = ("Needs PUBLIC_HTML_PATH environment variable which points on 'updatejs'"
-                            " installed directory, but got" + PUBLIC_HTML_PATH)
-
 if not has_ghost and os.environ.get('REQUIRE_GHOST'):
             raise Exception(no_ghost_message)
 
@@ -174,7 +161,7 @@ class WwwGhostTestMixin(object):
         twisted.web.http._logDateTimeUsers = 1
         twisted.internet.base.DelayedCall.debug = True
         ## we cannot use self.patch, as _logDateTimeUsers is not present in all versions of twisted
-        self.master = yield fakemaster.make_master_for_uitest(0, PUBLIC_HTML_PATH)
+        self.master = yield fakemaster.make_master_for_uitest(0)
         self.url = self.master.config.www["url"]
         log.msg("listening on "+self.url)
         self.ghost = Ghost()
@@ -194,7 +181,7 @@ class WwwGhostTestMixin(object):
     @defer.inlineCallbacks
     def doDohPageLoadRunnerTests(self, doh_tests="../../dojo/tests/colors"):
         self.ghost.wait_timeout = 200
-        yield self.ghost.open(urljoin(self.url,"static/js.built/lib/tests/runner.html#"+doh_tests))
+        yield self.ghost.open(urljoin(self.url,"app/base/bb/tests/runner.html#"+doh_tests))
         result_selector = "#testListContainer table tfoot tr.inProgress"
         yield self.ghost.wait_for_selector(result_selector)
         result, _ = self.ghost.evaluate("dojo.map(dojo.query('"+result_selector+" .failure'),function(a){return a.textContent;});")

@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 from buildbot.data import exceptions
-
+from twisted.internet import defer
 class ResourceType(object):
     type = None
     endpoints = []
@@ -54,7 +54,30 @@ class Endpoint(object):
     def startConsuming(self, callback, options, kwargs):
         raise NotImplementedError
 
+class GetParamsCheckMixin(object):
+    """ a mixin for making generic paramater checks for the get data api"""
+    maximumCount = 0
+    def get(self, options, kwargs):
+        """generic tests for get options
+           currently only test the count is not too large to avoid dos
+        """
+        if "count" in options:
+            try:
+                options["count"] = int(options["count"])
+            except:
+                return defer.fail(exceptions.InvalidOptionException(
+                        "count need to be integer %s"%(
+                            options["count"])))
+            if self.maximumCount > 0 and self.maximumCount < options["count"]:
+                return defer.fail(exceptions.InvalidOptionException(
+                        "to many element requested: %d > %d"%(
+                            options["count"], self.maximumCount)))
+        return self.safeGet(options, kwargs)
+    def safeGet(self, options, kwargs):
+        raise NotImplementedError
+
 class ControlParamsCheckMixin(object):
+    """ a mixin for making generic paramater checks for the control data api"""
     action_specs = {}
     def control(self, action, args, kwargs):
         if not action in self.action_specs:
