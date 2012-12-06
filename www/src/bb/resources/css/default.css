@@ -1,3 +1,16 @@
+@import "../../../dojo/resources/dojo.css";
+@import "foundation.css";
+@import "font-awesome.css";
+.button.with-icon i { top: 5px; padding: 0 0px 0 0; font-size: 16px; display: inline; line-height: inherit; }
+.fullwidth { width:100%}
+div.alert-box{font-weight: normal;}
+div.alert-box.alert { color: #B94A48; background-color: #F2DEDE; border-color: #EED3D7;text-shadow: none}
+.button.warning { background-color: #f89406; border: 1px solid #7f0a0c; }
+.button.warning:hover { background-color: #970b0e; }
+.button.warning:focus { -webkit-box-shadow: 0 0 4px #f89406, 0 1px 0 rgba(255, 255, 255, 0.5) inset; -moz-box-shadow: 0 0 4px #f89406, 0 1px 0 rgba(255, 255, 255, 0.5) inset; box-shadow: 0 0 4px #f89406, 0 1px 0 rgba(255, 255, 255, 0.5) inset; }
+
+[class*="dgrid-column"] + [class*="dgrid-column"]:last-child { float: none; }
+
 .navbar .nav > li {
     padding: 0;
 }
@@ -19,26 +32,12 @@
     margin-top:-10px;
 }
 
-.breadcrumb .btn:active,
-{
-  -webkit-box-shadow: none;
-     -moz-box-shadow: none;
-          box-shadow: none;
-}
 .step-sts {
     font-size: 13px;
     padding: 5px;
     padding-right:0px;
     margin:0px;
     margin-top:2px;
-}
-.step-sts .pull-right {
-    font-size: 11px;
-    margin-top: -5px;
-    height:20px;
-    padding:4px;
-    border-top-left-radius:0px;
-    border-bottom-left-radius:0px;
 }
 .dgrid-row-odd
 {

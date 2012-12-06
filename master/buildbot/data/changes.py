@@ -16,7 +16,7 @@
 from twisted.internet import defer
 from twisted.python import log
 import datetime
-from buildbot.data import base, exceptions
+from buildbot.data import base
 from buildbot.process import metrics
 from buildbot.process.users import users
 from buildbot.util import datetime2epoch, epoch2datetime
@@ -31,23 +31,16 @@ class ChangeEndpoint(base.Endpoint):
         return d
 
 
-class ChangesEndpoint(base.Endpoint):
+class ChangesEndpoint(base.GetParamsCheckMixin,base.Endpoint,):
 
     pathPattern = ( 'change', )
-    rootLinkName = 'changes'
-
-    def get(self, options, kwargs):
-        try:
-            count = min(int(options.get('count', '50')), 50)
-        except:
-            return defer.fail(
-                    exceptions.InvalidOptionException('invalid count option'))
-        d = self.master.db.changes.getRecentChanges(count)
-        @d.addCallback
-        def sort(changes):
-            changes.sort(key=lambda chdict : chdict['changeid'])
-            return map(_fixChange, changes)
-        return d
+    rootLinkName = 'change'
+    maximumCount = 50
+    @defer.inlineCallbacks
+    def safeGet(self, options, kwargs):
+        options['total'] = yield self.master.db.changes.getChangesCount(options)
+        changes = yield self.master.db.changes.getChanges(options)
+        defer.returnValue(map(_fixChange, changes))
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,

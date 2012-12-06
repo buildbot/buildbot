@@ -18,22 +18,23 @@ define(["dojo/_base/declare", "bb/ui/base",
        ], function(declare, Base, template) {
     "use strict";
     return declare([Base], {
-	templateFunc : template,
-	postCreate: function(){
-	    this.createGrid({
-		apiPath : "change",
-		idProperty: "changeid",
-		contentMaxHeight:700,
-		columns: {
-		    "changeid": { label:"#",style:"width:30px"},
-		    "author": { label:"Author",type:"user"},
-		    "branch": { label:"Branch",style:"width:100px"},
-		    "repository": { label:"Repository", type:"url"},
-		    "revision": { label:"Revision", type:"revision"},
-		    "when_timestamp": { label:"Date",type:"date"},
-		    "files": { label:"Files",type:"filelist"}
-		    }
-	    }, this.maingrid_node);
-	}
+        templateFunc : template,
+        postCreate: function(){
+            this.createGrid({
+                apiPath : "change",
+                idProperty: "changeid",
+                contentMaxHeight:700,
+                columns: {
+                    "changeid": { label:"#",style:"width:30px"},
+                    "author": { label:"Author",type:"user"},
+                    "branch": { label:"Branch",style:"width:100px"},
+                    "repository": { label:"Repository", type:"url"},
+                    "revision": { label:"Revision", type:"revision"},
+                    "when_timestamp": { label:"Date",type:"date"},
+                    "files": { label:"Files",type:"filelist"}
+                    },
+                sort:[{attribute:"changeid",descending:1}]
+            }, this.maingrid_node);
+        }
     });
 });

@@ -15,12 +15,12 @@
 
 define(["dojo/main", "doh/main", "bb/tests/utils"], function(dojo, doh, utils){
     utils.registerBBTests(doh, "/", "home",[
-	function resetDb(t) {
-	    var d = new doh.Deferred();
-	    dojo.when(utils.playTestScenario("buildbot.test.scenarios.base.BaseScenario.populateBaseDb"), function() {
-		d.callback(true);
-	    });
-	    return d;
-	}
+        function resetDb(t) {
+            var d = new doh.Deferred();
+            dojo.when(utils.playTestScenario("buildbot.test.scenarios.base.BaseScenario.populateBaseDb"), function() {
+                d.callback(true);
+            });
+            return d;
+        }
     ]);
 });

@@ -14,78 +14,78 @@
 // Copyright Buildbot Team Members
 
 define(["dojo/_base/declare", "bb/ui/base",
-	"dojo/store/Observable", "dojo/store/Memory",
-	"dojo/_base/array",
+        "dojo/store/Observable", "dojo/store/Memory",
+        "dojo/_base/array",
         "./templates/builder.haml"
 ], function(declare, Base, observable, Memory, array, template) {
     "use strict";
     return declare([Base], {
-	templateFunc:template,
+        templateFunc:template,
         constructor: function(args){
             declare.safeMixin(this,args);
         },
-	loadMoreContext: function(){
-	    this.builderName = this.path_components[1].toString();
-	    return this.api.getApiV1("builders",this.builderName).then(
-		dojo.hitch(this, function(builder) {
-		    this.builder = builder;
-		    window.bb.addHistory("recent_builders", this.builderName);
-		    return this.api.getApiV1("builders",this.builderName,"builds","_all").then(dojo.hitch(this, function(builds) {
-			this.builds = builds;
-		    }));
-	    }),
-		dojo.hitch(this, function(err) { /* error */
-		    if (err.status === 404) {
-			this.showError("builder: "+this.builderName+" not found");
-			return 0;
-		    }
-		}));
-	},
-	postCreate: function(){
-	    var data=[];
-	    for (var bn in this.builds) {
-		if (this.builds.hasOwnProperty(bn)) {
-		    var b = this.builds[bn];
-		    b.number = bn;
-		    array.forEach(b.properties, function(p) {
-			if (p[0] === "owner") { /* I know... We need it in the db ;-)*/
-			    b.owner = p[1];
-			}
-		    });
-		    data.push(b);
-		}
-	    }
-	    var store = observable(new Memory({data:data,idProperty: "number"}));
-	    this.createBaseGrid({
-		store: store,
-		cellNavigation:false,
-		tabableHeader: false,
-		contentMaxHeight:700,
-		columns: {
-		    number: {label:"number",
-			     get: function(o){return o;},
-			     formatter: function(data){
-				 return "<a href='#/builders/"+data.builderName+"/builds/"+data.number+"'>"+data.builderName+"/"+data.number+"</a>";
-			     }
-			    },
-		    reason: "Reason",
-		    slave: "Slave",
-		    owner: "Owner",
-		    started: {label:"Started",
-			      get: function(o){return o.times[0];},
-			      type:"date"},
-		    ended: {label:"Finished",
-			      get: function(o){return o.times[1];},
-			      type:"date"},
-		    text: {label:"results",
-			   get: function(o){return o;},
-			   formatter: function(data){
-			       var results_class = ["btn-success", "btn-warnings", "btn-danger", "btn", "btn-inverse", "btn-info"][data.results];
-			       return "<div style='height:100%;display:block' class='btn "+results_class+"'>"+data.text.join(" ")+"</div>";
-			   }
-			  }
-		}
-	    }, this.buildersgrid_node);
-	}
+        loadMoreContext: function(){
+            this.builderName = this.path_components[1].toString();
+            return this.api.getApiV1("builders",this.builderName).then(
+                dojo.hitch(this, function(builder) {
+                    this.builder = builder;
+                    window.bb.addHistory("recent_builders", this.builderName);
+                    return this.api.getApiV1("builders",this.builderName,"builds","_all").then(dojo.hitch(this, function(builds) {
+                        this.builds = builds;
+                    }));
+            }),
+                dojo.hitch(this, function(err) { /* error */
+                    if (err.status === 404) {
+                        this.showError("builder: "+this.builderName+" not found");
+                        return 0;
+                    }
+                }));
+        },
+        postCreate: function(){
+            var data=[];
+            for (var bn in this.builds) {
+                if (this.builds.hasOwnProperty(bn)) {
+                    var b = this.builds[bn];
+                    b.number = bn;
+                    array.forEach(b.properties, function(p) {
+                        if (p[0] === "owner") { /* I know... We need it in the db ;-)*/
+                            b.owner = p[1];
+                        }
+                    });
+                    data.push(b);
+                }
+            }
+            var store = observable(new Memory({data:data,idProperty: "number"}));
+            this.createBaseGrid({
+                store: store,
+                cellNavigation:false,
+                tabableHeader: false,
+                contentMaxHeight:700,
+                columns: {
+                    number: {label:"number",
+                             get: function(o){return o;},
+                             formatter: function(data){
+                                 return "<a href='#/builders/"+data.builderName+"/builds/"+data.number+"'>"+data.builderName+"/"+data.number+"</a>";
+                             }
+                            },
+                    reason: "Reason",
+                    slave: "Slave",
+                    owner: "Owner",
+                    started: {label:"Started",
+                              get: function(o){return o.times[0];},
+                              type:"date"},
+                    ended: {label:"Finished",
+                              get: function(o){return o.times[1];},
+                              type:"date"},
+                    text: {label:"results",
+                           get: function(o){return o;},
+                           formatter: function(data){
+                               var results_class = ["btn-success", "btn-warnings", "btn-danger", "btn", "btn-inverse", "btn-info"][data.results];
+                               return "<div style='height:100%;display:block' class='btn "+results_class+"'>"+data.text.join(" ")+"</div>";
+                           }
+                          }
+                }
+            }, this.buildersgrid_node);
+        }
     });
 });

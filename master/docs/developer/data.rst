@@ -82,6 +82,17 @@ Within the buildmaster process, the root of the data API is available at `self.m
 
         The options argument can be used to filter lists of resources, or to affect the amount of associated data returned with a single resource.
 
+        Several options are defined, and are available for all getter returning a list of data items:
+          - `sort`: list of tuples: [ ( key, descending ), .. ].
+          - `start`: skip the `start` first results of query
+          - `count`: return only `count` items of query
+          - TBD: `filter`: list of TBD generic filter (would be nice to have some kind of db backed match expression langage)
+
+        The goal of those generic querying options is to be able to access the buildbot data, and make heavy use of the db query performance. Doing the sorting/filtering in
+        buildbot is to be avoided in order to have maximum scalability.
+
+        Those query options are handled by generic functions in the BaseConnector classes (db and fakedb).
+
         The return value is composed of simple Python objects - lists, dicts, strings, numbers, and None, along with :py:class:`~buildbot.data.base.Link` instances giving paths to other resources.
 
     .. py:method:: startConsuming(callback, options, kwargs)

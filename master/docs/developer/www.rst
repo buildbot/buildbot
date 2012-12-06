@@ -82,7 +82,14 @@ Controlling
 Data API control operations are handled by POST requests.
 The request body content type can be either ``application/x-www-form-urlencoded`` or, better, ``application/json``.
 
-TODO: need more details
+If encoded in ``application/x-www-form-urlencoded`` options are retrived in the form request args, and transmitted to
+the control data api, special ``action`` parameter is removed, and transmitted to control data api, in its ``action``
+argument. Response is transmitted json encoded in the same format as GET
+
+If encoded in ``application/json``, JSON-RPC2 encodding is used: ``http://www.jsonrpc.org/specification``, where
+jsonrpc's ``method`` is mapped to ``action``, and jsonrpc's ``params`` is mapped to options.
+This allows to leverage existing client implementation of jsonrpc: ``http://en.wikipedia.org/wiki/JSON-RPC#Implementations``
+
 
 Message API
 -----------
@@ -158,7 +165,7 @@ For the sake of consistency, please try to use bootstrap CSS classes, and avoid 
 Routing
 ~~~~~~~
 
-The router, implemented in :bb:src:`www/src/bb/router.js`, is the component that is responsible for loading the proper content based on the URL fragment.
+The router, implemented in :bb:src:`www/src/bb/router.js`, is the component that is responsible for loading the proper content based on the URL "hash" fragment.
 
 Its input is a routing table -- an array of objects like this:
 
@@ -378,6 +385,40 @@ New www ui is coded fully in client side javascript. Heavy interaction with brow
 difficult to unit test in a strict way. This is why we use a more complex setup to test this part of
 the program.
 
+The JS tests are not using trial as a test suite runner, but rather are using dojo's test runner called
+`doh <http://dojotoolkit.org/reference-guide/1.8/util/doh.html>`_.
+A simple command is made to ease up the run of the js unit tests. just type the following command ::
+
+    buildbot ui-test-server
+
+This will start buildbot master in a special mode, so that the JS unit tests can run. This mode is mocking
+some of the api inside the master, and enabling a new control api ``/api/testshooks``, that can play test scenarios.
+Basically, a test scenario is a python method that calls the internal data api to create data events, or database rows.
+The JS tests can then make sure the corresponding UI is generated in the web browser.
+
+Test scenarios are located in master's test directory: ``master/buildbot/test/scenarios``.
+The js test suite is located in ``www/src/bb/tests``. You can look at existing tests to see example.
+The idea of the test suite is to let doh run the test web page iframe into a hashpath provided by the :ref:`Routing` table, and then verify that
+the UI is behaving as expected. A ``bb/utils`` class is used in order to factorize common stuff. It contains following methods:
+
+    - ``utils.registerBBTests(doh, <hashpath>, <testpath>)``: this function loads the hashpath into the test iframe, and make the router
+      run the test module inside the iframe environment. This function is called in two environment. The "topdog" environment of doh's runner.html test environment,
+      and the iframe environment, that runs the full buildbot website. The actual tests are to be run in the iframe environment. That is why this function only return
+      true if run in iframe environment, so that you can embed it in a ``if (utils.registerBBTests(..)) { doh.register([...]) }``, and have only one test file for topdog,
+      and iframe test declaration.
+
+    - ``utils.assertDomText( expected, cssquery)``: This function run a query, assert that one and only one element is returned, and verify that the innerText attribute
+      is equal to expected parameter.
+
+    - ``utils.playTestScenario(scenariopath)``: This function use ``testhooks`` data control api to run a scenario inside the mocked master. It returns a promise that calls when
+      when scenario's own deferred as called (in the python side), and then the Rest api has answered.
+
+    - ``utils.playTestScenarioWaitForDomChange(scenariopath, cssquery)``: a variant of playTestScenario, that polls for a cssquery to change. It will return via promise, when
+      the dom matched by cssquery has changed its innerHTML. The caller is then supposed to query again and verify that the changes are as expected. There is a 500ms polling timeout
+      in which case the promise will call, triggering the test, which is supposed to fail.
+
+
+
 Ghost.py
 ~~~~~~~~
 
@@ -391,6 +432,12 @@ As buildbot is running inside twisted, and our tests are running with the help o
 This version has the same API as the original documented ghost, but every call is returning deferred.
 
 Note, that as ghost is using webkit, which is based on qt technology, we must use some tricks in order to run the qt main loop inside trial reactor
+
+Also, ghost has no support for websocket, so message passing tests are disabled when websocket is unavailable.
+
+The ghost tests is running the same tests as ``buildbot ui-test-server`` would do on a real browser, but allows them to be run automatically in metabuildbot.
+It is not recomended to run the tests via ghost method for development. Running them inside a real browser is much more productive, because you can use
+the powerfull debug tools provided by them.
 
 Developer setup
 ~~~~~~~~~~~~~~~

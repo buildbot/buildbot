@@ -23,6 +23,7 @@ class MasterDict(dict):
     pass
 
 class MastersConnectorComponent(base.DBConnectorComponent):
+    data2db = { "masterid":"id", "link":"id"}
 
     def findMasterId(self, name, _reactor=reactor):
         tbl=self.db.model.masters
@@ -80,12 +81,12 @@ class MastersConnectorComponent(base.DBConnectorComponent):
             return rv
         return self.db.pool.do(thd)
 
-    def getMasters(self):
+    def getMasters(self, opts={}):
         def thd(conn):
             tbl = self.db.model.masters
             return [
                 self._masterdictFromRow(row)
-                for row in conn.execute(tbl.select()).fetchall() ]
+                for row in conn.execute(tbl.select(**self.dataOptionsToSelectOptions(opts))).fetchall() ]
         return self.db.pool.do(thd)
 
     def _masterdictFromRow(self, row):

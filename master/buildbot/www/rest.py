@@ -73,10 +73,29 @@ class V2RootResource(resource.Resource):
 
     knownArgs = set(['as_text', 'filter', 'compact', 'callback'])
     def decodeUrlEncoding(self, request):
-        # calculate the request options
-        reqOptions = {}
+        # calculate the request options. paging defaults
+        reqOptions = {"start":0,"count":50}
         for option in set(request.args) - self.knownArgs:
             reqOptions[option] = request.args[option][0]
+        _range = request.getHeader('X-Range') or request.getHeader('Range') or ""
+        if _range.startswith("items="):
+            try:
+                start, end = map(int,_range.split("=")[1].split("-"))
+                reqOptions["start"] = start
+                reqOptions["count"] = end-start
+            except:
+                raise ValueError("bad Range/X-Range header")
+
+        if "sort" in reqOptions:
+            def convert(s):
+                s = s.strip()
+                if s.startswith('+'):
+                    return(s[1:],0)
+                if s.startswith('-'):
+                    return(s[1:],1)
+                return (s,0)
+            reqOptions["sort"] = map(convert,reqOptions['sort'].split(','))
+
         return reqOptions
     def decodeJsonRPC2(self, request, reply):
         """ In the case of json encoding, we choose jsonrpc2 as the encoding:
@@ -180,13 +199,23 @@ class V2RootResource(resource.Resource):
             if data is None and request.method=="GET":
                 write_error("no data")
                 return
-
             # format the output based on request parameters
             as_text = self._booleanArg(request, 'as_text', False)
             filter = self._booleanArg(request, 'filter', as_text)
             compact = self._booleanArg(request, 'compact', not as_text)
             callback = request.args.get('callback', [None])[0]
 
+            if type(data) == list:
+                total = reqOptions["count"] = len(data)
+                if "total" in reqOptions:
+                    total = reqOptions["total"]
+                if reqOptions["count"] != total:
+                    request.setResponseCode(206) # avoid proxy caching!
+
+                request.setHeader("Content-Range", 'items %d-%d/%d'%(reqOptions["start"],
+                                                                     reqOptions["start"]+
+                                                                     reqOptions["count"],
+                                                                     total))
             # set up the content type
             if as_text:
                 request.setHeader("content-type", 'text/plain')
