@@ -25,6 +25,9 @@ class FakeBuildStatus(properties.PropertiesMixin, mock.Mock):
     def _get_child_mock(self, **kw):
         return mock.Mock(**kw)
 
+    def getInterestedUsers(self):
+        return []
+
 components.registerAdapter(
         lambda build_status : build_status.properties,
         FakeBuildStatus, interfaces.IProperties)

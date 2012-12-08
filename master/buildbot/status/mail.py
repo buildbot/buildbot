@@ -718,51 +718,13 @@ class MailNotifier(base.StatusReceiverMultiService):
 
     def useLookup(self, build):
         dl = []
-        for u in build.getInterestedUsers():
+        for u in build.getResponsibleUsers() + build.getInterestedUsers():
             d = defer.maybeDeferred(self.lookup.getAddress, u)
             dl.append(d)
         return defer.gatherResults(dl)
 
     def useUsers(self, build):
-        dl = []
-        ss = None
-        ss_list = build.getSourceStamps()
-        for ss in ss_list:
-            for change in ss.changes:
-                d = self.master.db.changes.getChangeUids(change.number)
-                def getContacts(uids):
-                    def uidContactPair(contact, uid):
-                        return (contact, uid)
-                    contacts = []
-                    for uid in uids:
-                        d = users.getUserContact(self.master,
-                                contact_type='email',
-                                uid=uid)
-                        d.addCallback(lambda contact: uidContactPair(contact, uid))
-                        contacts.append(d)
-                    return defer.gatherResults(contacts)
-                d.addCallback(getContacts)
-                def logNoMatch(contacts):
-                    for pair in contacts:
-                        contact, uid = pair
-                        if contact is None:
-                            twlog.msg("Unable to find email for uid: %r" % uid)
-                    return [pair[0] for pair in contacts]
-                d.addCallback(logNoMatch)
-                def addOwners(recipients):
-                    owners = [e for e in build.getInterestedUsers()
-                              if e not in build.getResponsibleUsers()]
-                    recipients.extend(owners)
-                    return recipients
-                d.addCallback(addOwners)
-                dl.append(d)
-        d = defer.gatherResults(dl)
-        @d.addCallback
-        def gatherRecipients(res):
-            recipients = []
-            map(recipients.extend, res)
-            return recipients
-        return d
+        return users.getBuildContacts(self.master, build, ['email'])
 
     def _shouldAttachLog(self, logname):
         if type(self.addLogs) is bool:
