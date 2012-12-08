@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.trial import unittest
+from twisted.python.reflect import namedModule
 from buildbot.steps.source import git
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import config, sourcesteps
@@ -36,6 +37,39 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', '--version'])
             + 0,
             Expect('stat', dict(file='wkdir/.git',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-d'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
+        return self.runStep()
+
+    def test_mode_full_clean_win32path(self):
+        self.setupStep(
+                git.Git(repourl='http://github.com/buildbot/buildbot.git',
+                                    mode='full', method='clean'))
+        self.build.path_module = namedModule('ntpath')
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + 0,
+            Expect('stat', dict(file=r'wkdir\.git',
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',

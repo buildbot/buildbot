@@ -600,7 +600,7 @@ The results are the substituted into the replacement text, along with the revisi
 ::
 
         from buildbot import revlinks
-        c['revlink'] = revlinks.RevlinkMatch([r'git://notmuchmail.org/git/\(.*\)'],
+        c['revlink'] = revlinks.RevlinkMatch([r'git://notmuchmail.org/git/(.*)'],
                                               r'http://git.notmuchmail.org/git/\1/commit/%s')
 
 :class:`buildbot.revlinks.RevlinkMultiplexer` takes a list of revision link callables, and tries each in turn, returning the first successful match.
