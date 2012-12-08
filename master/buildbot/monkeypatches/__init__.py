@@ -50,11 +50,6 @@ def patch_bug5079():
         from buildbot.monkeypatches import bug5079
         bug5079.patch()
 
-def patch_bug6202():
-    # patch this everywhere; it won't hurt
-    from buildbot.monkeypatches import bug6202
-    bug6202.patch()
-
 def patch_sqlalchemy2364():
     # fix for SQLAlchemy bug 2364 
     if sautils.sa_version() < (0,7,5):
@@ -71,7 +66,6 @@ def patch_all(for_tests=False):
     patch_bug4881()
     patch_bug4520()
     patch_bug5079()
-    patch_bug6202()
     patch_sqlalchemy2364()
     patch_sqlalchemy2189()
 
