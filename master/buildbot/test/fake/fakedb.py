@@ -20,7 +20,6 @@ the real connector components.
 """
 
 import copy
-import random
 import base64
 import hashlib
 from operator import itemgetter

@@ -15,7 +15,6 @@
 
 from twisted.internet import defer
 from twisted.python import log
-import datetime
 from buildbot.data import base
 from buildbot.process import metrics
 from buildbot.process.users import users
@@ -71,8 +70,6 @@ class ChangeResourceType(base.ResourceType):
                     author, src)
         else:
             uid = None
-        if isinstance(when_timestamp, datetime.datetime):
-            when_timestamp = datetime2epoch(when_timestamp)
         change = {
             'changeid': None, # not known yet
             'author': author,

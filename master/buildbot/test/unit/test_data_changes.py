@@ -17,7 +17,6 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.data import changes, exceptions
-from buildbot.util import epoch2datetime
 from buildbot.test.util import types, endpoint
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process.users import users
@@ -156,7 +155,7 @@ class ChangeResourceType(unittest.TestCase):
                 files=[u'master/buildbot/__init__.py'],
                 project=u'Buildbot', repository=u'git://warner',
                 revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
-                when_timestamp=epoch2datetime(256738404),
+                when_timestamp=256738404,
                 properties={u'foo': 20})
         expectedRoutingKey = ('change', '500', 'new')
         expectedMessage = {
@@ -200,7 +199,7 @@ class ChangeResourceType(unittest.TestCase):
                 files=[u'master/buildbot/__init__.py'],
                 project=u'Buildbot', repository=u'git://warner',
                 revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
-                when_timestamp=epoch2datetime(256738404),
+                when_timestamp=256738404,
                 properties={u'foo' : 20}, src=u'git', codebase=u'cb')
         expectedRoutingKey = ('change', '500', 'new')
         expectedMessage = {
@@ -250,7 +249,7 @@ class ChangeResourceType(unittest.TestCase):
                 files=[u'master/buildbot/__init__.py'],
                 project=u'Buildbot', repository=u'git://warner',
                 revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
-                when_timestamp=epoch2datetime(256738404),
+                when_timestamp=256738404,
                 properties={u'foo' : 20})
         expectedRoutingKey = ('change', '500', 'new')
         expectedMessage = {
