@@ -1012,7 +1012,7 @@ builders
         :returns: Deferred
 
         Add the given master to the list of masters on which the builder is configured.
-        This will raise a database exception if the master and builder are already associated.
+        This will do nothing if the master and builder are already associated.
 
     .. py:method:: removeBuilderMaster(builderid=None, masterid=None)
 

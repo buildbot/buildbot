@@ -41,9 +41,12 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
 
     def addBuilderMaster(self, builderid=None, masterid=None):
         def thd(conn, no_recurse=False):
-            tbl = self.db.model.builder_masters
-            q = tbl.insert()
-            conn.execute(q, builderid=builderid, masterid=masterid)
+            try:
+                tbl = self.db.model.builder_masters
+                q = tbl.insert()
+                conn.execute(q, builderid=builderid, masterid=masterid)
+            except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                pass
         return self.db.pool.do(thd)
 
     def removeBuilderMaster(self, builderid=None, masterid=None):

@@ -84,6 +84,20 @@ class Tests(interfaces.InterfaceTests):
                 dict(id=7, name='some:builder', masterids=[9, 10]))
 
     @defer.inlineCallbacks
+    def test_addBuilderMaster_already_present(self):
+        yield self.insertTestData([
+            fakedb.Builder(id=7),
+            fakedb.Master(id=9, name='abc'),
+            fakedb.Master(id=10, name='def'),
+            fakedb.BuilderMaster(builderid=7, masterid=9),
+        ])
+        yield self.db.builders.addBuilderMaster(builderid=7, masterid=9)
+        builderdict = yield self.db.builders.getBuilder(7)
+        types.verifyDbDict(self, 'builderdict', builderdict)
+        self.assertEqual(builderdict,
+                dict(id=7, name='some:builder', masterids=[9]))
+
+    @defer.inlineCallbacks
     def test_removeBuilderMaster(self):
         yield self.insertTestData([
             fakedb.Builder(id=7),

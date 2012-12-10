@@ -1407,9 +1407,10 @@ class FakeBuildersComponent(FakeDBComponent):
         return defer.succeed(id)
 
     def addBuilderMaster(self, builderid=None, masterid=None):
-        self.insertTestData([
-            BuilderMaster(builderid=builderid, masterid=masterid),
-        ])
+        if (builderid, masterid) not in self.builder_masters.itervalues():
+            self.insertTestData([
+                BuilderMaster(builderid=builderid, masterid=masterid),
+            ])
         return defer.succeed(None)
 
     def removeBuilderMaster(self, builderid=None, masterid=None):
