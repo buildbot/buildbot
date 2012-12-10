@@ -747,7 +747,7 @@ class Repo(SlaveSource):
 
     def __init__(self,
                  manifest_url=None,
-                 manifest_branch=None,
+                 default_manifest_branch=None,
                  manifest_file="default.xml",
                  tarball=None,
                  jobs=None,
@@ -756,16 +756,22 @@ class Repo(SlaveSource):
         @type  manifest_url: string
         @param manifest_url: The URL which points at the repo manifests repository.
 
-        @type  manifest_branch: string
-        @param manifest_branch: The manifest branch to check out by default.
+        @type  default_manifest_branch: string
+        @param default_manifest_branch: The manifest branch to check out by default.
 
         @type  manifest_file: string
         @param manifest_file: The manifest to use for sync.
 
         """
+
+        ### NOTE: default_manifest_branch parameter is only used if there is no build property
+        ###       "branch" (e.g., from force build page, or from Gerrit ref-updated)
+        ###       or
+        ###       "event.change.branch" (e.g., from Gerrit patchset-created)
+
         SlaveSource.__init__(self, **kwargs)
         self.manifest_url = _ComputeRepositoryURL(self, manifest_url)
-        self.branch = manifest_branch
+        self.branch = default_manifest_branch
         self.args.update({
                           'manifest_file': manifest_file,
                           'tarball': tarball,
