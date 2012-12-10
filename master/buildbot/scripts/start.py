@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 
 
-import os, sys, time
+import os, sys
 from buildbot.scripts import base
-from twisted.internet import reactor
+from twisted.internet import reactor, protocol
 from twisted.python.runtime import platformType
 from buildbot.scripts.logwatcher import LogWatcher
 from buildbot.scripts.logwatcher import BuildmasterTimeoutError
@@ -59,20 +59,15 @@ stop it, fix the config file, and restart.
         self.rc = 1
         reactor.stop()
 
-
-def launch(config):
+def launchNoDaemon(config):
     os.chdir(config['basedir'])
     sys.path.insert(0, os.path.abspath(config['basedir']))
 
-    # see if we can launch the application without actually having to
-    # spawn twistd, since spawning processes correctly is a real hassle
-    # on windows.
     argv = ["twistd",
             "--no_save",
+            '--nodaemon',
             "--logfile=twistd.log", # windows doesn't use the same default
             "--python=buildbot.tac"]
-    if config['nodaemon']:
-        argv.extend(['--nodaemon'])
     sys.argv = argv
 
     # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use
@@ -81,28 +76,41 @@ def launch(config):
     from twisted.scripts import twistd
     twistd.run()
 
+def launch(config):
+    os.chdir(config['basedir'])
+    sys.path.insert(0, os.path.abspath(config['basedir']))
+
+    # see if we can launch the application without actually having to
+    # spawn twistd, since spawning processes correctly is a real hassle
+    # on windows.
+    argv = [sys.executable,
+            "-c",
+            # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use
+            # _twistw.run . Twisted-2.5.0 and later use twistd.run, even for
+            # windows.
+            "from twisted.scripts import twistd; twistd.run()",
+            "--no_save",
+            "--logfile=twistd.log", # windows doesn't use the same default
+            "--python=buildbot.tac"]
+
+    # ProcessProtocol just ignores all output
+    reactor.spawnProcess(protocol.ProcessProtocol(), sys.executable, argv, env=os.environ)
+
 def start(config):
     if not base.isBuildmasterDir(config['basedir']):
         print "not a buildmaster directory"
         return 1
 
-    if config['quiet']:
-        launch(config)
+    if config['nodaemon']:
+        launchNoDaemon(config)
         return 0
 
-    # we probably can't do this os.fork under windows
-    if platformType == "win32":
-        launch(config)
-        return 0
-
-    # fork a child to launch the daemon, while the parent process tails the
-    # logfile
-    if os.fork():
-        # this is the parent
-        rc = Follower().follow(config['basedir'])
-        return rc
-    # this is the child: give the logfile-watching parent a chance to start
-    # watching it before we start the daemon
-    time.sleep(0.2)
     launch(config)
 
+    # We don't have tail on windows
+    if platformType == "win32" or config['quiet']:
+        return 0
+
+    # this is the parent
+    rc = Follower().follow(config['basedir'])
+    return rc

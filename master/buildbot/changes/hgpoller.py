@@ -245,7 +245,7 @@ class HgPoller(base.PollingChangeSource):
             return
         if current is None:
             # we could have used current = -1 convention as well (as hg does)
-            revrange = '0:%d' % head
+            revrange = '%d:%d' % (head, head)
         else:
             revrange = '%d:%s' % (current + 1, head)
 

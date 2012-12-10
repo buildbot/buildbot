@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import re
 import os
 import mock
 import signal
@@ -22,7 +21,7 @@ from twisted.trial import unittest
 from twisted.python import log
 from buildbot import master, monkeypatches, config
 from buildbot.db import exceptions
-from buildbot.test.util import dirs, compat
+from buildbot.test.util import dirs, compat, logging
 from buildbot.test.fake import fakedb, fakemq, fakedata
 from buildbot.changes.changes import Change
 
@@ -110,9 +109,10 @@ class OldTriggeringMethods(unittest.TestCase):
                 exp_data_kwargs=dict(author='me', files=['a'], comments='com'))
 
 
-class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
+class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpLogging()
         self.basedir = os.path.abspath('basedir')
         d = self.setUpDirs(self.basedir)
         @d.addCallback
@@ -133,11 +133,6 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
             self.mq = self.master.mq = fakemq.FakeMQConnector(self.master, self)
             self.data = self.master.data = fakedata.FakeDataConnector(self.master, self)
 
-        @d.addCallback
-        def patch_log_msg(_):
-            msg = mock.Mock(side_effect=log.msg)
-            self.patch(log, 'msg', msg)
-
         return d
 
     def tearDown(self):
@@ -147,13 +142,6 @@ class StartupAndReconfig(dirs.DirsMixin, unittest.TestCase):
         r = mock.Mock()
         r.callWhenRunning = reactor.callWhenRunning
         return r
-
-    def assertLogged(self, regexp):
-        r = re.compile(regexp)
-        for args, kwargs in log.msg.call_args_list:
-            if args and r.search(args[0]):
-                return
-        self.fail("%r not matched in log output" % regexp)
 
     def patch_loadConfig_fail(self):
         @classmethod

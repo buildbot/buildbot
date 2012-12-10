@@ -242,14 +242,14 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     @defer.inlineCallbacks
     def stopService(self):
-        yield service.MultiService.stopService(self)
+        if self.running:
+            yield service.MultiService.stopService(self)
         if self.masterid is not None:
             yield self.data.updates.masterStopped(
                     name=self.name, masterid=self.masterid)
 
         log.msg("BuildMsater is stopped")
         self._master_initialized = False
-
 
     def reconfig(self):
         # this method wraps doConfig, ensuring it is only ever called once at

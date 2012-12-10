@@ -107,6 +107,13 @@ class BaseBasicScheduler(CommonStuffMixin,
         d.addCallback(lambda _ : sched.stopService())
         return d
 
+    def test_subclass_fileIsImportant(self):
+        class Subclass(self.Subclass):
+            def fileIsImportant(self, change):
+                return False
+        sched = self.makeScheduler(Subclass, onlyImportant=True)
+        self.failUnlessEqual(Subclass.fileIsImportant.__get__(sched), sched.fileIsImportant)
+
     def test_startService_treeStableTimer(self):
         cf = mock.Mock()
         sched = self.makeScheduler(self.Subclass, treeStableTimer=10, change_filter=cf)

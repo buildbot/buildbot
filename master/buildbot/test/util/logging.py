@@ -13,23 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-import logging
+import re
 from twisted.python import log
 
-# this class bridges Python's `logging` module into Twisted's log system.
-# SqlAlchemy query logging uses `logging`, so this provides a way to enter
-# queries into the Twisted log file.
+class LoggingMixin(object):
 
-class PythonToTwistedHandler(logging.Handler):
+    def setUpLogging(self):
+        self._logEvents = []
+        log.addObserver(self._logEvents.append)
+        self.addCleanup(log.removeObserver, self._logEvents.append)
 
-    def emit(self, record):
-        log.msg(record.getMessage())
-
-def log_from_engine(engine):
-    # add the handler *before* enabling logging, so that no "default" logger
-    # is added automatically, but only do so once.  This is important since
-    # logging's loggers are singletons
-    if not engine.logger.handlers:
-        engine.logger.addHandler(PythonToTwistedHandler())
-    engine.echo = True
+    def assertLogged(self, regexp):
+        r = re.compile(regexp)
+        for event in self._logEvents:
+            msg = log.textFromEventDict(event)
+            if msg is not None and r.search(msg):
+                return
+        self.fail("%r not matched in log output" % regexp)

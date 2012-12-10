@@ -43,6 +43,10 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         self._builder_observers = bbcollections.KeyedSets()
         self._buildreq_observers = bbcollections.KeyedSets()
         self._buildset_finished_waiters = bbcollections.KeyedSets()
+        self._buildset_completion_sub = None
+        self._buildset_sub = None
+        self._build_request_sub = None
+        self._change_sub = None
 
     # service management
 
@@ -84,14 +88,17 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
                                                             new_config)
 
     def stopService(self):
-        self._buildset_complete_consumer.stopConsuming()
-        self._buildset_complete_consumer = None
+        if self._buildset_complete_consumer:
+            self._buildset_complete_consumer.stopConsuming()
+            self._buildset_complete_consumer = None
 
-        self._buildset_new_consumer.stopConsuming()
-        self._buildset_new_consumer = None
+        if self._buildset_new_consumer:
+            self._buildset_new_consumer.stopConsuming()
+            self._buildset_new_consumer = None
 
-        self._change_consumer.stopConsuming()
-        self._change_consumer = None
+        if self._change_consumer:
+            self._change_consumer.stopConsuming()
+            self._change_consumer = None
 
         return service.MultiService.stopService(self)
 

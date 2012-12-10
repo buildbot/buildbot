@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
-import os
 from distutils.version import LooseVersion
 
 # apply the same patches the buildmaster does when it starts
@@ -31,11 +29,9 @@ try:
     import mock
     mock = mock
 except ImportError:
-    print >>sys.stderr, ("\nBuildbot tests require the 'mock' module; "
+    raise ImportError("\nBuildbot tests require the 'mock' module; "
                          "try 'pip install mock'")
-    os._exit(1)
 
 if LooseVersion(mock.__version__) < LooseVersion("0.8"):
-    print >>sys.stderr, ("\nBuildbot tests require mock version 0.8.0 or "
+    raise ImportError("\nBuildbot tests require mock version 0.8.0 or "
                          "higher; try 'pip install -U mock'")
-    os._exit(1)

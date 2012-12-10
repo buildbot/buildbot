@@ -34,29 +34,33 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
     def test_simple(self):
         self.setupStep(slave.SetPropertiesFromEnv(
                 variables=["one", "two", "three", "five", "six"],
-                source="me"),
-            slave_env={ "one": 1, "two": None, "six": 6, "FIVE" : 555 })
+                source="me"))
+        self.buildslave.slave_environ = { "one": "1", "two": None, "six": "6", "FIVE" : "555" }
         self.properties.setProperty("four", 4, "them")
         self.properties.setProperty("five", 5, "them")
         self.properties.setProperty("six", 99, "them")
         self.expectOutcome(result=SUCCESS,
                 status_text=["Set"])
-        self.expectProperty('one', 1, source='me')
+        self.expectProperty('one', "1", source='me')
         self.expectNoProperty('two')
         self.expectNoProperty('three')
         self.expectProperty('four', 4, source='them')
         self.expectProperty('five', 5, source='them')
-        self.expectProperty('six', 6, source='me')
+        self.expectProperty('six', '6', source='me')
+        self.expectLogfile("properties",
+                "one = '1'\nsix = '6'")
         return self.runStep()
 
     def test_case_folding(self):
         self.setupStep(slave.SetPropertiesFromEnv(
-                variables=["eNv"], source="me"),
-            slave_env={ "ENV": 'EE' })
+                variables=["eNv"], source="me"))
+        self.buildslave.slave_environ = { "ENV": 'EE' }
         self.buildslave.slave_system = 'win32'
         self.expectOutcome(result=SUCCESS,
                 status_text=["Set"])
         self.expectProperty('eNv', 'EE', source='me')
+        self.expectLogfile("properties",
+                "eNv = 'EE'")
         return self.runStep()
 
 
