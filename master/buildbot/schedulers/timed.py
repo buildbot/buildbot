@@ -88,15 +88,13 @@ class Timed(base.BaseScheduler):
         # shut down any pending actuation, and ensure that we wait for any
         # current actuation to complete by acquiring the lock.  This ensures
         # that no build will be scheduled after stopService is complete.
-        d = self.actuationLock.acquire()
-        def stop_actuating(_):
+        def stop_actuating():
             self.actuateOk = False
             self.actuateAt = None
             if self.actuateAtTimer:
                 self.actuateAtTimer.cancel()
             self.actuateAtTimer = None
-        d.addCallback(stop_actuating)
-        d.addCallback(lambda _ : self.actuationLock.release())
+        d = self.actuationLock.run(stop_actuating)
 
         # and chain to the parent class
         d.addCallback(lambda _ : base.BaseScheduler.stopService(self))
@@ -137,14 +135,7 @@ class Timed(base.BaseScheduler):
 
         @returns: Deferred
         """
-        d = self.actuationLock.acquire()
-        d.addCallback(lambda _ : self._scheduleNextBuild_locked())
-        # always release the lock
-        def release(x):
-            self.actuationLock.release()
-            return x
-        d.addBoth(release)
-        return d
+        return self.actuationLock.run(self._scheduleNextBuild_locked)
 
     ## utilities
 
@@ -181,10 +172,8 @@ class Timed(base.BaseScheduler):
         self.actuateAtTimer = None
         self.lastActuated = self.actuateAt
 
-        d = self.actuationLock.acquire()
-
         @defer.inlineCallbacks
-        def set_state_and_start(_):
+        def set_state_and_start():
             # bail out if we shouldn't be actuating anymore
             if not self.actuateOk:
                 return
@@ -198,12 +187,7 @@ class Timed(base.BaseScheduler):
 
             # schedule the next build (noting the lock is already held)
             yield self._scheduleNextBuild_locked()
-        d.addCallback(set_state_and_start)
-
-        def unlock(x):
-            self.actuationLock.release()
-            return x
-        d.addBoth(unlock)
+        d = self.actuationLock.run(set_state_and_start)
 
         # this function can't return a deferred, so handle any failures via
         # log.err
