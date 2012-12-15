@@ -403,7 +403,7 @@ class TestBuild(unittest.TestCase):
 
         self.assertEqual(gotLocks, [True])
         self.assert_(('stepStarted', (), {}) in step.step_status.method_calls)
-        self.assertEqual(b.result, EXCEPTION)
+        self.assertEqual(b.result, CANCELLED)
 
     def testStepDone(self):
         b = self.build

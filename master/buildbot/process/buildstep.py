@@ -570,7 +570,7 @@ class BuildStep(object, properties.PropertiesMixin):
 
     def _startStep_2(self, res):
         if self.stopped:
-            self.finished(USERCANCEL)
+            self.finished(CANCELLED)
             return
 
         if self.progress:
@@ -645,10 +645,10 @@ class BuildStep(object, properties.PropertiesMixin):
             # At the same time we must respect RETRY status because it's used
             # to retry interrupted build due to some other issues for example
             # due to slave lost
-            if results == USERCANCEL:
+            if results == CANCELLED:
               self.step_status.setText(self.describe(True) +
-                                   ["usercancel"])
-              self.step_status.setText2(["usercancel"])
+                                   ["cancelled"])
+              self.step_status.setText2(["cancelled"])
             else:
               results = EXCEPTION
               self.step_status.setText(self.describe(True) +
@@ -932,8 +932,8 @@ class LoggingBuildStep(BuildStep):
             return self.describe(True) + ["warnings"]
         elif results == EXCEPTION:
             return self.describe(True) + ["exception"]
-        elif results == USERCANCEL:
-            return self.describe(True) + ["usercancel"]
+        elif results == CANCELLED:
+            return self.describe(True) + ["cancelled"]
         else:
             return self.describe(True) + ["failed"]
 

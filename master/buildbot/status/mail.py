@@ -337,7 +337,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.fromaddr = fromaddr
         if isinstance(mode, basestring):
             if mode == "all":
-                mode = ("failing", "passing", "warnings", "exception", "usercancel")
+                mode = ("failing", "passing", "warnings", "exception", "cancelled")
             elif mode == "warnings":
                 mode = ("failing", "warnings")
             else:

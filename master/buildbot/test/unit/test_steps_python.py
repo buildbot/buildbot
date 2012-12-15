@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.status.results import FAILURE, SUCCESS, WARNINGS
+from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, CANCELLED
 from buildbot.steps import python
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
