@@ -17,7 +17,7 @@ import sys
 from mock import Mock
 from buildbot import config
 from twisted.trial import unittest
-from buildbot.status.results import SUCCESS, FAILURE, WARNINGS, EXCEPTION
+from buildbot.status.results import SUCCESS, FAILURE, WARNINGS, EXCEPTION, CANCELLED
 from buildbot.status.mail import MailNotifier
 from twisted.internet import defer
 from buildbot.test.fake import fakedb

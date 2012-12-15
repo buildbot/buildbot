@@ -19,7 +19,7 @@ from twisted.internet import defer
 from buildbot import interfaces
 from buildbot.process.build import Build
 from buildbot.process.properties import Properties
-from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, RETRY, EXCEPTION
+from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, RETRY, EXCEPTION, CANCELLED
 from buildbot.locks import SlaveLock
 from buildbot.process.buildstep import LoggingBuildStep
 
@@ -142,7 +142,7 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assertEqual(b.result, EXCEPTION)
+        self.assertEqual(b.result, CANCELLED)
 
         self.assert_( ('interrupt', ('stop it',), {}) in step.method_calls)
 
@@ -183,7 +183,7 @@ class TestBuild(unittest.TestCase):
 
         d = b.startBuild(FakeBuildStatus(), None, slavebuilder)
         def check(ign):
-            self.assertEqual(b.result, EXCEPTION)
+            self.assertEqual(b.result, CANCELLED)
             self.assert_( ('interrupt', ('stop it',), {}) in step1.method_calls)
             self.assert_(step2Started[0])
         d.addCallback(check)
@@ -332,7 +332,7 @@ class TestBuild(unittest.TestCase):
         self.assert_( ('startStep', (slavebuilder.remote,), {})
                                     not in step.method_calls)
         self.assert_(b.currentStep is None)
-        self.assertEqual(b.result, EXCEPTION)
+        self.assertEqual(b.result, CANCELLED)
         self.assert_( ('interrupt', ('stop it',), {}) not in step.method_calls)
 
     def testStopBuildWaitingForLocks_lostRemote(self):
@@ -403,7 +403,7 @@ class TestBuild(unittest.TestCase):
 
         self.assertEqual(gotLocks, [True])
         self.assert_(('stepStarted', (), {}) in step.step_status.method_calls)
-        self.assertEqual(b.result, EXCEPTION)
+        self.assertEqual(b.result, CANCELLED)
 
     def testStepDone(self):
         b = self.build
