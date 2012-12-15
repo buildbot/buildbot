@@ -30,10 +30,10 @@ from buildbot.status.buildrequest import BuildRequestStatus
 
 # user modules expect these symbols to be present here
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED
-from buildbot.status.results import EXCEPTION, RETRY, USERCANCEL
+from buildbot.status.results import EXCEPTION, RETRY, CANCELLED
 from buildbot.status.results import Results, worst_status
 _hush_pyflakes = [ SUCCESS, WARNINGS, FAILURE, SKIPPED,
-                   EXCEPTION, RETRY, USERCANCEL, Results, worst_status ]
+                   EXCEPTION, RETRY, CANCELLED, Results, worst_status ]
 
 class BuilderStatus(styles.Versioned):
     """I handle status information for a single process.build.Builder object.

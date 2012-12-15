@@ -27,7 +27,7 @@ from twisted.python.reflect import accumulateClassList
 from buildbot import interfaces, locks, util, config
 from buildbot.status import progress
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
-     EXCEPTION, RETRY, USERCANCEL, worst_status
+     EXCEPTION, RETRY, CANCELLED, worst_status
 from buildbot.process import metrics, properties
 
 class BuildStepFailed(Exception):
