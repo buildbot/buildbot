@@ -185,7 +185,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
             res = "exception"
             text += res
         elif results == CANCELLED:
-            res = "usercancel"
+            res = "cancelled"
             text += res
         else:
             res += "busted"

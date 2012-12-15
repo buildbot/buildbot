@@ -899,9 +899,9 @@ class LoggingBuildStep(BuildStep):
         # 'reason' can be a Failure, or text
         BuildStep.interrupt(self, reason)
         if self.step_status.isWaitingForLocks():
-            self.addCompleteLog('usercancel while waiting for locks', str(reason))
+            self.addCompleteLog('cancelled while waiting for locks', str(reason))
         else:
-            self.addCompleteLog('usercancel', str(reason))
+            self.addCompleteLog('cancelled', str(reason))
 
         if self.cmd:
             d = self.cmd.interrupt(reason)

@@ -499,7 +499,7 @@ class Build(properties.PropertiesMixin):
         elif self.result == RETRY:
             text = ["retry"]
         elif self.result == CANCELLED:
-            text = ["usercancel"]
+            text = ["cancelled"]
         else:
             text = ["build", "successful"]
         text.extend(self.text)

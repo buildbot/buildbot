@@ -456,7 +456,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             return True
         if "exception" in self.mode and results == EXCEPTION:
             return True
-        if "usercancel" in self.mode and results == CANCELLED:
+        if "cancelled" in self.mode and results == CANCELLED:
             return True
 
         return False

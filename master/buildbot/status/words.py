@@ -404,7 +404,7 @@ class IRCContact(base.StatusReceiver):
         FAILURE:    ("Failure",   'RED'),
         EXCEPTION:  ("Exception", 'PURPLE'),
         RETRY:      ("Retry",     'AQUA_LIGHT'),
-        CANCELLED:  ("UserCancel", 'PINK'),
+        CANCELLED:  ("Cancelled", 'PINK'),
         }
 
     def getResultsDescriptionAndColor(self, results):
