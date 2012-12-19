@@ -237,7 +237,7 @@ class PerforceExtractor(SourceStampExtractor):
         self.patch = (patchlevel, mpatch)
 
     def getPatch(self, res):
-        d = self.dovc(["diff", "-du"])
+        d = self.dovc(["diff"])
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 
