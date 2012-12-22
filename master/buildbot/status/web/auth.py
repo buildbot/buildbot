@@ -183,7 +183,12 @@ class AuthFailResource(HtmlResource):
 
     def content(self, request, cxt):
         templates =request.site.buildbot_service.templates
-        template = templates.get_template("authfail.html") 
+        template = templates.get_template("authfail.html")
+        # XXX check if the user is logged
+        # #cxt['originalPage'] = request.args['originalPage']
+        # if logged in 
+        # redirect to request.args['originalPage']
+        # else
         return template.render(**cxt)
 
 class AuthzFailResource(HtmlResource):
@@ -206,7 +211,9 @@ class LoginResource(ActionResource):
                 return request.requestHeaders.getRawHeaders('referer',
                                                             [root])[0]
             else:
-                return path_to_authfail(request)
+                return (path_to_authfail(request) +
+                        "?originalPage=%s" %
+                        request.requestHeaders.getRawHeaders('referer')[0])
         d.addBoth(on_login)
         return d
 
