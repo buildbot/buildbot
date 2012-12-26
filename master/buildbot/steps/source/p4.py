@@ -38,11 +38,11 @@ Notes:
 
 
 class P4(Source):
-    """I perform Perforce checkout/update operations."""
+    """Perform Perforce checkout/update operations."""
 
     name = 'p4'
 
-    renderables = [ 'p4base', 'p4client','p4viewspec' ]
+    renderables = [ 'p4base', 'p4client','p4viewspec', 'p4branch' ]
     possible_modes = ('incremental', 'full')
     
     # SVN Has 'clean', 'fresh', 'clobber', 'copy', 'export', it may make sense to have 
@@ -51,7 +51,8 @@ class P4(Source):
     possible_methods = (None,)
 
     def __init__(self, mode='incremental',
-                 method=None,p4base=None, defaultBranch=None, p4port=None, p4user=None,
+                 method=None,p4base=None, p4branch=None,
+                 p4port=None, p4user=None,
                  p4passwd=None, p4extra_views=[], p4line_end='local',
                  p4viewspec=None,
                  p4client='buildbot_%(slave)s_%(builder)s',p4bin='p4',
@@ -60,13 +61,20 @@ class P4(Source):
         @type  p4base: string
         @param p4base: A view into a perforce depot, typically
                        "//depot/proj/"
+                       
+        @type  p4branch: string
+        @param p4branch: A single string, which is appended to the p4base as follows
+                        "<p4base><p4branch>/..." 
+                        to form the first line in the viewspec
 
-        @type  defaultBranch: string
-        @param defaultBranch: Identify a branch to build by default. Perforce
-                              is a view based branching system. So, the branch
-                              is normally the name after the base. For example,
-                              branch=1.0 is view=//depot/proj/1.0/...
-                              branch=1.1 is view=//depot/proj/1.1/...
+        @type  p4extra_views: list of tuples
+        @param p4extra_views: Extra views to be added to the client that is being used.
+
+        @type  p4viewspec: list of tuples
+        @param p4viewspec: This will override any p4branch, p4base, and/or p4extra_views
+                           specified.  The viewspec will be an array of tuples as follows
+                           [('//depot/main/','')]  yields a viewspec with just
+                           //depot/main/... //<p4client>/...
 
         @type  p4port: string
         @param p4port: Specify the perforce server to connection in the format
@@ -78,10 +86,6 @@ class P4(Source):
         @type  p4passwd: string
         @param p4passwd: The password for the perforce user.
 
-        @type  p4extra_views: list of tuples
-        @param p4extra_views: Extra views to be added to
-                              the client that is being used.
-
         @type  p4line_end: string
         @param p4line_end: value of the LineEnd client specification property
 
@@ -91,7 +95,6 @@ class P4(Source):
 
         self.method = method
         self.mode   = mode
-        self.branch = defaultBranch  # DEEGAN: might be able to get rid of this?
         self.p4branch = defaultBranch
         self.p4bin  = p4bin
         self.p4base = p4base
@@ -312,8 +315,10 @@ class P4(Source):
     @defer.inlineCallbacks
     def _createClientSpec(self):
         workdir=self.getProperty('workdir')
-        log.msg("WORKDIR:%s"%workdir)
-        log.msg("SELF.workdir:%s"%self.workdir)
+        
+        log.msg("P4:_createClientSpec:WORKDIR:%s"%workdir)
+        log.msg("P4:_createClientSpecSELF.workdir:%s"%self.workdir)
+        
         prop_dict=self.getProperties().asDict()
         prop_dict['p4client'] = self.p4client
         
@@ -334,16 +339,18 @@ class P4(Source):
         
         
         if self.p4viewspec:
+            # If the user specifies a viewspec via an array of tuples then
+            # Ignore any specified p4base,p4branch, and/or p4extra_views
             for k,v in self.p4viewspec:
-                log.msg('key:%s value:%s'%(k,v))
+                log.msg('P4:_createClientSpec:key:%s value:%s'%(k,v))
                 client_spec += '\t%s... //%s/%s...\n'%(k,self.p4client,v)
         else:  
             client_spec += "\t%s" % (self.p4base)
 
             if self.p4branch:
                 client_spec += "%s/" % (self.p4branch)
+                client_spec += "... //%s/...\n" % (self.p4client)
                 
-            client_spec += "... //%s/...\n" % (self.p4client)
             if self.p4extra_views:
                 for k, v in self.p4extra_views:
                     client_spec += "\t%s/... //%s/%s/...\n" % (k, self.p4client, v)
