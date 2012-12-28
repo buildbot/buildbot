@@ -27,6 +27,9 @@ Nine
 
   Please adjust any custom change sources accordingly.
 
+* A new build status, CANCELLED, has been added.
+  It is used when a step or build is deliberately cancelled by a user.
+
 * This upgrade will delete all rows from the ``buildrequest_claims`` table.
   If you are using this table for analytical purposes outside of Buildbot, please back up its contents before the upgrade, and restore it afterward, translating object IDs to scheduler IDs if necessary.
   This translation would be very slow and is not required for most users, so it is not done automatically.
