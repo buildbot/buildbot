@@ -27,6 +27,9 @@ Nine
 
   Please adjust any custom change sources accordingly.
 
+* A new build status, CANCELLED, has been added.
+  It is used when a step or build is deliberately cancelled by a user.
+
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
     Most simply need an additional bulleted list item, but more significant
