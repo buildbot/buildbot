@@ -181,24 +181,31 @@ Type Validation
 ---------------
 
 The :bb:src:`master/buildbot/test/util/validation.py` provides a set of classes and definitions for validating Buildbot data types.
-It supports three types of data:
+It supports four types of data:
 
  * DB API dictionaries, as returned from the ``getXxx`` methods,
- * Data API dictionaries, as returned from ``get``, and
- * Data API messages.
+ * Data API dictionaries, as returned from ``get``,
+ * Data API messages, and
+ * Simple data types.
 
 These are validated from elsewhere in the codebase with calls to
 
  * ``verifyDbDict(testcase, type, value)``,
- * ``verifyData(testcase, type, options, value)``, and
- * ``verifyMessage(testcase, routingKey, message)``,
+ * ``verifyData(testcase, type, options, value)``,
+ * ``verifyMessage(testcase, routingKey, message)``, and
+ * ``verifyType(testcase, name, value, validator)``.
 
 respectively.
 The ``testcase`` argument is used to fail the test case if the validation does not succeed.
 For DB dictionaries and data dictionaries, the ``type`` identifies the expected data type.
 For messages, the type is determined from the first element of the routing key.
 
-All messages sent with the fake MQ implementation are automatically validated.
+All messages sent with the fake MQ implementation are automatically validated using ``verifyMessage``.
+The ``verifyType`` method is used to validate simple types, e.g., ::
+
+    validation.verifyType(self, 'param1', param1, validation.StringValidator())
+
+In any case, if ``testcase`` is None, then the functions will raise an :py:exc:`AssertionError` on failure.
 
 Validator Classes
 ~~~~~~~~~~~~~~~~~

@@ -87,7 +87,7 @@ class BaseBasicScheduler(CommonStuffMixin,
         self.assertRaises(config.ConfigErrors,
                 lambda : self.Subclass("tsched", "master", 60))
 
-    def test_startService_no_treeStableTimer(self):
+    def test_activate_no_treeStableTimer(self):
         cf = mock.Mock('cf')
         fII = mock.Mock('fII')
         sched = self.makeScheduler(self.Subclass, treeStableTimer=None, change_filter=cf,
@@ -95,7 +95,7 @@ class BaseBasicScheduler(CommonStuffMixin,
 
         self.db.schedulers.fakeClassifications(self.SCHEDULERID, { 20 : True })
 
-        d = sched.startService(_returnDeferred=True)
+        d = sched.activate()
 
         # check that the scheduler has started to consume changes, and the
         # classifications *have* been flushed, since they will not be used
@@ -104,7 +104,7 @@ class BaseBasicScheduler(CommonStuffMixin,
                                         onlyImportant=False)
             self.db.schedulers.assertClassifications(self.SCHEDULERID, {})
         d.addCallback(check)
-        d.addCallback(lambda _ : sched.stopService())
+        d.addCallback(lambda _ : sched.deactivate())
         return d
 
     def test_subclass_fileIsImportant(self):
@@ -114,7 +114,7 @@ class BaseBasicScheduler(CommonStuffMixin,
         sched = self.makeScheduler(Subclass, onlyImportant=True)
         self.failUnlessEqual(Subclass.fileIsImportant.__get__(sched), sched.fileIsImportant)
 
-    def test_startService_treeStableTimer(self):
+    def test_activate_treeStableTimer(self):
         cf = mock.Mock()
         sched = self.makeScheduler(self.Subclass, treeStableTimer=10, change_filter=cf)
 
@@ -125,7 +125,7 @@ class BaseBasicScheduler(CommonStuffMixin,
                                                 changeid=20, important=1)
         ])
 
-        d = sched.startService(_returnDeferred=True)
+        d = sched.activate()
 
         # check that the scheduler has started to consume changes, and no
         # classifications have been flushed.  Furthermore, the existing
@@ -140,37 +140,37 @@ class BaseBasicScheduler(CommonStuffMixin,
             self.clock.advance(10)
             self.assertEqual(sched.getPendingBuildTimes(), [])
         d.addCallback(check)
-        d.addCallback(lambda _ : sched.stopService())
+        d.addCallback(lambda _ : sched.deactivate())
         return d
 
     def test_gotChange_no_treeStableTimer_unimportant(self):
         sched = self.makeScheduler(self.Subclass, treeStableTimer=None, branch='master')
 
-        sched.startService()
+        sched.activate()
 
         d = sched.gotChange(self.makeFakeChange(branch='master', number=13), False)
         def check(_):
             self.assertEqual(self.events, [])
         d.addCallback(check)
 
-        d.addCallback(lambda _ : sched.stopService())
+        d.addCallback(lambda _ : sched.deactivate())
 
     def test_gotChange_no_treeStableTimer_important(self):
         sched = self.makeScheduler(self.Subclass, treeStableTimer=None, branch='master')
 
-        sched.startService()
+        sched.activate()
 
         d = sched.gotChange(self.makeFakeChange(branch='master', number=13), True)
         def check(_):
             self.assertEqual(self.events, [ 'B[13]@0' ])
         d.addCallback(check)
 
-        d.addCallback(lambda _ : sched.stopService())
+        d.addCallback(lambda _ : sched.deactivate())
 
     def test_gotChange_treeStableTimer_unimportant(self):
         sched = self.makeScheduler(self.Subclass, treeStableTimer=10, branch='master')
 
-        sched.startService()
+        sched.activate()
 
         d = sched.gotChange(self.makeFakeChange(branch='master', number=13), False)
         def check(_):
@@ -179,12 +179,12 @@ class BaseBasicScheduler(CommonStuffMixin,
         d.addCallback(lambda _ : self.clock.advance(10))
         d.addCallback(check) # should still be empty
 
-        d.addCallback(lambda _ : sched.stopService())
+        d.addCallback(lambda _ : sched.deactivate())
 
     def test_gotChange_treeStableTimer_important(self):
         sched = self.makeScheduler(self.Subclass, treeStableTimer=10, branch='master')
 
-        sched.startService()
+        sched.activate()
 
         d = sched.gotChange(self.makeFakeChange(branch='master', number=13), True)
         d.addCallback(lambda _ : self.clock.advance(10))
@@ -192,7 +192,7 @@ class BaseBasicScheduler(CommonStuffMixin,
             self.assertEqual(self.events, [ 'B[13]@10' ])
         d.addCallback(check)
 
-        d.addCallback(lambda _ : sched.stopService())
+        d.addCallback(lambda _ : sched.deactivate())
 
     @defer.inlineCallbacks
     def test_gotChange_treeStableTimer_sequence(self):
@@ -207,7 +207,7 @@ class BaseBasicScheduler(CommonStuffMixin,
             fakedb.Change(changeid=4, branch='master', when_timestamp=4440),
             fakedb.ChangeFile(changeid=4, filename='readme.txt'),
         ])
-        sched.startService()
+        sched.activate()
 
         self.clock.advance(2220)
 
@@ -254,7 +254,7 @@ class BaseBasicScheduler(CommonStuffMixin,
         self.assertEqual(sched.getPendingBuildTimes(), [])
         self.db.schedulers.assertClassifications(self.SCHEDULERID, { })
 
-        yield sched.stopService()
+        yield sched.deactivate()
 
 
 class SingleBranchScheduler(CommonStuffMixin,
@@ -287,7 +287,7 @@ class SingleBranchScheduler(CommonStuffMixin,
         sched = self.makeScheduler(basic.SingleBranchScheduler,
                             treeStableTimer=10, branch='master')
 
-        sched.startService()
+        sched.activate()
 
         d = sched.gotChange(self.makeFakeChange(branch='master', number=13), True)
         d.addCallback(lambda _ : self.clock.advance(10))
@@ -295,7 +295,7 @@ class SingleBranchScheduler(CommonStuffMixin,
             self.assertEqual(self.events, [ 'B[13]@10' ])
         d.addCallback(check)
 
-        d.addCallback(lambda _ : sched.stopService())
+        d.addCallback(lambda _ : sched.deactivate())
 
 
 class AnyBranchScheduler(CommonStuffMixin,
@@ -318,7 +318,7 @@ class AnyBranchScheduler(CommonStuffMixin,
         sched = self.makeScheduler(basic.AnyBranchScheduler,
                             treeStableTimer=10, branches=['master', 'devel', 'boring'])
 
-        sched.startService()
+        sched.activate()
 
         def mkch(**kwargs):
             ch = self.makeFakeChange(**kwargs)
@@ -350,4 +350,4 @@ class AnyBranchScheduler(CommonStuffMixin,
             self.assertEqual(self.events, [ 'B[13,14]@11', 'B[16]@15' ])
         d.addCallback(check)
 
-        d.addCallback(lambda _ : sched.stopService())
+        d.addCallback(lambda _ : sched.deactivate())

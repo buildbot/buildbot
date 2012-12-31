@@ -513,12 +513,6 @@ class ForceScheduler(base.BaseScheduler):
         self.all_fields = [ NestedParameter(name='', fields=[username, reason]) ]
         self.all_fields.extend(self.forcedProperties)
 
-    def startService(self):
-        pass
-
-    def stopService(self):
-        pass
-
     @defer.inlineCallbacks
     def gatherPropertiesAndChanges(self, **kwargs):
         properties = {}

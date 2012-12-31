@@ -412,11 +412,6 @@ a Periodic scheduler without changing the name.
 Because Buildbot uses :py:class:`~buildbot.schedulers.base.BaseScheduler`
 instances directly in the configuration file, a reconfigured scheduler must
 extract its new configuration information from another instance of itself.
-:py:class:`~buildbot.schedulers.base.BaseScheduler` implements a helper method,
-:py:meth:`~buildbot.schedulers.base.BaseScheduler.findNewSchedulerInstance`,
-which will return the new instance of the scheduler in the given
-:py:class:`MasterConfig` object.
-
 
 Custom Subclasses
 ~~~~~~~~~~~~~~~~~
