@@ -1,17 +1,17 @@
 Source Stamps
 =============
 
-.. bb:rtype:: change
+.. bb:rtype:: sourcestamp
 
     :attr integer ssid: the ID of this sourcestamp
     :attr string branch: code branch, or none for the "default branch", whatever that might mean
-    :attr string revision: revision for this change, or none if unknown
-    :attr string project: user-defined project to which this change corresponds
-    :attr string repository: repository where this change occurred
+    :attr string revision: revision for this sourcestamp, or none if unknown
+    :attr string project: user-defined project to which this sourcestamp corresponds
+    :attr string repository: repository where this sourcestamp occurred
     :attr string codebase: codebase in this repository
-    :attr patch patch: the patch for this sourcestamp, or none
     :attr integer created_at: the timestamp when this sourcestamp was created
-    :attr Link link: link for this change
+    :attr patch patch: the patch for this sourcestamp, or none
+    :attr Link link: link for this sourcestamp
 
     A source stamp represents a particular version of the source code.
     Absolute sourcestamps specify this completely, while relative sourcestamps (with revision = None) specify the latest source at the current time.

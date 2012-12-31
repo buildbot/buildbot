@@ -521,5 +521,6 @@ All strings in the data model are unicode strings.
     rtype-change
     rtype-master
     rtype-builder
+    rtype-sourcestamp
 
 .. [#apiv1] The JSON API defined by ``status_json.py`` in Buildbot-0.8.x is considered version 1, although its root path was ``json``, not ``api/v1``.
