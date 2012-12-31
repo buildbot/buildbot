@@ -16,7 +16,9 @@
 from buildbot.util import json
 import types
 from twisted.internet import defer
-from buildbot.data import connector
+from twisted.python import failure
+from buildbot.data import connector, exceptions
+from buildbot.test.util import validation
 
 class FakeUpdates(object):
 
@@ -32,6 +34,8 @@ class FakeUpdates(object):
         self.buildsetsAdded = [] # Buildsets are numbered starting at 1
         self.maybeBuildsetCompleteCalls = 0
         self.masterStateChanges = [] # dictionaries
+        self.schedulerIds = {} # { name : id }; users can add schedulers here
+        self.schedulerMasters = {} # { schedulerid : masterid }
 
     ## extra assertions
 
@@ -139,8 +143,22 @@ class FakeUpdates(object):
     def masterDeactivated(self, masterid):
         return defer.succeed(None)
 
+    def findSchedulerId(self, name):
+        validation.verifyType(None, 'scheduler name', name,
+                validation.StringValidator())
+        if name not in self.schedulerIds:
+            self.schedulerIds[name] = max([0] + self.schedulerIds.values()) + 1
+        return defer.succeed(self.schedulerIds[name])
 
-class FakeDataConnector(object):
+    def setSchedulerMaster(self, schedulerid, masterid):
+        currentMasterid = self.schedulerMasters.get(schedulerid)
+        if currentMasterid and masterid is not None:
+            return defer.fail(failure.Failure(
+                exceptions.SchedulerAlreadyClaimedError()))
+        self.schedulerMasters[schedulerid] = masterid
+
+
+class FakeDataConnector(object) :
     # FakeDataConnector delegates to the real DataConnector so it can get all
     # of the proper getter and consumer behavior; it overrides all of the
     # relevant updates with fake methods, though.

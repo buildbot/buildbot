@@ -63,15 +63,15 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertRaises(config.ConfigErrors,
                 lambda : self.makeScheduler(upstream='foo'))
 
-    def test_startService(self):
+    def test_activate(self):
         sched = self.makeScheduler()
-        sched.startService()
+        sched.activate()
 
         self.assertEqual(
             sorted([ q.filter for q in sched.master.mq.qrefs ]),
             [('buildset', None, 'complete',), ('buildset', None, 'new',)])
 
-        d = sched.stopService()
+        d = sched.deactivate()
         def check(_):
             self.assertEqual([ q.filter for q in sched.master.mq.qrefs ], [])
         d.addCallback(check)
@@ -111,7 +111,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         """
 
         sched = self.makeScheduler()
-        sched.startService()
+        sched.activate()
 
         # announce a buildset with a matching name..
         self.db.insertTestData([

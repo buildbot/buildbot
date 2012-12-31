@@ -116,6 +116,8 @@ class MasterResourceType(base.ResourceType):
         # common code for deactivating a master
         yield self.master.data.rtypes.builder._masterDeactivated(
                                                     masterid=masterid)
+        yield self.master.data.rtypes.scheduler._masterDeactivated(
+                                                    masterid=masterid)
         self.produceEvent(
             dict(masterid=masterid, name=name, active=False),
             'stopped')

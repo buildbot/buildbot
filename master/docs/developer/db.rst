@@ -534,7 +534,7 @@ schedulers
 
 .. index:: double: Schedulers; DB Connector Component
 
-.. py:exception:: AlreadyClaimedError
+.. py:exception:: SchedulerAlreadyClaimedError
 
     Raised when a scheduler request is already claimed by another master.
 
@@ -614,7 +614,7 @@ schedulers
 
         Set, or unset if ``masterid`` is None, the active master for this scheduler.
         If no master is currently set, or the current master is not active, this method will complete without error.
-        If the current master is active, this method will raise :py:exc:`SchedulerAlreadyClaimedError`.
+        If the current master is active, this method will raise :py:exc:`~buildbot.db.exceptions.SchedulerAlreadyClaimedError`.
 
     .. py:method:: getScheduler(schedulerid)
 
@@ -630,7 +630,10 @@ schedulers
         :returns: list of scheduler dictionaries in unspecified order
 
         Get a list of schedulers.
-        If ``active``, schedulers are filtered according to whether they are active (true) or inactive (false).
+
+        If ``active`` is given, schedulers are filtered according to whether they are active (true) or inactive (false).
+        An active scheduler is one that is claimed by an active master.
+
         If ``masterid`` is given, the list is restricted to schedulers associated with that master.
 
 

@@ -17,52 +17,27 @@ import logging
 from zope.interface import implements
 from twisted.python import failure, log
 from twisted.application import service
-from twisted.internet import defer
+from twisted.internet import defer, task
 from buildbot.process.properties import Properties
 from buildbot.util import ComparableMixin
 from buildbot.changes import changes
 from buildbot import config, interfaces, util
 from buildbot.util.state import StateMixin
+from buildbot.data import exceptions
 
 class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
-    """
-    Base class for all schedulers; this provides the equipment to manage
-    reconfigurations and to handle basic scheduler state.  It also provides
-    utility methods to begin various sorts of builds.
-
-    Subclasses should add any configuration-derived attributes to
-    C{base.Scheduler.compare_attrs}.
-    """
 
     implements(interfaces.IScheduler)
 
-    DefaultCodebases = {'':{}}
+    DEFAULT_CODEBASES = {'':{}}
+    POLL_INTERVAL = 300 # 5 minutes
 
     compare_attrs = ('name', 'builderNames', 'properties', 'codebases')
 
     def __init__(self, name, builderNames, properties,
-                 codebases = DefaultCodebases):
-        """
-        Initialize a Scheduler.
-
-        @param name: name of this scheduler (used as a key for state)
-        @type name: unicode
-
-        @param builderNames: list of builders this scheduler may start
-        @type builderNames: list of unicode
-
-        @param properties: properties to add to builds triggered by this
-        scheduler
-        @type properties: dictionary
-
-        @param codebases: codebases that are necessary to process the changes
-        @type codebases: dict with following struct:
-            key: '<codebase>'
-            value: {'repository':'<repo>', 'branch':'<br>', 'revision:'<rev>'}
-        """
+                 codebases = DEFAULT_CODEBASES):
         service.MultiService.__init__(self)
         self.name = util.ascii2unicode(name)
-        "name of this scheduler; used to identify replacements on reconfig"
 
         ok = True
         if not isinstance(builderNames, (list, tuple)):
@@ -77,16 +52,14 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
                   "of Builder names.")
 
         self.builderNames = builderNames
-        "list of builder names to start in each buildset"
 
         self.properties = Properties()
-        "properties that are contributed to each buildset"
         self.properties.update(properties, "Scheduler")
         self.properties.setProperty("scheduler", name, "Scheduler")
-
         self.objectid = None
-
+        self.schedulerid = None
         self.master = None
+        self.active = False
 
         # Set the codebases that are necessary to process the changes
         # These codebases will always result in a sourcestamp with or without changes
@@ -96,67 +69,110 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
             for codebase, codebase_attrs in codebases.iteritems():
                 if not isinstance(codebase_attrs, dict):
                     config.error("Codebases must be a dict of dicts")
-                if (codebases != BaseScheduler.DefaultCodebases and
+                if (codebases != BaseScheduler.DEFAULT_CODEBASES and
                    'repository' not in codebase_attrs):
                     config.error("The key 'repository' is mandatory in codebases")
         else:
             config.error("Codebases cannot be None")
 
         self.codebases = codebases
-        
+
         # internal variables
         self._change_consumer = None
         self._change_consumption_lock = defer.DeferredLock()
+
+    ## activity handling
+
+    def activate(self):
+        return defer.succeed(None)
+
+    def deactivate(self):
+        return defer.succeed(None)
 
     ## service handling
 
     def startService(self):
         service.MultiService.startService(self)
+        self._startActivityPolling()
 
-    def findNewSchedulerInstance(self, new_config):
-        return new_config.schedulers[self.name] # should exist!
+    def _startActivityPolling(self):
+        self._activityPollCall = task.LoopingCall(self._activityPoll)
+        # plug in a clock if we have one, for tests
+        if hasattr(self, 'clock'):
+            self._activityPollCall.clock = self.clock
+        self._activityPollDeferred = d = self._activityPollCall.start(
+                self.POLL_INTERVAL, now=True)
+        @d.addErrback
+        def stopped(f):
+            # record that the call is stopped, or we'll try to stop it later
+            self._activityPollCall = None
+            self._activityPollCallDeferred = None
+            return f
+        d.addErrback(log.err, 'while polling for scheduler activity:')
 
+    def _stopActivityPolling(self):
+        if self._activityPollCall:
+            self._activityPollCall.stop()
+            self._activityPollCall = None
+
+    @defer.inlineCallbacks
+    def _activityPoll(self):
+        # just in case..
+        if self.active:
+            return
+
+        upd = self.master.data.updates
+        if self.schedulerid is None:
+            self.schedulerid = yield upd.findSchedulerId(self.name)
+
+        # try to claim the scheduler; if this fails, that's OK - it just means
+        # we try again next time.
+        try:
+            yield upd.setSchedulerMaster(self.schedulerid,
+                                         self.master.masterid)
+        except exceptions.SchedulerAlreadyClaimedError:
+            return
+
+        self._stopActivityPolling()
+        self.active = True
+        try:
+            yield self.activate()
+        except Exception:
+            # this scheduler is half-active, and noted as such in the db..
+            log.msg('WARNING: scheduler is in an unknown state')
+            raise
+
+        # Note that, in this implementation, the scheduler will never become
+        # inactive again.  This may change in later versions.
+
+    @defer.inlineCallbacks
     def stopService(self):
-        d = defer.maybeDeferred(self._stopConsumingChanges)
-        d.addCallback(lambda _ : service.MultiService.stopService(self))
-        return d
-
+        yield defer.maybeDeferred(service.MultiService.stopService, self)
+        self._stopActivityPolling()
+        # wait for the activity polling LoopingCall to complete
+        yield self._activityPollDeferred
+        yield defer.maybeDeferred(self._stopConsumingChanges)
+        if self.active:
+            self.active = False
+            yield self.deactivate()
+            # unclaim the scheduler
+            upd = self.master.data.updates
+            yield upd.setSchedulerMaster(self.schedulerid, None)
 
     ## status queries
 
-    # TODO: these aren't compatible with distributed schedulers
+    # deprecated: these aren't compatible with distributed schedulers
 
     def listBuilderNames(self):
-        "Returns the list of builder names"
         return self.builderNames
 
     def getPendingBuildTimes(self):
-        "Returns a list of the next times that builds are scheduled, if known."
         return []
 
     ## change handling
 
     def startConsumingChanges(self, fileIsImportant=None, change_filter=None,
                               onlyImportant=False):
-        """
-        Subclasses should call this method from startService to register to
-        receive changes.  The BaseScheduler class will take care of filtering
-        the changes (using change_filter) and (if fileIsImportant is not None)
-        classifying them.  See L{gotChange}.  Returns a Deferred.
-
-        @param fileIsImportant: a callable provided by the user to distinguish
-        important and unimportant changes
-        @type fileIsImportant: callable
-
-        @param change_filter: a filter to determine which changes are even
-        considered by this scheduler, or C{None} to consider all changes
-        @type change_filter: L{buildbot.changes.filter.ChangeFilter} instance
-
-        @param onlyImportant: If True, only important changes, as specified by
-        fileIsImportant, will be added to the buildset.
-        @type onlyImportant: boolean
-
-        """
         assert fileIsImportant is None or callable(fileIsImportant)
 
         # register for changes with the data API
@@ -224,34 +240,12 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         return d
 
     def gotChange(self, change, important):
-        """
-        Called when a change is received; returns a Deferred.  If the
-        C{fileIsImportant} parameter to C{startConsumingChanges} was C{None},
-        then all changes are considered important.
-        The C{codebase} of the change has always an entry in the C{codebases}
-        dictionary of the scheduler.
-
-        @param change: the new change object
-        @type change: L{buildbot.changes.changes.Change} instance
-        @param important: true if this is an important change, according to
-        C{fileIsImportant}.
-        @type important: boolean
-        @returns: Deferred
-        """
         raise NotImplementedError
 
     ## starting bulids
 
     def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
                                         properties=None, builderNames=None):
-        """Create a buildset based on the supplied sourcestamps, with defaults
-        applied from the scheduler's configuration.
-
-        Sourcestamps is a list of sourcestamp dictionaries, giving the required
-        parameters.  Any other defaults will be filled in from the scheduler's
-        configuration.  If sourcestamps is None, only the defaults will be
-        used.
-        """
 
         if sourcestamps is None:
             sourcestamps = []
@@ -282,11 +276,6 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
     @defer.inlineCallbacks
     def addBuildsetForChanges(self, reason='', external_idstring=None,
             changeids=[], builderNames=None, properties=None):
-        """
-        Add a buildset for the given collection of changes.  This will take the
-        latest of any changes with the same codebase, and will fill in
-        sourcestamps for any codebases for which no changes are included.
-        """
         changesByCodebase = {}
 
         def get_last_change_for_codebase(codebase):
@@ -324,22 +313,6 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
     def addBuildsetForSourceStamps(self, sourcestamps=[], reason='',
             external_idstring=None, properties=None, builderNames=None):
-        """
-        Add a buildset for the given sourcestamps.
-
-        @param sourcestamps: a list of full sourcestamp dictionaries  or
-            sourcestamp IDs
-        @param reason: reason for this buildset
-        @type reason: unicode string
-        @param external_idstring: external identifier for this buildset, or None
-        @param properties: a properties object containing initial properties for
-            the buildset
-        @type properties: L{buildbot.process.properties.Properties}
-        @param builderNames: builders to name in the buildset (defaults to
-            C{self.builderNames})
-        @param setid: idenitification of a set of sourcestamps
-        @returns: (buildset ID, buildrequest IDs) via Deferred
-        """
         # combine properties
         if properties:
             properties.updateFromProperties(self.properties)

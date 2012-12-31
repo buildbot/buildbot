@@ -236,6 +236,25 @@ All update methods return a Deferred.
         Record the given builders as the currently-configured set of builders on this master.
         Masters should call this every time the list of configured builders changes.
 
+.. py:class:: buildbot.data.changes.SchedulerResourceType
+
+    .. py:method:: findSchedulerId(name)
+
+        :param string name: scheduler name
+        :returns: scheduler ID via Deferred
+
+        Get the ID for the given scheduler name, inventing one if necessary.
+
+    .. py:method:: setSchedulerMaster(schedulerid, masterid)
+
+        :param integer schedulerid: scheduler ID to try to claim
+        :param integer masterid: this master's master ID
+        :raises: :py:exc:`~buildbot.data.exceptions.SchedulerAlreadyClaimedError`
+        :returns: Deferred
+
+        Attempt to claim the given scheduler on the master.
+        If the scheduler cannot be claimed, this method raises a :py:exc:`~buildbot.data.exceptions.SchedulerAlreadyClaimedError`.
+
 Links
 .....
 
@@ -267,6 +286,10 @@ Exceptions
 .. py:exception:: InvalidOptionError
 
     A value in the ``options`` argument was invalid or ill-formed.
+
+.. py:exception:: SchedulerAlreadyClaimedError
+
+    Identical to :py:exc:`~buildbot.db.schedulers.SchedulerAlreadyClaimedError`.
 
 Web Interface
 +++++++++++++
@@ -522,5 +545,6 @@ All strings in the data model are unicode strings.
     rtype-master
     rtype-builder
     rtype-sourcestamp
+    rtype-scheduler
 
 .. [#apiv1] The JSON API defined by ``status_json.py`` in Buildbot-0.8.x is considered version 1, although its root path was ``json``, not ``api/v1``.

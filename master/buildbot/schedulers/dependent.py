@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from twisted.python import log
 from buildbot import util, interfaces, config
 from buildbot.status.results import SUCCESS, WARNINGS
 from buildbot.schedulers import base
@@ -39,7 +38,7 @@ class Dependent(base.BaseScheduler):
         # complete.
         self._subscription_lock = defer.DeferredLock()
 
-    def startService(self):
+    def activate(self):
         self._buildset_new_consumer = self.master.data.startConsuming(
                     self._buildset_new_cb,
                     {}, ('buildset',))
@@ -50,10 +49,9 @@ class Dependent(base.BaseScheduler):
                     ('buildset', None, 'complete'))
 
         # check for any buildsets completed before we started
-        d = self._checkCompletedBuildsets(None, )
-        d.addErrback(log.err, 'while checking for completed buildsets in start')
+        return self._checkCompletedBuildsets(None, )
 
-    def stopService(self):
+    def deactivate(self):
         if self._buildset_new_consumer:
             self._buildset_new_consumer.stopConsuming()
         if self._buildset_complete_consumer:

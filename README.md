@@ -97,6 +97,7 @@ For each resource type, we'll need the following (based on "Adding Resource Type
 
 * A resource-type module and class, with unit tests
 * Docs for that resource type
+* Fake versions of all update methods
 * Type validators for the resource type
 * New endpoints, with unit tests
 * Docs for the endpoints
@@ -108,7 +109,6 @@ It's safe to leave tasks that have significant prerequisites - particularly the 
 
 The outstanding resource types are:
 
-* scheduler (underlying DB API complete)
 * buildrequest
 * build
 * step
@@ -116,17 +116,7 @@ The outstanding resource types are:
 * buildslave
 * changesource
 
-#### Schedulers ####
-
-There is no scheduler resource type yet, although schedulers are in place in the database API so that other tables can refer to a scheduler ID.
-Support needs to be added for schedulers on a particular master to "claim" the name for themselves, deactivate themselves if already running on another master, and periodically poll for the opportunity to pick up the role.
-This gives us automatic failover for schedulers in a multi-master configuration, and also means that all masters can run with identical configurations, which may make configuration management easier.
-
-When a master becomes inactive (either on its own, or having failed its heartbeat check), its schedulers should be marked inactive by the data API and suitable messages sent.
-
-It should be possible to list the master on which a scheduler is running at e.g., `/scheduler/:schedulerid/master`
-
-#### Buildrequests ####
+### Notes on Build Requests ###
 
 Buildrequests include a `builderid` field which will need to be determined from the builders table.
 It should probably be an error to schedule a build on a builder that does not exist, as that build will not be executed.
@@ -153,6 +143,7 @@ Tasks:
 * Move the methods of BuilderControl to update methods of the Builder resouce type (or other places as appropriate), and add control methods where appropriate.
   In particular, implement `rebuildBuild` properly.
 * Use DateTimes everywhere
+* Remove `listBuilderNames` and `getPendingBuildTimes` methods from BaseScheduler
 
 ## Status Rewrites ##
 
