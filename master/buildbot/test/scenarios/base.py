@@ -16,12 +16,12 @@
 from buildbot.data import testhooks
 from buildbot.test.fake import fakedb
 from twisted.internet import defer
-import mock
 
 class BaseScenario(testhooks.TestHooksScenario):
     """buildbot.test.unit.test_www.ui.BaseScenario"""
     def populateBaseDb(self):
-        self.master.db.__init__(mock.Mock)
+        # what on earth is this??
+        # self.master.db.__init__(mock.Mock)
         self.master.db.insertTestData([
             fakedb.Master(id=13, name=u'inactivemaster', active=0,
                           last_active=0),

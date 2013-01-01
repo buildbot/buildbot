@@ -18,7 +18,7 @@ from twisted.trial import unittest
 from twisted.internet import task, defer
 from buildbot import interfaces
 from buildbot.data import buildsets
-from buildbot.test.util import types, endpoint
+from buildbot.test.util import validation, endpoint
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.status.results import SUCCESS, FAILURE
 
@@ -32,24 +32,33 @@ class Buildset(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         self.setUpEndpoint()
         self.db.insertTestData([
-            fakedb.SourceStampSet(id=92),
-            fakedb.Buildset(id=13, sourcestampsetid=92,
-                reason='because I said so'),
-        ])
+            fakedb.Buildset(id=13, reason='because I said so'),
+            fakedb.SourceStamp(id=92),
+            fakedb.SourceStamp(id=93),
+            fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=92),
+            fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=93),
 
+            fakedb.Buildset(id=14, reason='no sourcestamps'),
+        ])
 
     def tearDown(self):
         self.tearDownEndpoint()
-
 
     def test_get_existing(self):
         d = self.callGet(dict(), dict(bsid=13))
         @d.addCallback
         def check(buildset):
-            types.verifyData(self, 'buildset', {}, buildset)
+            validation.verifyData(self, 'buildset', {}, buildset)
             self.assertEqual(buildset['reason'], 'because I said so')
         return d
 
+    def test_get_existing_no_sourcestamps(self):
+        d = self.callGet(dict(), dict(bsid=14))
+        @d.addCallback
+        def check(buildset):
+            validation.verifyData(self, 'buildset', {}, buildset)
+            self.assertEqual(buildset['sourcestamps'], [])
+        return d
 
     def test_get_missing(self):
         d = self.callGet(dict(), dict(bsid=99))
@@ -70,9 +79,11 @@ class Buildsets(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         self.setUpEndpoint()
         self.db.insertTestData([
-            fakedb.SourceStampSet(id=92),
-            fakedb.Buildset(id=13, complete=True, sourcestampsetid=92),
-            fakedb.Buildset(id=14, complete=False, sourcestampsetid=92),
+            fakedb.SourceStamp(id=92),
+            fakedb.Buildset(id=13, complete=True),
+            fakedb.Buildset(id=14, complete=False),
+            fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=92),
+            fakedb.BuildsetSourceStamp(buildsetid=14, sourcestampid=92),
         ])
 
 
@@ -83,9 +94,9 @@ class Buildsets(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict())
         @d.addCallback
         def check(buildsets):
-            types.verifyData(self, 'buildset', {}, buildsets[0])
+            validation.verifyData(self, 'buildset', {}, buildsets[0])
             self.assertEqual(buildsets[0]['bsid'], 13)
-            types.verifyData(self, 'buildset', {}, buildsets[1])
+            validation.verifyData(self, 'buildset', {}, buildsets[1])
             self.assertEqual(buildsets[1]['bsid'], 14)
         return d
 
@@ -94,7 +105,7 @@ class Buildsets(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(buildsets):
             self.assertEqual(len(buildsets), 1)
-            types.verifyData(self, 'buildset', {}, buildsets[0])
+            validation.verifyData(self, 'buildset', {}, buildsets[0])
             self.assertEqual(buildsets[0]['bsid'], 13)
         return d
 
@@ -103,7 +114,7 @@ class Buildsets(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(buildsets):
             self.assertEqual(len(buildsets), 1)
-            types.verifyData(self, 'buildset', {}, buildsets[0])
+            validation.verifyData(self, 'buildset', {}, buildsets[0])
             self.assertEqual(buildsets[0]['bsid'], 14)
         return d
 
@@ -117,11 +128,17 @@ class BuildsetResourceType(unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
-                                                testcase=self)
+                                        wantData=True, testcase=self)
         self.rtype = buildsets.BuildsetResourceType(self.master)
         return self.master.db.insertTestData([
-            fakedb.SourceStampSet(id=234),
+            fakedb.SourceStamp(id=234, branch='br', codebase='cb',
+                        project='pr', repository='rep', revision='rev',
+                        created_at=89834834),
         ])
+
+    SS234_DATA = {'branch': u'br', 'codebase': u'cb', 'patch': None,
+                  'project': u'pr', 'repository': u'rep', 'revision': u'rev',
+                  'created_at': 89834834, 'ssid': 234}
 
     def do_test_addBuildset(self, kwargs, expectedReturn,
             expectedMessages, expectedBuildset):
@@ -157,25 +174,27 @@ class BuildsetResourceType(unittest.TestCase):
                  buildername=buildername))
 
     def _buildsetMessage(self, bsid, external_idstring=u'extid',
-            reason=u'because', scheduler=u'fakesched', sourcestampsetid=234,
+            reason=u'because', scheduler=u'fakesched', sourcestampids=[234],
             submitted_at=A_TIMESTAMP):
+        ssmap = { 234: self.SS234_DATA }
         return (
             ('buildset', str(bsid), 'new'),
             dict(bsid=bsid, complete=False, complete_at=None,
                  external_idstring=external_idstring, reason=reason,
                  results=None, scheduler=scheduler,
-                 sourcestampsetid=sourcestampsetid,
+                 sourcestamps=[ ssmap[ssid] for ssid in sourcestampids],
                  submitted_at=submitted_at))
 
     def _buildsetCompleteMessage(self, bsid, complete_at=A_TIMESTAMP,
             submitted_at=A_TIMESTAMP, external_idstring=u'extid',
-            reason=u'because', results=0, sourcestampsetid=234):
+            reason=u'because', results=0, sourcestampids=[234]):
+        ssmap = { 234: self.SS234_DATA }
         return (
             ('buildset', str(bsid), 'complete'),
             dict(bsid=bsid, complete=True, complete_at=complete_at,
                  external_idstring=external_idstring, reason=reason,
-                 results=results, sourcestampsetid=sourcestampsetid,
-                 submitted_at=submitted_at))
+                 results=results, submitted_at=submitted_at,
+                 sourcestamps=[ ssmap[ssid] for ssid in sourcestampids ]))
 
 
     def test_addBuildset_two_builderNames(self):
@@ -184,7 +203,7 @@ class BuildsetResourceType(unittest.TestCase):
             name = 'fakesched'
 
         kwargs = dict(scheduler=u'fakesched', reason=u'because',
-                    sourcestampsetid=234, external_idstring=u'extid',
+                    sourcestamps=[234], external_idstring=u'extid',
                     builderNames=['a', 'b'])
         expectedReturn = (200, dict(a=1000, b=1001))
         expectedMessages = [
@@ -194,8 +213,7 @@ class BuildsetResourceType(unittest.TestCase):
         ]
         expectedBuildset = dict(reason=u'because',
                 properties={},
-                external_idstring=u'extid',
-                sourcestampsetid=234)
+                external_idstring=u'extid')
         return self.do_test_addBuildset(kwargs,
                 expectedReturn, expectedMessages, expectedBuildset)
 
@@ -205,7 +223,7 @@ class BuildsetResourceType(unittest.TestCase):
             name = 'fakesched'
 
         kwargs = dict(scheduler=u'fakesched', reason=u'because',
-                            sourcestampsetid=234, external_idstring=u'extid')
+                            sourcestamps=[234], external_idstring=u'extid')
         expectedReturn = (200, {})
         expectedMessages = [
             self._buildsetMessage(200),
@@ -214,8 +232,7 @@ class BuildsetResourceType(unittest.TestCase):
         ]
         expectedBuildset = dict(reason=u'because',
                 properties={},
-                external_idstring=u'extid',
-                sourcestampsetid=234)
+                external_idstring=u'extid')
         return self.do_test_addBuildset(kwargs,
                 expectedReturn, expectedMessages, expectedBuildset)
 
@@ -256,14 +273,16 @@ class BuildsetResourceType(unittest.TestCase):
                 complete=buildRequestCompletions.get(brid),
                 results=buildRequestResults.get(brid, SUCCESS))
         yield self.master.db.insertTestData([
-            fakedb.Buildset(id=72, sourcestampsetid=234,
+            fakedb.Buildset(id=72,
                 submitted_at=EARLIER,
                 complete=buildsetComplete,
                 complete_at=A_TIMESTAMP if buildsetComplete else None),
             mkbr(42), mkbr(43), mkbr(44),
-            fakedb.Buildset(id=73, sourcestampsetid=234,
+            fakedb.BuildsetSourceStamp(buildsetid=72, sourcestampid=234),
+            fakedb.Buildset(id=73,
                 complete=False),
             mkbr(45, bsid=73),
+            fakedb.BuildsetSourceStamp(buildsetid=73, sourcestampid=234),
         ])
 
         yield self.rtype.maybeBuildsetComplete(72, _reactor=clock)

@@ -17,8 +17,8 @@ import sqlalchemy as sa
 from twisted.trial import unittest
 from twisted.internet import defer, task
 from buildbot.test.fake import fakedb, fakemaster
-from buildbot.test.util import interfaces, connector_component, types
-from buildbot.db import changes
+from buildbot.test.util import interfaces, connector_component, validation
+from buildbot.db import changes, sourcestamps
 from buildbot.util import epoch2datetime
 
 class Tests(interfaces.InterfaceTests):
@@ -43,7 +43,7 @@ class Tests(interfaces.InterfaceTests):
             is_dir=0, branch="warnerdb", revision="0e92a098b",
             when_timestamp=266738404, revlink='http://warner/0e92a098b',
             category='devel', repository='git://warner', codebase='mainapp',
-            project='Buildbot'),
+            project='Buildbot', sourcestampid=234),
 
         fakedb.ChangeFile(changeid=14, filename='master/buildbot/__init__.py'),
     ]
@@ -63,6 +63,7 @@ class Tests(interfaces.InterfaceTests):
         'revision': u'0e92a098b',
         'revlink': u'http://warner/0e92a098b',
         'when_timestamp': epoch2datetime(266738404),
+        'sourcestampid': 234,
     }
 
     # tests
@@ -80,13 +81,68 @@ class Tests(interfaces.InterfaceTests):
         def getChange(self, key, no_cache=False):
             pass
 
+    @defer.inlineCallbacks
+    def test_addChange_getChange(self):
+        clock = task.Clock()
+        clock.advance(1230000353)
+        changeid = yield self.db.changes.addChange(
+                 author=u'dustin',
+                 files=[],
+                 comments=u'fix spelling',
+                 is_dir=0,
+                 revision=u'2d6caa52',
+                 when_timestamp=epoch2datetime(1239898353),
+                 branch=u'master',
+                 category=None,
+                 revlink=None,
+                 properties={},
+                 repository=u'repo://',
+                 codebase=u'cb',
+                 project=u'proj',
+                 _reactor=clock)
+        chdict = yield self.db.changes.getChange(changeid)
+        validation.verifyDbDict(self, 'chdict', chdict)
+        chdict = chdict.copy()
+        ss = yield self.db.sourcestamps.getSourceStamp(chdict['sourcestampid'])
+        chdict['sourcestampid'] = ss
+        self.assertEqual(chdict, {
+            'author': u'dustin',
+            'branch': u'master',
+            'category': None,
+            'changeid': changeid,
+            'codebase': u'cb',
+            'comments': u'fix spelling',
+            'files': [],
+            'is_dir': 0,
+            'project': u'proj',
+            'properties': {},
+            'repository': u'repo://',
+            'revision': u'2d6caa52',
+            'revlink': None,
+            'sourcestampid': {
+                'branch': u'master',
+                'codebase': u'cb',
+                'patch_author': None,
+                'patch_body': None,
+                'patch_comment': None,
+                'patch_level': None,
+                'patch_subdir': None,
+                'project': u'proj',
+                'repository': u'repo://',
+                'revision': u'2d6caa52',
+                'created_at': epoch2datetime(1230000353),
+                'ssid': ss['ssid'],
+            },
+            'when_timestamp': epoch2datetime(1239898353),
+        })
+
     def test_getChange_chdict(self):
         d = self.insertTestData(self.change14_rows)
         def get14(_):
             return self.db.changes.getChange(14)
         d.addCallback(get14)
         def check14(chdict):
-            types.verifyDbDict(self, 'chdict', chdict)
+            validation.verifyDbDict(self, 'chdict', chdict)
             self.assertEqual(chdict, self.change14_dict)
         d.addCallback(check14)
         return d
@@ -260,6 +316,8 @@ class RealTests(Tests):
     # tests that only "real" implementations will pass
 
     def test_addChange(self):
+        clock = task.Clock()
+        clock.advance(1230000353)
         d = self.db.changes.addChange(
                  author=u'dustin',
                  files=[u'master/LICENSING.txt', u'slave/LICENSING.txt'],
@@ -272,8 +330,9 @@ class RealTests(Tests):
                  revlink=None,
                  properties={u'platform': (u'linux', 'Change')},
                  repository=u'',
-                 codebase=u'',
-                 project=u'')
+                 codebase=u'cb',
+                 project=u'',
+                 _reactor=clock)
         # check all of the columns of the four relevant tables
         def check_change(changeid):
             def thd(conn):
@@ -290,8 +349,9 @@ class RealTests(Tests):
                 self.assertEqual(r[0].when_timestamp, 266738400)
                 self.assertEqual(r[0].category, None)
                 self.assertEqual(r[0].repository, '')
-                self.assertEqual(r[0].codebase, '')
+                self.assertEqual(r[0].codebase, u'cb')
                 self.assertEqual(r[0].project, '')
+                self.assertEqual(r[0].sourcestampid, 1)
             return self.db.pool.do(thd)
         d.addCallback(check_change)
         def check_change_files(_):
@@ -326,6 +386,23 @@ class RealTests(Tests):
                 self.assertEqual(len(r), 0)
             return self.db.pool.do(thd)
         d.addCallback(check_change_users)
+        def check_change_sourcestamps(_):
+            def thd(conn):
+                query = self.db.model.sourcestamps.select()
+                r = conn.execute(query)
+                self.assertEqual([ dict(row) for row in r.fetchall() ], [{
+                    'branch': u'master',
+                    'codebase': u'cb',
+                    'id': 1,
+                    'patchid': None,
+                    'project': u'',
+                    'repository': u'',
+                    'revision': u'2d6caa52',
+                    'created_at': 1230000353,
+                    'ss_hash': 'b777dbd10d1d4c76651335f6a78e278e88b010d6',
+                }])
+            return self.db.pool.do(thd)
+        d.addCallback(check_change_sourcestamps)
         return d
 
     def test_addChange_when_timestamp_None(self):
@@ -443,13 +520,13 @@ class RealTests(Tests):
     def test_pruneChanges(self):
         d = self.insertTestData([
             fakedb.Scheduler(id=29),
-            fakedb.SourceStamp(id=234),
+            fakedb.SourceStamp(id=234, branch='aa'),
+            fakedb.SourceStamp(id=235, branch='bb'),
 
             fakedb.Change(changeid=11),
 
-            fakedb.Change(changeid=12),
+            fakedb.Change(changeid=12, sourcestampid=234),
             fakedb.SchedulerChange(schedulerid=29, changeid=12),
-            fakedb.SourceStampChange(sourcestampid=234, changeid=12),
             ] +
 
             self.change13_rows + [
@@ -459,8 +536,7 @@ class RealTests(Tests):
             self.change14_rows + [
             fakedb.SchedulerChange(schedulerid=29, changeid=14),
 
-            fakedb.Change(changeid=15),
-            fakedb.SourceStampChange(sourcestampid=234, changeid=15),
+            fakedb.Change(changeid=15, sourcestampid=235),
             ]
         )
 
@@ -469,15 +545,13 @@ class RealTests(Tests):
         def check(_):
             def thd(conn):
                 results = {}
-                for tbl_name in ('scheduler_changes', 'sourcestamp_changes',
-                                 'change_files', 'change_properties',
-                                 'changes'):
+                for tbl_name in ('scheduler_changes', 'change_files',
+                                 'change_properties', 'changes'):
                     tbl = self.db.model.metadata.tables[tbl_name]
                     r = conn.execute(sa.select([tbl.c.changeid]))
                     results[tbl_name] = sorted([ r[0] for r in r.fetchall() ])
                 self.assertEqual(results, {
                     'scheduler_changes': [14],
-                    'sourcestamp_changes': [15],
                     'change_files': [14],
                     'change_properties': [],
                     'changes': [14, 15],
@@ -496,15 +570,13 @@ class RealTests(Tests):
         def check(_):
             def thd(conn):
                 results = {}
-                for tbl_name in ('scheduler_changes', 'sourcestamp_changes',
-                                 'change_files', 'change_properties',
-                                 'changes'):
+                for tbl_name in ('scheduler_changes', 'change_files',
+                                 'change_properties', 'changes'):
                     tbl = self.db.model.metadata.tables[tbl_name]
                     r = conn.execute(sa.select([tbl.c.changeid]))
                     results[tbl_name] = len([ r for r in r.fetchall() ])
                 self.assertEqual(results, {
                     'scheduler_changes': 0,
-                    'sourcestamp_changes': 0,
                     'change_files': 0,
                     'change_properties': 0,
                     'changes': 1,
@@ -532,7 +604,7 @@ class TestFakeDB(unittest.TestCase, Tests):
 
     def setUp(self):
         self.master = fakemaster.make_master()
-        self.db = fakedb.FakeDBConnector(self)
+        self.db = fakedb.FakeDBConnector(self.master, self)
         self.insertTestData = self.db.insertTestData
 
 
@@ -544,12 +616,14 @@ class TestRealDB(unittest.TestCase,
         d = self.setUpConnectorComponent(
             table_names=['changes', 'change_files',
                 'change_properties', 'scheduler_changes', 'schedulers',
-                'sourcestampsets', 'sourcestamps', 'sourcestamp_changes',
-                'patches', 'change_users', 'users'])
+                'sourcestampsets', 'sourcestamps', 'patches', 'change_users',
+                'users'])
 
         @d.addCallback
         def finish_setup(_):
             self.db.changes = changes.ChangesConnectorComponent(self.db)
+            self.db.sourcestamps = \
+                    sourcestamps.SourceStampsConnectorComponent(self.db)
         return d
 
     def tearDown(self):

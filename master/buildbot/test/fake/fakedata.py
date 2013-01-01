@@ -96,11 +96,15 @@ class FakeUpdates(object):
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def addBuildset(self, scheduler=None, sourcestampsetid=None, reason='',
+    def addBuildset(self, scheduler=None, sourcestamps=[], reason='',
             properties={}, builderNames=[], external_idstring=None):
         # assert types
         self.testcase.assertIsInstance(scheduler, unicode)
-        self.testcase.assertIsInstance(sourcestampsetid, int)
+        self.testcase.assertIsInstance(sourcestamps, list)
+        for ss in sourcestamps:
+            if not isinstance(ss, int) or isinstance(ss, dict):
+                self.fail("%s is not an integer or a dictionary")
+        del ss # since we use locals(), below
         self.testcase.assertIsInstance(reason, unicode)
         self.assertProperties(sourced=True, properties=properties)
         self.testcase.assertIsInstance(builderNames, list)
@@ -113,7 +117,7 @@ class FakeUpdates(object):
         # call through to the db layer, since many scheduler tests expect to
         # find the buildset in the db later - TODO fix this!
         bsid, brids = yield self.master.db.buildsets.addBuildset(
-                sourcestampsetid=sourcestampsetid, reason=reason,
+                sourcestamps=sourcestamps, reason=reason,
                 properties=properties, builderNames=builderNames,
                 external_idstring=external_idstring)
         defer.returnValue((bsid, brids))

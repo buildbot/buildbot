@@ -380,17 +380,20 @@ class NightlyTriggerable(NightlyBase):
         d = self.getState('lastTrigger', None)
         def setLast(lastTrigger):
             try:
-                if lastTrigger:
-                    assert isinstance(lastTrigger[0], dict)
+                if lastTrigger and isinstance(lastTrigger[0], list):
                     self._lastTrigger = (lastTrigger[0], properties.Properties.fromDict(lastTrigger[1]))
             except:
                 # If the lastTrigger isn't of the right format, ignore it
                 log.msg("NightlyTriggerable Scheduler <%s>: bad lastTrigger: %r" % (self.name, lastTrigger))
         d.addCallback(setLast)
+        d.addErrback(log.err, 'while getting NightlyTriggerable state')
 
     def trigger(self, sourcestamps, set_props=None):
         """Trigger this scheduler with the given sourcestamp ID. Returns a
         deferred that will fire when the buildset is finished."""
+        assert isinstance(sourcestamps, list), \
+                "trigger requires a list of sourcestamps"
+
         self._lastTrigger = (sourcestamps, set_props)
 
         # record the trigger in the db
@@ -423,5 +426,5 @@ class NightlyTriggerable(NightlyBase):
         if set_props:
             props.updateFromProperties(set_props)
 
-        yield self.addBuildsetForSourceStampSetDetails(reason=self.reason,
+        yield self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
                 sourcestamps=sourcestamps, properties=props)

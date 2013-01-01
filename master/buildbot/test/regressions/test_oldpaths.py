@@ -15,6 +15,7 @@
 
 
 from twisted.trial import unittest
+from buildbot.util import pickle_prereqs
 
 class OldImportPaths(unittest.TestCase):
     """
@@ -92,8 +93,10 @@ class OldImportPaths(unittest.TestCase):
     def test_sourcestamp_SourceStamp(self):
         # this must exist, and the class must be defined at this package path,
         # in order for old build pickles to be loaded.
+        pickle_prereqs.patch()
         from buildbot.sourcestamp import SourceStamp
         assert SourceStamp
+        pickle_prereqs.unpatch()
 
     def test_process_subunitlogobserver_SubunitShellCommand(self):
         from buildbot.process.subunitlogobserver import SubunitShellCommand

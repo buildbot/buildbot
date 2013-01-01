@@ -194,10 +194,10 @@ All update methods return a Deferred.
 
 .. py:class:: buildbot.data.changes.BuildsetResourceType
 
-    .. py:method:: addBuildset(scheduler=None, sourcestampsetid=None, reason='', properties={}, builderNames=[], external_idstring=None)
+    .. py:method:: addBuildset(scheduler=None, sourcestamps=[], reason='', properties={}, builderNames=[], external_idstring=None)
 
         :param string scheduler: the name of the scheduler creating this buildset
-        :param integer sourcestampsetid: the source stamp set to be built
+        :param list sourcestamps: sourcestamps for the new buildset; see below
         :param unicode reason: the reason for this build
         :param unicode reason: the reason for this build
         :param properties: properties to set on this buildset
@@ -213,6 +213,8 @@ All update methods return a Deferred.
 
         Create a new buildset and corresponding buildrequests based on the given parameters.
         This is the low-level interface for scheduling builds.
+
+        Each sourcestamp in the list of sourcestamps can be given either as an integer, assumed to be a sourcestamp ID, or a dictionary of keyword arguments to be passed to :py:meth:`~buildbot.db.sourcestamps.SourceStampsConnectorComponent.findSourceStampId`.
 
     .. py:method:: maybeBuildsetComplete(bsid)
 
@@ -519,5 +521,6 @@ All strings in the data model are unicode strings.
     rtype-change
     rtype-master
     rtype-builder
+    rtype-sourcestamp
 
 .. [#apiv1] The JSON API defined by ``status_json.py`` in Buildbot-0.8.x is considered version 1, although its root path was ``json``, not ``api/v1``.

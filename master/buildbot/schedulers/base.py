@@ -242,197 +242,94 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
     ## starting bulids
 
-    @defer.inlineCallbacks
-    def addBuildsetForLatest(self, reason='', external_idstring=None,
-                        branch=None, repository='', project='',
-                        builderNames=None, properties=None):
-        """
-        Add a buildset for the 'latest' source in the given branch,
-        repository, and project.  This will create a relative sourcestamp for
-        the buildset.
+    def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
+                                        properties=None, builderNames=None):
+        """Create a buildset based on the supplied sourcestamps, with defaults
+        applied from the scheduler's configuration.
 
-        This method will add any properties provided to the scheduler
-        constructor to the buildset, and will call the master's addBuildset
-        method with the appropriate parameters.
-
-        @param reason: reason for this buildset
-        @type reason: unicode string
-        @param external_idstring: external identifier for this buildset, or None
-        @param branch: branch to build (note that None often has a special meaning)
-        @param repository: repository name for sourcestamp
-        @param project: project name for sourcestamp
-        @param builderNames: builders to name in the buildset (defaults to
-            C{self.builderNames})
-        @param properties: a properties object containing initial properties for
-            the buildset
-        @type properties: L{buildbot.process.properties.Properties}
-        @returns: (buildset ID, buildrequest IDs) via Deferred
-        """
-        # Define setid for this set of changed repositories
-        setid = yield self.master.db.sourcestampsets.addSourceStampSet()
-
-        # add a sourcestamp for each codebase
-        for codebase, cb_info in self.codebases.iteritems():
-            ss_repository = cb_info.get('repository', repository)
-            ss_branch = cb_info.get('branch', branch)
-            ss_revision = cb_info.get('revision', None)
-            yield self.master.db.sourcestamps.addSourceStamp(
-                        codebase=codebase,
-                        repository=ss_repository,
-                        branch=ss_branch,
-                        revision=ss_revision,
-                        project=project,
-                        changeids=set(),
-                        sourcestampsetid=setid)
-
-        bsid,brids = yield self.addBuildsetForSourceStamp(
-                                setid=setid, reason=reason,
-                                external_idstring=external_idstring,
-                                builderNames=builderNames,
-                                properties=properties)
-
-        defer.returnValue((bsid,brids))
-
-
-    @defer.inlineCallbacks
-    def addBuildsetForSourceStampDetails(self, reason='', external_idstring=None,
-                        branch=None, repository='', project='', revision=None,
-                        builderNames=None, properties=None):
-        """
-        Given details about the source code to build, create a source stamp and
-        then add a buildset for it.
-
-        @param reason: reason for this buildset
-        @type reason: unicode string
-        @param external_idstring: external identifier for this buildset, or None
-        @param branch: branch to build (note that None often has a special meaning)
-        @param repository: repository name for sourcestamp
-        @param project: project name for sourcestamp
-        @param revision: revision to build - default is latest
-        @param builderNames: builders to name in the buildset (defaults to
-            C{self.builderNames})
-        @param properties: a properties object containing initial properties for
-            the buildset
-        @type properties: L{buildbot.process.properties.Properties}
-        @returns: (buildset ID, buildrequest IDs) via Deferred
-        """
-        # Define setid for this set of changed repositories
-        setid = yield self.master.db.sourcestampsets.addSourceStampSet()
-
-        yield self.master.db.sourcestamps.addSourceStamp(
-                branch=branch, revision=revision, repository=repository,
-                project=project, sourcestampsetid=setid)
-
-        rv = yield self.addBuildsetForSourceStamp(
-                                setid=setid, reason=reason,
-                                external_idstring=external_idstring,
-                                builderNames=builderNames,
-                                properties=properties)
-        defer.returnValue(rv)
-
-
-    @defer.inlineCallbacks
-    def addBuildsetForSourceStampSetDetails(self, reason, sourcestamps,
-                                            properties, builderNames=None):
-        """Create a sourcestamp set based on sourcestamps, then wrap it in a
-        buildset.
-
-        Sourcestamps is a dictionary keyed by codebase, giving the required
+        Sourcestamps is a list of sourcestamp dictionaries, giving the required
         parameters.  Any other defaults will be filled in from the scheduler's
         configuration.  If sourcestamps is None, only the defaults will be
         used.
         """
 
         if sourcestamps is None:
-            sourcestamps = {}
+            sourcestamps = []
 
-        # Define new setid for this set of sourcestamps
-        new_setid = yield self.master.db.sourcestampsets.addSourceStampSet()
+        # convert sourcestamps to a dictionary keyed by codebase
+        stampsByCodebase = {}
+        for ss in sourcestamps:
+            cb = ss['codebase']
+            if cb in stampsByCodebase:
+                raise RuntimeError("multiple sourcestamps with same codebase")
+            stampsByCodebase[cb] = ss
 
         # Merge codebases with the passed list of sourcestamps
         # This results in a new sourcestamp for each codebase
+        stampsWithDefaults = []
         for codebase in self.codebases:
             ss = self.codebases[codebase].copy()
              # apply info from passed sourcestamps onto the configured default
              # sourcestamp attributes for this codebase.
-            ss.update(sourcestamps.get(codebase,{}))
+            ss.update(stampsByCodebase.get(codebase,{}))
+            stampsWithDefaults.append(ss)
 
-            # add sourcestamp to the new setid
-            yield self.master.db.sourcestamps.addSourceStamp(
-                        codebase=codebase,
-                        repository=ss.get('repository', None),
-                        branch=ss.get('branch', None),
-                        revision=ss.get('revision', None),
-                        project=ss.get('project', ''),
-                        changeids=[c['number'] for c in ss.get('changes', [])],
-                        patch_body=ss.get('patch_body', None),
-                        patch_level=ss.get('patch_level', None),
-                        patch_author=ss.get('patch_author', None),
-                        patch_comment=ss.get('patch_comment', None),
-                        sourcestampsetid=new_setid)
-
-        rv = yield self.addBuildsetForSourceStamp(
-                                setid=new_setid, reason=reason,
-                                properties=properties,
-                                builderNames=builderNames)
-
-        defer.returnValue(rv)
+        return self.addBuildsetForSourceStamps(sourcestamps=stampsWithDefaults,
+                reason=reason, properties=properties,
+                builderNames=builderNames)
 
 
     @defer.inlineCallbacks
     def addBuildsetForChanges(self, reason='', external_idstring=None,
             changeids=[], builderNames=None, properties=None):
+        """
+        Add a buildset for the given collection of changes.  This will take the
+        latest of any changes with the same codebase, and will fill in
+        sourcestamps for any codebases for which no changes are included.
+        """
         changesByCodebase = {}
 
         def get_last_change_for_codebase(codebase):
             return max(changesByCodebase[codebase],key = lambda change: change["changeid"])
 
-        # Define setid for this set of changed repositories
-        setid = yield self.master.db.sourcestampsets.addSourceStampSet()
-
         # Changes are retrieved from database and grouped by their codebase
         for changeid in changeids:
             chdict = yield self.master.db.changes.getChange(changeid)
-            # group change by codebase
             changesByCodebase.setdefault(chdict["codebase"], []).append(chdict)
 
+        sourcestamps = []
         for codebase in self.codebases:
-            args = {'codebase': codebase, 'sourcestampsetid': setid }
             if codebase not in changesByCodebase:
                 # codebase has no changes
                 # create a sourcestamp that has no changes
-                args['repository'] = self.codebases[codebase]['repository']
-                args['branch'] = self.codebases[codebase].get('branch', None)
-                args['revision'] = self.codebases[codebase].get('revision', None)
-                args['changeids'] = set()
-                args['project'] = ''
+                ss = {
+                    'codebase': codebase,
+                    'repository': self.codebases[codebase]['repository'],
+                    'branch': self.codebases[codebase].get('branch', None),
+                    'revision': self.codebases[codebase].get('revision', None),
+                    'project': '',
+                }
             else:
-                #codebase has changes
-                args['changeids'] = [c["changeid"] for c in changesByCodebase[codebase]]
                 lastChange = get_last_change_for_codebase(codebase)
-                for key in ['repository', 'branch', 'revision', 'project']:
-                    args[key] = lastChange[key]
+                ss = lastChange['sourcestampid']
+            sourcestamps.append(ss)
 
-            yield self.master.db.sourcestamps.addSourceStamp(**args)
-
-        # add one buildset, this buildset is connected to the sourcestamps by the setid
-        bsid,brids = yield self.addBuildsetForSourceStamp( setid=setid,
-                            reason=reason, external_idstring=external_idstring,
-                            builderNames=builderNames, properties=properties)
+        # add one buildset, using the calculated sourcestamps
+        bsid,brids = yield self.addBuildsetForSourceStamps(
+                sourcestamps=sourcestamps, reason=reason,
+                external_idstring=external_idstring, builderNames=builderNames,
+                properties=properties)
 
         defer.returnValue((bsid,brids))
 
     @defer.inlineCallbacks
-    def addBuildsetForSourceStamp(self, ssid=None, setid=None, reason='', external_idstring=None,
-            properties=None, builderNames=None):
+    def addBuildsetForSourceStamps(self, sourcestamps=[], reason='',
+            external_idstring=None, properties=None, builderNames=None):
         """
-        Add a buildset for the given, already-existing sourcestamp.
+        Add a buildset for the given sourcestamps.
 
-        This method will add any properties provided to the scheduler
-        constructor to the buildset, and will call the master's
-        L{BuildMaster.addBuildset} method with the appropriate parameters, and
-        return the same result.
-
+        @param sourcestamps: a list of full sourcestamp dictionaries  or
+            sourcestamp IDs
         @param reason: reason for this buildset
         @type reason: unicode string
         @param external_idstring: external identifier for this buildset, or None
@@ -444,9 +341,6 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         @param setid: idenitification of a set of sourcestamps
         @returns: (buildset ID, buildrequest IDs) via Deferred
         """
-        assert (ssid is None and setid is not None) \
-            or (ssid is not None and setid is None), "pass a single sourcestamp OR set not both"
-
         # combine properties
         if properties:
             properties.updateFromProperties(self.properties)
@@ -461,16 +355,8 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         # addBuildset method
         properties_dict = properties.asDict()
 
-        if setid == None:
-            if ssid is not None:
-                ssdict = yield self.master.db.sourcestamps.getSourceStamp(ssid)
-                setid = ssdict['sourcestampsetid']
-            else:
-                # no sourcestamp and no sets
-                yield None
-
         rv = yield self.master.data.updates.addBuildset(
-                scheduler=self.name, sourcestampsetid=setid, reason=reason,
+                scheduler=self.name, sourcestamps=sourcestamps, reason=reason,
                 properties=properties_dict, builderNames=builderNames,
                 external_idstring=external_idstring)
         defer.returnValue(rv)

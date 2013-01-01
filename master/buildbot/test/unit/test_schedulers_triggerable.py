@@ -40,7 +40,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
     def assertTriggeredBuildset(self, properties={}, sourcestamps=None):
         properties.update({ u'scheduler' : ( 'n', u'Scheduler') })
         self.assertEqual(self.addBuildsetCalls, [
-            ('addBuildsetForSourceStampSetDetails', dict(
+            ('addBuildsetForSourceStampsWithDefaults', dict(
                 builderNames=None, # uses the default
                 properties=properties,
                 reason=u'Triggerable(n)',
@@ -52,13 +52,13 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.master.mq.callConsumer(('buildset', str(bsid), 'complete'),
             dict(
                 bsid=bsid,
-                sourcestampsetid=1093,
                 submitted_at=100,
                 complete=True,
                 complete_at=200,
                 external_idstring=None,
                 reason=u'triggering',
                 results=results,
+                sourcestamps=[],
                 ))
 
     # tests
@@ -81,15 +81,14 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
               'project':'p',
               'repository':'r',
               'codebase':'cb' }
-        d = sched.trigger({'cb': ss}, set_props=set_props)
+        d = sched.trigger([ss], set_props=set_props)
 
         self.assertTriggeredBuildset(
             properties={ u'pr': ('op', u'test') },
-            sourcestamps={
-                'cb':
+            sourcestamps=[
                  dict(branch='br', project='p', repository='r',
                      codebase='cb', revision='myrev'),
-                })
+            ])
 
         # set up a boolean so that we can know when the deferred fires
         self.fired = False
@@ -137,24 +136,22 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                      'repository':'r', 'codebase':'cb' }
 
         # trigger the scheduler the first time
-        d = sched.trigger({'cb':makeSS('myrev1')}) # triggers bsid 500
+        d = sched.trigger([makeSS('myrev1')]) # triggers bsid 500
         self.assertTriggeredBuildset(
-            sourcestamps={
-                'cb':
+            sourcestamps=[
                  dict(branch='br', project='p', repository='r',
                      codebase='cb', revision='myrev1'),
-                })
+                ])
         d.addCallback(lambda (res, brids) : self.assertEqual(res, 11)
                 and self.assertEqual(brids, {u'b':100}))
 
         # and the second time
-        d = sched.trigger({'cb':makeSS('myrev2')}) # triggers bsid 501
+        d = sched.trigger([makeSS('myrev2')]) # triggers bsid 501
         self.assertTriggeredBuildset(
-            sourcestamps={
-                'cb':
+            sourcestamps=[
                  dict(branch='br', project='p', repository='r',
                      codebase='cb', revision='myrev2'),
-                })
+                ])
         d.addCallback(lambda (res, brids) : self.assertEqual(res, 22) 
                 and self.assertEqual(brids, {u'b':101}))
 
@@ -183,14 +180,14 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         ss = {'repository': 'r3', 'codebase': 'cb3', 'revision': 'fixrev3',
                'branch': 'default', 'project': 'p' }
-        sched.trigger(sourcestamps = {'cb3': ss})
+        sched.trigger(sourcestamps=[ss])
 
-        self.assertTriggeredBuildset(sourcestamps={'cb3':ss})
+        self.assertTriggeredBuildset(sourcestamps=[ss])
 
     def test_trigger_without_sourcestamps(self):
         # Test a scheduler with 2 repositories.
         # Trigger the scheduler without a sourcestamp; this should translate to
-        # a call to addBuildsetForSourceStampSetDetails with no sourcestamps
+        # a call to addBuildsetForSourceStampsWithDefaults with no sourcestamps
         sched = self.makeScheduler()
-        sched.trigger(sourcestamps=None)
-        self.assertTriggeredBuildset(sourcestamps=None)
+        sched.trigger(sourcestamps=[])
+        self.assertTriggeredBuildset(sourcestamps=[])

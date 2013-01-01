@@ -31,7 +31,7 @@ class OldTriggeringMethods(unittest.TestCase):
         self.master = master.BuildMaster(basedir=None)
 
         self.master.data = fakedata.FakeDataConnector(self.master, self)
-        self.master.db = fakedb.FakeDBConnector(self)
+        self.master.db = fakedb.FakeDBConnector(self.master, self)
         self.master.db.insertTestData([
             fakedb.Change(changeid=1, author='this is a test'),
         ])
@@ -129,7 +129,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
                     classmethod(lambda cls, b, f : cls()))
 
             self.master = master.BuildMaster(self.basedir)
-            self.db = self.master.db = fakedb.FakeDBConnector(self)
+            self.db = self.master.db = fakedb.FakeDBConnector(self.master, self)
             self.mq = self.master.mq = fakemq.FakeMQConnector(self.master, self)
             self.data = self.master.data = fakedata.FakeDataConnector(self.master, self)
 

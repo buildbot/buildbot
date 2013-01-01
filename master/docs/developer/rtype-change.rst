@@ -17,6 +17,7 @@ Changes
     :attr string repository: repository where this change occurred
     :attr string project: user-defined project to which this change corresponds
     :attr string codebase: codebase in this repository
+    :attr sourcestamp sourcestamp: the sourcestamp resouce for this change
     :attr Link link: link for this change
 
     ..:

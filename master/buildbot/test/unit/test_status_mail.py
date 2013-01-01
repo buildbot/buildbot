@@ -224,18 +224,14 @@ class TestMailNotifier(unittest.TestCase):
           return {"Builder1": builder1, "Builder2": builder2}[buildername]
 
 
-        self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.SourceStampSet(id=127),
-                                fakedb.Buildset(id=99, sourcestampsetid=127,
-                                                results=SUCCESS,
-                                                reason="testReason"),
-                                fakedb.BuildRequest(id=11, buildsetid=99,
-                                                    buildername='Builder1'),
-                                fakedb.Build(number=0, brid=11),
-                                fakedb.BuildRequest(id=12, buildsetid=99,
-                                                    buildername='Builder2'),
-                                fakedb.Build(number=0, brid=12),
-                                ])
+        self.db = fakedb.FakeDBConnector(self, self)
+        self.db.insertTestData([
+            fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
+            fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder1'),
+            fakedb.Build(number=0, brid=11),
+            fakedb.BuildRequest(id=12, buildsetid=99, buildername='Builder2'),
+            fakedb.Build(number=0, brid=12),
+        ])
         mn.master = self # FIXME: Should be FakeMaster
 
         self.status = Mock()
@@ -284,15 +280,12 @@ class TestMailNotifier(unittest.TestCase):
         build.reason = "testReason"
         build.getBuilder.return_value = builder
 
-        self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.SourceStampSet(id=127),
-                                fakedb.Buildset(id=99, sourcestampsetid=127,
-                                                results=SUCCESS,
-                                                reason="testReason"),
-                                fakedb.BuildRequest(id=11, buildsetid=99,
-                                                    buildername='Builder'),
-                                fakedb.Build(number=0, brid=11),
-                                ])
+        self.db = fakedb.FakeDBConnector(self, self)
+        self.db.insertTestData([
+            fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
+            fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
+            fakedb.Build(number=0, brid=11),
+        ])
         mn.master = self
 
         self.status = Mock()
@@ -340,15 +333,12 @@ class TestMailNotifier(unittest.TestCase):
         def fakeGetBuildRequests(self, bsid):
             return defer.succeed([{"buildername":"Builder", "brid":1}])
  
-        self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.SourceStampSet(id=127),
-                                fakedb.Buildset(id=99, sourcestampsetid=127,
-                                                results=SUCCESS,
-                                                reason="testReason"),
-                                fakedb.BuildRequest(id=11, buildsetid=99,
-                                                    buildername='Builder'),
-                                fakedb.Build(number=0, brid=11),
-                                ])
+        self.db = fakedb.FakeDBConnector(self, self)
+        self.db.insertTestData([
+            fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
+            fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
+            fakedb.Build(number=0, brid=11),
+        ])
         mn.master = self
 
         builder = Mock()
@@ -411,15 +401,12 @@ class TestMailNotifier(unittest.TestCase):
         def fakeGetBuildRequests(self, bsid):
             return defer.succeed([{"buildername":"Builder", "brid":1}])
  
-        self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.SourceStampSet(id=127),
-                                fakedb.Buildset(id=99, sourcestampsetid=127,
-                                                results=SUCCESS,
-                                                reason="testReason"),
-                                fakedb.BuildRequest(id=11, buildsetid=99,
-                                                    buildername='Builder'),
-                                fakedb.Build(number=0, brid=11),
-                                ])
+        self.db = fakedb.FakeDBConnector(self, self)
+        self.db.insertTestData([
+            fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
+            fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
+            fakedb.Build(number=0, brid=11),
+        ])
         mn.master = self
 
         builder = Mock()
@@ -657,22 +644,18 @@ class TestMailNotifier(unittest.TestCase):
             return defer.succeed(m)
         mn.createEmail = fakeCreateEmail
 
-        self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.SourceStampSet(id=1099),
-                                fakedb.Buildset(id=99, sourcestampsetid=1099,
-                                                results=SUCCESS,
-                                                reason="testReason"),
-                                fakedb.BuildRequest(id=11, buildsetid=99,
-                                                    buildername='Builder'),
-                                fakedb.Build(number=0, brid=11),
-                                fakedb.Change(changeid=9123),
-                                fakedb.ChangeUser(changeid=9123, uid=1),
-                                fakedb.User(uid=1, identifier="tdurden"),
-                                fakedb.UserInfo(uid=1, attr_type='svn',
-                                            attr_data="tdurden"),
-                                fakedb.UserInfo(uid=1, attr_type='email',
-                                            attr_data="tyler@mayhem.net")
-                                ])
+        self.db = fakedb.FakeDBConnector(self, self)
+        self.db.insertTestData([
+            fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
+            fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
+            fakedb.Build(number=0, brid=11),
+            fakedb.Change(changeid=9123),
+            fakedb.ChangeUser(changeid=9123, uid=1),
+            fakedb.User(uid=1, identifier="tdurden"),
+            fakedb.UserInfo(uid=1, attr_type='svn', attr_data="tdurden"),
+            fakedb.UserInfo(uid=1, attr_type='email',
+                        attr_data="tyler@mayhem.net")
+        ])
 
         # fake sourcestamp with relevant user bits
         ss = Mock(name="sourcestamp")
@@ -767,26 +750,23 @@ class TestMailNotifier(unittest.TestCase):
             return defer.succeed(m)
         mn.createEmail = fakeCreateEmail
 
-        self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.SourceStampSet(id=1099),
-                                fakedb.Buildset(id=99, sourcestampsetid=1099,
-                                                results=SUCCESS,
-                                                reason="testReason"),
-                                fakedb.BuildRequest(id=11, buildsetid=99,
-                                                    buildername='Builder'),
-                                fakedb.Build(number=0, brid=11),
-                                fakedb.Build(number=1, brid=11),
-                                fakedb.Change(changeid=9123),
-                                fakedb.Change(changeid=9124),
-                                fakedb.ChangeUser(changeid=9123, uid=1),
-                                fakedb.ChangeUser(changeid=9124, uid=2),
-                                fakedb.User(uid=1, identifier="tdurden"),
-                                fakedb.User(uid=2, identifier="user2"),
-                                fakedb.UserInfo(uid=1, attr_type='email',
-                                            attr_data="tyler@mayhem.net"),
-                                fakedb.UserInfo(uid=2, attr_type='email',
-                                            attr_data="user2@example.net")
-                                ])
+        self.db = fakedb.FakeDBConnector(self, self)
+        self.db.insertTestData([
+            fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
+            fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
+            fakedb.Build(number=0, brid=11),
+            fakedb.Build(number=1, brid=11),
+            fakedb.Change(changeid=9123),
+            fakedb.Change(changeid=9124),
+            fakedb.ChangeUser(changeid=9123, uid=1),
+            fakedb.ChangeUser(changeid=9124, uid=2),
+            fakedb.User(uid=1, identifier="tdurden"),
+            fakedb.User(uid=2, identifier="user2"),
+            fakedb.UserInfo(uid=1, attr_type='email',
+                        attr_data="tyler@mayhem.net"),
+            fakedb.UserInfo(uid=2, attr_type='email',
+                        attr_data="user2@example.net")
+        ])
 
         def _getInterestedUsers():
             # 'narrator' in this case is the owner, which tests the lookup

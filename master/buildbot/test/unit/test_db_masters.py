@@ -16,7 +16,7 @@
 from twisted.trial import unittest
 from twisted.internet import defer, task
 from buildbot.test.fake import fakedb, fakemaster
-from buildbot.test.util import interfaces, connector_component, types
+from buildbot.test.util import interfaces, connector_component, validation
 from buildbot.db import masters
 from buildbot.util import epoch2datetime
 
@@ -142,7 +142,7 @@ class Tests(interfaces.InterfaceTests):
                         active=0, last_active=SOMETIME),
         ])
         masterdict = yield self.db.masters.getMaster(7)
-        types.verifyDbDict(self, 'masterdict', masterdict)
+        validation.verifyDbDict(self, 'masterdict', masterdict)
         self.assertEqual(masterdict, dict(id=7, name='some:master',
                                     active=False, last_active=SOMETIME_DT))
 
@@ -161,7 +161,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         masterlist = yield self.db.masters.getMasters(opts)
         for masterdict in masterlist:
-            types.verifyDbDict(self, 'masterdict', masterdict)
+            validation.verifyDbDict(self, 'masterdict', masterdict)
         expected_all = [
             dict(id=7, name='some:master',
                         active=0, last_active=SOMETIME_DT),
@@ -212,7 +212,7 @@ class TestFakeDB(unittest.TestCase, Tests):
         self.clock = task.Clock()
         self.clock.advance(SOMETIME)
         self.master = fakemaster.make_master()
-        self.db = fakedb.FakeDBConnector(self)
+        self.db = fakedb.FakeDBConnector(self.master, self)
         self.insertTestData = self.db.insertTestData
 
 

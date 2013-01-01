@@ -13,33 +13,51 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
+import copy
+from twisted.internet import defer, reactor
 from twisted.python import log
 from buildbot.data import base
 from buildbot.process import metrics
 from buildbot.process.users import users
 from buildbot.util import datetime2epoch, epoch2datetime
 
-class ChangeEndpoint(base.Endpoint):
+class FixerMixin(object):
+    @defer.inlineCallbacks
+    def _fixChange(self, change):
+        # TODO: make these mods in the DB API
+        if change:
+            change = change.copy()
+            del change['is_dir']
+            change['when_timestamp'] = datetime2epoch(change['when_timestamp'])
+            change['link'] = base.Link(('change', str(change['changeid'])))
+
+            sskey = ('sourcestamp', str(change['sourcestampid']))
+            change['sourcestamp'] = yield self.master.data.get({}, sskey)
+            del change['sourcestampid']
+        defer.returnValue(change)
+
+class ChangeEndpoint(FixerMixin, base.Endpoint):
 
     pathPattern = ( 'change', 'i:changeid' )
 
     def get(self, options, kwargs):
         d = self.master.db.changes.getChange(kwargs['changeid'])
-        d.addCallback(_fixChange)
+        d.addCallback(self._fixChange)
         return d
 
 
-class ChangesEndpoint(base.GetParamsCheckMixin,base.Endpoint,):
+class ChangesEndpoint(FixerMixin, base.GetParamsCheckMixin, base.Endpoint):
 
     pathPattern = ( 'change', )
     rootLinkName = 'change'
     maximumCount = 50
+
     @defer.inlineCallbacks
     def safeGet(self, options, kwargs):
         options['total'] = yield self.master.db.changes.getChangesCount(options)
         changes = yield self.master.db.changes.getChanges(options)
-        defer.returnValue(map(_fixChange, changes))
+        changes = [ (yield self._fixChange(ch)) for ch in changes ]
+        defer.returnValue(changes)
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
@@ -57,51 +75,66 @@ class ChangeResourceType(base.ResourceType):
     def addChange(self, files=None, comments=None, author=None, revision=None,
             when_timestamp=None, branch=None, category=None, revlink=u'',
             properties={}, repository=u'', codebase=None, project=u'',
-            src=None):
+            src=None, _reactor=reactor):
         metrics.MetricCountEvent.log("added_changes", 1)
 
         # add the source to the properties
         for k in properties:
             properties[k] = (properties[k], u'Change')
 
+        # get a user id
         if src:
             # create user object, returning a corresponding uid
             uid = yield users.createUserObject(self.master,
                     author, src)
         else:
             uid = None
-        change = {
-            'changeid': None, # not known yet
-            'author': author,
-            'files': files,
-            'comments': comments,
-            'revision': revision,
-            'when_timestamp': when_timestamp,
-            'branch': branch,
-            'category': category,
-            'revlink': revlink,
-            'properties': properties,
-            'repository': repository,
-            'project': project,
-            'codebase': None, # not set yet
-            # 'uid': uid, -- not in data API yet?
-        }
 
-        # if the codebase is default, and 
+        # set the codebase, either the default, supplied, or generated
         if codebase is None \
                 and self.master.config.codebaseGenerator is not None:
-            codebase = self.master.config.codebaseGenerator(change)
-            change['codebase'] = unicode(codebase)
+            pre_change = {
+                'author': author,
+                'files': files,
+                'comments': comments,
+                'revision': revision,
+                'when_timestamp': when_timestamp,
+                'branch': branch,
+                'category': category,
+                'revlink': revlink,
+                'properties': properties,
+                'repository': repository,
+                'project': project,
+                'codebase': None,
+                # 'uid': uid, -- not in data API yet?
+            }
+            codebase = self.master.config.codebaseGenerator(pre_change)
+            codebase = unicode(codebase)
         else:
-            change['codebase'] = codebase or u''
+            codebase = codebase or u''
 
-        # add the Change to the database and notify, converting briefly
-        # to database format, then back, and adding the changeid
-        del change['changeid']
-        change['when_timestamp'] = epoch2datetime(change['when_timestamp'])
-        changeid = yield self.master.db.changes.addChange(uid=uid, **change)
-        change['when_timestamp'] = datetime2epoch(change['when_timestamp'])
-        change['changeid'] = changeid
+        # add the Change to the database 
+        changeid = yield self.master.db.changes.addChange(
+            author=author,
+            files=files,
+            comments=comments,
+            revision=revision,
+            when_timestamp=epoch2datetime(when_timestamp),
+            branch=branch,
+            category=category,
+            revlink=revlink,
+            properties=properties,
+            repository=repository,
+            codebase=codebase,
+            project=project,
+            uid=uid,
+            _reactor=_reactor)
+
+        # get the change and munge the result for the notification
+        change = yield self.master.data.get({}, ('change', str(changeid)))
+        change = copy.deepcopy(change)
+        del change['link']
+        del change['sourcestamp']['link']
         self.produceEvent(change, 'new')
 
         # log, being careful to handle funny characters
@@ -109,13 +142,3 @@ class ChangeResourceType(base.ResourceType):
         log.msg(msg.encode('utf-8', 'replace'))
 
         defer.returnValue(changeid)
-
-
-def _fixChange(change):
-    # TODO: make these mods in the DB API
-    if change:
-        change = change.copy()
-        del change['is_dir']
-        change['when_timestamp'] = datetime2epoch(change['when_timestamp'])
-        change['link'] = base.Link(('change', str(change['changeid'])))
-    return change

@@ -638,12 +638,6 @@ buildmaster. The other sections of the tool are as follows:
     file, as any errors which are detected in the config file will be
     announced there.
 
-:guilabel:`Rebuild .py`
-    (not yet implemented). The idea here is to use Twisted's ``rebuild``
-    facilities to replace the buildmaster's running code with a new
-    version. Even if this worked, it would only be used by buildbot
-    developers.
-
 :guilabel:`poke IRC`
     This locates a :class:`words.IRC` status target and causes it to emit a
     message on all the channels to which it is currently connected. This

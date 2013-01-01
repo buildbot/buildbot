@@ -32,6 +32,7 @@ from migrate.versioning import schemadiff
 from buildbot.db import connector
 from buildbot.test.util import change_import, db, querylog
 from buildbot.test.fake import fakemaster
+from buildbot.util import pickle_prereqs
 
 # monkey-patch for "compare_model_to_db gets confused by sqlite_sequence",
 # http://code.google.com/p/sqlalchemy-migrate/issues/detail?id=124
@@ -77,6 +78,8 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
 
     @defer.inlineCallbacks
     def setUpUpgradeTest(self):
+        pickle_prereqs.patch()
+
         # set up the "real" db if desired
         if self.use_real_db:
             # note this changes self.db_url
@@ -207,7 +210,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
 
         def check(diff):
             if diff:
-                self.fail(str(diff))
+                self.fail("\n" + str(diff))
         d.addCallback(check)
         return d
 
@@ -335,6 +338,15 @@ class UpgradeTestCitools(UpgradeTestMixin, unittest.TestCase):
             whereclause=model.change_files.c.changeid == 77))
         self.assertEqual(r.scalar(), 'CHANGELOG')
 
+        r = conn.execute(
+            sa.select([model.sourcestamps],
+                whereclause=model.sourcestamps.c.id == ch.sourcestampid))
+        row = r.fetchone()
+        r.close()
+        exp = {'revision': 'HEAD', 'branch': 'master', 'project': '',
+               'repository': '', 'codebase': '', 'patchid': None}
+        self.assertEqual(dict((k,row[k]) for k in exp), exp)
+
     def test_upgrade(self):
         return self.do_test_upgrade()
 
@@ -380,6 +392,28 @@ class UpgradeTestV082(UpgradeTestMixin, unittest.TestCase):
             (6, 1310337779, objname),
             (7, 1310337779, objname),
         ])
+
+        # There's just one, boring sourcetamp
+        r = conn.execute(sa.select([model.sourcestamps]))
+        rows = [ dict(row) for row in r.fetchall() ]
+        for row in rows:
+            del row['created_at'] # it will be near the current time
+        self.assertEqual(rows, [
+            {u'branch': None, u'codebase': u'', u'id': 1,
+             u'patchid': None, u'project': u'', u'repository': u'',
+             u'revision': None,
+             'ss_hash': '835fccf6db3694afb48c380997024542c0bc162d'},
+        ])
+
+        # ..and all of the buildsets use it.
+        bs = model.buildsets
+        bss = model.buildset_sourcestamps
+        r = conn.execute(
+          sa.select([bs.c.id, bss.c.sourcestampid],
+                    whereclause=bs.c.id == bss.c.buildsetid))
+        rows = map(dict, r.fetchall())
+        self.assertEqual([ row['sourcestampid'] for row in rows ],
+                         [1] * 7)
 
     def test_upgrade(self):
         d = self.do_test_upgrade()
@@ -672,6 +706,12 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
 
 class TestPickles(unittest.TestCase):
 
+    def setUp(self):
+        pickle_prereqs.patch()
+
+    def tearDown(self):
+        pickle_prereqs.unpatch()
+
     def test_sourcestamp_081(self):
         # an empty pickled sourcestamp from 0.8.1
         pkl = textwrap.dedent("""\
@@ -697,7 +737,7 @@ class TestPickles(unittest.TestCase):
                 Nsb.""")
         ss = cPickle.loads(pkl)
         self.assertTrue(ss.revision is None)
-        self.assertTrue(hasattr(ss, '_addSourceStampToDatabase_lock'))
+        self.assertTrue(hasattr(ss, 'codebase'))
 
     def test_sourcestamp_version3(self):
         pkl = textwrap.dedent("""\

@@ -13,12 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 from twisted.trial import unittest
-
 from buildbot.steps.shell import ShellCommand, SetProperty
 from buildbot.process.properties import WithProperties, Properties
 from buildbot.process.factory import BuildFactory
-from buildbot.sourcestamp import SourceStamp
 from buildbot import config
 
 class FakeSlaveBuilder:
@@ -79,7 +78,10 @@ class TestShellCommandProperties(unittest.TestCase):
         f.addStep(SetProperty(command=["echo", "value"], property="propname"))
         f.addStep(ShellCommand(command=["echo", WithProperties("%(propname)s")]))
 
-        ss = SourceStamp()
+        ss = mock.Mock(name="sourcestamp")
+        ss.repository = 'repo'
+        ss.changes = []
+        ss.patch = ss.patch_info = None
 
         req = FakeBuildRequest("Testing", {ss.repository:ss}, None)
 
@@ -96,7 +98,10 @@ class TestSetProperty(unittest.TestCase):
         f = BuildFactory()
         f.addStep(SetProperty(command=["echo", "value"], property="propname"))
 
-        ss = SourceStamp()
+        ss = mock.Mock(name="sourcestamp")
+        ss.repository = 'repo'
+        ss.changes = []
+        ss.patch = ss.patch_info = None
 
         req = FakeBuildRequest("Testing", {ss.repository:ss}, None)
 

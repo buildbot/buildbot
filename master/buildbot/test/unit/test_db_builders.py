@@ -16,7 +16,7 @@
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.test.fake import fakedb, fakemaster
-from buildbot.test.util import interfaces, connector_component, types
+from buildbot.test.util import interfaces, connector_component, validation
 from buildbot.db import builders
 
 class Tests(interfaces.InterfaceTests):
@@ -79,7 +79,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         yield self.db.builders.addBuilderMaster(builderid=7, masterid=9)
         builderdict = yield self.db.builders.getBuilder(7)
-        types.verifyDbDict(self, 'builderdict', builderdict)
+        validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
                 dict(id=7, name='some:builder', masterids=[9, 10]))
 
@@ -93,7 +93,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         yield self.db.builders.addBuilderMaster(builderid=7, masterid=9)
         builderdict = yield self.db.builders.getBuilder(7)
-        types.verifyDbDict(self, 'builderdict', builderdict)
+        validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
                 dict(id=7, name='some:builder', masterids=[9]))
 
@@ -108,7 +108,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         yield self.db.builders.removeBuilderMaster(builderid=7, masterid=9)
         builderdict = yield self.db.builders.getBuilder(7)
-        types.verifyDbDict(self, 'builderdict', builderdict)
+        validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
                 dict(id=7, name='some:builder', masterids=[10]))
 
@@ -118,7 +118,7 @@ class Tests(interfaces.InterfaceTests):
             fakedb.Builder(id=7, name='some:builder'),
         ])
         builderdict = yield self.db.builders.getBuilder(7)
-        types.verifyDbDict(self, 'builderdict', builderdict)
+        validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
                 dict(id=7, name='some:builder', masterids=[]))
 
@@ -132,7 +132,7 @@ class Tests(interfaces.InterfaceTests):
             fakedb.BuilderMaster(builderid=7, masterid=4),
         ])
         builderdict = yield self.db.builders.getBuilder(7)
-        types.verifyDbDict(self, 'builderdict', builderdict)
+        validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
                 dict(id=7, name='some:builder', masterids=[3,4]))
 
@@ -155,7 +155,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         builderlist = yield self.db.builders.getBuilders()
         for builderdict in builderlist:
-            types.verifyDbDict(self, 'builderdict', builderdict)
+            validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(sorted(builderlist), sorted([
             dict(id=7, name='some:builder', masterids=[3]),
             dict(id=8, name='other:builder', masterids=[3,4]),
@@ -176,7 +176,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         builderlist = yield self.db.builders.getBuilders(masterid=3)
         for builderdict in builderlist:
-            types.verifyDbDict(self, 'builderdict', builderdict)
+            validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(sorted(builderlist), sorted([
             dict(id=7, name='some:builder', masterids=[3]),
             dict(id=8, name='other:builder', masterids=[3,4]),
@@ -198,8 +198,8 @@ class RealTests(Tests):
 class TestFakeDB(unittest.TestCase, Tests):
 
     def setUp(self):
-        self.builder = fakemaster.make_master()
-        self.db = fakedb.FakeDBConnector(self)
+        self.master = fakemaster.make_master()
+        self.db = fakedb.FakeDBConnector(self.master, self)
         self.insertTestData = self.db.insertTestData
 
 

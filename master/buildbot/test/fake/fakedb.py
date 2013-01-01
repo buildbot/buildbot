@@ -47,6 +47,9 @@ class Row(object):
     @cvar required_columns: a tuple of columns that must be given in the
     constructor
 
+    @cvar hashedColumns: a tuple of hash column and source columns designating
+    a hash to work around MySQL's inability to do indexing.
+
     @ivar values: the values to be inserted into this row
     """
 
@@ -54,7 +57,7 @@ class Row(object):
     required_columns = ()
     lists = ()
     dicts = ()
-    hash_pairs = []
+    hashedColumns = []
 
     _next_id = None
 
@@ -77,9 +80,9 @@ class Row(object):
             if isinstance(v, str):
                 self.values[k] = unicode(v)
         # calculate any necessary hashes
-        for src_col, hash_col in self.hash_pairs:
-            self.values[hash_col] = \
-                hashlib.sha1(self.values[src_col]).hexdigest()
+        for hash_col, src_cols in self.hashedColumns:
+            self.values[hash_col] = self.hashColumns(
+                        *(self.values[c] for c in src_cols))
 
         # make the values appear as attributes
         self.__dict__.update(self.values)
@@ -92,8 +95,19 @@ class Row(object):
         return '%s(**%r)' % (self.__class__.__name__, self.values)
 
     def nextId(self):
-        id, Row._next_id = Row._next_id, Row._next_id+1
+        id, Row._next_id = Row._next_id, (Row._next_id or 1)+1
         return id
+
+    def hashColumns(self, *args):
+        # copied from master/buildbot/db/base.py
+        def encode(x):
+            try:
+                return x.encode('utf8')
+            except AttributeError:
+                if x is None:
+                    return '\xf5'
+                return str(x)
+        return hashlib.sha1('\0'.join(map(encode, args))).hexdigest()
 
 
 class BuildRequest(Row):
@@ -142,6 +156,7 @@ class Change(Row):
         repository = u'repo',
         codebase =  u'',
         project = u'proj',
+        sourcestampid = 92,
     )
 
     lists = ('files','uids')
@@ -196,23 +211,6 @@ class Patch(Row):
     id_column = 'id'
 
 
-class SourceStampChange(Row):
-    table = "sourcestamp_changes"
-
-    defaults = dict(
-        sourcestampid = None,
-        changeid = None,
-    )
-
-    required_columns = ('sourcestampid', 'changeid')
-
-class SourceStampSet(Row):
-    table = "sourcestampsets"
-    defaults = dict(
-        id = None,
-    )
-    id_column = 'id'
-
 class SourceStamp(Row):
     table = "sourcestamps"
 
@@ -224,10 +222,13 @@ class SourceStamp(Row):
         repository = 'repo',
         codebase = '',
         project = 'proj',
-        sourcestampsetid = None,
+        created_at = 89834834,
+        ss_hash = None,
     )
 
     id_column = 'id'
+    hashedColumns = [ ( 'ss_hash', ('branch', 'revision', 'repository',
+                                    'project', 'codebase', 'patchid',) ) ]
 
 
 class Scheduler(Row):
@@ -240,7 +241,7 @@ class Scheduler(Row):
     )
 
     id_column = 'id'
-    hash_pairs = [ ( 'name', 'name_hash' ) ]
+    hashedColumns = [ ( 'name_hash', ('name',) ) ]
 
 
 class SchedulerMaster(Row):
@@ -272,7 +273,6 @@ class Buildset(Row):
         id = None,
         external_idstring = 'extid',
         reason = 'because',
-        sourcestampsetid = None,
         submitted_at = 12345678,
         complete = 0,
         complete_at = None,
@@ -280,7 +280,6 @@ class Buildset(Row):
     )
 
     id_column = 'id'
-    required_columns = ( 'sourcestampsetid', )
 
 
 class BuildsetProperty(Row):
@@ -293,6 +292,19 @@ class BuildsetProperty(Row):
     )
 
     required_columns = ( 'buildsetid', )
+
+
+class BuildsetSourceStamp(Row):
+    table = "buildset_sourcestamps"
+
+    defaults = dict(
+        id = None,
+        buildsetid = None,
+        sourcestampid = None,
+    )
+
+    required_columns = ( 'buildsetid', 'sourcestampid', )
+    id_column = 'id'
 
 
 class Object(Row):
@@ -365,7 +377,7 @@ class Master(Row):
     )
 
     id_column = 'id'
-    hash_pairs = [ ( 'name', 'name_hash' ) ]
+    hashedColumns = [ ( 'name_hash', ('name',) ) ]
 
 class Builder(Row):
     table = "builders"
@@ -377,7 +389,7 @@ class Builder(Row):
     )
 
     id_column = 'id'
-    hash_pairs = [ ( 'name', 'name_hash' ) ]
+    hashedColumns = [ ( 'name_hash', ('name',) ) ]
 
 class BuilderMaster(Row):
     table = "builder_masters"
@@ -443,14 +455,19 @@ class FakeChangesComponent(FakeDBComponent):
 
     # component methods
 
+    @defer.inlineCallbacks
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
             revision=None, when_timestamp=None, branch=None,
             category=None, revlink='', properties={}, repository='',
-            codebase='', project='', uid=None):
+            codebase='', project='', uid=None, _reactor=reactor):
         if self.changes:
             changeid = max(self.changes.iterkeys()) + 1
         else:
             changeid = 500
+
+        ssid = yield self.db.sourcestamps.findSourceStampId(
+            revision=revision, branch=branch, repository=repository,
+            codebase=codebase, project=project, _reactor=_reactor)
 
         self.changes[changeid] = ch = dict(
             changeid=changeid,
@@ -467,12 +484,13 @@ class FakeChangesComponent(FakeDBComponent):
             codebase=codebase,
             uids=[],
             files=files,
-            properties=properties)
+            properties=properties,
+            sourcestampid=ssid)
 
         if uid:
             ch['uids'].append(uid)
 
-        return defer.succeed(changeid)
+        yield defer.returnValue(changeid)
 
     def getLatestChangeid(self):
         if self.changes:
@@ -660,22 +678,6 @@ class FakeSchedulersComponent(FakeDBComponent):
                 classifications)
 
 
-class FakeSourceStampSetsComponent(FakeDBComponent):
-    def setUp(self):
-        self.sourcestampsets = {}
-
-    def insertTestData(self, rows):
-        for row in rows:
-            if isinstance(row, SourceStampSet):
-                self.sourcestampsets[row.id] = dict()
-
-    def addSourceStampSet(self):
-        id = len(self.sourcestampsets) + 100
-        while id in self.sourcestampsets:
-            id += 1
-        self.sourcestampsets[id] = dict()
-        return defer.succeed(id)
-
 class FakeSourceStampsComponent(FakeDBComponent):
 
     def setUp(self):
@@ -695,24 +697,17 @@ class FakeSourceStampsComponent(FakeDBComponent):
         for row in rows:
             if isinstance(row, SourceStamp):
                 ss = self.sourcestamps[row.id] = row.values.copy()
-                ss['changeids'] = set()
-
-        for row in rows:
-            if isinstance(row, SourceStampChange):
-                ss = self.sourcestamps[row.sourcestampid]
-                ss['changeids'].add(row.changeid)
+                ss['created_at'] = epoch2datetime(ss['created_at'])
+                del ss['ss_hash']
+                del ss['id']
 
     # component methods
 
-    def addSourceStamp(self, branch, revision, repository, project, sourcestampsetid,
-                          codebase = '', patch_body=None, patch_level=0, patch_author=None,
-                          patch_comment=None, patch_subdir=None, changeids=[]):
-        id = len(self.sourcestamps) + 100
-        while id in self.sourcestamps:
-            id += 1
-
-        changeids = set(changeids)
-
+    def findSourceStampId(self, branch=None, revision=None, repository=None,
+            project=None, codebase=None,
+            patch_body=None, patch_level=None,
+            patch_author=None, patch_comment=None, patch_subdir=None,
+            _reactor=reactor):
         if patch_body:
             patchid = len(self.patches) + 100
             while patchid in self.patches:
@@ -727,18 +722,33 @@ class FakeSourceStampsComponent(FakeDBComponent):
         else:
             patchid = None
 
-        self.sourcestamps[id] = dict(id=id, sourcestampsetid=sourcestampsetid, branch=branch, revision=revision, codebase=codebase,
+        new_ssdict = dict(branch=branch, revision=revision, codebase=codebase,
                 patchid=patchid, repository=repository, project=project,
-                changeids=changeids)
+                created_at=epoch2datetime(_reactor.seconds()))
+        for id, ssdict in self.sourcestamps.iteritems():
+            keys = ['branch', 'revision', 'repository',
+                    'codebase', 'project', 'patchid']
+            if [ ssdict[k] for k in keys ] == [ new_ssdict[k] for k in keys ]:
+                return defer.succeed(id)
+
+        id = len(self.sourcestamps) + 100
+        while id in self.sourcestamps:
+            id += 1
+        self.sourcestamps[id] = new_ssdict
         return defer.succeed(id)
 
-    def getSourceStamp(self, ssid):
-        return defer.succeed(self._getSourceStamp(ssid))
+    def getSourceStamp(self, key, no_cache=False):
+        return defer.succeed(self._getSourceStamp_sync(key))
 
-    def _getSourceStamp(self, ssid):
+    def getSourceStamps(self):
+        return defer.succeed([
+            self._getSourceStamp_sync(ssid)
+            for ssid in self.sourcestamps
+        ])
+
+    def _getSourceStamp_sync(self, ssid):
         if ssid in self.sourcestamps:
             ssdict = self.sourcestamps[ssid].copy()
-            del ssdict['id']
             ssdict['ssid'] = ssid
             patchid = ssdict['patchid']
             if patchid:
@@ -754,48 +764,13 @@ class FakeSourceStampsComponent(FakeDBComponent):
         else:
             return None
 
-    def getSourceStamps(self, sourcestampsetid):
-        sslist = []
-        for ssdict in self.sourcestamps.itervalues():
-            if ssdict['sourcestampsetid'] == sourcestampsetid:
-                ssdictcpy = self._getSourceStamp(ssdict['id'])
-                sslist.append(ssdictcpy)
-        return defer.succeed(sslist)
-
-    # assertions
-
-    def assertSourceStamps(self, sourcestampsetid, sourcestamps):
-        """Assert that the given sourcestamp set consist of the given
-        sourcestamps (munged about significantly)."""
-        got = []
-        for ssdict in self.sourcestamps.itervalues():
-            if ssdict['sourcestampsetid'] == sourcestampsetid:
-                ss = self._getSourceStamp(ssdict['id'])
-                del ss['ssid']
-                if not ss['changeids']:
-                    del ss['changeids']
-                else:
-                    ss['changeids'] = sorted(list(ss['changeids']))
-                del ss['sourcestampsetid']
-                got.append(ss)
-
-        exp = [ ss.copy() for ss in sourcestamps ]
-        for ss in exp:
-            for k in ('patch_body', 'patch_level', 'patch_subdir',
-                      'patch_author', 'patch_comment'):
-                ss.setdefault(k, None)
-            if 'changeids' in ss:
-                ss['changeids'] = sorted(list(ss['changeids']))
-
-        self.t.assertEqual(sorted(got), sorted(exp))
-
 
 class FakeBuildsetsComponent(FakeDBComponent):
 
     def setUp(self):
         self.buildsets = {}
         self.completed_bsids = set()
-        self.buildset_subs = []
+        self.buildset_sourcestamps = {}
 
     def insertTestData(self, rows):
         for row in rows:
@@ -810,6 +785,12 @@ class FakeBuildsetsComponent(FakeDBComponent):
                 v, src = tuple(json.loads(row.property_value))
                 self.buildsets[row.buildsetid]['properties'][n] = (v, src)
 
+        for row in rows:
+            if isinstance(row, BuildsetSourceStamp):
+                assert row.buildsetid in self.buildsets
+                self.buildset_sourcestamps.setdefault(row.buildsetid,
+                        []).append(row.sourcestampid)
+
     # component methods
 
     def _newBsid(self):
@@ -818,7 +799,8 @@ class FakeBuildsetsComponent(FakeDBComponent):
             bsid += 1
         return bsid
 
-    def addBuildset(self, sourcestampsetid, reason, properties, builderNames,
+    @defer.inlineCallbacks
+    def addBuildset(self, sourcestamps, reason, properties, builderNames,
                    external_idstring=None, submitted_at=None,
                    _reactor=reactor):
         bsid = self._newBsid()
@@ -835,13 +817,21 @@ class FakeBuildsetsComponent(FakeDBComponent):
             submitted_at = _reactor.seconds()
 
         # make up a row and keep its dictionary, with the properties tacked on
-        bsrow = Buildset(sourcestampsetid=sourcestampsetid, reason=reason,
+        bsrow = Buildset(id=bsid, reason=reason,
                 external_idstring=external_idstring,
                 submitted_at=submitted_at)
         self.buildsets[bsid] = bsrow.values.copy()
         self.buildsets[bsid]['properties'] = properties
 
-        return defer.succeed((bsid,
+        # add sourcestamps
+        ssids = []
+        for ss in sourcestamps:
+            if type(ss) != type(1):
+                ss = yield self.db.sourcestamps.findSourceStampId(**ss)
+            ssids.append(ss)
+        self.buildset_sourcestamps[bsid] = ssids
+
+        yield defer.returnValue((bsid,
             dict([ (br.buildername, br.id) for br in br_rows ])))
 
     def completeBuildset(self, bsid, results, complete_at=None,
@@ -882,12 +872,11 @@ class FakeBuildsetsComponent(FakeDBComponent):
         for bs in (yield self.getBuildsets(complete=complete)):
             if branch or repository:
                 ok = True
-                ssteps = (yield self.db.sourcestamps.getSourceStamps(
-                        bs['sourcestampsetid']))
-                if not ssteps:
+                if not bs['sourcestamps']:
                     # no sourcestamps -> no match
                     ok = False
-                for ss in ssteps:
+                for ssid in bs['sourcestamps']:
+                    ss = yield self.db.sourcestamps.getSourceStamp(ssid)
                     if branch and ss['branch'] != branch:
                         ok = False
                     if repository and ss['repository'] != repository:
@@ -912,6 +901,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
                              epoch2datetime(row['submitted_at'])
         row['complete'] = bool(row['complete'])
         row['bsid'] = row['id']
+        row['sourcestamps'] = self.buildset_sourcestamps.get(row['id'], [])
         del row['id']
         del row['properties']
         return row
@@ -1453,16 +1443,15 @@ class FakeDBConnector(object):
     see their documentation for more.
     """
 
-    def __init__(self, testcase):
+    def __init__(self, master, testcase):
         # reset the id generator, for stable id's
         Row._next_id = 1000
+        self.master = master
 
         self._components = []
         self.changes = comp = FakeChangesComponent(self, testcase)
         self._components.append(comp)
         self.schedulers = comp = FakeSchedulersComponent(self, testcase)
-        self._components.append(comp)
-        self.sourcestampsets = comp = FakeSourceStampSetsComponent(self,testcase)
         self._components.append(comp)
         self.sourcestamps = comp = FakeSourceStampsComponent(self, testcase)
         self._components.append(comp)
