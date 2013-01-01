@@ -68,6 +68,6 @@ class SourceStampsEndpoint(base.GetParamsCheckMixin, base.Endpoint):
 
 class SourceStampResourceType(base.ResourceType):
 
-    type = "master"
+    type = "sourcestamp"
     endpoints = [ SourceStampEndpoint, SourceStampsEndpoint ]
     keyFields = [ 'ssid' ]
