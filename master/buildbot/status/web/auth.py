@@ -182,9 +182,17 @@ class AuthFailResource(HtmlResource):
     pageTitle = "Authentication Failed"
 
     def content(self, request, cxt):
-        templates =request.site.buildbot_service.templates
-        template = templates.get_template("authfail.html") 
-        return template.render(**cxt)
+        authz = self.getAuthz(request)
+        if authz.authenticated:
+            request.redirect(request.args['originalPage'])
+            try:
+                request.finish()
+            except RuntimeError:
+                log.msg("http client disconnected before results were sent")
+        else:
+            templates =request.site.buildbot_service.templates
+            template = templates.get_template("authfail.html")
+            return template.render(**cxt)
 
 class AuthzFailResource(HtmlResource):
     pageTitle = "Authorization Failed"
