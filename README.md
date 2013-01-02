@@ -8,7 +8,6 @@ Right, this is the TODO list for Buildbot-0.9.0.  We'll delete this once it's em
 
 # Documentation #
 
-* Rename ``masters/docs/developer/database.rst`` to ``db.rst`` for consistency.
 * Put update methods in the appropriate resource-type files, rather than in ``data.rst``
 * Move data API how-to guides
 
