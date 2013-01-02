@@ -30,7 +30,7 @@ class BrDict(dict):
     pass
 
 class BuildRequestsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/database.rst
+    # Documentation is in developer/db.rst
 
     def getBuildRequest(self, brid):
         def thd(conn):

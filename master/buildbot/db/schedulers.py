@@ -23,7 +23,7 @@ class SchedulerAlreadyClaimedError(Exception):
     pass
 
 class SchedulersConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/database.rst
+    # Documentation is in developer/db.rst
 
     def classifyChanges(self, schedulerid, classifications):
         def thd(conn):

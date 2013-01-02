@@ -8,5 +8,5 @@ externally-maintained code should be written.
     :maxdepth: 2
 
     data
-    database
+    db
     mq

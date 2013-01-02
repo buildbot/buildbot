@@ -26,7 +26,7 @@ class SsList(list):
     pass
 
 class SourceStampsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/database.rst
+    # Documentation is in developer/db.rst
 
     def addSourceStamp(self, branch, revision, repository,
                           project, sourcestampsetid, codebase='',
