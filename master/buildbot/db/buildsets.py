@@ -30,10 +30,15 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
     def addBuildset(self, sourcestampsetid, reason, properties, builderNames,
-                   external_idstring=None, _reactor=reactor):
+                   external_idstring=None, submitted_at=None,
+                   _reactor=reactor):
+        if submitted_at:
+            submitted_at = datetime2epoch(submitted_at)
+        else:
+            submitted_at = _reactor.seconds()
+
         def thd(conn):
             buildsets_tbl = self.db.model.buildsets
-            submitted_at = _reactor.seconds()
 
             self.check_length(buildsets_tbl.c.reason, reason)
             self.check_length(buildsets_tbl.c.external_idstring,
@@ -133,24 +138,40 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             return [ self._row2dict(row) for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
-    def getBuildsetProperties(self, buildsetid):
-        """
-        Return the properties for a buildset, in the same format they were
-        given to L{addBuildset}.
+    def getRecentBuildsets(self, count=None, branch=None, repository=None,
+                           complete=None):
+        def thd(conn):
+            bs_tbl = self.db.model.buildsets
+            ss_tbl = self.db.model.sourcestamps
+            j = sa.join(self.db.model.buildsets,
+                               self.db.model.sourcestampsets)
+            j = j.join(self.db.model.sourcestamps)
+            q = sa.select(columns=[bs_tbl], from_obj=[j],
+                                         distinct=True)
+            q = q.order_by(sa.desc(bs_tbl.c.submitted_at))
+            q = q.limit(count)
 
-        Note that this method does not distinguish a nonexistent buildset from
-        a buildset with no properties, and returns C{{}} in either case.
+            if complete is not None:
+                if complete:
+                    q = q.where(bs_tbl.c.complete != 0)
+                else:
+                    q = q.where((bs_tbl.c.complete == 0) |
+                                (bs_tbl.c.complete == None))
+            if branch:
+              q = q.where(ss_tbl.c.branch == branch)
+            if repository:
+              q = q.where(ss_tbl.c.repository == repository)
+            res = conn.execute(q)
+            return list(reversed([ self._row2dict(row)
+                                  for row in res.fetchall() ]))
+        return self.db.pool.do(thd)
 
-        @param buildsetid: buildset ID
-
-        @returns: dictionary mapping property name to (value, source), via
-        Deferred
-        """
+    def getBuildsetProperties(self, bsid):
         def thd(conn):
             bsp_tbl = self.db.model.buildset_properties
             q = sa.select(
                 [ bsp_tbl.c.property_name, bsp_tbl.c.property_value ],
-                whereclause=(bsp_tbl.c.buildsetid == buildsetid))
+                whereclause=(bsp_tbl.c.buildsetid == bsid))
             l = []
             for row in conn.execute(q):
                 try:

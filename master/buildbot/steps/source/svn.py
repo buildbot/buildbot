@@ -236,10 +236,11 @@ class SVN(Source):
     @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
         # first, perform a stat to ensure that this is really an svn directory
-        res = yield self.pathExists(self.workdir+"/.svn")
+        res = yield self.pathExists(self.build.path_module.join(self.workdir, '.svn'))
         if not res:
             defer.returnValue(False)
             return
+
         # then run 'svn info' to check that the URL matches our repourl
         stdout = yield self._dovccmd(['info'], collectStdout=True)
 
@@ -274,7 +275,7 @@ class SVN(Source):
                 raise buildstep.BuildStepFailed()
 
             log.msg("Got SVN revision %s" % (revision, ))
-            self.updateSourceProperty('got_revision', revision)
+            self.updateSourceProperty('got_revision', str(revision))
             return 0
         d.addCallback(lambda _: _setrev(cmd.rc))
         return d

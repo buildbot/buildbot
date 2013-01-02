@@ -92,7 +92,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         all_got_revisions = self.properties.getProperty('got_revision', {})
         # For backwards compatibility all_got_revisions is a string if codebases
         # are not used. Convert to the default internal type (dict)
-        if isinstance(all_got_revisions, str):
+        if not isinstance(all_got_revisions, dict):
             all_got_revisions = {'': all_got_revisions}
         return all_got_revisions
 
@@ -134,7 +134,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
     def getInterestedUsers(self):
         # TODO: the Builder should add others: sheriffs, domain-owners
-        return self.blamelist + self.properties.getProperty('owners', [])
+        return self.properties.getProperty('owners', [])
 
     def getSteps(self):
         """Return a list of IBuildStepStatus objects. For invariant builds

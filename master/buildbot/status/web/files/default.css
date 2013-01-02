@@ -369,6 +369,12 @@ div.BuildWaterfall {
 	border-color: #A77272;
 }
 
+.failure-again {
+	color: #000;
+	background-color: #eA9;
+	border-color: #A77272;
+}
+
 .warnings {
 	color: #FFFFFF;
 	background-color: #fa3;
@@ -385,6 +391,12 @@ div.BuildWaterfall {
 	color: #FFFFFF;
 	background-color: #c6c;
 	border-color: #ACA0B3;
+}
+
+.cancelled {
+    color: #F433FF;
+    background-color: #000;
+    border-color: #FFFFFF;
 }
 
 .start {

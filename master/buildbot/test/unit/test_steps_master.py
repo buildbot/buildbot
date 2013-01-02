@@ -97,9 +97,9 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                 master.MasterShellCommand(description='x', descriptionDone='y',
                                 env={'a':'b'}, path=['/usr/bin'], usePTY=True,
                                 command='true'))
-        
+
         self.assertEqual(self.step.describe(), ['x'])
-        
+
         if runtime.platformType == 'win32':
             exp_argv = [ r'C:\WINDOWS\system32\cmd.exe', '/c', 'true' ]
         else:
@@ -133,6 +133,26 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         d.addBoth(_restore_env)
         return d
 
+    def test_env_list_subst(self):
+        cmd = [ sys.executable, '-c', 'import os; print os.environ["HELLO"]' ]
+        os.environ['WORLD'] = 'hello'
+        os.environ['LIST'] = 'world'
+        self.setupStep(
+                master.MasterShellCommand(command=cmd,
+                                env={'HELLO': ['${WORLD}', '${LIST}']}))
+        if runtime.platformType == 'win32':
+            self.expectLogfile('stdio', "hello;world\r\n")
+        else:
+            self.expectLogfile('stdio', "hello:world\n")
+        self.expectOutcome(result=SUCCESS, status_text=["Ran"])
+        def _restore_env(res):
+            del os.environ['WORLD']
+            del os.environ['LIST']
+            return res
+        d = self.runStep()
+        d.addBoth(_restore_env)
+        return d
+
     def test_prop_rendering(self):
         cmd = [ sys.executable, '-c', WithProperties(
                     'import os; print "%s"; print os.environ[\"BUILD\"]',
@@ -156,7 +176,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                                 command='true'))
 
         # call twice to make sure the suffix doesnt get double added
-        self.assertEqual(self.step.describe(), ['x', 'z'])        
+        self.assertEqual(self.step.describe(), ['x', 'z'])
         self.assertEqual(self.step.describe(), ['x', 'z'])
 
         if runtime.platformType == 'win32':

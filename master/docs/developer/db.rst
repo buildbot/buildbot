@@ -312,6 +312,7 @@ buildsets
         :type builderNames: list of strings
         :param external_idstring: external key to identify this buildset; defaults to None
         :type external_idstring: unicode string
+        :param datetime submitted_at: time this buildset was created; defaults to the current time
         :returns: buildset ID and buildrequest IDs, via a Deferred
 
         Add a new Buildset to the database, along with BuildRequests for each
@@ -357,9 +358,26 @@ buildsets
 
         Get a list of bsdicts matching the given criteria.
 
+    .. py:method:: getRecentBuildsets(count=None, branch=None, repository=None,
+                           complete=None):
+
+        :param count: maximum number of buildsets to retrieve (required).
+        :type branch: integer
+        :param branch: optional branch name. If specified, only buildsets
+            affecting such branch will be returned.
+        :type branch: string
+        :param repository: optional repository name. If specified, only
+            buildsets affecting such repository will be returned.
+        :type repository: string
+        :param complete: if true, return only complete buildsets; if false,
+            return only incomplete buildsets; if ``None`` or omitted, return all
+            buildsets
+        :type complete: Boolean
+        :returns: list of bsdicts, via Deferred
+
     .. py:method:: getBuildsetProperties(buildsetid)
 
-        :param buildsetid: buildset ID
+        :param bsid: buildset ID
         :returns: dictionary mapping property name to ``value, source``, via
             Deferred
 
@@ -484,6 +502,23 @@ changes
             earlier than the time at which it is merged into a repository
             monitored by Buildbot.
 
+    .. py:method:: getChanges(opts={})
+
+        :param opts: data query options
+        :returns: list of dictionaries via Deferred
+
+        Get a list of the changes, represented as
+        dictionaries; changes are sorted, and paged using generic data query options
+
+    .. py:method:: getChangesCount(opts={})
+
+        :param opts: data query options
+        :returns: list of dictionaries via Deferred
+
+        Get the number changes, that the query option would return if no
+        paging option where set
+
+
     .. py:method:: getLatestChangeid()
 
         :returns: changeid via Deferred
@@ -498,6 +533,10 @@ schedulers
 
 .. index:: double: Schedulers; DB Connector Component
 
+.. py:exception:: AlreadyClaimedError
+
+    Raised when a scheduler request is already claimed by another master.
+
 .. py:class:: SchedulersConnectorComponent
 
     This class manages the state of the Buildbot schedulers.  This state includes
@@ -505,14 +544,20 @@ schedulers
 
     An instance of this class is available at ``master.db.changes``.
 
-    .. index:: objectid
+    Schedulers are identified by their schedulerid, which can be objtained from :py:meth:`findSchedulerId`.
 
-    Schedulers are identified by a their objectid - see
-    :py:class:`StateConnectorComponent`.
+    Schedulers are represented by dictionaries with the following keys:
+
+        * ``id`` - scheduler's ID
+        * ``name`` - scheduler's name
+        * ``masterid`` - ID of the master currently running this scheduler, or None if it is inactive
+
+    Note that this class is conservative in determining what schedulers are inactive: a scheduler linked to an inactive master is still considered active.
+    This situation should never occur, however; links to a master should be deleted when it is marked inactive.
 
     .. py:method:: classifyChanges(objectid, classifications)
 
-        :param objectid: scheduler classifying the changes
+        :param schedulerid: ID of the scheduler classifying the changes
         :param classifications: mapping of changeid to boolean, where the boolean
             is true if the change is important, and false if it is unimportant
         :type classifications: dictionary
@@ -525,9 +570,9 @@ schedulers
         classifications once they are no longer needed, using
         :py:meth:`flushChangeClassifications`.
 
-    .. py:method: flushChangeClassifications(objectid, less_than=None)
+    .. py:method:: flushChangeClassifications(objectid, less_than=None)
 
-        :param objectid: scheduler owning the flushed changes
+        :param schedulerid: ID of the scheduler owning the flushed changes
         :param less_than: (optional) lowest changeid that should *not* be flushed
         :returns: Deferred
 
@@ -536,8 +581,8 @@ schedulers
 
     .. py:method:: getChangeClassifications(objectid[, branch])
 
-        :param objectid: scheduler to look up changes for
-        :type objectid: integer
+        :param schedulerid: ID of scheduler to look up changes for
+        :type schedulerid: integer
         :param branch: (optional) limit to changes with this branch
         :type branch: string or None (for default branch)
         :returns: dictionary via Deferred
@@ -551,6 +596,43 @@ schedulers
         default branch, and is not the same as omitting the ``branch`` argument
         altogether.
 
+    .. py:method:: findSchedulerId(name)
+
+        :param name: scheduler name
+        :returns: scheduler ID via Deferred
+
+        Return the scheduler ID for the scheduler with this name.
+        If such a scheduler is already in the database, this returns the ID.
+        If not, the scheduler is added to the database and its ID returned.
+
+    .. py:method:: setSchedulerMaster(schedulerid, masterid)
+
+        :param schedulerid: scheduler to set the master for
+        :param masterid: new master for this scheduler, or None
+        :returns: Deferred
+
+        Set, or unset if ``masterid`` is None, the active master for this scheduler.
+        If no master is currently set, or the current master is not active, this method will complete without error.
+        If the current master is active, this method will raise :py:exc:`SchedulerAlreadyClaimedError`.
+
+    .. py:method:: getScheduler(schedulerid)
+
+        :param schedulerid: scheduler ID
+        :returns: scheduler dictionary or None via Deferred
+
+        Get the scheduler dictionary for the given scheduler.
+
+    .. py:method:: getSchedulers(active=None, masterid=None)
+
+        :param boolean active: if specified, filter for active or inactive schedulers
+        :param integer masterid: if specified, only return schedulers attached associated with this master
+        :returns: list of scheduler dictionaries in unspecified order
+
+        Get a list of schedulers.
+        If ``active``, schedulers are filtered according to whether they are active (true) or inactive (false).
+        If ``masterid`` is given, the list is restricted to schedulers associated with that master.
+
+
 sourcestamps
 ~~~~~~~~~~~~
 
@@ -561,8 +643,8 @@ sourcestamps
 .. py:class:: SourceStampsConnectorComponent
 
     This class manages source stamps, as stored in the database. Source stamps
-    are linked to changes. Source stamps with the same sourcestampsetid belong 
-    to the same sourcestampset. Buildsets link to one or more source stamps via 
+    are linked to changes. Source stamps with the same sourcestampsetid belong
+    to the same sourcestampset. Buildsets link to one or more source stamps via
     a sourcestampset id.
 
     An instance of this class is available at ``master.db.sourcestamps``.
@@ -592,7 +674,7 @@ sourcestamps
 
     .. py:method:: addSourceStamp(branch, revision, repository, project, patch_body=None, patch_level=0, patch_author="", patch_comment="", patch_subdir=None, changeids=[])
 
-        :param branch: 
+        :param branch:
         :type branch: unicode string
         :param revision:
         :type revision: unicode string
@@ -629,15 +711,15 @@ sourcestamps
         such source stamp exists.
 
     .. py:method:: getSourceStamps(sourcestampsetid)
-    
+
         :param sourcestampsetid: identification of the set, all returned sourcestamps belong to this set
         :type sourcestampsetid: integer
         :returns: sslist of ssdict
-        
+
         Get a set of sourcestamps identified by a set id. The set is returned as
-        a sslist that contains one or more sourcestamps (represented as ssdicts). 
+        a sslist that contains one or more sourcestamps (represented as ssdicts).
         The list is empty if the set does not exist or no sourcestamps belong to the set.
-    
+
 sourcestampset
 ~~~~~~~~~~~~~~
 
@@ -649,19 +731,19 @@ sourcestampset
 
     This class is responsible for adding new sourcestampsets to the database.
     Build sets link to sourcestamp sets, via their (set) id's.
-    
+
     An instance of this class is available at ``master.db.sourcestampsets``.
-    
+
     Sourcestamp sets are identified by a sourcestampsetid.
 
     .. py:method:: addSourceStampSet()
-    
+
         :returns: new sourcestampsetid as integer, via Deferred
-        
+
         Add a new (empty) sourcestampset to the database. The unique identification
         of the set is returned as integer. The new id can be used to add
         new sourcestamps to the database and as reference in a buildset.
-    
+
 state
 ~~~~~
 
@@ -841,6 +923,120 @@ users
         :returns: uid or ``None``, via Deferred
 
         Fetch a uid for the given identifier, if one exists.
+
+
+masters
+~~~~~~~
+
+.. py:module:: buildbot.db.masters
+
+.. index:: double: Masters; DB Connector Component
+
+.. py:class:: MastersConnectorComponent
+
+    This class handles tracking the buildmasters in a multi-master configuration.
+    Masters "check in" periodically.
+    Other masters monitor the last activity times, and mark masters that have not recently checked in as inactive.
+
+    Masters are represented by master dictionaries with the following keys:
+
+    * ``id`` -- the ID of this master
+    * ``name`` -- the name of the master (generally of the form ``hostname:basedir``)
+    * ``active`` -- true if this master is running
+    * ``last_active`` -- time that this master last checked in (a datetime object)
+
+    .. py:method:: findMasterId(name)
+
+        :param unicode name: name of this master
+        :returns: master id via Deferred
+
+        Return the master ID for the master with this master name (generally ``hostname:basedir``).
+        If such a master is already in the database, this returns the ID.
+        If not, the master is added to the database, with ``active=False``, and its ID returned.
+
+    .. py:method:: setMasterState(masterid, active)
+
+        :param integer masterid: the master to check in
+        :param boolean active: whether to mark this master as active or inactive
+        :returns: boolean via Deferred
+
+        Mark the given master as active or inactive, returning true if the state actually changed.
+        If ``active`` is true, the ``last_active`` time is updated to the current time.
+        If ``active`` is false, then any links to this master, such as schedulers, will be deleted.
+
+    .. py:method:: getMaster(masterid)
+
+        :param integer masterid: the master to check in
+        :returns: Master dict or None via Deferred
+
+        Get the indicated master.
+
+    .. py:method:: getMasters(opts={})
+
+        :returns: list of Master dicts via Deferred
+
+        Get a list of the masters, represented as dictionaries; masters are sorted
+        and paged using generic data query options
+
+
+builders
+~~~~~~~~
+
+.. py:module:: buildbot.db.builders
+
+.. index:: double: Builders; DB Connector Component
+
+.. py:class:: BuildersConnectorComponent
+
+    This class handles the relationship between builder names and their IDs, as well as tracking which masters are configured for this builder.
+
+    Builders are represented by master dictionaries with the following keys:
+
+    * ``id`` -- the ID of this builder
+    * ``name`` -- the name of the builder
+    * ``masterids`` -- the IDs of the masters where this builder is configured (sorted by id)
+
+    .. py:method:: findBuilderId(name)
+
+        :param unicode name: name of this builder
+        :returns: builder id via Deferred
+
+        Return the builder ID for the builder with this builder name.
+        If such a builder is already in the database, this returns the ID.
+        If not, the builder is added to the database.
+
+    .. py:method:: addBuilderMaster(builderid=None, masterid=None)
+
+        :param integer builderid: the builder
+        :param integer masterid: the master
+        :returns: Deferred
+
+        Add the given master to the list of masters on which the builder is configured.
+        This will do nothing if the master and builder are already associated.
+
+    .. py:method:: removeBuilderMaster(builderid=None, masterid=None)
+
+        :param integer builderid: the builder
+        :param integer masterid: the master
+        :returns: Deferred
+
+        Remove the given master from the list of masters on which the builder is configured.
+
+    .. py:method:: getBuilder(builderid)
+
+        :param integer builderid: the builder to check in
+        :returns: Builder dict or None via Deferred
+
+        Get the indicated builder.
+
+    .. py:method:: getBuilders(masterid=None)
+
+        :param integer masterid: ID of the master to which the results should be limited
+        :returns: list of Builder dicts via Deferred
+
+        Get all builders (in unspecified order).
+        If ``masterid`` is given, then only builders configured on that master are returned.
+
 
 Writing Database Connector Methods
 ----------------------------------

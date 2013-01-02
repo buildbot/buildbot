@@ -23,6 +23,15 @@ from twisted.internet import defer, reactor
 from twisted.python import log
 from buildbot import config
 from buildbot.changes import filter
+# Import croniter if available.
+# This is only required for Nightly schedulers,
+# so fail gracefully if it isn't present.
+try:
+    from buildbot.util import croniter
+except ImportError:
+    # Pyflakes doesn't like a redefinition here
+    # Instead, we check if croniter is defined when we need it
+    pass
 
 class Timed(base.BaseScheduler):
     """
@@ -213,7 +222,8 @@ class Periodic(Timed):
                 "periodicBuildTimer must be positive")
         self.periodicBuildTimer = periodicBuildTimer
         self.branch = branch
-        self.reason = "The Periodic scheduler named '%s' triggered this build" % self.name
+        self.reason = (u"The Periodic scheduler named '%s' triggered "
+                       u"this build" % self.name)
 
     def getNextBuildTime(self, lastActuated):
         if lastActuated is None:
@@ -240,6 +250,12 @@ class NightlyBase(Timed):
         self.month = month
         self.dayOfWeek = dayOfWeek
 
+        try:
+            croniter
+        except NameError:
+            config.error("python-dateutil required for scheduler %s '%s'." %
+                (self.__class__.__name__, self.name))
+
     def _timeToCron(self, time, isDayOfWeek = False):
         if isinstance(time, int):
             if isDayOfWeek:
@@ -255,9 +271,6 @@ class NightlyBase(Timed):
         return ','.join([ str(s) for s in time ]) # Convert the list to a string
 
     def getNextBuildTime(self, lastActuated):
-        # deferred import in case python-dateutil is not present
-        from buildbot.util import croniter
-
         dateTime = lastActuated or self.now()
         sched =  '%s %s %s %s %s' % (self._timeToCron(self.minute),
                                      self._timeToCron(self.hour),
@@ -358,7 +371,7 @@ class NightlyTriggerable(NightlyBase):
                 dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, properties=properties, codebases=codebases)
 
         self._lastTrigger = None
-        self.reason = "The NightlyTriggerable scheduler named '%s' triggered this build" % self.name
+        self.reason = u"The NightlyTriggerable scheduler named '%s' triggered this build" % self.name
 
     def startService(self):
         NightlyBase.startService(self)
@@ -410,5 +423,5 @@ class NightlyTriggerable(NightlyBase):
         if set_props:
             props.updateFromProperties(set_props)
 
-        yield self.addBuildsetForSourceStampSetDetails(reason=self.reason, sourcestamps=sourcestamps,
-                properties=props)
+        yield self.addBuildsetForSourceStampSetDetails(reason=self.reason,
+                sourcestamps=sourcestamps, properties=props)

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import sqlalchemy as sa
+
 class DBConnectorComponent(object):
     # A fixed component of the DBConnector, handling one particular aspect of
     # the database.  Instances of subclasses are assigned to attributes of the
@@ -21,7 +23,7 @@ class DBConnectorComponent(object):
     # of the necessary backlinks and other housekeeping.
 
     connector = None
-
+    data2db = {}
     def __init__(self, connector):
         self.db = connector
 
@@ -53,7 +55,50 @@ class DBConnectorComponent(object):
                 "value for column %s is greater than max of %d characters: %s"
                     % (col, col.type.length, value))
 
+    def findSomethingId(self, tbl, whereclause, insert_values,
+            _race_hook=None):
+        """Find (using C{whereclause}) or add (using C{insert_values) a row to
+        C{table}, and return the resulting ID."""
+        def thd(conn, no_recurse=False):
+            # try to find the master
+            q = sa.select([ tbl.c.id ],
+                    whereclause=whereclause)
+            r = conn.execute(q)
+            row = r.fetchone()
+            r.close()
 
+            # found it!
+            if row:
+                return row.id
+
+            _race_hook and _race_hook(conn)
+
+            try:
+                r = conn.execute(tbl.insert(), [ insert_values ])
+                return r.inserted_primary_key[0]
+            except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                # try it all over again, in case there was an overlapping,
+                # identical call, but only retry once.
+                if no_recurse:
+                    raise
+                return thd(conn, no_recurse=True)
+        return self.db.pool.do(thd)
+
+    def dataOptionsToSelectOptions(self, opts):
+        r = {}
+        if 'start' in opts and opts['start'] != 0:
+            r["offset"] = int(opts['start'])
+        if 'count' in opts and opts['count'] != 0:
+            r["limit"] = int(opts['count'])
+        if 'sort' in opts and opts['sort'] != "":
+            def convert((k,r)):
+                if k in self.data2db:
+                    k = self.data2db[k]
+                if r:
+                    return sa.desc(k)
+                return sa.asc(k)
+            r["order_by"] = map(convert,opts['sort'])
+        return r
 class CachedMethod(object):
     def __init__(self, cache_name, method):
         self.cache_name = cache_name

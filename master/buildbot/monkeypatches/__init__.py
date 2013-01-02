@@ -43,7 +43,7 @@ def patch_bug4520():
         bug4520.patch()
 
 def patch_bug5079():
-    # this bug will hopefully be patched in Twisted-12.0.0; it was probably
+    # this bug is patched in Twisted-12.0.0; it was probably
     # present in Twisted-8.x.0, but the patch doesn't work
     if (twisted.version < versions.Version('twisted', 12, 0, 0) and
         twisted.version >= versions.Version('twisted', 9, 0, 0)):
@@ -74,3 +74,5 @@ def patch_all(for_tests=False):
         servicechecks.patch_servicechecks()
         from buildbot.monkeypatches import testcase_patch
         testcase_patch.patch_testcase_patch()
+        from buildbot.monkeypatches import decorators
+        decorators.patch()

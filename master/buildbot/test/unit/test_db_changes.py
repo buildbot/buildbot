@@ -13,36 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
-import pprint
 import sqlalchemy as sa
 from twisted.trial import unittest
 from twisted.internet import defer, task
-from buildbot.changes.changes import Change
+from buildbot.test.fake import fakedb, fakemaster
+from buildbot.test.util import interfaces, connector_component, types
 from buildbot.db import changes
-from buildbot.test.util import connector_component
-from buildbot.test.fake import fakedb
 from buildbot.util import epoch2datetime
 
-class TestChangesConnectorComponent(
-            connector_component.ConnectorComponentMixin,
-            unittest.TestCase):
-
-    def setUp(self):
-        d = self.setUpConnectorComponent(
-            table_names=['changes', 'change_files',
-                'change_properties', 'scheduler_changes', 'objects',
-                'sourcestampsets', 'sourcestamps', 'sourcestamp_changes',
-                'patches', 'change_users', 'users'])
-
-        def finish_setup(_):
-            self.db.changes = changes.ChangesConnectorComponent(self.db)
-        d.addCallback(finish_setup)
-
-        return d
-
-    def tearDown(self):
-        return self.tearDownConnectorComponent()
+class Tests(interfaces.InterfaceTests):
 
     # common sample data
 
@@ -63,7 +42,7 @@ class TestChangesConnectorComponent(
         fakedb.Change(changeid=14, author="warner", comments="fix whitespace",
             is_dir=0, branch="warnerdb", revision="0e92a098b",
             when_timestamp=266738404, revlink='http://warner/0e92a098b',
-            category='devel', repository='git://warner', codebase='mainapp', 
+            category='devel', repository='git://warner', codebase='mainapp',
             project='Buildbot'),
 
         fakedb.ChangeFile(changeid=14, filename='master/buildbot/__init__.py'),
@@ -86,66 +65,30 @@ class TestChangesConnectorComponent(
         'when_timestamp': epoch2datetime(266738404),
     }
 
-    def change14(self):
-        c = Change(**dict(
-         category='devel',
-         isdir=0,
-         repository=u'git://warner',
-         codebase=u'mainapp',
-         who=u'warner',
-         when=266738404,
-         comments=u'fix whitespace',
-         project=u'Buildbot',
-         branch=u'warnerdb',
-         revlink=u'http://warner/0e92a098b',
-         properties={},
-         files=[u'master/buildbot/__init__.py'],
-         revision=u'0e92a098b'))
-        c.number = 14
-        return c
-
-    # assertions
-
-    def assertChangesEqual(self, ca, cb):
-        ok = True
-        ok = ok and ca.number == cb.number
-        ok = ok and ca.who == cb.who
-        ok = ok and sorted(ca.files) == sorted(cb.files)
-        ok = ok and ca.comments == cb.comments
-        ok = ok and bool(ca.isdir) == bool(cb.isdir)
-        ok = ok and ca.revision == cb.revision
-        ok = ok and ca.when == cb.when
-        ok = ok and ca.branch == cb.branch
-        ok = ok and ca.category == cb.category
-        ok = ok and ca.revlink == cb.revlink
-        ok = ok and ca.properties == cb.properties
-        ok = ok and ca.repository == cb.repository
-        ok = ok and ca.codebase == cb.codebase
-        ok = ok and ca.project == cb.project
-        if not ok:
-            def printable(c):
-                return pprint.pformat(c.__dict__)
-            self.fail("changes do not match; expected\n%s\ngot\n%s" %
-                        (printable(ca), printable(cb)))
-
     # tests
 
-    def test_getChange(self):
+    def test_signature_addChange(self):
+        @self.assertArgSpecMatches(self.db.changes.addChange)
+        def addChange(self, author=None, files=None, comments=None, is_dir=0,
+            revision=None, when_timestamp=None, branch=None, category=None,
+            revlink='', properties={}, repository='', codebase='',
+            project='', uid=None):
+            pass
+
+    def test_signature_getChange(self):
+        @self.assertArgSpecMatches(self.db.changes.getChange)
+        def getChange(self, key, no_cache=False):
+            pass
+
+    def test_getChange_chdict(self):
         d = self.insertTestData(self.change14_rows)
         def get14(_):
             return self.db.changes.getChange(14)
         d.addCallback(get14)
         def check14(chdict):
+            types.verifyDbDict(self, 'chdict', chdict)
             self.assertEqual(chdict, self.change14_dict)
         d.addCallback(check14)
-        return d
-
-    def test_Change_fromChdict_with_chdict(self):
-        # test that the chdict getChange returns works with Change.fromChdict
-        d = Change.fromChdict(mock.Mock(), self.change14_dict)
-        def check(c):
-            self.assertChangesEqual(c, self.change14())
-        d.addCallback(check)
         return d
 
     def test_getChange_missing(self):
@@ -157,6 +100,139 @@ class TestChangesConnectorComponent(
             self.failUnless(chdict is None)
         d.addCallback(check14)
         return d
+
+    def test_signature_getChangeUids(self):
+        @self.assertArgSpecMatches(self.db.changes.getChangeUids)
+        def getChangeUids(self, changeid):
+            pass
+
+    def test_getChangeUids_missing(self):
+        d = self.db.changes.getChangeUids(1)
+        def check(res):
+            self.assertEqual(res, [])
+        d.addCallback(check)
+        return d
+
+    def test_getChangeUids_found(self):
+        d = self.insertTestData(self.change14_rows + [
+                fakedb.User(uid=1),
+                fakedb.ChangeUser(changeid=14, uid=1),
+            ])
+        d.addCallback(lambda _ : self.db.changes.getChangeUids(14))
+        def check(res):
+            self.assertEqual(res, [1])
+        d.addCallback(check)
+        return d
+
+    def test_getChangeUids_multi(self):
+        d = self.insertTestData(self.change14_rows + self.change13_rows + [
+                fakedb.User(uid=1, identifier="one"),
+                fakedb.User(uid=2, identifier="two"),
+                fakedb.User(uid=99, identifier="nooo"),
+                fakedb.ChangeUser(changeid=14, uid=1),
+                fakedb.ChangeUser(changeid=14, uid=2),
+                fakedb.ChangeUser(changeid=13, uid=99), # not selected
+            ])
+        d.addCallback(lambda _ : self.db.changes.getChangeUids(14))
+        def check(res):
+            self.assertEqual(sorted(res), [1, 2])
+        d.addCallback(check)
+        return d
+
+    def test_signature_getRecentChanges(self):
+        @self.assertArgSpecMatches(self.db.changes.getRecentChanges)
+        def getRecentChanges(self, count):
+            pass
+    def test_signature_getChanges(self):
+        @self.assertArgSpecMatches(self.db.changes.getChanges)
+        def getChanges(self, opts={}):
+            pass
+    def insert7Changes(self):
+        return self.insertTestData([
+            fakedb.Change(changeid=8),
+            fakedb.Change(changeid=9),
+            fakedb.Change(changeid=10),
+            fakedb.Change(changeid=11),
+            fakedb.Change(changeid=12),
+        ] + self.change13_rows + self.change14_rows)
+
+    def test_getRecentChanges_subset(self):
+        d = self.insert7Changes()
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5))
+        def check(changes):
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [10, 11, 12, 13, 14])
+        d.addCallback(check)
+        return d
+
+    def test_getChanges_subset_order_paging(self):
+        d = self.insert7Changes()
+        d.addCallback(lambda _ :
+                self.db.changes.getChanges(dict(start=1,count=5,sort=[("changeid",1)])))
+        def check(changes):
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [13, 12, 11, 10, 9])
+        d.addCallback(check)
+        return d
+
+    def test_getChangesCount(self):
+        d = self.insert7Changes()
+        d.addCallback(lambda _ :
+                self.db.changes.getChangesCount(dict(start=1,count=5,sort=[("changeid",1)])))
+        def check(n):
+            self.assertEqual(n, 7)
+        d.addCallback(check)
+        return d
+
+    def test_getChangesHugeCount(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=i) for i in xrange(2000)])
+        d.addCallback(lambda _ :
+                self.db.changes.getChangesCount(dict(start=1,count=5,sort=[("changeid",1)])))
+        def check(n):
+            self.assertEqual(n, 2000)
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChanges_empty(self):
+        d = defer.succeed(None)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5))
+        def check(changes):
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [])
+        d.addCallback(check)
+        d.addCallback(lambda _ :
+                self.db.changes.getChanges(dict(count=5)))
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChanges_missing(self):
+        d = self.insertTestData(self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChanges(5))
+        def check(changes):
+            # requested 5, but only got 2
+            # sort by changeid, since we assert on change 13 at index 0
+            changes.sort(key=lambda c: c['changeid'])
+            changeids = [ c['changeid'] for c in changes ]
+            self.assertEqual(changeids, [13, 14])
+            # double-check that they have .files, etc.
+            self.assertEqual(sorted(changes[0]['files']),
+                        sorted(['master/README.txt', 'slave/README.txt']))
+            self.assertEqual(changes[0]['properties'],
+                        { 'notest' : ('no', 'Change') })
+        d.addCallback(check)
+        d.addCallback(lambda _ :
+                self.db.changes.getChanges(dict(count=5)))
+        d.addCallback(check)
+        return d
+
+    def test_signature_getLatestChangeid(self):
+        @self.assertArgSpecMatches(self.db.changes.getLatestChangeid)
+        def getLatestChangeid(self):
+            pass
 
     def test_getLatestChangeid(self):
         d = self.insertTestData(self.change13_rows)
@@ -177,6 +253,11 @@ class TestChangesConnectorComponent(
             self.assertEqual(changeid, None)
         d.addCallback(check)
         return d
+
+
+class RealTests(Tests):
+
+    # tests that only "real" implementations will pass
 
     def test_addChange(self):
         d = self.db.changes.addChange(
@@ -359,57 +440,24 @@ class TestChangesConnectorComponent(
         d.addCallback(check_change_users)
         return d
 
-    def test_getChangeUids_missing(self):
-        d = self.db.changes.getChangeUids(1)
-        def check(res):
-            self.assertEqual(res, [])
-        d.addCallback(check)
-        return d
-
-    def test_getChangeUids_found(self):
-        d = self.insertTestData(self.change14_rows + [
-                fakedb.User(uid=1),
-                fakedb.ChangeUser(changeid=14, uid=1),
-            ])
-        d.addCallback(lambda _ : self.db.changes.getChangeUids(14))
-        def check(res):
-            self.assertEqual(res, [1])
-        d.addCallback(check)
-        return d
-
-    def test_getChangeUids_multi(self):
-        d = self.insertTestData(self.change14_rows + self.change13_rows + [
-                fakedb.User(uid=1, identifier="one"),
-                fakedb.User(uid=2, identifier="two"),
-                fakedb.User(uid=99, identifier="nooo"),
-                fakedb.ChangeUser(changeid=14, uid=1),
-                fakedb.ChangeUser(changeid=14, uid=2),
-                fakedb.ChangeUser(changeid=13, uid=99), # not selected
-            ])
-        d.addCallback(lambda _ : self.db.changes.getChangeUids(14))
-        def check(res):
-            self.assertEqual(sorted(res), [1, 2])
-        d.addCallback(check)
-        return d
-
     def test_pruneChanges(self):
         d = self.insertTestData([
-            fakedb.Object(id=29),
+            fakedb.Scheduler(id=29),
             fakedb.SourceStamp(id=234),
 
             fakedb.Change(changeid=11),
 
             fakedb.Change(changeid=12),
-            fakedb.SchedulerChange(objectid=29, changeid=12),
+            fakedb.SchedulerChange(schedulerid=29, changeid=12),
             fakedb.SourceStampChange(sourcestampid=234, changeid=12),
             ] +
 
             self.change13_rows + [
-            fakedb.SchedulerChange(objectid=29, changeid=13),
+            fakedb.SchedulerChange(schedulerid=29, changeid=13),
             ] +
 
             self.change14_rows + [
-            fakedb.SchedulerChange(objectid=29, changeid=14),
+            fakedb.SchedulerChange(schedulerid=29, changeid=14),
 
             fakedb.Change(changeid=15),
             fakedb.SourceStampChange(sourcestampid=234, changeid=15),
@@ -479,44 +527,31 @@ class TestChangesConnectorComponent(
         d.addCallback(check)
         return d
 
-    def test_getRecentChanges_subset(self):
-        d = self.insertTestData([
-            fakedb.Change(changeid=8),
-            fakedb.Change(changeid=9),
-            fakedb.Change(changeid=10),
-            fakedb.Change(changeid=11),
-            fakedb.Change(changeid=12),
-        ] + self.change13_rows + self.change14_rows)
-        d.addCallback(lambda _ :
-                self.db.changes.getRecentChanges(5))
-        def check(changes):
-            changeids = [ c['changeid'] for c in changes ]
-            self.assertEqual(changeids, [10, 11, 12, 13, 14])
-        d.addCallback(check)
+
+class TestFakeDB(unittest.TestCase, Tests):
+
+    def setUp(self):
+        self.master = fakemaster.make_master()
+        self.db = fakedb.FakeDBConnector(self)
+        self.insertTestData = self.db.insertTestData
+
+
+class TestRealDB(unittest.TestCase,
+        connector_component.ConnectorComponentMixin,
+        RealTests):
+
+    def setUp(self):
+        d = self.setUpConnectorComponent(
+            table_names=['changes', 'change_files',
+                'change_properties', 'scheduler_changes', 'schedulers',
+                'sourcestampsets', 'sourcestamps', 'sourcestamp_changes',
+                'patches', 'change_users', 'users'])
+
+        @d.addCallback
+        def finish_setup(_):
+            self.db.changes = changes.ChangesConnectorComponent(self.db)
         return d
 
-    def test_getRecentChanges_empty(self):
-        d = defer.succeed(None)
-        d.addCallback(lambda _ :
-                self.db.changes.getRecentChanges(5))
-        def check(changes):
-            changeids = [ c['changeid'] for c in changes ]
-            self.assertEqual(changeids, [])
-        d.addCallback(check)
-        return d
+    def tearDown(self):
+        return self.tearDownConnectorComponent()
 
-    def test_getRecentChanges_missing(self):
-        d = self.insertTestData(self.change13_rows + self.change14_rows)
-        d.addCallback(lambda _ :
-                self.db.changes.getRecentChanges(5))
-        def check(changes):
-            # requested 5, but only got 2
-            changeids = [ c['changeid'] for c in changes ]
-            self.assertEqual(changeids, [13, 14])
-            # double-check that they have .files, etc.
-            self.assertEqual(sorted(changes[0]['files']),
-                        sorted(['master/README.txt', 'slave/README.txt']))
-            self.assertEqual(changes[0]['properties'],
-                        { 'notest' : ('no', 'Change') })
-        d.addCallback(check)
-        return d

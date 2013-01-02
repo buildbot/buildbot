@@ -13,18 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 from twisted.internet import defer
-from twisted.trial import unittest
-from buildbot.test.fake.fakemaster import make_master
+from buildbot.test.fake import fakemaster
 
 class ChangeSourceMixin(object):
     """
     This class is used for testing change sources, and handles a few things:
 
      - starting and stopping a ChangeSource service
-     - a fake C{self.master.addChange}, which adds its args
-       to the list C{self.changes_added}
+     - a fake master with a data API implementation
     """
 
     changesource = None
@@ -32,20 +29,9 @@ class ChangeSourceMixin(object):
 
     def setUpChangeSource(self):
         "Set up the mixin - returns a deferred."
-        self.changes_added = []
-        def addChange(**kwargs):
-            # check for 8-bit strings
-            for k,v in kwargs.items():
-                if type(v) == type(""):
-                    try:
-                        v.decode('ascii')
-                    except UnicodeDecodeError:
-                        raise unittest.FailTest(
-                                "non-ascii string for key '%s': %r" % (k,v))
-            self.changes_added.append(kwargs)
-            return defer.succeed(mock.Mock())
-        self.master = make_master(testcase=self, wantDb=True)
-        self.master.addChange = addChange
+        self.master = fakemaster.make_master(wantDb=True, wantData=True,
+                                             testcase=self)
+        assert not hasattr(self.master, 'addChange') # just checking..
         return defer.succeed(None)
 
     def tearDownChangeSource(self):

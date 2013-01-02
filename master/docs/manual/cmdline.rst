@@ -75,6 +75,18 @@ This creates a new directory and populates it with files that allow it to be use
 You will usually want to use the :option:`-r` option to create a relocatable :file:`buildbot.tac`.
 This allows you to move the master directory without editing this file.
 
+.. bb:cmdline:: upgrade-master
+
+upgrade-master
+++++++++++++++
+
+.. code-block:: none
+
+    buildbot upgrade-master {BASEDIR}
+
+This upgrades a previously created buildmaster's base directory for a new version of buildbot master source code.
+This will copy the web server static files, and potencially upgrade the db.
+
 .. bb:cmdline:: start (buildbot)
 
 start

@@ -19,7 +19,6 @@ from twisted.internet import defer
 from buildbot.changes import hgpoller
 from buildbot.test.util import changesource, gpo
 from buildbot.test.fake.fakedb import FakeDBConnector
-from buildbot.util import epoch2datetime
 
 ENVIRON_2116_KEY = 'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'
 
@@ -82,26 +81,17 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                                 'ssh://example.com/foo/baz')
                 .path('/some/dir'),
             gpo.Expect('hg', 'heads', 'default', '--template={rev}\n')
-                .path('/some/dir').stdout("1"),
-            gpo.Expect('hg', 'log', '-b', 'default', '-r', '0:1',
+                .path('/some/dir').stdout("73591"),
+            gpo.Expect('hg', 'log', '-b', 'default', '-r', '73591:73591', # only fetches that head
                                 '--template={rev}:{node}\\n')
-                .path('/some/dir').stdout(os.linesep.join(['0:64a5dc2', '1:4423cdb'])),
-            gpo.Expect('hg', 'log', '-r', '64a5dc2',
-                '--template={date|hgdate}\n{author}\n{files}\n{desc|strip}')
-                .path('/some/dir').stdout(os.linesep.join([
-                    '1273258009.0 -7200',
-                    'Joe Test <joetest@example.org>',
-                    'file1 file2',
-                    'Multi-line',
-                    'Comment for rev 0',
-                    ''])),
+                .path('/some/dir').stdout(os.linesep.join(['73591:4423cdb'])),
             gpo.Expect('hg', 'log', '-r', '4423cdb',
                 '--template={date|hgdate}\n{author}\n{files}\n{desc|strip}')
                 .path('/some/dir').stdout(os.linesep.join([
                     '1273258100.0 -7200',
                     'Bob Test <bobtest@example.org>',
                     'file1 dir/file2',
-                    'This is rev 1',
+                    'This is rev 73591',
                     ''])),
             )
 
@@ -110,34 +100,20 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
 
         # check the results
         def check_changes(_):
-            self.assertEqual(len(self.changes_added), 2)
+            self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
-            change = self.changes_added[0]
-            self.assertEqual(change['revision'], '64a5dc2')
-            self.assertEqual(change['author'],
-                             'Joe Test <joetest@example.org>')
-            self.assertEqual(change['when_timestamp'],
-                             epoch2datetime(1273258009)),
-            self.assertEqual(change['files'], ['file1', 'file2'])
-            self.assertEqual(change['src'], 'hg')
-            self.assertEqual(change['branch'], 'default')
-            self.assertEqual(change['comments'],
-                             os.linesep.join(('Multi-line',
-                                              'Comment for rev 0')))
-
-            change = self.changes_added[1]
+            change = self.master.data.updates.changesAdded[0]
             self.assertEqual(change['revision'], '4423cdb')
             self.assertEqual(change['author'],
                              'Bob Test <bobtest@example.org>')
-            self.assertEqual(change['when_timestamp'],
-                             epoch2datetime(1273258100)),
+            self.assertEqual(change['when_timestamp'], 1273258100),
             self.assertEqual(change['files'], ['file1', 'dir/file2'])
             self.assertEqual(change['src'], 'hg')
             self.assertEqual(change['branch'], 'default')
-            self.assertEqual(change['comments'], 'This is rev 1')
+            self.assertEqual(change['comments'], 'This is rev 73591')
 
         d.addCallback(check_changes)
-        d.addCallback(self.check_current_rev(1))
+        d.addCallback(self.check_current_rev(73591))
         return d
 
     def check_current_rev(self, wished):
@@ -193,8 +169,8 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         d.addCallback(self.check_current_rev(5))
 
         def check_changes(_):
-            self.assertEquals(len(self.changes_added), 1)
-            change = self.changes_added[0]
-            self.assertEqual(change['revision'], '784bd')
-            self.assertEqual(change['comments'], 'Comment for rev 5')
+            self.assertEquals(len(self.master.data.updates.changesAdded), 1)
+            change = self.master.data.updates.changesAdded[0]
+            self.assertEqual(change['revision'], u'784bd')
+            self.assertEqual(change['comments'], u'Comment for rev 5')
         d.addCallback(check_changes)

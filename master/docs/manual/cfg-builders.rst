@@ -73,6 +73,7 @@ Other optional keys may be set on each ``BuilderConfig``:
     objects. The function should return one of the :class:`BuildSlave`
     objects, or ``None`` if none of the available slaves should be
     used.
+    The function can optionally return a Deferred, which should fire with the same results.
 
 ``nextBuild``
     If provided, this is a function that controls which build request will be
@@ -121,6 +122,10 @@ Other optional keys may be set on each ``BuilderConfig``:
     A builder may be given a dictionary of :ref:`Build-Properties`
     specific for this builder in this parameter. Those values can be used
     later on like other properties. :ref:`Interpolate`.
+
+``description``
+    A builder may be given an arbitrary description, which will show up in the
+    web status on the builder's page.
 
 .. index:: Builds; merging
 

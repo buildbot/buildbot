@@ -19,7 +19,6 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.changes import base, gitpoller
 from buildbot.test.util import changesource, config, gpo
-from buildbot.util import epoch2datetime
 
 # Test that environment variables get propagated to subprocesses (See #2116)
 os.environ['TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'] = 'TRUE'
@@ -86,31 +85,36 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
     
         def cb_desired(r):
             self.assertEquals(r, desiredGoodResult)
+            # check types
+            if isinstance(r, basestring):
+                self.assertIsInstance(r, unicode)
+            elif isinstance(r, list):
+                [ self.assertIsInstance(e, unicode) for e in r ]
         d.addCallback(cb_desired)
         d.addCallback(lambda _: self.assertAllCommandsRan())
-        
+
     def test_get_commit_author(self):
         authorStr = 'Sammy Jankis <email@example.com>'
         return self._perform_git_output_test(self.poller._get_commit_author,
-                ['log', self.dummyRevStr, '--no-walk', '--format=%aN <%aE>'],
+                ['log', '--no-walk', '--format=%aN <%aE>', self.dummyRevStr, '--'],
                 authorStr, authorStr)
-        
+
     def test_get_commit_comments(self):
         commentStr = 'this is a commit message\n\nthat is multiline'
         return self._perform_git_output_test(self.poller._get_commit_comments,
-                ['log', self.dummyRevStr, '--no-walk', '--format=%s%n%b'],
+                ['log', '--no-walk', '--format=%s%n%b', self.dummyRevStr, '--'],
                 commentStr, commentStr)
-        
+
     def test_get_commit_files(self):
         filesStr = 'file1\nfile2'
         return self._perform_git_output_test(self.poller._get_commit_files,
-                ['log', self.dummyRevStr, '--name-only', '--no-walk', '--format=%n'],
+                ['log', '--name-only', '--no-walk', '--format=%n', self.dummyRevStr, '--'],
                 filesStr, filesStr.split(), emptyRaisesException=False)
         
     def test_get_commit_timestamp(self):
         stampStr = '1273258009'
         return self._perform_git_output_test(self.poller._get_commit_timestamp,
-                ['log', self.dummyRevStr, '--no-walk', '--format=%ct'],
+                ['log', '--no-walk', '--format=%ct', self.dummyRevStr, '--'],
                 stampStr, float(stampStr))
 
     # _get_changes is tested in TestGitPoller, below
@@ -130,7 +134,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.poller.master = self.master
         d.addCallback(create_poller)
         return d
-        
+
     def tearDown(self):
         return self.tearDownChangeSource()
 
@@ -217,8 +221,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     .path('gitpoller-work')
                     .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
                 gpo.Expect('git', 'log',
+                    '--format=%H',
                     'fa3ae8ed68e664d4db24798611b352e3c6509930..4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                    '--format=%H')
+                    '--')
                     .path('gitpoller-work')
                     .exit(1),
                 )
@@ -255,8 +260,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     .path('gitpoller-work')
                     .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
                 gpo.Expect('git', 'log',
+                    '--format=%H',
                     '4423cdbcbb89c14e50dd5f4152415afd686c5241..4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                    '--format=%H')
+                    '--')
                     .path('gitpoller-work')
                     .stdout(''),
                 )
@@ -318,8 +324,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     .path('gitpoller-work')
                     .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
                 gpo.Expect('git', 'log',
+                    '--format=%H',
                     'fa3ae8ed68e664d4db24798611b352e3c6509930..4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                    '--format=%H')
+                    '--')
                     .path('gitpoller-work')
                     .stdout('\n'.join([
                         '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
@@ -329,8 +336,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     .path('gitpoller-work')
                     .stdout('9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
                 gpo.Expect('git', 'log',
+                    '--format=%H',
                     'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5..9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
-                    '--format=%H')
+                    '--')
                     .path('gitpoller-work')
                     .stdout( '\n'.join([
                         '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
@@ -340,16 +348,16 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         # and patch out the _get_commit_foo methods which were already tested
         # above
         def timestamp(rev):
-            return defer.succeed(1273258009.0)
+            return defer.succeed(1273258009)
         self.patch(self.poller, '_get_commit_timestamp', timestamp)
         def author(rev):
-            return defer.succeed('by:' + rev[:8])
+            return defer.succeed(u'by:' + rev[:8])
         self.patch(self.poller, '_get_commit_author', author)
         def files(rev):
-            return defer.succeed(['/etc/' + rev[:3]])
+            return defer.succeed([u'/etc/' + rev[:3]])
         self.patch(self.poller, '_get_commit_files', files)
         def comments(rev):
-            return defer.succeed('hello!')
+            return defer.succeed(u'hello!')
         self.patch(self.poller, '_get_commit_comments', comments)
 
         # do the poll
@@ -367,29 +375,52 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 'release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
                 })
 
-            self.assertEqual(len(self.changes_added), 3)
-
-            self.assertEqual(self.changes_added[0]['author'], 'by:4423cdbc')
-            self.assertEqual(self.changes_added[0]['when_timestamp'],
-                                        epoch2datetime(1273258009))
-            self.assertEqual(self.changes_added[0]['comments'], 'hello!')
-            self.assertEqual(self.changes_added[0]['branch'], 'master')
-            self.assertEqual(self.changes_added[0]['files'], [ '/etc/442' ])
-            self.assertEqual(self.changes_added[0]['src'], 'git')
-
-            self.assertEqual(self.changes_added[1]['author'], 'by:64a5dc2a')
-            self.assertEqual(self.changes_added[1]['when_timestamp'],
-                                        epoch2datetime(1273258009))
-            self.assertEqual(self.changes_added[1]['comments'], 'hello!')
-            self.assertEqual(self.changes_added[1]['files'], [ '/etc/64a' ])
-            self.assertEqual(self.changes_added[1]['src'], 'git')
-
-            self.assertEqual(self.changes_added[2]['author'], 'by:9118f4ab')
-            self.assertEqual(self.changes_added[2]['when_timestamp'],
-                                        epoch2datetime(1273258009))
-            self.assertEqual(self.changes_added[2]['comments'], 'hello!')
-            self.assertEqual(self.changes_added[2]['files'], [ '/etc/911' ])
-            self.assertEqual(self.changes_added[2]['src'], 'git')
+            self.assertEqual(self.master.data.updates.changesAdded, [ {
+                'author': u'by:4423cdbc',
+                'branch': u'master',
+                'category': None,
+                'codebase': None,
+                'comments': u'hello!',
+                'files': [u'/etc/442'],
+                'project': '',
+                'properties': {},
+                'repository': 'git@example.com:foo/baz.git',
+                'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                'revlink': '',
+                'src': 'git',
+                'when_timestamp': 1273258009,
+            },
+            {
+                'author': u'by:64a5dc2a',
+                'branch': u'master',
+                'category': None,
+                'codebase': None,
+                'comments': u'hello!',
+                'files': [u'/etc/64a'],
+                'project': '',
+                'properties': {},
+                'repository': 'git@example.com:foo/baz.git',
+                'revision': '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+                'revlink': '',
+                'src': 'git',
+                'when_timestamp': 1273258009,
+            },
+            {
+                'author': u'by:9118f4ab',
+                'branch': u'release',
+                'category': None,
+                'codebase': None,
+                'comments': u'hello!',
+                'files': [u'/etc/911'],
+                'project': '',
+                'properties': {},
+                'repository': 'git@example.com:foo/baz.git',
+                'revision': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
+                'revlink': '',
+                'src': 'git',
+                'when_timestamp': 1273258009,
+            }
+            ])
 
         return d
 
@@ -412,8 +443,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     .path('gitpoller-work')
                     .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
                 gpo.Expect('git', 'log',
+                    '--format=%H',
                     '4423cdbcbb89c14e50dd5f4152415afd686c5241..4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                    '--format=%H')
+                    '--')
                     .path('gitpoller-work')
                     .stdout(''),
                 )
@@ -449,8 +481,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     .path('gitpoller-work')
                     .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
                 gpo.Expect('git', 'log',
+                    '--format=%H',
                     'fa3ae8ed68e664d4db24798611b352e3c6509930..4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                    '--format=%H')
+                    '--')
                     .path('gitpoller-work')
                     .stdout('\n'.join([
                         '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
@@ -461,16 +494,16 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         # and patch out the _get_commit_foo methods which were already tested
         # above
         def timestamp(rev):
-            return defer.succeed(1273258009.0)
+            return defer.succeed(1273258009)
         self.patch(self.poller, '_get_commit_timestamp', timestamp)
         def author(rev):
-            return defer.succeed('by:' + rev[:8])
+            return defer.succeed(u'by:' + rev[:8])
         self.patch(self.poller, '_get_commit_author', author)
         def files(rev):
-            return defer.succeed(['/etc/' + rev[:3]])
+            return defer.succeed([u'/etc/' + rev[:3]])
         self.patch(self.poller, '_get_commit_files', files)
         def comments(rev):
-            return defer.succeed('hello!')
+            return defer.succeed(u'hello!')
         self.patch(self.poller, '_get_commit_comments', comments)
 
         # do the poll
@@ -480,24 +513,42 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         d = self.poller.poll()
 
         # check the results
+        @d.addCallback
         def check_changes(_):
             self.assertEqual(self.poller.lastRev, {
                 'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
                 })
-            self.assertEqual(len(self.changes_added), 2)
-            self.assertEqual(self.changes_added[0]['author'], 'by:4423cdbc')
-            self.assertEqual(self.changes_added[0]['when_timestamp'],
-                                        epoch2datetime(1273258009))
-            self.assertEqual(self.changes_added[0]['comments'], 'hello!')
-            self.assertEqual(self.changes_added[0]['branch'], 'master')
-            self.assertEqual(self.changes_added[0]['files'], [ '/etc/442' ])
-            self.assertEqual(self.changes_added[0]['src'], 'git')
-            self.assertEqual(self.changes_added[1]['author'], 'by:64a5dc2a')
-            self.assertEqual(self.changes_added[1]['when_timestamp'],
-                                        epoch2datetime(1273258009))
-            self.assertEqual(self.changes_added[1]['comments'], 'hello!')
-            self.assertEqual(self.changes_added[1]['files'], [ '/etc/64a' ])
-            self.assertEqual(self.changes_added[1]['src'], 'git')
+            self.assertEqual(self.master.data.updates.changesAdded, [ {
+                'author': 'by:4423cdbc',
+                'branch': 'master',
+                'category': None,
+                'codebase': None,
+                'comments': 'hello!',
+                'files': ['/etc/442'],
+                'project': '',
+                'properties': {},
+                'repository': 'git@example.com:foo/baz.git',
+                'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                'revlink': '',
+                'src': 'git',
+                'when_timestamp': 1273258009,
+            },
+            {
+                'author': 'by:64a5dc2a',
+                'branch': 'master',
+                'category': None,
+                'codebase': None,
+                'comments': 'hello!',
+                'files': ['/etc/64a'],
+                'project': '',
+                'properties': {},
+                'repository': 'git@example.com:foo/baz.git',
+                'revision': '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+                'revlink': '',
+                'src': 'git',
+                'when_timestamp': 1273258009,
+            }
+            ])
             self.assertAllCommandsRan()
 
             self.master.db.state.assertStateByClass(
@@ -505,7 +556,6 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     lastRev={
                         'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
                         })
-        d.addCallback(check_changes)
 
         return d
 

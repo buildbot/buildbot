@@ -542,14 +542,16 @@ class ForceScheduler(base.BaseScheduler):
         defer.returnValue((real_properties, changeids, sourcestamps))
 
     @defer.inlineCallbacks
-    def force(self, owner, builder_name, **kwargs):
+    def force(self, owner, builderNames=None, **kwargs):
         """
         We check the parameters, and launch the build, if everything is correct
         """
-        if not builder_name in self.builderNames:
-            # in the case of buildAll, this method will be called several times
-            # for all the builders
-            # we just do nothing on a builder that is not in our builderNames
+        if builderNames is None:
+            builderNames = self.builderNames
+        else:
+            builderNames = list(set(builderNames).intersection(self.builderNames))
+
+        if not builderNames:
             defer.returnValue(None)
             return
 
@@ -569,14 +571,14 @@ class ForceScheduler(base.BaseScheduler):
         properties.setProperty("reason", reason, "Force Build Form")
         properties.setProperty("owner", owner, "Force Build Form")
 
-        r = ("A build was forced by '%s': %s" % (owner, reason))
+        r = (u"A build was forced by '%s': %s" % (owner, reason))
 
         # everything is validated, we can create our source stamp, and buildrequest
         res = yield self.addBuildsetForSourceStampSetDetails(
             reason = r,
             sourcestamps = sourcestamps,
             properties = properties,
-            builderNames = [ builder_name ],
+            builderNames = builderNames,
             )
 
         defer.returnValue(res)

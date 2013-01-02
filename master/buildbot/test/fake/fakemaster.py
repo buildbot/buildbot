@@ -14,9 +14,13 @@
 # Copyright Buildbot Team Members
 
 import weakref
-from twisted.internet import defer
-from buildbot.test.fake import fakedb
+from twisted.internet import defer, reactor
+from twisted.internet.protocol import ServerFactory
+from buildbot.mq import connector as mqconnector
+from buildbot.data import connector as dataconnector
+from buildbot.test.fake import fakedb, fakemq, fakedata
 from buildbot.test.fake import pbmanager
+from buildbot.www import service
 from buildbot import config
 import mock
 
@@ -50,14 +54,28 @@ class FakeBotMaster(object):
 
 class FakeStatus(object):
 
-    def builderAdded(self, name, basedir, category=None):
+    def builderAdded(self, name, basedir, category=None, description=None):
         return FakeBuilderStatus()
 
+    def getBuilderNames(self):
+        return []
+
+    def getSlaveNames(self):
+        return []
 
 class FakeBuilderStatus(object):
 
+    def setDescription(self, description):
+        self._description = description
+
+    def getDescription(self):
+        return self._description
+
     def setCategory(self, category):
-        pass
+        self._category = category
+
+    def getCategory(self):
+        return self._category
 
     def setSlavenames(self, names):
         pass
@@ -87,6 +105,8 @@ class FakeMaster(object):
         self.botmaster.parent = self
         self.status = FakeStatus()
         self.status.master = self
+        self.name = 'fake:/master'
+        self.masterid = master_id
 
     def getObjectId(self):
         return defer.succeed(self._master_id)
@@ -98,10 +118,42 @@ class FakeMaster(object):
     def _get_child_mock(self, **kw):
         return mock.Mock(**kw)
 
+
 # Leave this alias, in case we want to add more behavior later
-def make_master(wantDb=False, testcase=None, **kwargs):
+def make_master(wantMq=False, wantDb=False, wantData=False,
+        testcase=None, **kwargs):
     master = FakeMaster(**kwargs)
+    if wantData:
+        wantMq = wantDb = True
+    if wantMq:
+        assert testcase is not None, "need testcase for wantMq"
+        master.mq = fakemq.FakeMQConnector(master, testcase)
     if wantDb:
         assert testcase is not None, "need testcase for wantDb"
         master.db = fakedb.FakeDBConnector(testcase)
+    if wantData:
+        master.data = fakedata.FakeDataConnector(master, testcase)
     return master
+
+# this config has real mq, real data, real www, but fakedb, and no build engine for ui test
+@defer.inlineCallbacks
+def make_master_for_uitest(port):
+    tcp = reactor.listenTCP(port, ServerFactory())
+    port = tcp._realPortNumber
+    yield tcp.stopListening()
+    url = 'http://localhost:'+str(port)+"/"
+    master = FakeMaster()
+    master.db = fakedb.FakeDBConnector(mock.Mock())
+    master.mq = mqconnector.MQConnector(master)
+    master.config.mq = dict(type='simple')
+    master.mq.setup()
+    class testHookedDataConnector(dataconnector.DataConnector):
+        submodules = dataconnector.DataConnector.submodules + ['buildbot.data.testhooks']
+
+    master.data = testHookedDataConnector(master)
+    master.config.www = dict(url=url, port=port)
+    master.www = service.WWWService(master)
+    master.data.updates.playTestScenario("buildbot.test.scenarios.base.BaseScenario.populateBaseDb")
+    yield master.www.startService()
+    yield master.www.reconfigService(master.config)
+    defer.returnValue(master)

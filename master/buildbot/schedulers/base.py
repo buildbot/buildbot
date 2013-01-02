@@ -20,7 +20,8 @@ from twisted.application import service
 from twisted.internet import defer
 from buildbot.process.properties import Properties
 from buildbot.util import ComparableMixin
-from buildbot import config, interfaces
+from buildbot.changes import changes
+from buildbot import config, interfaces, util
 from buildbot.util.state import StateMixin
 
 class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
@@ -58,15 +59,9 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         @type codebases: dict with following struct:
             key: '<codebase>'
             value: {'repository':'<repo>', 'branch':'<br>', 'revision:'<rev>'}
-
-        @param consumeChanges: true if this scheduler wishes to be informed
-        about the addition of new changes.  Defaults to False.  This should
-        be passed explicitly from subclasses to indicate their interest in
-        consuming changes.
-        @type consumeChanges: boolean
         """
         service.MultiService.__init__(self)
-        self.name = name
+        self.name = util.ascii2unicode(name)
         "name of this scheduler; used to identify replacements on reconfig"
 
         ok = True
@@ -110,7 +105,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         self.codebases = codebases
         
         # internal variables
-        self._change_subscription = None
+        self._change_consumer = None
         self._change_consumption_lock = defer.DeferredLock()
 
     ## service handling
@@ -164,43 +159,55 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         """
         assert fileIsImportant is None or callable(fileIsImportant)
 
-        # register for changes with master
-        assert not self._change_subscription
-        def changeCallback(change):
-            # ignore changes delivered while we're not running
-            if not self._change_subscription:
-                return
-
-            if change_filter and not change_filter.filter_change(change):
-                return
-            if change.codebase not in self.codebases:
-                log.msg('change contains codebase %s that is not processed by'
-                    ' scheduler %s' % (change.codebase, self.name),
-                    logLevel=logging.DEBUG)
-                return
-            if fileIsImportant:
-                try:
-                    important = fileIsImportant(change)
-                    if not important and onlyImportant:
-                        return
-                except:
-                    log.err(failure.Failure(),
-                            'in fileIsImportant check for %s' % change)
-                    return
-            else:
-                important = True
-
-            # use change_consumption_lock to ensure the service does not stop
-            # while this change is being processed
-            d = self._change_consumption_lock.acquire()
-            d.addCallback(lambda _ : self.gotChange(change, important))
-            def release(x):
-                self._change_consumption_lock.release()
-            d.addBoth(release)
-            d.addErrback(log.err, 'while processing change')
-        self._change_subscription = self.master.subscribeToChanges(changeCallback)
-
+        # register for changes with the data API
+        assert not self._change_consumer
+        self._change_consumer = self.master.data.startConsuming(
+                lambda k,m : self._changeCallback(k, m, fileIsImportant,
+                                            change_filter, onlyImportant),
+                {},
+                ('change',))
         return defer.succeed(None)
+
+    @defer.inlineCallbacks
+    def _changeCallback(self, key, msg, fileIsImportant, change_filter,
+                                onlyImportant):
+
+        # ignore changes delivered while we're not running
+        if not self._change_consumer:
+            return
+
+        # get a change object, since the API requires it
+        chdict = yield self.master.db.changes.getChange(msg['changeid'])
+        change = yield changes.Change.fromChdict(self.master, chdict)
+
+        # filter it
+        if change_filter and not change_filter.filter_change(change):
+            return
+        if change.codebase not in self.codebases:
+            log.msg('change contains codebase %s that is not processed by'
+                ' scheduler %s' % (change.codebase, self.name),
+                logLevel=logging.DEBUG)
+            return
+        if fileIsImportant:
+            try:
+                important = fileIsImportant(change)
+                if not important and onlyImportant:
+                    return
+            except:
+                log.err(failure.Failure(),
+                        'in fileIsImportant check for %s' % change)
+                return
+        else:
+            important = True
+
+        # use change_consumption_lock to ensure the service does not stop
+        # while this change is being processed
+        d = self._change_consumption_lock.acquire()
+        d.addCallback(lambda _ : self.gotChange(change, important))
+        def release(x):
+            self._change_consumption_lock.release()
+        d.addBoth(release)
+        d.addErrback(log.err, 'while processing change')
 
     def _stopConsumingChanges(self):
         # (note: called automatically in stopService)
@@ -209,9 +216,9 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         # consumption is complete before we are done stopping consumption
         d = self._change_consumption_lock.acquire()
         def stop(x):
-            if self._change_subscription:
-                self._change_subscription.unsubscribe()
-                self._change_subscription = None
+            if self._change_consumer:
+                self._change_consumer.stopConsuming()
+                self._change_consumer = None
             self._change_consumption_lock.release()
         d.addBoth(stop)
         return d
@@ -327,6 +334,15 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
     @defer.inlineCallbacks
     def addBuildsetForSourceStampSetDetails(self, reason, sourcestamps,
                                             properties, builderNames=None):
+        """Create a sourcestamp set based on sourcestamps, then wrap it in a
+        buildset.
+
+        Sourcestamps is a dictionary keyed by codebase, giving the required
+        parameters.  Any other defaults will be filled in from the scheduler's
+        configuration.  If sourcestamps is None, only the defaults will be
+        used.
+        """
+
         if sourcestamps is None:
             sourcestamps = {}
 
@@ -348,7 +364,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
                         branch=ss.get('branch', None),
                         revision=ss.get('revision', None),
                         project=ss.get('project', ''),
-                        changeids=[c['number'] for c in getattr(ss, 'changes', [])],
+                        changeids=[c['number'] for c in ss.get('changes', [])],
                         patch_body=ss.get('patch_body', None),
                         patch_level=ss.get('patch_level', None),
                         patch_author=ss.get('patch_author', None),
@@ -453,9 +469,8 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
                 # no sourcestamp and no sets
                 yield None
 
-        rv = yield self.master.addBuildset(sourcestampsetid=setid,
-                            reason=reason, properties=properties_dict,
-                            builderNames=builderNames,
-                            external_idstring=external_idstring)
+        rv = yield self.master.data.updates.addBuildset(
+                scheduler=self.name, sourcestampsetid=setid, reason=reason,
+                properties=properties_dict, builderNames=builderNames,
+                external_idstring=external_idstring)
         defer.returnValue(rv)
-

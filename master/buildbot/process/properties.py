@@ -92,8 +92,10 @@ class Properties(util.ComparableMixin):
         return l
 
     def asDict(self):
-        """Return the properties as a simple key:value dictionary"""
-        return dict(self.properties)
+        """Return the properties as a simple key:value dictionary,
+        properly unicoded"""
+        return dict((util.ascii2unicode(k), (v, util.ascii2unicode(s)))
+                    for k, (v, s) in self.properties.iteritems())
 
     def __repr__(self):
         return ('Properties(**' +
@@ -443,7 +445,8 @@ class Interpolate(util.ComparableMixin, object):
                 repl = None
             except ValueError:
                 config.error("Must specify both codebase and attribute for src Interpolation '%s'" % arg)
-                codebase = attr = repl = None
+                return {}, None, None
+
         if not Interpolate.identifier_re.match(codebase):
             config.error("Codebase must be alphanumeric for src Interpolation '%s'" % arg)
             codebase = attr = repl = None

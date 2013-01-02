@@ -19,9 +19,8 @@ from twisted.python import log
 from twisted.internet import defer, utils
 
 from buildbot import config
-from buildbot.util import deferredLocked
+from buildbot.util import deferredLocked, ascii2unicode
 from buildbot.changes import base
-from buildbot.util import epoch2datetime
 
 class HgPoller(base.PollingChangeSource):
     """This source will poll a remote hg repo for changes and submit
@@ -93,7 +92,7 @@ class HgPoller(base.PollingChangeSource):
                                    env=os.environ, errortoo=False )
         def process(output):
             # fortunately, Mercurial issues all filenames one one line
-            date, author, files, comments = output.decode(self.encoding).split(
+            date, author, files, comments = output.decode(self.encoding, "replace").split(
                 os.linesep, 3)
 
             if not self.usetimestamps:
@@ -246,7 +245,7 @@ class HgPoller(base.PollingChangeSource):
             return
         if current is None:
             # we could have used current = -1 convention as well (as hg does)
-            revrange = '0:%d' % head
+            revrange = '%d:%d' % (head, head)
         else:
             revrange = '%d:%s' % (current + 1, head)
 
@@ -263,17 +262,17 @@ class HgPoller(base.PollingChangeSource):
         for rev, node in revNodeList:
             timestamp, author, files, comments = yield self._getRevDetails(
                 node)
-            yield self.master.addChange(
+            yield self.master.data.updates.addChange(
                    author=author,
-                   revision=node,
+                   revision=unicode(node),
                    files=files,
                    comments=comments,
-                   when_timestamp=epoch2datetime(timestamp),
-                   branch=self.branch,
-                   category=self.category,
-                   project=self.project,
-                   repository=self.repourl,
-                   src='hg')
+                   when_timestamp=int(timestamp),
+                   branch=ascii2unicode(self.branch),
+                   category=ascii2unicode(self.category),
+                   project=ascii2unicode(self.project),
+                   repository=ascii2unicode(self.repourl),
+                   src=u'hg')
             # writing after addChange so that a rev is never missed,
             # but at once to avoid impact from later errors
             yield self._setCurrentRev(rev, oid=oid)

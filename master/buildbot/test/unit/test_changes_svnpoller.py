@@ -435,49 +435,73 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         d.addCallback(lambda _ : s.poll())
         def check_first(_):
             # no changes generated on the first iteration
-            self.assertEqual(self.changes_added, [])
+            self.assertEqual(self.master.data.updates.changesAdded, [])
             self.failUnlessEqual(s.last_change, 1)
         d.addCallback(check_first)
 
         # now fire it again, nothing changing
         d.addCallback(lambda _ : s.poll())
         def check_second(_):
-            self.assertEqual(self.changes_added, [])
+            self.assertEqual(self.master.data.updates.changesAdded, [])
             self.failUnlessEqual(s.last_change, 1)
         d.addCallback(check_second)
 
         # and again, with r2 this time
         d.addCallback(lambda _ : s.poll())
         def check_third(_):
-            self.assertEqual(len(self.changes_added), 1)
-            c = self.changes_added[0]
-            self.failUnlessEqual(c['branch'], "branch")
-            self.failUnlessEqual(c['revision'], '2')
-            self.failUnlessEqual(c['files'], ['']) # signals a new branch
-            self.failUnlessEqual(c['comments'], "make_branch")
-            self.failUnlessEqual(c['src'], "svn")
+            self.assertEqual(self.master.data.updates.changesAdded, [ {
+                'author': u'warner',
+                'branch': 'branch',
+                'category': None,
+                'codebase': None,
+                'comments': u'make_branch',
+                'files': [''],
+                'project': '',
+                'properties': {},
+                'repository': 'file:///usr/home/warner/stuff/Projects/BuildBot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
+                'revision': '2',
+                'revlink': '',
+                'src': 'svn',
+                'when_timestamp': None,
+            }])
             self.failUnlessEqual(s.last_change, 2)
         d.addCallback(check_third)
 
         # and again with both r3 and r4 appearing together
         def setup_fourth(_):
-            self.changes_added = []
+            self.master.data.updates.changesAdded = []
         d.addCallback(setup_fourth)
         d.addCallback(lambda _ : s.poll())
         def check_fourth(_):
-            self.assertEqual(len(self.changes_added), 2)
-            c = self.changes_added[0]
-            self.failUnlessEqual(c['branch'], "branch")
-            self.failUnlessEqual(c['revision'], '3')
-            self.failUnlessEqual(c['files'], ["main.c"])
-            self.failUnlessEqual(c['comments'], "commit_on_branch")
-            self.failUnlessEqual(c['src'], "svn")
-            c = self.changes_added[1]
-            self.failUnlessEqual(c['branch'], None)
-            self.failUnlessEqual(c['revision'], '4')
-            self.failUnlessEqual(c['files'], ["version.c"])
-            self.failUnlessEqual(c['comments'], "revised_to_2")
-            self.failUnlessEqual(c['src'], "svn")
+            self.assertEqual(self.master.data.updates.changesAdded, [{
+                'author': u'warner',
+                'branch': 'branch',
+                'category': None,
+                'codebase': None,
+                'comments': u'commit_on_branch',
+                'files': ['main.c'],
+                'project': '',
+                'properties': {},
+                'repository': 'file:///usr/home/warner/stuff/Projects/BuildBot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
+                'revision': '3',
+                'revlink': '',
+                'src': 'svn',
+                'when_timestamp': None,
+            }, {
+                'author': u'warner',
+                'branch': None,
+                'category': None,
+                'codebase': None,
+                'comments': u'revised_to_2',
+                'files': ['version.c'],
+                'project': '',
+                'properties': {},
+                'repository': 'file:///usr/home/warner/stuff/Projects/BuildBot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
+                'revision': '4',
+                'revlink': '',
+                'src': 'svn',
+                'when_timestamp': None,
+                }])
             self.failUnlessEqual(s.last_change, 4)
             self.assertAllCommandsRan()
         d.addCallback(check_fourth)

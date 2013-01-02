@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.trial import unittest
+from twisted.python.reflect import namedModule
 from buildbot.steps.source import bzr
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import sourcesteps
@@ -36,6 +37,34 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['bzr', '--version'])
             + 0,
             Expect('stat', dict(file='wkdir/.bzr',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'clean-tree', '--force'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'update'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'version-info', '--custom', "--template='{revno}"])
+            + ExpectShell.log('stdio',
+                stdout='100')
+            + 0,
+                    )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'Bzr')
+        return self.runStep()
+
+    def test_mode_full_win32path(self):
+        self.setupStep(
+            bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
+                    mode='full', method='fresh'))
+        self.build.path_module = namedModule('ntpath')
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', '--version'])
+            + 0,
+            Expect('stat', dict(file=r'wkdir\.bzr',
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -81,6 +110,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
                     )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
     def test_mode_full_revision(self):
@@ -108,6 +138,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
                     )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
     def test_mode_full_clean(self):
@@ -134,6 +165,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
                     )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
     def test_mode_full_clean_revision(self):
@@ -161,6 +193,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
                     )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
     def test_mode_full_fresh(self):
@@ -187,6 +220,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
                     )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
     def test_mode_full_clobber(self):
@@ -211,6 +245,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
                     )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
 
@@ -238,6 +273,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
                     )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
 
@@ -263,6 +299,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
                     )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
 
@@ -289,6 +326,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
                     )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
 
@@ -320,6 +358,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
     def test_mode_incremental(self):
@@ -343,6 +382,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
     def test_mode_incremental_revision(self):
@@ -367,6 +407,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
     def test_mode_incremental_no_existing_repo(self):
@@ -391,6 +432,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100\n', 'Bzr')
         return self.runStep()
 
     def test_bad_revparse(self):

@@ -78,8 +78,8 @@ class Model(base.DBConnectorComponent):
     # claim is made by the object referenced by objectid.
     buildrequest_claims = sa.Table('buildrequest_claims', metadata,
         sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
-            index=True, unique=True),
-        sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id'),
+            nullable=False),
+        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
             index=True, nullable=True),
         sa.Column('claimed_at', sa.Integer, nullable=False),
     )
@@ -282,16 +282,63 @@ class Model(base.DBConnectorComponent):
 
     # schedulers
 
+    # The schedulers table gives a unique identifier to each scheduler.  It
+    # also links to other tables used to ensure only one master runs each
+    # scheduler, and to track changes that a scheduler may trigger a build for
+    # later.
+    schedulers = sa.Table('schedulers', metadata,
+        sa.Column("id", sa.Integer, primary_key=True),
+
+        # name for this scheduler, as given in the configuration, plus a hash
+        # of that name used for a unique index
+        sa.Column('name', sa.Text, nullable=False),
+        sa.Column('name_hash', sa.String(40), nullable=False),
+    )
+
+    # This links schedulers to the master where they are running.  A scheduler
+    # linked to a master that is inactive can be unlinked by any master.  This
+    # is a separate table so that we can "claim" schedulers on a master by
+    # inserting; this has better support in database servers for ensuring that
+    # exactly one claim succeeds.  The ID column is present for external users;
+    # see bug #1053.
+    scheduler_masters = sa.Table('scheduler_masters', metadata,
+        sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.id'),
+            nullable=False, primary_key=True),
+        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+            nullable=False),
+    )
+
     # This table references "classified" changes that have not yet been
     # "processed".  That is, the scheduler has looked at these changes and
     # determined that something should be done, but that hasn't happened yet.
     # Rows are deleted from this table as soon as the scheduler is done with
     # the change.
     scheduler_changes = sa.Table('scheduler_changes', metadata,
-        sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id')),
+        sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.id')),
         sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid')),
         # true (nonzero) if this change is important to this scheduler
         sa.Column('important', sa.Integer),
+    )
+
+    # builders
+
+    builders = sa.Table('builders', metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        # builder's name
+        sa.Column('name', sa.Text, nullable=False),
+        # sha1 of name; used for a unique index
+        sa.Column('name_hash', sa.String(40), nullable=False),
+    )
+
+    # This links builders to the master where they are running.  A builder
+    # linked to a master that is inactive can be unlinked by any master.  Note
+    # that builders can run on multiple masters at the same time.
+    builder_masters = sa.Table('builder_masters', metadata,
+        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+        sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id'),
+            nullable=False),
+        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+            nullable=False),
     )
 
     # objects
@@ -351,6 +398,24 @@ class Model(base.DBConnectorComponent):
         sa.Column("attr_data", sa.String(128), nullable=False),
     )
 
+    # masters
+
+    masters = sa.Table("masters", metadata,
+        # unique id per master
+        sa.Column('id', sa.Integer, primary_key=True),
+
+        # master's name (generally in the form hostname:basedir)
+        sa.Column('name', sa.Text, nullable=False),
+        # sha1 of name; used for a unique index
+        sa.Column('name_hash', sa.String(40), nullable=False),
+
+        # true if this master is running
+        sa.Column('active', sa.Integer, nullable=False),
+
+        # updated periodically by a running master, so silently failed masters
+        # can be detected by other masters
+        sa.Column('last_active', sa.Integer, nullable=False),
+    )
 
     # indexes
 
@@ -370,10 +435,17 @@ class Model(base.DBConnectorComponent):
     sa.Index('changes_when_timestamp', changes.c.when_timestamp)
     sa.Index('change_files_changeid', change_files.c.changeid)
     sa.Index('change_properties_changeid', change_properties.c.changeid)
-    sa.Index('scheduler_changes_objectid', scheduler_changes.c.objectid)
+    sa.Index('scheduler_name_hash', schedulers.c.name_hash, unique=True)
+    sa.Index('scheduler_changes_schedulerid', scheduler_changes.c.schedulerid)
     sa.Index('scheduler_changes_changeid', scheduler_changes.c.changeid)
-    sa.Index('scheduler_changes_unique', scheduler_changes.c.objectid,
+    sa.Index('scheduler_changes_unique', scheduler_changes.c.schedulerid,
             scheduler_changes.c.changeid, unique=True)
+    sa.Index('builder_name_hash', builders.c.name_hash, unique=True)
+    sa.Index('builder_masters_builderid', builder_masters.c.builderid)
+    sa.Index('builder_masters_masterid', builder_masters.c.masterid)
+    sa.Index('builder_masters_identity',
+            builder_masters.c.builderid, builder_masters.c.masterid,
+            unique=True)
     sa.Index('sourcestamp_changes_sourcestampid',
             sourcestamp_changes.c.sourcestampid)
     sa.Index('sourcestamps_sourcestampsetid', sourcestamps.c.sourcestampsetid,
@@ -390,6 +462,9 @@ class Model(base.DBConnectorComponent):
             unique=True)
     sa.Index('name_per_object', object_state.c.objectid, object_state.c.name,
             unique=True)
+    sa.Index('master_name_hashes', masters.c.name_hash, unique=True)
+    sa.Index('buildrequest_claims_brids', buildrequest_claims.c.brid,
+            unique=True)
 
     # MySQl creates indexes for foreign keys, and these appear in the
     # reflection.  This is a list of (table, index) names that should be
@@ -402,6 +477,8 @@ class Model(base.DBConnectorComponent):
             dict(unique=False, column_names=['patchid'], name='patchid')),
         ('sourcestamp_changes',
             dict(unique=False, column_names=['changeid'], name='changeid')),
+        ('scheduler_masters',
+            dict(unique=False, column_names=['masterid'], name='masterid')),
         ('buildsets',
             dict(unique=False, column_names=['sourcestampsetid'],
                                name='buildsets_sourcestampsetid_fkey')),

@@ -50,6 +50,7 @@ global_defaults = dict(
     multiMaster=False,
     debugPassword=None,
     manhole=None,
+    www=dict(port=None, url='http://localhost:8080/'),
 )
 
 
@@ -150,8 +151,8 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         expected = dict(
             #validation,
             db=dict(
-                db_url='sqlite:///state.sqlite',
-                db_poll_interval=None),
+                db_url='sqlite:///state.sqlite'),
+            mq=dict(type='simple'),
             metrics = None,
             caches = dict(Changes=10, Builds=15),
             schedulers = {},
@@ -463,22 +464,24 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_db_defaults(self):
         self.cfg.load_db(self.filename, {}, self.errors)
         self.assertResults(
-            db=dict(db_url='sqlite:///state.sqlite', db_poll_interval=None))
+            db=dict(db_url='sqlite:///state.sqlite'))
 
     def test_load_db_db_url(self):
         self.cfg.load_db(self.filename, dict(db_url='abcd'), self.errors)
-        self.assertResults(db=dict(db_url='abcd', db_poll_interval=None))
+        self.assertResults(db=dict(db_url='abcd'))
 
     def test_load_db_db_poll_interval(self):
+        # value is ignored, but no error
         self.cfg.load_db(self.filename, dict(db_poll_interval=2), self.errors)
         self.assertResults(
-            db=dict(db_url='sqlite:///state.sqlite', db_poll_interval=2))
+            db=dict(db_url='sqlite:///state.sqlite'))
 
     def test_load_db_dict(self):
+        # db_poll_interval value is ignored, but no error
         self.cfg.load_db(self.filename,
             dict(db=dict(db_url='abcd', db_poll_interval=10)),
             self.errors)
-        self.assertResults(db=dict(db_url='abcd', db_poll_interval=10))
+        self.assertResults(db=dict(db_url='abcd'))
 
     def test_load_db_unk_keys(self):
         self.cfg.load_db(self.filename,
@@ -486,11 +489,25 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             self.errors)
         self.assertConfigError(self.errors, "unrecognized keys in")
 
-    def test_load_db_not_int(self):
-        self.cfg.load_db(self.filename,
-            dict(db=dict(db_url='abcd', db_poll_interval='ten')),
+
+    def test_load_mq_defaults(self):
+        self.cfg.load_mq(self.filename, {}, self.errors)
+        self.assertResults(mq=dict(type='simple'))
+
+    def test_load_mq_explicit_type(self):
+        self.cfg.load_mq(self.filename,
+                dict(mq=dict(type='simple')), self.errors)
+        self.assertResults(mq=dict(type='simple'))
+
+    def test_load_mq_unk_type(self):
+        self.cfg.load_mq(self.filename, dict(mq=dict(type='foo')), self.errors)
+        self.assertConfigError(self.errors, "mq type 'foo' is not known")
+
+    def test_load_mq_unk_keys(self):
+        self.cfg.load_mq(self.filename,
+            dict(mq=dict(bar='bar')),
             self.errors)
-        self.assertConfigError(self.errors, "must be an int")
+        self.assertConfigError(self.errors, "unrecognized keys in")
 
 
     def test_load_metrics_defaults(self):
@@ -690,6 +707,22 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 dict(user_managers=[um]),
                 self.errors)
         self.assertResults(user_managers=[um])
+
+
+    def test_load_www_default(self):
+        self.cfg.load_www(self.filename, {}, self.errors)
+        self.assertResults(www=dict(port=None, url='http://localhost:8080/'))
+
+    def test_load_www_port(self):
+        self.cfg.load_www(self.filename,
+                dict(www=dict(port=9888)), self.errors)
+        self.assertResults(www=dict(port=9888, url='http://localhost:9888/'))
+
+    def test_load_www_url_no_slash(self):
+        self.cfg.load_www(self.filename,
+                dict(www=dict(url='http://foo', port=20)), self.errors)
+        self.assertResults(www=dict(port=20, url='http://foo/'))
+
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
@@ -956,14 +989,16 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             locks=[],
             env={},
             properties={},
-            mergeRequests=None)
+            mergeRequests=None,
+            description=None)
 
     def test_args(self):
         cfg = config.BuilderConfig(
             name='b', slavename='s1', slavenames='s2', builddir='bd',
             slavebuilddir='sbd', factory=self.factory, category='c',
             nextSlave=lambda : 'ns', nextBuild=lambda : 'nb', locks=['l'],
-            env=dict(x=10), properties=dict(y=20), mergeRequests='mr')
+            env=dict(x=10), properties=dict(y=20), mergeRequests='mr',
+            description='buzz')
         self.assertIdentical(cfg.factory, self.factory)
         self.assertAttributes(cfg,
             name='b',
@@ -974,7 +1009,8 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             locks=['l'],
             env={'x':10},
             properties={'y':20},
-            mergeRequests='mr')
+            mergeRequests='mr',
+            description='buzz')
 
     def test_getConfigDict(self):
         ns = lambda : 'ns'
@@ -983,9 +1019,11 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             name='b', slavename='s1', slavenames='s2', builddir='bd',
             slavebuilddir='sbd', factory=self.factory, category='c',
             nextSlave=ns, nextBuild=nb, locks=['l'],
-            env=dict(x=10), properties=dict(y=20), mergeRequests='mr')
+            env=dict(x=10), properties=dict(y=20), mergeRequests='mr',
+            description='buzz')
         self.assertEqual(cfg.getConfigDict(), {'builddir': 'bd',
             'category': 'c',
+            'description': 'buzz',
             'env': {'x': 10},
             'factory': self.factory,
             'locks': ['l'],

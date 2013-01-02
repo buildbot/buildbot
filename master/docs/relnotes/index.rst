@@ -1,12 +1,50 @@
 Release Notes for Buildbot |version|
 ====================================
 
+Nine
+----
+
+..
+    For the moment, release notes for the nine branch go here, for ease of merging.
+
+* Buildbot's tests now require at least Mock-0.8.0.
+
+* Buildbot no longer polls the database for jobs.  The
+  ``db_poll_interval`` configuration parameter and the :bb:cfg:`db` key
+  of the same name are deprecated and will be ignored.
+
+* The interface for adding changes has changed.
+  The new method is ``master.data.updates.addChanges`` (implemented by :py:meth:`~buildbot.data.changes.ChangeResourceType.addChange`), although the old interface (``master.addChange``) will remain in place for a few versions.
+  The new method:
+
+  * returns a change ID, not a Change instance;
+
+  * takes its ``when_timestamp`` argument as epoch time (UNIX time), not a datetime instance; and
+
+  * does not accept the deprecated parameters ``who``, ``isdir``, ``is_dir``, and ``when``.
+
+  * requires that all strings be unicode, not bytestrings.
+
+  Please adjust any custom change sources accordingly.
+
+* A new build status, CANCELLED, has been added.
+  It is used when a step or build is deliberately cancelled by a user.
+
+* This upgrade will delete all rows from the ``buildrequest_claims`` table.
+  If you are using this table for analytical purposes outside of Buildbot, please back up its contents before the upgrade, and restore it afterward, translating object IDs to scheduler IDs if necessary.
+  This translation would be very slow and is not required for most users, so it is not done automatically.
+
+* All of the schedulers DB API methods now accept a schedulerid, rather than an objectid.
+  If you have custom code using these methods, check your code and make the necessary adjustments.
+
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
     Most simply need an additional bulleted list item, but more significant
     changes can be given a subsection of their own.
 
 The following are the release notes for Buildbot |version|.
+
+* The ``MasterShellCommand`` step now correctly handles environment variables passed as list.
 
 Master
 ------
@@ -25,6 +63,7 @@ Deprecations, Removals, and Non-Compatible Changes
 * The ``split_file`` function for :bb:chsrc:`SVNPoller` may now return a dictionary instead of a tuple.
   This allows it to add extra information about a change (such as ``project`` or ``repository``).
 * The ``workdir`` property has been renamed to ``builddir``.
+* The ``Blocker`` step has been removed.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -55,7 +94,7 @@ git log itself::
 Older Versions
 --------------
 
-Release notes for older versions of Buildbot are available in the :bb:src:`master/docs/release-notes/` directory of the source tree.
+Release notes for older versions of Buildbot are available in the :bb:src:`master/docs/relnotes/` directory of the source tree.
 Newer versions are also available here:
 
 .. toctree::

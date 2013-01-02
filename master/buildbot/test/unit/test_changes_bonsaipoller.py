@@ -13,14 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from copy import deepcopy
 import re
-
+from copy import deepcopy
 from twisted.trial import unittest
 from twisted.internet import defer
 from twisted.web import client
 from buildbot.test.util import changesource
-from buildbot.util import epoch2datetime
 from buildbot.changes.bonsaipoller import FileNode, CiNode, BonsaiResult, \
      BonsaiParser, BonsaiPoller, InvalidResultError, EmptyResult
 
@@ -251,7 +249,7 @@ class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
         self.fakeGetPage(badUnparsedResult)
         d = self.changesource.poll()
         def check(_):
-            self.assertEqual(len(self.changes_added), 0)
+            self.assertEqual(self.master.data.updates.changesAdded, [])
         d.addCallback(check)
         return d
 
@@ -259,25 +257,53 @@ class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
         self.fakeGetPage(goodUnparsedResult)
         d = self.changesource.poll()
         def check(_):
-            self.assertEqual(len(self.changes_added), 3)
-            self.assertEqual(self.changes_added[0]['author'], who1)
-            self.assertEqual(self.changes_added[0]['when_timestamp'],
-                                            epoch2datetime(date1))
-            self.assertEqual(self.changes_added[0]['comments'], log1)
-            self.assertEqual(self.changes_added[0]['branch'], 'seamonkey')
-            self.assertEqual(self.changes_added[0]['files'],
-                    [ '%s (revision %s)' % (file1, rev1) ])
-            self.assertEqual(self.changes_added[1]['author'], who2)
-            self.assertEqual(self.changes_added[1]['when_timestamp'],
-                                            epoch2datetime(date2))
-            self.assertEqual(self.changes_added[1]['comments'], log2)
-            self.assertEqual(self.changes_added[1]['files'],
-                    [ '%s (revision %s)' % (file2, rev2),
-                      '%s (revision %s)' % (file3, rev3) ])
-            self.assertEqual(self.changes_added[2]['author'], who3)
-            self.assertEqual(self.changes_added[2]['comments'], log3)
-            self.assertEqual(self.changes_added[2]['when_timestamp'],
-                                            epoch2datetime(date3))
-            self.assertEqual(self.changes_added[2]['files'], [])
+            self.assertEqual(self.master.data.updates.changesAdded, [ {
+                    'author': 'sar@gmail.com',
+                    'branch': 'seamonkey',
+                    'category': None,
+                    'codebase': None,
+                    'comments': u'Add Bug 338541a',
+                    'files': [
+                        u'mozilla/testing/mochitest/tests/index.html (revision 1.8)',
+                    ],
+                    'project': '',
+                    'properties': {},
+                    'repository': '',
+                    'revision': None,
+                    'revlink': '',
+                    'src': None,
+                    'when_timestamp': 1161908700,
+                }, {
+                    'author': 'aarrg@ooacm.org',
+                    'branch': 'seamonkey',
+                    'category': None,
+                    'codebase': None,
+                    'comments': u'bug 357427 add static ctor/dtor methods',
+                    'files': [
+                        u'mozilla/testing/mochitest/tests/test_bug338541.xhtml (revision 1.1)',
+                        u'mozilla/xpcom/threads/nsAutoLock.cpp (revision 1.1812)',
+                    ],
+                    'project': '',
+                    'properties': {},
+                    'repository': '',
+                    'revision': None,
+                    'revlink': '',
+                    'src': None,
+                    'when_timestamp': 1161910620,
+                }, {
+                    'author': 'huoents@hueont.net',
+                    'branch': 'seamonkey',
+                    'category': None,
+                    'codebase': None,
+                    'comments': u'Testing log #3 lbah blah',
+                    'files': [],
+                    'project': '',
+                    'properties': {},
+                    'repository': '',
+                    'revision': None,
+                    'revlink': '',
+                    'src': None,
+                    'when_timestamp': 1089822728,
+                } ])
         d.addCallback(check)
         return d

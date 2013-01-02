@@ -8,6 +8,10 @@
 
 <p>(<a href="{{ path_to_root }}waterfall?show={{ name }}">view in waterfall</a>)</p>
 
+{% if description %}
+  <div class="BuilderDescription">{{ description }}</div>
+{% endif %}
+
 <div class="column">
 
 {% if current %}

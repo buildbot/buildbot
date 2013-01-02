@@ -1,0 +1,34 @@
+-#lint-input {recent_builds:[{title:"a",url:"b"}],recent_builders:[{title:"a",url:"b"}]}
+.row.fullwidth
+  %ul.breadcrumbs
+    %li.current
+      %a{href:"#/"}Home
+  .three.columns
+    .panel
+      .small.button.right{data-dojo-attach-event:"onclick:clearHistory"}
+        %i.icon-trash
+           Clear History
+      %ul.side-nav
+        %li Most recently browsed builds
+        :each b in recent_builds
+          %li
+            %a{href:b.url}#{b.title}
+        %li.divider
+        %li Most recently browsed builders
+        :each b in recent_builders
+          %li
+            %a{href:b.url}#{b.title}
+  .nine.columns
+    .panel
+      %h2 Welcome to buildbot
+      Probably we should display information about the current config
+      .row-fluid
+        .span4
+          %ul
+            %li Buildbot version
+            %li Twisted version
+        .span4
+          %ul
+            %li Project Name
+            %li Project Version
+            %li Project Url

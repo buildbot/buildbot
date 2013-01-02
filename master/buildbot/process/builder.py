@@ -19,7 +19,7 @@ from zope.interface import implements
 from twisted.python import log, failure
 from twisted.spread import pb
 from twisted.application import service, internet
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 
 from buildbot import interfaces, config
 from buildbot.status.progress import Expectations
@@ -29,6 +29,7 @@ from buildbot.process.properties import Properties
 from buildbot.process import buildrequest, slavebuilder
 from buildbot.process.slavebuilder import BUILDING
 from buildbot.db import buildrequests
+from buildbot.util import epoch2datetime
 
 class Builder(config.ReconfigurableServiceMixin,
               pb.Referenceable,
@@ -75,19 +76,21 @@ class Builder(config.ReconfigurableServiceMixin,
         # find this builder in the config
         for builder_config in new_config.builders:
             if builder_config.name == self.name:
+                found_config = True
                 break
-        else:
-            assert 0, "no config found for builder '%s'" % self.name
+        assert found_config, "no config found for builder '%s'" % self.name
 
         # set up a builder status object on the first reconfig
         if not self.builder_status:
             self.builder_status = self.master.status.builderAdded(
                     builder_config.name,
                     builder_config.builddir,
-                    builder_config.category)
+                    builder_config.category,
+                    builder_config.description)
 
         self.config = builder_config
 
+        self.builder_status.setDescription(builder_config.description)
         self.builder_status.setCategory(builder_config.category)
         self.builder_status.setSlavenames(self.config.slavenames)
         self.builder_status.setCacheSize(new_config.caches['Builds'])
@@ -410,13 +413,18 @@ class Builder(config.ReconfigurableServiceMixin,
         results = build.build_status.getResults()
         self.building.remove(build)
         if results == RETRY:
-            self._resubmit_buildreqs(build).addErrback(log.err)
+            d = self._resubmit_buildreqs(build)
+            d.addErrback(log.err, 'while resubmitting a build request')
         else:
+            complete_at_epoch = reactor.seconds()
+            complete_at = epoch2datetime(complete_at_epoch)
             brids = [br.id for br in build.requests]
             db = self.master.db
-            d = db.buildrequests.completeBuildRequests(brids, results)
-            d.addCallback(
-                lambda _ : self._maybeBuildsetsComplete(build.requests))
+            d = db.buildrequests.completeBuildRequests(brids, results,
+                                    complete_at=complete_at)
+            d.addCallback(lambda _ :
+                self._notify_completions(build.requests, results,
+                                            complete_at_epoch))
             # nothing in particular to do with this deferred, so just log it if
             # it fails..
             d.addErrback(log.err, 'while marking build requests as completed')
@@ -427,14 +435,39 @@ class Builder(config.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
     @defer.inlineCallbacks
-    def _maybeBuildsetsComplete(self, requests):
-        # inform the master that we may have completed a number of buildsets
+    def _notify_completions(self, requests, results, complete_at_epoch):
+        # send a message for each request
         for br in requests:
-            yield self.master.maybeBuildsetComplete(br.bsid)
+            bsid = br.bsid
+            builderid = -1 # br.buildername - TODO
+            brid = br.id
+            key = ('buildrequest', str(bsid), str(builderid),
+                                                str(brid), 'complete')
+            msg = dict(
+                brid=brid,
+                bsid=bsid,
+                buildername=br.buildername,
+                builderid=builderid,
+                complete_at=complete_at_epoch,
+                results=results)
+            self.master.mq.produce(key, msg)
+
+        # check for completed buildsets -- one call for each build request with
+        # a unique bsid
+        seen_bsids = set()
+        for br in requests:
+            if br.bsid in seen_bsids:
+                continue
+            seen_bsids.add(br.bsid)
+            yield self.master.data.updates.maybeBuildsetComplete(br.bsid)
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]
-        return self.master.db.buildrequests.unclaimBuildRequests(brids)
+        d = self.master.db.buildrequests.unclaimBuildRequests(brids)
+        @d.addCallback
+        def notify(_):
+            self._msg_buildrequests_unclaimed(build.requests)
+        return d
 
     def setExpectations(self, progress):
         """Mark the build as successful and update expectations for the next
@@ -455,7 +488,7 @@ class Builder(config.ReconfigurableServiceMixin,
     # Build Creation
 
     @defer.inlineCallbacks
-    def maybeStartBuild(self):
+    def maybeStartBuild(self, _reactor=reactor):
         # This method is called by the botmaster whenever this builder should
         # check for and potentially start new builds.  Do not call this method
         # directly - use master.botmaster.maybeStartBuildsForBuilder, or one
@@ -520,9 +553,12 @@ class Builder(config.ReconfigurableServiceMixin,
                                     mergeRequests_fn)
 
             # try to claim the build requests
+            claimed_at_epoch = _reactor.seconds()
+            claimed_at = epoch2datetime(claimed_at_epoch)
             brids = [ brdict['brid'] for brdict in brdicts ]
             try:
-                yield self.master.db.buildrequests.claimBuildRequests(brids)
+                yield self.master.db.buildrequests.claimBuildRequests(brids,
+                                                claimed_at=claimed_at)
             except buildrequests.AlreadyClaimedError:
                 # one or more of the build requests was already claimed;
                 # re-fetch the now-partially-claimed build requests and keep
@@ -534,6 +570,22 @@ class Builder(config.ReconfigurableServiceMixin,
 
                 # go around the loop again
                 continue
+
+            # the claim was successful, so publish a message for each brid
+            masterid = yield self.master.getObjectId()
+
+            for brdict in brdicts:
+                key = ('buildrequest', str(brdict['buildsetid']),
+                       str(brdict['buildername']), str(brdict['brid']),
+                       'claimed')
+                msg = dict(
+                    bsid=brdict['buildsetid'],
+                    brid=brdict['brid'],
+                    buildername=brdict['buildername'],
+                    builderid=-1,
+                    claimed_at=claimed_at_epoch,
+                    masterid=masterid)
+                self.master.mq.produce(key, msg)
 
             # claim was successful, so initiate a build for this set of
             # requests.  Note that if the build fails from here on out (e.g.,
@@ -551,8 +603,10 @@ class Builder(config.ReconfigurableServiceMixin,
                 # build was not started, so unclaim the build requests
                 yield self.master.db.buildrequests.unclaimBuildRequests(brids)
 
-                # and try starting builds again.  If we still have a working slave,
-                # then this may re-claim the same buildrequests
+                self._msg_buildrequests_unclaimed(breqs)
+
+                # and try starting builds again.  If we still have a working
+                # slave, then this may re-claim the same buildrequests
                 self.botmaster.maybeStartBuildsForBuilder(self.name)
 
             # finally, remove the buildrequests and slavebuilder from the
@@ -688,6 +742,16 @@ class Builder(config.ReconfigurableServiceMixin,
             except KeyError:
                 pass
 
+    def _msg_buildrequests_unclaimed(self, breqs):
+        for breq in breqs:
+            bsid = breq.bsid
+            buildername = breq.buildername
+            brid = breq.id
+            key = ('buildrequest', str(bsid), str(buildername),
+                                                str(brid), 'unclaimed')
+            msg = dict(brid=brid, bsid=bsid, buildername=buildername,
+                    builderid=-1)
+            self.master.mq.produce(key, msg)
 
 class BuilderControl:
     implements(interfaces.IBuilderControl)

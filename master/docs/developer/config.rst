@@ -129,9 +129,8 @@ described in :ref:`developer-Reconfiguration`.
 
     .. py:attribute:: db
 
-        Database specification, a dictionary with keys :bb:cfg:`db_url` and
-        :bb:cfg:`db_poll_interval`.  It is safe to assume that both keys are
-        present.
+        Database specification, a dictionary with key :bb:cfg:`db_url`.  It is
+        safe to assume that this key is present.
 
     .. py:attribute:: metrics
 
@@ -175,6 +174,11 @@ described in :ref:`developer-Reconfiguration`.
     .. py:attribute:: user_managers
 
         The list of user managers providers from :bb:cfg:`user_managers`.
+
+    .. py:attribute:: www
+
+        The web server configuration from :bb:cfg:`www`.  The keys ``port`` and
+        ``url`` are always available.
 
     Loading of the configuration file is generally triggered by the master,
     using the following methods:
@@ -249,6 +253,10 @@ Builder Configuration
     .. py:attribute:: mergeRequests
 
         The builder's mergeRequests callable.
+
+    .. py:attribute:: description
+
+        The builder's description, displayed in the web status.
 
 Error Handling
 ==============

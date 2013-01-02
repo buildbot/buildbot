@@ -30,8 +30,8 @@ class Triggerable(base.BaseScheduler):
         base.BaseScheduler.__init__(self, name, builderNames, properties,
                                     **kwargs)
         self._waiters = {}
-        self._bsc_subscription = None
-        self.reason = "Triggerable(%s)" % name
+        self._buildset_complete_consumer = None
+        self.reason = u"Triggerable(%s)" % name
 
     def trigger(self, sourcestamps = None, set_props=None):
         """Trigger this scheduler with the optional given list of sourcestamps
@@ -58,9 +58,9 @@ class Triggerable(base.BaseScheduler):
 
     def stopService(self):
         # cancel any outstanding subscription
-        if self._bsc_subscription:
-            self._bsc_subscription.unsubscribe()
-            self._bsc_subscription = None
+        if self._buildset_complete_consumer:
+            self._buildset_complete_consumer.stopConsuming()
+            self._buildset_complete_consumer = None
 
         # and errback any outstanding deferreds
         if self._waiters:
@@ -73,22 +73,22 @@ class Triggerable(base.BaseScheduler):
 
 
     def _updateWaiters(self):
-        if self._waiters and not self._bsc_subscription:
-            self._bsc_subscription = \
-                    self.master.subscribeToBuildsetCompletions(
-                                                self._buildsetComplete)
-        elif not self._waiters and self._bsc_subscription:
-            self._bsc_subscription.unsubscribe()
-            self._bsc_subscription = None
+        if self._waiters and not self._buildset_complete_consumer:
+            self._buildset_complete_consumer = self.master.mq.startConsuming(
+                    self._buildset_complete_cb,
+                    ('buildset', None, 'complete'))
+        elif not self._waiters and self._buildset_complete_consumer:
+            self._buildset_complete_consumer.stopConsuming()
+            self._buildset_complete_consumer = None
 
-    def _buildsetComplete(self, bsid, result):
-        if bsid not in self._waiters:
+    def _buildset_complete_cb(self, key, msg):
+        if msg['bsid'] not in self._waiters:
             return
 
-        # pop this bsid from the waiters list, and potentially unsubscribe
-        # from completion notifications
-        d, brids = self._waiters.pop(bsid)
+        # pop this bsid from the waiters list, and potentially stop consuming
+        # buildset completion notifications
+        d, brids = self._waiters.pop(msg['bsid'])
         self._updateWaiters()
 
         # fire the callback to indicate that the triggered build is complete
-        d.callback((result, brids))
+        d.callback((msg['results'], brids))

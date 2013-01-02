@@ -18,8 +18,12 @@ from sqlalchemy.ext import compiler
 from sqlalchemy.sql.expression import Executable, ClauseElement
 
 # from http://www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct
+# _execution_options per http://docs.sqlalchemy.org/en/rel_0_7/core/compiler.html#enabling-compiled-autocommit
+#   (UpdateBase requires sqlalchemy 0.7.0)
 
 class InsertFromSelect(Executable, ClauseElement):
+    _execution_options = \
+        Executable._execution_options.union({'autocommit': True})
     def __init__(self, table, select):
         self.table = table
         self.select = select
@@ -33,5 +37,10 @@ def _visit_insert_from_select(element, compiler, **kw):
 
 def sa_version():
     if hasattr(sa, '__version__'):
-        return tuple(map(int, sa.__version__.split('.')))
+        def tryint(s):
+            try:
+                return int(s)
+            except:
+                return -1
+        return tuple(map(tryint, sa.__version__.split('.')))
     return (0,0,0) # "it's old"

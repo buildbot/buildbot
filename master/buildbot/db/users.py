@@ -25,6 +25,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
     def findUserByAttr(self, identifier, attr_type, attr_data, _race_hook=None):
+        # note that since this involves two tables, self.findSomethingId is not
+        # helpful
         def thd(conn, no_recurse=False):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info

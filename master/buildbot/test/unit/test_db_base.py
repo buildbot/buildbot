@@ -13,11 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+import hashlib
 import sqlalchemy as sa
 import mock
 from buildbot.db import base
 from twisted.trial import unittest
 from twisted.internet import defer
+from buildbot.test.util import connector_component
+from buildbot.test.fake import fakedb
 
 class TestBase(unittest.TestCase):
 
@@ -46,6 +49,63 @@ class TestBase(unittest.TestCase):
         self.comp.check_length(self.tbl.c.str32, "long string" * 5)
         # run that again since the method gets stubbed out
         self.comp.check_length(self.tbl.c.str32, "long string" * 5)
+
+class TestBaseAsConnectorComponent(unittest.TestCase,
+        connector_component.ConnectorComponentMixin):
+
+    def setUp(self):
+        # this co-opts the masters table to test findSomethingId
+        d = self.setUpConnectorComponent(
+            table_names=['masters'])
+
+        @d.addCallback
+        def finish_setup(_):
+            self.db.base = base.DBConnectorComponent(self.db)
+        return d
+
+    @defer.inlineCallbacks
+    def test_findSomethingId_race(self):
+        tbl=self.db.model.masters
+        hash = hashlib.sha1('somemaster').hexdigest()
+        def race_thd(conn):
+            conn.execute(tbl.insert(),
+                    id=5, name='somemaster', name_hash=hash,
+                    active=1, last_active=1)
+        id = yield self.db.base.findSomethingId(
+                tbl=self.db.model.masters,
+                whereclause=(tbl.c.name_hash==hash),
+                insert_values=dict(name='somemaster', name_hash=hash,
+                                   active=1, last_active=1),
+                _race_hook=race_thd)
+        self.assertEqual(id, 5)
+
+    @defer.inlineCallbacks
+    def test_findSomethingId_new(self):
+        tbl=self.db.model.masters
+        hash = hashlib.sha1('somemaster').hexdigest()
+        id = yield self.db.base.findSomethingId(
+                tbl=self.db.model.masters,
+                whereclause=(tbl.c.name_hash==hash),
+                insert_values=dict(name='somemaster', name_hash=hash,
+                                   active=1, last_active=1))
+        self.assertEqual(id, 1)
+
+    @defer.inlineCallbacks
+    def test_findSomethingId_existing(self):
+        tbl=self.db.model.masters
+        hash = hashlib.sha1('somemaster').hexdigest()
+
+        yield self.insertTestData([
+            fakedb.Master(id=7, name='somemaster', name_hash=hash),
+        ])
+
+        id = yield self.db.base.findSomethingId(
+                tbl=self.db.model.masters,
+                whereclause=(tbl.c.name_hash==hash),
+                insert_values=dict(name='somemaster', name_hash=hash,
+                                   active=1, last_active=1))
+        self.assertEqual(id, 7)
+
 
 class TestCachedDecorator(unittest.TestCase):
 

@@ -84,7 +84,9 @@ class MasterConfig(object):
         )
         self.db = dict(
             db_url='sqlite:///state.sqlite',
-            db_poll_interval=None,
+        )
+        self.mq = dict(
+            type='simple',
         )
         self.metrics = None
         self.caches = dict(
@@ -98,6 +100,10 @@ class MasterConfig(object):
         self.status = []
         self.user_managers = []
         self.revlink = default_revlink_matcher
+        self.www = dict(
+            port=None,
+            url='http://localhost:8080/',
+        )
 
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
@@ -107,7 +113,8 @@ class MasterConfig(object):
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projectName", "projectURL",
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
-        "status", "title", "titleURL", "user_managers", "validation"
+        "status", "title", "titleURL", "user_managers", "validation", 'mq',
+        'www'
     ])
 
     @classmethod
@@ -190,6 +197,7 @@ class MasterConfig(object):
         config.load_global(filename, config_dict, errors)
         config.load_validation(filename, config_dict, errors)
         config.load_db(filename, config_dict, errors)
+        config.load_mq(filename, config_dict, errors)
         config.load_metrics(filename, config_dict, errors)
         config.load_caches(filename, config_dict, errors)
         config.load_schedulers(filename, config_dict, errors)
@@ -198,6 +206,7 @@ class MasterConfig(object):
         config.load_change_sources(filename, config_dict, errors)
         config.load_status(filename, config_dict, errors)
         config.load_user_managers(filename, config_dict, errors)
+        config.load_www(filename, config_dict, errors)
 
         # run some sanity checks
         config.check_single_master(errors)
@@ -324,7 +333,7 @@ class MasterConfig(object):
     def load_db(self, filename, config_dict, errors):
         if 'db' in config_dict:
             db = config_dict['db']
-            if set(db.keys()) > set(['db_url', 'db_poll_interval']):
+            if set(db.keys()) - set(['db_url', 'db_poll_interval']):
                 errors.addError("unrecognized keys in c['db']")
             self.db.update(db)
         if 'db_url' in config_dict:
@@ -332,15 +341,31 @@ class MasterConfig(object):
         if 'db_poll_interval' in config_dict:
             self.db['db_poll_interval'] = config_dict["db_poll_interval"]
 
-        # we don't attempt to parse db URLs here - the engine strategy will do so
+        # we don't attempt to parse db URLs here - the engine strategy will do
+        # so.
 
-        # check the db_poll_interval
-        db_poll_interval = self.db['db_poll_interval']
-        if db_poll_interval is not None and \
-                    not isinstance(db_poll_interval, int):
-            errors.addError("c['db_poll_interval'] must be an int")
-        else:
-            self.db['db_poll_interval'] = db_poll_interval
+        # db_poll_interval is deprecated
+        if 'db_poll_interval' in self.db:
+            log.msg("NOTE: db_poll_interval is deprecated and will be ignored")
+            del self.db['db_poll_interval']
+
+
+    def load_mq(self, filename, config_dict, errors):
+        from buildbot.mq import connector # avoid circular imports
+        if 'mq' in config_dict:
+            self.mq.update(config_dict['mq'])
+
+        classes = connector.MQConnector.classes
+        typ = self.mq.get('type', 'simple')
+        if typ not in classes:
+            errors.addError("mq type '%s' is not known" % (typ,))
+            return
+
+        known_keys = classes[typ]['keys']
+        unk = set(self.mq.keys()) - known_keys - set(['type'])
+        if unk:
+            errors.addError("unrecognized keys in c['mq']: %s"
+                    % (', '.join(unk),))
 
 
     def load_metrics(self, filename, config_dict, errors):
@@ -507,6 +532,20 @@ class MasterConfig(object):
         self.user_managers = user_managers
 
 
+    def load_www(self, filename, config_dict, errors):
+        if 'www' not in config_dict:
+            return
+        www_cfg = config_dict['www']
+        self.www.update(www_cfg)
+
+        # invent an appropriate URL given the port
+        if 'port' in www_cfg and 'url' not in www_cfg:
+            self.www['url'] = 'http://localhost:%d/' % (www_cfg['port'],)
+
+        if not self.www['url'].endswith('/'):
+            self.www['url'] += '/'
+
+
     def check_single_master(self, errors):
         # check additional problems that are only valid in a single-master
         # installation
@@ -610,7 +649,7 @@ class BuilderConfig:
     def __init__(self, name=None, slavename=None, slavenames=None,
             builddir=None, slavebuilddir=None, factory=None, category=None,
             nextSlave=None, nextBuild=None, locks=None, env=None,
-            properties=None, mergeRequests=None):
+            properties=None, mergeRequests=None, description=None):
 
         errors = ConfigErrors([])
 
@@ -684,6 +723,8 @@ class BuilderConfig:
         self.properties = properties or {}
         self.mergeRequests = mergeRequests
 
+        self.description = description
+
         if errors:
             raise errors
 
@@ -712,6 +753,8 @@ class BuilderConfig:
             rv['properties'] = self.properties
         if self.mergeRequests:
             rv['mergeRequests'] = self.mergeRequests
+        if self.description:
+            rv['description'] = self.description
         return rv
 
 

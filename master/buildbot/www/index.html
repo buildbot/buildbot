@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Buildbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="buildbot team"/>
+
+    <!-- styles -->
+    <link rel="stylesheet" type="text/css" href="%(baseUrl)s/app/base/bb/resources/css/foundation.min.css" />
+    <link rel="stylesheet" type="text/css" href="%(baseUrl)s/app/base/bb/resources/css/default.css" />
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- fav and touch icons -->
+    <link rel="shortcut icon" href="%(baseUrl)s/app/base/bb/resources/img/favicon.ico"/>
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="%(baseUrl)s/app/base/ico/apple-touch-icon-144-precomposed.png"/>
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="%(baseUrl)s/app/base/ico/apple-touch-icon-114-precomposed.png"/>
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="%(baseUrl)s/app/base/ico/apple-touch-icon-72-precomposed.png"/>
+    <link rel="apple-touch-icon-precomposed" href="%(baseUrl)s/app/base/ico/apple-touch-icon-57-precomposed.png"/>
+  </head>
+
+  <body>
+
+    <div class="row fullwidth">
+      <nav class="top-bar">
+        <ul>
+          <li class="name"><h1><a class="brand" href="#"><img src="%(baseUrl)s/app/base/bb/resources/img/favicon.ico"/> Buildbot</a></h1></li>
+          <li class="toggle-topbar"><a href="#"></a></li>
+        </ul>
+        <section>
+          <ul class="left" id="navlist">
+            <!-- rest of the menu is loaded dynamically by router -->
+          </ul>
+        </section>
+      </nav>
+    </div>
+    <div id="loading">
+      <div id="loading_anim">
+      <div class="blockG" id="rotateG_01">
+      </div>
+      <div class="blockG" id="rotateG_02">
+      </div>
+      <div class="blockG" id="rotateG_03">
+      </div>
+      <div class="blockG" id="rotateG_04">
+      </div>
+      <div class="blockG" id="rotateG_05">
+      </div>
+      <div class="blockG" id="rotateG_06">
+      </div>
+      <div class="blockG" id="rotateG_07">
+      </div>
+      <div class="blockG" id="rotateG_08">
+      </div>
+      </div>
+    </div>
+    <div class="row fullwidth">
+      <div class="twelve columns" id="content">
+      </div>
+    </div>
+
+    <hr/>
+    <footer>
+      <p>Buildbot-%(buildbotVersion)s - © Buildbot Team Members</p>
+    </footer>
+
+
+    <!-- javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the page quickly show a loading placeholder
+
+      The router global object will take care of dynamically load the correct content widgets
+      and fill out the navbar
+    -->
+    <script>var dojoConfig = %(dojoConfigJson)s;</script>
+    <script src="%(baseUrl)s/app/base/dojo/dojo.js" data-dojo-config=''></script>
+    <script>require(["bb/router"], function(router) { router(); });</script>
+  </body>
+</html>

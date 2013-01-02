@@ -330,6 +330,10 @@ class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
         self.assertRaisesConfigError("Attribute must be alphanumeric for src Interpolation 'a:a+a'",
                 lambda: Interpolate("echo '%(src:a:a+a)s'"))
 
+    def test_src_missing_attr(self):
+        self.assertRaisesConfigError("Must specify both codebase and attr",
+                lambda: Interpolate("echo '%(src:a)s'"))
+
 
 class TestInterpolatePositional(unittest.TestCase):
     def setUp(self):
@@ -371,6 +375,7 @@ class TestInterpolateProperties(unittest.TestCase):
     def setUp(self):
         self.props = Properties()
         self.build = FakeBuild(self.props)
+
     def test_properties(self):
         self.props.setProperty("buildername", "winbld", "test")
         command = Interpolate("echo buildby-%(prop:buildername)s")
@@ -378,7 +383,15 @@ class TestInterpolateProperties(unittest.TestCase):
         d.addCallback(self.failUnlessEqual,
                              "echo buildby-winbld")
         return d
-        
+
+    def test_properties_newline(self):
+        self.props.setProperty("buildername", "winbld", "test")
+        command = Interpolate("aa\n%(prop:buildername)s\nbb")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                             "aa\nwinbld\nbb")
+        return d
+
     def test_property_not_set(self):
         command = Interpolate("echo buildby-%(prop:buildername)s")
         d = self.build.render(command)

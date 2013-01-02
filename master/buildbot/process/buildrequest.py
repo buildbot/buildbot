@@ -225,14 +225,24 @@ class BuildRequest(object):
             log.msg("build request already claimed; cannot cancel")
             return
 
+        # send a cancellation message
+        builderid = -1 # TODO
+        key = ('buildrequest', self.bsid, builderid, self.id, 'cancelled')
+        msg = dict(
+            brid=self.id,
+            bsid=self.bsid,
+            buildername=self.buildername,
+            builderid=builderid)
+        self.master.mq.produce(key, msg)
+
         # then complete it with 'FAILURE'; this is the closest we can get to
         # cancelling a request without running into trouble with dangling
         # references.
         yield self.master.db.buildrequests.completeBuildRequests([self.id],
                                                                 FAILURE)
 
-        # and let the master know that the enclosing buildset may be complete
-        yield self.master.maybeBuildsetComplete(self.bsid)
+        # and see if the enclosing buildset may be complete
+        yield self.master.data.updates.maybeBuildsetComplete(self.bsid)
 
 class BuildRequestControl:
     implements(interfaces.IBuildRequestControl)

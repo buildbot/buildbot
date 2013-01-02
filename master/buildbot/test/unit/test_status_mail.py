@@ -245,9 +245,14 @@ class TestMailNotifier(unittest.TestCase):
         mn.buildMessageDict.return_value = {"body":"body", "type":"text",
                                             "subject":"subject"}
 
-        mn.buildsetFinished(99, FAILURE)
-        fakeBuildMessage.assert_called_with("Buildset Complete: testReason",
-                                            [build1, build2], SUCCESS)
+        d = mn._buildset_complete_cb('buildset.99.complete',
+                dict(bsid=99, result=FAILURE))
+        @d.addCallback
+        def check(_):
+            fakeBuildMessage.assert_called_with(
+                    "Buildset Complete: testReason",
+                    [build1, build2], SUCCESS)
+        return d
 
     def test_buildsetFinished_doesnt_send_email(self):
         fakeBuildMessage = Mock()
@@ -297,8 +302,12 @@ class TestMailNotifier(unittest.TestCase):
         mn.buildMessageDict.return_value = {"body":"body", "type":"text",
                                             "subject":"subject"}
 
-        mn.buildsetFinished(99, FAILURE)
-        self.assertFalse(fakeBuildMessage.called)
+        d = mn._buildset_complete_cb('buildset.99.complete',
+                dict(bsid=99, result=FAILURE))
+        @d.addCallback
+        def check(_):
+            self.assertFalse(fakeBuildMessage.called)
+        return d
 
     def test_getCustomMesgData_multiple_sourcestamps(self):
         self.passedAttrs = {}
@@ -361,12 +370,15 @@ class TestMailNotifier(unittest.TestCase):
         ss2 = FakeSource(revision='222333', codebase='testlib2')
         build.getSourceStamps.return_value = [ss1, ss2]
         
-        mn.buildsetFinished(99, FAILURE)
-
-        self.assertTrue('revision' in self.passedAttrs, "No revision entry found in attrs")
-        self.assertTrue(isinstance(self.passedAttrs['revision'], dict))
-        self.assertEqual(self.passedAttrs['revision']['testlib1'], '111222')
-        self.assertEqual(self.passedAttrs['revision']['testlib2'], '222333')
+        d = mn._buildset_complete_cb('buildset.99.complete',
+                dict(bsid=99, result=FAILURE))
+        @d.addCallback
+        def check(_):
+            self.assertTrue('revision' in self.passedAttrs, "No revision entry found in attrs")
+            self.assertTrue(isinstance(self.passedAttrs['revision'], dict))
+            self.assertEqual(self.passedAttrs['revision']['testlib1'], '111222')
+            self.assertEqual(self.passedAttrs['revision']['testlib2'], '222333')
+        return d
         
     def test_getCustomMesgData_single_sourcestamp(self):
         self.passedAttrs = {}
@@ -428,13 +440,16 @@ class TestMailNotifier(unittest.TestCase):
         ss1 = FakeSource(revision='111222', codebase='testlib1')
         build.getSourceStamps.return_value = [ss1]
         
-        mn.buildsetFinished(99, FAILURE)
-
-        self.assertTrue('builderName' in self.passedAttrs, "No builderName entry found in attrs")
-        self.assertEqual(self.passedAttrs['builderName'], 'Builder')
-        self.assertTrue('revision' in self.passedAttrs, "No revision entry found in attrs")
-        self.assertTrue(isinstance(self.passedAttrs['revision'], str))
-        self.assertEqual(self.passedAttrs['revision'], '111222')
+        d = mn._buildset_complete_cb('buildset.99.complete',
+                dict(bsid=99, result=FAILURE))
+        @d.addCallback
+        def check(_):
+            self.assertTrue('builderName' in self.passedAttrs, "No builderName entry found in attrs")
+            self.assertEqual(self.passedAttrs['builderName'], 'Builder')
+            self.assertTrue('revision' in self.passedAttrs, "No revision entry found in attrs")
+            self.assertTrue(isinstance(self.passedAttrs['revision'], str))
+            self.assertEqual(self.passedAttrs['revision'], '111222')
+        return d
         
     def test_buildFinished_ignores_unspecified_categories(self):
         mn = MailNotifier('from@example.org', categories=['fast'])
@@ -672,7 +687,7 @@ class TestMailNotifier(unittest.TestCase):
 
         def _getInterestedUsers():
             # 'narrator' in this case is the owner, which tests the lookup
-            return ["Big Bob <bob@mayhem.net>", "narrator"]
+            return ["narrator"]
         build.getInterestedUsers = _getInterestedUsers
 
         def _getResponsibleUsers():
@@ -775,7 +790,7 @@ class TestMailNotifier(unittest.TestCase):
 
         def _getInterestedUsers():
             # 'narrator' in this case is the owner, which tests the lookup
-            return ["Big Bob <bob@mayhem.net>", "narrator"]
+            return ["narrator"]
         build1.getInterestedUsers = _getInterestedUsers
         build2.getInterestedUsers = _getInterestedUsers
 

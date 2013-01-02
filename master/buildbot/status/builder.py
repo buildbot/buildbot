@@ -30,9 +30,10 @@ from buildbot.status.buildrequest import BuildRequestStatus
 
 # user modules expect these symbols to be present here
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED
-from buildbot.status.results import EXCEPTION, RETRY, Results, worst_status
+from buildbot.status.results import EXCEPTION, RETRY, CANCELLED
+from buildbot.status.results import Results, worst_status
 _hush_pyflakes = [ SUCCESS, WARNINGS, FAILURE, SKIPPED,
-                   EXCEPTION, RETRY, Results, worst_status ]
+                   EXCEPTION, RETRY, CANCELLED, Results, worst_status ]
 
 class BuilderStatus(styles.Versioned):
     """I handle status information for a single process.build.Builder object.
@@ -62,9 +63,10 @@ class BuilderStatus(styles.Versioned):
     currentBigState = "offline" # or idle/waiting/interlocked/building
     basedir = None # filled in by our parent
 
-    def __init__(self, buildername, category, master):
+    def __init__(self, buildername, category, master, description):
         self.name = buildername
         self.category = category
+        self.description = description
         self.master = master
 
         self.slavenames = []
@@ -268,6 +270,13 @@ class BuilderStatus(styles.Versioned):
         # if builderstatus page does show not up without any reason then 
         # str(self.name) may be a workaround
         return self.name
+
+    def setDescription(self, description):
+        # used during reconfig
+        self.description = description
+
+    def getDescription(self):
+        return self.description
 
     def getState(self):
         return (self.currentBigState, self.currentBuilds)

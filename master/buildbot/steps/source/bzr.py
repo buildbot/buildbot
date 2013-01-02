@@ -29,7 +29,7 @@ class Bzr(Source):
 
     def __init__(self, repourl=None, baseURL=None, mode='incremental',
                  method=None, defaultBranch=None, **kwargs):
-        
+
         self.repourl = repourl
         self.baseURL = baseURL
         self.branch = defaultBranch
@@ -57,7 +57,7 @@ class Bzr(Source):
             self.branch = branch
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = self.addLog("stdio")
+        self.stdio_log = self.addLogForRemoteCommands("stdio")
 
         if self.repourl is None:
             self.repourl = os.path.join(self.baseURL, self.branch)
@@ -181,16 +181,7 @@ class Bzr(Source):
         return d
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.bzr',
-                                               'logEnviron': self.logEnviron,})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def _fail(tmp):
-            if cmd.didFail():
-                return False
-            return True
-        d.addCallback(_fail)
-        return d
+        return self.pathExists(self.build.path_module.join(self.workdir, '.bzr'))
 
     def computeSourceRevision(self, changes):
         if not changes:
@@ -240,7 +231,7 @@ class Bzr(Source):
         def setrev(stdout):
             revision = stdout.strip("'")
             try:
-                revision = int(revision)
+                int(revision)
             except ValueError:
                 log.msg("Invalid revision number")
                 raise buildstep.BuildStepFailed()
@@ -250,4 +241,4 @@ class Bzr(Source):
             return 0
         d.addCallback(setrev)
         return d
-    
+
