@@ -18,7 +18,7 @@ from buildbot.db import base
 from buildbot.util import epoch2datetime
 
 class BuildsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/database.rst
+    # Documentation is in developer/db.rst
 
     def getBuild(self, bid):
         def thd(conn):

@@ -27,7 +27,7 @@ class BsDict(dict):
     pass
 
 class BuildsetsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/database.rst
+    # Documentation is in developer/db.rst
 
     def addBuildset(self, sourcestampsetid, reason, properties, builderNames,
                    external_idstring=None, submitted_at=None,
