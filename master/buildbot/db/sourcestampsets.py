@@ -16,7 +16,7 @@
 from buildbot.db import base
 
 class SourceStampSetsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/database.rst
+    # Documentation is in developer/db.rst
 
     def addSourceStampSet(self):
         def thd(conn):

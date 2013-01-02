@@ -42,7 +42,7 @@ def with_master_objectid(fn):
     return wrap
 
 class BuildRequestsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/database.rst
+    # Documentation is in developer/db.rst
 
     @with_master_objectid
     def getBuildRequest(self, brid, _master_objectid=None):

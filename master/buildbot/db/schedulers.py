@@ -18,7 +18,7 @@ import sqlalchemy.exc
 from buildbot.db import base
 
 class SchedulersConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/database.rst
+    # Documentation is in developer/db.rst
 
     def classifyChanges(self, objectid, classifications):
         def thd(conn):

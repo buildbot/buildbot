@@ -22,7 +22,7 @@ class UsDict(dict):
     pass
 
 class UsersConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/database.rst
+    # Documentation is in developer/db.rst
 
     def findUserByAttr(self, identifier, attr_type, attr_data, _race_hook=None):
         def thd(conn, no_recurse=False):
