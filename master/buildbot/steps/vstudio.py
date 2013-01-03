@@ -353,11 +353,17 @@ class VC9(VC8):
 
 VS2008 = VC9
 
-# VC10 doesn't looks like it needs extra stuff.
+# VC10 doesn't look like it needs extra stuff.
 class VC10(VC9):
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 10.0'
 
 VS2010 = VC10
+
+# VC11 doesn't look like it needs extra stuff.
+class VC11(VC10):
+    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 11.0'
+
+VS2012 = VC11
 
 class MsBuild(VisualStudio):
     platform = None
