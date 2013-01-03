@@ -2,7 +2,7 @@ What?  This doesn't look like a README!
 
 Right, this is the TODO list for Buildbot-0.9.0.  We'll delete this once it's empty.  Pitch in!
 
-# Missing Functioality #
+# Missing Functionality #
 
 * request merging (or queue collapsing) - see https://plus.google.com/105883044168332773236/posts/TG8DHus4L4D
 

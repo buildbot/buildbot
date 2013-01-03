@@ -114,7 +114,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
 
             return changeid
-        yield defer.returnValue((yield self.db.pool.do(thd)))
+        defer.returnValue((yield self.db.pool.do(thd)))
 
     @base.cached("chdicts")
     def getChange(self, changeid):
