@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+# See "Type Validation" in master/docs/developer/tests.rst
+
 from buildbot.util import json, UTC
 from buildbot.data import base
 import datetime
@@ -26,7 +28,7 @@ class Validator(object):
 
 # Basic types
 
-class IsinstanceValidator(Validator):
+class InstanceValidator(Validator):
     types = ()
     name = ''
 
@@ -35,24 +37,24 @@ class IsinstanceValidator(Validator):
             yield "%s (%r) is not a %s" % (
                     name, object, self.name or `self.types`)
 
-class IntValidator(IsinstanceValidator):
+class IntValidator(InstanceValidator):
     types = (int, long)
     name = 'integer'
 
-class BooleanValidator(IsinstanceValidator):
+class BooleanValidator(InstanceValidator):
     types = (bool,)
     name = 'boolean'
 
-class LinkValidator(IsinstanceValidator):
+class LinkValidator(InstanceValidator):
     types = (base.Link,)
     name = 'Link'
 
-class StringValidator(IsinstanceValidator):
-    # note that unicode is *required
+class StringValidator(InstanceValidator):
+    # note that unicode is *required* for strings
     types = (unicode,)
     name = 'unicode string'
 
-class BinaryValidator(IsinstanceValidator):
+class BinaryValidator(InstanceValidator):
     types = (str,)
     name = 'bytestring'
 

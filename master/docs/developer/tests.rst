@@ -175,6 +175,92 @@ fully tested in an integration test, so that the fakes pass the same tests as
 the "real" thing.  It is particularly important that the method signatures be
 compared.
 
+Type Validation
+---------------
+
+The :bb:src:`master/buildbot/test/util/validation.py` provides a set of classes and definitions for validating Buildbot data types.
+It supports three types of data:
+
+ * DB API dictionaries, as returned from the ``getXxx`` methods,
+ * Data API dictionaries, as returned from ``get``, and
+ * Data API messages.
+
+These are validated from elsewhere in the codebase with calls to
+
+ * ``verifyDbDict(testcase, type, value)``,
+ * ``verifyData(testcase, type, options, value)``, and
+ * ``verifyMessage(testcase, routingKey, message)``,
+
+respectively.
+The ``testcase`` argument is used to fail the test case if the validation does not succeed.
+For DB dictionaries and data dictionaries, the ``type`` identifies the expected data type.
+For messages, the type is determined from the first element of the routing key.
+
+All messages sent with the fake MQ implementation are automatically validated.
+
+Validator Classes
+~~~~~~~~~~~~~~~~~
+
+A validator is an instance of the ``Validator`` class.
+Its ``validate`` method is a generator function that takes a name and an object to validate.
+It yields error messages describing any deviations of ``object`` from the designated data type.
+The ``name`` argument is used to make such messages more helpful.
+
+A number of validators are supplied for basic types.
+A few classes deserve special mention:
+
+ * ``NoneOk`` wraps another validator, allowing the object to be None.
+ * ``Any`` will match any object without error.
+ * ``DictValidator`` takes key names as keyword arguments, with the values giving validators for each key.
+   The ``optionalNames`` argument is a list of keys which may be omitted without error.
+ * ``SourcedPropertiesValidator`` matches dictionaries with (value, source) keys, the representation used for properties in the data API.
+ * ``MessageValidator`` validates messages.
+   It checks that the routing key is a tuple of strings.
+   The first tuple element gives the message type.
+   The last tuple element is the event, and must be a member of the ``events`` set.
+   The remaining "middle" tuple elements must match the message values identified by ``keyFields``.
+   The ``messageValidator`` should be a ``DictValidator`` configured to check the message body.
+   This validator's ``validate`` method is called with a tuple ``(routingKey, message)``.
+ * ``Selector`` allows different validators to be selected based on matching functions.
+   Its ``add`` method takes a matching function, which should return a boolean, and a validator to use if the matching function returns true.
+   If the matching function is None, it is used as a default.
+   This class is used for message and data validation.
+
+Defining Validators
+~~~~~~~~~~~~~~~~~~~
+
+DB validators are defined in the ``dbdict`` dictionary, e.g., ::
+
+    dbdict['foodict'] = DictValidator(
+        id=IntValidator(),
+        name=StringValidator(),
+        ...
+    )
+
+Data validators are ``Selector`` validators, where the selector is the ``options`` passed to ``verifyData``. ::
+
+    data['foo'] = Selector()
+    data['foo'].add(lambda opts : opt.get('fanciness') > 10,
+        DictValidator(
+            fooid=IntValidator(),
+            name=StringValidator(),
+            ...
+    ))
+
+Similarly, message validators are ``Selector`` validators, where the selector is the routing key.
+The underlying validator should be a ``MessageValidator``. ::
+
+    message['foo'] = Selector()
+    message['foo'].add(lambda rk : rk[-1] == 'new',
+        MessageValidator(
+            keyFields=['fooid'],
+            events=['new', 'complete'],
+            messageValidator=DictValidator(
+                fooid=IntValidator(),
+                name=StringValidator(),
+                ...
+           )))
+
 Good Tests
 ----------
 
