@@ -1724,9 +1724,14 @@ source code filenames involved).
 .. bb:step:: VC6
 .. bb:step:: VC7
 .. bb:step:: VC8
-.. bb:step:: VC2003
-.. bb:step:: VC2005
-.. bb:step:: VC2008
+.. bb:step:: VC9
+.. bb:step:: VC10
+.. bb:step:: VC11
+.. bb:step:: VS2003
+.. bb:step:: VS2005
+.. bb:step:: VS2008
+.. bb:step:: VS2010
+.. bb:step:: VS2012
 .. bb:step:: VCExpress9
 .. bb:step:: MsBuild
 
@@ -1734,7 +1739,7 @@ Visual C++
 ++++++++++
 
 These steps are meant to handle compilation using Microsoft compilers.
-VC++ 6-10 (aka Visual Studio 2003-2010 and VCExpress9) are supported via calling
+VC++ 6-11 (aka Visual Studio 2003-2012 and VCExpress9) are supported via calling
 ``devenv``. VS2012 as well as Windows Driver Kit 8 are supported via the new
 ``MsBuild`` step. These steps will take care of setting up a clean compilation
 environment, parsing the generated
@@ -1747,10 +1752,13 @@ All of the classes are in :mod:`buildbot.steps.vstudio`.  The available classes 
  * ``VC7``
  * ``VC8``
  * ``VC9``
+ * ``VC10``
+ * ``VC11``
  * ``VS2003``
  * ``VS2005``
  * ``VS2008``
  * ``VS2010``
+ * ``VS2012``
  * ``VCExpress9``
  * ``MsBuild``
 

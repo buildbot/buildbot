@@ -744,6 +744,30 @@ class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
+class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_installdir(self):
+        self.setupStep(vstudio.VC11(projectfile='pf', config='cfg',
+                                   project='pj'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['devenv.com', 'pf', '/Rebuild',
+                                 'cfg', '/Project', 'pj' ],
+                        env=self.getExpectedEnv(
+                            r'C:\Program Files\Microsoft Visual Studio 11.0'))
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["compile", "0 projects", "0 files"])
+        return self.runStep()
+
+
 class TestMsBuild(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
@@ -796,3 +820,5 @@ class Aliases(unittest.TestCase):
     def test_vs2010(self):
         self.assertIdentical(vstudio.VS2010, vstudio.VC10)
 
+    def test_vs2012(self):
+        self.assertIdentical(vstudio.VS2012, vstudio.VC11)
