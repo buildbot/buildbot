@@ -21,6 +21,9 @@ from buildbot.test.util import interfaces, connector_component, validation
 from buildbot.db import changes, sourcestamps
 from buildbot.util import epoch2datetime
 
+SOMETIME = 20398573
+OTHERTIME = 937239287
+
 class Tests(interfaces.InterfaceTests):
 
     # common sample data
@@ -84,14 +87,14 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_addChange_getChange(self):
         clock = task.Clock()
-        clock.advance(1230000353)
+        clock.advance(SOMETIME)
         changeid = yield self.db.changes.addChange(
                  author=u'dustin',
                  files=[],
                  comments=u'fix spelling',
                  is_dir=0,
                  revision=u'2d6caa52',
-                 when_timestamp=epoch2datetime(1239898353),
+                 when_timestamp=epoch2datetime(OTHERTIME),
                  branch=u'master',
                  category=None,
                  revlink=None,
@@ -130,10 +133,10 @@ class Tests(interfaces.InterfaceTests):
                 'project': u'proj',
                 'repository': u'repo://',
                 'revision': u'2d6caa52',
-                'created_at': epoch2datetime(1230000353),
+                'created_at': epoch2datetime(SOMETIME),
                 'ssid': ss['ssid'],
             },
-            'when_timestamp': epoch2datetime(1239898353),
+            'when_timestamp': epoch2datetime(OTHERTIME),
         })
 
     def test_getChange_chdict(self):
@@ -317,7 +320,7 @@ class RealTests(Tests):
 
     def test_addChange(self):
         clock = task.Clock()
-        clock.advance(1230000353)
+        clock.advance(SOMETIME)
         d = self.db.changes.addChange(
                  author=u'dustin',
                  files=[u'master/LICENSING.txt', u'slave/LICENSING.txt'],
@@ -398,7 +401,7 @@ class RealTests(Tests):
                     'project': u'',
                     'repository': u'',
                     'revision': u'2d6caa52',
-                    'created_at': 1230000353,
+                    'created_at': SOMETIME,
                     'ss_hash': 'b777dbd10d1d4c76651335f6a78e278e88b010d6',
                 }])
             return self.db.pool.do(thd)
@@ -407,7 +410,7 @@ class RealTests(Tests):
 
     def test_addChange_when_timestamp_None(self):
         clock = task.Clock()
-        clock.advance(1239898353)
+        clock.advance(OTHERTIME)
         d = self.db.changes.addChange(
                  author=u'dustin',
                  files=[],
@@ -430,7 +433,7 @@ class RealTests(Tests):
                 r = r.fetchall()
                 self.assertEqual(len(r), 1)
                 self.assertEqual(r[0].changeid, changeid)
-                self.assertEqual(r[0].when_timestamp, 1239898353)
+                self.assertEqual(r[0].when_timestamp, OTHERTIME)
             return self.db.pool.do(thd)
         d.addCallback(check_change)
         def check_change_files(_):
@@ -470,7 +473,7 @@ class RealTests(Tests):
                  comments=u'fix spelling',
                  is_dir=0,
                  revision=u'2d6caa52',
-                 when_timestamp=epoch2datetime(1239898353),
+                 when_timestamp=epoch2datetime(OTHERTIME),
                  branch=u'master',
                  category=None,
                  revlink=None,
@@ -486,7 +489,7 @@ class RealTests(Tests):
                 r = r.fetchall()
                 self.assertEqual(len(r), 1)
                 self.assertEqual(r[0].changeid, changeid)
-                self.assertEqual(r[0].when_timestamp, 1239898353)
+                self.assertEqual(r[0].when_timestamp, OTHERTIME)
             return self.db.pool.do(thd)
         d.addCallback(check_change)
         def check_change_files(_):

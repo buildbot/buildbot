@@ -378,6 +378,8 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             # the old .sourceStamp attribute wasn't actually very useful
             maxChangeNumber, patch = self.sourceStamp
             changes = getattr(self, 'changes', [])
+            # this module will exist when this method is called, thanks to
+            # pickle_prereqs
             from buildbot import sourcestamp
             source = sourcestamp.SourceStamp(branch=None,
                                              revision=None,

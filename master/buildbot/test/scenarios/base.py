@@ -20,7 +20,7 @@ from twisted.internet import defer
 class BaseScenario(testhooks.TestHooksScenario):
     """buildbot.test.unit.test_www.ui.BaseScenario"""
     def populateBaseDb(self):
-        # what on earth is this??
+        # XXX what on earth is this??
         # self.master.db.__init__(mock.Mock)
         self.master.db.insertTestData([
             fakedb.Master(id=13, name=u'inactivemaster', active=0,

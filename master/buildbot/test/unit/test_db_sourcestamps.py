@@ -39,7 +39,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getSourceStamps(self):
         @self.assertArgSpecMatches(self.db.sourcestamps.getSourceStamps)
-        def getSourceStamp(self):
+        def getSourceStamps(self):
             pass
 
     @defer.inlineCallbacks
