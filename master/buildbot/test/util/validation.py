@@ -173,7 +173,8 @@ class MessageValidator(Validator):
         self.events = set(events)
         self.messageValidator = messageValidator
 
-    def validate(self, name, (routingKey, message)):
+    def validate(self, name, routingKey_message):
+        routingKey, message = routingKey_message
         routingKeyBad = False
         for msg in self.routingKeyValidator.validate("routingKey", routingKey):
             yield msg
@@ -206,13 +207,14 @@ class Selector(Validator):
     def add(self, selector, validator):
         self.selectors.append((selector, validator))
 
-    def validate(self, name, (arg, object)):
+    def validate(self, name, arg_object):
+        arg, object = arg_object
         for selector, validator in self.selectors:
             if selector is None or selector(arg):
                 for msg in validator.validate(name, object):
                     yield msg
                 return
-        yield "no match for argument %r" % (arg,)
+        yield "no match for selector argument %r" % (arg,)
 
 # Type definitions
 
@@ -294,52 +296,53 @@ dbdict['builderdict'] = DictValidator(
 
 # buildset
 
+_buildset = dict(
+    bsid=IntValidator(),
+    external_idstring=NoneOk(StringValidator()),
+    reason=StringValidator(),
+    submitted_at=IntValidator(),
+    complete=BooleanValidator(),
+    complete_at=NoneOk(IntValidator()),
+    results=NoneOk(IntValidator()),
+)
+_buildsetKeyFields = ['bsid']
+_buildsetEvents = ['new', 'complete']
+
 data['buildset'] = Selector()
 data['buildset'].add(None,
     DictValidator(
-        bsid=IntValidator(),
-        external_idstring=NoneOk(StringValidator()),
-        reason=StringValidator(),
-        submitted_at=IntValidator(),
-        complete=BooleanValidator(),
-        complete_at=NoneOk(IntValidator()),
-        results=NoneOk(IntValidator()),
         sourcestamps=ListValidator(
             DictValidator(
                 link=LinkValidator(),
                 **_sourcestamp
             )),
         link=LinkValidator(),
+        **_buildset
     ))
 
 message['buildset'] = Selector()
-_buildsetBase = dict(
-    bsid=IntValidator(),
-    external_idstring=NoneOk(StringValidator()),
-    reason=StringValidator(),
-    sourcestamps=ListValidator(
-        DictValidator(
-            **_sourcestamp
-        )),
-    submitted_at=IntValidator(),
-    complete=BooleanValidator(),
-    complete_at=NoneOk(IntValidator()),
-    results=NoneOk(IntValidator()),
-)
 message['buildset'].add(lambda k : k[-1] == 'new',
     MessageValidator(
-        keyFields=['bsid'],
-        events=['new', 'complete'],
+        keyFields=_buildsetKeyFields,
+        events=_buildsetEvents,
         messageValidator=DictValidator(
             scheduler=StringValidator(), # only for 'new'
-            **_buildsetBase
+            sourcestamps=ListValidator(
+                DictValidator(
+                    **_sourcestamp
+                )),
+            **_buildset
         )))
 message['buildset'].add(None,
     MessageValidator(
-        keyFields=['bsid'],
-        events=['new', 'complete'],
+        keyFields=_buildsetKeyFields,
+        events=_buildsetEvents,
         messageValidator=DictValidator(
-            **_buildsetBase
+            sourcestamps=ListValidator(
+                DictValidator(
+                    **_sourcestamp
+                )),
+            **_buildset
         )))
 
 dbdict['bsdict'] = DictValidator(
@@ -482,6 +485,8 @@ def _verify(testcase, validator, name, object):
         testcase.fail("; ".join(msgs))
 
 def verifyMessage(testcase, routingKey, message_):
+    # the validator is a Selector wrapping a MessageValidator, so we need to
+    # pass (arg, (routingKey, message)), where the routing key is the arg
     _verify(testcase, message[routingKey[0]], '',
             (routingKey, (routingKey, message_)))
 
