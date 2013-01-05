@@ -322,7 +322,6 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
         defer.returnValue((bsid,brids))
 
-    @defer.inlineCallbacks
     def addBuildsetForSourceStamps(self, sourcestamps=[], reason='',
             external_idstring=None, properties=None, builderNames=None):
         """
@@ -355,8 +354,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         # addBuildset method
         properties_dict = properties.asDict()
 
-        rv = yield self.master.data.updates.addBuildset(
+        return self.master.data.updates.addBuildset(
                 scheduler=self.name, sourcestamps=sourcestamps, reason=reason,
                 properties=properties_dict, builderNames=builderNames,
                 external_idstring=external_idstring)
-        defer.returnValue(rv)
