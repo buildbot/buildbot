@@ -22,7 +22,7 @@ from buildbot.process import properties
 from buildbot.status.results import FAILURE
 from buildbot.db import buildrequests
 
-class SourceStamp(object):
+class TempSourceStamp(object):
     # temporary fake sourcestamp; attributes are added below
     pass
 
@@ -107,7 +107,7 @@ class BuildRequest(object):
         assert bsdata['sourcestamps'], "buildset must have at least one sourcestamp"
         buildrequest.sources = {}
         for ssdata in bsdata['sourcestamps']:
-            ss = buildrequest.sources[ssdata['codebase']] = SourceStamp()
+            ss = buildrequest.sources[ssdata['codebase']] = TempSourceStamp()
             ss.ssid = ssdata['ssid']
             ss.branch = ssdata['branch']
             ss.revision = ssdata['revision']
