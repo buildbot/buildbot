@@ -107,8 +107,7 @@ class BuildsetResourceType(base.ResourceType):
         # get each of the sourcestamps for this buildset (sequentially)
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
         sourcestamps = [
-            copy.deepcopy((yield self.master.data.get({},
-                                            ('sourcestamp', str(ssid)))))
+            (yield self.master.data.get({}, ('sourcestamp', str(ssid)))).copy()
             for ssid in bsdict['sourcestamps'] ]
 
         # strip the links from those sourcestamps
