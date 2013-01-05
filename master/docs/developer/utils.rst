@@ -610,3 +610,12 @@ The classes in the :py:mod:`buildbot.util.subscription` module are used for deal
 
         Set a named state value in the object's persistent state.
         Note that value must be json-able.
+
+buildbot.util.pickle
+~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.pickle
+
+This module is a drop-in replacement for the stdlib ``pickle`` or ``cPickle`` modules.
+It adds the ability to load pickles that reference classes that have since been removed from Buildbot.
+It should be used whenever pickles from Buildbot-0.8.x and earlier are loaded.

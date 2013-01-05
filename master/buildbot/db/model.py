@@ -19,7 +19,6 @@ import migrate.versioning.schema
 import migrate.versioning.repository
 from twisted.python import util, log
 from buildbot.db import base
-from buildbot.util import pickle_prereqs
 
 try:
     from migrate.versioning import exceptions
@@ -606,13 +605,8 @@ class Model(base.DBConnectorComponent):
                 upgrade(engine)
 
         # import the prerequisite classes for pickles
-        pickle_prereqs.patch()
         check_sqlalchemy_migrate_version()
-        d = self.db.pool.do_with_engine(thd)
-        @d.addCallback
-        def unpatch(_):
-            pickle_prereqs.unpatch()
-        return d
+        return self.db.pool.do_with_engine(thd)
 
 # migrate has a bug in one of its warnings; this is fixed in version control
 # (3ba66abc4d), but not yet released. It can't hurt to fix it here, too, so we

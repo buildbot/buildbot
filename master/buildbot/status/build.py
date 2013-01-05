@@ -1,4 +1,4 @@
-# This file is part of Buildbot.  Buildbot is free software: you can
+#.load and pickle.loads This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
 #
@@ -16,12 +16,12 @@
 from __future__ import with_statement
 
 import os, shutil, re
-from cPickle import dump
 from zope.interface import implements
 from twisted.python import log, runtime, components
 from twisted.persisted import styles
 from twisted.internet import reactor, defer
 from buildbot import interfaces, util
+from buildbot.util import pickle
 from buildbot.process import properties
 from buildbot.status.buildstep import BuildStepStatus
 
@@ -378,13 +378,13 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             # the old .sourceStamp attribute wasn't actually very useful
             maxChangeNumber, patch = self.sourceStamp
             changes = getattr(self, 'changes', [])
-            # this module will exist when this method is called, thanks to
-            # pickle_prereqs
-            from buildbot import sourcestamp
-            source = sourcestamp.SourceStamp(branch=None,
-                                             revision=None,
-                                             patch=patch,
-                                             changes=changes)
+            # the old SourceStamp class is gone, so use the one that is
+            # provided for backward compatibility
+            from buildbot.util.pickle import SourceStamp
+            source = SourceStamp(branch=None,
+                                 revision=None,
+                                 patch=patch,
+                                 changes=changes)
             self.source = source
             self.changes = source.changes
             del self.sourceStamp
@@ -422,7 +422,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         tmpfilename = filename + ".tmp"
         try:
             with open(tmpfilename, "wb") as f:
-                dump(self, f, -1)
+                pickle.dump(self, f, -1)
             if runtime.platformType  == 'win32':
                 # windows cannot rename a file on top of an existing one, so
                 # fall back to delete-first. There are ways this can fail and

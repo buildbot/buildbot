@@ -16,12 +16,13 @@
 from __future__ import with_statement
 
 import os
-import cStringIO, cPickle
+import cStringIO
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.status import logfile
 from buildbot.test.util import dirs
+from buildbot.util import pickle
 from buildbot import config
 
 class TestLogFileProducer(unittest.TestCase):
@@ -67,8 +68,8 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         self.tearDownDirs()
 
     def pickle_and_restore(self):
-        pkl = cPickle.dumps(self.logfile)
-        self.logfile = cPickle.loads(pkl)
+        pkl = pickle.dumps(self.logfile)
+        self.logfile = pickle.loads(pkl)
         step = self.build_step_status
         self.logfile.step = step
         self.logfile.master = self.master
