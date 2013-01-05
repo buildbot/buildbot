@@ -181,6 +181,24 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 revision='myrev'),
         ])
 
+    def test_savedTrigger_dict(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'],
+                minute=[5], codebases={'cb':{'repository':'annoying'}})
+        self.db.insertTestData([
+            fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
+            fakedb.ObjectState(objectid=self.SCHEDULERID, name='lastTrigger',
+                value_json='[ { "cb": {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} }, {} ]'),
+        ])
+
+        sched.startService()
+
+        self.clock.advance(60*60) # Run for 1h
+
+        self.assertBuildsetAdded(sourcestamps=[
+            dict(codebase='cb', branch='br', project='p', repository='r',
+                revision='myrev'),
+        ])
+
     def test_saveTrigger(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                 minute=[5], codebases={'cb':{'repository':'annoying'}})

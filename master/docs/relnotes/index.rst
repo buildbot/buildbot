@@ -42,6 +42,8 @@ Nine
   These methods are not yet documented, and their interface is not stable.
   Consult the source code for details on the changes.
 
+* The triggerable schedulers` ``trigger`` method now requires a list of sourcestamps, rather than a dictionary.
+
 * The :py:class:`~buildbot.sourcestamp.SourceStamp` class is no longer used.
   It remains in the codebase to support loading data from pickles on upgrade, but should not be used in running code.
 

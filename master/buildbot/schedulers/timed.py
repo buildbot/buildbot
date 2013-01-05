@@ -379,12 +379,22 @@ class NightlyTriggerable(NightlyBase):
         # get the scheduler's lastTrigger time (note: only done at startup)
         d = self.getState('lastTrigger', None)
         def setLast(lastTrigger):
-            try:
-                if lastTrigger and isinstance(lastTrigger[0], list):
-                    self._lastTrigger = (lastTrigger[0], properties.Properties.fromDict(lastTrigger[1]))
-            except:
+            self._lastTrigger = None
+            if lastTrigger:
+                try:
+                    if isinstance(lastTrigger[0], list):
+                        self._lastTrigger = (lastTrigger[0],
+                                properties.Properties.fromDict(lastTrigger[1]))
+                    # handle state from before Buildbot-0.9.0
+                    elif isinstance(lastTrigger[0], dict):
+                        self._lastTrigger = (lastTrigger[0].values(),
+                                properties.Properties.fromDict(lastTrigger[1]))
+                except Exception:
+                    pass
                 # If the lastTrigger isn't of the right format, ignore it
-                log.msg("NightlyTriggerable Scheduler <%s>: bad lastTrigger: %r" % (self.name, lastTrigger))
+                if not self._lastTrigger:
+                    log.msg("NightlyTriggerable Scheduler <%s>: could not "
+                            "load previous state; starting fresh")
         d.addCallback(setLast)
         d.addErrback(log.err, 'while getting NightlyTriggerable state')
 
