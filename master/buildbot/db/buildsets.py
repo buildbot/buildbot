@@ -107,7 +107,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
 
             return (bsid, brids)
-        yield defer.returnValue((yield self.db.pool.do(thd)))
+        defer.returnValue((yield self.db.pool.do(thd)))
 
     def completeBuildset(self, bsid, results, complete_at=None,
                                 _reactor=reactor):
