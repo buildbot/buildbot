@@ -720,7 +720,7 @@ class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class Test1C10(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
+class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
         return self.setUpBuildStep()
