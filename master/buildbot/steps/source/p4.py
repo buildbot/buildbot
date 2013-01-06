@@ -268,7 +268,6 @@ class P4(Source):
                                            initialStdin=initialStdin,)
         cmd.useLog(self.stdio_log, False)
         log.msg("Starting p4 command : p4 %s" % (" ".join(command), ))
-        log.msg("Starting p4 command : p4 %s" % command)
 
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
@@ -359,7 +358,7 @@ class P4(Source):
         log.msg(client_spec)
         
         stdout = yield self._dovccmd(['client','-i'], collectStdout=True, initialStdin=client_spec)
-        mo = re.search('Client (\S+) (.+)$',stdout,re.M)
+        mo = re.search(r'Client (\S+) (.+)$',stdout,re.M)
         defer.returnValue(mo and (mo.group(2) == 'saved.' or mo.group(2) == 'not changed.'))
 
 
@@ -387,7 +386,7 @@ class P4(Source):
                 raise buildstep.BuildStepFailed()
 
             log.msg("Got p4 revision %s" % (revision, ))
-            self.setProperty('got_revision', revision, 'Source')
+            self.updateSourceProperty('got_revision', revision)
             return 0
         d.addCallback(lambda _: _setrev(cmd.rc))
         return d
