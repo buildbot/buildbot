@@ -191,7 +191,7 @@ class Trial(ShellCommand):
     logfiles = {"test.log": "_trial_temp/test.log"}
     # we use test.log to track Progress at the end of __init__()
 
-    renderables = ['tests']
+    renderables = ['tests', 'trialJobs']
     flunkOnFailure = True
     python = None
     trial = "trial"
@@ -318,7 +318,6 @@ class Trial(ShellCommand):
             self.trialArgs = trialArgs
         if trialJobs is not None:
             self.trialJobs = trialJobs
-            assert isinstance(self.trialJobs, int)
 
         if testpath is not UNSPECIFIED:
             self.testpath = testpath
@@ -357,8 +356,6 @@ class Trial(ShellCommand):
             command.append("--reactor=%s" % reactor)
         if self.randomly:
             command.append("--random=0")
-        if self.trialJobs is not None:
-            command.append("--jobs=%d" % self.trialJobs)
         command.extend(self.trialArgs)
         self.command = command
 
@@ -372,21 +369,6 @@ class Trial(ShellCommand):
 
         # this counter will feed Progress along the 'test cases' metric
         self.addLogObserver('stdio', TrialTestCaseCounter())
-        
-        if self.trialJobs is not None:
-            # using -j/--jobs flag produces more than one test log.
-            self.progressMetrics = ('output', 'tests')
-            self.logfiles = {}
-            for i in xrange(self.trialJobs):
-                self.logfiles['test.%d.log' % i] = '_trial_temp/%d/test.log' % i
-                self.logfiles['err.%d.log' % i] = '_trial_temp/%d/err.log' % i
-                self.logfiles['out.%d.log' % i] = '_trial_temp/%d/out.log' % i
-                self.addLogObserver('test.%d.log' % i,
-                                    OutputProgressObserver('test.%d.log' % i))
-                self.progressMetrics += ('test.%d.log' % i,)
-        else:
-            # this one just measures bytes of output in _trial_temp/test.log
-            self.addLogObserver('test.log', OutputProgressObserver('test.log'))
 
     def setupEnvironment(self, cmd):
         ShellCommand.setupEnvironment(self, cmd)
@@ -405,6 +387,26 @@ class Trial(ShellCommand):
                 e['PYTHONPATH'] = ppath
 
     def start(self):
+        # choose progressMetrics and logfiles based on whether trial is being
+        # run with multiple workers or not.
+        if self.trialJobs is not None:
+            self.trialJobs = int(self.trialJobs)
+            self.command.append("--jobs=%d" % self.trialJobs)
+
+            # using -j/--jobs flag produces more than one test log.
+            self.progressMetrics = ('output', 'tests')
+            self.logfiles = {}
+            for i in xrange(self.trialJobs):
+                self.logfiles['test.%d.log' % i] = '_trial_temp/%d/test.log' % i
+                self.logfiles['err.%d.log' % i] = '_trial_temp/%d/err.log' % i
+                self.logfiles['out.%d.log' % i] = '_trial_temp/%d/out.log' % i
+                self.addLogObserver('test.%d.log' % i,
+                                    OutputProgressObserver('test.%d.log' % i))
+                self.progressMetrics += ('test.%d.log' % i,)
+        else:
+            # this one just measures bytes of output in _trial_temp/test.log
+            self.addLogObserver('test.log', OutputProgressObserver('test.log'))
+
         # now that self.build.allFiles() is nailed down, finish building the
         # command
         if self.testChanges:
