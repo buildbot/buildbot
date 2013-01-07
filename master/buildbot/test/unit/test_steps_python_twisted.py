@@ -139,15 +139,11 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         included since Twisted 12.3.0), and make corresponding changes to
         logfiles and progressMetrics.
         """
-        step = python_twisted.Trial(workdir='build',
+        step = self.setupStep(python_twisted.Trial(workdir='build',
                                     tests = 'testname',
                                     testpath = None,
-                                    trialJobs=2)
-        self.setupStep(step)
+                                    trialJobs=2))
 
-        def check(r):
-            self.assertEqual(step.progressMetrics, ('output', 'tests',
-                                                   'test.0.log', 'test.1.log'))
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', '--jobs=2',
@@ -162,10 +158,13 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
                             'out.1.log': '_trial_temp/1/out.log',
                         })
             + ExpectShell.log('stdio', stdout="Ran 1 tests\n")
-            + ExpectShell.behavior(check)
             + 0
         )
         self.expectOutcome(result=SUCCESS, status_text=['1 test', 'passed'])
+
+        def check(r):
+            self.assertEqual(step.progressMetrics, ('output', 'tests',
+                                                   'test.0.log', 'test.1.log'))
         return self.runStep().addCallback(check)
 
     def test_run_jobs_Properties(self):
