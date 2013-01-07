@@ -198,6 +198,7 @@ class Trial(ShellCommand):
     trialMode = ["--reporter=bwverbose"] # requires Twisted-2.1.0 or newer
     # for Twisted-2.0.0 or 1.3.0, use ["-o"] instead
     trialArgs = []
+    trialJobs = None
     testpath = UNSPECIFIED # required (but can be None)
     testChanges = False # TODO: needs better name
     recurse = False
@@ -209,7 +210,7 @@ class Trial(ShellCommand):
                  testpath=UNSPECIFIED,
                  tests=None, testChanges=None,
                  recurse=None, randomly=None,
-                 trialMode=None, trialArgs=None,
+                 trialMode=None, trialArgs=None, trialJobs=None,
                  **kwargs):
         """
         @type  testpath: string
@@ -244,6 +245,11 @@ class Trial(ShellCommand):
         @type trialArgs: list of strings
         @param trialArgs: a list of arguments to pass to trial, available to
                           turn on any extra flags you like. Defaults to [].
+
+        @type trialJobs: integer
+        @param trialJobs: integer to be used as trial -j/--jobs option (for
+                          running tests on several workers).  Only supported
+                          since Twisted-12.3.0.
 
         @type  tests: list of strings
         @param tests: a list of test modules to run, like
@@ -310,6 +316,9 @@ class Trial(ShellCommand):
             self.trialMode = trialMode
         if trialArgs is not None:
             self.trialArgs = trialArgs
+        if trialJobs is not None:
+            self.trialJobs = trialJobs
+            assert isinstance(self.trialJobs, int)
 
         if testpath is not UNSPECIFIED:
             self.testpath = testpath
@@ -348,6 +357,8 @@ class Trial(ShellCommand):
             command.append("--reactor=%s" % reactor)
         if self.randomly:
             command.append("--random=0")
+        if self.trialJobs is not None:
+            command.append("--jobs=%d" % self.trialJobs)
         command.extend(self.trialArgs)
         self.command = command
 
@@ -361,8 +372,21 @@ class Trial(ShellCommand):
 
         # this counter will feed Progress along the 'test cases' metric
         self.addLogObserver('stdio', TrialTestCaseCounter())
-        # this one just measures bytes of output in _trial_temp/test.log
-        self.addLogObserver('test.log', OutputProgressObserver('test.log'))
+        
+        if self.trialJobs is not None:
+            # using -j/--jobs flag produces more than one test log.
+            self.progressMetrics = ('output', 'tests')
+            self.logfiles = {}
+            for i in xrange(self.trialJobs):
+                self.logfiles['test.%d.log' % i] = '_trial_temp/%d/test.log' % i
+                self.logfiles['err.%d.log' % i] = '_trial_temp/%d/err.log' % i
+                self.logfiles['out.%d.log' % i] = '_trial_temp/%d/out.log' % i
+                self.addLogObserver('test.%d.log' % i,
+                                    OutputProgressObserver('test.%d.log' % i))
+                self.progressMetrics += ('test.%d.log' % i,)
+        else:
+            # this one just measures bytes of output in _trial_temp/test.log
+            self.addLogObserver('test.log', OutputProgressObserver('test.log'))
 
     def setupEnvironment(self, cmd):
         ShellCommand.setupEnvironment(self, cmd)
