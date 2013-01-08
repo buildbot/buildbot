@@ -256,7 +256,7 @@ class SVN(Source):
         svnversion_dir = self.workdir
         if self.mode == 'full' and self.method == 'export':
             svnversion_dir = 'source'
-        cmd = buildstep.RemoteShellCommand(svnversion_dir, ['svn', 'info'],
+        cmd = buildstep.RemoteShellCommand(svnversion_dir, ['svn', 'info', '--xml'],
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,
@@ -265,7 +265,7 @@ class SVN(Source):
         d = self.runCommand(cmd)
         def _setrev(_):
             stdout = cmd.stdout
-            match = re.search('Revision:(.+?)\n', stdout)
+            match = re.search('revision=\"([0-9]+)\">', stdout)
             try:
                 revision = int(match.group(1))
             except (AttributeError, ValueError):
