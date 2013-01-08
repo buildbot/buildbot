@@ -167,7 +167,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
                                                    'test.0.log', 'test.1.log'))
         return self.runStep().addCallback(check)
 
-    def test_run_jobs_Properties(self):
+    def test_run_jobsProperties(self):
         """
         C{jobs} should accept Properties
         """
