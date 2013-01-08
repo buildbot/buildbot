@@ -112,7 +112,7 @@ These are just "things that need doing", where we don't have much idea *how* yet
 
 * Need to download bootstrap from upstream instead of having a hardcopy in our source code.
 
-# Database Updates #
+# Database #
 
 We're deferring any changes to the database schema for as long as possible, because they are difficult to maintain on a branch.
 So, they're listed here.
@@ -153,6 +153,14 @@ For each of the config-objects tables (masters, builders, schedulesr, changesour
 # Later #
 
 This section can hold tasks that don't need to be done by 0.9.0, but shouldn't be forgotten, and might be implemented sooner if convenient.
+
+## MQ ##
+
+The MQ layer currently only has a simple (single-master) implementation.  We should have some or all of
+
+* AMQP
+* AMP-based master-to-master communication (full mesh, with every master talking to every other master)
+* ZeroMQ
 
 ## Infrastructure ##
 
