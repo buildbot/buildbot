@@ -135,14 +135,14 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
 
     def test_run_jobs(self):
         """
-        The C{trialJobs} kwarg should correspond to trial's -j option (
+        The C{jobs} kwarg should correspond to trial's -j option (
         included since Twisted 12.3.0), and make corresponding changes to
         logfiles and progressMetrics.
         """
         step = self.setupStep(python_twisted.Trial(workdir='build',
                                     tests = 'testname',
                                     testpath = None,
-                                    trialJobs=2))
+                                    jobs=2))
 
         self.expectCommands(
             ExpectShell(workdir='build',
@@ -169,11 +169,11 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
 
     def test_run_jobs_Properties(self):
         """
-        C{trialJobs} should accept Properties
+        C{jobs} should accept Properties
         """
         self.setupStep(python_twisted.Trial(workdir='build',
                                      tests = 'testname',
-                                     trialJobs=Property('jobs_count'),
+                                     jobs=Property('jobs_count'),
                                      testpath=None))
         self.properties.setProperty('jobs_count', '2', 'Test')
 
