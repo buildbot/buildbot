@@ -389,23 +389,22 @@ class Trial(ShellCommand):
     def start(self):
         # choose progressMetrics and logfiles based on whether trial is being
         # run with multiple workers or not.
+        output_observer = OutputProgressObserver('test.log')
+        
         if self.jobs is not None:
             self.jobs = int(self.jobs)
             self.command.append("--jobs=%d" % self.jobs)
 
             # using -j/--jobs flag produces more than one test log.
-            self.progressMetrics = ('output', 'tests')
             self.logfiles = {}
             for i in xrange(self.jobs):
                 self.logfiles['test.%d.log' % i] = '_trial_temp/%d/test.log' % i
                 self.logfiles['err.%d.log' % i] = '_trial_temp/%d/err.log' % i
                 self.logfiles['out.%d.log' % i] = '_trial_temp/%d/out.log' % i
-                self.addLogObserver('test.%d.log' % i,
-                                    OutputProgressObserver('test.%d.log' % i))
-                self.progressMetrics += ('test.%d.log' % i,)
+                self.addLogObserver('test.%d.log' % i, output_observer)
         else:
             # this one just measures bytes of output in _trial_temp/test.log
-            self.addLogObserver('test.log', OutputProgressObserver('test.log'))
+            self.addLogObserver('test.log', output_observer)
 
         # now that self.build.allFiles() is nailed down, finish building the
         # command

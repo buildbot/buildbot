@@ -137,7 +137,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         """
         The C{jobs} kwarg should correspond to trial's -j option (
         included since Twisted 12.3.0), and make corresponding changes to
-        logfiles and progressMetrics.
+        logfiles.
         """
         step = self.setupStep(python_twisted.Trial(workdir='build',
                                     tests = 'testname',
@@ -161,11 +161,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS, status_text=['1 test', 'passed'])
-
-        def check(r):
-            self.assertEqual(step.progressMetrics, ('output', 'tests',
-                                                   'test.0.log', 'test.1.log'))
-        return self.runStep().addCallback(check)
+        return self.runStep()
 
     def test_run_jobsProperties(self):
         """
