@@ -2,16 +2,77 @@ What?  This doesn't look like a README!
 
 Right, this is the TODO list for Buildbot-0.9.0.  We'll delete this once it's empty.  Pitch in!
 
-# Infrastructure #
+# Overall Goals #
+
+The 'nine' branch is a refactoring of Buildbot into a consistent, well-defined application composed of loosely coupled components.
+The components are linked by a common database backend and a messaging system.
+This allows components to be distributed across multiple build masters.
+It also allows the rendering of complex web status views to be performed in the browser, rather than on the buildmasters.
+
+The branch looks forward to committing to long-term API compatibility, but does not reach that goal.
+The Buildbot-0.9.x series of releases will give the new APIs time to "settle in" before we commit to them.
+Commitment will wait for Buildbot-1.0.0 (as per http://semver.org).
+Once Buildbot reaches version 1.0.0, upgrades will become much easier for users.
+
+To encourage contributions from a wider field of developers, the web application is designed to look like a normal Dojo application.
+Developers familiar with Dojo, but not with Python, should be able to start hacking on the web application quickly.
+The web application is "pluggable", so users who develop their own status displays can package those separately from Buildbot itself.
+
+Other goals:
+ * An approachable HTTP REST API, used by the web application but available for any other purpose.
+ * A high degree of coverage by reliable, easily-modified tests.
+ * "Interlocking" tests to guarantee compatibility.
+   For example, the real and fake DB implementations must both pass the same suite of tests.
+   Then no unseen difference between the fake and real implementations can mask errors that will occur in production.
+
+## Compatibility ##
+
+Upgrading Buildbot has always been difficult.
+The upgrade to 0.9.0 will be difficult, too -- the requirements make that unavoidable.
+However, we want to minimize the difficulty wherever possible, and be absolutely clear about any changes to documented behavior.
+The release notes should give detailed upgrade instructions wherever the changes are not automatic.
+
+## Requirements ##
+
+Buildbot-0.8.x requires:
+
+ * Python (obviously)
+ * Some DB (sqlite, etc. -- sqlite is built into Python)
+
+Buildbot-0.9.x will require:
+
+ * Python (obviously)
+ * Some DB (sqlite, etc. -- sqlite is built into Python)
+
+but it's a little more complicated:
+
+ * If you want to do web *development*, or *build* the buildbot-www package, you'll need Node and Java.
+   It's a Dojo app, and that's what Dojo requires.
+   We've taken pains to not make either a requirement for users - you can simply 'pip install' buildbot-www and be on your way.
+   This is the case even if you're hacking on the Python side of Buildbot.
+ * For a single master, nothing else is required.
+ * If you want multiple masters, you'll need a server-based DB (already the case in 0.8.x) and a messaging system of some sort.
+   Messaging requirements will be similar to DB requirements: small installs can use something built-in that doesn't scale well.
+   Larger installs can use external tools with better scaling behavior.
+
+# Development Tasks #
+
+## Progress ##
+
+At this point, most of the configuration objects (masters, schedulers, builders, etc.) and everything that is in the DB in 0.8.x are ported to the Data API.
+As data that has typically been in build pickles is migrated to the DB, all existing status code (web status, mail notifier, IRC, etc.) will become increasingly broken, because this code uses synchronous calls to get status information.
+Each of these status displays will need to be rewritten based on the Data API.
+
+## Infrastructure ##
 
 * Optimize the type verification system by dynamically creating verifier functions once.
 
-# Documentation #
+## Documentation ##
 
 * Put update methods in the appropriate resource-type files, rather than in ``data.rst``
-* Move data API how-to guides
+* Move data API how-to guides into a separate file
 
-# Data API #
+## Data API ##
 
 For each resource type, we'll need the following (based on "Adding Resource Types" in ``master/docs/developer/data.rst``).  use this list as a template in the list of types below when you begin a new type.
 
@@ -26,7 +87,7 @@ For each resource type, we'll need the following (based on "Adding Resource Type
 
 It's safe to leave tasks that have significant prerequisites - particularly the last point - commented as "TODO" in the source, with corresponding items added here.
 
-## Remaining Resource Types ##
+### Remaining Resource Types ###
 
 The outstanding resource types are:
 
@@ -39,7 +100,7 @@ The outstanding resource types are:
 * logfile
 * buildslave
 
-### Schedulers ###
+#### Schedulers ####
 
 There is no scheduler resource type yet, although schedulers are in place in the database API so that other tables can refer to a scheduler ID.
 Support needs to be added for schedulers on a particular master to "claim" the name for themselves, deactivate themselves if already running on another master, and periodically poll for the opportunity to pick up the role.
@@ -49,41 +110,45 @@ When a master becomes inactive (either on its own, or having failed its heartbea
 
 It should be possible to list the master on which a scheduler is running at e.g., `/scheduler/:schedulerid/master`
 
-### Builders ###
+#### Builders ####
 
 * Add identifiers for builders (url-component safe strings), and allow use of those in place of integer IDs in data API paths.
 
-### Buildrequests ###
+#### Buildrequests ####
 
 Buildrequests include a `builderid` field which will need to be determined from the builders table.
 It should probably be an error to schedule a build on a builder that does not exist, as that build will not be executed.
 It's OK to schedule a build on a builder that's not implemented by a running master, though.
 
-## Other Resource-Type Related Tasks ##
+### Other Resource-Type Related Tasks ###
 
 * ``addBuildset`` currently sends messages about buildrequests directly.
   It should, instead, coordinate with the buildrequests resource type to do so.
 * Add support for uids to the change resource type
 
-## Misc Data API Work ##
+### Misc Data API Work ###
 
 * Paging, filtering, and so on of data API results.
 * Parsing of endpoint options is currently left to the endpoint, which will lead to inconsistencies.
   Add and document some helper methods to ``base.Endpoint`` for parsing e.g., boolean options (supporting on/off, 0/1, true/false, etc.)
 * If several rtypes have `_db2data` functions or similar (so far masters and changes both do), then make that an idiom and document it.
 
-# Web #
+## Status Rewrites ##
 
-## Infrastructure ##
+The following will need to be rewritten
+
+## Web ##
+
+### Infrastructure ###
 
 * Add cache headers to the HTTP server, based on information encoded in the resource types regarding immutability and speed of change.
 
-## Javascript ##
+### Javascript ###
 
 * Standardize on interCaps spellings for identifiers (method and variable names).
 * Convert tabs to spaces
 
-## Javascript Testing ##
+### Javascript Testing ###
 
 Testing javascript and json api interaction is tricky. Few design principles:
 * Stubbing the data api in JS is considered wrong path, as we'll have to always make sure consistency between the stub and real implementation
@@ -101,7 +166,7 @@ Testing javascript and json api interaction is tricky. Few design principles:
   - Need a js test mode that has to be enabled in master.cfg, in order to prevent prod's db to be corrupted by tests if malicious people launch them
   - Test mode will add some data api to inject pre-crafted events in the data flow.
 
-## Vague Ideas ##
+### Vague Ideas ###
 
 These are just "things that need doing", where we don't have much idea *how* yet:
 
@@ -112,27 +177,25 @@ These are just "things that need doing", where we don't have much idea *how* yet
 
 * Need to download bootstrap from upstream instead of having a hardcopy in our source code.
 
-# Database #
+## Database ##
 
-We're deferring any changes to the database schema for as long as possible, because they are difficult to maintain on a branch.
-So, they're listed here.
+### Schema Changes ###
 
-## Schema Changes ##
+  * Remove ``is_dir`` from the changes table (and ignore/remove it everywhere else)
+  * ``changesources``
 
-Don't include the schema changes needed to implement the status stuff here; those will come when we implement the status stuff.
+    * New table
+    * Migration script + tests
+    * DB API module + docs, type verifier, and interface tests
+    * Fake implementation that passes unit tests 
+    * Add TODO for data API implementation
 
-* Remove ``is_dir`` from the changes table (and ignore/remove it everywhere else)
-* Add a ``changesources`` table, similar to schedulers
+  * replace ``builds`` with a useful representation of builds
+  * ``steps``
+  * ``logs``
+  * ``logchunks``
 
-For each of the config-objects tables (masters, builders, schedulesr, changesources):
-
- * New table
- * Migration script + tests
- * DB API module + docs, type verifier, and interface tests
- * Fake implementation that passes interface tests 
- * Add TODO for data API implementation
-
-## DB API Changes ##
+### DB API Changes ###
 
 * Switch to use epoch time throughout the DB API.
 * Use None/NULL, not -1, as the "no results yet" sentinel value in buildsets and buildrequests
@@ -141,20 +204,19 @@ For each of the config-objects tables (masters, builders, schedulesr, changesour
   Where indexes -- especially unique indexes -- are required on these columns, add sha1 hash columns and index those.
   Among other advantages, this will allow MySQL databases to use the vastly superior InnoDB table type.
 
-## Documentation ##
+### Documentation ###
 
 * Document Buildbot's behavior for a DBA: isolation assumptions, dependencies on autogenerated IDs, read-after-write expectations, buildrequest claiming, buildset completion detection
 
-## Miscellaneous ##
+### Miscellaneous ###
 
-* Factor the mutiple select-or-insert methods (e.g., for masters) into a common utility method.
 * Look carefully at race conditions around masters being marked inactive
 
-# Later #
+## Later ##
 
 This section can hold tasks that don't need to be done by 0.9.0, but shouldn't be forgotten, and might be implemented sooner if convenient.
 
-## MQ ##
+### MQ ###
 
 The MQ layer currently only has a simple (single-master) implementation.  We should have some or all of
 
@@ -162,10 +224,11 @@ The MQ layer currently only has a simple (single-master) implementation.  We sho
 * AMP-based master-to-master communication (full mesh, with every master talking to every other master)
 * ZeroMQ
 
-## Infrastructure ##
+### Infrastructure ###
 
 * Use some fancy algorithms to delay message transmission until the data is known-good in the database, for cases where the underlying database is asynchronously replicated.
+* Make the DB API a sub-component of the Data API, so that the two can be more tightly coupled (allowing for more effective filtering, sorting, and pagination) and so that it is clear the DB API should not be used outside of teh Data API implementation.  This will also permit changes to the DB API with fewer compatibility concerns.
 
-## Documentation ##
+### Documentation ###
 
 * Document how to write a scheduler: the ``addBuildsetForXxx`` methods, as well as the proper procedure for listening for changes.
