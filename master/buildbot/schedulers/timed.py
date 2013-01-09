@@ -393,8 +393,9 @@ class NightlyTriggerable(NightlyBase):
                     pass
                 # If the lastTrigger isn't of the right format, ignore it
                 if not self._lastTrigger:
-                    log.msg("NightlyTriggerable Scheduler <%s>: could not "
-                            "load previous state; starting fresh")
+                    log.msg("NightlyTriggerable Scheduler <%(scheduler)s>: "
+                            "could not load previous state; starting fresh",
+                            scheduler=self.name)
         d.addCallback(setLast)
         d.addErrback(log.err, 'while getting NightlyTriggerable state')
 
