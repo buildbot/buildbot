@@ -612,7 +612,7 @@ The classes in the :py:mod:`buildbot.util.subscription` module are used for deal
         Note that value must be json-able.
 
 buildbot.util.pickle
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.pickle
 
