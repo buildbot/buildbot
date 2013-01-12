@@ -331,7 +331,7 @@ class Nightly(NightlyBase):
             return defer.succeed(None) # don't care about this change
         return self.master.db.schedulers.classifyChanges(
                 self.objectid, { change.number : important })
-    
+
     @defer.inlineCallbacks
     def startBuild(self):
         scheds = self.master.db.schedulers
@@ -393,9 +393,10 @@ class NightlyTriggerable(NightlyBase):
                     pass
                 # If the lastTrigger isn't of the right format, ignore it
                 if not self._lastTrigger:
-                    log.msg("NightlyTriggerable Scheduler <%(scheduler)s>: "
-                            "could not load previous state; starting fresh",
-                            scheduler=self.name)
+                    log.msg(
+                    format="NightlyTriggerable Scheduler <%(scheduler)s>: "
+                           "could not load previous state; starting fresh",
+                    scheduler=self.name)
         d.addCallback(setLast)
         d.addErrback(log.err, 'while getting NightlyTriggerable state')
 
