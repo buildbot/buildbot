@@ -16,7 +16,6 @@
 from __future__ import with_statement
 
 import os
-import cPickle
 import tarfile
 import shutil
 import textwrap
@@ -32,6 +31,7 @@ from migrate.versioning import schemadiff
 from buildbot.db import connector
 from buildbot.test.util import change_import, db, querylog
 from buildbot.test.fake import fakemaster
+from buildbot.util import pickle
 
 # monkey-patch for "compare_model_to_db gets confused by sqlite_sequence",
 # http://code.google.com/p/sqlalchemy-migrate/issues/detail?id=124
@@ -207,7 +207,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
 
         def check(diff):
             if diff:
-                self.fail(str(diff))
+                self.fail("\n" + str(diff))
         d.addCallback(check)
         return d
 
@@ -282,10 +282,10 @@ class UpgradeTestV075(UpgradeTestMixin,
         """Do the equivalent of master/contrib/fix_pickle_encoding.py"""
         changes_file = os.path.join(self.basedir, "changes.pck")
         with open(changes_file) as fp:
-            changemgr = cPickle.load(fp)
+            changemgr = pickle.load(fp)
         changemgr.recode_changes(old_encoding, quiet=True)
         with open(changes_file, "w") as fp:
-            cPickle.dump(changemgr, fp)
+            pickle.dump(changemgr, fp)
 
     def test_upgrade(self):
         # this tarball contains some unicode changes, encoded as utf8, so it
@@ -335,6 +335,15 @@ class UpgradeTestCitools(UpgradeTestMixin, unittest.TestCase):
             whereclause=model.change_files.c.changeid == 77))
         self.assertEqual(r.scalar(), 'CHANGELOG')
 
+        r = conn.execute(
+            sa.select([model.sourcestamps],
+                whereclause=model.sourcestamps.c.id == ch.sourcestampid))
+        row = r.fetchone()
+        r.close()
+        exp = {'revision': 'HEAD', 'branch': 'master', 'project': '',
+               'repository': '', 'codebase': '', 'patchid': None}
+        self.assertEqual(dict((k,row[k]) for k in exp), exp)
+
     def test_upgrade(self):
         return self.do_test_upgrade()
 
@@ -381,6 +390,28 @@ class UpgradeTestV082(UpgradeTestMixin, unittest.TestCase):
             (7, 1310337779, objname),
         ])
 
+        # There's just one, boring sourcetamp
+        r = conn.execute(sa.select([model.sourcestamps]))
+        rows = [ dict(row) for row in r.fetchall() ]
+        for row in rows:
+            del row['created_at'] # it will be near the current time
+        self.assertEqual(rows, [
+            {u'branch': None, u'codebase': u'', u'id': 1,
+             u'patchid': None, u'project': u'', u'repository': u'',
+             u'revision': None,
+             'ss_hash': '835fccf6db3694afb48c380997024542c0bc162d'},
+        ])
+
+        # ..and all of the buildsets use it.
+        bs = model.buildsets
+        bss = model.buildset_sourcestamps
+        r = conn.execute(
+          sa.select([bs.c.id, bss.c.sourcestampid],
+                    whereclause=bs.c.id == bss.c.buildsetid))
+        rows = map(dict, r.fetchall())
+        self.assertEqual([ row['sourcestampid'] for row in rows ],
+                         [1] * 7)
+
     def test_upgrade(self):
         d = self.do_test_upgrade()
         @d.addCallback
@@ -388,7 +419,7 @@ class UpgradeTestV082(UpgradeTestMixin, unittest.TestCase):
             # try to unpickle things down to the level of a logfile
             filename = os.path.join(self.basedir, 'builder', 'builder')
             with open(filename, "rb") as f:
-                builder_status = cPickle.load(f)
+                builder_status = pickle.load(f)
             builder_status.master = self.master
             builder_status.basedir = os.path.join(self.basedir, 'builder')
             b0 = builder_status.loadBuildFromFile(0)
@@ -537,7 +568,7 @@ class UpgradeTestV085(UpgradeTestMixin, unittest.TestCase):
             # try to unpickle things down to the level of a logfile
             filename = os.path.join(self.basedir, 'builder', 'builder')
             with open(filename, "rb") as f:
-                builder_status = cPickle.load(f)
+                builder_status = pickle.load(f)
             builder_status.master = self.master
             builder_status.basedir = os.path.join(self.basedir, 'builder')
             b1 = builder_status.loadBuildFromFile(1)
@@ -583,7 +614,7 @@ class UpgradeTestV086p1(UpgradeTestMixin, unittest.TestCase):
             # try to unpickle things down to the level of a logfile
             filename = os.path.join(self.basedir, 'builder', 'builder')
             with open(filename, "rb") as f:
-                builder_status = cPickle.load(f)
+                builder_status = pickle.load(f)
             builder_status.master = self.master
             builder_status.basedir = os.path.join(self.basedir, 'builder')
             b0 = builder_status.loadBuildFromFile(0)
@@ -695,9 +726,9 @@ class TestPickles(unittest.TestCase):
                 NsS'revision'
                 p8
                 Nsb.""")
-        ss = cPickle.loads(pkl)
+        ss = pickle.loads(pkl)
         self.assertTrue(ss.revision is None)
-        self.assertTrue(hasattr(ss, '_addSourceStampToDatabase_lock'))
+        self.assertTrue(hasattr(ss, 'codebase'))
 
     def test_sourcestamp_version3(self):
         pkl = textwrap.dedent("""\
@@ -718,6 +749,6 @@ class TestPickles(unittest.TestCase):
             I2
             sS'patch'
             Nsb.""")
-        ss = cPickle.loads(pkl)
+        ss = pickle.loads(pkl)
         styles.doUpgrade()
         self.assertEqual(ss.codebase, '')

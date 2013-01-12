@@ -110,10 +110,10 @@ class Trigger(LoggingBuildStep):
                 codebase = ss.get('codebase','')
                 assert codebase not in ss_for_trigger, "codebase specified multiple times"
                 ss_for_trigger[codebase] = ss
-            return ss_for_trigger
+            return ss_for_trigger.values()
 
         if self.alwaysUseLatest:
-            return {}
+            return []
 
         # start with the sourcestamps from current build
         ss_for_trigger = {}
@@ -128,7 +128,7 @@ class Trigger(LoggingBuildStep):
                 if codebase in got:
                     ss_for_trigger[codebase]['revision'] = got[codebase]
 
-        return ss_for_trigger
+        return ss_for_trigger.values()
 
     @defer.inlineCallbacks
     def start(self):

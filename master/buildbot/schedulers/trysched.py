@@ -183,40 +183,28 @@ class Try_Jobdir(TryBase):
         if parsed_job['comment']:
             comment = parsed_job['comment']
 
-        d = self.master.db.sourcestampsets.addSourceStampSet()
+        sourcestamp=dict(branch=parsed_job['branch'],
+            revision=parsed_job['baserev'],
+            patch_body=parsed_job['patch_body'],
+            patch_level=parsed_job['patch_level'],
+            patch_author=who,
+            patch_comment=comment,
+            patch_subdir='',  # TODO: can't set this remotely - #1769
+            project=parsed_job['project'],
+            repository=parsed_job['repository'])
+        reason = u"'try' job"
+        if parsed_job['who']:
+            reason += u" by user %s" % ascii2unicode(parsed_job['who'])
+        properties = parsed_job['properties']
+        requested_props = Properties()
+        requested_props.update(properties, "try build")
 
-        def addsourcestamp(setid):
-            self.master.db.sourcestamps.addSourceStamp(
-                sourcestampsetid=setid,
-                branch=parsed_job['branch'],
-                revision=parsed_job['baserev'],
-                patch_body=parsed_job['patch_body'],
-                patch_level=parsed_job['patch_level'],
-                patch_author=who,
-                patch_comment=comment,
-                patch_subdir='',  # TODO: can't set this remotely - #1769
-                project=parsed_job['project'],
-                repository=parsed_job['repository'])
-            return setid
-
-        d.addCallback(addsourcestamp)
-
-        def create_buildset(setid):
-            reason = u"'try' job"
-            if parsed_job['who']:
-                reason += u" by user %s" % ascii2unicode(parsed_job['who'])
-            properties = parsed_job['properties']
-            requested_props = Properties()
-            requested_props.update(properties, "try build")
-            return self.addBuildsetForSourceStamp(
-                ssid=None,
-                setid=setid,
-                reason=reason,
-                external_idstring=ascii2unicode(parsed_job['jobid']),
-                builderNames=builderNames,
-                properties=requested_props)
-        d.addCallback(create_buildset)
-        return d
+        return self.addBuildsetForSourceStamps(
+            sourcestamps=[sourcestamp],
+            reason=reason,
+            external_idstring=ascii2unicode(parsed_job['jobid']),
+            builderNames=builderNames,
+            properties=requested_props)
 
 
 class Try_Userpass_Perspective(pbutil.NewCredPerspective):
@@ -244,20 +232,17 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         if comment:
             reason += u" (%s)" % ascii2unicode(comment)
 
-        sourcestampsetid = yield db.sourcestampsets.addSourceStampSet()
-
-        yield db.sourcestamps.addSourceStamp(
+        sourcestamp = dict(
             branch=branch, revision=revision, repository=repository,
             project=project, patch_level=patch[0], patch_body=patch[1],
             patch_subdir='', patch_author=who or '',
             patch_comment=comment or '',
-            sourcestampsetid=sourcestampsetid)
-                    # note: no way to specify patch subdir - #1769
+        )           # note: no way to specify patch subdir - #1769
 
         requested_props = Properties()
         requested_props.update(properties, "try build")
-        (bsid, brids) = yield self.scheduler.addBuildsetForSourceStamp(
-                setid=sourcestampsetid, reason=reason,
+        (bsid, brids) = yield self.scheduler.addBuildsetForSourceStamps(
+                sourcestamps=[sourcestamp], reason=reason,
                 properties=requested_props, builderNames=builderNames)
 
         # return a remotely-usable BuildSetStatus object

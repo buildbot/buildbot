@@ -331,7 +331,7 @@ class Nightly(NightlyBase):
             return defer.succeed(None) # don't care about this change
         return self.master.db.schedulers.classifyChanges(
                 self.objectid, { change.number : important })
-    
+
     @defer.inlineCallbacks
     def startBuild(self):
         scheds = self.master.db.schedulers
@@ -379,18 +379,33 @@ class NightlyTriggerable(NightlyBase):
         # get the scheduler's lastTrigger time (note: only done at startup)
         d = self.getState('lastTrigger', None)
         def setLast(lastTrigger):
-            try:
-                if lastTrigger:
-                    assert isinstance(lastTrigger[0], dict)
-                    self._lastTrigger = (lastTrigger[0], properties.Properties.fromDict(lastTrigger[1]))
-            except:
+            self._lastTrigger = None
+            if lastTrigger:
+                try:
+                    if isinstance(lastTrigger[0], list):
+                        self._lastTrigger = (lastTrigger[0],
+                                properties.Properties.fromDict(lastTrigger[1]))
+                    # handle state from before Buildbot-0.9.0
+                    elif isinstance(lastTrigger[0], dict):
+                        self._lastTrigger = (lastTrigger[0].values(),
+                                properties.Properties.fromDict(lastTrigger[1]))
+                except Exception:
+                    pass
                 # If the lastTrigger isn't of the right format, ignore it
-                log.msg("NightlyTriggerable Scheduler <%s>: bad lastTrigger: %r" % (self.name, lastTrigger))
+                if not self._lastTrigger:
+                    log.msg(
+                    format="NightlyTriggerable Scheduler <%(scheduler)s>: "
+                           "could not load previous state; starting fresh",
+                    scheduler=self.name)
         d.addCallback(setLast)
+        d.addErrback(log.err, 'while getting NightlyTriggerable state')
 
     def trigger(self, sourcestamps, set_props=None):
         """Trigger this scheduler with the given sourcestamp ID. Returns a
         deferred that will fire when the buildset is finished."""
+        assert isinstance(sourcestamps, list), \
+                "trigger requires a list of sourcestamps"
+
         self._lastTrigger = (sourcestamps, set_props)
 
         # record the trigger in the db
@@ -423,5 +438,5 @@ class NightlyTriggerable(NightlyBase):
         if set_props:
             props.updateFromProperties(set_props)
 
-        yield self.addBuildsetForSourceStampSetDetails(reason=self.reason,
+        yield self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
                 sourcestamps=sourcestamps, properties=props)

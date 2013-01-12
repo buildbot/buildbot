@@ -129,10 +129,6 @@ class Model(base.DBConnectorComponent):
         # results is only valid when complete == 1; 0 = SUCCESS, 1 = WARNINGS,
         # etc - see master/buildbot/status/builder.py
         sa.Column('results', sa.SmallInteger),
-
-        # buildset belongs to all sourcestamps with setid
-        sa.Column('sourcestampsetid', sa.Integer,
-            sa.ForeignKey('sourcestampsets.id')),
     )
 
     # changes
@@ -208,6 +204,10 @@ class Model(base.DBConnectorComponent):
         # later to filter changes
         sa.Column('project', sa.String(length=512), nullable=False,
             server_default=''),
+
+        # the sourcestamp this change brought the codebase to
+        sa.Column('sourcestampid', sa.Integer,
+            sa.ForeignKey('sourcestamps.id'))
     )
 
     # sourcestamps
@@ -232,26 +232,16 @@ class Model(base.DBConnectorComponent):
         sa.Column('subdir', sa.Text),
     )
 
-    # The changes that led up to a particular source stamp.
-    sourcestamp_changes = sa.Table('sourcestamp_changes', metadata,
-        sa.Column('sourcestampid', sa.Integer,
-            sa.ForeignKey('sourcestamps.id'), nullable=False),
-        sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'),
-            nullable=False),
-    )
-
-    # A sourcestampset identifies a set of sourcestamps. A sourcestamp belongs
-    # to a particular set if the sourcestamp has the same setid
-    sourcestampsets = sa.Table('sourcestampsets', metadata,
-        sa.Column('id', sa.Integer,  primary_key=True),
-    )
-
     # A sourcestamp identifies a particular instance of the source code.
     # Ideally, this would always be absolute, but in practice source stamps can
     # also mean "latest" (when revision is NULL), which is of course a
     # time-dependent definition.
     sourcestamps = sa.Table('sourcestamps', metadata,
         sa.Column('id', sa.Integer,  primary_key=True),
+
+        # hash of the branch, revision, patchid, repository, codebase, and
+        # project, using hashColumns.
+        sa.Column('ss_hash', sa.String(40), nullable=False),
 
         # the branch to check out.  When branch is NULL, that means
         # the main branch (trunk, master, etc.)
@@ -275,9 +265,19 @@ class Model(base.DBConnectorComponent):
         sa.Column('project', sa.String(length=512), nullable=False,
             server_default=''),
 
-        # each sourcestamp belongs to a set of sourcestamps
-        sa.Column('sourcestampsetid', sa.Integer,
-            sa.ForeignKey('sourcestampsets.id')),
+        # the time this sourcetamp was first seen (the first time it was added)
+        sa.Column('created_at', sa.Integer, nullable=False),
+    )
+
+    # a many-to-may relationship between buildsets and sourcestamps
+    buildset_sourcestamps = sa.Table('buildset_sourcestamps', metadata,
+        sa.Column('id', sa.Integer,  primary_key=True),
+        sa.Column('buildsetid', sa.Integer,
+            sa.ForeignKey('buildsets.id'),
+            nullable=False),
+        sa.Column('sourcestampid', sa.Integer,
+            sa.ForeignKey('sourcestamps.id'),
+            nullable=False),
     )
 
     # schedulers
@@ -435,6 +435,7 @@ class Model(base.DBConnectorComponent):
     sa.Index('changes_when_timestamp', changes.c.when_timestamp)
     sa.Index('change_files_changeid', change_files.c.changeid)
     sa.Index('change_properties_changeid', change_properties.c.changeid)
+    sa.Index('changes_sourcestampid', changes.c.sourcestampid)
     sa.Index('scheduler_name_hash', schedulers.c.name_hash, unique=True)
     sa.Index('scheduler_changes_schedulerid', scheduler_changes.c.schedulerid)
     sa.Index('scheduler_changes_changeid', scheduler_changes.c.changeid)
@@ -446,10 +447,6 @@ class Model(base.DBConnectorComponent):
     sa.Index('builder_masters_identity',
             builder_masters.c.builderid, builder_masters.c.masterid,
             unique=True)
-    sa.Index('sourcestamp_changes_sourcestampid',
-            sourcestamp_changes.c.sourcestampid)
-    sa.Index('sourcestamps_sourcestampsetid', sourcestamps.c.sourcestampsetid,
-            unique=False)
     sa.Index('users_identifier', users.c.identifier, unique=True)
     sa.Index('users_info_uid', users_info.c.uid)
     sa.Index('users_info_uid_attr_type', users_info.c.uid,
@@ -465,6 +462,13 @@ class Model(base.DBConnectorComponent):
     sa.Index('master_name_hashes', masters.c.name_hash, unique=True)
     sa.Index('buildrequest_claims_brids', buildrequest_claims.c.brid,
             unique=True)
+    sa.Index('sourcestamps_ss_hash_key', sourcestamps.c.ss_hash, unique=True)
+    sa.Index('buildset_sourcestamps_buildsetid',
+            buildset_sourcestamps.c.buildsetid)
+    sa.Index('buildset_sourcestamps_unique',
+            buildset_sourcestamps.c.buildsetid,
+            buildset_sourcestamps.c.sourcestampid,
+            unique=True)
 
     # MySQl creates indexes for foreign keys, and these appear in the
     # reflection.  This is a list of (table, index) names that should be
@@ -475,13 +479,11 @@ class Model(base.DBConnectorComponent):
             dict(unique=False, column_names=['uid'], name='uid')),
         ('sourcestamps',
             dict(unique=False, column_names=['patchid'], name='patchid')),
-        ('sourcestamp_changes',
-            dict(unique=False, column_names=['changeid'], name='changeid')),
         ('scheduler_masters',
             dict(unique=False, column_names=['masterid'], name='masterid')),
-        ('buildsets',
-            dict(unique=False, column_names=['sourcestampsetid'],
-                               name='buildsets_sourcestampsetid_fkey')),
+        ('buildset_sourcestamps',
+            dict(unique=False, column_names=['sourcestampid'],
+                               name='sourcestampid')),
     ]
 
     #
@@ -602,6 +604,7 @@ class Model(base.DBConnectorComponent):
                 version_control(engine)
                 upgrade(engine)
 
+        # import the prerequisite classes for pickles
         check_sqlalchemy_migrate_version()
         return self.db.pool.do_with_engine(thd)
 

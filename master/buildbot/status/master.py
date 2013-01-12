@@ -16,14 +16,13 @@
 from __future__ import with_statement
 
 import os, urllib
-from cPickle import load
 from twisted.python import log
 from twisted.persisted import styles
 from twisted.internet import defer
 from twisted.application import service
 from zope.interface import implements
 from buildbot import config, interfaces, util
-from buildbot.util import bbcollections
+from buildbot.util import bbcollections, pickle
 from buildbot.util.eventual import eventually
 from buildbot.changes import changes
 from buildbot.status import buildset, builder, buildrequest
@@ -330,7 +329,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         builder_status = None
         try:
             with open(filename, "rb") as f:
-                builder_status = load(f)
+                builder_status = pickle.load(f)
             builder_status.master = self.master
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite

@@ -79,16 +79,20 @@ class Dependent(base.BaseScheduler):
         subs = yield self._getUpstreamBuildsets()
 
         sub_bsids = []
-        for (sub_bsid, sub_sssetid, sub_complete, sub_results) in subs:
+        for (sub_bsid, sub_ssids, sub_complete, sub_results) in subs:
             # skip incomplete builds, handling the case where the 'complete'
             # column has not been updated yet
             if not sub_complete and sub_bsid != bsid:
                 continue
 
-            # build a dependent build if the status is appropriate
+            # build a dependent build if the status is appropriate.  Note that
+            # this uses the sourcestamps from the buildset, not from any of the
+            # builds performed to complete the buildset (since those might
+            # differ from one another)
             if sub_results in (SUCCESS, WARNINGS):
-                yield self.addBuildsetForSourceStamp(setid=sub_sssetid,
-                                               reason=u'downstream')
+                yield self.addBuildsetForSourceStamps(
+                        sourcestamps=[ ssid for ssid in sub_ssids ],
+                        reason=u'downstream')
 
             sub_bsids.append(sub_bsid)
 
@@ -111,14 +115,14 @@ class Dependent(base.BaseScheduler):
         changed = False
         rv = []
         for bsid in self._cached_upstream_bsids[:]:
-            bsdict = yield self.master.db.buildsets.getBuildset(bsid)
-            if not bsdict:
+            buildset = yield self.master.data.get({}, ('buildset', str(bsid)))
+            if not buildset:
                 self._cached_upstream_bsids.remove(bsid)
                 changed = True
                 continue
 
-            rv.append((bsid, bsdict['sourcestampsetid'], bsdict['complete'],
-                bsdict['results']))
+            ssids = [ ss['ssid'] for ss in buildset['sourcestamps'] ]
+            rv.append((bsid, ssids, buildset['complete'], buildset['results']))
 
         if changed:
             yield self.master.db.state.setState(self.objectid,

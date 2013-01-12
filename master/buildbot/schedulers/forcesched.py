@@ -573,8 +573,13 @@ class ForceScheduler(base.BaseScheduler):
 
         r = (u"A build was forced by '%s': %s" % (owner, reason))
 
+        # turn sourcestamps into a list
+        for cb, ss in sourcestamps.iteritems():
+            ss['codebase'] = cb
+        sourcestamps = sourcestamps.values()
+
         # everything is validated, we can create our source stamp, and buildrequest
-        res = yield self.addBuildsetForSourceStampSetDetails(
+        res = yield self.addBuildsetForSourceStampsWithDefaults(
             reason = r,
             sourcestamps = sourcestamps,
             properties = properties,

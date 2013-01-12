@@ -481,7 +481,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             assert f is fakefile
             return parseJob(f)
         sched.parseJob = parseJob_
-        return sched.handleJobFile('fakefile', fakefile)
+        return defer.maybeDeferred(sched.handleJobFile, 'fakefile', fakefile)
 
     def makeSampleParsedJob(self, **overrides):
         pj = dict(baserev='1234', branch='trunk',
@@ -721,8 +721,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='tsched', builderNames=['a', 'b'],
                 port='xxx', userpass=[('a', 'b')])
         persp = trysched.Try_Userpass_Perspective(sched, 'a')
-        d = defer.maybeDeferred(
-            lambda: persp.perspective_getAvailableBuilderNames())
+        d = defer.maybeDeferred(persp.perspective_getAvailableBuilderNames)
 
         def check(buildernames):
             self.assertEqual(buildernames, ['a', 'b'])

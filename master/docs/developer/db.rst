@@ -294,16 +294,16 @@ buildsets
     * ``bsid``
     * ``external_idstring`` (arbitrary string for mapping builds externally)
     * ``reason`` (string; reason these builds were triggered)
-    * ``sourcestampsetid`` (source stamp set for this buildset)
+    * ``sourcestamps`` (list of sourcestamps for this buildset, by ID)
     * ``submitted_at`` (datetime object; time this buildset was created)
     * ``complete`` (boolean; true if all of the builds for this buildset are complete)
     * ``complete_at`` (datetime object; time this buildset was completed)
     * ``results`` (aggregate result of this buildset; see :ref:`Build-Result-Codes`)
 
-    .. py:method:: addBuildset(sourcestampsetid, reason, properties, builderNames, external_idstring=None)
+    .. py:method:: addBuildset(sourcestamps, reason, properties, builderNames, external_idstring=None)
 
-        :param sourcestampsetid: id of the SourceStampSet for this buildset
-        :type sourcestampsetid: integer
+        :param sourcestamps: sourcestamps for the new buildset; see below
+        :type sourcestamps: list
         :param reason: reason for this buildset
         :type reason: short unicode string
         :param properties: properties for this buildset
@@ -315,13 +315,12 @@ buildsets
         :param datetime submitted_at: time this buildset was created; defaults to the current time
         :returns: buildset ID and buildrequest IDs, via a Deferred
 
-        Add a new Buildset to the database, along with BuildRequests for each
-        named builder, returning the resulting bsid via a Deferred.  Arguments
-        should be specified by keyword.
+        Add a new Buildset to the database, along with BuildRequests for each named builder, returning the resulting bsid via a Deferred.
+        Arguments should be specified by keyword.
 
-        The return value is a tuple ``(bsid, brids)`` where ``bsid`` is the
-        inserted buildset ID and ``brids`` is a dictionary mapping buildernames
-        to build request IDs.
+        Each sourcestamp in the list of sourcestamps can be given either as an integer, assumed to be a sourcestamp ID, or a dictionary of keyword arguments to be passed to :py:meth:`~buildbot.db.sourcestamps.SourceStampsConnectorComponent.findSourceStampId`.
+
+        The return value is a tuple ``(bsid, brids)`` where ``bsid`` is the inserted buildset ID and ``brids`` is a dictionary mapping buildernames to build request IDs.
 
     .. py:method:: completeBuildset(bsid, results[, complete_at=XX])
 
@@ -374,6 +373,8 @@ buildsets
             buildsets
         :type complete: Boolean
         :returns: list of bsdicts, via Deferred
+
+        Get "recent" buildsets, as defined by their ``submitted_at`` times.
 
     .. py:method:: getBuildsetProperties(buildsetid)
 
@@ -642,19 +643,21 @@ sourcestamps
 
 .. py:class:: SourceStampsConnectorComponent
 
-    This class manages source stamps, as stored in the database. Source stamps
-    are linked to changes. Source stamps with the same sourcestampsetid belong
-    to the same sourcestampset. Buildsets link to one or more source stamps via
-    a sourcestampset id.
+    This class manages source stamps, as stored in the database.
+    A source stamp uniquely identifies a particular version a single codebase.
+    Source stamps are identified by their ID.
+    It is safe to use sourcestamp ID equality as a proxy for source stamp equality.
+    For example, all builds of a particular version of a codebase will share the same sourcestamp ID.
+    This equality does not extend to patches: two sourcestamps generated with exactly the same patch will have different IDs.
+
+    Relative source stamps have a ``revision`` of None, meaning "whatever the latest is when this sourcestamp is interpreted".
+    While such source stamps may correspond to a wide array of revisions over the lifetime of a buildbot install, they will only ever have one ID.
 
     An instance of this class is available at ``master.db.sourcestamps``.
 
     .. index:: ssid, ssdict
 
-    Source stamps are identified by a *ssid*, and represented internally as a *ssdict*, with keys
-
     * ``ssid``
-    * ``sourcestampsetid`` (set to which the sourcestamp belongs)
     * ``branch`` (branch, or ``None`` for default branch)
     * ``revision`` (revision, or ``None`` to indicate the latest revision, in
       which case this is a relative source stamp)
@@ -665,40 +668,43 @@ sourcestamps
     * ``patch_comment`` (comment for the patch, or ``None``)
     * ``repository`` (repository containing the source; never ``None``)
     * ``project`` (project this source is for; never ``None``)
-    * ``changeids`` (list of changes, by id, that generated this sourcestamp)
+    * ``codebase`` (codebase this stamp is in; never ``None``)
+    * ``created_at`` (timestamp when this stamp was first created)
 
-    .. note::
-        Presently, no attempt is made to ensure uniqueness of source stamps, so
-        multiple ssids may correspond to the same source stamp.  This may be fixed
-        in a future version.
+    Note that the patch body is a bytestring, not a unicode string.
 
-    .. py:method:: addSourceStamp(branch, revision, repository, project, patch_body=None, patch_level=0, patch_author="", patch_comment="", patch_subdir=None, changeids=[])
+    .. py:method:: findSourceStampId(branch=None, revision=Node,
+                        repository=None, project=None, patch_body=None,
+                        patch_level=None, patch_author=None, patch_comment=None,
+                        patch_subdir=None):
 
         :param branch:
-        :type branch: unicode string
+        :type branch: unicode string or None
         :param revision:
-        :type revision: unicode string
+        :type revision: unicode string or None
         :param repository:
-        :type repository: unicode string
+        :type repository: unicode string or None
         :param project:
-        :type project: string
-        :param patch_body: (optional)
-        :type patch_body: string
-        :param patch_level: (optional)
-        :type patch_level: int
-        :param patch_author: (optional)
-        :type patch_author: unicode string
-        :param patch_comment: (optional)
-        :type patch_comment: unicode string
-        :param patch_subdir: (optional)
-        :type patch_subdir: unicode string
-        :param changeids:
-        :type changeids: list of ints
+        :type project: unicode string or None
+        :param codebase:
+        :type codebase: unicode string (required)
+        :param patch_body: patch body
+        :type patch_body: unicode string or None
+        :param patch_level: patch level
+        :type patch_level: integer or None
+        :param patch_author: patch author
+        :type patch_author: unicode string or None
+        :param patch_comment: patch comment
+        :type patch_comment: unicode string or None
+        :param patch_subdir: patch subdir
+        :type patch_subdir: unicode string or None
         :returns: ssid, via Deferred
 
-        Create a new SourceStamp instance with the given attributes, and return
-        its ssid.  The arguments all have the same meaning as in an ssdict.
-        Pass them as keyword arguments to allow for future expansion.
+        Create a new SourceStamp instance with the given attributes, or find an existing one.
+        In either case, return its ssid.
+        The arguments all have the same meaning as in an ssdict.
+
+        If a new SourceStamp is created, its ``created_at`` is set to the current time.
 
     .. py:method:: getSourceStamp(ssid)
 
@@ -710,39 +716,13 @@ sourcestamps
         Get an ssdict representing the given source stamp, or ``None`` if no
         such source stamp exists.
 
-    .. py:method:: getSourceStamps(sourcestampsetid)
+    .. py:method:: getSourceStamps()
 
-        :param sourcestampsetid: identification of the set, all returned sourcestamps belong to this set
-        :type sourcestampsetid: integer
-        :returns: sslist of ssdict
+        :returns: list of ssdict, via Deferred
 
-        Get a set of sourcestamps identified by a set id. The set is returned as
-        a sslist that contains one or more sourcestamps (represented as ssdicts).
-        The list is empty if the set does not exist or no sourcestamps belong to the set.
-
-sourcestampset
-~~~~~~~~~~~~~~
-
-.. py:module:: buildbot.db.sourcestampsets
-
-.. index:: double: SourceStampSets; DB Connector Component
-
-.. py:class:: SourceStampSetsConnectorComponent
-
-    This class is responsible for adding new sourcestampsets to the database.
-    Build sets link to sourcestamp sets, via their (set) id's.
-
-    An instance of this class is available at ``master.db.sourcestampsets``.
-
-    Sourcestamp sets are identified by a sourcestampsetid.
-
-    .. py:method:: addSourceStampSet()
-
-        :returns: new sourcestampsetid as integer, via Deferred
-
-        Add a new (empty) sourcestampset to the database. The unique identification
-        of the set is returned as integer. The new id can be used to add
-        new sourcestamps to the database and as reference in a buildset.
+        Get all sourcestamps in the database.
+        You probably don't want to do this!
+        This method will be extended to allow appropriate filtering.
 
 state
 ~~~~~

@@ -16,7 +16,7 @@
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.db import schedulers
-from buildbot.test.util import interfaces, connector_component, types
+from buildbot.test.util import interfaces, connector_component, validation
 from buildbot.test.fake import fakedb, fakemaster
 
 class Tests(interfaces.InterfaceTests):
@@ -190,7 +190,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getScheduler(self):
         yield self.insertTestData([ self.scheduler24 ])
         sch = yield self.db.schedulers.getScheduler(24)
-        types.verifyDbDict(self, 'schedulerdict', sch)
+        validation.verifyDbDict(self, 'schedulerdict', sch)
         self.assertEqual(sch, dict(
             id=24,
             name='schname',
@@ -206,7 +206,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData([ self.scheduler24, self.master13,
                                     self.scheduler24master ])
         sch = yield self.db.schedulers.getScheduler(24)
-        types.verifyDbDict(self, 'schedulerdict', sch)
+        validation.verifyDbDict(self, 'schedulerdict', sch)
         self.assertEqual(sch, dict(
             id=24,
             name='schname',
@@ -217,7 +217,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData([ self.scheduler25, self.master14,
                                     self.scheduler25master ])
         sch = yield self.db.schedulers.getScheduler(25)
-        types.verifyDbDict(self, 'schedulerdict', sch)
+        validation.verifyDbDict(self, 'schedulerdict', sch)
         self.assertEqual(sch, dict(
             id=25,
             name='schname2',
@@ -235,7 +235,7 @@ class Tests(interfaces.InterfaceTests):
             self.scheduler25,
             ])
         schlist = yield self.db.schedulers.getSchedulers()
-        [ types.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
         self.assertEqual(sorted(schlist), sorted([
             dict(id=24, name='schname', masterid=13),
             dict(id=25, name='schname2', masterid=None),
@@ -248,7 +248,7 @@ class Tests(interfaces.InterfaceTests):
             self.scheduler25,
             ])
         schlist = yield self.db.schedulers.getSchedulers(masterid=13)
-        [ types.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
         self.assertEqual(sorted(schlist), sorted([
             dict(id=24, name='schname', masterid=13),
         ]))
@@ -260,7 +260,7 @@ class Tests(interfaces.InterfaceTests):
             self.scheduler25
             ])
         schlist = yield self.db.schedulers.getSchedulers(active=True)
-        [ types.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
         self.assertEqual(sorted(schlist), sorted([
             dict(id=24, name='schname', masterid=13),
         ]))
@@ -273,7 +273,7 @@ class Tests(interfaces.InterfaceTests):
             ])
         schlist = yield self.db.schedulers.getSchedulers(
                                             active=True, masterid=13)
-        [ types.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
         self.assertEqual(sorted(schlist), sorted([
             dict(id=24, name='schname', masterid=13),
         ]))
@@ -285,7 +285,7 @@ class Tests(interfaces.InterfaceTests):
             self.scheduler25
             ])
         schlist = yield self.db.schedulers.getSchedulers(active=False)
-        [ types.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
         self.assertEqual(sorted(schlist), sorted([
             dict(id=25, name='schname2', masterid=None),
         ]))
@@ -298,7 +298,7 @@ class Tests(interfaces.InterfaceTests):
             ])
         schlist = yield self.db.schedulers.getSchedulers(
                 active=False, masterid=13)
-        [ types.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
         self.assertEqual(sorted(schlist), [])
 
 
@@ -311,8 +311,8 @@ class RealTests(Tests):
 class TestFakeDB(unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
-        self.db = fakedb.FakeDBConnector(self)
+        self.master = fakemaster.make_master(testcase=self, wantDb=True)
+        self.db = self.master.db
         self.insertTestData = self.db.insertTestData
 
     def addClassifications(self, schedulerid, *classifications):

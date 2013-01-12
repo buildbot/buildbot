@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import hashlib
 import sqlalchemy as sa
 from buildbot.db import base
 
@@ -26,7 +25,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 whereclause=(tbl.c.name == name),
                 insert_values=dict(
                     name=name,
-                    name_hash=hashlib.sha1(name).hexdigest(),
+                    name_hash=self.hashColumns(name),
                     ))
 
     def getBuilder(self, builderid):

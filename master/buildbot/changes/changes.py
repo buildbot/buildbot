@@ -15,11 +15,10 @@
 
 from __future__ import with_statement
 
-import os, time
-from cPickle import dump
+import time
 
 from zope.interface import implements
-from twisted.python import log, runtime
+from twisted.python import log
 from twisted.internet import defer
 from twisted.web import html
 from buildbot.util import datetime2epoch
@@ -203,73 +202,3 @@ class Change:
         return {}
 
 
-class ChangeMaster: # pragma: no cover
-    # this is a stub, retained to allow the "buildbot upgrade-master" tool to
-    # read old changes.pck pickle files and convert their contents into the
-    # new database format. This is only instantiated by that tool, or by
-    # test_db.py which tests that tool. The functionality that previously
-    # lived here has been moved into buildbot.changes.manager.ChangeManager
-
-    def __init__(self):
-        self.changes = []
-        # self.basedir must be filled in by the parent
-        self.nextNumber = 1
-
-    def saveYourself(self):
-        filename = os.path.join(self.basedir, "changes.pck")
-        tmpfilename = filename + ".tmp"
-        try:
-            with open(tmpfilename, "wb") as f:
-                dump(self, f)
-            if runtime.platformType  == 'win32':
-                # windows cannot rename a file on top of an existing one
-                if os.path.exists(filename):
-                    os.unlink(filename)
-            os.rename(tmpfilename, filename)
-        except Exception:
-            log.msg("unable to save changes")
-            log.err()
-
-    # This method is used by contrib/fix_changes_pickle_encoding.py to recode all
-    # bytestrings in an old changes.pck into unicode strings
-    def recode_changes(self, old_encoding, quiet=False):
-        """Processes the list of changes, with the change attributes re-encoded
-        unicode objects"""
-        nconvert = 0
-        for c in self.changes:
-            # give revision special handling, in case it is an integer
-            if isinstance(c.revision, int):
-                c.revision = unicode(c.revision)
-
-            for attr in ("who", "comments", "revlink", "category", "branch", "revision"):
-                a = getattr(c, attr)
-                if isinstance(a, str):
-                    try:
-                        setattr(c, attr, a.decode(old_encoding))
-                        nconvert += 1
-                    except UnicodeDecodeError:
-                        raise UnicodeError("Error decoding %s of change #%s as %s:\n%r" %
-                                        (attr, c.number, old_encoding, a))
-
-            # filenames are a special case, but in general they'll have the same encoding
-            # as everything else on a system.  If not, well, hack this script to do your
-            # import!
-            newfiles = []
-            for filename in util.flatten(c.files):
-                if isinstance(filename, str):
-                    try:
-                        filename = filename.decode(old_encoding)
-                        nconvert += 1
-                    except UnicodeDecodeError:
-                        raise UnicodeError("Error decoding filename '%s' of change #%s as %s:\n%r" %
-                                        (filename.decode('ascii', 'replace'),
-                                         c.number, old_encoding, a))
-                newfiles.append(filename)
-            c.files = newfiles
-        if not quiet:
-            print "converted %d strings" % nconvert
-
-class OldChangeMaster(ChangeMaster): # pragma: no cover
-    # this is a reminder that the ChangeMaster class is old
-    pass
-# vim: set ts=4 sts=4 sw=4 et:

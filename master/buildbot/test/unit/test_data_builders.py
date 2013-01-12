@@ -17,7 +17,7 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.data import builders
-from buildbot.test.util import types, endpoint
+from buildbot.test.util import validation, endpoint
 from buildbot.test.fake import fakemaster, fakedb
 
 class Builder(endpoint.EndpointMixin, unittest.TestCase):
@@ -40,7 +40,7 @@ class Builder(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(builderid=2))
         @d.addCallback
         def check(builder):
-            types.verifyData(self, 'builder', {}, builder)
+            validation.verifyData(self, 'builder', {}, builder)
             self.assertEqual(builder['name'], u'builderb')
         return d
 
@@ -55,7 +55,7 @@ class Builder(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(masterid=13, builderid=2))
         @d.addCallback
         def check(builder):
-            types.verifyData(self, 'builder', {}, builder)
+            validation.verifyData(self, 'builder', {}, builder)
             self.assertEqual(builder['name'], u'builderb')
         return d
 
@@ -96,7 +96,7 @@ class Builders(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict())
         @d.addCallback
         def check(builders):
-            [ types.verifyData(self, 'builder', {}, b) for b in builders ]
+            [ validation.verifyData(self, 'builder', {}, b) for b in builders ]
             self.assertEqual(sorted([b['builderid'] for b in builders]),
                              [1, 2])
         return d
@@ -105,7 +105,7 @@ class Builders(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(masterid=13))
         @d.addCallback
         def check(builders):
-            [ types.verifyData(self, 'builder', {}, b) for b in builders ]
+            [ validation.verifyData(self, 'builder', {}, b) for b in builders ]
             self.assertEqual(sorted([b['builderid'] for b in builders]),
                              [2])
         return d

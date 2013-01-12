@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import hashlib
 import sqlalchemy as sa
 import sqlalchemy.exc
 from twisted.internet import defer
@@ -83,7 +82,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
     def findSchedulerId(self, name):
         tbl=self.db.model.schedulers
-        name_hash=hashlib.sha1(name).hexdigest()
+        name_hash=self.hashColumns(name)
         return self.findSomethingId(
                 tbl=tbl,
                 whereclause=(tbl.c.name_hash == name_hash),

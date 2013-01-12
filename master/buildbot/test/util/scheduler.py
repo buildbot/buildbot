@@ -74,11 +74,9 @@ class SchedulerMixin(interfaces.InterfaceTests):
 
         if overrideBuildsetMethods:
             for method in (
-                    'addBuildsetForLatest',
-                    'addBuildsetForSourceStampDetails',
-                    'addBuildsetForSourceStampSetDetails',
+                    'addBuildsetForSourceStampsWithDefaults',
                     'addBuildsetForChanges',
-                    'addBuildsetForSourceStamp'):
+                    'addBuildsetForSourceStamps'):
                 actual = getattr(scheduler, method)
                 fake = getattr(self, 'fake_%s' % method)
 
@@ -100,7 +98,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
             def fake_addSourceStampSet():
                 self.addedSourceStampSets.append([])
                 return defer.succeed(400 + len(self.addedSourceStampSets) - 1)
-            self.db.sourcestampsets.addSourceStampSet = fake_addSourceStampSet
+            self.db.sourcestamps.addSourceStampSet = fake_addSourceStampSet
 
         self.sched = scheduler
         return scheduler
@@ -135,29 +133,13 @@ class SchedulerMixin(interfaces.InterfaceTests):
         brids = dict(zip(builderNames, self._bridGenerator))
         return defer.succeed((bsid, brids))
 
-    # fake addBuildsetForXxx methods, optionally patched in in attachScheduler.
-    # These signatures are verified against the scheduler in that method, too
-    def fake_addBuildsetForLatest(self, reason='', external_idstring=None,
-            branch=None, repository='', project='', builderNames=None,
-            properties=None):
+    def fake_addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
+            properties=None, builderNames=None):
         properties = properties.asDict()
-        self.addBuildsetCalls.append(('addBuildsetForLatest', locals()))
-        self.addBuildsetCalls[-1][1].pop('self')
-        return self._addBuildsetReturnValue(builderNames)
-
-    def fake_addBuildsetForSourceStampDetails(self, reason='',
-            external_idstring=None, branch=None, repository='', project='',
-            revision=None, builderNames=None, properties=None):
-        properties = properties.asDict()
-        self.addBuildsetCalls.append(('addBuildsetForSourceStampDetails',
-                                            locals()))
-        self.addBuildsetCalls[-1][1].pop('self')
-        return self._addBuildsetReturnValue(builderNames)
-
-    def fake_addBuildsetForSourceStampSetDetails(self, reason, sourcestamps,
-            properties, builderNames=None):
-        properties = properties.asDict()
-        self.addBuildsetCalls.append(('addBuildsetForSourceStampSetDetails',
+        self.assertIsInstance(sourcestamps, list,
+                "addBuildsetForSourceStamps requires a list")
+        sourcestamps.sort()
+        self.addBuildsetCalls.append(('addBuildsetForSourceStampsWithDefaults',
                                             locals()))
         self.addBuildsetCalls[-1][1].pop('self')
         return self._addBuildsetReturnValue(builderNames)
@@ -169,26 +151,15 @@ class SchedulerMixin(interfaces.InterfaceTests):
         self.addBuildsetCalls[-1][1].pop('self')
         return self._addBuildsetReturnValue(builderNames)
 
-    def fake_addBuildsetForSourceStamp(self, ssid=None, setid=None, reason='',
+    def fake_addBuildsetForSourceStamps(self, sourcestamps=[], reason='',
             external_idstring=None, properties=None, builderNames=None):
-        self.assertEqual(ssid, None) # this isn't used in Buildbot code
-
-        if self.addedSourceStamps:
-            # replace the setid with the corresponding set of sourcestamps,
-            # temporarily until sourcestamps are in the data API
-            sourcestamps = [
-                ss.copy() for ss in self.addedSourceStamps
-                if ss['sourcestampsetid'] == setid
-            ]
-            for ss in sourcestamps:
-                del ss['sourcestampsetid']
-            kwargs = dict(sourcestamps=sourcestamps)
-        else:
-            kwargs = dict(setid=setid)
-
         properties=properties.asDict() if properties is not None else None
+        self.assertIsInstance(sourcestamps, list,
+                "addBuildsetForSourceStamps requires a list")
+        sourcestamps.sort()
         self.addBuildsetCalls.append(('addBuildsetForSourceStamp',
             dict(reason=reason, external_idstring=external_idstring,
-                properties=properties, builderNames=builderNames, **kwargs)))
+                properties=properties, builderNames=builderNames,
+                sourcestamps=sourcestamps)))
 
         return self._addBuildsetReturnValue(builderNames)

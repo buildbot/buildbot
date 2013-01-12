@@ -83,7 +83,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         are hard-coded to correspond to those in do_test."""
         msg = dict(
                 bsid=44,
-                sourcestampsetid=1093,
+                sourcestamps=[], # blah blah blah
                 submitted_at=SUBMITTED_AT_TIME,
                 complete=complete,
                 complete_at=COMPLETE_AT_TIME if complete else None,
@@ -115,20 +115,19 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         # announce a buildset with a matching name..
         self.db.insertTestData([
-            fakedb.SourceStampSet(id=1093),
-            fakedb.SourceStamp(id=93, sourcestampsetid=1093, revision='555',
+            fakedb.SourceStamp(id=93, revision='555',
                             branch='master', project='proj', repository='repo',
                             codebase = 'cb'),
             fakedb.Buildset(
                     id=44,
-                    sourcestampsetid=1093,
                     submitted_at=SUBMITTED_AT_TIME,
                     complete=False,
                     complete_at=None,
                     external_idstring=None,
                     reason=u'Because',
                     results=-1,
-                )
+                ),
+            fakedb.BuildsetSourceStamp(buildsetid=44, sourcestampid=93),
             ])
         self.sendBuildsetMessage(scheduler_name=scheduler_name, complete=False)
 
@@ -150,7 +149,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
                     external_idstring=None,
                     properties=None,
                     reason=u'downstream',
-                    setid=1093)),
+                    sourcestamps=[93])),
             ])
         else:
             self.assertEqual(self.addBuildsetCalls, [])
@@ -173,9 +172,10 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         # insert some state, with more bsids than exist
         self.db.insertTestData([
-            fakedb.SourceStampSet(id=99),
-            fakedb.Buildset(id=11, sourcestampsetid=99),
-            fakedb.Buildset(id=13, sourcestampsetid=99),
+            fakedb.SourceStamp(id=1234),
+            fakedb.Buildset(id=11),
+            fakedb.Buildset(id=13),
+            fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=1234),
             fakedb.Object(id=OBJECTID),
             fakedb.ObjectState(objectid=OBJECTID,
                 name='upstream_bsids', value_json='[11,12,13]'),
@@ -183,7 +183,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         # check return value (missing 12)
         self.assertEqual((yield sched._getUpstreamBuildsets()),
-                [(11, 99, False, -1), (13, 99, False, -1)])
+                [(11, [], False, -1), (13, [1234], False, -1)])
 
         # and check that it wrote the correct value back to the state
         self.db.state.assertState(OBJECTID, upstream_bsids=[11, 13])

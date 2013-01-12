@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import hashlib
 import sqlalchemy as sa
 from twisted.internet import reactor
 from buildbot.util import epoch2datetime
@@ -32,7 +31,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 whereclause=(tbl.c.name == name),
                 insert_values=dict(
                     name=name,
-                    name_hash=hashlib.sha1(name).hexdigest(),
+                    name_hash=self.hashColumns(name),
                     active=0, # initially inactive
                     last_active=_reactor.seconds()
                     ))

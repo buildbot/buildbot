@@ -24,12 +24,10 @@ from twisted.internet import defer, reactor
 from buildbot import interfaces, config
 from buildbot.status.progress import Expectations
 from buildbot.status.builder import RETRY
-from buildbot.status.buildrequest import BuildRequestStatus
-from buildbot.process.properties import Properties
 from buildbot.process import buildrequest, slavebuilder
 from buildbot.process.slavebuilder import BUILDING
 from buildbot.db import buildrequests
-from buildbot.util import epoch2datetime
+from buildbot.util import epoch2datetime, ascii2unicode
 
 class Builder(config.ReconfigurableServiceMixin,
               pb.Referenceable,
@@ -120,6 +118,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         @returns: datetime instance or None, via Deferred
         """
+        # TODO: use data API here
         unclaimed = yield self.master.db.buildrequests.getBuildRequests(
                         buildername=self.name, claimed=False)
 
@@ -260,17 +259,8 @@ class Builder(config.ReconfigurableServiceMixin,
 
     @defer.inlineCallbacks
     def _startBuildFor(self, slavebuilder, buildrequests):
-        """Start a build on the given slave.
-        @param build: the L{base.Build} to start
-        @param sb: the L{SlaveBuilder} which will host this build
-
-        @return: (via Deferred) boolean indicating that the build was
-        succesfully started.
-        """
-
-        # as of the Python versions supported now, try/finally can't be used
-        # with a generator expression.  So instead, we push cleanup functions
-        # into a list so that, at any point, we can abort this operation.
+        # Build a stack of cleanup functions so that, at any point, we can
+        # abort this operation and unwind the commitments made so far.
         cleanups = []
         def run_cleanups():
             try:
@@ -572,19 +562,18 @@ class Builder(config.ReconfigurableServiceMixin,
                 continue
 
             # the claim was successful, so publish a message for each brid
-            masterid = yield self.master.getObjectId()
-
             for brdict in brdicts:
                 key = ('buildrequest', str(brdict['buildsetid']),
-                       str(brdict['buildername']), str(brdict['brid']),
-                       'claimed')
+                       str(-1), str(brdict['brid']), 'claimed')
                 msg = dict(
                     bsid=brdict['buildsetid'],
                     brid=brdict['brid'],
                     buildername=brdict['buildername'],
                     builderid=-1,
-                    claimed_at=claimed_at_epoch,
-                    masterid=masterid)
+                    # TODO:
+                    #claimed_at=claimed_at_epoch,
+                    #masterid=masterid)
+                    )
                 self.master.mq.produce(key, msg)
 
             # claim was successful, so initiate a build for this set of
@@ -682,33 +671,11 @@ class Builder(config.ReconfigurableServiceMixin,
     def _defaultMergeRequestFn(self, req1, req2):
         return req1.canBeMergedWith(req2)
 
-    @defer.inlineCallbacks
     def _mergeRequests(self, breq, unclaimed_requests, mergeRequests_fn):
         """Use C{mergeRequests_fn} to merge C{breq} against
         C{unclaimed_requests}, where both are build request dictionaries"""
-        # short circuit if there is no merging to do
-        if not mergeRequests_fn or len(unclaimed_requests) == 1:
-            defer.returnValue([ breq ])
-            return
-
-        # we'll need BuildRequest objects, so get those first
-        unclaimed_request_objects = yield defer.gatherResults(
-                [ self._brdictToBuildRequest(brdict)
-                  for brdict in unclaimed_requests ])
-
-        breq_object = unclaimed_request_objects[unclaimed_requests.index(breq)]
-
-        # gather the mergeable requests
-        merged_request_objects = []
-        for other_breq_object in unclaimed_request_objects:
-            if (yield defer.maybeDeferred(
-                        lambda : mergeRequests_fn(self, breq_object,
-                                                  other_breq_object))):
-                merged_request_objects.append(other_breq_object)
-
-        # convert them back to brdicts and return
-        merged_requests = [ br.brdict for br in merged_request_objects ]
-        defer.returnValue(merged_requests)
+        # TODO: merging is not supported in nine for the moment
+        return defer.succeed([ breq ])
 
     def _brdictToBuildRequest(self, brdict):
         """
@@ -745,9 +712,9 @@ class Builder(config.ReconfigurableServiceMixin,
     def _msg_buildrequests_unclaimed(self, breqs):
         for breq in breqs:
             bsid = breq.bsid
-            buildername = breq.buildername
+            buildername = ascii2unicode(breq.buildername)
             brid = breq.id
-            key = ('buildrequest', str(bsid), str(buildername),
+            key = ('buildrequest', str(bsid), str(-1),
                                                 str(brid), 'unclaimed')
             msg = dict(brid=brid, bsid=bsid, buildername=buildername,
                     builderid=-1)
@@ -759,54 +726,6 @@ class BuilderControl:
     def __init__(self, builder, control):
         self.original = builder
         self.control = control
-
-    def submitBuildRequest(self, ss, reason, props=None):
-        d = ss.getSourceStampSetId(self.control.master)
-        def add_buildset(sourcestampsetid):
-            return self.control.master.addBuildset(
-                    builderNames=[self.original.name],
-                    sourcestampsetid=sourcestampsetid, reason=reason, properties=props)
-        d.addCallback(add_buildset)
-        def get_brs((bsid,brids)):
-            brs = BuildRequestStatus(self.original.name,
-                                     brids[self.original.name],
-                                     self.control.master.status)
-            return brs
-        d.addCallback(get_brs)
-        return d
-
-    @defer.inlineCallbacks
-    def rebuildBuild(self, bs, reason="<rebuild, no reason given>", extraProperties=None):
-        if not bs.isFinished():
-            return
-
-        # Make a copy of the properties so as not to modify the original build.
-        properties = Properties()
-        # Don't include runtime-set properties in a rebuild request
-        properties.updateFromPropertiesNoRuntime(bs.getProperties())
-        if extraProperties is None:
-            properties.updateFromProperties(extraProperties)
-
-        properties_dict = dict((k,(v,s)) for (k,v,s) in properties.asList())
-        ssList = bs.getSourceStamps(absolute=True)
-        
-        if ssList:
-            sourcestampsetid = yield  ssList[0].getSourceStampSetId(self.control.master)
-            dl = []
-            for ss in ssList[1:]:
-                # add defered to the list
-                dl.append(ss.addSourceStampToDatabase(self.control.master, sourcestampsetid))
-            yield defer.gatherResults(dl)
-
-            bsid, brids = yield self.control.master.addBuildset(
-                    builderNames=[self.original.name],
-                    sourcestampsetid=sourcestampsetid, 
-                    reason=reason, 
-                    properties=properties_dict)
-            defer.returnValue((bsid, brids))
-        else:
-            log.msg('Cannot start rebuild, rebuild has no sourcestamps for a new build')
-            defer.returnValue(None)
 
     @defer.inlineCallbacks
     def getPendingBuildRequestControls(self):
