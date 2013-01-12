@@ -2263,6 +2263,19 @@ it can be seen as part of the status output. ::
     from buildbot.steps.python_twisted import Trial
     f.addStep(Trial(tests='petmail.test'))
 
+Trial has the ability to run tests on several workers in parallel (beginning
+with Twisted 12.3.0).  Set ``jobs`` to the number of workers you want to
+run.  Note that running :command:`trial` in this way will create multiple log
+files (named :file:`test.N.log`, :file:`err.N.log` and :file:`out.N.log`
+starting with ``N=0``) rather than a single :file:`test.log`.
+
+This step takes the following arguments:
+
+``jobs``
+   (optional) Number of slave-resident workers to use when running the tests.
+   Defaults to 1 worker.  Only works with Twisted>=12.3.0.
+   
+
 .. bb:step:: RemovePYCs
 
 RemovePYCs
