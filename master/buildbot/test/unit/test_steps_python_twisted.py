@@ -139,7 +139,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         included since Twisted 12.3.0), and make corresponding changes to
         logfiles.
         """
-        step = self.setupStep(python_twisted.Trial(workdir='build',
+        self.setupStep(python_twisted.Trial(workdir='build',
                                     tests = 'testname',
                                     testpath = None,
                                     jobs=2))
