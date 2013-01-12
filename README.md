@@ -34,6 +34,8 @@ The release notes should give detailed upgrade instructions wherever the changes
 
 ## Requirements ##
 
+For users, Buildbot's requirements will not change.
+
 Buildbot-0.8.x requires:
 
  * Python (obviously)
@@ -48,6 +50,7 @@ but it's a little more complicated:
 
  * If you want to do web *development*, or *build* the buildbot-www package, you'll need Node and Java.
    It's a Dojo app, and that's what Dojo requires.
+   Future versions of Dojo may only require node.
    We've taken pains to not make either a requirement for users - you can simply 'pip install' buildbot-www and be on your way.
    This is the case even if you're hacking on the Python side of Buildbot.
  * For a single master, nothing else is required.
@@ -74,6 +77,12 @@ Each of these status displays will need to be rewritten based on the Data API.
 
 ## Data API ##
 
+### Tests ###
+
+* Check that all Data API update methods have fake implementations, and that those fake implementations have the same signature as the real implementation.
+
+### Remaining Resource Types ###
+
 For each resource type, we'll need the following (based on "Adding Resource Types" in ``master/docs/developer/data.rst``).  use this list as a template in the list of types below when you begin a new type.
 
 * A resource-type module and class, with unit tests
@@ -86,8 +95,6 @@ For each resource type, we'll need the following (based on "Adding Resource Type
 * Integrate with Buildbot: process classes should use the data API and not the DB or MQ APIs.
 
 It's safe to leave tasks that have significant prerequisites - particularly the last point - commented as "TODO" in the source, with corresponding items added here.
-
-### Remaining Resource Types ###
 
 The outstanding resource types are:
 
