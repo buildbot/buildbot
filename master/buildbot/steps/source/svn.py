@@ -45,7 +45,7 @@ class SVN(Source):
         self.extra_args = extra_args
         self.keep_on_purge = keep_on_purge or []
         self.depth = depth
-        self.method=method
+        self.method = method
         self.mode = mode
         Source.__init__(self, **kwargs)
         errors = []
@@ -256,7 +256,7 @@ class SVN(Source):
         svnversion_dir = self.workdir
         if self.mode == 'full' and self.method == 'export':
             svnversion_dir = 'source'
-        cmd = buildstep.RemoteShellCommand(svnversion_dir, ['svn', 'info'],
+        cmd = buildstep.RemoteShellCommand(svnversion_dir, ['svn', 'info', '--xml'],
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,
@@ -265,9 +265,14 @@ class SVN(Source):
         d = self.runCommand(cmd)
         def _setrev(_):
             stdout = cmd.stdout
-            match = re.search('Revision:(.+?)\n', stdout)
             try:
-                revision = int(match.group(1))
+                stdout_xml = xml.dom.minidom.parseString(stdout)
+            except xml.parsers.expat.ExpatError:
+                log.err("Corrupted xml, aborting step")
+                raise buildstep.BuildStepFailed()
+            match = stdout_xml.getElementsByTagName('entry')[0].attributes['revision'].value
+            try:
+                revision = int(match)
             except (AttributeError, ValueError):
                 msg =("SVN.parseGotRevision unable to parse output "
                       "of svnversion: '%s'" % stdout)
