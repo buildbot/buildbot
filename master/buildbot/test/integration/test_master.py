@@ -58,6 +58,11 @@ class RunMaster(dirs.DirsMixin, unittest.TestCase):
         self.failIf(mock_reactor.stop.called,
             "startService tried to stop the reactor; check logs")
 
+        # hang out for a fraction of a second, to let startup processes run
+        d = defer.Deferred()
+        reactor.callLater(0.01, d.callback, None)
+        yield d
+
         # stop the service
         yield m.stopService()
 
