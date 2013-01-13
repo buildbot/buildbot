@@ -17,7 +17,7 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer, task
 from buildbot.data import changes, exceptions
-from buildbot.test.util import validation, endpoint
+from buildbot.test.util import validation, endpoint, interfaces
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process.users import users
 
@@ -128,12 +128,22 @@ class Changes(endpoint.EndpointMixin, unittest.TestCase):
                 expected_filter=('change', None, 'new'))
 
 
-class ChangeResourceType(unittest.TestCase):
+class ChangeResourceType(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
                                             wantData=True, testcase=self)
         self.rtype = changes.ChangeResourceType(self.master)
+
+    def test_signature_addChange(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.addChange, # fake
+            self.rtype.addChange) # real
+        def addChange(self, files=None, comments=None, author=None,
+            revision=None, when_timestamp=None, branch=None, category=None,
+            revlink=u'', properties={}, repository=u'', codebase=None,
+            project=u'', src=None):
+            pass
 
     def do_test_addChange(self, kwargs,
             expectedRoutingKey, expectedMessage, expectedRow,

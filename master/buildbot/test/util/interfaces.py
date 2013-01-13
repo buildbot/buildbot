@@ -19,7 +19,7 @@ class InterfaceTests(object):
 
     # assertions
 
-    def assertArgSpecMatches(self, actual, template=None):
+    def assertArgSpecMatches(self, *actualMethods):
         """Usage::
 
             @self.assertArgSpecMatches(obj.methodUnderTest)
@@ -56,17 +56,15 @@ class InterfaceTests(object):
                 return func
 
         def wrap(template):
-            actual_argspec = filter(
-                    inspect.getargspec(remove_decorators(actual)))
-            template_argspec = filter(
-                    inspect.getargspec(remove_decorators(template)))
-            if actual_argspec != template_argspec:
-                msg = "Expected: %s; got: %s" % (
-                    inspect.formatargspec(*template_argspec),
-                    inspect.formatargspec(*actual_argspec))
-                self.fail(msg)
+            for actual in actualMethods:
+                actual_argspec = filter(
+                        inspect.getargspec(remove_decorators(actual)))
+                template_argspec = filter(
+                        inspect.getargspec(remove_decorators(template)))
+                if actual_argspec != template_argspec:
+                    msg = "Expected: %s; got: %s" % (
+                        inspect.formatargspec(*template_argspec),
+                        inspect.formatargspec(*actual_argspec))
+                    self.fail(msg)
             return template  # just in case it's useful
-        if template:
-            wrap(template)
-        else:
-            return wrap
+        return wrap

@@ -18,7 +18,7 @@ from twisted.trial import unittest
 from twisted.internet import task, defer
 from buildbot import interfaces
 from buildbot.data import buildsets
-from buildbot.test.util import validation, endpoint
+from buildbot.test.util import validation, endpoint, interfaces as util_interfaces
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.status.results import SUCCESS, FAILURE
 
@@ -124,11 +124,11 @@ class Buildsets(endpoint.EndpointMixin, unittest.TestCase):
 
 
 
-class BuildsetResourceType(unittest.TestCase):
+class BuildsetResourceType(util_interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(wantMq=True, wantDb=True,
-                                        wantData=True, testcase=self)
+        self.master = fakemaster.make_master(testcase=self,
+                wantMq=True, wantDb=True, wantData=True)
         self.rtype = buildsets.BuildsetResourceType(self.master)
         return self.master.db.insertTestData([
             fakedb.SourceStamp(id=234, branch='br', codebase='cb',
@@ -139,6 +139,14 @@ class BuildsetResourceType(unittest.TestCase):
     SS234_DATA = {'branch': u'br', 'codebase': u'cb', 'patch': None,
                   'project': u'pr', 'repository': u'rep', 'revision': u'rev',
                   'created_at': 89834834, 'ssid': 234}
+
+    def test_signature_addBuildset(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.addBuildset, # fake
+            self.rtype.addBuildset) # real
+        def addBuildset(self, scheduler=None, sourcestamps=[], reason='',
+            properties={}, builderNames=[], external_idstring=None):
+            pass
 
     def do_test_addBuildset(self, kwargs, expectedReturn,
             expectedMessages, expectedBuildset):
@@ -196,7 +204,6 @@ class BuildsetResourceType(unittest.TestCase):
                  results=results, submitted_at=submitted_at,
                  sourcestamps=[ ssmap[ssid] for ssid in sourcestampids ]))
 
-
     def test_addBuildset_two_builderNames(self):
         class FakeSched(object):
             implements(interfaces.IScheduler)
@@ -235,6 +242,13 @@ class BuildsetResourceType(unittest.TestCase):
                 external_idstring=u'extid')
         return self.do_test_addBuildset(kwargs,
                 expectedReturn, expectedMessages, expectedBuildset)
+
+    def test_signature_maybeBuildsetComplete(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.maybeBuildsetComplete, # fake
+            self.rtype.maybeBuildsetComplete) # real
+        def maybeBuildsetComplete(self, bsid):
+            pass
 
     @defer.inlineCallbacks
     def do_test_maybeBuildsetComplete(self,

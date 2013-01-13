@@ -18,7 +18,7 @@ from twisted.trial import unittest
 from twisted.internet import task, defer
 from buildbot.data import masters, builders
 from buildbot.util import epoch2datetime
-from buildbot.test.util import validation, endpoint
+from buildbot.test.util import validation, endpoint, interfaces
 from buildbot.test.fake import fakemaster, fakedb
 
 SOMETIME = 1349016870
@@ -139,7 +139,7 @@ class Masters(endpoint.EndpointMixin, unittest.TestCase):
                 expected_filter=('master', None, None))
 
 
-class MasterResourceType(unittest.TestCase):
+class MasterResourceType(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
@@ -151,6 +151,13 @@ class MasterResourceType(unittest.TestCase):
                             lambda masterid : defer.succeed(None)
 
         self.rtype = masters.MasterResourceType(self.master)
+
+    def test_signature_masterActive(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.masterActive, # fake
+            self.rtype.masterActive) # real
+        def masterActive(self, name, masterid):
+            pass
 
     @defer.inlineCallbacks
     def test_masterActive(self):
@@ -192,6 +199,13 @@ class MasterResourceType(unittest.TestCase):
         ])
         self.master.mq.productions = []
 
+    def test_signature_masterStopped(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.masterStopped, # fake
+            self.rtype.masterStopped) # real
+        def masterStopped(self, name, masterid):
+            pass
+
     @defer.inlineCallbacks
     def test_masterStopped(self):
         clock = task.Clock()
@@ -220,6 +234,13 @@ class MasterResourceType(unittest.TestCase):
 
         yield self.rtype.masterStopped(name=u'aname', masterid=13)
         self.assertEqual(self.master.mq.productions, [])
+
+    def test_signature_expireMasters(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.expireMasters, # fake
+            self.rtype.expireMasters) # real
+        def expireMasters(self):
+            pass
 
     @defer.inlineCallbacks
     def test_expireMasters(self):

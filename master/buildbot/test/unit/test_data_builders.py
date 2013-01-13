@@ -17,7 +17,7 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.data import builders
-from buildbot.test.util import validation, endpoint
+from buildbot.test.util import validation, endpoint, interfaces
 from buildbot.test.fake import fakemaster, fakedb
 
 class Builder(endpoint.EndpointMixin, unittest.TestCase):
@@ -123,16 +123,23 @@ class Builders(endpoint.EndpointMixin, unittest.TestCase):
                 expected_filter=('builder', None, None))
 
 
-class BuilderResourceType(unittest.TestCase):
+class BuilderResourceType(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(wantMq=True, wantDb=True,
-                                                testcase=self)
+        self.master = fakemaster.make_master(testcase=self,
+                wantMq=True, wantDb=True, wantData=True)
         self.rtype = builders.BuildersResourceType(self.master)
         return self.master.db.insertTestData([
             fakedb.Master(id=13),
             fakedb.Master(id=14),
         ])
+
+    def test_signature_updateBuilderList(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.updateBuilderList, # fake
+            self.rtype.updateBuilderList) # real
+        def updateBuilderList(self, masterid, builderNames):
+            pass
 
     @defer.inlineCallbacks
     def test_updateBuilderList(self):
@@ -180,7 +187,7 @@ class BuilderResourceType(unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_masterDeactivated(self):
+    def test__masterDeactivated(self):
         # this method just calls updateBuilderList, so test that.
         self.rtype.updateBuilderList = mock.Mock(
                 spec=self.rtype.updateBuilderList)

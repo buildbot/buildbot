@@ -95,6 +95,9 @@ class FakeUpdates(object):
         self.masterActive = False
         return defer.succeed(None)
 
+    def expireMasters(self):
+        return defer.succeed(None)
+
     @defer.inlineCallbacks
     def addBuildset(self, scheduler=None, sourcestamps=[], reason='',
             properties={}, builderNames=[], external_idstring=None):
@@ -131,6 +134,9 @@ class FakeUpdates(object):
         for n in builderNames:
             self.testcase.assertIsInstance(n, unicode)
         self.builderNames = builderNames
+        return defer.succeed(None)
+
+    def masterDeactivated(self, masterid):
         return defer.succeed(None)
 
 

@@ -96,6 +96,8 @@ All of the test methods are defined here, segregated into tests that all impleme
 The ``test_signature_someMethod`` test above illustrates the :py:func:`buildbot.test.util.interfaces.assertArgSpecMatches` decorator, which can be used to compare the argument specification of a callable with a reference signature conveniently written as a nested function.
 Wherever possible, prefer to add tests to the ``Tests`` class, even if this means testing one method (e.g,. ``setFoo``) in terms of another (e.g., ``getFoo``).
 
+The ``assertArgSpecMatches`` method can take multiple methods to test; it will check each one in turn.
+
 At the bottom of the test module, a subclass is created for each implementation, implementing the setup methods that were stubbed out in the parent classes::
 
     class TestFakeThing(unittest.TestCase, Tests):
