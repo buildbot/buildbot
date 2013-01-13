@@ -141,6 +141,8 @@ Tasks:
 
 * ``addBuildset`` currently sends messages about buildrequests directly.
   It should, instead, coordinate with the buildrequests resource type to do so.
+* Similarly, `addBuildset` often creates source stamps.
+  Messages should be sent when this occurs.
 * Add support for uids to the change resource type
 
 ### Misc Data API Work ###
@@ -153,6 +155,16 @@ Tasks:
 * Move the methods of BuilderControl to update methods of the Builder resouce type (or other places as appropriate), and add control methods where appropriate.
   In particular, implement `rebuildBuild` properly.
 * Use DateTimes everywhere
+* Ensure that all id's are named using their full name (e.g., ``sourcestampid`` and not ``ssid``).
+  This includes the self-id (so, ``buildsetid``, not ``id``, is a field of a buildset resource).
+* Ensure that resources are consistent in their handling of embedded objects vs. ids/links.
+  For example, a buildset includes its component sourcestamps.
+  Does a build request include its parent buildset (and consequently the source stamps)?
+  Does this differ between messages and resources?
+* Create links with relations (`rel=..`).
+* Assign `urn`s to objects, and use those to correlate messages with objects.
+* Define the proper means of synchronizing messages and resources for each resource type.
+  This information should be sufficient to reliably predict resource contents based on only on messages.
 
 ## Status Rewrites ##
 
