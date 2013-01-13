@@ -72,8 +72,8 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
             complete = bool(options['complete']) # TODO: booleans from strings?
         d = self.master.db.buildsets.getBuildsets(complete=complete)
         @d.addCallback
-        def db2data(list):
-            d = defer.DeferredList([ self.db2data(bs) for bs in list ],
+        def db2data(buildsets):
+            d = defer.DeferredList([ self.db2data(bs) for bs in buildsets ],
                     fireOnOneErrback=True, consumeErrors=True)
             @d.addCallback
             def getResults(res):
