@@ -43,3 +43,44 @@ Masters
 
         This path selects a specific master, identified by ID.
         The ``:builderid`` field is ignored, since ``:masterid`` uniquely identifies the master.
+
+
+Updates
+.......
+
+The updates section is available at `self.master.data.updates`, and contains a number of ad-hoc methods needed by the process modules.
+
+.. note:
+    The update methods are implemented in resource type classes, but through some initialization-time magic, all appear as attributes of ``self.master.data.updates``.
+
+All update methods return a Deferred.
+
+.. py:class:: buildbot.data.changes.MasterResourceType
+
+    .. py:method:: masterActive(name, masterid)
+
+        :param unicode name: the name of this master (generally ``hostname:basedir``)
+        :param integer masterid: this master's master ID
+        :returns: Deferred
+
+        Mark this master as still active.
+        This method should be called at startup and at least once per minute.
+        The master ID is acquired directly from the database early in the master startup process.
+
+    .. py:method:: expireMasters()
+
+        :returns: Deferred
+
+        Scan the database for masters that have not checked in for ten minutes.
+        This method should be called about once per minute.
+
+    .. py:method:: masterStopped(name, masterid)
+
+        :param unicode name: the name of this master
+        :param integer masterid: this master's master ID
+        :returns: Deferred
+
+        Mark this master as inactive.
+        Masters should call this method before completing an expected shutdown.
+        This method will take care of deactivating or removing configuration resources like builders and schedulers as well.
+
