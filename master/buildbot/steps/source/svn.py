@@ -267,19 +267,24 @@ class SVN(Source):
             stdout = cmd.stdout
             try:
                 stdout_xml = xml.dom.minidom.parseString(stdout)
+                match = stdout_xml.getElementsByTagName('entry')[0].attributes['revision'].value
             except xml.parsers.expat.ExpatError:
-                log.err("Corrupted xml, aborting step")
+                msg = "Corrupted xml, aborting step"
+                log.err(None, msg)
+                self.stdio_log.addHeader(msg)
                 raise buildstep.BuildStepFailed()
-            match = stdout_xml.getElementsByTagName('entry')[0].attributes['revision'].value
             try:
                 revision = int(match)
             except (AttributeError, ValueError):
                 msg =("SVN.parseGotRevision unable to parse output "
                       "of svnversion: '%s'" % stdout)
                 log.msg(msg)
+                self.stdio_log.addHeader(msg)
                 raise buildstep.BuildStepFailed()
 
-            log.msg("Got SVN revision %s" % (revision, ))
+            msg = "Got SVN revision %s" % (revision, )
+            log.msg(msg)
+            self.stdio_log.addHeader(msg)
             self.updateSourceProperty('got_revision', str(revision))
             return 0
         d.addCallback(lambda _: _setrev(cmd.rc))
