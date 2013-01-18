@@ -10,3 +10,7 @@ externally-maintained code should be written.
     data
     db
     mq
+    rtype-master
+    rtype-builder
+    rtype-change
+    rtype-buildset
