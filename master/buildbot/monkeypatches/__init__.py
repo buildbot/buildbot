@@ -62,12 +62,19 @@ def patch_sqlalchemy2189():
         from buildbot.monkeypatches import sqlalchemy2189
         sqlalchemy2189.patch()
 
+def patch_gatherResults():
+    if twisted.version < versions.Version('twisted', 11, 1, 0):
+        from buildbot.monkeypatches import gatherResults
+        gatherResults.patch()
+
+
 def patch_all(for_tests=False):
     patch_bug4881()
     patch_bug4520()
     patch_bug5079()
     patch_sqlalchemy2364()
     patch_sqlalchemy2189()
+    patch_gatherResults()
 
     if for_tests:
         from buildbot.monkeypatches import servicechecks
