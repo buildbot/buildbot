@@ -44,14 +44,6 @@ Changes
 
         This path selects a specific change, identified by ID.
 
-Updates
-.......
-
-The updates section is available at `self.master.data.updates`, and contains a number of ad-hoc methods needed by the process modules.
-
-.. note:
-    The update methods are implemented in resource type classes, but through some initialization-time magic, all appear as attributes of ``self.master.data.updates``.
-
 All update methods return a Deferred.
 
 .. py:class:: buildbot.data.changes.ChangeResourceType

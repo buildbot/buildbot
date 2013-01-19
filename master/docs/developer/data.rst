@@ -123,6 +123,16 @@ Within the buildmaster process, the root of the data API is available at `self.m
         These attributes allow resource types to access one another for purposes of coordination.
         They are *not* intended for external access -- all external access to the data API should be via the methods above or update methods.
 
+Updates
+.......
+
+The updates section is available at `self.master.data.updates`, and contains a number of ad-hoc methods needed by the process modules.
+
+.. note:
+    The update methods are implemented in resource type classes, but through some initialization-time magic, all appear as attributes of ``self.master.data.updates``.
+
+The update methods are found in the resource type pages.
+
 Links
 .....
 
