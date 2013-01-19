@@ -75,7 +75,6 @@ The "process" part of Buildbot is the part that coordinates all of the other par
 ## Documentation ##
 
 * Document naming conventions (below) in the style guide, make sure everything adheres
-* Put update methods in the appropriate resource-type files, rather than in ``data.rst``
 * Move data API how-to guides into a separate file
 
 ### Naming Conventions ###

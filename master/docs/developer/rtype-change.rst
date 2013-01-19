@@ -43,3 +43,35 @@ Changes
         :pathkey integer changeid: the ID of the change
 
         This path selects a specific change, identified by ID.
+
+All update methods return a Deferred.
+
+.. py:class:: buildbot.data.changes.ChangeResourceType
+
+    .. py:method:: addChange(files=None, comments=None, author=None, revision=None, when_timestamp=None, branch=None, category=None, revlink='', properties={}, repository='', codebase=None, project='', src=None)
+
+        :param files: a list of filenames that were changed
+        :type files: list of unicode strings
+        :param unicode comments: user comments on the change
+        :param unicode author: the author of this change
+        :param unicode revision: the revision identifier for this change
+        :param integer when_timestamp: when this change occurred (seconds since the epoch), or the current time if None
+        :param unicode branch: the branch on which this change took place
+        :param unicode category: category for this change
+        :param string revlink: link to a web view of this revision
+        :param properties: properties to set on this change.  Note that the property source is *not* included in this dictionary.
+        :type properties: dictionary with unicode keys and simple values (JSON-able).
+        :param unicode repository: the repository in which this change took place
+        :param unicode project: the project this change is a part of
+        :param unicode src: source of the change (vcs or other)
+        :returns: the ID of the new change, via Deferred
+
+        Add a new change to Buildbot.
+        This method is the interface between change sources and the rest of Buildbot.
+
+        All parameters should be passed as keyword arguments.
+
+        All parameters labeled 'unicode' must be unicode strings and not bytestrings.
+        Filenames in ``files``, and property names, must also be unicode strings.
+        This is tested by the fake implementation.
+

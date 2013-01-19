@@ -43,3 +43,39 @@ Buildsets
 
         .. todo:
             Consuming from this path selects and :bb:event:`buildset.$bsid.complete` events for this buildset.
+
+All update methods return a Deferred.
+
+.. py:class:: buildbot.data.changes.BuildsetResourceType
+
+    .. py:method:: addBuildset(scheduler=None, sourcestamps=[], reason='', properties={}, builderNames=[], external_idstring=None)
+
+        :param string scheduler: the name of the scheduler creating this buildset
+        :param list sourcestamps: sourcestamps for the new buildset; see below
+        :param unicode reason: the reason for this build
+        :param unicode reason: the reason for this build
+        :param properties: properties to set on this buildset
+        :type properties: dictionary with unicode keys and (source, property value) values
+        :param list builderNames: names of the builders for which build requests should be created
+        :param unicode external_idstring: arbitrary identifier to recognize this buildset later
+        :returns: (buildset id, dictionary mapping builder names to build request ids) via Deferred
+
+        .. warning:
+
+            The ``scheduler`` parameter will be replaced with a ``schedulerid`` parameter in future releases.
+            The ``builderNames`` parameter will be replaced with a ``builderIds`` parameter in future releases.
+
+        Create a new buildset and corresponding buildrequests based on the given parameters.
+        This is the low-level interface for scheduling builds.
+
+        Each sourcestamp in the list of sourcestamps can be given either as an integer, assumed to be a sourcestamp ID, or a dictionary of keyword arguments to be passed to :py:meth:`~buildbot.db.sourcestamps.SourceStampsConnectorComponent.findSourceStampId`.
+
+    .. py:method:: maybeBuildsetComplete(bsid)
+
+        :param integer bsid: buildset that may be complete
+        :returns: Deferred
+
+        This method should be called when a build request is finished.
+        It checks the given buildset to see if all of its buildrequests are finished.
+        If so, it updates the status of the buildset and send the appropriate messages.
+
