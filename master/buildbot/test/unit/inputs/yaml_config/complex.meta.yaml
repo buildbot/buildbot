@@ -1,0 +1,25 @@
+root:
+  type: dict
+  kids:
+     slaves:
+        type: listofdicts
+        name: Build Slaves
+        kids:
+          caps:
+            type: dict
+            name: Capabilities
+            kids:
+                builder:
+                    name: Used by builder
+                    type: setofstrings
+                    values: [ autolint, build ]
+                    required: true
+                location:
+                    type: location
+                    required: true
+                speed:
+                    type: string
+                    default: fast
+                    values: [fast,slow]
+          slaves:
+            type: setofstrings
