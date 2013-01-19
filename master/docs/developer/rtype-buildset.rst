@@ -44,7 +44,10 @@ Buildsets
         .. todo:
             Consuming from this path selects and :bb:event:`buildset.$bsid.complete` events for this buildset.
 
-All update methods return a Deferred.
+Update Methods
+--------------
+
+All update methods are available as attributes of ``master.data.updates``.
 
 .. py:class:: buildbot.data.changes.BuildsetResourceType
 

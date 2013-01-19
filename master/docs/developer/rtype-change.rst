@@ -44,7 +44,10 @@ Changes
 
         This path selects a specific change, identified by ID.
 
-All update methods return a Deferred.
+Update Methods
+--------------
+
+All update methods are available as attributes of ``master.data.updates``.
 
 .. py:class:: buildbot.data.changes.ChangeResourceType
 

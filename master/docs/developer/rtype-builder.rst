@@ -44,7 +44,10 @@ Builders
         This path selects a specific builder, identified by ID.
         If the given builder is not running on the given master, this path returns nothing.
 
-All update methods return a Deferred.
+Update Methods
+--------------
+
+All update methods are available as attributes of ``master.data.updates``.
 
 .. py:class:: buildbot.data.changes.BuilderResourceType
 

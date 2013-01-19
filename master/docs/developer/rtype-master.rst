@@ -44,7 +44,10 @@ Masters
         This path selects a specific master, identified by ID.
         The ``:builderid`` field is ignored, since ``:masterid`` uniquely identifies the master.
 
-All update methods return a Deferred.
+Update Methods
+--------------
+
+All update methods are available as attributes of ``master.data.updates``.
 
 .. py:class:: buildbot.data.changes.MasterResourceType
 
