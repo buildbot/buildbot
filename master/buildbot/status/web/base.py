@@ -122,7 +122,7 @@ def path_to_root(request):
 
 def path_to_authfail(request):
     ret_path = path_to_root(request) + "authfail" + "?originalPage="
-    if 'authfail' in request.URLPath():
+    if request.path.startswith('/authfail'):
         ret_path += request.args['originalPage']
     else:
         ret_path += request.URLPath()
