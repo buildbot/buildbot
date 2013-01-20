@@ -155,6 +155,7 @@ Tasks:
 * Define the proper means of synchronizing messages and resources for each resource type.
   This information should be sufficient to reliably predict resource contents based on only on messages.
 * Remove `listBuilderNames` and `getPendingBuildTimes` methods from BaseScheduler
+* Add messages to the scheduler resource type, one for each possible change in scheduler status.
 
 ## Status Rewrites ##
 
