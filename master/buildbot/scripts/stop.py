@@ -24,9 +24,9 @@ from buildbot.scripts import base
 def stop(config, signame="TERM", wait=False):
     basedir = config['basedir']
     quiet = config['quiet']
-    graceful = config['graceful']
+    clean = config['clean']
 
-    if config['graceful']:
+    if config['clean']:
       signame = 'USR1'
 
     if not base.isBuildmasterDir(config['basedir']):

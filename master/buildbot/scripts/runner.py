@@ -134,7 +134,7 @@ class StopOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.stop.stop"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
-        ["graceful", "g", "Graceful shutdown master"],
+        ["clean", "g", "Clean shutdown master"],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot stop [<basedir>]"
