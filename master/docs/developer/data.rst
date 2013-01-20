@@ -165,6 +165,10 @@ Exceptions
 
     A value in the ``options`` argument was invalid or ill-formed.
 
+.. py:exception:: SchedulerAlreadyClaimedError
+
+    Identical to :py:exc:`~buildbot.db.schedulers.SchedulerAlreadyClaimedError`.
+
 Web Interface
 +++++++++++++
 
@@ -419,5 +423,6 @@ All strings in the data model are unicode strings.
     rtype-master
     rtype-builder
     rtype-sourcestamp
+    rtype-scheduler
 
 .. [#apiv1] The JSON API defined by ``status_json.py`` in Buildbot-0.8.x is considered version 1, although its root path was ``json``, not ``api/v1``.

@@ -446,14 +446,17 @@ dbdict['chdict'] = DictValidator(
 
 # masters
 
+_master = dict(
+    masterid=IntValidator(),
+    name=StringValidator(),
+    active=BooleanValidator(),
+    last_active=IntValidator(),
+)
 data['master'] = Selector()
 data['master'].add(None,
     DictValidator(
-        masterid=IntValidator(),
-        name=StringValidator(),
-        active=BooleanValidator(),
-        last_active=IntValidator(),
         link=LinkValidator(),
+        **_master
 ))
 
 message['master'] = Selector()
@@ -477,6 +480,17 @@ dbdict['masterdict'] = DictValidator(
 
 # schedulers
 
+data['scheduler'] = Selector()
+data['scheduler'].add(None,
+    DictValidator(
+        schedulerid=IntValidator(),
+        name=StringValidator(),
+        master=NoneOk(DictValidator(
+            link=LinkValidator(),
+            **_master)),
+        link=LinkValidator(),
+))
+
 dbdict['schedulerdict'] = DictValidator(
     id=IntValidator(),
     name=StringValidator(),
@@ -488,7 +502,11 @@ dbdict['schedulerdict'] = DictValidator(
 def _verify(testcase, validator, name, object):
     msgs = list(validator.validate(name, object))
     if msgs:
-        testcase.fail("; ".join(msgs))
+        msg = "; ".join(msgs)
+        if testcase:
+            testcase.fail(msg)
+        else:
+            raise AssertionError(msg)
 
 def verifyMessage(testcase, routingKey, message_):
     # the validator is a Selector wrapping a MessageValidator, so we need to
@@ -501,3 +519,6 @@ def verifyDbDict(testcase, type, value):
 
 def verifyData(testcase, type, options, value):
     _verify(testcase, data[type], type, (options, value))
+
+def verifyType(testcase, name, value, validator):
+    _verify(testcase, validator, name, value)

@@ -13,16 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
 import mock
-import twisted
 from twisted.trial import unittest
-from twisted.internet import defer
+from twisted.internet import defer, task
 from buildbot import config
 from buildbot.schedulers import base
 from buildbot.changes import changes
 from buildbot.process import properties
-from buildbot.test.util import scheduler
+from buildbot.test.util import scheduler, compat
 from buildbot.test.fake import fakedb
 
 class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
@@ -87,6 +85,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         # None (ignore the change))
         sched = self.makeScheduler()
         sched.startService()
+        self.addCleanup(sched.stopService)
 
         # set up a change message, a changedict, a change, and convince
         # getChange and fromChdict to convert one to the other
@@ -124,7 +123,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             qref.callback('change.12934.new', msg)
             self.assertEqual(change_received[0], expected_result)
         d.addCallback(test)
-        d.addCallback(lambda _ : sched.stopService())
+        #d.addCallback(lambda _ : sched.stopService())
         return d
 
     def test_change_consumption_defaults(self):
@@ -143,6 +142,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                 dict(fileIsImportant=lambda c : False),
                 False)
 
+    @compat.usesFlushLoggedErrors
     def test_change_consumption_fileIsImportant_exception(self):
         d = self.do_test_change_consumption(
                 dict(fileIsImportant=lambda c : 1/0),
@@ -151,9 +151,6 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             self.assertEqual(1, len(self.flushLoggedErrors(ZeroDivisionError)))
         d.addCallback(check_err)
         return d
-    if twisted.version.major <= 9 and sys.version_info[:2] >= (2,7):
-        test_change_consumption_fileIsImportant_exception.skip = \
-            "flushLoggedErrors does not work correctly on 9.0.0 and earlier with Python-2.7"
 
     def test_change_consumption_change_filter_True(self):
         cf = mock.Mock()
@@ -178,6 +175,53 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         return self.do_test_change_consumption(
                 dict(fileIsImportant=lambda c : True, onlyImportant=True),
                 True)
+
+    @defer.inlineCallbacks
+    def test_activation(self):
+        sched = self.makeScheduler(name='n', builderNames=['a'])
+        sched.clock = task.Clock()
+        sched.activate = mock.Mock(return_value=defer.succeed(None))
+        sched.deactivate = mock.Mock(return_value=defer.succeed(None))
+
+        # set the schedulerid, and claim the scheduler on another master
+        self.master.data.updates.schedulerIds['n'] = 20
+        self.master.data.updates.schedulerMasters[20] = 93
+
+        sched.startService()
+        sched.clock.advance(sched.POLL_INTERVAL/2)
+        sched.clock.advance(sched.POLL_INTERVAL/5)
+        sched.clock.advance(sched.POLL_INTERVAL/5)
+        self.assertFalse(sched.activate.called)
+        self.assertFalse(sched.deactivate.called)
+        self.assertFalse(sched.active)
+
+        # clear that masterid
+        del self.master.data.updates.schedulerMasters[20]
+        sched.clock.advance(sched.POLL_INTERVAL)
+        self.assertTrue(sched.activate.called)
+        self.assertFalse(sched.deactivate.called)
+        self.assertTrue(sched.active)
+
+        # stop the service and see that deactivate is called
+        yield sched.stopService()
+        self.assertTrue(sched.activate.called)
+        self.assertTrue(sched.deactivate.called)
+        self.assertFalse(sched.active)
+
+    @compat.usesFlushLoggedErrors
+    @defer.inlineCallbacks
+    def test_activation_activate_fails(self):
+        sched = self.makeScheduler(name='n', builderNames=['a'])
+        sched.clock = task.Clock()
+
+        def activate():
+            raise RuntimeError('oh noes')
+        sched.activate = activate
+
+        sched.startService()
+        sched.clock.advance(sched.POLL_INTERVAL/2)
+        yield sched.stopService()
+        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStampsWithDefaults(self):
@@ -379,11 +423,3 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                 reason=u'whynot',
                 scheduler=u'n',
                 sourcestamps=[91])
-
-    def test_findNewSchedulerInstance(self):
-        sched = self.makeScheduler(name='n', builderNames=['k'])
-        new_sched = self.makeScheduler(name='n', builderNames=['l'])
-        distractor = self.makeScheduler(name='x', builderNames=['l'])
-        config = mock.Mock()
-        config.schedulers = dict(dist=distractor, n=new_sched)
-        self.assertIdentical(sched.findNewSchedulerInstance(config), new_sched)
