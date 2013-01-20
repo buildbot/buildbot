@@ -388,12 +388,13 @@ class Builder(config.ReconfigurableServiceMixin,
         # (through our BuilderStatus object, which is its parent).  Finally it
         # will start the actual build process.  This is done with a fresh
         # Deferred since _startBuildFor should not wait until the build is
-        # finished.
+        # finished.  This uses `maybeDeferred` to ensure that any exceptions
+        # raised by startBuild are treated as deferred errbacks.
         d = defer.maybeDeferred(build.startBuild,
                 bs, self.expectations, slavebuilder)
         d.addCallback(self.buildFinished, slavebuilder, bids)
         # this shouldn't happen. if it does, the slave will be wedged
-        d.addErrback(log.err, 'while calling startBuild; this is a '
+        d.addErrback(log.err, 'from a running build; this is a '
             'serious error - please file a bug at http://buildbot.net')
 
         # make sure the builder's status is represented correctly
