@@ -75,7 +75,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                     'ss_hash' : ss_hash,
                     'created_at' : _reactor.seconds(),
                 })
-        yield defer.returnValue(sourcestampid)
+        defer.returnValue(sourcestampid)
 
     @base.cached("ssdicts")
     def getSourceStamp(self, ssid):

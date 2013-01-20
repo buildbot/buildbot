@@ -490,7 +490,7 @@ class FakeChangesComponent(FakeDBComponent):
         if uid:
             ch['uids'].append(uid)
 
-        yield defer.returnValue(changeid)
+        defer.returnValue(changeid)
 
     def getLatestChangeid(self):
         if self.changes:
@@ -831,7 +831,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
             ssids.append(ss)
         self.buildset_sourcestamps[bsid] = ssids
 
-        yield defer.returnValue((bsid,
+        defer.returnValue((bsid,
             dict([ (br.buildername, br.id) for br in br_rows ])))
 
     def completeBuildset(self, bsid, results, complete_at=None,
@@ -866,7 +866,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def getRecentBuildsets(self, count=None, branch=None, repository=None,
                                     complete=None):
         if not count:
-            yield defer.returnValue([])
+            defer.returnValue([])
             return
         rv = []
         for bs in (yield self.getBuildsets(complete=complete)):
@@ -889,7 +889,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
 
         rv.sort(key=lambda bs : -bs['bsid'])
 
-        yield defer.returnValue(list(reversed(rv[:count])))
+        defer.returnValue(list(reversed(rv[:count])))
 
     def _row2dict(self, row):
         row = row.copy()

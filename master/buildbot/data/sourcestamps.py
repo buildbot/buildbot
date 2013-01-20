@@ -48,7 +48,7 @@ class SourceStampEndpoint(base.Endpoint):
     def get(self, options, kwargs):
         ssdict = yield self.master.db.sourcestamps.getSourceStamp(
                                                         kwargs['ssid'])
-        yield defer.returnValue(_db2data(ssdict) if ssdict else None)
+        defer.returnValue(_db2data(ssdict) if ssdict else None)
 
 
 class SourceStampsEndpoint(base.GetParamsCheckMixin, base.Endpoint):
@@ -58,7 +58,7 @@ class SourceStampsEndpoint(base.GetParamsCheckMixin, base.Endpoint):
 
     @defer.inlineCallbacks
     def safeGet(self, options, kwargs):
-        yield defer.returnValue([ _db2data(ssdict) for ssdict in
+        defer.returnValue([ _db2data(ssdict) for ssdict in
             (yield self.master.db.sourcestamps.getSourceStamps()) ])
 
     def startConsuming(self, callback, options, kwargs):

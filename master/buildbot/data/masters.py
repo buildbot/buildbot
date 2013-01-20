@@ -41,10 +41,10 @@ class MasterEndpoint(base.Endpoint):
             builder = yield self.master.db.builders.getBuilder(
                     builderid=kwargs['builderid'])
             if not builder or kwargs['masterid'] not in builder['masterids']:
-                yield defer.returnValue(None)
+                defer.returnValue(None)
                 return
         m = yield self.master.db.masters.getMaster(kwargs['masterid'])
-        yield defer.returnValue(_db2data(m) if m else None)
+        defer.returnValue(_db2data(m) if m else None)
 
 
 class MastersEndpoint(base.GetParamsCheckMixin, base.Endpoint):
@@ -65,7 +65,7 @@ class MastersEndpoint(base.GetParamsCheckMixin, base.Endpoint):
                 masterlist = [ m for m in masterlist if m['id'] in masterids ]
             else:
                 masterlist = []
-        yield defer.returnValue([ _db2data(m) for m in masterlist ])
+        defer.returnValue([ _db2data(m) for m in masterlist ])
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,

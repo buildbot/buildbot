@@ -26,13 +26,13 @@ class BuilderEndpoint(base.Endpoint):
         builderid = kwargs['builderid']
         bdict = yield self.master.db.builders.getBuilder(builderid)
         if not bdict:
-            yield defer.returnValue(None)
+            defer.returnValue(None)
             return
         if 'masterid' in kwargs:
             if kwargs['masterid'] not in bdict['masterids']:
-                yield defer.returnValue(None)
+                defer.returnValue(None)
                 return
-        yield defer.returnValue(
+        defer.returnValue(
             dict(builderid=builderid,
                  name=bdict['name'],
                  link=base.Link(('builder', str(kwargs['builderid'])))))
@@ -48,7 +48,7 @@ class BuildersEndpoint(base.Endpoint):
     def get(self, options, kwargs):
         bdicts = yield self.master.db.builders.getBuilders(
                 masterid=kwargs.get('masterid', None))
-        yield defer.returnValue([
+        defer.returnValue([
             dict(builderid=bd['id'],
                  name=bd['name'],
                  link=base.Link(('builder', str(bd['id']))))
