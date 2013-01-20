@@ -27,13 +27,7 @@ def deferredLocked(lock_or_attr):
             lock = lock_or_attr
             if isinstance(lock, basestring):
                 lock = getattr(args[0], lock)
-            d = lock.acquire()
-            d.addCallback(lambda _ : fn(*args, **kwargs))
-            def release(val):
-                lock.release()
-                return val
-            d.addBoth(release)
-            return d
+            return lock.run(fn, *args, **kwargs)
         return wrapper
     return decorator
 

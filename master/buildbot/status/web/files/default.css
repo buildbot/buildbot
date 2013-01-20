@@ -566,6 +566,10 @@ span.header {
 	display: none;
 }
 
+pre {
+	white-space: pre-wrap;
+}
+
 /* change comments (use regular colors here) */
 pre.comments>a:link,pre.comments>a:visited {
 	color: blue;

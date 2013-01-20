@@ -78,6 +78,8 @@ Features
 
 * :bb:step:`CopyDirectory` has been added.
 
+* default.css now wraps preformatted text by default.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
