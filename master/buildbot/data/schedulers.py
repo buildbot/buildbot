@@ -47,7 +47,7 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
         if 'masterid' in kwargs:
             if dbdict['masterid'] != kwargs['masterid']:
                 return
-        yield defer.returnValue((yield self.db2data(dbdict))
+        defer.returnValue((yield self.db2data(dbdict))
                                 if dbdict else None)
 
 
@@ -63,7 +63,7 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
     def get(self, options, kwargs):
         schedulers = yield self.master.db.schedulers.getSchedulers(
                                 masterid=kwargs.get('masterid'))
-        yield defer.returnValue(
+        defer.returnValue(
                 [ (yield self.db2data(schdict)) for schdict in schedulers ])
 
     def startConsuming(self, callback, options, kwargs):
