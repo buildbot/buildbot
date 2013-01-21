@@ -114,7 +114,7 @@ clean
 
     buildbot clean {BASEDIR}
 
-Shutdowns the buildmaster cleanly.
+Shuts down the buildmaster cleanly.
 
 stop
 ++++
