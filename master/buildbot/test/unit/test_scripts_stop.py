@@ -23,7 +23,7 @@ from buildbot.scripts import stop
 from buildbot.test.util import dirs, misc, compat
 
 def mkconfig(**kwargs):
-    config = dict(quiet=False, basedir=os.path.abspath('basedir'))
+    config = dict(quiet=False, clean=False, basedir=os.path.abspath('basedir'))
     config.update(kwargs)
     return config
 

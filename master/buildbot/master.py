@@ -195,7 +195,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 signal.signal(signal.SIGHUP, sighup)
 
             if hasattr(signal, "SIGUSR1"):
-                def sighup(*args):
+                def sigusr1(*args):
                     _reactor.callLater(0, self.botmaster.cleanShutdown)
                 signal.signal(signal.SIGHUP, sigusr1)
 
