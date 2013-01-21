@@ -20,6 +20,7 @@ from twisted.internet import defer, reactor, task
 from twisted.spread import pb
 from buildbot.test.util import compat
 from buildbot.process import botmaster
+from buildbot.util.eventual import eventually
 
 # TODO: should do this with more of the Twisted machinery intact - maybe in a
 # separate integration test?
@@ -40,7 +41,7 @@ class FakeAbstractBuildSlave(object):
             self.call_on_detach()
             self.call_on_detach = None
         self.slave.broker.transport.loseConnection = (lambda :
-                self.reactor.callLater(0, tport_loseConnection))
+                eventually(tport_loseConnection))
 
     def subscribeToDetach(self, callback):
         self.call_on_detach = callback

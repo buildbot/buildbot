@@ -15,9 +15,10 @@
 
 
 from twisted.python import log
-from twisted.internet import reactor, defer
+from twisted.internet import defer
 from buildbot import util
 from buildbot.util import subscription
+from buildbot.util.eventual import eventually
 
 if False: # for debugging
     debuglog = log.msg
@@ -137,7 +138,7 @@ class BaseLock:
             # from the wait queue entry to indicate that it has been woken.
             if d:
                 self.waiting[i] = (w_owner, w_access, None)
-                reactor.callLater(0, d.callback, self)
+                eventually(d.callback, self)
 
         # notify any listeners
         self.release_subs.deliver()

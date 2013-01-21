@@ -20,6 +20,7 @@ from twisted.python import failure
 from buildbot.test.util import compat
 from buildbot.process import botmaster
 from buildbot.util import epoch2datetime
+from buildbot.util.eventual import eventually
 
 class Test(unittest.TestCase):
 
@@ -240,7 +241,7 @@ class Test(unittest.TestCase):
             def a_finished():
                 self.maybeStartBuild_calls.append('A-finished')
                 d.callback(None)
-            reactor.callLater(0, a_finished)
+            eventually(a_finished)
             return d
         self.builders['A'].maybeStartBuild = msb_stopNow
 
