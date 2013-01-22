@@ -717,7 +717,7 @@ class IRCContact(base.StatusReceiver):
     command_COMMANDS.usage = "commands - List available commands"
 
     def command_DESTROY(self, args, who):
-        if not args == "buildbot":
+        if args != "buildbot":
             self.act("readies phasers")
 
     def command_DANCE(self, args, who):
