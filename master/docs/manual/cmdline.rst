@@ -106,16 +106,6 @@ The :option:`--nodaemon` option has the same meaning as for ``start``.
 
 .. bb:cmdline:: stop (buildbot)
 
-clean
-+++++
-
-
-.. code-block:: none
-
-    buildbot clean {BASEDIR}
-
-Shuts down the buildmaster cleanly.
-
 stop
 ++++
 
@@ -124,6 +114,7 @@ stop
     buildbot stop {BASEDIR}
 
 This terminates the daemon (either buildmaster or buildslave) running in the given directory.
+The :option:`--clean` option shuts down the buildmaster cleanly.
 
 .. bb:cmdline:: sighup
 
