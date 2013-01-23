@@ -346,6 +346,8 @@ class TryOptions(base.SubcommandOptions):
          "Who is responsible for the try build"],
         ["comment", "C", None,
          "A comment which can be used in notifications for this build"],
+        ["codebase", None, '',
+         "Codebase to use."],
 
         # for ssh to accommodate running in a virtualenv on the buildmaster
         ["buildbotbin", None, "buildbot",
@@ -413,6 +415,7 @@ class TryOptions(base.SubcommandOptions):
         [ 'try_master', 'master' ],
         [ 'try_who', 'who' ],
         [ 'try_comment', 'comment' ],
+        [ 'try_codebase', 'codebase' ],
         #[ 'try_wait', 'wait' ], <-- handled in postOptions
         #[ 'try_quiet', 'quiet' ], <-- handled in postOptions
 

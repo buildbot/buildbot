@@ -506,6 +506,7 @@ class Try(pb.Referenceable):
         self.project = self.getopt('project', '')
         self.who = self.getopt('who')
         self.comment = self.getopt('comment')
+        self.codebase = self.getopt('codebase')
 
     def getopt(self, config_name, default=None):
         value = self.config.get(config_name)
@@ -620,7 +621,8 @@ class Try(pb.Referenceable):
                               self.builderNames,
                               self.who,
                               self.comment,
-                              self.config.get('properties', {}))
+                              self.config.get('properties', {}),
+                              self.codebase)
         d.addCallback(self._deliverJob_pb2)
         return d
 

@@ -613,6 +613,13 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
         persp = trysched.Try_Userpass_Perspective(sched, 'a')
         return persp.perspective_try(*args, **kwargs)
 
+    def call_perspective_try_codebases(self, *args, **kwargs):
+        sched = self.makeScheduler(name='tsched', builderNames=['a', 'b'],
+                port='xxx', userpass=[('a', 'b')], properties=dict(frm='schd'),
+                codebases={'cb1':{'repository':'r1'}, 'cb2': {'repository':'r2'}})
+        persp = trysched.Try_Userpass_Perspective(sched, 'a')
+        return persp.perspective_try(*args, **kwargs)
+
     def test_perspective_try(self):
         d = self.call_perspective_try(
             'default', 'abcdef', (1, '-- ++'), 'repo', 'proj', ['a'],
@@ -661,6 +668,36 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                         sourcestampsetid=100,
                         patch_body='-- ++', patch_level=1, patch_subdir='',
                         patch_author='who', patch_comment="comment")
+                    })
+        d.addCallback(check)
+        return d
+
+    def test_perspective_try_codebase(self):
+        d = self.call_perspective_try_codebases(
+            'default', 'abcdef', (1, '-- ++'), 'repo', 'proj', ['a'],
+            properties={'pr': 'op'}, codebase='cb1')
+
+        def check(_):
+            self.db.buildsets.assertBuildset('?',
+                    dict(reason="'try' job",
+                        external_idstring=None,
+                        properties=[
+                            ('frm', ('schd', 'Scheduler')),
+                            ('pr', ('op', 'try build')),
+                            ('scheduler', ('tsched', 'Scheduler')),
+                        ],
+                        sourcestampsetid=100,
+                        ),
+                    {'cb1':
+                     dict(branch='default', repository='repo',  codebase='cb1',
+                        project='proj', revision='abcdef',
+                        sourcestampsetid=100,
+                        patch_body='-- ++', patch_level=1, patch_subdir='',
+                        patch_author='', patch_comment=""),
+                     'cb2':
+                     dict(branch=None, repository='r2',  codebase='cb2',
+                        project='', revision=None,
+                        sourcestampsetid=100)
                     })
         d.addCallback(check)
         return d
