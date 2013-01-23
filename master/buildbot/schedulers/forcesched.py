@@ -466,7 +466,8 @@ class ForceScheduler(base.BaseScheduler):
         @type properties: list of BaseParameter's
         """
 
-        if (isinstance(reason, StringParameter)):
+        if (isinstance(reason, StringParameter) or
+            isinstance(reason, FixedParameter)):
             self.reason = reason
         else:
             raise ValidationError("reason must be of type StringParameter")
