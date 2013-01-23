@@ -223,7 +223,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
     @defer.inlineCallbacks
     def perspective_try(self, branch, revision, patch, repository, project,
-                        builderNames, who="", comment="", properties={}):
+                        builderNames, who="", comment="", properties={}, codebase=""):
         db = self.scheduler.master.db
         log.msg("user %s requesting build on builders %s" % (self.username,
                                                              builderNames))
@@ -243,7 +243,20 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
         sourcestampsetid = yield db.sourcestampsets.addSourceStampSet()
 
+        for codebase2 in self.scheduler.codebases:
+            if codebase != codebase2:
+                ss = self.scheduler.codebases[codebase2].copy()
+                ss.update({})
+                yield db.sourcestamps.addSourceStamp(
+                    codebase=codebase2,
+                    repository=ss.get('repository', None),
+                    branch=ss.get('branch', None),
+                    revision=ss.get('revision', None),
+                    project=ss.get('project', ''),
+                    sourcestampsetid=sourcestampsetid)
+
         yield db.sourcestamps.addSourceStamp(
+            codebase=codebase,
             branch=branch, revision=revision, repository=repository,
             project=project, patch_level=patch[0], patch_body=patch[1],
             patch_subdir='', patch_author=who or '',
@@ -276,9 +289,9 @@ class Try_Userpass(TryBase):
     compare_attrs = ('name', 'builderNames', 'port', 'userpass', 'properties')
 
     def __init__(self, name, builderNames, port, userpass,
-                 properties={}):
+                 properties={}, codebases=base.BaseScheduler.DefaultCodebases):
         TryBase.__init__(self, name=name, builderNames=builderNames,
-                         properties=properties)
+                         properties=properties, codebases=codebases)
         self.port = port
         self.userpass = userpass
 
