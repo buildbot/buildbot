@@ -443,3 +443,8 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                               expectKind=dict,                              
                               klass=NestedParameter, fields=fields, name='')
 
+    def test_bad_reason(self):
+        self.assertRaises(ValidationError, ForceScheduler,
+                          name='testsched', builderNames=[],
+                          codebases=['bar'], reason="foo")
+
