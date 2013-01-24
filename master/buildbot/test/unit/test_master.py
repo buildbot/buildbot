@@ -28,6 +28,8 @@ from buildbot.changes.changes import Change
 class OldTriggeringMethods(unittest.TestCase):
 
     def setUp(self):
+        self.patch(master.BuildMaster, 'create_child_services',
+                lambda self : None)
         self.master = master.BuildMaster(basedir=None)
 
         self.master.data = fakedata.FakeDataConnector(self.master, self)

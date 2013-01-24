@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import os
+import pkg_resources
 from urlparse import urljoin
 from buildbot.util import json
 from twisted.internet import defer, reactor
@@ -62,6 +63,8 @@ class FakeRequest(object):
 
 
 class WwwTestMixin(object):
+    if not list(pkg_resources.iter_entry_points('buildbot.www', 'base')):
+        skip = 'builbot-www not installed'
 
     def make_master(self, **kwargs):
         master = fakemaster.make_master(wantData=True, testcase=self)
