@@ -149,7 +149,6 @@ setup_args = {
               "buildbot.test.regressions",
               "buildbot.test.unit",
               "buildbot.test.util",
-              "buildbot.test.util.types",
               "buildbot.util",
               ],
     'data_files': [
