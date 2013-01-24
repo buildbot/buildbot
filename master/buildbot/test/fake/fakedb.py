@@ -939,6 +939,17 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 objectid=self.MASTER_ID, claimed_at=self._reactor.seconds())
         return defer.succeed(None)
 
+    def unclaimBuildRequests(self, brids):
+        for brid in brids:
+            try:
+                self.claims.pop(brid)
+            except KeyError:
+                print "trying to unclaim brid %d, but it's not claimed" % brid
+                return defer.fail(
+                        failure.Failure(buildrequests.AlreadyClaimedError))                
+            
+        return defer.succeed(None)
+
     # Code copied from buildrequests.BuildRequestConnectorComponent
     def _brdictFromRow(self, row):
         claimed = mine = False
