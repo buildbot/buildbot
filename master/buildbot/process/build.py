@@ -86,8 +86,10 @@ class Build(properties.PropertiesMixin):
         """
         self.builder = builder
 
-    def setLocks(self, locks):
-        self.locks = locks
+    def setLocks(self, lockList):
+        # convert all locks into their real forms
+        self.locks = [(self.builder.botmaster.getLockFromLockAccess(access), access)
+                        for access in lockList ]
 
     def setSlaveEnvironment(self, env):
         self.slaveEnvironment = env
@@ -158,8 +160,8 @@ class Build(properties.PropertiesMixin):
         props.build = self
 
         # start with global properties from the configuration
-        buildmaster = self.builder.botmaster.parent
-        props.updateFromProperties(buildmaster.config.properties)
+        master = self.builder.botmaster.master
+        props.updateFromProperties(master.config.properties)
 
         # from the SourceStamps, which have properties via Change
         for change in self.allChanges():
@@ -221,18 +223,9 @@ class Build(properties.PropertiesMixin):
         self.setupSlaveBuilder(slavebuilder)
         slavebuilder.slave.updateSlaveStatus(buildStarted=build_status)
 
-        # convert all locks into their real forms
-        lock_list = []
-        for access in self.locks:
-            if not isinstance(access, locks.LockAccess):
-                # Buildbot 0.7.7 compability: user did not specify access
-                access = access.defaultAccess()
-            lock = self.builder.botmaster.getLockByID(access.lockid)
-            lock_list.append((lock, access))
-        self.locks = lock_list
         # then narrow SlaveLocks down to the right slave
-        self.locks = [(l.getLock(self.slavebuilder.slave), la)
-                       for l, la in self.locks]
+        self.locks = [(l.getLock(self.slavebuilder.slave), a) 
+                        for l, a in self.locks ]
         self.remote = slavebuilder.remote
         self.remote.notifyOnDisconnect(self.lostRemote)
 

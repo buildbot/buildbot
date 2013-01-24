@@ -17,6 +17,7 @@ import weakref
 from twisted.internet import defer
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import pbmanager
+from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot import config
 import mock
 
@@ -41,11 +42,6 @@ class FakeCaches(object):
 
     def get_cache(self, name, miss_fn):
         return FakeCache(name, miss_fn)
-
-
-class FakeBotMaster(object):
-
-    pass
 
 
 class FakeStatus(object):
@@ -92,7 +88,7 @@ class FakeMaster(object):
         self.caches = FakeCaches()
         self.pbmanager = pbmanager.FakePBManager()
         self.basedir = 'basedir'
-        self.botmaster = FakeBotMaster()
+        self.botmaster = FakeBotMaster(master=self)
         self.botmaster.parent = self
         self.status = FakeStatus()
         self.status.master = self
