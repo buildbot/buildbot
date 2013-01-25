@@ -247,12 +247,9 @@ class StatusResourceBuild(HtmlResource):
             now = util.now()
             cxt['elapsed'] = util.formatInterval(now - start)
             
-        exactly = True
         has_changes = False
         for ss in sourcestamps:
-            exactly = exactly and (ss.revision is not None)
             has_changes = has_changes or ss.changes
-        cxt['exactly'] = (exactly) or b.getChanges()
         cxt['has_changes'] = has_changes
         cxt['build_url'] = path_to_build(req, b)
         cxt['authz'] = self.getAuthz(req)

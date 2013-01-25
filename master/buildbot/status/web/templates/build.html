@@ -215,7 +215,7 @@ SourceStamps:
 
   {% if authz.advertiseAction('forceBuild', request) %}
     <h3>Resubmit Build:</h3>
-    {{ forms.rebuild_build(build_url+"/rebuild", authz, exactly, sourcestamps[0]) }}
+    {{ forms.rebuild_build(build_url+"/rebuild", authz, sourcestamps[0]) }}
   {% endif %}
 
 </div>

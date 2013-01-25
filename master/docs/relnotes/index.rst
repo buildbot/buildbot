@@ -34,6 +34,9 @@ Deprecations, Removals, and Non-Compatible Changes
 * StatusReceivers' checkConfig method should no longer take an `errors`
   parameter. It should indicate errors by calling :py:function:`~buildbot.config.error`.
 
+* The web status no longer displays a potentially misleading message, indicating whether the build
+  can be rebuilt exactly.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
