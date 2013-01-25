@@ -721,6 +721,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
     def unpause(self):
         """Restart running new builds on the slave."""
         self.slave_status.setPaused(False)
+        self.botmaster.maybeStartBuildsForSlave(self.slavename)
 
     def isPaused(self):
         return self.paused
