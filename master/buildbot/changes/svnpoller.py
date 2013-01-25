@@ -210,9 +210,11 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             rootnode = rootnodes[0]
             root = "".join([c.data for c in rootnode.childNodes])
             # root will be a unicode string
-            assert self.svnurl.startswith(root), \
-                    ("svnurl='%s' doesn't start with <root>='%s'" %
-                    (self.svnurl, root))
+            if not self.svnurl.startswith(root):
+                log.msg(format="svnurl='%(svnurl)s' doesn't start with <root>='%(root)s'",
+                        svnurl=self.svnurl, root=root)
+                raise RuntimeError("Can't handle redirected svn connections!?"
+                        "This shouldn't happen.")
             prefix = self.svnurl[len(root):]
             if prefix.startswith("/"):
                 prefix = prefix[1:]
