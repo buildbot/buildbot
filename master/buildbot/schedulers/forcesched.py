@@ -453,7 +453,7 @@ class ForceScheduler(base.BaseScheduler):
 
         @param username: the "owner" for a build (may not be shown depending
                          on the Auth configuration for the master)
-        @type reason: BaseParameter or None (to disable this field)
+        @type username: BaseParameter
 
         @param reason: the "reason" for a build
         @type reason: BaseParameter or None (to disable this field)
