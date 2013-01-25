@@ -20,6 +20,7 @@ import email.utils as email_utils
 
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
+from buildbot.config import error
 
 class ValidationError(ValueError):
     pass
@@ -466,11 +467,10 @@ class ForceScheduler(base.BaseScheduler):
         @type properties: list of BaseParameter's
         """
 
-        if (isinstance(reason, StringParameter) or
-            isinstance(reason, FixedParameter)):
+        if isinstance(reason, BaseParameter):
             self.reason = reason
         else:
-            raise ValidationError("reason must be of type StringParameter")
+            config.error("ForceScheduler: reason must be a StringParameter") 
 
         self.username = username
         
