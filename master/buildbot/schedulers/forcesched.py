@@ -20,7 +20,7 @@ import email.utils as email_utils
 
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
-from buildbot.config import error
+from buildbot import config 
 
 class ValidationError(ValueError):
     pass
